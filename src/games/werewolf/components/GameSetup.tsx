@@ -7,6 +7,7 @@ import type { Player, Role, RoleDefinition } from '../logic/types';
 import { useTranslation } from 'react-i18next';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { RoleEditor } from './RoleEditor';
+import { DEFAULT_ROLES } from '../logic/defaultRoles';
 
 interface GameSetupProps {
     players: Player[];
@@ -17,11 +18,8 @@ interface GameSetupProps {
     onSaveCustomRoles: (roles: RoleDefinition[]) => void;
 }
 
-const SPECIAL_ROLES: Role[] = [
-    'CUPID', 'WITCH', 'SEER', 'LITTLE_GIRL', 'DETECTIVE', 'GUARDIAN',
-    'BLACK_CAT', 'HUNTER', 'WISE', 'BLACK_WEREWOLF', 'WHITE_WEREWOLF',
-    'ANGEL', 'EASTER_BUNNY', 'WOLFDOG', 'RIPPER', 'SURVIVOR', 'PYROMANIAC', 'THIEF'
-];
+// Derived from DEFAULT_ROLES to avoid duplication
+const SPECIAL_ROLES = DEFAULT_ROLES.map(r => r.id as Role);
 
 export const GameSetup: React.FC<GameSetupProps> = ({ players, customRoles = [], onAddPlayer, onRemovePlayer, onStartGame, onSaveCustomRoles }) => {
     const { t } = useTranslation();
@@ -127,20 +125,27 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, customRoles = [],
                 )}
 
                 <Grid container spacing={1}>
-                    {SPECIAL_ROLES.map(role => (
-                        <Grid size={{ xs: 6 }} key={role}>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={enabledRoles.includes(role)}
-                                        onChange={() => toggleRole(role)}
-                                        size="small"
-                                    />
-                                }
-                                label={<Typography variant="body2">{t(`games.werewolf.roles.${role}`)}</Typography>}
-                            />
-                        </Grid>
-                    ))}
+                    {SPECIAL_ROLES.map(role => {
+                        const customDef = customRoles.find(r => r.id === role);
+                        const label = customDef
+                            ? `${customDef.icon} ${customDef.name}`
+                            : t(`games.werewolf.roles.${role}`);
+
+                        return (
+                            <Grid size={{ xs: 6 }} key={role}>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={enabledRoles.includes(role)}
+                                            onChange={() => toggleRole(role)}
+                                            size="small"
+                                        />
+                                    }
+                                    label={<Typography variant="body2">{label}</Typography>}
+                                />
+                            </Grid>
+                        );
+                    })}
                     {customRoles.map(role => (
                         <Grid size={{ xs: 6 }} key={role.id}>
                             <FormControlLabel
@@ -161,7 +166,12 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, customRoles = [],
             <Dialog open={isEditorOpen} onClose={() => setIsEditorOpen(false)} fullScreen>
                 <RoleEditor
                     customRoles={customRoles}
+                    defaultRoles={DEFAULT_ROLES}
                     onSaveRoles={(roles) => {
+                        // We need to separate pure custom roles from overridden defaults if we want to save them efficiently,
+                        // but for now, the requirement is to allow editing defaults.
+                        // The `onSaveCustomRoles` expects `RoleDefinition[]`.
+                        // Game logic should persist these overrides.
                         onSaveCustomRoles(roles);
                         setIsEditorOpen(false);
                     }}

@@ -133,6 +133,33 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
         const alivePlayers = players.filter(p => p.isAlive);
         const rolePlayer = players.find(p => p.role === activeRole && p.isAlive);
 
+        // Check if there is a custom definition/override for this role
+        const customRole = customRoles.find(cr => cr.id === activeRole);
+
+        // If it's a custom role or an overridden standard role, use generic handling
+        // UNLESS it's a standard role but with NO changes to abilities?
+        // Actually, if the user edited it, they probably want the generic behavior (e.g. they changed Seer to Kill).
+        // The only risk is if they kept standard abilities but the generic view is inferior.
+        // For MVP, if it is in customRoles, we assume it's "customized" enough to warrant generic view.
+        if (customRole) {
+            const ability = customRole.abilities[0];
+            if (!ability) return <Box textAlign="center" mt={10}><Button onClick={nextRole}>Skip {activeRole}</Button></Box>;
+
+            return (
+                <PlayerSelectionView
+                    icon={<Typography variant="h1">{customRole.icon}</Typography>}
+                    title={customRole.name}
+                    subtitle={customRole.description}
+                    instruction={t(`games.werewolf.editor.ability_instruction_${ability.type.toLowerCase()}`, { count: ability.targetCount })}
+                    players={players.filter(p => p.isAlive)}
+                    onSelect={(id) => handleAction({ type: ability.type as any, targetId: id })}
+                    onSkip={nextRole}
+                    skipLabel={t('common.skip')}
+                    buttonColor="primary"
+                />
+            );
+        }
+
         switch (activeRole) {
             case 'WEREWOLF': {
                 // Standard Werewolf turn

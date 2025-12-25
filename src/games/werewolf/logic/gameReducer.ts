@@ -1,5 +1,27 @@
 import { INITIAL_STATE, getNextPhase } from './types';
-import type { GameState, Role, Action } from './types';
+import type { GameState, Role, Action, Player } from './types';
+
+const isWerewolf = (player: Player): boolean => {
+    // If infected, they count as a werewolf regardless of original role
+    if (player.powerState?.isInfected) {
+        return true;
+    }
+
+    const role = player.role;
+    if (!role) return false;
+
+    // Check specific werewolf roles
+    if (role === 'WEREWOLF' || role === 'BLACK_WEREWOLF' || role === 'WHITE_WEREWOLF') {
+        return true;
+    }
+
+    // Wolfdog chooses camp on first night
+    if (role === 'WOLFDOG' && player.powerState?.chosenCamp === 'WEREWOLF') {
+        return true;
+    }
+
+    return false;
+};
 
 export const gameReducer = (state: GameState, action: Action): GameState => {
     switch (action.type) {
@@ -91,8 +113,8 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
 
             // Check win conditions
             const alivePlayers = newPlayers.filter(p => p.isAlive);
-            const aliveWerewolves = alivePlayers.filter(p => p.role === 'WEREWOLF').length;
-            const aliveVillagers = alivePlayers.filter(p => p.role !== 'WEREWOLF').length;
+            const aliveWerewolves = alivePlayers.filter(p => isWerewolf(p)).length;
+            const aliveVillagers = alivePlayers.filter(p => !isWerewolf(p)).length;
 
             let winner: 'VILLAGERS' | 'WEREWOLVES' | null = null;
             if (aliveWerewolves === 0) {
@@ -207,13 +229,59 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                     break;
                 case 'BURN':
                     // Burn all oiled players
-                    newPlayers = newPlayers.map(p =>
-                        p.powerState.isOiled ? { ...p, isAlive: false } : p
-                    );
+                    // Add them to night action log so they die in the morning
+                    {
+                        const oiledPlayerIds = state.players
+                            .filter(p => p.powerState.isOiled)
+                            .map(p => p.id);
+
+                        // Add unique IDs to the log
+                        oiledPlayerIds.forEach(id => {
+                            if (!newNightActionLog.includes(id)) {
+                                newNightActionLog.push(id);
+                            }
+                        });
+
+                        // Also mark them dead soon for visibility if needed, though they will die at daybreak
+                        newPlayers = newPlayers.map(p =>
+                            oiledPlayerIds.includes(p.id) ? { ...p, powerState: { ...p.powerState, isDeadSoon: true } } : p
+                        );
+                    }
                     break;
-                case 'STEAL_ROLE':
-                    // Thief steals a role - complex, for now just placeholder
+                case 'STEAL_ROLE': {
+                    // Thief steals a role
+                    const thief = state.players.find(p => p.role === 'THIEF');
+                    const victim = state.players.find(p => p.id === nightAction.targetId);
+
+                    if (thief && victim) {
+                        newPlayers = newPlayers.map(p => {
+                            if (p.id === thief.id) {
+                                // Thief takes victim's role and initializes fresh power state
+                                const newRole = victim.role || 'VILLAGER';
+                                let newPowerState: any = {};
+
+                                // Initialize power state for the stolen role
+                                if (newRole === 'WITCH') {
+                                    newPowerState = { hasHealPotion: true, hasKillPotion: true };
+                                } else if (newRole === 'SURVIVOR') {
+                                    newPowerState = { protectionsLeft: 2 };
+                                } else if (newRole === 'WISE') {
+                                    newPowerState = { canSurviveWerewolf: true };
+                                } else if (newRole === 'BLACK_WEREWOLF') {
+                                    newPowerState = { hasInfected: true };
+                                }
+
+                                return { ...p, role: newRole, powerState: newPowerState };
+                            }
+                            if (p.id === victim.id) {
+                                // Victim becomes Villager (or just loses role)
+                                return { ...p, role: 'VILLAGER', powerState: {} };
+                            }
+                            return p;
+                        });
+                    }
                     break;
+                }
             }
 
             return {

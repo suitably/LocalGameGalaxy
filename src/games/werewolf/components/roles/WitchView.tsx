@@ -37,7 +37,7 @@ export const WitchView: React.FC<RoleViewProps> = ({ players, onAction, onSkip, 
                 title={t('games.werewolf.roles.WITCH')}
                 icon={<AutoFixHighIcon sx={{ fontSize: 60 }} />}
                 instruction={t('games.werewolf.ui.witch.select_kill')}
-                players={alivePlayers}
+                players={alivePlayers.filter(p => !p.powerState.isDeadSoon)}
                 onSelect={(id) => onAction({ type: 'KILL', targetId: id })}
                 onSkip={() => setAction(null)}
                 skipLabel={t('common.back')}

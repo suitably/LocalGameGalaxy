@@ -25,11 +25,13 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
 import { useTranslation } from 'react-i18next';
 import type { RoleDefinition, Ability, RoleAlignment } from '../logic/types';
 
 interface RoleEditorProps {
     customRoles: RoleDefinition[];
+    defaultRoles?: RoleDefinition[];
     onSaveRoles: (roles: RoleDefinition[]) => void;
     onClose: () => void;
 }
@@ -40,9 +42,22 @@ const EMPTY_ABILITY: Ability = {
     targetCount: 1,
 };
 
-export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, onSaveRoles, onClose }) => {
+export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, defaultRoles = [], onSaveRoles, onClose }) => {
     const { t } = useTranslation();
-    const [roles, setRoles] = useState<RoleDefinition[]>(customRoles);
+    // mergedRoles contains all unique roles. If a custom role shares an ID with a default role, it overrides it.
+    const [roles, setRoles] = useState<RoleDefinition[]>(() => {
+        const merged = [...defaultRoles];
+        customRoles.forEach(custom => {
+            const index = merged.findIndex(r => r.id === custom.id);
+            if (index > -1) {
+                merged[index] = custom;
+            } else {
+                merged.push(custom);
+            }
+        });
+        return merged;
+    });
+
     const [editingRole, setEditingRole] = useState<RoleDefinition | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -64,8 +79,18 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, onSaveRoles
         setIsDialogOpen(true);
     };
 
-    const handleDeleteRole = (id: string) => {
-        setRoles(prev => prev.filter(r => r.id !== id));
+    const handleDeleteRole = (id: string, isDefault: boolean) => {
+        if (isDefault) {
+            // Reset to default: remove the override from our working state
+            // We start by getting the original default
+            const originalDefault = defaultRoles.find(r => r.id === id);
+            if (originalDefault) {
+                setRoles(prev => prev.map(r => r.id === id ? originalDefault : r));
+            }
+        } else {
+            // Truly delete custom role
+            setRoles(prev => prev.filter(r => r.id !== id));
+        }
     };
 
     const handleSaveRole = () => {
@@ -82,6 +107,27 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, onSaveRoles
             setIsDialogOpen(false);
             setEditingRole(null);
         }
+    };
+
+    const handleSaveAll = () => {
+        // We only want to bubble up the "custom" roles (which now includes overrides of defaults)
+        // An override is any role in 'roles' that:
+        // 1. Is not in defaultRoles OR
+        // 2. Is in defaultRoles but acts different (we can just save all that have matching IDs but different content, or just save everything that isn't === ref, but simpler:
+        // Actually, the simplest approach for the parent app is to just receive a list of "Custom Definitions".
+        // The parent will persist these. When reloading, the parent merges Default + Custom again.
+        // So we need to filter out roles that are IDENTICAL to their default counterparts.
+
+        const rolesToSave = roles.filter(role => {
+            const defaultDef = defaultRoles.find(d => d.id === role.id);
+            if (!defaultDef) return true; // It's a purely custom role
+
+            // It is a default role ID, check if it's modified
+            // This is a deep comparison approximation. 
+            return JSON.stringify(role) !== JSON.stringify(defaultDef);
+        });
+
+        onSaveRoles(rolesToSave);
     };
 
     const handleAddAbility = () => {
@@ -120,27 +166,43 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, onSaveRoles
             </Box>
 
             <List component={Paper}>
-                {roles.map(role => (
-                    <ListItem key={role.id} divider>
-                        <ListItemText
-                            primary={`${role.icon} ${role.name}`}
-                            secondary={role.description}
-                        />
-                        <ListItemSecondaryAction>
-                            <IconButton edge="end" onClick={() => handleEditRole(role)} sx={{ mr: 1 }}>
-                                <EditIcon />
-                            </IconButton>
-                            <IconButton edge="end" onClick={() => handleDeleteRole(role.id)}>
-                                <DeleteIcon />
-                            </IconButton>
-                        </ListItemSecondaryAction>
-                    </ListItem>
-                ))}
+                {roles.map(role => {
+                    // Check if modified from default to show indicator or enable reset
+                    const isDefaultId = defaultRoles.some(d => d.id === role.id);
+                    const isModified = isDefaultId && JSON.stringify(role) !== JSON.stringify(defaultRoles.find(d => d.id === role.id));
+
+                    return (
+                        <ListItem key={role.id} divider>
+                            <ListItemText
+                                primary={
+                                    <Box display="flex" alignItems="center" gap={1}>
+                                        <Typography>{role.icon} {role.name}</Typography>
+                                        {isModified && <Chip label="Modified" size="small" color="primary" variant="outlined" />}
+                                    </Box>
+                                }
+                                secondary={role.description}
+                            />
+                            <ListItemSecondaryAction>
+                                <IconButton edge="end" onClick={() => handleEditRole(role)} sx={{ mr: 1 }}>
+                                    <EditIcon />
+                                </IconButton>
+                                <IconButton
+                                    edge="end"
+                                    onClick={() => handleDeleteRole(role.id, isDefaultId)}
+                                    color={isDefaultId ? "default" : "error"}
+                                    title={isDefaultId ? t('common.reset', 'Reset') : t('common.delete', 'Delete')}
+                                >
+                                    {isDefaultId ? <CloseIcon /> : <DeleteIcon />}
+                                </IconButton>
+                            </ListItemSecondaryAction>
+                        </ListItem>
+                    );
+                })}
             </List>
 
             <Box mt={3} display="flex" justifyContent="flex-end" gap={2}>
                 <Button onClick={onClose}>{t('common.back')}</Button>
-                <Button variant="contained" color="primary" startIcon={<SaveIcon />} onClick={() => onSaveRoles(roles)}>
+                <Button variant="contained" color="primary" startIcon={<SaveIcon />} onClick={handleSaveAll}>
                     {t('common.save', 'Save All')}
                 </Button>
             </Box>
