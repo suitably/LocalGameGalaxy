@@ -344,6 +344,31 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                 return p;
             });
 
+            // Check win conditions after hunter shot
+            const allRoles = [...DEFAULT_ROLES, ...state.customRoles];
+            const alivePlayers = newPlayers.filter(p => p.isAlive);
+            const aliveWerewolves = alivePlayers.filter(p => isWerewolf(p, allRoles)).length;
+            const aliveVillagers = alivePlayers.filter(p => !isWerewolf(p, allRoles)).length;
+
+            let winner: 'VILLAGERS' | 'WEREWOLVES' | null = null;
+            if (aliveWerewolves === 0) {
+                winner = 'VILLAGERS';
+            } else if (aliveWerewolves >= aliveVillagers) {
+                winner = 'WEREWOLVES';
+            }
+
+            // If there's a winner, end the game immediately
+            if (winner) {
+                return {
+                    ...state,
+                    players: newPlayers,
+                    phase: 'GAME_OVER',
+                    winner,
+                    pendingHunterIds: [],
+                    nextPhaseAfterShot: null
+                };
+            }
+
             const nextPhase = newPending.length > 0 ? 'HUNTER_SHOT' : (state.nextPhaseAfterShot || 'DAY');
 
             return checkHunterDeath({
