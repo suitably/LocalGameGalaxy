@@ -136,7 +136,24 @@ for (let i = 0; i < wordPairsEN.length; i++) {
     const en = wordPairsEN[i];
     if (enToDeMap.has(i)) {
         const deIndex = enToDeMap.get(i)!;
-        const de = wordPairsDE[deIndex];
+        const de = [...wordPairsDE[deIndex]]; // Clone
+
+        // Re-check similarity to determine orientation
+        const s1 = similarity(en[0], de[0]);
+        const s2 = similarity(en[1], de[1]);
+        const score1 = s1 + s2;
+
+        const c1 = similarity(en[0], de[1]);
+        const c2 = similarity(en[1], de[0]);
+        const score2 = c1 + c2;
+
+        if (score2 > score1) {
+            // Swap DE to align with EN
+            const temp = de[0];
+            de[0] = de[1];
+            de[1] = temp;
+        }
+
         finalOutput.push({ en, de });
     } else {
         missingOutput.push({ index: i, en: en });
