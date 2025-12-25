@@ -51,6 +51,8 @@ export const getNextPhase = (current: GamePhase): { phase: GamePhase; incrementR
         case 'NIGHT':
             return { phase: 'DAY', incrementRound: false };
         case 'DAY':
+            return { phase: 'VOTING', incrementRound: false };
+        case 'VOTING':
             return { phase: 'NIGHT', incrementRound: true }; // New round
         default:
             return { phase: current, incrementRound: false };

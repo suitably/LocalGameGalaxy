@@ -4,9 +4,11 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import TranslateIcon from '@mui/icons-material/Translate';
 import HomeIcon from '@mui/icons-material/Home';
 import { useTranslation } from 'react-i18next';
+import { useTitle } from '../../context/TitleContext';
 
 export const MainLayout: React.FC = () => {
     const { t, i18n } = useTranslation();
+    const { pageTitle } = useTitle();
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 
@@ -38,7 +40,7 @@ export const MainLayout: React.FC = () => {
                         <HomeIcon />
                     </IconButton>
                     <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                        {t('app.title')}
+                        {pageTitle || t('app.title')}
                     </Typography>
                     <div>
                         <IconButton

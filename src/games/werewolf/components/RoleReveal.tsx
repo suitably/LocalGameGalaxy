@@ -29,7 +29,7 @@ export const RoleReveal: React.FC<RoleRevealProps> = ({ players, onComplete }) =
     return (
         <Box maxWidth="sm" mx="auto" textAlign="center" mt={4}>
             <Typography variant="h5" gutterBottom>
-                {isRevealed ? t('games.werewolf.role_reveal') : `Pass to ${currentPlayer.name}`}
+                {isRevealed ? t('games.werewolf.role_reveal') : t('games.werewolf.pass_device_instruction', { name: currentPlayer.name })}
             </Typography>
 
             <Paper
@@ -52,10 +52,10 @@ export const RoleReveal: React.FC<RoleRevealProps> = ({ players, onComplete }) =
                 ) : (
                     <Box>
                         <Typography variant="h4" color="secondary" gutterBottom>
-                            {currentPlayer.role}
+                            {t(`games.werewolf.roles.${currentPlayer.role}`)}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            {currentPlayer.role === 'WEREWOLF' ? 'Kill the villagers.' : 'Find the werewolves.'}
+                            {t(`games.werewolf.role_descriptions.${currentPlayer.role}`)}
                         </Typography>
                     </Box>
                 )}

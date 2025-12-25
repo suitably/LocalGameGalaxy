@@ -34,7 +34,7 @@ export const DayPhase: React.FC<DayPhaseProps> = ({ players, round, onNextPhase,
     return (
         <Box maxWidth="sm" mx="auto" textAlign="center" mt={4}>
             <WbSunnyIcon sx={{ fontSize: 60, color: 'orange', mb: 2 }} />
-            <Typography variant="h4" gutterBottom>Day {round}</Typography>
+            <Typography variant="h4" gutterBottom>{t('games.werewolf.narrator.day_label', { round })}</Typography>
 
             <Paper sx={{ p: 3, mb: 3 }}>
                 <Typography variant="h6" gutterBottom>
@@ -55,7 +55,7 @@ export const DayPhase: React.FC<DayPhaseProps> = ({ players, round, onNextPhase,
                 onClick={onNextPhase}
                 sx={{ mt: 2 }}
             >
-                {t('games.werewolf.start_vote')} (Next Night)
+                {t('games.werewolf.ui.start_vote')}
             </Button>
         </Box >
     );

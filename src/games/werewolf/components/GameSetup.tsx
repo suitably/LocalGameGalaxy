@@ -44,13 +44,13 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
                 <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                     <TextField
                         fullWidth
-                        label="Player Name"
+                        label={t('games.werewolf.ui.player_name')}
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
                     />
                     <Button variant="contained" onClick={handleAdd} startIcon={<PersonAddIcon />}>
-                        Add
+                        {t('games.werewolf.ui.add')}
                     </Button>
                 </Box>
 
@@ -69,7 +69,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
                     ))}
                     {players.length === 0 && (
                         <Typography variant="body2" color="text.secondary" align="center">
-                            Add at least 3 players to start.
+                            {t('games.werewolf.ui.add_players_hint')}
                         </Typography>
                     )}
                 </List>

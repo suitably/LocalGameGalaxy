@@ -60,25 +60,25 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, round, isNarrat
 
     if (subPhase === 'END') {
         handleEndNight(); // Auto transition
-        return <Box sx={{ textAlign: 'center', mt: 10 }}><Typography>Morning is coming...</Typography></Box>;
+        return <Box sx={{ textAlign: 'center', mt: 10 }}><Typography>{t('games.werewolf.narrator.morning_coming')}</Typography></Box>;
     }
 
     // --- NARRATOR DASHBOARD ---
     if (isHumanNarrator) {
         return (
             <Box maxWidth="sm" mx="auto" textAlign="center" mt={4}>
-                <Typography variant="h4" gutterBottom>Narrator Dashboard (Night {round})</Typography>
+                <Typography variant="h4" gutterBottom>{t('games.werewolf.narrator.dashboard_title', { round })}</Typography>
                 <Paper sx={{ p: 3, mb: 3, bgcolor: 'grey.900', color: 'common.white' }}>
                     <Typography variant="h6" gutterBottom color="secondary">
-                        Wait for Werewolves to decide...
+                        {t('games.werewolf.narrator.wait_for_werewolves')}
                     </Typography>
 
                     <Box sx={{ mb: 3 }}>
-                        <Typography variant="subtitle2">Werewolves:</Typography>
+                        <Typography variant="subtitle2">{t('games.werewolf.narrator.werewolves_label')}</Typography>
                         <Typography variant="body1">{werewolves.map(w => w.name).join(', ')}</Typography>
                     </Box>
 
-                    <Typography variant="subtitle2" gutterBottom>Select Victim:</Typography>
+                    <Typography variant="subtitle2" gutterBottom>{t('games.werewolf.narrator.select_victim')}</Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                         {alivePlayers.map(p => (
                             <Button
@@ -95,7 +95,7 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, round, isNarrat
                 </Paper>
 
                 <Button variant="outlined" fullWidth onClick={() => setSubPhase('END')}>
-                    Skip to Morning
+                    {t('games.werewolf.narrator.skip_to_morning')}
                 </Button>
             </Box>
         );
@@ -117,7 +117,7 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, round, isNarrat
             }}
         >
             <Typography variant="h4" gutterBottom sx={{ color: 'grey.800', opacity: 0.3 }}>
-                Night {round}
+                {t('games.werewolf.narrator.night_label', { round })}
             </Typography>
 
             {subPhase === 'SLEEP' && (

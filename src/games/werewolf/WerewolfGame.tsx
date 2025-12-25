@@ -1,18 +1,23 @@
 import React, { useReducer, useEffect, useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import { gameReducer } from './logic/gameReducer';
 import { INITIAL_STATE } from './logic/types';
 import { GameSetup } from './components/GameSetup';
 import { RoleReveal } from './components/RoleReveal';
 import { NightPhase } from './components/NightPhase';
 import { DayPhase } from './components/DayPhase';
+import { VotingPhase } from './components/VotingPhase';
 import { GameOver } from './components/GameOver';
 import { ContinueGameDialog } from './components/ContinueGameDialog';
 import { useGameStatePersistence } from './hooks/useGameStatePersistence';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '../../context/TitleContext';
 
 export const WerewolfGame: React.FC = () => {
     const { t } = useTranslation();
+
+    // Set the game title in the header
+    usePageTitle(t('games.werewolf.title'));
     const { saveGameState, loadGameState, getSavedGameInfo, clearSavedGame, hasSavedGame } = useGameStatePersistence();
 
     const [showContinueDialog, setShowContinueDialog] = useState(false);
@@ -61,10 +66,6 @@ export const WerewolfGame: React.FC = () => {
                 onNewGame={handleNewGame}
             />
 
-            <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', mb: 4 }}>
-                {t('games.werewolf.title')}
-            </Typography>
-
             {gameState.phase === 'SETUP' && (
                 <GameSetup
                     players={gameState.players}
@@ -97,6 +98,15 @@ export const WerewolfGame: React.FC = () => {
                     round={gameState.round}
                     onNextPhase={() => dispatch({ type: 'NEXT_PHASE' })}
                     removedPlayerIds={gameState.players.filter((p: { isAlive: boolean; id: string }) => !p.isAlive && gameState.nightActionLog.includes(p.id)).map((p: { id: string }) => p.id)} // Mock logic for now
+                />
+            )}
+
+            {gameState.phase === 'VOTING' && (
+                <VotingPhase
+                    players={gameState.players}
+                    round={gameState.round}
+                    onVote={(playerId) => dispatch({ type: 'KILL_PLAYER', id: playerId })}
+                    onSkipVote={() => dispatch({ type: 'NEXT_PHASE' })}
                 />
             )}
 
