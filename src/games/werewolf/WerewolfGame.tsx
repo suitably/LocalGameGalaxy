@@ -71,7 +71,7 @@ export const WerewolfGame: React.FC = () => {
                     players={gameState.players}
                     onAddPlayer={(name) => dispatch({ type: 'ADD_PLAYER', name })}
                     onRemovePlayer={(id) => dispatch({ type: 'REMOVE_PLAYER', id })}
-                    onStartGame={(roles, isNarratorMode) => dispatch({ type: 'START_GAME', roles, isNarratorMode })}
+                    onStartGame={(roles) => dispatch({ type: 'START_GAME', roles })}
                 />
             )}
 
@@ -86,7 +86,6 @@ export const WerewolfGame: React.FC = () => {
                 <NightPhase
                     players={gameState.players}
                     round={gameState.round}
-                    isNarratorMode={gameState.isNarratorMode}
                     onNextPhase={() => dispatch({ type: 'NEXT_PHASE' })}
                     onNightAction={(targetId) => dispatch({ type: 'KILL_PLAYER', id: targetId })}
                 />

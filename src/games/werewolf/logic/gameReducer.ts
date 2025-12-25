@@ -4,7 +4,7 @@ import type { GameState, Role } from './types';
 export type Action =
     | { type: 'ADD_PLAYER'; name: string }
     | { type: 'REMOVE_PLAYER'; id: string }
-    | { type: 'START_GAME'; roles: Role[]; isNarratorMode: boolean } // shuffle and assign
+    | { type: 'START_GAME'; roles: Role[] } // shuffle and assign
     | { type: 'NEXT_PHASE' }
     | { type: 'KILL_PLAYER'; id: string }
     | { type: 'RESET_GAME' }
@@ -34,7 +34,7 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
             };
 
         case 'START_GAME': {
-            const { roles, isNarratorMode } = action;
+            const { roles } = action;
             const shuffledRoles = [...roles].sort(() => Math.random() - 0.5);
 
             // Assign roles to ALL players
@@ -49,7 +49,6 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                 players: newPlayers,
                 phase: 'ROLE_REVEAL',
                 round: 1,
-                isNarratorMode,
                 currentTurnPlayerId: newPlayers[0].id // Start with first player for reveal
             };
         }

@@ -25,7 +25,6 @@ export interface GameState {
     currentTurnPlayerId: PlayerId | null; // For Pass & Play Role Reveal or Night actions
     nightActionLog: string[]; // Who did what during night
     winner: 'VILLAGERS' | 'WEREWOLVES' | null;
-    isNarratorMode: boolean; // true means a human is narrating (Dashboard mode)
 }
 
 export const INITIAL_STATE: GameState = {
@@ -35,7 +34,6 @@ export const INITIAL_STATE: GameState = {
     currentTurnPlayerId: null,
     nightActionLog: [],
     winner: null,
-    isNarratorMode: false,
 };
 
 // Modular phase configuration - easily change game flow order here
