@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, TextField, Button, List, ListItem, ListItemText, IconButton, Paper, Typography } from '@mui/material';
+import { Box, TextField, Button, List, ListItem, ListItemText, IconButton, Paper, Typography, Switch, FormControlLabel } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -10,12 +10,13 @@ interface GameSetupProps {
     players: Player[];
     onAddPlayer: (name: string) => void;
     onRemovePlayer: (id: string) => void;
-    onStartGame: (roles: Role[]) => void;
+    onStartGame: (roles: Role[], isNarratorMode: boolean) => void;
 }
 
 export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRemovePlayer, onStartGame }) => {
     const { t } = useTranslation();
     const [newName, setNewName] = useState('');
+    const [useNarrator, setUseNarrator] = useState(true);
 
     const handleAdd = () => {
         if (newName.trim()) {
@@ -26,12 +27,13 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
 
     const handleStart = () => {
         // MVP: Minimal roles for testing. 1 Wolf, rest Villagers.
-        // In real app, we would have role selection UI
         const roles: Role[] = ['WEREWOLF'];
-        const villagerCount = players.length - 1;
+        const playerCountForRoles = players.length; // Everyone gets a role now
+        const villagerCount = playerCountForRoles - 1;
+
         for (let i = 0; i < villagerCount; i++) roles.push('VILLAGER');
 
-        onStartGame(roles);
+        onStartGame(roles, useNarrator);
     };
 
     return (
@@ -52,7 +54,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
                     </Button>
                 </Box>
 
-                <List dense>
+                <List dense sx={{ mb: 2 }}>
                     {players.map(player => (
                         <ListItem
                             key={player.id}
@@ -71,6 +73,13 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
                         </Typography>
                     )}
                 </List>
+
+                <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 2, mt: 2 }}>
+                    <FormControlLabel
+                        control={<Switch checked={useNarrator} onChange={(e) => setUseNarrator(e.target.checked)} />}
+                        label={t('games.werewolf.ui.narrator_mode')}
+                    />
+                </Box>
             </Paper>
 
             <Button

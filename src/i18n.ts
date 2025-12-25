@@ -28,8 +28,26 @@ const resources = {
                     "ui": {
                         "died_last_night": "Died last night:",
                         "peaceful_night": "Peaceful night.",
-                        "start_vote": "Start Voting / End Day"
-                    }
+                        "start_vote": "Start Voting / End Day",
+                        "narrator_mode": "Dedicated Narrator",
+                        "narrator_select": "Who is the Narrator?",
+                        "tap_to_act": "TAP TO ACT",
+                        "hide_screen": "Hide Screen",
+                        "pass_to_werewolf": "Pass phone to any Werewolf or place in middle."
+                    },
+                    "continue": {
+                        "title": "Continue Game?",
+                        "message": "A saved game was found. Would you like to continue or start a new game?",
+                        "round": "Round {{round}}",
+                        "phase": "Phase: {{phase}}",
+                        "players": "{{count}} players",
+                        "continue_game": "Continue",
+                        "new_game": "New Game"
+                    },
+                    "game_over": "Game Over",
+                    "werewolves_win": "The Werewolves Win!",
+                    "villagers_win": "The Villagers Win!",
+                    "play_again": "Play Again"
                 }
             },
             "common": {
@@ -66,8 +84,26 @@ const resources = {
                     "ui": {
                         "died_last_night": "Letzte Nacht gestorben:",
                         "peaceful_night": "Eine friedliche Nacht.",
-                        "start_vote": "Abstimmung starten / Tag beenden"
-                    }
+                        "start_vote": "Abstimmung starten / Tag beenden",
+                        "narrator_mode": "Menschlicher Erzähler",
+                        "narrator_select": "Wer ist der Erzähler?",
+                        "tap_to_act": "ANTIPPEN",
+                        "hide_screen": "Verstecken",
+                        "pass_to_werewolf": "Handy an einen Werwolf geben oder in die Mitte legen."
+                    },
+                    "continue": {
+                        "title": "Spiel fortsetzen?",
+                        "message": "Ein gespeichertes Spiel wurde gefunden. Möchtest du fortfahren oder ein neues Spiel starten?",
+                        "round": "Runde {{round}}",
+                        "phase": "Phase: {{phase}}",
+                        "players": "{{count}} Spieler",
+                        "continue_game": "Fortsetzen",
+                        "new_game": "Neues Spiel"
+                    },
+                    "game_over": "Spiel vorbei",
+                    "werewolves_win": "Die Werwölfe gewinnen!",
+                    "villagers_win": "Die Dorfbewohner gewinnen!",
+                    "play_again": "Nochmal spielen"
                 }
             },
             "common": {

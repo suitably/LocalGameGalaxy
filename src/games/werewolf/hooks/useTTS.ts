@@ -6,6 +6,10 @@ export const useTTS = () => {
     const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
 
     useEffect(() => {
+        if (typeof window === 'undefined' || !window.speechSynthesis) {
+            return;
+        }
+
         const loadVoices = () => {
             const availableVoices = window.speechSynthesis.getVoices();
             setVoices(availableVoices);
@@ -15,12 +19,14 @@ export const useTTS = () => {
         window.speechSynthesis.onvoiceschanged = loadVoices;
 
         return () => {
-            window.speechSynthesis.onvoiceschanged = null;
+            if (window.speechSynthesis) {
+                window.speechSynthesis.onvoiceschanged = null;
+            }
         };
     }, []);
 
     const speak = useCallback((text: string) => {
-        if (!text) return;
+        if (!text || typeof window === 'undefined' || !window.speechSynthesis) return;
 
         // stop any current speech
         window.speechSynthesis.cancel();
@@ -42,7 +48,9 @@ export const useTTS = () => {
     }, [i18n.language, voices]);
 
     const cancel = useCallback(() => {
-        window.speechSynthesis.cancel();
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
     }, []);
 
     return { speak, cancel };
