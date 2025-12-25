@@ -311,6 +311,12 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                     }
                     break;
                 }
+                case 'CURSE':
+                    // Black Cat curses a player - they get an extra vote against them
+                    newPlayers = newPlayers.map(p =>
+                        p.id === nightAction.targetId ? { ...p, powerState: { ...p.powerState, isCursed: true } } : p
+                    );
+                    break;
             }
 
             return {

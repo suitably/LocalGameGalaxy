@@ -261,55 +261,55 @@ export const WordEditor: React.FC<WordEditorProps> = ({
                             </Button>
                         </Box>
 
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                             {editingCategory?.words.map((word, idx) => (
-                                <Paper key={idx} sx={{ p: 2, bgcolor: 'background.default', position: 'relative' }}>
+                                <Box
+                                    key={idx}
+                                    sx={{
+                                        display: 'flex',
+                                        gap: 1,
+                                        alignItems: 'center',
+                                        p: 1,
+                                        bgcolor: 'background.default',
+                                        borderRadius: 1
+                                    }}
+                                >
+                                    <TextField
+                                        label={t('games.imposter.editor.word_en')}
+                                        value={word.en}
+                                        onChange={e => handleUpdateWord(idx, 'en', e.target.value)}
+                                        size="small"
+                                        sx={{ flex: 1, minWidth: 0 }}
+                                    />
+                                    <TextField
+                                        label={t('games.imposter.editor.word_de')}
+                                        value={word.de}
+                                        onChange={e => handleUpdateWord(idx, 'de', e.target.value)}
+                                        size="small"
+                                        sx={{ flex: 1, minWidth: 0 }}
+                                    />
+                                    <TextField
+                                        label={t('games.imposter.editor.hint_en')}
+                                        value={word.hint.en}
+                                        onChange={e => handleUpdateWord(idx, 'hint', e.target.value, 'en')}
+                                        size="small"
+                                        sx={{ flex: 1, minWidth: 0 }}
+                                    />
+                                    <TextField
+                                        label={t('games.imposter.editor.hint_de')}
+                                        value={word.hint.de}
+                                        onChange={e => handleUpdateWord(idx, 'hint', e.target.value, 'de')}
+                                        size="small"
+                                        sx={{ flex: 1, minWidth: 0 }}
+                                    />
                                     <IconButton
                                         size="small"
                                         onClick={() => handleRemoveWord(idx)}
-                                        sx={{ position: 'absolute', top: 8, right: 8 }}
+                                        color="error"
                                     >
                                         <DeleteIcon fontSize="small" />
                                     </IconButton>
-                                    <Grid container spacing={2} sx={{ mt: 1 }}>
-                                        <Grid item xs={6}>
-                                            <TextField
-                                                label={t('games.imposter.editor.word_en')}
-                                                value={word.en}
-                                                onChange={e => handleUpdateWord(idx, 'en', e.target.value)}
-                                                fullWidth
-                                                size="small"
-                                            />
-                                        </Grid>
-                                        <Grid item xs={6}>
-                                            <TextField
-                                                label={t('games.imposter.editor.word_de')}
-                                                value={word.de}
-                                                onChange={e => handleUpdateWord(idx, 'de', e.target.value)}
-                                                fullWidth
-                                                size="small"
-                                            />
-                                        </Grid>
-                                        <Grid item xs={6}>
-                                            <TextField
-                                                label={t('games.imposter.editor.hint_en')}
-                                                value={word.hint.en}
-                                                onChange={e => handleUpdateWord(idx, 'hint', e.target.value, 'en')}
-                                                fullWidth
-                                                size="small"
-                                            />
-                                        </Grid>
-                                        <Grid item xs={6}>
-                                            <TextField
-                                                label={t('games.imposter.editor.hint_de')}
-                                                value={word.hint.de}
-                                                onChange={e => handleUpdateWord(idx, 'hint', e.target.value, 'de')}
-                                                fullWidth
-                                                size="small"
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                </Paper>
+                                </Box>
                             ))}
                         </Box>
                     </Box>
@@ -323,20 +323,4 @@ export const WordEditor: React.FC<WordEditorProps> = ({
             </Dialog>
         </Box>
     );
-};
-
-// Simple Grid component since Material UI Grid v1 is slightly different from what I might expect in some versions
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const Grid: React.FC<{ container?: boolean; item?: boolean; spacing?: number; xs?: number; children: React.ReactNode; sx?: any }> = ({
-    container,
-    item: _item,
-    spacing,
-    xs,
-    children,
-    sx
-}) => {
-    if (container) {
-        return <Box display="flex" flexWrap="wrap" gap={spacing ? spacing * 8 : 0} sx={sx}>{children}</Box>;
-    }
-    return <Box sx={{ flexBasis: xs ? `${(xs / 12) * 100}%` : 'auto', maxWidth: xs ? `${(xs / 12) * 100}%` : 'none', ...sx }}>{children}</Box>;
 };

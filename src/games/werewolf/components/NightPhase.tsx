@@ -12,6 +12,7 @@ import { DetectiveView } from './roles/DetectiveView';
 import { GuardianView } from './roles/GuardianView';
 import { BlackWerewolfView } from './roles/BlackWerewolfView';
 import { WhiteWerewolfView } from './roles/WhiteWerewolfView';
+import { BlackCatView } from './roles/BlackCatView';
 import { EasterBunnyView } from './roles/EasterBunnyView';
 import { WolfdogView } from './roles/WolfdogView';
 import { RipperView } from './roles/RipperView';
@@ -33,7 +34,7 @@ interface NightPhaseProps {
 
 const NIGHT_ROLE_ORDER: Role[] = [
     'CUPID', 'THIEF', 'WOLFDOG', 'GUARDIAN', 'WEREWOLF', 'BLACK_WEREWOLF',
-    'WHITE_WEREWOLF', 'WITCH', 'SEER', 'DETECTIVE', 'EASTER_BUNNY',
+    'WHITE_WEREWOLF', 'WITCH', 'HUNTER', 'SEER', 'DETECTIVE', 'BLACK_CAT', 'EASTER_BUNNY',
     'PYROMANIAC', 'RIPPER', 'SURVIVOR'
 ];
 
@@ -232,6 +233,7 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
             case 'SURVIVOR': return <SurvivorView players={players} onAction={handleAction} onSkip={nextRole} powerState={rolePlayer?.powerState} instruction={customInstruction} />;
             case 'PYROMANIAC': return <PyromaniacView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
             case 'THIEF': return <ThiefView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
+            case 'BLACK_CAT': return <BlackCatView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
             default: return <Box textAlign="center" mt={10}><Button onClick={nextRole}>Skip {activeRole}</Button></Box>;
         }
     };

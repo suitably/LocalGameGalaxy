@@ -59,6 +59,7 @@ export interface PlayerPowerState {
     isDragonInfected?: boolean; // Wait, Black Werewolf infects, let's call it isInfected
     isInfected?: boolean;
     isDoubleVoted?: boolean;
+    isCursed?: boolean;
     chosenCamp?: 'VILLAGER' | 'WEREWOLF'; // For Wolfdog
     hasEGG?: boolean; // Wait, hasEgg was already there
     eggCount?: number;
@@ -84,6 +85,7 @@ export type NightAction =
     | { type: 'CHOOSE_CAMP'; camp: 'VILLAGER' | 'WEREWOLF' }
     | { type: 'STEAL_ROLE'; targetId: string }
     | { type: 'PEEK' }
+    | { type: 'CURSE'; targetId: string }
     | { type: 'NONE' };
 
 export interface NightDecision {

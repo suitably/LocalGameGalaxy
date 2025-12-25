@@ -91,10 +91,12 @@ export const DEFAULT_ROLES: RoleDefinition[] = [
     {
         id: 'BLACK_CAT',
         name: 'Black Cat',
-        description: 'If killed by werewolves, one of them dies.',
+        description: 'Each night, curse a player to give them an extra vote against them.',
         icon: '🐈‍⬛',
         alignment: 'VILLAGER',
-        abilities: [], // Passive
+        abilities: [
+            { type: 'CURSE', timing: 'EVERY_NIGHT', targetCount: 1 }
+        ],
         isCustom: false
     },
     {

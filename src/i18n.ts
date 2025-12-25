@@ -91,7 +91,8 @@ const resources = {
                         "give_egg": "{{role}} gave eggs to {{targets}}.",
                         "choose_camp": "{{role}} chose the {{camp}} camp.",
                         "steal_role": "{{role}} stole the identity of {{target}}.",
-                        "peek": "{{role}} peeked during the night."
+                        "peek": "{{role}} peeked during the night.",
+                        "curse": "{{role}} cursed {{target}}."
                     },
                     "ui": {
                         "died_last_night": "Died last night:",
@@ -163,6 +164,9 @@ const resources = {
                         },
                         "little_girl": {
                             "instruction": "A brave child with curious eyes. During the night, while the werewolves choose their victim, you can peek and try to identify them. But beware: if they catch you looking, they will surely find you!"
+                        },
+                        "black_cat": {
+                            "instruction": "The night calls for misfortune. Choose a player to curse. Tomorrow, an invisible force will push the village to vote against them."
                         },
                         "lovers": {
                             "label": "Lovers"
@@ -395,7 +399,8 @@ const resources = {
                         "give_egg": "{{role}} hat Eier an {{targets}} verteilt.",
                         "choose_camp": "{{role}} hat sich für das Lager der {{camp}} entschieden.",
                         "steal_role": "{{role}} hat die Identität von {{target}} gestohlen.",
-                        "peek": "{{role}} hat in der Nacht geblinzelt."
+                        "peek": "{{role}} hat in der Nacht geblinzelt.",
+                        "curse": "{{role}} hat {{target}} verflucht."
                     },
                     "ui": {
                         "died_last_night": "Letzte Nacht gestorben:",
@@ -467,6 +472,9 @@ const resources = {
                         },
                         "little_girl": {
                             "instruction": "Ein mutiges Kind mit neugierigen Augen. In der Nacht, während die Werwölfe ihr Opfer wählen, darfst du blinzeln und versuchen, sie zu identifizieren. Aber Vorsicht: Wenn sie dich beim Gucken erwischen, werden sie dich sicher finden!"
+                        },
+                        "black_cat": {
+                            "instruction": "Die Nacht ruft nach Unglück. Wähle einen Spieler zum Verfluchen. Morgen wird eine unsichtbare Kraft das Dorf dazu treiben, gegen ihn zu stimmen."
                         },
                         "lovers": {
                             "label": "Liebespaar"
