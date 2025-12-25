@@ -3,6 +3,7 @@ import { Typography, Box, Card, CardContent, CardActionArea } from '@mui/materia
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 
 export const Hub: React.FC = () => {
     const { t } = useTranslation();
@@ -24,6 +25,21 @@ export const Hub: React.FC = () => {
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
                                     {t('games.werewolf.description')}
+                                </Typography>
+                            </CardContent>
+                        </CardActionArea>
+                    </Card>
+                </Box>
+                <Box sx={{ width: { xs: '100%', sm: '50%' } }}>
+                    <Card>
+                        <CardActionArea onClick={() => navigate('/games/imposter')}>
+                            <CardContent sx={{ textAlign: 'center', py: 5 }}>
+                                <PersonSearchIcon sx={{ fontSize: 60, mb: 2, color: 'primary.main' }} />
+                                <Typography variant="h5" component="div">
+                                    {t('games.imposter.title')}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    {t('games.imposter.description')}
                                 </Typography>
                             </CardContent>
                         </CardActionArea>

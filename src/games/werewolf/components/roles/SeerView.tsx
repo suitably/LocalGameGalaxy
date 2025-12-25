@@ -25,7 +25,7 @@ export const SeerView: React.FC<RoleViewProps> = ({ players, onAction, onSkip, i
                     <Typography variant="h6" color="primary">{t(`games.werewolf.roles.${revealedPlayer.role}`)}</Typography>
                     <Typography variant="body2">{t(`games.werewolf.role_descriptions.${revealedPlayer.role}`)}</Typography>
                 </Box>
-                <Button sx={{ mt: 6 }} variant="contained" size="large" fullWidth onClick={() => onAction({ type: 'NONE' })}>{t('common.next')}</Button>
+                <Button sx={{ mt: 6 }} variant="contained" size="large" fullWidth onClick={() => onAction({ type: 'CHECK_ROLE', targetId: revealedPlayer.id })}>{t('common.next')}</Button>
             </Box>
         );
     }

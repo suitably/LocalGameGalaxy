@@ -10,6 +10,7 @@ All project documentation, plans, and tracking files are stored in the `docs` di
 - **Task Tracking**: Stored in `docs/tasks` [ID: DOCS-002](docs/tasks/00_SUMMARY.md)
 - **Verification & Walkthroughs**: Stored in `docs/verification` [ID: DOCS-003](docs/verification/00_SUMMARY.md)
 - **Standard Workflows**: Stored in `docs/workflows` [ID: DOCS-004](docs/workflows/00_SUMMARY.md)
+- **Technical Architecture**: Stored in `docs/tech` [ID: DOCS-005](docs/tech/00_SUMMARY.md). `architecture.md` is the **Single Source of Truth** for system design.
 
 ## 2. The Agent Workflow
 
@@ -43,7 +44,8 @@ Agents must follow this cyclical process for every significant task:
 
 1.  **Code**: Follow the implementation plan.
 2.  **Refine**: If you discover new requirements, update the *Plan* first, then the *Code*.
-3.  **Document**: Update `AGENTS.md` or other workflows if you change how the system works.
+3.  **Update Architecture**: If you change the system structure, you **MUST** update `docs/tech/architecture.md`.
+4.  **Document**: Update `AGENTS.md` or other workflows if you change how the system works.
 
 ### Phase 4: Verification
 **Goal**: Prove correctness.

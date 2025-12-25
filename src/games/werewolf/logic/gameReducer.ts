@@ -2,6 +2,7 @@ import { INITIAL_STATE, getNextPhase } from './types';
 import type { GameState, Role, Action } from './types';
 
 import { isWerewolf, getDeathCascade } from './utils';
+import { DEFAULT_ROLES } from './defaultRoles';
 
 
 export const gameReducer = (state: GameState, action: Action): GameState => {
@@ -26,6 +27,12 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
             return {
                 ...state,
                 players: state.players.filter(p => p.id !== action.id)
+            };
+
+        case 'CLEAR_ALL_PLAYERS':
+            return {
+                ...state,
+                players: []
             };
 
         case 'START_GAME': {
@@ -69,24 +76,38 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
         case 'NEXT_PHASE': {
             const { phase, incrementRound } = getNextPhase(state.phase);
             let newPlayers = state.players;
+            let victims: string[] = [];
 
             // Process deaths from night action log when transitioning to day
             if (phase === 'DAY') {
-                const victims = getDeathCascade(state.nightActionLog, state.players);
+                victims = getDeathCascade(state.nightActionLog, state.players);
                 newPlayers = state.players.map(p =>
                     victims.includes(p.id) ? { ...p, isAlive: false } : p
                 );
                 // Update log to include cascade victims
                 state.nightActionLog = victims;
+
+                // Clear temporary night flags
+                newPlayers = newPlayers.map(p => ({
+                    ...p,
+                    powerState: {
+                        ...p.powerState,
+                        isProtected: false,
+                        isDeadSoon: false
+                    }
+                }));
             }
 
-            return {
+            const newState = {
                 ...state,
                 players: newPlayers,
                 phase,
                 round: incrementRound ? state.round + 1 : state.round,
-                nightActionLog: phase === 'NIGHT' ? [] : state.nightActionLog // Clear log at start of night
+                nightActionLog: phase === 'NIGHT' ? [] : state.nightActionLog, // Clear log at start of night
+                nightDecisions: phase === 'NIGHT' ? [] : state.nightDecisions // Clear decisions at start of night
             };
+
+            return phase === 'DAY' ? checkHunterDeath(newState, victims) : newState;
         }
 
         case 'KILL_PLAYER': {
@@ -98,9 +119,10 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
             );
 
             // Check win conditions
+            const allRoles = [...DEFAULT_ROLES, ...state.customRoles];
             const alivePlayers = newPlayers.filter(p => p.isAlive);
-            const aliveWerewolves = alivePlayers.filter(p => isWerewolf(p)).length;
-            const aliveVillagers = alivePlayers.filter(p => !isWerewolf(p)).length;
+            const aliveWerewolves = alivePlayers.filter(p => isWerewolf(p, allRoles)).length;
+            const aliveVillagers = alivePlayers.filter(p => !isWerewolf(p, allRoles)).length;
 
             let winner: 'VILLAGERS' | 'WEREWOLVES' | null = null;
             if (aliveWerewolves === 0) {
@@ -109,26 +131,26 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                 winner = 'WEREWOLVES';
             }
 
-            // If someone won, go to GAME_OVER
             if (winner) {
                 return {
                     ...state,
                     players: newPlayers,
-                    nightActionLog: [...(state.nightActionLog || []), ...victims].filter((v, i, a) => a.indexOf(v) === i), // Add all victims to log, unique
+                    nightActionLog: [...(state.nightActionLog || []), ...victims].filter((v, i, a) => a.indexOf(v) === i),
                     phase: 'GAME_OVER',
                     winner
                 };
             }
 
-            // Otherwise continue to next phase
             const { phase, incrementRound } = getNextPhase(state.phase);
-            return {
+            const finalState = {
                 ...state,
                 players: newPlayers,
                 nightActionLog: [...(state.nightActionLog || []), ...victims].filter((v, i, a) => a.indexOf(v) === i),
                 phase,
                 round: incrementRound ? state.round + 1 : state.round
             };
+
+            return checkHunterDeath(finalState, victims);
         }
 
         case 'NIGHT_ACTION': {
@@ -140,6 +162,12 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                 case 'KILL':
                     // Add to night action log to be processed in morning
                     if (nightAction.targetId) {
+                        const targetPlayer = state.players.find(p => p.id === nightAction.targetId);
+                        if (targetPlayer?.powerState?.isProtected) {
+                            // Target is protected, kill fails
+                            break;
+                        }
+
                         newNightActionLog.push(nightAction.targetId);
                         // Mark as dead soon for witch to see
                         newPlayers = newPlayers.map(p =>
@@ -288,8 +316,37 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
             return {
                 ...state,
                 players: newPlayers,
-                nightActionLog: newNightActionLog
+                nightActionLog: newNightActionLog,
+                nightDecisions: [...state.nightDecisions, { role, action: nightAction }]
             };
+        }
+
+        case 'HUNTER_SHOT': {
+            const hunterId = state.pendingHunterIds[0];
+            const victimId = action.targetId;
+            const newPending = state.pendingHunterIds.slice(1);
+
+            // Kill the victim and mark hunter as having shot
+            const victims = getDeathCascade([victimId], state.players);
+            const newPlayers = state.players.map(p => {
+                if (p.id === hunterId) {
+                    return { ...p, powerState: { ...p.powerState, hasShot: true } };
+                }
+                if (victims.includes(p.id)) {
+                    return { ...p, isAlive: false };
+                }
+                return p;
+            });
+
+            const nextPhase = newPending.length > 0 ? 'HUNTER_SHOT' : (state.nextPhaseAfterShot || 'DAY');
+
+            return checkHunterDeath({
+                ...state,
+                players: newPlayers,
+                pendingHunterIds: newPending,
+                phase: nextPhase,
+                nextPhaseAfterShot: newPending.length > 0 ? state.nextPhaseAfterShot : null
+            }, victims);
         }
 
         case 'RESET_GAME':
@@ -298,7 +355,8 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
         case 'RESTORE_STATE':
             return {
                 ...action.state,
-                customRoles: action.state.customRoles || []
+                customRoles: action.state.customRoles || [],
+                nightDecisions: action.state.nightDecisions || []
             };
 
         case 'SAVE_CUSTOM_ROLES':
@@ -310,4 +368,21 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
         default:
             return state;
     }
+};
+
+const checkHunterDeath = (state: GameState, newVictimIds: string[]): GameState => {
+    const newlyDeadHunters = state.players.filter(p =>
+        newVictimIds.includes(p.id) &&
+        p.role === 'HUNTER' &&
+        !p.powerState.hasShot
+    ).map(p => p.id);
+
+    if (newlyDeadHunters.length === 0) return state;
+
+    return {
+        ...state,
+        phase: 'HUNTER_SHOT',
+        pendingHunterIds: [...state.pendingHunterIds, ...newlyDeadHunters],
+        nextPhaseAfterShot: state.phase === 'HUNTER_SHOT' ? state.nextPhaseAfterShot : state.phase
+    };
 };

@@ -9,10 +9,13 @@ import { NightPhase } from './components/NightPhase';
 import { DayPhase } from './components/DayPhase';
 import { VotingPhase } from './components/VotingPhase';
 import { GameOver } from './components/GameOver';
+import { HunterShotView } from './components/HunterShotView';
 import { ContinueGameDialog } from './components/ContinueGameDialog';
 import { useGameStatePersistence } from './hooks/useGameStatePersistence';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
+
+const STORAGE_KEY_SETUP_PLAYERS = 'werewolf-setup-players';
 
 export const WerewolfGame: React.FC = () => {
     const { t } = useTranslation();
@@ -23,7 +26,18 @@ export const WerewolfGame: React.FC = () => {
 
     const [showContinueDialog, setShowContinueDialog] = useState(false);
     const [savedGameInfo, setSavedGameInfo] = useState(getSavedGameInfo());
-    const [gameState, dispatch] = useReducer(gameReducer, INITIAL_STATE);
+
+    // Initialize game state with persisted setup players
+    const [gameState, dispatch] = useReducer(gameReducer, INITIAL_STATE, (initial) => {
+        try {
+            const savedPlayers = localStorage.getItem(STORAGE_KEY_SETUP_PLAYERS);
+            if (savedPlayers) {
+                const players = JSON.parse(savedPlayers);
+                return { ...initial, players };
+            }
+        } catch { }
+        return initial;
+    });
     const [isInitialized, setIsInitialized] = useState(false);
 
     // Check for saved game on mount
@@ -54,6 +68,13 @@ export const WerewolfGame: React.FC = () => {
         }
     }, [gameState, isInitialized, saveGameState]);
 
+    // Persist setup players when in SETUP phase
+    useEffect(() => {
+        if (gameState.phase === 'SETUP') {
+            localStorage.setItem(STORAGE_KEY_SETUP_PLAYERS, JSON.stringify(gameState.players));
+        }
+    }, [gameState.players, gameState.phase]);
+
     const handleContinueGame = () => {
         const savedState = loadGameState();
         if (savedState) {
@@ -67,6 +88,10 @@ export const WerewolfGame: React.FC = () => {
         clearSavedGame();
         setShowContinueDialog(false);
         setIsInitialized(true);
+    };
+
+    const handleClearAllPlayers = () => {
+        dispatch({ type: 'CLEAR_ALL_PLAYERS' });
     };
 
     return (
@@ -84,6 +109,7 @@ export const WerewolfGame: React.FC = () => {
                     customRoles={gameState.customRoles}
                     onAddPlayer={(name) => dispatch({ type: 'ADD_PLAYER', name })}
                     onRemovePlayer={(id) => dispatch({ type: 'REMOVE_PLAYER', id })}
+                    onClearAllPlayers={handleClearAllPlayers}
                     onStartGame={(roles) => dispatch({ type: 'START_GAME', roles })}
                     onSaveCustomRoles={(roles) => {
                         dispatch({ type: 'SAVE_CUSTOM_ROLES', roles });
@@ -114,8 +140,10 @@ export const WerewolfGame: React.FC = () => {
                 <DayPhase
                     players={gameState.players}
                     round={gameState.round}
+                    customRoles={gameState.customRoles}
                     onNextPhase={() => dispatch({ type: 'NEXT_PHASE' })}
                     removedPlayerIds={gameState.players.filter((p: Player) => !p.isAlive && gameState.nightActionLog.includes(p.id)).map((p: Player) => p.id)}
+                    nightDecisions={gameState.nightDecisions}
                 />
             )}
 
@@ -125,6 +153,15 @@ export const WerewolfGame: React.FC = () => {
                     round={gameState.round}
                     onVote={(playerId) => dispatch({ type: 'KILL_PLAYER', id: playerId })}
                     onSkipVote={() => dispatch({ type: 'NEXT_PHASE' })}
+                />
+            )}
+
+            {gameState.phase === 'HUNTER_SHOT' && (
+                <HunterShotView
+                    hunter={gameState.players.find((p: Player) => p.id === gameState.pendingHunterIds[0])!}
+                    players={gameState.players}
+                    onShot={(targetId) => dispatch({ type: 'HUNTER_SHOT', targetId })}
+                    onSkip={() => dispatch({ type: 'HUNTER_SHOT', targetId: '' })}
                 />
             )}
 

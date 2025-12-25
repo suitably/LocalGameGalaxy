@@ -168,9 +168,9 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, defaultRole
     return (
         <Box p={2}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h5">{t('games.werewolf.editor.title', 'Role Editor')}</Typography>
+                <Typography variant="h5">{t('games.werewolf.ui.editor.title', 'Role Editor')}</Typography>
                 <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddRole}>
-                    {t('games.werewolf.editor.add_role', 'Add Role')}
+                    {t('games.werewolf.ui.editor.add_role', 'Add Role')}
                 </Button>
             </Box>
 
@@ -188,16 +188,19 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, defaultRole
                     const defaultDef = defaultRoles.find(d => d.id === role.id);
                     const isModified = isDefaultId && defaultDef && JSON.stringify(role) !== JSON.stringify(defaultDef);
 
+                    const displayName = isDefaultId ? t(`games.werewolf.roles.${role.id}`, role.name) : role.name;
+                    const displayDescription = isDefaultId ? t(`games.werewolf.role_descriptions.${role.id}`, role.description) : role.description;
+
                     return (
                         <ListItem key={role.id} divider>
                             <ListItemText
                                 primary={
                                     <Box display="flex" alignItems="center" gap={1}>
-                                        <Typography>{role.icon} {role.name}</Typography>
+                                        <Typography>{role.icon} {displayName}</Typography>
                                         {isModified && <Chip label={t('common.modified', 'Modified')} size="small" color="primary" variant="outlined" />}
                                     </Box>
                                 }
-                                secondary={role.description}
+                                secondary={displayDescription}
                             />
                             <ListItemSecondaryAction>
                                 <IconButton edge="end" onClick={() => handleEditRole(role)} sx={{ mr: 1 }}>
@@ -221,7 +224,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, defaultRole
                         {customRolesList.length > 0 && (
                             <Paper sx={{ mb: 2 }}>
                                 <Typography variant="h6" sx={{ p: 2, pb: 0 }}>
-                                    {t('games.werewolf.editor.custom_roles', 'Custom Roles')}
+                                    {t('games.werewolf.ui.editor.custom_roles', 'Custom Roles')}
                                 </Typography>
                                 <List sx={{ width: '100%' }}>
                                     {customRolesList.map(renderRoleItem)}
@@ -232,7 +235,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, defaultRole
                         <Accordion defaultExpanded={false}>
                             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                                 <Typography variant="h6">
-                                    {t('games.werewolf.editor.standard_roles', 'Standard Roles')} ({standardRolesList.length})
+                                    {t('games.werewolf.ui.editor.standard_roles', 'Standard Roles')} ({standardRolesList.length})
                                 </Typography>
                             </AccordionSummary>
                             <AccordionDetails sx={{ p: 0 }}>
@@ -248,22 +251,35 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, defaultRole
             <Box mt={3} display="flex" justifyContent="flex-end" gap={2}>
                 <Button onClick={onClose}>{t('common.back')}</Button>
                 <Button variant="contained" color="primary" startIcon={<SaveIcon />} onClick={handleSaveAll}>
-                    {t('common.save', 'Save All')}
+                    {t('common.save_all', 'Save All')}
                 </Button>
             </Box>
 
             <Dialog open={isDialogOpen} onClose={() => setIsDialogOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>{editingRole?.name ? t('games.werewolf.editor.edit_role', 'Edit Role') : t('games.werewolf.editor.new_role', 'New Role')}</DialogTitle>
+                <DialogTitle>{editingRole?.name ? t('games.werewolf.ui.editor.edit_role', 'Edit Role') : t('games.werewolf.ui.editor.new_role', 'New Role')}</DialogTitle>
                 <DialogContent>
                     <Box display="flex" flexDirection="column" gap={2} mt={1}>
                         <TextField
-                            label={t('games.werewolf.ui.player_name')}
+                            label={t('games.werewolf.ui.editor.role_name', 'Role Name')}
                             value={editingRole?.name || ''}
                             onChange={e => setEditingRole(prev => prev ? { ...prev, name: e.target.value } : null)}
                             fullWidth
                         />
+                        <FormControl fullWidth>
+                            <InputLabel>{t('games.werewolf.ui.editor.inherits_from', 'Inherits From')}</InputLabel>
+                            <Select
+                                value={editingRole?.inheritsFrom || ''}
+                                label={t('games.werewolf.ui.editor.inherits_from', 'Inherits From')}
+                                onChange={e => setEditingRole(prev => prev ? { ...prev, inheritsFrom: e.target.value } : null)}
+                            >
+                                <MenuItem value=""><em>{t('games.werewolf.ui.editor.inherits_from_none', 'None')}</em></MenuItem>
+                                {defaultRoles.map(role => (
+                                    <MenuItem key={role.id} value={role.id}>{t(`games.werewolf.roles.${role.id}`, role.name)}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
                         <TextField
-                            label={t('games.werewolf.description', 'Description')}
+                            label={t('games.werewolf.ui.editor.description', 'Description')}
                             value={editingRole?.description || ''}
                             onChange={e => setEditingRole(prev => prev ? { ...prev, description: e.target.value } : null)}
                             multiline
@@ -271,33 +287,53 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, defaultRole
                             fullWidth
                         />
                         <TextField
-                            label={t('games.werewolf.editor.narrator_text', 'Night Narration')}
+                            label={t('games.werewolf.ui.editor.narrator_text', 'Night Narration')}
                             value={editingRole?.narratorText || ''}
                             onChange={e => setEditingRole(prev => prev ? { ...prev, narratorText: e.target.value } : null)}
                             multiline
                             rows={2}
                             fullWidth
-                            helperText={t('games.werewolf.editor.narrator_text_hint', 'Text read by narrator at night. Leave empty to use default.')}
+                            helperText={t('games.werewolf.ui.editor.narrator_text_hint', 'Text read by narrator at night. Leave empty to use default.')}
                         />
                         <FormControl fullWidth>
-                            <InputLabel>{t('games.werewolf.editor.alignment', 'Alignment')}</InputLabel>
+                            <InputLabel>{t('games.werewolf.ui.editor.alignment', 'Alignment')}</InputLabel>
                             <Select
                                 value={editingRole?.alignment || 'VILLAGER'}
-                                label={t('games.werewolf.editor.alignment', 'Alignment')}
+                                label={t('games.werewolf.ui.editor.alignment', 'Alignment')}
                                 onChange={e => setEditingRole(prev => prev ? { ...prev, alignment: e.target.value as RoleAlignment } : null)}
                             >
-                                <MenuItem value="VILLAGER">Villager</MenuItem>
-                                <MenuItem value="WEREWOLF">Werewolf</MenuItem>
-                                <MenuItem value="NEUTRAL">Neutral</MenuItem>
+                                <MenuItem value="VILLAGER">{t('games.werewolf.ui.editor.alignments.villager', 'Villager')}</MenuItem>
+                                <MenuItem value="WEREWOLF">{t('games.werewolf.ui.editor.alignments.werewolf', 'Werewolf')}</MenuItem>
+                                <MenuItem value="NEUTRAL">{t('games.werewolf.ui.editor.alignments.neutral', 'Neutral')}</MenuItem>
+                            </Select>
+                        </FormControl>
+
+                        <FormControl fullWidth>
+                            <InputLabel>{t('games.werewolf.editor.inherits_from', 'Inherits From')}</InputLabel>
+                            <Select
+                                value={editingRole?.inheritsFrom || ''}
+                                label={t('games.werewolf.editor.inherits_from', 'Inherits From')}
+                                onChange={e => setEditingRole(prev => prev ? { ...prev, inheritsFrom: e.target.value || undefined } : null)}
+                            >
+                                <MenuItem value="">
+                                    <em>{t('games.werewolf.editor.inherits_from_none', 'None')}</em>
+                                </MenuItem>
+                                {roles
+                                    .filter(r => r.id !== editingRole?.id)
+                                    .map(r => (
+                                        <MenuItem key={r.id} value={r.id}>
+                                            {r.icon} {r.name || t(`games.werewolf.roles.${r.id}`)}
+                                        </MenuItem>
+                                    ))}
                             </Select>
                         </FormControl>
 
                         <Divider sx={{ my: 1 }} />
 
                         <Box display="flex" justifyContent="space-between" alignItems="center">
-                            <Typography variant="subtitle1">{t('games.werewolf.editor.abilities', 'Abilities')}</Typography>
+                            <Typography variant="subtitle1">{t('games.werewolf.ui.editor.abilities', 'Abilities')}</Typography>
                             <Button size="small" startIcon={<AddIcon />} onClick={handleAddAbility}>
-                                {t('games.werewolf.editor.add_ability', 'Add Ability')}
+                                {t('games.werewolf.ui.editor.add_ability', 'Add Ability')}
                             </Button>
                         </Box>
 
@@ -311,34 +347,34 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, defaultRole
                                         </IconButton>
                                     </Box>
                                     <FormControl fullWidth size="small">
-                                        <InputLabel>{t('games.werewolf.editor.ability_type', 'Action')}</InputLabel>
+                                        <InputLabel>{t('games.werewolf.ui.editor.ability_type', 'Action')}</InputLabel>
                                         <Select
                                             value={ability.type}
-                                            label={t('games.werewolf.editor.ability_type', 'Action')}
+                                            label={t('games.werewolf.ui.editor.ability_type', 'Action')}
                                             onChange={e => handleUpdateAbility(idx, { type: e.target.value as any })}
                                         >
-                                            <MenuItem value="KILL">Kill</MenuItem>
-                                            <MenuItem value="HEAL">Heal</MenuItem>
-                                            <MenuItem value="PROTECT">Protect</MenuItem>
-                                            <MenuItem value="INFECT">Infect</MenuItem>
-                                            <MenuItem value="CHECK_ROLE">Check Role</MenuItem>
-                                            <MenuItem value="LINK_LOVERS">Link Lovers</MenuItem>
-                                            <MenuItem value="GIVE_EGG">Give Item</MenuItem>
-                                            <MenuItem value="CHOOSE_CAMP">Choose Camp</MenuItem>
-                                            <MenuItem value="STEAL_ROLE">Steal Role</MenuItem>
+                                            <MenuItem value="KILL">{t('games.werewolf.ui.editor.ability_types.kill', 'Kill')}</MenuItem>
+                                            <MenuItem value="HEAL">{t('games.werewolf.ui.editor.ability_types.heal', 'Heal')}</MenuItem>
+                                            <MenuItem value="PROTECT">{t('games.werewolf.ui.editor.ability_types.protect', 'Protect')}</MenuItem>
+                                            <MenuItem value="INFECT">{t('games.werewolf.ui.editor.ability_types.infect', 'Infect')}</MenuItem>
+                                            <MenuItem value="CHECK_ROLE">{t('games.werewolf.ui.editor.ability_types.check_role', 'Check Role')}</MenuItem>
+                                            <MenuItem value="LINK_LOVERS">{t('games.werewolf.ui.editor.ability_types.link_lovers', 'Link Lovers')}</MenuItem>
+                                            <MenuItem value="GIVE_EGG">{t('games.werewolf.ui.editor.ability_types.give_egg', 'Give Item')}</MenuItem>
+                                            <MenuItem value="CHOOSE_CAMP">{t('games.werewolf.ui.editor.ability_types.choose_camp', 'Choose Camp')}</MenuItem>
+                                            <MenuItem value="STEAL_ROLE">{t('games.werewolf.ui.editor.ability_types.steal_role', 'Steal Role')}</MenuItem>
                                         </Select>
                                     </FormControl>
                                     <Box display="flex" gap={2}>
                                         <FormControl fullWidth size="small">
-                                            <InputLabel>{t('games.werewolf.editor.timing', 'Timing')}</InputLabel>
+                                            <InputLabel>{t('games.werewolf.ui.editor.timing', 'Timing')}</InputLabel>
                                             <Select
                                                 value={ability.timing}
-                                                label={t('games.werewolf.editor.timing', 'Timing')}
+                                                label={t('games.werewolf.ui.editor.timing', 'Timing')}
                                                 onChange={e => handleUpdateAbility(idx, { timing: e.target.value as any })}
                                             >
-                                                <MenuItem value="EVERY_NIGHT">Every Night</MenuItem>
-                                                <MenuItem value="FIRST_NIGHT">First Night Only</MenuItem>
-                                                <MenuItem value="ROUND_NUMBER">Specific Round</MenuItem>
+                                                <MenuItem value="EVERY_NIGHT">{t('games.werewolf.ui.editor.timing_options.every_night', 'Every Night')}</MenuItem>
+                                                <MenuItem value="FIRST_NIGHT">{t('games.werewolf.ui.editor.timing_options.first_night', 'First Night Only')}</MenuItem>
+                                                <MenuItem value="ROUND_NUMBER">{t('games.werewolf.ui.editor.timing_options.round_number', 'Specific Round')}</MenuItem>
                                             </Select>
                                         </FormControl>
                                         <TextField

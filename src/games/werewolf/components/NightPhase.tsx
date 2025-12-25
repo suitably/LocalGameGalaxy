@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Box, Typography, Button, IconButton, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import type { Player, NightAction, Role, RoleDefinition } from '../logic/types';
 import { isWerewolf } from '../logic/utils';
+import { DEFAULT_ROLES } from '../logic/defaultRoles';
 import { useTranslation } from 'react-i18next';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import { WitchView } from './roles/WitchView';
@@ -55,7 +56,8 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
 
             const alive = players.some(p => p.role === role && p.isAlive);
             if (role === 'WEREWOLF') {
-                return players.some(p => isWerewolf(p) && p.isAlive);
+                const allRoles = [...DEFAULT_ROLES, ...customRoles];
+                return players.some(p => isWerewolf(p, allRoles) && p.isAlive);
             }
 
             if (role === 'BLACK_WEREWOLF') {
@@ -172,7 +174,8 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
         switch (activeRole) {
             case 'WEREWOLF': {
                 // Standard Werewolf turn
-                const werewolves = alivePlayers.filter(p => isWerewolf(p));
+                const allRoles = [...DEFAULT_ROLES, ...customRoles];
+                const werewolves = alivePlayers.filter(p => isWerewolf(p, allRoles));
                 const extraContent = (
                     <Box sx={{ mb: 3 }}>
                         <Typography variant="subtitle2" color="text.secondary">{t('games.werewolf.narrator.werewolves_label')}</Typography>
@@ -191,7 +194,7 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
                         players={alivePlayers}
                         onSelect={(id) => handleAction({ type: 'KILL', targetId: id })}
                         onSkip={nextRole}
-                        skipLabel={t('games.werewolf.narrator.skip_to_morning')}
+                        skipLabel={t('common.skip')}
                         buttonColor="error"
                         extraContent={extraContent}
                     />
@@ -220,9 +223,9 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
             case 'WITCH': return <WitchView players={players} onAction={handleAction} onSkip={nextRole} powerState={rolePlayer?.powerState} instruction={customInstruction} />;
             case 'SEER': return <SeerView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
             case 'CUPID': return <CupidView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
-            case 'DETECTIVE': return <DetectiveView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
+            case 'DETECTIVE': return <DetectiveView players={players} customRoles={customRoles} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
             case 'GUARDIAN': return <GuardianView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
-            case 'WHITE_WEREWOLF': return <WhiteWerewolfView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
+            case 'WHITE_WEREWOLF': return <WhiteWerewolfView players={players} customRoles={customRoles} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
             case 'EASTER_BUNNY': return <EasterBunnyView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
             case 'WOLFDOG': return <WolfdogView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
             case 'RIPPER': return <RipperView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;

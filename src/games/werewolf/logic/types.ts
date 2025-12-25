@@ -18,6 +18,7 @@ export interface RoleDefinition {
     abilities: Ability[];
     isCustom?: boolean;
     narratorText?: string;
+    inheritsFrom?: string;
 }
 
 export type Role =
@@ -65,6 +66,8 @@ export interface PlayerPowerState {
     isProtectedBySurvivor?: boolean;
     isProtectedByWise?: boolean;
     isDeadSoon?: boolean; // For Witch's victim
+    isProtected?: boolean; // Unified protection flag (Guardian, Survivor, etc.)
+    hasShot?: boolean; // For Hunter
 }
 
 export type NightAction =
@@ -83,6 +86,11 @@ export type NightAction =
     | { type: 'PEEK' }
     | { type: 'NONE' };
 
+export interface NightDecision {
+    role: Role;
+    action: NightAction;
+}
+
 export interface Player {
     id: PlayerId;
     name: string;
@@ -95,13 +103,15 @@ export interface Player {
 export type Action =
     | { type: 'ADD_PLAYER'; name: string }
     | { type: 'REMOVE_PLAYER'; id: PlayerId }
+    | { type: 'CLEAR_ALL_PLAYERS' }
     | { type: 'START_GAME'; roles: Role[] }
     | { type: 'NEXT_PHASE' }
     | { type: 'KILL_PLAYER'; id: PlayerId }
     | { type: 'RESET_GAME' }
     | { type: 'RESTORE_STATE'; state: GameState }
     | { type: 'SAVE_CUSTOM_ROLES'; roles: RoleDefinition[] }
-    | { type: 'NIGHT_ACTION'; action: NightAction; role: Role };
+    | { type: 'NIGHT_ACTION'; action: NightAction; role: Role }
+    | { type: 'HUNTER_SHOT'; targetId: string };
 
 export type GamePhase =
     | 'SETUP'
@@ -109,6 +119,7 @@ export type GamePhase =
     | 'NIGHT'
     | 'DAY'
     | 'VOTING'
+    | 'HUNTER_SHOT'
     | 'GAME_OVER';
 
 export interface GameState {
@@ -117,9 +128,12 @@ export interface GameState {
     round: number;
     currentTurnPlayerId: PlayerId | null;
     nightActionLog: string[];
+    nightDecisions: NightDecision[];
     winner: 'VILLAGERS' | 'WEREWOLVES' | 'WHITE_WEREWOLF' | 'LOVERS' | 'ANGEL' | 'RIPPER' | 'SURVIVOR' | 'PYROMANIAC' | 'EASTER_BUNNY' | null;
     enabledRoles: Role[];
     customRoles: RoleDefinition[];
+    pendingHunterIds: string[];
+    nextPhaseAfterShot: GamePhase | null;
 }
 
 export const INITIAL_STATE: GameState = {
@@ -128,9 +142,12 @@ export const INITIAL_STATE: GameState = {
     round: 0,
     currentTurnPlayerId: null,
     nightActionLog: [],
+    nightDecisions: [],
     winner: null,
     enabledRoles: ['VILLAGER', 'WEREWOLF', 'SEER', 'WITCH', 'HUNTER'], // Default basic roles
     customRoles: [],
+    pendingHunterIds: [],
+    nextPhaseAfterShot: null,
 };
 
 // Modular phase configuration - easily change game flow order here

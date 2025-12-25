@@ -75,7 +75,23 @@ const resources = {
                         "select_victim": "Select Victim:",
                         "skip_to_morning": "Skip to Morning",
                         "night_label": "Night {{round}}",
-                        "day_label": "Day {{round}}"
+                        "day_label": "Day {{round}}",
+                        "night_summary_label": "Night Summary (Narrator only)"
+                    },
+                    "night_summary": {
+                        "kill": "{{role}} decided to kill {{target}}.",
+                        "heal": "{{role}} decided to heal {{target}}.",
+                        "protect": "{{role}} decided to protect {{target}}.",
+                        "infect": "{{role}} decided to infect {{target}}.",
+                        "link_lovers": "{{role}} linked {{target1}} and {{target2}} to be lovers.",
+                        "check_role": "{{role}} checked the role of {{target}} ({{result}}).",
+                        "compare_camps": "{{role}} compared the camps of {{target1}} and {{target2}} ({{result}}).",
+                        "oil": "{{role}} oiled {{targets}}.",
+                        "burn": "{{role}} ignited the fire!",
+                        "give_egg": "{{role}} gave eggs to {{targets}}.",
+                        "choose_camp": "{{role}} chose the {{camp}} camp.",
+                        "steal_role": "{{role}} stole the identity of {{target}}.",
+                        "peek": "{{role}} peeked during the night."
                     },
                     "ui": {
                         "died_last_night": "Died last night:",
@@ -90,7 +106,9 @@ const resources = {
                         "add": "Add",
                         "add_players_hint": "Add at least 3 players to start.",
                         "select_roles_hint": "Select roles to include:",
+                        "num_werewolves": "Number of Werewolves",
                         "too_many_roles": "Too many roles selected for the number of players!",
+                        "too_many_werewolf_roles": "Too many special werewolf roles selected for the total number of werewolves!",
                         "witch": {
                             "save_player": "The werewolves have struck. Will you use your healing potion to grant {{name}} a second chance at life?",
                             "select_kill": "The night is quiet... too quiet. Will you use your poison to eliminate someone you suspect of evil?",
@@ -104,7 +122,9 @@ const resources = {
                             "instruction": "Love is in the air, but it carries a heavy price. Choose two souls whose hearts shall be bound together forever."
                         },
                         "detective": {
-                            "instruction": "A mystery unfolded. Select two players and I will tell you if their loyalties lie within the same camp."
+                            "instruction": "A mystery unfolded. Select two players and I will tell you if their loyalties lie within the same camp.",
+                            "same_camp": "Same Camp",
+                            "different_camps": "Different Camps"
                         },
                         "guardian": {
                             "instruction": "The shadows are lengthening. Whom will you stand watch over tonight to ensure they survive until morning?"
@@ -117,6 +137,10 @@ const resources = {
                         },
                         "easter_bunny": {
                             "instruction": "Spring is coming. Select two players to receive your mysterious eggs. Your ultimate gift is almost ready."
+                        },
+                        "hunter": {
+                            "shot_subtitle": "The hour of revenge has come for {{name}}.",
+                            "instruction": "Open your eyes and take one last player with you to the grave."
                         },
                         "wolfdog": {
                             "instruction": "The first night is your time of choice. Do you remain loyal to the Village that raised you, or do you embrace your wild side and join the Werewolf pack?"
@@ -148,7 +172,13 @@ const resources = {
                             "add_role": "Add Role",
                             "edit_role": "Edit Role",
                             "new_role": "New Role",
+                            "role_name": "Role Name",
                             "alignment": "Alignment",
+                            "inherits_from": "Inherits From",
+                            "inherits_from_none": "None",
+                            "description": "Description",
+                            "narrator_text": "Night Narration",
+                            "narrator_text_hint": "Text read by narrator at night. Leave empty to use default.",
                             "abilities": "Abilities",
                             "add_ability": "Add Ability",
                             "ability_type": "Action",
@@ -162,7 +192,28 @@ const resources = {
                             "ability_instruction_link_lovers": "Choose two players to fall in love.",
                             "ability_instruction_give_egg": "Choose players to receive a special item.",
                             "ability_instruction_choose_camp": "Choose your loyalty for the rest of the game.",
-                            "ability_instruction_steal_role": "Choose a player to swap roles with."
+                            "ability_instruction_steal_role": "Choose a player to swap roles with.",
+                            "alignments": {
+                                "villager": "Villager",
+                                "werewolf": "Werewolf",
+                                "neutral": "Neutral"
+                            },
+                            "ability_types": {
+                                "kill": "Kill",
+                                "heal": "Heal",
+                                "protect": "Protect",
+                                "infect": "Infect",
+                                "check_role": "Check Role",
+                                "link_lovers": "Link Lovers",
+                                "give_egg": "Give Item",
+                                "choose_camp": "Choose Camp",
+                                "steal_role": "Steal Role"
+                            },
+                            "timing_options": {
+                                "every_night": "Every Night",
+                                "first_night": "First Night Only",
+                                "round_number": "Specific Round"
+                            }
                         }
                     },
                     "continue": {
@@ -185,6 +236,56 @@ const resources = {
                     "werewolves_win": "The Werewolves Win!",
                     "villagers_win": "The Villagers Win!",
                     "play_again": "Play Again"
+                },
+                "imposter": {
+                    "title": "Imposter",
+                    "description": "Find the imposter before they blend in!",
+                    "rules": "Rules: Normal players get a word. Imposter gets a hint. Discuss and find the imposter!",
+                    "setup": {
+                        "title": "Imposter Setup",
+                        "imposter_count": "Number of Imposters",
+                        "timer_length": "Timer",
+                        "minutes": "Minutes",
+                        "seconds": "Seconds",
+                        "select_category": "Select Categories",
+                        "select_all": "Select All",
+                        "select_none": "Select None",
+                        "reset_to_default": "Reset to Default"
+                    },
+                    "handover": {
+                        "pass_to": "Pass phone to {{name}}",
+                        "your_word": "Your word is:",
+                        "you_are_imposter": "You are the IMPOSTER",
+                        "imposter_hint": "Tip: {{hint}}",
+                        "understood": "I understood"
+                    },
+                    "game": {
+                        "timer": "Discussion Time",
+                        "pause": "Pause",
+                        "resume": "Resume",
+                        "end_round": "End Round",
+                        "confirm_end": "Are you sure you want to end the round early?",
+                        "kick_title": "Who is the Imposter?"
+                    },
+                    "result": {
+                        "imposters_win": "Imposters Win!",
+                        "innocents_win": "Innocents Win!"
+                    },
+                    "editor": {
+                        "title": "Category Editor",
+                        "add_category": "Add Category",
+                        "edit_category": "Edit Category",
+                        "category_name_en": "Category Name (EN)",
+                        "category_name_de": "Category Name (DE)",
+                        "words": "Words",
+                        "add_word": "Add Word",
+                        "word_en": "Word (EN)",
+                        "word_de": "Word (DE)",
+                        "hint_en": "Hint (EN)",
+                        "hint_de": "Hint (DE)",
+                        "custom_categories": "Custom Categories",
+                        "standard_categories": "Standard Categories"
+                    }
                 }
             },
             "common": {
@@ -195,7 +296,13 @@ const resources = {
                 "yes": "Yes",
                 "no": "No",
                 "skip": "Skip",
-                "close": "Close"
+                "close": "Close",
+                "save": "Save",
+                "save_all": "Save All",
+                "modified": "Modified",
+                "reset": "Reset",
+                "delete": "Delete",
+                "clear_all_players": "Clear All Players"
             }
         }
     },
@@ -272,7 +379,23 @@ const resources = {
                         "select_victim": "Opfer auswählen:",
                         "skip_to_morning": "Zum Morgen springen",
                         "night_label": "Nacht {{round}}",
-                        "day_label": "Tag {{round}}"
+                        "day_label": "Tag {{round}}",
+                        "night_summary_label": "Nacht-Zusammenfassung (Nur für Erzähler)"
+                    },
+                    "night_summary": {
+                        "kill": "{{role}} hat sich entschieden, {{target}} zu eliminieren.",
+                        "heal": "{{role}} hat sich entschieden, {{target}} zu heilen.",
+                        "protect": "{{role}} hat sich entschieden, {{target}} zu beschützen.",
+                        "infect": "{{role}} hat sich entschieden, {{target}} zu infizieren.",
+                        "link_lovers": "{{role}} hat {{target1}} und {{target2}} als Liebespaar verbunden.",
+                        "check_role": "{{role}} hat die Rolle von {{target}} überprüft ({{result}}).",
+                        "compare_camps": "{{role}} hat das Lager von {{target1}} und {{target2}} verglichen ({{result}}).",
+                        "oil": "{{role}} hat {{targets}} mit Öl übergossen.",
+                        "burn": "{{role}} hat das Feuer entfacht!",
+                        "give_egg": "{{role}} hat Eier an {{targets}} verteilt.",
+                        "choose_camp": "{{role}} hat sich für das Lager der {{camp}} entschieden.",
+                        "steal_role": "{{role}} hat die Identität von {{target}} gestohlen.",
+                        "peek": "{{role}} hat in der Nacht geblinzelt."
                     },
                     "ui": {
                         "died_last_night": "Letzte Nacht gestorben:",
@@ -287,7 +410,9 @@ const resources = {
                         "add": "Hinzufügen",
                         "add_players_hint": "Füge mindestens 3 Spieler hinzu.",
                         "select_roles_hint": "Wähle die Rollen für das Spiel:",
+                        "num_werewolves": "Anzahl der Werwölfe",
                         "too_many_roles": "Zu viele Rollen für die Anzahl der Spieler ausgewählt!",
+                        "too_many_werewolf_roles": "Zu viele spezielle Werwolf-Rollen für die Gesamtzahl der Werwölfe ausgewählt!",
                         "witch": {
                             "save_player": "Die Werwölfe haben zugeschlagen. Wirst du deinen Heiltrank nutzen, um {{name}} eine zweite Chance auf ein Leben zu gewähren?",
                             "select_kill": "Die Nacht ist ruhig... zu ruhig. Wirst du dein Gift nutzen, um jemanden zu eliminieren, den du des Bösen verdächtigst?",
@@ -301,7 +426,9 @@ const resources = {
                             "instruction": "Liebe liegt in der Luft, aber sie fordert einen hohen Preis. Wähle zwei Seelen, deren Herzen für immer miteinander verbunden sein sollen."
                         },
                         "detective": {
-                            "instruction": "Ein Geheimnis hat sich entfaltet. Wähle zwei Spieler und ich werde dir sagen, ob ihre Loyalität dem gleichen Lager gilt."
+                            "instruction": "Ein Geheimnis hat sich entfaltet. Wähle zwei Spieler und ich werde dir sagen, ob ihre Loyalität dem gleichen Lager gilt.",
+                            "same_camp": "Gleiches Team",
+                            "different_camps": "Verschiedene Teams"
                         },
                         "guardian": {
                             "instruction": "Die Schatten werden länger. Wen wirst du heute Nacht bewachen, um sicherzustellen, dass er bis zum Morgen überlebt?"
@@ -314,6 +441,10 @@ const resources = {
                         },
                         "easter_bunny": {
                             "instruction": "Der Frühling naht. Wähle zwei Spieler aus, die deine geheimnisvollen Eier erhalten sollen. Dein ultimatives Geschenk ist fast bereit."
+                        },
+                        "hunter": {
+                            "shot_subtitle": "Die Stunde der Rache ist für {{name}} gekommen.",
+                            "instruction": "Öffne deine Augen und reiße einen letzten Spieler mit in den Tod."
                         },
                         "wolfdog": {
                             "instruction": "In dieser ersten Nacht musst du dich entscheiden. Bleibst du dem Dorf treu, das dich aufgezogen hat, oder gibst du deiner wilden Seite nach und schließt dich dem Rudel der Werwölfe an?"
@@ -345,7 +476,13 @@ const resources = {
                             "add_role": "Rolle hinzufügen",
                             "edit_role": "Rolle bearbeiten",
                             "new_role": "Neue Rolle",
+                            "role_name": "Rollenname",
                             "alignment": "Gesinnung",
+                            "inherits_from": "Erbt von",
+                            "inherits_from_none": "Keine",
+                            "description": "Beschreibung",
+                            "narrator_text": "Nacht-Erzähltext",
+                            "narrator_text_hint": "Text, den der Erzähler nachts vorliest. Leer lassen für Standard.",
                             "abilities": "Fähigkeiten",
                             "add_ability": "Fähigkeit hinzufügen",
                             "ability_type": "Aktion",
@@ -359,7 +496,28 @@ const resources = {
                             "ability_instruction_link_lovers": "Wähle zwei Spieler, die sich verlieben sollen.",
                             "ability_instruction_give_egg": "Wähle Spieler, die einen Gegenstand erhalten.",
                             "ability_instruction_choose_camp": "Wähle dein Team für den Rest des Spiels.",
-                            "ability_instruction_steal_role": "Wähle einen Spieler, dessen Rolle du stiehlst."
+                            "ability_instruction_steal_role": "Wähle einen Spieler, dessen Rolle du stiehlst.",
+                            "alignments": {
+                                "villager": "Dorfbewohner",
+                                "werewolf": "Werwolf",
+                                "neutral": "Neutral"
+                            },
+                            "ability_types": {
+                                "kill": "Eliminieren",
+                                "heal": "Heilen",
+                                "protect": "Beschützen",
+                                "infect": "Infizieren",
+                                "check_role": "Rolle prüfen",
+                                "link_lovers": "Liebespaar verbinden",
+                                "give_egg": "Gegenstand geben",
+                                "choose_camp": "Lager wählen",
+                                "steal_role": "Rolle stehlen"
+                            },
+                            "timing_options": {
+                                "every_night": "Jede Nacht",
+                                "first_night": "Nur erste Nacht",
+                                "round_number": "Bestimmte Runde"
+                            }
                         }
                     },
                     "continue": {
@@ -382,6 +540,56 @@ const resources = {
                     "werewolves_win": "Die Werwölfe gewinnen!",
                     "villagers_win": "Die Dorfbewohner gewinnen!",
                     "play_again": "Nochmal spielen"
+                },
+                "imposter": {
+                    "title": "Imposter",
+                    "description": "Finde den Imposter, bevor er untertaucht!",
+                    "rules": "Regeln: Normale Spieler erhalten ein Wort. Der Imposter erhält ein Hinweiswort. Diskutiert und findet den Imposter!",
+                    "setup": {
+                        "title": "Imposter Setup",
+                        "imposter_count": "Anzahl der Imposter",
+                        "timer_length": "Timer",
+                        "minutes": "Minuten",
+                        "seconds": "Sekunden",
+                        "select_category": "Kategorien wählen",
+                        "select_all": "Alle auswählen",
+                        "select_none": "Keine auswählen",
+                        "reset_to_default": "Zurücksetzen"
+                    },
+                    "handover": {
+                        "pass_to": "Handy an {{name}} geben",
+                        "your_word": "Dein Wort ist:",
+                        "you_are_imposter": "Du bist der IMPOSTER",
+                        "imposter_hint": "Tipp: {{hint}}",
+                        "understood": "Ich habe es verstanden"
+                    },
+                    "game": {
+                        "timer": "Diskussionszeit",
+                        "pause": "Pause",
+                        "resume": "Weiter",
+                        "end_round": "Runde beenden",
+                        "confirm_end": "Bist du sicher, dass du die Runde vorzeitig beenden möchtest?",
+                        "kick_title": "Wer ist der Imposter?"
+                    },
+                    "result": {
+                        "imposters_win": "Die Imposter gewinnen!",
+                        "innocents_win": "Die Unschuldigen gewinnen!"
+                    },
+                    "editor": {
+                        "title": "Kategorien-Editor",
+                        "add_category": "Kategorie hinzufügen",
+                        "edit_category": "Kategorie bearbeiten",
+                        "category_name_en": "Kategorienname (EN)",
+                        "category_name_de": "Kategorienname (DE)",
+                        "words": "Wörter",
+                        "add_word": "Wort hinzufügen",
+                        "word_en": "Wort (EN)",
+                        "word_de": "Wort (DE)",
+                        "hint_en": "Hinweis (EN)",
+                        "hint_de": "Hinweis (DE)",
+                        "custom_categories": "Eigene Kategorien",
+                        "standard_categories": "Standard-Kategorien"
+                    }
                 }
             },
             "common": {
@@ -392,7 +600,13 @@ const resources = {
                 "yes": "Ja",
                 "no": "Nein",
                 "skip": "Überspringen",
-                "close": "Schließen"
+                "close": "Schließen",
+                "save": "Speichern",
+                "save_all": "Alles speichern",
+                "modified": "Geändert",
+                "reset": "Zurücksetzen",
+                "delete": "Löschen",
+                "clear_all_players": "Alle Spieler löschen"
             }
         }
     }

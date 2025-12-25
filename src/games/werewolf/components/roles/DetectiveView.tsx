@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { useTranslation } from 'react-i18next';
-import type { Player, NightAction } from '../../logic/types';
+import type { Player, NightAction, RoleDefinition } from '../../logic/types';
 import { isWerewolf } from '../../logic/utils';
 
 interface RoleViewProps {
     players: Player[];
+    customRoles?: RoleDefinition[];
     onAction: (action: NightAction) => void;
     onSkip: () => void;
     instruction?: string;
 }
 
-export const DetectiveView: React.FC<RoleViewProps> = ({ players, onAction, onSkip, instruction }) => {
+export const DetectiveView: React.FC<RoleViewProps> = ({ players, customRoles, onAction, onSkip, instruction }) => {
     const { t } = useTranslation();
     const [selected, setSelected] = useState<string[]>([]);
     const [result, setResult] = useState<boolean | null>(null);
@@ -21,8 +22,8 @@ export const DetectiveView: React.FC<RoleViewProps> = ({ players, onAction, onSk
         const p1 = players.find(p => p.id === selected[0]);
         const p2 = players.find(p => p.id === selected[1]);
         if (p1 && p2) {
-            const camp1 = isWerewolf(p1) ? 'WOLF' : 'VILLAGER';
-            const camp2 = isWerewolf(p2) ? 'WOLF' : 'VILLAGER';
+            const camp1 = isWerewolf(p1, customRoles) ? 'WOLF' : 'VILLAGER';
+            const camp2 = isWerewolf(p2, customRoles) ? 'WOLF' : 'VILLAGER';
             setResult(camp1 === camp2);
         }
     };
@@ -32,9 +33,9 @@ export const DetectiveView: React.FC<RoleViewProps> = ({ players, onAction, onSk
             <Box textAlign="center">
                 <SearchIcon sx={{ fontSize: 80, color: 'primary.main', mb: 2 }} />
                 <Typography variant="h4" color={result ? "success.main" : "error.main"}>
-                    {result ? "Same Camp" : "Different Camps"}
+                    {result ? t('games.werewolf.ui.detective.same_camp') : t('games.werewolf.ui.detective.different_camps')}
                 </Typography>
-                <Button sx={{ mt: 4 }} variant="contained" onClick={() => onAction({ type: 'NONE' })}>{t('common.next')}</Button>
+                <Button sx={{ mt: 4 }} variant="contained" onClick={() => onAction({ type: 'COMPARE_CAMPS', targetIds: [selected[0], selected[1]] })}>{t('common.next')}</Button>
             </Box>
         );
     }
