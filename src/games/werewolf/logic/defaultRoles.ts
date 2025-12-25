@@ -205,5 +205,16 @@ export const DEFAULT_ROLES: RoleDefinition[] = [
             { type: 'STEAL_ROLE', timing: 'FIRST_NIGHT', targetCount: 1 }
         ],
         isCustom: false
+    },
+    {
+        id: 'DORFMATRATZE',
+        name: 'Dorfmatratze',
+        description: 'Sleeps with a different player each night. Survives if not home when attacked. Dies if host dies.',
+        icon: '🛌',
+        alignment: 'VILLAGER',
+        abilities: [
+            { type: 'SLEEP', timing: 'EVERY_NIGHT', targetCount: 1 }
+        ],
+        isCustom: false
     }
 ];

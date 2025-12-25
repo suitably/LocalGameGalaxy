@@ -36,7 +36,8 @@ const resources = {
                         "RIPPER": "Ripper",
                         "SURVIVOR": "Survivor",
                         "PYROMANIAC": "Pyromaniac",
-                        "THIEF": "Thief"
+                        "THIEF": "Thief",
+                        "DORFMATRATZE": "Village Mattress"
                     },
                     "role_descriptions": {
                         "VILLAGER": "An ordinary inhabitant of the village. You have no special powers during the night, but your voice and your vote are your dual weapons during the day. Your goal is to work with others to identify, discuss, and eliminate all threats (Werewolves and other killers) to the village's peace.",
@@ -58,7 +59,8 @@ const resources = {
                         "RIPPER": "A cold-blooded serial killer acting entirely alone. You are not a wolf and not a villager. Each night, you wake up to eliminate one player of your choice. Your goal is simple but brutal: you win by being the last person alive in the village.",
                         "SURVIVOR": "A resilient loner in a world of monsters. You belong to the village camp but have no active powers to help them. Instead, you have two personal shields. Up to twice per game, you can choose to protect yourself during the night, making you immune to any attack.",
                         "PYROMANIAC": "A destructive arsonist with a long-term plan. Each night, you can douse two players in oil. These players won't know they are oiled. At any later point, you can choose to ignite the oil, instantly eliminating every single player you have previously marked.",
-                        "THIEF": "A cunning opportunist who starts with nothing. On the very first night, you choose a player. You swap roles with them: you take their identity and powers, and they become a regular Villager. Use this to seize the most powerful role in the game."
+                        "THIEF": "A cunning opportunist who starts with nothing. On the very first night, you choose a player. You swap roles with them: you take their identity and powers, and they become a regular Villager. Use this to seize the most powerful role in the game.",
+                        "DORFMATRATZE": "You sleep in a different bed every night. If the werewolves attack your home while you are away, you survive. However, if the person you are sleeping with is killed, you die with them."
                     },
                     "narrator": {
                         "night_start": "Night falls. Everyone close your eyes.",
@@ -92,7 +94,8 @@ const resources = {
                         "choose_camp": "{{role}} chose the {{camp}} camp.",
                         "steal_role": "{{role}} stole the identity of {{target}}.",
                         "peek": "{{role}} peeked during the night.",
-                        "curse": "{{role}} cursed {{target}}."
+                        "curse": "{{role}} cursed {{target}}.",
+                        "sleep": "{{role}} slept at {{target}}'s place."
                     },
                     "ui": {
                         "died_last_night": "Died last night:",
@@ -170,6 +173,9 @@ const resources = {
                         },
                         "lovers": {
                             "label": "Lovers"
+                        },
+                        "dorfmatratze": {
+                            "instruction": "Choose whose bed you want to sleep in tonight. If they die, you die. If you are attacked at home, you survive."
                         },
                         "editor": {
                             "title": "Role Editor",
@@ -344,7 +350,8 @@ const resources = {
                         "RIPPER": "Ripper",
                         "SURVIVOR": "Überlebender",
                         "PYROMANIAC": "Pyromane",
-                        "THIEF": "Dieb"
+                        "THIEF": "Dieb",
+                        "DORFMATRATZE": "Dorfmatratze"
                     },
                     "role_descriptions": {
                         "VILLAGER": "Ein gewöhnlicher Bewohner des Dorfes. Du hast in der Nacht keine besonderen Kräfte, aber deine Stimme und deine Stimme sind am Tag deine einzige Waffe. Arbeite mit anderen zusammen, um die Werwölfe und andere Bedrohungen zu finden und zu eliminieren.",
@@ -366,7 +373,8 @@ const resources = {
                         "RIPPER": "Ein kaltblütiger Serienmörder, der völlig allein handelt. Du bist kein Wolf und kein Dorfbewohner. Jede Nacht wachst du auf, um einen Spieler deiner Wahl zu eliminieren. Dein Ziel ist brutal: Du gewinnst, wenn du am Ende als einziger Überlebender im Dorf übrig bleibst.",
                         "SURVIVOR": "Ein zäher Einzelgänger in einer Welt voller Monster. Du gehörst zum Dorf-Lager, hast aber keine aktiven Kräfte für andere. Stattdessen hast du zwei persönliche Schutzschilde, die du nachts aktivieren kannst, um gegen Angriffe immun zu sein.",
                         "PYROMANIAC": "Ein zerstörerischer Brandstifter mit einem Langzeitplan. Jede Nacht übergießt du zwei Spieler mit Öl. Diese wissen nichts davon. Zu jedem späteren Zeitpunkt kannst du wählen, das Öl zu entzünden, wodurch alle markierten Spieler gleichzeitig in einer Nacht sterben.",
-                        "THIEF": "Ein listiger Opportunist, der ohne eigene Rolle startet. In der ersten Nacht wählst du einen Spieler und stiehlst seine Identität. Du übernimmst seine Rolle und Kräfte, während das Opfer zu einem einfachen Dorfbewohner ohne Fähigkeiten wird."
+                        "THIEF": "Ein listiger Opportunist, der ohne eigene Rolle startet. In der ersten Nacht wählst du einen Spieler und stiehlst seine Identität. Du übernimmst seine Rolle und Kräfte, während das Opfer zu einem einfachen Dorfbewohner ohne Fähigkeiten wird.",
+                        "DORFMATRATZE": "Du schläfst jede Nacht bei einem anderen. Wenn die Werwölfe dich zuhause angreifen, während du weg bist, überlebst du. Aber Vorsicht: Wenn dein Gastgeber stirbt, stirbst du mit ihm!"
                     },
                     "narrator": {
                         "night_start": "Die Nacht bricht herein. Alle schließen die Augen.",
@@ -400,7 +408,8 @@ const resources = {
                         "choose_camp": "{{role}} hat sich für das Lager der {{camp}} entschieden.",
                         "steal_role": "{{role}} hat die Identität von {{target}} gestohlen.",
                         "peek": "{{role}} hat in der Nacht geblinzelt.",
-                        "curse": "{{role}} hat {{target}} verflucht."
+                        "curse": "{{role}} hat {{target}} verflucht.",
+                        "sleep": "{{role}} hat bei {{target}} geschlafen."
                     },
                     "ui": {
                         "died_last_night": "Letzte Nacht gestorben:",
@@ -478,6 +487,9 @@ const resources = {
                         },
                         "lovers": {
                             "label": "Liebespaar"
+                        },
+                        "dorfmatratze": {
+                            "instruction": "Bei wem möchtest du heute Nacht schlafen? Wenn er stirbt, stirbst du auch. Wenn du zuhause angegriffen wirst, überlebst du."
                         },
                         "editor": {
                             "title": "Rollen-Editor",

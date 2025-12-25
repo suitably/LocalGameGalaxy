@@ -19,6 +19,7 @@ import { RipperView } from './roles/RipperView';
 import { SurvivorView } from './roles/SurvivorView';
 import { PyromaniacView } from './roles/PyromaniacView';
 import { ThiefView } from './roles/ThiefView';
+import { MatratzeView } from './roles/MatratzeView';
 import { PlayerSelectionView } from './PlayerSelectionView';
 import InfoIcon from '@mui/icons-material/Info';
 import CloseIcon from '@mui/icons-material/Close';
@@ -33,7 +34,7 @@ interface NightPhaseProps {
 }
 
 const NIGHT_ROLE_ORDER: Role[] = [
-    'CUPID', 'THIEF', 'WOLFDOG', 'GUARDIAN', 'WEREWOLF', 'BLACK_WEREWOLF',
+    'CUPID', 'THIEF', 'WOLFDOG', 'GUARDIAN', 'DORFMATRATZE', 'WEREWOLF', 'BLACK_WEREWOLF',
     'WHITE_WEREWOLF', 'WITCH', 'SEER', 'DETECTIVE', 'BLACK_CAT', 'EASTER_BUNNY',
     'PYROMANIAC', 'RIPPER', 'SURVIVOR'
 ];
@@ -234,6 +235,7 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
             case 'PYROMANIAC': return <PyromaniacView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
             case 'THIEF': return <ThiefView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
             case 'BLACK_CAT': return <BlackCatView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
+            case 'DORFMATRATZE': return <MatratzeView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
             default: return <Box textAlign="center" mt={10}><Button onClick={nextRole}>Skip {activeRole}</Button></Box>;
         }
     };

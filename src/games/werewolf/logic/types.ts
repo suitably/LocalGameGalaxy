@@ -42,6 +42,7 @@ export type Role =
     | 'SURVIVOR'
     | 'PYROMANIAC'
     | 'THIEF'
+    | 'DORFMATRATZE'
     | string; // Support for custom role IDs
 
 export type PlayerId = string;
@@ -69,6 +70,7 @@ export interface PlayerPowerState {
     isDeadSoon?: boolean; // For Witch's victim
     isProtected?: boolean; // Unified protection flag (Guardian, Survivor, etc.)
     hasShot?: boolean; // For Hunter
+    sleepingAt?: PlayerId; // For Dorfmatratze
 }
 
 export type NightAction =
@@ -86,6 +88,7 @@ export type NightAction =
     | { type: 'STEAL_ROLE'; targetId: string }
     | { type: 'PEEK' }
     | { type: 'CURSE'; targetId: string }
+    | { type: 'SLEEP'; targetId: string }
     | { type: 'NONE' };
 
 export interface NightDecision {

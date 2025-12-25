@@ -93,7 +93,8 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                     powerState: {
                         ...p.powerState,
                         isProtected: false,
-                        isDeadSoon: false
+                        isDeadSoon: false,
+                        sleepingAt: undefined
                     }
                 }));
             }
@@ -168,7 +169,33 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                             break;
                         }
 
+                        // Dorfmatratze Survival Check
+                        // If Dorfmatratze is not home (has sleepingAt set to someone else) AND is the target
+                        if (targetPlayer?.role === 'DORFMATRATZE' && targetPlayer.powerState.sleepingAt && targetPlayer.powerState.sleepingAt !== targetPlayer.id) {
+                            // She is not home, so she survives
+                            break;
+                        }
+
                         newNightActionLog.push(nightAction.targetId);
+
+                        // Linked Death: Check if any Dorfmatratze is sleeping at the target's house
+                        const linkedMatratzen = state.players.filter(p =>
+                            p.role === 'DORFMATRATZE' &&
+                            p.powerState.sleepingAt === nightAction.targetId &&
+                            p.isAlive
+                        );
+
+                        linkedMatratzen.forEach(matratze => {
+                            if (!newNightActionLog.includes(matratze.id)) {
+                                newNightActionLog.push(matratze.id);
+                                // Mark Matratze as dead soon too
+                                newPlayers = newPlayers.map(p =>
+                                    p.id === matratze.id ? { ...p, powerState: { ...p.powerState, isDeadSoon: true } } : p
+                                );
+                            }
+                        });
+
+
                         // Mark as dead soon for witch to see
                         newPlayers = newPlayers.map(p =>
                             p.id === nightAction.targetId ? { ...p, powerState: { ...p.powerState, isDeadSoon: true } } : p
@@ -317,6 +344,14 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                         p.id === nightAction.targetId ? { ...p, powerState: { ...p.powerState, isCursed: true } } : p
                     );
                     break;
+                case 'SLEEP':
+                    // Dorfmatratze chooses where to sleep
+                    newPlayers = newPlayers.map(p =>
+                        p.role === 'DORFMATRATZE'
+                            ? { ...p, powerState: { ...p.powerState, sleepingAt: nightAction.targetId } }
+                            : p
+                    );
+                    break;
             }
 
             return {
@@ -381,7 +416,18 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
         }
 
         case 'RESET_GAME':
-            return INITIAL_STATE;
+            return {
+                ...INITIAL_STATE,
+                players: state.players.map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    role: null,
+                    isAlive: true,
+                    needsToAct: false,
+                    powerState: {}
+                })),
+                customRoles: state.customRoles
+            };
 
         case 'RESTORE_STATE':
             return {
@@ -402,11 +448,14 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
 };
 
 const checkHunterDeath = (state: GameState, newVictimIds: string[]): GameState => {
+    console.log('Checking Hunter Death. Victims:', newVictimIds);
     const newlyDeadHunters = state.players.filter(p =>
         newVictimIds.includes(p.id) &&
         p.role === 'HUNTER' &&
         !p.powerState.hasShot
     ).map(p => p.id);
+
+    console.log('Newly Dead Hunters:', newlyDeadHunters);
 
     if (newlyDeadHunters.length === 0) return state;
 
