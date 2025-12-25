@@ -2,6 +2,7 @@ import React, { useReducer, useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 import { gameReducer } from './logic/gameReducer';
 import { INITIAL_STATE } from './logic/types';
+import type { Player } from './logic/types';
 import { GameSetup } from './components/GameSetup';
 import { RoleReveal } from './components/RoleReveal';
 import { NightPhase } from './components/NightPhase';
@@ -87,7 +88,7 @@ export const WerewolfGame: React.FC = () => {
                     players={gameState.players}
                     round={gameState.round}
                     onNextPhase={() => dispatch({ type: 'NEXT_PHASE' })}
-                    onNightAction={(targetId) => dispatch({ type: 'KILL_PLAYER', id: targetId })}
+                    onNightAction={(action, role) => dispatch({ type: 'NIGHT_ACTION', action, role })}
                 />
             )}
 
@@ -96,7 +97,7 @@ export const WerewolfGame: React.FC = () => {
                     players={gameState.players}
                     round={gameState.round}
                     onNextPhase={() => dispatch({ type: 'NEXT_PHASE' })}
-                    removedPlayerIds={gameState.players.filter((p: { isAlive: boolean; id: string }) => !p.isAlive && gameState.nightActionLog.includes(p.id)).map((p: { id: string }) => p.id)} // Mock logic for now
+                    removedPlayerIds={gameState.players.filter((p: Player) => !p.isAlive && gameState.nightActionLog.includes(p.id)).map((p: Player) => p.id)}
                 />
             )}
 

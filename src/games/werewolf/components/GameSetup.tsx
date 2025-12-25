@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, TextField, Button, List, ListItem, ListItemText, IconButton, Paper, Typography } from '@mui/material';
+import { Box, TextField, Button, List, ListItem, ListItemText, IconButton, Paper, Typography, FormControlLabel, Checkbox, Grid, Alert } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -13,9 +13,16 @@ interface GameSetupProps {
     onStartGame: (roles: Role[]) => void;
 }
 
+const SPECIAL_ROLES: Role[] = [
+    'WITCH', 'SEER', 'CUPID', 'LITTLE_GIRL', 'DETECTIVE', 'GUARDIAN',
+    'BLACK_CAT', 'HUNTER', 'WISE', 'BLACK_WEREWOLF', 'WHITE_WEREWOLF',
+    'ANGEL', 'EASTER_BUNNY', 'WOLFDOG', 'RIPPER', 'SURVIVOR', 'PYROMANIAC', 'THIEF'
+];
+
 export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRemovePlayer, onStartGame }) => {
     const { t } = useTranslation();
     const [newName, setNewName] = useState('');
+    const [enabledRoles, setEnabledRoles] = useState<Role[]>(['WITCH', 'SEER']);
 
     const handleAdd = () => {
         if (newName.trim()) {
@@ -24,16 +31,35 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
         }
     };
 
-    const handleStart = () => {
-        // MVP: Minimal roles for testing. 1 Wolf, rest Villagers.
-        const roles: Role[] = ['WEREWOLF'];
-        const playerCountForRoles = players.length; // Everyone gets a role now
-        const villagerCount = playerCountForRoles - 1;
-
-        for (let i = 0; i < villagerCount; i++) roles.push('VILLAGER');
-
-        onStartGame(roles);
+    const toggleRole = (role: Role) => {
+        setEnabledRoles(prev =>
+            prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]
+        );
     };
+
+    const handleStart = () => {
+        const playerCount = players.length;
+        const roles: Role[] = [...enabledRoles];
+
+        // Ensure we have at least one werewolf if not explicitly chosen
+        const hasWolf = roles.some(r => r === 'WEREWOLF' || r === 'BLACK_WEREWOLF' || r === 'WHITE_WEREWOLF');
+        if (!hasWolf) {
+            roles.push('WEREWOLF');
+        }
+
+        // Fill remaining slots with Villagers
+        while (roles.length < playerCount) {
+            roles.push('VILLAGER');
+        }
+
+        // If too many roles selected, we'll just take the first ones up to playerCount
+        // (But UI should ideally prevent this)
+        const finalRoles = roles.slice(0, playerCount);
+
+        onStartGame(finalRoles);
+    };
+
+    const tooManyRoles = enabledRoles.length + 1 > players.length && players.length > 0;
 
     return (
         <Box maxWidth="sm" mx="auto">
@@ -72,8 +98,36 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
                         </Typography>
                     )}
                 </List>
+            </Paper>
 
+            <Paper sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h6" gutterBottom>{t('games.werewolf.role_reveal')}</Typography>
+                <Typography variant="body2" sx={{ mb: 2 }}>
+                    {t('games.werewolf.ui.select_roles_hint', 'Select roles to include:')}
+                </Typography>
 
+                {tooManyRoles && (
+                    <Alert severity="warning" sx={{ mb: 2 }}>
+                        {t('games.werewolf.ui.too_many_roles', 'Too many roles selected for the number of players!')}
+                    </Alert>
+                )}
+
+                <Grid container spacing={1}>
+                    {SPECIAL_ROLES.map(role => (
+                        <Grid size={{ xs: 6 }} key={role}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={enabledRoles.includes(role)}
+                                        onChange={() => toggleRole(role)}
+                                        size="small"
+                                    />
+                                }
+                                label={<Typography variant="body2">{t(`games.werewolf.roles.${role}`)}</Typography>}
+                            />
+                        </Grid>
+                    ))}
+                </Grid>
             </Paper>
 
             <Button
@@ -81,7 +135,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
                 size="large"
                 fullWidth
                 color="secondary"
-                disabled={players.length < 3}
+                disabled={players.length < 3 || tooManyRoles}
                 onClick={handleStart}
                 startIcon={<PlayArrowIcon />}
             >

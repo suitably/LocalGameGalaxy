@@ -13,6 +13,7 @@ interface PlayerSelectionViewProps {
     skipLabel: string;
     buttonColor: 'primary' | 'error' | 'secondary' | 'info' | 'success' | 'warning';
     extraContent?: React.ReactNode;
+    disabled?: boolean;
 }
 
 export const PlayerSelectionView: React.FC<PlayerSelectionViewProps> = ({
@@ -25,10 +26,11 @@ export const PlayerSelectionView: React.FC<PlayerSelectionViewProps> = ({
     onSkip,
     skipLabel,
     buttonColor,
-    extraContent
+    extraContent,
+    disabled
 }) => {
     return (
-        <Box maxWidth="sm" mx="auto" textAlign="center" mt={4}>
+        <Box maxWidth="sm" mx="auto" textAlign="center" mt={4} sx={{ opacity: disabled ? 0.6 : 1, pointerEvents: disabled ? 'none' : 'auto' }}>
             <Box sx={{ mb: 2 }}>
                 {icon}
             </Box>
