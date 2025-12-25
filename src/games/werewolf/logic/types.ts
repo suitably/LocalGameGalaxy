@@ -1,3 +1,24 @@
+export type RoleAlignment = 'VILLAGER' | 'WEREWOLF' | 'NEUTRAL';
+
+export interface Ability {
+    type: NightAction['type'];
+    usesPerGame?: number;
+    usesPerNight?: number;
+    timing: 'FIRST_NIGHT' | 'EVERY_NIGHT' | 'ROUND_NUMBER';
+    roundNumber?: number;
+    targetCount: number;
+}
+
+export interface RoleDefinition {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    alignment: RoleAlignment;
+    abilities: Ability[];
+    isCustom?: boolean;
+}
+
 export type Role =
     | 'VILLAGER'
     | 'WITCH'
@@ -18,7 +39,8 @@ export type Role =
     | 'RIPPER'
     | 'SURVIVOR'
     | 'PYROMANIAC'
-    | 'THIEF';
+    | 'THIEF'
+    | string; // Support for custom role IDs
 
 export type PlayerId = string;
 
@@ -77,6 +99,7 @@ export type Action =
     | { type: 'KILL_PLAYER'; id: PlayerId }
     | { type: 'RESET_GAME' }
     | { type: 'RESTORE_STATE'; state: GameState }
+    | { type: 'SAVE_CUSTOM_ROLES'; roles: RoleDefinition[] }
     | { type: 'NIGHT_ACTION'; action: NightAction; role: Role };
 
 export type GamePhase =
@@ -95,6 +118,7 @@ export interface GameState {
     nightActionLog: string[];
     winner: 'VILLAGERS' | 'WEREWOLVES' | 'WHITE_WEREWOLF' | 'LOVERS' | 'ANGEL' | 'RIPPER' | 'SURVIVOR' | 'PYROMANIAC' | 'EASTER_BUNNY' | null;
     enabledRoles: Role[];
+    customRoles: RoleDefinition[];
 }
 
 export const INITIAL_STATE: GameState = {
@@ -105,6 +129,7 @@ export const INITIAL_STATE: GameState = {
     nightActionLog: [],
     winner: null,
     enabledRoles: ['VILLAGER', 'WEREWOLF', 'SEER', 'WITCH', 'HUNTER'], // Default basic roles
+    customRoles: [],
 };
 
 // Modular phase configuration - easily change game flow order here

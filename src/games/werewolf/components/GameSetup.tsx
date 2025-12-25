@@ -1,28 +1,33 @@
 import React, { useState } from 'react';
-import { Box, TextField, Button, List, ListItem, ListItemText, IconButton, Paper, Typography, FormControlLabel, Checkbox, Grid, Alert } from '@mui/material';
+import { Box, TextField, Button, List, ListItem, ListItemText, IconButton, Paper, Typography, FormControlLabel, Checkbox, Grid, Alert, Dialog } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import type { Player, Role } from '../logic/types';
+import type { Player, Role, RoleDefinition } from '../logic/types';
 import { useTranslation } from 'react-i18next';
+import SettingsIcon from '@mui/icons-material/Settings';
+import { RoleEditor } from './RoleEditor';
 
 interface GameSetupProps {
     players: Player[];
+    customRoles: RoleDefinition[];
     onAddPlayer: (name: string) => void;
     onRemovePlayer: (id: string) => void;
     onStartGame: (roles: Role[]) => void;
+    onSaveCustomRoles: (roles: RoleDefinition[]) => void;
 }
 
 const SPECIAL_ROLES: Role[] = [
-    'WITCH', 'SEER', 'CUPID', 'LITTLE_GIRL', 'DETECTIVE', 'GUARDIAN',
+    'CUPID', 'WITCH', 'SEER', 'LITTLE_GIRL', 'DETECTIVE', 'GUARDIAN',
     'BLACK_CAT', 'HUNTER', 'WISE', 'BLACK_WEREWOLF', 'WHITE_WEREWOLF',
     'ANGEL', 'EASTER_BUNNY', 'WOLFDOG', 'RIPPER', 'SURVIVOR', 'PYROMANIAC', 'THIEF'
 ];
 
-export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRemovePlayer, onStartGame }) => {
+export const GameSetup: React.FC<GameSetupProps> = ({ players, customRoles = [], onAddPlayer, onRemovePlayer, onStartGame, onSaveCustomRoles }) => {
     const { t } = useTranslation();
     const [newName, setNewName] = useState('');
     const [enabledRoles, setEnabledRoles] = useState<Role[]>(['WITCH', 'SEER']);
+    const [isEditorOpen, setIsEditorOpen] = useState(false);
 
     const handleAdd = () => {
         if (newName.trim()) {
@@ -101,7 +106,16 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
             </Paper>
 
             <Paper sx={{ p: 3, mb: 3 }}>
-                <Typography variant="h6" gutterBottom>{t('games.werewolf.role_reveal')}</Typography>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="h6">{t('games.werewolf.role_reveal')}</Typography>
+                    <Button
+                        startIcon={<SettingsIcon />}
+                        size="small"
+                        onClick={() => setIsEditorOpen(true)}
+                    >
+                        {t('games.werewolf.editor.title', 'Editor')}
+                    </Button>
+                </Box>
                 <Typography variant="body2" sx={{ mb: 2 }}>
                     {t('games.werewolf.ui.select_roles_hint', 'Select roles to include:')}
                 </Typography>
@@ -127,8 +141,33 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
                             />
                         </Grid>
                     ))}
+                    {customRoles.map(role => (
+                        <Grid size={{ xs: 6 }} key={role.id}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={enabledRoles.includes(role.id)}
+                                        onChange={() => toggleRole(role.id)}
+                                        size="small"
+                                    />
+                                }
+                                label={<Typography variant="body2">{role.icon} {role.name}</Typography>}
+                            />
+                        </Grid>
+                    ))}
                 </Grid>
             </Paper>
+
+            <Dialog open={isEditorOpen} onClose={() => setIsEditorOpen(false)} fullScreen>
+                <RoleEditor
+                    customRoles={customRoles}
+                    onSaveRoles={(roles) => {
+                        onSaveCustomRoles(roles);
+                        setIsEditorOpen(false);
+                    }}
+                    onClose={() => setIsEditorOpen(false)}
+                />
+            </Dialog>
 
             <Button
                 variant="contained"

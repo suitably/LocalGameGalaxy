@@ -65,8 +65,18 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
 
         case 'NEXT_PHASE': {
             const { phase, incrementRound } = getNextPhase(state.phase);
+            let newPlayers = state.players;
+
+            // Process deaths from night action log when transitioning to day
+            if (phase === 'DAY') {
+                newPlayers = state.players.map(p =>
+                    state.nightActionLog.includes(p.id) ? { ...p, isAlive: false } : p
+                );
+            }
+
             return {
                 ...state,
+                players: newPlayers,
                 phase,
                 round: incrementRound ? state.round + 1 : state.round,
                 nightActionLog: phase === 'NIGHT' ? [] : state.nightActionLog // Clear log at start of night
@@ -130,16 +140,22 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                     }
                     break;
                 case 'INFECT':
-                    // Black Werewolf infects a player
+                    // Black Werewolf infects a player - they join the werewolf pack
                     newPlayers = newPlayers.map(p => {
                         if (p.id === nightAction.targetId) {
-                            return { ...p, powerState: { ...p.powerState, isInfected: true } };
+                            return {
+                                ...p,
+                                role: 'WEREWOLF',
+                                powerState: { ...p.powerState, isInfected: true, isDeadSoon: false }
+                            };
                         }
                         if (p.role === 'BLACK_WEREWOLF') {
                             return { ...p, powerState: { ...p.powerState, hasInfected: false } };
                         }
                         return p;
                     });
+                    // Remove from death log since they are now infected instead of killed
+                    newNightActionLog = newNightActionLog.filter(id => id !== nightAction.targetId);
                     break;
                 case 'HEAL':
                     // Witch heals
@@ -211,7 +227,10 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
             return INITIAL_STATE;
 
         case 'RESTORE_STATE':
-            return action.state;
+            return {
+                ...action.state,
+                customRoles: action.state.customRoles || []
+            };
 
         default:
             return state;

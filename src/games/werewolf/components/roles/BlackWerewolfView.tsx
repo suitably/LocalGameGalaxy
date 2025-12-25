@@ -1,29 +1,53 @@
 import React from 'react';
 import PestControlRodentIcon from '@mui/icons-material/PestControlRodent';
 import { useTranslation } from 'react-i18next';
-import { PlayerSelectionView } from '../PlayerSelectionView';
+import { Box, Typography, Button, Paper } from '@mui/material';
 import type { Player, NightAction } from '../../logic/types';
 
 interface RoleViewProps {
     players: Player[];
+    victim: Player;
     onAction: (action: NightAction) => void;
     onSkip: () => void;
     powerState?: any;
 }
 
-export const BlackWerewolfView: React.FC<RoleViewProps> = ({ players, onAction, onSkip, powerState }) => {
+export const BlackWerewolfView: React.FC<RoleViewProps> = ({ victim, onAction, onSkip }) => {
     const { t } = useTranslation();
+
     return (
-        <PlayerSelectionView
-            title={t('games.werewolf.roles.BLACK_WEREWOLF')}
-            icon={<PestControlRodentIcon sx={{ fontSize: 60 }} />}
-            instruction={t('games.werewolf.ui.black_werewolf.instruction')}
-            players={players.filter(p => p.isAlive && p.role !== 'WEREWOLF' && p.role !== 'BLACK_WEREWOLF')}
-            onSelect={(id) => onAction({ type: 'INFECT', targetId: id })}
-            onSkip={onSkip}
-            skipLabel={t('common.skip')}
-            buttonColor="error"
-            disabled={!powerState?.hasInfected}
-        />
+        <Box maxWidth="sm" mx="auto" textAlign="center">
+            <PestControlRodentIcon sx={{ fontSize: 60, color: 'secondary.main', mb: 2 }} />
+            <Typography variant="h4" gutterBottom>{t('games.werewolf.roles.BLACK_WEREWOLF')}</Typography>
+
+            <Paper sx={{ p: 3, mb: 3, bgcolor: 'rgba(0,0,0,0.1)' }}>
+                <Typography variant="body1" sx={{ mb: 3 }}>
+                    {t('games.werewolf.ui.black_werewolf.instruction')}
+                </Typography>
+                <Typography variant="h6" color="error" gutterBottom>
+                    {t('games.werewolf.narrator.select_victim')}: {victim.name}
+                </Typography>
+            </Paper>
+
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Button
+                    variant="contained"
+                    color="secondary"
+                    size="large"
+                    onClick={() => onAction({ type: 'INFECT', targetId: victim.id })}
+                >
+                    {t('games.werewolf.editor.ability_instruction_infect').replace('...', '')} {victim.name}
+                </Button>
+
+                <Button
+                    variant="outlined"
+                    onClick={onSkip}
+                    size="large"
+                >
+                    {t('common.skip')} / {t('games.werewolf.narrator.select_victim')}
+                </Button>
+            </Box>
+        </Box>
     );
 };
+

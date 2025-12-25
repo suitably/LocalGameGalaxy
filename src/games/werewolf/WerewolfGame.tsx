@@ -70,9 +70,11 @@ export const WerewolfGame: React.FC = () => {
             {gameState.phase === 'SETUP' && (
                 <GameSetup
                     players={gameState.players}
+                    customRoles={gameState.customRoles}
                     onAddPlayer={(name) => dispatch({ type: 'ADD_PLAYER', name })}
                     onRemovePlayer={(id) => dispatch({ type: 'REMOVE_PLAYER', id })}
                     onStartGame={(roles) => dispatch({ type: 'START_GAME', roles })}
+                    onSaveCustomRoles={(roles) => dispatch({ type: 'SAVE_CUSTOM_ROLES', roles })}
                 />
             )}
 
@@ -86,7 +88,9 @@ export const WerewolfGame: React.FC = () => {
             {gameState.phase === 'NIGHT' && (
                 <NightPhase
                     players={gameState.players}
+                    customRoles={gameState.customRoles}
                     round={gameState.round}
+                    nightActionLog={gameState.nightActionLog}
                     onNextPhase={() => dispatch({ type: 'NEXT_PHASE' })}
                     onNightAction={(action, role) => dispatch({ type: 'NIGHT_ACTION', action, role })}
                 />
