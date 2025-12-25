@@ -1,7 +1,7 @@
 import { INITIAL_STATE, getNextPhase } from './types';
 import type { GameState, Role, Action } from './types';
 
-import { isWerewolf, getDeathCascade } from './utils';
+import { getDeathCascade, getWinningFaction } from './utils';
 import { DEFAULT_ROLES } from './defaultRoles';
 
 
@@ -121,16 +121,7 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
 
             // Check win conditions
             const allRoles = [...DEFAULT_ROLES, ...state.customRoles];
-            const alivePlayers = newPlayers.filter(p => p.isAlive);
-            const aliveWerewolves = alivePlayers.filter(p => isWerewolf(p, allRoles)).length;
-            const aliveVillagers = alivePlayers.filter(p => !isWerewolf(p, allRoles)).length;
-
-            let winner: 'VILLAGERS' | 'WEREWOLVES' | null = null;
-            if (aliveWerewolves === 0) {
-                winner = 'VILLAGERS';
-            } else if (aliveWerewolves >= aliveVillagers) {
-                winner = 'WEREWOLVES';
-            }
+            const winner = getWinningFaction(newPlayers, allRoles);
 
             if (winner) {
                 return {
@@ -354,12 +345,26 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                     break;
             }
 
-            return {
+            const tempState = {
                 ...state,
                 players: newPlayers,
                 nightActionLog: newNightActionLog,
                 nightDecisions: [...state.nightDecisions, { role, action: nightAction }]
             };
+
+            // Check if this action caused a win condition (e.g. Easter Bunny)
+            const allRoles = [...DEFAULT_ROLES, ...state.customRoles];
+            const winResult = getWinningFaction(newPlayers, allRoles);
+
+            if (winResult) {
+                return {
+                    ...tempState,
+                    phase: 'GAME_OVER',
+                    winner: winResult
+                };
+            }
+
+            return tempState;
         }
 
         case 'HUNTER_SHOT': {
@@ -381,16 +386,7 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
 
             // Check win conditions after hunter shot
             const allRoles = [...DEFAULT_ROLES, ...state.customRoles];
-            const alivePlayers = newPlayers.filter(p => p.isAlive);
-            const aliveWerewolves = alivePlayers.filter(p => isWerewolf(p, allRoles)).length;
-            const aliveVillagers = alivePlayers.filter(p => !isWerewolf(p, allRoles)).length;
-
-            let winner: 'VILLAGERS' | 'WEREWOLVES' | null = null;
-            if (aliveWerewolves === 0) {
-                winner = 'VILLAGERS';
-            } else if (aliveWerewolves >= aliveVillagers) {
-                winner = 'WEREWOLVES';
-            }
+            const winner = getWinningFaction(newPlayers, allRoles);
 
             // If there's a winner, end the game immediately
             if (winner) {

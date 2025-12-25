@@ -97,3 +97,31 @@ export const getDeathCascade = (initialVictims: string[], players: Player[]): st
 
     return Array.from(toDie);
 };
+
+export const getWinningFaction = (players: Player[], allRoles: RoleDefinition[]): import('./types').GameState['winner'] => {
+    const alivePlayers = players.filter(p => p.isAlive);
+
+    // Easter Bunny Check: If Easter Bunny is alive AND everyone (alive) has an egg
+    const easterBunny = alivePlayers.find(p => p.role === 'EASTER_BUNNY');
+    if (easterBunny) {
+        // Check if all alive players have an egg
+        const allHaveEggs = alivePlayers.every(p => p.powerState.hasEgg);
+        if (allHaveEggs) {
+            return 'EASTER_BUNNY';
+        }
+    }
+
+    // Default Win Conditions
+    const aliveWerewolves = alivePlayers.filter(p => isWerewolf(p, allRoles)).length;
+    const aliveVillagers = alivePlayers.filter(p => !isWerewolf(p, allRoles)).length;
+
+    if (aliveWerewolves === 0 && alivePlayers.length > 0) {
+        return 'VILLAGERS';
+    } else if (aliveWerewolves >= aliveVillagers && aliveWerewolves > 0) {
+        return 'WEREWOLVES';
+    }
+
+    // TODO: Add other win conditions (White Werewolf, Angel, etc.) here as we refactor
+
+    return null;
+};

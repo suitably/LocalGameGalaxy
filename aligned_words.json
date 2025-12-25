@@ -1,0 +1,2532 @@
+[
+  {
+    "en": [
+      "Dog",
+      "Cat"
+    ],
+    "de": [
+      "Hund",
+      "Katze"
+    ]
+  },
+  {
+    "en": [
+      "Pizza",
+      "Burger"
+    ],
+    "de": [
+      "Pizza",
+      "Burger"
+    ]
+  },
+  {
+    "en": [
+      "Beach",
+      "Mountain"
+    ],
+    "de": [
+      "Strand",
+      "Berg"
+    ]
+  },
+  {
+    "en": [
+      "Coffee",
+      "Tea"
+    ],
+    "de": [
+      "Kaffee",
+      "Tee"
+    ]
+  },
+  {
+    "en": [
+      "Car",
+      "Bus"
+    ],
+    "de": [
+      "Auto",
+      "Bus"
+    ]
+  },
+  {
+    "en": [
+      "Sun",
+      "Moon"
+    ],
+    "de": [
+      "Sonne",
+      "Mond"
+    ]
+  },
+  {
+    "en": [
+      "Banana",
+      "Apple"
+    ],
+    "de": [
+      "Banane",
+      "Apfel"
+    ]
+  },
+  {
+    "en": [
+      "Perfume",
+      "Deodorant"
+    ],
+    "de": [
+      "Parfüm",
+      "Deo"
+    ]
+  },
+  {
+    "en": [
+      "Adidas",
+      "Nike"
+    ],
+    "de": [
+      "Adidas",
+      "Nike"
+    ]
+  },
+  {
+    "en": [
+      "backpack",
+      "suitcase"
+    ],
+    "de": [
+      "Rucksack",
+      "Koffer"
+    ]
+  },
+  {
+    "en": [
+      "jacuzzi",
+      "sauna"
+    ],
+    "de": [
+      "Whirlpool",
+      "Sauna"
+    ]
+  },
+  {
+    "en": [
+      "sneakers",
+      "sandals"
+    ],
+    "de": [
+      "Turnschuhe",
+      "Sandalen"
+    ]
+  },
+  {
+    "en": [
+      "sunglasses",
+      "eyeglasses"
+    ],
+    "de": [
+      "Sonnenbrille",
+      "Taucherbrille"
+    ]
+  },
+  {
+    "en": [
+      "piano",
+      "guitar"
+    ],
+    "de": [
+      "Klavier",
+      "Gitarre"
+    ]
+  },
+  {
+    "en": [
+      "cruise",
+      "safari"
+    ],
+    "de": [
+      "Kreuzfahrt",
+      "Safari"
+    ]
+  },
+  {
+    "en": [
+      "sushi",
+      "pizza"
+    ],
+    "de": [
+      "Sushi",
+      "Pizza"
+    ]
+  },
+  {
+    "en": [
+      "hamburger",
+      "hotdog"
+    ],
+    "de": [
+      "Hamburger",
+      "Hotdog"
+    ]
+  },
+  {
+    "en": [
+      "chocolate",
+      "vanilla"
+    ],
+    "de": [
+      "Schokolade",
+      "Vanille"
+    ]
+  },
+  {
+    "en": [
+      "beer",
+      "wine"
+    ],
+    "de": [
+      "Bier",
+      "Wein"
+    ]
+  },
+  {
+    "en": [
+      "whiskey",
+      "vodka"
+    ],
+    "de": [
+      "Whiskey",
+      "Wodka"
+    ]
+  },
+  {
+    "en": [
+      "milk",
+      "juice"
+    ],
+    "de": [
+      "Milch",
+      "Saft"
+    ]
+  },
+  {
+    "en": [
+      "bread",
+      "butter"
+    ],
+    "de": [
+      "Brot",
+      "Butter"
+    ]
+  },
+  {
+    "en": [
+      "rice",
+      "pasta"
+    ],
+    "de": [
+      "Reis",
+      "Nudeln"
+    ]
+  },
+  {
+    "en": [
+      "chicken",
+      "beef"
+    ],
+    "de": [
+      "Hühnchen",
+      "Rindfleisch"
+    ]
+  },
+  {
+    "en": [
+      "apple",
+      "orange"
+    ],
+    "de": [
+      "Apfel",
+      "Orange"
+    ]
+  },
+  {
+    "en": [
+      "banana",
+      "strawberry"
+    ],
+    "de": [
+      "Banane",
+      "Erdbeere"
+    ]
+  },
+  {
+    "en": [
+      "carrot",
+      "broccoli"
+    ],
+    "de": [
+      "Karotte",
+      "Brokkoli"
+    ]
+  },
+  {
+    "en": [
+      "potato",
+      "tomato"
+    ],
+    "de": [
+      "Kartoffel",
+      "Tomate"
+    ]
+  },
+  {
+    "en": [
+      "onion",
+      "garlic"
+    ],
+    "de": [
+      "Zwiebel",
+      "Knoblauch"
+    ]
+  },
+  {
+    "en": [
+      "salt",
+      "pepper"
+    ],
+    "de": [
+      "Salz",
+      "Pfeffer"
+    ]
+  },
+  {
+    "en": [
+      "sugar",
+      "honey"
+    ],
+    "de": [
+      "Zucker",
+      "Honig"
+    ]
+  },
+  {
+    "en": [
+      "water",
+      "soda"
+    ],
+    "de": [
+      "Wasser",
+      "Limonade"
+    ]
+  },
+  {
+    "en": [
+      "Apple",
+      "Microsoft"
+    ],
+    "de": [
+      "Apple",
+      "Microsoft"
+    ]
+  },
+  {
+    "en": [
+      "Google",
+      "Facebook"
+    ],
+    "de": [
+      "Google",
+      "Facebook"
+    ]
+  },
+  {
+    "en": [
+      "Amazon",
+      "Netflix"
+    ],
+    "de": [
+      "Amazon",
+      "Netflix"
+    ]
+  },
+  {
+    "en": [
+      "Pancake",
+      "Doughnut"
+    ],
+    "de": [
+      "Pfannkuchen",
+      "Donut"
+    ]
+  },
+  {
+    "en": [
+      "Ice cream",
+      "Cake"
+    ],
+    "de": [
+      "Eiscreme",
+      "Kuchen"
+    ]
+  },
+  {
+    "en": [
+      "McDonalds",
+      "KFC"
+    ],
+    "de": [
+      "McDonalds",
+      "KFC"
+    ]
+  },
+  {
+    "en": [
+      "Car",
+      "Bike"
+    ],
+    "de": [
+      "Auto",
+      "Fahrrad"
+    ]
+  },
+  {
+    "en": [
+      "virus",
+      "bacteria"
+    ],
+    "de": [
+      "Virus",
+      "Bakterien"
+    ]
+  },
+  {
+    "en": [
+      "Lord of the rings",
+      "Hobbit"
+    ],
+    "de": [
+      "Herr der Ringe",
+      "Der Hobbit"
+    ]
+  },
+  {
+    "en": [
+      "Harry Potter",
+      "Lord Voldemort"
+    ],
+    "de": [
+      "Harry Potter",
+      "Lord Voldemort"
+    ]
+  },
+  {
+    "en": [
+      "Superman",
+      "Batman"
+    ],
+    "de": [
+      "Superman",
+      "Batman"
+    ]
+  },
+  {
+    "en": [
+      "Spiderman",
+      "Ironman"
+    ],
+    "de": [
+      "Spiderman",
+      "Ironman"
+    ]
+  },
+  {
+    "en": [
+      "Captain America",
+      "Thor"
+    ],
+    "de": [
+      "Captain America",
+      "Thor"
+    ]
+  },
+  {
+    "en": [
+      "Pizza",
+      "Pasta"
+    ],
+    "de": [
+      "Pizza",
+      "Pasta"
+    ]
+  },
+  {
+    "en": [
+      "Football",
+      "Basketball"
+    ],
+    "de": [
+      "Baseball",
+      "Football"
+    ]
+  },
+  {
+    "en": [
+      "Dog",
+      "Wolf"
+    ],
+    "de": [
+      "Hund",
+      "Wolf"
+    ]
+  },
+  {
+    "en": [
+      "Pizza",
+      "Lasagna"
+    ],
+    "de": [
+      "Pizza",
+      "Lasagne"
+    ]
+  },
+  {
+    "en": [
+      "Facebook",
+      "Instagram"
+    ],
+    "de": [
+      "Facebook",
+      "Instagram"
+    ]
+  },
+  {
+    "en": [
+      "Sunglasses",
+      "Goggles"
+    ],
+    "de": [
+      "Sonnenbrille",
+      "Taucherbrille"
+    ]
+  },
+  {
+    "en": [
+      "Laptop",
+      "Tablet"
+    ],
+    "de": [
+      "Laptop",
+      "Tablet"
+    ]
+  },
+  {
+    "en": [
+      "Doctor",
+      "Surgeon"
+    ],
+    "de": [
+      "Arzt",
+      "Chirurg"
+    ]
+  },
+  {
+    "en": [
+      "Bitcoin",
+      "Ethereum"
+    ],
+    "de": [
+      "Bitcoin",
+      "Ethereum"
+    ]
+  },
+  {
+    "en": [
+      "Bomb",
+      "Gun"
+    ],
+    "de": [
+      "Bombe",
+      "Gewehr"
+    ]
+  },
+  {
+    "en": [
+      "Einstein",
+      "Newton"
+    ],
+    "de": [
+      "Einstein",
+      "Newton"
+    ]
+  },
+  {
+    "en": [
+      "Soccer",
+      "Rugby"
+    ],
+    "de": [
+      "Fußball",
+      "Rugby"
+    ]
+  },
+  {
+    "en": [
+      "Teacher",
+      "Professor"
+    ],
+    "de": [
+      "Lehrer",
+      "Professor"
+    ]
+  },
+  {
+    "en": [
+      "Mouse",
+      "Rat"
+    ],
+    "de": [
+      "Maus",
+      "Ratte"
+    ]
+  },
+  {
+    "en": [
+      "Cucumber",
+      "Zucchini"
+    ],
+    "de": [
+      "Gurke",
+      "Zucchini"
+    ]
+  },
+  {
+    "en": [
+      "Dragon",
+      "Dinosaur"
+    ],
+    "de": [
+      "Drache",
+      "Dinosaurier"
+    ]
+  },
+  {
+    "en": [
+      "Ghost",
+      "Zombie"
+    ],
+    "de": [
+      "Geist",
+      "Zombie"
+    ]
+  },
+  {
+    "en": [
+      "Chef",
+      "Kitchen counter"
+    ],
+    "de": [
+      "Küchentheke",
+      "Küchenchef"
+    ]
+  },
+  {
+    "en": [
+      "Pyramid",
+      "Temple"
+    ],
+    "de": [
+      "Pyramide",
+      "Tempel"
+    ]
+  },
+  {
+    "en": [
+      "Volcano",
+      "Mountain"
+    ],
+    "de": [
+      "Vulkan",
+      "Berg"
+    ]
+  },
+  {
+    "en": [
+      "Desert",
+      "Sand"
+    ],
+    "de": [
+      "Wüste",
+      "Sand"
+    ]
+  },
+  {
+    "en": [
+      "Cloud",
+      "Fog"
+    ],
+    "de": [
+      "Wolke",
+      "Nebel"
+    ]
+  },
+  {
+    "en": [
+      "Snow",
+      "Hail"
+    ],
+    "de": [
+      "Schnee",
+      "Hagel"
+    ]
+  },
+  {
+    "en": [
+      "Detective",
+      "Criminal"
+    ],
+    "de": [
+      "Detektiv",
+      "Verbrecher"
+    ]
+  },
+  {
+    "en": [
+      "Jungle",
+      "Forest"
+    ],
+    "de": [
+      "Dschungel",
+      "Wald"
+    ]
+  },
+  {
+    "en": [
+      "Clock",
+      "Watch"
+    ],
+    "de": [
+      "Uhr",
+      "Armbanduhr"
+    ]
+  },
+  {
+    "en": [
+      "Bread",
+      "Toast"
+    ],
+    "de": [
+      "Brot",
+      "Toast"
+    ]
+  },
+  {
+    "en": [
+      "Painting",
+      "Sketch"
+    ],
+    "de": [
+      "Gemälde",
+      "Skizze"
+    ]
+  },
+  {
+    "en": [
+      "Umbrella",
+      "Parasol"
+    ],
+    "de": [
+      "Regenschirm",
+      "Sonnenschirm"
+    ]
+  },
+  {
+    "en": [
+      "Suit",
+      "necktie"
+    ],
+    "de": [
+      "Anzug",
+      "Krawatte"
+    ]
+  },
+  {
+    "en": [
+      "Socks",
+      "Stockings"
+    ],
+    "de": [
+      "Socken",
+      "Strumpfhosen"
+    ]
+  },
+  {
+    "en": [
+      "Belt",
+      "Jeans"
+    ],
+    "de": [
+      "Gürtel",
+      "Jeans"
+    ]
+  },
+  {
+    "en": [
+      "Crown",
+      "Hat"
+    ],
+    "de": [
+      "Krone",
+      "Hut"
+    ]
+  },
+  {
+    "en": [
+      "Ballet",
+      "Hip Hop"
+    ],
+    "de": [
+      "Ballett",
+      "Hip Hop"
+    ]
+  },
+  {
+    "en": [
+      "Parrot",
+      "Crow"
+    ],
+    "de": [
+      "Papagei",
+      "Krähe"
+    ]
+  },
+  {
+    "en": [
+      "Bat",
+      "Owl"
+    ],
+    "de": [
+      "Fledermaus",
+      "Eule"
+    ]
+  },
+  {
+    "en": [
+      "Candle",
+      "Lantern"
+    ],
+    "de": [
+      "Kerze",
+      "Laterne"
+    ]
+  },
+  {
+    "en": [
+      "Library",
+      "University"
+    ],
+    "de": [
+      "Bibliothek",
+      "Universität"
+    ]
+  },
+  {
+    "en": [
+      "Museum",
+      "Gallery"
+    ],
+    "de": [
+      "Museum",
+      "Galerie"
+    ]
+  },
+  {
+    "en": [
+      "Radio",
+      "Podcast"
+    ],
+    "de": [
+      "Radio",
+      "Podcast"
+    ]
+  },
+  {
+    "en": [
+      "online news",
+      "Newspaper"
+    ],
+    "de": [
+      "Online Nachrichten",
+      "Zeitung"
+    ]
+  },
+  {
+    "en": [
+      "Pen",
+      "Paper"
+    ],
+    "de": [
+      "Kugelschreiber",
+      "Blatt Papier"
+    ]
+  },
+  {
+    "en": [
+      "Moon",
+      "Sun"
+    ],
+    "de": [
+      "Mond",
+      "Sonne"
+    ]
+  },
+  {
+    "en": [
+      "Tennis",
+      "Badminton"
+    ],
+    "de": [
+      "Tennis",
+      "Badminton"
+    ]
+  },
+  {
+    "en": [
+      "Skiing",
+      "Snow"
+    ],
+    "de": [
+      "Skifahren",
+      "Schnee"
+    ]
+  },
+  {
+    "en": [
+      "Swimming",
+      "Diving"
+    ],
+    "de": [
+      "Schwimmen",
+      "Tauchen"
+    ]
+  },
+  {
+    "en": [
+      "Running",
+      "Jogging"
+    ],
+    "de": [
+      "Laufen",
+      "Joggen"
+    ]
+  },
+  {
+    "en": [
+      "Elevator",
+      "Escalator"
+    ],
+    "de": [
+      "Aufzug",
+      "Rolltreppe"
+    ]
+  },
+  {
+    "en": [
+      "Ferry",
+      "Cruise"
+    ],
+    "de": [
+      "Fähre",
+      "Kreuzfahrt"
+    ]
+  },
+  {
+    "en": [
+      "Map",
+      "GPS"
+    ],
+    "de": [
+      "Karte",
+      "GPS"
+    ]
+  },
+  {
+    "en": [
+      "Sailboat",
+      "Yacht"
+    ],
+    "de": [
+      "Segelboot",
+      "Yacht"
+    ]
+  },
+  {
+    "en": [
+      "Meteor",
+      "Satellite"
+    ],
+    "de": [
+      "Meteor",
+      "Satellit"
+    ]
+  },
+  {
+    "en": [
+      "Planet",
+      "Star"
+    ],
+    "de": [
+      "Planet",
+      "Stern"
+    ]
+  },
+  {
+    "en": [
+      "Earthquake",
+      "Tsunami"
+    ],
+    "de": [
+      "Erdbeben",
+      "Tsunami"
+    ]
+  },
+  {
+    "en": [
+      "Wolf",
+      "Fox"
+    ],
+    "de": [
+      "Wolf",
+      "Fuchs"
+    ]
+  },
+  {
+    "en": [
+      "Elvis",
+      "The Beatles"
+    ],
+    "de": [
+      "Elvis",
+      "The Beatles"
+    ]
+  },
+  {
+    "en": [
+      "Leonardo da Vinci",
+      "Michelangelo"
+    ],
+    "de": [
+      "Leonardo da Vinci",
+      "Michelangelo"
+    ]
+  },
+  {
+    "en": [
+      "Napoleon",
+      "Caesar"
+    ],
+    "de": [
+      "Napoleon",
+      "Cäsar"
+    ]
+  },
+  {
+    "en": [
+      "Mario",
+      "Luigi"
+    ],
+    "de": [
+      "Mario",
+      "Luigi"
+    ]
+  },
+  {
+    "en": [
+      "Sonic",
+      "Tails"
+    ],
+    "de": [
+      "Sonic",
+      "Tails"
+    ]
+  },
+  {
+    "en": [
+      "Pac-Man",
+      "Tetris"
+    ],
+    "de": [
+      "Pac-Man",
+      "Tetris"
+    ]
+  },
+  {
+    "en": [
+      "Fortnite",
+      "Minecraft"
+    ],
+    "de": [
+      "Fortnite",
+      "Minecraft"
+    ]
+  },
+  {
+    "en": [
+      "Call of Duty",
+      "Battlefield"
+    ],
+    "de": [
+      "Call of Duty",
+      "Battlefield"
+    ]
+  },
+  {
+    "en": [
+      "Game of Thrones",
+      "Lord of the Rings"
+    ],
+    "de": [
+      "Game of Thrones",
+      "Herr der Ringe"
+    ]
+  },
+  {
+    "en": [
+      "Star Wars",
+      "Star Trek"
+    ],
+    "de": [
+      "Star Wars",
+      "Star Trek"
+    ]
+  },
+  {
+    "en": [
+      "Harry Potter",
+      "Percy Jackson"
+    ],
+    "de": [
+      "Harry Potter",
+      "Percy Jackson"
+    ]
+  },
+  {
+    "en": [
+      "Sherlock Holmes",
+      "Hercule Poirot"
+    ],
+    "de": [
+      "Sherlock Holmes",
+      "Hercule Poirot"
+    ]
+  },
+  {
+    "en": [
+      "Dracula",
+      "Frankenstein"
+    ],
+    "de": [
+      "Dracula",
+      "Frankenstein"
+    ]
+  },
+  {
+    "en": [
+      "James Bond",
+      "Secret Service"
+    ],
+    "de": [
+      "James Bond",
+      "Geheimdienst"
+    ]
+  },
+  {
+    "en": [
+      "Homer Simpson",
+      "Peter Griffin"
+    ],
+    "de": [
+      "Homer Simpson",
+      "Peter Griffin"
+    ]
+  },
+  {
+    "en": [
+      "SpongeBob",
+      "Patrick"
+    ],
+    "de": [
+      "SpongeBob",
+      "Patrick"
+    ]
+  },
+  {
+    "en": [
+      "Godzilla",
+      "King Kong"
+    ],
+    "de": [
+      "Godzilla",
+      "King Kong"
+    ]
+  },
+  {
+    "en": [
+      "Lego",
+      "Playmobil"
+    ],
+    "de": [
+      "Lego",
+      "Playmobil"
+    ]
+  },
+  {
+    "en": [
+      "UNO",
+      "Monopoly"
+    ],
+    "de": [
+      "UNO",
+      "Monopoly"
+    ]
+  },
+  {
+    "en": [
+      "Catan",
+      "Risk"
+    ],
+    "de": [
+      "Catan",
+      "Risiko"
+    ]
+  },
+  {
+    "en": [
+      "Blackjack",
+      "Poker"
+    ],
+    "de": [
+      "Blackjack",
+      "Poker"
+    ]
+  },
+  {
+    "en": [
+      "Bingo",
+      "Roulette"
+    ],
+    "de": [
+      "Bingo",
+      "Roulette"
+    ]
+  },
+  {
+    "en": [
+      "New York",
+      "Los Angeles"
+    ],
+    "de": [
+      "New York",
+      "Los Angeles"
+    ]
+  },
+  {
+    "en": [
+      "Paris",
+      "London"
+    ],
+    "de": [
+      "Paris",
+      "London"
+    ]
+  },
+  {
+    "en": [
+      "Rome",
+      "Athens"
+    ],
+    "de": [
+      "Rom",
+      "Athen"
+    ]
+  },
+  {
+    "en": [
+      "Sydney",
+      "Melbourne"
+    ],
+    "de": [
+      "Sydney",
+      "Melbourne"
+    ]
+  },
+  {
+    "en": [
+      "Rio de Janeiro",
+      "Buenos Aires"
+    ],
+    "de": [
+      "Rio de Janeiro",
+      "Buenos Aires"
+    ]
+  },
+  {
+    "en": [
+      "Mount Everest",
+      "Nepal"
+    ],
+    "de": [
+      "Mount Everest",
+      "Nepal"
+    ]
+  },
+  {
+    "en": [
+      "Amazon",
+      "Nile"
+    ],
+    "de": [
+      "Amazonas",
+      "Nil"
+    ]
+  },
+  {
+    "en": [
+      "Grand Canyon",
+      "Niagara Falls"
+    ],
+    "de": [
+      "Grand Canyon",
+      "Niagarafälle"
+    ]
+  },
+  {
+    "en": [
+      "Taj Mahal",
+      "Great Wall of China"
+    ],
+    "de": [
+      "Taj Mahal",
+      "Chinesische Mauer"
+    ]
+  },
+  {
+    "en": [
+      "Eiffel Tower",
+      "Statue of Liberty"
+    ],
+    "de": [
+      "Eiffelturm",
+      "Freiheitsstatue"
+    ]
+  },
+  {
+    "en": [
+      "Big Ben",
+      "Leaning Tower of Pisa"
+    ],
+    "de": [
+      "Big Ben",
+      "Schiefer Turm von Pisa"
+    ]
+  },
+  {
+    "en": [
+      "Olympics",
+      "World Cup"
+    ],
+    "de": [
+      "Olympia",
+      "WM"
+    ]
+  },
+  {
+    "en": [
+      "NBA",
+      "NFL"
+    ],
+    "de": [
+      "NBA",
+      "NFL"
+    ]
+  },
+  {
+    "en": [
+      "Golf",
+      "Cricket"
+    ],
+    "de": [
+      "Golf",
+      "Cricket"
+    ]
+  },
+  {
+    "en": [
+      "UFC",
+      "WWE"
+    ],
+    "de": [
+      "UFC",
+      "WWE"
+    ]
+  },
+  {
+    "en": [
+      "Twitch",
+      "Netflix"
+    ],
+    "de": [
+      "Twitch",
+      "Netflix"
+    ]
+  },
+  {
+    "en": [
+      "Twitter",
+      "Facebook"
+    ],
+    "de": [
+      "Twitter",
+      "Facebook"
+    ]
+  },
+  {
+    "en": [
+      "SpaceX",
+      "Tesla"
+    ],
+    "de": [
+      "SpaceX",
+      "Tesla"
+    ]
+  },
+  {
+    "en": [
+      "Burger King",
+      "McDonald’s"
+    ],
+    "de": [
+      "Burger King",
+      "McDonald’s"
+    ]
+  },
+  {
+    "en": [
+      "Sony",
+      "Samsung"
+    ],
+    "de": [
+      "Sony",
+      "Samsung"
+    ]
+  },
+  {
+    "en": [
+      "Mercedes",
+      "BMW"
+    ],
+    "de": [
+      "Mercedes",
+      "BMW"
+    ]
+  },
+  {
+    "en": [
+      "Harvard",
+      "MIT"
+    ],
+    "de": [
+      "Harvard",
+      "MIT"
+    ]
+  },
+  {
+    "en": [
+      "Oxford",
+      "Highschool"
+    ],
+    "de": [
+      "Oxford",
+      "Schule"
+    ]
+  },
+  {
+    "en": [
+      "CIA",
+      "FBI"
+    ],
+    "de": [
+      "CIA",
+      "FBI"
+    ]
+  },
+  {
+    "en": [
+      "Hitler",
+      "Stalin"
+    ],
+    "de": [
+      "Hitler",
+      "Stalin"
+    ]
+  },
+  {
+    "en": [
+      "Tesla",
+      "Porsche"
+    ],
+    "de": [
+      "Tesla",
+      "Porsche"
+    ]
+  },
+  {
+    "en": [
+      "iPhone",
+      "Samsung"
+    ],
+    "de": [
+      "iPhone",
+      "Samsung"
+    ]
+  },
+  {
+    "en": [
+      "PlayStation",
+      "Xbox"
+    ],
+    "de": [
+      "PlayStation",
+      "Xbox"
+    ]
+  },
+  {
+    "en": [
+      "Windows",
+      "MacOS"
+    ],
+    "de": [
+      "Windows",
+      "MacOS"
+    ]
+  },
+  {
+    "en": [
+      "YouTube",
+      "TikTok"
+    ],
+    "de": [
+      "YouTube",
+      "TikTok"
+    ]
+  },
+  {
+    "en": [
+      "Twitch",
+      "Kick"
+    ],
+    "de": [
+      "Twitch",
+      "Kick"
+    ]
+  },
+  {
+    "en": [
+      "Spotify",
+      "Apple Music"
+    ],
+    "de": [
+      "Spotify",
+      "Apple Music"
+    ]
+  },
+  {
+    "en": [
+      "Reddit",
+      "Discord"
+    ],
+    "de": [
+      "Reddit",
+      "Discord"
+    ]
+  },
+  {
+    "en": [
+      "Instagram",
+      "Snapchat"
+    ],
+    "de": [
+      "Instagram",
+      "Snapchat"
+    ]
+  },
+  {
+    "en": [
+      "ChatGPT",
+      "Gemini"
+    ],
+    "de": [
+      "ChatGPT",
+      "Gemini"
+    ]
+  },
+  {
+    "en": [
+      "Laptop",
+      "Desktop"
+    ],
+    "de": [
+      "Laptop",
+      "Desktop"
+    ]
+  },
+  {
+    "en": [
+      "Moon",
+      "Planet"
+    ],
+    "de": [
+      "Mond",
+      "Planet"
+    ]
+  },
+  {
+    "en": [
+      "Comet",
+      "Asteroid"
+    ],
+    "de": [
+      "Komet",
+      "Asteroid"
+    ]
+  },
+  {
+    "en": [
+      "Bridge",
+      "Tunnel"
+    ],
+    "de": [
+      "Brücke",
+      "Tunnel"
+    ]
+  },
+  {
+    "en": [
+      "Bus",
+      "Tram"
+    ],
+    "de": [
+      "Bus",
+      "Straßenbahn"
+    ]
+  },
+  {
+    "en": [
+      "Giraffe",
+      "Zebra"
+    ],
+    "de": [
+      "Giraffe",
+      "Zebra"
+    ]
+  },
+  {
+    "en": [
+      "Elephant",
+      "Rhino"
+    ],
+    "de": [
+      "Elefant",
+      "Nashorn"
+    ]
+  },
+  {
+    "en": [
+      "Alligator",
+      "Crocodile"
+    ],
+    "de": [
+      "Skorpion",
+      "Spinne"
+    ]
+  },
+  {
+    "en": [
+      "Oyster",
+      "Clam"
+    ],
+    "de": [
+      "Tintenfisch",
+      "Oktopus"
+    ]
+  },
+  {
+    "en": [
+      "Gold",
+      "Silver"
+    ],
+    "de": [
+      "Gold",
+      "Silber"
+    ]
+  },
+  {
+    "en": [
+      "Platinum",
+      "Gold"
+    ],
+    "de": [
+      "Platin",
+      "Gold"
+    ]
+  },
+  {
+    "en": [
+      "Jacket",
+      "Coat"
+    ],
+    "de": [
+      "Jacke",
+      "Mantel"
+    ]
+  },
+  {
+    "en": [
+      "Scarf",
+      "Tie"
+    ],
+    "de": [
+      "Stiefel",
+      "Turnschuhe"
+    ]
+  },
+  {
+    "en": [
+      "Helmet",
+      "Hat"
+    ],
+    "de": [
+      "Helm",
+      "Hut"
+    ]
+  },
+  {
+    "en": [
+      "Ring",
+      "Earring"
+    ],
+    "de": [
+      "Ring",
+      "Ohrring"
+    ]
+  },
+  {
+    "en": [
+      "Microphone",
+      "Speaker"
+    ],
+    "de": [
+      "Mikrofon",
+      "Lautsprecher"
+    ]
+  },
+  {
+    "en": [
+      "Headphones",
+      "Earbuds"
+    ],
+    "de": [
+      "Kopfhörer",
+      "Ohrstöpsel"
+    ]
+  },
+  {
+    "en": [
+      "Television",
+      "Radio"
+    ],
+    "de": [
+      "Fernseher",
+      "Radio"
+    ]
+  },
+  {
+    "en": [
+      "Projector",
+      "Screen"
+    ],
+    "de": [
+      "Projektor",
+      "Leinwand"
+    ]
+  },
+  {
+    "en": [
+      "Calculator",
+      "Typewriter"
+    ],
+    "de": [
+      "Taschenrechner",
+      "Schreibmaschine"
+    ]
+  },
+  {
+    "en": [
+      "Flashlight",
+      "Lantern"
+    ],
+    "de": [
+      "Taschenlampe",
+      "Laterne"
+    ]
+  },
+  {
+    "en": [
+      "Tent",
+      "Cabin"
+    ],
+    "de": [
+      "Zelt",
+      "Hütte"
+    ]
+  },
+  {
+    "en": [
+      "Compass",
+      "Map"
+    ],
+    "de": [
+      "Kompass",
+      "Karte"
+    ]
+  },
+  {
+    "en": [
+      "Boarding pass",
+      "ID card"
+    ],
+    "de": [
+      "Bordkarte",
+      "Ausweis"
+    ]
+  },
+  {
+    "en": [
+      "Ticket",
+      "Invoice"
+    ],
+    "de": [
+      "Ticket",
+      "Rechnung"
+    ]
+  },
+  {
+    "en": [
+      "Passport",
+      "Ticket"
+    ],
+    "de": [
+      "Reisepass",
+      "Ticket"
+    ]
+  },
+  {
+    "en": [
+      "Subway",
+      "Taxi"
+    ],
+    "de": [
+      "U-Bahn",
+      "Taxi"
+    ]
+  },
+  {
+    "en": [
+      "Sky",
+      "Jet"
+    ],
+    "de": [
+      "Himmel",
+      "Jet"
+    ]
+  },
+  {
+    "en": [
+      "Motorcycle",
+      "Scooter"
+    ],
+    "de": [
+      "Motorrad",
+      "Roller"
+    ]
+  },
+  {
+    "en": [
+      "Surfboard",
+      "Skateboard"
+    ],
+    "de": [
+      "Surfbrett",
+      "Skateboard"
+    ]
+  },
+  {
+    "en": [
+      "Baseball",
+      "Football"
+    ],
+    "de": [
+      "Baseball",
+      "Football"
+    ]
+  },
+  {
+    "en": [
+      "Volleyball",
+      "Basketball"
+    ],
+    "de": [
+      "Volleyball",
+      "Basketball"
+    ]
+  },
+  {
+    "en": [
+      "Table tennis",
+      "Badminton"
+    ],
+    "de": [
+      "Tischtennis",
+      "Badminton"
+    ]
+  },
+  {
+    "en": [
+      "Puzzle",
+      "Crossword"
+    ],
+    "de": [
+      "Puzzle",
+      "Kreuzworträtsel"
+    ]
+  },
+  {
+    "en": [
+      "Bowling",
+      "Golf"
+    ],
+    "de": [
+      "Bowling",
+      "Golf"
+    ]
+  },
+  {
+    "en": [
+      "Marathon",
+      "Sprint"
+    ],
+    "de": [
+      "Marathon",
+      "Sprint"
+    ]
+  },
+  {
+    "en": [
+      "Fencing",
+      "Archery"
+    ],
+    "de": [
+      "Fechten",
+      "Bogenschießen"
+    ]
+  },
+  {
+    "en": [
+      "Boxing",
+      "Karate"
+    ],
+    "de": [
+      "Boxen",
+      "Karate"
+    ]
+  },
+  {
+    "en": [
+      "Hockey",
+      "Soccer"
+    ],
+    "de": [
+      "Hockey",
+      "Fußball"
+    ]
+  },
+  {
+    "en": [
+      "Concert",
+      "Festival"
+    ],
+    "de": [
+      "Konzert",
+      "Festival"
+    ]
+  },
+  {
+    "en": [
+      "Novel",
+      "Poem"
+    ],
+    "de": [
+      "Netflix",
+      "Kino"
+    ]
+  },
+  {
+    "en": [
+      "Dictionary",
+      "Encyclopedia"
+    ],
+    "de": [
+      "Roman",
+      "Gedicht"
+    ]
+  },
+  {
+    "en": [
+      "Pharmacist",
+      "Doctor"
+    ],
+    "de": [
+      "Enzyklopädie",
+      "Wörterbuch"
+    ]
+  },
+  {
+    "en": [
+      "Engineer",
+      "Architect"
+    ],
+    "de": [
+      "Apotheker",
+      "Arzt"
+    ]
+  },
+  {
+    "en": [
+      "Firefighter",
+      "Policeman"
+    ],
+    "de": [
+      "Ingenieur",
+      "Architekt"
+    ]
+  },
+  {
+    "en": [
+      "Germany",
+      "France"
+    ],
+    "de": [
+      "Feuerwehrmann",
+      "Polizist"
+    ]
+  },
+  {
+    "en": [
+      "Pilot",
+      "Astronaut"
+    ],
+    "de": [
+      "Pilot",
+      "Astronaut"
+    ]
+  },
+  {
+    "en": [
+      "Judge",
+      "Punishment"
+    ],
+    "de": [
+      "Richter",
+      "Strafe"
+    ]
+  },
+  {
+    "en": [
+      "Baker",
+      "Chef"
+    ],
+    "de": [
+      "Bäcker",
+      "Koch"
+    ]
+  },
+  {
+    "en": [
+      "Farmer",
+      "Fisherman"
+    ],
+    "de": [
+      "Bauer",
+      "Fischer"
+    ]
+  },
+  {
+    "en": [
+      "Blacksmith",
+      "Carpenter"
+    ],
+    "de": [
+      "Schmied",
+      "Zimmermann"
+    ]
+  },
+  {
+    "en": [
+      "Heaven",
+      "Hell"
+    ],
+    "de": [
+      "Himmel",
+      "Hölle"
+    ]
+  },
+  {
+    "en": [
+      "Sky",
+      "Clouds"
+    ],
+    "de": [
+      "Himmel",
+      "Wolken"
+    ]
+  },
+  {
+    "en": [
+      "Japan",
+      "China"
+    ],
+    "de": [
+      "Japan",
+      "China"
+    ]
+  },
+  {
+    "en": [
+      "France",
+      "Eiffel Tower"
+    ],
+    "de": [
+      "Frankreich",
+      "Eiffelturm"
+    ]
+  },
+  {
+    "en": [
+      "Thor",
+      "Lightning"
+    ],
+    "de": [
+      "Thor",
+      "Blitz"
+    ]
+  },
+  {
+    "en": [
+      "Obi Wan",
+      "Force"
+    ],
+    "de": [
+      "Obi Wan",
+      "Macht"
+    ]
+  },
+  {
+    "en": [
+      "UFO",
+      "Drones"
+    ],
+    "de": [
+      "UFO",
+      "Drohnen"
+    ]
+  },
+  {
+    "en": [
+      "God",
+      "Heaven"
+    ],
+    "de": [
+      "Gott",
+      "Himmel"
+    ]
+  },
+  {
+    "en": [
+      "Tortilla",
+      "Taco"
+    ],
+    "de": [
+      "Tortilla",
+      "Taco"
+    ]
+  },
+  {
+    "en": [
+      "Baguette",
+      "Ciabatta"
+    ],
+    "de": [
+      "Baguette",
+      "Ciabatta"
+    ]
+  },
+  {
+    "en": [
+      "Hot Dog",
+      "Bratwurst"
+    ],
+    "de": [
+      "Hot Dog",
+      "Bratwurst"
+    ]
+  },
+  {
+    "en": [
+      "Energy Drink",
+      "Soda"
+    ],
+    "de": [
+      "Energy Drink",
+      "Limonade"
+    ]
+  },
+  {
+    "en": [
+      "Coconut milk",
+      "soy milk"
+    ],
+    "de": [
+      "Kokosmilch",
+      "Sojamilch"
+    ]
+  },
+  {
+    "en": [
+      "Picasso",
+      "Van Gogh"
+    ],
+    "de": [
+      "Picasso",
+      "Van Gogh"
+    ]
+  },
+  {
+    "en": [
+      "Mozart",
+      "Beethoven"
+    ],
+    "de": [
+      "Mozart",
+      "Beethoven"
+    ]
+  },
+  {
+    "en": [
+      "Messi",
+      "Ronaldo"
+    ],
+    "de": [
+      "Messi",
+      "Ronaldo"
+    ]
+  },
+  {
+    "en": [
+      "Bayern Munich",
+      "Real Madrid"
+    ],
+    "de": [
+      "Bayern München",
+      "Real Madrid"
+    ]
+  },
+  {
+    "en": [
+      "Ferrari",
+      "Lamborghini"
+    ],
+    "de": [
+      "Ferrari",
+      "Lamborghini"
+    ]
+  },
+  {
+    "en": [
+      "Coca-Cola",
+      "Pepsi"
+    ],
+    "de": [
+      "Coca-Cola",
+      "Pepsi"
+    ]
+  },
+  {
+    "en": [
+      "London",
+      "Paris"
+    ],
+    "de": [
+      "London",
+      "Paris"
+    ]
+  },
+  {
+    "en": [
+      "Los Angeles",
+      "New York"
+    ],
+    "de": [
+      "Los Angeles",
+      "New York"
+    ]
+  },
+  {
+    "en": [
+      "Big Ben",
+      "Leaning Tower of Pisa"
+    ],
+    "de": [
+      "Big Ben",
+      "Schiefer Turm von Pisa"
+    ]
+  },
+  {
+    "en": [
+      "Statue of Liberty",
+      "Eiffel Tower"
+    ],
+    "de": [
+      "Freiheitsstatue",
+      "Eiffelturm"
+    ]
+  },
+  {
+    "en": [
+      "Mouse",
+      "Keyboard"
+    ],
+    "de": [
+      "Maus",
+      "Tastatur"
+    ]
+  },
+  {
+    "en": [
+      "TV",
+      "Laptop"
+    ],
+    "de": [
+      "Fernseher",
+      "Laptop"
+    ]
+  },
+  {
+    "en": [
+      "Wardrobe",
+      "Showcase"
+    ],
+    "de": [
+      "Schrank",
+      "Vitrine"
+    ]
+  },
+  {
+    "en": [
+      "Birch",
+      "Shrub"
+    ],
+    "de": [
+      "Birke",
+      "Strauch"
+    ]
+  },
+  {
+    "en": [
+      "Radiator",
+      "Hairdryer"
+    ],
+    "de": [
+      "Heizung",
+      "Föhn"
+    ]
+  },
+  {
+    "en": [
+      "Lamp",
+      "Candle"
+    ],
+    "de": [
+      "Lampe",
+      "Kerze"
+    ]
+  },
+  {
+    "en": [
+      "Pillow",
+      "Blanket"
+    ],
+    "de": [
+      "Kissen",
+      "Decke"
+    ]
+  },
+  {
+    "en": [
+      "Microphone",
+      "Camera"
+    ],
+    "de": [
+      "Mikrofon",
+      "Kamera"
+    ]
+  },
+  {
+    "en": [
+      "Oven",
+      "Microwave"
+    ],
+    "de": [
+      "Ofen",
+      "Mikrowelle"
+    ]
+  },
+  {
+    "en": [
+      "Pan",
+      "Pot"
+    ],
+    "de": [
+      "Pfanne",
+      "Topf"
+    ]
+  },
+  {
+    "en": [
+      "Tablet",
+      "Smartphone"
+    ],
+    "de": [
+      "Tablet",
+      "Smartphone"
+    ]
+  },
+  {
+    "en": [
+      "Stairs",
+      "Elevator"
+    ],
+    "de": [
+      "Treppe",
+      "Aufzug"
+    ]
+  },
+  {
+    "en": [
+      "Techno",
+      "Rap"
+    ],
+    "de": [
+      "Techno",
+      "Rap"
+    ]
+  },
+  {
+    "en": [
+      "Rock",
+      "Pop"
+    ],
+    "de": [
+      "Rock",
+      "Pop"
+    ]
+  },
+  {
+    "en": [
+      "Table Tennis",
+      "Badminton"
+    ],
+    "de": [
+      "Tischtennis",
+      "Badminton"
+    ]
+  },
+  {
+    "en": [
+      "Bed",
+      "Sofa"
+    ],
+    "de": [
+      "Bett",
+      "Sofa"
+    ]
+  },
+  {
+    "en": [
+      "Forest",
+      "Park"
+    ],
+    "de": [
+      "Wald",
+      "Park"
+    ]
+  },
+  {
+    "en": [
+      "Cinema",
+      "Bowling"
+    ],
+    "de": [
+      "Kino",
+      "Bowling"
+    ]
+  },
+  {
+    "en": [
+      "Glass",
+      "Cup"
+    ],
+    "de": [
+      "Glas",
+      "Tasse"
+    ]
+  },
+  {
+    "en": [
+      "Job",
+      "Hobby"
+    ],
+    "de": [
+      "Job",
+      "Hobby"
+    ]
+  },
+  {
+    "en": [
+      "Jesus",
+      "Santa Claus"
+    ],
+    "de": [
+      "Jesus",
+      "Weihnachtsmann"
+    ]
+  },
+  {
+    "en": [
+      "bra",
+      "bikini"
+    ],
+    "de": [
+      "BH",
+      "Bikini"
+    ]
+  }
+]

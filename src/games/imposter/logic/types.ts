@@ -16,7 +16,7 @@ export interface Category {
     words: {
         en: string;
         de: string;
-        hint: {
+        hint?: {
             en: string;
             de: string;
         };
