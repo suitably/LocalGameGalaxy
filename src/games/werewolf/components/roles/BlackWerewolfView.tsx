@@ -10,9 +10,10 @@ interface RoleViewProps {
     onAction: (action: NightAction) => void;
     onSkip: () => void;
     powerState?: any;
+    instruction?: string;
 }
 
-export const BlackWerewolfView: React.FC<RoleViewProps> = ({ victim, onAction, onSkip }) => {
+export const BlackWerewolfView: React.FC<RoleViewProps> = ({ victim, onAction, onSkip, instruction }) => {
     const { t } = useTranslation();
 
     return (
@@ -22,7 +23,7 @@ export const BlackWerewolfView: React.FC<RoleViewProps> = ({ victim, onAction, o
 
             <Paper sx={{ p: 3, mb: 3, bgcolor: 'rgba(0,0,0,0.1)' }}>
                 <Typography variant="body1" sx={{ mb: 3 }}>
-                    {t('games.werewolf.ui.black_werewolf.instruction')}
+                    {instruction || t('games.werewolf.ui.black_werewolf.instruction')}
                 </Typography>
                 <Typography variant="h6" color="error" gutterBottom>
                     {t('games.werewolf.narrator.select_victim')}: {victim.name}

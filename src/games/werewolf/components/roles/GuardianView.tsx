@@ -8,15 +8,16 @@ interface RoleViewProps {
     players: Player[];
     onAction: (action: NightAction) => void;
     onSkip: () => void;
+    instruction?: string;
 }
 
-export const GuardianView: React.FC<RoleViewProps> = ({ players, onAction, onSkip }) => {
+export const GuardianView: React.FC<RoleViewProps> = ({ players, onAction, onSkip, instruction }) => {
     const { t } = useTranslation();
     return (
         <PlayerSelectionView
             title={t('games.werewolf.roles.GUARDIAN')}
             icon={<ShieldIcon sx={{ fontSize: 60 }} />}
-            instruction={t('games.werewolf.ui.guardian.instruction')}
+            instruction={instruction || t('games.werewolf.ui.guardian.instruction')}
             players={players.filter(p => p.isAlive)}
             onSelect={(id) => onAction({ type: 'PROTECT', targetId: id })}
             onSkip={onSkip}

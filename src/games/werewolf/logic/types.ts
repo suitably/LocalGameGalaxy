@@ -17,6 +17,7 @@ export interface RoleDefinition {
     alignment: RoleAlignment;
     abilities: Ability[];
     isCustom?: boolean;
+    narratorText?: string;
 }
 
 export type Role =
@@ -52,7 +53,7 @@ export interface PlayerPowerState {
     hasInfected?: boolean;
     isOiled?: boolean;
     hasEgg?: boolean;
-    loverId?: PlayerId;
+    loverIds?: PlayerId[];
     isProtectedByGuardian?: boolean;
     isDragonInfected?: boolean; // Wait, Black Werewolf infects, let's call it isInfected
     isInfected?: boolean;

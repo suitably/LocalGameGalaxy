@@ -3,14 +3,16 @@ import { Box, Typography, Button } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { useTranslation } from 'react-i18next';
 import type { Player, NightAction } from '../../logic/types';
+import { isWerewolf } from '../../logic/utils';
 
 interface RoleViewProps {
     players: Player[];
     onAction: (action: NightAction) => void;
     onSkip: () => void;
+    instruction?: string;
 }
 
-export const DetectiveView: React.FC<RoleViewProps> = ({ players, onAction, onSkip }) => {
+export const DetectiveView: React.FC<RoleViewProps> = ({ players, onAction, onSkip, instruction }) => {
     const { t } = useTranslation();
     const [selected, setSelected] = useState<string[]>([]);
     const [result, setResult] = useState<boolean | null>(null);
@@ -19,8 +21,8 @@ export const DetectiveView: React.FC<RoleViewProps> = ({ players, onAction, onSk
         const p1 = players.find(p => p.id === selected[0]);
         const p2 = players.find(p => p.id === selected[1]);
         if (p1 && p2) {
-            const camp1 = (p1.role === 'WEREWOLF' || p1.role === 'BLACK_WEREWOLF' || p1.role === 'WHITE_WEREWOLF') ? 'WOLF' : 'VILLAGER';
-            const camp2 = (p2.role === 'WEREWOLF' || p2.role === 'BLACK_WEREWOLF' || p2.role === 'WHITE_WEREWOLF') ? 'WOLF' : 'VILLAGER';
+            const camp1 = isWerewolf(p1) ? 'WOLF' : 'VILLAGER';
+            const camp2 = isWerewolf(p2) ? 'WOLF' : 'VILLAGER';
             setResult(camp1 === camp2);
         }
     };
@@ -41,7 +43,7 @@ export const DetectiveView: React.FC<RoleViewProps> = ({ players, onAction, onSk
         <Box textAlign="center">
             <SearchIcon sx={{ fontSize: 80, color: 'primary.main', mb: 2 }} />
             <Typography variant="h5">{t('games.werewolf.roles.DETECTIVE')}</Typography>
-            <Typography variant="body1" sx={{ mb: 3 }}>{t('games.werewolf.ui.detective.instruction')}</Typography>
+            <Typography variant="body1" sx={{ mb: 3 }}>{instruction || t('games.werewolf.ui.detective.instruction')}</Typography>
 
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 4 }}>
                 {players.filter(p => p.isAlive).map(p => (

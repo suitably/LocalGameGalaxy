@@ -10,9 +10,10 @@ interface RoleViewProps {
     onAction: (action: NightAction) => void;
     onSkip: () => void;
     powerState?: any;
+    instruction?: string;
 }
 
-export const WitchView: React.FC<RoleViewProps> = ({ players, onAction, onSkip, powerState }) => {
+export const WitchView: React.FC<RoleViewProps> = ({ players, onAction, onSkip, powerState, instruction }) => {
     const { t } = useTranslation();
     const [action, setAction] = useState<'HEAL' | 'KILL' | null>(null);
 
@@ -22,7 +23,7 @@ export const WitchView: React.FC<RoleViewProps> = ({ players, onAction, onSkip, 
     if (action === 'HEAL' && deadSoon) {
         return (
             <Box textAlign="center">
-                <Typography variant="h6" sx={{ mb: 2 }}>{t('games.werewolf.ui.witch.save_player', { name: deadSoon.name })}</Typography>
+                <Typography variant="h6" sx={{ mb: 2 }}>{instruction || t('games.werewolf.ui.witch.save_player', { name: deadSoon.name })}</Typography>
                 <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
                     <Button onClick={() => onAction({ type: 'HEAL', targetId: deadSoon.id })} variant="contained" color="success">{t('common.yes')}</Button>
                     <Button onClick={() => setAction(null)} variant="outlined">{t('common.no')}</Button>
@@ -36,7 +37,7 @@ export const WitchView: React.FC<RoleViewProps> = ({ players, onAction, onSkip, 
             <PlayerSelectionView
                 title={t('games.werewolf.roles.WITCH')}
                 icon={<AutoFixHighIcon sx={{ fontSize: 60 }} />}
-                instruction={t('games.werewolf.ui.witch.select_kill')}
+                instruction={instruction || t('games.werewolf.ui.witch.select_kill')}
                 players={alivePlayers.filter(p => !p.powerState.isDeadSoon)}
                 onSelect={(id) => onAction({ type: 'KILL', targetId: id })}
                 onSkip={() => setAction(null)}

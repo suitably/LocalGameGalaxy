@@ -1,27 +1,8 @@
 import { INITIAL_STATE, getNextPhase } from './types';
-import type { GameState, Role, Action, Player } from './types';
+import type { GameState, Role, Action } from './types';
 
-const isWerewolf = (player: Player): boolean => {
-    // If infected, they count as a werewolf regardless of original role
-    if (player.powerState?.isInfected) {
-        return true;
-    }
+import { isWerewolf, getDeathCascade } from './utils';
 
-    const role = player.role;
-    if (!role) return false;
-
-    // Check specific werewolf roles
-    if (role === 'WEREWOLF' || role === 'BLACK_WEREWOLF' || role === 'WHITE_WEREWOLF') {
-        return true;
-    }
-
-    // Wolfdog chooses camp on first night
-    if (role === 'WOLFDOG' && player.powerState?.chosenCamp === 'WEREWOLF') {
-        return true;
-    }
-
-    return false;
-};
 
 export const gameReducer = (state: GameState, action: Action): GameState => {
     switch (action.type) {
@@ -91,9 +72,12 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
 
             // Process deaths from night action log when transitioning to day
             if (phase === 'DAY') {
+                const victims = getDeathCascade(state.nightActionLog, state.players);
                 newPlayers = state.players.map(p =>
-                    state.nightActionLog.includes(p.id) ? { ...p, isAlive: false } : p
+                    victims.includes(p.id) ? { ...p, isAlive: false } : p
                 );
+                // Update log to include cascade victims
+                state.nightActionLog = victims;
             }
 
             return {
@@ -106,9 +90,11 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
         }
 
         case 'KILL_PLAYER': {
-            // Kill player
+            // Kill player and cascade to lovers
+            const victims = getDeathCascade([action.id], state.players);
+
             const newPlayers = state.players.map(p =>
-                p.id === action.id ? { ...p, isAlive: false } : p
+                victims.includes(p.id) ? { ...p, isAlive: false } : p
             );
 
             // Check win conditions
@@ -128,7 +114,7 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                 return {
                     ...state,
                     players: newPlayers,
-                    nightActionLog: [...(state.nightActionLog || []), action.id],
+                    nightActionLog: [...(state.nightActionLog || []), ...victims].filter((v, i, a) => a.indexOf(v) === i), // Add all victims to log, unique
                     phase: 'GAME_OVER',
                     winner
                 };
@@ -139,7 +125,7 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
             return {
                 ...state,
                 players: newPlayers,
-                nightActionLog: [...(state.nightActionLog || []), action.id],
+                nightActionLog: [...(state.nightActionLog || []), ...victims].filter((v, i, a) => a.indexOf(v) === i),
                 phase,
                 round: incrementRound ? state.round + 1 : state.round
             };
@@ -207,10 +193,25 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                     });
                     break;
                 case 'LINK_LOVERS':
-                    // Cupid links players
-                    newPlayers = newPlayers.map(p =>
-                        nightAction.targetIds?.includes(p.id) ? { ...p, powerState: { ...p.powerState, isLover: true } } : p
-                    );
+                    // Cupid links players - supports multiple links now
+                    if (nightAction.targetIds && nightAction.targetIds.length === 2) {
+                        const [id1, id2] = nightAction.targetIds;
+                        newPlayers = newPlayers.map(p => {
+                            if (p.id === id1) {
+                                const current = p.powerState.loverIds || [];
+                                if (!current.includes(id2)) {
+                                    return { ...p, powerState: { ...p.powerState, loverIds: [...current, id2] } };
+                                }
+                            }
+                            if (p.id === id2) {
+                                const current = p.powerState.loverIds || [];
+                                if (!current.includes(id1)) {
+                                    return { ...p, powerState: { ...p.powerState, loverIds: [...current, id1] } };
+                                }
+                            }
+                            return p;
+                        });
+                    }
                     break;
                 case 'GIVE_EGG':
                     newPlayers = newPlayers.map(p =>
@@ -298,6 +299,12 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
             return {
                 ...action.state,
                 customRoles: action.state.customRoles || []
+            };
+
+        case 'SAVE_CUSTOM_ROLES':
+            return {
+                ...state,
+                customRoles: action.roles
             };
 
         default:

@@ -127,9 +127,13 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, customRoles = [],
                 <Grid container spacing={1}>
                     {SPECIAL_ROLES.map(role => {
                         const customDef = customRoles.find(r => r.id === role);
-                        const label = customDef
-                            ? `${customDef.icon} ${customDef.name}`
-                            : t(`games.werewolf.roles.${role}`);
+                        const defaultDef = DEFAULT_ROLES.find(r => r.id === role);
+
+                        // Use custom definition if exists, otherwise fall back to default
+                        const icon = customDef?.icon || defaultDef?.icon || '❓';
+                        const name = customDef?.name || t(`games.werewolf.roles.${role}`);
+
+                        const label = `${icon} ${name}`;
 
                         return (
                             <Grid size={{ xs: 6 }} key={role}>

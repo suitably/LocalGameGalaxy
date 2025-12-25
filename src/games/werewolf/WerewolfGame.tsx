@@ -28,6 +28,17 @@ export const WerewolfGame: React.FC = () => {
 
     // Check for saved game on mount
     useEffect(() => {
+        // Load custom roles from library storage (independent of game session)
+        try {
+            const savedCustomRoles = localStorage.getItem('werewolf-custom-roles');
+            if (savedCustomRoles) {
+                const roles = JSON.parse(savedCustomRoles);
+                dispatch({ type: 'SAVE_CUSTOM_ROLES', roles });
+            }
+        } catch (e) {
+            console.error('Failed to load custom roles library', e);
+        }
+
         if (hasSavedGame()) {
             setSavedGameInfo(getSavedGameInfo());
             setShowContinueDialog(true);
@@ -74,7 +85,10 @@ export const WerewolfGame: React.FC = () => {
                     onAddPlayer={(name) => dispatch({ type: 'ADD_PLAYER', name })}
                     onRemovePlayer={(id) => dispatch({ type: 'REMOVE_PLAYER', id })}
                     onStartGame={(roles) => dispatch({ type: 'START_GAME', roles })}
-                    onSaveCustomRoles={(roles) => dispatch({ type: 'SAVE_CUSTOM_ROLES', roles })}
+                    onSaveCustomRoles={(roles) => {
+                        dispatch({ type: 'SAVE_CUSTOM_ROLES', roles });
+                        localStorage.setItem('werewolf-custom-roles', JSON.stringify(roles));
+                    }}
                 />
             )}
 

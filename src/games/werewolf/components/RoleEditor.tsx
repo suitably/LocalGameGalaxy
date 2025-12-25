@@ -26,6 +26,12 @@ import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import {
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
+} from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { RoleDefinition, Ability, RoleAlignment } from '../logic/types';
 
@@ -46,13 +52,16 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, defaultRole
     const { t } = useTranslation();
     // mergedRoles contains all unique roles. If a custom role shares an ID with a default role, it overrides it.
     const [roles, setRoles] = useState<RoleDefinition[]>(() => {
+        // Clone defaults to avoid mutations
         const merged = [...defaultRoles];
         customRoles.forEach(custom => {
             const index = merged.findIndex(r => r.id === custom.id);
             if (index > -1) {
-                merged[index] = custom;
+                // Override default role
+                merged[index] = { ...custom, isCustom: false }; // Ensure it keeps isCustom=false if it's an override
             } else {
-                merged.push(custom);
+                // New custom role
+                merged.push({ ...custom, isCustom: true });
             }
         });
         return merged;
@@ -165,11 +174,19 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, defaultRole
                 </Button>
             </Box>
 
-            <List component={Paper}>
-                {roles.map(role => {
-                    // Check if modified from default to show indicator or enable reset
+            {/* SEPARATE LISTS: Custom (Always Visible) vs Standard (Collapsed) */}
+            {(() => {
+                //    - Custom: isCustom === true (New roles)
+                //    - Standard: isCustom !== true (Default or Overrides)
+
+                const customRolesList = roles.filter(r => r.isCustom);
+                const standardRolesList = roles.filter(r => !r.isCustom);
+
+                const renderRoleItem = (role: RoleDefinition) => {
                     const isDefaultId = defaultRoles.some(d => d.id === role.id);
-                    const isModified = isDefaultId && JSON.stringify(role) !== JSON.stringify(defaultRoles.find(d => d.id === role.id));
+                    // Check if modified
+                    const defaultDef = defaultRoles.find(d => d.id === role.id);
+                    const isModified = isDefaultId && defaultDef && JSON.stringify(role) !== JSON.stringify(defaultDef);
 
                     return (
                         <ListItem key={role.id} divider>
@@ -177,7 +194,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, defaultRole
                                 primary={
                                     <Box display="flex" alignItems="center" gap={1}>
                                         <Typography>{role.icon} {role.name}</Typography>
-                                        {isModified && <Chip label="Modified" size="small" color="primary" variant="outlined" />}
+                                        {isModified && <Chip label={t('common.modified', 'Modified')} size="small" color="primary" variant="outlined" />}
                                     </Box>
                                 }
                                 secondary={role.description}
@@ -197,8 +214,36 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, defaultRole
                             </ListItemSecondaryAction>
                         </ListItem>
                     );
-                })}
-            </List>
+                };
+
+                return (
+                    <Box display="flex" flexDirection="column" gap={2}>
+                        {customRolesList.length > 0 && (
+                            <Paper sx={{ mb: 2 }}>
+                                <Typography variant="h6" sx={{ p: 2, pb: 0 }}>
+                                    {t('games.werewolf.editor.custom_roles', 'Custom Roles')}
+                                </Typography>
+                                <List sx={{ width: '100%' }}>
+                                    {customRolesList.map(renderRoleItem)}
+                                </List>
+                            </Paper>
+                        )}
+
+                        <Accordion defaultExpanded={false}>
+                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                                <Typography variant="h6">
+                                    {t('games.werewolf.editor.standard_roles', 'Standard Roles')} ({standardRolesList.length})
+                                </Typography>
+                            </AccordionSummary>
+                            <AccordionDetails sx={{ p: 0 }}>
+                                <List sx={{ width: '100%' }}>
+                                    {standardRolesList.map(renderRoleItem)}
+                                </List>
+                            </AccordionDetails>
+                        </Accordion>
+                    </Box>
+                );
+            })()}
 
             <Box mt={3} display="flex" justifyContent="flex-end" gap={2}>
                 <Button onClick={onClose}>{t('common.back')}</Button>
@@ -224,6 +269,15 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, defaultRole
                             multiline
                             rows={2}
                             fullWidth
+                        />
+                        <TextField
+                            label={t('games.werewolf.editor.narrator_text', 'Night Narration')}
+                            value={editingRole?.narratorText || ''}
+                            onChange={e => setEditingRole(prev => prev ? { ...prev, narratorText: e.target.value } : null)}
+                            multiline
+                            rows={2}
+                            fullWidth
+                            helperText={t('games.werewolf.editor.narrator_text_hint', 'Text read by narrator at night. Leave empty to use default.')}
                         />
                         <FormControl fullWidth>
                             <InputLabel>{t('games.werewolf.editor.alignment', 'Alignment')}</InputLabel>

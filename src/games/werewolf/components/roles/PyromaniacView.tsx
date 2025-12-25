@@ -8,9 +8,10 @@ interface RoleViewProps {
     players: Player[];
     onAction: (action: NightAction) => void;
     onSkip: () => void;
+    instruction?: string;
 }
 
-export const PyromaniacView: React.FC<RoleViewProps> = ({ players, onAction, onSkip }) => {
+export const PyromaniacView: React.FC<RoleViewProps> = ({ players, onAction, onSkip, instruction }) => {
     const { t } = useTranslation();
     const [action, setAction] = useState<'OIL' | 'BURN' | null>(null);
     const [selected, setSelected] = useState<string[]>([]);
@@ -18,7 +19,7 @@ export const PyromaniacView: React.FC<RoleViewProps> = ({ players, onAction, onS
     if (action === 'OIL') {
         return (
             <Box textAlign="center">
-                <Typography variant="h6">{t('games.werewolf.ui.pyromaniac.instruction_oil')}</Typography>
+                <Typography variant="h6">{instruction || t('games.werewolf.ui.pyromaniac.instruction_oil')}</Typography>
                 <Grid container spacing={1} sx={{ mt: 2, mb: 4 }}>
                     {players.filter(p => p.isAlive).map(p => (
                         <Grid size={{ xs: 6 }} key={p.id}>

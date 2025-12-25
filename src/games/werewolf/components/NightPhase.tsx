@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Box, Typography, Button, IconButton, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import type { Player, NightAction, Role, RoleDefinition } from '../logic/types';
+import { isWerewolf } from '../logic/utils';
 import { useTranslation } from 'react-i18next';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import { WitchView } from './roles/WitchView';
@@ -54,7 +55,7 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
 
             const alive = players.some(p => p.role === role && p.isAlive);
             if (role === 'WEREWOLF') {
-                return players.some(p => (p.role === 'WEREWOLF' || p.role === 'BLACK_WEREWOLF') && p.isAlive);
+                return players.some(p => isWerewolf(p) && p.isAlive);
             }
 
             if (role === 'BLACK_WEREWOLF') {
@@ -134,23 +135,31 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
         const rolePlayer = players.find(p => p.role === activeRole && p.isAlive);
 
         // Check if there is a custom definition/override for this role
-        const customRole = customRoles.find(cr => cr.id === activeRole);
+        const activeCustomRole = customRoles.find(cr => cr.id === activeRole);
 
         // If it's a custom role or an overridden standard role, use generic handling
         // UNLESS it's a standard role but with NO changes to abilities?
         // Actually, if the user edited it, they probably want the generic behavior (e.g. they changed Seer to Kill).
         // The only risk is if they kept standard abilities but the generic view is inferior.
         // For MVP, if it is in customRoles, we assume it's "customized" enough to warrant generic view.
-        if (customRole) {
-            const ability = customRole.abilities[0];
+        // Helper to get custom text if available
+        const getInstruction = () => {
+            if (activeCustomRole?.narratorText) return activeCustomRole.narratorText;
+            return undefined;
+        };
+
+        const customInstruction = getInstruction();
+
+        if (activeCustomRole) {
+            const ability = activeCustomRole.abilities[0];
             if (!ability) return <Box textAlign="center" mt={10}><Button onClick={nextRole}>Skip {activeRole}</Button></Box>;
 
             return (
                 <PlayerSelectionView
-                    icon={<Typography variant="h1">{customRole.icon}</Typography>}
-                    title={customRole.name}
-                    subtitle={customRole.description}
-                    instruction={t(`games.werewolf.editor.ability_instruction_${ability.type.toLowerCase()}`, { count: ability.targetCount })}
+                    icon={<Typography variant="h1">{activeCustomRole.icon}</Typography>}
+                    title={activeCustomRole.name}
+                    subtitle={activeCustomRole.description}
+                    instruction={customInstruction || t(`games.werewolf.editor.ability_instruction_${ability.type.toLowerCase()}`, { count: ability.targetCount })}
                     players={players.filter(p => p.isAlive)}
                     onSelect={(id) => handleAction({ type: ability.type as any, targetId: id })}
                     onSkip={nextRole}
@@ -163,7 +172,7 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
         switch (activeRole) {
             case 'WEREWOLF': {
                 // Standard Werewolf turn
-                const werewolves = alivePlayers.filter(p => p.role === 'WEREWOLF' || p.role === 'BLACK_WEREWOLF');
+                const werewolves = alivePlayers.filter(p => isWerewolf(p));
                 const extraContent = (
                     <Box sx={{ mb: 3 }}>
                         <Typography variant="subtitle2" color="text.secondary">{t('games.werewolf.narrator.werewolves_label')}</Typography>
@@ -190,7 +199,6 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
             }
             case 'BLACK_WEREWOLF': {
                 const blackWolf = players.find(p => p.role === 'BLACK_WEREWOLF' && p.isAlive);
-                // Find the victim chosen by werewolves tonight
                 const victimId = nightActionLog[nightActionLog.length - 1];
                 const victim = players.find(p => p.id === victimId);
 
@@ -205,45 +213,23 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
                         onAction={handleAction}
                         onSkip={nextRole}
                         powerState={blackWolf.powerState}
+                        instruction={customInstruction}
                     />
                 );
             }
-            case 'WITCH': return <WitchView players={players} onAction={handleAction} onSkip={nextRole} powerState={rolePlayer?.powerState} />;
-            case 'SEER': return <SeerView players={players} onAction={handleAction} onSkip={nextRole} />;
-            case 'CUPID': return <CupidView players={players} onAction={handleAction} onSkip={nextRole} />;
-            case 'DETECTIVE': return <DetectiveView players={players} onAction={handleAction} onSkip={nextRole} />;
-            case 'GUARDIAN': return <GuardianView players={players} onAction={handleAction} onSkip={nextRole} />;
-            case 'WHITE_WEREWOLF': return <WhiteWerewolfView players={players} onAction={handleAction} onSkip={nextRole} />;
-            case 'EASTER_BUNNY': return <EasterBunnyView players={players} onAction={handleAction} onSkip={nextRole} />;
-            case 'WOLFDOG': return <WolfdogView players={players} onAction={handleAction} onSkip={nextRole} />;
-            case 'RIPPER': return <RipperView players={players} onAction={handleAction} onSkip={nextRole} />;
-            case 'SURVIVOR': return <SurvivorView players={players} onAction={handleAction} onSkip={nextRole} powerState={rolePlayer?.powerState} />;
-            case 'PYROMANIAC': return <PyromaniacView players={players} onAction={handleAction} onSkip={nextRole} />;
-            case 'THIEF': return <ThiefView players={players} onAction={handleAction} onSkip={nextRole} />;
-            default: {
-                // Check if it's a custom role
-                const customRole = customRoles.find(cr => cr.id === activeRole);
-                if (customRole) {
-                    // For now, render a generic selection view for the first ability
-                    const ability = customRole.abilities[0];
-                    if (!ability) return <Box textAlign="center" mt={10}><Button onClick={nextRole}>Skip {activeRole}</Button></Box>;
-
-                    return (
-                        <PlayerSelectionView
-                            icon={<Typography variant="h1">{customRole.icon}</Typography>}
-                            title={customRole.name}
-                            subtitle={customRole.description}
-                            instruction={t(`games.werewolf.editor.ability_instruction_${ability.type.toLowerCase()}`, { count: ability.targetCount })}
-                            players={players.filter(p => p.isAlive)}
-                            onSelect={(id) => handleAction({ type: ability.type as any, targetId: id })}
-                            onSkip={nextRole}
-                            skipLabel={t('common.skip')}
-                            buttonColor="primary"
-                        />
-                    );
-                }
-                return <Box textAlign="center" mt={10}><Button onClick={nextRole}>Skip {activeRole}</Button></Box>;
-            }
+            case 'WITCH': return <WitchView players={players} onAction={handleAction} onSkip={nextRole} powerState={rolePlayer?.powerState} instruction={customInstruction} />;
+            case 'SEER': return <SeerView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
+            case 'CUPID': return <CupidView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
+            case 'DETECTIVE': return <DetectiveView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
+            case 'GUARDIAN': return <GuardianView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
+            case 'WHITE_WEREWOLF': return <WhiteWerewolfView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
+            case 'EASTER_BUNNY': return <EasterBunnyView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
+            case 'WOLFDOG': return <WolfdogView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
+            case 'RIPPER': return <RipperView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
+            case 'SURVIVOR': return <SurvivorView players={players} onAction={handleAction} onSkip={nextRole} powerState={rolePlayer?.powerState} instruction={customInstruction} />;
+            case 'PYROMANIAC': return <PyromaniacView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
+            case 'THIEF': return <ThiefView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
+            default: return <Box textAlign="center" mt={10}><Button onClick={nextRole}>Skip {activeRole}</Button></Box>;
         }
     };
 

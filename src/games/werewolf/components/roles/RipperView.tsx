@@ -8,15 +8,16 @@ interface RoleViewProps {
     players: Player[];
     onAction: (action: NightAction) => void;
     onSkip: () => void;
+    instruction?: string;
 }
 
-export const RipperView: React.FC<RoleViewProps> = ({ players, onAction, onSkip }) => {
+export const RipperView: React.FC<RoleViewProps> = ({ players, onAction, onSkip, instruction }) => {
     const { t } = useTranslation();
     return (
         <PlayerSelectionView
             title={t('games.werewolf.roles.RIPPER')}
             icon={<PersonSearchIcon sx={{ fontSize: 60 }} />}
-            instruction={t('games.werewolf.ui.ripper.instruction')}
+            instruction={instruction || t('games.werewolf.ui.ripper.instruction')}
             players={players.filter(p => p.isAlive)}
             onSelect={(id) => onAction({ type: 'KILL', targetId: id })}
             onSkip={onSkip}

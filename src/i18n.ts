@@ -80,8 +80,8 @@ const resources = {
                     "ui": {
                         "died_last_night": "Died last night:",
                         "peaceful_night": "Peaceful night.",
-                        "start_vote": "Start Voting / End Day",
-                        "narrator_mode": "Dedicated Narrator",
+                        "start_vote": "Start Voting",
+                        "narrator_mode": "Narrator Mode",
                         "narrator_select": "Who is the Narrator?",
                         "tap_to_act": "TAP TO ACT",
                         "hide_screen": "Hide Screen",
@@ -119,9 +119,7 @@ const resources = {
                             "instruction": "Spring is coming. Select two players to receive your mysterious eggs. Your ultimate gift is almost ready."
                         },
                         "wolfdog": {
-                            "instruction": "The first night is your time of choice. Do you remain loyal to the Village that raised you, or do you embrace your wild side and join the Werewolf pack?",
-                            "villager": "Villager",
-                            "werewolf": "Werewolf"
+                            "instruction": "The first night is your time of choice. Do you remain loyal to the Village that raised you, or do you embrace your wild side and join the Werewolf pack?"
                         },
                         "ripper": {
                             "instruction": "The blade is sharp and the night is long. Choose your next victim to feel the cold steel of the Ripper."
@@ -196,7 +194,8 @@ const resources = {
                 "players": "Players",
                 "yes": "Yes",
                 "no": "No",
-                "skip": "Skip"
+                "skip": "Skip",
+                "close": "Close"
             }
         }
     },
@@ -278,8 +277,8 @@ const resources = {
                     "ui": {
                         "died_last_night": "Letzte Nacht gestorben:",
                         "peaceful_night": "Eine friedliche Nacht.",
-                        "start_vote": "Abstimmung starten / Tag beenden",
-                        "narrator_mode": "Menschlicher Erzähler",
+                        "start_vote": "Abstimmung starten",
+                        "narrator_mode": "Erzählermodus",
                         "narrator_select": "Wer ist der Erzähler?",
                         "tap_to_act": "ANTIPPEN",
                         "hide_screen": "Verstecken",
@@ -317,9 +316,7 @@ const resources = {
                             "instruction": "Der Frühling naht. Wähle zwei Spieler aus, die deine geheimnisvollen Eier erhalten sollen. Dein ultimatives Geschenk ist fast bereit."
                         },
                         "wolfdog": {
-                            "instruction": "In dieser ersten Nacht musst du dich entscheiden. Bleibst du dem Dorf treu, das dich aufgezogen hat, oder gibst du deiner wilden Seite nach und schließt dich dem Rudel der Werwölfe an?",
-                            "villager": "Dorfbewohner",
-                            "werewolf": "Werwolf"
+                            "instruction": "In dieser ersten Nacht musst du dich entscheiden. Bleibst du dem Dorf treu, das dich aufgezogen hat, oder gibst du deiner wilden Seite nach und schließt dich dem Rudel der Werwölfe an?"
                         },
                         "ripper": {
                             "instruction": "Die Klinge ist scharf und die Nacht ist lang. Wähle dein nächstes Opfer, das den kalten Stahl des Rippers spüren soll."
@@ -394,7 +391,8 @@ const resources = {
                 "players": "Spieler",
                 "yes": "Ja",
                 "no": "Nein",
-                "skip": "Überspringen"
+                "skip": "Überspringen",
+                "close": "Schließen"
             }
         }
     }
@@ -404,11 +402,15 @@ i18n
     .use(initReactI18next)
     .init({
         resources,
-        lng: "en",
+        lng: localStorage.getItem('language') || "en",
         fallbackLng: "en",
         interpolation: {
             escapeValue: false
         }
     });
+
+i18n.on('languageChanged', (lng) => {
+    localStorage.setItem('language', lng);
+});
 
 export default i18n;

@@ -9,9 +9,10 @@ interface RoleViewProps {
     players: Player[];
     onAction: (action: NightAction) => void;
     onSkip: () => void;
+    instruction?: string;
 }
 
-export const SeerView: React.FC<RoleViewProps> = ({ players, onAction, onSkip }) => {
+export const SeerView: React.FC<RoleViewProps> = ({ players, onAction, onSkip, instruction }) => {
     const { t } = useTranslation();
     const [revealedPlayer, setRevealedPlayer] = useState<Player | null>(null);
 
@@ -33,7 +34,7 @@ export const SeerView: React.FC<RoleViewProps> = ({ players, onAction, onSkip })
         <PlayerSelectionView
             title={t('games.werewolf.roles.SEER')}
             icon={<VisibilityIcon sx={{ fontSize: 60 }} />}
-            instruction={t('games.werewolf.ui.seer.instruction')}
+            instruction={instruction || t('games.werewolf.ui.seer.instruction')}
             players={players.filter(p => p.isAlive)}
             onSelect={(id) => setRevealedPlayer(players.find(p => p.id === id) || null)}
             onSkip={onSkip}

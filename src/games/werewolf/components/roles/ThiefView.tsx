@@ -9,9 +9,10 @@ interface RoleViewProps {
     players: Player[];
     onAction: (action: NightAction) => void;
     onSkip: () => void;
+    instruction?: string;
 }
 
-export const ThiefView: React.FC<RoleViewProps> = ({ players, onAction, onSkip }) => {
+export const ThiefView: React.FC<RoleViewProps> = ({ players, onAction, onSkip, instruction }) => {
     const { t } = useTranslation();
     const [stolenRoleData, setStolenRoleData] = useState<{ id: string; name: string; role: string } | null>(null);
 
@@ -39,7 +40,7 @@ export const ThiefView: React.FC<RoleViewProps> = ({ players, onAction, onSkip }
 
                 <Paper sx={{ p: 4, my: 4, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
                     <Typography variant="h6" gutterBottom>
-                        {t('games.werewolf.ui.thief.instruction')}
+                        {instruction || t('games.werewolf.ui.thief.instruction')}
                     </Typography>
                     <Typography variant="body1" sx={{ mt: 2, mb: 1 }}>
                         You stole the role from <strong>{stolenRoleData.name}</strong>:
@@ -66,7 +67,7 @@ export const ThiefView: React.FC<RoleViewProps> = ({ players, onAction, onSkip }
         <PlayerSelectionView
             title={t('games.werewolf.roles.THIEF')}
             icon={<PersonSearchIcon sx={{ fontSize: 60 }} />}
-            instruction={t('games.werewolf.ui.thief.instruction')}
+            instruction={instruction || t('games.werewolf.ui.thief.instruction')}
             players={players.filter(p => p.isAlive)}
             onSelect={handleSelect}
             onSkip={onSkip}
