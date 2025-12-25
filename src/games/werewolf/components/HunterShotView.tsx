@@ -13,7 +13,8 @@ interface HunterShotViewProps {
 
 export const HunterShotView: React.FC<HunterShotViewProps> = ({ hunter, players, onShot, onSkip }) => {
     const { t } = useTranslation();
-    const alivePlayers = players.filter(p => p.isAlive && p.id !== hunter.id);
+    // Only show players who are currently alive and not the hunter themselves
+    const alivePlayers = players.filter(p => p.isAlive === true && p.id !== hunter?.id);
 
     return (
         <PlayerSelectionView
