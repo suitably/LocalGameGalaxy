@@ -108,6 +108,13 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                 nightDecisions: phase === 'NIGHT' ? [] : state.nightDecisions // Clear decisions at start of night
             };
 
+            // Angel Transformation: If Angel survives the first day, they become a Villager
+            if (state.phase === 'VOTING' && state.round === 1 && phase === 'NIGHT') {
+                newState.players = newState.players.map(p =>
+                    p.role === 'ANGEL' && p.isAlive ? { ...p, role: 'VILLAGER' } : p
+                );
+            }
+
             return phase === 'DAY' ? checkHunterDeath(newState, victims) : newState;
         }
 
@@ -121,7 +128,7 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
 
             // Check win conditions
             const allRoles = [...DEFAULT_ROLES, ...state.customRoles];
-            const winner = getWinningFaction(newPlayers, allRoles);
+            const winner = getWinningFaction(newPlayers, allRoles, state.phase, state.round, victims);
 
             if (winner) {
                 return {
@@ -382,7 +389,7 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
 
             // Check if this action caused a win condition (e.g. Easter Bunny)
             const allRoles = [...DEFAULT_ROLES, ...state.customRoles];
-            const winResult = getWinningFaction(newPlayers, allRoles);
+            const winResult = getWinningFaction(newPlayers, allRoles, state.phase, state.round);
 
             if (winResult) {
                 return {
@@ -414,7 +421,7 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
 
             // Check win conditions after hunter shot
             const allRoles = [...DEFAULT_ROLES, ...state.customRoles];
-            const winner = getWinningFaction(newPlayers, allRoles);
+            const winner = getWinningFaction(newPlayers, allRoles, state.phase, state.round, victims);
 
             // If there's a winner, end the game immediately
             if (winner) {

@@ -92,14 +92,20 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
         setCurrentRoleIndex(prev => prev + 1);
     };
 
-    // Handle transition to morning when all roles have acted
+    // Automatically trigger morning when all roles have acted
     useEffect(() => {
-        if (currentRoleIndex >= rolesToAct.length && rolesToAct.length > 0 && !isMorningComing) {
+        if (!isMorningComing && rolesToAct.length > 0 && currentRoleIndex >= rolesToAct.length) {
             setIsMorningComing(true);
+        }
+    }, [currentRoleIndex, rolesToAct.length, isMorningComing]);
+
+    // Handle phase transition timer whenever morning starts
+    useEffect(() => {
+        if (isMorningComing) {
             const timer = setTimeout(onNextPhase, 2000);
             return () => clearTimeout(timer);
         }
-    }, [currentRoleIndex, rolesToAct.length, onNextPhase, isMorningComing]);
+    }, [isMorningComing, onNextPhase]);
 
     const handleAction = (action: NightAction) => {
         onNightAction(action, activeRole || 'WEREWOLF');
