@@ -4,6 +4,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
+import InfoIcon from '@mui/icons-material/Info';
 import type { Player, Role, RoleDefinition } from '../logic/types';
 import { useTranslation } from 'react-i18next';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -54,6 +55,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, customRoles = [],
         return 1;
     });
     const [isEditorOpen, setIsEditorOpen] = useState(false);
+    const [selectedRoleForDesc, setSelectedRoleForDesc] = useState<RoleDefinition | null>(null);
 
     // Save settings to localStorage whenever they change
     useEffect(() => {
@@ -187,8 +189,15 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, customRoles = [],
                 )}
 
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
-                    <Typography variant="body1" sx={{ flexGrow: 1 }}>
+                    <Typography variant="body1" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
                         🐺 {t('games.werewolf.ui.num_werewolves')}:
+                        <IconButton
+                            size="small"
+                            onClick={() => setSelectedRoleForDesc(DEFAULT_ROLES.find(r => r.id === 'WEREWOLF') || null)}
+                            sx={{ ml: 0.5, p: 0.5, color: 'text.secondary', opacity: 0.5 }}
+                        >
+                            <InfoIcon fontSize="inherit" />
+                        </IconButton>
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
                         <IconButton
@@ -232,7 +241,21 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, customRoles = [],
                                             size="small"
                                         />
                                     }
-                                    label={<Typography variant="body2">{label}</Typography>}
+                                    label={
+                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                            <Typography variant="body2">{label}</Typography>
+                                            <IconButton
+                                                size="small"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setSelectedRoleForDesc(customDef || defaultDef || null);
+                                                }}
+                                                sx={{ ml: 0.5, p: 0.5, color: 'text.secondary', opacity: 0.5 }}
+                                            >
+                                                <InfoIcon fontSize="inherit" />
+                                            </IconButton>
+                                        </Box>
+                                    }
                                 />
                             </Grid>
                         );
@@ -247,7 +270,21 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, customRoles = [],
                                         size="small"
                                     />
                                 }
-                                label={<Typography variant="body2">{role.icon} {role.name}</Typography>}
+                                label={
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Typography variant="body2">{role.icon} {role.name}</Typography>
+                                        <IconButton
+                                            size="small"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                setSelectedRoleForDesc(role);
+                                            }}
+                                            sx={{ ml: 0.5, p: 0.5, color: 'text.secondary', opacity: 0.5 }}
+                                        >
+                                            <InfoIcon fontSize="inherit" />
+                                        </IconButton>
+                                    </Box>
+                                }
                             />
                         </Grid>
                     ))}
@@ -268,6 +305,34 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, customRoles = [],
                     }}
                     onClose={() => setIsEditorOpen(false)}
                 />
+            </Dialog>
+
+            <Dialog
+                open={Boolean(selectedRoleForDesc)}
+                onClose={() => setSelectedRoleForDesc(null)}
+                maxWidth="xs"
+                fullWidth
+            >
+                {selectedRoleForDesc && (
+                    <Box sx={{ p: 3, textAlign: 'center' }}>
+                        <Typography variant="h3" gutterBottom>
+                            {selectedRoleForDesc.icon}
+                        </Typography>
+                        <Typography variant="h5" gutterBottom>
+                            {selectedRoleForDesc.isCustom ? selectedRoleForDesc.name : t(`games.werewolf.roles.${selectedRoleForDesc.id}`)}
+                        </Typography>
+                        <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', mb: 3 }}>
+                            {selectedRoleForDesc.isCustom ? selectedRoleForDesc.description : t(`games.werewolf.role_descriptions.${selectedRoleForDesc.id}`)}
+                        </Typography>
+                        <Button
+                            variant="outlined"
+                            fullWidth
+                            onClick={() => setSelectedRoleForDesc(null)}
+                        >
+                            {t('common.close')}
+                        </Button>
+                    </Box>
+                )}
             </Dialog>
 
             <Button
