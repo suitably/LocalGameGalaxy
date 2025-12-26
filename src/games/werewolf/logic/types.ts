@@ -89,6 +89,7 @@ export type NightAction =
     | { type: 'PEEK' }
     | { type: 'CURSE'; targetId: string }
     | { type: 'SLEEP'; targetId: string }
+    | { type: 'SURVIVE' }
     | { type: 'NONE' };
 
 export interface NightDecision {

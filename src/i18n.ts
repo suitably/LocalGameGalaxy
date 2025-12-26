@@ -95,7 +95,8 @@ const resources = {
                         "steal_role": "{{role}} stole the identity of {{target}}.",
                         "peek": "{{role}} peeked during the night.",
                         "curse": "{{role}} cursed {{target}}.",
-                        "sleep": "{{role}} slept at {{target}}'s place."
+                        "sleep": "{{role}} slept at {{target}}'s place.",
+                        "survive": "{{role}} survived the attack."
                     },
                     "ui": {
                         "died_last_night": "Died last night:",
@@ -367,7 +368,7 @@ const resources = {
                         "DETECTIVE": "Ein scharfsinniger Ermittler der Gesinnung. Jede Nacht wählst du zwei Spieler aus. Der Erzähler verrät dir, ob sie zum selben Team gehören (z. B. beide Dorfbewohner oder beide Werwölfe) oder zu verschiedenen Lagern. Perfekt, um das Rudel aufzudecken.",
                         "GUARDIAN": "Ein selbstloser Beschützer. Jede Nacht wählst du einen Spieler aus, den du vor den Werwölfen bewachst. Er kann heute Nacht nicht durch einen Werwolf-Angriff sterben. Du darfst dich selbst schützen, aber niemals dieselbe Person zwei Nächte hintereinander.",
                         "BLACK_CAT": "Ein Bote des Unglücks. Jede Nacht kannst du einen Spieler verfluchen. Dieser Spieler erhält bei der nächsten Dorf-Abstimmung automatisch eine unsichtbare Zusatzstimme gegen sich, was es einfacher macht, ihn aus dem Dorf zu werfen.",
-                        "WISE": "Ein Ältester mit uralter Widerstandskraft. Du bist so robust, dass du den ersten erfolgreichen Angriff der Werwölfe überlebben kannst. Du stirbst nicht und das Spiel geht weiter. Erst bei einem zweiten Angriff (durch Wölfe oder Mörder) wirst du wie jeder andere sterben.",
+                        "WISE": "Ein Ältester mit uralter Widerstandskraft. Du bist so robust, dass du den ersten erfolgreichen Angriff der Werwölfe überleben kannst. Du stirbst nicht und das Spiel geht weiter. Erst bei einem zweiten Angriff (durch Wölfe oder Mörder) wirst du wie jeder andere sterben.",
                         "BLACK_WEREWOLF": "Der Alpha des Rudels. Du bist ein normaler Werwolf mit einer Sonderkraft: Einmal pro Spiel kannst du wählen, das Opfer der Werwölfe zu infizieren, anstatt es zu töten. Das Opfer verliert seine ursprüngliche Rolle und gehört fortan heimlich zu eurem Werwolf-Rudel.",
                         "WHITE_WEREWOLF": "Ein einsamer Abtrünniger, der ein doppeltes Spiel spielt. Jede Nacht wachst du zuerst mit den anderen Werwölfen auf, um gemeinsam zu jagen. Sobald diese schlafen, wachst du heimlich erneut auf, um einen anderen Werwolf zu eliminieren. Du gewinnst nur, wenn du der letzte Überlebende bist.",
                         "ANGEL": "Ein himmlisches Wesen, das einen schnellen Abgang sucht. Dein Ziel ist ungewöhnlich: Du gewinnst das Spiel sofort, wenn es dir gelingt, in der allerersten Abstimmungsphase des Tages hingerichtet zu werden. Überlebst du den ersten Tag, wirst du zu einem einfachen Dorfbewohner.",
@@ -412,7 +413,8 @@ const resources = {
                         "steal_role": "{{role}} hat die Identität von {{target}} gestohlen.",
                         "peek": "{{role}} hat in der Nacht geblinzelt.",
                         "curse": "{{role}} hat {{target}} verflucht.",
-                        "sleep": "{{role}} hat bei {{target}} geschlafen."
+                        "sleep": "{{role}} hat bei {{target}} geschlafen.",
+                        "survive": "{{role}} hat den Angriff überlebt."
                     },
                     "ui": {
                         "died_last_night": "Letzte Nacht gestorben:",

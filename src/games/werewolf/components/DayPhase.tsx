@@ -108,6 +108,8 @@ export const DayPhase: React.FC<DayPhaseProps> = ({ players, round, onNextPhase,
                 return t('games.werewolf.night_summary.curse', { role: roleName, target: getTargetName(action.targetId) });
             case 'SLEEP':
                 return t('games.werewolf.night_summary.sleep', { role: roleName, target: getTargetName(action.targetId) });
+            case 'SURVIVE':
+                return t('games.werewolf.night_summary.survive', { role: roleName });
             default:
                 return `${roleName}: ${action.type}`;
         }

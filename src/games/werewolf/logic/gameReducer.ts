@@ -1,7 +1,7 @@
 import { INITIAL_STATE, getNextPhase } from './types';
 import type { GameState, Role, Action } from './types';
 
-import { getDeathCascade, getWinningFaction } from './utils';
+import { getDeathCascade, getWinningFaction, isWerewolfRole } from './utils';
 import { DEFAULT_ROLES } from './defaultRoles';
 
 
@@ -149,6 +149,7 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
             const { action: nightAction, role } = action;
             let newPlayers = [...state.players];
             let newNightActionLog = [...state.nightActionLog];
+            let newNightDecisions = [...state.nightDecisions];
 
             switch (nightAction.type) {
                 case 'KILL':
@@ -164,6 +165,18 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                         // If Dorfmatratze is not home (has sleepingAt set to someone else) AND is the target
                         if (targetPlayer?.role === 'DORFMATRATZE' && targetPlayer.powerState.sleepingAt && targetPlayer.powerState.sleepingAt !== targetPlayer.id) {
                             // She is not home, so she survives
+                            break;
+                        }
+
+                        // Wise Elder Survival Check
+                        const allRoles = [...DEFAULT_ROLES, ...state.customRoles];
+                        if (targetPlayer?.role === 'WISE' && targetPlayer.powerState.canSurviveWerewolf && isWerewolfRole(role, allRoles)) {
+                            // Use up survival and don't kill
+                            newPlayers = newPlayers.map(p =>
+                                p.id === targetPlayer.id ? { ...p, powerState: { ...p.powerState, canSurviveWerewolf: false } } : p
+                            );
+                            // Also add a special decision so it shows in summary
+                            newNightDecisions.push({ role: 'WISE', action: { type: 'SURVIVE' } });
                             break;
                         }
 
@@ -349,7 +362,7 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                 ...state,
                 players: newPlayers,
                 nightActionLog: newNightActionLog,
-                nightDecisions: [...state.nightDecisions, { role, action: nightAction }]
+                nightDecisions: [...newNightDecisions, { role, action: nightAction }]
             };
 
             // Check if this action caused a win condition (e.g. Easter Bunny)
