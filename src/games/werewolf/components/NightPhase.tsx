@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Box, Typography, Button, IconButton, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import type { Player, NightAction, Role, RoleDefinition } from '../logic/types';
 import { isWerewolf } from '../logic/utils';
@@ -89,13 +89,17 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
     const activeRole = rolesToAct[currentRoleIndex];
 
     const nextRole = () => {
-        if (currentRoleIndex < rolesToAct.length - 1) {
-            setCurrentRoleIndex(prev => prev + 1);
-        } else {
-            setIsMorningComing(true);
-            setTimeout(onNextPhase, 2000);
-        }
+        setCurrentRoleIndex(prev => prev + 1);
     };
+
+    // Handle transition to morning when all roles have acted
+    useEffect(() => {
+        if (currentRoleIndex >= rolesToAct.length && rolesToAct.length > 0 && !isMorningComing) {
+            setIsMorningComing(true);
+            const timer = setTimeout(onNextPhase, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [currentRoleIndex, rolesToAct.length, onNextPhase, isMorningComing]);
 
     const handleAction = (action: NightAction) => {
         onNightAction(action, activeRole || 'WEREWOLF');
@@ -156,7 +160,7 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
 
         if (activeCustomRole) {
             const ability = activeCustomRole.abilities[0];
-            if (!ability) return <Box textAlign="center" mt={10}><Button onClick={nextRole}>Skip {activeRole}</Button></Box>;
+            if (!ability) return <Box textAlign="center" mt={10}><Button variant="outlined" onClick={nextRole}>{t('common.skip')} {activeRole}</Button></Box>;
 
             return (
                 <PlayerSelectionView
@@ -208,7 +212,7 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
                 const victim = players.find(p => p.id === victimId);
 
                 if (!blackWolf || !victim) {
-                    return <Box textAlign="center" mt={10}><Button onClick={nextRole}>Skip</Button></Box>;
+                    return <Box textAlign="center" mt={10}><Button variant="outlined" onClick={nextRole}>{t('common.skip')}</Button></Box>;
                 }
 
                 return (
@@ -236,7 +240,7 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
             case 'THIEF': return <ThiefView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
             case 'BLACK_CAT': return <BlackCatView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
             case 'DORFMATRATZE': return <MatratzeView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
-            default: return <Box textAlign="center" mt={10}><Button onClick={nextRole}>Skip {activeRole}</Button></Box>;
+            default: return <Box textAlign="center" mt={10}><Button variant="outlined" onClick={nextRole}>{t('common.skip')} {activeRole}</Button></Box>;
         }
     };
 

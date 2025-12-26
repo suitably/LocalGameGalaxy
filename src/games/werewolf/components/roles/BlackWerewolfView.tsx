@@ -26,7 +26,7 @@ export const BlackWerewolfView: React.FC<RoleViewProps> = ({ victim, onAction, o
                     {instruction || t('games.werewolf.ui.black_werewolf.instruction')}
                 </Typography>
                 <Typography variant="h6" color="error" gutterBottom>
-                    {t('games.werewolf.narrator.select_victim')}: {victim.name}
+                    {t('games.werewolf.narrator.select_victim')} {victim.name}
                 </Typography>
             </Paper>
 
@@ -37,7 +37,7 @@ export const BlackWerewolfView: React.FC<RoleViewProps> = ({ victim, onAction, o
                     size="large"
                     onClick={() => onAction({ type: 'INFECT', targetId: victim.id })}
                 >
-                    {t('games.werewolf.editor.ability_instruction_infect').replace('...', '')} {victim.name}
+                    {t('games.werewolf.ui.black_werewolf.infect_victim', { name: victim.name })}
                 </Button>
 
                 <Button
@@ -45,7 +45,7 @@ export const BlackWerewolfView: React.FC<RoleViewProps> = ({ victim, onAction, o
                     onClick={onSkip}
                     size="large"
                 >
-                    {t('common.skip')} / {t('games.werewolf.narrator.select_victim')}
+                    {t('common.skip')}
                 </Button>
             </Box>
         </Box>

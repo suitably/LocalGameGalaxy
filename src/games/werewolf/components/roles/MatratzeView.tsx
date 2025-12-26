@@ -21,7 +21,7 @@ export const MatratzeView: React.FC<MatratzeViewProps> = ({ players, onAction, o
     return (
         <Box>
             <PlayerSelectionView
-                title={t('games.werewolf.roles.dorfmatratze')}
+                title={t('games.werewolf.roles.DORFMATRATZE')}
                 instruction={instruction || t('games.werewolf.ui.dorfmatratze.instruction')}
                 players={players.filter(p => p.isAlive)}
                 onSelect={handleSelect}

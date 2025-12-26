@@ -135,7 +135,8 @@ const resources = {
                             "instruction": "The shadows are lengthening. Whom will you stand watch over tonight to ensure they survive until morning?"
                         },
                         "black_werewolf": {
-                            "instruction": "Your power is ancient. Choose a victim to infect with the curse of the moon, making them a brother of the pack."
+                            "instruction": "Your power is ancient. Choose a victim to infect with the curse of the moon, making them a brother of the pack.",
+                            "infect_victim": "Infect {{name}}"
                         },
                         "white_werewolf": {
                             "instruction": "The pack is asleep and the coast is clear. Which of your fellow werewolves will you eliminate tonight to get closer to your solitary victory?"
@@ -453,7 +454,8 @@ const resources = {
                             "instruction": "Die Schatten werden länger. Wen wirst du heute Nacht bewachen, um sicherzustellen, dass er bis zum Morgen überlebt?"
                         },
                         "black_werewolf": {
-                            "instruction": "Deine Macht ist uralt. Wähle ein Opfer, um es mit dem Fluch des Mondes zu infizieren und zu einem Bruder des Rudels zu machen."
+                            "instruction": "Deine Macht ist uralt. Wähle ein Opfer, um es mit dem Fluch des Mondes zu infizieren und zu einem Bruder des Rudels zu machen.",
+                            "infect_victim": "{{name}} infizieren"
                         },
                         "white_werewolf": {
                             "instruction": "Das Rudel schläft und die Luft ist rein. Welchen deiner Werwolf-Artgenossen wirst du heute Nacht eliminieren, um deinem Einzelsieg näher zu kommen?"
