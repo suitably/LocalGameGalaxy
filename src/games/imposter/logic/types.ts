@@ -7,26 +7,27 @@ export interface Player {
     isKicked?: boolean;
 }
 
-export interface Category {
+export interface DbCategory {
     id: string;
     name: {
         en: string;
         de: string;
     };
+}
+
+export interface DbWordPair {
+    id?: number;
     words: {
-        en: string;
-        de: string;
-        hint?: {
-            en: string;
-            de: string;
-        };
-    }[];
+        en: [string, string];
+        de: [string, string];
+    };
+    categoryIds: string[];
 }
 
 export interface GameState {
     phase: GamePhase;
     players: Player[];
-    selectedCategories: Category[];
+    selectedCategories: DbCategory[];
     selectedWord: string | null;
     selectedHint: string | null;
     imposterCount: number;

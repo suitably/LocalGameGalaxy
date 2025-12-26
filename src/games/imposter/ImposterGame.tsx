@@ -5,10 +5,12 @@ import { GameSetup } from './components/GameSetup';
 import { HandoverView } from './components/HandoverView';
 import { GameTimer } from './components/GameTimer';
 import { VotingView } from './components/VotingView';
-import type { Player, GameState, Category } from './logic/types';
+import type { Player, GameState, DbCategory, DbWordPair } from './logic/types';
 import ReplayIcon from '@mui/icons-material/Replay';
 import HomeIcon from '@mui/icons-material/Home';
 import { useNavigate } from 'react-router-dom';
+import { seedImposterDatabase } from './logic/dbSeeder';
+import { db } from '../../lib/db';
 
 const STORAGE_KEY_PLAYERS = 'imposter-setup-players';
 
@@ -30,6 +32,11 @@ export const ImposterGame: React.FC = () => {
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY_PLAYERS, JSON.stringify(players));
     }, [players]);
+
+    // Initialize database
+    useEffect(() => {
+        seedImposterDatabase();
+    }, []);
     const [gameState, setGameState] = useState<GameState>({
         phase: 'LOBBY',
         players: [],
@@ -52,13 +59,20 @@ export const ImposterGame: React.FC = () => {
         setPlayers(prev => prev.filter(p => p.id !== id));
     }, []);
 
-    const startGame = (setup: { categories: Category[]; imposterCount: number; timerLength: number }) => {
-        // Pool words/hints from all selected categories
-        const wordPool = setup.categories.flatMap(cat => cat.words);
-        if (wordPool.length === 0) return;
+    const startGame = async (setup: { categories: DbCategory[]; imposterCount: number; timerLength: number }) => {
+        // Fetch word pairs from selected categories
+        const categoryIds = setup.categories.map(c => c.id);
+        const pairs = await db.imposter_word_pairs
+            .where('categoryIds')
+            .anyOf(categoryIds)
+            .toArray();
 
-        const randomWordObj = wordPool[Math.floor(Math.random() * wordPool.length)];
-        const currentLang = i18n.language.startsWith('de') ? 'de' : 'en';
+        if (pairs.length === 0) return;
+
+        const randomPair = pairs[Math.floor(Math.random() * pairs.length)] as DbWordPair;
+        const currentLang = i18n.language.startsWith('de') ? 'de' : ('en' as 'en' | 'de');
+
+        const [word, hint] = randomPair.words[currentLang];
 
         const shuffled = [...players].sort(() => 0.5 - Math.random());
         const imposterIds = new Set(shuffled.slice(0, setup.imposterCount).map(p => p.id));
@@ -74,8 +88,8 @@ export const ImposterGame: React.FC = () => {
             phase: 'HANDOVER',
             players: updatedPlayers,
             selectedCategories: setup.categories,
-            selectedWord: randomWordObj[currentLang],
-            selectedHint: randomWordObj.hint[currentLang],
+            selectedWord: word,
+            selectedHint: hint,
             imposterCount: setup.imposterCount,
             timerLength: setup.timerLength,
             remainingTime: setup.timerLength,

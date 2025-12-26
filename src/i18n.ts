@@ -279,7 +279,10 @@ const resources = {
                     },
                     "result": {
                         "imposters_win": "Imposters Win!",
-                        "innocents_win": "Innocents Win!"
+                        "innocents_win": "Innocents Win!",
+                        "imposter": "the Imposter",
+                        "normal": "an Innocent",
+                        "revealed_role": "{{name}} was {{role}}!"
                     },
                     "editor": {
                         "title": "Category Editor",
@@ -593,7 +596,10 @@ const resources = {
                     },
                     "result": {
                         "imposters_win": "Die Imposter gewinnen!",
-                        "innocents_win": "Die Unschuldigen gewinnen!"
+                        "innocents_win": "Die Unschuldigen gewinnen!",
+                        "imposter": "der Imposter",
+                        "normal": "ein Unschuldiger",
+                        "revealed_role": "{{name}} war {{role}}!"
                     },
                     "editor": {
                         "title": "Kategorien-Editor",

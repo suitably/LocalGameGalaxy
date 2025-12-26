@@ -1,0 +1,2082 @@
+{
+    "categories": {
+        "animals": "Tiere",
+        "food": "Essen",
+        "cities": "Städte",
+        "general": "Allgemein"
+    },
+    "words": {
+        "lion": {
+            "word": "Löwe",
+            "hint": "König der Tiere"
+        },
+        "elephant": {
+            "word": "Elefant",
+            "hint": "Hat einen Rüssel"
+        },
+        "giraffe": {
+            "word": "Giraffe",
+            "hint": "Langer Hals"
+        },
+        "penguin": {
+            "word": "Pinguin",
+            "hint": "Vogel der nicht fliegen kann"
+        },
+        "pizza": {
+            "word": "Pizza",
+            "hint": "Italienischer runder Teig"
+        },
+        "burger": {
+            "word": "Burger",
+            "hint": "Fast Food in einem Brötchen"
+        },
+        "sushi": {
+            "word": "Sushi",
+            "hint": "Japanischer Reis und Fisch"
+        },
+        "pasta": {
+            "word": "Pasta",
+            "hint": "Nudeln"
+        },
+        "paris": {
+            "word": "Paris",
+            "hint": "Stadt der Liebe"
+        },
+        "berlin": {
+            "word": "Berlin",
+            "hint": "Hauptstadt von Deutschland"
+        },
+        "london": {
+            "word": "London",
+            "hint": "Big Ben"
+        },
+        "new_york": {
+            "word": "New York",
+            "hint": "Der Big Apple"
+        },
+        "dog": {
+            "word": "Hund",
+            "hint": ""
+        },
+        "cat": {
+            "word": "Katze",
+            "hint": ""
+        },
+        "pizza_1": {
+            "word": "Pizza",
+            "hint": ""
+        },
+        "burger_1": {
+            "word": "Burger",
+            "hint": ""
+        },
+        "beach": {
+            "word": "Strand",
+            "hint": ""
+        },
+        "mountain": {
+            "word": "Berg",
+            "hint": ""
+        },
+        "coffee": {
+            "word": "Kaffee",
+            "hint": ""
+        },
+        "tea": {
+            "word": "Tee",
+            "hint": ""
+        },
+        "car": {
+            "word": "Auto",
+            "hint": ""
+        },
+        "bus": {
+            "word": "Bus",
+            "hint": ""
+        },
+        "sun": {
+            "word": "Sonne",
+            "hint": ""
+        },
+        "moon": {
+            "word": "Mond",
+            "hint": ""
+        },
+        "banana": {
+            "word": "Banane",
+            "hint": ""
+        },
+        "apple": {
+            "word": "Apfel",
+            "hint": ""
+        },
+        "perfume": {
+            "word": "Parfüm",
+            "hint": ""
+        },
+        "deodorant": {
+            "word": "Deo",
+            "hint": ""
+        },
+        "adidas": {
+            "word": "Adidas",
+            "hint": ""
+        },
+        "nike": {
+            "word": "Nike",
+            "hint": ""
+        },
+        "backpack": {
+            "word": "Rucksack",
+            "hint": ""
+        },
+        "suitcase": {
+            "word": "Koffer",
+            "hint": ""
+        },
+        "jacuzzi": {
+            "word": "Whirlpool",
+            "hint": ""
+        },
+        "sauna": {
+            "word": "Sauna",
+            "hint": ""
+        },
+        "sneakers": {
+            "word": "Turnschuhe",
+            "hint": ""
+        },
+        "sandals": {
+            "word": "Sandalen",
+            "hint": ""
+        },
+        "sunglasses": {
+            "word": "Sonnenbrille",
+            "hint": ""
+        },
+        "eyeglasses": {
+            "word": "Taucherbrille",
+            "hint": ""
+        },
+        "piano": {
+            "word": "Klavier",
+            "hint": ""
+        },
+        "guitar": {
+            "word": "Gitarre",
+            "hint": ""
+        },
+        "cruise": {
+            "word": "Kreuzfahrt",
+            "hint": ""
+        },
+        "safari": {
+            "word": "Safari",
+            "hint": ""
+        },
+        "sushi_1": {
+            "word": "Sushi",
+            "hint": ""
+        },
+        "pizza_2": {
+            "word": "Pizza",
+            "hint": ""
+        },
+        "hamburger": {
+            "word": "Hamburger",
+            "hint": ""
+        },
+        "hotdog": {
+            "word": "Hotdog",
+            "hint": ""
+        },
+        "chocolate": {
+            "word": "Schokolade",
+            "hint": ""
+        },
+        "vanilla": {
+            "word": "Vanille",
+            "hint": ""
+        },
+        "beer": {
+            "word": "Bier",
+            "hint": ""
+        },
+        "wine": {
+            "word": "Wein",
+            "hint": ""
+        },
+        "whiskey": {
+            "word": "Whiskey",
+            "hint": ""
+        },
+        "vodka": {
+            "word": "Wodka",
+            "hint": ""
+        },
+        "milk": {
+            "word": "Milch",
+            "hint": ""
+        },
+        "juice": {
+            "word": "Saft",
+            "hint": ""
+        },
+        "bread": {
+            "word": "Brot",
+            "hint": ""
+        },
+        "butter": {
+            "word": "Butter",
+            "hint": ""
+        },
+        "rice": {
+            "word": "Reis",
+            "hint": ""
+        },
+        "pasta_1": {
+            "word": "Nudeln",
+            "hint": ""
+        },
+        "chicken": {
+            "word": "Hühnchen",
+            "hint": ""
+        },
+        "beef": {
+            "word": "Rindfleisch",
+            "hint": ""
+        },
+        "apple_1": {
+            "word": "Apfel",
+            "hint": ""
+        },
+        "orange": {
+            "word": "Orange",
+            "hint": ""
+        },
+        "banana_1": {
+            "word": "Banane",
+            "hint": ""
+        },
+        "strawberry": {
+            "word": "Erdbeere",
+            "hint": ""
+        },
+        "carrot": {
+            "word": "Karotte",
+            "hint": ""
+        },
+        "broccoli": {
+            "word": "Brokkoli",
+            "hint": ""
+        },
+        "potato": {
+            "word": "Kartoffel",
+            "hint": ""
+        },
+        "tomato": {
+            "word": "Tomate",
+            "hint": ""
+        },
+        "onion": {
+            "word": "Zwiebel",
+            "hint": ""
+        },
+        "garlic": {
+            "word": "Knoblauch",
+            "hint": ""
+        },
+        "salt": {
+            "word": "Salz",
+            "hint": ""
+        },
+        "pepper": {
+            "word": "Pfeffer",
+            "hint": ""
+        },
+        "sugar": {
+            "word": "Zucker",
+            "hint": ""
+        },
+        "honey": {
+            "word": "Honig",
+            "hint": ""
+        },
+        "water": {
+            "word": "Wasser",
+            "hint": ""
+        },
+        "soda": {
+            "word": "Limonade",
+            "hint": ""
+        },
+        "apple_2": {
+            "word": "Apple",
+            "hint": ""
+        },
+        "microsoft": {
+            "word": "Microsoft",
+            "hint": ""
+        },
+        "google": {
+            "word": "Google",
+            "hint": ""
+        },
+        "facebook": {
+            "word": "Facebook",
+            "hint": ""
+        },
+        "amazon": {
+            "word": "Amazon",
+            "hint": ""
+        },
+        "netflix": {
+            "word": "Netflix",
+            "hint": ""
+        },
+        "pancake": {
+            "word": "Pfannkuchen",
+            "hint": ""
+        },
+        "doughnut": {
+            "word": "Donut",
+            "hint": ""
+        },
+        "ice_cream": {
+            "word": "Eiscreme",
+            "hint": ""
+        },
+        "cake": {
+            "word": "Kuchen",
+            "hint": ""
+        },
+        "mcdonalds": {
+            "word": "McDonalds",
+            "hint": ""
+        },
+        "kfc": {
+            "word": "KFC",
+            "hint": ""
+        },
+        "car_1": {
+            "word": "Auto",
+            "hint": ""
+        },
+        "bike": {
+            "word": "Fahrrad",
+            "hint": ""
+        },
+        "virus": {
+            "word": "Virus",
+            "hint": ""
+        },
+        "bacteria": {
+            "word": "Bakterien",
+            "hint": ""
+        },
+        "lord_of_the_rings": {
+            "word": "Herr der Ringe",
+            "hint": ""
+        },
+        "hobbit": {
+            "word": "Der Hobbit",
+            "hint": ""
+        },
+        "harry_potter": {
+            "word": "Harry Potter",
+            "hint": ""
+        },
+        "lord_voldemort": {
+            "word": "Lord Voldemort",
+            "hint": ""
+        },
+        "superman": {
+            "word": "Superman",
+            "hint": ""
+        },
+        "batman": {
+            "word": "Batman",
+            "hint": ""
+        },
+        "spiderman": {
+            "word": "Spiderman",
+            "hint": ""
+        },
+        "ironman": {
+            "word": "Ironman",
+            "hint": ""
+        },
+        "captain_america": {
+            "word": "Captain America",
+            "hint": ""
+        },
+        "thor": {
+            "word": "Thor",
+            "hint": ""
+        },
+        "pizza_3": {
+            "word": "Pizza",
+            "hint": ""
+        },
+        "pasta_2": {
+            "word": "Pasta",
+            "hint": ""
+        },
+        "football": {
+            "word": "Football",
+            "hint": ""
+        },
+        "basketball": {
+            "word": "Baseball",
+            "hint": ""
+        },
+        "dog_1": {
+            "word": "Hund",
+            "hint": ""
+        },
+        "wolf": {
+            "word": "Wolf",
+            "hint": ""
+        },
+        "pizza_4": {
+            "word": "Pizza",
+            "hint": ""
+        },
+        "lasagna": {
+            "word": "Lasagne",
+            "hint": ""
+        },
+        "facebook_1": {
+            "word": "Facebook",
+            "hint": ""
+        },
+        "instagram": {
+            "word": "Instagram",
+            "hint": ""
+        },
+        "sunglasses_1": {
+            "word": "Sonnenbrille",
+            "hint": ""
+        },
+        "goggles": {
+            "word": "Taucherbrille",
+            "hint": ""
+        },
+        "laptop": {
+            "word": "Laptop",
+            "hint": ""
+        },
+        "tablet": {
+            "word": "Tablet",
+            "hint": ""
+        },
+        "doctor": {
+            "word": "Arzt",
+            "hint": ""
+        },
+        "surgeon": {
+            "word": "Chirurg",
+            "hint": ""
+        },
+        "bitcoin": {
+            "word": "Bitcoin",
+            "hint": ""
+        },
+        "ethereum": {
+            "word": "Ethereum",
+            "hint": ""
+        },
+        "bomb": {
+            "word": "Bombe",
+            "hint": ""
+        },
+        "gun": {
+            "word": "Gewehr",
+            "hint": ""
+        },
+        "einstein": {
+            "word": "Einstein",
+            "hint": ""
+        },
+        "newton": {
+            "word": "Newton",
+            "hint": ""
+        },
+        "soccer": {
+            "word": "Fußball",
+            "hint": ""
+        },
+        "rugby": {
+            "word": "Rugby",
+            "hint": ""
+        },
+        "teacher": {
+            "word": "Lehrer",
+            "hint": ""
+        },
+        "professor": {
+            "word": "Professor",
+            "hint": ""
+        },
+        "mouse": {
+            "word": "Maus",
+            "hint": ""
+        },
+        "rat": {
+            "word": "Ratte",
+            "hint": ""
+        },
+        "cucumber": {
+            "word": "Gurke",
+            "hint": ""
+        },
+        "zucchini": {
+            "word": "Zucchini",
+            "hint": ""
+        },
+        "dragon": {
+            "word": "Drache",
+            "hint": ""
+        },
+        "dinosaur": {
+            "word": "Dinosaurier",
+            "hint": ""
+        },
+        "ghost": {
+            "word": "Geist",
+            "hint": ""
+        },
+        "zombie": {
+            "word": "Zombie",
+            "hint": ""
+        },
+        "chef": {
+            "word": "Küchenchef",
+            "hint": ""
+        },
+        "kitchen_counter": {
+            "word": "Küchentheke",
+            "hint": ""
+        },
+        "pyramid": {
+            "word": "Pyramide",
+            "hint": ""
+        },
+        "temple": {
+            "word": "Tempel",
+            "hint": ""
+        },
+        "volcano": {
+            "word": "Vulkan",
+            "hint": ""
+        },
+        "mountain_1": {
+            "word": "Berg",
+            "hint": ""
+        },
+        "desert": {
+            "word": "Wüste",
+            "hint": ""
+        },
+        "sand": {
+            "word": "Sand",
+            "hint": ""
+        },
+        "cloud": {
+            "word": "Wolke",
+            "hint": ""
+        },
+        "fog": {
+            "word": "Nebel",
+            "hint": ""
+        },
+        "snow": {
+            "word": "Schnee",
+            "hint": ""
+        },
+        "hail": {
+            "word": "Hagel",
+            "hint": ""
+        },
+        "detective": {
+            "word": "Detektiv",
+            "hint": ""
+        },
+        "criminal": {
+            "word": "Verbrecher",
+            "hint": ""
+        },
+        "jungle": {
+            "word": "Dschungel",
+            "hint": ""
+        },
+        "forest": {
+            "word": "Wald",
+            "hint": ""
+        },
+        "clock": {
+            "word": "Uhr",
+            "hint": ""
+        },
+        "watch": {
+            "word": "Armbanduhr",
+            "hint": ""
+        },
+        "bread_1": {
+            "word": "Brot",
+            "hint": ""
+        },
+        "toast": {
+            "word": "Toast",
+            "hint": ""
+        },
+        "painting": {
+            "word": "Gemälde",
+            "hint": ""
+        },
+        "sketch": {
+            "word": "Skizze",
+            "hint": ""
+        },
+        "umbrella": {
+            "word": "Regenschirm",
+            "hint": ""
+        },
+        "parasol": {
+            "word": "Sonnenschirm",
+            "hint": ""
+        },
+        "suit": {
+            "word": "Anzug",
+            "hint": ""
+        },
+        "necktie": {
+            "word": "Krawatte",
+            "hint": ""
+        },
+        "socks": {
+            "word": "Socken",
+            "hint": ""
+        },
+        "stockings": {
+            "word": "Strumpfhosen",
+            "hint": ""
+        },
+        "belt": {
+            "word": "Gürtel",
+            "hint": ""
+        },
+        "jeans": {
+            "word": "Jeans",
+            "hint": ""
+        },
+        "crown": {
+            "word": "Krone",
+            "hint": ""
+        },
+        "hat": {
+            "word": "Hut",
+            "hint": ""
+        },
+        "ballet": {
+            "word": "Ballett",
+            "hint": ""
+        },
+        "hip_hop": {
+            "word": "Hip Hop",
+            "hint": ""
+        },
+        "parrot": {
+            "word": "Papagei",
+            "hint": ""
+        },
+        "crow": {
+            "word": "Krähe",
+            "hint": ""
+        },
+        "bat": {
+            "word": "Fledermaus",
+            "hint": ""
+        },
+        "owl": {
+            "word": "Eule",
+            "hint": ""
+        },
+        "candle": {
+            "word": "Kerze",
+            "hint": ""
+        },
+        "lantern": {
+            "word": "Laterne",
+            "hint": ""
+        },
+        "library": {
+            "word": "Bibliothek",
+            "hint": ""
+        },
+        "university": {
+            "word": "Universität",
+            "hint": ""
+        },
+        "museum": {
+            "word": "Museum",
+            "hint": ""
+        },
+        "gallery": {
+            "word": "Galerie",
+            "hint": ""
+        },
+        "radio": {
+            "word": "Radio",
+            "hint": ""
+        },
+        "podcast": {
+            "word": "Podcast",
+            "hint": ""
+        },
+        "online_news": {
+            "word": "Online Nachrichten",
+            "hint": ""
+        },
+        "newspaper": {
+            "word": "Zeitung",
+            "hint": ""
+        },
+        "pen": {
+            "word": "Kugelschreiber",
+            "hint": ""
+        },
+        "paper": {
+            "word": "Blatt Papier",
+            "hint": ""
+        },
+        "moon_1": {
+            "word": "Mond",
+            "hint": ""
+        },
+        "sun_1": {
+            "word": "Sonne",
+            "hint": ""
+        },
+        "tennis": {
+            "word": "Tennis",
+            "hint": ""
+        },
+        "badminton": {
+            "word": "Badminton",
+            "hint": ""
+        },
+        "skiing": {
+            "word": "Skifahren",
+            "hint": ""
+        },
+        "snow_1": {
+            "word": "Schnee",
+            "hint": ""
+        },
+        "swimming": {
+            "word": "Schwimmen",
+            "hint": ""
+        },
+        "diving": {
+            "word": "Tauchen",
+            "hint": ""
+        },
+        "running": {
+            "word": "Laufen",
+            "hint": ""
+        },
+        "jogging": {
+            "word": "Joggen",
+            "hint": ""
+        },
+        "elevator": {
+            "word": "Aufzug",
+            "hint": ""
+        },
+        "escalator": {
+            "word": "Rolltreppe",
+            "hint": ""
+        },
+        "ferry": {
+            "word": "Fähre",
+            "hint": ""
+        },
+        "cruise_1": {
+            "word": "Kreuzfahrt",
+            "hint": ""
+        },
+        "map": {
+            "word": "Karte",
+            "hint": ""
+        },
+        "gps": {
+            "word": "GPS",
+            "hint": ""
+        },
+        "sailboat": {
+            "word": "Segelboot",
+            "hint": ""
+        },
+        "yacht": {
+            "word": "Yacht",
+            "hint": ""
+        },
+        "meteor": {
+            "word": "Meteor",
+            "hint": ""
+        },
+        "satellite": {
+            "word": "Satellit",
+            "hint": ""
+        },
+        "planet": {
+            "word": "Planet",
+            "hint": ""
+        },
+        "star": {
+            "word": "Stern",
+            "hint": ""
+        },
+        "earthquake": {
+            "word": "Erdbeben",
+            "hint": ""
+        },
+        "tsunami": {
+            "word": "Tsunami",
+            "hint": ""
+        },
+        "wolf_1": {
+            "word": "Wolf",
+            "hint": ""
+        },
+        "fox": {
+            "word": "Fuchs",
+            "hint": ""
+        },
+        "elvis": {
+            "word": "Elvis",
+            "hint": ""
+        },
+        "the_beatles": {
+            "word": "The Beatles",
+            "hint": ""
+        },
+        "leonardo_da_vinci": {
+            "word": "Leonardo da Vinci",
+            "hint": ""
+        },
+        "michelangelo": {
+            "word": "Michelangelo",
+            "hint": ""
+        },
+        "napoleon": {
+            "word": "Napoleon",
+            "hint": ""
+        },
+        "caesar": {
+            "word": "Cäsar",
+            "hint": ""
+        },
+        "mario": {
+            "word": "Mario",
+            "hint": ""
+        },
+        "luigi": {
+            "word": "Luigi",
+            "hint": ""
+        },
+        "sonic": {
+            "word": "Sonic",
+            "hint": ""
+        },
+        "tails": {
+            "word": "Tails",
+            "hint": ""
+        },
+        "pac_man": {
+            "word": "Pac-Man",
+            "hint": ""
+        },
+        "tetris": {
+            "word": "Tetris",
+            "hint": ""
+        },
+        "fortnite": {
+            "word": "Fortnite",
+            "hint": ""
+        },
+        "minecraft": {
+            "word": "Minecraft",
+            "hint": ""
+        },
+        "call_of_duty": {
+            "word": "Call of Duty",
+            "hint": ""
+        },
+        "battlefield": {
+            "word": "Battlefield",
+            "hint": ""
+        },
+        "game_of_thrones": {
+            "word": "Game of Thrones",
+            "hint": ""
+        },
+        "lord_of_the_rings_1": {
+            "word": "Herr der Ringe",
+            "hint": ""
+        },
+        "star_wars": {
+            "word": "Star Wars",
+            "hint": ""
+        },
+        "star_trek": {
+            "word": "Star Trek",
+            "hint": ""
+        },
+        "harry_potter_1": {
+            "word": "Harry Potter",
+            "hint": ""
+        },
+        "percy_jackson": {
+            "word": "Percy Jackson",
+            "hint": ""
+        },
+        "sherlock_holmes": {
+            "word": "Sherlock Holmes",
+            "hint": ""
+        },
+        "hercule_poirot": {
+            "word": "Hercule Poirot",
+            "hint": ""
+        },
+        "dracula": {
+            "word": "Dracula",
+            "hint": ""
+        },
+        "frankenstein": {
+            "word": "Frankenstein",
+            "hint": ""
+        },
+        "james_bond": {
+            "word": "James Bond",
+            "hint": ""
+        },
+        "secret_service": {
+            "word": "Geheimdienst",
+            "hint": ""
+        },
+        "homer_simpson": {
+            "word": "Homer Simpson",
+            "hint": ""
+        },
+        "peter_griffin": {
+            "word": "Peter Griffin",
+            "hint": ""
+        },
+        "spongebob": {
+            "word": "SpongeBob",
+            "hint": ""
+        },
+        "patrick": {
+            "word": "Patrick",
+            "hint": ""
+        },
+        "godzilla": {
+            "word": "Godzilla",
+            "hint": ""
+        },
+        "king_kong": {
+            "word": "King Kong",
+            "hint": ""
+        },
+        "lego": {
+            "word": "Lego",
+            "hint": ""
+        },
+        "playmobil": {
+            "word": "Playmobil",
+            "hint": ""
+        },
+        "uno": {
+            "word": "UNO",
+            "hint": ""
+        },
+        "monopoly": {
+            "word": "Monopoly",
+            "hint": ""
+        },
+        "catan": {
+            "word": "Catan",
+            "hint": ""
+        },
+        "risk": {
+            "word": "Risiko",
+            "hint": ""
+        },
+        "blackjack": {
+            "word": "Blackjack",
+            "hint": ""
+        },
+        "poker": {
+            "word": "Poker",
+            "hint": ""
+        },
+        "bingo": {
+            "word": "Bingo",
+            "hint": ""
+        },
+        "roulette": {
+            "word": "Roulette",
+            "hint": ""
+        },
+        "new_york_1": {
+            "word": "New York",
+            "hint": ""
+        },
+        "los_angeles": {
+            "word": "Los Angeles",
+            "hint": ""
+        },
+        "paris_1": {
+            "word": "Paris",
+            "hint": ""
+        },
+        "london_1": {
+            "word": "London",
+            "hint": ""
+        },
+        "rome": {
+            "word": "Rom",
+            "hint": ""
+        },
+        "athens": {
+            "word": "Athen",
+            "hint": ""
+        },
+        "sydney": {
+            "word": "Sydney",
+            "hint": ""
+        },
+        "melbourne": {
+            "word": "Melbourne",
+            "hint": ""
+        },
+        "rio_de_janeiro": {
+            "word": "Rio de Janeiro",
+            "hint": ""
+        },
+        "buenos_aires": {
+            "word": "Buenos Aires",
+            "hint": ""
+        },
+        "mount_everest": {
+            "word": "Mount Everest",
+            "hint": ""
+        },
+        "nepal": {
+            "word": "Nepal",
+            "hint": ""
+        },
+        "amazon_1": {
+            "word": "Amazonas",
+            "hint": ""
+        },
+        "nile": {
+            "word": "Nil",
+            "hint": ""
+        },
+        "grand_canyon": {
+            "word": "Grand Canyon",
+            "hint": ""
+        },
+        "niagara_falls": {
+            "word": "Niagarafälle",
+            "hint": ""
+        },
+        "taj_mahal": {
+            "word": "Taj Mahal",
+            "hint": ""
+        },
+        "great_wall_of_china": {
+            "word": "Chinesische Mauer",
+            "hint": ""
+        },
+        "eiffel_tower": {
+            "word": "Eiffelturm",
+            "hint": ""
+        },
+        "statue_of_liberty": {
+            "word": "Freiheitsstatue",
+            "hint": ""
+        },
+        "big_ben": {
+            "word": "Big Ben",
+            "hint": ""
+        },
+        "leaning_tower_of_pisa": {
+            "word": "Schiefer Turm von Pisa",
+            "hint": ""
+        },
+        "olympics": {
+            "word": "Olympia",
+            "hint": ""
+        },
+        "world_cup": {
+            "word": "WM",
+            "hint": ""
+        },
+        "nba": {
+            "word": "NBA",
+            "hint": ""
+        },
+        "nfl": {
+            "word": "NFL",
+            "hint": ""
+        },
+        "golf": {
+            "word": "Golf",
+            "hint": ""
+        },
+        "cricket": {
+            "word": "Cricket",
+            "hint": ""
+        },
+        "ufc": {
+            "word": "UFC",
+            "hint": ""
+        },
+        "wwe": {
+            "word": "WWE",
+            "hint": ""
+        },
+        "twitch": {
+            "word": "Twitch",
+            "hint": ""
+        },
+        "netflix_1": {
+            "word": "Netflix",
+            "hint": ""
+        },
+        "twitter": {
+            "word": "Twitter",
+            "hint": ""
+        },
+        "facebook_2": {
+            "word": "Facebook",
+            "hint": ""
+        },
+        "spacex": {
+            "word": "SpaceX",
+            "hint": ""
+        },
+        "tesla": {
+            "word": "Tesla",
+            "hint": ""
+        },
+        "burger_king": {
+            "word": "Burger King",
+            "hint": ""
+        },
+        "mcdonald_s": {
+            "word": "McDonald’s",
+            "hint": ""
+        },
+        "sony": {
+            "word": "Sony",
+            "hint": ""
+        },
+        "samsung": {
+            "word": "Samsung",
+            "hint": ""
+        },
+        "mercedes": {
+            "word": "Mercedes",
+            "hint": ""
+        },
+        "bmw": {
+            "word": "BMW",
+            "hint": ""
+        },
+        "harvard": {
+            "word": "Harvard",
+            "hint": ""
+        },
+        "mit": {
+            "word": "MIT",
+            "hint": ""
+        },
+        "oxford": {
+            "word": "Oxford",
+            "hint": ""
+        },
+        "highschool": {
+            "word": "Schule",
+            "hint": ""
+        },
+        "cia": {
+            "word": "CIA",
+            "hint": ""
+        },
+        "fbi": {
+            "word": "FBI",
+            "hint": ""
+        },
+        "hitler": {
+            "word": "Hitler",
+            "hint": ""
+        },
+        "stalin": {
+            "word": "Stalin",
+            "hint": ""
+        },
+        "tesla_1": {
+            "word": "Tesla",
+            "hint": ""
+        },
+        "porsche": {
+            "word": "Porsche",
+            "hint": ""
+        },
+        "iphone": {
+            "word": "iPhone",
+            "hint": ""
+        },
+        "samsung_1": {
+            "word": "Samsung",
+            "hint": ""
+        },
+        "playstation": {
+            "word": "PlayStation",
+            "hint": ""
+        },
+        "xbox": {
+            "word": "Xbox",
+            "hint": ""
+        },
+        "windows": {
+            "word": "Windows",
+            "hint": ""
+        },
+        "macos": {
+            "word": "MacOS",
+            "hint": ""
+        },
+        "youtube": {
+            "word": "YouTube",
+            "hint": ""
+        },
+        "tiktok": {
+            "word": "TikTok",
+            "hint": ""
+        },
+        "twitch_1": {
+            "word": "Twitch",
+            "hint": ""
+        },
+        "kick": {
+            "word": "Kick",
+            "hint": ""
+        },
+        "spotify": {
+            "word": "Spotify",
+            "hint": ""
+        },
+        "apple_music": {
+            "word": "Apple Music",
+            "hint": ""
+        },
+        "reddit": {
+            "word": "Reddit",
+            "hint": ""
+        },
+        "discord": {
+            "word": "Discord",
+            "hint": ""
+        },
+        "instagram_1": {
+            "word": "Instagram",
+            "hint": ""
+        },
+        "snapchat": {
+            "word": "Snapchat",
+            "hint": ""
+        },
+        "chatgpt": {
+            "word": "ChatGPT",
+            "hint": ""
+        },
+        "gemini": {
+            "word": "Gemini",
+            "hint": ""
+        },
+        "laptop_1": {
+            "word": "Laptop",
+            "hint": ""
+        },
+        "desktop": {
+            "word": "Desktop",
+            "hint": ""
+        },
+        "moon_2": {
+            "word": "Mond",
+            "hint": ""
+        },
+        "planet_1": {
+            "word": "Planet",
+            "hint": ""
+        },
+        "comet": {
+            "word": "Komet",
+            "hint": ""
+        },
+        "asteroid": {
+            "word": "Asteroid",
+            "hint": ""
+        },
+        "bridge": {
+            "word": "Brücke",
+            "hint": ""
+        },
+        "tunnel": {
+            "word": "Tunnel",
+            "hint": ""
+        },
+        "bus_1": {
+            "word": "Bus",
+            "hint": ""
+        },
+        "tram": {
+            "word": "Straßenbahn",
+            "hint": ""
+        },
+        "giraffe_1": {
+            "word": "Giraffe",
+            "hint": ""
+        },
+        "zebra": {
+            "word": "Zebra",
+            "hint": ""
+        },
+        "elephant_1": {
+            "word": "Elefant",
+            "hint": ""
+        },
+        "rhino": {
+            "word": "Nashorn",
+            "hint": ""
+        },
+        "alligator": {
+            "word": "Skorpion",
+            "hint": ""
+        },
+        "crocodile": {
+            "word": "Spinne",
+            "hint": ""
+        },
+        "oyster": {
+            "word": "Tintenfisch",
+            "hint": ""
+        },
+        "clam": {
+            "word": "Oktopus",
+            "hint": ""
+        },
+        "gold": {
+            "word": "Gold",
+            "hint": ""
+        },
+        "silver": {
+            "word": "Silber",
+            "hint": ""
+        },
+        "platinum": {
+            "word": "Platin",
+            "hint": ""
+        },
+        "gold_1": {
+            "word": "Gold",
+            "hint": ""
+        },
+        "jacket": {
+            "word": "Jacke",
+            "hint": ""
+        },
+        "coat": {
+            "word": "Mantel",
+            "hint": ""
+        },
+        "scarf": {
+            "word": "Turnschuhe",
+            "hint": ""
+        },
+        "tie": {
+            "word": "Stiefel",
+            "hint": ""
+        },
+        "helmet": {
+            "word": "Helm",
+            "hint": ""
+        },
+        "hat_1": {
+            "word": "Hut",
+            "hint": ""
+        },
+        "ring": {
+            "word": "Ohrring",
+            "hint": ""
+        },
+        "earring": {
+            "word": "Ring",
+            "hint": ""
+        },
+        "microphone": {
+            "word": "Mikrofon",
+            "hint": ""
+        },
+        "speaker": {
+            "word": "Lautsprecher",
+            "hint": ""
+        },
+        "headphones": {
+            "word": "Kopfhörer",
+            "hint": ""
+        },
+        "earbuds": {
+            "word": "Ohrstöpsel",
+            "hint": ""
+        },
+        "television": {
+            "word": "Fernseher",
+            "hint": ""
+        },
+        "radio_1": {
+            "word": "Radio",
+            "hint": ""
+        },
+        "projector": {
+            "word": "Projektor",
+            "hint": ""
+        },
+        "screen": {
+            "word": "Leinwand",
+            "hint": ""
+        },
+        "calculator": {
+            "word": "Taschenrechner",
+            "hint": ""
+        },
+        "typewriter": {
+            "word": "Schreibmaschine",
+            "hint": ""
+        },
+        "flashlight": {
+            "word": "Taschenlampe",
+            "hint": ""
+        },
+        "lantern_1": {
+            "word": "Laterne",
+            "hint": ""
+        },
+        "tent": {
+            "word": "Zelt",
+            "hint": ""
+        },
+        "cabin": {
+            "word": "Hütte",
+            "hint": ""
+        },
+        "compass": {
+            "word": "Kompass",
+            "hint": ""
+        },
+        "map_1": {
+            "word": "Karte",
+            "hint": ""
+        },
+        "boarding_pass": {
+            "word": "Bordkarte",
+            "hint": ""
+        },
+        "id_card": {
+            "word": "Ausweis",
+            "hint": ""
+        },
+        "ticket": {
+            "word": "Ticket",
+            "hint": ""
+        },
+        "invoice": {
+            "word": "Rechnung",
+            "hint": ""
+        },
+        "passport": {
+            "word": "Reisepass",
+            "hint": ""
+        },
+        "ticket_1": {
+            "word": "Ticket",
+            "hint": ""
+        },
+        "subway": {
+            "word": "U-Bahn",
+            "hint": ""
+        },
+        "taxi": {
+            "word": "Taxi",
+            "hint": ""
+        },
+        "sky": {
+            "word": "Himmel",
+            "hint": ""
+        },
+        "jet": {
+            "word": "Jet",
+            "hint": ""
+        },
+        "motorcycle": {
+            "word": "Motorrad",
+            "hint": ""
+        },
+        "scooter": {
+            "word": "Roller",
+            "hint": ""
+        },
+        "surfboard": {
+            "word": "Surfbrett",
+            "hint": ""
+        },
+        "skateboard": {
+            "word": "Skateboard",
+            "hint": ""
+        },
+        "baseball": {
+            "word": "Baseball",
+            "hint": ""
+        },
+        "football_1": {
+            "word": "Football",
+            "hint": ""
+        },
+        "volleyball": {
+            "word": "Volleyball",
+            "hint": ""
+        },
+        "basketball_1": {
+            "word": "Basketball",
+            "hint": ""
+        },
+        "table_tennis": {
+            "word": "Tischtennis",
+            "hint": ""
+        },
+        "badminton_1": {
+            "word": "Badminton",
+            "hint": ""
+        },
+        "puzzle": {
+            "word": "Puzzle",
+            "hint": ""
+        },
+        "crossword": {
+            "word": "Kreuzworträtsel",
+            "hint": ""
+        },
+        "bowling": {
+            "word": "Bowling",
+            "hint": ""
+        },
+        "golf_1": {
+            "word": "Golf",
+            "hint": ""
+        },
+        "marathon": {
+            "word": "Marathon",
+            "hint": ""
+        },
+        "sprint": {
+            "word": "Sprint",
+            "hint": ""
+        },
+        "fencing": {
+            "word": "Fechten",
+            "hint": ""
+        },
+        "archery": {
+            "word": "Bogenschießen",
+            "hint": ""
+        },
+        "boxing": {
+            "word": "Boxen",
+            "hint": ""
+        },
+        "karate": {
+            "word": "Karate",
+            "hint": ""
+        },
+        "hockey": {
+            "word": "Hockey",
+            "hint": ""
+        },
+        "soccer_1": {
+            "word": "Fußball",
+            "hint": ""
+        },
+        "concert": {
+            "word": "Konzert",
+            "hint": ""
+        },
+        "festival": {
+            "word": "Festival",
+            "hint": ""
+        },
+        "novel": {
+            "word": "Netflix",
+            "hint": ""
+        },
+        "poem": {
+            "word": "Kino",
+            "hint": ""
+        },
+        "dictionary": {
+            "word": "Roman",
+            "hint": ""
+        },
+        "encyclopedia": {
+            "word": "Gedicht",
+            "hint": ""
+        },
+        "pharmacist": {
+            "word": "Enzyklopädie",
+            "hint": ""
+        },
+        "doctor_1": {
+            "word": "Wörterbuch",
+            "hint": ""
+        },
+        "engineer": {
+            "word": "Apotheker",
+            "hint": ""
+        },
+        "architect": {
+            "word": "Arzt",
+            "hint": ""
+        },
+        "firefighter": {
+            "word": "Ingenieur",
+            "hint": ""
+        },
+        "policeman": {
+            "word": "Architekt",
+            "hint": ""
+        },
+        "germany": {
+            "word": "Feuerwehrmann",
+            "hint": ""
+        },
+        "france": {
+            "word": "Polizist",
+            "hint": ""
+        },
+        "pilot": {
+            "word": "Pilot",
+            "hint": ""
+        },
+        "astronaut": {
+            "word": "Astronaut",
+            "hint": ""
+        },
+        "judge": {
+            "word": "Richter",
+            "hint": ""
+        },
+        "punishment": {
+            "word": "Strafe",
+            "hint": ""
+        },
+        "baker": {
+            "word": "Bäcker",
+            "hint": ""
+        },
+        "chef_1": {
+            "word": "Koch",
+            "hint": ""
+        },
+        "farmer": {
+            "word": "Bauer",
+            "hint": ""
+        },
+        "fisherman": {
+            "word": "Fischer",
+            "hint": ""
+        },
+        "blacksmith": {
+            "word": "Schmied",
+            "hint": ""
+        },
+        "carpenter": {
+            "word": "Zimmermann",
+            "hint": ""
+        },
+        "heaven": {
+            "word": "Himmel",
+            "hint": ""
+        },
+        "hell": {
+            "word": "Hölle",
+            "hint": ""
+        },
+        "sky_1": {
+            "word": "Himmel",
+            "hint": ""
+        },
+        "clouds": {
+            "word": "Wolken",
+            "hint": ""
+        },
+        "japan": {
+            "word": "Japan",
+            "hint": ""
+        },
+        "china": {
+            "word": "China",
+            "hint": ""
+        },
+        "france_1": {
+            "word": "Frankreich",
+            "hint": ""
+        },
+        "eiffel_tower_1": {
+            "word": "Eiffelturm",
+            "hint": ""
+        },
+        "thor_1": {
+            "word": "Thor",
+            "hint": ""
+        },
+        "lightning": {
+            "word": "Blitz",
+            "hint": ""
+        },
+        "obi_wan": {
+            "word": "Obi Wan",
+            "hint": ""
+        },
+        "force": {
+            "word": "Macht",
+            "hint": ""
+        },
+        "ufo": {
+            "word": "UFO",
+            "hint": ""
+        },
+        "drones": {
+            "word": "Drohnen",
+            "hint": ""
+        },
+        "god": {
+            "word": "Gott",
+            "hint": ""
+        },
+        "heaven_1": {
+            "word": "Himmel",
+            "hint": ""
+        },
+        "tortilla": {
+            "word": "Tortilla",
+            "hint": ""
+        },
+        "taco": {
+            "word": "Taco",
+            "hint": ""
+        },
+        "baguette": {
+            "word": "Baguette",
+            "hint": ""
+        },
+        "ciabatta": {
+            "word": "Ciabatta",
+            "hint": ""
+        },
+        "hot_dog": {
+            "word": "Hot Dog",
+            "hint": ""
+        },
+        "bratwurst": {
+            "word": "Bratwurst",
+            "hint": ""
+        },
+        "energy_drink": {
+            "word": "Energy Drink",
+            "hint": ""
+        },
+        "soda_1": {
+            "word": "Limonade",
+            "hint": ""
+        },
+        "coconut_milk": {
+            "word": "Kokosmilch",
+            "hint": ""
+        },
+        "soy_milk": {
+            "word": "Sojamilch",
+            "hint": ""
+        },
+        "picasso": {
+            "word": "Picasso",
+            "hint": ""
+        },
+        "van_gogh": {
+            "word": "Van Gogh",
+            "hint": ""
+        },
+        "mozart": {
+            "word": "Mozart",
+            "hint": ""
+        },
+        "beethoven": {
+            "word": "Beethoven",
+            "hint": ""
+        },
+        "messi": {
+            "word": "Messi",
+            "hint": ""
+        },
+        "ronaldo": {
+            "word": "Ronaldo",
+            "hint": ""
+        },
+        "bayern_munich": {
+            "word": "Bayern München",
+            "hint": ""
+        },
+        "real_madrid": {
+            "word": "Real Madrid",
+            "hint": ""
+        },
+        "ferrari": {
+            "word": "Ferrari",
+            "hint": ""
+        },
+        "lamborghini": {
+            "word": "Lamborghini",
+            "hint": ""
+        },
+        "coca_cola": {
+            "word": "Coca-Cola",
+            "hint": ""
+        },
+        "pepsi": {
+            "word": "Pepsi",
+            "hint": ""
+        },
+        "london_2": {
+            "word": "London",
+            "hint": ""
+        },
+        "paris_2": {
+            "word": "Paris",
+            "hint": ""
+        },
+        "los_angeles_1": {
+            "word": "Los Angeles",
+            "hint": ""
+        },
+        "new_york_2": {
+            "word": "New York",
+            "hint": ""
+        },
+        "big_ben_1": {
+            "word": "Big Ben",
+            "hint": ""
+        },
+        "leaning_tower_of_pisa_1": {
+            "word": "Schiefer Turm von Pisa",
+            "hint": ""
+        },
+        "statue_of_liberty_1": {
+            "word": "Freiheitsstatue",
+            "hint": ""
+        },
+        "eiffel_tower_2": {
+            "word": "Eiffelturm",
+            "hint": ""
+        },
+        "mouse_1": {
+            "word": "Maus",
+            "hint": ""
+        },
+        "keyboard": {
+            "word": "Tastatur",
+            "hint": ""
+        },
+        "tv": {
+            "word": "Fernseher",
+            "hint": ""
+        },
+        "laptop_2": {
+            "word": "Laptop",
+            "hint": ""
+        },
+        "wardrobe": {
+            "word": "Schrank",
+            "hint": ""
+        },
+        "showcase": {
+            "word": "Vitrine",
+            "hint": ""
+        },
+        "birch": {
+            "word": "Birke",
+            "hint": ""
+        },
+        "shrub": {
+            "word": "Strauch",
+            "hint": ""
+        },
+        "radiator": {
+            "word": "Heizung",
+            "hint": ""
+        },
+        "hairdryer": {
+            "word": "Föhn",
+            "hint": ""
+        },
+        "lamp": {
+            "word": "Lampe",
+            "hint": ""
+        },
+        "candle_1": {
+            "word": "Kerze",
+            "hint": ""
+        },
+        "pillow": {
+            "word": "Kissen",
+            "hint": ""
+        },
+        "blanket": {
+            "word": "Decke",
+            "hint": ""
+        },
+        "microphone_1": {
+            "word": "Mikrofon",
+            "hint": ""
+        },
+        "camera": {
+            "word": "Kamera",
+            "hint": ""
+        },
+        "oven": {
+            "word": "Ofen",
+            "hint": ""
+        },
+        "microwave": {
+            "word": "Mikrowelle",
+            "hint": ""
+        },
+        "pan": {
+            "word": "Pfanne",
+            "hint": ""
+        },
+        "pot": {
+            "word": "Topf",
+            "hint": ""
+        },
+        "tablet_1": {
+            "word": "Tablet",
+            "hint": ""
+        },
+        "smartphone": {
+            "word": "Smartphone",
+            "hint": ""
+        },
+        "stairs": {
+            "word": "Treppe",
+            "hint": ""
+        },
+        "elevator_1": {
+            "word": "Aufzug",
+            "hint": ""
+        },
+        "techno": {
+            "word": "Techno",
+            "hint": ""
+        },
+        "rap": {
+            "word": "Rap",
+            "hint": ""
+        },
+        "rock": {
+            "word": "Rock",
+            "hint": ""
+        },
+        "pop": {
+            "word": "Pop",
+            "hint": ""
+        },
+        "table_tennis_1": {
+            "word": "Tischtennis",
+            "hint": ""
+        },
+        "badminton_2": {
+            "word": "Badminton",
+            "hint": ""
+        },
+        "bed": {
+            "word": "Bett",
+            "hint": ""
+        },
+        "sofa": {
+            "word": "Sofa",
+            "hint": ""
+        },
+        "forest_1": {
+            "word": "Wald",
+            "hint": ""
+        },
+        "park": {
+            "word": "Park",
+            "hint": ""
+        },
+        "cinema": {
+            "word": "Kino",
+            "hint": ""
+        },
+        "bowling_1": {
+            "word": "Bowling",
+            "hint": ""
+        },
+        "glass": {
+            "word": "Glas",
+            "hint": ""
+        },
+        "cup": {
+            "word": "Tasse",
+            "hint": ""
+        },
+        "job": {
+            "word": "Job",
+            "hint": ""
+        },
+        "hobby": {
+            "word": "Hobby",
+            "hint": ""
+        },
+        "jesus": {
+            "word": "Jesus",
+            "hint": ""
+        },
+        "santa_claus": {
+            "word": "Weihnachtsmann",
+            "hint": ""
+        },
+        "bra": {
+            "word": "BH",
+            "hint": ""
+        },
+        "bikini": {
+            "word": "Bikini",
+            "hint": ""
+        }
+    }
+}

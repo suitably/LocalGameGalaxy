@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Box, TextField, Button, List, ListItem, ListItemText, IconButton, Paper, Typography, Checkbox, FormControlLabel, FormGroup, InputAdornment, Dialog, DialogContent } from '@mui/material';
+import { Box, TextField, Button, List, ListItem, ListItemText, IconButton, Paper, Typography, Checkbox, FormControlLabel, FormGroup, InputAdornment } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import RestoreIcon from '@mui/icons-material/Restore';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
 import { useTranslation } from 'react-i18next';
-import { CATEGORIES as DEFAULT_CATEGORIES } from '../logic/words';
-import type { Category } from '../logic/types';
-import { WordEditor } from './WordEditor';
-import SettingsIcon from '@mui/icons-material/Settings';
+import type { DbCategory } from '../logic/types';
+import { db } from '../../../lib/db';
 
 const STORAGE_KEY_SETTINGS = 'imposter-setup-settings';
 
@@ -19,7 +17,7 @@ interface GameSetupProps {
     onRemovePlayer: (id: string) => void;
     onClearAllPlayers: () => void;
     onStartGame: (setup: {
-        categories: Category[];
+        categories: DbCategory[];
         imposterCount: number;
         timerLength: number;
     }) => void;
@@ -28,24 +26,16 @@ interface GameSetupProps {
 export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRemovePlayer, onClearAllPlayers, onStartGame }) => {
     const { t, i18n } = useTranslation();
     const [newName, setNewName] = useState('');
+    const [allCategories, setAllCategories] = useState<DbCategory[]>([]);
 
-    const [customCategories, setCustomCategories] = useState<Category[]>(() => {
-        const saved = localStorage.getItem('imposter_custom_categories');
-        return saved ? JSON.parse(saved) : [];
-    });
-
-    const allCategories = React.useMemo(() => {
-        const merged = [...DEFAULT_CATEGORIES];
-        customCategories.forEach(custom => {
-            const index = merged.findIndex(c => c.id === custom.id);
-            if (index > -1) {
-                merged[index] = custom;
-            } else {
-                merged.push(custom);
-            }
-        });
-        return merged;
-    }, [customCategories]);
+    // Fetch categories from database
+    useEffect(() => {
+        const fetchCategories = async () => {
+            const cats = await db.imposter_categories.toArray();
+            setAllCategories(cats);
+        };
+        fetchCategories();
+    }, []);
 
     // Load settings from localStorage
     const [imposterCount, setImposterCount] = useState(() => {
@@ -99,8 +89,6 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
         return allCategories.map(c => c.id);
     });
 
-    const [isEditorOpen, setIsEditorOpen] = useState(false);
-
     // Save settings to localStorage whenever they change
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify({
@@ -136,12 +124,6 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
             imposterCount,
             timerLength: totalTimerSeconds,
         });
-    };
-
-    const handleSaveCategories = (newCustomCategories: Category[]) => {
-        setCustomCategories(newCustomCategories);
-        localStorage.setItem('imposter_custom_categories', JSON.stringify(newCustomCategories));
-        setIsEditorOpen(false);
     };
 
     const toggleCategory = (id: string) => {
@@ -232,9 +214,6 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
                             <Button size="small" onClick={() => setSelectedCategoryIds([])}>
                                 {t('games.imposter.setup.select_none')}
                             </Button>
-                            <Button size="small" startIcon={<SettingsIcon />} onClick={() => setIsEditorOpen(true)} sx={{ ml: 'auto' }}>
-                                {t('games.imposter.editor.title')}
-                            </Button>
                         </Box>
                         <FormGroup sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
                             {allCategories.map((category) => (
@@ -309,17 +288,6 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
             >
                 {t('common.start')}
             </Button>
-
-            <Dialog open={isEditorOpen} onClose={() => setIsEditorOpen(false)} maxWidth="md" fullWidth>
-                <DialogContent>
-                    <WordEditor
-                        customCategories={customCategories}
-                        defaultCategories={DEFAULT_CATEGORIES}
-                        onSaveCategories={handleSaveCategories}
-                        onClose={() => setIsEditorOpen(false)}
-                    />
-                </DialogContent>
-            </Dialog>
         </Box>
     );
 };
