@@ -206,24 +206,39 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                         );
                     }
                     break;
-                case 'INFECT':
+                case 'INFECT': {
                     // Black Werewolf infects a player - they join the werewolf pack
+                    const infectedTargetId = nightAction.targetId;
+
+                    // Identify collateral victims who were supposed to die with this target (e.g. Dorfmatratze)
+                    const collateralVictimIds = state.players.filter(p =>
+                        p.role === 'DORFMATRATZE' &&
+                        p.powerState.sleepingAt === infectedTargetId &&
+                        p.isAlive
+                    ).map(p => p.id);
+
                     newPlayers = newPlayers.map(p => {
-                        if (p.id === nightAction.targetId) {
+                        if (p.id === infectedTargetId) {
                             return {
                                 ...p,
                                 role: 'WEREWOLF',
                                 powerState: { ...p.powerState, isInfected: true, isDeadSoon: false }
                             };
                         }
+                        if (collateralVictimIds.includes(p.id)) {
+                            return { ...p, powerState: { ...p.powerState, isDeadSoon: false } };
+                        }
                         if (p.role === 'BLACK_WEREWOLF') {
                             return { ...p, powerState: { ...p.powerState, hasInfected: false } };
                         }
                         return p;
                     });
+
                     // Remove from death log since they are now infected instead of killed
-                    newNightActionLog = newNightActionLog.filter(id => id !== nightAction.targetId);
+                    const victimsToRemove = [infectedTargetId, ...collateralVictimIds];
+                    newNightActionLog = newNightActionLog.filter(id => !victimsToRemove.includes(id));
                     break;
+                }
                 case 'HEAL':
                     // Witch heals
                     newPlayers = newPlayers.map(p => {

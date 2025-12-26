@@ -84,7 +84,7 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
         }).map(cr => cr.id as Role);
 
         return [...standardRoles, ...activeCustomRoles];
-    }, [players, customRoles, round]);
+    }, [players, customRoles, round, nightActionLog]);
 
     const activeRole = rolesToAct[currentRoleIndex];
 
@@ -204,7 +204,7 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
             }
             case 'BLACK_WEREWOLF': {
                 const blackWolf = players.find(p => p.role === 'BLACK_WEREWOLF' && p.isAlive);
-                const victimId = nightActionLog[nightActionLog.length - 1];
+                const victimId = nightActionLog[0];
                 const victim = players.find(p => p.id === victimId);
 
                 if (!blackWolf || !victim) {
