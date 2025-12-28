@@ -6,7 +6,7 @@ export interface Song {
     artist: string;
     cover?: string; // stored as Blob or URL
     background?: string; // stored as Blob or URL
-    audio?: string; // stored as Blob or URL (mp3, ogg, wav, etc.)
+    audio?: string | Blob; // stored as Blob or URL (mp3, ogg, wav, etc.)
     video?: string; // stored as Blob or URL
     txtContent: string; // The raw or parsed content
     dirPath: string; // Handle to the directory if available, or just path string

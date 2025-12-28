@@ -100,7 +100,11 @@ export class MelodiqImporter {
                     };
 
                     if (chosenAudioFile) {
-                        song.audio = URL.createObjectURL(await chosenAudioFile.getFile());
+                        try {
+                            song.audio = await chosenAudioFile.getFile();
+                        } catch (e) {
+                            console.warn('Failed to get audio file', e);
+                        }
                     }
 
                     await db.songs.put(song);
@@ -215,11 +219,7 @@ export class MelodiqImporter {
                     };
 
                     if (chosenAudioFile) {
-                        try {
-                            song.audio = URL.createObjectURL(chosenAudioFile);
-                        } catch (e) {
-                            console.warn('Failed to create object URL for audio', e);
-                        }
+                        song.audio = chosenAudioFile;
                     }
 
                     await db.songs.put(song);

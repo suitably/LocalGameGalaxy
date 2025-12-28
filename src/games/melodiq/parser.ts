@@ -9,6 +9,8 @@ export interface Note {
 export interface ParsedSong {
     headers: Record<string, string>;
     notes: Note[];
+    bpm: number;
+    gap: number;
 }
 
 export const parseUltraStarTxt = (content: string): ParsedSong => {
@@ -36,8 +38,28 @@ export const parseUltraStarTxt = (content: string): ParsedSong => {
                     text: parts.slice(4).join(' ')
                 });
             }
+        } else if (line.startsWith('-')) {
+            // Line break: - START [END]
+            const parts = line.split(' ');
+            if (parts.length >= 2) {
+                notes.push({
+                    type: '-',
+                    start: parseInt(parts[1], 10),
+                    duration: 0,
+                    pitch: 0,
+                    text: ''
+                });
+            }
         }
     }
 
-    return { headers, notes };
+    // Extract BPM and GAP with defaults
+    // Replace comma with dot for float parsing just in case (e.g. European format)
+    const bpmString = headers['BPM'] ? headers['BPM'].replace(',', '.') : '120';
+    const bpm = parseFloat(bpmString) || 120;
+
+    const gapString = headers['GAP'] ? headers['GAP'].replace(',', '.') : '0';
+    const gap = parseFloat(gapString) || 0;
+
+    return { headers, notes, bpm, gap };
 };

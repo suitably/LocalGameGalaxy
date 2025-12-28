@@ -16,6 +16,7 @@ interface MelodiqSessionProps {
 export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) => {
     const audioRef = useRef<HTMLAudioElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [bpmMultiplier, setBpmMultiplier] = useState(4);
     const [currentTime, setCurrentTime] = useState(0);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_duration, setDuration] = useState(0);
@@ -23,7 +24,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     // Parse song on mount
     const parsedSong: SongWithNotes = React.useMemo(() => {
         const parsed = parseUltraStarTxt(song.txtContent);
-        return { ...song, notes: parsed.notes, headers: parsed.headers };
+        return { ...song, notes: parsed.notes, headers: parsed.headers, bpm: parsed.bpm, gap: parsed.gap };
     }, [song]);
     const requestRef = useRef<number>(0);
 
@@ -57,20 +58,38 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     }, [isPlaying, updateLoop]);
 
     useEffect(() => {
-        // Calculate song duration from notes if metadata insufficient?
-        // Or just let audio load.
         const audio = audioRef.current;
         if (audio) {
             audio.onloadedmetadata = () => {
-                setDuration(audio.duration);
+                const duration = audio.duration;
+                setDuration(duration);
             };
             audio.onended = () => {
                 setIsPlaying(false);
             };
         }
-    }, []);
+    }, [parsedSong]);
 
-    // Clean up Blob URL if created here? No, passed from prop.
+    // Manage audio source URL
+    const [audioSrc, setAudioSrc] = useState<string | undefined>(undefined);
+
+    useEffect(() => {
+        let url: string | undefined;
+        if (song.audio) {
+            if (song.audio instanceof Blob) {
+                url = URL.createObjectURL(song.audio);
+            } else if (typeof song.audio === 'string') {
+                url = song.audio;
+            }
+        }
+        setAudioSrc(url);
+
+        return () => {
+            if (url && song.audio instanceof Blob) {
+                URL.revokeObjectURL(url);
+            }
+        };
+    }, [song.audio]);
 
     return (
         <Box sx={{
@@ -93,8 +112,15 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
 
             {/* Visualizer Area */}
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <PitchVisualizer song={parsedSong} currentTime={currentTime} height={400} />
-                <LyricsDisplay song={parsedSong} currentTime={currentTime} />
+                <PitchVisualizer
+                    song={parsedSong}
+                    currentBeat={(currentTime * 1000 - (parsedSong.gap || 0)) / (60000 / ((parsedSong.bpm || 120) * bpmMultiplier))}
+                    height={400}
+                />
+                <LyricsDisplay
+                    song={parsedSong}
+                    currentBeat={(currentTime * 1000 - (parsedSong.gap || 0)) / (60000 / ((parsedSong.bpm || 120) * bpmMultiplier))}
+                />
             </Box>
 
             {/* Controls (Dev only, usually hidden in gameplay) */}
@@ -107,19 +133,25 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                 >
                     {isPlaying ? "Pause" : "Play"}
                 </Button>
+
             </Box>
 
+
             {/* Audio Element (Hidden or visible for debug) */}
-            {song.audio && (
-                <audio
-                    ref={audioRef}
-                    src={song.audio}
-                    style={{ display: 'none' }} // Hide native player
-                />
-            )}
-            {!song.audio && (
-                <Typography color="error" sx={{ textAlign: 'center' }}>No Audio Source Found</Typography>
-            )}
-        </Box>
+            {
+                audioSrc && (
+                    <audio
+                        ref={audioRef}
+                        src={audioSrc}
+                        style={{ display: 'none' }} // Hide native player
+                    />
+                )
+            }
+            {
+                !audioSrc && (
+                    <Typography color="error" sx={{ textAlign: 'center' }}>No Audio Source Found</Typography>
+                )
+            }
+        </Box >
     );
 };
