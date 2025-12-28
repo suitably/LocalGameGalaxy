@@ -301,6 +301,14 @@ const resources = {
                         "custom_categories": "Custom Categories",
                         "standard_categories": "Standard Categories"
                     }
+                },
+                "melodiq": {
+                    "title": "Melodiq",
+                    "description": "Sing your heart out with friends!",
+                    "library_empty": "Your library is empty",
+                    "load_folder": "Load Song Directory",
+                    "scanning": "Scanning...",
+                    "import_stats": "Found: {{found}} | Processed: {{processed}} | Errors: {{errors}}"
                 }
             },
             "common": {
@@ -620,6 +628,14 @@ const resources = {
                         "custom_categories": "Eigene Kategorien",
                         "standard_categories": "Standard-Kategorien"
                     }
+                },
+                "melodiq": {
+                    "title": "Melodiq",
+                    "description": "Sing dich frei mit Freunden!",
+                    "library_empty": "Deine Bibliothek ist leer",
+                    "load_folder": "Lieder-Ordner laden",
+                    "scanning": "Scanne...",
+                    "import_stats": "Gefunden: {{found}} | Verarbeitet: {{processed}} | Fehler: {{errors}}"
                 }
             },
             "common": {

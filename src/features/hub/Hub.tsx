@@ -45,6 +45,21 @@ export const Hub: React.FC = () => {
                         </CardActionArea>
                     </Card>
                 </Box>
+                <Box sx={{ width: { xs: '100%', sm: '50%' } }}>
+                    <Card>
+                        <CardActionArea onClick={() => navigate('/games/melodiq')}>
+                            <CardContent sx={{ textAlign: 'center', py: 5 }}>
+                                <SportsEsportsIcon sx={{ fontSize: 60, mb: 2, color: 'success.main' }} />
+                                <Typography variant="h5" component="div">
+                                    Melodiq
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Karaoke Game
+                                </Typography>
+                            </CardContent>
+                        </CardActionArea>
+                    </Card>
+                </Box>
             </Box>
         </div>
     );
