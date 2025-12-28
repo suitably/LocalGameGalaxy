@@ -51,31 +51,53 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = ({ song, currentBeat 
     // For now, default to first or empty.
 
     return (
-        <Box sx={{ textAlign: 'center', py: 4, height: 100, display: 'flex', justifyContent: 'center', gap: '4px', flexWrap: 'wrap' }}>
-            {activeLine && activeLine.map((note, idx) => {
-                const isPast = currentBeat >= (note.start + note.duration);
-                const isActive = currentBeat >= note.start && currentBeat < (note.start + note.duration);
+        <Box sx={{ textAlign: 'center', py: 4, height: 120, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+            {/* Active Line */}
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: '4px', flexWrap: 'wrap', minHeight: '40px' }}>
+                {activeLine ? activeLine.map((note, idx) => {
+                    const isPast = currentBeat >= (note.start + note.duration);
+                    const isActive = currentBeat >= note.start && currentBeat < (note.start + note.duration);
 
-                let color = 'rgba(255,255,255,0.5)'; // Pending
-                if (isActive) color = '#00ffff'; // Active
-                if (isPast) color = '#ffffff'; // Done
+                    let color = 'rgba(255,255,255,0.5)'; // Pending
+                    if (isActive) color = '#00ffff'; // Active
+                    if (isPast) color = '#ffffff'; // Done
 
-                return (
-                    <Typography
-                        key={idx}
-                        variant="h5"
-                        sx={{
-                            fontWeight: isActive ? 'bold' : 'normal',
-                            color: color,
-                            textShadow: isActive ? '0 0 10px rgba(0,255,255,0.8)' : 'none',
-                            transition: 'color 0.1s'
-                        }}
-                    >
-                        {note.text}
-                    </Typography>
-                );
-            })}
-            {!activeLine && <Typography variant="h6" color="gray">...</Typography>}
+                    return (
+                        <Typography
+                            key={idx}
+                            variant="h5"
+                            sx={{
+                                fontWeight: isActive ? 'bold' : 'normal',
+                                color: color,
+                                textShadow: isActive ? '0 0 10px rgba(0,255,255,0.8)' : 'none',
+                                transition: 'color 0.1s'
+                            }}
+                        >
+                            {note.text}
+                        </Typography>
+                    );
+                }) : (
+                    <Typography variant="h6" color="gray">...</Typography>
+                )}
+            </Box>
+
+            {/* Next Line */}
+            {lines[activeLineIndex + 1] && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                    {lines[activeLineIndex + 1].map((note, idx) => (
+                        <Typography
+                            key={idx}
+                            variant="h6"
+                            sx={{
+                                color: 'rgba(255,255,255,0.3)',
+                                fontWeight: 'light'
+                            }}
+                        >
+                            {note.text}
+                        </Typography>
+                    ))}
+                </Box>
+            )}
         </Box>
     );
 };
