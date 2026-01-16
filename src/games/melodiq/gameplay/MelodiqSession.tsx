@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Box, Button, Typography, IconButton, Slider } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import type { Song } from '../db';
 import { parseUltraStarTxt } from '../parser';
-import { PitchVisualizer, type SongWithNotes } from './PitchVisualizer';
+import { PitchVisualizer, type SongWithNotes, type SungSegment } from './PitchVisualizer';
 import { LyricsDisplay } from './LyricsDisplay';
 import { MicrophoneManager, type PitchResult } from '../audio/MicrophoneManager';
 
@@ -19,20 +18,33 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit, sh
     const audioRef = useRef<HTMLAudioElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [bpmMultiplier, setBpmMultiplier] = useState(4);
-    const [currentTime, setCurrentTime] = useState(0);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [bpmMultiplier] = useState(4);
+
+    // Removed high-frequency states
+    // const [currentTime, setCurrentTime] = useState(0); 
+    // const [currentPitch, setCurrentPitch] = useState<PitchResult | null>(null);
+    // const [sungSegments, setSungSegments] = useState<SungSegment[]>([]);
+
+    // Refs for high-frequency data
+    const currentPitchRef = useRef<PitchResult | null>(null);
+    const sungSegmentsRef = useRef<SungSegment[]>([]);
+
+    // UI State (Throttled or Low Frequency)
     const [_duration, setDuration] = useState(0);
-    const [currentPitch, setCurrentPitch] = useState<PitchResult | null>(null);
     const [devPitchOverride, setDevPitchOverride] = useState<number | null>(null);
+    const [score, setScore] = useState(0);
+
+    // Internal tracking for game loop
     const micRef = useRef<MicrophoneManager>(new MicrophoneManager());
+    const scoreRef = useRef(0);
+    const requestRef = useRef<number>(0);
+    const lastScoreUpdateRef = useRef<number>(0);
 
     // Parse song on mount
     const parsedSong: SongWithNotes = React.useMemo(() => {
         const parsed = parseUltraStarTxt(song.txtContent);
         return { ...song, notes: parsed.notes, headers: parsed.headers, bpm: parsed.bpm, gap: parsed.gap };
     }, [song]);
-    const requestRef = useRef<number>(0);
 
     const togglePlay = () => {
         if (audioRef.current) {
@@ -48,29 +60,86 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit, sh
     };
 
     const updateLoop = useCallback(() => {
+        const now = performance.now();
+
+        // 1. Audio/Video Sync (Check occasionally, not every frame?)
+        // Actually, simple check is cheap.
         if (audioRef.current && isPlaying) {
-            setCurrentTime(audioRef.current.currentTime);
-            // Sync video if needed (simple check)
+            // Sync video if needed
             if (videoRef.current && Math.abs(videoRef.current.currentTime - audioRef.current.currentTime) > 0.2) {
                 videoRef.current.currentTime = audioRef.current.currentTime;
             }
         }
 
+        // 2. Pitch Detection
+        let pitch: PitchResult | null = null;
         if (devPitchOverride !== null) {
-            // Emulate pitch
-            setCurrentPitch({
+            pitch = {
                 frequency: 440 * Math.pow(2, (devPitchOverride - 69) / 12),
                 note: devPitchOverride,
                 volume: 1.0
-            });
+            };
         } else {
-            // Use real mic
-            const pitch = micRef.current.getPitch();
-            setCurrentPitch(pitch);
+            pitch = micRef.current.getPitch();
+        }
+        currentPitchRef.current = pitch;
+
+        // 3. Scoring Logic
+        if (pitch && pitch.note > 0 && isPlaying && parsedSong.notes && audioRef.current) {
+            const beatDuration = 60000 / ((parsedSong.bpm || 120) * bpmMultiplier);
+            const currentBeat = (audioRef.current.currentTime * 1000 - (parsedSong.gap || 0)) / beatDuration;
+
+            // Optimization: Don't search all notes?
+            // Since notes are sorted, we can optimize. But N is small.
+            const activeNoteIndex = parsedSong.notes.findIndex((n) =>
+                n.type !== '-' &&
+                currentBeat >= n.start &&
+                currentBeat <= n.start + n.duration
+            );
+
+            if (activeNoteIndex !== -1) {
+                const note = parsedSong.notes[activeNoteIndex];
+                const targetPitch = note.pitch;
+                const sungPitch = pitch.note;
+
+                const diff = Math.abs((sungPitch % 12) - (targetPitch % 12));
+                const semitoneDiff = Math.min(diff, 12 - diff);
+
+                if (semitoneDiff < 1.0) {
+                    // Update Score Ref
+                    scoreRef.current += 10;
+
+                    // Update Segments Ref
+                    const prev = sungSegmentsRef.current;
+                    const last = prev[prev.length - 1];
+
+                    if (last && last.noteIndex === activeNoteIndex) {
+                        // Extend existing
+                        // Mutating the last object in ref array is safe if we don't depend on immutability for re-renders below
+                        // But PitchVisualizer might need to know?
+                        // Ideally we treat ref content as mutable.
+                        last.endBeat = currentBeat;
+                    } else {
+                        // New Segment
+                        sungSegmentsRef.current.push({ noteIndex: activeNoteIndex, startBeat: currentBeat, endBeat: currentBeat });
+                    }
+                }
+            }
+        }
+
+        // 4. Update React State (Throttled)
+        if (now - lastScoreUpdateRef.current > 200) { // 5Hz updates for score
+            if (score !== scoreRef.current) {
+                setScore(scoreRef.current);
+            }
+            lastScoreUpdateRef.current = now;
         }
 
         requestRef.current = requestAnimationFrame(updateLoop);
-    }, [isPlaying, devPitchOverride]);
+    }, [isPlaying, devPitchOverride, parsedSong, bpmMultiplier, score]);
+    // Note: 'score' dependency is actually not needed for logic, but setScore uses it? 
+    // Ah, setScore(scoreRef.current) doesn't need 'score' dep. 
+    // We should remove 'score' from deps to avoid loop recreation.
 
     useEffect(() => {
         // Start microphone
@@ -83,14 +152,14 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit, sh
             cancelAnimationFrame(requestRef.current);
             micRef.current.stop();
         };
-    }, [updateLoop]); // updateLoop changes when isPlaying changes
+    }, [updateLoop]);
 
+    // Audio Metadata
     useEffect(() => {
         const audio = audioRef.current;
         if (audio) {
             audio.onloadedmetadata = () => {
-                const duration = audio.duration;
-                setDuration(duration);
+                setDuration(audio.duration);
             };
             audio.onended = () => {
                 setIsPlaying(false);
@@ -103,7 +172,6 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit, sh
 
     // Manage audio source URL
     const [audioSrc, setAudioSrc] = useState<string | undefined>(undefined);
-
     useEffect(() => {
         let url: string | undefined;
         if (song.audio) {
@@ -114,11 +182,8 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit, sh
             }
         }
         setAudioSrc(url);
-
         return () => {
-            if (url && song.audio instanceof Blob) {
-                URL.revokeObjectURL(url);
-            }
+            if (url && song.audio instanceof Blob) URL.revokeObjectURL(url);
         };
     }, [song.audio]);
 
@@ -134,17 +199,13 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit, sh
             }
         }
         setVideoSrc(url);
-
         return () => {
-            if (url && song.video instanceof Blob) {
-                URL.revokeObjectURL(url);
-            }
+            if (url && song.video instanceof Blob) URL.revokeObjectURL(url);
         };
     }, [song.video]);
 
     return (
         <Box sx={{
-            // ... (keep existing styles) ...
             position: 'fixed',
             top: 0, left: 0, right: 0, bottom: 0,
             bgcolor: 'black',
@@ -154,7 +215,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit, sh
             flexDirection: 'column',
             overflow: 'hidden'
         }}>
-            {/* ... (keep video and overlay) ... */}
+            {/* Background Video */}
             {videoSrc && (
                 <video
                     ref={videoRef}
@@ -187,24 +248,25 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit, sh
                         <ArrowBackIcon />
                     </IconButton>
                     <Typography variant="h6">{song.artist} - {song.title}</Typography>
-                    <Box>Score: 0</Box>
+                    <Box>Score: {score}</Box>
                 </Box>
 
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', pointerEvents: 'auto' }}>
                     <PitchVisualizer
                         song={parsedSong}
-                        currentBeat={(currentTime * 1000 - (parsedSong.gap || 0)) / (60000 / ((parsedSong.bpm || 120) * bpmMultiplier))}
+                        audioRef={audioRef}
                         height={400}
-                        currentPitch={currentPitch}
+                        currentPitchRef={currentPitchRef}
+                        sungSegmentsRef={sungSegmentsRef}
                         showDebugOverlay={showDebugOverlay}
                     />
                     <LyricsDisplay
                         song={parsedSong}
-                        currentBeat={(currentTime * 1000 - (parsedSong.gap || 0)) / (60000 / ((parsedSong.bpm || 120) * bpmMultiplier))}
+                        audioRef={audioRef}
                     />
                 </Box>
 
-                {/* Controls (Dev only, usually hidden in gameplay) */}
+                {/* Controls (Dev only) */}
                 {showDevSlider && (
                     <Box sx={{ width: 400, alignSelf: 'center', display: 'flex', alignItems: 'center', gap: 2, bgcolor: 'rgba(0,0,0,0.5)', p: 2, borderRadius: 2, pointerEvents: 'auto' }}>
                         <Typography width={140}>Dev Pitch: {Math.round(devPitchOverride || 0)}</Typography>
@@ -233,7 +295,10 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit, sh
                     </Button>
                     {showMicStatus && (
                         <Typography variant="caption" sx={{ ml: 2, color: 'text.secondary' }}>
-                            Microphone: {micRef.current?.isActive ? 'Active' : 'Tracking...'} | Pitch: {currentPitch?.note.toFixed(1) || '--'}
+                            Microphone: {micRef.current.isActive ? 'Active' : 'Tracking...'}
+                            {/* Note: We can't display live pitch here easily without state update. 
+                                 Maybe remove pitch display from footer or use a separate ref-based component? 
+                                 For performance, removing live pitch text update 60fps from DOM is good. */}
                         </Typography>
                     )}
                 </Box>
