@@ -5,11 +5,43 @@ import { MelodiqImporter, type ImportStats } from './importer';
 import { MelodiqSession } from './gameplay/MelodiqSession';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import SettingsIcon from '@mui/icons-material/Settings';
+import { Dialog, DialogTitle, DialogContent, DialogActions, FormControlLabel, Switch } from '@mui/material';
 
 export const MelodiqGame: React.FC = () => {
     const [importing, setImporting] = useState(false);
     const [stats, setStats] = useState<ImportStats | null>(null);
     const [songs, setSongs] = useState<Song[]>([]);
+    const [showSettings, setShowSettings] = useState(false);
+    const [showDebugOverlay, setShowDebugOverlay] = useState(() => {
+        return localStorage.getItem('melodiq_show_overlay') === 'true';
+    });
+    const [showDevSlider, setShowDevSlider] = useState(() => {
+        return localStorage.getItem('melodiq_show_slider') === 'true';
+    });
+    const [showMicStatus, setShowMicStatus] = useState(() => {
+        // Default to true if not set, or check existence
+        const stored = localStorage.getItem('melodiq_show_mic_status');
+        return stored === null ? true : stored === 'true';
+    });
+
+    const toggleOverlay = () => {
+        const newValue = !showDebugOverlay;
+        setShowDebugOverlay(newValue);
+        localStorage.setItem('melodiq_show_overlay', String(newValue));
+    };
+
+    const toggleSlider = () => {
+        const newValue = !showDevSlider;
+        setShowDevSlider(newValue);
+        localStorage.setItem('melodiq_show_slider', String(newValue));
+    };
+
+    const toggleMicStatus = () => {
+        const newValue = !showMicStatus;
+        setShowMicStatus(newValue);
+        localStorage.setItem('melodiq_show_mic_status', String(newValue));
+    };
 
     useEffect(() => {
         db.songs.toArray().then(setSongs);
@@ -47,7 +79,13 @@ export const MelodiqGame: React.FC = () => {
     const [selectedSong, setSelectedSong] = useState<Song | null>(null);
 
     if (selectedSong) {
-        return <MelodiqSession song={selectedSong} onExit={() => setSelectedSong(null)} />;
+        return <MelodiqSession
+            song={selectedSong}
+            onExit={() => setSelectedSong(null)}
+            showDebugOverlay={showDebugOverlay}
+            showDevSlider={showDevSlider}
+            showMicStatus={showMicStatus}
+        />;
     }
 
     return (
@@ -66,15 +104,45 @@ export const MelodiqGame: React.FC = () => {
                     <MusicNoteIcon fontSize="large" color="primary" />
                     Melodiq
                 </Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<FolderOpenIcon />}
-                    onClick={handleImport}
-                    disabled={importing}
-                >
-                    {importing ? 'Scanning...' : 'Load Song Directory'}
-                </Button>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Button
+                        onClick={() => setShowSettings(true)}
+                        startIcon={<SettingsIcon />}
+                        variant="outlined"
+                    >
+                        Settings
+                    </Button>
+                    <Button
+                        variant="contained"
+                        startIcon={<FolderOpenIcon />}
+                        onClick={handleImport}
+                        disabled={importing}
+                    >
+                        {importing ? 'Scanning...' : 'Load Song Directory'}
+                    </Button>
+                </Box>
             </Box>
+
+            <Dialog open={showSettings} onClose={() => setShowSettings(false)}>
+                <DialogTitle>Melodiq Settings</DialogTitle>
+                <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <FormControlLabel
+                        control={<Switch checked={showDebugOverlay} onChange={toggleOverlay} />}
+                        label="Show Debug Overlay (Green Text)"
+                    />
+                    <FormControlLabel
+                        control={<Switch checked={showDevSlider} onChange={toggleSlider} />}
+                        label="Show Dev Pitch Slider"
+                    />
+                    <FormControlLabel
+                        control={<Switch checked={showMicStatus} onChange={toggleMicStatus} />}
+                        label="Show Mic Status (Footer)"
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setShowSettings(false)}>Close</Button>
+                </DialogActions>
+            </Dialog>
 
             {importing && stats && (
                 <Card sx={{ mb: 4, p: 2 }}>

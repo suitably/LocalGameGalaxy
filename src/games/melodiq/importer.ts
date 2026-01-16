@@ -29,6 +29,7 @@ export class MelodiqImporter {
     }
 
     private readonly SUPPORTED_AUDIO_EXT = ['.mp3', '.ogg', '.wav', '.m4a'];
+    private readonly SUPPORTED_VIDEO_EXT = ['.mp4', '.avi', '.webm', '.mkv', '.mpg', '.mpeg'];
 
     /**
      * Entry point to import from a directory handle.
@@ -56,6 +57,7 @@ export class MelodiqImporter {
             try {
                 let txtFile: FileSystemFileHandle | undefined;
                 const audioFiles: FileSystemFileHandle[] = [];
+                const videoFiles: FileSystemFileHandle[] = [];
 
                 // @ts-ignore
                 for await (const entry of subDir.values()) {
@@ -65,6 +67,8 @@ export class MelodiqImporter {
                             txtFile = entry;
                         } else if (this.SUPPORTED_AUDIO_EXT.some(ext => name.endsWith(ext))) {
                             audioFiles.push(entry);
+                        } else if (this.SUPPORTED_VIDEO_EXT.some(ext => name.endsWith(ext))) {
+                            videoFiles.push(entry);
                         }
                     }
                 }
@@ -78,8 +82,6 @@ export class MelodiqImporter {
                     const id = generateId(title, artist, subDir.name);
 
                     // Determine audio file
-                    // 1. Try to find file matching #MP3 header
-                    // 2. Fallback to first found audio file
                     let chosenAudioFile: FileSystemFileHandle | undefined;
                     const headerAudio = parsed.headers['MP3'];
 
@@ -88,6 +90,17 @@ export class MelodiqImporter {
                     }
                     if (!chosenAudioFile && audioFiles.length > 0) {
                         chosenAudioFile = audioFiles[0];
+                    }
+
+                    // Determine video file
+                    let chosenVideoFile: FileSystemFileHandle | undefined;
+                    const headerVideo = parsed.headers['VIDEO'];
+
+                    if (headerVideo) {
+                        chosenVideoFile = videoFiles.find(f => f.name.toLowerCase() === headerVideo.toLowerCase());
+                    }
+                    if (!chosenVideoFile && videoFiles.length > 0) {
+                        chosenVideoFile = videoFiles[0];
                     }
 
                     const song: Song = {
@@ -104,6 +117,15 @@ export class MelodiqImporter {
                             song.audio = await chosenAudioFile.getFile();
                         } catch (e) {
                             console.warn('Failed to get audio file', e);
+                        }
+                    }
+
+                    if (chosenVideoFile) {
+                        try {
+                            // @ts-ignore - db.ts interface might need update if strict, but let's assume it accepts Blob/File for now or we will fix db.ts next
+                            song.video = await chosenVideoFile.getFile();
+                        } catch (e) {
+                            console.warn('Failed to get video file', e);
                         }
                     }
 
@@ -180,6 +202,7 @@ export class MelodiqImporter {
             try {
                 let txtFile: File | undefined;
                 const audioFiles: File[] = [];
+                const videoFiles: File[] = [];
 
                 for (const file of files) {
                     const name = file.name.toLowerCase();
@@ -187,6 +210,8 @@ export class MelodiqImporter {
                         txtFile = file;
                     } else if (this.SUPPORTED_AUDIO_EXT.some(ext => name.endsWith(ext))) {
                         audioFiles.push(file);
+                    } else if (this.SUPPORTED_VIDEO_EXT.some(ext => name.endsWith(ext))) {
+                        videoFiles.push(file);
                     }
                 }
 
@@ -209,6 +234,15 @@ export class MelodiqImporter {
                         chosenAudioFile = audioFiles[0];
                     }
 
+                    let chosenVideoFile: File | undefined;
+                    const headerVideo = parsed.headers['VIDEO'];
+                    if (headerVideo) {
+                        chosenVideoFile = videoFiles.find(f => f.name.toLowerCase() === headerVideo.toLowerCase());
+                    }
+                    if (!chosenVideoFile && videoFiles.length > 0) {
+                        chosenVideoFile = videoFiles[0];
+                    }
+
                     const song: Song = {
                         id,
                         title,
@@ -220,6 +254,10 @@ export class MelodiqImporter {
 
                     if (chosenAudioFile) {
                         song.audio = chosenAudioFile;
+                    }
+                    if (chosenVideoFile) {
+                        // @ts-ignore
+                        song.video = chosenVideoFile;
                     }
 
                     await db.songs.put(song);
