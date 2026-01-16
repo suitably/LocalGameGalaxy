@@ -140,7 +140,6 @@ export class MelodiqImporter {
 
                     if (chosenVideoFile) {
                         try {
-                            // @ts-ignore - db.ts interface might need update if strict, but let's assume it accepts Blob/File for now or we will fix db.ts next
                             song.video = await chosenVideoFile.getFile();
                         } catch (e) {
                             console.warn('Failed to get video file', e);
@@ -149,7 +148,6 @@ export class MelodiqImporter {
 
                     if (chosenImageFile) {
                         try {
-                            // @ts-ignore
                             song.cover = await chosenImageFile.getFile();
                         } catch (e) {
                             console.warn('Failed to get cover file', e);
@@ -297,20 +295,18 @@ export class MelodiqImporter {
                         song.audio = chosenAudioFile;
                     }
                     if (chosenVideoFile) {
-                        // @ts-ignore
                         song.video = chosenVideoFile;
                     }
                     if (chosenImageFile) {
-                        // @ts-ignore
                         song.cover = chosenImageFile;
                     }
 
                     await db.songs.put(song);
+
+                    stats.processed++;
+                    onProgress(stats);
+
                 }
-
-                stats.processed++;
-                onProgress(stats);
-
             } catch (err) {
                 console.error(err);
                 stats.errors++;

@@ -279,17 +279,46 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = React.memo(({
         const currentPitch = currentPitchRef.current;
         if (currentPitch && currentPitch.note > 0) {
             let displayedPitch = currentPitch.note;
-            const targetOctaveCenter = centerPitch;
+            // --- Smart Octave Folding ---
+            // Dynamic Target: Prefer the pitch of the active (or nearest future) note.
+            // This ensures that if the song goes high, our "center" goes high, preventing wrapping.
+            let targetOctaveCenter = centerPitch;
+
+            // Find active note or nearest future note
+            const notes = song.notes || [];
+            // Optimization: We could binary search, but basic find is okay for small N.
+            // Search for note covering current beat, or first note after current beat.
+            const activeNote = notes.find(n => n.type !== '-' && n.start <= currentBeat && (n.start + n.duration) >= currentBeat);
+
+            if (activeNote) {
+                targetOctaveCenter = activeNote.pitch;
+            } else {
+                // If no active note, look ahead slightly (e.g., 4 beats) to anticipate
+                const futureNote = notes.find(n => n.type !== '-' && n.start > currentBeat && n.start < currentBeat + 4);
+                if (futureNote) {
+                    targetOctaveCenter = futureNote.pitch;
+                }
+            }
+
             const diff = targetOctaveCenter - displayedPitch;
             const idealShift = Math.round(diff / 12) * 12;
 
             const currentShift = lastOctaveShiftRef.current;
             let finalShift = currentShift;
 
-            // Hysteresis
+            // Hysteresis calculation
+            // If the ideal shift is DIFFERENT from current shift, check if we SHOULD switch.
+            // Switch if the alignment error with Current Shift is significantly worse than with Ideal Shift.
+
             const pitchWithCurrent = displayedPitch + currentShift;
             const pitchWithIdeal = displayedPitch + idealShift;
-            if (Math.abs(Math.abs(targetOctaveCenter - pitchWithCurrent) - Math.abs(targetOctaveCenter - pitchWithIdeal)) > 3) {
+
+            const errorCurrent = Math.abs(targetOctaveCenter - pitchWithCurrent);
+            const errorIdeal = Math.abs(targetOctaveCenter - pitchWithIdeal);
+
+            // If ideal error is significantly better (smaller) than current error (by > 3 semitones), switch.
+            // This prevents flickering when error differences are marginal.
+            if (errorCurrent - errorIdeal > 3) {
                 finalShift = idealShift;
                 lastOctaveShiftRef.current = finalShift;
             }

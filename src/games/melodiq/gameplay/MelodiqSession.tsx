@@ -129,17 +129,15 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit, sh
 
         // 4. Update React State (Throttled)
         if (now - lastScoreUpdateRef.current > 200) { // 5Hz updates for score
-            if (score !== scoreRef.current) {
-                setScore(scoreRef.current);
-            }
+            setScore(prev => {
+                if (prev !== scoreRef.current) return scoreRef.current;
+                return prev;
+            });
             lastScoreUpdateRef.current = now;
         }
 
         requestRef.current = requestAnimationFrame(updateLoop);
-    }, [isPlaying, devPitchOverride, parsedSong, bpmMultiplier, score]);
-    // Note: 'score' dependency is actually not needed for logic, but setScore uses it? 
-    // Ah, setScore(scoreRef.current) doesn't need 'score' dep. 
-    // We should remove 'score' from deps to avoid loop recreation.
+    }, [isPlaying, devPitchOverride, parsedSong, bpmMultiplier]);
 
     useEffect(() => {
         // Start microphone
@@ -255,7 +253,6 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit, sh
                     <PitchVisualizer
                         song={parsedSong}
                         audioRef={audioRef}
-                        height={400}
                         currentPitchRef={currentPitchRef}
                         sungSegmentsRef={sungSegmentsRef}
                         showDebugOverlay={showDebugOverlay}
