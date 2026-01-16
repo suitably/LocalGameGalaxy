@@ -164,33 +164,56 @@ export const MelodiqGame: React.FC = () => {
 
                 {songs?.map((song) => (
                     <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={song.id}>
-                        <Card
-                            sx={{
-                                height: '100%',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                cursor: 'pointer',
-                                transition: 'transform 0.2s',
-                                '&:hover': { transform: 'scale(1.02)' }
-                            }}
-                            onClick={() => setSelectedSong(song)}
-                        >
-                            {/* Placeholder for cover art - we only store path now, so we need logic to resolve it later, 
-                                or we need to store the blob. For now just a placeholder. */}
-                            <Box sx={{ height: 140, bgcolor: 'action.hover', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <MusicNoteIcon sx={{ fontSize: 60, opacity: 0.2 }} />
-                            </Box>
-                            <CardContent>
-                                <Typography variant="h6" noWrap title={song.title}>{song.title}</Typography>
-                                <Typography variant="subtitle1" color="text.secondary" noWrap title={song.artist}>{song.artist}</Typography>
-                                <Typography variant="caption" display="block" color="text.disabled">
-                                    {song.id.substring(0, 8)}...
-                                </Typography>
-                            </CardContent>
-                        </Card>
+                        <SongCard song={song} onClick={() => setSelectedSong(song)} />
                     </Grid>
                 ))}
             </Grid>
         </Container>
     );
 };
+
+const SongCard: React.FC<{ song: Song; onClick: () => void }> = ({ song, onClick }) => {
+    const [coverUrl, setCoverUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (song.cover) {
+            if (song.cover instanceof Blob) {
+                const url = URL.createObjectURL(song.cover);
+                setCoverUrl(url);
+                return () => URL.revokeObjectURL(url);
+            } else if (typeof song.cover === 'string') {
+                setCoverUrl(song.cover);
+            }
+        }
+    }, [song.cover]);
+
+    return (
+        <Card
+            sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+                '&:hover': { transform: 'scale(1.02)' }
+            }}
+            onClick={onClick}
+        >
+            <Box sx={{ height: 140, bgcolor: 'action.hover', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                {coverUrl ? (
+                    <img src={coverUrl} alt={song.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                    <MusicNoteIcon sx={{ fontSize: 60, opacity: 0.2 }} />
+                )}
+            </Box>
+            <CardContent>
+                <Typography variant="h6" noWrap title={song.title}>{song.title}</Typography>
+                <Typography variant="subtitle1" color="text.secondary" noWrap title={song.artist}>{song.artist}</Typography>
+                <Typography variant="caption" display="block" color="text.disabled">
+                    {song.id.substring(0, 8)}...
+                </Typography>
+            </CardContent>
+        </Card>
+    );
+};
+

@@ -30,6 +30,7 @@ export class MelodiqImporter {
 
     private readonly SUPPORTED_AUDIO_EXT = ['.mp3', '.ogg', '.wav', '.m4a'];
     private readonly SUPPORTED_VIDEO_EXT = ['.mp4', '.avi', '.webm', '.mkv', '.mpg', '.mpeg'];
+    private readonly SUPPORTED_IMAGE_EXT = ['.jpg', '.jpeg', '.png'];
 
     /**
      * Entry point to import from a directory handle.
@@ -58,6 +59,7 @@ export class MelodiqImporter {
                 let txtFile: FileSystemFileHandle | undefined;
                 const audioFiles: FileSystemFileHandle[] = [];
                 const videoFiles: FileSystemFileHandle[] = [];
+                const imageFiles: FileSystemFileHandle[] = [];
 
                 // @ts-ignore
                 for await (const entry of subDir.values()) {
@@ -69,6 +71,8 @@ export class MelodiqImporter {
                             audioFiles.push(entry);
                         } else if (this.SUPPORTED_VIDEO_EXT.some(ext => name.endsWith(ext))) {
                             videoFiles.push(entry);
+                        } else if (this.SUPPORTED_IMAGE_EXT.some(ext => name.endsWith(ext))) {
+                            imageFiles.push(entry);
                         }
                     }
                 }
@@ -103,6 +107,20 @@ export class MelodiqImporter {
                         chosenVideoFile = videoFiles[0];
                     }
 
+                    // Determine cover image
+                    let chosenImageFile: FileSystemFileHandle | undefined;
+                    const headerCover = parsed.headers['COVER'];
+
+                    if (headerCover) {
+                        chosenImageFile = imageFiles.find(f => f.name.toLowerCase() === headerCover.toLowerCase());
+                    }
+                    if (!chosenImageFile && imageFiles.length > 0) {
+                        // If no specific cover is set, try to find one with "cover" or "background" in name, or just first one
+                        chosenImageFile = imageFiles.find(f => f.name.toLowerCase().includes('cover'))
+                            || imageFiles.find(f => f.name.toLowerCase().includes('background'))
+                            || imageFiles[0];
+                    }
+
                     const song: Song = {
                         id,
                         title,
@@ -126,6 +144,15 @@ export class MelodiqImporter {
                             song.video = await chosenVideoFile.getFile();
                         } catch (e) {
                             console.warn('Failed to get video file', e);
+                        }
+                    }
+
+                    if (chosenImageFile) {
+                        try {
+                            // @ts-ignore
+                            song.cover = await chosenImageFile.getFile();
+                        } catch (e) {
+                            console.warn('Failed to get cover file', e);
                         }
                     }
 
@@ -203,6 +230,7 @@ export class MelodiqImporter {
                 let txtFile: File | undefined;
                 const audioFiles: File[] = [];
                 const videoFiles: File[] = [];
+                const imageFiles: File[] = [];
 
                 for (const file of files) {
                     const name = file.name.toLowerCase();
@@ -212,6 +240,8 @@ export class MelodiqImporter {
                         audioFiles.push(file);
                     } else if (this.SUPPORTED_VIDEO_EXT.some(ext => name.endsWith(ext))) {
                         videoFiles.push(file);
+                    } else if (this.SUPPORTED_IMAGE_EXT.some(ext => name.endsWith(ext))) {
+                        imageFiles.push(file);
                     }
                 }
 
@@ -243,6 +273,17 @@ export class MelodiqImporter {
                         chosenVideoFile = videoFiles[0];
                     }
 
+                    let chosenImageFile: File | undefined;
+                    const headerCover = parsed.headers['COVER'];
+                    if (headerCover) {
+                        chosenImageFile = imageFiles.find(f => f.name.toLowerCase() === headerCover.toLowerCase());
+                    }
+                    if (!chosenImageFile && imageFiles.length > 0) {
+                        chosenImageFile = imageFiles.find(f => f.name.toLowerCase().includes('cover'))
+                            || imageFiles.find(f => f.name.toLowerCase().includes('background'))
+                            || imageFiles[0];
+                    }
+
                     const song: Song = {
                         id,
                         title,
@@ -258,6 +299,10 @@ export class MelodiqImporter {
                     if (chosenVideoFile) {
                         // @ts-ignore
                         song.video = chosenVideoFile;
+                    }
+                    if (chosenImageFile) {
+                        // @ts-ignore
+                        song.cover = chosenImageFile;
                     }
 
                     await db.songs.put(song);

@@ -4,7 +4,7 @@ export interface Song {
     id: string; // hash or unique identifier
     title: string;
     artist: string;
-    cover?: string; // stored as Blob or URL
+    cover?: string | Blob; // stored as Blob or URL
     background?: string; // stored as Blob or URL
     audio?: string | Blob; // stored as Blob or URL (mp3, ogg, wav, etc.)
     video?: string | Blob; // stored as Blob or URL
