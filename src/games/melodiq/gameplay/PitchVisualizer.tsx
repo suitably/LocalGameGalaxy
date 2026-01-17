@@ -21,6 +21,9 @@ interface PitchVisualizerProps {
     currentPitchRef: React.RefObject<PitchResult | null>;
     sungSegmentsRef: React.MutableRefObject<SungSegment[]>;
     showDebugOverlay?: boolean;
+    label?: string;
+    hue?: number;
+    showNoteLabels?: boolean;
 }
 
 interface Particle {
@@ -33,10 +36,7 @@ interface Particle {
     size: number;
 }
 
-interface PitchPoint {
-    beat: number;
-    pitch: number;
-}
+
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
@@ -47,20 +47,34 @@ const getNoteName = (midiNote: number): string => {
     return `${name}${octave}`;
 };
 
-export const PitchVisualizer: React.FC<PitchVisualizerProps> = React.memo(({
+export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
     song,
     audioRef,
     height = 300,
     currentPitchRef,
     sungSegmentsRef,
-    showDebugOverlay = false
+    showDebugOverlay = false,
+    label,
+    hue = 190,
+    showNoteLabels = true
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const particlesRef = useRef<Particle[]>([]);
-    const pitchHistoryRef = useRef<PitchPoint[]>([]);
+
     const lastOctaveShiftRef = useRef<number>(0);
+    const lastValidPitchRef = useRef<number>(-1);
+    const lastValidTimeRef = useRef<number>(0);
     const requestRef = useRef<number>(0);
+
+    // FIX: Track the LATEST ref from props, because parent might pass a new object literal every render
+    const latestPitchRef = useRef(currentPitchRef);
+    const latestSungSegmentsRef = useRef(sungSegmentsRef);
+
+    useEffect(() => {
+        latestPitchRef.current = currentPitchRef;
+        latestSungSegmentsRef.current = sungSegmentsRef;
+    }, [currentPitchRef, sungSegmentsRef]);
 
     // We track dimensions to support High DPI and auto-resizing
     const [dimensions, setDimensions] = useState({ width: 800, height: height });
@@ -161,7 +175,8 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = React.memo(({
 
         // --- Notes (Culling Enforced) ---
         const notes = song.notes || [];
-        const sungSegments = sungSegmentsRef.current || [];
+        // Use latestSungSegmentsRef to get the active segments array from the parent's latest ref object
+        const sungSegments = latestSungSegmentsRef.current.current || [];
 
         notes.forEach((note, index) => {
             if (note.type === '-') return;
@@ -178,14 +193,14 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = React.memo(({
             const y = (dimensions.height / 2) - (relPitch * NOTE_HEIGHT) - (NOTE_HEIGHT / 2);
 
             // Palette
-            let hue = 190; // Cyan
+            let noteHue = hue; // Use prop hue by default
             let sat = '100%';
             let lit = '50%';
-            if (note.type === '*') { hue = 40; lit = '60%'; } // Gold
-            if (note.type === 'F') { hue = 320; lit = '60%'; } // Freestyle
+            if (note.type === '*') { noteHue = 40; lit = '60%'; } // Gold
+            if (note.type === 'F') { noteHue = 320; lit = '60%'; } // Freestyle
 
-            const colorMain = `hsl(${hue}, ${sat}, ${lit})`;
-            const colorGlow = `hsla(${hue}, ${sat}, 70%, 0.8)`;
+            const colorMain = `hsl(${noteHue}, ${sat}, ${lit})`;
+            const colorGlow = `hsla(${noteHue}, ${sat}, 70%, 0.8)`;
 
             // Glow & Outline
             ctx.shadowBlur = 12;
@@ -226,14 +241,18 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = React.memo(({
 
             // Particles Trigger
             if (PLAYHEAD_X >= x && PLAYHEAD_X <= x + w) {
-                if (Math.random() < 0.4) {
+                // Check if currently singing strictly correctly (covered by a segment)
+                // We use a small tolerance or check if currentBeat is inside any segment for specific note index
+                const isSingingCorrectly = segments.some(s => currentBeat >= s.startBeat && currentBeat <= s.endBeat + 0.1);
+
+                if (isSingingCorrectly && Math.random() < 0.4) {
                     particlesRef.current.push({
                         x: PLAYHEAD_X,
                         y: y + NOTE_HEIGHT / 2 + (Math.random() - 0.5) * NOTE_HEIGHT,
                         vx: (Math.random() - 0.5) * 6,
                         vy: (Math.random() - 0.5) * 6,
                         life: 1.0,
-                        color: `hsl(${hue}, 100%, 80%)`,
+                        color: `hsl(${noteHue}, 100%, 80%)`,
                         size: Math.random() * 2 + 1
                     });
                 }
@@ -260,25 +279,30 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = React.memo(({
         ctx.globalAlpha = 1.0;
         ctx.globalCompositeOperation = 'source-over';
 
-        // --- Playhead ---
-        const beamGrad = ctx.createLinearGradient(0, 0, 0, dimensions.height);
-        beamGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-        beamGrad.addColorStop(0.3, 'rgba(255, 255, 255, 0.8)');
-        beamGrad.addColorStop(0.7, 'rgba(255, 255, 255, 0.8)');
-        beamGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.fillStyle = beamGrad;
-        ctx.fillRect(PLAYHEAD_X - 1, 0, 2, dimensions.height);
 
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = '#fff';
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(PLAYHEAD_X - 0.5, 0, 1, dimensions.height);
-        ctx.shadowBlur = 0;
 
-        // --- Pitch Indicator ---
-        const currentPitch = currentPitchRef.current;
+        // --- persistent cursor logic ---
+        // Access via `.current.current` because latestPitchRef holds the ref object from props
+        const currentPitch = latestPitchRef.current.current;
+        const now = performance.now();
+        let activePitchNote = -1;
+
         if (currentPitch && currentPitch.note > 0) {
-            let displayedPitch = currentPitch.note;
+            activePitchNote = currentPitch.note;
+            lastValidPitchRef.current = activePitchNote;
+            lastValidTimeRef.current = now;
+        }
+
+        // Determine what to show
+        let displayedPitch: number | null = null;
+        if (activePitchNote > 0) {
+            displayedPitch = activePitchNote;
+        } else if (now - lastValidTimeRef.current < 2000 && lastValidPitchRef.current > 0) {
+            // Show sticky pitch
+            displayedPitch = lastValidPitchRef.current;
+        }
+
+        if (displayedPitch !== null) {
             // --- Smart Octave Folding ---
             // Dynamic Target: Prefer the pitch of the active (or nearest future) note.
             // This ensures that if the song goes high, our "center" goes high, preventing wrapping.
@@ -306,9 +330,8 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = React.memo(({
             const currentShift = lastOctaveShiftRef.current;
             let finalShift = currentShift;
 
-            // Hysteresis calculation
-            // If the ideal shift is DIFFERENT from current shift, check if we SHOULD switch.
-            // Switch if the alignment error with Current Shift is significantly worse than with Ideal Shift.
+            // Hysteresis calculation (Only update shift if actively singing to avoid jumping around when silent?)
+            // Actually allow shift update even if sticky, so it stays near the notes if the song moves.
 
             const pitchWithCurrent = displayedPitch + currentShift;
             const pitchWithIdeal = displayedPitch + idealShift;
@@ -316,20 +339,11 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = React.memo(({
             const errorCurrent = Math.abs(targetOctaveCenter - pitchWithCurrent);
             const errorIdeal = Math.abs(targetOctaveCenter - pitchWithIdeal);
 
-            // If ideal error is significantly better (smaller) than current error (by > 3 semitones), switch.
-            // This prevents flickering when error differences are marginal.
             if (errorCurrent - errorIdeal > 3) {
                 finalShift = idealShift;
                 lastOctaveShiftRef.current = finalShift;
             }
             displayedPitch += finalShift;
-
-            // History
-            pitchHistoryRef.current.push({ beat: currentBeat, pitch: displayedPitch });
-            if (pitchHistoryRef.current.length > 0) {
-                const first = pitchHistoryRef.current[0];
-                if (currentBeat - first.beat > 20) pitchHistoryRef.current.shift();
-            }
 
             const relPitch = displayedPitch - centerPitch;
             const y = (dimensions.height / 2) - (relPitch * NOTE_HEIGHT) - (NOTE_HEIGHT / 2);
@@ -343,34 +357,16 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = React.memo(({
             ctx.arc(PLAYHEAD_X, y + NOTE_HEIGHT / 2, 8, 0, Math.PI * 2);
             ctx.fill();
 
-            // Trail
-            ctx.strokeStyle = 'rgba(0, 255, 204, 0.8)';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            let started = false;
-            for (let i = 0; i < pitchHistoryRef.current.length; i++) {
-                const point = pitchHistoryRef.current[i];
-                const hX = (point.beat - currentBeat) * PIXELS_PER_BEAT + PLAYHEAD_X;
-                if (hX < -10) continue;
-                const hRelPitch = point.pitch - centerPitch;
-                const hY = (dimensions.height / 2) - (hRelPitch * NOTE_HEIGHT) - (NOTE_HEIGHT / 2) + (NOTE_HEIGHT / 2); // Center!
-
-                if (!started) { ctx.moveTo(hX, hY); started = true; }
-                else ctx.lineTo(hX, hY);
-            }
-            ctx.lineTo(PLAYHEAD_X, y + NOTE_HEIGHT / 2);
-            ctx.stroke();
-
             // Label
-            ctx.shadowBlur = 4;
-            ctx.shadowColor = 'rgba(0,0,0,0.8)';
-            ctx.fillStyle = '#00ffcc';
-            ctx.font = 'bold 24px monospace';
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(getNoteName(displayedPitch), PLAYHEAD_X + 20, y + NOTE_HEIGHT / 2);
-        } else {
-            if (pitchHistoryRef.current.length > 500) pitchHistoryRef.current = pitchHistoryRef.current.slice(-500);
+            if (showNoteLabels) {
+                ctx.shadowBlur = 4;
+                ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                ctx.fillStyle = '#00ffcc';
+                ctx.font = 'bold 24px monospace';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(getNoteName(displayedPitch), PLAYHEAD_X + 20, y + NOTE_HEIGHT / 2);
+            }
         }
 
         // --- Debug ---
@@ -386,8 +382,16 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = React.memo(({
             ctx.fillText(`C Pitch: ${centerPitch}`, 10, 40);
         }
 
+        // Draw label if provided
+        if (label) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(label, 20, 40);
+        }
+
         requestRef.current = requestAnimationFrame(animate);
-    }, [song, dimensions, audioRef, showDebugOverlay, centerPitch]); // Deps for loop recreation
+    }, [song, audioRef, showDebugOverlay, label, dimensions, centerPitch, showNoteLabels]); // Deps for loop recreation
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -425,4 +429,4 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = React.memo(({
             />
         </Box>
     );
-});
+};

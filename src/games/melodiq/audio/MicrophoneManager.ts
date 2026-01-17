@@ -18,11 +18,19 @@ export class MicrophoneManager {
 
     constructor() { }
 
-    public async start(): Promise<void> {
+    public static async getDevices(): Promise<MediaDeviceInfo[]> {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        return devices.filter(d => d.kind === 'audioinput');
+    }
+
+    public async start(deviceId?: string): Promise<void> {
         if (this.audioContext) return;
 
         try {
-            this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const constraints: MediaStreamConstraints = {
+                audio: deviceId ? { deviceId: { exact: deviceId } } : true
+            };
+            this.mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
 
             this.audioContext = new AudioContext();
             this.analyser = this.audioContext.createAnalyser();
@@ -59,7 +67,7 @@ export class MicrophoneManager {
     public getPitch(): PitchResult | null {
         if (!this.analyser || !this.buffer || !this.audioContext) return null;
 
-        this.analyser.getFloatTimeDomainData(this.buffer as unknown as Float32Array);
+        this.analyser.getFloatTimeDomainData(this.buffer as any);
 
         const volume = this.computeRMS(this.buffer);
         if (volume < 0.01) {

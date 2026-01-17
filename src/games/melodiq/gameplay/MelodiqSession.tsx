@@ -5,38 +5,67 @@ import { parseUltraStarTxt } from '../parser';
 import { PitchVisualizer, type SongWithNotes, type SungSegment } from './PitchVisualizer';
 import { LyricsDisplay } from './LyricsDisplay';
 import { MicrophoneManager, type PitchResult } from '../audio/MicrophoneManager';
+import { type UserProfile, type ActivePlayer } from '../MelodiqSettings';
 
 interface MelodiqSessionProps {
     song: SongWithNotes;
     onExit: () => void;
+    // Props are now optional/ignored as we read from LS, but kept for compatibility if needed for overrides
     showDebugOverlay?: boolean;
     showDevSlider?: boolean;
     showMicStatus?: boolean;
 }
 
-export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit, showDebugOverlay = false, showDevSlider = false, showMicStatus = true }) => {
+// Helper class to manage runtime state for a single player
+class PlayerRuntime {
+    public mic: MicrophoneManager;
+    public score: number = 0;
+    public currentPitch: PitchResult | null = null;
+    public sungSegments: SungSegment[] = [];
+    public config: UserProfile & { deviceId: string };
+
+    constructor(config: UserProfile & { deviceId: string }) {
+        this.mic = new MicrophoneManager();
+        this.config = config;
+    }
+}
+
+export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) => {
+    // Session State
+    // Read Settings from LocalStorage
+    const [showDebugOverlay] = useState(localStorage.getItem('melodiq_show_overlay') === 'true');
+    const [showDevSlider] = useState(localStorage.getItem('melodiq_show_slider') === 'true');
+    const [showMicStatus] = useState(() => {
+        const stored = localStorage.getItem('melodiq_show_mic_status');
+        return stored === null ? true : stored === 'true';
+    });
+    const [showNoteLabels] = useState(() => {
+        const stored = localStorage.getItem('melodiq_show_note_labels');
+        return stored === null ? true : stored === 'true';
+    });
+    // Layout State
+    const [layoutOverride] = useState(localStorage.getItem('melodiq_layout_override') || '');
+
+    // Dynamic Player State
+    const [players, setPlayers] = useState<PlayerRuntime[]>([]);
+    const [ready, setReady] = useState(false);
+
+    // We use a ref to hold the runtime objects to avoid re-renders on every pitch update
+    // But we also need state to trigger initial render.
+    // The `players` state above holds the initial list. The Refs inside PlayerRuntime are mutable.
+    // However, to force React to re-render scores, we need a separate state or forceUpdate.
+    const [scores, setScores] = useState<Record<string, number>>({});
+
+    // Audio/Video logic
     const audioRef = useRef<HTMLAudioElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [bpmMultiplier] = useState(4);
 
-    // Removed high-frequency states
-    // const [currentTime, setCurrentTime] = useState(0); 
-    // const [currentPitch, setCurrentPitch] = useState<PitchResult | null>(null);
-    // const [sungSegments, setSungSegments] = useState<SungSegment[]>([]);
-
-    // Refs for high-frequency data
-    const currentPitchRef = useRef<PitchResult | null>(null);
-    const sungSegmentsRef = useRef<SungSegment[]>([]);
-
-    // UI State (Throttled or Low Frequency)
+    // UI State
     const [_duration, setDuration] = useState(0);
     const [devPitchOverride, setDevPitchOverride] = useState<number | null>(null);
-    const [score, setScore] = useState(0);
 
-    // Internal tracking for game loop
-    const micRef = useRef<MicrophoneManager>(new MicrophoneManager());
-    const scoreRef = useRef(0);
     const requestRef = useRef<number>(0);
     const lastScoreUpdateRef = useRef<number>(0);
 
@@ -45,6 +74,81 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit, sh
         const parsed = parseUltraStarTxt(song.txtContent);
         return { ...song, notes: parsed.notes, headers: parsed.headers, bpm: parsed.bpm, gap: parsed.gap };
     }, [song]);
+
+    // Calculate Grid Layout
+    const gridLayout = React.useMemo(() => {
+        const count = players.length;
+        if (count === 0) return { rows: [], columnWidthPercent: 100 };
+
+        let rowConfig: number[] = [];
+
+        // 1. Check Override
+        if (layoutOverride) {
+            const parts = layoutOverride.split('.').map(p => parseInt(p.trim())).filter(n => !isNaN(n) && n > 0);
+            const sum = parts.reduce((a, b) => a + b, 0);
+            if (sum === count) {
+                rowConfig = parts;
+            }
+        }
+
+        // 2. Default Balanced Logic if no valid override
+        if (rowConfig.length === 0) {
+            // Heuristic:
+            // 1-3 Players: Vertical Stack (1 col per row) to maximize timeline width
+            if (count <= 3) {
+                rowConfig = new Array(count).fill(1);
+            } else {
+                // 4+ Players: Balanced Grid (Max 3 columns)
+                const maxCols = 3;
+                const numRows = Math.ceil(count / maxCols);
+                const baseCols = Math.floor(count / numRows);
+                const remainder = count % numRows;
+
+                rowConfig = [];
+                for (let i = 0; i < numRows; i++) {
+                    // Distribute remainder to first rows
+                    rowConfig.push(baseCols + (i < remainder ? 1 : 0));
+                }
+            }
+        }
+
+        // Calculate Max Columns for Uniform Width
+        const maxColumnsInGrid = Math.max(...rowConfig);
+
+        return {
+            rows: rowConfig,
+            columnWidthPercent: 100 / maxColumnsInGrid
+        };
+    }, [players.length, layoutOverride]);
+
+    // Initialization Effect
+    useEffect(() => {
+        const storedProfiles = localStorage.getItem('melodiq_profiles');
+        const storedActive = localStorage.getItem('melodiq_active_session');
+
+        if (storedProfiles && storedActive) {
+            const allProfiles: UserProfile[] = JSON.parse(storedProfiles);
+            const activeSession: ActivePlayer[] = JSON.parse(storedActive);
+
+            const newPlayers: PlayerRuntime[] = [];
+
+            activeSession.forEach(p => {
+                const profile = allProfiles.find(prof => prof.id === p.profileId);
+                if (profile) {
+                    newPlayers.push(new PlayerRuntime({
+                        ...profile,
+                        deviceId: p.deviceId
+                    }));
+                }
+            });
+
+            setPlayers(newPlayers);
+        } else {
+            // Fallback for immediate migration issues or first run without settings
+            console.warn("No dynamic settings found, falling back to empty session.");
+        }
+        setReady(true);
+    }, []);
 
     const togglePlay = () => {
         if (audioRef.current) {
@@ -59,38 +163,26 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit, sh
         }
     };
 
-    const updateLoop = useCallback(() => {
-        const now = performance.now();
-
-        // 1. Audio/Video Sync (Check occasionally, not every frame?)
-        // Actually, simple check is cheap.
-        if (audioRef.current && isPlaying) {
-            // Sync video if needed
-            if (videoRef.current && Math.abs(videoRef.current.currentTime - audioRef.current.currentTime) > 0.2) {
-                videoRef.current.currentTime = audioRef.current.currentTime;
-            }
-        }
-
-        // 2. Pitch Detection
+    const processPlayer = (
+        player: PlayerRuntime,
+        devOverride: number | null
+    ) => {
         let pitch: PitchResult | null = null;
-        if (devPitchOverride !== null) {
+        if (devOverride !== null) {
             pitch = {
-                frequency: 440 * Math.pow(2, (devPitchOverride - 69) / 12),
-                note: devPitchOverride,
+                frequency: 440 * Math.pow(2, (devOverride - 69) / 12),
+                note: devOverride,
                 volume: 1.0
             };
         } else {
-            pitch = micRef.current.getPitch();
+            pitch = player.mic.getPitch();
         }
-        currentPitchRef.current = pitch;
+        player.currentPitch = pitch;
 
-        // 3. Scoring Logic
         if (pitch && pitch.note > 0 && isPlaying && parsedSong.notes && audioRef.current) {
             const beatDuration = 60000 / ((parsedSong.bpm || 120) * bpmMultiplier);
             const currentBeat = (audioRef.current.currentTime * 1000 - (parsedSong.gap || 0)) / beatDuration;
 
-            // Optimization: Don't search all notes?
-            // Since notes are sorted, we can optimize. But N is small.
             const activeNoteIndex = parsedSong.notes.findIndex((n) =>
                 n.type !== '-' &&
                 currentBeat >= n.start &&
@@ -106,101 +198,103 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit, sh
                 const semitoneDiff = Math.min(diff, 12 - diff);
 
                 if (semitoneDiff < 1.0) {
-                    // Update Score Ref
-                    scoreRef.current += 10;
+                    player.score += 10;
 
-                    // Update Segments Ref
-                    const prev = sungSegmentsRef.current;
+                    const prev = player.sungSegments;
                     const last = prev[prev.length - 1];
 
                     if (last && last.noteIndex === activeNoteIndex) {
-                        // Extend existing
-                        // Mutating the last object in ref array is safe if we don't depend on immutability for re-renders below
-                        // But PitchVisualizer might need to know?
-                        // Ideally we treat ref content as mutable.
                         last.endBeat = currentBeat;
                     } else {
-                        // New Segment
-                        sungSegmentsRef.current.push({ noteIndex: activeNoteIndex, startBeat: currentBeat, endBeat: currentBeat });
+                        player.sungSegments.push({ noteIndex: activeNoteIndex, startBeat: currentBeat, endBeat: currentBeat });
                     }
                 }
             }
         }
+    };
 
-        // 4. Update React State (Throttled)
-        if (now - lastScoreUpdateRef.current > 200) { // 5Hz updates for score
-            setScore(prev => {
-                if (prev !== scoreRef.current) return scoreRef.current;
-                return prev;
+    const updateLoop = useCallback(() => {
+        const now = performance.now();
+
+        if (audioRef.current && isPlaying) {
+            if (videoRef.current && Math.abs(videoRef.current.currentTime - audioRef.current.currentTime) > 0.2) {
+                videoRef.current.currentTime = audioRef.current.currentTime;
+            }
+        }
+
+        // Process All Players
+        players.forEach((player, index) => {
+            // Apply Dev Override only to the first player for simplicity
+            const override = (index === 0) ? devPitchOverride : null;
+            processPlayer(player, override);
+        });
+
+        // Update React State (Throttled)
+        if (now - lastScoreUpdateRef.current > 200) {
+            const newScores: Record<string, number> = {};
+            players.forEach(p => {
+                newScores[p.config.id] = p.score;
             });
+            setScores(newScores); // Always set new object to trigger render
             lastScoreUpdateRef.current = now;
         }
 
         requestRef.current = requestAnimationFrame(updateLoop);
-    }, [isPlaying, devPitchOverride, parsedSong, bpmMultiplier]);
+    }, [isPlaying, devPitchOverride, parsedSong, bpmMultiplier, players]);
 
+    // Start/Stop Mics
     useEffect(() => {
-        // Start microphone
-        micRef.current.start().catch(err => console.error("Mic start failed", err));
+        if (!ready || players.length === 0) return;
 
-        // Start loop
+        players.forEach(p => {
+            if (p.config.deviceId) {
+                p.mic.start(p.config.deviceId).catch(e => console.error(`Failed to start mic for ${p.config.name}`, e));
+            }
+        });
+
         requestRef.current = requestAnimationFrame(updateLoop);
 
         return () => {
             cancelAnimationFrame(requestRef.current);
-            micRef.current.stop();
+            players.forEach(p => p.mic.stop());
         };
-    }, [updateLoop]);
+    }, [ready, players, updateLoop]);
 
-    // Audio Metadata
+    // Audio Metadata & Src Management (Same as before)
     useEffect(() => {
         const audio = audioRef.current;
         if (audio) {
-            audio.onloadedmetadata = () => {
-                setDuration(audio.duration);
-            };
+            audio.onloadedmetadata = () => setDuration(audio.duration);
             audio.onended = () => {
                 setIsPlaying(false);
-                if (videoRef.current) {
-                    videoRef.current.pause();
-                }
+                if (videoRef.current) videoRef.current.pause();
             };
         }
     }, [parsedSong]);
 
-    // Manage audio source URL
     const [audioSrc, setAudioSrc] = useState<string | undefined>(undefined);
     useEffect(() => {
         let url: string | undefined;
         if (song.audio) {
-            if (song.audio instanceof Blob) {
-                url = URL.createObjectURL(song.audio);
-            } else if (typeof song.audio === 'string') {
-                url = song.audio;
-            }
+            if (song.audio instanceof Blob) url = URL.createObjectURL(song.audio);
+            else if (typeof song.audio === 'string') url = song.audio;
         }
         setAudioSrc(url);
-        return () => {
-            if (url && song.audio instanceof Blob) URL.revokeObjectURL(url);
-        };
+        return () => { if (url && song.audio instanceof Blob) URL.revokeObjectURL(url); };
     }, [song.audio]);
 
-    // Manage video source URL
     const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
     useEffect(() => {
         let url: string | undefined;
         if (song.video) {
-            if (song.video instanceof Blob) {
-                url = URL.createObjectURL(song.video);
-            } else if (typeof song.video === 'string') {
-                url = song.video;
-            }
+            if (song.video instanceof Blob) url = URL.createObjectURL(song.video);
+            else if (typeof song.video === 'string') url = song.video;
         }
         setVideoSrc(url);
-        return () => {
-            if (url && song.video instanceof Blob) URL.revokeObjectURL(url);
-        };
+        return () => { if (url && song.video instanceof Blob) URL.revokeObjectURL(url); };
     }, [song.video]);
+
+    if (!ready) return <Box sx={{ bgcolor: 'black', height: '100vh' }} />; // Loading black screen
 
     return (
         <Box sx={{
@@ -221,97 +315,115 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit, sh
                     muted
                     style={{
                         position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        zIndex: 0,
-                        opacity: 0.6
+                        top: 0, left: 0, width: '100%', height: '100%',
+                        objectFit: 'cover', zIndex: 0, opacity: 0.6
                     }}
                 />
             )}
             {videoSrc && (
-                <Box sx={{
-                    position: 'absolute',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    bgcolor: 'rgba(0,0,0,0.4)',
-                    zIndex: 1
-                }} />
+                <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, bgcolor: 'rgba(0,0,0,0.4)', zIndex: 1 }} />
             )}
 
             <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', flex: 1, pointerEvents: 'none' }}>
                 <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'rgba(0,0,0,0.5)', pointerEvents: 'auto' }}>
-                    <IconButton onClick={onExit} color="inherit">
-                        <ArrowBackIcon />
-                    </IconButton>
+                    <IconButton onClick={onExit} color="inherit"><ArrowBackIcon /></IconButton>
                     <Typography variant="h6">{song.artist} - {song.title}</Typography>
-                    <Box>Score: {score}</Box>
+                    <Box sx={{ display: 'flex', gap: 4 }}>
+                        {players.map(p => (
+                            <Typography key={p.config.id} sx={{ color: `hsl(${p.config.hue}, 100%, 70%)` }} fontWeight="bold">
+                                {p.config.name}: {scores[p.config.id] || 0}
+                            </Typography>
+                        ))}
+                    </Box>
                 </Box>
 
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', pointerEvents: 'auto' }}>
-                    <PitchVisualizer
-                        song={parsedSong}
-                        audioRef={audioRef}
-                        currentPitchRef={currentPitchRef}
-                        sungSegmentsRef={sungSegmentsRef}
-                        showDebugOverlay={showDebugOverlay}
-                    />
-                    <LyricsDisplay
-                        song={parsedSong}
-                        audioRef={audioRef}
-                    />
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                    {/* Dynamic Split Screen Container */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                        {players.length === 0 && (
+                            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Typography>No Active Players. Go to Settings.</Typography>
+                            </Box>
+                        )}
+
+                        {/* Grid Rendering */}
+                        {(() => {
+                            let playerIndex = 0;
+                            return gridLayout.rows.map((colsInRow, rowIndex) => (
+                                <Box key={rowIndex} sx={{ flex: 1, display: 'flex', borderBottom: rowIndex < gridLayout.rows.length - 1 ? '1px solid rgba(255,255,255,0.2)' : 'none' }}>
+                                    {Array.from({ length: colsInRow }).map((_, colIndex) => {
+                                        const player = players[playerIndex++];
+                                        if (!player) return null; // Should not happen if logic is correct
+
+                                        return (
+                                            <Box
+                                                key={player.config.id}
+                                                sx={{
+                                                    width: `${gridLayout.columnWidthPercent}%`,
+                                                    height: '100%',
+                                                    position: 'relative',
+                                                    borderRight: colIndex < colsInRow - 1 ? '1px solid rgba(255,255,255,0.2)' : 'none'
+                                                }}
+                                            >
+                                                <PitchVisualizer
+                                                    song={parsedSong}
+                                                    audioRef={audioRef}
+                                                    currentPitchRef={{ current: player.currentPitch }}
+                                                    sungSegmentsRef={{ current: player.sungSegments }}
+                                                    showDebugOverlay={showDebugOverlay}
+                                                    label={player.config.name}
+                                                    hue={player.config.hue}
+                                                    showNoteLabels={showNoteLabels}
+                                                />
+                                            </Box>
+                                        );
+                                    })}
+                                    {/* Empty filler if needed for row alignment? No, user wants left aligned, empty space empty. Flex row does this naturally if we set widths. */}
+                                </Box>
+                            ));
+                        })()}
+
+                        {/* Lyrics Overlay (Center) */}
+                        <Box sx={{
+                            position: 'absolute',
+                            top: '50%', left: 0, right: 0,
+                            transform: 'translateY(-50%)',
+                            pointerEvents: 'none',
+                            zIndex: 10
+                        }}>
+                            <LyricsDisplay song={parsedSong} audioRef={audioRef} />
+                        </Box>
+                    </Box>
                 </Box>
 
-                {/* Controls (Dev only) */}
+                {/* Controls */}
                 {showDevSlider && (
-                    <Box sx={{ width: 400, alignSelf: 'center', display: 'flex', alignItems: 'center', gap: 2, bgcolor: 'rgba(0,0,0,0.5)', p: 2, borderRadius: 2, pointerEvents: 'auto' }}>
-                        <Typography width={140}>Dev Pitch: {Math.round(devPitchOverride || 0)}</Typography>
-                        <Slider
-                            value={devPitchOverride || 60}
-                            min={36}
-                            max={84}
-                            onChange={(_, v) => setDevPitchOverride(v as number)}
-                        />
-                        <Button onClick={() => setDevPitchOverride(null)} variant="outlined" size="small">
-                            Reset
-                        </Button>
+                    <Box sx={{ width: 400, alignSelf: 'center', display: 'flex', alignItems: 'center', gap: 2, bgcolor: 'rgba(0,0,0,0.5)', p: 2, borderRadius: 2, pointerEvents: 'auto', mt: 2 }}>
+                        <Typography width={140}>P1 Dev Pitch: {Math.round(devPitchOverride || 0)}</Typography>
+                        <Slider value={devPitchOverride || 60} min={36} max={84} onChange={(_, v) => setDevPitchOverride(v as number)} />
+                        <Button onClick={() => setDevPitchOverride(null)} variant="outlined" size="small">Reset</Button>
                     </Box>
                 )}
 
                 <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', gap: 2, alignItems: 'center', pointerEvents: 'auto' }}>
-                    <Button
-                        variant="contained"
-                        color={isPlaying ? 'warning' : 'success'}
-                        onClick={togglePlay}
-                    >
+                    <Button variant="contained" color={isPlaying ? 'warning' : 'success'} onClick={togglePlay}>
                         {isPlaying ? "Pause" : "Play"}
                     </Button>
-                    <Button variant="outlined" color="error" onClick={onExit}>
-                        Exit
-                    </Button>
+                    <Button variant="outlined" color="error" onClick={onExit}>Exit</Button>
                     {showMicStatus && (
-                        <Typography variant="caption" sx={{ ml: 2, color: 'text.secondary' }}>
-                            Microphone: {micRef.current.isActive ? 'Active' : 'Tracking...'}
-                            {/* Note: We can't display live pitch here easily without state update. 
-                                 Maybe remove pitch display from footer or use a separate ref-based component? 
-                                 For performance, removing live pitch text update 60fps from DOM is good. */}
-                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                            {players.map(p => (
+                                <Typography key={p.config.id} variant="caption" sx={{ color: `hsl(${p.config.hue}, 100%, 70%)` }}>
+                                    {p.config.name} Mic: {p.mic.isActive ? 'On' : 'Off'}
+                                </Typography>
+                            ))}
+                        </Box>
                     )}
                 </Box>
             </Box>
 
-            {/* Audio Element */}
-            {audioSrc && (
-                <audio
-                    ref={audioRef}
-                    src={audioSrc}
-                    style={{ display: 'none' }}
-                />
-            )}
-            {!audioSrc && (
-                <Typography color="error" sx={{ textAlign: 'center', position: 'relative', zIndex: 5 }}>No Audio Source Found</Typography>
-            )}
+            {audioSrc && <audio ref={audioRef} src={audioSrc} style={{ display: 'none' }} />}
+            {!audioSrc && <Typography color="error" sx={{ textAlign: 'center', position: 'relative', zIndex: 5 }}>No Audio Source Found</Typography>}
         </Box>
     );
 };

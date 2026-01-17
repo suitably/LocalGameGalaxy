@@ -6,50 +6,36 @@ import { MelodiqSession } from './gameplay/MelodiqSession';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { Dialog, DialogTitle, DialogContent, DialogActions, FormControlLabel, Switch } from '@mui/material';
+import { MelodiqSettings } from './MelodiqSettings';
+
+// Navigation State
+type View = 'Home' | 'Settings' | 'Session';
 
 export const MelodiqGame: React.FC = () => {
     const [importing, setImporting] = useState(false);
     const [stats, setStats] = useState<ImportStats | null>(null);
     const [songs, setSongs] = useState<Song[]>([]);
-    const [showSettings, setShowSettings] = useState(false);
-    const [showDebugOverlay, setShowDebugOverlay] = useState(() => {
-        return localStorage.getItem('melodiq_show_overlay') === 'true';
-    });
-    const [showDevSlider, setShowDevSlider] = useState(() => {
-        return localStorage.getItem('melodiq_show_slider') === 'true';
-    });
-    const [showMicStatus, setShowMicStatus] = useState(() => {
-        // Default to true if not set, or check existence
-        const stored = localStorage.getItem('melodiq_show_mic_status');
-        return stored === null ? true : stored === 'true';
-    });
 
-    const toggleOverlay = () => {
-        const newValue = !showDebugOverlay;
-        setShowDebugOverlay(newValue);
-        localStorage.setItem('melodiq_show_overlay', String(newValue));
-    };
+    // View State
+    const [currentView, setCurrentView] = useState<View>('Home');
+    const [selectedSong, setSelectedSong] = useState<Song | null>(null);
 
-    const toggleSlider = () => {
-        const newValue = !showDevSlider;
-        setShowDevSlider(newValue);
-        localStorage.setItem('melodiq_show_slider', String(newValue));
-    };
-
-    const toggleMicStatus = () => {
-        const newValue = !showMicStatus;
-        setShowMicStatus(newValue);
-        localStorage.setItem('melodiq_show_mic_status', String(newValue));
-    };
+    // Initial Load of Settings (For passing to session if needed, though Session reads directly now)
+    // We can remove these states from here if MelodiqSession reads from localStorage directly, 
+    // BUT MelodiqSession props currently require them.
+    // Let's keep them read-only here or updated when returning from settings.
+    // Actually, to keep it clean, let's just force a re-mount or have Session read from LS.
+    // The plan says Session will read from LS. So we don't need to pass them as props anymore.
+    // However, existing MelodiqSession interface expects them. We will refactor Session next.
+    // For now, let's ignore passing them and rely on Session refactor.
 
     useEffect(() => {
         db.songs.toArray().then(setSongs);
-    }, [importing]); // Reload when importing changes (finished)
+    }, [importing]);
 
     const handleImport = async () => {
         try {
-            // @ts-ignore - File System Access API
+            // @ts-ignore
             if (window.showDirectoryPicker) {
                 // @ts-ignore
                 const dirHandle = await window.showDirectoryPicker();
@@ -58,7 +44,6 @@ export const MelodiqGame: React.FC = () => {
                 await importer.importFromHandle(dirHandle, (s) => setStats({ ...s }));
                 setImporting(false);
             } else {
-                // Fallback trigger
                 document.getElementById('fallback-dir-input')?.click();
             }
         } catch (err) {
@@ -76,16 +61,21 @@ export const MelodiqGame: React.FC = () => {
         }
     }
 
-    const [selectedSong, setSelectedSong] = useState<Song | null>(null);
-
-    if (selectedSong) {
+    if (currentView === 'Session' && selectedSong) {
         return <MelodiqSession
             song={selectedSong}
-            onExit={() => setSelectedSong(null)}
-            showDebugOverlay={showDebugOverlay}
-            showDevSlider={showDevSlider}
-            showMicStatus={showMicStatus}
+            onExit={() => {
+                setSelectedSong(null);
+                setCurrentView('Home');
+            }}
+            showDebugOverlay={false}
+            showDevSlider={false}
+            showMicStatus={false}
         />;
+    }
+
+    if (currentView === 'Settings') {
+        return <MelodiqSettings onBack={() => setCurrentView('Home')} />;
     }
 
     return (
@@ -106,7 +96,7 @@ export const MelodiqGame: React.FC = () => {
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2 }}>
                     <Button
-                        onClick={() => setShowSettings(true)}
+                        onClick={() => setCurrentView('Settings')}
                         startIcon={<SettingsIcon />}
                         variant="outlined"
                     >
@@ -123,26 +113,7 @@ export const MelodiqGame: React.FC = () => {
                 </Box>
             </Box>
 
-            <Dialog open={showSettings} onClose={() => setShowSettings(false)}>
-                <DialogTitle>Melodiq Settings</DialogTitle>
-                <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    <FormControlLabel
-                        control={<Switch checked={showDebugOverlay} onChange={toggleOverlay} />}
-                        label="Show Debug Overlay (Green Text)"
-                    />
-                    <FormControlLabel
-                        control={<Switch checked={showDevSlider} onChange={toggleSlider} />}
-                        label="Show Dev Pitch Slider"
-                    />
-                    <FormControlLabel
-                        control={<Switch checked={showMicStatus} onChange={toggleMicStatus} />}
-                        label="Show Mic Status (Footer)"
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setShowSettings(false)}>Close</Button>
-                </DialogActions>
-            </Dialog>
+            {/* Old Dialog Removed */}
 
             {importing && stats && (
                 <Card sx={{ mb: 4, p: 2 }}>
@@ -164,13 +135,18 @@ export const MelodiqGame: React.FC = () => {
 
                 {songs?.map((song) => (
                     <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={song.id}>
-                        <SongCard song={song} onClick={() => setSelectedSong(song)} />
+                        <SongCard song={song} onClick={() => {
+                            setSelectedSong(song);
+                            setCurrentView('Session');
+                        }} />
                     </Grid>
                 ))}
             </Grid>
         </Container>
     );
 };
+
+
 
 const SongCard: React.FC<{ song: Song; onClick: () => void }> = ({ song, onClick }) => {
     const [coverUrl, setCoverUrl] = useState<string | null>(null);
