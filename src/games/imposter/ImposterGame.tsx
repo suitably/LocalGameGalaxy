@@ -11,12 +11,16 @@ import HomeIcon from '@mui/icons-material/Home';
 import { useNavigate } from 'react-router-dom';
 import { seedImposterDatabase } from './logic/dbSeeder';
 import { db } from '../../lib/db';
+import { usePageTitle } from '../../context/TitleContext';
 
 const STORAGE_KEY_PLAYERS = 'imposter-setup-players';
 
 export const ImposterGame: React.FC = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
+
+    // Set the game title in the header
+    usePageTitle(t('games.imposter.title'));
 
     // Load players from localStorage on init
     const [players, setPlayers] = useState<Player[]>(() => {

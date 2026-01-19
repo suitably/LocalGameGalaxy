@@ -1,5 +1,6 @@
 import { db, type Song } from './db';
 import { parseUltraStarTxt } from './parser';
+import { calculateSongDuration } from './utils';
 
 /**
  * Generates a unique ID for a song based on its content/path.
@@ -18,7 +19,17 @@ export interface ImportStats {
     totalFound: number;
     processed: number;
     cached: number;
+    removed: number;
     errors: number;
+}
+
+interface CacheEntry {
+    id: string;
+    title: string;
+    artist: string;
+    dirPath: string;
+    txtModified: number;
+    updatedAt: number;
 }
 
 export class MelodiqImporter {
@@ -35,23 +46,28 @@ export class MelodiqImporter {
     /**
      * Entry point to import from a directory handle.
      */
-    public async importFromHandle(dirHandle: FileSystemDirectoryHandle, onProgress: (stats: ImportStats) => void): Promise<void> {
+    public async importFromHandle(dirHandle: FileSystemDirectoryHandle, onProgress: (stats: ImportStats) => void, forceReimport = false): Promise<void> {
         this.stopRequested = false;
-        const stats: ImportStats = { totalFound: 0, processed: 0, cached: 0, errors: 0 };
+        const stats: ImportStats = { totalFound: 0, processed: 0, cached: 0, removed: 0, errors: 0 };
         const songDirs = await this.scanForSongDirs(dirHandle);
         stats.totalFound = songDirs.length;
         onProgress(stats);
 
-        // Check for existing cache file in root
-        try {
-            const cacheFileHandle = await dirHandle.getFileHandle('melodiq_cache.json', { create: false });
-            const file = await cacheFileHandle.getFile();
-            await file.text(); // Just validation
-        } catch {
-            // No cache found, ignore
+        // Load existing cache file
+        let existingCache: Record<string, CacheEntry> = {};
+        if (!forceReimport) {
+            try {
+                const cacheFileHandle = await dirHandle.getFileHandle('melodiq_cache.json', { create: false });
+                const file = await cacheFileHandle.getFile();
+                const text = await file.text();
+                existingCache = JSON.parse(text);
+            } catch {
+                // No cache found, will do full import
+            }
         }
 
-        const newCache: Record<string, Partial<Song>> = {};
+        const newCache: Record<string, CacheEntry> = {};
+        const currentDirPaths = new Set<string>();
 
         for (const subDir of songDirs) {
             if (this.stopRequested) break;
@@ -78,8 +94,22 @@ export class MelodiqImporter {
                 }
 
                 if (txtFile) {
-                    const file = await txtFile.getFile();
-                    const text = await file.text();
+                    currentDirPaths.add(subDir.name);
+                    const txtFileObj = await txtFile.getFile();
+                    const txtModified = txtFileObj.lastModified;
+
+                    // Check cache - skip if unchanged
+                    const cached = existingCache[subDir.name];
+                    if (cached && cached.txtModified === txtModified) {
+                        // Song unchanged, use cached data
+                        newCache[subDir.name] = cached;
+                        stats.cached++;
+                        onProgress(stats);
+                        continue;
+                    }
+
+                    // Process song (new or modified)
+                    const text = await txtFileObj.text();
                     const parsed = parseUltraStarTxt(text);
                     const title = parsed.headers['TITLE'] || subDir.name;
                     const artist = parsed.headers['ARTIST'] || 'Unknown';
@@ -127,23 +157,21 @@ export class MelodiqImporter {
                         artist,
                         txtContent: text,
                         dirPath: subDir.name,
-                        updatedAt: Date.now()
+                        updatedAt: Date.now(),
+                        duration: calculateSongDuration(parsed.notes, parsed.bpm, parsed.gap)
                     };
 
+
                     if (chosenAudioFile) {
-                        try {
-                            song.audio = await chosenAudioFile.getFile();
-                        } catch (e) {
-                            console.warn('Failed to get audio file', e);
-                        }
+                        // Store the handle directly, do not read into memory/blob
+                        // @ts-ignore - IndexDB supports storing handles in Chrome/Edge
+                        song.audio = chosenAudioFile;
                     }
 
                     if (chosenVideoFile) {
-                        try {
-                            song.video = await chosenVideoFile.getFile();
-                        } catch (e) {
-                            console.warn('Failed to get video file', e);
-                        }
+                        // Store the handle directly
+                        // @ts-ignore
+                        song.video = chosenVideoFile;
                     }
 
                     if (chosenImageFile) {
@@ -155,7 +183,14 @@ export class MelodiqImporter {
                     }
 
                     await db.songs.put(song);
-                    newCache[subDir.name] = { id, title, artist, updatedAt: Date.now() };
+                    newCache[subDir.name] = {
+                        id,
+                        title,
+                        artist,
+                        dirPath: subDir.name,
+                        txtModified,
+                        updatedAt: Date.now()
+                    };
                 }
 
                 stats.processed++;
@@ -166,6 +201,21 @@ export class MelodiqImporter {
                 stats.errors++;
             }
         }
+
+        // Clean up deleted songs from database
+        const deletedDirPaths = Object.keys(existingCache).filter(dirPath => !currentDirPaths.has(dirPath));
+        for (const dirPath of deletedDirPaths) {
+            try {
+                const cachedEntry = existingCache[dirPath];
+                if (cachedEntry?.id) {
+                    await db.songs.delete(cachedEntry.id);
+                    stats.removed++;
+                }
+            } catch (e) {
+                console.warn(`Failed to delete song with dirPath ${dirPath}`, e);
+            }
+        }
+        onProgress(stats);
 
         // Write new cache file (if possible)
         try {
@@ -204,7 +254,7 @@ export class MelodiqImporter {
      */
     public async importFromFileList(fileList: FileList, onProgress: (stats: ImportStats) => void): Promise<void> {
         this.stopRequested = false;
-        const stats: ImportStats = { totalFound: 0, processed: 0, cached: 0, errors: 0 };
+        const stats: ImportStats = { totalFound: 0, processed: 0, cached: 0, removed: 0, errors: 0 };
 
         const dirGroups: Record<string, File[]> = {};
         for (let i = 0; i < fileList.length; i++) {
@@ -288,7 +338,8 @@ export class MelodiqImporter {
                         artist,
                         txtContent: text,
                         dirPath: dirName,
-                        updatedAt: Date.now()
+                        updatedAt: Date.now(),
+                        duration: calculateSongDuration(parsed.notes, parsed.bpm, parsed.gap)
                     };
 
                     if (chosenAudioFile) {

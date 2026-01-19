@@ -9,6 +9,7 @@ import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { MicrophoneManager } from './audio/MicrophoneManager';
 import { LatencyCalibrator } from './components/LatencyCalibrator';
+import QRCode from 'qrcode';
 
 
 // Presets: Hue values
@@ -124,6 +125,21 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
         return stored ? parseFloat(stored) : 1.0;
     });
 
+    // WebRTC Remote Microphones
+    const [partyId, setPartyId] = useState(() => {
+        const stored = localStorage.getItem('melodiq_party_id');
+        return stored || crypto.randomUUID();
+    });
+    const [trackerUrls, setTrackerUrls] = useState<string[]>(() => {
+        const stored = localStorage.getItem('melodiq_tracker_urls');
+        return stored ? JSON.parse(stored) : [
+            'wss://tracker.openwebtorrent.com',
+            'wss://tracker.fastcast.nz'
+        ];
+    });
+    const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+    const [newTrackerUrl, setNewTrackerUrl] = useState('');
+
     // Color Picker State
     const [colorAnchorEl, setColorAnchorEl] = useState<HTMLElement | null>(null);
     const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
@@ -175,6 +191,14 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
         });
     }, []);
 
+    // Generate QR Code when Party ID changes
+    useEffect(() => {
+        const phoneUrl = `${window.location.origin}/games/melodiq/phone?party=${partyId}`;
+        QRCode.toDataURL(phoneUrl, { width: 200, margin: 2 })
+            .then((url: string) => setQrCodeDataUrl(url))
+            .catch((err: Error) => console.error('Failed to generate QR code:', err));
+    }, [partyId]);
+
     // Save Logic
     const handleSave = () => {
         localStorage.setItem('melodiq_profiles', JSON.stringify(profiles));
@@ -188,6 +212,11 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
 
         localStorage.setItem('melodiq_song_volume', String(songVolume));
         localStorage.setItem('melodiq_master_volume', String(masterVolume));
+
+        // Save WebRTC settings
+        localStorage.setItem('melodiq_party_id', partyId);
+        localStorage.setItem('melodiq_tracker_urls', JSON.stringify(trackerUrls));
+
         onBack();
     };
 
@@ -242,6 +271,22 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
 
     const updateActivePlayerConfig = (profileId: string, updates: Partial<ActivePlayer>) => {
         setActivePlayers(activePlayers.map(ap => ap.profileId === profileId ? { ...ap, ...updates } : ap));
+    };
+
+    // --- WebRTC Remote Microphones ---
+    const regeneratePartyId = () => {
+        setPartyId(crypto.randomUUID());
+    };
+
+    const addTrackerUrl = () => {
+        if (newTrackerUrl.trim() && !trackerUrls.includes(newTrackerUrl.trim())) {
+            setTrackerUrls([...trackerUrls, newTrackerUrl.trim()]);
+            setNewTrackerUrl('');
+        }
+    };
+
+    const removeTrackerUrl = (url: string) => {
+        setTrackerUrls(trackerUrls.filter(u => u !== url));
     };
 
 
@@ -451,6 +496,110 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
                                 </IconButton>
                             </Box>
                         ))}
+                    </Box>
+                </Box>
+
+                <Divider />
+
+                {/* 3. Remote Microphones (WebRTC) */}
+                <Box>
+                    <Typography variant="h6" gutterBottom>Remote Microphones (Phone)</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Connect phones as microphones via WebRTC. Scan the QR code with your phone to join.
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {/* Party ID and QR Code */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Box sx={{ flex: 1 }}>
+                                <Typography variant="subtitle2" gutterBottom>Party ID</Typography>
+                                <TextField
+                                    value={partyId}
+                                    size="small"
+                                    fullWidth
+                                    variant="outlined"
+                                    InputProps={{ readOnly: true }}
+                                    sx={{ fontFamily: 'monospace' }}
+                                />
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={regeneratePartyId}
+                                    sx={{ mt: 1 }}
+                                >
+                                    Regenerate Party ID
+                                </Button>
+                            </Box>
+                            {qrCodeDataUrl && (
+                                <Box sx={{ p: 1, bgcolor: 'white', borderRadius: 1 }}>
+                                    <img src={qrCodeDataUrl} alt="QR Code" style={{ display: 'block' }} />
+                                </Box>
+                            )}
+                        </Box>
+
+                        {/* Copyable URL */}
+                        <Box>
+                            <Typography variant="subtitle2" gutterBottom>Phone URL (Fallback)</Typography>
+                            <TextField
+                                value={`${window.location.origin}/games/melodiq/phone?party=${partyId}`}
+                                size="small"
+                                fullWidth
+                                variant="outlined"
+                                InputProps={{ readOnly: true }}
+                                onClick={(e) => {
+                                    const input = e.target as HTMLInputElement;
+                                    input.select();
+                                    navigator.clipboard.writeText(input.value);
+                                }}
+                                sx={{ cursor: 'pointer', fontFamily: 'monospace', fontSize: '0.85rem' }}
+                                helperText="Click to copy URL"
+                            />
+                        </Box>
+
+                        {/* Tracker URLs */}
+                        <Box>
+                            <Typography variant="subtitle2" gutterBottom>Tracker URLs</Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                {trackerUrls.map((url, index) => (
+                                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <TextField
+                                            value={url}
+                                            size="small"
+                                            fullWidth
+                                            variant="outlined"
+                                            InputProps={{ readOnly: true }}
+                                        />
+                                        <IconButton
+                                            color="error"
+                                            size="small"
+                                            onClick={() => removeTrackerUrl(url)}
+                                            disabled={trackerUrls.length <= 1}
+                                        >
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </Box>
+                                ))}
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <TextField
+                                        value={newTrackerUrl}
+                                        onChange={(e) => setNewTrackerUrl(e.target.value)}
+                                        placeholder="wss://tracker.example.com"
+                                        size="small"
+                                        fullWidth
+                                        variant="outlined"
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                addTrackerUrl();
+                                            }
+                                        }}
+                                    />
+                                    <Button variant="outlined" size="small" onClick={addTrackerUrl}>
+                                        Add
+                                    </Button>
+                                </Box>
+                            </Box>
+                        </Box>
                     </Box>
                 </Box>
 

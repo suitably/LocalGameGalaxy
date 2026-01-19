@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { VirtuosoGrid } from 'react-virtuoso';
 import { Box, Button, Typography, LinearProgress, Card, CardContent, Grid, Container } from '@mui/material';
 import { db, type Song } from './db';
 import { MelodiqImporter, type ImportStats } from './importer';
@@ -7,11 +8,19 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { MelodiqSettings } from './MelodiqSettings';
+import { formatDuration } from './utils';
+import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '../../context/TitleContext';
 
 // Navigation State
 type View = 'Home' | 'Settings' | 'Session';
 
 export const MelodiqGame: React.FC = () => {
+    const { t } = useTranslation();
+
+    // Set the game title in the header
+    usePageTitle(t('games.melodiq.title'));
+
     const [importing, setImporting] = useState(false);
     const [stats, setStats] = useState<ImportStats | null>(null);
     const [songs, setSongs] = useState<Song[]>([]);
@@ -33,7 +42,7 @@ export const MelodiqGame: React.FC = () => {
         db.songs.toArray().then(setSongs);
     }, [importing]);
 
-    const handleImport = async () => {
+    const handleImport = async (forceReimport = false) => {
         try {
             // @ts-ignore
             if (window.showDirectoryPicker) {
@@ -41,7 +50,7 @@ export const MelodiqGame: React.FC = () => {
                 const dirHandle = await window.showDirectoryPicker();
                 setImporting(true);
                 const importer = new MelodiqImporter();
-                await importer.importFromHandle(dirHandle, (s) => setStats({ ...s }));
+                await importer.importFromHandle(dirHandle, (s) => setStats({ ...s }), forceReimport);
                 setImporting(false);
             } else {
                 document.getElementById('fallback-dir-input')?.click();
@@ -105,10 +114,18 @@ export const MelodiqGame: React.FC = () => {
                     <Button
                         variant="contained"
                         startIcon={<FolderOpenIcon />}
-                        onClick={handleImport}
+                        onClick={() => handleImport(false)}
                         disabled={importing}
                     >
                         {importing ? 'Scanning...' : 'Load Song Directory'}
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        onClick={() => handleImport(true)}
+                        disabled={importing}
+                        size="small"
+                    >
+                        Force Re-import
                     </Button>
                 </Box>
             </Box>
@@ -119,29 +136,45 @@ export const MelodiqGame: React.FC = () => {
                 <Card sx={{ mb: 4, p: 2 }}>
                     <Typography variant="h6">Importing Library...</Typography>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Found: {stats.totalFound} | Processed: {stats.processed} | Errors: {stats.errors}
+                        Found: {stats.totalFound} |
+                        New/Updated: {stats.processed} |
+                        Cached: {stats.cached} |
+                        Removed: {stats.removed} |
+                        Errors: {stats.errors}
                     </Typography>
-                    <LinearProgress variant="determinate" value={(stats.processed / (stats.totalFound || 1)) * 100} />
+                    <LinearProgress
+                        variant="determinate"
+                        value={((stats.processed + stats.cached) / (stats.totalFound || 1)) * 100}
+                    />
                 </Card>
             )}
+            {/* Empty State */}
+            {songs?.length === 0 && !importing && (
+                <Box sx={{ width: '100%', textAlign: 'center', py: 8, opacity: 0.7 }}>
+                    <Typography variant="h5">Your library is empty</Typography>
+                    <Typography>Load a folder with UltraStar songs to begin</Typography>
+                </Box>
+            )}
 
-            <Grid container spacing={3}>
-                {songs?.length === 0 && !importing && (
-                    <Box sx={{ width: '100%', textAlign: 'center', py: 8, opacity: 0.7 }}>
-                        <Typography variant="h5">Your library is empty</Typography>
-                        <Typography>Load a folder with UltraStar songs to begin</Typography>
-                    </Box>
-                )}
-
-                {songs?.map((song) => (
-                    <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={song.id}>
-                        <SongCard song={song} onClick={() => {
-                            setSelectedSong(song);
-                            setCurrentView('Session');
-                        }} />
-                    </Grid>
-                ))}
-            </Grid>
+            {songs?.length > 0 && (
+                <VirtuosoGrid
+                    style={{ height: 'calc(100vh - 200px)', width: '100%' }}
+                    totalCount={songs.length}
+                    components={{
+                        List: React.forwardRef((props, ref) => <Grid container spacing={3} {...props} ref={ref as any} />),
+                        Item: React.forwardRef((props, ref) => <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} {...props} ref={ref as any} />)
+                    }}
+                    itemContent={(index: number) => (
+                        <SongCard
+                            song={songs[index]}
+                            onClick={() => {
+                                setSelectedSong(songs[index]);
+                                setCurrentView('Session');
+                            }}
+                        />
+                    )}
+                />
+            )}
         </Container>
     );
 };
@@ -186,7 +219,7 @@ const SongCard: React.FC<{ song: Song; onClick: () => void }> = ({ song, onClick
                 <Typography variant="h6" noWrap title={song.title}>{song.title}</Typography>
                 <Typography variant="subtitle1" color="text.secondary" noWrap title={song.artist}>{song.artist}</Typography>
                 <Typography variant="caption" display="block" color="text.disabled">
-                    {song.id.substring(0, 8)}...
+                    {song.duration ? formatDuration(song.duration) : '0:00'} • {song.id.substring(0, 8)}...
                 </Typography>
             </CardContent>
         </Card>

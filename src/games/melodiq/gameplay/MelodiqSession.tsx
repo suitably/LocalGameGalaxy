@@ -6,6 +6,7 @@ import { PitchVisualizer, type SongWithNotes, type SungSegment } from './PitchVi
 import { LyricsDisplay } from './LyricsDisplay';
 import { MicrophoneManager, type PitchResult } from '../audio/MicrophoneManager';
 import { type UserProfile, type ActivePlayer } from '../MelodiqSettings';
+import { ScoreBoard } from './ScoreBoard';
 
 interface MelodiqSessionProps {
     song: SongWithNotes;
@@ -77,17 +78,21 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [bpmMultiplier] = useState(4);
+    const [isFinished, setIsFinished] = useState(false);
+
 
 
     // UI State
     const [_duration, setDuration] = useState(0);
     const [devPitchOverride, setDevPitchOverride] = useState<number | null>(null);
+    const [audioSrc, setAudioSrc] = useState<string | undefined>(undefined);
+    const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
 
     const requestRef = useRef<number>(0);
     const lastScoreUpdateRef = useRef<number>(0);
 
     // Parse song on mount
-    const parsedSong: SongWithNotes = React.useMemo(() => {
+    const parsedSong: React.MemoExoticComponent<any> | SongWithNotes = React.useMemo(() => {
         const parsed = parseUltraStarTxt(song.txtContent);
         return { ...song, notes: parsed.notes, headers: parsed.headers, bpm: parsed.bpm, gap: parsed.gap };
     }, [song]);
@@ -182,7 +187,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             }
             setIsPlaying(!isPlaying);
         }
-    }, [isPlaying]);
+    }, [isPlaying, songVolume, masterVolume]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -302,41 +307,121 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         };
     }, [ready, players, updateLoop]);
 
-    // Audio Metadata & Src Management (Same as before)
+    // Audio event handlers - set after audio source is loaded
     useEffect(() => {
         const audio = audioRef.current;
-        if (audio) {
+        if (audio && audioSrc) {
             audio.onloadedmetadata = () => setDuration(audio.duration);
             audio.onended = () => {
+                console.log('Song ended, showing scoreboard');
+                setIsFinished(true);
                 setIsPlaying(false);
                 if (videoRef.current) videoRef.current.pause();
             };
         }
-    }, [parsedSong]);
+    }, [audioSrc]);
 
-    const [audioSrc, setAudioSrc] = useState<string | undefined>(undefined);
     useEffect(() => {
-        let url: string | undefined;
-        if (song.audio) {
-            if (song.audio instanceof Blob) url = URL.createObjectURL(song.audio);
-            else if (typeof song.audio === 'string') url = song.audio;
-        }
-        setAudioSrc(url);
-        return () => { if (url && song.audio instanceof Blob) URL.revokeObjectURL(url); };
+        let activeUrl: string | undefined;
+        let mounted = true;
+
+        const loadAudio = async () => {
+            if (!song.audio) return;
+            try {
+                if (song.audio instanceof Blob) {
+                    activeUrl = URL.createObjectURL(song.audio);
+                } else if (typeof song.audio === 'string') {
+                    activeUrl = song.audio;
+                } else {
+                    // FileSystemFileHandle
+                    // @ts-ignore
+                    const file = await song.audio.getFile();
+                    activeUrl = URL.createObjectURL(file);
+                }
+            } catch (e) {
+                console.error("Failed to load audio", e);
+            }
+            if (mounted) setAudioSrc(activeUrl);
+        };
+        loadAudio();
+
+        return () => {
+            mounted = false;
+            // Revoke if it was created from a blob or handle (which creates a blob url)
+            if (activeUrl && typeof song.audio !== 'string') URL.revokeObjectURL(activeUrl);
+        };
     }, [song.audio]);
 
-    const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
     useEffect(() => {
-        let url: string | undefined;
-        if (song.video) {
-            if (song.video instanceof Blob) url = URL.createObjectURL(song.video);
-            else if (typeof song.video === 'string') url = song.video;
-        }
-        setVideoSrc(url);
-        return () => { if (url && song.video instanceof Blob) URL.revokeObjectURL(url); };
+        let activeUrl: string | undefined;
+        let mounted = true;
+
+        const loadVideo = async () => {
+            if (!song.video) return;
+            try {
+                if (song.video instanceof Blob) {
+                    activeUrl = URL.createObjectURL(song.video);
+                } else if (typeof song.video === 'string') {
+                    activeUrl = song.video;
+                } else {
+                    // FileSystemFileHandle
+                    // @ts-ignore
+                    const file = await song.video.getFile();
+                    activeUrl = URL.createObjectURL(file);
+                }
+            } catch (e) {
+                console.error("Failed to load video", e);
+            }
+            if (mounted) setVideoSrc(activeUrl);
+        };
+        loadVideo();
+
+        return () => {
+            mounted = false;
+            if (activeUrl && typeof song.video !== 'string') URL.revokeObjectURL(activeUrl);
+        };
     }, [song.video]);
 
+    // Auto-start logic
+    const hasStartedRef = useRef(false);
+    useEffect(() => {
+        if (!hasStartedRef.current && ready && audioSrc && audioRef.current) {
+            hasStartedRef.current = true;
+            const audio = audioRef.current;
+
+            // Set volume ensuring it's not overridden later by some other default
+            audio.volume = songVolume * masterVolume;
+
+            const startPlay = async () => {
+                try {
+                    await audio.play();
+                    if (videoRef.current) {
+                        // Sync video time just in case
+                        videoRef.current.currentTime = audio.currentTime;
+                        await videoRef.current.play();
+                    }
+                    setIsPlaying(true);
+                } catch (e) {
+                    console.error("Auto-start failed (likely browser policy):", e);
+                    // Reset so user can try manually
+                    hasStartedRef.current = false;
+                }
+            };
+            startPlay();
+        }
+    }, [ready, audioSrc, songVolume, masterVolume]);
+
     if (!ready) return <Box sx={{ bgcolor: 'black', height: '100vh' }} />; // Loading black screen
+
+    if (isFinished) {
+        // Prepare props for ScoreBoard from valid players state
+        const scoreBoardPlayers = players.map(p => ({
+            config: p.config,
+            score: p.score // Note: p.score is updated in real-time in the mutable object
+        }));
+
+        return <ScoreBoard players={scoreBoardPlayers} onExit={onExit} />;
+    }
 
     return (
         <Box sx={{
@@ -416,6 +501,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                                                     label={player.config.name}
                                                     hue={player.config.hue}
                                                     showNoteLabels={showNoteLabels}
+                                                    latency={player.config.latency}
                                                 />
                                             </Box>
                                         );

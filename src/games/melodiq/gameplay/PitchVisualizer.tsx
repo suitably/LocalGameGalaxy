@@ -24,6 +24,7 @@ interface PitchVisualizerProps {
     label?: string;
     hue?: number;
     showNoteLabels?: boolean;
+    latency?: number;
 }
 
 interface Particle {
@@ -56,7 +57,8 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
     showDebugOverlay = false,
     label,
     hue = 190,
-    showNoteLabels = true
+    showNoteLabels = true,
+    latency
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -138,7 +140,7 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
         const gap = song.gap || 0;
         const noteDivisor = 4; // bpmMultiplier
         const beatDuration = 60000 / (bpm * noteDivisor);
-        const currentBeat = (currentTime * 1000 - gap) / beatDuration;
+        const currentBeat = ((currentTime * 1000) - (latency || 0) - gap) / beatDuration;
 
         // Reset Transform to Identity then Scale
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -353,8 +355,8 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
             // Draw Cursor
             // Glow
             ctx.shadowBlur = 20;
-            ctx.shadowColor = '#00ffcc';
-            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
+            ctx.fillStyle = `hsl(${hue}, 100%, 70%)`;
             ctx.beginPath();
             ctx.arc(PLAYHEAD_X, y + NOTE_HEIGHT / 2, 8, 0, Math.PI * 2);
             ctx.fill();

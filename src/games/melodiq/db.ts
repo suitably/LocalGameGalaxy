@@ -6,11 +6,12 @@ export interface Song {
     artist: string;
     cover?: string | Blob; // stored as Blob or URL
     background?: string; // stored as Blob or URL
-    audio?: string | Blob; // stored as Blob or URL (mp3, ogg, wav, etc.)
-    video?: string | Blob; // stored as Blob or URL
+    audio?: string | Blob | FileSystemFileHandle; // stored as Blob or URL (mp3, ogg, wav, etc.) or FileHandle
+    video?: string | Blob | FileSystemFileHandle; // stored as Blob or URL or FileHandle
     txtContent: string; // The raw or parsed content
     dirPath: string; // Handle to the directory if available, or just path string
     updatedAt: number;
+    duration?: number; // Duration in seconds
 }
 
 export interface CachedDir {
@@ -25,7 +26,7 @@ const db = new Dexie('MelodiqDB') as Dexie & {
     cachedDirs: EntityTable<CachedDir, 'path'>
 };
 
-db.version(1).stores({
+db.version(3).stores({
     songs: 'id, title, artist',
     cachedDirs: 'path'
 });
