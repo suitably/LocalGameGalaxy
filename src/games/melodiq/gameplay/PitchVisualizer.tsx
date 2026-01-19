@@ -19,7 +19,7 @@ interface PitchVisualizerProps {
     height?: number;
     // Using refs for high-frequency data to avoid re-renders
     currentPitchRef: React.RefObject<PitchResult | null>;
-    sungSegmentsRef: React.MutableRefObject<SungSegment[]>;
+    sungSegmentsRef: React.MutableRefObject<Record<number, SungSegment[]>>;
     showDebugOverlay?: boolean;
     label?: string;
     hue?: number;
@@ -175,8 +175,8 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
 
         // --- Notes (Culling Enforced) ---
         const notes = song.notes || [];
-        // Use latestSungSegmentsRef to get the active segments array from the parent's latest ref object
-        const sungSegments = latestSungSegmentsRef.current.current || [];
+        // Use latestSungSegmentsRef to get the active segments record
+        const sungSegmentsRecord = latestSungSegmentsRef.current.current || {};
 
         notes.forEach((note, index) => {
             if (note.type === '-') return;
@@ -222,7 +222,9 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
             ctx.fill();
 
             // --- Sung Segments (Fill) ---
-            const segments = sungSegments.filter(s => s.noteIndex === index);
+            // OPTIMIZATION: O(1) lookup from Record instead of O(N) filter
+            const segments = sungSegmentsRecord[index] || [];
+
             segments.forEach(seg => {
                 const startB = Math.max(seg.startBeat, note.start);
                 const endB = Math.min(seg.endBeat, note.start + note.duration);

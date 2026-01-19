@@ -20,11 +20,17 @@ interface MelodiqSessionProps {
 class PlayerRuntime {
     public mic: MicrophoneManager;
     public score: number = 0;
-    public currentPitch: PitchResult | null = null;
-    public sungSegments: SungSegment[] = [];
-    public config: UserProfile & { deviceId: string };
 
-    constructor(config: UserProfile & { deviceId: string }) {
+    // Stable refs for high-frequency updates without React renders
+    public pitchRef = { current: null as PitchResult | null };
+    public segmentsRef = { current: {} as Record<number, SungSegment[]> };
+
+    // Helper to track active segment for optimization
+    public activeSegment: SungSegment | null = null;
+
+    public config: UserProfile & { deviceId: string; volume?: number; muted?: boolean; latency?: number };
+
+    constructor(config: UserProfile & { deviceId: string; volume?: number; muted?: boolean; latency?: number }) {
         this.mic = new MicrophoneManager();
         this.config = config;
     }
@@ -46,6 +52,16 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     // Layout State
     const [layoutOverride] = useState(localStorage.getItem('melodiq_layout_override') || '');
 
+    // Volume State
+    const [songVolume] = useState(() => {
+        const stored = localStorage.getItem('melodiq_song_volume');
+        return stored ? parseFloat(stored) : 0.7;
+    });
+    const [masterVolume] = useState(() => {
+        const stored = localStorage.getItem('melodiq_master_volume');
+        return stored ? parseFloat(stored) : 1.0;
+    });
+
     // Dynamic Player State
     const [players, setPlayers] = useState<PlayerRuntime[]>([]);
     const [ready, setReady] = useState(false);
@@ -61,6 +77,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [bpmMultiplier] = useState(4);
+
 
     // UI State
     const [_duration, setDuration] = useState(0);
@@ -137,7 +154,10 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                 if (profile) {
                     newPlayers.push(new PlayerRuntime({
                         ...profile,
-                        deviceId: p.deviceId
+                        deviceId: p.deviceId,
+                        volume: p.volume,
+                        muted: p.muted,
+                        latency: p.latency
                     }));
                 }
             });
@@ -150,18 +170,30 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         setReady(true);
     }, []);
 
-    const togglePlay = () => {
+    const togglePlay = useCallback(() => {
         if (audioRef.current) {
             if (isPlaying) {
                 audioRef.current.pause();
                 if (videoRef.current) videoRef.current.pause();
             } else {
+                audioRef.current.volume = songVolume * masterVolume;
                 audioRef.current.play();
                 if (videoRef.current) videoRef.current.play();
             }
             setIsPlaying(!isPlaying);
         }
-    };
+    }, [isPlaying]);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                togglePlay();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [togglePlay]);
 
     const processPlayer = (
         player: PlayerRuntime,
@@ -177,11 +209,12 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         } else {
             pitch = player.mic.getPitch();
         }
-        player.currentPitch = pitch;
+        player.pitchRef.current = pitch;
 
         if (pitch && pitch.note > 0 && isPlaying && parsedSong.notes && audioRef.current) {
             const beatDuration = 60000 / ((parsedSong.bpm || 120) * bpmMultiplier);
-            const currentBeat = (audioRef.current.currentTime * 1000 - (parsedSong.gap || 0)) / beatDuration;
+            const latency = player.config.latency || 0;
+            const currentBeat = ((audioRef.current.currentTime * 1000) - latency - (parsedSong.gap || 0)) / beatDuration;
 
             const activeNoteIndex = parsedSong.notes.findIndex((n) =>
                 n.type !== '-' &&
@@ -200,13 +233,20 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                 if (semitoneDiff < 1.0) {
                     player.score += 10;
 
-                    const prev = player.sungSegments;
-                    const last = prev[prev.length - 1];
+                    const record = player.segmentsRef.current;
 
-                    if (last && last.noteIndex === activeNoteIndex) {
-                        last.endBeat = currentBeat;
+                    // Check if we can continue the active segment
+                    // We need to check if activeSegment exists AND matches the current activeNoteIndex
+                    const activeSeg = player.activeSegment;
+
+                    if (activeSeg && activeSeg.noteIndex === activeNoteIndex) {
+                        activeSeg.endBeat = currentBeat;
                     } else {
-                        player.sungSegments.push({ noteIndex: activeNoteIndex, startBeat: currentBeat, endBeat: currentBeat });
+                        const newSegment = { noteIndex: activeNoteIndex, startBeat: currentBeat, endBeat: currentBeat };
+                        player.activeSegment = newSegment;
+
+                        if (!record[activeNoteIndex]) record[activeNoteIndex] = [];
+                        record[activeNoteIndex].push(newSegment);
                     }
                 }
             }
@@ -248,7 +288,9 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
 
         players.forEach(p => {
             if (p.config.deviceId) {
-                p.mic.start(p.config.deviceId).catch(e => console.error(`Failed to start mic for ${p.config.name}`, e));
+                const vol = (p.config.volume ?? 0.8) * masterVolume;
+                const muted = p.config.muted ?? false;
+                p.mic.start(p.config.deviceId, vol, muted).catch(e => console.error(`Failed to start mic for ${p.config.name}`, e));
             }
         });
 
@@ -368,8 +410,8 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                                                 <PitchVisualizer
                                                     song={parsedSong}
                                                     audioRef={audioRef}
-                                                    currentPitchRef={{ current: player.currentPitch }}
-                                                    sungSegmentsRef={{ current: player.sungSegments }}
+                                                    currentPitchRef={player.pitchRef}
+                                                    sungSegmentsRef={player.segmentsRef}
                                                     showDebugOverlay={showDebugOverlay}
                                                     label={player.config.name}
                                                     hue={player.config.hue}
@@ -383,13 +425,13 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                             ));
                         })()}
 
-                        {/* Lyrics Overlay (Center) */}
+                        {/* Lyrics Overlay (Bottom - Flex Flow) */}
                         <Box sx={{
-                            position: 'absolute',
-                            top: '50%', left: 0, right: 0,
-                            transform: 'translateY(-50%)',
+                            width: '100%',
                             pointerEvents: 'none',
-                            zIndex: 10
+                            zIndex: 10,
+                            borderTop: '1px solid rgba(255,255,255,0.1)',
+                            bgcolor: 'rgba(0,0,0,0.2)'
                         }}>
                             <LyricsDisplay song={parsedSong} audioRef={audioRef} />
                         </Box>
@@ -405,12 +447,8 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     </Box>
                 )}
 
-                <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', gap: 2, alignItems: 'center', pointerEvents: 'auto' }}>
-                    <Button variant="contained" color={isPlaying ? 'warning' : 'success'} onClick={togglePlay}>
-                        {isPlaying ? "Pause" : "Play"}
-                    </Button>
-                    <Button variant="outlined" color="error" onClick={onExit}>Exit</Button>
-                    {showMicStatus && (
+                {showMicStatus && (
+                    <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', gap: 2, alignItems: 'center', pointerEvents: 'auto' }}>
                         <Box sx={{ display: 'flex', gap: 2 }}>
                             {players.map(p => (
                                 <Typography key={p.config.id} variant="caption" sx={{ color: `hsl(${p.config.hue}, 100%, 70%)` }}>
@@ -418,8 +456,8 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                                 </Typography>
                             ))}
                         </Box>
-                    )}
-                </Box>
+                    </Box>
+                )}
             </Box>
 
             {audioSrc && <audio ref={audioRef} src={audioSrc} style={{ display: 'none' }} />}

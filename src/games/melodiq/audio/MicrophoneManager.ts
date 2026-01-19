@@ -13,6 +13,7 @@ export class MicrophoneManager {
     private audioContext: AudioContext | null = null;
     private analyser: AnalyserNode | null = null;
     private mediaStream: MediaStream | null = null;
+    private gainNode: GainNode | null = null;
     private buffer: Float32Array | null = null;
     private source: MediaStreamAudioSourceNode | null = null;
 
@@ -23,26 +24,54 @@ export class MicrophoneManager {
         return devices.filter(d => d.kind === 'audioinput');
     }
 
-    public async start(deviceId?: string): Promise<void> {
+    public async start(deviceId?: string, initialVolume: number = 1.0, initialMuted: boolean = false): Promise<void> {
         if (this.audioContext) return;
 
         try {
             const constraints: MediaStreamConstraints = {
-                audio: deviceId ? { deviceId: { exact: deviceId } } : true
+                audio: {
+                    deviceId: deviceId ? { exact: deviceId } : undefined,
+                    echoCancellation: false,
+                    autoGainControl: false,
+                    noiseSuppression: false
+                }
             };
             this.mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
 
-            this.audioContext = new AudioContext();
+            this.audioContext = new AudioContext({ latencyHint: 'interactive' });
+
+            // Critical: Resume context if suspended (common in some browsers)
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+            }
+
             this.analyser = this.audioContext.createAnalyser();
             this.analyser.fftSize = 2048;
 
+            this.gainNode = this.audioContext.createGain();
+            this.gainNode.gain.value = initialMuted ? 0 : initialVolume;
+
             this.source = this.audioContext.createMediaStreamSource(this.mediaStream);
+
+            // Branch 1: Analysis (Always raw input)
             this.source.connect(this.analyser);
+
+            // Branch 2: Monitoring (Volume controlled)
+            this.source.connect(this.gainNode);
+            this.gainNode.connect(this.audioContext.destination);
 
             this.buffer = new Float32Array(this.analyser.fftSize);
         } catch (err) {
             console.error('Error initializing microphone:', err);
             throw err;
+        }
+    }
+
+    public setVolume(volume: number): void {
+        if (this.gainNode && this.audioContext) {
+            // Instant change for responsiveness, or slight ramp to prevent clicks
+            this.gainNode.gain.cancelScheduledValues(this.audioContext.currentTime);
+            this.gainNode.gain.setValueAtTime(volume, this.audioContext.currentTime);
         }
     }
 
@@ -56,6 +85,7 @@ export class MicrophoneManager {
             this.audioContext = null;
         }
         this.analyser = null;
+        this.gainNode = null;
         this.source = null;
         this.buffer = null;
     }
@@ -64,9 +94,20 @@ export class MicrophoneManager {
         return !!this.audioContext;
     }
 
+    public get context(): AudioContext | null {
+        return this.audioContext;
+    }
+
+    public getCurrentVolume(): number {
+        if (!this.analyser || !this.buffer) return 0;
+        this.analyser.getFloatTimeDomainData(this.buffer as any);
+        return this.computeRMS(this.buffer);
+    }
+
     public getPitch(): PitchResult | null {
         if (!this.analyser || !this.buffer || !this.audioContext) return null;
 
+        // Note: getCurrentVolume refills the buffer if called immediately before this, which is fine
         this.analyser.getFloatTimeDomainData(this.buffer as any);
 
         const volume = this.computeRMS(this.buffer);
