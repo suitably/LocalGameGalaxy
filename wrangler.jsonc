@@ -2,6 +2,7 @@
     "name": "nexiuma",
     "compatibility_date": "2026-01-19",
     "assets": {
-        "directory": "./dist"
+        "directory": "./dist",
+        "not_found_handling": "single-page-application"
     }
 }
