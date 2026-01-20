@@ -15,4 +15,37 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split React and React DOM into their own chunk
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          // Split Material-UI into its own chunk
+          'mui-vendor': [
+            '@mui/material',
+            '@mui/icons-material',
+            '@mui/lab',
+            '@emotion/react',
+            '@emotion/styled'
+          ],
+          // Split other heavy libraries
+          'lib-vendor': [
+            'dexie',
+            'simple-peer',
+            'bittorrent-tracker',
+            'html5-qrcode',
+            'qrcode',
+            'qrcode.react'
+          ],
+        },
+      },
+    },
+    // Increase chunk size warning limit (we're aware of large chunks)
+    chunkSizeWarningLimit: 600,
+    // Enable CSS code splitting
+    cssCodeSplit: true,
+    // Use esbuild for minification (default, faster than terser)
+    minify: 'esbuild',
+  },
 })

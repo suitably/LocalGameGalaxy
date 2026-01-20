@@ -1,20 +1,47 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { CircularProgress, Box } from '@mui/material';
 import { MainLayout } from './components/Layout/MainLayout';
 import { Hub } from './features/hub/Hub';
-import { WerewolfGame } from './games/werewolf/WerewolfGame';
-import { ImposterGame } from './games/imposter/ImposterGame';
-import { MelodiqGame } from './games/melodiq/MelodiqGame';
-import { MelodiqPhoneClient } from './games/melodiq/MelodiqPhoneClient';
+
+// Lazy load game components to reduce initial bundle size
+const WerewolfGame = lazy(() => import('./games/werewolf/WerewolfGame').then(m => ({ default: m.WerewolfGame })));
+const ImposterGame = lazy(() => import('./games/imposter/ImposterGame').then(m => ({ default: m.ImposterGame })));
+const MelodiqGame = lazy(() => import('./games/melodiq/MelodiqGame').then(m => ({ default: m.MelodiqGame })));
+const MelodiqPhoneClient = lazy(() => import('./games/melodiq/MelodiqPhoneClient').then(m => ({ default: m.MelodiqPhoneClient })));
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+    <CircularProgress />
+  </Box>
+);
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Hub />} />
-        <Route path="games/werewolf" element={<WerewolfGame />} />
-        <Route path="games/imposter" element={<ImposterGame />} />
-        <Route path="games/melodiq" element={<MelodiqGame />} />
-        <Route path="games/melodiq/phone" element={<MelodiqPhoneClient />} />
+        <Route path="games/werewolf" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <WerewolfGame />
+          </Suspense>
+        } />
+        <Route path="games/imposter" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <ImposterGame />
+          </Suspense>
+        } />
+        <Route path="games/melodiq" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <MelodiqGame />
+          </Suspense>
+        } />
+        <Route path="games/melodiq/phone" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <MelodiqPhoneClient />
+          </Suspense>
+        } />
       </Route>
     </Routes>
   );
