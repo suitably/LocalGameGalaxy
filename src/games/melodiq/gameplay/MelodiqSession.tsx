@@ -5,6 +5,7 @@ import { parseUltraStarTxt } from '../parser';
 import { PitchVisualizer, type SongWithNotes, type SungSegment } from './PitchVisualizer';
 import { LyricsDisplay } from './LyricsDisplay';
 import { MicrophoneManager, type PitchResult } from '../audio/MicrophoneManager';
+import { WebRTCMicManager } from '../audio/WebRTCMicManager';
 import { type UserProfile, type ActivePlayer } from '../MelodiqSettings';
 import { ScoreBoard } from './ScoreBoard';
 
@@ -19,7 +20,13 @@ interface MelodiqSessionProps {
 
 // Helper class to manage runtime state for a single player
 class PlayerRuntime {
-    public mic: MicrophoneManager;
+    // Local Mic
+    public mic: MicrophoneManager | null = null;
+
+    // Remote Mic
+    public remotePeerId: string | null = null;
+    public webRtcManager: WebRTCMicManager | null = null;
+
     public score: number = 0;
 
     // Stable refs for high-frequency updates without React renders
@@ -29,11 +36,39 @@ class PlayerRuntime {
     // Helper to track active segment for optimization
     public activeSegment: SungSegment | null = null;
 
-    public config: UserProfile & { deviceId: string; volume?: number; muted?: boolean; latency?: number };
+    public config: UserProfile & { deviceId: string; volume?: number; muted?: boolean; latency?: number; isRemote?: boolean };
 
-    constructor(config: UserProfile & { deviceId: string; volume?: number; muted?: boolean; latency?: number }) {
-        this.mic = new MicrophoneManager();
+    constructor(
+        config: UserProfile & { deviceId: string; volume?: number; muted?: boolean; latency?: number; isRemote?: boolean },
+        webRtcManager?: WebRTCMicManager
+    ) {
         this.config = config;
+
+        if (config.isRemote && webRtcManager) {
+            this.webRtcManager = webRtcManager;
+            this.remotePeerId = config.deviceId; // For remote, deviceId is the peerId
+        } else {
+            this.mic = new MicrophoneManager();
+        }
+    }
+
+    getPitch(): PitchResult | null {
+        if (this.mic) return this.mic.getPitch();
+        if (this.webRtcManager && this.remotePeerId) {
+            return this.webRtcManager.getPitch(this.remotePeerId);
+        }
+        return null;
+    }
+
+    start(): Promise<void> {
+        if (this.mic && this.config.deviceId) {
+            return this.mic.start(this.config.deviceId, this.config.volume, this.config.muted);
+        }
+        return Promise.resolve();
+    }
+
+    stop(): void {
+        this.mic?.stop();
     }
 }
 
@@ -169,10 +204,57 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
 
             setPlayers(newPlayers);
         } else {
-            // Fallback for immediate migration issues or first run without settings
             console.warn("No dynamic settings found, falling back to empty session.");
         }
+
+        // Initialize WebRTC Manager if configured
+        const partyId = localStorage.getItem('melodiq_party_id');
+        const trackerUrlsStr = localStorage.getItem('melodiq_tracker_urls');
+
+        let cleanupWebRTC: (() => void) | undefined;
+
+        if (partyId && trackerUrlsStr) {
+            const trackerUrls = JSON.parse(trackerUrlsStr);
+            const manager = new WebRTCMicManager(partyId, trackerUrls, {
+                onPeerConnected: (peerId, name) => {
+                    console.log('Phone connected:', name, peerId);
+                    setPlayers(prev => {
+                        // Check if already exists to avoid dupes
+                        if (prev.some(p => p.config.deviceId === peerId)) return prev;
+
+                        const newProfile: UserProfile = {
+                            id: peerId, // Use peerId as profileId for now
+                            name: name,
+                            hue: Math.floor(Math.random() * 360)
+                        };
+
+                        const newPlayer = new PlayerRuntime({
+                            ...newProfile,
+                            deviceId: peerId,
+                            volume: 1.0,
+                            muted: false,
+                            latency: 0,
+                            isRemote: true
+                        }, manager);
+
+                        return [...prev, newPlayer];
+                    });
+                },
+                onPeerDisconnected: (peerId) => {
+                    console.log('Phone disconnected:', peerId);
+                    setPlayers(prev => prev.filter(p => p.config.deviceId !== peerId));
+                }
+            });
+
+            manager.start().catch(err => console.error("Failed to start WebRTC Manager", err));
+            cleanupWebRTC = () => manager.stop();
+        }
+
         setReady(true);
+
+        return () => {
+            if (cleanupWebRTC) cleanupWebRTC();
+        };
     }, []);
 
     const togglePlay = useCallback(() => {
@@ -212,7 +294,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                 volume: 1.0
             };
         } else {
-            pitch = player.mic.getPitch();
+            pitch = player.getPitch();
         }
         player.pitchRef.current = pitch;
 
@@ -292,18 +374,15 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         if (!ready || players.length === 0) return;
 
         players.forEach(p => {
-            if (p.config.deviceId) {
-                const vol = (p.config.volume ?? 0.8) * masterVolume;
-                const muted = p.config.muted ?? false;
-                p.mic.start(p.config.deviceId, vol, muted).catch(e => console.error(`Failed to start mic for ${p.config.name}`, e));
-            }
+            // start() now handles null check internally
+            p.start().catch(e => console.error(`Failed to start mic for ${p.config.name}`, e));
         });
 
         requestRef.current = requestAnimationFrame(updateLoop);
 
         return () => {
             cancelAnimationFrame(requestRef.current);
-            players.forEach(p => p.mic.stop());
+            players.forEach(p => p.stop());
         };
     }, [ready, players, updateLoop]);
 
@@ -538,7 +617,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                         <Box sx={{ display: 'flex', gap: 2 }}>
                             {players.map(p => (
                                 <Typography key={p.config.id} variant="caption" sx={{ color: `hsl(${p.config.hue}, 100%, 70%)` }}>
-                                    {p.config.name} Mic: {p.mic.isActive ? 'On' : 'Off'}
+                                    {p.config.name} Mic: {p.mic?.isActive ? 'On' : (p.webRtcManager ? 'Remote' : 'Off')}
                                 </Typography>
                             ))}
                         </Box>

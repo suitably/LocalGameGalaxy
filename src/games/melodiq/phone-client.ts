@@ -7,6 +7,8 @@ const reconnectBtn = document.getElementById('reconnect')!;
 let peer: SimplePeer.Instance | null = null;
 let trackerClient: Client | null = null;
 let mediaStream: MediaStream | null = null;
+const handledTrackerPeers: Set<string> = new Set(); // Track handled tracker peers to avoid duplicates
+let audioPeerCreated = false; // Global flag: only ONE audio peer ever
 
 function setStatus(message: string, className: string) {
     statusEl.textContent = message;
@@ -46,7 +48,9 @@ function stringToInfoHash(str: string): Uint8Array {
 }
 
 function generatePeerId(): string {
-    return `phone-${Math.random().toString(36).substring(2, 15)}`;
+    const array = new Uint8Array(10);
+    crypto.getRandomValues(array);
+    return '01234567890123456789' + Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 async function connect(partyId: string, trackerUrls: string[]) {
@@ -89,47 +93,111 @@ async function connect(partyId: string, trackerUrls: string[]) {
 }
 
 function setupPeerConnection(trackerPeer: any) {
-    peer = new SimplePeer({
-        initiator: false,
-        trickle: true,
-        stream: mediaStream!,
-        config: {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-            ],
-        },
-    });
+    // Use the trackerPeer's unique ID to prevent duplicate audio peer creation
+    const trackerPeerId = trackerPeer._id || trackerPeer.channelName || Math.random().toString(36);
+    if (handledTrackerPeers.has(trackerPeerId)) {
+        console.log('[Phone] Ignoring duplicate tracker peer:', trackerPeerId);
+        return;
+    }
+    handledTrackerPeers.add(trackerPeerId);
 
-    peer.on('signal', (data: any) => {
-        console.log('[Phone] Sending signal to host');
-        if (trackerPeer && typeof trackerPeer.signal === 'function') {
-            trackerPeer.signal(data);
-        }
-    });
+    console.log('[Phone] Tracker peer found. Waiting for Host signal...', trackerPeerId);
 
-    peer.on('connect', () => {
-        console.log('[Phone] Connected to host!');
-        setStatus('✅ Connected', 'status-connected');
-        reconnectBtn.style.display = 'none';
-    });
+    const setupAudioPeer = () => {
+        console.log('[Phone] Tracker peer connected. Waiting for Host to initiate...');
 
-    peer.on('error', (err: Error) => {
-        console.error('[Phone] Peer error:', err);
-        setStatus('Connection lost', 'status-error');
-        reconnectBtn.style.display = 'block';
-    });
+        // Wait for the Host to send the first signal (offer), then create our peer
+        const onData = (data: Uint8Array | string) => {
+            try {
+                const str = (typeof data === 'string') ? data : new TextDecoder().decode(data);
+                const parts = str.split('\n');
 
-    peer.on('close', () => {
-        console.log('[Phone] Connection closed');
-        setStatus('Disconnected', 'status-disconnected');
-        reconnectBtn.style.display = 'block';
-    });
+                for (const part of parts) {
+                    if (!part.trim()) continue;
+                    try {
+                        const signal = JSON.parse(part);
 
-    if (trackerPeer && typeof trackerPeer.signal === 'function') {
-        trackerPeer.on('signal', (data: any) => {
-            peer!.signal(data);
-        });
+                        // Create peer on first signal from Host (and only if we haven't created one already)
+                        if (!audioPeerCreated) {
+                            console.log('[Phone] Received first signal from Host. Creating audio peer...');
+                            audioPeerCreated = true;
+
+                            peer = new SimplePeer({
+                                initiator: false,
+                                trickle: true,
+                                stream: mediaStream!,
+                                config: {
+                                    iceServers: [
+                                        { urls: 'stun:stun.l.google.com:19302' },
+                                        { urls: 'stun:global.stun.twilio.com:3478' },
+                                        // Free TURN server for NAT traversal
+                                        {
+                                            urls: 'turn:numb.viagenie.ca',
+                                            username: 'webrtc@live.com',
+                                            credential: 'muazkh',
+                                        },
+                                    ],
+                                },
+                            });
+
+                            // Send our signals back to Host
+                            peer.on('signal', (data: any) => {
+                                console.log('[Phone] Sending signal to host');
+                                if (trackerPeer.connected) {
+                                    try {
+                                        trackerPeer.send(JSON.stringify(data) + '\n');
+                                    } catch (e) {
+                                        console.error('[Phone] Failed to send signal:', e);
+                                    }
+                                }
+                            });
+
+                            peer.on('connect', () => {
+                                console.log('[Phone] Connected to host!');
+                                setStatus('✅ Connected', 'status-connected');
+                                reconnectBtn.style.display = 'none';
+                            });
+
+                            peer.on('error', (err: Error) => {
+                                console.error('[Phone] Peer error:', err);
+                                setStatus('Connection lost', 'status-error');
+                                reconnectBtn.style.display = 'block';
+                                trackerPeer.off('data', onData);
+                            });
+
+                            peer.on('close', () => {
+                                console.log('[Phone] Connection closed');
+                                setStatus('Disconnected', 'status-disconnected');
+                                reconnectBtn.style.display = 'block';
+                                trackerPeer.off('data', onData);
+                            });
+
+                            trackerPeer.on('close', () => {
+                                if (peer) peer.destroy();
+                            });
+
+                            // Process the first signal immediately
+                            peer.signal(signal);
+                        } else {
+                            // Forward subsequent signals to existing peer
+                            peer?.signal(signal);
+                        }
+                    } catch (e) {
+                        console.error('[Phone] Failed to parse individual signal chunk:', part, e);
+                    }
+                }
+            } catch (e) {
+                console.error('[Phone] Failed to process received data:', e);
+            }
+        };
+
+        trackerPeer.on('data', onData);
+    };
+
+    if (trackerPeer.connected) {
+        setupAudioPeer();
+    } else {
+        trackerPeer.on('connect', setupAudioPeer);
     }
 }
 
@@ -148,15 +216,24 @@ function cleanup() {
     }
 }
 
-function reconnect() {
+async function reconnect() {
     cleanup();
     const partyId = getPartyIdFromUrl();
     if (partyId) {
-        const trackerUrls = [
+        // Deduplicate using Set
+        const uniqueTrackers = Array.from(new Set([
+            `ws://${window.location.hostname}:8000`,
             'wss://tracker.openwebtorrent.com',
             'wss://tracker.fastcast.nz',
-        ];
-        connect(partyId, trackerUrls);
+            'wss://webtorrent.io',
+            'wss://tracker.sloppy.zone:8000',
+            'wss://tracker.btorrent.xyz',
+            'wss://wz.webtorrent.dev'
+        ]));
+
+        console.log('[Phone] Starting with trackers:', uniqueTrackers);
+
+        await connect(partyId, uniqueTrackers);
     }
 }
 
@@ -165,11 +242,19 @@ const partyId = getPartyIdFromUrl();
 if (!partyId) {
     setStatus('❌ No Party ID', 'status-error');
 } else {
-    const trackerUrls = [
+    // Deduplicate using Set
+    const uniqueTrackers = Array.from(new Set([
+        `ws://${window.location.hostname}:8000`,
         'wss://tracker.openwebtorrent.com',
         'wss://tracker.fastcast.nz',
-    ];
-    connect(partyId, trackerUrls);
+        'wss://webtorrent.io',
+        'wss://tracker.sloppy.zone:8000',
+        'wss://tracker.btorrent.xyz',
+        'wss://wz.webtorrent.dev'
+    ]));
+
+    console.log('[Phone] Starting with trackers:', uniqueTrackers);
+    connect(partyId, uniqueTrackers);
 }
 
 reconnectBtn.addEventListener('click', reconnect);

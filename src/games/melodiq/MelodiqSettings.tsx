@@ -8,6 +8,7 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { MicrophoneManager } from './audio/MicrophoneManager';
+import { WebRTCMicManager } from './audio/WebRTCMicManager';
 import { LatencyCalibrator } from './components/LatencyCalibrator';
 import QRCode from 'qrcode';
 
@@ -133,12 +134,52 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
     const [trackerUrls, setTrackerUrls] = useState<string[]>(() => {
         const stored = localStorage.getItem('melodiq_tracker_urls');
         return stored ? JSON.parse(stored) : [
+            `ws://${window.location.hostname}:8000`, // Auto-add local tracker first!
             'wss://tracker.openwebtorrent.com',
-            'wss://tracker.fastcast.nz'
+            'wss://tracker.fastcast.nz',
+            'wss://webtorrent.io',
+            'wss://tracker.sloppy.zone:8000',
+            'wss://tracker.btorrent.xyz',
+            'wss://wz.webtorrent.dev'
         ];
     });
     const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
     const [newTrackerUrl, setNewTrackerUrl] = useState('');
+    const [connectedPreviewPeers, setConnectedPreviewPeers] = useState<string[]>([]);
+
+
+
+    // Preview Connection Effect (with automatic local tracker injection)
+    useEffect(() => {
+        if (!partyId) return;
+
+        // Use 127.0.0.1 instead of localhost to avoid IPv6 resolution issues
+        const hostname = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+        const localTracker = `ws://${hostname}:8000`;
+
+        // Build final tracker list: local tracker first, then user-configured trackers (excluding any localhost variants)
+        const cleaned = trackerUrls.filter(url => !url.includes('localhost') && !url.includes('127.0.0.1'));
+        const finalTrackers = [localTracker, ...cleaned];
+
+        if (finalTrackers.length === 0) return;
+
+        console.log('[Settings] Starting WebRTCMicManager with trackers:', finalTrackers);
+        const manager = new WebRTCMicManager(partyId, finalTrackers, {
+            onPeerConnected: (peerId) => {
+                setConnectedPreviewPeers(prev => [...prev, peerId]);
+            },
+            onPeerDisconnected: (peerId) => {
+                setConnectedPreviewPeers(prev => prev.filter(p => p !== peerId));
+            }
+        });
+
+        manager.start().catch(console.error);
+
+        return () => {
+            console.log('[Settings] Stopping WebRTCMicManager');
+            manager.stop();
+        };
+    }, [partyId, trackerUrls]); // Re-run if ID or Trackers change
 
     // Color Picker State
     const [colorAnchorEl, setColorAnchorEl] = useState<HTMLElement | null>(null);
@@ -287,6 +328,18 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
 
     const removeTrackerUrl = (url: string) => {
         setTrackerUrls(trackerUrls.filter(u => u !== url));
+    };
+
+    const restoreDefaultTrackers = () => {
+        setTrackerUrls([
+            `ws://${window.location.hostname}:8000`, // Auto-add local tracker
+            'wss://tracker.openwebtorrent.com',
+            'wss://tracker.fastcast.nz',
+            'wss://webtorrent.io',
+            'wss://tracker.sloppy.zone:8000',
+            'wss://tracker.btorrent.xyz',
+            'wss://wz.webtorrent.dev'
+        ]);
     };
 
 
@@ -558,7 +611,22 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
 
                         {/* Tracker URLs */}
                         <Box>
-                            <Typography variant="subtitle2" gutterBottom>Tracker URLs</Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Typography variant="subtitle2" gutterBottom>Tracker URLs</Typography>
+                                <Button size="small" onClick={restoreDefaultTrackers} sx={{ fontSize: '0.7rem' }}>
+                                    Restore Defaults
+                                </Button>
+                            </Box>
+
+                            {/* Connection Preview Status */}
+                            {connectedPreviewPeers.length > 0 && (
+                                <Box sx={{ mb: 1, p: 1, bgcolor: 'rgba(74, 222, 128, 0.1)', border: '1px solid rgba(74, 222, 128, 0.3)', borderRadius: 1 }}>
+                                    <Typography variant="caption" sx={{ color: '#4ade80' }}>
+                                        ✅ {connectedPreviewPeers.length} Phone(s) Connected Successfully!
+                                    </Typography>
+                                </Box>
+                            )}
+
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                 {trackerUrls.map((url, index) => (
                                     <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
