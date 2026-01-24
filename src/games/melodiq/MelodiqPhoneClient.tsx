@@ -93,12 +93,6 @@ export const MelodiqPhoneClient = () => {
                                         iceServers: [
                                             { urls: 'stun:stun.l.google.com:19302' },
                                             { urls: 'stun:global.stun.twilio.com:3478' },
-                                            // Free TURN server for NAT traversal
-                                            {
-                                                urls: 'turn:numb.viagenie.ca',
-                                                username: 'webrtc@live.com',
-                                                credential: 'muazkh',
-                                            },
                                         ],
                                     },
                                 });
