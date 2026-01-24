@@ -221,11 +221,9 @@ async function reconnect() {
     const partyId = getPartyIdFromUrl();
     if (partyId) {
         // Deduplicate using Set
-        // Reliable public trackers only
+        // Reliable public trackers only - SINGLE default to ensure matching
         const reliableTrackers = [
             'wss://tracker.openwebtorrent.com',
-            'wss://tracker.webtorrent.io',
-            'wss://tracker.files.fm:7073/announce',
         ];
 
         // Only add local tracker if we are actually on localhost
@@ -246,11 +244,9 @@ const partyId = getPartyIdFromUrl();
 if (!partyId) {
     setStatus('❌ No Party ID', 'status-error');
 } else {
-    // Reliable public trackers only - no local dev trackers in production
+    // Reliable public trackers only - SINGLE default to ensure matching
     const reliableTrackers = [
         'wss://tracker.openwebtorrent.com',
-        'wss://tracker.webtorrent.io',
-        'wss://tracker.files.fm:7073/announce',
     ];
 
     // Only add local tracker if we are actually on localhost

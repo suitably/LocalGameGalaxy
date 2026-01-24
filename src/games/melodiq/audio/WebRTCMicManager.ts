@@ -58,10 +58,9 @@ export class WebRTCMicManager {
         });
 
         // Always add reliable public trackers
+        // Use ONLY ONE reliable default to ensure all peers meet in the same "room"
         const reliableTrackers = [
             'wss://tracker.openwebtorrent.com',
-            'wss://tracker.webtorrent.io',
-            'wss://tracker.files.fm:7073/announce',
         ];
 
         // Merge and deduplicate

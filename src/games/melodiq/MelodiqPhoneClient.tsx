@@ -224,11 +224,9 @@ export const MelodiqPhoneClient = () => {
         cleanup();
         const partyId = getPartyIdFromUrl();
         if (partyId) {
-            // Reliable public trackers only
+            // Reliable public trackers only - SINGLE default to ensure matching
             const reliableTrackers = [
                 'wss://tracker.openwebtorrent.com',
-                'wss://tracker.webtorrent.io',
-                'wss://tracker.files.fm:7073/announce',
             ];
 
             // Only add local tracker if we are actually on localhost
@@ -247,11 +245,9 @@ export const MelodiqPhoneClient = () => {
             updateStatus('❌ No Party ID', 'status-error');
         } else {
             // Deduplicate using Set to prevent multiple connections to the same tracker
-            // Reliable public trackers only - no local dev trackers in production
+            // Reliable public trackers only - SINGLE default to ensure matching
             const reliableTrackers = [
                 'wss://tracker.openwebtorrent.com',
-                'wss://tracker.webtorrent.io',
-                'wss://tracker.files.fm:7073/announce',
             ];
 
             // Only add local tracker if we are actually on localhost
