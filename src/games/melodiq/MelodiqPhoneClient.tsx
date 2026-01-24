@@ -183,6 +183,11 @@ export const MelodiqPhoneClient = () => {
             updateStatus('Connecting to party...', 'status-connecting');
 
             const infoHash = stringToInfoHash(partyId);
+            console.log('[Phone] Generated InfoHash for Party ID:', partyId);
+            // Convert Uint8Array to hex string manually for logging
+            const infoHashHex = Array.from(infoHash).map(b => b.toString(16).padStart(2, '0')).join('');
+            console.log('[Phone] InfoHash (Hex):', infoHashHex);
+
             const peerId = generatePeerId();
 
             const trackerClient = new Client({

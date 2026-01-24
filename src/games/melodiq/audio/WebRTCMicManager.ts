@@ -38,6 +38,9 @@ export class WebRTCMicManager {
         // Create a tracker client as the "host"
         // We use the partyId as the infoHash
         const infoHash = this.stringToInfoHash(this.partyId);
+        console.log('[WebRTCMicManager] Generated InfoHash for Party ID:', this.partyId);
+        const infoHashHex = Array.from(infoHash).map(b => b.toString(16).padStart(2, '0')).join('');
+        console.log('[WebRTCMicManager] InfoHash (Hex):', infoHashHex);
         const peerId = this.generatePeerId();
 
         const isSecure = window.location.protocol === 'https:';
