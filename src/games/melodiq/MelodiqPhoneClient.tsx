@@ -224,16 +224,20 @@ export const MelodiqPhoneClient = () => {
         cleanup();
         const partyId = getPartyIdFromUrl();
         if (partyId) {
-            const trackerUrls = [
-                `ws://${window.location.hostname}:8000`, // Auto-add local tracker
+            // Reliable public trackers only
+            const reliableTrackers = [
                 'wss://tracker.openwebtorrent.com',
-                'wss://tracker.fastcast.nz',
-                'wss://webtorrent.io',
-                'wss://tracker.sloppy.zone:8000',
-                'wss://tracker.btorrent.xyz',
-                'wss://wz.webtorrent.dev'
+                'wss://tracker.webtorrent.io',
+                'wss://tracker.files.fm:7073/announce',
             ];
-            connect(partyId, trackerUrls);
+
+            // Only add local tracker if we are actually on localhost
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                reliableTrackers.unshift(`ws://${window.location.hostname}:8000`);
+            }
+
+            const uniqueTrackers = Array.from(new Set(reliableTrackers));
+            connect(partyId, uniqueTrackers);
         }
     };
 
@@ -243,15 +247,20 @@ export const MelodiqPhoneClient = () => {
             updateStatus('❌ No Party ID', 'status-error');
         } else {
             // Deduplicate using Set to prevent multiple connections to the same tracker
-            const uniqueTrackers = Array.from(new Set([
-                `ws://${window.location.hostname}:8000`, // Auto-add local tracker
+            // Reliable public trackers only - no local dev trackers in production
+            const reliableTrackers = [
                 'wss://tracker.openwebtorrent.com',
-                'wss://tracker.fastcast.nz',
-                'wss://webtorrent.io',
-                'wss://tracker.sloppy.zone:8000',
-                'wss://tracker.btorrent.xyz',
-                'wss://wz.webtorrent.dev'
-            ]));
+                'wss://tracker.webtorrent.io',
+                'wss://tracker.files.fm:7073/announce',
+            ];
+
+            // Only add local tracker if we are actually on localhost
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                reliableTrackers.unshift(`ws://${window.location.hostname}:8000`);
+            }
+
+            // Deduplicate
+            const uniqueTrackers = Array.from(new Set(reliableTrackers));
             connect(partyId, uniqueTrackers);
         }
 

@@ -40,10 +40,38 @@ export class WebRTCMicManager {
         const infoHash = this.stringToInfoHash(this.partyId);
         const peerId = this.generatePeerId();
 
+        const isSecure = window.location.protocol === 'https:';
+
+        // Filter and process tracker URLs based on environment
+        const validTrackers = this.trackerUrls.map(url => {
+            // If we are on HTTPS, we MUST use WSS
+            if (isSecure && url.startsWith('ws:')) {
+                return url.replace('ws:', 'wss:');
+            }
+            return url;
+        }).filter(url => {
+            // Remove local trackers in production unless we are on localhost
+            if (url.includes('localhost') || url.includes('127.0.0.1') || url.includes(':8000')) {
+                return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            }
+            return true;
+        });
+
+        // Always add reliable public trackers
+        const reliableTrackers = [
+            'wss://tracker.openwebtorrent.com',
+            'wss://tracker.webtorrent.io',
+            'wss://tracker.files.fm:7073/announce',
+        ];
+
+        // Merge and deduplicate
+        const finalTrackers = Array.from(new Set([...validTrackers, ...reliableTrackers]));
+        console.log('[WebRTCMicManager] Using trackers:', finalTrackers);
+
         this.trackerClient = new Client({
             infoHash,
             peerId,
-            announce: this.trackerUrls,
+            announce: finalTrackers,
             port: 0, // Not used for WebRTC
         });
 
