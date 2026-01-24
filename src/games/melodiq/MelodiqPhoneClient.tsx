@@ -53,6 +53,9 @@ export const MelodiqPhoneClient = () => {
             mediaStreamRef.current.getTracks().forEach(track => track.stop());
             mediaStreamRef.current = null;
         }
+        // Reset state refs
+        handledTrackerPeersRef.current.clear();
+        audioPeerCreatedRef.current = false;
     };
 
     const setupPeerConnection = (trackerPeer: any) => {
@@ -87,7 +90,7 @@ export const MelodiqPhoneClient = () => {
 
                                 const peer = new SimplePeer({
                                     initiator: false,
-                                    trickle: true,
+                                    trickle: false,
                                     stream: mediaStreamRef.current!,
                                     config: {
                                         iceServers: [

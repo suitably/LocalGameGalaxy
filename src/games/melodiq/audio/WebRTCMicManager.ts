@@ -119,7 +119,7 @@ export class WebRTCMicManager {
 
             const audioPeer = new SimplePeer({
                 initiator: true, // Host initiates the audio connection
-                trickle: true,
+                trickle: false,
                 config: {
                     iceServers: [
                         { urls: 'stun:stun.l.google.com:19302' },
