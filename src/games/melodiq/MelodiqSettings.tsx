@@ -153,11 +153,17 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
 
         // Use 127.0.0.1 instead of localhost to avoid IPv6 resolution issues
         const hostname = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-        const localTracker = `ws://${hostname}:8000`;
 
-        // Build final tracker list: local tracker first, then user-configured trackers (excluding any localhost variants)
-        const cleaned = trackerUrls.filter(url => !url.includes('localhost') && !url.includes('127.0.0.1'));
-        const finalTrackers = [localTracker, ...cleaned];
+        // Build final tracker list
+        // Filter out localhost/127.0.0.1 from stored list to avoid dupes/conflicts
+        const cleaned = trackerUrls.filter(url => !url.includes('localhost') && !url.includes('127.0.0.1') && !url.includes(':8000'));
+
+        const finalTrackers = [...cleaned];
+
+        // Only add local tracker if we are actually ON localhost/127.0.0.1
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            finalTrackers.unshift(`ws://${hostname}:8000`);
+        }
 
         if (finalTrackers.length === 0) return;
 
