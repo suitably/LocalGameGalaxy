@@ -95,63 +95,79 @@ export const MelodiqPhoneClient = () => {
 
                             // Create peer on first signal from Host (and only if we haven't created one already)
                             if (!audioPeerCreatedRef.current) {
-                                console.log('[Phone] Received first signal from Host. Creating audio peer...');
+                                if (signal.type !== 'offer') {
+                                    console.warn('[Phone] Received non-offer signal first:', signal.type);
+                                    continue;
+                                }
+
+                                console.log('[Phone] Received Offer from Host. Creating audio peer...');
                                 audioPeerCreatedRef.current = true;
 
-                                const peer = new SimplePeer({
-                                    initiator: false,
-                                    trickle: false,
-                                    stream: mediaStreamRef.current!,
-                                    config: {
-                                        iceServers: [
-                                            { urls: 'stun:stun.l.google.com:19302' },
-                                            { urls: 'stun:global.stun.twilio.com:3478' },
-                                        ],
-                                    },
-                                });
+                                // Delay slightly to ensure cleaner execution stack
+                                setTimeout(() => {
+                                    try {
+                                        const peer = new SimplePeer({
+                                            initiator: false,
+                                            trickle: false,
+                                            stream: mediaStreamRef.current!,
+                                            config: {
+                                                iceServers: [
+                                                    { urls: 'stun:stun.l.google.com:19302' },
+                                                    { urls: 'stun:global.stun.twilio.com:3478' },
+                                                ],
+                                            },
+                                        });
 
-                                peerRef.current = peer;
+                                        peerRef.current = peer;
 
-                                // Send our signals back to Host
-                                peer.on('signal', (data: any) => {
-                                    console.log('[Phone] Sending signal to host');
-                                    if (trackerPeer.connected) {
-                                        try {
-                                            trackerPeer.send(JSON.stringify(data) + '\n');
-                                        } catch (e) {
-                                            console.error('[Phone] Failed to send signal:', e);
-                                        }
+                                        // Send our signals back to Host
+                                        peer.on('signal', (data: any) => {
+                                            console.log('[Phone] Sending signal to host:', data.type);
+                                            if (trackerPeer.connected) {
+                                                try {
+                                                    trackerPeer.send(JSON.stringify(data) + '\n');
+                                                } catch (e) {
+                                                    console.error('[Phone] Failed to send signal:', e);
+                                                }
+                                            }
+                                        });
+
+                                        peer.on('connect', () => {
+                                            console.log('[Phone] Connected to host!');
+                                            updateStatus('✅ Connected', 'status-connected');
+                                            setShowReconnect(false);
+                                        });
+
+                                        peer.on('error', (err: Error) => {
+                                            console.error('[Phone] Peer error:', err);
+                                            updateStatus(`Connection lost: ${err.message}`, 'status-error');
+                                            setShowReconnect(true);
+                                            trackerPeer.off('data', onData);
+                                        });
+
+                                        peer.on('close', () => {
+                                            console.log('[Phone] Connection closed');
+                                            updateStatus('Disconnected', 'status-disconnected');
+                                            setShowReconnect(true);
+                                            trackerPeer.off('data', onData);
+                                        });
+
+                                        trackerPeer.on('close', () => {
+                                            peer.destroy();
+                                        });
+
+                                        // Process the Offer
+                                        console.log('[Phone] Signaling Offer to Peer...');
+                                        peer.signal(signal);
+                                    } catch (err) {
+                                        console.error('[Phone] Failed to create/signal peer:', err);
+                                        audioPeerCreatedRef.current = false; // Reset if failed
                                     }
-                                });
+                                }, 100);
 
-                                peer.on('connect', () => {
-                                    console.log('[Phone] Connected to host!');
-                                    updateStatus('✅ Connected', 'status-connected');
-                                    setShowReconnect(false);
-                                });
-
-                                peer.on('error', (err: Error) => {
-                                    console.error('[Phone] Peer error:', err);
-                                    updateStatus('Connection lost', 'status-error');
-                                    setShowReconnect(true);
-                                    trackerPeer.off('data', onData);
-                                });
-
-                                peer.on('close', () => {
-                                    console.log('[Phone] Connection closed');
-                                    updateStatus('Disconnected', 'status-disconnected');
-                                    setShowReconnect(true);
-                                    trackerPeer.off('data', onData);
-                                });
-
-                                trackerPeer.on('close', () => {
-                                    peer.destroy();
-                                });
-
-                                // Process the first signal immediately
-                                peer.signal(signal);
                             } else {
                                 // Forward subsequent signals to existing peer
+                                console.log('[Phone] Received subsequent signal:', signal.type);
                                 peerRef.current?.signal(signal);
                             }
                         } catch (e) {
