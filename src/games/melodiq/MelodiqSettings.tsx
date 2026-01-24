@@ -236,13 +236,31 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
         });
     }, []);
 
-    // Generate QR Code when Party ID changes
+    // Generate QR Code when Party ID or Trackers change
     useEffect(() => {
-        const phoneUrl = `${window.location.origin}/games/melodiq/phone?party=${partyId}`;
-        QRCode.toDataURL(phoneUrl, { width: 200, margin: 2 })
+        const url = new URL(`${window.location.origin}/games/melodiq/phone`);
+        url.searchParams.set('party', partyId);
+
+        // Add all tracker URLs to the params
+        trackerUrls.forEach(tracker => {
+            // Filter out localhost trackers for the phone QR code as they won't work on the phone
+            if (!tracker.includes('localhost') && !tracker.includes('127.0.0.1')) {
+                url.searchParams.append('tracker', tracker);
+            }
+        });
+
+        // Heuristic: If we are on a LAN IP (e.g. 192.168.x.x), and we don't have a local tracker in the list,
+        // we might want to suggest one? But for now let's just use what is in the list.
+        // Actually, if the Host is running on localhost, the phone URL generated will look like http://localhost:3000/...
+        // which is useless for the phone.
+        // But if the Host is running on a LAN IP (e.g. 192.168.1.5), then the URL is http://192.168.1.5:3000/...
+        // In that case, we should probably add ws://192.168.1.5:8000 if it's not already there?
+        // But let's stick to the explicit user request: provide the address "via qr code".
+
+        QRCode.toDataURL(url.toString(), { width: 200, margin: 2 })
             .then((url: string) => setQrCodeDataUrl(url))
             .catch((err: Error) => console.error('Failed to generate QR code:', err));
-    }, [partyId]);
+    }, [partyId, trackerUrls]);
 
     // Save Logic
     const handleSave = () => {

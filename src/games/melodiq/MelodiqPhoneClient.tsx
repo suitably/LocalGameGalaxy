@@ -223,6 +223,9 @@ export const MelodiqPhoneClient = () => {
         cleanup();
         const partyId = getPartyIdFromUrl();
         if (partyId) {
+            const params = new URLSearchParams(window.location.search);
+            const urlTrackers = params.getAll('tracker');
+
             // Reliable public trackers only - SINGLE default to ensure matching
             const reliableTrackers = [
                 'wss://tracker.openwebtorrent.com',
@@ -233,7 +236,7 @@ export const MelodiqPhoneClient = () => {
                 reliableTrackers.unshift(`ws://${window.location.hostname}:8000`);
             }
 
-            const uniqueTrackers = Array.from(new Set(reliableTrackers));
+            const uniqueTrackers = Array.from(new Set([...urlTrackers, ...reliableTrackers]));
             connect(partyId, uniqueTrackers);
         }
     };
@@ -243,8 +246,11 @@ export const MelodiqPhoneClient = () => {
         if (!partyId) {
             updateStatus('❌ No Party ID', 'status-error');
         } else {
-            // Deduplicate using Set to prevent multiple connections to the same tracker
-            // Reliable public trackers only - SINGLE default to ensure matching
+            // Get trackers from URL params
+            const params = new URLSearchParams(window.location.search);
+            const urlTrackers = params.getAll('tracker');
+
+            // Reliable public trackers
             const reliableTrackers = [
                 'wss://tracker.openwebtorrent.com',
             ];
@@ -254,8 +260,13 @@ export const MelodiqPhoneClient = () => {
                 reliableTrackers.unshift(`ws://${window.location.hostname}:8000`);
             }
 
+            // Combine reliable trackers with URL-provided trackers
+            const allTrackers = [...urlTrackers, ...reliableTrackers];
+
             // Deduplicate
-            const uniqueTrackers = Array.from(new Set(reliableTrackers));
+            const uniqueTrackers = Array.from(new Set(allTrackers));
+
+            console.log('[Phone] Connecting with trackers:', uniqueTrackers);
             connect(partyId, uniqueTrackers);
         }
 
