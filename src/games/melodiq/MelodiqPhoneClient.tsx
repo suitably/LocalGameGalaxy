@@ -166,7 +166,15 @@ export const MelodiqPhoneClient = () => {
                                 }, 100);
 
                             } else {
-                                // Forward subsequent signals to existing peer
+                                // Forward subsequent signals to existing peer, BUT IGNORE OFFERS
+                                // If we receive another "offer" while we have a peer, it's likely a duplicate or a race.
+                                // Trying to signal an existing peer with a new Offer triggers renegotiation/ICE restart,
+                                // which is failing here. We should only accept answer/candidate signals on an existing peer.
+                                if (signal.type === 'offer') {
+                                    console.log('[Phone] Ignoring subsequent/duplicate Offer.');
+                                    return;
+                                }
+
                                 console.log('[Phone] Received subsequent signal:', signal.type);
                                 peerRef.current?.signal(signal);
                             }
