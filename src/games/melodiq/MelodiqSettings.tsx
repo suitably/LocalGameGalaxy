@@ -134,14 +134,12 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
     const [trackerUrls, setTrackerUrls] = useState<string[]>(() => {
         const stored = localStorage.getItem('melodiq_tracker_urls');
         return stored ? JSON.parse(stored) : [
-            `ws://${window.location.hostname}:8000`, // Auto-add local tracker first!
             'wss://tracker.openwebtorrent.com',
-            'wss://tracker.fastcast.nz',
-            'wss://webtorrent.io',
-            'wss://tracker.sloppy.zone:8000',
-            'wss://tracker.btorrent.xyz',
-            'wss://wz.webtorrent.dev'
-        ];
+        ].concat(
+            (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                ? [`ws://${window.location.hostname}:8000`]
+                : []
+        );
     });
     const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
     const [newTrackerUrl, setNewTrackerUrl] = useState('');
@@ -331,15 +329,11 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
     };
 
     const restoreDefaultTrackers = () => {
-        setTrackerUrls([
-            `ws://${window.location.hostname}:8000`, // Auto-add local tracker
-            'wss://tracker.openwebtorrent.com',
-            'wss://tracker.fastcast.nz',
-            'wss://webtorrent.io',
-            'wss://tracker.sloppy.zone:8000',
-            'wss://tracker.btorrent.xyz',
-            'wss://wz.webtorrent.dev'
-        ]);
+        const reliableDefaults = ['wss://tracker.openwebtorrent.com'];
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            reliableDefaults.unshift(`ws://${window.location.hostname}:8000`);
+        }
+        setTrackerUrls(reliableDefaults);
     };
 
 
