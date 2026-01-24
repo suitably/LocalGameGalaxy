@@ -73,6 +73,8 @@ export const MelodiqPhoneClient = () => {
             console.log('[Phone] Tracker peer connected. Waiting for Host to initiate...');
 
             // Wait for the Host to send the first signal (offer), then create our peer
+            const processedSignalsRef = new Set<string>();
+
             const onData = (data: Uint8Array | string) => {
                 try {
                     const str = (typeof data === 'string') ? data : new TextDecoder().decode(data);
@@ -80,6 +82,14 @@ export const MelodiqPhoneClient = () => {
 
                     for (const part of parts) {
                         if (!part.trim()) continue;
+
+                        // Deduplicate signals: Ignore if we've already processed this exact signal string
+                        if (processedSignalsRef.has(part)) {
+                            console.log('[Phone] Ignoring duplicate signal');
+                            continue;
+                        }
+                        processedSignalsRef.add(part);
+
                         try {
                             const signal = JSON.parse(part);
 

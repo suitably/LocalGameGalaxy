@@ -154,6 +154,8 @@ export class WebRTCMicManager {
             });
 
             // 2. Receive remote signals via trackerPeer data channel
+            const processedSignals = new Set<string>();
+
             const onData = (data: Uint8Array | string) => {
                 try {
                     const str = (typeof data === 'string') ? data : new TextDecoder().decode(data);
@@ -161,6 +163,13 @@ export class WebRTCMicManager {
                     const parts = str.split('\n');
                     for (const part of parts) {
                         if (!part.trim()) continue;
+
+                        if (processedSignals.has(part)) {
+                            console.log('[WebRTCMicManager] Ignoring duplicate signal');
+                            continue;
+                        }
+                        processedSignals.add(part);
+
                         try {
                             const signal = JSON.parse(part);
                             audioPeer.signal(signal);

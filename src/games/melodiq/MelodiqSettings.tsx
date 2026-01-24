@@ -612,7 +612,16 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
                         <Box>
                             <Typography variant="subtitle2" gutterBottom>Phone URL (Fallback)</Typography>
                             <TextField
-                                value={`${window.location.origin}/games/melodiq/phone?party=${partyId}`}
+                                value={(() => {
+                                    const url = new URL(`${window.location.origin}/games/melodiq/phone`);
+                                    url.searchParams.set('party', partyId);
+                                    trackerUrls.forEach(tracker => {
+                                        if (!tracker.includes('localhost') && !tracker.includes('127.0.0.1')) {
+                                            url.searchParams.append('tracker', tracker);
+                                        }
+                                    });
+                                    return url.toString();
+                                })()}
                                 size="small"
                                 fullWidth
                                 variant="outlined"
