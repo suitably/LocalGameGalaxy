@@ -10,6 +10,9 @@ interface PeerInfo {
 interface WebRTCContextType {
     manager: WebRTCMicManager | null;
     peers: PeerInfo[];
+    activePeers: PeerInfo[];
+    inactivePeers: PeerInfo[];
+    togglePeerActive: (peerId: string) => void;
     partyId: string;
     regeneratePartyId: () => void;
     trackerUrls: string[];
@@ -44,6 +47,12 @@ export const WebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [manager, setManager] = useState<WebRTCMicManager | null>(null);
     const [peers, setPeers] = useState<PeerInfo[]>([]);
 
+    // Active/Inactive peer tracking (persisted)
+    const [activePeerIds, setActivePeerIds] = useState<string[]>(() => {
+        const stored = localStorage.getItem('melodiq_active_peer_ids');
+        return stored ? JSON.parse(stored) : [];
+    });
+
     // Persist Config Changes
     useEffect(() => {
         localStorage.setItem('melodiq_party_id', partyId);
@@ -52,6 +61,11 @@ export const WebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     useEffect(() => {
         localStorage.setItem('melodiq_tracker_urls', JSON.stringify(trackerUrls));
     }, [trackerUrls]);
+
+    // Persist active peer IDs
+    useEffect(() => {
+        localStorage.setItem('melodiq_active_peer_ids', JSON.stringify(activePeerIds));
+    }, [activePeerIds]);
 
     // 3. Manager Lifecycle
     useEffect(() => {
@@ -66,6 +80,8 @@ export const WebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     if (prev.some(p => p.id === peerId)) return prev.map(p => p.id === peerId ? { id: peerId, name, hue } : p);
                     return [...prev, { id: peerId, name, hue }];
                 });
+                // Auto-activate new peers
+                setActivePeerIds(prev => prev.includes(peerId) ? prev : [...prev, peerId]);
             },
             onPeerDisconnected: (peerId) => {
                 console.log('[WebRTCProvider] Peer Disconnected:', peerId);
@@ -81,6 +97,8 @@ export const WebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     // Peer doesn't exist yet (identity arrived before stream), add it
                     return [...prev, { id: peerId, name, hue }];
                 });
+                // Auto-activate new peers
+                setActivePeerIds(prev => prev.includes(peerId) ? prev : [...prev, peerId]);
             }
         });
 
@@ -126,6 +144,19 @@ export const WebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setTrackerUrls(defaults);
     }, []);
 
+    // Toggle peer active/inactive
+    const togglePeerActive = useCallback((peerId: string) => {
+        setActivePeerIds(prev =>
+            prev.includes(peerId)
+                ? prev.filter(id => id !== peerId)
+                : [...prev, peerId]
+        );
+    }, []);
+
+    // Computed: active and inactive peers
+    const activePeers = peers.filter(p => activePeerIds.includes(p.id));
+    const inactivePeers = peers.filter(p => !activePeerIds.includes(p.id));
+
     // Ensure we have at least defaults if empty
     useEffect(() => {
         if (trackerUrls.length === 0) {
@@ -137,6 +168,9 @@ export const WebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         <WebRTCContext.Provider value={{
             manager,
             peers,
+            activePeers,
+            inactivePeers,
+            togglePeerActive,
             partyId,
             regeneratePartyId,
             trackerUrls,
