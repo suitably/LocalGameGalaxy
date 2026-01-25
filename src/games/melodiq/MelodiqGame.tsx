@@ -11,9 +11,12 @@ import { MelodiqSettings } from './MelodiqSettings';
 import { formatDuration } from './utils';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
+import { WebRTCProvider } from './audio/WebRTCContext';
+import { MelodiqConnection } from './MelodiqConnection';
+import QrCodeIcon from '@mui/icons-material/QrCode';
 
 // Navigation State
-type View = 'Home' | 'Settings' | 'Session';
+type View = 'Home' | 'Settings' | 'Session' | 'Connection';
 
 export const MelodiqGame: React.FC = () => {
     const { t } = useTranslation();
@@ -70,112 +73,131 @@ export const MelodiqGame: React.FC = () => {
         }
     }
 
-    if (currentView === 'Session' && selectedSong) {
-        return <MelodiqSession
-            song={selectedSong}
-            onExit={() => {
-                setSelectedSong(null);
-                setCurrentView('Home');
-            }}
-            showDebugOverlay={false}
-            showDevSlider={false}
-            showMicStatus={false}
-        />;
-    }
+    // Render the active view inside a single shared WebRTCProvider
+    const renderView = () => {
+        if (currentView === 'Session' && selectedSong) {
+            return <MelodiqSession
+                song={selectedSong}
+                onExit={() => {
+                    setSelectedSong(null);
+                    setCurrentView('Home');
+                }}
+                showDebugOverlay={false}
+                showDevSlider={false}
+                showMicStatus={false}
+            />;
+        }
 
-    if (currentView === 'Settings') {
-        return <MelodiqSettings onBack={() => setCurrentView('Home')} />;
-    }
+        if (currentView === 'Settings') {
+            return <MelodiqSettings onBack={() => setCurrentView('Home')} />;
+        }
+
+        if (currentView === 'Connection') {
+            return <MelodiqConnection onBack={() => setCurrentView('Home')} />;
+        }
+
+        // Home view
+        return (
+            <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+                <input
+                    type="file"
+                    id="fallback-dir-input"
+                    // @ts-ignore
+                    webkitdirectory=""
+                    directory=""
+                    style={{ display: 'none' }}
+                    onChange={handleFallbackImport}
+                />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                    <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <MusicNoteIcon fontSize="large" color="primary" />
+                        Melodiq
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Button
+                            onClick={() => setCurrentView('Settings')}
+                            startIcon={<SettingsIcon />}
+                            variant="outlined"
+                        >
+                            Settings
+                        </Button>
+                        <Button
+                            onClick={() => setCurrentView('Connection')}
+                            startIcon={<QrCodeIcon />}
+                            variant="outlined"
+                        >
+                            Connect Phones
+                        </Button>
+                        <Button
+                            variant="contained"
+                            startIcon={<FolderOpenIcon />}
+                            onClick={() => handleImport(false)}
+                            disabled={importing}
+                        >
+                            {importing ? 'Scanning...' : 'Load Song Directory'}
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            onClick={() => handleImport(true)}
+                            disabled={importing}
+                            size="small"
+                        >
+                            Force Re-import
+                        </Button>
+                    </Box>
+                </Box>
+
+                {importing && stats && (
+                    <Card sx={{ mb: 4, p: 2 }}>
+                        <Typography variant="h6">Importing Library...</Typography>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                            Found: {stats.totalFound} |
+                            New/Updated: {stats.processed} |
+                            Cached: {stats.cached} |
+                            Removed: {stats.removed} |
+                            Errors: {stats.errors}
+                        </Typography>
+                        <LinearProgress
+                            variant="determinate"
+                            value={((stats.processed + stats.cached) / (stats.totalFound || 1)) * 100}
+                        />
+                    </Card>
+                )}
+                {/* Empty State */}
+                {songs?.length === 0 && !importing && (
+                    <Box sx={{ width: '100%', textAlign: 'center', py: 8, opacity: 0.7 }}>
+                        <Typography variant="h5">Your library is empty</Typography>
+                        <Typography>Load a folder with UltraStar songs to begin</Typography>
+                    </Box>
+                )}
+
+                {songs?.length > 0 && (
+                    <VirtuosoGrid
+                        style={{ height: 'calc(100vh - 200px)', width: '100%' }}
+                        totalCount={songs.length}
+                        components={{
+                            List: React.forwardRef((props, ref) => <Grid container spacing={3} {...props} ref={ref as any} />),
+                            Item: React.forwardRef((props, ref) => <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} {...props} ref={ref as any} />)
+                        }}
+                        itemContent={(index: number) => (
+                            <SongCard
+                                song={songs[index]}
+                                onClick={() => {
+                                    setSelectedSong(songs[index]);
+                                    setCurrentView('Session');
+                                }}
+                            />
+                        )}
+                    />
+                )}
+            </Container>
+        );
+    };
 
     return (
-        <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-            <input
-                type="file"
-                id="fallback-dir-input"
-                // @ts-ignore
-                webkitdirectory=""
-                directory=""
-                style={{ display: 'none' }}
-                onChange={handleFallbackImport}
-            />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-                <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <MusicNoteIcon fontSize="large" color="primary" />
-                    Melodiq
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Button
-                        onClick={() => setCurrentView('Settings')}
-                        startIcon={<SettingsIcon />}
-                        variant="outlined"
-                    >
-                        Settings
-                    </Button>
-                    <Button
-                        variant="contained"
-                        startIcon={<FolderOpenIcon />}
-                        onClick={() => handleImport(false)}
-                        disabled={importing}
-                    >
-                        {importing ? 'Scanning...' : 'Load Song Directory'}
-                    </Button>
-                    <Button
-                        variant="outlined"
-                        onClick={() => handleImport(true)}
-                        disabled={importing}
-                        size="small"
-                    >
-                        Force Re-import
-                    </Button>
-                </Box>
-            </Box>
-
-            {/* Old Dialog Removed */}
-
-            {importing && stats && (
-                <Card sx={{ mb: 4, p: 2 }}>
-                    <Typography variant="h6">Importing Library...</Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Found: {stats.totalFound} |
-                        New/Updated: {stats.processed} |
-                        Cached: {stats.cached} |
-                        Removed: {stats.removed} |
-                        Errors: {stats.errors}
-                    </Typography>
-                    <LinearProgress
-                        variant="determinate"
-                        value={((stats.processed + stats.cached) / (stats.totalFound || 1)) * 100}
-                    />
-                </Card>
-            )}
-            {/* Empty State */}
-            {songs?.length === 0 && !importing && (
-                <Box sx={{ width: '100%', textAlign: 'center', py: 8, opacity: 0.7 }}>
-                    <Typography variant="h5">Your library is empty</Typography>
-                    <Typography>Load a folder with UltraStar songs to begin</Typography>
-                </Box>
-            )}
-
-            {songs?.length > 0 && (
-                <VirtuosoGrid
-                    style={{ height: 'calc(100vh - 200px)', width: '100%' }}
-                    totalCount={songs.length}
-                    components={{
-                        List: React.forwardRef((props, ref) => <Grid container spacing={3} {...props} ref={ref as any} />),
-                        Item: React.forwardRef((props, ref) => <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} {...props} ref={ref as any} />)
-                    }}
-                    itemContent={(index: number) => (
-                        <SongCard
-                            song={songs[index]}
-                            onClick={() => {
-                                setSelectedSong(songs[index]);
-                                setCurrentView('Session');
-                            }}
-                        />
-                    )}
-                />
-            )}
-        </Container>
+        <WebRTCProvider>
+            {renderView()}
+        </WebRTCProvider>
     );
 };
 

@@ -220,10 +220,7 @@ async function reconnect() {
             'wss://tracker.openwebtorrent.com',
         ];
 
-        // Only add local tracker if we are actually on localhost
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            reliableTrackers.unshift(`ws://${window.location.hostname}:8000`);
-        }
+
 
         const uniqueTrackers = Array.from(new Set(reliableTrackers));
 
@@ -243,10 +240,7 @@ if (!partyId) {
         'wss://tracker.openwebtorrent.com',
     ];
 
-    // Only add local tracker if we are actually on localhost
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        reliableTrackers.unshift(`ws://${window.location.hostname}:8000`);
-    }
+
 
     // Deduplicate
     const uniqueTrackers = Array.from(new Set(reliableTrackers));

@@ -18,6 +18,8 @@ interface MelodiqSessionProps {
     showMicStatus?: boolean;
 }
 
+import { useWebRTC } from '../audio/WebRTCContext';
+
 // Helper class to manage runtime state for a single player
 class PlayerRuntime {
     // Local Mic
@@ -61,7 +63,7 @@ class PlayerRuntime {
     }
 
     start(): Promise<void> {
-        if (this.mic && this.config.deviceId) {
+        if (this.mic && this.config.deviceId && !this.config.isRemote) {
             return this.mic.start(this.config.deviceId, this.config.volume, this.config.muted);
         }
         return Promise.resolve();
@@ -69,6 +71,16 @@ class PlayerRuntime {
 
     stop(): void {
         this.mic?.stop();
+    }
+
+    attachRemotePeer(manager: WebRTCMicManager, peerId: string) {
+        this.webRtcManager = manager;
+        this.remotePeerId = peerId;
+        // Stop local mic if it was running?
+        if (this.mic && this.mic.isActive) {
+            this.mic.stop();
+            this.mic = null; // Disable local mic effectively
+        }
     }
 }
 
@@ -178,7 +190,10 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         };
     }, [players.length, layoutOverride]);
 
-    // Initialization Effect
+    // WebRTC Context
+    const { manager, peers } = useWebRTC();
+
+    // Initialization Effect: Load Players from Settings
     useEffect(() => {
         const storedProfiles = localStorage.getItem('melodiq_profiles');
         const storedActive = localStorage.getItem('melodiq_active_session');
@@ -197,65 +212,101 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                         deviceId: p.deviceId,
                         volume: p.volume,
                         muted: p.muted,
-                        latency: p.latency
+                        latency: p.latency,
+                        isRemote: p.isRemote // Ensure isRemote is passed
                     }));
                 }
             });
 
+            console.log('[MelodiqSession] Initialized players:', newPlayers.length);
             setPlayers(newPlayers);
+            setReady(true);
         } else {
             console.warn("No dynamic settings found, falling back to empty session.");
+            setReady(true);
         }
+    }, []);
 
-        // Initialize WebRTC Manager if configured
-        const partyId = localStorage.getItem('melodiq_party_id');
-        const trackerUrlsStr = localStorage.getItem('melodiq_tracker_urls');
+    // Sync Players with WebRTC Peers
+    useEffect(() => {
+        if (!manager) return;
 
-        let cleanupWebRTC: (() => void) | undefined;
+        setPlayers(prevPlayers => {
+            let updatedPlayers = [...prevPlayers];
+            let changed = false;
 
-        if (partyId && trackerUrlsStr) {
-            const trackerUrls = JSON.parse(trackerUrlsStr);
-            const manager = new WebRTCMicManager(partyId, trackerUrls, {
-                onPeerConnected: (peerId, name) => {
-                    console.log('Phone connected:', name, peerId);
-                    setPlayers(prev => {
-                        // Check if already exists to avoid dupes
-                        if (prev.some(p => p.config.deviceId === peerId)) return prev;
+            // 1. Attach/Add connected peers
+            peers.forEach(peer => {
+                const existingIdx = updatedPlayers.findIndex(p => p.config.deviceId === peer.id);
 
-                        const newProfile: UserProfile = {
-                            id: peerId, // Use peerId as profileId for now
-                            name: name,
-                            hue: Math.floor(Math.random() * 360)
-                        };
+                if (existingIdx !== -1) {
+                    // Attach to existing player
+                    const player = updatedPlayers[existingIdx];
+                    if (!player.webRtcManager) {
+                        console.log(`[Session] Attaching Phone ${peer.name} to existing player ${player.config.name}`);
+                        player.attachRemotePeer(manager, peer.id);
+                        changed = true;
+                    }
+                } else {
+                    // Create new Guest Player
+                    // Check if we already have this Guest (by checking if any player has this deviceId, which we did above)
+                    // The above check covers it. If existingIdx === -1, it's new.
 
-                        const newPlayer = new PlayerRuntime({
-                            ...newProfile,
-                            deviceId: peerId,
-                            volume: 1.0,
-                            muted: false,
-                            latency: 0,
-                            isRemote: true
-                        }, manager);
+                    console.log(`[Session] New Phone Guest: ${peer.name}`);
+                    const newProfile: UserProfile = {
+                        id: peer.id,
+                        name: peer.name,
+                        hue: peer.hue || Math.floor(Math.random() * 360)
+                    };
 
-                        return [...prev, newPlayer];
-                    });
-                },
-                onPeerDisconnected: (peerId) => {
-                    console.log('Phone disconnected:', peerId);
-                    setPlayers(prev => prev.filter(p => p.config.deviceId !== peerId));
+                    const newPlayer = new PlayerRuntime({
+                        ...newProfile,
+                        deviceId: peer.id, // Device ID is Peer ID
+                        volume: 1.0,
+                        muted: false,
+                        latency: 0,
+                        isRemote: true
+                    }, manager);
+
+                    updatedPlayers.push(newPlayer);
+                    changed = true;
                 }
             });
 
-            manager.start().catch(err => console.error("Failed to start WebRTC Manager", err));
-            cleanupWebRTC = () => manager.stop();
-        }
+            // 2. Handle Disconnected Peers
+            // If a player isRemote, and their deviceId is NOT in peers...
+            // If it was a Guest (profileId == deviceId), remove them.
+            // If it was a configured player, detach? (PlayerRuntime cleanup handles stream end usually)
 
-        setReady(true);
+            // For now, let's remove Guests who disconnected
+            const activePeerIds = new Set(peers.map(p => p.id));
+            const filtered = updatedPlayers.filter(p => {
+                if (p.config.isRemote) {
+                    // If peer is gone
+                    if (!activePeerIds.has(p.config.deviceId)) {
+                        // If Guest (profileId matches deviceId basically)
+                        // Or strict logic: if they were added dynamically.
+                        // Simple heuristic: if profileId === deviceId, it's a guest.
+                        if (p.config.id === p.config.deviceId) {
+                            console.log(`[Session] removing disconnected guest ${p.config.name}`);
+                            changed = true;
+                            return false;
+                        }
+                        // Configured players stay, but are effectively disconnected
+                    }
+                }
+                return true;
+            });
 
-        return () => {
-            if (cleanupWebRTC) cleanupWebRTC();
-        };
-    }, []);
+            if (filtered.length !== updatedPlayers.length) {
+                updatedPlayers = filtered;
+                changed = true;
+            }
+
+            return changed ? updatedPlayers : prevPlayers;
+        });
+
+    }, [peers, manager]);
 
     const togglePlay = useCallback(() => {
         if (audioRef.current) {

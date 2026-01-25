@@ -9,6 +9,7 @@ interface RemotePeer {
     buffer: Float32Array | null;
     peerId: string;
     name: string; // Display name for the phone
+    hue?: number; // Hue for avatar
 }
 
 export class WebRTCMicManager {
@@ -17,21 +18,26 @@ export class WebRTCMicManager {
     private trackerClient: Client | null = null;
     private partyId: string;
     private trackerUrls: string[];
-    private onPeerConnected?: (peerId: string, name: string) => void;
+
+    // Callbacks
+    private onPeerConnected?: (peerId: string, name: string, hue?: number) => void;
     private onPeerDisconnected?: (peerId: string) => void;
+    private onPeerUpdated?: (peerId: string, name: string, hue?: number) => void;
 
     constructor(
         partyId: string,
         trackerUrls: string[],
         callbacks?: {
-            onPeerConnected?: (peerId: string, name: string) => void;
+            onPeerConnected?: (peerId: string, name: string, hue?: number) => void;
             onPeerDisconnected?: (peerId: string) => void;
+            onPeerUpdated?: (peerId: string, name: string, hue?: number) => void;
         }
     ) {
         this.partyId = partyId;
         this.trackerUrls = trackerUrls;
         this.onPeerConnected = callbacks?.onPeerConnected;
         this.onPeerDisconnected = callbacks?.onPeerDisconnected;
+        this.onPeerUpdated = callbacks?.onPeerUpdated;
     }
 
     async start(): Promise<void> {
@@ -184,6 +190,18 @@ export class WebRTCMicManager {
 
                         try {
                             const signal = JSON.parse(part);
+
+                            // Check for identity signal
+                            if (signal.type === 'identify') {
+                                console.log('[WebRTCMicManager] Received identity from phone:', signal.name, signal.hue);
+                                remotePeer.name = signal.name || remotePeer.name;
+                                remotePeer.hue = signal.hue;
+
+                                // Notify listener of update
+                                this.onPeerUpdated?.(peerId, remotePeer.name, remotePeer.hue);
+                                return;
+                            }
+
                             console.log('[WebRTCMicManager] Processing signal from phone:', signal.type);
                             audioPeer.signal(signal);
                         } catch (e) {
@@ -207,7 +225,7 @@ export class WebRTCMicManager {
             audioPeer.on('stream', (stream: MediaStream) => {
                 console.log('[WebRTCMicManager] Received audio stream from phone:', peerId);
                 this.setupAudioProcessing(peerId, stream);
-                this.onPeerConnected?.(peerId, remotePeer.name);
+                this.onPeerConnected?.(peerId, remotePeer.name, remotePeer.hue);
             });
 
             audioPeer.on('error', (err: Error) => {

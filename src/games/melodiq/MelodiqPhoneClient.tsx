@@ -7,13 +7,25 @@ export const MelodiqPhoneClient = () => {
         message: 'Initializing...',
         className: 'status-connecting'
     });
+    const [playerName, setPlayerName] = useState(() => localStorage.getItem('melodiq_phone_name') || `Phone ${Math.floor(Math.random() * 1000)}`);
+    const [playerHue, setPlayerHue] = useState<number>(() => {
+        const stored = localStorage.getItem('melodiq_phone_hue');
+        return stored ? parseInt(stored) : Math.floor(Math.random() * 360);
+    });
     const [showReconnect, setShowReconnect] = useState(false);
 
+    // Refs
     const peerRef = useRef<SimplePeer.Instance | null>(null);
     const trackerClientRef = useRef<Client | null>(null);
     const mediaStreamRef = useRef<MediaStream | null>(null);
     const handledTrackerPeersRef = useRef<Set<string>>(new Set()); // Track handled tracker peers to avoid duplicates
     const audioPeerCreatedRef = useRef<boolean>(false); // Global flag: only ONE audio peer ever
+
+    // Save settings when changed
+    useEffect(() => {
+        localStorage.setItem('melodiq_phone_name', playerName);
+        localStorage.setItem('melodiq_phone_hue', String(playerHue));
+    }, [playerName, playerHue]);
 
     const updateStatus = (message: string, className: string) => {
         setStatus({ message, className });
@@ -56,6 +68,31 @@ export const MelodiqPhoneClient = () => {
         // Reset state refs
         handledTrackerPeersRef.current.clear();
         audioPeerCreatedRef.current = false;
+    };
+
+    // Helper to send Identity
+    const sendIdentity = (peer: SimplePeer.Instance, trackerPeerForSend: any) => {
+        const identityMsg = {
+            type: 'identify',
+            name: playerName,
+            hue: playerHue
+        };
+        console.log('[Phone] Sending identity:', identityMsg);
+
+        // Send via WebRTC data channel if open (most reliable/fast)
+        if ((peer as any).connected) {
+            peer.send(JSON.stringify(identityMsg));
+        }
+
+        // ALSO Send via Tracker signaling channel to ensure it gets there early/reliably 
+        // even if WebRTC data channel isn't fully ready or for redundancy
+        if (trackerPeerForSend && trackerPeerForSend.connected) {
+            try {
+                trackerPeerForSend.send(JSON.stringify(identityMsg) + '\n');
+            } catch (e) {
+                console.error('[Phone] Failed to send identity via tracker:', e);
+            }
+        }
     };
 
     const setupPeerConnection = (trackerPeer: any) => {
@@ -136,6 +173,9 @@ export const MelodiqPhoneClient = () => {
                                             console.log('[Phone] Connected to host!');
                                             updateStatus('✅ Connected', 'status-connected');
                                             setShowReconnect(false);
+
+                                            // Send Identity immediately upon connection
+                                            sendIdentity(peer, trackerPeer);
                                         });
 
                                         peer.on('error', (err: Error) => {
@@ -268,10 +308,7 @@ export const MelodiqPhoneClient = () => {
                 'wss://tracker.openwebtorrent.com',
             ];
 
-            // Only add local tracker if we are actually on localhost
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                reliableTrackers.unshift(`ws://${window.location.hostname}:8000`);
-            }
+
 
             const uniqueTrackers = Array.from(new Set([...urlTrackers, ...reliableTrackers]));
             connect(partyId, uniqueTrackers);
@@ -292,10 +329,7 @@ export const MelodiqPhoneClient = () => {
                 'wss://tracker.openwebtorrent.com',
             ];
 
-            // Only add local tracker if we are actually on localhost
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                reliableTrackers.unshift(`ws://${window.location.hostname}:8000`);
-            }
+
 
             // Combine reliable trackers with URL-provided trackers
             const allTrackers = [...urlTrackers, ...reliableTrackers];
@@ -311,62 +345,106 @@ export const MelodiqPhoneClient = () => {
     }, []);
 
     return (
-        <div style={{
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif',
-            background: '#121212',
-            color: 'white',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '100vh',
-            padding: '20px',
-            margin: 0,
-        }}>
-            <div style={{ textAlign: 'center', maxWidth: '400px', width: '100%' }}>
-                <h1 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#90caf9' }}>🎤 Melodiq Phone Mic</h1>
-                <div
-                    style={{
-                        fontSize: '1.5rem',
-                        margin: '2rem 0',
-                        padding: '1.5rem',
-                        background: '#1e1e1e',
-                        borderRadius: '12px',
-                        border: '1px solid rgba(144, 202, 249, 0.2)',
-                    }}
-                    className={status.className}
-                >
-                    {status.message}
+        <div className={`melodiq-phone-client ${status.className}`}>
+            <div className="status-container">
+                <div className="status-icon">
+                    {status.className === 'status-connected' ? '🎤' : '⏳'}
                 </div>
+                <div className="status-text">{status.message}</div>
+
+                {/* Identity Settings */}
+                <div className="identity-settings" style={{ marginTop: '20px', padding: '15px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+                    <div style={{ marginBottom: '10px' }}>
+                        <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>Your Name</label>
+                        <input
+                            type="text"
+                            value={playerName}
+                            onChange={(e) => setPlayerName(e.target.value)}
+                            style={{
+                                background: 'rgba(255,255,255,0.1)',
+                                border: '1px solid rgba(255,255,255,0.3)',
+                                color: 'white',
+                                padding: '8px',
+                                borderRadius: '4px',
+                                width: '100%',
+                                fontSize: '1rem'
+                            }}
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>Your Color</label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div
+                                style={{
+                                    width: '40px',
+                                    height: '40px',
+                                    borderRadius: '50%',
+                                    backgroundColor: `hsl(${playerHue}, 100%, 50%)`,
+                                    border: '2px solid white'
+                                }}
+                            />
+                            <input
+                                type="range"
+                                min="0"
+                                max="360"
+                                value={playerHue}
+                                onChange={(e) => setPlayerHue(parseInt(e.target.value))}
+                                style={{ flex: 1 }}
+                            />
+                        </div>
+                    </div>
+                </div>
+
                 {showReconnect && (
-                    <button
-                        onClick={handleReconnect}
-                        style={{
-                            background: '#90caf9',
-                            color: '#000',
-                            border: 'none',
-                            padding: '1rem 2rem',
-                            fontSize: '1.1rem',
-                            fontWeight: 600,
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            marginTop: '1rem',
-                        }}
-                    >
-                        Reconnect
+                    <button onClick={handleReconnect} className="reconnect-btn">
+                        Retry Connection
                     </button>
                 )}
-                <div style={{ marginTop: '2rem', fontSize: '0.9rem', opacity: 0.7, color: 'rgba(255, 255, 255, 0.7)' }}>
-                    <p>Keep this page open while playing</p>
-                </div>
             </div>
+
             <style>{`
+                .melodiq-phone-client {
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                    background: #121212;
+                    color: white;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 100vh;
+                    padding: 20px;
+                    margin: 0;
+                }
+                .status-container {
+                    text-align: center;
+                    max-width: 400px;
+                    width: 100%;
+                }
+                .status-icon {
+                    font-size: 3rem;
+                    margin-bottom: 1rem;
+                }
+                .status-text {
+                    font-size: 1.2rem;
+                    margin-bottom: 2rem;
+                }
                 .status-connecting { color: #fbbf24; }
                 .status-connected { color: #4ade80; }
                 .status-error { color: #f87171; }
                 .status-disconnected { color: #9ca3af; }
-                button:active { transform: scale(0.95); }
-                button:disabled { opacity: 0.5; cursor: not-allowed; }
+                
+                .reconnect-btn {
+                    background: #90caf9;
+                    color: #000;
+                    border: none;
+                    padding: 0.8rem 1.5rem;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    margin-top: 1rem;
+                }
+                .reconnect-btn:active { transform: scale(0.95); }
             `}</style>
         </div>
     );

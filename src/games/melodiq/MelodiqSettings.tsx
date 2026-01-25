@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Typography, FormControl, MenuItem, Select, Switch, FormControlLabel, Container, Paper, Divider, TextField, IconButton, Avatar, Popover, Slider } from '@mui/material';
+import { Box, Button, Typography, FormControl, MenuItem, Select, Switch, FormControlLabel, Container, Paper, Divider, TextField, IconButton, Avatar, Popover, Slider, Chip } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
@@ -8,9 +8,9 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { MicrophoneManager } from './audio/MicrophoneManager';
-import { WebRTCMicManager } from './audio/WebRTCMicManager';
 import { LatencyCalibrator } from './components/LatencyCalibrator';
-import QRCode from 'qrcode';
+import { useWebRTC } from './audio/WebRTCContext';
+
 
 
 // Presets: Hue values
@@ -36,6 +36,7 @@ export interface ActivePlayer {
     volume?: number;
     muted?: boolean;
     latency?: number;
+    isRemote?: boolean;
 }
 
 interface MelodiqSettingsProps {
@@ -117,6 +118,7 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
     const [layoutOverride, setLayoutOverride] = useState(localStorage.getItem('melodiq_layout_override') || '');
 
     // Volume Settings
+    // Volume Settings
     const [songVolume, setSongVolume] = useState(() => {
         const stored = localStorage.getItem('melodiq_song_volume');
         return stored ? parseFloat(stored) : 0.7;
@@ -126,64 +128,10 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
         return stored ? parseFloat(stored) : 1.0;
     });
 
-    // WebRTC Remote Microphones
-    const [partyId, setPartyId] = useState(() => {
-        const stored = localStorage.getItem('melodiq_party_id');
-        return stored || crypto.randomUUID();
-    });
-    const [trackerUrls, setTrackerUrls] = useState<string[]>(() => {
-        const stored = localStorage.getItem('melodiq_tracker_urls');
-        return stored ? JSON.parse(stored) : [
-            'wss://tracker.openwebtorrent.com',
-        ].concat(
-            (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-                ? [`ws://${window.location.hostname}:8000`]
-                : []
-        );
-    });
-    const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
-    const [newTrackerUrl, setNewTrackerUrl] = useState('');
-    const [connectedPreviewPeers, setConnectedPreviewPeers] = useState<string[]>([]);
+    // WebRTC Context (Only needed for Phone Assignment in Dropdown)
+    const { peers: connectedPreviewPeers } = useWebRTC();
 
-
-
-    // Preview Connection Effect (with automatic local tracker injection)
-    useEffect(() => {
-        if (!partyId) return;
-
-        // Use 127.0.0.1 instead of localhost to avoid IPv6 resolution issues
-        const hostname = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-
-        // Build final tracker list
-        // Filter out localhost/127.0.0.1 from stored list to avoid dupes/conflicts
-        const cleaned = trackerUrls.filter(url => !url.includes('localhost') && !url.includes('127.0.0.1') && !url.includes(':8000'));
-
-        const finalTrackers = [...cleaned];
-
-        // Only add local tracker if we are actually ON localhost/127.0.0.1
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            finalTrackers.unshift(`ws://${hostname}:8000`);
-        }
-
-        if (finalTrackers.length === 0) return;
-
-        console.log('[Settings] Starting WebRTCMicManager with trackers:', finalTrackers);
-        const manager = new WebRTCMicManager(partyId, finalTrackers, {
-            onPeerConnected: (peerId) => {
-                setConnectedPreviewPeers(prev => [...prev, peerId]);
-            },
-            onPeerDisconnected: (peerId) => {
-                setConnectedPreviewPeers(prev => prev.filter(p => p !== peerId));
-            }
-        });
-
-        manager.start().catch(console.error);
-
-        return () => {
-            console.log('[Settings] Stopping WebRTCMicManager');
-            manager.stop();
-        };
-    }, [partyId, trackerUrls]); // Re-run if ID or Trackers change
+    // Color Picker State
 
     // Color Picker State
     const [colorAnchorEl, setColorAnchorEl] = useState<HTMLElement | null>(null);
@@ -236,32 +184,6 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
         });
     }, []);
 
-    // Generate QR Code when Party ID or Trackers change
-    useEffect(() => {
-        const url = new URL(`${window.location.origin}/games/melodiq/phone`);
-        url.searchParams.set('party', partyId);
-
-        // Add all tracker URLs to the params
-        trackerUrls.forEach(tracker => {
-            // Filter out localhost trackers for the phone QR code as they won't work on the phone
-            if (!tracker.includes('localhost') && !tracker.includes('127.0.0.1')) {
-                url.searchParams.append('tracker', tracker);
-            }
-        });
-
-        // Heuristic: If we are on a LAN IP (e.g. 192.168.x.x), and we don't have a local tracker in the list,
-        // we might want to suggest one? But for now let's just use what is in the list.
-        // Actually, if the Host is running on localhost, the phone URL generated will look like http://localhost:3000/...
-        // which is useless for the phone.
-        // But if the Host is running on a LAN IP (e.g. 192.168.1.5), then the URL is http://192.168.1.5:3000/...
-        // In that case, we should probably add ws://192.168.1.5:8000 if it's not already there?
-        // But let's stick to the explicit user request: provide the address "via qr code".
-
-        QRCode.toDataURL(url.toString(), { width: 200, margin: 2 })
-            .then((url: string) => setQrCodeDataUrl(url))
-            .catch((err: Error) => console.error('Failed to generate QR code:', err));
-    }, [partyId, trackerUrls]);
-
     // Save Logic
     const handleSave = () => {
         localStorage.setItem('melodiq_profiles', JSON.stringify(profiles));
@@ -276,9 +198,9 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
         localStorage.setItem('melodiq_song_volume', String(songVolume));
         localStorage.setItem('melodiq_master_volume', String(masterVolume));
 
-        // Save WebRTC settings
-        localStorage.setItem('melodiq_party_id', partyId);
-        localStorage.setItem('melodiq_tracker_urls', JSON.stringify(trackerUrls));
+        // Save WebRTC settings - NOT NEEDED here anymore, handled by Context/Connection page
+        // But we DO need to ensure partyId is preserved if we ever re-init? 
+        // Actually Context handles persistence.
 
         onBack();
     };
@@ -337,28 +259,7 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
     };
 
     // --- WebRTC Remote Microphones ---
-    const regeneratePartyId = () => {
-        setPartyId(crypto.randomUUID());
-    };
 
-    const addTrackerUrl = () => {
-        if (newTrackerUrl.trim() && !trackerUrls.includes(newTrackerUrl.trim())) {
-            setTrackerUrls([...trackerUrls, newTrackerUrl.trim()]);
-            setNewTrackerUrl('');
-        }
-    };
-
-    const removeTrackerUrl = (url: string) => {
-        setTrackerUrls(trackerUrls.filter(u => u !== url));
-    };
-
-    const restoreDefaultTrackers = () => {
-        const reliableDefaults = ['wss://tracker.openwebtorrent.com'];
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            reliableDefaults.unshift(`ws://${window.location.hostname}:8000`);
-        }
-        setTrackerUrls(reliableDefaults);
-    };
 
 
     // Render Helper
@@ -430,15 +331,34 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
 
                                     <FormControl sx={{ minWidth: 150 }} size="small">
                                         <Select
-                                            value={loadingDevices ? 'loading' : (devices.some(d => d.deviceId === ap.deviceId) ? ap.deviceId : '')}
-                                            onChange={(e) => updateActivePlayerConfig(ap.profileId, { deviceId: e.target.value })}
+                                            value={loadingDevices ? 'loading' : (
+                                                devices.some(d => d.deviceId === ap.deviceId) || connectedPreviewPeers.some(p => p.id === ap.deviceId)
+                                                    ? ap.deviceId : ''
+                                            )}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const isPhone = connectedPreviewPeers.some(p => p.id === val);
+                                                updateActivePlayerConfig(ap.profileId, { deviceId: val, isRemote: isPhone });
+                                            }}
                                             disabled={loadingDevices}
                                             displayEmpty
                                             variant="standard"
                                         >
                                             <MenuItem value=""><em>No Device</em></MenuItem>
+                                            {/* Local Devices */}
                                             {devices.map(d => (
                                                 <MenuItem key={d.deviceId} value={d.deviceId}>{d.label || d.deviceId}</MenuItem>
+                                            ))}
+                                            {/* Remote Devices (Phones) */}
+                                            {connectedPreviewPeers.length > 0 && <Divider />}
+                                            {connectedPreviewPeers.length > 0 && <MenuItem disabled><em>Phones</em></MenuItem>}
+                                            {connectedPreviewPeers.map(p => (
+                                                <MenuItem key={p.id} value={p.id}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <Typography>📱 {p.name}</Typography>
+                                                        {p.hue && <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: `hsl(${p.hue}, 100%, 50%)` }} />}
+                                                    </Box>
+                                                </MenuItem>
                                             ))}
                                         </Select>
                                     </FormControl>
@@ -570,135 +490,7 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
                     </Box>
                 </Box>
 
-                <Divider />
 
-                {/* 3. Remote Microphones (WebRTC) */}
-                <Box>
-                    <Typography variant="h6" gutterBottom>Remote Microphones (Phone)</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Connect phones as microphones via WebRTC. Scan the QR code with your phone to join.
-                    </Typography>
-
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        {/* Party ID and QR Code */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Box sx={{ flex: 1 }}>
-                                <Typography variant="subtitle2" gutterBottom>Party ID</Typography>
-                                <TextField
-                                    value={partyId}
-                                    size="small"
-                                    fullWidth
-                                    variant="outlined"
-                                    InputProps={{ readOnly: true }}
-                                    sx={{ fontFamily: 'monospace' }}
-                                />
-                                <Button
-                                    variant="outlined"
-                                    size="small"
-                                    onClick={regeneratePartyId}
-                                    sx={{ mt: 1 }}
-                                >
-                                    Regenerate Party ID
-                                </Button>
-                            </Box>
-                            {qrCodeDataUrl && (
-                                <Box sx={{ p: 1, bgcolor: 'white', borderRadius: 1 }}>
-                                    <img src={qrCodeDataUrl} alt="QR Code" style={{ display: 'block' }} />
-                                </Box>
-                            )}
-                        </Box>
-
-                        {/* Copyable URL */}
-                        <Box>
-                            <Typography variant="subtitle2" gutterBottom>Phone URL (Fallback)</Typography>
-                            <TextField
-                                value={(() => {
-                                    const url = new URL(`${window.location.origin}/games/melodiq/phone`);
-                                    url.searchParams.set('party', partyId);
-                                    trackerUrls.forEach(tracker => {
-                                        if (!tracker.includes('localhost') && !tracker.includes('127.0.0.1')) {
-                                            url.searchParams.append('tracker', tracker);
-                                        }
-                                    });
-                                    return url.toString();
-                                })()}
-                                size="small"
-                                fullWidth
-                                variant="outlined"
-                                InputProps={{ readOnly: true }}
-                                onClick={(e) => {
-                                    const input = e.target as HTMLInputElement;
-                                    input.select();
-                                    navigator.clipboard.writeText(input.value);
-                                }}
-                                sx={{ cursor: 'pointer', fontFamily: 'monospace', fontSize: '0.85rem' }}
-                                helperText="Click to copy URL"
-                            />
-                        </Box>
-
-                        {/* Tracker URLs */}
-                        <Box>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Typography variant="subtitle2" gutterBottom>Tracker URLs</Typography>
-                                <Button size="small" onClick={restoreDefaultTrackers} sx={{ fontSize: '0.7rem' }}>
-                                    Restore Defaults
-                                </Button>
-                            </Box>
-
-                            {/* Connection Preview Status */}
-                            {connectedPreviewPeers.length > 0 && (
-                                <Box sx={{ mb: 1, p: 1, bgcolor: 'rgba(74, 222, 128, 0.1)', border: '1px solid rgba(74, 222, 128, 0.3)', borderRadius: 1 }}>
-                                    <Typography variant="caption" sx={{ color: '#4ade80' }}>
-                                        ✅ {connectedPreviewPeers.length} Phone(s) Connected Successfully!
-                                    </Typography>
-                                </Box>
-                            )}
-
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                {trackerUrls.map((url, index) => (
-                                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <TextField
-                                            value={url}
-                                            size="small"
-                                            fullWidth
-                                            variant="outlined"
-                                            InputProps={{ readOnly: true }}
-                                        />
-                                        <IconButton
-                                            color="error"
-                                            size="small"
-                                            onClick={() => removeTrackerUrl(url)}
-                                            disabled={trackerUrls.length <= 1}
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Box>
-                                ))}
-                                <Box sx={{ display: 'flex', gap: 1 }}>
-                                    <TextField
-                                        value={newTrackerUrl}
-                                        onChange={(e) => setNewTrackerUrl(e.target.value)}
-                                        placeholder="wss://tracker.example.com"
-                                        size="small"
-                                        fullWidth
-                                        variant="outlined"
-                                        onKeyPress={(e) => {
-                                            if (e.key === 'Enter') {
-                                                e.preventDefault();
-                                                addTrackerUrl();
-                                            }
-                                        }}
-                                    />
-                                    <Button variant="outlined" size="small" onClick={addTrackerUrl}>
-                                        Add
-                                    </Button>
-                                </Box>
-                            </Box>
-                        </Box>
-                    </Box>
-                </Box>
-
-                <Divider />
 
                 {/* Debug & Layout */}
                 <Box>
