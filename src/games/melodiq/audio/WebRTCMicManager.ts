@@ -66,15 +66,13 @@ export class WebRTCMicManager {
             return true;
         });
 
-        // Always add reliable public trackers
-        // Use ONLY ONE reliable default to ensure all peers meet in the same "room"
-        const reliableTrackers = [
-            'wss://tracker.openwebtorrent.com',
-        ];
-
         // Merge and deduplicate
-        const finalTrackers = Array.from(new Set([...validTrackers, ...reliableTrackers]));
+        const finalTrackers = Array.from(new Set(validTrackers));
         console.log('[WebRTCMicManager] Using trackers:', finalTrackers);
+
+        if (finalTrackers.length === 0) {
+            console.warn('[WebRTCMicManager] No trackers provided. Connection will not be possible.');
+        }
 
         this.trackerClient = new Client({
             infoHash,
@@ -134,8 +132,8 @@ export class WebRTCMicManager {
             const peerId = this.generatePeerId();
 
             const audioPeer = new SimplePeer({
-                initiator: true, // Host initiates the audio connection
-                trickle: false,
+                initiator: false, // Phone will initiate with the stream
+                trickle: true,
                 config: {
                     iceServers: [
                         { urls: 'stun:stun.l.google.com:19302' },
@@ -202,8 +200,16 @@ export class WebRTCMicManager {
                                 return;
                             }
 
-                            console.log('[WebRTCMicManager] Processing signal from phone:', signal.type);
-                            audioPeer.signal(signal);
+                            if (audioPeer && !(audioPeer as any).destroyed) {
+                                console.log('[WebRTCMicManager] Processing signal from phone:', signal.type);
+                                try {
+                                    audioPeer.signal(signal);
+                                } catch (err) {
+                                    console.warn('[WebRTCMicManager] Error signaling peer (might be destroyed):', err);
+                                }
+                            } else {
+                                console.log('[WebRTCMicManager] Ignoring signal, peer is destroyed:', signal.type);
+                            }
                         } catch (e) {
                             console.error('[WebRTCMicManager] Failed to parse individual signal chunk:', part, e);
                         }
@@ -231,6 +237,7 @@ export class WebRTCMicManager {
             audioPeer.on('error', (err: Error) => {
                 console.error('[WebRTCMicManager] Audio Peer error:', peerId, err);
                 this.removePeer(peerId);
+                this.pendingTrackerPeers.delete(trackerPeerId);
                 trackerPeer.off('data', onData);
                 // Clean up flag so we can retry if needed (though usually tracker peer dies too)
                 delete (trackerPeer as any)._audioPeerSetup;
@@ -239,6 +246,7 @@ export class WebRTCMicManager {
             audioPeer.on('close', () => {
                 console.log('[WebRTCMicManager] Audio Peer closed:', peerId);
                 this.removePeer(peerId);
+                this.pendingTrackerPeers.delete(trackerPeerId);
                 trackerPeer.off('data', onData);
                 delete (trackerPeer as any)._audioPeerSetup;
             });
@@ -246,6 +254,7 @@ export class WebRTCMicManager {
             // Cleanup tracker listener if tracker peer dies
             trackerPeer.on('close', () => {
                 audioPeer.destroy();
+                this.pendingTrackerPeers.delete(trackerPeerId);
                 delete (trackerPeer as any)._audioPeerSetup;
             });
         };

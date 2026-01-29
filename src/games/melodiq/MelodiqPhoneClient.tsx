@@ -107,127 +107,104 @@ export const MelodiqPhoneClient = () => {
         console.log('[Phone] Tracker peer found. Waiting for Host signal...', trackerPeerId);
 
         const setupAudioPeer = () => {
-            console.log('[Phone] Tracker peer connected. Waiting for Host to initiate...');
+            if (audioPeerCreatedRef.current) return;
+            audioPeerCreatedRef.current = true;
 
-            // Wait for the Host to send the first signal (offer), then create our peer
-            const processedSignalsRef = new Set<string>();
+            console.log('[Phone] Tracker peer connected. Initiating audio handshake...');
 
-            const onData = (data: Uint8Array | string) => {
-                try {
-                    const str = (typeof data === 'string') ? data : new TextDecoder().decode(data);
-                    const parts = str.split('\n');
+            try {
+                const peer = new SimplePeer({
+                    initiator: true, // Phone initiates to send stream immediately
+                    trickle: true,
+                    stream: mediaStreamRef.current!,
+                    config: {
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:global.stun.twilio.com:3478' },
+                        ],
+                    },
+                });
 
-                    for (const part of parts) {
-                        if (!part.trim()) continue;
+                peerRef.current = peer;
 
-                        // Deduplicate signals: Ignore if we've already processed this exact signal string
-                        if (processedSignalsRef.has(part)) {
-                            console.log('[Phone] Ignoring duplicate signal');
-                            continue;
-                        }
-                        processedSignalsRef.add(part);
-
+                // Send our signals back to Host
+                peer.on('signal', (data: any) => {
+                    console.log('[Phone] Sending signal to host:', data.type);
+                    if (trackerPeer.connected) {
                         try {
-                            const signal = JSON.parse(part);
-
-                            // Create peer on first signal from Host (and only if we haven't created one already)
-                            if (!audioPeerCreatedRef.current) {
-                                if (signal.type !== 'offer') {
-                                    console.warn('[Phone] Received non-offer signal first:', signal.type);
-                                    continue;
-                                }
-
-                                console.log('[Phone] Received Offer from Host. Creating audio peer...');
-                                audioPeerCreatedRef.current = true;
-
-                                // Delay slightly to ensure cleaner execution stack
-                                setTimeout(() => {
-                                    try {
-                                        const peer = new SimplePeer({
-                                            initiator: false,
-                                            trickle: false,
-                                            stream: mediaStreamRef.current!,
-                                            config: {
-                                                iceServers: [
-                                                    { urls: 'stun:stun.l.google.com:19302' },
-                                                    { urls: 'stun:global.stun.twilio.com:3478' },
-                                                ],
-                                            },
-                                        });
-
-                                        peerRef.current = peer;
-
-                                        // Send our signals back to Host
-                                        peer.on('signal', (data: any) => {
-                                            console.log('[Phone] Sending signal to host:', data.type);
-                                            if (trackerPeer.connected) {
-                                                try {
-                                                    trackerPeer.send(JSON.stringify(data) + '\n');
-                                                } catch (e) {
-                                                    console.error('[Phone] Failed to send signal:', e);
-                                                }
-                                            }
-                                        });
-
-                                        peer.on('connect', () => {
-                                            console.log('[Phone] Connected to host!');
-                                            updateStatus('✅ Connected', 'status-connected');
-                                            setShowReconnect(false);
-
-                                            // Send Identity immediately upon connection
-                                            sendIdentity(peer, trackerPeer);
-                                        });
-
-                                        peer.on('error', (err: Error) => {
-                                            console.error('[Phone] Peer error:', err);
-                                            updateStatus(`Connection lost: ${err.message}`, 'status-error');
-                                            setShowReconnect(true);
-                                            trackerPeer.off('data', onData);
-                                        });
-
-                                        peer.on('close', () => {
-                                            console.log('[Phone] Connection closed');
-                                            updateStatus('Disconnected', 'status-disconnected');
-                                            setShowReconnect(true);
-                                            trackerPeer.off('data', onData);
-                                        });
-
-                                        trackerPeer.on('close', () => {
-                                            peer.destroy();
-                                        });
-
-                                        // Process the Offer
-                                        console.log('[Phone] Signaling Offer to Peer...');
-                                        peer.signal(signal);
-                                    } catch (err) {
-                                        console.error('[Phone] Failed to create/signal peer:', err);
-                                        audioPeerCreatedRef.current = false; // Reset if failed
-                                    }
-                                }, 100);
-
-                            } else {
-                                // Forward subsequent signals to existing peer, BUT IGNORE OFFERS
-                                // If we receive another "offer" while we have a peer, it's likely a duplicate or a race.
-                                // Trying to signal an existing peer with a new Offer triggers renegotiation/ICE restart,
-                                // which is failing here. We should only accept answer/candidate signals on an existing peer.
-                                if (signal.type === 'offer') {
-                                    console.log('[Phone] Ignoring subsequent/duplicate Offer.');
-                                    return;
-                                }
-
-                                console.log('[Phone] Received subsequent signal:', signal.type);
-                                peerRef.current?.signal(signal);
-                            }
+                            trackerPeer.send(JSON.stringify(data) + '\n');
                         } catch (e) {
-                            console.error('[Phone] Failed to parse individual signal chunk:', part, e);
+                            console.error('[Phone] Failed to send signal:', e);
                         }
                     }
-                } catch (e) {
-                    console.error('[Phone] Failed to process received data:', e);
-                }
-            };
+                });
 
-            trackerPeer.on('data', onData);
+                const onData = (data: Uint8Array | string) => {
+                    try {
+                        const str = (typeof data === 'string') ? data : new TextDecoder().decode(data);
+                        const parts = str.split('\n');
+
+                        for (const part of parts) {
+                            if (!part.trim()) continue;
+
+                            try {
+                                const signal = JSON.parse(part);
+
+                                if (peer && !(peer as any).destroyed) {
+                                    if (signal.type === 'offer') {
+                                        console.log('[Phone] Ignoring incoming Offer (we are initiator)');
+                                        return;
+                                    }
+                                    console.log('[Phone] Processing signal from host:', signal.type);
+                                    peer.signal(signal);
+                                }
+                            } catch (e) {
+                                console.error('[Phone] Failed to parse individual signal chunk:', part, e);
+                            }
+                        }
+                    } catch (e) {
+                        console.error('[Phone] Failed to process received data:', e);
+                    }
+                };
+
+                trackerPeer.on('data', onData);
+
+                peer.on('connect', () => {
+                    console.log('[Phone] Connected to host!');
+                    updateStatus('✅ Connected', 'status-connected');
+                    setShowReconnect(false);
+                    sendIdentity(peer, trackerPeer);
+                });
+
+                peer.on('error', (err: Error) => {
+                    console.error('[Phone] Peer error:', err);
+                    updateStatus(`Connection lost: ${err.message}`, 'status-error');
+                    setShowReconnect(true);
+                    audioPeerCreatedRef.current = false;
+                    handledTrackerPeersRef.current.delete(trackerPeerId);
+                    trackerPeer.off('data', onData);
+                });
+
+                peer.on('close', () => {
+                    console.log('[Phone] Connection closed');
+                    updateStatus('Disconnected', 'status-disconnected');
+                    setShowReconnect(true);
+                    audioPeerCreatedRef.current = false;
+                    handledTrackerPeersRef.current.delete(trackerPeerId);
+                    trackerPeer.off('data', onData);
+                });
+
+                trackerPeer.on('close', () => {
+                    peer.destroy();
+                    audioPeerCreatedRef.current = false;
+                    handledTrackerPeersRef.current.delete(trackerPeerId);
+                });
+
+            } catch (err) {
+                console.error('[Phone] Failed to create/signal peer:', err);
+                audioPeerCreatedRef.current = false;
+                handledTrackerPeersRef.current.delete(trackerPeerId);
+            }
         };
 
         if (trackerPeer.connected) {
@@ -304,9 +281,7 @@ export const MelodiqPhoneClient = () => {
             const urlTrackers = params.getAll('tracker');
 
             // Reliable public trackers only - SINGLE default to ensure matching
-            const reliableTrackers = [
-                'wss://tracker.openwebtorrent.com',
-            ];
+            const reliableTrackers: string[] = [];
 
 
 
@@ -324,10 +299,8 @@ export const MelodiqPhoneClient = () => {
             const params = new URLSearchParams(window.location.search);
             const urlTrackers = params.getAll('tracker');
 
-            // Reliable public trackers
-            const reliableTrackers = [
-                'wss://tracker.openwebtorrent.com',
-            ];
+            // Reliable public trackers 
+            const reliableTrackers: string[] = [];
 
 
 

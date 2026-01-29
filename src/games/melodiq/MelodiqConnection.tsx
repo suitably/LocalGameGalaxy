@@ -158,12 +158,19 @@ export const MelodiqConnection: React.FC<MelodiqConnectionProps> = ({ onBack }) 
                                             color="error"
                                             size="small"
                                             onClick={() => contextRemoveTrackerUrl(url)}
-                                            disabled={trackerUrls.length <= 1}
                                         >
                                             <DeleteIcon />
                                         </IconButton>
                                     </Box>
                                 ))}
+                                {trackerUrls.length === 0 && (
+                                    <Box sx={{ p: 2, bgcolor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 1 }}>
+                                        <Typography variant="body2" color="error">
+                                            ⚠️ No signaling servers configured. Connection will not be possible.
+                                            Please add a WSS tracker URL below.
+                                        </Typography>
+                                    </Box>
+                                )}
                                 <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                                     <TextField
                                         value={newTrackerUrl}

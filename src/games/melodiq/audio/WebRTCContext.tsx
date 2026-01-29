@@ -71,46 +71,60 @@ export const WebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     useEffect(() => {
         if (!partyId || trackerUrls.length === 0) return;
 
-        console.log('[WebRTCProvider] Initializing Manager with:', { partyId, trackerUrls });
+        let managerInstance: WebRTCMicManager | null = null;
+        let isCleanedUp = false;
 
-        const newManager = new WebRTCMicManager(partyId, trackerUrls, {
-            onPeerConnected: (peerId, name, hue) => {
-                console.log('[WebRTCProvider] Peer Connected:', name, peerId);
-                setPeers(prev => {
-                    if (prev.some(p => p.id === peerId)) return prev.map(p => p.id === peerId ? { id: peerId, name, hue } : p);
-                    return [...prev, { id: peerId, name, hue }];
-                });
-                // Auto-activate new peers
-                setActivePeerIds(prev => prev.includes(peerId) ? prev : [...prev, peerId]);
-            },
-            onPeerDisconnected: (peerId) => {
-                console.log('[WebRTCProvider] Peer Disconnected:', peerId);
-                setPeers(prev => prev.filter(p => p.id !== peerId));
-            },
-            onPeerUpdated: (peerId, name, hue) => {
-                console.log('[WebRTCProvider] Peer Updated:', name, peerId);
-                setPeers(prev => {
-                    const existing = prev.find(p => p.id === peerId);
-                    if (existing) {
-                        return prev.map(p => p.id === peerId ? { ...p, name, hue } : p);
-                    }
-                    // Peer doesn't exist yet (identity arrived before stream), add it
-                    return [...prev, { id: peerId, name, hue }];
-                });
-                // Auto-activate new peers
-                setActivePeerIds(prev => prev.includes(peerId) ? prev : [...prev, peerId]);
-            }
-        });
+        console.log('[WebRTCProvider] Scheduling Manager init...', { partyId });
 
-        // Start it
-        newManager.start().catch(err => console.error('[WebRTCProvider] Failed to start manager:', err));
-        setManager(newManager);
+        // Debounce initialization to handle React Strict Mode double-mount
+        const timer = setTimeout(() => {
+            if (isCleanedUp) return;
+
+            console.log('[WebRTCProvider] Initializing Manager with:', { partyId, trackerUrls });
+
+            managerInstance = new WebRTCMicManager(partyId, trackerUrls, {
+                onPeerConnected: (peerId, name, hue) => {
+                    console.log('[WebRTCProvider] Peer Connected:', name, peerId);
+                    setPeers(prev => {
+                        if (prev.some(p => p.id === peerId)) return prev.map(p => p.id === peerId ? { id: peerId, name, hue } : p);
+                        return [...prev, { id: peerId, name, hue }];
+                    });
+                    // Auto-activate new peers
+                    setActivePeerIds(prev => prev.includes(peerId) ? prev : [...prev, peerId]);
+                },
+                onPeerDisconnected: (peerId) => {
+                    console.log('[WebRTCProvider] Peer Disconnected:', peerId);
+                    setPeers(prev => prev.filter(p => p.id !== peerId));
+                },
+                onPeerUpdated: (peerId, name, hue) => {
+                    console.log('[WebRTCProvider] Peer Updated:', name, peerId);
+                    setPeers(prev => {
+                        const existing = prev.find(p => p.id === peerId);
+                        if (existing) {
+                            return prev.map(p => p.id === peerId ? { ...p, name, hue } : p);
+                        }
+                        // Peer doesn't exist yet (identity arrived before stream), add it
+                        return [...prev, { id: peerId, name, hue }];
+                    });
+                    // Auto-activate new peers
+                    setActivePeerIds(prev => prev.includes(peerId) ? prev : [...prev, peerId]);
+                }
+            });
+
+            // Start it
+            managerInstance.start().catch(err => console.error('[WebRTCProvider] Failed to start manager:', err));
+            setManager(managerInstance);
+        }, 500); // 500ms delay to ensure stability
 
         return () => {
-            console.log('[WebRTCProvider] Cleaning up Manager');
-            newManager.stop();
-            setManager(null);
-            setPeers([]);
+            isCleanedUp = true;
+            clearTimeout(timer);
+            if (managerInstance) {
+                console.log('[WebRTCProvider] Cleaning up Manager');
+                managerInstance.stop();
+                setManager(null);
+                setPeers([]);
+            }
         };
     }, [partyId, JSON.stringify(trackerUrls)]); // Re-init if config changes
 
@@ -130,18 +144,7 @@ export const WebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }, []);
 
     const restoreDefaultTrackers = useCallback(() => {
-        const defaults = [
-            'wss://tracker.openwebtorrent.com',
-            'wss://tracker.files.fm:7073/announce',
-            'wss://tracker.btorrent.xyz',
-        ];
-
-        // If explicitly localhost in browser check, ideally we add local.
-        // But for generic defaults, we stick to public ones.
-        // The user can add their own local ones or rely on auto-detection logic if they want.
-        // Wait, previous logic had auto-detection inside settings? No, inside component mount logic.
-        // Let's just stick to public defaults here to start clean.
-        setTrackerUrls(defaults);
+        setTrackerUrls([]);
     }, []);
 
     // Toggle peer active/inactive
