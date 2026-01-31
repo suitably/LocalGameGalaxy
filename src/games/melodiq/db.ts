@@ -12,6 +12,11 @@ export interface Song {
     dirPath: string; // Handle to the directory if available, or just path string
     updatedAt: number;
     duration?: number; // Duration in seconds
+    year?: string;
+    genre?: string;
+    language?: string;
+    edition?: string;
+    album?: string;
 }
 
 export interface CachedDir {
@@ -26,8 +31,9 @@ const db = new Dexie('MelodiqDB') as Dexie & {
     cachedDirs: EntityTable<CachedDir, 'path'>
 };
 
-db.version(3).stores({
-    songs: 'id, title, artist',
+// Update to version 4 to include new indices
+db.version(4).stores({
+    songs: 'id, title, artist, year, genre, language',
     cachedDirs: 'path'
 });
 

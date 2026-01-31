@@ -158,7 +158,12 @@ export class MelodiqImporter {
                         txtContent: text,
                         dirPath: subDir.name,
                         updatedAt: Date.now(),
-                        duration: calculateSongDuration(parsed.notes, parsed.bpm, parsed.gap)
+                        duration: calculateSongDuration(parsed.notes, parsed.bpm, parsed.gap),
+                        year: parsed.headers['YEAR'],
+                        genre: parsed.headers['GENRE'],
+                        language: parsed.headers['LANGUAGE'],
+                        edition: parsed.headers['EDITION'],
+                        album: parsed.headers['ALBUM']
                     };
 
 
@@ -339,7 +344,12 @@ export class MelodiqImporter {
                         txtContent: text,
                         dirPath: dirName,
                         updatedAt: Date.now(),
-                        duration: calculateSongDuration(parsed.notes, parsed.bpm, parsed.gap)
+                        duration: calculateSongDuration(parsed.notes, parsed.bpm, parsed.gap),
+                        year: parsed.headers['YEAR'],
+                        genre: parsed.headers['GENRE'],
+                        language: parsed.headers['LANGUAGE'],
+                        edition: parsed.headers['EDITION'],
+                        album: parsed.headers['ALBUM']
                     };
 
                     if (chosenAudioFile) {

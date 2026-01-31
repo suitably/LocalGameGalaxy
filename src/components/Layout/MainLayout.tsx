@@ -1,6 +1,6 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Container, Box, IconButton, Menu, MenuItem } from '@mui/material';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import TranslateIcon from '@mui/icons-material/Translate';
 import HomeIcon from '@mui/icons-material/Home';
 import { useTranslation } from 'react-i18next';
@@ -25,8 +25,11 @@ export const MainLayout: React.FC = () => {
         handleClose();
     };
 
+    const location = useLocation();
+    const isMelodiq = location.pathname.includes('/games/melodiq');
+
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
             <AppBar position="static">
                 <Toolbar>
                     <IconButton
@@ -74,9 +77,16 @@ export const MainLayout: React.FC = () => {
                     </div>
                 </Toolbar>
             </AppBar>
-            <Container maxWidth="md" sx={{ mt: 4, flex: 1, pb: 4 }}>
-                <Outlet />
-            </Container>
+
+            {isMelodiq ? (
+                <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    <Outlet />
+                </Box>
+            ) : (
+                <Container maxWidth="md" sx={{ mt: 4, flex: 1, pb: 4, overflow: 'auto' }}>
+                    <Outlet />
+                </Container>
+            )}
         </Box>
     );
 };

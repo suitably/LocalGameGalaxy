@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { VirtuosoGrid } from 'react-virtuoso';
-import { Box, Button, Typography, LinearProgress, Card, CardContent, Grid, Container } from '@mui/material';
+import { Box, Button, Typography, LinearProgress, Card, CardContent, Grid, Container, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText } from '@mui/material';
 import { db, type Song } from './db';
 import { MelodiqImporter, type ImportStats } from './importer';
 import { MelodiqSession } from './gameplay/MelodiqSession';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import SettingsIcon from '@mui/icons-material/Settings';
+import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
 import { MelodiqSettings } from './MelodiqSettings';
 import { formatDuration } from './utils';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +30,20 @@ export const MelodiqGame: React.FC = () => {
     const [stats, setStats] = useState<ImportStats | null>(null);
     const [songs, setSongs] = useState<Song[]>([]);
 
+    // Search & Filter State
+    const [searchQuery, setSearchQuery] = useState('');
+    const [activeFilters, setActiveFilters] = useState<{
+        year: string[];
+        genre: string[];
+        language: string[];
+        edition: string[];
+    }>({
+        year: [],
+        genre: [],
+        language: [],
+        edition: []
+    });
+
     // View State
     const [currentView, setCurrentView] = useState<View>('Home');
     const [selectedSong, setSelectedSong] = useState<Song | null>(null);
@@ -44,6 +60,58 @@ export const MelodiqGame: React.FC = () => {
     useEffect(() => {
         db.songs.toArray().then(setSongs);
     }, [importing]);
+
+    const filteredSongs = React.useMemo(() => {
+        let result = songs;
+
+        if (searchQuery) {
+            const lowerQuery = searchQuery.toLowerCase();
+            result = result.filter(song =>
+                song.title.toLowerCase().includes(lowerQuery) ||
+                song.artist.toLowerCase().includes(lowerQuery)
+            );
+        }
+
+        if (activeFilters.year.length > 0) {
+            result = result.filter(song => song.year && activeFilters.year.includes(song.year));
+        }
+
+        if (activeFilters.genre.length > 0) {
+            result = result.filter(song => song.genre && activeFilters.genre.includes(song.genre));
+        }
+
+        if (activeFilters.language.length > 0) {
+            result = result.filter(song => song.language && activeFilters.language.includes(song.language));
+        }
+
+        if (activeFilters.edition.length > 0) {
+            result = result.filter(song => song.edition && activeFilters.edition.includes(song.edition));
+        }
+
+        return result;
+    }, [songs, searchQuery, activeFilters]);
+
+    // Derive available options
+    const availableYears = React.useMemo(() =>
+        Array.from(new Set(songs.map(s => s.year).filter(Boolean))).sort().reverse() as string[],
+        [songs]);
+
+    const availableGenres = React.useMemo(() =>
+        Array.from(new Set(songs.map(s => s.genre).filter(Boolean))).sort() as string[],
+        [songs]);
+
+    const availableLanguages = React.useMemo(() =>
+        Array.from(new Set(songs.map(s => s.language).filter(Boolean))).sort() as string[],
+        [songs]);
+
+    const availableEditions = React.useMemo(() =>
+        Array.from(new Set(songs.map(s => s.edition).filter(Boolean))).sort() as string[],
+        [songs]);
+
+    const clearFilters = () => {
+        setSearchQuery('');
+        setActiveFilters({ year: [], genre: [], language: [], edition: [] });
+    };
 
     const handleImport = async (forceReimport = false) => {
         try {
@@ -98,7 +166,13 @@ export const MelodiqGame: React.FC = () => {
 
         // Home view
         return (
-            <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+            <Box sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                p: { xs: 2, md: 4 }, // Responsive padding
+                overflow: 'hidden' // Prevent body scroll
+            }}>
                 <input
                     type="file"
                     id="fallback-dir-input"
@@ -108,7 +182,7 @@ export const MelodiqGame: React.FC = () => {
                     style={{ display: 'none' }}
                     onChange={handleFallbackImport}
                 />
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexShrink: 0 }}>
                     <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 2 }}>
                         <MusicNoteIcon fontSize="large" color="primary" />
                         Melodiq
@@ -148,7 +222,7 @@ export const MelodiqGame: React.FC = () => {
                 </Box>
 
                 {importing && stats && (
-                    <Card sx={{ mb: 4, p: 2 }}>
+                    <Card sx={{ mb: 4, p: 2, flexShrink: 0 }}>
                         <Typography variant="h6">Importing Library...</Typography>
                         <Typography variant="body2" color="text.secondary" gutterBottom>
                             Found: {stats.totalFound} |
@@ -165,32 +239,171 @@ export const MelodiqGame: React.FC = () => {
                 )}
                 {/* Empty State */}
                 {songs?.length === 0 && !importing && (
-                    <Box sx={{ width: '100%', textAlign: 'center', py: 8, opacity: 0.7 }}>
+                    <Box sx={{ width: '100%', textAlign: 'center', py: 8, opacity: 0.7, flexGrow: 1 }}>
                         <Typography variant="h5">Your library is empty</Typography>
                         <Typography>Load a folder with UltraStar songs to begin</Typography>
                     </Box>
                 )}
 
-                {songs?.length > 0 && (
-                    <VirtuosoGrid
-                        style={{ height: 'calc(100vh - 200px)', width: '100%' }}
-                        totalCount={songs.length}
-                        components={{
-                            List: React.forwardRef((props, ref) => <Grid container spacing={3} {...props} ref={ref as any} />),
-                            Item: React.forwardRef((props, ref) => <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} {...props} ref={ref as any} />)
-                        }}
-                        itemContent={(index: number) => (
-                            <SongCard
-                                song={songs[index]}
-                                onClick={() => {
-                                    setSelectedSong(songs[index]);
-                                    setCurrentView('Session');
+                {/* Search and Filters */}
+                {songs.length > 0 && (
+                    <Card sx={{ mb: 2, p: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', flexShrink: 0 }}>
+                        <TextField
+                            placeholder="Search title, artist..."
+                            variant="outlined"
+                            size="small"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchIcon color="action" />
+                                    </InputAdornment>
+                                ),
+                                endAdornment: searchQuery && (
+                                    <InputAdornment position="end">
+                                        <IconButton size="small" onClick={() => setSearchQuery('')}>
+                                            <CloseIcon fontSize="small" />
+                                        </IconButton>
+                                    </InputAdornment>
+                                )
+                            }}
+                            sx={{ flexGrow: 1, minWidth: '200px' }}
+                        />
+
+                        <FormControl size="small" sx={{ minWidth: 120, maxWidth: 200 }}>
+                            <InputLabel>Genre</InputLabel>
+                            <Select
+                                multiple
+                                value={activeFilters.genre}
+                                label="Genre"
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setActiveFilters(prev => ({
+                                        ...prev,
+                                        genre: typeof value === 'string' ? value.split(',') : value
+                                    }));
                                 }}
-                            />
+                                renderValue={(selected) => selected.join(', ')}
+                            >
+                                {availableGenres.map(g => (
+                                    <MenuItem key={g} value={g}>
+                                        <Checkbox checked={activeFilters.genre.indexOf(g) > -1} />
+                                        <ListItemText primary={g} />
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+
+                        <FormControl size="small" sx={{ minWidth: 100, maxWidth: 150 }}>
+                            <InputLabel>Year</InputLabel>
+                            <Select
+                                multiple
+                                value={activeFilters.year}
+                                label="Year"
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setActiveFilters(prev => ({
+                                        ...prev,
+                                        year: typeof value === 'string' ? value.split(',') : value
+                                    }));
+                                }}
+                                renderValue={(selected) => selected.join(', ')}
+                            >
+                                {availableYears.map(y => (
+                                    <MenuItem key={y} value={y}>
+                                        <Checkbox checked={activeFilters.year.indexOf(y) > -1} />
+                                        <ListItemText primary={y} />
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+
+                        <FormControl size="small" sx={{ minWidth: 120, maxWidth: 200 }}>
+                            <InputLabel>Language</InputLabel>
+                            <Select
+                                multiple
+                                value={activeFilters.language}
+                                label="Language"
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setActiveFilters(prev => ({
+                                        ...prev,
+                                        language: typeof value === 'string' ? value.split(',') : value
+                                    }));
+                                }}
+                                renderValue={(selected) => selected.join(', ')}
+                            >
+                                {availableLanguages.map(l => (
+                                    <MenuItem key={l} value={l}>
+                                        <Checkbox checked={activeFilters.language.indexOf(l) > -1} />
+                                        <ListItemText primary={l} />
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+
+                        <FormControl size="small" sx={{ minWidth: 150, maxWidth: 250 }}>
+                            <InputLabel>Edition</InputLabel>
+                            <Select
+                                multiple
+                                value={activeFilters.edition}
+                                label="Edition"
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setActiveFilters(prev => ({
+                                        ...prev,
+                                        edition: typeof value === 'string' ? value.split(',') : value
+                                    }));
+                                }}
+                                renderValue={(selected) => selected.join(', ')}
+                            >
+                                {availableEditions.map(ed => (
+                                    <MenuItem key={ed} value={ed}>
+                                        <Checkbox checked={activeFilters.edition.indexOf(ed) > -1} />
+                                        <ListItemText primary={ed} />
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+
+                        {(searchQuery || activeFilters.year.length > 0 || activeFilters.genre.length > 0 || activeFilters.language.length > 0 || activeFilters.edition.length > 0) && (
+                            <Button size="small" onClick={clearFilters} color="inherit">
+                                Clear All
+                            </Button>
                         )}
-                    />
-                )}
-            </Container>
+
+                        <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
+                            {filteredSongs.length} / {songs.length} songs
+                        </Typography>
+                    </Card>
+                )
+                }
+
+                {
+                    filteredSongs?.length > 0 && (
+                        <Box sx={{ flexGrow: 1, minHeight: 0 }}>
+                            <VirtuosoGrid
+                                style={{ height: '100%', width: '100%' }}
+                                totalCount={filteredSongs.length}
+                                components={{
+                                    List: React.forwardRef((props, ref) => <Grid container spacing={2} {...props} ref={ref as any} />),
+                                    Item: React.forwardRef((props, ref) => <Grid size={{ xs: 6, sm: 4, md: 3, lg: 2 }} {...props} ref={ref as any} />)
+                                }}
+                                itemContent={(index: number) => (
+                                    <SongCard
+                                        song={filteredSongs[index]}
+                                        onClick={() => {
+                                            setSelectedSong(filteredSongs[index]);
+                                            setCurrentView('Session');
+                                        }}
+                                    />
+                                )}
+                            />
+                        </Box>
+                    )
+                }
+            </Box >
         );
     };
 
@@ -230,21 +443,20 @@ const SongCard: React.FC<{ song: Song; onClick: () => void }> = ({ song, onClick
             }}
             onClick={onClick}
         >
-            <Box sx={{ height: 140, bgcolor: 'action.hover', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <Box sx={{ height: 100, bgcolor: 'action.hover', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                 {coverUrl ? (
                     <img src={coverUrl} alt={song.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                    <MusicNoteIcon sx={{ fontSize: 60, opacity: 0.2 }} />
+                    <MusicNoteIcon sx={{ fontSize: 40, opacity: 0.2 }} />
                 )}
             </Box>
-            <CardContent>
-                <Typography variant="h6" noWrap title={song.title}>{song.title}</Typography>
-                <Typography variant="subtitle1" color="text.secondary" noWrap title={song.artist}>{song.artist}</Typography>
-                <Typography variant="caption" display="block" color="text.disabled">
-                    {song.duration ? formatDuration(song.duration) : '0:00'} • {song.id.substring(0, 8)}...
+            <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                <Typography variant="subtitle2" noWrap title={song.title} sx={{ fontWeight: 'bold', lineHeight: 1.2 }}>{song.title}</Typography>
+                <Typography variant="caption" display="block" color="text.secondary" noWrap title={song.artist} sx={{ lineHeight: 1.2 }}>{song.artist}</Typography>
+                <Typography variant="caption" display="block" color="text.disabled" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
+                    {song.duration ? formatDuration(song.duration) : '0:00'}
                 </Typography>
             </CardContent>
         </Card>
     );
 };
-

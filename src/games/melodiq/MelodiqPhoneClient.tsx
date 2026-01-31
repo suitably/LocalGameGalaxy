@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import SimplePeer from 'simple-peer';
 import Client from 'bittorrent-tracker';
+import { computeRMS, autoCorrelate, freqToMidi } from './audio/AudioUtils';
 
 export const MelodiqPhoneClient = () => {
     const [status, setStatus] = useState<{ message: string; className: string }>({
@@ -14,6 +15,10 @@ export const MelodiqPhoneClient = () => {
     });
     const [showReconnect, setShowReconnect] = useState(false);
 
+    // Audio visualization state
+    const [visualVolume, setVisualVolume] = useState(0);
+    const [visualPitch, setVisualPitch] = useState(0);
+
     // Refs
     const peerRef = useRef<SimplePeer.Instance | null>(null);
     const trackerClientRef = useRef<Client | null>(null);
@@ -22,6 +27,13 @@ export const MelodiqPhoneClient = () => {
     // const audioPeerCreatedRef = useRef<boolean>(false); // REMOVE (Replaced by race mode)
     const candidatePeersRef = useRef<Set<any>>(new Set()); // Track all racing peers
     const isWebRTCConnectedRef = useRef<boolean>(false); // For suppressing discovery spam
+
+    // Audio processing refs
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const analyserRef = useRef<AnalyserNode | null>(null);
+    const bufferRef = useRef<Float32Array | null>(null);
+    const animFrameRef = useRef<number | null>(null);
+    const lastPitchSendTimeRef = useRef<number>(0);
 
     // Save settings when changed
     useEffect(() => {
@@ -54,7 +66,17 @@ export const MelodiqPhoneClient = () => {
         return '01234567890123456789' + Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
     };
 
+    // Cleanup function
     const cleanup = () => {
+        if (animFrameRef.current) {
+            cancelAnimationFrame(animFrameRef.current);
+            animFrameRef.current = null;
+        }
+        if (audioContextRef.current) {
+            audioContextRef.current.close();
+            audioContextRef.current = null;
+        }
+
         if (peerRef.current) {
             peerRef.current.destroy();
             peerRef.current = null;
@@ -77,7 +99,68 @@ export const MelodiqPhoneClient = () => {
         isWebRTCConnectedRef.current = false;
     };
 
+    // Audio Loop
+    const startAudioProcessing = (stream: MediaStream) => {
+        try {
+            const audioContext = new AudioContext({ latencyHint: 'interactive' });
+            const analyser = audioContext.createAnalyser();
+            analyser.fftSize = 2048;
 
+            const source = audioContext.createMediaStreamSource(stream);
+            source.connect(analyser);
+
+            audioContextRef.current = audioContext;
+            analyserRef.current = analyser;
+            bufferRef.current = new Float32Array(analyser.fftSize);
+
+            const processAudio = () => {
+                if (!analyserRef.current || !bufferRef.current || !audioContextRef.current) return;
+
+                analyserRef.current.getFloatTimeDomainData(bufferRef.current as any);
+                const volume = computeRMS(bufferRef.current);
+
+                // Update Visualization State (Throttled slightly by React renders, but good enough)
+                setVisualVolume(Math.min(1, volume * 5)); // Amplify for visibility
+
+                if (volume > 0.01) {
+                    const frequency = autoCorrelate(bufferRef.current, audioContextRef.current.sampleRate);
+                    if (frequency !== -1) {
+                        const note = freqToMidi(frequency);
+                        setVisualPitch(note);
+
+                        // SEND TO HOST
+                        const now = Date.now();
+                        // Send at max 30 times per second (approx every 33ms)
+                        if (isWebRTCConnectedRef.current && peerRef.current && (peerRef.current as any).connected) {
+                            if (now - lastPitchSendTimeRef.current > 33) {
+                                const msg = JSON.stringify({
+                                    type: 'pitch',
+                                    frequency,
+                                    note,
+                                    volume
+                                });
+                                try {
+                                    peerRef.current.send(msg);
+                                    lastPitchSendTimeRef.current = now;
+                                } catch (e) { /* Ignore send errors */ }
+                            }
+                        }
+                    } else {
+                        setVisualPitch(0);
+                    }
+                } else {
+                    setVisualPitch(0);
+                }
+
+                animFrameRef.current = requestAnimationFrame(processAudio);
+            };
+
+            processAudio();
+
+        } catch (err) {
+            console.error('[Phone] Failed to start local audio processing:', err);
+        }
+    };
 
     const setupPeerConnection = (trackerPeer: any) => {
         // Use the trackerPeer's unique ID to prevent duplicate audio peer creation
@@ -260,6 +343,9 @@ export const MelodiqPhoneClient = () => {
             });
 
             mediaStreamRef.current = stream;
+            // START LOCAL PROCESSING
+            startAudioProcessing(stream);
+
             updateStatus('Connecting to party...', 'status-connecting');
 
             const infoHash = stringToInfoHash(partyId);
@@ -372,6 +458,38 @@ export const MelodiqPhoneClient = () => {
                     {status.className === 'status-connected' ? '🎤' : '⏳'}
                 </div>
                 <div className="status-text">{status.message}</div>
+
+                {/* VISUALIZATION BAR */}
+                {status.className === 'status-connected' && (
+                    <div style={{
+                        width: '100%',
+                        height: '20px',
+                        background: '#333',
+                        borderRadius: '10px',
+                        overflow: 'hidden',
+                        marginBottom: '20px',
+                        position: 'relative',
+                        border: '1px solid #555'
+                    }}>
+                        <div style={{
+                            width: `${Math.min(100, visualVolume * 100)}%`,
+                            height: '100%',
+                            background: `hsl(${playerHue}, 100%, 50%)`,
+                            transition: 'width 0.1s linear'
+                        }} />
+                        {visualPitch > 0 && (
+                            <div style={{
+                                position: 'absolute',
+                                left: `${((visualPitch - 36) / (84 - 36)) * 100}%`, // Assuming C2 to C6 roughly
+                                top: 0,
+                                bottom: 0,
+                                width: '4px',
+                                background: 'white',
+                                boxShadow: '0 0 5px white'
+                            }} />
+                        )}
+                    </div>
+                )}
 
                 {/* Identity Settings */}
                 <div className="identity-settings" style={{ marginTop: '20px', padding: '15px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>

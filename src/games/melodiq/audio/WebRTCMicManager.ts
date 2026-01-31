@@ -1,6 +1,6 @@
 import SimplePeer from 'simple-peer';
 import Client from 'bittorrent-tracker';
-import { type PitchResult } from './MicrophoneManager';
+import { type PitchResult, computeRMS, autoCorrelate, freqToMidi } from './AudioUtils';
 
 interface RemotePeer {
     peer: SimplePeer.Instance;
@@ -10,6 +10,7 @@ interface RemotePeer {
     peerId: string;
     name: string; // Display name for the phone
     hue?: number; // Hue for avatar
+    lastPitch?: PitchResult | null; // Latest pitch received from phone
 }
 
 export class WebRTCMicManager {
@@ -113,7 +114,7 @@ export class WebRTCMicManager {
 
         // Receive remote signals via trackerPeer data channel
         const onData = (data: Uint8Array | string) => {
-            console.log('[WebRTCMicManager] Received data from phone');
+            // console.log('[WebRTCMicManager] Received data from phone');
             try {
                 const str = (typeof data === 'string') ? data : new TextDecoder().decode(data);
                 // Split by newline to handle multiple JSON objects in one chunk
@@ -138,6 +139,14 @@ export class WebRTCMicManager {
                             } else {
                                 console.warn('[WebRTCMicManager] Received identity for unknown or mismatched peer:', parsedData.connectionId);
                             }
+                            return;
+                        }
+
+                        // Check for pitch signal
+                        if (parsedData.type === 'pitch') {
+                            // Find the peer associated with this tracker peer
+                            // Note: Incoming pitch via tracker channel is possible but prefer WebRTC channel.
+                            // However, we must support it if phone sends via tracker fall back.
                             return;
                         }
 
@@ -251,6 +260,33 @@ export class WebRTCMicManager {
             console.log('[WebRTCMicManager] Audio Peer connected:', peerId);
         });
 
+        // Listen for data from the phone (Pitch data!)
+        audioPeer.on('data', (data: Uint8Array | string) => {
+            try {
+                const str = (typeof data === 'string') ? data : new TextDecoder().decode(data);
+                const parts = str.split('\n');
+                for (const part of parts) {
+                    if (!part.trim()) continue;
+                    const msg = JSON.parse(part);
+
+                    if (msg.type === 'pitch') {
+                        remotePeer.lastPitch = {
+                            frequency: msg.frequency,
+                            note: msg.note,
+                            volume: msg.volume
+                        };
+                    } else if (msg.type === 'identify') {
+                        console.log('[WebRTCMicManager] Received identity (WebRTC):', msg.name, msg.hue);
+                        remotePeer.name = msg.name || remotePeer.name;
+                        remotePeer.hue = msg.hue;
+                        this.onPeerUpdated?.(remotePeer.peerId, remotePeer.name, remotePeer.hue);
+                    }
+                }
+            } catch (e) {
+                // console.error('[WebRTCMicManager] Error parsing WebRTC data:', e);
+            }
+        });
+
         audioPeer.on('track', (track: MediaStreamTrack, stream: MediaStream) => {
             console.log('[WebRTCMicManager] Received track from phone:', track.kind, stream.id, peerId);
         });
@@ -314,23 +350,33 @@ export class WebRTCMicManager {
 
     getPitch(peerId: string): PitchResult | null {
         const remotePeer = this.peers.get(peerId);
-        if (!remotePeer || !remotePeer.analyser || !remotePeer.buffer || !remotePeer.audioContext) {
+        if (!remotePeer) return null;
+
+        // Prefer the pitch calculated by the phone itself
+        if (remotePeer.lastPitch) {
+            // Optional: Age check? If data is stale (> 200ms), maybe return null 
+            // or fallback. For now, we trust the stream.
+            return remotePeer.lastPitch;
+        }
+
+        // Fallback to local calculation if we have raw audio but no data stream
+        if (!remotePeer.analyser || !remotePeer.buffer || !remotePeer.audioContext) {
             return null;
         }
 
         remotePeer.analyser.getFloatTimeDomainData(remotePeer.buffer as any);
 
-        const volume = this.computeRMS(remotePeer.buffer);
+        const volume = computeRMS(remotePeer.buffer);
         if (volume < 0.01) {
             return null;
         }
 
-        const frequency = this.autoCorrelate(remotePeer.buffer, remotePeer.audioContext.sampleRate);
+        const frequency = autoCorrelate(remotePeer.buffer, remotePeer.audioContext.sampleRate);
         if (frequency === -1) {
             return null;
         }
 
-        const note = this.freqToMidi(frequency);
+        const note = freqToMidi(frequency);
 
         return { frequency, note, volume };
     }
@@ -369,82 +415,5 @@ export class WebRTCMicManager {
         const array = new Uint8Array(10); // 10 bytes = 20 hex chars
         crypto.getRandomValues(array);
         return '01234567890123456789' + Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-
-    // Audio analysis methods (copied from MicrophoneManager)
-    private computeRMS(buffer: Float32Array): number {
-        let sum = 0;
-        for (let i = 0; i < buffer.length; i++) {
-            sum += buffer[i] * buffer[i];
-        }
-        return Math.sqrt(sum / buffer.length);
-    }
-
-    private autoCorrelate(buffer: Float32Array, sampleRate: number): number {
-        const SIZE = buffer.length;
-        let sumOfSquares = 0;
-        for (let i = 0; i < SIZE; i++) {
-            const val = buffer[i];
-            sumOfSquares += val * val;
-        }
-
-        const rootMeanSquare = Math.sqrt(sumOfSquares / SIZE);
-        if (rootMeanSquare < 0.01) {
-            return -1;
-        }
-
-        let r1 = 0;
-        let r2 = SIZE - 1;
-        const threshold = 0.2;
-
-        for (let i = 0; i < SIZE / 2; i++) {
-            if (Math.abs(buffer[i]) < threshold) {
-                r1 = i;
-                break;
-            }
-        }
-        for (let i = 1; i < SIZE / 2; i++) {
-            if (Math.abs(buffer[SIZE - i]) < threshold) {
-                r2 = SIZE - i;
-                break;
-            }
-        }
-
-        const trimmedBuffer = buffer.slice(r1, r2);
-        const c = new Array(trimmedBuffer.length).fill(0);
-
-        for (let i = 0; i < trimmedBuffer.length; i++) {
-            for (let j = 0; j < trimmedBuffer.length - i; j++) {
-                c[i] = c[i] + trimmedBuffer[j] * trimmedBuffer[j + i];
-            }
-        }
-
-        let d = 0;
-        while (c[d] > c[d + 1]) d++;
-
-        let maxval = -1;
-        let maxpos = -1;
-
-        for (let i = d; i < c.length; i++) {
-            if (c[i] > maxval) {
-                maxval = c[i];
-                maxpos = i;
-            }
-        }
-
-        let T0 = maxpos;
-
-        const x1 = c[T0 - 1];
-        const x2 = c[T0];
-        const x3 = c[T0 + 1];
-        const a = (x1 + x3 - 2 * x2) / 2;
-        const b = (x3 - x1) / 2;
-        if (a) T0 = T0 - b / (2 * a);
-
-        return sampleRate / T0;
-    }
-
-    private freqToMidi(frequency: number): number {
-        return 69 + 12 * Math.log2(frequency / 440);
     }
 }
