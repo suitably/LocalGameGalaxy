@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { VirtuosoGrid } from 'react-virtuoso';
-import { Box, Button, Typography, LinearProgress, Card, CardContent, Grid, Container, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText } from '@mui/material';
+import { Box, Button, Typography, LinearProgress, Card, CardContent, Grid, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText } from '@mui/material';
 import { db, type Song } from './db';
 import { MelodiqImporter, type ImportStats } from './importer';
 import { MelodiqSession } from './gameplay/MelodiqSession';
@@ -157,11 +157,19 @@ export const MelodiqGame: React.FC = () => {
         }
 
         if (currentView === 'Settings') {
-            return <MelodiqSettings onBack={() => setCurrentView('Home')} />;
+            return (
+                <Box sx={{ height: '100%', overflow: 'auto' }}>
+                    <MelodiqSettings onBack={() => setCurrentView('Home')} />
+                </Box>
+            );
         }
 
         if (currentView === 'Connection') {
-            return <MelodiqConnection onBack={() => setCurrentView('Home')} />;
+            return (
+                <Box sx={{ height: '100%', overflow: 'auto' }}>
+                    <MelodiqConnection onBack={() => setCurrentView('Home')} />
+                </Box>
+            );
         }
 
         // Home view
@@ -388,7 +396,21 @@ export const MelodiqGame: React.FC = () => {
                                 totalCount={filteredSongs.length}
                                 components={{
                                     List: React.forwardRef((props, ref) => <Grid container spacing={2} {...props} ref={ref as any} />),
-                                    Item: React.forwardRef((props, ref) => <Grid size={{ xs: 6, sm: 4, md: 3, lg: 2 }} {...props} ref={ref as any} />)
+                                    Item: React.forwardRef((props, ref) => {
+                                        // Read density preference (default to 'small' for high density)
+                                        const cardSize = localStorage.getItem('melodiq_card_size') || 'small';
+
+                                        // Define responsive grid sizes
+                                        let gridProps: any = { xs: 6, sm: 4, md: 3, lg: 2 }; // Default 'small' (dense)
+
+                                        if (cardSize === 'medium') {
+                                            gridProps = { xs: 6, sm: 4, md: 4, lg: 3 }; // 4 per row on desktop
+                                        } else if (cardSize === 'large') {
+                                            gridProps = { xs: 12, sm: 6, md: 4, lg: 3 }; // 4 per row but bigger on mobile
+                                        }
+
+                                        return <Grid size={gridProps} {...props} ref={ref as any} />;
+                                    })
                                 }}
                                 itemContent={(index: number) => (
                                     <SongCard

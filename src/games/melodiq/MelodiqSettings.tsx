@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Typography, FormControl, MenuItem, Select, Switch, FormControlLabel, Container, Paper, Divider, TextField, IconButton, Avatar, Popover, Slider, Chip } from '@mui/material';
+import { Box, Button, Typography, FormControl, MenuItem, Select, Switch, FormControlLabel, Container, Paper, Divider, TextField, IconButton, Avatar, Popover, Slider, Chip, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
@@ -116,6 +116,7 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
         return stored === null ? true : stored === 'true';
     });
     const [layoutOverride, setLayoutOverride] = useState(localStorage.getItem('melodiq_layout_override') || '');
+    const [cardSize, setCardSize] = useState(localStorage.getItem('melodiq_card_size') || 'small');
 
     // Volume Settings
     // Volume Settings
@@ -193,7 +194,9 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
         localStorage.setItem('melodiq_show_slider', String(showDevSlider));
         localStorage.setItem('melodiq_show_mic_status', String(showMicStatus));
         localStorage.setItem('melodiq_show_note_labels', String(showNoteLabels));
+        localStorage.setItem('melodiq_show_note_labels', String(showNoteLabels));
         localStorage.setItem('melodiq_layout_override', layoutOverride);
+        localStorage.setItem('melodiq_card_size', cardSize);
 
         localStorage.setItem('melodiq_song_volume', String(songVolume));
         localStorage.setItem('melodiq_master_volume', String(masterVolume));
@@ -531,6 +534,25 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
                             fullWidth
                             size="small"
                         />
+
+                        <Box sx={{ mt: 2 }}>
+                            <Typography variant="subtitle2" gutterBottom>Card Size & Density</Typography>
+                            <ToggleButtonGroup
+                                value={cardSize}
+                                exclusive
+                                onChange={(_, newVal) => newVal && setCardSize(newVal)}
+                                aria-label="card size"
+                                size="small"
+                                fullWidth
+                            >
+                                <ToggleButton value="small">Small (Dense)</ToggleButton>
+                                <ToggleButton value="medium">Medium</ToggleButton>
+                                <ToggleButton value="large">Large</ToggleButton>
+                            </ToggleButtonGroup>
+                            <Typography variant="caption" color="text.secondary">
+                                Controls how many songs fit on a row. Small = more songs.
+                            </Typography>
+                        </Box>
                         <Box sx={{ mt: 2 }}>
                             <Typography gutterBottom>Song Volume: {Math.round(songVolume * 100)}%</Typography>
                             <Slider
