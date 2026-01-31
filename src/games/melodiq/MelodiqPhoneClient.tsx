@@ -19,7 +19,9 @@ export const MelodiqPhoneClient = () => {
     const trackerClientRef = useRef<Client | null>(null);
     const mediaStreamRef = useRef<MediaStream | null>(null);
     const handledTrackerPeersRef = useRef<Set<string>>(new Set()); // Track handled tracker peers to avoid duplicates
-    const audioPeerCreatedRef = useRef<boolean>(false); // Global flag: only ONE audio peer ever
+    // const audioPeerCreatedRef = useRef<boolean>(false); // REMOVE (Replaced by race mode)
+    const candidatePeersRef = useRef<Set<any>>(new Set()); // Track all racing peers
+    const isWebRTCConnectedRef = useRef<boolean>(false); // For suppressing discovery spam
 
     // Save settings when changed
     useEffect(() => {
@@ -58,6 +60,7 @@ export const MelodiqPhoneClient = () => {
             peerRef.current = null;
         }
         if (trackerClientRef.current) {
+            (trackerClientRef.current as any).stop();
             trackerClientRef.current.destroy();
             trackerClientRef.current = null;
         }
@@ -67,33 +70,14 @@ export const MelodiqPhoneClient = () => {
         }
         // Reset state refs
         handledTrackerPeersRef.current.clear();
-        audioPeerCreatedRef.current = false;
+        candidatePeersRef.current.forEach(p => {
+            try { p.destroy(); } catch (e) { }
+        });
+        candidatePeersRef.current.clear();
+        isWebRTCConnectedRef.current = false;
     };
 
-    // Helper to send Identity
-    const sendIdentity = (peer: SimplePeer.Instance, trackerPeerForSend: any) => {
-        const identityMsg = {
-            type: 'identify',
-            name: playerName,
-            hue: playerHue
-        };
-        console.log('[Phone] Sending identity:', identityMsg);
 
-        // Send via WebRTC data channel if open (most reliable/fast)
-        if ((peer as any).connected) {
-            peer.send(JSON.stringify(identityMsg));
-        }
-
-        // ALSO Send via Tracker signaling channel to ensure it gets there early/reliably 
-        // even if WebRTC data channel isn't fully ready or for redundancy
-        if (trackerPeerForSend && trackerPeerForSend.connected) {
-            try {
-                trackerPeerForSend.send(JSON.stringify(identityMsg) + '\n');
-            } catch (e) {
-                console.error('[Phone] Failed to send identity via tracker:', e);
-            }
-        }
-    };
 
     const setupPeerConnection = (trackerPeer: any) => {
         // Use the trackerPeer's unique ID to prevent duplicate audio peer creation
@@ -107,10 +91,9 @@ export const MelodiqPhoneClient = () => {
         console.log('[Phone] Tracker peer found. Waiting for Host signal...', trackerPeerId);
 
         const setupAudioPeer = () => {
-            if (audioPeerCreatedRef.current) return;
-            audioPeerCreatedRef.current = true;
+            // No early return for audioPeerCreatedRef - we allow racing!
 
-            console.log('[Phone] Tracker peer connected. Initiating audio handshake...');
+            console.log('[Phone] Tracker peer connected. Initiating audio handshake (Race Candidate)...');
 
             try {
                 const peer = new SimplePeer({
@@ -125,14 +108,23 @@ export const MelodiqPhoneClient = () => {
                     },
                 });
 
-                peerRef.current = peer;
+                const connectionId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+
+                // Track wrapped state
+                (peer as any)._connectionId = connectionId;
+
+                // Add to race candidates
+                candidatePeersRef.current.add(peer);
 
                 // Send our signals back to Host
                 peer.on('signal', (data: any) => {
-                    console.log('[Phone] Sending signal to host:', data.type);
+                    if (data.type !== 'candidate') {
+                        console.log('[Phone] Sending signal to host:', data.type, 'ConnID:', connectionId);
+                    }
                     if (trackerPeer.connected) {
                         try {
-                            trackerPeer.send(JSON.stringify(data) + '\n');
+                            const payload = { connectionId, signal: data };
+                            trackerPeer.send(JSON.stringify(payload) + '\n');
                         } catch (e) {
                             console.error('[Phone] Failed to send signal:', e);
                         }
@@ -148,15 +140,16 @@ export const MelodiqPhoneClient = () => {
                             if (!part.trim()) continue;
 
                             try {
-                                const signal = JSON.parse(part);
+                                const parsed = JSON.parse(part);
 
-                                if (peer && !(peer as any).destroyed) {
-                                    if (signal.type === 'offer') {
-                                        console.log('[Phone] Ignoring incoming Offer (we are initiator)');
-                                        return;
+                                if (parsed.connectionId === connectionId && parsed.signal) {
+                                    const signal = parsed.signal;
+                                    if (peer && !(peer as any).destroyed) {
+                                        if (signal.type !== 'candidate') {
+                                            console.log('[Phone] Processing matched signal:', signal.type);
+                                        }
+                                        peer.signal(signal);
                                     }
-                                    console.log('[Phone] Processing signal from host:', signal.type);
-                                    peer.signal(signal);
                                 }
                             } catch (e) {
                                 console.error('[Phone] Failed to parse individual signal chunk:', part, e);
@@ -170,39 +163,78 @@ export const MelodiqPhoneClient = () => {
                 trackerPeer.on('data', onData);
 
                 peer.on('connect', () => {
-                    console.log('[Phone] Connected to host!');
+                    if (isWebRTCConnectedRef.current) {
+                        console.log('[Phone] Another peer won the race. Destroying late arrival.');
+                        peer.destroy();
+                        return;
+                    }
+
+                    console.log('[Phone] Connected to host! (We won the race)');
+                    isWebRTCConnectedRef.current = true;
+                    peerRef.current = peer; // Set winner as main peer
                     updateStatus('✅ Connected', 'status-connected');
                     setShowReconnect(false);
-                    sendIdentity(peer, trackerPeer);
+                    updateStatus('✅ Connected', 'status-connected');
+                    setShowReconnect(false);
+                    // Send identity inside an envelope too? No, Host expects specific format for identity.
+                    // But we modified Host to check connectionId for identity too.
+                    const identityMsg = {
+                        type: 'identify',
+                        name: playerName,
+                        hue: playerHue,
+                        connectionId // Include matching connectionId
+                    };
+                    // Send via WebRTC data (fastest) and Tracker (fallback)
+                    if ((peer as any).connected) peer.send(JSON.stringify(identityMsg));
+                    if (trackerPeer.connected) trackerPeer.send(JSON.stringify(identityMsg) + '\n');
+
+                    // Destroy all other candidates
+                    candidatePeersRef.current.delete(peer);
+                    candidatePeersRef.current.forEach(p => {
+                        try { p.destroy(); } catch (e) { }
+                    });
+                    candidatePeersRef.current.clear();
                 });
 
                 peer.on('error', (err: Error) => {
-                    console.error('[Phone] Peer error:', err);
-                    updateStatus(`Connection lost: ${err.message}`, 'status-error');
-                    setShowReconnect(true);
-                    audioPeerCreatedRef.current = false;
-                    handledTrackerPeersRef.current.delete(trackerPeerId);
+                    candidatePeersRef.current.delete(peer);
+
+                    // Only show error if THIS was the connected peer
+                    if (isWebRTCConnectedRef.current && peerRef.current === peer) {
+                        console.error('[Phone] Peer error:', err);
+                        isWebRTCConnectedRef.current = false;
+                        updateStatus(`Connection lost: ${err.message}`, 'status-error');
+                        setShowReconnect(true);
+                        handledTrackerPeersRef.current.delete(trackerPeerId); // Allow retry
+                    } else {
+                        console.warn('[Phone] Candidate peer failed (ignored):', err.message);
+                        // If we are NOT connected, and this was the last candidate... maybe show error?
+                        // But usually better to stay "Connecting..."
+                    }
                     trackerPeer.off('data', onData);
                 });
 
                 peer.on('close', () => {
-                    console.log('[Phone] Connection closed');
-                    updateStatus('Disconnected', 'status-disconnected');
-                    setShowReconnect(true);
-                    audioPeerCreatedRef.current = false;
-                    handledTrackerPeersRef.current.delete(trackerPeerId);
+                    candidatePeersRef.current.delete(peer);
+
+                    if (isWebRTCConnectedRef.current && peerRef.current === peer) {
+                        console.log('[Phone] Connection closed');
+                        isWebRTCConnectedRef.current = false;
+                        updateStatus('Disconnected', 'status-disconnected');
+                        setShowReconnect(true);
+                        handledTrackerPeersRef.current.delete(trackerPeerId);
+                    }
                     trackerPeer.off('data', onData);
                 });
 
                 trackerPeer.on('close', () => {
                     peer.destroy();
-                    audioPeerCreatedRef.current = false;
+                    candidatePeersRef.current.delete(peer);
                     handledTrackerPeersRef.current.delete(trackerPeerId);
                 });
 
             } catch (err) {
                 console.error('[Phone] Failed to create/signal peer:', err);
-                audioPeerCreatedRef.current = false;
                 handledTrackerPeersRef.current.delete(trackerPeerId);
             }
         };
@@ -243,11 +275,27 @@ export const MelodiqPhoneClient = () => {
                 peerId,
                 announce: trackerUrls,
                 port: 0,
-            });
+                rtcConfig: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:global.stun.twilio.com:3478' },
+                    ],
+                },
+            } as any);
 
             trackerClientRef.current = trackerClient;
 
             trackerClient.on('peer', (trackerPeer: any) => {
+                if (isWebRTCConnectedRef.current) {
+                    return; // Ignore spam if we already have a live WebRTC link
+                }
+
+                // Prevent connecting to self
+                const tpId = trackerPeer._id || trackerPeer.id;
+                if (tpId === (trackerClient as any).peerId) {
+                    return;
+                }
+
                 console.log('[Phone] Tracker discovered host (Peer info):', trackerPeer);
                 setupPeerConnection(trackerPeer);
             });

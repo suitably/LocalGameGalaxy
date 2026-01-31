@@ -14,7 +14,9 @@ interface RemotePeer {
 
 export class WebRTCMicManager {
     private peers: Map<string, RemotePeer> = new Map();
-    private pendingTrackerPeers: Set<string> = new Set(); // Track tracker peer IDs to avoid duplicate audio peers
+    private pendingTrackerPeers: Set<string> = new Set();
+
+
     private trackerClient: Client | null = null;
     private partyId: string;
     private trackerUrls: string[];
@@ -78,8 +80,14 @@ export class WebRTCMicManager {
             infoHash,
             peerId,
             announce: finalTrackers,
-            port: 0, // Not used for WebRTC
-        });
+            port: 0,
+            rtcConfig: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:global.stun.twilio.com:3478' },
+                ],
+            },
+        } as any);
 
         // Listen for peers discovered by the tracker
         this.trackerClient.on('peer', (peer: any) => {
@@ -100,170 +108,178 @@ export class WebRTCMicManager {
     }
 
     private handleTrackerPeer(trackerPeer: any): void {
-        // trackerPeer is a simple-peer instance created by bittorrent-tracker
-        // connected via the tracker's signaling.
-        // We will use this established connection as a signaling channel for our Audio Peer.
-
-        // Use the trackerPeer's unique ID to prevent duplicate audio peer creation
-        // The bittorrent-tracker library might emit 'peer' multiple times for the same connection
         const trackerPeerId = trackerPeer._id || trackerPeer.channelName || Math.random().toString(36);
-
-        if (this.pendingTrackerPeers.has(trackerPeerId)) {
-            console.log('[WebRTCMicManager] Ignoring known/pending tracker peer:', trackerPeerId);
-            return;
-        }
-        this.pendingTrackerPeers.add(trackerPeerId);
-
         console.log('[WebRTCMicManager] Tracker peer found. Waiting for connection...', trackerPeerId);
 
-        const setupAudioPeer = () => {
-            // DOUBLE CHECK: Even if we added to pending, check if we've already set up an audio peer for this
-            // specific signaling channel to be absolutely safe against race conditions.
-            if ((trackerPeer as any)._audioPeerSetup) {
-                console.log('[WebRTCMicManager] Audio peer already set up for this tracker peer. Skipping.');
+        // Receive remote signals via trackerPeer data channel
+        const onData = (data: Uint8Array | string) => {
+            console.log('[WebRTCMicManager] Received data from phone');
+            try {
+                const str = (typeof data === 'string') ? data : new TextDecoder().decode(data);
+                // Split by newline to handle multiple JSON objects in one chunk
+                const parts = str.split('\n');
+                for (const part of parts) {
+                    if (!part.trim()) continue;
+
+                    try {
+                        const parsedData = JSON.parse(part);
+
+                        // Check for identity signal (application-level, not SimplePeer)
+                        if (parsedData.type === 'identify' && parsedData.connectionId) {
+                            const remotePeer = Array.from(this.peers.values()).find(p =>
+                                (trackerPeer as any)._audioPeerInstance === p.peer &&
+                                (trackerPeer as any)._currentConnectionId === parsedData.connectionId
+                            );
+                            if (remotePeer) {
+                                console.log('[WebRTCMicManager] Received identity from phone:', parsedData.name, parsedData.hue);
+                                remotePeer.name = parsedData.name || remotePeer.name;
+                                remotePeer.hue = parsedData.hue;
+                                this.onPeerUpdated?.(remotePeer.peerId, remotePeer.name, remotePeer.hue);
+                            } else {
+                                console.warn('[WebRTCMicManager] Received identity for unknown or mismatched peer:', parsedData.connectionId);
+                            }
+                            return;
+                        }
+
+                        // If it's a wrapped SimplePeer signal
+                        if (parsedData.connectionId && parsedData.signal) {
+                            this.handleWrappedSignal(trackerPeer, parsedData);
+                        } else {
+                            // console.debug('[WebRTCMicManager] Ignoring legacy or malformed signal');
+                        }
+                    } catch (e) {
+                        console.error('[WebRTCMicManager] Failed to parse individual signal chunk:', part, e);
+                    }
+                }
+            } catch (e) {
+                console.error('[WebRTCMicManager] Failed to process received data:', e);
+            }
+        };
+        trackerPeer.on('data', onData);
+
+        // Cleanup tracker listener if tracker peer dies
+        trackerPeer.on('close', () => {
+            if ((trackerPeer as any)._audioPeerInstance) {
+                (trackerPeer as any)._audioPeerInstance.destroy();
+                delete (trackerPeer as any)._audioPeerInstance;
+            }
+            this.pendingTrackerPeers.delete(trackerPeerId);
+            delete (trackerPeer as any)._currentConnectionId;
+            trackerPeer.off('data', onData); // Remove data listener
+        });
+    }
+
+    // Helper to process wrapped signals
+    private handleWrappedSignal(trackerPeer: any, wrappedData: any) {
+        const { connectionId, signal } = wrappedData;
+        const currentConnectionId = (trackerPeer as any)._currentConnectionId;
+
+        // If this is a new connection attempt (new ID), resets
+        if (signal.type === 'offer' && connectionId !== currentConnectionId) {
+            console.log('[WebRTCMicManager] New connection attempt detected:', connectionId);
+
+            // Destroy existing if any
+            const existingPeer = (trackerPeer as any)._audioPeerInstance;
+            if (existingPeer) {
+                existingPeer.destroy();
+                delete (trackerPeer as any)._audioPeerInstance;
+            }
+
+            (trackerPeer as any)._currentConnectionId = connectionId;
+            this.initAudioPeer(trackerPeer, connectionId);
+        }
+
+        const audioPeer = (trackerPeer as any)._audioPeerInstance;
+        if (audioPeer && !audioPeer.destroyed && (trackerPeer as any)._currentConnectionId === connectionId) {
+            // Host is non-initiator, so it should NEVER process an 'answer' signal (echo protection)
+            if (signal.type === 'answer') {
+                // console.log('[WebRTCMicManager] Ignoring echo answer (Host is responder)'); 
                 return;
             }
-            (trackerPeer as any)._audioPeerSetup = true;
 
-            console.log('[WebRTCMicManager] Tracker peer connected. Establishing Audio Peer...');
+            // console.log('[WebRTCMicManager] Processing verified signal:', signal.type);
+            try {
+                audioPeer.signal(signal);
+            } catch (e) {
+                console.error('[WebRTCMicManager] Signal error:', e);
+            }
+        } else {
+            // console.debug('[WebRTCMicManager] Ignoring mismatched or orphan signal:', connectionId);
+        }
+    }
 
-            // We use a unique ID for the audio connection to avoid cross-talk if multiple
-            // simple-peers are multiplexed (though here we just have one)
-            const peerId = this.generatePeerId();
+    private initAudioPeer(trackerPeer: any, connectionId: string) {
+        console.log('[WebRTCMicManager] Initializing Audio Peer for:', connectionId);
+        const peerId = this.generatePeerId();
 
-            const audioPeer = new SimplePeer({
-                initiator: false, // Phone will initiate with the stream
-                trickle: true,
-                config: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:global.stun.twilio.com:3478' },
-                    ],
-                },
-            });
+        const audioPeer = new SimplePeer({
+            initiator: false,
+            trickle: true,
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:global.stun.twilio.com:3478' },
+                ],
+            },
+        });
 
-            const remotePeer: RemotePeer = {
-                peer: audioPeer,
-                audioContext: null,
-                analyser: null,
-                buffer: null,
-                peerId,
-                name: `Phone ${this.peers.size + 1}`,
-            };
+        // Store instance
+        (trackerPeer as any)._audioPeerInstance = audioPeer;
 
-            this.peers.set(peerId, remotePeer);
-
-            // 1. Send our signals via the trackerPeer data channel
-            audioPeer.on('signal', (data: any) => {
-                console.log('[WebRTCMicManager] Sending signal to phone:', data.type);
-                if (trackerPeer.connected) {
-                    try {
-                        // Use NDJSON (Newline Delimited JSON) to handle multiple signals in one chunk
-                        trackerPeer.send(JSON.stringify(data) + '\n');
-                    } catch (e) {
-                        console.error('[WebRTCMicManager] Failed to send signal:', e);
-                    }
-                } else {
-                    console.warn('[WebRTCMicManager] Tracker peer not connected, cannot send signal');
-                }
-            });
-
-            // 2. Receive remote signals via trackerPeer data channel
-            const processedSignals = new Set<string>();
-
-            const onData = (data: Uint8Array | string) => {
-                console.log('[WebRTCMicManager] Received data from phone');
-                try {
-                    const str = (typeof data === 'string') ? data : new TextDecoder().decode(data);
-                    // Split by newline to handle multiple JSON objects in one chunk
-                    const parts = str.split('\n');
-                    for (const part of parts) {
-                        if (!part.trim()) continue;
-
-                        if (processedSignals.has(part)) {
-                            console.log('[WebRTCMicManager] Ignoring duplicate signal');
-                            continue;
-                        }
-                        processedSignals.add(part);
-
-                        try {
-                            const signal = JSON.parse(part);
-
-                            // Check for identity signal
-                            if (signal.type === 'identify') {
-                                console.log('[WebRTCMicManager] Received identity from phone:', signal.name, signal.hue);
-                                remotePeer.name = signal.name || remotePeer.name;
-                                remotePeer.hue = signal.hue;
-
-                                // Notify listener of update
-                                this.onPeerUpdated?.(peerId, remotePeer.name, remotePeer.hue);
-                                return;
-                            }
-
-                            if (audioPeer && !(audioPeer as any).destroyed) {
-                                console.log('[WebRTCMicManager] Processing signal from phone:', signal.type);
-                                try {
-                                    audioPeer.signal(signal);
-                                } catch (err) {
-                                    console.warn('[WebRTCMicManager] Error signaling peer (might be destroyed):', err);
-                                }
-                            } else {
-                                console.log('[WebRTCMicManager] Ignoring signal, peer is destroyed:', signal.type);
-                            }
-                        } catch (e) {
-                            console.error('[WebRTCMicManager] Failed to parse individual signal chunk:', part, e);
-                        }
-                    }
-                } catch (e) {
-                    console.error('[WebRTCMicManager] Failed to process received data:', e);
-                }
-            };
-            trackerPeer.on('data', onData);
-
-            audioPeer.on('connect', () => {
-                console.log('[WebRTCMicManager] Audio Peer connected:', peerId);
-            });
-
-            audioPeer.on('track', (track: MediaStreamTrack, stream: MediaStream) => {
-                console.log('[WebRTCMicManager] Received track from phone:', track.kind, stream.id, peerId);
-            });
-
-            audioPeer.on('stream', (stream: MediaStream) => {
-                console.log('[WebRTCMicManager] Received audio stream from phone:', peerId);
-                this.setupAudioProcessing(peerId, stream);
-                this.onPeerConnected?.(peerId, remotePeer.name, remotePeer.hue);
-            });
-
-            audioPeer.on('error', (err: Error) => {
-                console.error('[WebRTCMicManager] Audio Peer error:', peerId, err);
-                this.removePeer(peerId);
-                this.pendingTrackerPeers.delete(trackerPeerId);
-                trackerPeer.off('data', onData);
-                // Clean up flag so we can retry if needed (though usually tracker peer dies too)
-                delete (trackerPeer as any)._audioPeerSetup;
-            });
-
-            audioPeer.on('close', () => {
-                console.log('[WebRTCMicManager] Audio Peer closed:', peerId);
-                this.removePeer(peerId);
-                this.pendingTrackerPeers.delete(trackerPeerId);
-                trackerPeer.off('data', onData);
-                delete (trackerPeer as any)._audioPeerSetup;
-            });
-
-            // Cleanup tracker listener if tracker peer dies
-            trackerPeer.on('close', () => {
-                audioPeer.destroy();
-                this.pendingTrackerPeers.delete(trackerPeerId);
-                delete (trackerPeer as any)._audioPeerSetup;
-            });
+        const remotePeer: RemotePeer = {
+            peer: audioPeer,
+            audioContext: null,
+            analyser: null,
+            buffer: null,
+            peerId,
+            name: `Phone ${this.peers.size + 1}`,
         };
 
-        if (trackerPeer.connected) {
-            setupAudioPeer();
-        } else {
-            trackerPeer.on('connect', setupAudioPeer);
-        }
+        this.peers.set(peerId, remotePeer);
+
+        // Send wrapped signals
+        audioPeer.on('signal', (data: any) => {
+            if (trackerPeer.connected) {
+                try {
+                    const payload = { connectionId, signal: data };
+                    trackerPeer.send(JSON.stringify(payload) + '\n');
+                } catch (e) { }
+            }
+        });
+
+        audioPeer.on('connect', () => {
+            console.log('[WebRTCMicManager] Audio Peer connected:', peerId);
+        });
+
+        audioPeer.on('track', (track: MediaStreamTrack, stream: MediaStream) => {
+            console.log('[WebRTCMicManager] Received track from phone:', track.kind, stream.id, peerId);
+        });
+
+        audioPeer.on('stream', (stream: MediaStream) => {
+            console.log('[WebRTCMicManager] Received audio stream from phone:', peerId);
+            this.setupAudioProcessing(peerId, stream);
+            this.onPeerConnected?.(peerId, remotePeer.name, remotePeer.hue);
+        });
+
+        audioPeer.on('close', () => {
+            console.log('[WebRTCMicManager] Audio Peer closed:', peerId);
+            this.removePeer(peerId);
+            // Clear the current connection ID if this peer was the active one
+            if ((trackerPeer as any)._currentConnectionId === connectionId) {
+                delete (trackerPeer as any)._currentConnectionId;
+                delete (trackerPeer as any)._audioPeerInstance;
+            }
+        });
+
+        audioPeer.on('error', (e: any) => {
+            console.error('[WebRTCMicManager] Audio Peer error:', peerId, e);
+            this.removePeer(peerId);
+            // Clear the current connection ID if this peer was the active one
+            if ((trackerPeer as any)._currentConnectionId === connectionId) {
+                delete (trackerPeer as any)._currentConnectionId;
+                delete (trackerPeer as any)._audioPeerInstance;
+            }
+        });
     }
 
     private setupAudioProcessing(peerId: string, stream: MediaStream): void {
@@ -328,6 +344,7 @@ export class WebRTCMicManager {
 
     stop(): void {
         if (this.trackerClient) {
+            (this.trackerClient as any).stop();
             this.trackerClient.destroy();
             this.trackerClient = null;
         }
