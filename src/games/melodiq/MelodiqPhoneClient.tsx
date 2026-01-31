@@ -3,6 +3,9 @@ import SimplePeer from 'simple-peer';
 import Client from 'bittorrent-tracker';
 import { computeRMS, autoCorrelate, freqToMidi } from './audio/AudioUtils';
 
+const MAX_CANDIDATES = 5;
+const CONNECTION_TIMEOUT_MS = 15000;
+
 export const MelodiqPhoneClient = () => {
     const [status, setStatus] = useState<{ message: string; className: string }>({
         message: 'Initializing...',
@@ -13,13 +16,20 @@ export const MelodiqPhoneClient = () => {
         const stored = localStorage.getItem('melodiq_phone_hue');
         return stored ? parseInt(stored) : Math.floor(Math.random() * 360);
     });
+    const [audioInputDevices, setAudioInputDevices] = useState<MediaDeviceInfo[]>([]);
+    const [selectedDeviceId, setSelectedDeviceId] = useState<string>(() => localStorage.getItem('melodiq_mic_id') || '');
     const [showReconnect, setShowReconnect] = useState(false);
 
-    // Audio visualization state
-    const [visualVolume, setVisualVolume] = useState(0);
-    const [visualPitch, setVisualPitch] = useState(0);
+    // Audio visualization refs (Direct DOM manipulation for performance)
+    const volumeBarRef = useRef<HTMLDivElement>(null);
+    const pitchIndicatorRef = useRef<HTMLDivElement>(null);
+    const noteNameRef = useRef<HTMLDivElement>(null);
+
+    const [latestStats, setLatestStats] = useState<{ song: string, score: number, date: string } | null>(null);
 
     // Refs
+    // Queue for pending peers to avoid overwhelming the browser
+    const pendingPeerCandidatesRef = useRef<any[]>([]);
     const peerRef = useRef<SimplePeer.Instance | null>(null);
     const trackerClientRef = useRef<Client | null>(null);
     const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -36,10 +46,50 @@ export const MelodiqPhoneClient = () => {
     const lastPitchSendTimeRef = useRef<number>(0);
 
     // Save settings when changed
+    // Save settings when changed
     useEffect(() => {
         localStorage.setItem('melodiq_phone_name', playerName);
         localStorage.setItem('melodiq_phone_hue', String(playerHue));
-    }, [playerName, playerHue]);
+        if (selectedDeviceId) localStorage.setItem('melodiq_mic_id', selectedDeviceId);
+
+        // Send update to Host if connected
+        if (isWebRTCConnectedRef.current && peerRef.current && (peerRef.current as any).connected) {
+            const identityMsg = {
+                type: 'identify',
+                name: playerName,
+                hue: playerHue,
+                connectionId: (peerRef.current as any)._connectionId
+            };
+            try {
+                peerRef.current.send(JSON.stringify(identityMsg));
+            } catch (e) {
+                console.error('[Phone] Failed to send identity update:', e);
+            }
+        }
+    }, [playerName, playerHue, selectedDeviceId]);
+
+    // Enumerate Devices
+    useEffect(() => {
+        const getDevices = async () => {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const audioInputs = devices.filter(d => d.kind === 'audioinput');
+                setAudioInputDevices(audioInputs);
+
+                // If we have a stored ID but it's not in the list (anymore), default to empty (default device)
+                // actually, we might want to keep it if it's just temporarily unplugged, but for now let's leave it.
+            } catch (err) {
+                console.error('[Phone] Error enumerating devices:', err);
+            }
+        };
+        // Ask for permissions first to get labels? 
+        // We usually need an active stream to get labels on some browsers.
+        // We will call this again after getting the stream.
+        getDevices();
+
+        navigator.mediaDevices.ondevicechange = getDevices;
+        return () => { navigator.mediaDevices.ondevicechange = null; };
+    }, []);
 
     const updateStatus = (message: string, className: string) => {
         setStatus({ message, className });
@@ -119,14 +169,29 @@ export const MelodiqPhoneClient = () => {
                 analyserRef.current.getFloatTimeDomainData(bufferRef.current as any);
                 const volume = computeRMS(bufferRef.current);
 
-                // Update Visualization State (Throttled slightly by React renders, but good enough)
-                setVisualVolume(Math.min(1, volume * 5)); // Amplify for visibility
+                // Update Visualization State (Direct DOM manipulation)
+                const visVolume = Math.min(1, volume * 5);
+                if (volumeBarRef.current) {
+                    volumeBarRef.current.style.width = `${visVolume * 100}%`;
+                }
 
                 if (volume > 0.01) {
                     const frequency = autoCorrelate(bufferRef.current, audioContextRef.current.sampleRate);
                     if (frequency !== -1) {
                         const note = freqToMidi(frequency);
-                        setVisualPitch(note);
+
+                        // Calculate note name
+                        const roundedNote = Math.round(note);
+                        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+                        const noteIndex = ((roundedNote % 12) + 12) % 12;
+                        const noteName = noteNames[noteIndex];
+                        const octave = Math.floor(roundedNote / 12) - 1;
+
+                        if (noteNameRef.current) noteNameRef.current.innerText = `${noteName}${octave}`;
+                        if (pitchIndicatorRef.current) {
+                            pitchIndicatorRef.current.style.display = 'block';
+                            pitchIndicatorRef.current.style.left = `${((note - 36) / (84 - 36)) * 100}%`;
+                        }
 
                         // SEND TO HOST
                         const now = Date.now();
@@ -146,10 +211,12 @@ export const MelodiqPhoneClient = () => {
                             }
                         }
                     } else {
-                        setVisualPitch(0);
+                        if (noteNameRef.current) noteNameRef.current.innerText = '';
+                        if (pitchIndicatorRef.current) pitchIndicatorRef.current.style.display = 'none';
                     }
                 } else {
-                    setVisualPitch(0);
+                    if (noteNameRef.current) noteNameRef.current.innerText = '';
+                    if (pitchIndicatorRef.current) pitchIndicatorRef.current.style.display = 'none';
                 }
 
                 animFrameRef.current = requestAnimationFrame(processAudio);
@@ -166,17 +233,40 @@ export const MelodiqPhoneClient = () => {
         // Use the trackerPeer's unique ID to prevent duplicate audio peer creation
         const trackerPeerId = trackerPeer._id || trackerPeer.channelName || Math.random().toString(36);
         if (handledTrackerPeersRef.current.has(trackerPeerId)) {
-            console.log('[Phone] Ignoring duplicate tracker peer:', trackerPeerId);
+            // console.log('[Phone] Ignoring duplicate tracker peer:', trackerPeerId);
             return;
         }
         handledTrackerPeersRef.current.add(trackerPeerId);
 
+        // Check concurrency limit
+        if (candidatePeersRef.current.size >= MAX_CANDIDATES) {
+            console.log(`[Phone] Queueing peer ${trackerPeerId} (Limit reached: ${candidatePeersRef.current.size}/${MAX_CANDIDATES})`);
+            pendingPeerCandidatesRef.current.push(trackerPeer);
+            return;
+        }
+
+        initiateConnection(trackerPeer, trackerPeerId);
+    };
+
+    const processNextPendingPeer = () => {
+        if (candidatePeersRef.current.size < MAX_CANDIDATES && pendingPeerCandidatesRef.current.length > 0) {
+            const nextPeer = pendingPeerCandidatesRef.current.shift();
+            // We already added it to handledTrackerPeersRef when we queued it, so we can just initiate
+            const trackerPeerId = nextPeer._id || nextPeer.channelName; // Re-derive ID simply
+            console.log('[Phone] Processing queued peer:', trackerPeerId);
+            initiateConnection(nextPeer, trackerPeerId);
+        }
+    };
+
+    const initiateConnection = (trackerPeer: any, trackerPeerId: string) => {
         console.log('[Phone] Tracker peer found. Waiting for Host signal...', trackerPeerId);
 
         const setupAudioPeer = () => {
             // No early return for audioPeerCreatedRef - we allow racing!
 
             console.log('[Phone] Tracker peer connected. Initiating audio handshake (Race Candidate)...');
+
+            let connectionTimeout: any = null;
 
             try {
                 const peer = new SimplePeer({
@@ -198,6 +288,16 @@ export const MelodiqPhoneClient = () => {
 
                 // Add to race candidates
                 candidatePeersRef.current.add(peer);
+
+                // Set safety timeout
+                connectionTimeout = setTimeout(() => {
+                    if (peer && !(peer as any).destroyed && !(peer as any).connected) {
+                        console.warn('[Phone] Connection timeout for candidate:', connectionId);
+                        peer.destroy();
+                        // This will trigger 'close' which handles cleanup and next peer
+                    }
+                }, CONNECTION_TIMEOUT_MS);
+
 
                 // Send our signals back to Host
                 peer.on('signal', (data: any) => {
@@ -225,6 +325,29 @@ export const MelodiqPhoneClient = () => {
                             try {
                                 const parsed = JSON.parse(part);
 
+                                if (parsed.type === 'stats') {
+                                    console.log('[Phone] Received stats:', parsed);
+                                    const statsEntry = {
+                                        song: parsed.songTitle,
+                                        score: parsed.score,
+                                        date: new Date().toISOString()
+                                    };
+
+                                    // Store in localStorage
+                                    const historyStr = localStorage.getItem('melodiq_history');
+                                    const history = historyStr ? JSON.parse(historyStr) : [];
+                                    history.unshift(statsEntry);
+                                    // Limit history to 50 items
+                                    if (history.length > 50) history.pop();
+
+                                    localStorage.setItem('melodiq_history', JSON.stringify(history));
+                                    setLatestStats(statsEntry);
+
+                                    // Clear notify after 5s
+                                    setTimeout(() => setLatestStats(null), 5000);
+                                    continue;
+                                }
+
                                 if (parsed.connectionId === connectionId && parsed.signal) {
                                     const signal = parsed.signal;
                                     if (peer && !(peer as any).destroyed) {
@@ -246,6 +369,8 @@ export const MelodiqPhoneClient = () => {
                 trackerPeer.on('data', onData);
 
                 peer.on('connect', () => {
+                    clearTimeout(connectionTimeout);
+
                     if (isWebRTCConnectedRef.current) {
                         console.log('[Phone] Another peer won the race. Destroying late arrival.');
                         peer.destroy();
@@ -273,13 +398,24 @@ export const MelodiqPhoneClient = () => {
 
                     // Destroy all other candidates
                     candidatePeersRef.current.delete(peer);
+
+                    // Clear pending queue too? No, keep them just in case? 
+                    // Actually if we are connected, we don't need pending.
+                    // But if we disconnect, we might need them?
+                    // For now, let's just destroy candidates.
                     candidatePeersRef.current.forEach(p => {
                         try { p.destroy(); } catch (e) { }
                     });
                     candidatePeersRef.current.clear();
+
+                    // We don't clear pendingPeersRef because maybe we lose connection and want to try them? 
+                    // But usually we just reload or reconnect.
+                    // Let's clear them to be safe.
+                    pendingPeerCandidatesRef.current = [];
                 });
 
                 peer.on('error', (err: Error) => {
+                    clearTimeout(connectionTimeout);
                     candidatePeersRef.current.delete(peer);
 
                     // Only show error if THIS was the connected peer
@@ -295,9 +431,15 @@ export const MelodiqPhoneClient = () => {
                         // But usually better to stay "Connecting..."
                     }
                     trackerPeer.off('data', onData);
+
+                    // Trigger next
+                    if (!isWebRTCConnectedRef.current) {
+                        processNextPendingPeer();
+                    }
                 });
 
                 peer.on('close', () => {
+                    clearTimeout(connectionTimeout);
                     candidatePeersRef.current.delete(peer);
 
                     if (isWebRTCConnectedRef.current && peerRef.current === peer) {
@@ -308,17 +450,30 @@ export const MelodiqPhoneClient = () => {
                         handledTrackerPeersRef.current.delete(trackerPeerId);
                     }
                     trackerPeer.off('data', onData);
+
+                    // Trigger next
+                    if (!isWebRTCConnectedRef.current) {
+                        processNextPendingPeer();
+                    }
                 });
 
                 trackerPeer.on('close', () => {
+                    clearTimeout(connectionTimeout);
                     peer.destroy();
                     candidatePeersRef.current.delete(peer);
                     handledTrackerPeersRef.current.delete(trackerPeerId);
+
+                    // Trigger next
+                    if (!isWebRTCConnectedRef.current) {
+                        processNextPendingPeer();
+                    }
                 });
 
             } catch (err) {
                 console.error('[Phone] Failed to create/signal peer:', err);
                 handledTrackerPeersRef.current.delete(trackerPeerId);
+                if (connectionTimeout) clearTimeout(connectionTimeout);
+                processNextPendingPeer();
             }
         };
 
@@ -333,14 +488,21 @@ export const MelodiqPhoneClient = () => {
         try {
             updateStatus('Requesting microphone...', 'status-connecting');
 
-            const stream = await navigator.mediaDevices.getUserMedia({
+            const constraints: MediaStreamConstraints = {
                 audio: {
+                    deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
                     echoCancellation: false,
                     autoGainControl: false,
                     noiseSuppression: false,
                 },
                 video: false,
-            });
+            };
+
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+            // Re-enumerate to get labels now that we have permission
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            setAudioInputDevices(devices.filter(d => d.kind === 'audioinput'));
 
             mediaStreamRef.current = stream;
             // START LOCAL PROCESSING
@@ -367,6 +529,7 @@ export const MelodiqPhoneClient = () => {
                         { urls: 'stun:global.stun.twilio.com:3478' },
                     ],
                 },
+                numWant: 4,
             } as any);
 
             trackerClientRef.current = trackerClient;
@@ -402,7 +565,12 @@ export const MelodiqPhoneClient = () => {
 
             trackerClient.start();
         } catch (err: any) {
-            updateStatus(err.message || 'Failed to connect', 'status-error');
+            console.error('[Phone] Connect error:', err);
+            if (err.message && err.message.includes('Cannot create so many PeerConnections')) {
+                updateStatus('❌ Browser resource limit reached. Please close tab and restart browser.', 'status-error');
+            } else {
+                updateStatus(err.message || 'Failed to connect', 'status-error');
+            }
             setShowReconnect(true);
         }
     };
@@ -426,6 +594,8 @@ export const MelodiqPhoneClient = () => {
 
     useEffect(() => {
         const partyId = getPartyIdFromUrl();
+        let startupTimeout: any;
+
         if (!partyId) {
             updateStatus('❌ No Party ID', 'status-error');
         } else {
@@ -436,8 +606,6 @@ export const MelodiqPhoneClient = () => {
             // Reliable public trackers 
             const reliableTrackers: string[] = [];
 
-
-
             // Combine reliable trackers with URL-provided trackers
             const allTrackers = [...urlTrackers, ...reliableTrackers];
 
@@ -445,10 +613,17 @@ export const MelodiqPhoneClient = () => {
             const uniqueTrackers = Array.from(new Set(allTrackers));
 
             console.log('[Phone] Connecting with trackers:', uniqueTrackers);
-            connect(partyId, uniqueTrackers);
+
+            // Add a small delay to allow previous instances/GC to cleanup
+            startupTimeout = setTimeout(() => {
+                connect(partyId, uniqueTrackers);
+            }, 1000);
         }
 
-        return cleanup;
+        return () => {
+            if (startupTimeout) clearTimeout(startupTimeout);
+            cleanup();
+        };
     }, []);
 
     return (
@@ -460,34 +635,80 @@ export const MelodiqPhoneClient = () => {
                 <div className="status-text">{status.message}</div>
 
                 {/* VISUALIZATION BAR */}
-                {status.className === 'status-connected' && (
-                    <div style={{
-                        width: '100%',
-                        height: '20px',
-                        background: '#333',
-                        borderRadius: '10px',
-                        overflow: 'hidden',
-                        marginBottom: '20px',
-                        position: 'relative',
-                        border: '1px solid #555'
-                    }}>
-                        <div style={{
-                            width: `${Math.min(100, visualVolume * 100)}%`,
+                {/* VISUALIZATION BAR */}
+                <div style={{
+                    width: '100%',
+                    height: '40px',
+                    background: '#222',
+                    borderRadius: '20px',
+                    overflow: 'hidden',
+                    marginBottom: '20px',
+                    marginTop: '20px',
+                    position: 'relative',
+                    border: '1px solid #444',
+                    boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.5)'
+                }}>
+                    <div
+                        ref={volumeBarRef}
+                        style={{
+                            width: '0%',
                             height: '100%',
-                            background: `hsl(${playerHue}, 100%, 50%)`,
-                            transition: 'width 0.1s linear'
-                        }} />
-                        {visualPitch > 0 && (
-                            <div style={{
-                                position: 'absolute',
-                                left: `${((visualPitch - 36) / (84 - 36)) * 100}%`, // Assuming C2 to C6 roughly
-                                top: 0,
-                                bottom: 0,
-                                width: '4px',
-                                background: 'white',
-                                boxShadow: '0 0 5px white'
-                            }} />
-                        )}
+                            background: `linear-gradient(90deg, hsl(${playerHue}, 100%, 30%) 0%, hsl(${playerHue}, 100%, 50%) 100%)`,
+                            transition: 'width 0.05s linear',
+                            opacity: 0.5
+                        }}
+                    />
+
+                    {/* Note Name Display */}
+                    <div
+                        ref={noteNameRef}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 'bold',
+                            fontSize: '1.2rem',
+                            color: 'white',
+                            textShadow: '0 2px 4px black'
+                        }}
+                    >
+                    </div>
+
+                    <div
+                        ref={pitchIndicatorRef}
+                        style={{
+                            position: 'absolute',
+                            left: '0%',
+                            top: '5px',
+                            bottom: '5px',
+                            width: '6px',
+                            borderRadius: '3px',
+                            background: 'white',
+                            boxShadow: '0 0 10px white, 0 0 5px ' + `hsl(${playerHue}, 100%, 50%)`,
+                            transition: 'left 0.1s cubic-bezier(0.1, 0.7, 1.0, 0.1)',
+                            display: 'none'
+                        }}
+                    />
+                </div>
+
+                {/* Stats Notification */}
+                {latestStats && (
+                    <div style={{
+                        animation: 'fadeIn 0.5s',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        padding: '15px',
+                        borderRadius: '10px',
+                        marginTop: '20px',
+                        border: '1px solid rgba(255, 255, 255, 0.2)'
+                    }}>
+                        <div style={{ fontSize: '0.9rem', color: '#aaa' }}>Last Performance</div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '5px 0' }}>{latestStats.song}</div>
+                        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#4ade80' }}>{latestStats.score} pts</div>
                     </div>
                 )}
 
@@ -532,6 +753,33 @@ export const MelodiqPhoneClient = () => {
                             />
                         </div>
                     </div>
+                    <div style={{ marginTop: '15px' }}>
+                        <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>Microphone</label>
+                        <select
+                            value={selectedDeviceId}
+                            value={selectedDeviceId}
+                            onChange={(e) => {
+                                const newId = e.target.value;
+                                switchMicrophone(newId);
+                            }}
+                            style={{
+                                background: 'rgba(255,255,255,0.1)',
+                                border: '1px solid rgba(255,255,255,0.3)',
+                                color: 'white',
+                                padding: '8px',
+                                borderRadius: '4px',
+                                width: '100%',
+                                fontSize: '1rem'
+                            }}
+                        >
+                            <option value="">Default</option>
+                            {audioInputDevices.map((device, i) => (
+                                <option key={device.deviceId} value={device.deviceId}>
+                                    {device.label || `Microphone ${i + 1}`}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
 
                 {showReconnect && (
@@ -542,6 +790,11 @@ export const MelodiqPhoneClient = () => {
             </div>
 
             <style>{`
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(-10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+
                 .melodiq-phone-client {
                     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
                     background: #121212;

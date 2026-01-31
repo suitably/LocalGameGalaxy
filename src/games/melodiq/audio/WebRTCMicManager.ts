@@ -400,6 +400,19 @@ export class WebRTCMicManager {
         this.peers.clear();
     }
 
+    sendToPeer(peerId: string, data: any): void {
+        const remotePeer = this.peers.get(peerId);
+        if (remotePeer && remotePeer.peer && (remotePeer.peer as any).connected) {
+            try {
+                remotePeer.peer.send(JSON.stringify(data));
+            } catch (e) {
+                console.error(`[WebRTCMicManager] Failed to send data to ${peerId}:`, e);
+            }
+        } else {
+            console.warn(`[WebRTCMicManager] Cannot send to ${peerId} - not connected`);
+        }
+    }
+
     // Helper: Convert string to 20-byte infoHash (SHA-1 style)
     private stringToInfoHash(str: string): Uint8Array {
         const hash = new Uint8Array(20);

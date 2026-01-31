@@ -463,12 +463,28 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             audio.onloadedmetadata = () => setDuration(audio.duration);
             audio.onended = () => {
                 console.log('Song ended, showing scoreboard');
+
+                // Broadcast Stats to Connected Phones
+                const now = new Date();
+                players.forEach(p => {
+                    if (p.config.isRemote && p.webRtcManager && p.remotePeerId) {
+                        const statsPayload = {
+                            type: 'stats',
+                            songTitle: song.title,
+                            score: p.score,
+                            date: now.toISOString()
+                        };
+                        console.log(`[Session] Sending stats to ${p.config.name}`, statsPayload);
+                        p.webRtcManager.sendToPeer(p.remotePeerId, statsPayload);
+                    }
+                });
+
                 setIsFinished(true);
                 setIsPlaying(false);
                 if (videoRef.current) videoRef.current.pause();
             };
         }
-    }, [audioSrc]);
+    }, [audioSrc, players]);
 
     useEffect(() => {
         let activeUrl: string | undefined;
