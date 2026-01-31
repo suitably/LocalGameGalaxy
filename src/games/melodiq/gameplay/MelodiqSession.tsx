@@ -696,9 +696,9 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     </Box>
                 </Box>
 
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', minHeight: 0 }}>
                     {/* Dynamic Split Screen Container */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
                         {players.length === 0 && (
                             <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <Typography>No Active Players. Go to Settings.</Typography>
@@ -709,17 +709,18 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                         {(() => {
                             let playerIndex = 0;
                             return gridLayout.rows.map((colsInRow, rowIndex) => (
-                                <Box key={rowIndex} sx={{ flex: 1, display: 'flex', borderBottom: rowIndex < gridLayout.rows.length - 1 ? '1px solid rgba(255,255,255,0.2)' : 'none' }}>
+                                <Box key={rowIndex} sx={{ flex: 1, display: 'flex', minHeight: 0, borderBottom: rowIndex < gridLayout.rows.length - 1 ? '1px solid rgba(255,255,255,0.2)' : 'none' }}>
                                     {Array.from({ length: colsInRow }).map((_, colIndex) => {
                                         const player = players[playerIndex++];
-                                        if (!player) return null; // Should not happen if logic is correct
+                                        if (!player) return null;
 
                                         return (
                                             <Box
                                                 key={player.config.id}
                                                 sx={{
                                                     width: `${gridLayout.columnWidthPercent}%`,
-                                                    height: '100%',
+                                                    flex: 1,
+                                                    minHeight: 0,
                                                     position: 'relative',
                                                     borderRight: colIndex < colsInRow - 1 ? '1px solid rgba(255,255,255,0.2)' : 'none'
                                                 }}
@@ -738,21 +739,21 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                                             </Box>
                                         );
                                     })}
-                                    {/* Empty filler if needed for row alignment? No, user wants left aligned, empty space empty. Flex row does this naturally if we set widths. */}
                                 </Box>
                             ));
                         })()}
+                    </Box>
 
-                        {/* Lyrics Overlay (Bottom - Flex Flow) */}
-                        <Box sx={{
-                            width: '100%',
-                            pointerEvents: 'none',
-                            zIndex: 10,
-                            borderTop: '1px solid rgba(255,255,255,0.1)',
-                            bgcolor: 'rgba(0,0,0,0.2)'
-                        }}>
-                            <LyricsDisplay song={parsedSong!} audioRef={audioRef} />
-                        </Box>
+                    {/* Lyrics (Fixed height at bottom, outside the flex grid) */}
+                    <Box sx={{
+                        flexShrink: 0,
+                        width: '100%',
+                        pointerEvents: 'none',
+                        zIndex: 10,
+                        borderTop: '1px solid rgba(255,255,255,0.1)',
+                        bgcolor: 'rgba(0,0,0,0.2)'
+                    }}>
+                        <LyricsDisplay song={parsedSong!} audioRef={audioRef} />
                     </Box>
                 </Box>
 

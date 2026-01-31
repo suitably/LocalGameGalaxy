@@ -447,10 +447,7 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
         localStorage.setItem('melodiq_show_slider', String(showDevSlider));
         localStorage.setItem('melodiq_show_mic_status', String(showMicStatus));
         localStorage.setItem('melodiq_show_note_labels', String(showNoteLabels));
-        localStorage.setItem('melodiq_show_mic_status', String(showMicStatus));
-        localStorage.setItem('melodiq_show_note_labels', String(showNoteLabels));
         localStorage.setItem('melodiq_show_video_errors', String(showVideoErrors));
-        localStorage.setItem('melodiq_layout_override', layoutOverride);
         localStorage.setItem('melodiq_layout_override', layoutOverride);
         localStorage.setItem('melodiq_card_size', cardSize);
         localStorage.setItem('melodiq_custom_target_columns', String(customTarget));
@@ -970,7 +967,6 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
                         </Box>
                         <FormControlLabel control={<Switch checked={showDebugOverlay} onChange={(e) => setShowDebugOverlay(e.target.checked)} />} label="Show Debug Overlay" />
                         <FormControlLabel control={<Switch checked={showDevSlider} onChange={(e) => setShowDevSlider(e.target.checked)} />} label="Show Tech/Dev Slider" />
-                        <FormControlLabel control={<Switch checked={showMicStatus} onChange={(e) => setShowMicStatus(e.target.checked)} />} label="Show Mic Status" />
                         <FormControlLabel control={<Switch checked={showMicStatus} onChange={(e) => setShowMicStatus(e.target.checked)} />} label="Show Mic Status" />
                         <FormControlLabel control={<Switch checked={showNoteLabels} onChange={(e) => setShowNoteLabels(e.target.checked)} />} label="Show Pitch Note Labels" />
                         <FormControlLabel control={<Switch checked={showVideoErrors} onChange={(e) => setShowVideoErrors(e.target.checked)} />} label="Show Video Error Messages" />

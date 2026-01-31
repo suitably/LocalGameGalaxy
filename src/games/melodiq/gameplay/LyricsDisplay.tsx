@@ -86,7 +86,7 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, a
     const activeLine = lines[activeLineIndex !== -1 ? activeLineIndex : 0];
 
     return (
-        <Box sx={{ textAlign: 'center', py: 4, height: 120, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ textAlign: 'center', py: 2, minHeight: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
             {/* Active Line */}
             <Box sx={{ display: 'flex', justifyContent: 'center', gap: '4px', flexWrap: 'wrap', minHeight: '40px' }}>
                 {activeLine ? activeLine.map((note, idx) => {

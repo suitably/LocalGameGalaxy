@@ -51,7 +51,7 @@ const getNoteName = (midiNote: number): string => {
 export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
     song,
     audioRef,
-    height = 300,
+    height,
     currentPitchRef,
     sungSegmentsRef,
     showDebugOverlay = false,
@@ -79,7 +79,8 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
     }, [currentPitchRef, sungSegmentsRef]);
 
     // We track dimensions to support High DPI and auto-resizing
-    const [dimensions, setDimensions] = useState({ width: 800, height: height });
+    // Initialize with height prop or 300 as fallback until container measures
+    const [dimensions, setDimensions] = useState({ width: 800, height: height ?? 300 });
 
     // Constants for rendering
     const PIXELS_PER_BEAT = 40; // Wider spacing for cleaner look
@@ -91,8 +92,9 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
         const updateSize = () => {
             if (containerRef.current) {
                 const { offsetWidth, offsetHeight } = containerRef.current;
-                // Use props height if provided, else container height
-                setDimensions({ width: offsetWidth, height: height || offsetHeight || 300 });
+                // Use container height when no explicit height prop is passed
+                // This allows the visualizer to fill its parent container
+                setDimensions({ width: offsetWidth, height: height ?? offsetHeight ?? 300 });
             }
         };
 
@@ -416,10 +418,12 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
         <Box
             ref={containerRef}
             sx={{
-                width: '100%',
-                height: height,
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
                 bgcolor: 'transparent',
-                position: 'relative',
                 overflow: 'hidden'
             }}
         >
