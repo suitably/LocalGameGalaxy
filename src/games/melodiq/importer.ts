@@ -1,4 +1,4 @@
-import { db, type Song } from './db';
+import { db, type Song, type SongContent } from './db';
 import { parseUltraStarTxt } from './parser';
 import { calculateSongDuration } from './utils';
 
@@ -10,26 +10,33 @@ const generateId = (title: string, artist: string, path: string) => {
     return btoa(`${artist}-${title}-${path}`).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
 };
 
-export interface FileSystemHandleCommon {
-    name: string;
-    kind: 'file' | 'directory';
-}
-
 export interface ImportStats {
     totalFound: number;
     processed: number;
     cached: number;
     removed: number;
     errors: number;
+    lastLog?: string;
 }
 
-interface CacheEntry {
+export interface ManifestEntry {
     id: string;
     title: string;
     artist: string;
-    dirPath: string;
-    txtModified: number;
-    updatedAt: number;
+    dirPath: string; // Relative path to directory
+    txtFileName: string;
+    audioFileName?: string;
+    videoFileName?: string;
+    coverFileName?: string;
+    // Metadata for faster loading without parsing
+    duration?: number;
+    year?: string;
+    genre?: string;
+    language?: string;
+    edition?: string;
+    album?: string;
+    bpm?: number;
+    gap?: number;
 }
 
 export class MelodiqImporter {
@@ -42,336 +49,591 @@ export class MelodiqImporter {
     private readonly SUPPORTED_AUDIO_EXT = ['.mp3', '.ogg', '.wav', '.m4a'];
     private readonly SUPPORTED_VIDEO_EXT = ['.mp4', '.avi', '.webm', '.mkv', '.mpg', '.mpeg'];
     private readonly SUPPORTED_IMAGE_EXT = ['.jpg', '.jpeg', '.png'];
+    private readonly BATCH_SIZE = 50;
 
     /**
-     * Entry point to import from a directory handle.
+     * Checks if a manifest file exists in the directory.
      */
-    public async importFromHandle(dirHandle: FileSystemDirectoryHandle, onProgress: (stats: ImportStats) => void, forceReimport = false): Promise<void> {
-        this.stopRequested = false;
-        const stats: ImportStats = { totalFound: 0, processed: 0, cached: 0, removed: 0, errors: 0 };
-        const songDirs = await this.scanForSongDirs(dirHandle);
-        stats.totalFound = songDirs.length;
-        onProgress(stats);
-
-        // Load existing cache file
-        let existingCache: Record<string, CacheEntry> = {};
-        if (!forceReimport) {
-            try {
-                const cacheFileHandle = await dirHandle.getFileHandle('melodiq_cache.json', { create: false });
-                const file = await cacheFileHandle.getFile();
-                const text = await file.text();
-                existingCache = JSON.parse(text);
-            } catch {
-                // No cache found, will do full import
-            }
-        }
-
-        const newCache: Record<string, CacheEntry> = {};
-        const currentDirPaths = new Set<string>();
-
-        for (const subDir of songDirs) {
-            if (this.stopRequested) break;
-            try {
-                let txtFile: FileSystemFileHandle | undefined;
-                const audioFiles: FileSystemFileHandle[] = [];
-                const videoFiles: FileSystemFileHandle[] = [];
-                const imageFiles: FileSystemFileHandle[] = [];
-
-                // @ts-ignore
-                for await (const entry of subDir.values()) {
-                    if (entry.kind === 'file') {
-                        const name = entry.name.toLowerCase();
-                        if (name.endsWith('.txt')) {
-                            txtFile = entry;
-                        } else if (this.SUPPORTED_AUDIO_EXT.some(ext => name.endsWith(ext))) {
-                            audioFiles.push(entry);
-                        } else if (this.SUPPORTED_VIDEO_EXT.some(ext => name.endsWith(ext))) {
-                            videoFiles.push(entry);
-                        } else if (this.SUPPORTED_IMAGE_EXT.some(ext => name.endsWith(ext))) {
-                            imageFiles.push(entry);
-                        }
-                    }
-                }
-
-                if (txtFile) {
-                    currentDirPaths.add(subDir.name);
-                    const txtFileObj = await txtFile.getFile();
-                    const txtModified = txtFileObj.lastModified;
-
-                    // Check cache - skip if unchanged
-                    const cached = existingCache[subDir.name];
-                    if (cached && cached.txtModified === txtModified) {
-                        // Song unchanged, use cached data
-                        newCache[subDir.name] = cached;
-                        stats.cached++;
-                        onProgress(stats);
-                        continue;
-                    }
-
-                    // Process song (new or modified)
-                    const text = await txtFileObj.text();
-                    const parsed = parseUltraStarTxt(text);
-                    const title = parsed.headers['TITLE'] || subDir.name;
-                    const artist = parsed.headers['ARTIST'] || 'Unknown';
-                    const id = generateId(title, artist, subDir.name);
-
-                    // Determine audio file
-                    let chosenAudioFile: FileSystemFileHandle | undefined;
-                    const headerAudio = parsed.headers['MP3'];
-
-                    if (headerAudio) {
-                        chosenAudioFile = audioFiles.find(f => f.name.toLowerCase() === headerAudio.toLowerCase());
-                    }
-                    if (!chosenAudioFile && audioFiles.length > 0) {
-                        chosenAudioFile = audioFiles[0];
-                    }
-
-                    // Determine video file
-                    let chosenVideoFile: FileSystemFileHandle | undefined;
-                    const headerVideo = parsed.headers['VIDEO'];
-
-                    if (headerVideo) {
-                        chosenVideoFile = videoFiles.find(f => f.name.toLowerCase() === headerVideo.toLowerCase());
-                    }
-                    if (!chosenVideoFile && videoFiles.length > 0) {
-                        chosenVideoFile = videoFiles[0];
-                    }
-
-                    // Determine cover image
-                    let chosenImageFile: FileSystemFileHandle | undefined;
-                    const headerCover = parsed.headers['COVER'];
-
-                    if (headerCover) {
-                        chosenImageFile = imageFiles.find(f => f.name.toLowerCase() === headerCover.toLowerCase());
-                    }
-                    if (!chosenImageFile && imageFiles.length > 0) {
-                        // If no specific cover is set, try to find one with "cover" or "background" in name, or just first one
-                        chosenImageFile = imageFiles.find(f => f.name.toLowerCase().includes('cover'))
-                            || imageFiles.find(f => f.name.toLowerCase().includes('background'))
-                            || imageFiles[0];
-                    }
-
-                    const song: Song = {
-                        id,
-                        title,
-                        artist,
-                        txtContent: text,
-                        dirPath: subDir.name,
-                        updatedAt: Date.now(),
-                        duration: calculateSongDuration(parsed.notes, parsed.bpm, parsed.gap),
-                        year: parsed.headers['YEAR'],
-                        genre: parsed.headers['GENRE'],
-                        language: parsed.headers['LANGUAGE'],
-                        edition: parsed.headers['EDITION'],
-                        album: parsed.headers['ALBUM']
-                    };
-
-
-                    if (chosenAudioFile) {
-                        // Store the handle directly, do not read into memory/blob
-                        // @ts-ignore - IndexDB supports storing handles in Chrome/Edge
-                        song.audio = chosenAudioFile;
-                    }
-
-                    if (chosenVideoFile) {
-                        // Store the handle directly
-                        // @ts-ignore
-                        song.video = chosenVideoFile;
-                    }
-
-                    if (chosenImageFile) {
-                        try {
-                            song.cover = await chosenImageFile.getFile();
-                        } catch (e) {
-                            console.warn('Failed to get cover file', e);
-                        }
-                    }
-
-                    await db.songs.put(song);
-                    newCache[subDir.name] = {
-                        id,
-                        title,
-                        artist,
-                        dirPath: subDir.name,
-                        txtModified,
-                        updatedAt: Date.now()
-                    };
-                }
-
-                stats.processed++;
-                onProgress(stats);
-
-            } catch (err) {
-                console.error(err);
-                stats.errors++;
-            }
-        }
-
-        // Clean up deleted songs from database
-        const deletedDirPaths = Object.keys(existingCache).filter(dirPath => !currentDirPaths.has(dirPath));
-        for (const dirPath of deletedDirPaths) {
-            try {
-                const cachedEntry = existingCache[dirPath];
-                if (cachedEntry?.id) {
-                    await db.songs.delete(cachedEntry.id);
-                    stats.removed++;
-                }
-            } catch (e) {
-                console.warn(`Failed to delete song with dirPath ${dirPath}`, e);
-            }
-        }
-        onProgress(stats);
-
-        // Write new cache file (if possible)
+    public async checkManifest(dirHandle: FileSystemDirectoryHandle): Promise<boolean> {
         try {
-            const cacheFileHandle = await dirHandle.getFileHandle('melodiq_cache.json', { create: true });
-            const writable = await cacheFileHandle.createWritable();
-            await writable.write(JSON.stringify(newCache, null, 2));
-            await writable.close();
-        } catch (e) {
-            console.warn('Could not write cache file to directory', e);
+            await dirHandle.getFileHandle('melodiq_manifest.json', { create: false });
+            return true;
+        } catch {
+            return false;
         }
     }
 
-    private async scanForSongDirs(dirHandle: FileSystemDirectoryHandle): Promise<FileSystemDirectoryHandle[]> {
-        const results: FileSystemDirectoryHandle[] = [];
-        // @ts-ignore
-        for await (const entry of dirHandle.values()) {
-            if (entry.kind === 'directory') {
-                let hasTxt = false;
-                // @ts-ignore
-                for await (const sub of entry.values()) {
-                    if (sub.kind === 'file' && sub.name.endsWith('.txt')) {
-                        hasTxt = true;
-                        break;
-                    }
+    /**
+     * Fast import using an existing manifest file.
+     */
+    public async importFromManifest(dirHandle: FileSystemDirectoryHandle, onProgress: (stats: ImportStats) => void, onLog: (msg: string) => void, libraryId?: string): Promise<void> {
+        this.stopRequested = false;
+        const stats: ImportStats = { totalFound: 0, processed: 0, cached: 0, removed: 0, errors: 0 };
+        const log = (msg: string) => {
+            onLog(msg);
+            stats.lastLog = msg;
+        };
+
+        const songBuffer: Song[] = [];
+        const contentBuffer: SongContent[] = [];
+        const processedIds = new Set<string>();
+
+        const flush = async () => {
+            if (songBuffer.length > 0) {
+                await db.songs.bulkPut(songBuffer);
+                await db.songsContent.bulkPut(contentBuffer);
+                songBuffer.length = 0;
+                contentBuffer.length = 0;
+                onProgress(stats);
+            }
+        };
+
+        try {
+            if (!libraryId) {
+                // Legacy behavior: clear everything if no specific library targeted
+                log('Clearing database (Legacy Mode)...');
+                await db.songs.clear();
+                await db.songsContent.clear();
+            } else {
+                log(`Updating library: ${libraryId}...`);
+            }
+
+            log('Reading manifest file...');
+            const fileHandle = await dirHandle.getFileHandle('melodiq_manifest.json');
+            const file = await fileHandle.getFile();
+            const text = await file.text();
+            const manifest: ManifestEntry[] = JSON.parse(text);
+
+            stats.totalFound = manifest.length;
+            onProgress(stats);
+            log(`Found ${manifest.length} songs in manifest.`);
+
+            for (const entry of manifest) {
+                if (this.stopRequested) {
+                    log('Import stopped by user.');
+                    break;
                 }
-                if (hasTxt) {
-                    results.push(entry);
+
+                try {
+                    // Start by getting the song directory handle
+                    let songDirHandle = dirHandle;
+                    if (entry.dirPath && entry.dirPath !== '.') {
+                        const parts = entry.dirPath.split('/').filter(p => p && p !== '.');
+                        for (const part of parts) {
+                            songDirHandle = await songDirHandle.getDirectoryHandle(part);
+                        }
+                    }
+
+                    // Resolve files
+                    let audioFile: FileSystemFileHandle | undefined;
+                    if (entry.audioFileName) {
+                        try {
+                            audioFile = await songDirHandle.getFileHandle(entry.audioFileName);
+                        } catch { /* missing file */ }
+                    }
+
+                    let videoFile: FileSystemFileHandle | undefined;
+                    if (entry.videoFileName) {
+                        try {
+                            videoFile = await songDirHandle.getFileHandle(entry.videoFileName);
+                        } catch { /* missing file */ }
+                    }
+
+                    let coverHandle: FileSystemFileHandle | undefined;
+                    if (entry.coverFileName) {
+                        try {
+                            coverHandle = await songDirHandle.getFileHandle(entry.coverFileName);
+                        } catch { /* missing file */ }
+                    }
+
+                    let txtContent = '';
+                    try {
+                        const txtHandle = await songDirHandle.getFileHandle(entry.txtFileName);
+                        const txtFile = await txtHandle.getFile();
+                        txtContent = await txtFile.text();
+                    } catch (e) {
+                        console.warn(`Missing txt file for ${entry.title}`, e);
+                        stats.errors++;
+                        continue;
+                    }
+
+                    const song: Song = {
+                        id: entry.id,
+                        libraryId,
+                        title: entry.title,
+                        artist: entry.artist,
+                        // txtContent removed
+                        dirPath: entry.dirPath,
+                        updatedAt: Date.now(),
+                        duration: entry.duration,
+                        year: entry.year,
+                        genre: entry.genre,
+                        language: entry.language,
+                        edition: entry.edition,
+                        album: entry.album
+                    };
+
+                    if (audioFile) song.audio = audioFile;
+                    if (videoFile) song.video = videoFile;
+                    if (coverHandle) song.cover = coverHandle;
+
+                    songBuffer.push(song);
+                    contentBuffer.push({ id: entry.id, txtContent });
+                    processedIds.add(entry.id);
+                    stats.processed++;
+
+                    if (stats.processed % this.BATCH_SIZE === 0) {
+                        await flush();
+                    }
+
+                } catch (songErr) {
+                    console.error(`Failed to load song from manifest: ${entry.title}`, songErr);
+                    log(`Error loading ${entry.title}: ${songErr}`);
+                    stats.errors++;
+                }
+            }
+
+            await flush();
+
+            // Cleanup removed songs if in library mode
+            if (libraryId) {
+                const existingSongs = await db.songs.where('libraryId').equals(libraryId).toArray();
+                const toRemove = existingSongs.filter(s => !processedIds.has(s.id)).map(s => s.id);
+                if (toRemove.length > 0) {
+                    log(`Removing ${toRemove.length} obsolete songs...`);
+                    await db.songs.bulkDelete(toRemove);
+                    await db.songsContent.bulkDelete(toRemove);
+                    stats.removed = toRemove.length;
+                }
+            }
+
+            onProgress(stats);
+            log('Import Complete.');
+
+        } catch (err) {
+            console.error("Failed to import from manifest", err);
+            log(`Critical Error: ${err}`);
+            throw err;
+        }
+    }
+
+    /**
+     * Scans the directory, parses files, updates DB, AND writes a manifest file.
+     */
+    public async scanAndGenerateManifest(dirHandle: FileSystemDirectoryHandle, onProgress: (stats: ImportStats) => void, onLog: (msg: string) => void, libraryId?: string): Promise<void> {
+        this.stopRequested = false;
+        const stats: ImportStats = { totalFound: 0, processed: 0, cached: 0, removed: 0, errors: 0 };
+        const log = (msg: string) => {
+            onLog(msg);
+            stats.lastLog = msg;
+        };
+
+        const songBuffer: Song[] = [];
+        const contentBuffer: SongContent[] = [];
+        const processedIds = new Set<string>();
+
+        const flush = async () => {
+            if (songBuffer.length > 0) {
+                await db.songs.bulkPut(songBuffer);
+                await db.songsContent.bulkPut(contentBuffer);
+                songBuffer.length = 0;
+                contentBuffer.length = 0;
+                onProgress(stats);
+            }
+        };
+
+        try {
+            if (!libraryId) {
+                log('Clearing database (Legacy)...');
+                await db.songs.clear();
+                await db.songsContent.clear();
+            } else {
+                log(`Scanning library: ${libraryId}...`);
+            }
+
+            log('Scanning directory structure...');
+            const songDirs = await this.scanForSongDirs(dirHandle);
+            stats.totalFound = songDirs.length;
+            onProgress(stats);
+            log(`Found ${songDirs.length} song directories.`);
+
+            const manifest: ManifestEntry[] = [];
+
+            for (const { dir, relativePath } of songDirs) {
+                if (this.stopRequested) {
+                    log('Scan stopped by user.');
+                    break;
+                }
+                try {
+                    let txtFile: FileSystemFileHandle | undefined;
+                    const audioFiles: FileSystemFileHandle[] = [];
+                    const videoFiles: FileSystemFileHandle[] = [];
+                    const imageFiles: FileSystemFileHandle[] = [];
+
+                    // @ts-ignore
+                    for await (const entry of dir.values()) {
+                        if (entry.kind === 'file') {
+                            const name = entry.name.toLowerCase();
+                            if (name.endsWith('.txt')) {
+                                txtFile = entry;
+                            } else if (this.SUPPORTED_AUDIO_EXT.some(ext => name.endsWith(ext))) {
+                                audioFiles.push(entry);
+                            } else if (this.SUPPORTED_VIDEO_EXT.some(ext => name.endsWith(ext))) {
+                                videoFiles.push(entry);
+                            } else if (this.SUPPORTED_IMAGE_EXT.some(ext => name.endsWith(ext))) {
+                                imageFiles.push(entry);
+                            }
+                        }
+                    }
+
+                    if (txtFile) {
+                        const txtFileObj = await txtFile.getFile();
+                        const text = await txtFileObj.text();
+                        const parsed = parseUltraStarTxt(text);
+                        const title = parsed.headers['TITLE'] || dir.name;
+                        const artist = parsed.headers['ARTIST'] || 'Unknown';
+                        const id = generateId(title, artist, relativePath);
+
+                        log(`Processing: ${artist} - ${title}`);
+
+                        // Determine audio file
+                        let chosenAudioFile: FileSystemFileHandle | undefined;
+                        const headerAudio = parsed.headers['MP3'];
+                        if (headerAudio) {
+                            chosenAudioFile = audioFiles.find(f => f.name.toLowerCase() === headerAudio.toLowerCase());
+                        }
+                        if (!chosenAudioFile && audioFiles.length > 0) {
+                            chosenAudioFile = audioFiles[0];
+                        }
+
+                        // Determine video file
+                        let chosenVideoFile: FileSystemFileHandle | undefined;
+                        const headerVideo = parsed.headers['VIDEO'];
+                        if (headerVideo) {
+                            chosenVideoFile = videoFiles.find(f => f.name.toLowerCase() === headerVideo.toLowerCase());
+                        }
+                        if (!chosenVideoFile && videoFiles.length > 0) {
+                            chosenVideoFile = videoFiles[0];
+                        }
+
+                        // Determine cover image
+                        let chosenImageFile: FileSystemFileHandle | undefined;
+                        const headerCover = parsed.headers['COVER'];
+                        if (headerCover) {
+                            chosenImageFile = imageFiles.find(f => f.name.toLowerCase() === headerCover.toLowerCase());
+                        }
+                        if (!chosenImageFile && imageFiles.length > 0) {
+                            chosenImageFile = imageFiles.find(f => f.name.toLowerCase().includes('cover'))
+                                || imageFiles.find(f => f.name.toLowerCase().includes('background'))
+                                || imageFiles[0];
+                        }
+
+                        // Build Song Object
+                        const duration = calculateSongDuration(parsed.notes, parsed.bpm, parsed.gap);
+                        const song: Song = {
+                            id,
+                            libraryId,
+                            title,
+                            artist,
+                            // txtContent removed
+                            dirPath: relativePath,
+                            updatedAt: Date.now(),
+                            duration,
+                            year: parsed.headers['YEAR'],
+                            genre: parsed.headers['GENRE'],
+                            language: parsed.headers['LANGUAGE'],
+                            edition: parsed.headers['EDITION'],
+                            album: parsed.headers['ALBUM']
+                        };
+
+                        if (chosenAudioFile) song.audio = chosenAudioFile; // @ts-ignore
+                        if (chosenVideoFile) song.video = chosenVideoFile; // @ts-ignore
+                        if (chosenImageFile) song.cover = chosenImageFile; // @ts-ignore
+
+                        songBuffer.push(song);
+                        contentBuffer.push({ id, txtContent: text });
+                        processedIds.add(id);
+                        stats.processed++;
+
+                        // Add to Manifest
+                        manifest.push({
+                            id,
+                            title,
+                            artist,
+                            dirPath: relativePath,
+                            txtFileName: txtFile.name,
+                            audioFileName: chosenAudioFile?.name,
+                            videoFileName: chosenVideoFile?.name,
+                            coverFileName: chosenImageFile?.name,
+                            duration,
+                            year: song.year,
+                            genre: song.genre,
+                            language: song.language,
+                            edition: song.edition,
+                            album: song.album,
+                            bpm: parsed.bpm,
+                            gap: parsed.gap
+                        });
+
+                        if (stats.processed % this.BATCH_SIZE === 0) {
+                            await flush();
+                        }
+                    }
+                } catch (err) {
+                    console.error(`Error processing dir ${dir.name}`, err);
+                    log(`Error processing ${dir.name}: ${err}`);
+                    stats.errors++;
+                }
+            }
+
+            await flush();
+
+            // Cleanup removed songs if in library mode
+            if (libraryId) {
+                const existingSongs = await db.songs.where('libraryId').equals(libraryId).toArray();
+                const toRemove = existingSongs.filter(s => !processedIds.has(s.id)).map(s => s.id);
+                if (toRemove.length > 0) {
+                    log(`Removing ${toRemove.length} obsolete songs...`);
+                    await db.songs.bulkDelete(toRemove);
+                    await db.songsContent.bulkDelete(toRemove);
+                    stats.removed = toRemove.length;
+                }
+            }
+
+            onProgress(stats);
+
+            // Write Manifest File
+            try {
+                log('Writing manifest file...');
+                const fileHandle = await dirHandle.getFileHandle('melodiq_manifest.json', { create: true });
+                const writable = await fileHandle.createWritable();
+                await writable.write(JSON.stringify(manifest, null, 2));
+                await writable.close();
+                log('Manifest saved.');
+            } catch (e) {
+                console.warn('Failed to write manifest file', e);
+                log(`Error writing manifest: ${e}`);
+            }
+            log('Scan complete.');
+        } catch (e) {
+            console.error(e);
+            log(`Critical Error: ${e}`);
+        }
+    }
+
+    private async scanForSongDirs(dirHandle: FileSystemDirectoryHandle): Promise<{ dir: FileSystemDirectoryHandle, relativePath: string }[]> {
+        const results: { dir: FileSystemDirectoryHandle, relativePath: string }[] = [];
+
+        // Helper to traverse
+        async function traverse(currentDir: FileSystemDirectoryHandle, currentPath: string) {
+            // Check if this dir IS a song dir (has .txt)
+            let hasTxt = false;
+            // @ts-ignore
+            for await (const entry of currentDir.values()) {
+                if (entry.kind === 'file' && entry.name.endsWith('.txt')) {
+                    hasTxt = true;
+                    break;
+                }
+            }
+            if (hasTxt) {
+                results.push({ dir: currentDir, relativePath: currentPath });
+            }
+
+            // Recurse into subdirs
+            // @ts-ignore
+            for await (const entry of currentDir.values()) {
+                if (entry.kind === 'directory') {
+                    // Avoid loop? FileSystemHandle doesn't expose full path, keeping relativePath manually
+                    const newPath = currentPath === '.' ? entry.name : `${currentPath}/${entry.name}`;
+                    await traverse(entry, newPath);
                 }
             }
         }
+
+        await traverse(dirHandle, '.'); // Start with dot as relative root
         return results;
     }
 
     /**
      * Fallback for browsers that don't support File System Access API (like Firefox).
+     * NOTE: Manifest logic is trickier with FileList (no write access). 
+     * We will just do a standard scan-and-replace here, no manifest writing.
      */
-    public async importFromFileList(fileList: FileList, onProgress: (stats: ImportStats) => void): Promise<void> {
+    /**
+     * Fallback for browsers that don't support File System Access API (like Firefox).
+     * NOTE: Manifest logic is trickier with FileList (no write access). 
+     * We will just do a standard scan-and-replace here, no manifest writing.
+     */
+    public async importFromFileList(fileList: FileList, onProgress: (stats: ImportStats) => void, onLog: (msg: string) => void, libraryId?: string): Promise<void> {
         this.stopRequested = false;
         const stats: ImportStats = { totalFound: 0, processed: 0, cached: 0, removed: 0, errors: 0 };
+        const log = (msg: string) => {
+            onLog(msg);
+            stats.lastLog = msg;
+        };
 
-        const dirGroups: Record<string, File[]> = {};
-        for (let i = 0; i < fileList.length; i++) {
-            const file = fileList[i];
-            const pathParts = file.webkitRelativePath.split('/');
-            pathParts.pop();
-            const dirPath = pathParts.join('/');
-            if (!dirGroups[dirPath]) {
-                dirGroups[dirPath] = [];
+        const songBuffer: Song[] = [];
+        const contentBuffer: SongContent[] = [];
+        const processedIds = new Set<string>();
+
+        const flush = async () => {
+            if (songBuffer.length > 0) {
+                await db.songs.bulkPut(songBuffer);
+                await db.songsContent.bulkPut(contentBuffer);
+                songBuffer.length = 0;
+                contentBuffer.length = 0;
+                onProgress(stats);
             }
-            dirGroups[dirPath].push(file);
-        }
+        };
 
-        const dirs = Object.values(dirGroups);
-        stats.totalFound = dirs.length;
-        onProgress(stats);
-
-        for (const files of dirs) {
-            if (this.stopRequested) break;
-            try {
-                let txtFile: File | undefined;
-                const audioFiles: File[] = [];
-                const videoFiles: File[] = [];
-                const imageFiles: File[] = [];
-
-                for (const file of files) {
-                    const name = file.name.toLowerCase();
-                    if (name.endsWith('.txt')) {
-                        txtFile = file;
-                    } else if (this.SUPPORTED_AUDIO_EXT.some(ext => name.endsWith(ext))) {
-                        audioFiles.push(file);
-                    } else if (this.SUPPORTED_VIDEO_EXT.some(ext => name.endsWith(ext))) {
-                        videoFiles.push(file);
-                    } else if (this.SUPPORTED_IMAGE_EXT.some(ext => name.endsWith(ext))) {
-                        imageFiles.push(file);
-                    }
-                }
-
-                if (txtFile) {
-                    const text = await txtFile.text();
-                    const parsed = parseUltraStarTxt(text);
-                    const dirName = txtFile.webkitRelativePath.split('/').slice(-2, -1)[0];
-
-                    const title = parsed.headers['TITLE'] || dirName;
-                    const artist = parsed.headers['ARTIST'] || 'Unknown';
-                    const id = generateId(title, artist, dirName);
-
-                    let chosenAudioFile: File | undefined;
-                    const headerAudio = parsed.headers['MP3'];
-
-                    if (headerAudio) {
-                        chosenAudioFile = audioFiles.find(f => f.name.toLowerCase() === headerAudio.toLowerCase());
-                    }
-                    if (!chosenAudioFile && audioFiles.length > 0) {
-                        chosenAudioFile = audioFiles[0];
-                    }
-
-                    let chosenVideoFile: File | undefined;
-                    const headerVideo = parsed.headers['VIDEO'];
-                    if (headerVideo) {
-                        chosenVideoFile = videoFiles.find(f => f.name.toLowerCase() === headerVideo.toLowerCase());
-                    }
-                    if (!chosenVideoFile && videoFiles.length > 0) {
-                        chosenVideoFile = videoFiles[0];
-                    }
-
-                    let chosenImageFile: File | undefined;
-                    const headerCover = parsed.headers['COVER'];
-                    if (headerCover) {
-                        chosenImageFile = imageFiles.find(f => f.name.toLowerCase() === headerCover.toLowerCase());
-                    }
-                    if (!chosenImageFile && imageFiles.length > 0) {
-                        chosenImageFile = imageFiles.find(f => f.name.toLowerCase().includes('cover'))
-                            || imageFiles.find(f => f.name.toLowerCase().includes('background'))
-                            || imageFiles[0];
-                    }
-
-                    const song: Song = {
-                        id,
-                        title,
-                        artist,
-                        txtContent: text,
-                        dirPath: dirName,
-                        updatedAt: Date.now(),
-                        duration: calculateSongDuration(parsed.notes, parsed.bpm, parsed.gap),
-                        year: parsed.headers['YEAR'],
-                        genre: parsed.headers['GENRE'],
-                        language: parsed.headers['LANGUAGE'],
-                        edition: parsed.headers['EDITION'],
-                        album: parsed.headers['ALBUM']
-                    };
-
-                    if (chosenAudioFile) {
-                        song.audio = chosenAudioFile;
-                    }
-                    if (chosenVideoFile) {
-                        song.video = chosenVideoFile;
-                    }
-                    if (chosenImageFile) {
-                        song.cover = chosenImageFile;
-                    }
-
-                    await db.songs.put(song);
-
-                    stats.processed++;
-                    onProgress(stats);
-
-                }
-            } catch (err) {
-                console.error(err);
-                stats.errors++;
+        try {
+            if (!libraryId) {
+                log('Clearing database (Legacy)...');
+                await db.songs.clear();
+                await db.songsContent.clear();
+            } else {
+                log(`Scanning library: ${libraryId}...`);
             }
+
+            const dirGroups: Record<string, File[]> = {};
+            for (let i = 0; i < fileList.length; i++) {
+                const file = fileList[i];
+                const pathParts = file.webkitRelativePath.split('/');
+                pathParts.pop();
+                const dirPath = pathParts.join('/');
+                if (!dirGroups[dirPath]) {
+                    dirGroups[dirPath] = [];
+                }
+                dirGroups[dirPath].push(file);
+            }
+
+            const dirs = Object.values(dirGroups);
+            stats.totalFound = dirs.length;
+            onProgress(stats);
+            log(`Found ${dirs.length} directory groups.`);
+
+            for (const files of dirs) {
+                if (this.stopRequested) {
+                    log('Stopped by user.');
+                    break;
+                }
+                try {
+                    let txtFile: File | undefined;
+                    const audioFiles: File[] = [];
+                    const videoFiles: File[] = [];
+                    const imageFiles: File[] = [];
+
+                    for (const file of files) {
+                        const name = file.name.toLowerCase();
+                        if (name.endsWith('.txt')) {
+                            txtFile = file;
+                        } else if (this.SUPPORTED_AUDIO_EXT.some(ext => name.endsWith(ext))) {
+                            audioFiles.push(file);
+                        } else if (this.SUPPORTED_VIDEO_EXT.some(ext => name.endsWith(ext))) {
+                            videoFiles.push(file);
+                        } else if (this.SUPPORTED_IMAGE_EXT.some(ext => name.endsWith(ext))) {
+                            imageFiles.push(file);
+                        }
+                    }
+
+                    if (txtFile) {
+                        const text = await txtFile.text();
+                        const parsed = parseUltraStarTxt(text);
+                        const dirName = txtFile.webkitRelativePath.split('/').slice(-2, -1)[0];
+                        const fullRelPath = txtFile.webkitRelativePath.split('/').slice(0, -1).join('/');
+
+                        const title = parsed.headers['TITLE'] || dirName;
+                        const artist = parsed.headers['ARTIST'] || 'Unknown';
+                        const id = generateId(title, artist, fullRelPath);
+
+                        log(`Processing: ${artist} - ${title}`);
+
+                        let chosenAudioFile: File | undefined;
+                        const headerAudio = parsed.headers['MP3'];
+
+                        if (headerAudio) {
+                            chosenAudioFile = audioFiles.find(f => f.name.toLowerCase() === headerAudio.toLowerCase());
+                        }
+                        if (!chosenAudioFile && audioFiles.length > 0) {
+                            chosenAudioFile = audioFiles[0];
+                        }
+
+                        let chosenVideoFile: File | undefined;
+                        const headerVideo = parsed.headers['VIDEO'];
+                        if (headerVideo) {
+                            chosenVideoFile = videoFiles.find(f => f.name.toLowerCase() === headerVideo.toLowerCase());
+                        }
+                        if (!chosenVideoFile && videoFiles.length > 0) {
+                            chosenVideoFile = videoFiles[0];
+                        }
+
+                        let chosenImageFile: File | undefined;
+                        const headerCover = parsed.headers['COVER'];
+                        if (headerCover) {
+                            chosenImageFile = imageFiles.find(f => f.name.toLowerCase() === headerCover.toLowerCase());
+                        }
+                        if (!chosenImageFile && imageFiles.length > 0) {
+                            chosenImageFile = imageFiles.find(f => f.name.toLowerCase().includes('cover'))
+                                || imageFiles.find(f => f.name.toLowerCase().includes('background'))
+                                || imageFiles[0];
+                        }
+
+                        const song: Song = {
+                            id,
+                            libraryId,
+                            title,
+                            artist,
+                            // txtContent removed
+                            dirPath: fullRelPath,
+                            updatedAt: Date.now(),
+                            duration: calculateSongDuration(parsed.notes, parsed.bpm, parsed.gap),
+                            year: parsed.headers['YEAR'],
+                            genre: parsed.headers['GENRE'],
+                            language: parsed.headers['LANGUAGE'],
+                            edition: parsed.headers['EDITION'],
+                            album: parsed.headers['ALBUM']
+                        };
+
+                        if (chosenAudioFile) song.audio = chosenAudioFile;
+                        if (chosenVideoFile) song.video = chosenVideoFile;
+                        if (chosenImageFile) song.cover = chosenImageFile; // @ts-ignore
+
+                        songBuffer.push(song);
+                        contentBuffer.push({ id, txtContent: text });
+                        processedIds.add(id);
+
+                        stats.processed++;
+
+                        if (stats.processed % this.BATCH_SIZE === 0) {
+                            await flush();
+                        }
+                    }
+                } catch (err) {
+                    console.error(err);
+                    log(`Error: ${err}`);
+                    stats.errors++;
+                }
+            }
+
+            await flush();
+
+            // Cleanup removed songs if in library mode
+            if (libraryId) {
+                const existingSongs = await db.songs.where('libraryId').equals(libraryId).toArray();
+                const toRemove = existingSongs.filter(s => !processedIds.has(s.id)).map(s => s.id);
+                if (toRemove.length > 0) {
+                    log(`Removing ${toRemove.length} obsolete songs...`);
+                    await db.songs.bulkDelete(toRemove);
+                    await db.songsContent.bulkDelete(toRemove);
+                    stats.removed = toRemove.length;
+                }
+            }
+
+            onProgress(stats);
+            log('Import complete.');
+        } catch (e) {
+            console.error(e);
+            log(`Critical Error: ${e}`);
         }
     }
 }

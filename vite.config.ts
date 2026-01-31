@@ -14,6 +14,21 @@ export default defineConfig({
         process: true,
       },
     }),
+    {
+      name: 'sourcemap-404',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url?.endsWith('.map')) {
+            // If the map file isn't found by previous middlewares, return 404 explicitly
+            // to prevent falling back to index.html (SPA fallback)
+            res.statusCode = 404;
+            res.end();
+          } else {
+            next();
+          }
+        });
+      }
+    }
   ],
   build: {
     rollupOptions: {

@@ -4,7 +4,7 @@ import type { Song } from '../db';
 import type { Note } from '../parser';
 import type { PitchResult } from '../audio/MicrophoneManager';
 
-export type SongWithNotes = Song & { notes?: Note[], bpm?: number, gap?: number };
+export type SongWithNotes = Song & { notes?: Note[], bpm?: number, gap?: number, headers?: any };
 
 export interface SungSegment {
     noteIndex: number; // Index of the note in song.notes

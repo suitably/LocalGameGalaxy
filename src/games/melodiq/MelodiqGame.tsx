@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { VirtuosoGrid } from 'react-virtuoso';
-import { Box, Button, Typography, LinearProgress, Card, CardContent, Grid, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText } from '@mui/material';
+import { Box, Button, Typography, Card, CardContent, Grid, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText } from '@mui/material';
 import { db, type Song } from './db';
-import { MelodiqImporter, type ImportStats } from './importer';
 import { MelodiqSession } from './gameplay/MelodiqSession';
-import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import SettingsIcon from '@mui/icons-material/Settings';
 import SearchIcon from '@mui/icons-material/Search';
@@ -26,8 +24,6 @@ export const MelodiqGame: React.FC = () => {
     // Set the game title in the header
     usePageTitle(t('games.melodiq.title'));
 
-    const [importing, setImporting] = useState(false);
-    const [stats, setStats] = useState<ImportStats | null>(null);
     const [songs, setSongs] = useState<Song[]>([]);
 
     // Search & Filter State
@@ -59,7 +55,7 @@ export const MelodiqGame: React.FC = () => {
 
     useEffect(() => {
         db.songs.toArray().then(setSongs);
-    }, [importing]);
+    }, []); // Only load once (or we can listen to db changes later)
 
     const filteredSongs = React.useMemo(() => {
         let result = songs;
@@ -113,33 +109,7 @@ export const MelodiqGame: React.FC = () => {
         setActiveFilters({ year: [], genre: [], language: [], edition: [] });
     };
 
-    const handleImport = async (forceReimport = false) => {
-        try {
-            // @ts-ignore
-            if (window.showDirectoryPicker) {
-                // @ts-ignore
-                const dirHandle = await window.showDirectoryPicker();
-                setImporting(true);
-                const importer = new MelodiqImporter();
-                await importer.importFromHandle(dirHandle, (s) => setStats({ ...s }), forceReimport);
-                setImporting(false);
-            } else {
-                document.getElementById('fallback-dir-input')?.click();
-            }
-        } catch (err) {
-            console.error('Import cancelled or failed', err);
-            setImporting(false);
-        }
-    };
 
-    const handleFallbackImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files.length > 0) {
-            setImporting(true);
-            const importer = new MelodiqImporter();
-            await importer.importFromFileList(e.target.files, (s: ImportStats) => setStats({ ...s }));
-            setImporting(false);
-        }
-    }
 
     // Render the active view inside a single shared WebRTCProvider
     const renderView = () => {
@@ -159,7 +129,13 @@ export const MelodiqGame: React.FC = () => {
         if (currentView === 'Settings') {
             return (
                 <Box sx={{ height: '100%', overflow: 'auto' }}>
-                    <MelodiqSettings onBack={() => setCurrentView('Home')} />
+                    <Box sx={{ height: '100%', overflow: 'auto' }}>
+                        <MelodiqSettings onBack={() => {
+                            // Refresh songs when returning from settings (in case import happened)
+                            db.songs.toArray().then(setSongs);
+                            setCurrentView('Home');
+                        }} />
+                    </Box>
                 </Box>
             );
         }
@@ -181,15 +157,7 @@ export const MelodiqGame: React.FC = () => {
                 p: { xs: 2, md: 4 }, // Responsive padding
                 overflow: 'hidden' // Prevent body scroll
             }}>
-                <input
-                    type="file"
-                    id="fallback-dir-input"
-                    // @ts-ignore
-                    webkitdirectory=""
-                    directory=""
-                    style={{ display: 'none' }}
-                    onChange={handleFallbackImport}
-                />
+
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexShrink: 0 }}>
                     <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 2 }}>
                         <MusicNoteIcon fontSize="large" color="primary" />
@@ -210,43 +178,10 @@ export const MelodiqGame: React.FC = () => {
                         >
                             Connect Phones
                         </Button>
-                        <Button
-                            variant="contained"
-                            startIcon={<FolderOpenIcon />}
-                            onClick={() => handleImport(false)}
-                            disabled={importing}
-                        >
-                            {importing ? 'Scanning...' : 'Load Song Directory'}
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            onClick={() => handleImport(true)}
-                            disabled={importing}
-                            size="small"
-                        >
-                            Force Re-import
-                        </Button>
                     </Box>
                 </Box>
-
-                {importing && stats && (
-                    <Card sx={{ mb: 4, p: 2, flexShrink: 0 }}>
-                        <Typography variant="h6">Importing Library...</Typography>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                            Found: {stats.totalFound} |
-                            New/Updated: {stats.processed} |
-                            Cached: {stats.cached} |
-                            Removed: {stats.removed} |
-                            Errors: {stats.errors}
-                        </Typography>
-                        <LinearProgress
-                            variant="determinate"
-                            value={((stats.processed + stats.cached) / (stats.totalFound || 1)) * 100}
-                        />
-                    </Card>
-                )}
                 {/* Empty State */}
-                {songs?.length === 0 && !importing && (
+                {songs?.length === 0 && (
                     <Box sx={{ width: '100%', textAlign: 'center', py: 8, opacity: 0.7, flexGrow: 1 }}>
                         <Typography variant="h5">Your library is empty</Typography>
                         <Typography>Load a folder with UltraStar songs to begin</Typography>
@@ -407,6 +342,27 @@ export const MelodiqGame: React.FC = () => {
                                             gridProps = { xs: 6, sm: 4, md: 4, lg: 3 }; // 4 per row on desktop
                                         } else if (cardSize === 'large') {
                                             gridProps = { xs: 12, sm: 6, md: 4, lg: 3 }; // 4 per row but bigger on mobile
+                                        } else if (cardSize === 'custom') {
+                                            try {
+                                                const stored = localStorage.getItem('melodiq_custom_target_columns');
+                                                const target = stored ? parseInt(stored) : 6;
+
+                                                // Calculate items per row for each breakpoint based on target (desktop/large)
+                                                // Scaling factors: lg=100%, md=75%, sm=50%, xs=33% (min 1)
+                                                const lgItems = Math.max(1, target);
+                                                const mdItems = Math.max(1, Math.round(target * 0.75)); // e.g. 6 -> 4 or 5
+                                                const smItems = Math.max(1, Math.round(target * 0.5));  // e.g. 6 -> 3
+                                                const xsItems = Math.max(1, Math.round(target * 0.33)); // e.g. 6 -> 2
+
+                                                gridProps = {
+                                                    xs: 12 / xsItems,
+                                                    sm: 12 / smItems,
+                                                    md: 12 / mdItems,
+                                                    lg: 12 / lgItems
+                                                };
+                                            } catch (e) {
+                                                console.error('Failed to parse custom target', e);
+                                            }
                                         }
 
                                         return <Grid size={gridProps} {...props} ref={ref as any} />;
@@ -442,15 +398,37 @@ const SongCard: React.FC<{ song: Song; onClick: () => void }> = ({ song, onClick
     const [coverUrl, setCoverUrl] = useState<string | null>(null);
 
     useEffect(() => {
-        if (song.cover) {
-            if (song.cover instanceof Blob) {
-                const url = URL.createObjectURL(song.cover);
-                setCoverUrl(url);
-                return () => URL.revokeObjectURL(url);
-            } else if (typeof song.cover === 'string') {
-                setCoverUrl(song.cover);
+        let active = true;
+        let url: string | null = null;
+
+        const loadCover = async () => {
+            if (!song.cover) return;
+
+            try {
+                if (typeof song.cover === 'string') {
+                    if (active) setCoverUrl(song.cover);
+                } else if (song.cover instanceof Blob) {
+                    url = URL.createObjectURL(song.cover);
+                    if (active) setCoverUrl(url);
+                } else if ('getFile' in song.cover && typeof song.cover.getFile === 'function') {
+                    // It's a FileSystemFileHandle
+                    const file = await (song.cover as any).getFile();
+                    if (active) {
+                        url = URL.createObjectURL(file);
+                        setCoverUrl(url);
+                    }
+                }
+            } catch (e) {
+                console.warn("Failed to load cover", e);
             }
-        }
+        };
+
+        loadCover();
+
+        return () => {
+            active = false;
+            if (url) URL.revokeObjectURL(url);
+        };
     }, [song.cover]);
 
     return (
@@ -465,7 +443,7 @@ const SongCard: React.FC<{ song: Song; onClick: () => void }> = ({ song, onClick
             }}
             onClick={onClick}
         >
-            <Box sx={{ height: 100, bgcolor: 'action.hover', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <Box sx={{ width: '100%', aspectRatio: '1 / 1', bgcolor: 'action.hover', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                 {coverUrl ? (
                     <img src={coverUrl} alt={song.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (

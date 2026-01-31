@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Typography, FormControl, MenuItem, Select, Switch, FormControlLabel, Container, Paper, Divider, TextField, IconButton, Avatar, Popover, Slider, Chip, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Box, Button, Typography, FormControl, MenuItem, Select, Switch, FormControlLabel, Container, Paper, Divider, TextField, IconButton, Avatar, Popover, Slider, Chip, ToggleButton, ToggleButtonGroup, Card, LinearProgress, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import CloseIcon from '@mui/icons-material/Close';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import ArticleIcon from '@mui/icons-material/Article';
+import { MelodiqImporter, type ImportStats } from './importer';
+import { db } from './db';
+
 import SettingsIcon from '@mui/icons-material/Settings';
 import { MicrophoneManager } from './audio/MicrophoneManager';
 import { LatencyCalibrator } from './components/LatencyCalibrator';
@@ -115,8 +120,13 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
         const stored = localStorage.getItem('melodiq_show_note_labels');
         return stored === null ? true : stored === 'true';
     });
+    const [showVideoErrors, setShowVideoErrors] = useState(localStorage.getItem('melodiq_show_video_errors') === 'true');
     const [layoutOverride, setLayoutOverride] = useState(localStorage.getItem('melodiq_layout_override') || '');
     const [cardSize, setCardSize] = useState(localStorage.getItem('melodiq_card_size') || 'small');
+    const [customTarget, setCustomTarget] = useState(() => {
+        const stored = localStorage.getItem('melodiq_custom_target_columns');
+        return stored ? parseInt(stored) : 6;
+    });
 
     // Volume Settings
     // Volume Settings
@@ -137,6 +147,249 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
     // Color Picker State
     const [colorAnchorEl, setColorAnchorEl] = useState<HTMLElement | null>(null);
     const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
+
+    // --- Library Management ---
+    const [libraries, setLibraries] = useState<Array<import('./db').Library>>([]);
+    const [loadingLibraries, setLoadingLibraries] = useState(true);
+    const [activeImportId, setActiveImportId] = useState<string | null>(null);
+    const [importStats, setImportStats] = useState<ImportStats | null>(null);
+    const [libraryLogs, setLibraryLogs] = useState<string[]>([]); // Current logs being viewed or generated
+    const [viewingLogLibraryId, setViewingLogLibraryId] = useState<string | null>(null); // Library ID for the log dialog
+    const [showLogDialog, setShowLogDialog] = useState(false);
+
+    // Fallback Import State (Firefox / Non-FSA)
+    const fallbackInputRef = React.useRef<HTMLInputElement>(null);
+    const [fallbackAction, setFallbackAction] = useState<{ type: 'add' | 'reload', libId?: string } | null>(null);
+
+    // Load Libraries
+    useEffect(() => {
+        const fetchLibs = async () => {
+            const libs = await db.libraries.toArray();
+            setLibraries(libs);
+            setLoadingLibraries(false);
+        };
+        fetchLibs();
+    }, [activeImportId]); // Reload when import status changes
+
+    const handleAddLibrary = async () => {
+        try {
+            // @ts-ignore
+            if (window.showDirectoryPicker) {
+                // @ts-ignore
+                const dirHandle = await window.showDirectoryPicker();
+                const libId = crypto.randomUUID();
+                const newLib: import('./db').Library = {
+                    id: libId,
+                    name: dirHandle.name,
+                    handle: dirHandle,
+                    logs: [],
+                    stats: { totalFound: 0, processed: 0, cached: 0, removed: 0, errors: 0 }
+                };
+
+                // Save initial library entry
+                await db.libraries.add(newLib);
+                setLibraries(prev => [...prev, newLib]);
+
+                // Start Import
+                await runLibraryImport(newLib);
+            } else {
+                // Fallback for Firefox
+                setFallbackAction({ type: 'add' });
+                fallbackInputRef.current?.click();
+            }
+        } catch (err) {
+            console.error('Add library failed', err);
+        }
+    };
+
+    const handleFallbackInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || e.target.files.length === 0) return;
+        const files = e.target.files;
+
+        // Determine Library Name (root folder name of first file)
+        const firstFile = files[0];
+        const pathParts = firstFile.webkitRelativePath?.split('/');
+        const rootName = pathParts && pathParts.length > 0 ? pathParts[0] : 'Imported Folder';
+
+        let targetLibId = fallbackAction?.libId;
+        let libName = rootName;
+
+        if (fallbackAction?.type === 'add') {
+            targetLibId = crypto.randomUUID();
+            const newLib: import('./db').Library = {
+                id: targetLibId,
+                name: libName,
+                handle: null as any, // No handle for fallback
+                logs: [],
+                stats: { totalFound: 0, processed: 0, cached: 0, removed: 0, errors: 0 }
+            };
+            await db.libraries.add(newLib);
+            setLibraries(prev => [...prev, newLib]);
+        }
+
+        if (!targetLibId) return;
+
+        setActiveImportId(targetLibId);
+        const importer = new MelodiqImporter();
+        const logs: string[] = [];
+        let finalStats: ImportStats | null = null;
+
+        try {
+            const onProgress = (stats: ImportStats) => {
+                finalStats = { ...stats };
+                setImportStats({ ...stats });
+            };
+            const onLog = (msg: string) => {
+                logs.push(msg);
+                if (viewingLogLibraryId === targetLibId) {
+                    setLibraryLogs(prev => [...prev, msg]);
+                }
+            };
+
+            onLog("Starting Fallback Import (No persistent file handle)...");
+            onLog(`Selected ${files.length} files.`);
+
+            await importer.importFromFileList(files, onProgress, onLog, targetLibId);
+
+            // Update Library in DB on completion
+            await db.libraries.update(targetLibId, {
+                stats: finalStats || undefined,
+                logs: logs,
+                lastScanned: Date.now()
+            });
+
+        } catch (err) {
+            console.error("Fallback Import Failed", err);
+            logs.push(`Critical Error: ${err}`);
+            await db.libraries.update(targetLibId, { logs: logs });
+        } finally {
+            setActiveImportId(null);
+            setImportStats(null);
+            setFallbackAction(null);
+            // Clear input value so same dir can be selected again
+            if (fallbackInputRef.current) fallbackInputRef.current.value = '';
+            // Refresh libraries
+            const updatedLibs = await db.libraries.toArray();
+            setLibraries(updatedLibs);
+        }
+    };
+
+    const runLibraryImport = async (lib: import('./db').Library) => {
+        setActiveImportId(lib.id);
+        const importer = new MelodiqImporter();
+        const logs: string[] = [];
+        let finalStats: ImportStats | null = null;
+
+        try {
+            // Check for manifest
+            const hasManifest = await importer.checkManifest(lib.handle);
+
+            const onProgress = (stats: ImportStats) => {
+                finalStats = { ...stats };
+                setImportStats({ ...stats });
+                // Update DB periodically or at end? Doing at end to save writes, but live UI needs state
+            };
+
+            const onLog = (msg: string) => {
+                logs.push(msg);
+                // If we are viewing logs for THIS library, update UI
+                if (viewingLogLibraryId === lib.id) {
+                    setLibraryLogs(prev => [...prev, msg]);
+                }
+            };
+
+            if (hasManifest) {
+                await importer.importFromManifest(lib.handle, onProgress, onLog, lib.id);
+            } else {
+                await importer.scanAndGenerateManifest(lib.handle, onProgress, onLog, lib.id);
+            }
+
+            // Update Library in DB on completion
+            await db.libraries.update(lib.id, {
+                stats: finalStats || undefined,
+                logs: logs,
+                lastScanned: Date.now()
+            });
+
+        } catch (err) {
+            console.error(`Import failed for ${lib.name}`, err);
+            logs.push(`Critical Error: ${err}`);
+            await db.libraries.update(lib.id, { logs: logs });
+        } finally {
+            setActiveImportId(null);
+            setImportStats(null);
+            // Refresh libraries to show updated stats/time
+            const updatedLibs = await db.libraries.toArray();
+            setLibraries(updatedLibs);
+        }
+    };
+
+    const handleReloadLibrary = async (lib: import('./db').Library) => {
+        if (!lib.handle) {
+            // Fallback reload -> trigger file picker again
+            alert(`For this folder, you must re-select it to reload because your browser does not support persistent access.`);
+            setFallbackAction({ type: 'reload', libId: lib.id });
+            fallbackInputRef.current?.click();
+            return;
+        }
+
+        // Verify permission (browser requires user gesture sometimes, might need re-request)
+        // Since we are clicking a button, we are in a trusted event.
+        // However, persistent permissions might need verification.
+        try {
+            // Simple check: try to read access
+            // @ts-ignore
+            await lib.handle.queryPermission({ mode: 'read' });
+            // If prompt needed, request it?
+            // @ts-ignore
+            if ((await lib.handle.queryPermission({ mode: 'read' })) !== 'granted') {
+                // @ts-ignore
+                if ((await lib.handle.requestPermission({ mode: 'read' })) !== 'granted') {
+                    throw new Error("Permission denied");
+                }
+            }
+
+            // Setup UI for logs if we want to see them live?
+            // Set viewing logs to this lib so we can see progress if dialog is open?
+            // Or just let it run in background with progress bar on the card?
+            setLibraryLogs([]); // Clear previous local logs if we were viewing them
+            await runLibraryImport(lib);
+
+        } catch (e) {
+            alert(`Could not access folder "${lib.name}". You may need to re-add it or grant permissions.`);
+            console.error(e);
+        }
+    };
+
+    const handleDeleteLibrary = async (libId: string) => {
+        if (confirm("Are you sure? This will remove the folder from the list and delete all its songs from the database.")) {
+            // Delete songs
+            await db.songs.where('libraryId').equals(libId).delete();
+            await db.songsContent.where('id').anyOf(await db.songs.where('libraryId').equals(libId).primaryKeys()).delete();
+            // Ideally we filter songsContent by ID matching songs... but Dexie delete by index is simpler.
+            // Wait, songsContent ID matches Library song ID. 
+            // We first need the IDs.
+            const ids = await db.songs.where('libraryId').equals(libId).primaryKeys();
+            await db.songsContent.bulkDelete(ids);
+            await db.songs.bulkDelete(ids);
+
+            // Delete library
+            await db.libraries.delete(libId);
+            setLibraries(prev => prev.filter(l => l.id !== libId));
+        }
+    };
+
+    const handleViewLogs = (lib: import('./db').Library) => {
+        setLibraryLogs(lib.logs || []);
+        setViewingLogLibraryId(lib.id);
+        setShowLogDialog(true);
+    };
+
+    const handleCloseLogs = () => {
+        setShowLogDialog(false);
+        setViewingLogLibraryId(null);
+        setLibraryLogs([]);
+    };
 
     const handleColorClick = (event: React.MouseEvent<HTMLElement>, profileId: string) => {
         setEditingProfileId(profileId);
@@ -194,9 +447,13 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
         localStorage.setItem('melodiq_show_slider', String(showDevSlider));
         localStorage.setItem('melodiq_show_mic_status', String(showMicStatus));
         localStorage.setItem('melodiq_show_note_labels', String(showNoteLabels));
+        localStorage.setItem('melodiq_show_mic_status', String(showMicStatus));
         localStorage.setItem('melodiq_show_note_labels', String(showNoteLabels));
+        localStorage.setItem('melodiq_show_video_errors', String(showVideoErrors));
+        localStorage.setItem('melodiq_layout_override', layoutOverride);
         localStorage.setItem('melodiq_layout_override', layoutOverride);
         localStorage.setItem('melodiq_card_size', cardSize);
+        localStorage.setItem('melodiq_custom_target_columns', String(customTarget));
 
         localStorage.setItem('melodiq_song_volume', String(songVolume));
         localStorage.setItem('melodiq_master_volume', String(masterVolume));
@@ -277,7 +534,127 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
 
             <Paper sx={{ p: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
 
-                {/* 1. Session Setup */}
+                {/* 1. Song Libraries */}
+                <Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="h6">Song Libraries</Typography>
+                        {/* Fallback Input for Non-FSA Browsers */}
+                        <input
+                            type="file"
+                            // @ts-ignore
+                            webkitdirectory=""
+                            style={{ display: 'none' }}
+                            ref={fallbackInputRef}
+                            onChange={handleFallbackInputChange}
+                        />
+                        <Button
+                            variant="contained"
+                            startIcon={<FolderOpenIcon />}
+                            onClick={handleAddLibrary}
+                            disabled={loadingLibraries || activeImportId !== null}
+                        >
+                            Add Connection
+                        </Button>
+                    </Box>
+
+                    {loadingLibraries ? <Typography>Loading...</Typography> : (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            {libraries.length === 0 && (
+                                <Box sx={{ p: 4, textAlign: 'center', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: 2 }}>
+                                    <Typography color="text.secondary">No song folders connected.</Typography>
+                                    <Typography variant="caption" display="block">Click "Add Connection" to link a folder containing your songs.</Typography>
+                                </Box>
+                            )}
+
+                            {libraries.map(lib => (
+                                <Card key={lib.id} sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <Box>
+                                            <Typography variant="subtitle1" fontWeight="bold">{lib.name}</Typography>
+                                            <Typography variant="caption" color="text.secondary" display="block">
+                                                ID: {lib.id.substring(0, 8)}... | Last Scan: {lib.lastScanned ? new Date(lib.lastScanned).toLocaleString() : 'Never'}
+                                            </Typography>
+                                            {lib.stats ? (
+                                                <Typography variant="caption" display="block" sx={{ mt: 0.5, color: lib.stats.errors > 0 ? 'warning.main' : 'text.secondary' }}>
+                                                    Imported: {(lib.stats.processed || 0) + (lib.stats.cached || 0)} | Failed: {lib.stats.errors || 0} | Total Found: {lib.stats.totalFound || 0}
+                                                </Typography>
+                                            ) : (
+                                                <Typography variant="caption" display="block" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                                                    Pending Scan...
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                        <Box sx={{ display: 'flex', gap: 1 }}>
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => handleReloadLibrary(lib)}
+                                                disabled={activeImportId !== null}
+                                                color="primary"
+                                                title="Reload / Rescan"
+                                            >
+                                                {/* @ts-ignore */}
+                                                <Typography sx={{ fontSize: '1.2rem' }}>↻</Typography>
+                                            </IconButton>
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => handleViewLogs(lib)}
+                                                disabled={!lib.logs || lib.logs.length === 0}
+                                                title="View Logs"
+                                            >
+                                                <ArticleIcon fontSize="small" />
+                                            </IconButton>
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => handleDeleteLibrary(lib.id)}
+                                                color="error"
+                                                disabled={activeImportId !== null}
+                                                title="Remove Library"
+                                            >
+                                                <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                                        </Box>
+                                    </Box>
+
+                                    {/* Active Progress Bar for this Library */}
+                                    {activeImportId === lib.id && importStats && (
+                                        <Box sx={{ mt: 1 }}>
+                                            <LinearProgress
+                                                variant="determinate"
+                                                value={((importStats.processed + importStats.cached) / (importStats.totalFound || 1)) * 100}
+                                            />
+                                            <Typography variant="caption" sx={{ mt: 0.5, display: 'block', fontStyle: 'italic' }}>
+                                                {importStats.lastLog}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                </Card>
+                            ))}
+                        </Box>
+                    )}
+                </Box>
+
+                {/* Log Dialog */}
+                <Dialog open={showLogDialog} onClose={handleCloseLogs} maxWidth="md" fullWidth>
+                    <DialogTitle>Import Logs</DialogTitle>
+                    <DialogContent dividers>
+                        <Box sx={{ fontFamily: 'monospace', fontSize: '0.85rem', whiteSpace: 'pre-wrap' }}>
+                            {libraryLogs.length > 0 ? libraryLogs.map((line, i) => (
+                                <div key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '2px 0' }}>{line}</div>
+                            )) : (
+                                <Typography color="text.secondary">No logs available.</Typography>
+                            )}
+                        </Box>
+                        {/* Auto-scroll anchor */}
+                        <div ref={(el) => el?.scrollIntoView({ behavior: 'smooth' })} />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCloseLogs}>Close</Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Divider />
+
+                {/* 2. Session Setup */}
                 <Box>
                     <Typography variant="h6" gutterBottom>Session Setup</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -348,6 +725,7 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
                                             variant="standard"
                                         >
                                             <MenuItem value=""><em>No Device</em></MenuItem>
+                                            {loadingDevices && <MenuItem value="loading" disabled>Loading...</MenuItem>}
                                             {/* Local Devices */}
                                             {devices.map(d => (
                                                 <MenuItem key={d.deviceId} value={d.deviceId}>{d.label || d.deviceId}</MenuItem>
@@ -545,13 +923,30 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
                                 size="small"
                                 fullWidth
                             >
-                                <ToggleButton value="small">Small (Dense)</ToggleButton>
+                                <ToggleButton value="small">Small</ToggleButton>
                                 <ToggleButton value="medium">Medium</ToggleButton>
                                 <ToggleButton value="large">Large</ToggleButton>
+                                <ToggleButton value="custom">Custom</ToggleButton>
                             </ToggleButtonGroup>
-                            <Typography variant="caption" color="text.secondary">
-                                Controls how many songs fit on a row. Small = more songs.
-                            </Typography>
+
+                            {cardSize === 'custom' && (
+                                <Box sx={{ mt: 2 }}>
+                                    <Typography gutterBottom>Max Items per Row (Large Screen): {customTarget}</Typography>
+                                    <Slider
+                                        value={customTarget}
+                                        onChange={(_, val) => setCustomTarget(val as number)}
+                                        min={1}
+                                        max={12}
+                                        step={1}
+                                        marks
+                                        valueLabelDisplay="auto"
+                                        sx={{ width: '100%' }}
+                                    />
+                                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                                        Set the maximum number of songs in a row. The game will automatically adjust for smaller screens.
+                                    </Typography>
+                                </Box>
+                            )}
                         </Box>
                         <Box sx={{ mt: 2 }}>
                             <Typography gutterBottom>Song Volume: {Math.round(songVolume * 100)}%</Typography>
@@ -576,7 +971,10 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
                         <FormControlLabel control={<Switch checked={showDebugOverlay} onChange={(e) => setShowDebugOverlay(e.target.checked)} />} label="Show Debug Overlay" />
                         <FormControlLabel control={<Switch checked={showDevSlider} onChange={(e) => setShowDevSlider(e.target.checked)} />} label="Show Tech/Dev Slider" />
                         <FormControlLabel control={<Switch checked={showMicStatus} onChange={(e) => setShowMicStatus(e.target.checked)} />} label="Show Mic Status" />
+                        <FormControlLabel control={<Switch checked={showMicStatus} onChange={(e) => setShowMicStatus(e.target.checked)} />} label="Show Mic Status" />
                         <FormControlLabel control={<Switch checked={showNoteLabels} onChange={(e) => setShowNoteLabels(e.target.checked)} />} label="Show Pitch Note Labels" />
+                        <FormControlLabel control={<Switch checked={showVideoErrors} onChange={(e) => setShowVideoErrors(e.target.checked)} />} label="Show Video Error Messages" />
+
 
 
                     </Box>

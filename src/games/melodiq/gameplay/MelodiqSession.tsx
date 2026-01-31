@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Box, Button, Typography, IconButton, Slider } from '@mui/material';
+import { Box, Button, Typography, IconButton, Slider, Snackbar, Alert } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { db, type Song } from '../db';
 import { parseUltraStarTxt } from '../parser';
 import { PitchVisualizer, type SongWithNotes, type SungSegment } from './PitchVisualizer';
 import { LyricsDisplay } from './LyricsDisplay';
@@ -10,7 +11,7 @@ import { type UserProfile, type ActivePlayer } from '../MelodiqSettings';
 import { ScoreBoard } from './ScoreBoard';
 
 interface MelodiqSessionProps {
-    song: SongWithNotes;
+    song: Song;
     onExit: () => void;
     // Props are now optional/ignored as we read from LS, but kept for compatibility if needed for overrides
     showDebugOverlay?: boolean;
@@ -97,6 +98,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         const stored = localStorage.getItem('melodiq_show_note_labels');
         return stored === null ? true : stored === 'true';
     });
+    const [showVideoErrors] = useState(localStorage.getItem('melodiq_show_video_errors') === 'true');
     // Layout State
     const [layoutOverride] = useState(localStorage.getItem('melodiq_layout_override') || '');
 
@@ -127,21 +129,38 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     const [bpmMultiplier] = useState(4);
     const [isFinished, setIsFinished] = useState(false);
 
-
-
     // UI State
     const [_duration, setDuration] = useState(0);
     const [devPitchOverride, setDevPitchOverride] = useState<number | null>(null);
     const [audioSrc, setAudioSrc] = useState<string | undefined>(undefined);
     const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
+    const [videoError, setVideoError] = useState<string | null>(null);
 
     const requestRef = useRef<number>(0);
     const lastScoreUpdateRef = useRef<number>(0);
 
-    // Parse song on mount
-    const parsedSong: React.MemoExoticComponent<any> | SongWithNotes = React.useMemo(() => {
-        const parsed = parseUltraStarTxt(song.txtContent);
-        return { ...song, notes: parsed.notes, headers: parsed.headers, bpm: parsed.bpm, gap: parsed.gap };
+    // Load Content State
+    const [parsedSong, setParsedSong] = useState<SongWithNotes | null>(null);
+    const [contentLoading, setContentLoading] = useState(true);
+
+    useEffect(() => {
+        const loadContent = async () => {
+            try {
+                setContentLoading(true);
+                const content = await db.songsContent.get(song.id);
+                if (content?.txtContent) {
+                    const parsed = parseUltraStarTxt(content.txtContent);
+                    setParsedSong({ ...song, notes: parsed.notes, headers: parsed.headers, bpm: parsed.bpm, gap: parsed.gap });
+                } else {
+                    console.error('Song content not found for', song.title);
+                }
+            } catch (e) {
+                console.error('Failed to load song content', e);
+            } finally {
+                setContentLoading(false);
+            }
+        };
+        loadContent();
     }, [song]);
 
     // Calculate Grid Layout
@@ -349,7 +368,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         }
         player.pitchRef.current = pitch;
 
-        if (pitch && pitch.note > 0 && isPlaying && parsedSong.notes && audioRef.current) {
+        if (pitch && pitch.note > 0 && isPlaying && parsedSong && parsedSong.notes && audioRef.current) {
             const beatDuration = 60000 / ((parsedSong.bpm || 120) * bpmMultiplier);
             const latency = player.config.latency || 0;
             const currentBeat = ((audioRef.current.currentTime * 1000) - latency - (parsedSong.gap || 0)) / beatDuration;
@@ -489,16 +508,44 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         const loadVideo = async () => {
             if (!song.video) return;
             try {
+                let fileOrBlob: Blob | File | null = null;
+                let fileName: string = '';
+
+                // 1. Resolve to a usable Blob/File
                 if (song.video instanceof Blob) {
-                    activeUrl = URL.createObjectURL(song.video);
+                    fileOrBlob = song.video;
+                    if (song.video instanceof File) {
+                        fileName = song.video.name;
+                    }
+                    // If it's a raw Blob, we might not have a name, but we can check type
                 } else if (typeof song.video === 'string') {
+                    // URL string - can't really mask this easily without fetching, 
+                    // but usually strings are direct http links which we shouldn't mess with
                     activeUrl = song.video;
                 } else {
                     // FileSystemFileHandle
                     // @ts-ignore
-                    const file = await song.video.getFile();
-                    activeUrl = URL.createObjectURL(file);
+                    const fileHandle = await song.video.getFile();
+                    fileOrBlob = fileHandle;
+                    fileName = fileHandle.name;
                 }
+
+                // 2. Apply AVI Workaround if we have a Blob/File
+                if (fileOrBlob) {
+                    let blobToUrl = fileOrBlob;
+                    const type = fileOrBlob.type;
+                    const name = fileName.toLowerCase();
+
+                    // Check for AVI by extension or type
+                    // Note: fileOrBlob.type might be empty or wrong, so extension is important
+                    if (name.endsWith('.avi') || type.includes('avi') || type === 'video/x-msvideo') {
+                        console.log('[Melodiq] Attempting to force-load AVI file by masking as MP4:', name, 'Type:', type);
+                        blobToUrl = new Blob([fileOrBlob], { type: 'video/mp4' });
+                    }
+
+                    activeUrl = URL.createObjectURL(blobToUrl);
+                }
+
             } catch (e) {
                 console.error("Failed to load video", e);
             }
@@ -512,10 +559,30 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         };
     }, [song.video]);
 
+    // Clear error when song changes
+    useEffect(() => {
+        setVideoError(null);
+    }, [song.id]);
+
+    // Ensure video plays if it loads after audio has started
+    useEffect(() => {
+        if (videoSrc && isPlaying && videoRef.current) {
+            videoRef.current.play().catch(e => console.warn("Late video start failed", e));
+        }
+    }, [videoSrc, isPlaying]);
+
+    // Auto-start logic
     // Auto-start logic
     const hasStartedRef = useRef(false);
     useEffect(() => {
-        if (!hasStartedRef.current && ready && audioSrc && audioRef.current) {
+        // We only try to start IF:
+        // 1. We haven't started yet (hasStartedRef)
+        // 2. We are ready (settings loaded)
+        // 3. Content is loaded (not loading)
+        // 4. Parsed song exists
+        // 5. Audio source is set
+        // 6. Audio element is mounted
+        if (!hasStartedRef.current && ready && !contentLoading && parsedSong && audioSrc && audioRef.current) {
             hasStartedRef.current = true;
             const audio = audioRef.current;
 
@@ -539,9 +606,9 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             };
             startPlay();
         }
-    }, [ready, audioSrc, songVolume, masterVolume]);
+    }, [ready, contentLoading, parsedSong, audioSrc, songVolume, masterVolume]);
 
-    if (!ready) return <Box sx={{ bgcolor: 'black', height: '100vh' }} />; // Loading black screen
+    if (!ready || contentLoading || !parsedSong) return <Box sx={{ bgcolor: 'black', height: '100vh', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Typography>Loading...</Typography></Box>; // Loading black screen
 
     if (isFinished) {
         // Prepare props for ScoreBoard from valid players state
@@ -575,11 +642,30 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                         top: 0, left: 0, width: '100%', height: '100%',
                         objectFit: 'cover', zIndex: 0, opacity: 0.6
                     }}
+                    onError={(e) => {
+                        console.warn("Video playback failed (likely unsupported codec/format).", e);
+                        setVideoError("Video format not supported (Firefox does not support AVI/DivX)");
+                        setVideoSrc(undefined);
+                    }}
                 />
             )}
-            {videoSrc && (
-                <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, bgcolor: 'rgba(0,0,0,0.4)', zIndex: 1 }} />
-            )}
+
+            {/* Transient Video Error Notification */}
+            <Snackbar
+                open={!!videoError && showVideoErrors}
+                autoHideDuration={6000}
+                onClose={() => setVideoError(null)}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert onClose={() => setVideoError(null)} severity="warning" sx={{ width: '100%' }}>
+                    {videoError}
+                </Alert>
+            </Snackbar>
+            {
+                videoSrc && (
+                    <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, bgcolor: 'rgba(0,0,0,0.4)', zIndex: 1 }} />
+                )
+            }
 
             <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', flex: 1, pointerEvents: 'none' }}>
                 <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'rgba(0,0,0,0.5)', pointerEvents: 'auto' }}>
@@ -623,7 +709,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                                                 }}
                                             >
                                                 <PitchVisualizer
-                                                    song={parsedSong}
+                                                    song={parsedSong!}
                                                     audioRef={audioRef}
                                                     currentPitchRef={player.pitchRef}
                                                     sungSegmentsRef={player.segmentsRef}
@@ -649,7 +735,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                             borderTop: '1px solid rgba(255,255,255,0.1)',
                             bgcolor: 'rgba(0,0,0,0.2)'
                         }}>
-                            <LyricsDisplay song={parsedSong} audioRef={audioRef} />
+                            <LyricsDisplay song={parsedSong!} audioRef={audioRef} />
                         </Box>
                     </Box>
                 </Box>
@@ -678,6 +764,6 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
 
             {audioSrc && <audio ref={audioRef} src={audioSrc} style={{ display: 'none' }} />}
             {!audioSrc && <Typography color="error" sx={{ textAlign: 'center', position: 'relative', zIndex: 5 }}>No Audio Source Found</Typography>}
-        </Box>
+        </Box >
     );
 };
