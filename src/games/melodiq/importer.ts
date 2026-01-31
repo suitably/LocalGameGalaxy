@@ -1,4 +1,4 @@
-import { db, type Song, type SongContent } from './db';
+import db, { type Song, type SongContent, type SongMeta, setCachedFiles } from './db';
 import { parseUltraStarTxt } from './parser';
 import { calculateSongDuration } from './utils';
 
@@ -7,7 +7,70 @@ import { calculateSongDuration } from './utils';
  * Simple implementation for now.
  */
 const generateId = (title: string, artist: string, path: string) => {
-    return btoa(`${artist}-${title}-${path}`).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
+    // Use TextEncoder to safely handle Unicode characters before base64 encoding
+    const str = `${artist}-${title}-${path}`;
+    const bytes = new TextEncoder().encode(str);
+    const binaryString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
+    return btoa(binaryString).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
+};
+
+/**
+ * Creates a small thumbnail from an image file.
+ * Used for FileList fallback to reduce storage size.
+ * @param file The image file to thumbnail
+ * @param maxSize Maximum dimension (width or height) in pixels
+ * @returns A small Blob thumbnail, or undefined if creation fails
+ */
+const createThumbnail = async (file: File, maxSize: number = 150): Promise<Blob | undefined> => {
+    return new Promise((resolve) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+
+            // Calculate scaled dimensions
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > maxSize) {
+                    height = Math.round((height * maxSize) / width);
+                    width = maxSize;
+                }
+            } else {
+                if (height > maxSize) {
+                    width = Math.round((width * maxSize) / height);
+                    height = maxSize;
+                }
+            }
+
+            // Draw to canvas and export as small JPEG
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                resolve(undefined);
+                return;
+            }
+
+            ctx.drawImage(img, 0, 0, width, height);
+            canvas.toBlob(
+                (blob) => resolve(blob || undefined),
+                'image/jpeg',
+                0.7 // 70% quality for good compression
+            );
+        };
+
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            resolve(undefined);
+        };
+
+        img.src = url;
+    });
 };
 
 export interface ImportStats {
@@ -75,14 +138,17 @@ export class MelodiqImporter {
         };
 
         const songBuffer: Song[] = [];
+        const metaBuffer: SongMeta[] = [];
         const contentBuffer: SongContent[] = [];
         const processedIds = new Set<string>();
 
         const flush = async () => {
             if (songBuffer.length > 0) {
                 await db.songs.bulkPut(songBuffer);
+                await db.songsMeta.bulkPut(metaBuffer);
                 await db.songsContent.bulkPut(contentBuffer);
                 songBuffer.length = 0;
+                metaBuffer.length = 0;
                 contentBuffer.length = 0;
                 onProgress(stats);
             }
@@ -93,6 +159,7 @@ export class MelodiqImporter {
                 // Legacy behavior: clear everything if no specific library targeted
                 log('Clearing database (Legacy Mode)...');
                 await db.songs.clear();
+                await db.songsMeta.clear();
                 await db.songsContent.clear();
             } else {
                 log(`Updating library: ${libraryId}...`);
@@ -177,10 +244,28 @@ export class MelodiqImporter {
                     if (videoFile) song.video = videoFile;
                     if (coverHandle) song.cover = coverHandle;
 
+                    // Build lightweight metadata
+                    const meta: SongMeta = {
+                        id: entry.id,
+                        libraryId,
+                        title: entry.title,
+                        artist: entry.artist,
+                        duration: entry.duration,
+                        year: entry.year,
+                        genre: entry.genre,
+                        language: entry.language,
+                        edition: entry.edition,
+                        album: entry.album,
+                        hasCover: !!coverHandle,
+                        hasVideo: !!videoFile
+                    };
+
                     songBuffer.push(song);
+                    metaBuffer.push(meta);
                     contentBuffer.push({ id: entry.id, txtContent });
                     processedIds.add(entry.id);
                     stats.processed++;
+                    onProgress(stats); // Update progress after each song
 
                     if (stats.processed % this.BATCH_SIZE === 0) {
                         await flush();
@@ -229,14 +314,17 @@ export class MelodiqImporter {
         };
 
         const songBuffer: Song[] = [];
+        const metaBuffer: SongMeta[] = [];
         const contentBuffer: SongContent[] = [];
         const processedIds = new Set<string>();
 
         const flush = async () => {
             if (songBuffer.length > 0) {
                 await db.songs.bulkPut(songBuffer);
+                await db.songsMeta.bulkPut(metaBuffer);
                 await db.songsContent.bulkPut(contentBuffer);
                 songBuffer.length = 0;
+                metaBuffer.length = 0;
                 contentBuffer.length = 0;
                 onProgress(stats);
             }
@@ -246,6 +334,7 @@ export class MelodiqImporter {
             if (!libraryId) {
                 log('Clearing database (Legacy)...');
                 await db.songs.clear();
+                await db.songsMeta.clear();
                 await db.songsContent.clear();
             } else {
                 log(`Scanning library: ${libraryId}...`);
@@ -350,10 +439,28 @@ export class MelodiqImporter {
                         if (chosenVideoFile) song.video = chosenVideoFile; // @ts-ignore
                         if (chosenImageFile) song.cover = chosenImageFile; // @ts-ignore
 
+                        // Build lightweight metadata
+                        const meta: SongMeta = {
+                            id,
+                            libraryId,
+                            title,
+                            artist,
+                            duration,
+                            year: parsed.headers['YEAR'],
+                            genre: parsed.headers['GENRE'],
+                            language: parsed.headers['LANGUAGE'],
+                            edition: parsed.headers['EDITION'],
+                            album: parsed.headers['ALBUM'],
+                            hasCover: !!chosenImageFile,
+                            hasVideo: !!chosenVideoFile
+                        };
+
                         songBuffer.push(song);
+                        metaBuffer.push(meta);
                         contentBuffer.push({ id, txtContent: text });
                         processedIds.add(id);
                         stats.processed++;
+                        onProgress(stats); // Update progress after each song
 
                         // Add to Manifest
                         manifest.push({
@@ -395,6 +502,7 @@ export class MelodiqImporter {
                 if (toRemove.length > 0) {
                     log(`Removing ${toRemove.length} obsolete songs...`);
                     await db.songs.bulkDelete(toRemove);
+                    await db.songsMeta.bulkDelete(toRemove);
                     await db.songsContent.bulkDelete(toRemove);
                     stats.removed = toRemove.length;
                 }
@@ -473,14 +581,17 @@ export class MelodiqImporter {
         };
 
         const songBuffer: Song[] = [];
+        const metaBuffer: SongMeta[] = [];
         const contentBuffer: SongContent[] = [];
         const processedIds = new Set<string>();
 
         const flush = async () => {
             if (songBuffer.length > 0) {
                 await db.songs.bulkPut(songBuffer);
+                await db.songsMeta.bulkPut(metaBuffer);
                 await db.songsContent.bulkPut(contentBuffer);
                 songBuffer.length = 0;
+                metaBuffer.length = 0;
                 contentBuffer.length = 0;
                 onProgress(stats);
             }
@@ -490,6 +601,7 @@ export class MelodiqImporter {
             if (!libraryId) {
                 log('Clearing database (Legacy)...');
                 await db.songs.clear();
+                await db.songsMeta.clear();
                 await db.songsContent.clear();
             } else {
                 log(`Scanning library: ${libraryId}...`);
@@ -594,15 +706,48 @@ export class MelodiqImporter {
                             album: parsed.headers['ALBUM']
                         };
 
-                        if (chosenAudioFile) song.audio = chosenAudioFile;
-                        if (chosenVideoFile) song.video = chosenVideoFile;
-                        if (chosenImageFile) song.cover = chosenImageFile; // @ts-ignore
+                        // FileList fallback: Store only filenames, not actual file blobs
+                        // This prevents QuotaExceededError with large libraries
+                        if (chosenAudioFile) song.audio = chosenAudioFile.name;
+                        if (chosenVideoFile) song.video = chosenVideoFile.name;
+
+                        // Create small thumbnail for cover (reduces ~500KB to ~10KB)
+                        if (chosenImageFile) {
+                            const thumbnail = await createThumbnail(chosenImageFile, 150);
+                            if (thumbnail) song.cover = thumbnail;
+                        }
+
+                        // Cache actual File objects in memory for same-session playback
+                        // This avoids the need to re-select folder during current browser session
+                        setCachedFiles(id, {
+                            audio: chosenAudioFile,
+                            video: chosenVideoFile,
+                            cover: chosenImageFile
+                        });
+
+                        // Build lightweight metadata
+                        const meta: SongMeta = {
+                            id,
+                            libraryId,
+                            title,
+                            artist,
+                            duration: song.duration,
+                            year: song.year,
+                            genre: song.genre,
+                            language: song.language,
+                            edition: song.edition,
+                            album: song.album,
+                            hasCover: !!song.cover,
+                            hasVideo: !!chosenVideoFile
+                        };
 
                         songBuffer.push(song);
+                        metaBuffer.push(meta);
                         contentBuffer.push({ id, txtContent: text });
                         processedIds.add(id);
 
                         stats.processed++;
+                        onProgress(stats); // Update progress after each song
 
                         if (stats.processed % this.BATCH_SIZE === 0) {
                             await flush();
@@ -624,6 +769,7 @@ export class MelodiqImporter {
                 if (toRemove.length > 0) {
                     log(`Removing ${toRemove.length} obsolete songs...`);
                     await db.songs.bulkDelete(toRemove);
+                    await db.songsMeta.bulkDelete(toRemove);
                     await db.songsContent.bulkDelete(toRemove);
                     stats.removed = toRemove.length;
                 }

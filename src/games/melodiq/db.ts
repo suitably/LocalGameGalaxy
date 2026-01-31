@@ -22,6 +22,25 @@ export interface Song {
     album?: string;
 }
 
+/**
+ * Lightweight song metadata for fast list rendering.
+ * Does NOT include heavy file handles (audio, video, cover).
+ */
+export interface SongMeta {
+    id: string;
+    libraryId?: string;
+    title: string;
+    artist: string;
+    duration?: number;
+    year?: string;
+    genre?: string;
+    language?: string;
+    edition?: string;
+    album?: string;
+    hasCover: boolean;  // Flag to indicate cover exists
+    hasVideo: boolean;  // Flag to indicate video exists
+}
+
 export interface SongContent {
     id: string;
     txtContent: string;
@@ -45,17 +64,45 @@ export interface Library {
 
 const db = new Dexie('MelodiqDB') as Dexie & {
     songs: EntityTable<Song, 'id'>,
+    songsMeta: EntityTable<SongMeta, 'id'>,
     songsContent: EntityTable<SongContent, 'id'>,
     cachedDirs: EntityTable<CachedDir, 'path'>,
     libraries: EntityTable<Library, 'id'>
 };
 
-// Update to version 6 to include libraries and song.libraryId
-db.version(6).stores({
+// Update to version 7 to include songsMeta lightweight table
+db.version(7).stores({
     songs: 'id, libraryId, title, artist, year, genre, language',
+    songsMeta: 'id, libraryId, title, artist, year, genre, language, edition',
     songsContent: 'id',
     cachedDirs: 'path',
     libraries: 'id'
 });
 
-export { db };
+export default db;
+
+/**
+ * In-memory cache for File objects from FileList imports.
+ * These can't be stored in IndexedDB without exceeding quota,
+ * but we can keep them in memory for the current browser session.
+ * After page refresh, files will need to be re-selected.
+ */
+export interface CachedFiles {
+    audio?: File;
+    video?: File;
+    cover?: File;
+}
+
+const fileCache = new Map<string, CachedFiles>();
+
+export const getCachedFiles = (songId: string): CachedFiles | undefined => {
+    return fileCache.get(songId);
+};
+
+export const setCachedFiles = (songId: string, files: CachedFiles): void => {
+    fileCache.set(songId, files);
+};
+
+export const clearFileCache = (): void => {
+    fileCache.clear();
+};

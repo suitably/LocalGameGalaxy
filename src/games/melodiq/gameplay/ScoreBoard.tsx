@@ -44,8 +44,15 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
                 gap: 2,
                 width: '100%',
                 maxWidth: 600,
-                mb: 6
+                mb: 6,
+                maxHeight: '60vh',
+                overflowY: 'auto',
             }}>
+                {sortedPlayers.length === 0 && (
+                    <Typography variant="h5" sx={{ color: 'rgba(255,255,255,0.7)', textAlign: 'center', py: 4 }}>
+                        No players in this session
+                    </Typography>
+                )}
                 {sortedPlayers.map((player, index) => {
                     const isWinner = index === 0;
                     return (

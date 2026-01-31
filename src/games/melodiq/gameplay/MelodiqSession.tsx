@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Box, Button, Typography, IconButton, Slider, Snackbar, Alert } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { db, type Song } from '../db';
+import db, { type Song, getCachedFiles } from '../db';
 import { parseUltraStarTxt } from '../parser';
 import { PitchVisualizer, type SongWithNotes, type SungSegment } from './PitchVisualizer';
 import { LyricsDisplay } from './LyricsDisplay';
@@ -135,9 +135,11 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     const [audioSrc, setAudioSrc] = useState<string | undefined>(undefined);
     const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
     const [videoError, setVideoError] = useState<string | null>(null);
+    const [needsFolderAccess, setNeedsFolderAccess] = useState(false);
 
     const requestRef = useRef<number>(0);
     const lastScoreUpdateRef = useRef<number>(0);
+    const playersRef = useRef<PlayerRuntime[]>([]);
 
     // Load Content State
     const [parsedSong, setParsedSong] = useState<SongWithNotes | null>(null);
@@ -239,6 +241,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
 
             console.log('[MelodiqSession] Initialized players:', newPlayers.length);
             setPlayers(newPlayers);
+            playersRef.current = newPlayers;
             setReady(true);
         } else {
             console.warn("No dynamic settings found, falling back to empty session.");
@@ -322,6 +325,9 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                 changed = true;
             }
 
+            if (changed) {
+                playersRef.current = updatedPlayers;
+            }
             return changed ? updatedPlayers : prevPlayers;
         });
 
@@ -456,35 +462,37 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         };
     }, [ready, players, updateLoop]);
 
+    // Handle song end - use ref to avoid stale closure issues
+    const handleSongEnd = useCallback(() => {
+        console.log('Song ended, showing scoreboard');
+
+        // Broadcast Stats to Connected Phones using ref to get latest players
+        const now = new Date();
+        playersRef.current.forEach(p => {
+            if (p.config.isRemote && p.webRtcManager && p.remotePeerId) {
+                const statsPayload = {
+                    type: 'stats',
+                    songTitle: song.title,
+                    score: p.score,
+                    date: now.toISOString()
+                };
+                console.log(`[Session] Sending stats to ${p.config.name}`, statsPayload);
+                p.webRtcManager.sendToPeer(p.remotePeerId, statsPayload);
+            }
+        });
+
+        setIsFinished(true);
+        setIsPlaying(false);
+        if (videoRef.current) videoRef.current.pause();
+    }, [song.title]);
+
     // Audio event handlers - set after audio source is loaded
     useEffect(() => {
         const audio = audioRef.current;
         if (audio && audioSrc) {
             audio.onloadedmetadata = () => setDuration(audio.duration);
-            audio.onended = () => {
-                console.log('Song ended, showing scoreboard');
-
-                // Broadcast Stats to Connected Phones
-                const now = new Date();
-                players.forEach(p => {
-                    if (p.config.isRemote && p.webRtcManager && p.remotePeerId) {
-                        const statsPayload = {
-                            type: 'stats',
-                            songTitle: song.title,
-                            score: p.score,
-                            date: now.toISOString()
-                        };
-                        console.log(`[Session] Sending stats to ${p.config.name}`, statsPayload);
-                        p.webRtcManager.sendToPeer(p.remotePeerId, statsPayload);
-                    }
-                });
-
-                setIsFinished(true);
-                setIsPlaying(false);
-                if (videoRef.current) videoRef.current.pause();
-            };
         }
-    }, [audioSrc, players]);
+    }, [audioSrc]);
 
     useEffect(() => {
         let activeUrl: string | undefined;
@@ -496,7 +504,29 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                 if (song.audio instanceof Blob) {
                     activeUrl = URL.createObjectURL(song.audio);
                 } else if (typeof song.audio === 'string') {
-                    activeUrl = song.audio;
+                    // Check if it's a full URL or just a filename
+                    if (song.audio.startsWith('http://') || song.audio.startsWith('https://') || song.audio.startsWith('blob:')) {
+                        activeUrl = song.audio;
+                    } else {
+                        // It's just a filename (FileList fallback import)
+                        // First check the in-memory cache (available during same session)
+                        const cached = getCachedFiles(song.id);
+                        if (cached?.audio) {
+                            activeUrl = URL.createObjectURL(cached.audio);
+                            console.log('[Session] Using cached audio file:', cached.audio.name);
+
+                            // Also load cached video if available
+                            if (cached.video && mounted) {
+                                setVideoSrc(URL.createObjectURL(cached.video));
+                            }
+                        } else {
+                            // Cache empty (page was refreshed) - need to prompt user
+                            if (mounted) {
+                                setNeedsFolderAccess(true);
+                            }
+                            return;
+                        }
+                    }
                 } else {
                     // FileSystemFileHandle
                     // @ts-ignore
@@ -515,7 +545,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             // Revoke if it was created from a blob or handle (which creates a blob url)
             if (activeUrl && typeof song.audio !== 'string') URL.revokeObjectURL(activeUrl);
         };
-    }, [song.audio]);
+    }, [song.audio, song.id]);
 
     useEffect(() => {
         let activeUrl: string | undefined;
@@ -624,7 +654,99 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         }
     }, [ready, contentLoading, parsedSong, audioSrc, songVolume, masterVolume]);
 
+    // Ref for hidden folder input (Firefox compatible)
+    const folderInputRef = useRef<HTMLInputElement>(null);
+
+    // Handler for FileList fallback: user selects folder to access files
+    const handleFolderInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        const audioFilename = typeof song.audio === 'string' ? song.audio : null;
+        const videoFilename = typeof song.video === 'string' ? song.video : null;
+
+        if (audioFilename && song.dirPath) {
+            // Find the audio file by matching dirPath + filename
+            // FileList items have webkitRelativePath like "root/subdir/file.mp3"
+            const targetAudioPath = `${song.dirPath}/${audioFilename}`.replace(/^\.\//, '');
+
+            let audioFile: File | undefined;
+            let videoFile: File | undefined;
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const relativePath = file.webkitRelativePath;
+
+                if (relativePath.endsWith(targetAudioPath) || relativePath === targetAudioPath) {
+                    audioFile = file;
+                }
+                if (videoFilename) {
+                    const targetVideoPath = `${song.dirPath}/${videoFilename}`.replace(/^\.\//, '');
+                    if (relativePath.endsWith(targetVideoPath) || relativePath === targetVideoPath) {
+                        videoFile = file;
+                    }
+                }
+
+                // Early exit if we found both
+                if (audioFile && (!videoFilename || videoFile)) break;
+            }
+
+            if (audioFile) {
+                setAudioSrc(URL.createObjectURL(audioFile));
+                console.log('[Session] Loaded audio from re-selected folder:', audioFile.name);
+            } else {
+                console.error('Audio file not found in selected folder:', targetAudioPath);
+            }
+
+            if (videoFile) {
+                setVideoSrc(URL.createObjectURL(videoFile));
+                console.log('[Session] Loaded video from re-selected folder:', videoFile.name);
+            }
+        }
+
+        setNeedsFolderAccess(false);
+        // Reset input so same folder can be selected again if needed
+        e.target.value = '';
+    };
+
     if (!ready || contentLoading || !parsedSong) return <Box sx={{ bgcolor: 'black', height: '100vh', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Typography>Loading...</Typography></Box>; // Loading black screen
+
+    // Show folder access prompt for FileList-imported songs
+    if (needsFolderAccess) {
+        return (
+            <Box sx={{
+                bgcolor: 'black',
+                height: '100vh',
+                color: 'white',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 3
+            }}>
+                <Typography variant="h5">{song.artist} - {song.title}</Typography>
+                <Typography color="text.secondary" sx={{ maxWidth: 500, textAlign: 'center' }}>
+                    This song was imported without persistent file access.<br />
+                    To play, please select the same folder you imported from.
+                </Typography>
+                {/* Hidden folder input - Firefox compatible */}
+                <input
+                    ref={folderInputRef}
+                    type="file"
+                    // @ts-ignore - webkitdirectory is non-standard but supported
+                    webkitdirectory=""
+                    style={{ display: 'none' }}
+                    onChange={handleFolderInputChange}
+                />
+                <Button variant="contained" onClick={() => folderInputRef.current?.click()}>
+                    Select Song Folder
+                </Button>
+                <Button variant="text" color="inherit" onClick={onExit}>
+                    Go Back
+                </Button>
+            </Box>
+        );
+    }
 
     if (isFinished) {
         // Prepare props for ScoreBoard from valid players state
@@ -779,7 +901,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                 )}
             </Box>
 
-            {audioSrc && <audio ref={audioRef} src={audioSrc} style={{ display: 'none' }} />}
+            {audioSrc && <audio ref={audioRef} src={audioSrc} onEnded={handleSongEnd} style={{ display: 'none' }} />}
             {!audioSrc && <Typography color="error" sx={{ textAlign: 'center', position: 'relative', zIndex: 5 }}>No Audio Source Found</Typography>}
         </Box >
     );

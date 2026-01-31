@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { VirtuosoGrid } from 'react-virtuoso';
-import { Box, Button, Typography, Card, CardContent, Grid, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText } from '@mui/material';
-import { db, type Song } from './db';
+import { Box, Button, Typography, Card, CardContent, Grid, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText, LinearProgress } from '@mui/material';
+import db, { type Song, type SongMeta } from './db';
 import { MelodiqSession } from './gameplay/MelodiqSession';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -14,6 +14,7 @@ import { usePageTitle } from '../../context/TitleContext';
 import { WebRTCProvider } from './audio/WebRTCContext';
 import { MelodiqConnection } from './MelodiqConnection';
 import QrCodeIcon from '@mui/icons-material/QrCode';
+import { useSongs } from './hooks/useSongs';
 
 // Navigation State
 type View = 'Home' | 'Settings' | 'Session' | 'Connection';
@@ -24,7 +25,8 @@ export const MelodiqGame: React.FC = () => {
     // Set the game title in the header
     usePageTitle(t('games.melodiq.title'));
 
-    const [songs, setSongs] = useState<Song[]>([]);
+    // Use centralized song management hook
+    const { songs, loadingProgress, refreshSongs, getSongById } = useSongs();
 
     // Search & Filter State
     const [searchQuery, setSearchQuery] = useState('');
@@ -44,18 +46,18 @@ export const MelodiqGame: React.FC = () => {
     const [currentView, setCurrentView] = useState<View>('Home');
     const [selectedSong, setSelectedSong] = useState<Song | null>(null);
 
-    // Initial Load of Settings (For passing to session if needed, though Session reads directly now)
-    // We can remove these states from here if MelodiqSession reads from localStorage directly, 
-    // BUT MelodiqSession props currently require them.
-    // Let's keep them read-only here or updated when returning from settings.
-    // Actually, to keep it clean, let's just force a re-mount or have Session read from LS.
-    // The plan says Session will read from LS. So we don't need to pass them as props anymore.
-    // However, existing MelodiqSession interface expects them. We will refactor Session next.
-    // For now, let's ignore passing them and rely on Session refactor.
-
-    useEffect(() => {
-        db.songs.toArray().then(setSongs);
-    }, []); // Only load once (or we can listen to db changes later)
+    // Handler to select and load a song for playback
+    const handleSelectSong = async (songMeta: SongMeta) => {
+        try {
+            const fullSong = await getSongById(songMeta.id);
+            if (fullSong) {
+                setSelectedSong(fullSong);
+                setCurrentView('Session');
+            }
+        } catch (e) {
+            console.error('Failed to load song:', e);
+        }
+    };
 
     const filteredSongs = React.useMemo(() => {
         let result = songs;
@@ -132,7 +134,7 @@ export const MelodiqGame: React.FC = () => {
                     <Box sx={{ height: '100%', overflow: 'auto' }}>
                         <MelodiqSettings onBack={() => {
                             // Refresh songs when returning from settings (in case import happened)
-                            db.songs.toArray().then(setSongs);
+                            refreshSongs();
                             setCurrentView('Home');
                         }} />
                     </Box>
@@ -180,8 +182,22 @@ export const MelodiqGame: React.FC = () => {
                         </Button>
                     </Box>
                 </Box>
+
+                {/* Loading Progress */}
+                {loadingProgress && (
+                    <Box sx={{ mb: 2, flexShrink: 0 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                            Loading songs... {loadingProgress.loaded} / {loadingProgress.total}
+                        </Typography>
+                        <LinearProgress
+                            variant="determinate"
+                            value={(loadingProgress.loaded / loadingProgress.total) * 100}
+                        />
+                    </Box>
+                )}
+
                 {/* Empty State */}
-                {songs?.length === 0 && (
+                {songs?.length === 0 && !loadingProgress && (
                     <Box sx={{ width: '100%', textAlign: 'center', py: 8, opacity: 0.7, flexGrow: 1 }}>
                         <Typography variant="h5">Your library is empty</Typography>
                         <Typography>Load a folder with UltraStar songs to begin</Typography>
@@ -371,10 +387,7 @@ export const MelodiqGame: React.FC = () => {
                                 itemContent={(index: number) => (
                                     <SongCard
                                         song={filteredSongs[index]}
-                                        onClick={() => {
-                                            setSelectedSong(filteredSongs[index]);
-                                            setCurrentView('Session');
-                                        }}
+                                        onClick={() => handleSelectSong(filteredSongs[index])}
                                     />
                                 )}
                             />
@@ -393,29 +406,35 @@ export const MelodiqGame: React.FC = () => {
 };
 
 
-
-const SongCard: React.FC<{ song: Song; onClick: () => void }> = ({ song, onClick }) => {
+/**
+ * SongCard displays lightweight SongMeta for fast rendering.
+ * Cover is loaded on-demand from the full Song table when visible.
+ */
+const SongCard: React.FC<{ song: SongMeta; onClick: () => void }> = ({ song, onClick }) => {
     const [coverUrl, setCoverUrl] = useState<string | null>(null);
 
     useEffect(() => {
         let active = true;
-        let url: string | null = null;
+        let objectUrl: string | null = null;
 
         const loadCover = async () => {
-            if (!song.cover) return;
+            if (!song.hasCover) return;
 
             try {
-                if (typeof song.cover === 'string') {
-                    if (active) setCoverUrl(song.cover);
-                } else if (song.cover instanceof Blob) {
-                    url = URL.createObjectURL(song.cover);
-                    if (active) setCoverUrl(url);
-                } else if ('getFile' in song.cover && typeof song.cover.getFile === 'function') {
-                    // It's a FileSystemFileHandle
-                    const file = await (song.cover as any).getFile();
+                // Load full song to get cover handle
+                const fullSong = await db.songs.get(song.id);
+                if (!fullSong?.cover || !active) return;
+
+                if (typeof fullSong.cover === 'string') {
+                    setCoverUrl(fullSong.cover);
+                } else if (fullSong.cover instanceof Blob) {
+                    objectUrl = URL.createObjectURL(fullSong.cover);
+                    if (active) setCoverUrl(objectUrl);
+                } else if ('getFile' in fullSong.cover && typeof fullSong.cover.getFile === 'function') {
+                    const file = await (fullSong.cover as FileSystemFileHandle).getFile();
                     if (active) {
-                        url = URL.createObjectURL(file);
-                        setCoverUrl(url);
+                        objectUrl = URL.createObjectURL(file);
+                        setCoverUrl(objectUrl);
                     }
                 }
             } catch (e) {
@@ -427,9 +446,9 @@ const SongCard: React.FC<{ song: Song; onClick: () => void }> = ({ song, onClick
 
         return () => {
             active = false;
-            if (url) URL.revokeObjectURL(url);
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
         };
-    }, [song.cover]);
+    }, [song.id, song.hasCover]);
 
     return (
         <Card

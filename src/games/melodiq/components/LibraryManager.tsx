@@ -7,7 +7,7 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ArticleIcon from '@mui/icons-material/Article';
 import { MelodiqImporter, type ImportStats } from '../importer';
-import { db, type Library } from '../db';
+import db, { type Library } from '../db';
 
 export const LibraryManager: React.FC = () => {
     const [libraries, setLibraries] = useState<Library[]>([]);

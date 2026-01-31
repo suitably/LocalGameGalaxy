@@ -757,10 +757,8 @@ export const MelodiqPhoneClient = () => {
                         <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>Microphone</label>
                         <select
                             value={selectedDeviceId}
-                            value={selectedDeviceId}
                             onChange={(e) => {
-                                const newId = e.target.value;
-                                switchMicrophone(newId);
+                                setSelectedDeviceId(e.target.value);
                             }}
                             style={{
                                 background: 'rgba(255,255,255,0.1)',
