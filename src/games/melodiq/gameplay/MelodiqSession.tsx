@@ -39,6 +39,9 @@ class PlayerRuntime {
     // Helper to track active segment for optimization
     public activeSegment: SungSegment | null = null;
 
+    // Duet: Current Track Index (0 = P1, 1 = P2)
+    public trackIndex: number = 0;
+
     public config: UserProfile & { deviceId: string; volume?: number; muted?: boolean; latency?: number; isRemote?: boolean };
 
     constructor(
@@ -111,6 +114,10 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         const stored = localStorage.getItem('melodiq_master_volume');
         return stored ? parseFloat(stored) : 1.0;
     });
+    const [goldenNoteMultiplier] = useState(() => {
+        const stored = localStorage.getItem('melodiq_golden_note_multiplier');
+        return stored ? parseFloat(stored) : 2.0;
+    });
 
     // Dynamic Player State
     const [players, setPlayers] = useState<PlayerRuntime[]>([]);
@@ -145,14 +152,32 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     const [parsedSong, setParsedSong] = useState<SongWithNotes | null>(null);
     const [contentLoading, setContentLoading] = useState(true);
 
+    // Scoring Normalization - Per Track
+    const [trackScoreWeights, setTrackScoreWeights] = useState<number[]>([]);
+
     useEffect(() => {
         const loadContent = async () => {
             try {
                 setContentLoading(true);
+
+                // Check if content was passed via song object (Server/Helper songs from useSongs caching)
+                // @ts-ignore - Song interface doesn't strictly include txtContent but useSongs attaches it
+                if (song.txtContent) {
+                    // @ts-ignore
+                    const parsed = parseUltraStarTxt(song.txtContent);
+                    const parsedWithMeta = { ...song, notes: parsed.notes, tracks: parsed.tracks, headers: parsed.headers, bpm: parsed.bpm, gap: parsed.gap };
+                    setParsedSong(parsedWithMeta);
+                    calculateScoreNormalization(parsed);
+                    setContentLoading(false);
+                    return;
+                }
+
                 const content = await db.songsContent.get(song.id);
                 if (content?.txtContent) {
                     const parsed = parseUltraStarTxt(content.txtContent);
-                    setParsedSong({ ...song, notes: parsed.notes, headers: parsed.headers, bpm: parsed.bpm, gap: parsed.gap });
+                    const parsedWithMeta = { ...song, notes: parsed.notes, tracks: parsed.tracks, headers: parsed.headers, bpm: parsed.bpm, gap: parsed.gap };
+                    setParsedSong(parsedWithMeta);
+                    calculateScoreNormalization(parsed);
                 } else {
                     console.error('Song content not found for', song.title);
                 }
@@ -163,7 +188,41 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             }
         };
         loadContent();
-    }, [song]);
+    }, [song, goldenNoteMultiplier]);
+
+    // Calculate score normalization based on total weighted beats in each track
+    const calculateScoreNormalization = (parsed: { notes: any[], tracks: any[] }) => {
+        const weights: number[] = [];
+
+        // If we have tracks, calculate for each
+        if (parsed.tracks && parsed.tracks.length > 0) {
+            parsed.tracks.forEach(track => {
+                let total = 0;
+                track.notes.forEach((note: any) => {
+                    if (note.type === ':') {
+                        total += note.duration;
+                    } else if (note.type === '*' || note.type === 'F') {
+                        total += note.duration * (note.type === '*' ? goldenNoteMultiplier : 1);
+                    }
+                });
+                weights.push(total > 0 ? 1000 / total : 0);
+            });
+        } else {
+            // Fallback for legacy parsing or single track
+            let total = 0;
+            parsed.notes.forEach(note => {
+                if (note.type === ':') {
+                    total += note.duration;
+                } else if (note.type === '*' || note.type === 'F') {
+                    total += note.duration * (note.type === '*' ? goldenNoteMultiplier : 1);
+                }
+            });
+            weights.push(total > 0 ? 1000 / total : 0);
+        }
+
+        setTrackScoreWeights(weights);
+        console.log(`[MelodiqSession] Scoring Normalized Weights:`, weights);
+    };
 
     // Calculate Grid Layout
     const gridLayout = React.useMemo(() => {
@@ -253,6 +312,18 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     useEffect(() => {
         if (!manager) return;
 
+        // Message Handling
+        manager.onMessage = (peerId, data) => {
+            if (data.type === 'trackSelect' && typeof data.trackIndex === 'number') {
+                const currentPlayers = playersRef.current;
+                const pIdx = currentPlayers.findIndex(p => p.config.deviceId === peerId);
+                if (pIdx !== -1) {
+                    console.log(`[Session] Remote track switch for ${currentPlayers[pIdx].config.name} -> Track ${data.trackIndex}`);
+                    switchTrack(pIdx, data.trackIndex);
+                }
+            }
+        };
+
         setPlayers(prevPlayers => {
             let updatedPlayers = [...prevPlayers];
             let changed = false;
@@ -271,9 +342,6 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     }
                 } else {
                     // Create new Guest Player
-                    // Check if we already have this Guest (by checking if any player has this deviceId, which we did above)
-                    // The above check covers it. If existingIdx === -1, it's new.
-
                     console.log(`[Session] New Phone Guest: ${peer.name}`);
                     const newProfile: UserProfile = {
                         id: peer.id,
@@ -296,25 +364,18 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             });
 
             // 2. Handle Disconnected Peers
-            // If a player isRemote, and their deviceId is NOT in peers...
-            // If it was a Guest (profileId == deviceId), remove them.
-            // If it was a configured player, detach? (PlayerRuntime cleanup handles stream end usually)
-
-            // For now, let's remove Guests who disconnected
+            // Remove Guests who disconnected
             const activePeerIds = new Set(peers.map(p => p.id));
             const filtered = updatedPlayers.filter(p => {
                 if (p.config.isRemote) {
                     // If peer is gone
                     if (!activePeerIds.has(p.config.deviceId)) {
                         // If Guest (profileId matches deviceId basically)
-                        // Or strict logic: if they were added dynamically.
-                        // Simple heuristic: if profileId === deviceId, it's a guest.
                         if (p.config.id === p.config.deviceId) {
                             console.log(`[Session] removing disconnected guest ${p.config.name}`);
                             changed = true;
                             return false;
                         }
-                        // Configured players stay, but are effectively disconnected
                     }
                 }
                 return true;
@@ -332,6 +393,30 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         });
 
     }, [peers, manager]);
+
+    // Broadcast Song Info (Tracks) to Peers
+    useEffect(() => {
+        if (!manager || !parsedSong) return;
+
+        const trackNames = parsedSong.tracks && parsedSong.tracks.length > 0
+            ? parsedSong.tracks.map((t: any, i: number) => t.name || `Player ${i + 1}`)
+            : [];
+
+        const payload = {
+            type: 'songInfo',
+            title: song.title,
+            artist: song.artist,
+            tracks: trackNames
+        };
+
+        // Send to all connected remote players
+        players.forEach(p => {
+            if (p.config.isRemote && p.webRtcManager && p.remotePeerId && p.webRtcManager.getConnectedPeers().some(cp => cp.peerId === p.remotePeerId)) {
+                p.webRtcManager.sendToPeer(p.remotePeerId, payload);
+            }
+        });
+
+    }, [manager, parsedSong, players.length, song.title]); // Trigger on players change (new connection) or song load
 
     const togglePlay = useCallback(() => {
         if (audioRef.current) {
@@ -360,7 +445,8 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
 
     const processPlayer = (
         player: PlayerRuntime,
-        devOverride: number | null
+        devOverride: number | null,
+        deltaTimeMs: number
     ) => {
         let pitch: PitchResult | null = null;
         if (devOverride !== null) {
@@ -379,14 +465,19 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             const latency = player.config.latency || 0;
             const currentBeat = ((audioRef.current.currentTime * 1000) - latency - (parsedSong.gap || 0)) / beatDuration;
 
-            const activeNoteIndex = parsedSong.notes.findIndex((n) =>
+            const trackIndex = player.trackIndex;
+            // Use track notes if available, otherwise fallback to main notes
+            const notesSource = (parsedSong.tracks && parsedSong.tracks[trackIndex]) ? parsedSong.tracks[trackIndex].notes : parsedSong.notes;
+            const currentScoreWeight = (trackScoreWeights.length > trackIndex) ? trackScoreWeights[trackIndex] : (trackScoreWeights[0] || 0);
+
+            const activeNoteIndex = notesSource.findIndex((n) =>
                 n.type !== '-' &&
                 currentBeat >= n.start &&
                 currentBeat <= n.start + n.duration
             );
 
             if (activeNoteIndex !== -1) {
-                const note = parsedSong.notes[activeNoteIndex];
+                const note = notesSource[activeNoteIndex];
                 const targetPitch = note.pitch;
                 const sungPitch = pitch.note;
 
@@ -394,7 +485,17 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                 const semitoneDiff = Math.min(diff, 12 - diff);
 
                 if (semitoneDiff < 1.0) {
-                    player.score += 10;
+                    // Calculate score increment based on time portion (deltaTime)
+                    // durationUnitsCovered = deltaTimeMs / beatDuration
+                    const durationUnitsCovered = deltaTimeMs / beatDuration;
+
+                    let points = durationUnitsCovered * currentScoreWeight;
+
+                    if (note.type === '*') {
+                        points *= goldenNoteMultiplier;
+                    }
+
+                    player.score += points;
 
                     const record = player.segmentsRef.current;
 
@@ -416,8 +517,33 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         }
     };
 
+    const switchTrack = (playerIndex: number, trackIndex: number) => {
+        setPlayers(prev => {
+            const newPlayers = [...prev];
+            const p = newPlayers[playerIndex];
+            if (p) {
+                // Determine actual track index (prevent out of bounds)
+                const safeIndex = (parsedSong?.tracks && trackIndex < parsedSong.tracks.length) ? trackIndex : 0;
+
+                // Create a shallow copy or just mutate if we rely on forceUpdate (setPlayers triggers render)
+                // But PlayerRuntime is a class instance.
+                // We should probably mutate it, then clone array to trigger React.
+                p.trackIndex = safeIndex;
+                p.score = 0; // Reset score on switch
+                p.segmentsRef.current = {}; // Clear visual segments
+                p.activeSegment = null;
+                console.log(`[Session] Player ${p.config.name} switched to Track ${safeIndex}`);
+            }
+            return newPlayers;
+        });
+    };
+
+    const lastTimeRef = useRef<number>(performance.now());
+
     const updateLoop = useCallback(() => {
         const now = performance.now();
+        const deltaTime = now - lastTimeRef.current;
+        lastTimeRef.current = now;
 
         if (audioRef.current && isPlaying) {
             if (videoRef.current && Math.abs(videoRef.current.currentTime - audioRef.current.currentTime) > 0.2) {
@@ -429,21 +555,21 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         players.forEach((player, index) => {
             // Apply Dev Override only to the first player for simplicity
             const override = (index === 0) ? devPitchOverride : null;
-            processPlayer(player, override);
+            processPlayer(player, override, deltaTime);
         });
 
         // Update React State (Throttled)
         if (now - lastScoreUpdateRef.current > 200) {
             const newScores: Record<string, number> = {};
             players.forEach(p => {
-                newScores[p.config.id] = p.score;
+                newScores[p.config.id] = Math.round(p.score);
             });
             setScores(newScores); // Always set new object to trigger render
             lastScoreUpdateRef.current = now;
         }
 
         requestRef.current = requestAnimationFrame(updateLoop);
-    }, [isPlaying, devPitchOverride, parsedSong, bpmMultiplier, players]);
+    }, [isPlaying, devPitchOverride, parsedSong, bpmMultiplier, players, trackScoreWeights, goldenNoteMultiplier]);
 
     // Start/Stop Mics
     useEffect(() => {
@@ -887,7 +1013,33 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                                                     hue={player.config.hue}
                                                     showNoteLabels={showNoteLabels}
                                                     latency={player.config.latency}
+                                                    trackIndex={player.trackIndex}
                                                 />
+                                                {/* Track Selector Overlay */}
+                                                {parsedSong?.tracks && parsedSong.tracks.length > 1 && (
+                                                    <Box sx={{ position: 'absolute', top: 10, right: 10, zIndex: 10, pointerEvents: 'auto' }}>
+                                                        <Box sx={{ bgcolor: 'rgba(0,0,0,0.6)', borderRadius: 1, p: 0.5, display: 'flex', gap: 0.5 }}>
+                                                            {parsedSong.tracks.map((t: any, tIdx: number) => (
+                                                                <Button
+                                                                    key={tIdx}
+                                                                    variant={player.trackIndex === tIdx ? "contained" : "text"}
+                                                                    size="small"
+                                                                    sx={{
+                                                                        minWidth: 30,
+                                                                        p: '2px 8px',
+                                                                        fontSize: '0.75rem',
+                                                                        bgcolor: player.trackIndex === tIdx ? `hsl(${player.config.hue}, 80%, 40%)` : 'transparent',
+                                                                        color: 'white',
+                                                                        '&:hover': { bgcolor: player.trackIndex === tIdx ? `hsl(${player.config.hue}, 80%, 50%)` : 'rgba(255,255,255,0.1)' }
+                                                                    }}
+                                                                    onClick={() => switchTrack(players.indexOf(player), tIdx)}
+                                                                >
+                                                                    {t.name || `P${tIdx + 1}`}
+                                                                </Button>
+                                                            ))}
+                                                        </Box>
+                                                    </Box>
+                                                )}
                                             </Box>
                                         );
                                     })}

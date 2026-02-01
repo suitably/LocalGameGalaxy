@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState, useLayoutEffect, useCallback } from 'react';
 import { Box } from '@mui/material';
 import type { Song } from '../db';
-import type { Note } from '../parser';
+import type { Note, SongTrack } from '../parser';
 import type { PitchResult } from '../audio/MicrophoneManager';
 
-export type SongWithNotes = Song & { notes?: Note[], bpm?: number, gap?: number, headers?: any };
+export type SongWithNotes = Song & { notes?: Note[], tracks?: SongTrack[], bpm?: number, gap?: number, headers?: any };
 
 export interface SungSegment {
     noteIndex: number; // Index of the note in song.notes
@@ -25,6 +25,7 @@ interface PitchVisualizerProps {
     hue?: number;
     showNoteLabels?: boolean;
     latency?: number;
+    trackIndex?: number;
 }
 
 interface Particle {
@@ -58,7 +59,8 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
     label,
     hue = 190,
     showNoteLabels = true,
-    latency
+    latency,
+    trackIndex = 0
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -105,9 +107,10 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
         return () => observer.disconnect();
     }, [height]);
 
-    // Pre-calculate center pitch
+    // Pre-calculate center pitch - use track notes if available
     const centerPitch = React.useMemo(() => {
-        const notes = song.notes || [];
+        const trackNotes = (song.tracks && song.tracks[trackIndex]) ? song.tracks[trackIndex].notes : song.notes;
+        const notes = trackNotes || [];
         if (notes.length === 0) return 60;
         let min = Infinity, max = -Infinity;
         notes.forEach(n => {
@@ -118,7 +121,7 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
         });
         if (min === Infinity) return 60;
         return (min + max) / 2;
-    }, [song.notes]); // Only depend on notes
+    }, [song.tracks, song.notes, trackIndex]); // Depend on trackIndex too
 
     // Main Animate Loop
     const animate = useCallback(() => {
@@ -178,7 +181,9 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
         }
 
         // --- Notes (Culling Enforced) ---
-        const notes = song.notes || [];
+        // Use track notes if available
+        const trackNotesSource = (song.tracks && song.tracks[trackIndex]) ? song.tracks[trackIndex].notes : song.notes;
+        const notes = trackNotesSource || [];
         // Use latestSungSegmentsRef to get the active segments record
         const sungSegmentsRecord = latestSungSegmentsRef.current.current || {};
 

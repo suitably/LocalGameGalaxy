@@ -503,9 +503,24 @@ const SongCard: React.FC<{ song: SongMeta; onClick: () => void }> = ({ song, onC
             <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                 <Typography variant="subtitle2" noWrap title={song.title} sx={{ fontWeight: 'bold', lineHeight: 1.2 }}>{song.title}</Typography>
                 <Typography variant="caption" display="block" color="text.secondary" noWrap title={song.artist} sx={{ lineHeight: 1.2 }}>{song.artist}</Typography>
-                <Typography variant="caption" display="block" color="text.disabled" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
-                    {song.duration ? formatDuration(song.duration) : '0:00'}
-                </Typography>
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                    <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.7rem' }}>
+                        {song.duration ? formatDuration(song.duration) : '0:00'}
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        {song.year && (
+                            <Typography variant="caption" sx={{ bgcolor: 'action.selected', px: 0.5, borderRadius: 0.5, fontSize: '0.65rem' }}>
+                                {song.year}
+                            </Typography>
+                        )}
+                        {song.genre && (
+                            <Typography variant="caption" sx={{ bgcolor: 'action.selected', px: 0.5, borderRadius: 0.5, fontSize: '0.65rem', maxWidth: 60 }} noWrap title={song.genre}>
+                                {song.genre}
+                            </Typography>
+                        )}
+                    </Box>
+                </Box>
             </CardContent>
         </Card>
     );

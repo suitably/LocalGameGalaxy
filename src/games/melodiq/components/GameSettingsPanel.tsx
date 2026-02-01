@@ -61,6 +61,24 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                     )}
                 </Box>
 
+
+                <Box sx={{ mt: 2 }}>
+                    <Typography gutterBottom>Golden Note Multiplier: {settings.goldenNoteMultiplier}x</Typography>
+                    <Slider
+                        value={settings.goldenNoteMultiplier}
+                        onChange={(_, val) => onUpdateSetting('goldenNoteMultiplier', val as number)}
+                        min={1.0}
+                        max={5.0}
+                        step={0.5}
+                        marks
+                        valueLabelDisplay="auto"
+                        sx={{ width: '100%' }}
+                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                        Multiplier for golden notes (marked with *).
+                    </Typography>
+                </Box>
+
                 <Box sx={{ mt: 2 }}>
                     <Typography gutterBottom>Song Volume: {Math.round(settings.songVolume * 100)}%</Typography>
                     <Slider

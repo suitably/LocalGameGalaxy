@@ -26,6 +26,21 @@ export const MelodiqPhoneClient = () => {
     const noteNameRef = useRef<HTMLDivElement>(null);
 
     const [latestStats, setLatestStats] = useState<{ song: string, score: number, date: string } | null>(null);
+    const [availableTracks, setAvailableTracks] = useState<string[]>([]);
+    const [selectedTrackIndex, setSelectedTrackIndex] = useState<number>(0);
+
+    const handleTrackSelect = (index: number) => {
+        setSelectedTrackIndex(index);
+
+        // Send to host
+        if (isWebRTCConnectedRef.current && peerRef.current && (peerRef.current as any).connected) {
+            const msg = {
+                type: 'trackSelect',
+                trackIndex: index
+            };
+            peerRef.current.send(JSON.stringify(msg));
+        }
+    };
 
     // Refs
     // Queue for pending peers to avoid overwhelming the browser
@@ -324,6 +339,16 @@ export const MelodiqPhoneClient = () => {
 
                             try {
                                 const parsed = JSON.parse(part);
+
+                                if (parsed.type === 'songInfo') {
+                                    console.log('[Phone] Received song info:', parsed);
+                                    if (parsed.tracks && Array.isArray(parsed.tracks)) {
+                                        setAvailableTracks(parsed.tracks);
+                                        // Reset selection to 0 when song changes
+                                        setSelectedTrackIndex(0);
+                                    }
+                                    continue;
+                                }
 
                                 if (parsed.type === 'stats') {
                                     console.log('[Phone] Received stats:', parsed);
@@ -709,6 +734,34 @@ export const MelodiqPhoneClient = () => {
                         <div style={{ fontSize: '0.9rem', color: '#aaa' }}>Last Performance</div>
                         <div style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '5px 0' }}>{latestStats.song}</div>
                         <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#4ade80' }}>{latestStats.score} pts</div>
+                    </div>
+                )}
+
+                {/* Track Selector */}
+                {availableTracks.length > 1 && (
+                    <div style={{ marginTop: '20px', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                        <div style={{ fontSize: '0.9rem', marginBottom: '10px', color: '#ccc' }}>Select Your Singer Part</div>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                            {availableTracks.map((track, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => handleTrackSelect(idx)}
+                                    style={{
+                                        flex: 1,
+                                        padding: '10px',
+                                        background: selectedTrackIndex === idx ? `hsl(${playerHue}, 80%, 40%)` : 'rgba(255,255,255,0.1)',
+                                        border: selectedTrackIndex === idx ? `1px solid hsl(${playerHue}, 100%, 70%)` : '1px solid transparent',
+                                        color: 'white',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        fontWeight: selectedTrackIndex === idx ? 'bold' : 'normal',
+                                        minWidth: '100px'
+                                    }}
+                                >
+                                    {track}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 )}
 

@@ -41,6 +41,8 @@ export class MicrophoneManager {
             // Critical: Resume context if suspended (common in some browsers)
             if (this.audioContext.state === 'suspended') {
                 await this.audioContext.resume();
+                // Check if stopped during await
+                if (!this.audioContext) return;
             }
 
             this.analyser = this.audioContext.createAnalyser();

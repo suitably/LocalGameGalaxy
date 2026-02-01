@@ -26,6 +26,7 @@ export class WebRTCMicManager {
     private onPeerConnected?: (peerId: string, name: string, hue?: number) => void;
     private onPeerDisconnected?: (peerId: string) => void;
     private onPeerUpdated?: (peerId: string, name: string, hue?: number) => void;
+    public onMessage?: (peerId: string, data: any) => void;
 
     constructor(
         partyId: string,
@@ -34,6 +35,7 @@ export class WebRTCMicManager {
             onPeerConnected?: (peerId: string, name: string, hue?: number) => void;
             onPeerDisconnected?: (peerId: string) => void;
             onPeerUpdated?: (peerId: string, name: string, hue?: number) => void;
+            onMessage?: (peerId: string, data: any) => void;
         }
     ) {
         this.partyId = partyId;
@@ -41,6 +43,7 @@ export class WebRTCMicManager {
         this.onPeerConnected = callbacks?.onPeerConnected;
         this.onPeerDisconnected = callbacks?.onPeerDisconnected;
         this.onPeerUpdated = callbacks?.onPeerUpdated;
+        this.onMessage = callbacks?.onMessage;
     }
 
     async start(): Promise<void> {
@@ -279,7 +282,11 @@ export class WebRTCMicManager {
                         console.log('[WebRTCMicManager] Received identity (WebRTC):', msg.name, msg.hue);
                         remotePeer.name = msg.name || remotePeer.name;
                         remotePeer.hue = msg.hue;
+                        remotePeer.hue = msg.hue;
                         this.onPeerUpdated?.(remotePeer.peerId, remotePeer.name, remotePeer.hue);
+                    } else {
+                        // Pass generic messages to consumer
+                        this.onMessage?.(peerId, msg);
                     }
                 }
             } catch (e) {

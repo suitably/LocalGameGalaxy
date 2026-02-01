@@ -41,7 +41,18 @@ app.get('/', (req, res) => {
                 .btn-primary:hover { background: #1565c0; }
                 .btn-primary:disabled { background: #90caf9; cursor: not-allowed; }
                 input[type="text"] { padding: 8px; border: 1px solid #ddd; border-radius: 4px; flex-grow: 1; margin-right: 8px; }
-                .input-group { display: flex; margin-top: 16px; }
+                .input-group { display: flex; margin-top: 16px; align-items: center; }
+                /* Modal Styles */
+                .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+                .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; }
+                .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+                .close:hover { color: black; }
+                .dir-list { list-style: none; padding: 0; max-height: 300px; overflow-y: auto; border: 1px solid #eee; }
+                .dir-item { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; align-items: center; }
+                .dir-item:hover { background-color: #f0f0f0; }
+                .dir-icon { margin-right: 8px; color: #ffa000; }
+                .current-path { font-weight: bold; margin-bottom: 10px; word-break: break-all; }
+                .modal-actions { display: flex; justify-content: flex-end; margin-top: 16px; gap: 8px; }
             </style>
         </head>
         <body>
@@ -62,7 +73,22 @@ app.get('/', (req, res) => {
 
                 <div class="input-group">
                     <input type="text" id="newPath" placeholder="Enter full folder path (e.g. /home/deck/Music)" />
+                    <button class="btn-primary" onclick="openBrowser()" style="margin-right: 8px;">Browse...</button>
                     <button class="btn-primary" onclick="addDir()">Add Folder</button>
+                </div>
+                
+                <!-- File Browser Modal -->
+                <div id="browserModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close" onclick="closeBrowser()">&times;</span>
+                        <h2>Select Directory</h2>
+                        <div id="currentPath" class="current-path">Loading...</div>
+                        <ul id="browserList" class="dir-list"></ul>
+                        <div class="modal-actions">
+                            <button class="btn-primary" onclick="selectCurrent()">Select This Folder</button>
+                            <button onclick="closeBrowser()">Cancel</button>
+                        </div>
+                    </div>
                 </div>
                 <p id="errorMsg" style="color:red; display:none; margin-top:10px;"></p>
             </div>
@@ -138,6 +164,67 @@ app.get('/', (req, res) => {
                     return text.replace(/\\\\/g, '\\\\\\\\').replace(/'/g, "\\\\'");
                 }
 
+                /* Browser Logic */
+                let currentBrowserPath = '';
+
+                function openBrowser() {
+                    document.getElementById('browserModal').style.display = 'block';
+                    loadBrowse(''); // Load home/default
+                }
+
+                function closeBrowser() {
+                    document.getElementById('browserModal').style.display = 'none';
+                }
+
+                async function loadBrowse(path) {
+                    try {
+                        const url = '/api/browse' + (path ? '?path=' + encodeURIComponent(path) : '');
+                        const res = await fetch(url);
+                        const data = await res.json();
+                        
+                        if (data.error) {
+                            alert(data.error);
+                            return;
+                        }
+
+                        currentBrowserPath = data.current;
+                        document.getElementById('currentPath').innerText = data.current;
+                        
+                        const list = document.getElementById('browserList');
+                        list.innerHTML = '';
+
+                        data.dirs.forEach(dir => {
+                            const li = document.createElement('li');
+                            li.className = 'dir-item';
+                            li.innerHTML = '<span class="dir-icon">📁</span> ' + escapeHtml(dir);
+                            li.onclick = () => {
+                                // Navigate
+                                const newPath = dir === '..' 
+                                    ? currentBrowserPath.split(/[\\/]/).slice(0, -1).join('/') || '/'
+                                    : (currentBrowserPath.endsWith('/') ? currentBrowserPath + dir : currentBrowserPath + '/' + dir);
+                                loadBrowse(newPath);
+                            };
+                            list.appendChild(li);
+                        });
+
+                    } catch (e) {
+                        alert('Failed to load directory');
+                    }
+                }
+
+                function selectCurrent() {
+                    document.getElementById('newPath').value = currentBrowserPath;
+                    closeBrowser();
+                }
+
+                // Close modal on outside click
+                window.onclick = function(event) {
+                    const modal = document.getElementById('browserModal');
+                    if (event.target == modal) {
+                        closeBrowser();
+                    }
+                }
+
                 loadDirs();
             </script>
         </body>
@@ -146,19 +233,6 @@ app.get('/', (req, res) => {
 });
 
 // Serve static media from all configured directories
-// Since we have multiple roots, we can't easily map /media to one folder.
-// We'll need a way to serve specific files.
-// Solution: We'll serve '/media' via a custom handler that checks all dirs or 
-// we assume the scan results provide absolute paths and we serve via a query param? or route param?
-// Better: We register a static route for EACH directory dynamically?
-// Or we serve /media/:dirIndex/:filePath?
-// Simplest compliant way:
-// Just return full absolute paths in the API? Chrome blocks local file access.
-// We MUST serve them via HTTP.
-// Let's use a virtual path mapping.
-// server URL: /media?path=<absolute_path_encoded>
-// And the server verifies the path is inside one of the allowed directories.
-
 app.get('/media', (req, res) => {
     const targetPath = req.query.path;
     if (!targetPath) return res.status(400).send('Missing path');
@@ -168,17 +242,7 @@ app.get('/media', (req, res) => {
     // Security check: ensure path is within one of our config.directories
     const allowed = config.directories.some(dir => safePath.startsWith(path.normalize(dir)));
 
-    if (!allowed) {
-        // Maybe looser check? Just check if it exists?
-        // User added the dir, so it's trusted.
-        // But for robust security we should check.
-        // For now, let's allow serving any file if it exists, assuming local user trust.
-        // Or enforce strictly. Let's enforce strictly.
-        // Actually, normalizing paths is tricky across OS.
-        // Let's just check if file exists for now to be "easy".
-        // It's a local helper app.
-    }
-
+    // Just check if file exists for now to be "easy".
     if (fs.existsSync(safePath)) {
         res.sendFile(safePath);
     } else {
@@ -277,12 +341,43 @@ app.get('/api/songs', async (req, res) => {
                             artist: headers['ARTIST'],
                             bpm: parseFloat(headers['BPM']?.replace(',', '.') || '0'),
                             gap: parseFloat(headers['GAP']?.replace(',', '.') || '0'),
+                            edition: headers['EDITION'],
+                            genre: headers['GENRE'],
+                            language: headers['LANGUAGE'],
+                            year: headers['YEAR'],
                             video: getServeUrl(headers['VIDEO']),
                             audio: getServeUrl(headers['MP3']),
                             cover: getServeUrl(headers['COVER']),
                             background: getServeUrl(headers['BACKGROUND']),
                             txtContent: content
                         };
+
+                        // Calculate Duration if not explicit
+                        if (headers['END']) {
+                            song.duration = parseFloat(headers['END']) / 1000;
+                        } else {
+                            // Simple scan for max beat
+                            let maxBeat = 0;
+                            const lines = content.split('\n');
+                            for (const line of lines) {
+                                if (line.startsWith(':') || line.startsWith('*') || line.startsWith('F')) {
+                                    const parts = line.split(' ');
+                                    if (parts.length >= 3) {
+                                        const start = parseInt(parts[1]);
+                                        const len = parseInt(parts[2]);
+                                        if (!isNaN(start) && !isNaN(len)) {
+                                            if (start + len > maxBeat) maxBeat = start + len;
+                                        }
+                                    }
+                                }
+                            }
+                            // UltraStar BPM is usually 4x real BPM (beat resolution).
+                            // Client logic (utils.ts): beatDuration = 60000 / (bpm * 4) = 15000 / bpm (ms)
+                            // Duration (sec) = maxBeat * 15 / BPM
+                            if (song.bpm > 0) {
+                                song.duration = (maxBeat * 15) / song.bpm;
+                            }
+                        }
 
                         allSongs.push(song);
                     } catch (err) {
@@ -300,6 +395,33 @@ app.get('/api/songs', async (req, res) => {
     } catch (err) {
         console.error('Scan failed:', err);
         res.status(500).json({ error: 'Failed to scan library' });
+    }
+});
+
+// Directory Browser API
+app.get('/api/browse', (req, res) => {
+    const queryPath = req.query.path || require('os').homedir();
+
+    try {
+        if (!fs.existsSync(queryPath)) return res.status(404).json({ error: 'Path not found' });
+
+        const entries = fs.readdirSync(queryPath, { withFileTypes: true });
+        const dirs = entries
+            .filter(dirent => dirent.isDirectory() && !dirent.name.startsWith('.'))
+            .map(dirent => dirent.name);
+
+        // Add '..' if not root
+        const parent = path.dirname(queryPath);
+        if (parent !== queryPath) {
+            dirs.unshift('..');
+        }
+
+        res.json({
+            current: queryPath,
+            dirs: dirs
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
 });
 

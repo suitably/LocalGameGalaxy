@@ -97,9 +97,12 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
 
                             <Typography variant="h3" sx={{
                                 color: isWinner ? '#ffd700' : 'rgba(255,255,255,0.9)',
-                                fontWeight: 'bold'
+                                fontWeight: 'bold',
+                                textShadow: isWinner ? '0 0 15px rgba(255, 215, 0, 0.4)' : 'none',
+                                textAlign: 'right',
+                                minWidth: '120px'
                             }}>
-                                {player.score}
+                                {Math.round(player.score).toLocaleString()}
                             </Typography>
                         </Paper>
                     );

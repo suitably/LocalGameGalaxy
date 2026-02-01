@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { type Song, type SongMeta } from '../db';
 
 interface LoadingProgress {
@@ -20,6 +20,9 @@ export const useSongs = () => {
         url: localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000',
         enabled: localStorage.getItem('melodiq_enable_helper') === 'true'
     });
+
+    // Cache for server song content (lyrics/notes) which is provided by API but not in SongMeta
+    const serverContentCache = useRef(new Map<string, string>());
 
     // Load songs from Local Server AND IndexedDB
     const loadSongs = useCallback(async () => {
@@ -46,6 +49,13 @@ export const useSongs = () => {
 
             if (mounted) {
                 console.log(`[useSongs] Loaded ${serverSongs.length} server (enabled=${enabled}), ${localSongs.length} local`);
+
+                // Update Content Cache
+                serverSongs.forEach((s: any) => {
+                    if (s.id && s.txtContent) {
+                        serverContentCache.current.set(s.id, s.txtContent);
+                    }
+                });
 
                 // Merge (deduplicate by ID preferred, or just concat)
                 const allSongs = [...serverSongs, ...localSongs];
@@ -125,7 +135,16 @@ export const useSongs = () => {
         // The URL processing done in loadSongs (prepending helperUrl) is preserved here
         // because we are finding it in 'songs' state which already has processed URLs.
         const found = songs.find(s => s.id === id);
-        return found as unknown as Song;
+        if (found) {
+            // Attach cached content if available
+            const content = serverContentCache.current.get(id);
+            if (content) {
+                // Return a hybrid object with txtContent (used by MelodiqSession)
+                return { ...found, txtContent: content } as unknown as Song;
+            }
+            return found as unknown as Song;
+        }
+        return undefined;
     }, [songs]);
 
     return {
