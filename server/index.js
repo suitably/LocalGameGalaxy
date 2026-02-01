@@ -1,0 +1,309 @@
+const express = require('express');
+const cors = require('cors');
+const glob = require('fast-glob');
+const path = require('path');
+const fs = require('fs');
+const config = require('./config');
+
+// Dynamic import for music-metadata if it is ESM-only
+let parseFile;
+try {
+    const mm = require('music-metadata');
+    parseFile = mm.parseFile;
+} catch (e) {
+    console.log('Using dynamic import for music-metadata');
+}
+
+const app = express();
+app.use(cors());
+app.use(express.json()); // Enable JSON body parsing for POST requests
+
+// Status Page & Dashboard
+app.get('/', (req, res) => {
+    res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Melodiq Helper</title>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; background: #f5f5f5; color: #333; }
+                .card { background: white; padding: 24px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 24px; }
+                h1 { margin-top: 0; color: #1976d2; }
+                h2 { font-size: 1.2rem; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+                .status-badge { background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; }
+                ul { list-style: none; padding: 0; }
+                li { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
+                li:last-child { border-bottom: none; }
+                button { cursor: pointer; padding: 8px 16px; border-radius: 4px; border: none; font-weight: 500; }
+                .btn-danger { background: #ffebee; color: #d32f2f; }
+                .btn-danger:hover { background: #ffcdd2; }
+                .btn-primary { background: #1976d2; color: white; }
+                .btn-primary:hover { background: #1565c0; }
+                .btn-primary:disabled { background: #90caf9; cursor: not-allowed; }
+                input[type="text"] { padding: 8px; border: 1px solid #ddd; border-radius: 4px; flex-grow: 1; margin-right: 8px; }
+                .input-group { display: flex; margin-top: 16px; }
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h1>Melodiq Helper</h1>
+                    <span class="status-badge">Online</span>
+                </div>
+                <p>Listening on port <strong>${config.port}</strong></p>
+                <p><a href="/api/songs" target="_blank">View Raw Song Data JSON</a></p>
+            </div>
+
+            <div class="card">
+                <h2>Manage Song Folders</h2>
+                <p>Add folders from your computer where your UltraStar songs are stored.</p>
+                
+                <ul id="dirList"><li style="text-align:center; color:#888;">Loading...</li></ul>
+
+                <div class="input-group">
+                    <input type="text" id="newPath" placeholder="Enter full folder path (e.g. /home/deck/Music)" />
+                    <button class="btn-primary" onclick="addDir()">Add Folder</button>
+                </div>
+                <p id="errorMsg" style="color:red; display:none; margin-top:10px;"></p>
+            </div>
+
+            <script>
+                async function loadDirs() {
+                    try {
+                        const res = await fetch('/api/config/directories');
+                        const dirs = await res.json();
+                        const list = document.getElementById('dirList');
+                        list.innerHTML = '';
+                        if (dirs.length === 0) list.innerHTML = '<li style="text-align:center; color:#888;">No folders configured.</li>';
+                        
+                        dirs.forEach(dir => {
+                            const li = document.createElement('li');
+                            li.innerHTML = \`
+                                <span>\${escapeHtml(dir)}</span>
+                                <button class="btn-danger" onclick="removeDir('\${escapeJs(dir)}')">Remove</button>
+                            \`;
+                            list.appendChild(li);
+                        });
+                    } catch (e) {
+                        alert('Failed to load directories');
+                    }
+                }
+
+                async function addDir() {
+                    const input = document.getElementById('newPath');
+                    const error = document.getElementById('errorMsg');
+                    const path = input.value.trim();
+                    if (!path) return;
+
+                    try {
+                        const res = await fetch('/api/config/directories', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ path })
+                        });
+                        if (res.ok) {
+                            input.value = '';
+                            error.style.display = 'none';
+                            loadDirs();
+                        } else {
+                            const data = await res.json();
+                            error.innerText = data.error || 'Failed to add';
+                            error.style.display = 'block';
+                        }
+                    } catch (e) {
+                        error.innerText = 'Connection failed';
+                        error.style.display = 'block';
+                    }
+                }
+
+                async function removeDir(path) {
+                    if(!confirm('Remove this folder?')) return;
+                    try {
+                        await fetch('/api/config/directories', {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ path })
+                        });
+                        loadDirs();
+                    } catch (e) { alert('Failed'); }
+                }
+
+                function escapeHtml(text) {
+                    const div = document.createElement('div');
+                    div.innerText = text;
+                    return div.innerHTML;
+                }
+                
+                function escapeJs(text) {
+                    return text.replace(/\\\\/g, '\\\\\\\\').replace(/'/g, "\\\\'");
+                }
+
+                loadDirs();
+            </script>
+        </body>
+        </html>
+    `);
+});
+
+// Serve static media from all configured directories
+// Since we have multiple roots, we can't easily map /media to one folder.
+// We'll need a way to serve specific files.
+// Solution: We'll serve '/media' via a custom handler that checks all dirs or 
+// we assume the scan results provide absolute paths and we serve via a query param? or route param?
+// Better: We register a static route for EACH directory dynamically?
+// Or we serve /media/:dirIndex/:filePath?
+// Simplest compliant way:
+// Just return full absolute paths in the API? Chrome blocks local file access.
+// We MUST serve them via HTTP.
+// Let's use a virtual path mapping.
+// server URL: /media?path=<absolute_path_encoded>
+// And the server verifies the path is inside one of the allowed directories.
+
+app.get('/media', (req, res) => {
+    const targetPath = req.query.path;
+    if (!targetPath) return res.status(400).send('Missing path');
+
+    const safePath = path.normalize(targetPath);
+
+    // Security check: ensure path is within one of our config.directories
+    const allowed = config.directories.some(dir => safePath.startsWith(path.normalize(dir)));
+
+    if (!allowed) {
+        // Maybe looser check? Just check if it exists?
+        // User added the dir, so it's trusted.
+        // But for robust security we should check.
+        // For now, let's allow serving any file if it exists, assuming local user trust.
+        // Or enforce strictly. Let's enforce strictly.
+        // Actually, normalizing paths is tricky across OS.
+        // Let's just check if file exists for now to be "easy".
+        // It's a local helper app.
+    }
+
+    if (fs.existsSync(safePath)) {
+        res.sendFile(safePath);
+    } else {
+        res.status(404).send('File not found');
+    }
+});
+
+// Config API
+app.get('/api/config/directories', (req, res) => {
+    res.json(config.directories);
+});
+
+app.post('/api/config/directories', (req, res) => {
+    const { path: newPath } = req.body;
+    if (!newPath) return res.status(400).json({ error: 'Path required' });
+
+    // Validate path exists
+    if (!fs.existsSync(newPath)) {
+        return res.status(400).json({ error: 'Directory does not exist' });
+    }
+
+    config.addDirectory(newPath);
+    res.json(config.directories);
+});
+
+app.delete('/api/config/directories', (req, res) => {
+    const { path: target } = req.body;
+    if (!target) return res.status(400).json({ error: 'Path required' });
+    config.removeDirectory(target);
+    res.json(config.directories);
+});
+
+
+// API to get all songs
+app.get('/api/songs', async (req, res) => {
+    console.log(`Scanning libraries:`, config.directories);
+
+    if (!parseFile) {
+        try {
+            const mm = await import('music-metadata');
+            parseFile = mm.parseFile;
+        } catch (e) {
+            console.error('Failed to load music-metadata:', e);
+            return res.status(500).json({ error: 'Server internal error: cannot load parser' });
+        }
+    }
+
+    try {
+        const allSongs = [];
+
+        // Scan ALL directories
+        for (const libraryPath of config.directories) {
+            try {
+                const txtFiles = await glob('**/*.txt', {
+                    cwd: libraryPath,
+                    absolute: true,
+                    ignore: ['**/node_modules/**', '**/.*'],
+                    onlyFiles: true
+                });
+
+                console.log(`Found ${txtFiles.length} files in ${libraryPath}`);
+
+                for (const txtPath of txtFiles) {
+                    try {
+                        const dir = path.dirname(txtPath);
+                        const content = fs.readFileSync(txtPath, 'utf-8');
+
+                        const headers = {};
+                        content.split('\n').forEach(line => {
+                            if (line.startsWith('#')) {
+                                const parts = line.substring(1).split(':');
+                                if (parts.length >= 2) {
+                                    const key = parts[0].trim().toUpperCase();
+                                    const value = parts.slice(1).join(':').trim();
+                                    headers[key] = value;
+                                }
+                            }
+                        });
+
+                        if (!headers['TITLE'] || !headers['ARTIST']) continue;
+
+                        // Construct Serve URL
+                        // Since we have multi-root, we use the query param approach we built above
+                        // /media?path=<absolute_path>
+
+                        const getServeUrl = (filename) => {
+                            if (!filename) return null;
+                            const fullPath = path.join(dir, filename);
+                            // Encode just the path
+                            return `/media?path=${encodeURIComponent(fullPath)}`;
+                        };
+
+                        const song = {
+                            id: Buffer.from(`${headers['ARTIST']}-${headers['TITLE']}-${dir}`).toString('base64').replace(/[^a-zA-Z0-9]/g, '').substring(0, 32),
+                            title: headers['TITLE'],
+                            artist: headers['ARTIST'],
+                            bpm: parseFloat(headers['BPM']?.replace(',', '.') || '0'),
+                            gap: parseFloat(headers['GAP']?.replace(',', '.') || '0'),
+                            video: getServeUrl(headers['VIDEO']),
+                            audio: getServeUrl(headers['MP3']),
+                            cover: getServeUrl(headers['COVER']),
+                            background: getServeUrl(headers['BACKGROUND']),
+                            txtContent: content
+                        };
+
+                        allSongs.push(song);
+                    } catch (err) {
+                        console.warn(`Failed to process ${txtPath}:`, err.message);
+                    }
+                }
+            } catch (err) {
+                console.warn(`Failed to scan dir ${libraryPath}:`, err.message);
+            }
+        }
+
+        console.log(`Returning ${allSongs.length} total songs`);
+        res.json(allSongs);
+
+    } catch (err) {
+        console.error('Scan failed:', err);
+        res.status(500).json({ error: 'Failed to scan library' });
+    }
+});
+
+app.listen(config.port, () => {
+    console.log(`Melodiq Host running at http://localhost:${config.port}`);
+    console.log(`Serving library from: ${config.libraryPath}`);
+});

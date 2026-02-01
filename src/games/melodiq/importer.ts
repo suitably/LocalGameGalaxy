@@ -523,6 +523,10 @@ export class MelodiqImporter {
                 log(`Error writing manifest: ${e}`);
             }
             log('Scan complete.');
+
+            if (libraryId) {
+                await db.libraries.update(libraryId, { stats });
+            }
         } catch (e) {
             console.error(e);
             log(`Critical Error: ${e}`);
@@ -777,9 +781,32 @@ export class MelodiqImporter {
 
             onProgress(stats);
             log('Import complete.');
+
+            if (libraryId) {
+                await db.libraries.update(libraryId, { stats });
+            }
         } catch (e) {
             console.error(e);
             log(`Critical Error: ${e}`);
         }
     }
 }
+
+export const runLibraryImport = async (library: any, onProgress?: (stats: ImportStats) => void, onLog?: (msg: string) => void) => {
+    const importer = new MelodiqImporter();
+    // Default no-op callbacks
+    const progressCb = onProgress || (() => { });
+    const logCb = onLog || (() => { });
+
+    // Only supports DirectoryHandle for now in this flow
+    if (library.handle) {
+        await importer.scanAndGenerateManifest(library.handle, progressCb, logCb, library.id);
+    }
+};
+
+export const runLegacyImport = async (fileList: FileList, libraryId: string, onProgress?: (stats: ImportStats) => void, onLog?: (msg: string) => void) => {
+    const importer = new MelodiqImporter();
+    const progressCb = onProgress || (() => { });
+    const logCb = onLog || (() => { });
+    await importer.importFromFileList(fileList, progressCb, logCb, libraryId);
+};

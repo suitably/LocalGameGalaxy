@@ -7,6 +7,11 @@ interface ProfilesState {
     activePlayers: ActivePlayer[];
 }
 
+const persistProfiles = (profiles: UserProfile[], activePlayers: ActivePlayer[]) => {
+    localStorage.setItem('melodiq_profiles', JSON.stringify(profiles));
+    localStorage.setItem('melodiq_active_session', JSON.stringify(activePlayers));
+};
+
 const loadInitialData = (): ProfilesState => {
     const storedProfiles = localStorage.getItem('melodiq_profiles');
     const storedActive = localStorage.getItem('melodiq_active_session');
@@ -59,46 +64,55 @@ export const useProfiles = (devices: MediaDeviceInfo[]) => {
     const [profiles, setProfiles] = useState<UserProfile[]>(initialData.profiles);
     const [activePlayers, setActivePlayers] = useState<ActivePlayer[]>(initialData.activePlayers);
 
-    // Profile Management
+    // Profile Management (with instant persist)
     const addProfile = useCallback(() => {
-        const newProfile: UserProfile = {
-            id: crypto.randomUUID(),
-            name: `Player ${profiles.length + 1}`,
-            hue: COLOR_PRESETS[profiles.length % COLOR_PRESETS.length].hue
-        };
-        setProfiles(prev => [...prev, newProfile]);
-    }, [profiles.length]);
+        setProfiles(prev => {
+            const newProfile: UserProfile = {
+                id: crypto.randomUUID(),
+                name: `Player ${prev.length + 1}`,
+                hue: COLOR_PRESETS[prev.length % COLOR_PRESETS.length].hue
+            };
+            const next = [...prev, newProfile];
+            persistProfiles(next, activePlayers);
+            return next;
+        });
+    }, [activePlayers]);
 
     const updateProfile = useCallback((id: string, updates: Partial<UserProfile>) => {
-        setProfiles(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
-    }, []);
+        setProfiles(prev => {
+            const next = prev.map(p => p.id === id ? { ...p, ...updates } : p);
+            persistProfiles(next, activePlayers);
+            return next;
+        });
+    }, [activePlayers]);
 
     const deleteProfile = useCallback((id: string) => {
-        setProfiles(prev => prev.filter(p => p.id !== id));
-        setActivePlayers(prev => prev.filter(ap => ap.profileId !== id));
+        setProfiles(prevProfiles => {
+            const nextProfiles = prevProfiles.filter(p => p.id !== id);
+            setActivePlayers(prevActive => {
+                const nextActive = prevActive.filter(ap => ap.profileId !== id);
+                persistProfiles(nextProfiles, nextActive);
+                return nextActive;
+            });
+            return nextProfiles;
+        });
     }, []);
 
-    // Session Selection
+    // Session Selection (with instant persist)
     const toggleActivePlayer = useCallback((profileId: string) => {
         setActivePlayers(prev => {
+            let next: ActivePlayer[];
             if (prev.some(ap => ap.profileId === profileId)) {
-                // Remove
-                return prev.filter(ap => ap.profileId !== profileId);
+                next = prev.filter(ap => ap.profileId !== profileId);
             } else {
-                // Add (Initialize with empty device or first available)
                 const usedDevices = prev.map(ap => ap.deviceId).filter(Boolean);
                 const nextDevice = devices.find(d => !usedDevices.includes(d.deviceId))?.deviceId || '';
-
-                return [...prev, {
-                    profileId,
-                    deviceId: nextDevice,
-                    volume: 0.8,
-                    muted: true,
-                    latency: 0
-                }];
+                next = [...prev, { profileId, deviceId: nextDevice, volume: 0.8, muted: true, latency: 0 }];
             }
+            persistProfiles(profiles, next);
+            return next;
         });
-    }, [devices]);
+    }, [devices, profiles]);
 
     const moveActivePlayer = useCallback((index: number, direction: 'up' | 'down') => {
         setActivePlayers(prev => {
@@ -108,18 +122,29 @@ export const useProfiles = (devices: MediaDeviceInfo[]) => {
             } else if (direction === 'down' && index < newActive.length - 1) {
                 [newActive[index], newActive[index + 1]] = [newActive[index + 1], newActive[index]];
             }
+            persistProfiles(profiles, newActive);
             return newActive;
         });
-    }, []);
+    }, [profiles]);
 
     const updateActivePlayerConfig = useCallback((profileId: string, updates: Partial<ActivePlayer>) => {
-        setActivePlayers(prev => prev.map(ap => ap.profileId === profileId ? { ...ap, ...updates } : ap));
+        setActivePlayers(prev => {
+            const next = prev.map(ap => ap.profileId === profileId ? { ...ap, ...updates } : ap);
+            persistProfiles(profiles, next);
+            return next;
+        });
+    }, [profiles]);
+
+    /** Replace all state (for undo) */
+    const resetProfiles = useCallback((newProfiles: UserProfile[], newActive: ActivePlayer[]) => {
+        setProfiles(newProfiles);
+        setActivePlayers(newActive);
+        persistProfiles(newProfiles, newActive);
     }, []);
 
-    // Save to localStorage
+    // saveProfiles kept for compatibility but now optional
     const saveProfiles = useCallback(() => {
-        localStorage.setItem('melodiq_profiles', JSON.stringify(profiles));
-        localStorage.setItem('melodiq_active_session', JSON.stringify(activePlayers));
+        persistProfiles(profiles, activePlayers);
     }, [profiles, activePlayers]);
 
     return {
@@ -131,6 +156,7 @@ export const useProfiles = (devices: MediaDeviceInfo[]) => {
         toggleActivePlayer,
         moveActivePlayer,
         updateActivePlayerConfig,
+        resetProfiles,
         saveProfiles
     };
 };

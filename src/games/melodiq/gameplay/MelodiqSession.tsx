@@ -504,9 +504,22 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                 if (song.audio instanceof Blob) {
                     activeUrl = URL.createObjectURL(song.audio);
                 } else if (typeof song.audio === 'string') {
-                    // Check if it's a full URL or just a filename
-                    if (song.audio.startsWith('http://') || song.audio.startsWith('https://') || song.audio.startsWith('blob:')) {
+                    // Check if it's a full URL, relative URL (server), or just a filename
+                    if (song.audio.startsWith('http://') || song.audio.startsWith('https://') || song.audio.startsWith('blob:') || song.audio.startsWith('/')) {
                         activeUrl = song.audio;
+
+                        // If it's a relative URL from our server, we might need to prepend base if not on same origin
+                        // But since we use vite proxy or if frontend is on 5173 and server on 3000...
+                        // Wait, if frontend is 5173, fetching '/media/...' will go to 5173.
+                        // We need the server URL.
+                        if (song.audio.startsWith('/') && !window.location.origin.includes('3000')) {
+                            // We are on dev server (5173) probably, but media is on 3000.
+                            // We should probably rely on the server returning full URLs or configured proxy.
+                            // But let's just prepend the server URL for now or assume proxy.
+                            // The fetch in useSongs used http://localhost:3000.
+                            // So we should prepend http://localhost:3000 if it's just /media
+                            activeUrl = `http://localhost:3000${song.audio}`;
+                        }
                     } else {
                         // It's just a filename (FileList fallback import)
                         // First check the in-memory cache (available during same session)
@@ -565,9 +578,26 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     }
                     // If it's a raw Blob, we might not have a name, but we can check type
                 } else if (typeof song.video === 'string') {
-                    // URL string - can't really mask this easily without fetching, 
-                    // but usually strings are direct http links which we shouldn't mess with
-                    activeUrl = song.video;
+                    // Check if it looks like a URL (Server/Remote)
+                    if (song.video.startsWith('http') || song.video.startsWith('/') || song.video.startsWith('blob:')) {
+                        if (song.video.startsWith('/') && !window.location.origin.includes('3000')) {
+                            activeUrl = `http://localhost:3000${song.video}`;
+                        } else {
+                            activeUrl = song.video;
+                        }
+                    } else {
+                        // Likely a filename from Legacy/Fallback Import
+                        // Try to retrieve from in-memory cache
+                        const cached = getCachedFiles(song.id);
+                        if (cached?.video) {
+                            fileOrBlob = cached.video;
+                            fileName = cached.video.name;
+                            console.log('[Session] Using cached video file:', fileName);
+                        } else {
+                            // Cache miss (e.g. reload). User needs to re-select folder, but that's handled by audio check mostly.
+                            console.warn("Video file cache miss:", song.video);
+                        }
+                    }
                 } else {
                     // FileSystemFileHandle
                     // @ts-ignore

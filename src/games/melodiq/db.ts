@@ -37,6 +37,7 @@ export interface SongMeta {
     language?: string;
     edition?: string;
     album?: string;
+    cover?: string | Blob | FileSystemFileHandle; // Optional, might be populated by useSongs (URL) or importer (Thumbnail)
     hasCover: boolean;  // Flag to indicate cover exists
     hasVideo: boolean;  // Flag to indicate video exists
 }

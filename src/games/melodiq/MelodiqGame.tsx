@@ -26,7 +26,7 @@ export const MelodiqGame: React.FC = () => {
     usePageTitle(t('games.melodiq.title'));
 
     // Use centralized song management hook
-    const { songs, loadingProgress, refreshSongs, getSongById } = useSongs();
+    const { songs, loadingProgress, refreshSongs, getSongById, isLoading } = useSongs();
 
     // Search & Filter State
     const [searchQuery, setSearchQuery] = useState('');
@@ -167,6 +167,14 @@ export const MelodiqGame: React.FC = () => {
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 2 }}>
                         <Button
+                            onClick={() => refreshSongs()}
+                            startIcon={<SearchIcon />} // Using SearchIcon as "Scan/Refresh" placeholder or better icon if available
+                            variant="outlined"
+                            disabled={loadingProgress !== null}
+                        >
+                            Refresh
+                        </Button>
+                        <Button
                             onClick={() => setCurrentView('Settings')}
                             startIcon={<SettingsIcon />}
                             variant="outlined"
@@ -184,23 +192,40 @@ export const MelodiqGame: React.FC = () => {
                 </Box>
 
                 {/* Loading Progress */}
-                {loadingProgress && (
+                {loadingProgress && isLoading && (
                     <Box sx={{ mb: 2, flexShrink: 0 }}>
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                            Loading songs... {loadingProgress.loaded} / {loadingProgress.total}
+                            Loading library... {loadingProgress.total > 0 ? `${loadingProgress.loaded} / ${loadingProgress.total}` : ''}
                         </Typography>
                         <LinearProgress
                             variant="determinate"
-                            value={(loadingProgress.loaded / loadingProgress.total) * 100}
+                            value={loadingProgress.total > 0 ? (loadingProgress.loaded / loadingProgress.total) * 100 : 0}
                         />
                     </Box>
                 )}
 
                 {/* Empty State */}
-                {songs?.length === 0 && !loadingProgress && (
+                {songs?.length === 0 && !loadingProgress && !isLoading && (
                     <Box sx={{ width: '100%', textAlign: 'center', py: 8, opacity: 0.7, flexGrow: 1 }}>
-                        <Typography variant="h5">Your library is empty</Typography>
-                        <Typography>Load a folder with UltraStar songs to begin</Typography>
+                        <Typography variant="h5">Cannot connect to Melodiq Helper</Typography>
+                        <Typography sx={{ mt: 1 }}>
+                            To play local songs, you need the desktop helper app running.
+                        </Typography>
+                        <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'center' }}>
+                            <Button
+                                variant="contained"
+                                color="secondary"
+                                onClick={() => alert("Binaries are in server/dist/ folder!")}
+                            >
+                                Download Helper
+                            </Button>
+                            <Button
+                                onClick={refreshSongs}
+                                variant="outlined"
+                            >
+                                Retry Connection
+                            </Button>
+                        </Box>
                     </Box>
                 )}
 
@@ -420,8 +445,14 @@ const SongCard: React.FC<{ song: SongMeta; onClick: () => void }> = ({ song, onC
         const loadCover = async () => {
             if (!song.hasCover) return;
 
+            // 1. If we already have a string URL (Server/Remote song), use it directly
+            if (typeof song.cover === 'string' && song.cover.length > 0) {
+                setCoverUrl(song.cover);
+                return;
+            }
+
             try {
-                // Load full song to get cover handle
+                // 2. Load full song to get cover handle/blob (Local song)
                 const fullSong = await db.songs.get(song.id);
                 if (!fullSong?.cover || !active) return;
 

@@ -1,339 +1,292 @@
-import React, { useEffect, useState, useRef } from 'react';
-import {
-    Box, Button, Typography, IconButton, Card, LinearProgress,
-    Dialog, DialogTitle, DialogContent, DialogActions
-} from '@mui/material';
-import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import React, { useState, useEffect, useRef } from 'react';
+import { Box, Button, Typography, Paper, Divider, Alert, List, ListItem, ListItemText, IconButton, CircularProgress, TextField, FormControlLabel, Switch } from '@mui/material';
+import FolderIcon from '@mui/icons-material/Folder';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ArticleIcon from '@mui/icons-material/Article';
-import { MelodiqImporter, type ImportStats } from '../importer';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import CloudQueueIcon from '@mui/icons-material/CloudQueue';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import db, { type Library } from '../db';
+import { runLibraryImport, runLegacyImport } from '../importer';
+import { useSettings } from '../hooks/useSettings';
 
 export const LibraryManager: React.FC = () => {
-    const [libraries, setLibraries] = useState<Library[]>([]);
-    const [loadingLibraries, setLoadingLibraries] = useState(true);
-    const [activeImportId, setActiveImportId] = useState<string | null>(null);
-    const [importStats, setImportStats] = useState<ImportStats | null>(null);
-    const [libraryLogs, setLibraryLogs] = useState<string[]>([]);
-    const [viewingLogLibraryId, setViewingLogLibraryId] = useState<string | null>(null);
-    const [showLogDialog, setShowLogDialog] = useState(false);
+    // ---- Settings Hook ----
+    const { settings, updateSetting, saveSettings } = useSettings();
+    const [tempUrl, setTempUrl] = useState(settings.helperUrl);
 
-    // Fallback Import State (Firefox / Non-FSA)
-    const fallbackInputRef = useRef<HTMLInputElement>(null);
-    const [fallbackAction, setFallbackAction] = useState<{ type: 'add' | 'reload', libId?: string } | null>(null);
-
-    // Load Libraries
+    // Sync tempUrl with settings if settings change externally
     useEffect(() => {
-        const fetchLibs = async () => {
-            const libs = await db.libraries.toArray();
-            setLibraries(libs);
-            setLoadingLibraries(false);
+        setTempUrl(settings.helperUrl);
+    }, [settings.helperUrl]);
+
+    // ---- Section 1: Helper App Status ----
+    const [helperStatus, setHelperStatus] = useState<'loading' | 'online' | 'offline' | 'disabled'>('disabled');
+
+    // Check helper status whenever URL changes or enabled status changes
+    useEffect(() => {
+        if (!settings.enableHelper) {
+            setHelperStatus('disabled');
+            return;
+        }
+
+        const checkHelper = async () => {
+            setHelperStatus('loading');
+            try {
+                // Remove trailing slash if present for cleaner URL construction
+                const baseUrl = settings.helperUrl.replace(/\/$/, "");
+                const res = await fetch(`${baseUrl}/api/config/directories`);
+                if (res.ok) setHelperStatus('online');
+                else setHelperStatus('offline');
+            } catch (e) {
+                setHelperStatus('offline');
+            }
         };
-        fetchLibs();
-    }, [activeImportId]);
+        checkHelper();
+    }, [settings.helperUrl, settings.enableHelper]);
 
-    const runLibraryImport = async (lib: Library) => {
-        setActiveImportId(lib.id);
-        const importer = new MelodiqImporter();
-        const logs: string[] = [];
-        let finalStats: ImportStats | null = null;
+    const handleSaveUrl = () => {
+        let cleanUrl = tempUrl.trim();
+        if (cleanUrl.endsWith('/')) cleanUrl = cleanUrl.slice(0, -1);
+        if (!cleanUrl.startsWith('http')) cleanUrl = `http://${cleanUrl}`;
 
-        try {
-            const hasManifest = await importer.checkManifest(lib.handle);
-
-            const onProgress = (stats: ImportStats) => {
-                finalStats = { ...stats };
-                setImportStats({ ...stats });
-            };
-
-            const onLog = (msg: string) => {
-                logs.push(msg);
-                if (viewingLogLibraryId === lib.id) {
-                    setLibraryLogs(prev => [...prev, msg]);
-                }
-            };
-
-            if (hasManifest) {
-                await importer.importFromManifest(lib.handle, onProgress, onLog, lib.id);
-            } else {
-                await importer.scanAndGenerateManifest(lib.handle, onProgress, onLog, lib.id);
-            }
-
-            await db.libraries.update(lib.id, {
-                stats: finalStats || undefined,
-                logs: logs,
-                lastScanned: Date.now()
-            });
-
-        } catch (err) {
-            console.error(`Import failed for ${lib.name}`, err);
-            logs.push(`Critical Error: ${err}`);
-            await db.libraries.update(lib.id, { logs: logs });
-        } finally {
-            setActiveImportId(null);
-            setImportStats(null);
-            const updatedLibs = await db.libraries.toArray();
-            setLibraries(updatedLibs);
-        }
+        updateSetting('helperUrl', cleanUrl);
+        // Force immediate save or rely on effect. 
+        // We'll rely on the existing hook's saveSettings which persists current state
+        // But we just called updateSetting which is async state update.
+        // It's safer to save in an effect or use a timeout, OR trust the user will leave page eventually?
+        // Let's use timeout to be safe given current hook implementation
+        setTimeout(() => saveSettings(), 100);
     };
 
-    const handleAddLibrary = async () => {
-        try {
-            // @ts-ignore
-            if (window.showDirectoryPicker) {
-                // @ts-ignore
-                const dirHandle = await window.showDirectoryPicker();
-                const libId = crypto.randomUUID();
-                const newLib: Library = {
-                    id: libId,
-                    name: dirHandle.name,
-                    handle: dirHandle,
-                    logs: [],
-                    stats: { totalFound: 0, processed: 0, cached: 0, removed: 0, errors: 0 }
-                };
-
-                await db.libraries.add(newLib);
-                setLibraries(prev => [...prev, newLib]);
-                await runLibraryImport(newLib);
-            } else {
-                setFallbackAction({ type: 'add' });
-                fallbackInputRef.current?.click();
-            }
-        } catch (err) {
-            console.error('Add library failed', err);
-        }
+    const handleToggleHelper = (e: React.ChangeEvent<HTMLInputElement>) => {
+        updateSetting('enableHelper', e.target.checked);
+        setTimeout(() => saveSettings(), 100);
     };
 
-    const handleFallbackInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files || e.target.files.length === 0) return;
-        const files = e.target.files;
+    // ---- Section 2: Browser Libraries ----
+    const [libraries, setLibraries] = useState<Library[]>([]);
+    const legacyInputRef = useRef<HTMLInputElement>(null);
 
-        const firstFile = files[0];
-        const pathParts = firstFile.webkitRelativePath?.split('/');
-        const rootName = pathParts && pathParts.length > 0 ? pathParts[0] : 'Imported Folder';
-
-        let targetLibId = fallbackAction?.libId;
-        const libName = rootName;
-
-        if (fallbackAction?.type === 'add') {
-            targetLibId = crypto.randomUUID();
-            const newLib: Library = {
-                id: targetLibId,
-                name: libName,
-                handle: null as any,
-                logs: [],
-                stats: { totalFound: 0, processed: 0, cached: 0, removed: 0, errors: 0 }
-            };
-            await db.libraries.add(newLib);
-            setLibraries(prev => [...prev, newLib]);
-        }
-
-        if (!targetLibId) return;
-
-        setActiveImportId(targetLibId);
-        const importer = new MelodiqImporter();
-        const logs: string[] = [];
-        let finalStats: ImportStats | null = null;
-
-        try {
-            const onProgress = (stats: ImportStats) => {
-                finalStats = { ...stats };
-                setImportStats({ ...stats });
-            };
-            const onLog = (msg: string) => {
-                logs.push(msg);
-                if (viewingLogLibraryId === targetLibId) {
-                    setLibraryLogs(prev => [...prev, msg]);
-                }
-            };
-
-            onLog("Starting Fallback Import (No persistent file handle)...");
-            onLog(`Selected ${files.length} files.`);
-
-            await importer.importFromFileList(files, onProgress, onLog, targetLibId);
-
-            await db.libraries.update(targetLibId, {
-                stats: finalStats || undefined,
-                logs: logs,
-                lastScanned: Date.now()
-            });
-
-        } catch (err) {
-            console.error("Fallback Import Failed", err);
-            logs.push(`Critical Error: ${err}`);
-            await db.libraries.update(targetLibId, { logs: logs });
-        } finally {
-            setActiveImportId(null);
-            setImportStats(null);
-            setFallbackAction(null);
-            if (fallbackInputRef.current) fallbackInputRef.current.value = '';
-            const updatedLibs = await db.libraries.toArray();
-            setLibraries(updatedLibs);
-        }
+    const refreshLibraries = () => {
+        db.libraries.toArray().then(setLibraries);
     };
 
-    const handleReloadLibrary = async (lib: Library) => {
-        if (!lib.handle) {
-            alert(`For this folder, you must re-select it to reload because your browser does not support persistent access.`);
-            setFallbackAction({ type: 'reload', libId: lib.id });
-            fallbackInputRef.current?.click();
+    useEffect(() => {
+        refreshLibraries();
+    }, []);
+
+    const [importing, setImporting] = useState(false);
+
+    const handleAddBrowserLibrary = async () => {
+        // Feature detection
+        // @ts-ignore
+        if (!window.showDirectoryPicker) {
+            // Fallback for Firefox/Non-Chromium
+            legacyInputRef.current?.click();
             return;
         }
 
         try {
-            // @ts-ignore
-            await lib.handle.queryPermission({ mode: 'read' });
-            // @ts-ignore
-            if ((await lib.handle.queryPermission({ mode: 'read' })) !== 'granted') {
-                // @ts-ignore
-                if ((await lib.handle.requestPermission({ mode: 'read' })) !== 'granted') {
-                    throw new Error("Permission denied");
-                }
-            }
+            // @ts-ignore - File System Access API
+            const handle = await window.showDirectoryPicker();
 
-            setLibraryLogs([]);
+            const lib: Library = {
+                id: crypto.randomUUID(),
+                name: handle.name,
+                handle: handle,
+                lastScanned: Date.now()
+            };
+
+            await db.libraries.add(lib);
+
+            // Trigger scan
+            setImporting(true);
             await runLibraryImport(lib);
+            setImporting(false);
+            refreshLibraries();
 
-        } catch (e) {
-            alert(`Could not access folder "${lib.name}". You may need to re-add it or grant permissions.`);
-            console.error(e);
+        } catch (err) {
+            if ((err as Error).name !== 'AbortError') {
+                console.error("Browser import failed", err);
+                alert("Browser import failed: " + (err as Error).message);
+            }
+            setImporting(false);
         }
     };
 
-    const handleDeleteLibrary = async (libId: string) => {
-        if (confirm("Are you sure? This will remove the folder from the list and delete all its songs from the database.")) {
-            const ids = await db.songs.where('libraryId').equals(libId).primaryKeys();
-            await db.songsContent.bulkDelete(ids);
-            await db.songs.bulkDelete(ids);
-            await db.libraries.delete(libId);
-            setLibraries(prev => prev.filter(l => l.id !== libId));
+    const handleLegacyFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || e.target.files.length === 0) return;
+
+        const files = e.target.files;
+        // Use directory name from first file as library name
+        // webkitRelativePath is like "Folder/Sub/File.txt"
+        // We want "Folder"
+        const firstPath = files[0].webkitRelativePath;
+        const rootName = firstPath.split('/')[0] || "Local Folder";
+
+        const lib: Library = {
+            id: crypto.randomUUID(),
+            name: rootName,
+            // No handle in legacy mode
+            lastScanned: Date.now()
+        };
+
+        try {
+            setImporting(true);
+            await db.libraries.add(lib);
+            await runLegacyImport(files, lib.id);
+            setImporting(false);
+            refreshLibraries();
+
+            // Clear input
+            e.target.value = '';
+        } catch (err) {
+            console.error("Legacy import failed", err);
+            alert("Import failed: " + (err as Error).message);
+            setImporting(false);
         }
     };
 
-    const handleViewLogs = (lib: Library) => {
-        setLibraryLogs(lib.logs || []);
-        setViewingLogLibraryId(lib.id);
-        setShowLogDialog(true);
-    };
 
-    const handleCloseLogs = () => {
-        setShowLogDialog(false);
-        setViewingLogLibraryId(null);
-        setLibraryLogs([]);
+    const handleRemoveBrowserLibrary = async (id: string) => {
+        if (!confirm("Remove this folder from Browser Storage? Songs will be deleted from the database.")) return;
+
+        // Find songs in this library
+        const songIds = await db.songs.where('libraryId').equals(id).primaryKeys();
+        await db.songsContent.bulkDelete(songIds);
+        await db.songs.bulkDelete(songIds);
+        await db.songsMeta.bulkDelete(songIds);
+        await db.libraries.delete(id);
+
+        refreshLibraries();
     };
 
     return (
-        <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6">Song Libraries</Typography>
-                <input
-                    type="file"
-                    // @ts-ignore
-                    webkitdirectory=""
-                    style={{ display: 'none' }}
-                    ref={fallbackInputRef}
-                    onChange={handleFallbackInputChange}
-                />
-                <Button
-                    variant="contained"
-                    startIcon={<FolderOpenIcon />}
-                    onClick={handleAddLibrary}
-                    disabled={loadingLibraries || activeImportId !== null}
-                >
-                    Add Connection
-                </Button>
-            </Box>
+        <Paper variant="outlined" sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>Song Libraries</Typography>
 
-            {loadingLibraries ? <Typography>Loading...</Typography> : (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {libraries.length === 0 && (
-                        <Box sx={{ p: 4, textAlign: 'center', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: 2 }}>
-                            <Typography color="text.secondary">No song folders connected.</Typography>
-                            <Typography variant="caption" display="block">Click "Add Connection" to link a folder containing your songs.</Typography>
-                        </Box>
-                    )}
+            {/* Helper App Section */}
+            <Box sx={{ mb: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CloudQueueIcon fontSize="small" color="primary" /> Melodiq Helper (Remote/Local)
+                    </Typography>
 
-                    {libraries.map(lib => (
-                        <Card key={lib.id} sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <Box>
-                                    <Typography variant="subtitle1" fontWeight="bold">{lib.name}</Typography>
-                                    <Typography variant="caption" color="text.secondary" display="block">
-                                        ID: {lib.id.substring(0, 8)}... | Last Scan: {lib.lastScanned ? new Date(lib.lastScanned).toLocaleString() : 'Never'}
-                                    </Typography>
-                                    {lib.stats ? (
-                                        <Typography variant="caption" display="block" sx={{ mt: 0.5, color: lib.stats.errors > 0 ? 'warning.main' : 'text.secondary' }}>
-                                            Imported: {(lib.stats.processed || 0) + (lib.stats.cached || 0)} | Failed: {lib.stats.errors || 0} | Total Found: {lib.stats.totalFound || 0}
-                                        </Typography>
-                                    ) : (
-                                        <Typography variant="caption" display="block" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-                                            Pending Scan...
-                                        </Typography>
-                                    )}
-                                </Box>
-                                <Box sx={{ display: 'flex', gap: 1 }}>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => handleReloadLibrary(lib)}
-                                        disabled={activeImportId !== null}
-                                        color="primary"
-                                        title="Reload / Rescan"
-                                    >
-                                        <Typography sx={{ fontSize: '1.2rem' }}>↻</Typography>
-                                    </IconButton>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => handleViewLogs(lib)}
-                                        disabled={!lib.logs || lib.logs.length === 0}
-                                        title="View Logs"
-                                    >
-                                        <ArticleIcon fontSize="small" />
-                                    </IconButton>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => handleDeleteLibrary(lib.id)}
-                                        color="error"
-                                        disabled={activeImportId !== null}
-                                        title="Remove Library"
-                                    >
-                                        <DeleteIcon fontSize="small" />
-                                    </IconButton>
-                                </Box>
-                            </Box>
-
-                            {activeImportId === lib.id && importStats && (
-                                <Box sx={{ mt: 1 }}>
-                                    <LinearProgress
-                                        variant="determinate"
-                                        value={((importStats.processed + importStats.cached) / (importStats.totalFound || 1)) * 100}
-                                    />
-                                    <Typography variant="caption" sx={{ mt: 0.5, display: 'block', fontStyle: 'italic' }}>
-                                        {importStats.lastLog}
-                                    </Typography>
-                                </Box>
-                            )}
-                        </Card>
-                    ))}
+                    <FormControlLabel
+                        control={<Switch size="small" checked={settings.enableHelper} onChange={handleToggleHelper} />}
+                        label={settings.enableHelper ? "Enabled" : "Disabled"}
+                    />
                 </Box>
-            )}
 
-            {/* Log Dialog */}
-            <Dialog open={showLogDialog} onClose={handleCloseLogs} maxWidth="md" fullWidth>
-                <DialogTitle>Import Logs</DialogTitle>
-                <DialogContent dividers>
-                    <Box sx={{ fontFamily: 'monospace', fontSize: '0.85rem', whiteSpace: 'pre-wrap' }}>
-                        {libraryLogs.length > 0 ? libraryLogs.map((line, i) => (
-                            <div key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '2px 0' }}>{line}</div>
-                        )) : (
-                            <Typography color="text.secondary">No logs available.</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Connect to a Helper App running locally or on another computer.
+                </Typography>
+
+                {settings.enableHelper && (
+                    <Box sx={{ ml: 2, pl: 2, borderLeft: '2px solid #eee' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                            <Box sx={{ display: 'flex', gap: 1, flexGrow: 1 }}>
+                                <TextField
+                                    size="small"
+                                    fullWidth
+                                    label="Helper URL"
+                                    value={tempUrl}
+                                    onChange={(e) => setTempUrl(e.target.value)}
+                                    placeholder="http://localhost:3000"
+                                />
+                                <Button
+                                    variant="contained"
+                                    onClick={handleSaveUrl}
+                                    disabled={tempUrl === settings.helperUrl}
+                                >
+                                    Save
+                                </Button>
+                            </Box>
+                            {helperStatus === 'online' ?
+                                <Typography variant="caption" sx={{ color: 'success.main', fontWeight: 'bold', whiteSpace: 'nowrap' }}>Connected</Typography> :
+                                helperStatus === 'loading' ? <CircularProgress size={16} /> :
+                                    helperStatus === 'disabled' ? <Typography variant="caption" color="text.disabled">Disabled</Typography> :
+                                        <Typography variant="caption" color="error" sx={{ whiteSpace: 'nowrap' }}>Disconnected</Typography>
+                            }
+                        </Box>
+
+                        {helperStatus === 'online' ? (
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                startIcon={<OpenInNewIcon />}
+                                href={settings.helperUrl}
+                                target="_blank"
+                            >
+                                Open Dashboard
+                            </Button>
+                        ) : (
+                            <Alert severity="info" sx={{ py: 0 }}>
+                                Helper not reachable at this URL.
+                            </Alert>
                         )}
                     </Box>
-                    <div ref={(el) => el?.scrollIntoView({ behavior: 'smooth' })} />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseLogs}>Close</Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
+                )}
+            </Box>
+
+            <Divider sx={{ mb: 3 }} />
+
+            {/* Browser Storage Section */}
+            <Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <FolderIcon fontSize="small" /> Browser Storage
+                    </Typography>
+                    {importing && <CircularProgress size={16} />}
+                </Box>
+
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Stores metadata in database. Files accessed directly from disk.
+                    <br />
+                    <small>Note: Firefox may have storage limits.</small>
+                </Typography>
+
+                <List dense sx={{ bgcolor: 'action.hover', borderRadius: 1, mb: 1 }}>
+                    {libraries.map(lib => (
+                        <ListItem key={lib.id}>
+                            <ListItemText
+                                primary={lib.name}
+                                secondary={`${lib.stats?.processed || 0} songs`}
+                            />
+                            <IconButton edge="end" size="small" onClick={() => handleRemoveBrowserLibrary(lib.id)}>
+                                <DeleteIcon fontSize="small" />
+                            </IconButton>
+                        </ListItem>
+                    ))}
+                    {libraries.length === 0 && (
+                        <ListItem>
+                            <ListItemText primary="No local folders added." sx={{ fontStyle: 'italic', color: 'text.disabled' }} />
+                        </ListItem>
+                    )}
+                </List>
+
+                {/* Hidden input for Legacy (Firefox) support */}
+                <input
+                    type="file"
+                    ref={legacyInputRef}
+                    style={{ display: 'none' }}
+                    // @ts-ignore - Non-standard attribute for directory selection
+                    webkitdirectory=""
+                    directory=""
+                    multiple
+                    onChange={handleLegacyFileSelect}
+                />
+
+                <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<FolderOpenIcon />}
+                    onClick={handleAddBrowserLibrary}
+                    disabled={importing}
+                >
+                    Add Local Folder
+                </Button>
+            </Box>
+        </Paper>
     );
 };

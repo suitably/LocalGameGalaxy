@@ -11,7 +11,25 @@ export interface SettingsState {
     customTarget: number;
     songVolume: number;
     masterVolume: number;
+    helperUrl: string;
+    enableHelper: boolean;
 }
+
+/** Default/Factory settings */
+export const DEFAULT_SETTINGS: SettingsState = {
+    showDebugOverlay: false,
+    showDevSlider: false,
+    showMicStatus: true,
+    showNoteLabels: true,
+    showVideoErrors: false,
+    layoutOverride: '',
+    cardSize: 'small',
+    customTarget: 6,
+    songVolume: 0.7,
+    masterVolume: 1.0,
+    helperUrl: 'http://localhost:3000',
+    enableHelper: false
+};
 
 const loadSettings = (): SettingsState => ({
     showDebugOverlay: localStorage.getItem('melodiq_show_overlay') === 'true',
@@ -38,32 +56,52 @@ const loadSettings = (): SettingsState => ({
     masterVolume: (() => {
         const stored = localStorage.getItem('melodiq_master_volume');
         return stored ? parseFloat(stored) : 1.0;
-    })()
+    })(),
+    helperUrl: localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000',
+    enableHelper: localStorage.getItem('melodiq_enable_helper') === 'true'
 });
+
+const persistSettings = (s: SettingsState) => {
+    localStorage.setItem('melodiq_show_overlay', String(s.showDebugOverlay));
+    localStorage.setItem('melodiq_show_slider', String(s.showDevSlider));
+    localStorage.setItem('melodiq_show_mic_status', String(s.showMicStatus));
+    localStorage.setItem('melodiq_show_note_labels', String(s.showNoteLabels));
+    localStorage.setItem('melodiq_show_video_errors', String(s.showVideoErrors));
+    localStorage.setItem('melodiq_layout_override', s.layoutOverride);
+    localStorage.setItem('melodiq_card_size', s.cardSize);
+    localStorage.setItem('melodiq_custom_target_columns', String(s.customTarget));
+    localStorage.setItem('melodiq_song_volume', String(s.songVolume));
+    localStorage.setItem('melodiq_master_volume', String(s.masterVolume));
+    localStorage.setItem('melodiq_helper_url', s.helperUrl);
+    localStorage.setItem('melodiq_enable_helper', String(s.enableHelper));
+};
 
 export const useSettings = () => {
     const [settings, setSettings] = useState<SettingsState>(loadSettings);
 
     const updateSetting = useCallback(<K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
-        setSettings(prev => ({ ...prev, [key]: value }));
+        setSettings(prev => {
+            const next = { ...prev, [key]: value };
+            persistSettings(next); // Instant save
+            return next;
+        });
     }, []);
 
+    /** Replace all settings (for undo/reset) */
+    const resetSettings = useCallback((newState: SettingsState) => {
+        setSettings(newState);
+        persistSettings(newState);
+    }, []);
+
+    // saveSettings kept for compatibility but now optional
     const saveSettings = useCallback(() => {
-        localStorage.setItem('melodiq_show_overlay', String(settings.showDebugOverlay));
-        localStorage.setItem('melodiq_show_slider', String(settings.showDevSlider));
-        localStorage.setItem('melodiq_show_mic_status', String(settings.showMicStatus));
-        localStorage.setItem('melodiq_show_note_labels', String(settings.showNoteLabels));
-        localStorage.setItem('melodiq_show_video_errors', String(settings.showVideoErrors));
-        localStorage.setItem('melodiq_layout_override', settings.layoutOverride);
-        localStorage.setItem('melodiq_card_size', settings.cardSize);
-        localStorage.setItem('melodiq_custom_target_columns', String(settings.customTarget));
-        localStorage.setItem('melodiq_song_volume', String(settings.songVolume));
-        localStorage.setItem('melodiq_master_volume', String(settings.masterVolume));
+        persistSettings(settings);
     }, [settings]);
 
     return {
         settings,
         updateSetting,
+        resetSettings,
         saveSettings
     };
 };
