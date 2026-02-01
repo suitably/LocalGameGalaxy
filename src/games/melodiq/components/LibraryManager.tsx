@@ -11,7 +11,7 @@ import { useSettings } from '../hooks/useSettings';
 
 export const LibraryManager: React.FC = () => {
     // ---- Settings Hook ----
-    const { settings, updateSetting, saveSettings } = useSettings();
+    const { settings, updateSetting } = useSettings();
     const [tempUrl, setTempUrl] = useState(settings.helperUrl);
 
     // Sync tempUrl with settings if settings change externally
@@ -50,17 +50,12 @@ export const LibraryManager: React.FC = () => {
         if (!cleanUrl.startsWith('http')) cleanUrl = `http://${cleanUrl}`;
 
         updateSetting('helperUrl', cleanUrl);
-        // Force immediate save or rely on effect. 
-        // We'll rely on the existing hook's saveSettings which persists current state
-        // But we just called updateSetting which is async state update.
-        // It's safer to save in an effect or use a timeout, OR trust the user will leave page eventually?
-        // Let's use timeout to be safe given current hook implementation
-        setTimeout(() => saveSettings(), 100);
+        // updateSetting now persists instantly, no need for manual save
     };
 
     const handleToggleHelper = (e: React.ChangeEvent<HTMLInputElement>) => {
         updateSetting('enableHelper', e.target.checked);
-        setTimeout(() => saveSettings(), 100);
+        // updateSetting now persists instantly, no need for manual save
     };
 
     // ---- Section 2: Browser Libraries ----
