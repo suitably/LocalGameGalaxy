@@ -57,7 +57,7 @@ export interface CachedDir {
 export interface Library {
     id: string;
     name: string;
-    handle: FileSystemDirectoryHandle;
+    handle?: FileSystemDirectoryHandle;
     stats?: ImportStats;
     logs?: string[];
     lastScanned?: number;
