@@ -1,0 +1,45 @@
+name: Release Melodiq Helper
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on version tags, e.g. v1.0.0
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Release Helper
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./server
+        run: npm ci
+
+      - name: Build Binaries (pkg)
+        working-directory: ./server
+        run: npm run package
+
+      - name: Create Release & Upload Assets
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            server/dist/melodiq-server-linux
+            server/dist/melodiq-server-macos
+            server/dist/melodiq-server-win.exe
+          draft: false
+          prerelease: false
+          generate_release_notes: true
