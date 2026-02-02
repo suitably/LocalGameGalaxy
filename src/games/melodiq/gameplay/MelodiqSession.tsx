@@ -27,32 +27,46 @@ class PlayerRuntime {
     public mic: MicrophoneManager | null = null;
 
     // Remote Mic
-    public remotePeerId: string | null = null;
-    public webRtcManager: WebRTCMicManager | null = null;
+    public webRtcManager?: WebRTCMicManager;
+    public remotePeerId?: string;
 
-    public score: number = 0;
+    // OLD: public score: number = 0;
+    // NEW: Per-Track Scoring
+    public trackScores: Record<number, number> = {};
+    public score: number = 0; // Keeping for compatibility / total sum or caching
 
     // Stable refs for high-frequency updates without React renders
-    public pitchRef = { current: null as PitchResult | null };
-    public segmentsRef = { current: {} as Record<number, SungSegment[]> };
+    public pitchRef: React.RefObject<PitchResult | null>;
+    public segmentsRef: React.RefObject<Record<number, SungSegment[]>>;
 
     // Helper to track active segment for optimization
-    public activeSegment: SungSegment | null = null;
+    // Helper to track active segment for optimization - Per Track
+    public activeSegments: Record<number, SungSegment | null> = {};
 
     // Duet: Current Track Index (0 = P1, 1 = P2)
     public trackIndex: number = 0;
 
     public config: UserProfile & { deviceId: string; volume?: number; muted?: boolean; latency?: number; isRemote?: boolean };
 
-    constructor(
-        config: UserProfile & { deviceId: string; volume?: number; muted?: boolean; latency?: number; isRemote?: boolean },
-        webRtcManager?: WebRTCMicManager
-    ) {
-        this.config = config;
+    constructor(config: UserProfile & { deviceId?: string, volume?: number, muted?: number | boolean, latency?: number, isRemote?: boolean }, manager?: WebRTCMicManager) {
+        this.config = {
+            id: config.id,
+            name: config.name,
+            hue: config.hue,
+            deviceId: config.deviceId || '', // Fallback to empty string if undefined
+            volume: config.volume ?? 1.0,
+            muted: (config.muted === 1 || config.muted === true),
+            latency: config.latency ?? 0,
+            isRemote: config.isRemote ?? false
+        };
+        this.pitchRef = { current: null };
+        this.segmentsRef = { current: {} };
+        // Initialize scores
+        this.trackScores = { 0: 0, 1: 0 };
 
-        if (config.isRemote && webRtcManager) {
-            this.webRtcManager = webRtcManager;
-            this.remotePeerId = config.deviceId; // For remote, deviceId is the peerId
+        if (this.config.isRemote && manager) {
+            this.webRtcManager = manager;
+            this.remotePeerId = this.config.deviceId; // For remote, deviceId is the peerId
         } else {
             this.mic = new MicrophoneManager();
         }
@@ -465,53 +479,64 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             const latency = player.config.latency || 0;
             const currentBeat = ((audioRef.current.currentTime * 1000) - latency - (parsedSong.gap || 0)) / beatDuration;
 
-            const trackIndex = player.trackIndex;
-            // Use track notes if available, otherwise fallback to main notes
-            const notesSource = (parsedSong.tracks && parsedSong.tracks[trackIndex]) ? parsedSong.tracks[trackIndex].notes : parsedSong.notes;
-            const currentScoreWeight = (trackScoreWeights.length > trackIndex) ? trackScoreWeights[trackIndex] : (trackScoreWeights[0] || 0);
+            const trackCount = (parsedSong.tracks && parsedSong.tracks.length > 0) ? parsedSong.tracks.length : 1;
 
-            const activeNoteIndex = notesSource.findIndex((n) =>
-                n.type !== '-' &&
-                currentBeat >= n.start &&
-                currentBeat <= n.start + n.duration
-            );
+            for (let tIdx = 0; tIdx < trackCount; tIdx++) {
+                const notesSource: any[] = (parsedSong.tracks && parsedSong.tracks[tIdx]) ? parsedSong.tracks[tIdx].notes : parsedSong.notes;
+                const currentScoreWeight = (trackScoreWeights.length > tIdx) ? trackScoreWeights[tIdx] : (trackScoreWeights[0] || 0);
 
-            if (activeNoteIndex !== -1) {
-                const note = notesSource[activeNoteIndex];
-                const targetPitch = note.pitch;
-                const sungPitch = pitch.note;
+                const activeNoteIndex = notesSource.findIndex((n) =>
+                    n.type !== '-' &&
+                    currentBeat >= n.start &&
+                    currentBeat <= n.start + n.duration
+                );
 
-                const diff = Math.abs((sungPitch % 12) - (targetPitch % 12));
-                const semitoneDiff = Math.min(diff, 12 - diff);
+                if (activeNoteIndex !== -1) {
+                    const note = notesSource[activeNoteIndex];
+                    const targetPitch = note.pitch;
+                    const sungPitch = pitch.note;
 
-                if (semitoneDiff < 1.0) {
-                    // Calculate score increment based on time portion (deltaTime)
-                    // durationUnitsCovered = deltaTimeMs / beatDuration
-                    const durationUnitsCovered = deltaTimeMs / beatDuration;
+                    const diff = Math.abs((sungPitch % 12) - (targetPitch % 12));
+                    const semitoneDiff = Math.min(diff, 12 - diff);
 
-                    let points = durationUnitsCovered * currentScoreWeight;
+                    if (semitoneDiff < 1.0) {
+                        const durationUnitsCovered = deltaTimeMs / beatDuration;
+                        let points = durationUnitsCovered * currentScoreWeight;
+                        if (note.type === '*') points *= goldenNoteMultiplier;
 
-                    if (note.type === '*') {
-                        points *= goldenNoteMultiplier;
-                    }
+                        // Award points to this track
+                        if (!player.trackScores[tIdx]) player.trackScores[tIdx] = 0;
+                        player.trackScores[tIdx] += points;
 
-                    player.score += points;
+                        // Update visualization segments for this track
+                        const record = player.segmentsRef.current;
+                        if (!record) continue; // Should not happen with RefObject init
 
-                    const record = player.segmentsRef.current;
+                        const activeSeg = player.activeSegments[tIdx];
 
-                    // Check if we can continue the active segment
-                    // We need to check if activeSegment exists AND matches the current activeNoteIndex
-                    const activeSeg = player.activeSegment;
+                        if (activeSeg &&
+                            activeSeg.trackIndex === tIdx &&
+                            activeSeg.noteIndex === activeNoteIndex) {
+                            activeSeg.endBeat = currentBeat;
+                        } else {
+                            const newSegment = {
+                                noteIndex: activeNoteIndex,
+                                startBeat: currentBeat,
+                                endBeat: currentBeat,
+                                trackIndex: tIdx
+                            };
+                            player.activeSegments[tIdx] = newSegment;
 
-                    if (activeSeg && activeSeg.noteIndex === activeNoteIndex) {
-                        activeSeg.endBeat = currentBeat;
+                            if (!record[activeNoteIndex]) record[activeNoteIndex] = [];
+                            record[activeNoteIndex].push(newSegment);
+                        }
                     } else {
-                        const newSegment = { noteIndex: activeNoteIndex, startBeat: currentBeat, endBeat: currentBeat };
-                        player.activeSegment = newSegment;
-
-                        if (!record[activeNoteIndex]) record[activeNoteIndex] = [];
-                        record[activeNoteIndex].push(newSegment);
+                        // Pitch mismatch, end active segment for this track
+                        player.activeSegments[tIdx] = null;
                     }
+                } else {
+                    // No active note, end active segment for this track
+                    player.activeSegments[tIdx] = null;
                 }
             }
         }
@@ -529,9 +554,10 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                 // But PlayerRuntime is a class instance.
                 // We should probably mutate it, then clone array to trigger React.
                 p.trackIndex = safeIndex;
-                p.score = 0; // Reset score on switch
-                p.segmentsRef.current = {}; // Clear visual segments
-                p.activeSegment = null;
+                // No score reset: p.score = 0; 
+                // No segment clear: p.segmentsRef.current = {}; 
+                // Just clear active segment to prevent continuity across tracks visually if switch happens mid-sing
+                p.activeSegments = {};
                 console.log(`[Session] Player ${p.config.name} switched to Track ${safeIndex}`);
             }
             return newPlayers;
@@ -562,7 +588,9 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         if (now - lastScoreUpdateRef.current > 200) {
             const newScores: Record<string, number> = {};
             players.forEach(p => {
-                newScores[p.config.id] = Math.round(p.score);
+                // Display the score for the CURRENTLY SELECTED TRACK
+                const currentTrackScore = p.trackScores[p.trackIndex] || 0;
+                newScores[p.config.id] = Math.round(currentTrackScore);
             });
             setScores(newScores); // Always set new object to trigger render
             lastScoreUpdateRef.current = now;
@@ -966,11 +994,18 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     <IconButton onClick={onExit} color="inherit"><ArrowBackIcon /></IconButton>
                     <Typography variant="h6">{song.artist} - {song.title}</Typography>
                     <Box sx={{ display: 'flex', gap: 4 }}>
-                        {players.map(p => (
-                            <Typography key={p.config.id} sx={{ color: `hsl(${p.config.hue}, 100%, 70%)` }} fontWeight="bold">
-                                {p.config.name}: {scores[p.config.id] || 0}
-                            </Typography>
-                        ))}
+                        {players.map(p => {
+                            // Determine display name: If track has specific name, use it? Or Player Name (Track Name)?
+                            // User requested "show the real names of the txt files".
+                            const trackName = (parsedSong?.tracks && parsedSong.tracks[p.trackIndex]) ? parsedSong.tracks[p.trackIndex].name : null;
+                            const displayName = trackName ? `${p.config.name} (${trackName})` : p.config.name;
+
+                            return (
+                                <Typography key={p.config.id} sx={{ color: `hsl(${p.config.hue}, 100%, 70%)` }} fontWeight="bold">
+                                    {displayName}: {scores[p.config.id] || 0}
+                                </Typography>
+                            );
+                        })}
                     </Box>
                 </Box>
 

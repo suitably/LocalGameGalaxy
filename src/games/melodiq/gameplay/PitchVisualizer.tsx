@@ -10,6 +10,7 @@ export interface SungSegment {
     noteIndex: number; // Index of the note in song.notes
     startBeat: number; // Relative to song start
     endBeat: number;
+    trackIndex?: number; // Which track this segment belongs to
 }
 
 interface PitchVisualizerProps {
@@ -235,6 +236,13 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
             const segments = sungSegmentsRecord[index] || [];
 
             segments.forEach(seg => {
+                // Global Scoring: Only visualize segments that belong to this track
+                // If seg.trackIndex is undefined (legacy), assume it belongs to track 0 or whatever.
+                // But new logic always sets it.
+                if (seg.trackIndex !== undefined && seg.trackIndex !== trackIndex) {
+                    return;
+                }
+
                 const startB = Math.max(seg.startBeat, note.start);
                 const endB = Math.min(seg.endBeat, note.start + note.duration);
                 if (endB > startB) {
@@ -402,7 +410,7 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
         }
 
         requestRef.current = requestAnimationFrame(animate);
-    }, [song, audioRef, showDebugOverlay, label, dimensions, centerPitch, showNoteLabels]); // Deps for loop recreation
+    }, [song, audioRef, showDebugOverlay, label, dimensions, centerPitch, showNoteLabels, trackIndex, hue, latency]); // Deps for loop recreation
 
     useEffect(() => {
         const canvas = canvasRef.current;
