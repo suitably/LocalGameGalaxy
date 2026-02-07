@@ -212,9 +212,14 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
             const colorMain = `hsl(${noteHue}, ${sat}, ${lit})`;
             const colorGlow = `hsla(${noteHue}, ${sat}, 70%, 0.8)`;
 
-            // Glow & Outline
-            ctx.shadowBlur = 12;
-            ctx.shadowColor = colorGlow;
+            // Outline (no shadowBlur for perf - only apply to active notes)
+            const isActiveNote = PLAYHEAD_X >= x && PLAYHEAD_X <= x + w;
+            if (isActiveNote) {
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = colorGlow;
+            } else {
+                ctx.shadowBlur = 0;
+            }
             ctx.strokeStyle = colorMain;
             ctx.lineWidth = 2;
 
@@ -222,9 +227,9 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
             if (ctx.roundRect) ctx.roundRect(x, y + 2, w, NOTE_HEIGHT - 4, 6);
             else ctx.rect(x, y + 2, w, NOTE_HEIGHT - 4);
             ctx.stroke();
+            ctx.shadowBlur = 0;
 
             // Inner Highlight
-            ctx.shadowBlur = 0;
             ctx.fillStyle = 'rgba(255,255,255,0.1)';
             ctx.beginPath();
             if (ctx.roundRect) ctx.roundRect(x + 2, y + 4, w - 4, (NOTE_HEIGHT - 8) / 2, 4);
@@ -258,19 +263,18 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
                 }
             });
 
-            // Particles Trigger
-            if (PLAYHEAD_X >= x && PLAYHEAD_X <= x + w) {
+            // Particles Trigger - only check if we're at the active note and limit particle count
+            if (isActiveNote && particlesRef.current.length < 50) {
                 // Check if currently singing strictly correctly (covered by a segment)
-                // We use a small tolerance or check if currentBeat is inside any segment for specific note index
                 const isSingingCorrectly = segments.some(s => currentBeat >= s.startBeat && currentBeat <= s.endBeat + 0.1);
 
-                if (isSingingCorrectly && Math.random() < 0.4) {
+                if (isSingingCorrectly && Math.random() < 0.3) {
                     particlesRef.current.push({
                         x: PLAYHEAD_X,
                         y: y + NOTE_HEIGHT / 2 + (Math.random() - 0.5) * NOTE_HEIGHT,
-                        vx: (Math.random() - 0.5) * 6,
-                        vy: (Math.random() - 0.5) * 6,
-                        life: 1.0,
+                        vx: (Math.random() - 0.5) * 5,
+                        vy: (Math.random() - 0.5) * 5,
+                        life: 0.8,
                         color: `hsl(${noteHue}, 100%, 80%)`,
                         size: Math.random() * 2 + 1
                     });
@@ -278,16 +282,15 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
             }
         });
 
-        // --- Particles ---
+        // --- Particles (optimized: filter instead of splice) ---
         ctx.globalCompositeOperation = 'lighter';
-        for (let i = particlesRef.current.length - 1; i >= 0; i--) {
-            const p = particlesRef.current[i];
+        const particles = particlesRef.current;
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
             p.x += p.vx;
             p.y += p.vy;
-            p.life -= 0.05;
-            if (p.life <= 0) {
-                particlesRef.current.splice(i, 1);
-            } else {
+            p.life -= 0.06;
+            if (p.life > 0) {
                 ctx.globalAlpha = p.life;
                 ctx.fillStyle = p.color;
                 ctx.beginPath();
@@ -295,6 +298,8 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
                 ctx.fill();
             }
         }
+        // Batch cleanup (O(n) filter instead of O(n²) splice)
+        particlesRef.current = particles.filter(p => p.life > 0);
         ctx.globalAlpha = 1.0;
         ctx.globalCompositeOperation = 'source-over';
 
@@ -368,13 +373,14 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
             const y = (dimensions.height / 2) - (relPitch * NOTE_HEIGHT) - (NOTE_HEIGHT / 2);
 
             // Draw Cursor
-            // Glow
-            ctx.shadowBlur = 20;
+            // Glow (reduced for perf)
+            ctx.shadowBlur = 10;
             ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
             ctx.fillStyle = `hsl(${hue}, 100%, 70%)`;
             ctx.beginPath();
             ctx.arc(PLAYHEAD_X, y + NOTE_HEIGHT / 2, 8, 0, Math.PI * 2);
             ctx.fill();
+            ctx.shadowBlur = 0;
 
             // Label
             if (showNoteLabels) {

@@ -72,12 +72,30 @@ class PlayerRuntime {
         }
     }
 
+    // Pitch caching for performance throttling
+    private lastPitchTime: number = 0;
+    private cachedPitch: PitchResult | null = null;
+    private static PITCH_THROTTLE_MS = 33; // ~30fps for pitch detection
+
     getPitch(): PitchResult | null {
-        if (this.mic) return this.mic.getPitch();
-        if (this.webRtcManager && this.remotePeerId) {
-            return this.webRtcManager.getPitch(this.remotePeerId);
+        const now = performance.now();
+
+        // Return cached pitch if within throttle window
+        if (now - this.lastPitchTime < PlayerRuntime.PITCH_THROTTLE_MS) {
+            return this.cachedPitch;
         }
-        return null;
+
+        this.lastPitchTime = now;
+
+        if (this.mic) {
+            this.cachedPitch = this.mic.getPitch();
+        } else if (this.webRtcManager && this.remotePeerId) {
+            this.cachedPitch = this.webRtcManager.getPitch(this.remotePeerId);
+        } else {
+            this.cachedPitch = null;
+        }
+
+        return this.cachedPitch;
     }
 
     start(): Promise<void> {
