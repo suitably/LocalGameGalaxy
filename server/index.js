@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const glob = require('fast-glob');
@@ -7,6 +8,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const sanitize = require('sanitize-filename');
+const crypto = require('crypto');
 const config = require('./config');
 
 // Dynamic import for music-metadata
@@ -21,22 +23,65 @@ try {
 
 const app = express();
 
+// --- AUTHENTICATION ---
+// Generate or Load Token
+const AUTH_TOKEN = process.env.MELODIQ_TOKEN || crypto.randomBytes(16).toString('hex');
+console.log('---------------------------------------------------');
+console.log('SECURITY TOKEN:', AUTH_TOKEN);
+console.log('Use this token to connect from the Melodiq Host.');
+console.log('---------------------------------------------------');
+
+// Auth Middleware
+const requireAuth = (req, res, next) => {
+    // Allow options for CORS preflight
+    if (req.method === 'OPTIONS') return next();
+
+    // Allow status page without auth (to check online status)
+    if (req.path === '/' || req.path === '/favicon.ico') return next();
+
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (token === AUTH_TOKEN) {
+        next();
+    } else {
+        // Also check query param for media (video/audio tags often don't support headers easily)
+        if (req.query.token === AUTH_TOKEN) {
+            next();
+        } else {
+            console.warn(`[Auth] Unauthorized access attempt from ${req.ip}`);
+            res.status(401).json({ error: 'Unauthorized: Invalid Token' });
+        }
+    }
+};
+
+
 // --- SECURITY MIDDLEWARE ---
 app.use(helmet({
     contentSecurityPolicy: false, // Disabled for local dev/inline scripts in our simple HTML
+    crossOriginResourcePolicy: { policy: "cross-origin" } // Allow media needed by external hosts (TV)
 }));
-app.use(cors()); // In production, restrict this to specific origins
+
+// CORS: Allow All Origins (Standard for P2P/Local Network usage)
+// This is necessary so https://nexumia.de (TV) can fetch from http://192.168.x.x (PC)
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 app.use(morgan('dev')); // Logging
 
 // Rate Limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 500, // Limit each IP to 500 requests per windowMs (relaxed for local dev/media streaming)
+    max: 1000, // Increased limit for media streaming chunks/pings
     standardHeaders: true,
     legacyHeaders: false,
 });
 app.use(limiter);
+app.use(requireAuth); // Protect everything (except whitelisted paths)
 
 // --- IN-MEMORY CACHE ---
 let SONG_CACHE = [];
@@ -104,7 +149,7 @@ const scanSongs = async () => {
                     const getServeUrl = (filename) => {
                         if (!filename) return null;
                         const fullPath = path.join(dir, filename);
-                        return `/media?path=${encodeURIComponent(fullPath)}`;
+                        return `/media?path=${encodeURIComponent(fullPath)}&token=${AUTH_TOKEN}`;
                     };
 
                     const song = {
@@ -167,7 +212,7 @@ scanSongs();
 
 // --- ROUTES ---
 
-// Status Page
+// Status Page & Dashboard
 app.get('/', (req, res) => {
     res.send(`
         <!DOCTYPE html>
@@ -180,6 +225,8 @@ app.get('/', (req, res) => {
                 h1 { color: #1976d2; }
                 .badge { background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
                 button { cursor: pointer; padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; }
+                .token-box { background: #333; color: #0f0; padding: 15px; font-family: monospace; font-size: 1.2rem; border-radius: 4px; overflow-x: auto; margin: 10px 0; }
+                .copy-btn { margin-top: 5px; background: #444; font-size: 0.8rem; }
             </style>
         </head>
         <body>
@@ -189,14 +236,21 @@ app.get('/', (req, res) => {
                     <span class="badge">Online</span>
                 </div>
                 <p>Songs Cached: <strong>${SONG_CACHE.length}</strong> (Last scan: ${LAST_SCAN_TIME ? LAST_SCAN_TIME.toLocaleTimeString() : 'Never'})</p>
-                <form action="/api/songs/refresh" method="POST">
+                
+                <h3>🔑 Authentication Token</h3>
+                <p>Enter this token in the Melodiq Host Settings (TV/PC):</p>
+                <div class="token-box" id="tokenDisplay">${AUTH_TOKEN}</div>
+                <button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('tokenDisplay').innerText); alert('Copied!');">Copy Token</button>
+
+                <br><br>
+                <form action="/api/songs/refresh?token=${AUTH_TOKEN}" method="POST">
                    <button type="submit" ${IS_SCANNING ? 'disabled' : ''}>${IS_SCANNING ? 'Scanning...' : 'Refresh Library'}</button>
                 </form>
             </div>
             <div class="card">
                  <h2>Useful Links</h2>
                  <ul>
-                    <li><a href="/api/songs?limit=10">Test API (First 10 songs)</a></li>
+                    <li><a href="/api/songs?limit=10&token=${AUTH_TOKEN}">Test API (First 10 songs)</a></li>
                  </ul>
             </div>
         </body>

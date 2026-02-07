@@ -18,7 +18,8 @@ export const useSongs = () => {
     // Read config from storage
     const getHelperConfig = () => ({
         url: localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000',
-        enabled: localStorage.getItem('melodiq_enable_helper') === 'true'
+        token: localStorage.getItem('melodiq_helper_token') || '',
+        enabled: localStorage.getItem('melodiq_enable_helper') !== 'false' // Enable by default if not set to 'false' explicitly
     });
 
     // Cache for server song content (lyrics/notes) which is provided by API but not in SongMeta
@@ -27,7 +28,7 @@ export const useSongs = () => {
     // Load songs from Local Server AND IndexedDB
     const loadSongs = useCallback(async () => {
         let mounted = true;
-        const { url, enabled } = getHelperConfig();
+        const { url, token, enabled } = getHelperConfig();
         const helperUrl = url.replace(/\/$/, "");
 
         try {
@@ -36,9 +37,21 @@ export const useSongs = () => {
 
             // Parallel fetch: Server (if enabled) + Local DB
             const serverPromise = enabled
-                ? fetch(`${helperUrl}/api/songs`)
-                    .then(res => res.ok ? res.json() : [])
-                    .catch(() => [])
+                ? fetch(`${helperUrl}/api/songs`, {
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                })
+                    .then(res => {
+                        if (res.status === 401) {
+                            console.warn('Helper Auth Failed');
+                            // Maybe trigger UI notification? For now just log.
+                            return [];
+                        }
+                        return res.ok ? res.json() : [];
+                    })
+                    .catch((e) => {
+                        console.warn('Helper connection failed:', e);
+                        return [];
+                    })
                 : Promise.resolve([]);
 
             // Import db dynamically to access local indexedDB
@@ -66,8 +79,19 @@ export const useSongs = () => {
                     // Local DB songs have Blob/File objects or are processed differently
 
                     const processUrl = (url?: string | Blob | FileSystemFileHandle) => {
-                        if (typeof url === 'string' && url.startsWith('/media')) {
-                            return `${helperUrl}${url}`;
+                        if (typeof url === 'string') {
+                            if (url.startsWith('/media')) {
+                                let final = `${helperUrl}${url}`;
+                                // If URL already has token (server provided it), good. If not, append it.
+                                if (token && !final.includes('token=')) {
+                                    final += (final.includes('?') ? '&' : '?') + `token=${token}`;
+                                }
+                                return final;
+                            }
+                            // Handle existing absolute HTTP URLs that might need token if they are pointing to our helper
+                            if (url.startsWith(helperUrl) && url.includes('/media') && token && !url.includes('token=')) {
+                                return url + (url.includes('?') ? '&' : '?') + `token=${token}`;
+                            }
                         }
                         return url;
                     };

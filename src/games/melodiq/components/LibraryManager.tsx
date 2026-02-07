@@ -1,62 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Button, Typography, Paper, Divider, Alert, List, ListItem, ListItemText, IconButton, CircularProgress, TextField, FormControlLabel, Switch } from '@mui/material';
+import { Box, Button, Typography, Paper, Divider, List, ListItem, ListItemText, IconButton, CircularProgress } from '@mui/material';
 import FolderIcon from '@mui/icons-material/Folder';
 import DeleteIcon from '@mui/icons-material/Delete';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import CloudQueueIcon from '@mui/icons-material/CloudQueue';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import db, { type Library } from '../db';
 import { runLibraryImport, runLegacyImport } from '../importer';
-import { useSettings } from '../hooks/useSettings';
 
 export const LibraryManager: React.FC = () => {
     // ---- Settings Hook ----
-    const { settings, updateSetting } = useSettings();
-    const [tempUrl, setTempUrl] = useState(settings.helperUrl);
+    // const { settings } = useSettings(); // Might still need settings if we use other parts? Actually we don't use settings anymore here.
 
-    // Sync tempUrl with settings if settings change externally
-    useEffect(() => {
-        setTempUrl(settings.helperUrl);
-    }, [settings.helperUrl]);
-
-    // ---- Section 1: Helper App Status ----
-    const [helperStatus, setHelperStatus] = useState<'loading' | 'online' | 'offline' | 'disabled'>('disabled');
-
-    // Check helper status whenever URL changes or enabled status changes
-    useEffect(() => {
-        if (!settings.enableHelper) {
-            setHelperStatus('disabled');
-            return;
-        }
-
-        const checkHelper = async () => {
-            setHelperStatus('loading');
-            try {
-                // Remove trailing slash if present for cleaner URL construction
-                const baseUrl = settings.helperUrl.replace(/\/$/, "");
-                const res = await fetch(`${baseUrl}/api/config/directories`);
-                if (res.ok) setHelperStatus('online');
-                else setHelperStatus('offline');
-            } catch (e) {
-                setHelperStatus('offline');
-            }
-        };
-        checkHelper();
-    }, [settings.helperUrl, settings.enableHelper]);
-
-    const handleSaveUrl = () => {
-        let cleanUrl = tempUrl.trim();
-        if (cleanUrl.endsWith('/')) cleanUrl = cleanUrl.slice(0, -1);
-        if (!cleanUrl.startsWith('http')) cleanUrl = `http://${cleanUrl}`;
-
-        updateSetting('helperUrl', cleanUrl);
-        // updateSetting now persists instantly, no need for manual save
-    };
-
-    const handleToggleHelper = (e: React.ChangeEvent<HTMLInputElement>) => {
-        updateSetting('enableHelper', e.target.checked);
-        // updateSetting now persists instantly, no need for manual save
-    };
 
     // ---- Section 2: Browser Libraries ----
     const [libraries, setLibraries] = useState<Library[]>([]);
@@ -158,72 +111,7 @@ export const LibraryManager: React.FC = () => {
 
     return (
         <Paper variant="outlined" sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>Song Libraries</Typography>
-
-            {/* Helper App Section */}
-            <Box sx={{ mb: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <CloudQueueIcon fontSize="small" color="primary" /> Melodiq Helper (Remote/Local)
-                    </Typography>
-
-                    <FormControlLabel
-                        control={<Switch size="small" checked={settings.enableHelper} onChange={handleToggleHelper} />}
-                        label={settings.enableHelper ? "Enabled" : "Disabled"}
-                    />
-                </Box>
-
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Connect to a Helper App running locally or on another computer.
-                </Typography>
-
-                {settings.enableHelper && (
-                    <Box sx={{ ml: 2, pl: 2, borderLeft: '2px solid #eee' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                            <Box sx={{ display: 'flex', gap: 1, flexGrow: 1 }}>
-                                <TextField
-                                    size="small"
-                                    fullWidth
-                                    label="Helper URL"
-                                    value={tempUrl}
-                                    onChange={(e) => setTempUrl(e.target.value)}
-                                    placeholder="http://localhost:3000"
-                                />
-                                <Button
-                                    variant="contained"
-                                    onClick={handleSaveUrl}
-                                    disabled={tempUrl === settings.helperUrl}
-                                >
-                                    Save
-                                </Button>
-                            </Box>
-                            {helperStatus === 'online' ?
-                                <Typography variant="caption" sx={{ color: 'success.main', fontWeight: 'bold', whiteSpace: 'nowrap' }}>Connected</Typography> :
-                                helperStatus === 'loading' ? <CircularProgress size={16} /> :
-                                    helperStatus === 'disabled' ? <Typography variant="caption" color="text.disabled">Disabled</Typography> :
-                                        <Typography variant="caption" color="error" sx={{ whiteSpace: 'nowrap' }}>Disconnected</Typography>
-                            }
-                        </Box>
-
-                        {helperStatus === 'online' ? (
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                startIcon={<OpenInNewIcon />}
-                                href={settings.helperUrl}
-                                target="_blank"
-                            >
-                                Open Dashboard
-                            </Button>
-                        ) : (
-                            <Alert severity="info" sx={{ py: 0 }}>
-                                Helper not reachable at this URL.
-                            </Alert>
-                        )}
-                    </Box>
-                )}
-            </Box>
-
+            <Typography variant="h6" gutterBottom>Local Song Libraries</Typography>
             <Divider sx={{ mb: 3 }} />
 
             {/* Browser Storage Section */}

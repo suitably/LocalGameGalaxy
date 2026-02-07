@@ -11,7 +11,7 @@ import { MelodiqSettings } from './MelodiqSettings';
 import { formatDuration } from './utils';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
-import { WebRTCProvider } from './audio/WebRTCContext';
+import { WebRTCProvider, useWebRTC } from './audio/WebRTCContext';
 import { MelodiqConnection } from './MelodiqConnection';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 import { useSongs } from './hooks/useSongs';
@@ -19,7 +19,7 @@ import { useSongs } from './hooks/useSongs';
 // Navigation State
 type View = 'Home' | 'Settings' | 'Session' | 'Connection';
 
-export const MelodiqGame: React.FC = () => {
+export const MelodiqGameContent: React.FC = () => {
     const { t } = useTranslation();
 
     // Set the game title in the header
@@ -423,9 +423,49 @@ export const MelodiqGame: React.FC = () => {
         );
     };
 
+    // --- Remote Configuration Listener ---
+    const { manager } = useWebRTC();
+
+    useEffect(() => {
+        if (!manager) return;
+
+        // When NOT in session (Session has its own handler), listen for global commands
+        if (currentView !== 'Session') {
+            manager.onMessage = (peerId, data) => {
+                if (data.type === 'configure' && data.config) {
+                    console.log(`[Host] Received Remote Config from ${peerId}:`, data.config);
+
+                    if (data.config.url) localStorage.setItem('melodiq_helper_url', data.config.url);
+                    if (data.config.token) localStorage.setItem('melodiq_helper_token', data.config.token);
+
+                    // Enable helper if it was disabled
+                    localStorage.setItem('melodiq_enable_helper', 'true');
+
+                    // Notify user (simple alert for now, or use Snackbar if available)
+                    alert(`Configuration Updated by Remote Phone!\nURL: ${data.config.url}\nReloading...`);
+                    window.location.reload();
+                }
+            };
+        }
+
+        return () => {
+            // Cleanup: If we leave Home view, we might want to clear this, 
+            // but effectively the new view (Session) will overwrite it or unmount/remount this component
+            // Actually MelodiqGame stays mounted, so we should be careful.
+            // But since 'currentView' changes, this effect runs again.
+            if (currentView !== 'Session' && manager) {
+                manager.onMessage = undefined;
+            }
+        };
+    }, [manager, currentView]);
+
+    return renderView();
+};
+
+export const MelodiqGame: React.FC = () => {
     return (
         <WebRTCProvider>
-            {renderView()}
+            <MelodiqGameContent />
         </WebRTCProvider>
     );
 };

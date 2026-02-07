@@ -651,14 +651,105 @@ export const MelodiqPhoneClient = () => {
         };
     }, []);
 
-    return (
-        <div className={`melodiq-phone-client ${status.className}`}>
-            <div className="status-container">
-                <div className="status-icon">
-                    {status.className === 'status-connected' ? '🎤' : '⏳'}
-                </div>
-                <div className="status-text">{status.message}</div>
+    // --- Remote Configuration State ---
+    const [showRemoteSettings, setShowRemoteSettings] = useState(false);
+    const [remoteUrl, setRemoteUrl] = useState('');
+    const [remoteToken, setRemoteToken] = useState('');
 
+    const sendRemoteConfig = () => {
+        if (!peerRef.current || !(peerRef.current as any).connected) {
+            alert('Not connected to Host');
+            return;
+        }
+
+        const msg = {
+            type: 'configure',
+            config: {
+                url: remoteUrl,
+                token: remoteToken
+            }
+        };
+
+        try {
+            peerRef.current.send(JSON.stringify(msg));
+            alert('Settings sent to Host! The TV should reload shortly.');
+            setShowRemoteSettings(false);
+        } catch (e) {
+            alert('Failed to send settings');
+            console.error(e);
+        }
+    };
+
+
+    if (showRemoteSettings) {
+        return (
+            <div className="phone-client" style={{ padding: 20, textAlign: 'left' }}>
+                <h2>Host Settings</h2>
+                <p>Configure the TV/Host Server Connection remotely.</p>
+
+                <div style={{ marginBottom: 15 }}>
+                    <label style={{ display: 'block', marginBottom: 5 }}>Helper URL</label>
+                    <input
+                        type="text"
+                        value={remoteUrl}
+                        onChange={e => setRemoteUrl(e.target.value)}
+                        placeholder="http://192.168.1.50:3000"
+                        style={{ width: '100%', padding: 10, fontSize: 16 }}
+                    />
+                </div>
+
+                <div style={{ marginBottom: 15 }}>
+                    <label style={{ display: 'block', marginBottom: 5 }}>Security Token</label>
+                    <input
+                        type="text"
+                        value={remoteToken}
+                        onChange={e => setRemoteToken(e.target.value)}
+                        placeholder="Token from Helper Console"
+                        style={{ width: '100%', padding: 10, fontSize: 16 }}
+                    />
+                </div>
+
+                <div style={{ display: 'flex', gap: 10 }}>
+                    <button onClick={sendRemoteConfig} style={{ flex: 1, padding: 15, background: '#4caf50', color: 'white', border: 'none', borderRadius: 8 }}>
+                        Send to TV
+                    </button>
+                    <button onClick={() => setShowRemoteSettings(false)} style={{ flex: 1, padding: 15, background: '#666', color: 'white', border: 'none', borderRadius: 8 }}>
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className={`phone-client ${status.className}`}>
+            {/* Header / Status Bar */}
+            <div style={{
+                position: 'fixed', top: 0, left: 0, right: 0,
+                padding: '10px 15px',
+                background: 'rgba(0,0,0,0.8)',
+                backdropFilter: 'blur(10px)',
+                zIndex: 100,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{
+                        width: 10, height: 10, borderRadius: '50%',
+                        background: status.className === 'status-connected' ? '#4caf50' : '#f44336'
+                    }} />
+                    <span style={{ fontSize: 14, fontWeight: 'bold' }}>{status.message}</span>
+                </div>
+                <button
+                    onClick={() => setShowRemoteSettings(true)}
+                    style={{ background: 'transparent', border: '1px solid #666', color: '#aaa', padding: '5px 10px', borderRadius: 4, fontSize: 12 }}
+                >
+                    ⚙️ Host
+                </button>
+            </div>
+
+            <div className="main-content" style={{ marginTop: 60, paddingBottom: 100 }}>
                 {/* VISUALIZATION BAR */}
                 {/* VISUALIZATION BAR */}
                 <div style={{

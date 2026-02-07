@@ -11,6 +11,7 @@ import { useSettings, DEFAULT_SETTINGS, type SettingsState } from './hooks/useSe
 import { SessionSetup } from './components/SessionSetup';
 import { UserProfilesManager } from './components/UserProfilesManager';
 import { GameSettingsPanel } from './components/GameSettingsPanel';
+import { HelperConnection } from './components/HelperConnection';
 import { LibraryManager } from './components/LibraryManager';
 import type { UserProfile, ActivePlayer } from './types';
 
@@ -106,7 +107,12 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
             </Box>
 
             <Paper sx={{ p: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {/* 1. Library Management (Hybrid) */}
+                {/* 0. P2P Helper Connection (Priority for TV) */}
+                <HelperConnection />
+
+                <Divider />
+
+                {/* 1. Library Management (Local Browser Storage) */}
                 <LibraryManager />
 
                 <Divider />

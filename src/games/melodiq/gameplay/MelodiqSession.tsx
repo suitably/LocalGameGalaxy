@@ -672,7 +672,17 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                             // But let's just prepend the server URL for now or assume proxy.
                             // The fetch in useSongs used http://localhost:3000.
                             // So we should prepend http://localhost:3000 if it's just /media
-                            activeUrl = `http://localhost:3000${song.audio}`;
+                            const helperUrl = localStorage.getItem('melodiq_helper_url')?.replace(/\/$/, "") || 'http://localhost:3000';
+                            let finalUrl = song.audio.startsWith('http') ? song.audio : `${helperUrl}${song.audio}`;
+
+                            // Append Token if needed and not present
+                            if (finalUrl.includes('/media') && !finalUrl.includes('token=')) {
+                                const token = localStorage.getItem('melodiq_helper_token');
+                                if (token) {
+                                    finalUrl += (finalUrl.includes('?') ? '&' : '?') + `token=${token}`;
+                                }
+                            }
+                            activeUrl = finalUrl;
                         }
                     } else {
                         // It's just a filename (FileList fallback import)
@@ -735,7 +745,16 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     // Check if it looks like a URL (Server/Remote)
                     if (song.video.startsWith('http') || song.video.startsWith('/') || song.video.startsWith('blob:')) {
                         if (song.video.startsWith('/') && !window.location.origin.includes('3000')) {
-                            activeUrl = `http://localhost:3000${song.video}`;
+                            const helperUrl = localStorage.getItem('melodiq_helper_url')?.replace(/\/$/, "") || 'http://localhost:3000';
+                            let finalUrl = `${helperUrl}${song.video}`;
+                            // Append Token if needed
+                            if (finalUrl.includes('/media') && !finalUrl.includes('token=')) {
+                                const token = localStorage.getItem('melodiq_helper_token');
+                                if (token) {
+                                    finalUrl += (finalUrl.includes('?') ? '&' : '?') + `token=${token}`;
+                                }
+                            }
+                            activeUrl = finalUrl;
                         } else {
                             activeUrl = song.video;
                         }
