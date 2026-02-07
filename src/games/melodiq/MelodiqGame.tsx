@@ -15,8 +15,9 @@ import { WebRTCProvider, useWebRTC } from './audio/WebRTCContext';
 import { MelodiqConnection } from './MelodiqConnection';
 import { SongCard } from './components/SongCard';
 import QrCodeIcon from '@mui/icons-material/QrCode';
-import { useSongs } from './hooks/useSongs';
+import { useSongs, SongsProvider } from './hooks/useSongs';
 import { useQueue } from './hooks/useQueue';
+import { PhoneQueueBridge } from './components/PhoneQueueBridge';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 
 // Navigation State
@@ -450,42 +451,42 @@ export const MelodiqGameContent: React.FC = () => {
         if (!manager) return;
 
         // When NOT in session (Session has its own handler), listen for global commands
+        // actually, PhoneQueueBridge handles queue/library commands now.
+        // We just need to handle configuration here if needed, or move it to bridge too.
+        // For now, keep config listener here but ensure Bridge is mounted.
+
         if (currentView !== 'Session') {
-            manager.onMessage = (peerId, data) => {
+            const handleConfig = (peerId: string, data: any) => {
                 if (data.type === 'configure' && data.config) {
                     console.log(`[Host] Received Remote Config from ${peerId}:`, data.config);
-
                     if (data.config.url) localStorage.setItem('melodiq_helper_url', data.config.url);
                     if (data.config.token) localStorage.setItem('melodiq_helper_token', data.config.token);
-
                     // Enable helper if it was disabled
                     localStorage.setItem('melodiq_enable_helper', 'true');
-
                     // Notify user (simple alert for now, or use Snackbar if available)
                     alert(`Configuration Updated by Remote Phone!\nURL: ${data.config.url}\nReloading...`);
                     window.location.reload();
                 }
             };
+            manager.on('message', handleConfig);
+            return () => manager.off('message', handleConfig);
         }
+    }, [manager, currentView, refreshSongs]);
 
-        return () => {
-            // Cleanup: If we leave Home view, we might want to clear this, 
-            // but effectively the new view (Session) will overwrite it or unmount/remount this component
-            // Actually MelodiqGame stays mounted, so we should be careful.
-            // But since 'currentView' changes, this effect runs again.
-            if (currentView !== 'Session' && manager) {
-                manager.onMessage = undefined;
-            }
-        };
-    }, [manager, currentView]);
-
-    return renderView();
+    return (
+        <Box sx={{ width: '100vw', height: '100vh', overflow: 'hidden', bgcolor: 'background.default', color: 'text.primary' }}>
+            {renderView()}
+        </Box>
+    );
 };
 
 export const MelodiqGame: React.FC = () => {
     return (
         <WebRTCProvider>
-            <MelodiqGameContent />
+            <SongsProvider>
+                <MelodiqGameContent />
+                <PhoneQueueBridge />
+            </SongsProvider>
         </WebRTCProvider>
     );
 };

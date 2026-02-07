@@ -68,8 +68,6 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
                                 bgcolor: isWinner ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)',
                                 border: isWinner ? '2px solid #ffd700' : '1px solid rgba(255,255,255,0.1)',
                                 borderRadius: 4,
-                                border: isWinner ? '2px solid #ffd700' : '1px solid rgba(255,255,255,0.1)',
-                                borderRadius: 4,
                             }}
                         >
                             <Box sx={{

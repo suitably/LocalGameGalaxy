@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { WebRTCMicManager } from './WebRTCMicManager';
 
 interface PeerInfo {
     id: string;
     name: string;
     hue?: number;
+    connectionId?: string;
 }
 
 interface WebRTCContextType {
@@ -83,11 +84,11 @@ export const WebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             console.log('[WebRTCProvider] Initializing Manager with:', { partyId, trackerUrls });
 
             managerInstance = new WebRTCMicManager(partyId, trackerUrls, {
-                onPeerConnected: (peerId, name, hue) => {
-                    console.log('[WebRTCProvider] Peer Connected:', name, peerId);
+                onPeerConnected: (peerId, name, hue, connectionId) => {
+                    console.log('[WebRTCProvider] Peer Connected:', name, peerId, connectionId);
                     setPeers(prev => {
-                        if (prev.some(p => p.id === peerId)) return prev.map(p => p.id === peerId ? { id: peerId, name, hue } : p);
-                        return [...prev, { id: peerId, name, hue }];
+                        if (prev.some(p => p.id === peerId)) return prev.map(p => p.id === peerId ? { id: peerId, name, hue, connectionId } : p);
+                        return [...prev, { id: peerId, name, hue, connectionId }];
                     });
                     // Auto-activate new peers
                     setActivePeerIds(prev => prev.includes(peerId) ? prev : [...prev, peerId]);
@@ -96,18 +97,28 @@ export const WebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     console.log('[WebRTCProvider] Peer Disconnected:', peerId);
                     setPeers(prev => prev.filter(p => p.id !== peerId));
                 },
-                onPeerUpdated: (peerId, name, hue) => {
-                    console.log('[WebRTCProvider] Peer Updated:', name, peerId);
+                onPeerUpdated: (peerId, name, hue, connectionId) => {
+                    console.log('[WebRTCProvider] Peer Updated:', name, peerId, connectionId);
                     setPeers(prev => {
                         const existing = prev.find(p => p.id === peerId);
                         if (existing) {
-                            return prev.map(p => p.id === peerId ? { ...p, name, hue } : p);
+                            return prev.map(p => p.id === peerId ? { ...p, name, hue, connectionId: connectionId || p.connectionId } : p);
                         }
                         // Peer doesn't exist yet (identity arrived before stream), add it
-                        return [...prev, { id: peerId, name, hue }];
+                        return [...prev, { id: peerId, name, hue, connectionId }];
                     });
                     // Auto-activate new peers
                     setActivePeerIds(prev => prev.includes(peerId) ? prev : [...prev, peerId]);
+                },
+                onMessage: (peerId, data) => {
+                    if (data.type === 'roster.toggle') {
+                        console.log('[WebRTCContext] Received roster.toggle from peer:', peerId); // DEBUG LOG
+                        setActivePeerIds(prev =>
+                            prev.includes(peerId)
+                                ? prev.filter(id => id !== peerId)
+                                : [...prev, peerId]
+                        );
+                    }
                 }
             });
 
@@ -157,15 +168,33 @@ export const WebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }, []);
 
     // Computed: active and inactive peers
-    const activePeers = peers.filter(p => activePeerIds.includes(p.id));
-    const inactivePeers = peers.filter(p => !activePeerIds.includes(p.id));
+    const activePeers = useMemo(() => peers.filter(p => activePeerIds.includes(p.id)), [peers, activePeerIds]);
+    const inactivePeers = useMemo(() => peers.filter(p => !activePeerIds.includes(p.id)), [peers, activePeerIds]);
 
+    // Ensure we have at least defaults if empty
     // Ensure we have at least defaults if empty
     useEffect(() => {
         if (trackerUrls.length === 0) {
             restoreDefaultTrackers();
         }
-    }, []);
+    }, [trackerUrls]);
+
+    // Broadcast roster updates
+    useEffect(() => {
+        if (manager) {
+            const roster = activePeers.map(p => ({
+                id: p.id,
+                name: p.name,
+                hue: p.hue,
+                connectionId: p.connectionId
+            }));
+            console.log('[WebRTCContext] Broadcasting Roster:', roster); // DEBUG LOG
+            manager.broadcast({
+                type: 'roster.update',
+                roster
+            });
+        }
+    }, [activePeers, manager]);
 
     return (
         <WebRTCContext.Provider value={{

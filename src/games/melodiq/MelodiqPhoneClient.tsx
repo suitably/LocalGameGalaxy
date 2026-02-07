@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { Snackbar, Alert } from '@mui/material';
 import SimplePeer from 'simple-peer';
 import Client from 'bittorrent-tracker';
 import { computeRMS, autoCorrelate, freqToMidi } from './audio/AudioUtils';
@@ -18,6 +19,15 @@ export const MelodiqPhoneClient = () => {
     });
     const [audioInputDevices, setAudioInputDevices] = useState<MediaDeviceInfo[]>([]);
     const [selectedDeviceId, setSelectedDeviceId] = useState<string>(() => localStorage.getItem('melodiq_mic_id') || '');
+    const [isActive, setIsActive] = useState(true);
+
+    // UI state for notifications
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+
+    const handleSnackbarClose = () => {
+        setSnackbarOpen(false);
+    };
     const [showReconnect, setShowReconnect] = useState(false);
 
     // Audio visualization refs (Direct DOM manipulation for performance)
@@ -59,6 +69,27 @@ export const MelodiqPhoneClient = () => {
     const bufferRef = useRef<Float32Array | null>(null);
     const animFrameRef = useRef<number | null>(null);
     const lastPitchSendTimeRef = useRef<number>(0);
+
+    // --- Queue & Library State ---
+    const [activeTab, setActiveTab] = useState<'mic' | 'queue'>('mic');
+    const [queueSearchQuery, setQueueSearchQuery] = useState('');
+    const [showFilters, setShowFilters] = useState(false);
+    const [filters, setFilters] = useState({
+        genre: 'All',
+        year: 'All',
+        language: 'All'
+    });
+
+    const [libraryResults, setLibraryResults] = useState<any[]>([]);
+    const [hostQueue, setHostQueue] = useState<any[]>([]);
+    const [nowPlaying, setNowPlaying] = useState<any>(null);
+
+    // Initial load of songs when switching to queue tab
+    useEffect(() => {
+        if (activeTab === 'queue' && peerRef.current && status.className === 'status-connected') {
+            sendSearch(queueSearchQuery);
+        }
+    }, [activeTab, status.className]);
 
     // Save settings when changed
     // Save settings when changed
@@ -369,7 +400,36 @@ export const MelodiqPhoneClient = () => {
                                     setLatestStats(statsEntry);
 
                                     // Clear notify after 5s
+                                    // Clear notify after 5s
                                     setTimeout(() => setLatestStats(null), 5000);
+                                    continue;
+                                }
+
+                                if (parsed.type === 'roster.update') {
+                                    if (peer && (peer as any)._connectionId) {
+                                        const myId = (peer as any)._connectionId;
+                                        // Check against connectionId, not peerId (which is host-assigned)
+                                        const amIInRoster = parsed.roster.some((p: any) => p.connectionId === myId);
+
+                                        console.log('[Phone] Roster Update. My ConnectionID:', myId);
+                                        console.log('[Phone] Roster:', parsed.roster);
+                                        console.log('[Phone] Am I in roster?', amIInRoster);
+
+                                        setIsActive(amIInRoster);
+                                    }
+                                    continue;
+                                }
+
+                                if (parsed.type === 'queue.update') {
+                                    console.log('[Phone] Received Queue Update:', parsed);
+                                    setHostQueue(parsed.queue || []);
+                                    setNowPlaying(parsed.nowPlaying);
+                                    continue;
+                                }
+
+                                if (parsed.type === 'library.results') {
+                                    console.log('[Phone] Received Library Results:', parsed);
+                                    setLibraryResults(parsed.results || []);
                                     continue;
                                 }
 
@@ -392,6 +452,7 @@ export const MelodiqPhoneClient = () => {
                 };
 
                 trackerPeer.on('data', onData);
+                peer.on('data', onData);
 
                 peer.on('connect', () => {
                     clearTimeout(connectionTimeout);
@@ -437,6 +498,20 @@ export const MelodiqPhoneClient = () => {
                     // But usually we just reload or reconnect.
                     // Let's clear them to be safe.
                     pendingPeerCandidatesRef.current = [];
+
+                    // Request initial queue state
+                    // Request initial queue state and library
+                    // Retry a few times to ensure host is ready
+                    [500, 1500, 3000].forEach(delay => {
+                        setTimeout(() => {
+                            if ((peerRef.current as any).connected) {
+                                (peerRef.current as any).send(JSON.stringify({ type: 'queue.get' }));
+                                // Also fetch library if we are in queue tab (or just pre-fetch it)
+                                // Pre-fetching library ensures it's ready when user clicks tab
+                                peer.send(JSON.stringify({ type: 'library.search', query: '' }));
+                            }
+                        }, delay);
+                    });
                 });
 
                 peer.on('error', (err: Error) => {
@@ -680,6 +755,60 @@ export const MelodiqPhoneClient = () => {
         }
     };
 
+    // --- Queue Actions ---
+    const sendSearch = (query: string) => {
+        if (!peerRef.current) {
+            alert('Not connected (No Peea Ref)');
+            return;
+        }
+        if (!(peerRef.current as any).connected) {
+            alert('Not connected (Peer State: ' + (peerRef.current as any).connected + ')');
+            return;
+        }
+
+        const msg = {
+            type: 'library.search',
+            query,
+            filters: {
+                genre: filters.genre === 'All' ? undefined : filters.genre,
+                year: filters.year === 'All' ? undefined : filters.year,
+                language: filters.language === 'All' ? undefined : filters.language
+            }
+        };
+
+        try {
+            peerRef.current.send(JSON.stringify(msg));
+        } catch (e) {
+            console.error('Failed to send search:', e);
+            alert('Failed to send search: ' + e);
+        }
+    };
+
+    // Re-trigger search when filters change
+    useEffect(() => {
+        if (activeTab === 'queue') {
+            sendSearch(queueSearchQuery);
+        }
+    }, [filters]);
+
+    const addToQueue = (songId: string) => {
+        if (!peerRef.current || !(peerRef.current as any).connected) return;
+        const msg = { type: 'queue.add', songId };
+        peerRef.current.send(JSON.stringify(msg));
+        setSnackbarMessage('Added to Queue!');
+        setSnackbarOpen(true);
+    };
+
+    const removeFromQueue = (itemId: string) => {
+        if (!peerRef.current || !(peerRef.current as any).connected) return;
+        const msg = { type: 'queue.remove', itemId };
+        peerRef.current.send(JSON.stringify(msg));
+    };
+
+    const GENRES = ['All', 'Pop', 'Rock', 'Hip Hop', 'R&B', 'Country', 'Electronic', 'Jazz', 'Metal', 'Folk', 'Reggae', 'Blues', 'Soundtrack', 'Holiday'];
+    const YEARS = ['All', '2020s', '2010s', '2000s', '1990s', '1980s', '1970s', '1960s', '1950s'];
+    const LANGUAGES = ['All', 'English', 'Spanish', 'French', 'German', 'Italian', 'Japanese', 'Korean', 'Chinese'];
+
 
     if (showRemoteSettings) {
         return (
@@ -722,7 +851,7 @@ export const MelodiqPhoneClient = () => {
     }
 
     return (
-        <div className={`phone-client ${status.className}`}>
+        <div className={`melodiq-phone-client ${status.className}`}>
             {/* Header / Status Bar */}
             <div style={{
                 position: 'fixed', top: 0, left: 0, right: 0,
@@ -737,9 +866,10 @@ export const MelodiqPhoneClient = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{
                         width: 10, height: 10, borderRadius: '50%',
-                        background: status.className === 'status-connected' ? '#4caf50' : '#f44336'
+                        backgroundColor: status.className === 'status-connected' ? '#4ade80' :
+                            status.className === 'status-connecting' ? '#fbbf24' : '#f87171'
                     }} />
-                    <span style={{ fontSize: 14, fontWeight: 'bold' }}>{status.message}</span>
+                    <div style={{ fontWeight: 'bold' }}>{status.message}</div>
                 </div>
                 <button
                     onClick={() => setShowRemoteSettings(true)}
@@ -749,187 +879,400 @@ export const MelodiqPhoneClient = () => {
                 </button>
             </div>
 
-            <div className="main-content" style={{ marginTop: 60, paddingBottom: 100 }}>
-                {/* VISUALIZATION BAR */}
-                {/* VISUALIZATION BAR */}
-                <div style={{
-                    width: '100%',
-                    height: '40px',
-                    background: '#222',
-                    borderRadius: '20px',
-                    overflow: 'hidden',
-                    marginBottom: '20px',
-                    marginTop: '20px',
-                    position: 'relative',
-                    border: '1px solid #444',
-                    boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.5)'
-                }}>
-                    <div
-                        ref={volumeBarRef}
-                        style={{
-                            width: '0%',
-                            height: '100%',
-                            background: `linear-gradient(90deg, hsl(${playerHue}, 100%, 30%) 0%, hsl(${playerHue}, 100%, 50%) 100%)`,
-                            transition: 'width 0.05s linear',
-                            opacity: 0.5
-                        }}
-                    />
+            {/* Tab Navigation */}
+            <div style={{
+                position: 'fixed', bottom: 0, left: 0, right: 0,
+                height: 60, background: '#1a1a1a', borderTop: '1px solid #333',
+                display: 'flex', zIndex: 100
+            }}>
+                <button
+                    onClick={() => setActiveTab('mic')}
+                    style={{
+                        flex: 1, background: activeTab === 'mic' ? '#333' : 'transparent',
+                        border: 'none', color: activeTab === 'mic' ? '#fff' : '#888',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+                    }}
+                >
+                    <span style={{ fontSize: 20 }}>🎤</span>
+                    <span style={{ fontSize: 12 }}>Mic</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('queue')}
+                    style={{
+                        flex: 1, background: activeTab === 'queue' ? '#333' : 'transparent',
+                        border: 'none', color: activeTab === 'queue' ? '#fff' : '#888',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+                    }}
+                >
+                    <span style={{ fontSize: 20 }}>🎵</span>
+                    <span style={{ fontSize: 12 }}>Queue</span>
+                </button>
+            </div>
 
-                    {/* Note Name Display */}
-                    <div
-                        ref={noteNameRef}
-                        style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 'bold',
-                            fontSize: '1.2rem',
-                            color: 'white',
-                            textShadow: '0 2px 4px black'
-                        }}
-                    >
-                    </div>
+            <div className="main-content" style={{ marginTop: 60, paddingBottom: 100, paddingLeft: 10, paddingRight: 10, width: '100%', boxSizing: 'border-box' }}>
 
-                    <div
-                        ref={pitchIndicatorRef}
-                        style={{
-                            position: 'absolute',
-                            left: '0%',
-                            top: '5px',
-                            bottom: '5px',
-                            width: '6px',
-                            borderRadius: '3px',
-                            background: 'white',
-                            boxShadow: '0 0 10px white, 0 0 5px ' + `hsl(${playerHue}, 100%, 50%)`,
-                            transition: 'left 0.1s cubic-bezier(0.1, 0.7, 1.0, 0.1)',
-                            display: 'none'
-                        }}
-                    />
-                </div>
-
-                {/* Stats Notification */}
-                {latestStats && (
-                    <div style={{
-                        animation: 'fadeIn 0.5s',
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        padding: '15px',
-                        borderRadius: '10px',
-                        marginTop: '20px',
-                        border: '1px solid rgba(255, 255, 255, 0.2)'
-                    }}>
-                        <div style={{ fontSize: '0.9rem', color: '#aaa' }}>Last Performance</div>
-                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '5px 0' }}>{latestStats.song}</div>
-                        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#4ade80' }}>{latestStats.score} pts</div>
-                    </div>
-                )}
-
-                {/* Track Selector */}
-                {availableTracks.length > 1 && (
-                    <div style={{ marginTop: '20px', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                        <div style={{ fontSize: '0.9rem', marginBottom: '10px', color: '#ccc' }}>Select Your Singer Part</div>
-                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                            {availableTracks.map((track, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => handleTrackSelect(idx)}
-                                    style={{
-                                        flex: 1,
-                                        padding: '10px',
-                                        background: selectedTrackIndex === idx ? `hsl(${playerHue}, 80%, 40%)` : 'rgba(255,255,255,0.1)',
-                                        border: selectedTrackIndex === idx ? `1px solid hsl(${playerHue}, 100%, 70%)` : '1px solid transparent',
-                                        color: 'white',
-                                        borderRadius: '6px',
-                                        cursor: 'pointer',
-                                        fontWeight: selectedTrackIndex === idx ? 'bold' : 'normal',
-                                        minWidth: '100px'
-                                    }}
-                                >
-                                    {track}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* Identity Settings */}
-                <div className="identity-settings" style={{ marginTop: '20px', padding: '15px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-                    <div style={{ marginBottom: '10px' }}>
-                        <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>Your Name</label>
-                        <input
-                            type="text"
-                            value={playerName}
-                            onChange={(e) => setPlayerName(e.target.value)}
-                            style={{
-                                background: 'rgba(255,255,255,0.1)',
-                                border: '1px solid rgba(255,255,255,0.3)',
-                                color: 'white',
-                                padding: '8px',
-                                borderRadius: '4px',
-                                width: '100%',
-                                fontSize: '1rem'
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>Your Color</label>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {activeTab === 'mic' && (
+                    <>
+                        {/* VISUALIZATION BAR */}
+                        <div style={{
+                            width: '100%',
+                            height: '40px',
+                            background: '#222',
+                            borderRadius: '20px',
+                            overflow: 'hidden',
+                            marginBottom: '20px',
+                            marginTop: '20px',
+                            position: 'relative',
+                            border: '1px solid #444',
+                            boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.5)'
+                        }}>
                             <div
+                                ref={volumeBarRef}
                                 style={{
-                                    width: '40px',
-                                    height: '40px',
-                                    borderRadius: '50%',
-                                    backgroundColor: `hsl(${playerHue}, 100%, 50%)`,
-                                    border: '2px solid white'
+                                    width: '0%',
+                                    height: '100%',
+                                    background: `linear-gradient(90deg, hsl(${playerHue}, 100%, 30%) 0%, hsl(${playerHue}, 100%, 50%) 100%)`,
+                                    transition: 'width 0.05s linear',
+                                    opacity: 0.5
                                 }}
                             />
-                            <input
-                                type="range"
-                                min="0"
-                                max="360"
-                                value={playerHue}
-                                onChange={(e) => setPlayerHue(parseInt(e.target.value))}
-                                style={{ flex: 1 }}
+
+                            {/* Note Name Display */}
+                            <div
+                                ref={noteNameRef}
+                                style={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontWeight: 'bold',
+                                    fontSize: '1.2rem',
+                                    color: 'white',
+                                    textShadow: '0 2px 4px black'
+                                }}
+                            >
+                            </div>
+
+                            <div
+                                ref={pitchIndicatorRef}
+                                style={{
+                                    position: 'absolute',
+                                    left: '0%',
+                                    top: '5px',
+                                    bottom: '5px',
+                                    width: '6px',
+                                    borderRadius: '3px',
+                                    background: 'white',
+                                    boxShadow: '0 0 10px white, 0 0 5px ' + `hsl(${playerHue}, 100%, 50%)`,
+                                    transition: 'left 0.1s cubic-bezier(0.1, 0.7, 1.0, 0.1)',
+                                    display: 'none'
+                                }}
                             />
                         </div>
-                    </div>
-                    <div style={{ marginTop: '15px' }}>
-                        <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>Microphone</label>
-                        <select
-                            value={selectedDeviceId}
-                            onChange={(e) => {
-                                setSelectedDeviceId(e.target.value);
-                            }}
-                            style={{
-                                background: 'rgba(255,255,255,0.1)',
-                                border: '1px solid rgba(255,255,255,0.3)',
-                                color: 'white',
-                                padding: '8px',
-                                borderRadius: '4px',
-                                width: '100%',
-                                fontSize: '1rem'
-                            }}
-                        >
-                            <option value="">Default</option>
-                            {audioInputDevices.map((device, i) => (
-                                <option key={device.deviceId} value={device.deviceId}>
-                                    {device.label || `Microphone ${i + 1}`}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
 
-                {showReconnect && (
-                    <button onClick={handleReconnect} className="reconnect-btn">
-                        Retry Connection
-                    </button>
+                        {/* Stats Notification */}
+                        {latestStats && (
+                            <div style={{
+                                animation: 'fadeIn 0.5s',
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                padding: '15px',
+                                borderRadius: '10px',
+                                marginTop: '20px',
+                                border: '1px solid rgba(255, 255, 255, 0.2)'
+                            }}>
+                                <div style={{ fontSize: '0.9rem', color: '#aaa' }}>Last Performance</div>
+                                <div style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '5px 0' }}>{latestStats.song}</div>
+                                <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#4ade80' }}>{latestStats.score} pts</div>
+                            </div>
+                        )}
+
+                        {/* Track Selector */}
+                        {availableTracks.length > 1 && (
+                            <div style={{ marginTop: '20px', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                                <div style={{ fontSize: '0.9rem', marginBottom: '10px', color: '#ccc' }}>Select Your Singer Part</div>
+                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                    {availableTracks.map((track, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => handleTrackSelect(idx)}
+                                            style={{
+                                                flex: 1,
+                                                padding: '10px',
+                                                background: selectedTrackIndex === idx ? `hsl(${playerHue}, 80%, 40%)` : 'rgba(255,255,255,0.1)',
+                                                border: selectedTrackIndex === idx ? `1px solid hsl(${playerHue}, 100%, 70%)` : '1px solid transparent',
+                                                color: 'white',
+                                                borderRadius: '6px',
+                                                cursor: 'pointer',
+                                                fontWeight: selectedTrackIndex === idx ? 'bold' : 'normal',
+                                                minWidth: '100px'
+                                            }}
+                                        >
+                                            {track}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Roster Toggle */}
+                        <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', textAlign: 'center' }}>
+                            <div style={{ marginBottom: '10px', fontSize: '0.9rem', color: '#ccc' }}>
+                                {isActive ? 'You are in the game! 🎤' : 'You are sitting out. 💤'}
+                            </div>
+                            <button
+                                onClick={() => {
+                                    console.log('[Phone] Toggle Button Clicked'); // DEBUG LOG
+                                    if (peerRef.current && (peerRef.current as any).connected) {
+                                        // Send toggle
+                                        console.log('[Phone] Sending roster.toggle request...'); // DEBUG LOG
+                                        const msg = { type: 'roster.toggle' };
+                                        peerRef.current.send(JSON.stringify(msg));
+                                        // Optimistic update
+                                        setIsActive(!isActive);
+                                    } else {
+                                        console.warn('[Phone] Cannot toggle: Peer not connected'); // DEBUG LOG
+                                    }
+                                }}
+                                style={{
+                                    padding: '12px 24px',
+                                    borderRadius: '8px',
+                                    border: 'none',
+                                    background: isActive ? '#f44336' : '#4caf50',
+                                    color: 'white',
+                                    fontSize: '1rem',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    width: '100%'
+                                }}
+                            >
+                                {isActive ? 'Leave Game' : 'Join Game'}
+                            </button>
+                        </div>
+
+                        {/* Identity Settings */}
+                        <div className="identity-settings" style={{ marginTop: '20px', padding: '15px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+                            <div style={{ marginBottom: '10px' }}>
+                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>Your Name</label>
+                                <input
+                                    type="text"
+                                    value={playerName}
+                                    onChange={(e) => setPlayerName(e.target.value)}
+                                    style={{
+                                        background: 'rgba(255,255,255,0.1)',
+                                        border: '1px solid rgba(255,255,255,0.3)',
+                                        color: 'white',
+                                        padding: '8px',
+                                        borderRadius: '4px',
+                                        width: '100%',
+                                        fontSize: '1rem'
+                                    }}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>Your Color</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div
+                                        style={{
+                                            width: '40px',
+                                            height: '40px',
+                                            borderRadius: '50%',
+                                            backgroundColor: `hsl(${playerHue}, 100%, 50%)`,
+                                            border: '2px solid white'
+                                        }}
+                                    />
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="360"
+                                        value={playerHue}
+                                        onChange={(e) => setPlayerHue(parseInt(e.target.value))}
+                                        style={{ flex: 1 }}
+                                    />
+                                </div>
+                            </div>
+                            <div style={{ marginTop: '15px' }}>
+                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>Microphone</label>
+                                <select
+                                    value={selectedDeviceId}
+                                    onChange={(e) => {
+                                        setSelectedDeviceId(e.target.value);
+                                    }}
+                                    style={{
+                                        background: 'rgba(255,255,255,0.1)',
+                                        border: '1px solid rgba(255,255,255,0.3)',
+                                        color: 'white',
+                                        padding: '8px',
+                                        borderRadius: '4px',
+                                        width: '100%',
+                                        fontSize: '1rem'
+                                    }}
+                                >
+                                    <option value="">Default</option>
+                                    {audioInputDevices.map((device, i) => (
+                                        <option key={device.deviceId} value={device.deviceId}>
+                                            {device.label || `Microphone ${i + 1}`}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        {showReconnect && (
+                            <button onClick={handleReconnect} className="reconnect-btn">
+                                Retry Connection
+                            </button>
+                        )}
+                    </>
+                )}
+
+                {activeTab === 'queue' && (
+                    <div style={{ paddingTop: 10 }}>
+                        {/* Now Playing */}
+                        {nowPlaying && (
+                            <div style={{ padding: 10, background: '#333', borderRadius: 8, marginBottom: 15, borderLeft: '4px solid #4caf50' }}>
+                                <div style={{ fontSize: 10, textTransform: 'uppercase', color: '#888', marginBottom: 2 }}>Now Playing</div>
+                                <div style={{ fontWeight: 'bold', fontSize: 16 }}>{nowPlaying.title}</div>
+                                <div style={{ fontSize: 12, color: '#bbb' }}>{nowPlaying.artist}</div>
+                            </div>
+                        )}
+
+                        {/* Search */}
+                        <div style={{ display: 'flex', gap: 10, marginBottom: 15 }}>
+                            <input
+                                type="text"
+                                value={queueSearchQuery}
+                                onChange={(e) => {
+                                    setQueueSearchQuery(e.target.value);
+                                    sendSearch(e.target.value); // Live search
+                                }}
+                                placeholder="Search songs..."
+                                style={{ flex: 1, padding: 10, borderRadius: 8, border: 'none', background: '#333', color: 'white', fontSize: 16 }}
+                            />
+                            <button
+                                onClick={() => setShowFilters(!showFilters)}
+                                style={{
+                                    padding: '0 15px',
+                                    borderRadius: 8,
+                                    border: 'none',
+                                    background: showFilters ? '#2196f3' : '#444',
+                                    color: 'white'
+                                }}
+                            >
+                                🌪️
+                            </button>
+                        </div>
+
+                        {/* Filters Panel */}
+                        {showFilters && (
+                            <div style={{
+                                display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10,
+                                marginBottom: 15, padding: 10, background: '#222', borderRadius: 8
+                            }}>
+                                <select
+                                    value={filters.genre}
+                                    onChange={(e) => setFilters(prev => ({ ...prev, genre: e.target.value }))}
+                                    style={{ padding: 8, borderRadius: 4, background: '#333', color: 'white', border: 'none' }}
+                                >
+                                    {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+                                </select>
+                                <select
+                                    value={filters.year}
+                                    onChange={(e) => setFilters(prev => ({ ...prev, year: e.target.value }))}
+                                    style={{ padding: 8, borderRadius: 4, background: '#333', color: 'white', border: 'none' }}
+                                >
+                                    {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                                </select>
+                                <select
+                                    value={filters.language}
+                                    onChange={(e) => setFilters(prev => ({ ...prev, language: e.target.value }))}
+                                    style={{ padding: 8, borderRadius: 4, background: '#333', color: 'white', border: 'none' }}
+                                >
+                                    {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
+                                </select>
+                            </div>
+                        )}
+
+                        {/* Search Results */}
+                        {libraryResults.length > 0 ? (
+                            <div style={{ marginBottom: 20 }}>
+                                <h4 style={{ margin: '0 0 10px 0', color: '#888' }}>
+                                    {queueSearchQuery || filters.genre !== 'All' ? 'Results' : 'Library'}
+                                </h4>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    {libraryResults.map(song => (
+                                        <div key={song.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 10, background: '#222', borderRadius: 8 }}>
+                                            <div style={{ overflow: 'hidden' }}>
+                                                <div style={{ fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{song.title}</div>
+                                                <div style={{ fontSize: 12, color: '#888' }}>{song.artist}</div>
+                                            </div>
+                                            <button
+                                                onClick={() => addToQueue(song.id)}
+                                                style={{ padding: '5px 10px', borderRadius: 4, border: 'none', background: '#4caf50', color: 'white', marginLeft: 10 }}
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div style={{ marginBottom: 20, textAlign: 'center', padding: 20, color: '#666', background: '#222', borderRadius: 8 }}>
+                                <div>{queueSearchQuery ? 'No matches found' : 'Library not loaded'}</div>
+                                <button
+                                    className="load-lib-btn"
+                                    onClick={() => sendSearch(queueSearchQuery)}
+                                    style={{ marginTop: 10, padding: '12px 24px', borderRadius: 8, border: 'none', background: '#444', color: 'white', fontSize: '16px', fontWeight: 'bold' }}
+                                >
+                                    ↻ Load Library
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Queue List */}
+                        <div>
+                            <h4 style={{ margin: '0 0 10px 0', color: '#888' }}>Up Next ({hostQueue.length})</h4>
+                            {hostQueue.length === 0 ? (
+                                <div style={{ textAlign: 'center', color: '#666', padding: 20 }}>Queue is empty</div>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    {hostQueue.map((item, idx) => (
+                                        <div key={item.id || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 10, background: '#2a2a2a', borderRadius: 8 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden' }}>
+                                                <div style={{ color: '#666', width: 20, textAlign: 'center' }}>{idx + 1}</div>
+                                                <div style={{ overflow: 'hidden' }}>
+                                                    <div style={{ fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.title}</div>
+                                                    <div style={{ fontSize: 12, color: '#888' }}>{item.artist} {item.requester && `• ${item.requester}`}</div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => removeFromQueue(item.id)}
+                                                style={{ background: 'transparent', border: 'none', color: '#666', fontSize: 16, padding: '0 10px' }}
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 )}
             </div>
+
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={3000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={handleSnackbarClose} severity="success" sx={{ width: '100%' }}>
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
 
             <style>{`
                 @keyframes fadeIn {
@@ -941,13 +1284,10 @@ export const MelodiqPhoneClient = () => {
                     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
                     background: #121212;
                     color: white;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
+                    display: block; /* Removed flex centering */
                     min-height: 100vh;
-                    padding: 20px;
                     margin: 0;
+                    overflow-x: hidden;
                 }
                 .status-container {
                     text-align: center;
@@ -966,6 +1306,7 @@ export const MelodiqPhoneClient = () => {
                 .status-connected { color: #4ade80; }
                 .status-error { color: #f87171; }
                 .status-disconnected { color: #9ca3af; }
+                .status-disconnected { color: #9ca3af; }
                 
                 .reconnect-btn {
                     background: #90caf9;
@@ -979,6 +1320,18 @@ export const MelodiqPhoneClient = () => {
                     margin-top: 1rem;
                 }
                 .reconnect-btn:active { transform: scale(0.95); }
+
+                /* Ensure main content is clickable and on top */
+                .main-content {
+                    position: relative;
+                    z-index: 10;
+                }
+
+                /* load library button active state */
+                .load-lib-btn:active {
+                    transform: scale(0.95);
+                    background: #666 !important;
+                }
             `}</style>
         </div>
     );

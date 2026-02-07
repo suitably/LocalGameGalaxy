@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
 import { type Song, type SongMeta } from '../db';
 
 interface LoadingProgress {
@@ -6,11 +6,20 @@ interface LoadingProgress {
     total: number;
 }
 
+interface UseSongsResult {
+    songs: SongMeta[];
+    isLoading: boolean;
+    loadingProgress: LoadingProgress | null;
+    refreshSongs: () => Promise<void>;
+    getSongById: (id: string) => Promise<Song | undefined>;
+}
+
+const SongsContext = createContext<UseSongsResult | null>(null);
+
 /**
- * Centralized hook for managing song data.
- * Loads lightweight SongMeta for listing, provides on-demand full Song loading for playback.
+ * Provider component that manages the song library state.
  */
-export const useSongs = () => {
+export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [songs, setSongs] = useState<SongMeta[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null);
@@ -19,13 +28,12 @@ export const useSongs = () => {
     const getHelperConfig = () => ({
         url: localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000',
         token: localStorage.getItem('melodiq_helper_token') || '',
-        enabled: localStorage.getItem('melodiq_enable_helper') !== 'false' // Enable by default if not set to 'false' explicitly
+        enabled: localStorage.getItem('melodiq_enable_helper') !== 'false'
     });
 
-    // Cache for server song content (lyrics/notes) which is provided by API but not in SongMeta
+    // Cache for server song content
     const serverContentCache = useRef(new Map<string, string>());
 
-    // Load songs from Local Server AND IndexedDB
     const loadSongs = useCallback(async () => {
         let mounted = true;
         const { url, token, enabled } = getHelperConfig();
@@ -35,60 +43,47 @@ export const useSongs = () => {
             setIsLoading(true);
             setLoadingProgress({ loaded: 0, total: 0 });
 
-            // Parallel fetch: Server (if enabled) + Local DB
+            // Parallel fetch: Server + Local DB
             const serverPromise = enabled
                 ? fetch(`${helperUrl}/api/songs`, {
                     headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-                })
-                    .then(res => {
-                        if (res.status === 401) {
-                            console.warn('Helper Auth Failed');
-                            // Maybe trigger UI notification? For now just log.
-                            return [];
-                        }
-                        return res.ok ? res.json() : [];
-                    })
-                    .catch((e) => {
-                        console.warn('Helper connection failed:', e);
+                }).then(res => {
+                    if (res.status === 401) {
+                        console.warn('Helper Auth Failed');
                         return [];
-                    })
+                    }
+                    return res.ok ? res.json() : [];
+                }).catch((e) => {
+                    console.warn('Helper connection failed:', e);
+                    return [];
+                })
                 : Promise.resolve([]);
 
-            // Import db dynamically to access local indexedDB
+            // Dynamically import DB
             const [serverSongs, localSongs] = await Promise.all([
                 serverPromise,
                 import('../db').then(m => m.default.songsMeta.toArray())
             ]);
 
             if (mounted) {
-                console.log(`[useSongs] Loaded ${serverSongs.length} server (enabled=${enabled}), ${localSongs.length} local`);
+                console.log(`[SongsProvider] Loaded ${serverSongs.length} server, ${localSongs.length} local`);
 
-                // Update Content Cache
                 serverSongs.forEach((s: any) => {
-                    if (s.id && s.txtContent) {
-                        serverContentCache.current.set(s.id, s.txtContent);
-                    }
+                    if (s.id && s.txtContent) serverContentCache.current.set(s.id, s.txtContent);
                 });
 
-                // Merge (deduplicate by ID preferred, or just concat)
                 const allSongs = [...serverSongs, ...localSongs];
 
-                // Adapting to SongMeta
                 const metas: SongMeta[] = allSongs.map((s: any) => {
-                    // If song comes from server (has string URL starting with /media), prepend helperUrl
-                    // Local DB songs have Blob/File objects or are processed differently
-
                     const processUrl = (url?: string | Blob | FileSystemFileHandle) => {
                         if (typeof url === 'string') {
                             if (url.startsWith('/media')) {
                                 let final = `${helperUrl}${url}`;
-                                // If URL already has token (server provided it), good. If not, append it.
                                 if (token && !final.includes('token=')) {
                                     final += (final.includes('?') ? '&' : '?') + `token=${token}`;
                                 }
                                 return final;
                             }
-                            // Handle existing absolute HTTP URLs that might need token if they are pointing to our helper
                             if (url.startsWith(helperUrl) && url.includes('/media') && token && !url.includes('token=')) {
                                 return url + (url.includes('?') ? '&' : '?') + `token=${token}`;
                             }
@@ -111,20 +106,18 @@ export const useSongs = () => {
                         end: s.end,
                         duration: s.duration,
                         edition: s.edition,
-                        // Computed flags - respect existing flag first (local DB), fallback to field presence (Server)
                         hasCover: s.hasCover ?? !!s.cover,
                         hasVideo: s.hasVideo ?? !!s.video
                     };
                 });
 
-                // Deduplicate by ID
+                // Deduplicate
                 const unique = Array.from(new Map(metas.map(item => [item.id, item])).values());
 
                 setSongs(unique);
                 setLoadingProgress({ loaded: unique.length, total: unique.length });
                 setIsLoading(false);
             }
-
         } catch (e) {
             console.error('Failed to load songs:', e);
             if (mounted) {
@@ -135,19 +128,15 @@ export const useSongs = () => {
         return () => { mounted = false; };
     }, []);
 
-    // Load on mount
     useEffect(() => {
         loadSongs();
     }, [loadSongs]);
 
-    // Refresh callback
     const refreshSongs = useCallback(async () => {
         await loadSongs();
     }, [loadSongs]);
 
-    // Get full song data
     const getSongById = useCallback(async (id: string): Promise<Song | undefined> => {
-        // 1. Try to get full object from Local DB (contains File/Blob handles)
         try {
             const localSong = await import('../db').then(m => m.default.songs.get(id));
             if (localSong) return localSong;
@@ -155,15 +144,10 @@ export const useSongs = () => {
             console.warn("Failed to check local DB for song", id);
         }
 
-        // 2. Fallback to in-memory state (Server songs) - casting Meta to Song
-        // The URL processing done in loadSongs (prepending helperUrl) is preserved here
-        // because we are finding it in 'songs' state which already has processed URLs.
         const found = songs.find(s => s.id === id);
         if (found) {
-            // Attach cached content if available
             const content = serverContentCache.current.get(id);
             if (content) {
-                // Return a hybrid object with txtContent (used by MelodiqSession)
                 return { ...found, txtContent: content } as unknown as Song;
             }
             return found as unknown as Song;
@@ -171,11 +155,18 @@ export const useSongs = () => {
         return undefined;
     }, [songs]);
 
-    return {
-        songs,
-        isLoading,
-        loadingProgress,
-        refreshSongs,
-        getSongById
-    };
+    return (
+        <SongsContext.Provider value= {{ songs, isLoading, loadingProgress, refreshSongs, getSongById }
+}>
+    { children }
+    </SongsContext.Provider>
+    );
+};
+
+export const useSongs = () => {
+    const context = useContext(SongsContext);
+    if (!context) {
+        throw new Error('useSongs must be used within a SongsProvider');
+    }
+    return context;
 };

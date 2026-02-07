@@ -8,6 +8,7 @@ interface RemotePeer {
     analyser: AnalyserNode | null;
     buffer: Float32Array | null;
     peerId: string;
+    connectionId?: string; // The ID used by Phone for signaling
     name: string; // Display name for the phone
     hue?: number; // Hue for avatar
     lastPitch?: PitchResult | null; // Latest pitch received from phone
@@ -23,18 +24,19 @@ export class WebRTCMicManager {
     private trackerUrls: string[];
 
     // Callbacks
-    private onPeerConnected?: (peerId: string, name: string, hue?: number) => void;
+    private onPeerConnected?: (peerId: string, name: string, hue?: number, connectionId?: string) => void;
     private onPeerDisconnected?: (peerId: string) => void;
-    private onPeerUpdated?: (peerId: string, name: string, hue?: number) => void;
-    public onMessage?: (peerId: string, data: any) => void;
+    private onPeerUpdated?: (peerId: string, name: string, hue?: number, connectionId?: string) => void;
+    public onMessage?: (peerId: string, data: any) => void; // Legacy single listener
+    private messageListeners: Set<(peerId: string, data: any) => void> = new Set();
 
     constructor(
         partyId: string,
         trackerUrls: string[],
         callbacks?: {
-            onPeerConnected?: (peerId: string, name: string, hue?: number) => void;
+            onPeerConnected?: (peerId: string, name: string, hue?: number, connectionId?: string) => void;
             onPeerDisconnected?: (peerId: string) => void;
-            onPeerUpdated?: (peerId: string, name: string, hue?: number) => void;
+            onPeerUpdated?: (peerId: string, name: string, hue?: number, connectionId?: string) => void;
             onMessage?: (peerId: string, data: any) => void;
         }
     ) {
@@ -44,6 +46,18 @@ export class WebRTCMicManager {
         this.onPeerDisconnected = callbacks?.onPeerDisconnected;
         this.onPeerUpdated = callbacks?.onPeerUpdated;
         this.onMessage = callbacks?.onMessage;
+    }
+
+    on(event: 'message', listener: (peerId: string, data: any) => void): void {
+        if (event === 'message') {
+            this.messageListeners.add(listener);
+        }
+    }
+
+    off(event: 'message', listener: (peerId: string, data: any) => void): void {
+        if (event === 'message') {
+            this.messageListeners.delete(listener);
+        }
     }
 
     async start(): Promise<void> {
@@ -138,7 +152,7 @@ export class WebRTCMicManager {
                                 console.log('[WebRTCMicManager] Received identity from phone:', parsedData.name, parsedData.hue);
                                 remotePeer.name = parsedData.name || remotePeer.name;
                                 remotePeer.hue = parsedData.hue;
-                                this.onPeerUpdated?.(remotePeer.peerId, remotePeer.name, remotePeer.hue);
+                                this.onPeerUpdated?.(remotePeer.peerId, remotePeer.name, remotePeer.hue, remotePeer.connectionId);
                             } else {
                                 console.warn('[WebRTCMicManager] Received identity for unknown or mismatched peer:', parsedData.connectionId);
                             }
@@ -244,6 +258,7 @@ export class WebRTCMicManager {
             analyser: null,
             buffer: null,
             peerId,
+            connectionId,
             name: `Phone ${this.peers.size + 1}`,
         };
 
@@ -283,10 +298,11 @@ export class WebRTCMicManager {
                         remotePeer.name = msg.name || remotePeer.name;
                         remotePeer.hue = msg.hue;
                         remotePeer.hue = msg.hue;
-                        this.onPeerUpdated?.(remotePeer.peerId, remotePeer.name, remotePeer.hue);
+                        this.onPeerUpdated?.(remotePeer.peerId, remotePeer.name, remotePeer.hue, remotePeer.connectionId);
                     } else {
                         // Pass generic messages to consumer
                         this.onMessage?.(peerId, msg);
+                        this.messageListeners.forEach(listener => listener(peerId, msg));
                     }
                 }
             } catch (e) {
@@ -301,7 +317,7 @@ export class WebRTCMicManager {
         audioPeer.on('stream', (stream: MediaStream) => {
             console.log('[WebRTCMicManager] Received audio stream from phone:', peerId);
             this.setupAudioProcessing(peerId, stream);
-            this.onPeerConnected?.(peerId, remotePeer.name, remotePeer.hue);
+            this.onPeerConnected?.(peerId, remotePeer.name, remotePeer.hue, remotePeer.connectionId);
         });
 
         audioPeer.on('close', () => {
@@ -418,6 +434,18 @@ export class WebRTCMicManager {
         } else {
             console.warn(`[WebRTCMicManager] Cannot send to ${peerId} - not connected`);
         }
+    }
+
+    broadcast(data: any): void {
+        this.peers.forEach(p => {
+            if (p.peer && (p.peer as any).connected) {
+                try {
+                    p.peer.send(JSON.stringify(data));
+                } catch (e) {
+                    console.error(`[WebRTCMicManager] Failed to broadcast to ${p.peerId}:`, e);
+                }
+            }
+        });
     }
 
     // Helper: Convert string to 20-byte infoHash (SHA-1 style)

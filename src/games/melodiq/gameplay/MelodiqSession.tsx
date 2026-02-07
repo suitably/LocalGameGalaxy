@@ -306,7 +306,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     }, [players.length, layoutOverride]);
 
     // WebRTC Context
-    const { manager, peers } = useWebRTC();
+    const { manager, activePeers } = useWebRTC();
 
     // Initialization Effect: Load Players from Settings
     useEffect(() => {
@@ -364,7 +364,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             let changed = false;
 
             // 1. Attach/Add connected peers
-            peers.forEach(peer => {
+            activePeers.forEach(peer => {
                 const existingIdx = updatedPlayers.findIndex(p => p.config.deviceId === peer.id);
 
                 if (existingIdx !== -1) {
@@ -400,7 +400,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
 
             // 2. Handle Disconnected Peers
             // Remove Guests who disconnected
-            const activePeerIds = new Set(peers.map(p => p.id));
+            const activePeerIds = new Set(activePeers.map(p => p.id));
             const filtered = updatedPlayers.filter(p => {
                 if (p.config.isRemote) {
                     // If peer is gone
@@ -427,7 +427,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             return changed ? updatedPlayers : prevPlayers;
         });
 
-    }, [peers, manager]);
+    }, [activePeers, manager]);
 
     // Broadcast Song Info (Tracks) to Peers
     useEffect(() => {
@@ -983,7 +983,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                 <Button variant="contained" onClick={() => folderInputRef.current?.click()}>
                     Select Song Folder
                 </Button>
-                <Button variant="text" color="inherit" onClick={() => onExit(false)}>
+                <Button variant="text" color="inherit" onClick={() => onExit(true)}>
                     Go Back
                 </Button>
             </Box>
@@ -1049,13 +1049,13 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
 
             <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', flex: 1, pointerEvents: 'none' }}>
                 <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'rgba(0,0,0,0.5)', pointerEvents: 'auto' }}>
-                    <IconButton onClick={() => onExit(false)} color="inherit"><ArrowBackIcon /></IconButton>
+                    <IconButton onClick={() => onExit(true)} color="inherit"><ArrowBackIcon /></IconButton>
                     <Typography variant="h6">{song.artist} - {song.title}</Typography>
                     <Box sx={{ display: 'flex', gap: 4 }}>
                         {players.map(p => {
-                            // Determine display name: If track has specific name, use it? Or Player Name (Track Name)?
-                            // User requested "show the real names of the txt files".
-                            const trackName = (parsedSong?.tracks && parsedSong.tracks[p.trackIndex]) ? parsedSong.tracks[p.trackIndex].name : null;
+                            // Determine display name: Only show track suffix for duet songs (more than 1 track)
+                            const isDuet = parsedSong?.tracks && parsedSong.tracks.length > 1;
+                            const trackName = isDuet && parsedSong?.tracks?.[p.trackIndex] ? parsedSong.tracks[p.trackIndex].name : null;
                             const displayName = trackName ? `${p.config.name} (${trackName})` : p.config.name;
 
                             return (
@@ -1072,7 +1072,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
                         {players.length === 0 && (
                             <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Typography>No Active Players. Go to Settings.</Typography>
+                                <LyricsDisplay song={parsedSong!} audioRef={audioRef} centered />
                             </Box>
                         )}
 
@@ -1141,17 +1141,19 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                         })()}
                     </Box>
 
-                    {/* Lyrics (Fixed height at bottom, outside the flex grid) */}
-                    <Box sx={{
-                        flexShrink: 0,
-                        width: '100%',
-                        pointerEvents: 'none',
-                        zIndex: 10,
-                        borderTop: '1px solid rgba(255,255,255,0.1)',
-                        bgcolor: 'rgba(0,0,0,0.2)'
-                    }}>
-                        <LyricsDisplay song={parsedSong!} audioRef={audioRef} />
-                    </Box>
+                    {/* Lyrics (Fixed height at bottom, outside the flex grid) - only show if there are players */}
+                    {players.length > 0 && (
+                        <Box sx={{
+                            flexShrink: 0,
+                            width: '100%',
+                            pointerEvents: 'none',
+                            zIndex: 10,
+                            borderTop: '1px solid rgba(255,255,255,0.1)',
+                            bgcolor: 'rgba(0,0,0,0.2)'
+                        }}>
+                            <LyricsDisplay song={parsedSong!} audioRef={audioRef} />
+                        </Box>
+                    )}
                 </Box>
 
                 {/* Controls */}

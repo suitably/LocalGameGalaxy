@@ -6,6 +6,7 @@ import type { Note } from '../parser';
 interface LyricsDisplayProps {
     song: SongWithNotes;
     audioRef: React.RefObject<HTMLAudioElement | null>;
+    centered?: boolean; // When true, show lyrics centered for full-screen display (no players)
 }
 
 interface LyricsLaneProps {
@@ -111,7 +112,7 @@ const LyricsLane: React.FC<LyricsLaneProps> = React.memo(({ notes, currentBeat, 
     );
 });
 
-export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, audioRef }) => {
+export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, audioRef, centered }) => {
     const [currentBeat, setCurrentBeat] = useState(0);
 
     useEffect(() => {
@@ -135,7 +136,15 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, a
     const isDuet = song.tracks && song.tracks.length > 1;
 
     return (
-        <Box sx={{ py: 2, minHeight: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+        <Box sx={{
+            py: centered ? 4 : 2,
+            minHeight: centered ? 200 : 120,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            flexDirection: isDuet ? 'row' : 'column' // Duets: left/right, Solo: centered column
+        }}>
             {isDuet ? (
                 // Duet View: Split 50/50
                 <>
