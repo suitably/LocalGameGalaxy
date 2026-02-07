@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Box, Button, Typography, Container, Paper, Divider, IconButton } from '@mui/material';
+import { Box, Button, Typography, Paper, Divider, IconButton } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import UndoIcon from '@mui/icons-material/Undo';
 import RestoreIcon from '@mui/icons-material/Restore';
@@ -93,7 +93,7 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
     };
 
     return (
-        <Container maxWidth="md" sx={{ py: 4, height: '100%', overflowY: 'auto' }}>
+        <Box sx={{ p: 2, height: '100%', overflowY: 'auto' }}>
             <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
                 <IconButton onClick={onBack} color="primary">
                     <ArrowBackIcon />
@@ -170,6 +170,6 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
                     <Button variant="contained" onClick={onBack}>Back</Button>
                 </Box>
             </Paper>
-        </Container>
+        </Box>
     );
 };

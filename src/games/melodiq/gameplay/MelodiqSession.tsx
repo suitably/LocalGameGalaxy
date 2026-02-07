@@ -12,7 +12,7 @@ import { ScoreBoard } from './ScoreBoard';
 
 interface MelodiqSessionProps {
     song: Song;
-    onExit: () => void;
+    onExit: (forceHome?: boolean) => void;
     // Props are now optional/ignored as we read from LS, but kept for compatibility if needed for overrides
     showDebugOverlay?: boolean;
     showDevSlider?: boolean;
@@ -161,6 +161,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     const requestRef = useRef<number>(0);
     const lastScoreUpdateRef = useRef<number>(0);
     const playersRef = useRef<PlayerRuntime[]>([]);
+    const progressLineRef = useRef<HTMLDivElement>(null);
 
     // Load Content State
     const [parsedSong, setParsedSong] = useState<SongWithNotes | null>(null);
@@ -169,9 +170,29 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     // Scoring Normalization - Per Track
     const [trackScoreWeights, setTrackScoreWeights] = useState<number[]>([]);
 
+    // Reset state when song changes
+    useEffect(() => {
+        setIsFinished(false);
+        setIsPlaying(false);
+        setAudioSrc(undefined);
+        setVideoSrc(undefined);
+        setParsedSong(null);
+        setContentLoading(true);
+        hasStartedRef.current = false;
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+        }
+    }, [song.id]);
+
     useEffect(() => {
         const loadContent = async () => {
             try {
+                // Ensure we are loading for the current song
                 setContentLoading(true);
 
                 // Check if content was passed via song object (Server/Helper songs from useSongs caching)
@@ -202,7 +223,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             }
         };
         loadContent();
-    }, [song, goldenNoteMultiplier]);
+    }, [song.id, goldenNoteMultiplier]);
 
     // Calculate score normalization based on total weighted beats in each track
     const calculateScoreNormalization = (parsed: { notes: any[], tracks: any[] }) => {
@@ -577,6 +598,20 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             }
         }
 
+        // Update Progress Line - Run always, even if paused, to show current state
+        if (progressLineRef.current) {
+            // Use _duration state if audio duration is not ready or weird
+            const duration = (audioRef.current && Number.isFinite(audioRef.current.duration) && audioRef.current.duration > 0)
+                ? audioRef.current.duration
+                : (_duration > 0 ? _duration : 0);
+
+            if (duration > 0) {
+                const currentTime = audioRef.current ? audioRef.current.currentTime : 0;
+                const progress = Math.min(100, Math.max(0, (currentTime / duration) * 100));
+                progressLineRef.current.style.width = `${progress}%`;
+            }
+        }
+
         // Process All Players
         players.forEach((player, index) => {
             // Apply Dev Override only to the first player for simplicity
@@ -597,16 +632,20 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         }
 
         requestRef.current = requestAnimationFrame(updateLoop);
-    }, [isPlaying, devPitchOverride, parsedSong, bpmMultiplier, players, trackScoreWeights, goldenNoteMultiplier]);
+    }, [isPlaying, devPitchOverride, parsedSong, bpmMultiplier, players, trackScoreWeights, goldenNoteMultiplier, _duration]);
 
-    // Start/Stop Mics
+    // Start/Stop Mics and Loop
     useEffect(() => {
-        if (!ready || players.length === 0) return;
+        if (!ready) return;
 
-        players.forEach(p => {
-            // start() now handles null check internally
-            p.start().catch(e => console.error(`Failed to start mic for ${p.config.name}`, e));
-        });
+        // Start mics if there are players
+        if (players.length > 0) {
+            players.forEach(p => {
+                p.start().catch(e => console.error(`Failed to start mic for ${p.config.name}`, e));
+            });
+        } else {
+            console.log("[MelodiqSession] No players active, starting loop for playback/visuals only.");
+        }
 
         requestRef.current = requestAnimationFrame(updateLoop);
 
@@ -831,7 +870,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         // 4. Parsed song exists
         // 5. Audio source is set
         // 6. Audio element is mounted
-        if (!hasStartedRef.current && ready && !contentLoading && parsedSong && audioSrc && audioRef.current) {
+        if (!hasStartedRef.current && ready && !contentLoading && parsedSong && audioSrc && audioRef.current && !isFinished) {
             hasStartedRef.current = true;
             const audio = audioRef.current;
 
@@ -855,7 +894,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             };
             startPlay();
         }
-    }, [ready, contentLoading, parsedSong, audioSrc, songVolume, masterVolume]);
+    }, [ready, contentLoading, parsedSong, audioSrc, songVolume, masterVolume, song.id, isFinished]);
 
     // Ref for hidden folder input (Firefox compatible)
     const folderInputRef = useRef<HTMLInputElement>(null);
@@ -944,7 +983,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                 <Button variant="contained" onClick={() => folderInputRef.current?.click()}>
                     Select Song Folder
                 </Button>
-                <Button variant="text" color="inherit" onClick={onExit}>
+                <Button variant="text" color="inherit" onClick={() => onExit(false)}>
                     Go Back
                 </Button>
             </Box>
@@ -1010,7 +1049,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
 
             <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', flex: 1, pointerEvents: 'none' }}>
                 <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'rgba(0,0,0,0.5)', pointerEvents: 'auto' }}>
-                    <IconButton onClick={onExit} color="inherit"><ArrowBackIcon /></IconButton>
+                    <IconButton onClick={() => onExit(false)} color="inherit"><ArrowBackIcon /></IconButton>
                     <Typography variant="h6">{song.artist} - {song.title}</Typography>
                     <Box sx={{ display: 'flex', gap: 4 }}>
                         {players.map(p => {
@@ -1139,6 +1178,20 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
 
             {audioSrc && <audio ref={audioRef} src={audioSrc} onEnded={handleSongEnd} style={{ display: 'none' }} />}
             {!audioSrc && <Typography color="error" sx={{ textAlign: 'center', position: 'relative', zIndex: 5 }}>No Audio Source Found</Typography>}
+
+            {/* Progress Line - Fixed at bottom */}
+            <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 6, bgcolor: 'rgba(255,255,255,0.2)', zIndex: 100, pointerEvents: 'none' }}>
+                <Box
+                    ref={progressLineRef}
+                    sx={{
+                        width: '0%',
+                        height: '100%',
+                        background: 'linear-gradient(90deg, #ff4081 0%, #7c4dff 100%)', // Melodiq gradient
+                        boxShadow: '0 0 10px currentColor',
+                        transition: 'width 0.1s linear'
+                    }}
+                />
+            </Box>
         </Box >
     );
 };

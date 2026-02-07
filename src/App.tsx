@@ -9,6 +9,7 @@ const WerewolfGame = lazy(() => import('./games/werewolf/WerewolfGame').then(m =
 const ImposterGame = lazy(() => import('./games/imposter/ImposterGame').then(m => ({ default: m.ImposterGame })));
 const MelodiqGame = lazy(() => import('./games/melodiq/MelodiqGame').then(m => ({ default: m.MelodiqGame })));
 const MelodiqPhoneClient = lazy(() => import('./games/melodiq/MelodiqPhoneClient').then(m => ({ default: m.MelodiqPhoneClient })));
+const MelodiqQueue = lazy(() => import('./games/melodiq/components/MelodiqQueue').then(m => ({ default: m.MelodiqQueue })));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -40,6 +41,11 @@ function App() {
         <Route path="games/melodiq/phone" element={
           <Suspense fallback={<LoadingFallback />}>
             <MelodiqPhoneClient />
+          </Suspense>
+        } />
+        <Route path="games/melodiq/queue" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <MelodiqQueue />
           </Suspense>
         } />
       </Route>

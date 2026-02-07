@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Box, Typography, Button, Paper, Container } from '@mui/material';
+import { Box, Typography, Button, Paper } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { GameSetup } from './components/GameSetup';
 import { HandoverView } from './components/HandoverView';
@@ -227,10 +227,10 @@ export const ImposterGame: React.FC = () => {
     };
 
     return (
-        <Container maxWidth="md">
-            <Box sx={{ py: 4 }}>
+        <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>
+            <Box sx={{ py: 2 }}>
                 {renderPhase()}
             </Box>
-        </Container>
+        </Box>
     );
 };

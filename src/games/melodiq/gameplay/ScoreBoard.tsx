@@ -2,15 +2,17 @@ import React from 'react';
 import { Box, Typography, Button, Paper, Avatar } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'; // Trophy icon
 import type { UserProfile } from '../MelodiqSettings';
+import { useQueue } from '../hooks/useQueue';
 
 interface ScoreBoardProps {
     players: { config: UserProfile; score: number }[];
-    onExit: () => void;
+    onExit: (forceHome?: boolean) => void;
 }
 
 export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
     // Sort players by score descending
     const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+    const { queue } = useQueue();
 
     return (
         <Box
@@ -26,7 +28,7 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 zIndex: 2000,
-                padding: 4,
+                padding: 2,
                 animation: 'fadeIn 0.5s ease-in-out',
                 '@keyframes fadeIn': {
                     '0%': { opacity: 0 },
@@ -43,9 +45,9 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
                 flexDirection: 'column',
                 gap: 2,
                 width: '100%',
-                maxWidth: 600,
+                maxWidth: 'md', // 900px provides a good balance for reading vs full width
                 mb: 6,
-                maxHeight: '60vh',
+                maxHeight: '70vh', // Allow more height too
                 overflowY: 'auto',
             }}>
                 {sortedPlayers.length === 0 && (
@@ -66,8 +68,8 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
                                 bgcolor: isWinner ? 'rgba(255, 215, 0, 0.15)' : 'rgba(255, 255, 255, 0.05)',
                                 border: isWinner ? '2px solid #ffd700' : '1px solid rgba(255,255,255,0.1)',
                                 borderRadius: 4,
-                                transform: isWinner ? 'scale(1.05)' : 'scale(1)',
-                                transition: 'transform 0.2s',
+                                border: isWinner ? '2px solid #ffd700' : '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: 4,
                             }}
                         >
                             <Box sx={{
@@ -109,21 +111,44 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
                 })}
             </Box>
 
-            <Button
-                variant="contained"
-                size="large"
-                onClick={onExit}
-                sx={{
-                    px: 6,
-                    py: 1.5,
-                    fontSize: '1.2rem',
-                    borderRadius: 50,
-                    backgroundImage: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
-                    boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
-                }}
-            >
-                Continue
-            </Button>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+                {queue.length > 0 && (
+                    <Button
+                        variant="outlined"
+                        size="large"
+                        onClick={() => onExit(true)}
+                        sx={{
+                            px: 4,
+                            py: 1.5,
+                            fontSize: '1rem',
+                            borderRadius: 50,
+                            color: 'white',
+                            borderColor: 'rgba(255,255,255,0.5)',
+                            '&:hover': {
+                                borderColor: 'white',
+                                bgcolor: 'rgba(255,255,255,0.1)'
+                            }
+                        }}
+                    >
+                        Main Menu
+                    </Button>
+                )}
+                <Button
+                    variant="contained"
+                    size="large"
+                    onClick={() => onExit(false)}
+                    sx={{
+                        px: 6,
+                        py: 1.5,
+                        fontSize: '1.2rem',
+                        borderRadius: 50,
+                        backgroundImage: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
+                        boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
+                    }}
+                >
+                    {queue.length > 0 ? `Next: ${queue[0].song.title}` : 'Continue'}
+                </Button>
+            </Box>
         </Box>
     );
 };

@@ -26,59 +26,61 @@ export const MainLayout: React.FC = () => {
     };
 
     const location = useLocation();
-    const isMelodiq = location.pathname.includes('/games/melodiq');
+    const isGame = location.pathname.includes('/games/');
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-            <AppBar position="static">
-                <Toolbar>
-                    <IconButton
-                        size="large"
-                        edge="start"
-                        color="inherit"
-                        aria-label="home"
-                        sx={{ mr: 2 }}
-                        onClick={() => navigate('/')}
-                    >
-                        <HomeIcon />
-                    </IconButton>
-                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                        {pageTitle || t('app.title')}
-                    </Typography>
-                    <div>
+            {!isGame && (
+                <AppBar position="static">
+                    <Toolbar>
                         <IconButton
                             size="large"
-                            aria-label="language selector"
-                            aria-controls="menu-appbar"
-                            aria-haspopup="true"
-                            onClick={handleMenu}
+                            edge="start"
                             color="inherit"
+                            aria-label="home"
+                            sx={{ mr: 2 }}
+                            onClick={() => navigate('/')}
                         >
-                            <TranslateIcon />
+                            <HomeIcon />
                         </IconButton>
-                        <Menu
-                            id="menu-appbar"
-                            anchorEl={anchorEl}
-                            anchorOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
-                            }}
-                            keepMounted
-                            transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
-                            }}
-                            open={Boolean(anchorEl)}
-                            onClose={handleClose}
-                        >
-                            <MenuItem onClick={() => changeLanguage('en')}>English</MenuItem>
-                            <MenuItem onClick={() => changeLanguage('de')}>Deutsch</MenuItem>
-                        </Menu>
-                    </div>
-                </Toolbar>
-            </AppBar>
+                        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                            {pageTitle || t('app.title')}
+                        </Typography>
+                        <div>
+                            <IconButton
+                                size="large"
+                                aria-label="language selector"
+                                aria-controls="menu-appbar"
+                                aria-haspopup="true"
+                                onClick={handleMenu}
+                                color="inherit"
+                            >
+                                <TranslateIcon />
+                            </IconButton>
+                            <Menu
+                                id="menu-appbar"
+                                anchorEl={anchorEl}
+                                anchorOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                                keepMounted
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                                open={Boolean(anchorEl)}
+                                onClose={handleClose}
+                            >
+                                <MenuItem onClick={() => changeLanguage('en')}>English</MenuItem>
+                                <MenuItem onClick={() => changeLanguage('de')}>Deutsch</MenuItem>
+                            </Menu>
+                        </div>
+                    </Toolbar>
+                </AppBar>
+            )}
 
-            {isMelodiq ? (
+            {isGame ? (
                 <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                     <Outlet />
                 </Box>

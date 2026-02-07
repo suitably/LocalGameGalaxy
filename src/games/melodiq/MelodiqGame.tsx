@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { VirtuosoGrid } from 'react-virtuoso';
-import { Box, Button, Typography, Card, CardContent, Grid, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText, LinearProgress } from '@mui/material';
-import db, { type Song, type SongMeta } from './db';
+import { Box, Button, Typography, Card, Grid, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText, LinearProgress } from '@mui/material';
+import { type Song, type SongMeta } from './db';
 import { MelodiqSession } from './gameplay/MelodiqSession';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import SettingsIcon from '@mui/icons-material/Settings';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import { MelodiqSettings } from './MelodiqSettings';
-import { formatDuration } from './utils';
+
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
 import { WebRTCProvider, useWebRTC } from './audio/WebRTCContext';
 import { MelodiqConnection } from './MelodiqConnection';
+import { SongCard } from './components/SongCard';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 import { useSongs } from './hooks/useSongs';
+import { useQueue } from './hooks/useQueue';
+import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 
 // Navigation State
 type View = 'Home' | 'Settings' | 'Session' | 'Connection';
@@ -27,6 +30,7 @@ export const MelodiqGameContent: React.FC = () => {
 
     // Use centralized song management hook
     const { songs, loadingProgress, refreshSongs, getSongById, isLoading } = useSongs();
+    const { queue, popNext, setNowPlaying } = useQueue();
 
     // Search & Filter State
     const [searchQuery, setSearchQuery] = useState('');
@@ -52,6 +56,7 @@ export const MelodiqGameContent: React.FC = () => {
             const fullSong = await getSongById(songMeta.id);
             if (fullSong) {
                 setSelectedSong(fullSong);
+                setNowPlaying(songMeta);
                 setCurrentView('Session');
             }
         } catch (e) {
@@ -111,14 +116,23 @@ export const MelodiqGameContent: React.FC = () => {
         setActiveFilters({ year: [], genre: [], language: [], edition: [] });
     };
 
-
-
     // Render the active view inside a single shared WebRTCProvider
     const renderView = () => {
         if (currentView === 'Session' && selectedSong) {
             return <MelodiqSession
                 song={selectedSong}
-                onExit={() => {
+                onExit={(forceHome = false) => {
+                    setNowPlaying(null);
+
+                    if (!forceHome) {
+                        const nextItem = popNext();
+                        if (nextItem) {
+                            console.log("Playing next from queue:", nextItem.song.title);
+                            handleSelectSong(nextItem.song);
+                            return;
+                        }
+                    }
+
                     setSelectedSong(null);
                     setCurrentView('Home');
                 }}
@@ -156,16 +170,22 @@ export const MelodiqGameContent: React.FC = () => {
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                p: { xs: 2, md: 4 }, // Responsive padding
                 overflow: 'hidden' // Prevent body scroll
             }}>
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexShrink: 0 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexShrink: 0, px: 2, pt: 2 }}>
                     <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 2 }}>
                         <MusicNoteIcon fontSize="large" color="primary" />
                         Melodiq
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Button
+                            onClick={() => window.open('/games/melodiq/queue', '_blank')}
+                            startIcon={<PlaylistPlayIcon />}
+                            variant="outlined"
+                        >
+                            Queue ({queue.length})
+                        </Button>
                         <Button
                             onClick={() => refreshSongs()}
                             startIcon={<SearchIcon />} // Using SearchIcon as "Scan/Refresh" placeholder or better icon if available
@@ -471,97 +491,4 @@ export const MelodiqGame: React.FC = () => {
 };
 
 
-/**
- * SongCard displays lightweight SongMeta for fast rendering.
- * Cover is loaded on-demand from the full Song table when visible.
- */
-const SongCard: React.FC<{ song: SongMeta; onClick: () => void }> = ({ song, onClick }) => {
-    const [coverUrl, setCoverUrl] = useState<string | null>(null);
 
-    useEffect(() => {
-        let active = true;
-        let objectUrl: string | null = null;
-
-        const loadCover = async () => {
-            if (!song.hasCover) return;
-
-            // 1. If we already have a string URL (Server/Remote song), use it directly
-            if (typeof song.cover === 'string' && song.cover.length > 0) {
-                setCoverUrl(song.cover);
-                return;
-            }
-
-            try {
-                // 2. Load full song to get cover handle/blob (Local song)
-                const fullSong = await db.songs.get(song.id);
-                if (!fullSong?.cover || !active) return;
-
-                if (typeof fullSong.cover === 'string') {
-                    setCoverUrl(fullSong.cover);
-                } else if (fullSong.cover instanceof Blob) {
-                    objectUrl = URL.createObjectURL(fullSong.cover);
-                    if (active) setCoverUrl(objectUrl);
-                } else if ('getFile' in fullSong.cover && typeof fullSong.cover.getFile === 'function') {
-                    const file = await (fullSong.cover as FileSystemFileHandle).getFile();
-                    if (active) {
-                        objectUrl = URL.createObjectURL(file);
-                        setCoverUrl(objectUrl);
-                    }
-                }
-            } catch (e) {
-                console.warn("Failed to load cover", e);
-            }
-        };
-
-        loadCover();
-
-        return () => {
-            active = false;
-            if (objectUrl) URL.revokeObjectURL(objectUrl);
-        };
-    }, [song.id, song.hasCover]);
-
-    return (
-        <Card
-            sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                cursor: 'pointer',
-                transition: 'transform 0.2s',
-                '&:hover': { transform: 'scale(1.02)' }
-            }}
-            onClick={onClick}
-        >
-            <Box sx={{ width: '100%', aspectRatio: '1 / 1', bgcolor: 'action.hover', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                {coverUrl ? (
-                    <img src={coverUrl} alt={song.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                ) : (
-                    <MusicNoteIcon sx={{ fontSize: 40, opacity: 0.2 }} />
-                )}
-            </Box>
-            <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
-                <Typography variant="subtitle2" noWrap title={song.title} sx={{ fontWeight: 'bold', lineHeight: 1.2 }}>{song.title}</Typography>
-                <Typography variant="caption" display="block" color="text.secondary" noWrap title={song.artist} sx={{ lineHeight: 1.2 }}>{song.artist}</Typography>
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                    <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.7rem' }}>
-                        {song.duration ? formatDuration(song.duration) : '0:00'}
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                        {song.year && (
-                            <Typography variant="caption" sx={{ bgcolor: 'action.selected', px: 0.5, borderRadius: 0.5, fontSize: '0.65rem' }}>
-                                {song.year}
-                            </Typography>
-                        )}
-                        {song.genre && (
-                            <Typography variant="caption" sx={{ bgcolor: 'action.selected', px: 0.5, borderRadius: 0.5, fontSize: '0.65rem', maxWidth: 60 }} noWrap title={song.genre}>
-                                {song.genre}
-                            </Typography>
-                        )}
-                    </Box>
-                </Box>
-            </CardContent>
-        </Card>
-    );
-};

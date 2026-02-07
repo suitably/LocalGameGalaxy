@@ -1,123 +1,118 @@
-
 const express = require('express');
 const cors = require('cors');
-const glob = require('fast-glob');
-const path = require('path');
 const fs = require('fs');
-const helmet = require('helmet');
+const path = require('path');
+const { glob } = require('fast-glob');
 const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 const morgan = require('morgan');
-const sanitize = require('sanitize-filename');
 const crypto = require('crypto');
+const https = require('https');
+const http = require('http');
+const forge = require('node-forge');
 const config = require('./config');
 
-// Dynamic import for music-metadata
-let parseFile;
-try {
-    import('music-metadata').then(mm => {
-        parseFile = mm.parseFile;
-    });
-} catch (e) {
-    console.log('Using dynamic import for music-metadata');
+// Music Metadata
+const mm = require('music-metadata');
+
+// Ensure TextEncoder/btoa are available (Node 18+)
+if (typeof TextEncoder === 'undefined') {
+    const { TextEncoder } = require('util');
+    global.TextEncoder = TextEncoder;
+}
+if (typeof btoa === 'undefined') {
+    global.btoa = (str) => Buffer.from(str, 'binary').toString('base64');
 }
 
 const app = express();
 
-// --- AUTHENTICATION ---
-// Generate or Load Token
-const AUTH_TOKEN = process.env.MELODIQ_TOKEN || crypto.randomBytes(16).toString('hex');
-console.log('---------------------------------------------------');
-console.log('SECURITY TOKEN:', AUTH_TOKEN);
-console.log('Use this token to connect from the Melodiq Host.');
-console.log('---------------------------------------------------');
+// --- CONFIG ---
+const PORT = config.port;
+const SSL_PORT = config.port + 1;
 
-// Auth Middleware
+// --- AUTH TOKEN ---
+const AUTH_TOKEN = config.token;
+
+// Middleware
 const requireAuth = (req, res, next) => {
-    // Allow options for CORS preflight
     if (req.method === 'OPTIONS') return next();
 
-    // Allow status page without auth (to check online status)
-    if (req.path === '/' || req.path === '/favicon.ico') return next();
+    if (req.path === '/' || req.path === '/favicon.ico' || req.path === '/api/browse') {
+        return next();
+    }
+    const token = req.headers['authorization'] || req.query.token;
+    const cleanToken = token?.replace('Bearer ', '');
 
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (token === AUTH_TOKEN) {
+    if (token === AUTH_TOKEN || cleanToken === AUTH_TOKEN) {
         next();
     } else {
-        // Also check query param for media (video/audio tags often don't support headers easily)
-        if (req.query.token === AUTH_TOKEN) {
-            next();
-        } else {
-            console.warn(`[Auth] Unauthorized access attempt from ${req.ip}`);
-            res.status(401).json({ error: 'Unauthorized: Invalid Token' });
-        }
+        res.status(401).json({ error: 'Unauthorized. Invalid Token.' });
     }
 };
 
-
-// --- SECURITY MIDDLEWARE ---
 app.use(helmet({
-    contentSecurityPolicy: false, // Disabled for local dev/inline scripts in our simple HTML
-    crossOriginResourcePolicy: { policy: "cross-origin" } // Allow media needed by external hosts (TV)
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    strictTransportSecurity: false
 }));
 
-// CORS: Allow All Origins (Standard for P2P/Local Network usage)
-// This is necessary so https://nexumia.de (TV) can fetch from http://192.168.x.x (PC)
-app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use((req, res, next) => {
+    const origin = req.headers.origin || '*';
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Private-Network', 'true');
+
+    if (req.method === 'OPTIONS') {
+        res.sendStatus(200);
+    } else {
+        next();
+    }
+});
 
 app.use(express.json());
-app.use(morgan('dev')); // Logging
+app.use(morgan('dev'));
 
-// Rate Limiting
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // Increased limit for media streaming chunks/pings
+    windowMs: 15 * 60 * 1000,
+    max: 1000,
     standardHeaders: true,
     legacyHeaders: false,
 });
 app.use(limiter);
-app.use(requireAuth); // Protect everything (except whitelisted paths)
+app.use(requireAuth);
 
-// --- IN-MEMORY CACHE ---
 let SONG_CACHE = [];
 let IS_SCANNING = false;
-let LAST_SCAN_TIME = null;
 
-// Helper: Secure Path Resolution
 const resolveSecurePath = (userPath) => {
     if (!userPath) return null;
     const safePath = path.normalize(userPath);
-    // Ensure path is within one of the configured directories
     const isAllowed = config.directories.some(dir => safePath.startsWith(path.normalize(dir)));
     return isAllowed && fs.existsSync(safePath) ? safePath : null;
 };
 
-// --- CORE LOGIC: SCANNING ---
+// ID Generation (Matches Client Logic)
+const generateId = (title, artist, relPath) => {
+    // Ensure forward slashes for consistency with Client
+    const normalizedPath = relPath.replace(/\\/g, '/');
+    const str = `${artist}-${title}-${normalizedPath}`;
+
+    // Node.js implementation of Client logic
+    // Client: const bytes = new TextEncoder().encode(str); return btoa(String.fromCharCode(...))...
+    // Node Buffer is equivalent to UTF-8 encode
+    return Buffer.from(str, 'utf-8').toString('base64').replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
+};
+
+// --- SCANNING ---
 const scanSongs = async () => {
     if (IS_SCANNING) return;
     IS_SCANNING = true;
     console.log(`[Scanner] Starting scan of ${config.directories.length} directories...`);
     const startTime = Date.now();
 
-    // Ensure parser is loaded
-    if (!parseFile) {
-        try {
-            const mm = await import('music-metadata');
-            parseFile = mm.parseFile;
-        } catch (e) {
-            console.error('[Scanner] Failed to load music-metadata:', e);
-            IS_SCANNING = false;
-            return;
-        }
-    }
-
     const newSongs = [];
-
     for (const libraryPath of config.directories) {
         try {
             const txtFiles = await glob('**/*.txt', {
@@ -130,6 +125,12 @@ const scanSongs = async () => {
             for (const txtPath of txtFiles) {
                 try {
                     const dir = path.dirname(txtPath);
+
+                    // Calculate relative path from library root to match Client ID generation
+                    // If libraryPath is /Music and dir is /Music/Artist/Song, relative is Artist/Song
+                    let relativePath = path.relative(libraryPath, dir);
+                    if (relativePath === '') relativePath = '.'; // Handle root match
+
                     const content = fs.readFileSync(txtPath, 'utf-8');
                     const headers = {};
 
@@ -148,12 +149,36 @@ const scanSongs = async () => {
 
                     const getServeUrl = (filename) => {
                         if (!filename) return null;
-                        const fullPath = path.join(dir, filename);
-                        return `/media?path=${encodeURIComponent(fullPath)}&token=${AUTH_TOKEN}`;
+                        const floatPath = path.resolve(dir, filename);
+                        if (fs.existsSync(floatPath)) return floatPath;
+                        return null;
                     };
 
+                    const audioPath = getServeUrl(headers['MP3']);
+                    const videoPath = getServeUrl(headers['VIDEO']);
+                    const coverPath = getServeUrl(headers['COVER']);
+                    const backgroundPath = getServeUrl(headers['BACKGROUND']);
+
+                    // DURATION CALCULATION
+                    let duration = 0;
+                    if (audioPath) {
+                        try {
+                            const metadata = await mm.parseFile(audioPath, { duration: true, skipCovers: true });
+                            if (metadata.format.duration) {
+                                duration = metadata.format.duration;
+                            }
+                        } catch (e) {
+                            console.warn(`[Scanner] Failed to read duration for ${audioPath}:`, e.message);
+                        }
+                    }
+
+                    // Fallback Duration
+                    if (!duration && headers['END']) {
+                        duration = parseFloat(headers['END']) / 1000;
+                    }
+
                     const song = {
-                        id: Buffer.from(`${headers['ARTIST']}-${headers['TITLE']}-${dir}`).toString('base64').replace(/[^a-zA-Z0-9]/g, '').substring(0, 32),
+                        id: generateId(headers['TITLE'], headers['ARTIST'], relativePath),
                         title: headers['TITLE'],
                         artist: headers['ARTIST'],
                         bpm: parseFloat(headers['BPM']?.replace(',', '.') || '0'),
@@ -162,38 +187,17 @@ const scanSongs = async () => {
                         genre: headers['GENRE'],
                         language: headers['LANGUAGE'],
                         year: headers['YEAR'],
-                        video: getServeUrl(headers['VIDEO']),
-                        audio: getServeUrl(headers['MP3']),
-                        cover: getServeUrl(headers['COVER']),
-                        background: getServeUrl(headers['BACKGROUND']),
+                        video: videoPath,
+                        audio: audioPath,
+                        cover: coverPath,
+                        background: backgroundPath,
                         txtContent: content,
+                        duration: duration,
                         searchString: `${headers['TITLE']} ${headers['ARTIST']} ${headers['GENRE']} ${headers['LANGUAGE']}`.toLowerCase()
                     };
 
-                    // Duration calc
-                    if (headers['END']) {
-                        song.duration = parseFloat(headers['END']) / 1000;
-                    } else if (song.bpm > 0) {
-                        // Estimate
-                        let maxBeat = 0;
-                        const lines = content.split('\n');
-                        for (const line of lines) {
-                            if (line.startsWith(':') || line.startsWith('*') || line.startsWith('F')) {
-                                const parts = line.split(' ');
-                                if (parts.length >= 3) {
-                                    const start = parseInt(parts[1]);
-                                    const len = parseInt(parts[2]);
-                                    if (!isNaN(start) && !isNaN(len) && start + len > maxBeat) {
-                                        maxBeat = start + len;
-                                    }
-                                }
-                            }
-                        }
-                        song.duration = (maxBeat * 60) / song.bpm;
-                    }
-
                     newSongs.push(song);
-                } catch (e) { /* ignore individual file errors */ }
+                } catch (e) { /* ignore */ }
             }
         } catch (e) {
             console.warn(`[Scanner] Failed to scan ${libraryPath}:`, e.message);
@@ -201,7 +205,6 @@ const scanSongs = async () => {
     }
 
     SONG_CACHE = newSongs;
-    LAST_SCAN_TIME = new Date();
     IS_SCANNING = false;
     console.log(`[Scanner] Finished. Cached ${newSongs.length} songs in ${(Date.now() - startTime) / 1000}s.`);
 };
@@ -209,111 +212,336 @@ const scanSongs = async () => {
 // Initial Scan
 scanSongs();
 
+const getLocalIp = () => {
+    const { networkInterfaces } = require('os');
+    const nets = networkInterfaces();
+    for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+            if (net.family === 'IPv4' && !net.internal) {
+                return net.address;
+            }
+        }
+    }
+    return 'localhost';
+};
 
-// --- ROUTES ---
-
-// Status Page & Dashboard
+// --- UI ROUTE ---
 app.get('/', (req, res) => {
+    const localIp = getLocalIp();
+    const networkUrl = `https://${localIp}:${SSL_PORT}`;
+
+    // Note: Concatenated string to avoid template tag issues with tools
+
+    // SECURITY CHECK
+    // Allow localhost automatically. Remote IPs must provide ?token=...
+    const remoteIp = req.socket.remoteAddress || req.connection.remoteAddress;
+    const isLocal = remoteIp === '::1' || remoteIp === '127.0.0.1' || remoteIp === '::ffff:127.0.0.1';
+    const clientToken = req.query.token;
+
+    if (!isLocal && clientToken !== AUTH_TOKEN) {
+        return res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Melodiq Helper Login</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <style>
+                    body { font-family: system-ui, -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f2f5; }
+                    .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 320px; }
+                    input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+                    button { width: 100%; padding: 10px; background: #1877f2; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+                    button:hover { background: #166fe5; }
+                    h2 { color: #1c1e21; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <h2 style="margin-top:0; text-align:center;">Melodiq Access</h2>
+                    <form method="GET" action="/">
+                        <input type="text" name="token" placeholder="Enter Access Token" required>
+                        <button type="submit">Connect</button>
+                    </form>
+                </div>
+            </body>
+            </html>
+        `);
+    }
+
     res.send(`
         <!DOCTYPE html>
         <html>
         <head>
             <title>Melodiq Helper</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
             <style>
-                body { font-family: system-ui; max-width: 800px; margin: 0 auto; padding: 40px; background: #f5f5f5; color: #333; }
-                .card { background: white; padding: 24px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 24px; }
-                h1 { color: #1976d2; }
-                .badge { background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
-                button { cursor: pointer; padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; }
-                .token-box { background: #333; color: #0f0; padding: 15px; font-family: monospace; font-size: 1.2rem; border-radius: 4px; overflow-x: auto; margin: 10px 0; }
-                .copy-btn { margin-top: 5px; background: #444; font-size: 0.8rem; }
+                body { font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f0f2f5; color: #1c1e21; }
+                .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 24px; }
+                h1 { color: #1877f2; margin-top: 0; font-size: 1.5rem; }
+                .badge { background: #e7f3ff; color: #1877f2; padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; vertical-align: middle; }
+                button { cursor: pointer; padding: 10px 16px; background: #1877f2; color: white; border: none; border-radius: 6px; font-weight: 600; transition: background 0.2s; }
+                button:hover { background: #166fe5; }
+                button:disabled { background: #ccc; cursor: not-allowed; }
+                button.secondary { background: #e4e6eb; color: #050505; }
+                button.secondary:hover { background: #d8dadf; }
+                button.danger { background: #fff; color: #dc3545; border: 1px solid #dc3545; padding: 4px 10px; font-size: 0.9rem; }
+                button.danger:hover { background: #dc3545; color: white; }
+                
+                .code-box { background: #242526; color: #4cd964; padding: 16px; font-family: 'SF Mono', Consolas, monospace; font-size: 1.1rem; border-radius: 8px; overflow-x: auto; margin: 10px 0; border: 1px solid #3e4042; }
+                .label { font-size: 0.9rem; font-weight: 600; color: #65676b; margin-bottom: 8px; display: block; }
+                .row { display: flex; gap: 10px; align-items: stretch; }
+                
+                .dir-list { list-style: none; padding: 0; margin: 0; }
+                .dir-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f7f8fa; border-radius: 6px; margin-bottom: 8px; }
+                .dir-path { font-family: monospace; word-break: break-all; font-size: 0.9rem; }
+                
+                input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
+
+                a { color: #1877f2; text-decoration: none; }
+                a:hover { text-decoration: underline; }
+
+                .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+                .modal-content { background: white; width: 90%; max-width: 500px; margin: 50px auto; padding: 20px; border-radius: 12px; height: 70vh; display: flex; flex-direction: column; }
+                .browser-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+                .browser-list { overflow-y: auto; flex: 1; border: 1px solid #ddd; border-radius: 4px; }
+                .browser-item { padding: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+                .browser-item:hover { background: #f5f5f5; }
+                .browser-item.selected { background: #e7f3ff; }
+                .folder-icon { color: #ffd700; width: 20px; display: inline-block; }
             </style>
+            <script>
+                const API_TOKEN = "${AUTH_TOKEN}";
+
+                function copyText(id) {
+                    const el = document.getElementById(id);
+                    navigator.clipboard.writeText(el.innerText).then(() => {
+                        const btn = document.getElementById('btn-' + id);
+                        const original = btn.innerText;
+                        btn.innerText = 'Copied!';
+                        setTimeout(() => btn.innerText = original, 2000);
+                    });
+                }
+
+                async function addDir() {
+                    const input = document.getElementById('newPath');
+                    const path = input.value.trim();
+                    if (!path) return;
+                    
+                    try {
+                         const res = await fetch('/api/config/directories?token=' + API_TOKEN, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ path })
+                        });
+                        if (res.ok) window.location.reload();
+                        else alert('Failed to add directory. Ensure path exists.');
+                    } catch(e) { alert('Error: ' + e.message); }
+                }
+
+                async function removeDir(path) {
+                    if (!confirm('Remove this directory from configuration?')) return;
+                    try {
+                         const res = await fetch('/api/config/directories?token=' + API_TOKEN, {
+                            method: 'DELETE',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ path })
+                        });
+                        if (res.ok) window.location.reload();
+                    } catch(e) { alert('Error: ' + e.message); }
+                }
+
+                let currentBrowserPath = '';
+                
+                async function openBrowser() {
+                    document.getElementById('browserModal').style.display = 'block';
+                    loadPath('');
+                }
+
+                function closeBrowser() {
+                    document.getElementById('browserModal').style.display = 'none';
+                }
+
+                async function loadPath(path) {
+                    try {
+                        const res = await fetch('/api/browse?path=' + encodeURIComponent(path));
+                         if (res.status === 401) throw new Error("Unauthorized");
+                        const data = await res.json();
+                        if (data.error) throw new Error(data.error);
+                        
+                        currentBrowserPath = data.current;
+                        document.getElementById('currentPathDisplay').innerText = data.current;
+                        
+                        const list = document.getElementById('browserList');
+                        list.innerHTML = '';
+                        
+                        data.dirs.forEach(dir => {
+                            const div = document.createElement('div');
+                            div.className = 'browser-item';
+                            div.innerHTML = \`<span class="folder-icon">📁</span> \${dir}\`;
+                            div.onclick = () => {
+                                let newPath;
+                                if (dir === '..') {
+                                    newPath = currentBrowserPath.endsWith('/') || currentBrowserPath.endsWith('\\\\') 
+                                        ? currentBrowserPath + dir 
+                                        : currentBrowserPath + '/' + dir; 
+                                } else {
+                                    newPath = currentBrowserPath.endsWith('/') || currentBrowserPath.endsWith('\\\\') 
+                                        ? currentBrowserPath + dir 
+                                        : currentBrowserPath + '/' + dir;
+                                }
+                                loadPath(newPath);
+                            };
+                            list.appendChild(div);
+                        });
+
+                    } catch(e) {
+                        alert('Error loading path: ' + e.message);
+                    }
+                }
+
+                function selectCurrentPath() {
+                    document.getElementById('newPath').value = currentBrowserPath;
+                    closeBrowser();
+                }
+            </script>
         </head>
         <body>
             <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h1>Melodiq Helper</h1>
-                    <span class="badge">Online</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                    <div style="display:flex; align-items:center; gap: 10px;">
+                        <h1>Melodiq Helper</h1>
+                        <span class="badge">Online (HTTP/HTTPS)</span>
+                    </div>
                 </div>
-                <p>Songs Cached: <strong>${SONG_CACHE.length}</strong> (Last scan: ${LAST_SCAN_TIME ? LAST_SCAN_TIME.toLocaleTimeString() : 'Never'})</p>
                 
-                <h3>🔑 Authentication Token</h3>
-                <p>Enter this token in the Melodiq Host Settings (TV/PC):</p>
-                <div class="token-box" id="tokenDisplay">${AUTH_TOKEN}</div>
-                <button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('tokenDisplay').innerText); alert('Copied!');">Copy Token</button>
+                 <div style="background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
+                    <strong>TV Connection Info:</strong> Use the HTTPS URL below. When opening on TV/Mobile, you will assume a "Security Warning". Click "Advanced" -> "Proceed (Unsafe)" to accept the self-signed certificate. This is necessary for Mixed Content support.
+                </div>
 
-                <br><br>
-                <form action="/api/songs/refresh?token=${AUTH_TOKEN}" method="POST">
-                   <button type="submit" ${IS_SCANNING ? 'disabled' : ''}>${IS_SCANNING ? 'Scanning...' : 'Refresh Library'}</button>
-                </form>
+                <p><strong>${SONG_CACHE.length}</strong> songs cached.</p>
+                <div style="margin-top: 30px;">
+                    <span class="label">Music Folders</span>
+                    <ul class="dir-list">
+                        ${config.directories.map(dir => `
+                            <li class="dir-item">
+                                <span class="dir-path">${dir}</span>
+                                <button class="danger" onclick="removeDir('${dir.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')">Remove</button>
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <div class="row" style="margin-top: 10px;">
+                        <input type="text" id="newPath" placeholder="/path/to/media/folder">
+                        <button class="secondary" onclick="openBrowser()">Browse...</button>
+                        <button class="secondary" onclick="addDir()">Add</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                   <span class="label">Network URL (HTTPS - Recommended for TV)</span>
+                    <div class="row">
+                        <div class="code-box" style="flex:1; margin:0; display:flex; align-items:center;" id="urlDisplay">${networkUrl}</div>
+                        <button class="secondary" id="btn-urlDisplay" onclick="copyText('urlDisplay')">Copy</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <span class="label">Security Token (Persistent)</span>
+                    <div class="row">
+                        <div class="code-box" style="flex:1; margin:0; display:flex; align-items:center;" id="tokenDisplay">${AUTH_TOKEN}</div>
+                        <button class="secondary" id="btn-tokenDisplay" onclick="copyText('tokenDisplay')">Copy</button>
+                    </div>
+                </div>
+                
+                 <div style="margin-top: 20px;">
+                    <span class="label">Alternative HTTP Link</span>
+                     <div class="row">
+                        <div class="code-box" style="flex:1; margin:0; display:flex; align-items:center; opacity: 0.7; font-size: 0.9rem;">http://${localIp}:${PORT}</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                    <form action="/api/songs/refresh?token=${AUTH_TOKEN}" method="POST">
+                       <button type="submit" ${IS_SCANNING ? 'disabled' : ''} style="width:100%">${IS_SCANNING ? 'Scanning Library...' : 'Rescan Library'}</button>
+                    </form>
+                </div>
             </div>
-            <div class="card">
-                 <h2>Useful Links</h2>
-                 <ul>
-                    <li><a href="/api/songs?limit=10&token=${AUTH_TOKEN}">Test API (First 10 songs)</a></li>
-                 </ul>
+            
+            <p style="text-align:center; color:#65676b; font-size: 0.9rem;">
+                <a href="/api/songs?limit=10&token=${AUTH_TOKEN}" target="_blank">Test API Connection</a>
+            </p>
+
+            <div id="browserModal" class="modal">
+                <div class="modal-content">
+                    <div class="browser-header">
+                        <span style="font-weight:bold" id="currentPathDisplay">...</span>
+                        <button class="secondary" onclick="closeBrowser()">Cancel</button>
+                    </div>
+                    <div class="browser-list" id="browserList">
+                    </div>
+                    <div style="margin-top: 15px; text-align: right;">
+                        <button onclick="selectCurrentPath()">Select This Folder</button>
+                    </div>
+                </div>
             </div>
         </body>
         </html>
     `);
 });
 
-// Secure Media Serving
 app.get('/media', (req, res) => {
     const targetPath = req.query.path;
     if (!targetPath) return res.status(400).send('Missing path');
-
     const safePath = resolveSecurePath(targetPath);
     if (!safePath) return res.status(403).send('Access Denied or File Not Found');
-
     res.sendFile(safePath);
 });
 
-// API: List Songs (with Pagination & Search)
 app.get('/api/songs', (req, res) => {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10000; // Default to High for backwards compat with Desktop
+    const limit = parseInt(req.query.limit) || 10000;
     const search = (req.query.search || '').trim().toLowerCase();
 
+    // Convert cache to client-safe format
+    const toClientSong = (s) => {
+        const secureUrl = (absPath) => {
+            if (!absPath) return null;
+            return '/media?path=' + encodeURIComponent(absPath) + '&token=' + AUTH_TOKEN;
+        };
+
+        return {
+            ...s,
+            video: secureUrl(s.video),
+            audio: secureUrl(s.audio),
+            cover: secureUrl(s.cover),
+            background: secureUrl(s.background)
+        };
+    };
+
     let results = SONG_CACHE;
+    if (search) results = results.filter(s => s.searchString.includes(search));
 
-    // Filter
-    if (search) {
-        results = results.filter(s => s.searchString.includes(search));
-    }
-
-    // Pagination
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
-    const paginated = results.slice(startIndex, endIndex);
-
-    // If client requested pagination specifically (low limit) or simply for API correctness
-    // We return the array directly if it seems legacy, OR we can determine via acceptance header?
-    // User instruction said: "If no page is provided, it will return ALL songs... but for Mobile support, clients should use ?page=1"
-    // To ensure existing client compatibility (which expects Array), we MUST return Array.
-    // We can add metadata in headers X-Total-Count, X-Page, etc.
+    const paginated = results.slice(startIndex, endIndex).map(toClientSong);
 
     res.set('X-Total-Count', results.length);
     res.set('X-Page', page);
     res.set('X-Limit', limit);
-
     res.json(paginated);
 });
 
-// API: Refresh
 app.post('/api/songs/refresh', async (req, res) => {
     if (IS_SCANNING) return res.status(409).send('Scan already in progress');
-    scanSongs(); // Async, don't wait
+    scanSongs();
     res.send('Scan started');
 });
 
-// API: Config (Preserved)
+// API: Config
 app.get('/api/config/directories', (req, res) => res.json(config.directories));
 app.post('/api/config/directories', (req, res) => {
     const { path: newPath } = req.body;
     if (newPath && fs.existsSync(newPath)) {
         config.addDirectory(newPath);
-        scanSongs(); // Trigger rescan
+        scanSongs();
         res.json(config.directories);
     } else {
         res.status(400).json({ error: 'Invalid path' });
@@ -325,7 +553,7 @@ app.delete('/api/config/directories', (req, res) => {
     res.json(config.directories);
 });
 
-// Directory Browser DO NOT REMOVE (Needed for frontend)
+// Directory Browser
 app.get('/api/browse', (req, res) => {
     const queryPath = req.query.path || require('os').homedir();
     try {
@@ -334,14 +562,99 @@ app.get('/api/browse', (req, res) => {
         const dirs = entries
             .filter(dirent => dirent.isDirectory() && !dirent.name.startsWith('.'))
             .map(dirent => dirent.name);
-        const parent = path.dirname(queryPath);
-        if (parent !== queryPath) dirs.unshift('..');
-        res.json({ current: queryPath, dirs: dirs });
+
+        const parent = path.resolve(queryPath, '..');
+        if (parent !== path.resolve(queryPath)) {
+            dirs.unshift('..');
+        }
+
+        res.json({ current: path.resolve(queryPath), dirs: dirs });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
 });
 
-app.listen(config.port, () => {
-    console.log(`Melodiq Host running at http://localhost:${config.port}`);
+
+// GENERATE OR LOAD CERTIFICATE
+let pem;
+
+if (config.ssl && config.ssl.key && config.ssl.cert) {
+    console.log('Loading existing SSL certificate...');
+    pem = {
+        private: config.ssl.key,
+        cert: config.ssl.cert
+    };
+} else {
+    console.log('Generating standardized RSA certificate (node-forge)...');
+    const pki = forge.pki;
+    const keys = pki.rsa.generateKeyPair(2048);
+    const cert = pki.createCertificate();
+    cert.publicKey = keys.publicKey;
+    // RANDOM SERIAL to avoid browser errors (SEC_ERROR_REUSED_ISSUER_AND_SERIAL)
+    cert.serialNumber = crypto.randomBytes(16).toString('hex');
+    cert.validity.notBefore = new Date();
+    cert.validity.notAfter = new Date();
+    cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 10); // 10 years
+    const attrs = [
+        { name: 'commonName', value: 'MelodiqHelper' },
+        { name: 'countryName', value: 'US' },
+        { shortName: 'ST', value: 'Virginia' },
+        { name: 'organizationName', value: 'Melodiq' },
+        { shortName: 'OU', value: 'Helper' }
+    ];
+    cert.setSubject(attrs);
+    cert.setIssuer(attrs);
+    cert.setExtensions([
+        { name: 'basicConstraints', cA: true },
+        { name: 'keyUsage', keyCertSign: true, digitalSignature: true, nonRepudiation: true, keyEncipherment: true, dataEncipherment: true },
+        { name: 'extKeyUsage', serverAuth: true, clientAuth: true, codeSigning: true, emailProtection: true, timeStamping: true },
+        { name: 'nsCertType', client: true, server: true, email: true, objsign: true, sslCA: true, emailCA: true, objCA: true }
+    ]);
+    // Self-sign with SHA256
+    cert.sign(keys.privateKey, forge.md.sha256.create());
+
+    pem = {
+        private: pki.privateKeyToPem(keys.privateKey),
+        cert: pki.certificateToPem(cert)
+    };
+
+    // Save to config
+    config.ssl = {
+        key: pem.private,
+        cert: pem.cert
+    };
+    console.log('New SSL certificate generated and saved.');
+}
+
+const httpsOptions = {
+    key: pem.private,
+    cert: pem.cert,
+    minVersion: 'TLSv1',
+    ciphers: 'ALL:!EXPORT:!LOW:!aNULL:!eNULL:!SSLv2'
+};
+
+// START SERVERS
+http.createServer(app).listen(PORT, '0.0.0.0', () => {
+    console.log(`HTTP Server running on port ${PORT}`);
+});
+
+https.createServer(httpsOptions, app).listen(SSL_PORT, '0.0.0.0', () => {
+    const localIp = getLocalIp();
+    console.log(`---------------------------------------------------`);
+    console.log(`MELODIQ HELPER RUNNING (HTTPS)`);
+    console.log(`---------------------------------------------------`);
+    console.log(`Local Access:   http://localhost:${PORT}`);
+    console.log(`Secure Access:  https://${localIp}:${SSL_PORT}`);
+    console.log(``);
+    console.log(`NOTE: You MUST accept the self-signed certificate warning.`);
+    console.log(`---------------------------------------------------`);
+    console.log(`SECURITY TOKEN: ${AUTH_TOKEN}`);
+    console.log(`---------------------------------------------------`);
+
+    // Initial Scan
+    if (typeof IS_SCANNING !== 'undefined' && !IS_SCANNING) {
+        scanSongs();
+    } else if (typeof scanSongs === 'function') {
+        scanSongs();
+    }
 });

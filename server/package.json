@@ -9,8 +9,10 @@
     },
     "bin": "index.js",
     "pkg": {
-        "scripts": "index.js",
-        "assets": [],
+        "assets": [
+            "config.js",
+            "node_modules/**/*"
+        ],
         "targets": [
             "node18-linux-x64",
             "node18-win-x64",
@@ -25,7 +27,9 @@
         "helmet": "^8.1.0",
         "morgan": "^1.10.1",
         "music-metadata": "^7.14.0",
-        "sanitize-filename": "^1.6.3"
+        "node-forge": "^1.3.3",
+        "sanitize-filename": "^1.6.3",
+        "selfsigned": "^5.5.0"
     },
     "devDependencies": {
         "pkg": "^5.8.1"

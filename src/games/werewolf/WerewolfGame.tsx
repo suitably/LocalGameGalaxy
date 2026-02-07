@@ -95,7 +95,7 @@ export const WerewolfGame: React.FC = () => {
     };
 
     return (
-        <Box>
+        <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>
             <ContinueGameDialog
                 open={showContinueDialog}
                 savedGameInfo={savedGameInfo}
