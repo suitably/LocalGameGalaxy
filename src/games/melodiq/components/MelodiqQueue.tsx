@@ -88,15 +88,15 @@ export const MelodiqQueue: React.FC = () => {
     };
 
     return (
-        <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', gap: 4, overflow: 'auto' }}>
-            <Typography variant="h4" sx={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+        <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>
+            <Typography variant="h4" sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                 <PlaylistPlayIcon fontSize="large" color="primary" />
                 Song Queue
             </Typography>
 
-            <Grid container spacing={4} sx={{ flexGrow: 1, minHeight: 0 }}>
+            <Grid container spacing={4} sx={{ height: { md: 'calc(100% - 60px)' } }}>
                 {/* Left Side: Current Queue */}
-                <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column', height: { xs: '50vh', md: '100%' } }}>
+                <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column', height: { md: '100%' } }}>
                     {nowPlaying && (
                         <Paper sx={{ p: 2, mb: 4, bgcolor: 'rgba(76, 175, 80, 0.1)', border: '1px solid rgba(76, 175, 80, 0.3)' }}>
                             <Typography variant="overline" color="success.main" fontWeight="bold">Now Playing</Typography>
@@ -128,7 +128,13 @@ export const MelodiqQueue: React.FC = () => {
                         )}
                     </Paper>
 
-                    <Box sx={{ flexGrow: 1, overflow: 'auto', bgcolor: 'background.paper', borderRadius: 1 }}>
+                    <Box sx={{
+                        overflow: 'auto',
+                        bgcolor: 'background.paper',
+                        borderRadius: 1,
+                        maxHeight: { xs: '30vh', md: 'none' },
+                        flexGrow: { md: 1 }
+                    }}>
                         <List>
                             {queue.map((item, index) => (
                                 <ListItem
@@ -168,10 +174,10 @@ export const MelodiqQueue: React.FC = () => {
                 </Grid>
 
                 {/* Right Side: Add Songs */}
-                <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column', height: { xs: '70vh', md: '100%' } }}>
-                    <Typography variant="h6" sx={{ mb: 2, flexShrink: 0 }}>Add Songs</Typography>
+                <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column', height: { md: '100%' } }}>
+                    <Typography variant="h6" sx={{ mb: 2 }}>Add Songs</Typography>
 
-                    <Card sx={{ mb: 2, p: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <Card sx={{ mb: 2, p: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', flexShrink: 0 }}>
                         <TextField
                             placeholder="Search to add..."
                             variant="outlined"
@@ -301,7 +307,9 @@ export const MelodiqQueue: React.FC = () => {
                         </FormControl>
                     </Card>
 
-                    <Box sx={{ flexGrow: 1 }}>
+                    {/* On mobile: explicit height since parent isn't flex-constrained.
+                         On desktop: flexGrow fills the remaining space. */}
+                    <Box sx={{ height: { xs: '60vh', md: 'auto' }, flexGrow: { md: 1 }, minHeight: { md: 0 } }}>
                         <VirtuosoGrid
                             style={{ height: '100%', width: '100%' }}
                             totalCount={filteredSongs.length}
