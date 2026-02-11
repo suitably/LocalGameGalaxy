@@ -88,15 +88,15 @@ export const MelodiqQueue: React.FC = () => {
     };
 
     return (
-        <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', gap: 4, overflow: 'hidden' }}>
-            <Typography variant="h4" sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', gap: 4, overflow: 'auto' }}>
+            <Typography variant="h4" sx={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
                 <PlaylistPlayIcon fontSize="large" color="primary" />
                 Song Queue
             </Typography>
 
             <Grid container spacing={4} sx={{ flexGrow: 1, minHeight: 0 }}>
                 {/* Left Side: Current Queue */}
-                <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column', height: { xs: '50vh', md: '100%' } }}>
                     {nowPlaying && (
                         <Paper sx={{ p: 2, mb: 4, bgcolor: 'rgba(76, 175, 80, 0.1)', border: '1px solid rgba(76, 175, 80, 0.3)' }}>
                             <Typography variant="overline" color="success.main" fontWeight="bold">Now Playing</Typography>
@@ -115,7 +115,14 @@ export const MelodiqQueue: React.FC = () => {
                     <Paper sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                         <Typography variant="h6">Up Next ({queue.length})</Typography>
                         {queue.length > 0 && (
-                            <Button size="small" color="error" onClick={clearQueue} startIcon={<DeleteIcon />}>
+                            <Button
+                                size="small"
+                                color="error"
+                                onClick={clearQueue}
+                                startIcon={<DeleteIcon />}
+                                variant="outlined"
+                                sx={{ borderRadius: 50 }}
+                            >
                                 Clear All
                             </Button>
                         )}
@@ -161,8 +168,8 @@ export const MelodiqQueue: React.FC = () => {
                 </Grid>
 
                 {/* Right Side: Add Songs */}
-                <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    <Typography variant="h6" sx={{ mb: 2 }}>Add Songs</Typography>
+                <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column', height: { xs: '70vh', md: '100%' } }}>
+                    <Typography variant="h6" sx={{ mb: 2, flexShrink: 0 }}>Add Songs</Typography>
 
                     <Card sx={{ mb: 2, p: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
                         <TextField
@@ -185,7 +192,12 @@ export const MelodiqQueue: React.FC = () => {
                                     </InputAdornment>
                                 )
                             }}
-                            sx={{ flexGrow: 1, minWidth: '200px' }}
+                            sx={{
+                                flexGrow: 1,
+                                minWidth: '200px',
+                                '& .MuiOutlinedInput-root': { borderRadius: 50 },
+                                '& .MuiOutlinedInput-notchedOutline': { borderRadius: 50 }
+                            }}
                         />
 
                         <FormControl size="small" sx={{ minWidth: 120, maxWidth: 200 }}>
@@ -202,6 +214,7 @@ export const MelodiqQueue: React.FC = () => {
                                     }));
                                 }}
                                 renderValue={(selected) => selected.join(', ')}
+                                sx={{ borderRadius: 50 }}
                             >
                                 {availableGenres.map(g => (
                                     <MenuItem key={g} value={g}>
@@ -226,6 +239,7 @@ export const MelodiqQueue: React.FC = () => {
                                     }));
                                 }}
                                 renderValue={(selected) => selected.join(', ')}
+                                sx={{ borderRadius: 50 }}
                             >
                                 {availableYears.map(y => (
                                     <MenuItem key={y} value={y}>
@@ -250,6 +264,7 @@ export const MelodiqQueue: React.FC = () => {
                                     }));
                                 }}
                                 renderValue={(selected) => selected.join(', ')}
+                                sx={{ borderRadius: 50 }}
                             >
                                 {availableLanguages.map(l => (
                                     <MenuItem key={l} value={l}>
@@ -274,6 +289,7 @@ export const MelodiqQueue: React.FC = () => {
                                     }));
                                 }}
                                 renderValue={(selected) => selected.join(', ')}
+                                sx={{ borderRadius: 50 }}
                             >
                                 {availableEditions.map(ed => (
                                     <MenuItem key={ed} value={ed}>

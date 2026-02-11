@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useMediaQuery } from '@mui/material';
 import { type SongWithNotes } from './PitchVisualizer';
 import type { Note } from '../parser';
 
@@ -135,10 +135,13 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, a
 
     const isDuet = song.tracks && song.tracks.length > 1;
 
+    // Use media query for mobile/small screens
+    const isSmallScreen = useMediaQuery('(max-width:600px), (max-height:500px)');
+
     return (
         <Box sx={{
-            py: centered ? 4 : 2,
-            minHeight: centered ? 200 : 120,
+            py: centered ? 4 : (isSmallScreen ? 0.5 : 2),
+            minHeight: centered ? 200 : (isSmallScreen ? 60 : 120),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -155,7 +158,7 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, a
                             align="right"
                             color="#40c4ff" // Blue
                         />
-                        <Typography variant="caption" sx={{ display: 'block', textAlign: 'right', pr: 2, mt: 1, color: '#40c4ff', opacity: 0.5 }}>
+                        <Typography variant="caption" sx={{ display: 'block', textAlign: 'right', pr: 2, mt: 0.5, color: '#40c4ff', opacity: 0.5, fontSize: isSmallScreen ? '0.65rem' : '0.75rem' }}>
                             {song.tracks![0].name || "Player 1"}
                         </Typography>
                     </Box>
@@ -167,7 +170,7 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, a
                             color="#ff4081" // Pink
                             secondary
                         />
-                        <Typography variant="caption" sx={{ display: 'block', textAlign: 'left', pl: 2, mt: 1, color: '#ff4081', opacity: 0.5 }}>
+                        <Typography variant="caption" sx={{ display: 'block', textAlign: 'left', pl: 2, mt: 0.5, color: '#ff4081', opacity: 0.5, fontSize: isSmallScreen ? '0.65rem' : '0.75rem' }}>
                             {song.tracks![1].name || "Player 2"}
                         </Typography>
                     </Box>

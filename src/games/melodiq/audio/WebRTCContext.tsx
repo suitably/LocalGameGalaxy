@@ -171,14 +171,6 @@ export const WebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const activePeers = useMemo(() => peers.filter(p => activePeerIds.includes(p.id)), [peers, activePeerIds]);
     const inactivePeers = useMemo(() => peers.filter(p => !activePeerIds.includes(p.id)), [peers, activePeerIds]);
 
-    // Ensure we have at least defaults if empty
-    // Ensure we have at least defaults if empty
-    useEffect(() => {
-        if (trackerUrls.length === 0) {
-            restoreDefaultTrackers();
-        }
-    }, [trackerUrls]);
-
     // Broadcast roster updates
     useEffect(() => {
         if (manager) {

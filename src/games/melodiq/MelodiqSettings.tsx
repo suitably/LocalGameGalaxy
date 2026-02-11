@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 import { MicrophoneManager } from './audio/MicrophoneManager';
 import { useProfiles } from './hooks/useProfiles';
-import { useSettings, DEFAULT_SETTINGS, type SettingsState } from './hooks/useSettings';
+import { useMelodiqSettings, DEFAULT_SETTINGS, type SettingsState } from './hooks/SettingsContext';
 import { SessionSetup } from './components/SessionSetup';
 import { UserProfilesManager } from './components/UserProfilesManager';
 import { GameSettingsPanel } from './components/GameSettingsPanel';
@@ -23,7 +23,7 @@ interface MelodiqSettingsProps {
 }
 
 export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
 
     // Audio Devices
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
@@ -31,7 +31,7 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
 
     // Custom Hooks for state management
     const profilesHook = useProfiles(devices);
-    const settingsHook = useSettings();
+    const settingsHook = useMelodiqSettings();
 
     // Snapshot initial state for session undo (only captured once on mount)
     const initialSnapshot = useRef<{
@@ -106,7 +106,7 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
                 </Typography>
             </Box>
 
-            <Paper sx={{ p: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <Paper sx={{ p: { xs: 2, md: 4 }, display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {/* 0. P2P Helper Connection (Priority for TV) */}
                 <HelperConnection />
 
@@ -141,33 +141,97 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
 
                 <Divider />
 
-                {/* 4. Game Settings */}
+                {/* 4. Language Settings */}
+                <Box>
+                    <Typography variant="h6" sx={{ mb: 2 }}>{t('settings.language', 'Language')}</Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Button
+                            variant={i18n.language === 'en' ? 'contained' : 'outlined'}
+                            onClick={() => i18n.changeLanguage('en')}
+                        >
+                            English
+                        </Button>
+                        <Button
+                            variant={i18n.language === 'de' ? 'contained' : 'outlined'}
+                            onClick={() => i18n.changeLanguage('de')}
+                        >
+                            Deutsch
+                        </Button>
+                    </Box>
+                </Box>
+
+                <Divider />
+
+                {/* 5. Game Settings */}
                 <GameSettingsPanel
                     settings={settingsHook.settings}
                     onUpdateSetting={settingsHook.updateSetting}
                 />
 
-                <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                <Box sx={{
+                    mt: 4,
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 2
+                }}>
+                    <Box sx={{
+                        display: 'flex',
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        gap: { xs: 2, sm: 1 },
+                        width: { xs: '100%', sm: 'auto' }
+                    }}>
                         <Button
                             variant="outlined"
-                            size="small"
                             startIcon={<UndoIcon />}
                             onClick={handleUndo}
+                            sx={{
+                                width: { xs: '100%', sm: 'auto' },
+                                borderRadius: 50,
+                                px: 4,
+                                py: 1.5,
+                                borderColor: 'rgba(255,255,255,0.5)',
+                                color: 'text.primary',
+                                '&:hover': {
+                                    borderColor: 'white',
+                                    bgcolor: 'rgba(255,255,255,0.05)'
+                                }
+                            }}
                         >
                             Undo Session
                         </Button>
                         <Button
                             variant="outlined"
-                            size="small"
                             color="warning"
                             startIcon={<RestoreIcon />}
                             onClick={handleResetDefaults}
+                            sx={{
+                                width: { xs: '100%', sm: 'auto' },
+                                borderRadius: 50,
+                                px: 4,
+                                py: 1.5
+                            }}
                         >
                             Reset Defaults
                         </Button>
                     </Box>
-                    <Button variant="contained" onClick={onBack}>Back</Button>
+                    <Button
+                        variant="contained"
+                        onClick={onBack}
+                        sx={{
+                            width: { xs: '100%', sm: 'auto' },
+                            borderRadius: 50,
+                            px: 6,
+                            py: 1.5,
+                            fontSize: '1.1rem',
+                            backgroundImage: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
+                            boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
+                            color: 'white'
+                        }}
+                    >
+                        Back
+                    </Button>
                 </Box>
             </Paper>
         </Box>

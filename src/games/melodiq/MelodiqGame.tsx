@@ -1,24 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { VirtuosoGrid } from 'react-virtuoso';
-import { Box, Button, Typography, Card, Grid, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText, LinearProgress } from '@mui/material';
+import { Box, Button, Typography, Card, Grid, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText, LinearProgress, Collapse } from '@mui/material';
 import { type Song, type SongMeta } from './db';
 import { MelodiqSession } from './gameplay/MelodiqSession';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
+
 import SettingsIcon from '@mui/icons-material/Settings';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import { MelodiqSettings } from './MelodiqSettings';
 
+
+import QrCodeIcon from '@mui/icons-material/QrCode';
+import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
+
 import { useTranslation } from 'react-i18next';
-import { usePageTitle } from '../../context/TitleContext';
+import { useLayout } from '../../context/LayoutContext';
 import { WebRTCProvider, useWebRTC } from './audio/WebRTCContext';
+import { SettingsProvider } from './hooks/SettingsContext';
 import { MelodiqConnection } from './MelodiqConnection';
 import { SongCard } from './components/SongCard';
-import QrCodeIcon from '@mui/icons-material/QrCode';
 import { useSongs, SongsProvider } from './hooks/useSongs';
 import { useQueue } from './hooks/useQueue';
 import { PhoneQueueBridge } from './components/PhoneQueueBridge';
-import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
+import { CastButton } from './components/CastButton';
 
 // Navigation State
 type View = 'Home' | 'Settings' | 'Session' | 'Connection';
@@ -27,7 +32,10 @@ export const MelodiqGameContent: React.FC = () => {
     const { t } = useTranslation();
 
     // Set the game title in the header
-    usePageTitle(t('games.melodiq.title'));
+    // Set the game title in the header using useLayout
+    // usePageTitle(t('games.melodiq.title'));
+
+    const { setHeader, setCustomHeaderActions } = useLayout();
 
     // Use centralized song management hook
     const { songs, loadingProgress, refreshSongs, getSongById, isLoading } = useSongs();
@@ -50,6 +58,60 @@ export const MelodiqGameContent: React.FC = () => {
     // View State
     const [currentView, setCurrentView] = useState<View>('Home');
     const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+
+    // Update Global Header based on state
+    // Update Global Header based on state
+    // Filter Visibility State
+    const [showFilters, setShowFilters] = useState(true);
+
+    // Update Global Header based on state
+    useEffect(() => {
+        // Always intercept home button to keep user in Melodiq
+        const homeAction = () => setCurrentView('Home');
+
+        if (currentView === 'Home') {
+            setHeader(t('games.melodiq.title'), [
+                {
+                    label: showFilters ? 'Hide Filters' : 'Show Filters',
+                    icon: <FilterListIcon />,
+                    action: () => setShowFilters(prev => !prev),
+                    showAlways: true
+                },
+                {
+                    label: `Queue (${queue.length})`,
+                    icon: <PlaylistPlayIcon />,
+                    action: () => window.open('/games/melodiq/queue', '_blank')
+                },
+                {
+                    label: 'Refresh',
+                    icon: <SearchIcon />,
+                    action: () => refreshSongs(),
+                    disabled: loadingProgress !== null
+                },
+                {
+                    label: 'Settings',
+                    icon: <SettingsIcon />,
+                    action: () => setCurrentView('Settings'),
+                    showAlways: true
+                },
+                {
+                    label: 'Connect Phones',
+                    icon: <QrCodeIcon />,
+                    action: () => setCurrentView('Connection'),
+                    showAlways: true
+                }
+            ], homeAction);
+            setCustomHeaderActions(<CastButton />);
+        } else {
+            // Clear menu items for other views to avoid irrelevant actions
+            setHeader(t('games.melodiq.title'), [], homeAction);
+            setCustomHeaderActions(null);
+        }
+        return () => {
+            setHeader(null, [], null);
+            setCustomHeaderActions(null);
+        };
+    }, [currentView, queue.length, loadingProgress, refreshSongs, setCurrentView, t, setHeader, showFilters, setShowFilters, setCustomHeaderActions]);
 
     // Handler to select and load a song for playback
     const handleSelectSong = async (songMeta: SongMeta) => {
@@ -174,43 +236,7 @@ export const MelodiqGameContent: React.FC = () => {
                 overflow: 'hidden' // Prevent body scroll
             }}>
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexShrink: 0, px: 2, pt: 2 }}>
-                    <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <MusicNoteIcon fontSize="large" color="primary" />
-                        Melodiq
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                        <Button
-                            onClick={() => window.open('/games/melodiq/queue', '_blank')}
-                            startIcon={<PlaylistPlayIcon />}
-                            variant="outlined"
-                        >
-                            Queue ({queue.length})
-                        </Button>
-                        <Button
-                            onClick={() => refreshSongs()}
-                            startIcon={<SearchIcon />} // Using SearchIcon as "Scan/Refresh" placeholder or better icon if available
-                            variant="outlined"
-                            disabled={loadingProgress !== null}
-                        >
-                            Refresh
-                        </Button>
-                        <Button
-                            onClick={() => setCurrentView('Settings')}
-                            startIcon={<SettingsIcon />}
-                            variant="outlined"
-                        >
-                            Settings
-                        </Button>
-                        <Button
-                            onClick={() => setCurrentView('Connection')}
-                            startIcon={<QrCodeIcon />}
-                            variant="outlined"
-                        >
-                            Connect Phones
-                        </Button>
-                    </Box>
-                </Box>
+                {/* Header removed, now using GlobalHeader */}
 
                 {/* Loading Progress */}
                 {loadingProgress && isLoading && (
@@ -237,12 +263,25 @@ export const MelodiqGameContent: React.FC = () => {
                                 variant="contained"
                                 color="secondary"
                                 onClick={() => alert("Binaries are in server/dist/ folder!")}
+                                sx={{
+                                    borderRadius: 50,
+                                    px: 4,
+                                    py: 1.5,
+                                    backgroundImage: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
+                                    boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
+                                    color: 'white'
+                                }}
                             >
                                 Download Helper
                             </Button>
                             <Button
                                 onClick={refreshSongs}
                                 variant="outlined"
+                                sx={{
+                                    borderRadius: 50,
+                                    px: 4,
+                                    py: 1.5
+                                }}
                             >
                                 Retry Connection
                             </Button>
@@ -250,140 +289,157 @@ export const MelodiqGameContent: React.FC = () => {
                     </Box>
                 )}
 
-                {/* Search and Filters */}
+                {/* Filter Toggle & Container */}
                 {songs.length > 0 && (
-                    <Card sx={{ mb: 2, p: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', flexShrink: 0 }}>
-                        <TextField
-                            placeholder="Search title, artist..."
-                            variant="outlined"
-                            size="small"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <SearchIcon color="action" />
-                                    </InputAdornment>
-                                ),
-                                endAdornment: searchQuery && (
-                                    <InputAdornment position="end">
-                                        <IconButton size="small" onClick={() => setSearchQuery('')}>
-                                            <CloseIcon fontSize="small" />
-                                        </IconButton>
-                                    </InputAdornment>
-                                )
-                            }}
-                            sx={{ flexGrow: 1, minWidth: '200px' }}
-                        />
+                    <Box sx={{ mb: 2, flexShrink: 0 }}>
+                        <Collapse in={showFilters}>
+                            <Card sx={{ p: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                                <TextField
+                                    placeholder="Search title, artist..."
+                                    variant="outlined"
+                                    size="small"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <SearchIcon color="action" />
+                                            </InputAdornment>
+                                        ),
+                                        endAdornment: searchQuery && (
+                                            <InputAdornment position="end">
+                                                <IconButton size="small" onClick={() => setSearchQuery('')}>
+                                                    <CloseIcon fontSize="small" />
+                                                </IconButton>
+                                            </InputAdornment>
+                                        )
+                                    }}
+                                    sx={{
+                                        flexGrow: 1,
+                                        minWidth: '200px',
+                                        '& .MuiOutlinedInput-root': { borderRadius: 50 }
+                                    }}
+                                />
 
-                        <FormControl size="small" sx={{ minWidth: 120, maxWidth: 200 }}>
-                            <InputLabel>Genre</InputLabel>
-                            <Select
-                                multiple
-                                value={activeFilters.genre}
-                                label="Genre"
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setActiveFilters(prev => ({
-                                        ...prev,
-                                        genre: typeof value === 'string' ? value.split(',') : value
-                                    }));
-                                }}
-                                renderValue={(selected) => selected.join(', ')}
-                            >
-                                {availableGenres.map(g => (
-                                    <MenuItem key={g} value={g}>
-                                        <Checkbox checked={activeFilters.genre.indexOf(g) > -1} />
-                                        <ListItemText primary={g} />
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+                                <FormControl size="small" sx={{ minWidth: 120, maxWidth: 200 }}>
+                                    <InputLabel>Genre</InputLabel>
+                                    <Select
+                                        multiple
+                                        value={activeFilters.genre}
+                                        label="Genre"
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            setActiveFilters(prev => ({
+                                                ...prev,
+                                                genre: typeof value === 'string' ? value.split(',') : value
+                                            }));
+                                        }}
+                                        renderValue={(selected) => selected.join(', ')}
+                                        sx={{ borderRadius: 50 }}
+                                    >
+                                        {availableGenres.map(g => (
+                                            <MenuItem key={g} value={g}>
+                                                <Checkbox checked={activeFilters.genre.indexOf(g) > -1} />
+                                                <ListItemText primary={g} />
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
 
-                        <FormControl size="small" sx={{ minWidth: 100, maxWidth: 150 }}>
-                            <InputLabel>Year</InputLabel>
-                            <Select
-                                multiple
-                                value={activeFilters.year}
-                                label="Year"
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setActiveFilters(prev => ({
-                                        ...prev,
-                                        year: typeof value === 'string' ? value.split(',') : value
-                                    }));
-                                }}
-                                renderValue={(selected) => selected.join(', ')}
-                            >
-                                {availableYears.map(y => (
-                                    <MenuItem key={y} value={y}>
-                                        <Checkbox checked={activeFilters.year.indexOf(y) > -1} />
-                                        <ListItemText primary={y} />
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+                                <FormControl size="small" sx={{ minWidth: 100, maxWidth: 150 }}>
+                                    <InputLabel>Year</InputLabel>
+                                    <Select
+                                        multiple
+                                        value={activeFilters.year}
+                                        label="Year"
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            setActiveFilters(prev => ({
+                                                ...prev,
+                                                year: typeof value === 'string' ? value.split(',') : value
+                                            }));
+                                        }}
+                                        renderValue={(selected) => selected.join(', ')}
+                                        sx={{ borderRadius: 50 }}
+                                    >
+                                        {availableYears.map(y => (
+                                            <MenuItem key={y} value={y}>
+                                                <Checkbox checked={activeFilters.year.indexOf(y) > -1} />
+                                                <ListItemText primary={y} />
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
 
-                        <FormControl size="small" sx={{ minWidth: 120, maxWidth: 200 }}>
-                            <InputLabel>Language</InputLabel>
-                            <Select
-                                multiple
-                                value={activeFilters.language}
-                                label="Language"
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setActiveFilters(prev => ({
-                                        ...prev,
-                                        language: typeof value === 'string' ? value.split(',') : value
-                                    }));
-                                }}
-                                renderValue={(selected) => selected.join(', ')}
-                            >
-                                {availableLanguages.map(l => (
-                                    <MenuItem key={l} value={l}>
-                                        <Checkbox checked={activeFilters.language.indexOf(l) > -1} />
-                                        <ListItemText primary={l} />
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+                                <FormControl size="small" sx={{ minWidth: 120, maxWidth: 200 }}>
+                                    <InputLabel>Language</InputLabel>
+                                    <Select
+                                        multiple
+                                        value={activeFilters.language}
+                                        label="Language"
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            setActiveFilters(prev => ({
+                                                ...prev,
+                                                language: typeof value === 'string' ? value.split(',') : value
+                                            }));
+                                        }}
+                                        renderValue={(selected) => selected.join(', ')}
+                                        sx={{ borderRadius: 50 }}
+                                    >
+                                        {availableLanguages.map(l => (
+                                            <MenuItem key={l} value={l}>
+                                                <Checkbox checked={activeFilters.language.indexOf(l) > -1} />
+                                                <ListItemText primary={l} />
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
 
-                        <FormControl size="small" sx={{ minWidth: 150, maxWidth: 250 }}>
-                            <InputLabel>Edition</InputLabel>
-                            <Select
-                                multiple
-                                value={activeFilters.edition}
-                                label="Edition"
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setActiveFilters(prev => ({
-                                        ...prev,
-                                        edition: typeof value === 'string' ? value.split(',') : value
-                                    }));
-                                }}
-                                renderValue={(selected) => selected.join(', ')}
-                            >
-                                {availableEditions.map(ed => (
-                                    <MenuItem key={ed} value={ed}>
-                                        <Checkbox checked={activeFilters.edition.indexOf(ed) > -1} />
-                                        <ListItemText primary={ed} />
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+                                <FormControl size="small" sx={{ minWidth: 150, maxWidth: 250 }}>
+                                    <InputLabel>Edition</InputLabel>
+                                    <Select
+                                        multiple
+                                        value={activeFilters.edition}
+                                        label="Edition"
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            setActiveFilters(prev => ({
+                                                ...prev,
+                                                edition: typeof value === 'string' ? value.split(',') : value
+                                            }));
+                                        }}
+                                        renderValue={(selected) => selected.join(', ')}
+                                        sx={{ borderRadius: 50 }}
+                                    >
+                                        {availableEditions.map(ed => (
+                                            <MenuItem key={ed} value={ed}>
+                                                <Checkbox checked={activeFilters.edition.indexOf(ed) > -1} />
+                                                <ListItemText primary={ed} />
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
 
-                        {(searchQuery || activeFilters.year.length > 0 || activeFilters.genre.length > 0 || activeFilters.language.length > 0 || activeFilters.edition.length > 0) && (
-                            <Button size="small" onClick={clearFilters} color="inherit">
-                                Clear All
-                            </Button>
-                        )}
+                                {(searchQuery || activeFilters.year.length > 0 || activeFilters.genre.length > 0 || activeFilters.language.length > 0 || activeFilters.edition.length > 0) && (
+                                    <Button
+                                        size="small"
+                                        onClick={clearFilters}
+                                        color="inherit"
+                                        variant="outlined"
+                                        sx={{ borderRadius: 50 }}
+                                    >
+                                        Clear All
+                                    </Button>
+                                )}
 
-                        <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
-                            {filteredSongs.length} / {songs.length} songs
-                        </Typography>
-                    </Card>
-                )
-                }
+                                <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
+                                    {filteredSongs.length} / {songs.length} songs
+                                </Typography>
+                            </Card>
+                        </Collapse>
+                    </Box>
+                )}
 
                 {
                     filteredSongs?.length > 0 && (
@@ -392,7 +448,7 @@ export const MelodiqGameContent: React.FC = () => {
                                 style={{ height: '100%', width: '100%' }}
                                 totalCount={filteredSongs.length}
                                 components={{
-                                    List: React.forwardRef((props, ref) => <Grid container spacing={2} {...props} ref={ref as any} />),
+                                    List: React.forwardRef((props, ref) => <Grid container spacing={2} {...props} ref={ref as any} id="song-grid" />),
                                     Item: React.forwardRef((props, ref) => {
                                         // Read density preference (default to 'small' for high density)
                                         const cardSize = localStorage.getItem('melodiq_card_size') || 'small';
@@ -474,7 +530,7 @@ export const MelodiqGameContent: React.FC = () => {
     }, [manager, currentView, refreshSongs]);
 
     return (
-        <Box sx={{ width: '100vw', height: '100vh', overflow: 'hidden', bgcolor: 'background.default', color: 'text.primary' }}>
+        <Box sx={{ width: '100vw', height: '100%', overflow: 'hidden', bgcolor: 'background.default', color: 'text.primary' }}>
             {renderView()}
         </Box>
     );
@@ -482,12 +538,14 @@ export const MelodiqGameContent: React.FC = () => {
 
 export const MelodiqGame: React.FC = () => {
     return (
-        <WebRTCProvider>
-            <SongsProvider>
-                <MelodiqGameContent />
-                <PhoneQueueBridge />
-            </SongsProvider>
-        </WebRTCProvider>
+        <SettingsProvider>
+            <WebRTCProvider>
+                <SongsProvider>
+                    <MelodiqGameContent />
+                    <PhoneQueueBridge />
+                </SongsProvider>
+            </WebRTCProvider>
+        </SettingsProvider>
     );
 };
 

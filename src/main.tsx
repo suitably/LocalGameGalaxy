@@ -5,6 +5,7 @@ import { ThemeProvider, CssBaseline } from '@mui/material';
 import App from './App';
 import theme from './theme';
 import { TitleProvider } from './context/TitleContext';
+import { LayoutProvider } from './context/LayoutContext';
 import './i18n';
 import './index.css';
 
@@ -14,7 +15,9 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <TitleProvider>
-          <App />
+          <LayoutProvider>
+            <App />
+          </LayoutProvider>
         </TitleProvider>
       </ThemeProvider>
     </BrowserRouter>

@@ -9,6 +9,7 @@ import { MicrophoneManager, type PitchResult } from '../audio/MicrophoneManager'
 import { WebRTCMicManager } from '../audio/WebRTCMicManager';
 import { type UserProfile, type ActivePlayer } from '../MelodiqSettings';
 import { ScoreBoard } from './ScoreBoard';
+import { useMelodiqSettings } from '../hooks/SettingsContext';
 
 interface MelodiqSessionProps {
     song: Song;
@@ -121,35 +122,19 @@ class PlayerRuntime {
 }
 
 export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) => {
-    // Session State
-    // Read Settings from LocalStorage
-    const [showDebugOverlay] = useState(localStorage.getItem('melodiq_show_overlay') === 'true');
-    const [showDevSlider] = useState(localStorage.getItem('melodiq_show_slider') === 'true');
-    const [showMicStatus] = useState(() => {
-        const stored = localStorage.getItem('melodiq_show_mic_status');
-        return stored === null ? true : stored === 'true';
-    });
-    const [showNoteLabels] = useState(() => {
-        const stored = localStorage.getItem('melodiq_show_note_labels');
-        return stored === null ? true : stored === 'true';
-    });
-    const [showVideoErrors] = useState(localStorage.getItem('melodiq_show_video_errors') === 'true');
-    // Layout State
-    const [layoutOverride] = useState(localStorage.getItem('melodiq_layout_override') || '');
-
-    // Volume State
-    const [songVolume] = useState(() => {
-        const stored = localStorage.getItem('melodiq_song_volume');
-        return stored ? parseFloat(stored) : 0.7;
-    });
-    const [masterVolume] = useState(() => {
-        const stored = localStorage.getItem('melodiq_master_volume');
-        return stored ? parseFloat(stored) : 1.0;
-    });
-    const [goldenNoteMultiplier] = useState(() => {
-        const stored = localStorage.getItem('melodiq_golden_note_multiplier');
-        return stored ? parseFloat(stored) : 2.0;
-    });
+    // Session State - Read from shared SettingsContext (reactive / live updates)
+    const { settings } = useMelodiqSettings();
+    const {
+        showDebugOverlay,
+        showDevSlider,
+        showMicStatus,
+        showNoteLabels,
+        showVideoErrors,
+        layoutOverride,
+        songVolume,
+        masterVolume,
+        goldenNoteMultiplier
+    } = settings;
 
     // Dynamic Player State
     const [players, setPlayers] = useState<PlayerRuntime[]>([]);
@@ -176,7 +161,48 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     const [videoError, setVideoError] = useState<string | null>(null);
     const [needsFolderAccess, setNeedsFolderAccess] = useState(false);
 
+    // Live Volume Sync: update audio volume when settings change during playback
+    useEffect(() => {
+        if (audioRef.current) {
+            audioRef.current.volume = songVolume * masterVolume;
+        }
+    }, [songVolume, masterVolume]);
+
+    // Auto-Hide UI State
+    const [isUIVisible, setIsUIVisible] = useState(true);
+    const uiTimeoutRef = useRef<any>(null);
     const requestRef = useRef<number>(0);
+
+    const resetUITimer = useCallback(() => {
+        setIsUIVisible(true);
+        if (uiTimeoutRef.current) {
+            clearTimeout(uiTimeoutRef.current);
+        }
+        uiTimeoutRef.current = setTimeout(() => {
+            if (isPlaying && !isFinished) {
+                setIsUIVisible(false);
+            }
+        }, 3000); // Hide after 3 seconds
+    }, [isPlaying, isFinished]);
+
+    useEffect(() => {
+        const handleActivity = () => resetUITimer();
+
+        window.addEventListener('mousemove', handleActivity);
+        window.addEventListener('keydown', handleActivity);
+        window.addEventListener('touchstart', handleActivity);
+        window.addEventListener('click', handleActivity);
+
+        resetUITimer(); // Start timer initially
+
+        return () => {
+            window.removeEventListener('mousemove', handleActivity);
+            window.removeEventListener('keydown', handleActivity);
+            window.removeEventListener('touchstart', handleActivity);
+            window.removeEventListener('click', handleActivity);
+            if (uiTimeoutRef.current) clearTimeout(uiTimeoutRef.current);
+        };
+    }, [resetUITimer]);
     const lastScoreUpdateRef = useRef<number>(0);
     const playersRef = useRef<PlayerRuntime[]>([]);
     const progressLineRef = useRef<HTMLDivElement>(null);
@@ -375,6 +401,31 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     switchTrack(pIdx, data.trackIndex);
                 }
             }
+
+            // Phone Remote Control Commands
+            if (data.type === 'remote.command') {
+                console.log(`[Session] Remote command from ${peerId}:`, data.command);
+                switch (data.command) {
+                    case 'play':
+                        togglePlay();
+                        break;
+                    case 'restart':
+                        if (audioRef.current) {
+                            audioRef.current.currentTime = 0;
+                            if (videoRef.current) videoRef.current.currentTime = 0;
+                        }
+                        break;
+                    case 'next':
+                        // Skip to end to trigger song-end handler
+                        if (audioRef.current && audioRef.current.duration) {
+                            audioRef.current.currentTime = audioRef.current.duration - 0.1;
+                        }
+                        break;
+                    case 'exit':
+                        onExit();
+                        break;
+                }
+            }
         };
 
         setPlayers(prevPlayers => {
@@ -487,14 +538,46 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.code === 'Space') {
-                e.preventDefault();
-                togglePlay();
+            // TV Remote / Keyboard Shortcuts
+            switch (e.key) {
+                case ' ':
+                case 'Enter': // TV Remote "OK"
+                case 'MediaPlayPause':
+                    e.preventDefault();
+                    togglePlay();
+                    break;
+                case 'ArrowRight':
+                case 'MediaFastForward':
+                    if (audioRef.current) {
+                        e.preventDefault();
+                        audioRef.current.currentTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 10);
+                        resetUITimer();
+                    }
+                    break;
+                case 'ArrowLeft': // TV Remote "Left" (Seek Back) or MediaRewind
+                case 'MediaRewind':
+                    if (audioRef.current) {
+                        e.preventDefault();
+                        audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 10);
+                        resetUITimer();
+                    }
+                    break;
+                case 'ArrowUp': // TV Remote "Up" (Volume Up?) - Optional, might conflict with navigation if we add UI later
+                    // For now, let's allow it as volume control if no UI is focused
+                    e.preventDefault();
+                    // Increase volume? implementation left out for now to avoid complexity, usually TV handles system volume.
+                    // But we can implement internal gain if needed.
+                    break;
+                case 'Escape':
+                case 'Backspace': // TV Remote "Back"
+                    e.preventDefault();
+                    onExit();
+                    break;
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [togglePlay]);
+    }, [togglePlay, onExit, resetUITimer]);
 
     const processPlayer = (
         player: PlayerRuntime,
@@ -719,16 +802,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     if (song.audio.startsWith('http://') || song.audio.startsWith('https://') || song.audio.startsWith('blob:') || song.audio.startsWith('/')) {
                         activeUrl = song.audio;
 
-                        // If it's a relative URL from our server, we might need to prepend base if not on same origin
-                        // But since we use vite proxy or if frontend is on 5173 and server on 3000...
-                        // Wait, if frontend is 5173, fetching '/media/...' will go to 5173.
-                        // We need the server URL.
                         if (song.audio.startsWith('/') && !window.location.origin.includes('3000')) {
-                            // We are on dev server (5173) probably, but media is on 3000.
-                            // We should probably rely on the server returning full URLs or configured proxy.
-                            // But let's just prepend the server URL for now or assume proxy.
-                            // The fetch in useSongs used http://localhost:3000.
-                            // So we should prepend http://localhost:3000 if it's just /media
                             const helperUrl = localStorage.getItem('melodiq_helper_url')?.replace(/\/$/, "") || 'http://localhost:3000';
                             let finalUrl = song.audio.startsWith('http') ? song.audio : `${helperUrl}${song.audio}`;
 
@@ -747,14 +821,18 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                         const cached = getCachedFiles(song.id);
                         if (cached?.audio) {
                             activeUrl = URL.createObjectURL(cached.audio);
-                            console.log('[Session] Using cached audio file:', cached.audio.name);
+                            console.log(`[MelodiqSession] Using cached audio file for ${song.title}:`, cached.audio.name, `(${cached.audio.size} bytes)`);
 
                             // Also load cached video if available
                             if (cached.video && mounted) {
-                                setVideoSrc(URL.createObjectURL(cached.video));
+                                // check if we already have a video src, if not, set it
+                                // But video is handled in its own effect usually. 
+                                // However, for simple local playback, setting it here might be a sync optimization?
+                                // Actually, let's leave video to its own effect to avoid race/double-set.
                             }
                         } else {
-                            // Cache empty (page was refreshed) - need to prompt user
+                            // Cache miss (page was refreshed) - need to prompt user
+                            console.warn(`[MelodiqSession] Cache miss for audio: ${song.audio}. ID: ${song.id}`);
                             if (mounted) {
                                 setNeedsFolderAccess(true);
                             }
@@ -777,7 +855,12 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         return () => {
             mounted = false;
             // Revoke if it was created from a blob or handle (which creates a blob url)
-            if (activeUrl && typeof song.audio !== 'string') URL.revokeObjectURL(activeUrl);
+            // IMPORTANT: If we created a blob URL from cache (string source), we MUST revoke it.
+            // The check `typeof song.audio !== 'string'` was preventing cleanup of cached files!
+            if (activeUrl && activeUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(activeUrl);
+                console.log(`[MelodiqSession] Revoked audio URL: ${activeUrl}`);
+            }
         };
     }, [song.audio, song.id]);
 
@@ -822,7 +905,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                         if (cached?.video) {
                             fileOrBlob = cached.video;
                             fileName = cached.video.name;
-                            console.log('[Session] Using cached video file:', fileName);
+                            console.log(`[MelodiqSession] Using cached video file for ${song.title}:`, fileName, `(${cached.video.size} bytes)`);
                         } else {
                             // Cache miss (e.g. reload). User needs to re-select folder, but that's handled by audio check mostly.
                             console.warn("Video file cache miss:", song.video);
@@ -861,7 +944,11 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
 
         return () => {
             mounted = false;
-            if (activeUrl && typeof song.video !== 'string') URL.revokeObjectURL(activeUrl);
+            // Revoke if it was created from a blob or handle (which creates a blob url)
+            if (activeUrl && activeUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(activeUrl);
+                console.log(`[MelodiqSession] Revoked video URL: ${activeUrl}`);
+            }
         };
     }, [song.video]);
 
@@ -1066,7 +1153,22 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             }
 
             <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', flex: 1, pointerEvents: 'none' }}>
-                <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'rgba(0,0,0,0.5)', pointerEvents: 'auto' }}>
+                <Box sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    zIndex: 20, // Higher than content
+                    p: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    bgcolor: 'rgba(0,0,0,0.5)',
+                    backdropFilter: 'blur(4px)', // Optional: Nice touch for overlay
+                    pointerEvents: isUIVisible ? 'auto' : 'none',
+                    opacity: isUIVisible ? 1 : 0,
+                    transition: 'opacity 0.5s ease-in-out'
+                }}>
                     <IconButton onClick={() => onExit(true)} color="inherit"><ArrowBackIcon /></IconButton>
                     <Typography variant="h6">{song.artist} - {song.title}</Typography>
                     <Box sx={{ display: 'flex', gap: 4 }}>
@@ -1077,9 +1179,16 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                             const displayName = trackName ? `${p.config.name} (${trackName})` : p.config.name;
 
                             return (
-                                <Typography key={p.config.id} sx={{ color: `hsl(${p.config.hue}, 100%, 70%)` }} fontWeight="bold">
-                                    {displayName}: {scores[p.config.id] || 0}
-                                </Typography>
+                                <Box key={p.config.id} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <Typography sx={{ color: `hsl(${p.config.hue}, 100%, 70%)` }} fontWeight="bold">
+                                        {displayName}: {scores[p.config.id] || 0}
+                                    </Typography>
+                                    {showMicStatus && (
+                                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.7rem' }}>
+                                            Mic: {p.mic?.isActive ? 'On' : (p.webRtcManager ? 'Remote' : 'Off')}
+                                        </Typography>
+                                    )}
+                                </Box>
                             );
                         })}
                     </Box>
@@ -1183,24 +1292,25 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     </Box>
                 )}
 
-                {showMicStatus && (
-                    <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', gap: 2, alignItems: 'center', pointerEvents: 'auto' }}>
-                        <Box sx={{ display: 'flex', gap: 2 }}>
-                            {players.map(p => (
-                                <Typography key={p.config.id} variant="caption" sx={{ color: `hsl(${p.config.hue}, 100%, 70%)` }}>
-                                    {p.config.name} Mic: {p.mic?.isActive ? 'On' : (p.webRtcManager ? 'Remote' : 'Off')}
-                                </Typography>
-                            ))}
-                        </Box>
-                    </Box>
-                )}
+                {/* Mic Status moved to Header */}
             </Box>
 
             {audioSrc && <audio ref={audioRef} src={audioSrc} onEnded={handleSongEnd} style={{ display: 'none' }} />}
             {!audioSrc && <Typography color="error" sx={{ textAlign: 'center', position: 'relative', zIndex: 5 }}>No Audio Source Found</Typography>}
 
             {/* Progress Line - Fixed at bottom */}
-            <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 6, bgcolor: 'rgba(255,255,255,0.2)', zIndex: 100, pointerEvents: 'none' }}>
+            <Box sx={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 6,
+                bgcolor: 'rgba(255,255,255,0.2)',
+                zIndex: 100,
+                pointerEvents: 'none',
+                opacity: isUIVisible ? 1 : 0,
+                transition: 'opacity 0.5s ease-in-out'
+            }}>
                 <Box
                     ref={progressLineRef}
                     sx={{

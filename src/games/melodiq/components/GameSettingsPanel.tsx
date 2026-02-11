@@ -34,6 +34,18 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                         aria-label="card size"
                         size="small"
                         fullWidth
+                        sx={{
+                            borderRadius: 50,
+                            '& .MuiToggleButton-root': {
+                                borderRadius: 50,
+                                border: '1px solid rgba(255, 255, 255, 0.23)',
+                                '&.Mui-selected': {
+                                    bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    borderColor: 'white'
+                                }
+                            }
+                        }}
                     >
                         <ToggleButton value="small">Small</ToggleButton>
                         <ToggleButton value="medium">Medium</ToggleButton>

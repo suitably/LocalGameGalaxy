@@ -7,6 +7,7 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import CloseIcon from '@mui/icons-material/Close';
 import SettingsIcon from '@mui/icons-material/Settings';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import type { UserProfile, ActivePlayer } from '../types';
 import { LatencyCalibrator } from './LatencyCalibrator';
 import { useWebRTC } from '../audio/WebRTCContext';
@@ -55,7 +56,12 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
                 Select who is playing today. Drag (Use arrows) to reorder priority/position.
             </Typography>
 
-            <Button variant="outlined" size="small" onClick={onRefreshDevices} sx={{ mb: 2 }}>
+            <Button
+                variant="outlined"
+                onClick={onRefreshDevices}
+                sx={{ mb: 2, borderRadius: 50, px: 3 }}
+                startIcon={<RefreshIcon />}
+            >
                 Refresh Devices
             </Button>
 
@@ -68,81 +74,94 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
                     const profile = profiles.find(p => p.id === ap.profileId);
                     if (!profile) return null;
                     return (
-                        <Box key={ap.profileId} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, border: '1px solid rgba(255,255,255,0.2)', borderRadius: 1 }}>
-                            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                                <IconButton size="small" onClick={() => onMoveActivePlayer(index, 'up')} disabled={index === 0}>
-                                    <Typography variant="caption">▲</Typography>
-                                </IconButton>
-                                <IconButton size="small" onClick={() => onMoveActivePlayer(index, 'down')} disabled={index === activePlayers.length - 1}>
-                                    <Typography variant="caption">▼</Typography>
-                                </IconButton>
+                        <Box key={ap.profileId} sx={{
+                            display: 'flex',
+                            flexDirection: { xs: 'column', md: 'row' },
+                            alignItems: { xs: 'stretch', md: 'center' },
+                            gap: 2,
+                            p: { xs: 1.5, md: 1 },
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            borderRadius: 1
+                        }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+                                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                    <IconButton size="small" onClick={() => onMoveActivePlayer(index, 'up')} disabled={index === 0}>
+                                        <Typography variant="caption">▲</Typography>
+                                    </IconButton>
+                                    <IconButton size="small" onClick={() => onMoveActivePlayer(index, 'down')} disabled={index === activePlayers.length - 1}>
+                                        <Typography variant="caption">▼</Typography>
+                                    </IconButton>
+                                </Box>
+
+                                <Avatar sx={{ bgcolor: `hsl(${profile.hue}, 100%, 50%)`, width: 32, height: 32 }}>{profile.name[0]}</Avatar>
+                                <Typography sx={{ flex: 1, fontWeight: 'bold' }}>{profile.name}</Typography>
                             </Box>
 
-                            <Avatar sx={{ bgcolor: `hsl(${profile.hue}, 100%, 50%)`, width: 32, height: 32 }}>{profile.name[0]}</Avatar>
-                            <Typography sx={{ flex: 1, fontWeight: 'bold' }}>{profile.name}</Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
 
-                            <Button
-                                size="small"
-                                onClick={() => {
-                                    const newMuted = !(ap.muted ?? false);
-                                    onUpdateActivePlayerConfig(ap.profileId, { muted: newMuted });
-                                }}
-                                color={ap.muted ? "error" : "primary"}
-                                sx={{ minWidth: 40 }}
-                            >
-                                {ap.muted ? <VolumeOffIcon /> : <VolumeUpIcon />}
-                            </Button>
-
-                            <Slider
-                                size="small"
-                                value={typeof ap.volume === 'number' ? ap.volume * 100 : 80}
-                                min={0}
-                                max={100}
-                                onChange={(_, val) => onUpdateActivePlayerConfig(ap.profileId, { volume: (val as number) / 100 })}
-                                sx={{ width: 80, mx: 2 }}
-                                disabled={ap.muted}
-                            />
-
-                            <FormControl sx={{ minWidth: 150 }} size="small">
-                                <Select
-                                    value={loadingDevices ? 'loading' : (
-                                        devices.some(d => d.deviceId === ap.deviceId) || connectedPreviewPeers.some(p => p.id === ap.deviceId)
-                                            ? ap.deviceId : ''
-                                    )}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        const isPhone = connectedPreviewPeers.some(p => p.id === val);
-                                        onUpdateActivePlayerConfig(ap.profileId, { deviceId: val, isRemote: isPhone });
+                                <Button
+                                    size="small"
+                                    onClick={() => {
+                                        const newMuted = !(ap.muted ?? false);
+                                        onUpdateActivePlayerConfig(ap.profileId, { muted: newMuted });
                                     }}
-                                    disabled={loadingDevices}
-                                    displayEmpty
-                                    variant="standard"
+                                    color={ap.muted ? "error" : "primary"}
+                                    sx={{ minWidth: 40 }}
                                 >
-                                    <MenuItem value=""><em>No Device</em></MenuItem>
-                                    {loadingDevices && <MenuItem value="loading" disabled>Loading...</MenuItem>}
-                                    {devices.map(d => (
-                                        <MenuItem key={d.deviceId} value={d.deviceId}>{d.label || d.deviceId}</MenuItem>
-                                    ))}
-                                    {connectedPreviewPeers.length > 0 && <Divider />}
-                                    {connectedPreviewPeers.length > 0 && <MenuItem disabled><em>Phones</em></MenuItem>}
-                                    {connectedPreviewPeers.map(p => (
-                                        <MenuItem key={p.id} value={p.id}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <Typography>📱 {p.name}</Typography>
-                                                {p.hue && <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: `hsl(${p.hue}, 100%, 50%)` }} />}
-                                            </Box>
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                                    {ap.muted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+                                </Button>
 
-                            <IconButton size="small" onClick={(e) => handleSettingsClick(e, ap.profileId)}>
-                                <SettingsIcon fontSize="small" />
-                            </IconButton>
+                                <Slider
+                                    size="small"
+                                    value={typeof ap.volume === 'number' ? ap.volume * 100 : 80}
+                                    min={0}
+                                    max={100}
+                                    onChange={(_, val) => onUpdateActivePlayerConfig(ap.profileId, { volume: (val as number) / 100 })}
+                                    sx={{ width: 80, mx: 2 }}
+                                    disabled={ap.muted}
+                                />
 
-                            <IconButton color="error" onClick={() => onToggleActivePlayer(ap.profileId)}>
-                                <CloseIcon />
-                            </IconButton>
+                                <FormControl sx={{ minWidth: 150 }} size="small">
+                                    <Select
+                                        value={loadingDevices ? 'loading' : (
+                                            devices.some(d => d.deviceId === ap.deviceId) || connectedPreviewPeers.some(p => p.id === ap.deviceId)
+                                                ? ap.deviceId : ''
+                                        )}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const isPhone = connectedPreviewPeers.some(p => p.id === val);
+                                            onUpdateActivePlayerConfig(ap.profileId, { deviceId: val, isRemote: isPhone });
+                                        }}
+                                        disabled={loadingDevices}
+                                        displayEmpty
+                                        variant="standard"
+                                    >
+                                        <MenuItem value=""><em>No Device</em></MenuItem>
+                                        {loadingDevices && <MenuItem value="loading" disabled>Loading...</MenuItem>}
+                                        {devices.map(d => (
+                                            <MenuItem key={d.deviceId} value={d.deviceId}>{d.label || d.deviceId}</MenuItem>
+                                        ))}
+                                        {connectedPreviewPeers.length > 0 && <Divider />}
+                                        {connectedPreviewPeers.length > 0 && <MenuItem disabled><em>Phones</em></MenuItem>}
+                                        {connectedPreviewPeers.map(p => (
+                                            <MenuItem key={p.id} value={p.id}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <Typography>📱 {p.name}</Typography>
+                                                    {p.hue && <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: `hsl(${p.hue}, 100%, 50%)` }} />}
+                                                </Box>
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+
+                                <IconButton size="small" onClick={(e) => handleSettingsClick(e, ap.profileId)}>
+                                    <SettingsIcon fontSize="small" />
+                                </IconButton>
+
+                                <IconButton color="error" onClick={() => onToggleActivePlayer(ap.profileId)}>
+                                    <CloseIcon />
+                                </IconButton>
+                            </Box>
                         </Box>
                     );
                 })}
@@ -211,6 +230,7 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
                             variant="outlined"
                             startIcon={<Typography sx={{ color: `hsl(${p.hue}, 100%, 50%)` }}>●</Typography>}
                             onClick={() => onToggleActivePlayer(p.id)}
+                            sx={{ borderRadius: 50 }}
                         >
                             {p.name}
                         </Button>

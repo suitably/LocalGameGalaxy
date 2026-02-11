@@ -155,11 +155,14 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return undefined;
     }, [songs]);
 
+    const value = React.useMemo(() => ({
+        songs, isLoading, loadingProgress, refreshSongs, getSongById
+    }), [songs, isLoading, loadingProgress, refreshSongs, getSongById]);
+
     return (
-        <SongsContext.Provider value= {{ songs, isLoading, loadingProgress, refreshSongs, getSongById }
-}>
-    { children }
-    </SongsContext.Provider>
+        <SongsContext.Provider value={value}>
+            {children}
+        </SongsContext.Provider>
     );
 };
 

@@ -87,7 +87,6 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
 
     // Constants for rendering
     const PIXELS_PER_BEAT = 40; // Wider spacing for cleaner look
-    const NOTE_HEIGHT = 18;
     const PLAYHEAD_X = 150; // More anticipation time
 
     // Handle Resize & DPI
@@ -108,11 +107,13 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
         return () => observer.disconnect();
     }, [height]);
 
-    // Pre-calculate center pitch - use track notes if available
-    const centerPitch = React.useMemo(() => {
+    // Pre-calculate pitch range and center
+    const { centerPitch, noteHeight } = React.useMemo(() => {
         const trackNotes = (song.tracks && song.tracks[trackIndex]) ? song.tracks[trackIndex].notes : song.notes;
         const notes = trackNotes || [];
-        if (notes.length === 0) return 60;
+
+        if (notes.length === 0) return { centerPitch: 60, noteHeight: 18 };
+
         let min = Infinity, max = -Infinity;
         notes.forEach(n => {
             if (n.type !== '-') {
@@ -120,9 +121,23 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
                 if (n.pitch > max) max = n.pitch;
             }
         });
-        if (min === Infinity) return 60;
-        return (min + max) / 2;
-    }, [song.tracks, song.notes, trackIndex]); // Depend on trackIndex too
+
+        if (min === Infinity) return { centerPitch: 60, noteHeight: 18 };
+
+        const center = (min + max) / 2;
+        const range = max - min + 4; // Add padding (2 semitones each side)
+
+        // Calculate optional note height to fit range
+        // Clamp between 10 (very dense) and 30 (very spacious)
+        // Default was 18
+        const availableHeight = dimensions.height;
+        let calculatedHeight = availableHeight / range;
+
+        // Clamp
+        calculatedHeight = Math.max(10, Math.min(30, calculatedHeight));
+
+        return { centerPitch: center, noteHeight: calculatedHeight };
+    }, [song.tracks, song.notes, trackIndex, dimensions.height]);
 
     // Main Animate Loop
     const animate = useCallback(() => {
@@ -172,11 +187,16 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
 
         // Horizontal Guide Lines (Pitch)
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
-        for (let i = 0; i < dimensions.height / NOTE_HEIGHT; i++) {
+        const visibleNotes = Math.ceil(dimensions.height / noteHeight);
+        // Center the grid vertically based on centerPitch
+        // But drawing purely horizontal lines relative to calculated y
+
+        for (let i = 0; i < visibleNotes; i++) {
             if (i % 2 === 0) {
+                const y = i * noteHeight;
                 ctx.beginPath();
-                ctx.moveTo(0, i * NOTE_HEIGHT);
-                ctx.lineTo(dimensions.width, i * NOTE_HEIGHT);
+                ctx.moveTo(0, y);
+                ctx.lineTo(dimensions.width, y);
                 ctx.stroke();
             }
         }
@@ -200,7 +220,7 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
             const x = (note.start - currentBeat) * PIXELS_PER_BEAT + PLAYHEAD_X;
             const w = note.duration * PIXELS_PER_BEAT;
             const relPitch = note.pitch - centerPitch;
-            const y = (dimensions.height / 2) - (relPitch * NOTE_HEIGHT) - (NOTE_HEIGHT / 2);
+            const y = (dimensions.height / 2) - (relPitch * noteHeight) - (noteHeight / 2);
 
             // Palette
             let noteHue = hue; // Use prop hue by default
@@ -224,16 +244,16 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
             ctx.lineWidth = 2;
 
             ctx.beginPath();
-            if (ctx.roundRect) ctx.roundRect(x, y + 2, w, NOTE_HEIGHT - 4, 6);
-            else ctx.rect(x, y + 2, w, NOTE_HEIGHT - 4);
+            if (ctx.roundRect) ctx.roundRect(x, y + 2, w, noteHeight - 4, 6);
+            else ctx.rect(x, y + 2, w, noteHeight - 4);
             ctx.stroke();
             ctx.shadowBlur = 0;
 
             // Inner Highlight
             ctx.fillStyle = 'rgba(255,255,255,0.1)';
             ctx.beginPath();
-            if (ctx.roundRect) ctx.roundRect(x + 2, y + 4, w - 4, (NOTE_HEIGHT - 8) / 2, 4);
-            else ctx.rect(x + 2, y + 4, w - 4, (NOTE_HEIGHT - 8) / 2);
+            if (ctx.roundRect) ctx.roundRect(x + 2, y + 4, w - 4, (noteHeight - 8) / 2, 4);
+            else ctx.rect(x + 2, y + 4, w - 4, (noteHeight - 8) / 2);
             ctx.fill();
 
             // --- Sung Segments (Fill) ---
@@ -257,8 +277,8 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
                     ctx.fillStyle = colorMain;
                     ctx.shadowBlur = 0; // No glow for fill to save perf?
                     ctx.beginPath();
-                    if (ctx.roundRect) ctx.roundRect(fillX, y + 2, fillW, NOTE_HEIGHT - 4, 4);
-                    else ctx.rect(fillX, y + 2, fillW, NOTE_HEIGHT - 4);
+                    if (ctx.roundRect) ctx.roundRect(fillX, y + 2, fillW, noteHeight - 4, 4);
+                    else ctx.rect(fillX, y + 2, fillW, noteHeight - 4);
                     ctx.fill();
                 }
             });
@@ -271,7 +291,7 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
                 if (isSingingCorrectly && Math.random() < 0.3) {
                     particlesRef.current.push({
                         x: PLAYHEAD_X,
-                        y: y + NOTE_HEIGHT / 2 + (Math.random() - 0.5) * NOTE_HEIGHT,
+                        y: y + noteHeight / 2 + (Math.random() - 0.5) * noteHeight,
                         vx: (Math.random() - 0.5) * 5,
                         vy: (Math.random() - 0.5) * 5,
                         life: 0.8,
@@ -370,7 +390,7 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
             displayedPitch += finalShift;
 
             const relPitch = displayedPitch - centerPitch;
-            const y = (dimensions.height / 2) - (relPitch * NOTE_HEIGHT) - (NOTE_HEIGHT / 2);
+            const y = (dimensions.height / 2) - (relPitch * noteHeight) - (noteHeight / 2);
 
             // Draw Cursor
             // Glow (reduced for perf)
@@ -378,7 +398,7 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
             ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
             ctx.fillStyle = `hsl(${hue}, 100%, 70%)`;
             ctx.beginPath();
-            ctx.arc(PLAYHEAD_X, y + NOTE_HEIGHT / 2, 8, 0, Math.PI * 2);
+            ctx.arc(PLAYHEAD_X, y + noteHeight / 2, 8, 0, Math.PI * 2);
             ctx.fill();
             ctx.shadowBlur = 0;
 
@@ -390,7 +410,7 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
                 ctx.font = 'bold 24px monospace';
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(getNoteName(displayedPitch), PLAYHEAD_X + 20, y + NOTE_HEIGHT / 2);
+                ctx.fillText(getNoteName(displayedPitch), PLAYHEAD_X + 20, y + noteHeight / 2);
             }
         }
 

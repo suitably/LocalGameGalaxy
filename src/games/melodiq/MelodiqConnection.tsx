@@ -46,7 +46,19 @@ export const MelodiqConnection: React.FC<MelodiqConnectionProps> = ({ onBack }) 
     return (
         <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
             <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Button startIcon={<ArrowBackIcon />} onClick={onBack}>Back</Button>
+                <Button
+                    startIcon={<ArrowBackIcon />}
+                    onClick={onBack}
+                    variant="outlined"
+                    sx={{
+                        borderRadius: 50,
+                        px: 3,
+                        py: 1,
+                        borderColor: 'rgba(0,0,0,0.2)'
+                    }}
+                >
+                    Back
+                </Button>
                 <Typography variant="h4">Connect Phones</Typography>
             </Box>
 
@@ -105,7 +117,11 @@ export const MelodiqConnection: React.FC<MelodiqConnectionProps> = ({ onBack }) 
                                     InputProps={{ readOnly: true }}
                                     sx={{ fontFamily: 'monospace' }}
                                 />
-                                <Button variant="outlined" onClick={regeneratePartyId}>
+                                <Button
+                                    variant="outlined"
+                                    onClick={regeneratePartyId}
+                                    sx={{ borderRadius: 50 }}
+                                >
                                     Regenerate
                                 </Button>
                             </Box>
@@ -141,7 +157,14 @@ export const MelodiqConnection: React.FC<MelodiqConnectionProps> = ({ onBack }) 
                         <Box>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Typography variant="subtitle2" gutterBottom>Signaling Servers (Trackers)</Typography>
-                                <Button size="small" onClick={restoreDefaultTrackers}>Restore Defaults</Button>
+                                <Button
+                                    size="small"
+                                    onClick={restoreDefaultTrackers}
+                                    variant="outlined"
+                                    sx={{ borderRadius: 50 }}
+                                >
+                                    Restore Defaults
+                                </Button>
                             </Box>
 
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -187,10 +210,21 @@ export const MelodiqConnection: React.FC<MelodiqConnectionProps> = ({ onBack }) 
                                             }
                                         }}
                                     />
-                                    <Button variant="contained" onClick={() => {
-                                        contextAddTrackerUrl(newTrackerUrl);
-                                        setNewTrackerUrl('');
-                                    }}>
+                                    <Button
+                                        variant="contained"
+                                        onClick={() => {
+                                            contextAddTrackerUrl(newTrackerUrl);
+                                            setNewTrackerUrl('');
+                                        }}
+                                        sx={{
+                                            borderRadius: 50,
+                                            px: 4,
+                                            py: 1,
+                                            backgroundImage: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
+                                            boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
+                                            color: 'white'
+                                        }}
+                                    >
                                         Add
                                     </Button>
                                 </Box>

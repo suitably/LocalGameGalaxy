@@ -67,10 +67,23 @@ export const SongCard: React.FC<SongCardProps> = ({ song, onClick }) => {
                 display: 'flex',
                 flexDirection: 'column',
                 cursor: 'pointer',
-                transition: 'transform 0.2s',
-                '&:hover': { transform: 'scale(1.02)' }
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                '&:hover': { transform: 'scale(1.02)' },
+                '&:focus': {
+                    outline: 'none',
+                    transform: 'scale(1.05)',
+                    boxShadow: '0 0 0 4px #FE6B8B', // High visibility focus ring
+                    zIndex: 1
+                }
             }}
+            tabIndex={0}
             onClick={onClick}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onClick();
+                }
+            }}
         >
             <Box sx={{ width: '100%', aspectRatio: '1 / 1', bgcolor: 'action.hover', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                 {coverUrl ? (

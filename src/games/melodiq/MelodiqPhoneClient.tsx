@@ -71,7 +71,7 @@ export const MelodiqPhoneClient = () => {
     const lastPitchSendTimeRef = useRef<number>(0);
 
     // --- Queue & Library State ---
-    const [activeTab, setActiveTab] = useState<'mic' | 'queue'>('mic');
+    const [activeTab, setActiveTab] = useState<'mic' | 'queue' | 'remote'>('mic');
     const [queueSearchQuery, setQueueSearchQuery] = useState('');
     const [showFilters, setShowFilters] = useState(false);
     const [filters, setFilters] = useState({
@@ -799,6 +799,15 @@ export const MelodiqPhoneClient = () => {
         setSnackbarOpen(true);
     };
 
+    // --- Remote Control Actions ---
+    const sendRemoteCommand = (command: string, value?: any) => {
+        if (!peerRef.current || !(peerRef.current as any).connected) return;
+        const msg = { type: 'remote.command', command, value };
+        peerRef.current.send(JSON.stringify(msg));
+        // vibration feedback
+        if (navigator.vibrate) navigator.vibrate(50);
+    };
+
     const removeFromQueue = (itemId: string) => {
         if (!peerRef.current || !(peerRef.current as any).connected) return;
         const msg = { type: 'queue.remove', itemId };
@@ -906,6 +915,17 @@ export const MelodiqPhoneClient = () => {
                 >
                     <span style={{ fontSize: 20 }}>🎵</span>
                     <span style={{ fontSize: 12 }}>Queue</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('remote')}
+                    style={{
+                        flex: 1, background: activeTab === 'remote' ? '#333' : 'transparent',
+                        border: 'none', color: activeTab === 'remote' ? '#fff' : '#888',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+                    }}
+                >
+                    <span style={{ fontSize: 20 }}>🎮</span>
+                    <span style={{ fontSize: 12 }}>Remote</span>
                 </button>
             </div>
 
@@ -1261,6 +1281,60 @@ export const MelodiqPhoneClient = () => {
                         </div>
                     </div>
                 )}
+
+                {activeTab === 'remote' && (
+                    <div style={{ paddingTop: 20, textAlign: 'center' }}>
+                        <h3 style={{ color: '#aaa', marginBottom: 20 }}>Remote Control</h3>
+
+                        {/* Playback Controls */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 30 }}>
+                            <button
+                                onClick={() => sendRemoteCommand('play')}
+                                className="remote-btn"
+                                style={{ background: '#4caf50', gridColumn: 'span 2' }}
+                            >
+                                ⏯ Play / Pause
+                            </button>
+
+                            <button
+                                onClick={() => sendRemoteCommand('restart')}
+                                className="remote-btn"
+                                style={{ background: '#ff9800' }}
+                            >
+                                ⏮ Restart
+                            </button>
+
+                            <button
+                                onClick={() => sendRemoteCommand('next')}
+                                className="remote-btn"
+                                style={{ background: '#2196f3' }}
+                            >
+                                ⏭ Next
+                            </button>
+                        </div>
+
+                        <div style={{ height: 1, background: '#333', margin: '20px 0' }} />
+
+                        {/* System Controls */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 15 }}>
+                            <button
+                                onClick={() => {
+                                    if (confirm('Are you sure you want to stop the game?')) {
+                                        sendRemoteCommand('exit');
+                                    }
+                                }}
+                                className="remote-btn"
+                                style={{ background: '#f44336' }}
+                            >
+                                ⏹ Exit Session
+                            </button>
+                        </div>
+
+                        <div style={{ marginTop: 40, fontSize: 12, color: '#666' }}>
+                            Control the main screen from your phone.
+                        </div>
+                    </div>
+                )}
             </div>
 
             <Snackbar
@@ -1320,6 +1394,26 @@ export const MelodiqPhoneClient = () => {
                     margin-top: 1rem;
                 }
                 .reconnect-btn:active { transform: scale(0.95); }
+
+                .remote-btn {
+                    padding: 20px;
+                    border: none;
+                    border-radius: 12px;
+                    color: white;
+                    font-size: 1.1rem;
+                    font-weight: bold;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+                    transition: transform 0.1s;
+                }
+                .remote-btn:active {
+                    transform: scale(0.96);
+                    box-shadow: 0 2px 3px rgba(0,0,0,0.3);
+                }
 
                 /* Ensure main content is clickable and on top */
                 .main-content {

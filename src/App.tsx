@@ -18,6 +18,8 @@ const LoadingFallback = () => (
   </Box>
 );
 
+import { SongsProvider } from './games/melodiq/hooks/useSongs';
+
 function App() {
   return (
     <Routes>
@@ -45,7 +47,9 @@ function App() {
         } />
         <Route path="games/melodiq/queue" element={
           <Suspense fallback={<LoadingFallback />}>
-            <MelodiqQueue />
+            <SongsProvider>
+              <MelodiqQueue />
+            </SongsProvider>
           </Suspense>
         } />
       </Route>

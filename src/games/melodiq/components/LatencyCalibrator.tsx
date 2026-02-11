@@ -187,6 +187,14 @@ export const LatencyCalibrator: React.FC<LatencyCalibratorProps> = ({ onComplete
                     size="small"
                     onClick={startCalibration}
                     disabled={status === 'running'}
+                    sx={{
+                        borderRadius: 50,
+                        px: 3,
+                        py: 1,
+                        backgroundImage: status === 'running' ? 'none' : 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
+                        boxShadow: status === 'running' ? 'none' : '0 3px 5px 2px rgba(255, 105, 135, .3)',
+                        color: 'white'
+                    }}
                 >
                     {status === 'running' ? 'Calibrating...' : 'Auto Calibrate'}
                 </Button>
