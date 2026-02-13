@@ -48,7 +48,9 @@ export const SongCard: React.FC<SongCardProps> = ({ song, onClick }) => {
                     }
                 }
             } catch (e) {
-                console.warn("Failed to load cover", e);
+                if ((e as Error).name !== 'NotAllowedError') {
+                    console.warn("Failed to load cover", e);
+                }
             }
         };
 

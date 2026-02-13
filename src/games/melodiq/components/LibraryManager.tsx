@@ -5,10 +5,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import db, { type Library } from '../db';
 import { runLibraryImport, runLegacyImport } from '../importer';
+import { useSongs } from '../hooks/useSongs';
 
 export const LibraryManager: React.FC = () => {
     // ---- Settings Hook ----
     // const { settings } = useSettings(); // Might still need settings if we use other parts? Actually we don't use settings anymore here.
+    const { refreshSongs } = useSongs();
 
 
     // ---- Section 2: Browser Libraries ----
@@ -52,11 +54,12 @@ export const LibraryManager: React.FC = () => {
             await runLibraryImport(lib);
             setImporting(false);
             refreshLibraries();
+            refreshSongs();
 
         } catch (err) {
             if ((err as Error).name !== 'AbortError') {
-                console.error("Browser import failed", err);
-                alert("Browser import failed: " + (err as Error).message);
+                console.error("Browser import failed, falling back to legacy input", err);
+                legacyInputRef.current?.click();
             }
             setImporting(false);
         }
@@ -85,6 +88,7 @@ export const LibraryManager: React.FC = () => {
             await runLegacyImport(files, lib.id);
             setImporting(false);
             refreshLibraries();
+            refreshSongs();
 
             // Clear input
             e.target.value = '';
@@ -107,6 +111,7 @@ export const LibraryManager: React.FC = () => {
         await db.libraries.delete(id);
 
         refreshLibraries();
+        refreshSongs();
     };
 
     return (

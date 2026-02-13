@@ -130,6 +130,16 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     useEffect(() => {
         loadSongs();
+
+        const handleSettingsUpdate = () => {
+            console.log('[SongsProvider] Settings updated, reloading songs...');
+            loadSongs();
+        };
+
+        window.addEventListener('melodiq_settings_updated', handleSettingsUpdate);
+        return () => {
+            window.removeEventListener('melodiq_settings_updated', handleSettingsUpdate);
+        };
     }, [loadSongs]);
 
     const refreshSongs = useCallback(async () => {

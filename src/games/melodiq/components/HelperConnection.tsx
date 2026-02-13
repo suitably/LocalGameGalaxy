@@ -16,6 +16,9 @@ export const HelperConnection: React.FC = () => {
         localStorage.setItem('melodiq_helper_url', url);
         localStorage.setItem('melodiq_helper_token', token);
         localStorage.setItem('melodiq_enable_helper', String(enabled));
+
+        // Notify listeners
+        window.dispatchEvent(new Event('melodiq_settings_updated'));
     }, [url, token, enabled]);
 
     const checkConnection = async () => {

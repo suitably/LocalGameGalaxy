@@ -1,0 +1,9 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Type=Application
+Name=Melodiq Server
+Comment=Start the Melodiq Server
+Exec=/home/deck/Projects/LocalGameGalaxy/server/dist/start-server.sh
+Icon=utilities-terminal
+Terminal=true
+Categories=Game;Network;

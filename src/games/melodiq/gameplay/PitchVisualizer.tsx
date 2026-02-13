@@ -134,7 +134,7 @@ export const PitchVisualizer: React.FC<PitchVisualizerProps> = ({
         let calculatedHeight = availableHeight / range;
 
         // Clamp
-        calculatedHeight = Math.max(10, Math.min(30, calculatedHeight));
+        calculatedHeight = Math.min(30, calculatedHeight);
 
         return { centerPitch: center, noteHeight: calculatedHeight };
     }, [song.tracks, song.notes, trackIndex, dimensions.height]);

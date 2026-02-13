@@ -399,6 +399,23 @@ export const MelodiqPhoneClient = () => {
                                     localStorage.setItem('melodiq_history', JSON.stringify(history));
                                     setLatestStats(statsEntry);
 
+                                    // Filter history for this song to determine record
+                                    const songHistory = history.filter((h: any) => h.song === parsed.songTitle);
+                                    const relevantScores = songHistory.map((h: any) => h.score);
+                                    const maxScore = relevantScores.length > 0 ? Math.max(...relevantScores) : 0;
+                                    const isNewRecord = statsEntry.score >= maxScore && statsEntry.score > 0;
+
+                                    // Send history report back to host
+                                    if (peer && (peer as any).connected) {
+                                        const report = {
+                                            type: 'history_report',
+                                            songTitle: parsed.songTitle,
+                                            history: songHistory,
+                                            isNewRecord
+                                        };
+                                        peer.send(JSON.stringify(report));
+                                    }
+
                                     // Clear notify after 5s
                                     // Clear notify after 5s
                                     setTimeout(() => setLatestStats(null), 5000);

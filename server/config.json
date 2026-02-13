@@ -1,5 +1,8 @@
 {
-  "directories": [],
+  "directories": [
+    "/home/deck/Music/Ultrastar/Songs",
+    "/home/deck/Music/Ultrastar/Test"
+  ],
   "port": 3000,
   "token": "55f7a1128452020e3e5a3c5abe019bdf"
 }

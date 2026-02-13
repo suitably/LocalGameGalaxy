@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Box, Button, Typography, IconButton, Slider, Snackbar, Alert } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import db, { type Song, getCachedFiles } from '../db';
+import db, { type Song, getCachedFiles, type Score } from '../db';
 import { parseUltraStarTxt } from '../parser';
 import { PitchVisualizer, type SongWithNotes, type SungSegment } from './PitchVisualizer';
 import { LyricsDisplay } from './LyricsDisplay';
@@ -144,7 +144,9 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     // But we also need state to trigger initial render.
     // The `players` state above holds the initial list. The Refs inside PlayerRuntime are mutable.
     // However, to force React to re-render scores, we need a separate state or forceUpdate.
+    // However, to force React to re-render scores, we need a separate state or forceUpdate.
     const [scores, setScores] = useState<Record<string, number>>({});
+    const [results, setResults] = useState<any[]>([]);
 
     // Audio/Video logic
     const audioRef = useRef<HTMLAudioElement>(null);
@@ -400,6 +402,21 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     console.log(`[Session] Remote track switch for ${currentPlayers[pIdx].config.name} -> Track ${data.trackIndex}`);
                     switchTrack(pIdx, data.trackIndex);
                 }
+            }
+
+            if (data.type === 'history_report') {
+                console.log(`[Session] Received history from ${peerId}`, data);
+                setResults(prev => prev.map(r => {
+                    if (r.config.deviceId === peerId && r.isRemote) {
+                        return {
+                            ...r,
+                            history: data.history,
+                            isNewRecord: data.isNewRecord,
+                            loadingHistory: false
+                        };
+                    }
+                    return r;
+                }));
             }
 
             // Phone Remote Control Commands
@@ -757,28 +774,92 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     }, [ready, players, updateLoop]);
 
     // Handle song end - use ref to avoid stale closure issues
-    const handleSongEnd = useCallback(() => {
+    // Handle song end - use ref to avoid stale closure issues
+    const handleSongEnd = useCallback(async () => {
         console.log('Song ended, showing scoreboard');
 
         // Broadcast Stats to Connected Phones using ref to get latest players
         const now = new Date();
-        playersRef.current.forEach(p => {
-            if (p.config.isRemote && p.webRtcManager && p.remotePeerId) {
-                const statsPayload = {
-                    type: 'stats',
-                    songTitle: song.title,
-                    score: p.score,
-                    date: now.toISOString()
-                };
-                console.log(`[Session] Sending stats to ${p.config.name}`, statsPayload);
-                p.webRtcManager.sendToPeer(p.remotePeerId, statsPayload);
-            }
-        });
+        const currentResults: any[] = [];
+        const isoDate = now.toISOString();
 
+        for (const p of playersRef.current) {
+            // Calculate Total Score 
+            const totalScore = Math.round(Object.values(p.trackScores).reduce((a, b) => a + b, 0));
+            p.score = totalScore;
+
+            if (p.config.isRemote) {
+                // Remote Player: Send Stats, Wait for History
+                if (p.webRtcManager && p.remotePeerId) {
+                    const statsPayload = {
+                        type: 'stats',
+                        songTitle: song.title,
+                        score: totalScore,
+                        date: isoDate
+                    };
+                    console.log(`[Session] Sending stats to ${p.config.name}`, statsPayload);
+                    p.webRtcManager.sendToPeer(p.remotePeerId, statsPayload);
+                }
+
+                // Add preliminary result
+                currentResults.push({
+                    config: p.config,
+                    score: totalScore,
+                    history: [],
+                    isNewRecord: false,
+                    isRemote: true,
+                    loadingHistory: true
+                });
+            } else {
+                // Local Player: Save & Load History
+                try {
+                    await db.scores.add({
+                        songId: song.id,
+                        profileId: p.config.id,
+                        score: totalScore,
+                        date: isoDate
+                    });
+
+                    // Get History for this song & profile
+                    const allScores = await db.scores
+                        .where({ songId: song.id, profileId: p.config.id })
+                        .toArray();
+
+                    // Sort descending by score
+                    const sorted = allScores.sort((a, b) => b.score - a.score);
+
+                    // Determine if new record: 
+                    // Best score should be the one we just added (if it's the best)
+                    // We can check if sorted[0].date === isoDate
+                    const isRecord = sorted.length > 0 && sorted[0].date === isoDate;
+
+                    currentResults.push({
+                        config: p.config,
+                        score: totalScore,
+                        history: sorted,
+                        isNewRecord: isRecord,
+                        isRemote: false,
+                        loadingHistory: false
+                    });
+
+                } catch (e) {
+                    console.error("Failed to save score", e);
+                    currentResults.push({
+                        config: p.config,
+                        score: totalScore,
+                        history: [],
+                        isNewRecord: false,
+                        isRemote: false
+                    });
+                }
+            }
+        }
+
+        setResults(currentResults);
         setIsFinished(true);
         setIsPlaying(false);
         if (videoRef.current) videoRef.current.pause();
-    }, [song.title]);
+    }, [song.title, song.id]);
 
     // Audio event handlers - set after audio source is loaded
     useEffect(() => {
@@ -846,7 +927,12 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     activeUrl = URL.createObjectURL(file);
                 }
             } catch (e) {
-                console.error("Failed to load audio", e);
+                if ((e as Error).name === 'NotAllowedError') {
+                    console.debug("Audio permission not granted yet");
+                    if (mounted) setNeedsFolderAccess(true);
+                } else {
+                    console.error("Failed to load audio", e);
+                }
             }
             if (mounted) setAudioSrc(activeUrl);
         };
@@ -936,7 +1022,9 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                 }
 
             } catch (e) {
-                console.error("Failed to load video", e);
+                if ((e as Error).name !== 'NotAllowedError') {
+                    console.error("Failed to load video", e);
+                }
             }
             if (mounted) setVideoSrc(activeUrl);
         };
@@ -1097,12 +1185,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
 
     if (isFinished) {
         // Prepare props for ScoreBoard from valid players state
-        const scoreBoardPlayers = players.map(p => ({
-            config: p.config,
-            score: p.score // Note: p.score is updated in real-time in the mutable object
-        }));
-
-        return <ScoreBoard players={scoreBoardPlayers} onExit={onExit} />;
+        return <ScoreBoard players={results.length > 0 ? results : players.map(p => ({ config: p.config, score: p.score, history: [], isNewRecord: false }))} onExit={onExit} />;
     }
 
     return (

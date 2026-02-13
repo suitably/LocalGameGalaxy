@@ -113,6 +113,14 @@ const scanSongs = async () => {
     const startTime = Date.now();
 
     const newSongs = [];
+
+    if (!config.directories || !Array.isArray(config.directories)) {
+        console.warn('[Scanner] config.directories is missing or invalid.');
+        SONG_CACHE = [];
+        IS_SCANNING = false;
+        return;
+    }
+
     for (const libraryPath of config.directories) {
         try {
             const txtFiles = await glob('**/*.txt', {
@@ -145,7 +153,10 @@ const scanSongs = async () => {
                         }
                     });
 
-                    if (!headers['TITLE'] || !headers['ARTIST']) continue;
+                    if (!headers['TITLE'] || !headers['ARTIST']) {
+                        console.warn(`[Scanner] Skipping ${path.basename(txtPath)}: Missing TITLE or ARTIST header.`);
+                        continue;
+                    }
 
                     const getServeUrl = (filename) => {
                         if (!filename) return null;
@@ -204,6 +215,15 @@ const scanSongs = async () => {
         }
     }
 
+    if (newSongs.length === 0) {
+        console.warn(`[Scanner] No songs found in any of the directories.`);
+        if (config.directories.length > 0) {
+            console.log(`[Scanner] Checked directories: ${config.directories.join(', ')}`);
+        } else {
+            console.warn(`[Scanner] No directories configured.`);
+        }
+    }
+
     SONG_CACHE = newSongs;
     IS_SCANNING = false;
     console.log(`[Scanner] Finished. Cached ${newSongs.length} songs in ${(Date.now() - startTime) / 1000}s.`);
@@ -227,6 +247,11 @@ const getLocalIp = () => {
 
 // --- UI ROUTE ---
 app.get('/', (req, res) => {
+    // Disable caching for the main page
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     const localIp = getLocalIp();
     const networkUrl = `https://${localIp}:${SSL_PORT}`;
 
@@ -458,11 +483,50 @@ app.get('/', (req, res) => {
                     </div>
                 </div>
 
-                <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
-                    <form action="/api/songs/refresh?token=${AUTH_TOKEN}" method="POST">
-                       <button type="submit" ${IS_SCANNING ? 'disabled' : ''} style="width:100%">${IS_SCANNING ? 'Scanning Library...' : 'Rescan Library'}</button>
-                    </form>
-                </div>
+            <script>
+                // ... previous scripts remain ... 
+
+               async function rescanLibrary() {
+                    const btn = document.getElementById('btn-rescan');
+                    const originalText = btn.innerText;
+                    btn.disabled = true;
+                    btn.innerText = 'Scanning Library...';
+                    
+                    try {
+                        const res = await fetch('/api/songs/refresh?token=' + API_TOKEN, { method: 'POST' });
+                        if (res.ok) {
+                             // Poll for status
+                             const pollInterval = setInterval(async () => {
+                                 try {
+                                     const statusRes = await fetch('/api/status?token=' + API_TOKEN);
+                                     const status = await statusRes.json();
+                                     if (!status.scanning) {
+                                         clearInterval(pollInterval);
+                                         btn.innerText = 'Scan Complete!';
+                                         setTimeout(() => window.location.reload(), 1000);
+                                     }
+                                 } catch(e) {
+                                     console.error('Poll failed', e);
+                                 }
+                             }, 1000);
+                        } else {
+                            const txt = await res.text();
+                            alert('Scan failed to start: ' + txt);
+                            btn.innerText = originalText;
+                            btn.disabled = false;
+                        }
+                    } catch (e) {
+                        alert('Error: ' + e.message);
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                    }
+                }
+            </script>
+            <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                <button id="btn-rescan" onclick="rescanLibrary()" ${IS_SCANNING ? 'disabled' : ''} style="width:100%">
+                    ${IS_SCANNING ? 'Scanning Library...' : 'Rescan Library'}
+                </button>
+            </div>
             </div>
             
             <p style="text-align:center; color:#65676b; font-size: 0.9rem;">
@@ -527,6 +591,13 @@ app.get('/api/songs', (req, res) => {
     res.set('X-Page', page);
     res.set('X-Limit', limit);
     res.json(paginated);
+});
+
+app.get('/api/status', (req, res) => {
+    res.json({
+        scanning: IS_SCANNING,
+        count: SONG_CACHE.length
+    });
 });
 
 app.post('/api/songs/refresh', async (req, res) => {

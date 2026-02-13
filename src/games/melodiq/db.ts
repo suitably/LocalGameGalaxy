@@ -63,21 +63,32 @@ export interface Library {
     lastScanned?: number;
 }
 
+export interface Score {
+    id?: number;
+    songId: string;
+    profileId: string;
+    score: number;
+    date: string;
+    difficulty?: string;
+}
+
 const db = new Dexie('MelodiqDB') as Dexie & {
     songs: EntityTable<Song, 'id'>,
     songsMeta: EntityTable<SongMeta, 'id'>,
     songsContent: EntityTable<SongContent, 'id'>,
     cachedDirs: EntityTable<CachedDir, 'path'>,
-    libraries: EntityTable<Library, 'id'>
+    libraries: EntityTable<Library, 'id'>,
+    scores: EntityTable<Score, 'id'>
 };
 
-// Update to version 7 to include songsMeta lightweight table
-db.version(7).stores({
+// Update to version 8 to include scores table
+db.version(8).stores({
     songs: 'id, libraryId, title, artist, year, genre, language',
     songsMeta: 'id, libraryId, title, artist, year, genre, language, edition',
     songsContent: 'id',
     cachedDirs: 'path',
-    libraries: 'id'
+    libraries: 'id',
+    scores: '++id, songId, profileId, score, date, difficulty'
 });
 
 export default db;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, IconButton, Menu, MenuItem, Box, Tooltip } from '@mui/material';
+import { AppBar, Toolbar, Typography, IconButton, Menu, MenuItem, Box, Tooltip, useMediaQuery, useTheme } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import HomeIcon from '@mui/icons-material/Home';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +12,8 @@ export const GlobalHeader: React.FC = () => {
     const { title, menuItems, homeAction, customHeaderActions } = useLayout();
     const { pageTitle } = useTitle();
     const navigate = useNavigate();
+    const theme = useTheme();
+    const isLargeScreen = useMediaQuery(theme.breakpoints.up('md'));
 
     // State for Burger Menu
     const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -37,9 +39,11 @@ export const GlobalHeader: React.FC = () => {
         }
     };
 
-    // Separate items into "Always Show" and "Overflow"
-    const alwaysItems = menuItems.filter(item => item.showAlways);
-    const overflowItems = menuItems.filter(item => !item.showAlways);
+    // Strict Responsive Logic:
+    // Large Screen: Show ALL items in toolbar.
+    // Small Screen: Show ALL items in burger menu.
+    const visibleInToolbar = isLargeScreen ? menuItems : [];
+    const overflowItems = isLargeScreen ? [] : menuItems;
 
     return (
         <AppBar position="static">
@@ -54,13 +58,15 @@ export const GlobalHeader: React.FC = () => {
                 >
                     <HomeIcon />
                 </IconButton>
-                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {title || pageTitle || t('app.title')}
                 </Typography>
 
-                {/* Always Visible Actions */}
+                {/* Always Visible Actions (Custom actions lik CastButton usually stay visible) */}
                 {customHeaderActions}
-                {alwaysItems.map((item, index) => (
+
+                {/* Toolbar Items (Desktop) */}
+                {visibleInToolbar.map((item, index) => (
                     <Tooltip key={index} title={item.label}>
                         <span>
                             <IconButton
@@ -74,7 +80,7 @@ export const GlobalHeader: React.FC = () => {
                     </Tooltip>
                 ))}
 
-                {/* Burger Menu (only if overflow items exist) */}
+                {/* Burger Menu (Mobile - ONLY if there are overflow items) */}
                 {overflowItems.length > 0 && (
                     <div>
                         <IconButton
@@ -114,8 +120,7 @@ export const GlobalHeader: React.FC = () => {
                             ))}
                         </Menu>
                     </div>
-                )
-                }
+                )}
             </Toolbar >
         </AppBar >
     );
