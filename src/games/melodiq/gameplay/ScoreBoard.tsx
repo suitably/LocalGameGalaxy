@@ -35,7 +35,7 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 zIndex: 2000,
-                padding: 2,
+                padding: { xs: 1, sm: 2 },
                 animation: 'fadeIn 0.5s ease-in-out',
                 '@keyframes fadeIn': {
                     '0%': { opacity: 0 },
@@ -44,21 +44,27 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
                 overflowY: 'auto'
             }}
         >
-            <Typography variant="h2" sx={{ mb: 4, fontWeight: 'bold', color: '#ffd700', textShadow: '0 0 20px rgba(255, 215, 0, 0.5)' }}>
+            <Typography variant="h2" sx={{
+                mb: { xs: 2, md: 4 },
+                fontWeight: 'bold',
+                color: '#ffd700',
+                textShadow: '0 0 20px rgba(255, 215, 0, 0.5)',
+                fontSize: { xs: '2rem', sm: '3rem', md: '3.75rem' }
+            }}>
                 Session Results
             </Typography>
 
             <Box sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 2,
+                gap: { xs: 1, sm: 2 },
                 width: '100%',
                 maxWidth: 'lg',
-                mb: 6,
+                mb: { xs: 2, md: 6 },
                 flex: 1,
                 minHeight: 0,
                 overflowY: 'auto',
-                px: 2
+                px: { xs: 0, sm: 2 }
             }}>
                 {sortedPlayers.length === 0 && (
                     <Typography variant="h5" sx={{ color: 'rgba(255,255,255,0.7)', textAlign: 'center', py: 4 }}>
@@ -74,10 +80,10 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
                             sx={{
                                 display: 'flex',
                                 flexDirection: 'column',
-                                p: 2,
+                                p: { xs: 1.5, sm: 2 },
                                 bgcolor: isWinner ? 'rgba(255, 215, 0, 0.1)' : 'rgba(255, 255, 255, 0.05)',
                                 border: isWinner ? '2px solid rgba(255, 215, 0, 0.5)' : '1px solid rgba(255,255,255,0.1)',
-                                borderRadius: 4,
+                                borderRadius: { xs: 2, sm: 4 },
                             }}
                         >
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: player.history.length > 0 ? 2 : 0 }}>
@@ -85,34 +91,34 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    width: 40,
-                                    height: 40,
-                                    mr: 2
+                                    width: { xs: 30, sm: 40 },
+                                    height: { xs: 30, sm: 40 },
+                                    mr: { xs: 1, sm: 2 }
                                 }}>
                                     {isWinner ? (
-                                        <EmojiEventsIcon sx={{ color: '#ffd700', fontSize: 40 }} />
+                                        <EmojiEventsIcon sx={{ color: '#ffd700', fontSize: { xs: 30, sm: 40 } }} />
                                     ) : (
-                                        <Typography variant="h5" sx={{ color: 'rgba(255,255,255,0.5)' }}>#{index + 1}</Typography>
+                                        <Typography variant="h5" sx={{ color: 'rgba(255,255,255,0.5)', fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>#{index + 1}</Typography>
                                     )}
                                 </Box>
 
-                                <Avatar sx={{ bgcolor: `hsl(${player.config.hue}, 100%, 50%)`, mr: 2 }}>
+                                <Avatar sx={{ bgcolor: `hsl(${player.config.hue}, 100%, 50%)`, mr: { xs: 1, sm: 2 }, width: { xs: 32, sm: 40 }, height: { xs: 32, sm: 40 } }}>
                                     {player.config.name.substring(0, 1).toUpperCase()}
                                 </Avatar>
 
-                                <Box sx={{ flex: 1 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                        <Typography variant="h5" sx={{ color: '#fff', fontWeight: isWinner ? 'bold' : 'normal' }}>
+                                <Box sx={{ flex: 1, overflow: 'hidden' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                                        <Typography variant="h5" sx={{ color: '#fff', fontWeight: isWinner ? 'bold' : 'normal', fontSize: { xs: '1.1rem', sm: '1.5rem' }, noWrap: true }}>
                                             {player.config.name}
                                         </Typography>
                                         {player.isNewRecord && (
-                                            <Paper sx={{ bgcolor: '#ffd700', color: 'black', px: 1, py: 0.5, borderRadius: 1, fontWeight: 'bold', fontSize: '0.8rem' }}>
+                                            <Paper sx={{ bgcolor: '#ffd700', color: 'black', px: 1, py: 0.5, borderRadius: 1, fontWeight: 'bold', fontSize: { xs: '0.6rem', sm: '0.8rem' } }}>
                                                 NEW RECORD!
                                             </Paper>
                                         )}
                                         {player.loadingHistory && (
-                                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' }}>
-                                                Syncing history...
+                                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', fontSize: { xs: '0.6rem', sm: '0.75rem' } }}>
+                                                Syncing...
                                             </Typography>
                                         )}
                                     </Box>
@@ -123,7 +129,8 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
                                     fontWeight: 'bold',
                                     textShadow: isWinner ? '0 0 15px rgba(255, 215, 0, 0.4)' : 'none',
                                     textAlign: 'right',
-                                    minWidth: '120px'
+                                    minWidth: { xs: '80px', sm: '120px' },
+                                    fontSize: { xs: '1.5rem', sm: '3rem' }
                                 }}>
                                     {Math.round(player.score).toLocaleString()}
                                 </Typography>
@@ -131,32 +138,29 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
 
                             {/* History Section */}
                             {player.history.length > 0 && (
-                                <Box sx={{ pl: 9, mt: 1 }}>
+                                <Box sx={{ pl: { xs: 0, sm: 9 }, mt: 1 }}>
                                     <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mb: 1 }}>
                                         HISTORY
                                     </Typography>
-                                    <Box sx={{ display: 'flex', gap: 2, overflowX: 'auto', pb: 1 }}>
+                                    <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 1 }}>
                                         {player.history.slice(0, 5).map((h: any, i: number) => {
-                                            // const isCurrent = h.score === player.score ...
-                                            // Actually we can just key by index
-
                                             // Format date
                                             const date = new Date(h.date);
                                             const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
                                             return (
                                                 <Box key={i} sx={{
-                                                    minWidth: 80,
+                                                    minWidth: { xs: 60, sm: 80 },
                                                     p: 1,
                                                     bgcolor: 'rgba(0,0,0,0.3)',
                                                     borderRadius: 2,
                                                     border: h.score === player.score ? '1px solid rgba(255,255,255,0.3)' : 'none',
                                                     opacity: 0.8
                                                 }}>
-                                                    <Typography variant="body2" fontWeight="bold" color="white">
+                                                    <Typography variant="body2" fontWeight="bold" color="white" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                                                         {Math.round(h.score).toLocaleString()}
                                                     </Typography>
-                                                    <Typography variant="caption" color="rgba(255,255,255,0.5)">
+                                                    <Typography variant="caption" color="rgba(255,255,255,0.5)" sx={{ fontSize: { xs: '0.6rem', sm: '0.75rem' } }}>
                                                         {dateStr}
                                                     </Typography>
                                                 </Box>
@@ -170,7 +174,7 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
                 })}
             </Box>
 
-            <Box sx={{ display: 'flex', gap: 2, mt: 'auto' }}>
+            <Box sx={{ display: 'flex', gap: 2, mt: 'auto', flexDirection: { xs: 'column', sm: 'row' }, width: { xs: '100%', sm: 'auto' } }}>
                 {queue.length > 0 && (
                     <Button
                         variant="outlined"
@@ -183,6 +187,7 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
                             borderRadius: 50,
                             color: 'white',
                             borderColor: 'rgba(255,255,255,0.5)',
+                            width: { xs: '100%', sm: 'auto' },
                             '&:hover': {
                                 borderColor: 'white',
                                 bgcolor: 'rgba(255,255,255,0.1)'
@@ -203,7 +208,8 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit }) => {
                         borderRadius: 50,
                         backgroundImage: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
                         boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
-                        color: 'white' // Evaluate if needed
+                        color: 'white',
+                        width: { xs: '100%', sm: 'auto' }
                     }}
                 >
                     {queue.length > 0 ? `Next: ${queue[0].song.title}` : 'Continue'}
