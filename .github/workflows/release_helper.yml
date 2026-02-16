@@ -1,9 +1,8 @@
 name: Release Melodiq Helper
 
 on:
-  push:
-    tags:
-      - 'v*' # Trigger on version tags, e.g. v1.0.0
+  release:
+    types: [published]
 
 permissions:
   contents: write
@@ -57,14 +56,10 @@ jobs:
           cd release/windows && zip -r ../../melodiq-server-win.zip * && cd ../..
           cd release/macos && tar -czf ../../melodiq-server-macos.tar.gz * && cd ../..
 
-      - name: Create Release & Upload Assets
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Attach Server Binaries to Release
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             melodiq-server-linux.tar.gz
             melodiq-server-macos.tar.gz
             melodiq-server-win.zip
-          draft: false
-          prerelease: false
-          generate_release_notes: true
