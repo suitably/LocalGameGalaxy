@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Box, Typography, Button, Paper, Avatar, Chip, Grid, Divider } from '@mui/material';
+import { Box, Typography, Button, Paper, Avatar, Chip, Grid } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'; // Trophy icon
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import HistoryIcon from '@mui/icons-material/History';
@@ -103,7 +103,7 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit, onResum
 
             <Grid container spacing={4} sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                 {/* LEFT: SESSION RANKING */}
-                <Grid item xs={12} md={7} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+                <Grid size={{ xs: 12, md: 7 }} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto', pr: 1, pb: 2 }}>
                         {sessionRanking.map((player, index) => {
                             const isWinner = index === 0;
@@ -202,7 +202,7 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit, onResum
                 </Grid>
 
                 {/* RIGHT: HISTORICAL RANKING (Subtle/Dezent) */}
-                <Grid item xs={12} md={5} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+                <Grid size={{ xs: 12, md: 5 }} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
                     <Paper sx={{
                         flex: 1,
                         bgcolor: 'rgba(0,0,0,0.4)',

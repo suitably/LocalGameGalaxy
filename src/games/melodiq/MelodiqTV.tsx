@@ -64,10 +64,12 @@ export const MelodiqTV: React.FC = () => {
         channel.postMessage({ type: 'TV_READY' });
 
         // Presentation API
-        if (navigator.presentation?.receiver) {
-            navigator.presentation.receiver.connectionList.then(list => {
-                list.connections.forEach(conn => setupConnection(conn));
-                list.onconnectionavailable = (evt) => setupConnection(evt.connection);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const nav = navigator as any;
+        if (nav.presentation?.receiver) {
+            nav.presentation.receiver.connectionList.then((list: any) => {
+                list.connections.forEach((conn: any) => setupConnection(conn));
+                list.onconnectionavailable = (evt: any) => setupConnection(evt.connection);
             });
         }
 
