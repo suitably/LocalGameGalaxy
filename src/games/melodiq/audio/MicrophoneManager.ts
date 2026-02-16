@@ -26,15 +26,24 @@ export class MicrophoneManager {
         if (this.audioContext) return;
 
         try {
-            const constraints: MediaStreamConstraints = {
-                audio: {
-                    deviceId: deviceId ? { exact: deviceId } : undefined,
-                    echoCancellation: false,
-                    autoGainControl: false,
-                    noiseSuppression: false
-                }
+            const audioConstraints: MediaTrackConstraints = {
+                deviceId: deviceId ? { exact: deviceId } : undefined,
+                echoCancellation: false,
+                autoGainControl: false,
+                noiseSuppression: false
             };
-            this.mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+            try {
+                this.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+            } catch (constraintErr: any) {
+                if (constraintErr.name === 'OverconstrainedError' && deviceId) {
+                    console.warn(`[MicrophoneManager] Device "${deviceId}" not found, falling back to default mic.`);
+                    this.mediaStream = await navigator.mediaDevices.getUserMedia({
+                        audio: { echoCancellation: false, autoGainControl: false, noiseSuppression: false }
+                    });
+                } else {
+                    throw constraintErr;
+                }
+            }
 
             this.audioContext = new AudioContext({ latencyHint: 'interactive' });
 
