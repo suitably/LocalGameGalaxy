@@ -10,6 +10,7 @@ const ImposterGame = lazy(() => import('./games/imposter/ImposterGame').then(m =
 const MelodiqGame = lazy(() => import('./games/melodiq/MelodiqGame').then(m => ({ default: m.MelodiqGame })));
 const MelodiqPhoneClient = lazy(() => import('./games/melodiq/MelodiqPhoneClient').then(m => ({ default: m.MelodiqPhoneClient })));
 const MelodiqQueue = lazy(() => import('./games/melodiq/components/MelodiqQueue').then(m => ({ default: m.MelodiqQueue })));
+const MelodiqTV = lazy(() => import('./games/melodiq/MelodiqTV').then(m => ({ default: m.MelodiqTV })));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -53,6 +54,11 @@ function App() {
           </Suspense>
         } />
       </Route>
+      <Route path="/games/melodiq/tv" element={
+        <Suspense fallback={<LoadingFallback />}>
+          <MelodiqTV />
+        </Suspense>
+      } />
     </Routes>
   );
 }

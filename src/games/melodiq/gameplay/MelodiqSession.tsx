@@ -1,7 +1,8 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { Box, Button, Typography, IconButton, Slider, Snackbar, Alert } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import db, { type Song, getCachedFiles, type Score } from '../db';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import db, { type Song, getCachedFiles } from '../db';
 import { parseUltraStarTxt } from '../parser';
 import { PitchVisualizer, type SongWithNotes, type SungSegment } from './PitchVisualizer';
 import { LyricsDisplay } from './LyricsDisplay';
@@ -9,18 +10,65 @@ import { MicrophoneManager, type PitchResult } from '../audio/MicrophoneManager'
 import { WebRTCMicManager } from '../audio/WebRTCMicManager';
 import { type UserProfile, type ActivePlayer } from '../MelodiqSettings';
 import { ScoreBoard } from './ScoreBoard';
+import { ScoreDisplay, type ScoreDisplayHandle, type RatingType } from './ScoreDisplay';
 import { useMelodiqSettings } from '../hooks/SettingsContext';
+import { useWebRTC } from '../audio/WebRTCContext';
+import { ErrorBoundary } from '../../../components/ErrorBoundary';
+
+export interface MelodiqSessionHandle {
+    togglePlay: () => void;
+    isPlaying: boolean;
+    getDuration: () => number;
+    getCurrentTime: () => number;
+    finishSong: () => void;
+    isFinished: boolean;
+    pauseForScore: () => void;
+    resumeFromScore: () => void;
+    isPausedForScore: boolean;
+    handleNext: () => boolean;
+    // New: For Host to broadcast state
+    getGameState: () => PassiveGameState;
+}
+
+export interface PassivePlayerState {
+    id: string;
+    name: string;
+    hue: number;
+    score: number;
+    trackScores: Record<number, number>;
+    currentPitch: PitchResult | null;
+    activeSegments: Record<number, SungSegment | null>;
+    combo: number;
+    lastHit: { rating: RatingType, score: number, timestamp: number } | null;
+}
+
+export interface PassiveGameState {
+    players: PassivePlayerState[];
+    isPlaying: boolean;
+    isFinished: boolean;
+    isPausedForScore: boolean;
+    currentTime: number;
+}
 
 interface MelodiqSessionProps {
     song: Song;
     onExit: (forceHome?: boolean) => void;
+    onMinimize?: () => void;
+    onPlaybackUpdate?: (state: { isPlaying: boolean; currentTime: number; duration: number; progress: number }) => void;
     // Props are now optional/ignored as we read from LS, but kept for compatibility if needed for overrides
     showDebugOverlay?: boolean;
     showDevSlider?: boolean;
     showMicStatus?: boolean;
+    isTVMode?: boolean;
+    muteAudio?: boolean;
+    // Passive Mode (TV rendering Host brain)
+    isPassive?: boolean;
+    passiveState?: PassiveGameState | null;
+    suppressResults?: boolean;
+    uiScale?: number;
 }
 
-import { useWebRTC } from '../audio/WebRTCContext';
+
 
 // Helper class to manage runtime state for a single player
 class PlayerRuntime {
@@ -43,6 +91,11 @@ class PlayerRuntime {
     // Helper to track active segment for optimization
     // Helper to track active segment for optimization - Per Track
     public activeSegments: Record<number, SungSegment | null> = {};
+
+    // Combo Tracking
+    public combo: number = 0;
+    public maxCombo: number = 0;
+    public lastHit: { rating: RatingType, score: number, timestamp: number } | null = null;
 
     // Duet: Current Track Index (0 = P1, 1 = P2)
     public trackIndex: number = 0;
@@ -106,8 +159,10 @@ class PlayerRuntime {
         return Promise.resolve();
     }
 
-    stop(): void {
-        this.mic?.stop();
+    async stop(): Promise<void> {
+        if (this.mic) {
+            await this.mic.stop();
+        }
     }
 
     attachRemotePeer(manager: WebRTCMicManager, peerId: string) {
@@ -121,7 +176,7 @@ class PlayerRuntime {
     }
 }
 
-export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) => {
+const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlaybackUpdate, isTVMode = false, muteAudio = false, isPassive = false, passiveState, suppressResults = false, uiScale = 1.0 }: MelodiqSessionProps, ref: React.ForwardedRef<MelodiqSessionHandle>): React.ReactNode => {
     // Session State - Read from shared SettingsContext (reactive / live updates)
     const { settings } = useMelodiqSettings();
     const {
@@ -143,10 +198,120 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     // We use a ref to hold the runtime objects to avoid re-renders on every pitch update
     // But we also need state to trigger initial render.
     // The `players` state above holds the initial list. The Refs inside PlayerRuntime are mutable.
-    // However, to force React to re-render scores, we need a separate state or forceUpdate.
-    // However, to force React to re-render scores, we need a separate state or forceUpdate.
-    const [scores, setScores] = useState<Record<string, number>>({});
+    const [, setScores] = useState<Record<string, number>>({});
     const [results, setResults] = useState<any[]>([]);
+
+    // Sync Passive State (TV Side)
+    useEffect(() => {
+        if (isPassive && passiveState) {
+            // Update local players to match remote state
+            // We need to map passiveState.players to PlayerRuntime objects or update existing ones
+            // Since PlayerRuntime has complex logic, we might just update the properties we need for rendering (pitchRef, segmentsRef, score)
+
+            if (players.length !== passiveState.players.length) {
+                // Re-init players if count changes (or on first load)
+                const newPlayers = passiveState.players.map(p => new PlayerRuntime({
+                    id: p.id,
+                    name: p.name,
+                    hue: p.hue,
+                    isRemote: true // All are remote effectively on TV
+                }));
+                setPlayers(newPlayers);
+                playersRef.current = newPlayers;
+            }
+
+            // Sync Data
+            passiveState.players.forEach((pState, idx) => {
+                const rt = playersRef.current[idx];
+                if (rt) {
+                    rt.pitchRef.current = pState.currentPitch;
+                    rt.activeSegments = pState.activeSegments;
+                    rt.trackScores = pState.trackScores;
+                    rt.score = pState.score;
+                    rt.combo = pState.combo;
+
+                    // Sync Hit Events (Popups)
+                    if (pState.lastHit && (!rt.lastHit || pState.lastHit.timestamp > rt.lastHit.timestamp)) {
+                        rt.lastHit = pState.lastHit;
+                        scoreDisplayRef.current?.triggerHit(
+                            pState.id,
+                            pState.lastHit.rating,
+                            pState.combo,
+                            pState.lastHit.score
+                        );
+                    }
+
+                    // Update visualization segments
+                    // This is tricky: Host sends activeSegments. 
+                    // To keep history, we need to append? 
+                    // Actually, for visualization, `segmentsRef.current` stores the history.
+                    // If Host sends "activeSegments", that's just the current note being sung.
+                    // The Host *also* needs to send the *committed* segments or we replicate logic.
+                    // Simpler approach: 
+                    // TV is dumb. It just renders what Host says is happening NOW.
+                    // But `PitchVisualizer` needs history (committed notes) to draw the trail.
+                    // If we don't sync history, trails will disappear or not form.
+                    // FIX: Host calculates segments. TV just adds them to its local history when they "finish" (become null in activeSegments)?
+                    // OR: We just run the visualizer "append" logic on TV too?
+                    // Better: Let's trust the current PitchVisualizer to handle "live" pitch updates if we assume `activeSegments` is enough?
+                    // No, `PitchVisualizer` reads `segmentsRef` for history.
+
+                    // QUICK FIX: 
+                    // We just update `pitchRef.current`. 
+                    // And we run the `processPlayer` loop on TV too, BUT without scoring?
+                    // No, "Brain on Host". Host decides if a note was hit.
+                    // If we run logic on TV, we duplicate it.
+                    // IF we want "Dumb TV", Host must send EVERYTHING to render.
+                    // That includes all historical segments. Too much bandwidth.
+
+                    // Hybrid:
+                    // Host sends "Current Pitch".
+                    // TV uses that Pitch to run visualizer logic (hit testing) purely for visuals?
+                    // Use `processPlayer` but with weight=0 (no scoring)?
+                    // But scoring logic determines if a segment is "hit" (colored fill).
+
+                    // Let's rely on Host sending `trackScores` for the ScoreBoard.
+                    // For the Visualizer, let's inject the `pitch` from Host and run the local `processPlayer` logic 
+                    // so it generates the segments locally. Since audio/video is on TV, the timing should be "close enough" 
+                    // to the Host's timing if they started together.
+                    // Actually, if Host sends Pitch, and TV plays Audio, TV is the one who knows "Time vs Pitch".
+                    // Wait, Host processes Audio (Muted). Host knows "Time vs Pitch" (from Mic).
+                    // Host sends: "At HostTime T, Pitch is P".
+                    // TV receives P. TV is at TvTime T'.
+                    // If TV applies P at T', and T' ~= T, then visual is correct.
+                    // So: pass received pitch to pitchRef.
+                    // AND let the loop runs `processPlayer` to update segments/visuals. 
+                }
+            });
+
+            // Sync Play State
+            if (passiveState.isPlaying !== isPlaying) {
+                if (passiveState.isPlaying) {
+                    audioRef.current?.play().catch(e => console.log('[Session] Passive play interrupted:', e.name));
+                    videoRef.current?.play().catch(() => { });
+                    setIsPlaying(true);
+                } else {
+                    audioRef.current?.pause();
+                    videoRef.current?.pause();
+                    setIsPlaying(false);
+                }
+            }
+
+            // Sync Game State (Results/Pause)
+            if (passiveState.isFinished !== isFinished) setIsFinished(passiveState.isFinished);
+            if (passiveState.isPausedForScore !== isPausedForScore) setIsPausedForScore(passiveState.isPausedForScore);
+
+            // Sync Time (Drift Correction)
+            if (audioRef.current && passiveState.isPlaying && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 1.0) {
+                console.log(`[Session] Syncing time drift: Local=${audioRef.current.currentTime.toFixed(2)} Remote=${passiveState.currentTime.toFixed(2)}`);
+                // Smooth sync: if only slightly off, maybe playbackRate adjustment? 
+                // For now, hard seek if > 1s off
+                audioRef.current.currentTime = passiveState.currentTime;
+                if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
+            }
+
+        }
+    }, [isPassive, passiveState]);
 
     // Audio/Video logic
     const audioRef = useRef<HTMLAudioElement>(null);
@@ -154,6 +319,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     const [isPlaying, setIsPlaying] = useState(false);
     const [bpmMultiplier] = useState(4);
     const [isFinished, setIsFinished] = useState(false);
+    const [isPausedForScore, setIsPausedForScore] = useState(false);
 
     // UI State
     const [_duration, setDuration] = useState(0);
@@ -162,13 +328,14 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
     const [videoError, setVideoError] = useState<string | null>(null);
     const [needsFolderAccess, setNeedsFolderAccess] = useState(false);
+    const playPromiseRef = useRef<Promise<void> | null>(null);
 
     // Live Volume Sync: update audio volume when settings change during playback
     useEffect(() => {
         if (audioRef.current) {
-            audioRef.current.volume = songVolume * masterVolume;
+            audioRef.current.volume = muteAudio ? 0 : songVolume * masterVolume;
         }
-    }, [songVolume, masterVolume]);
+    }, [songVolume, masterVolume, muteAudio]);
 
     // Auto-Hide UI State
     const [isUIVisible, setIsUIVisible] = useState(true);
@@ -208,10 +375,12 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     const lastScoreUpdateRef = useRef<number>(0);
     const playersRef = useRef<PlayerRuntime[]>([]);
     const progressLineRef = useRef<HTMLDivElement>(null);
+    const scoreDisplayRef = useRef<ScoreDisplayHandle>(null);
 
     // Load Content State
     const [parsedSong, setParsedSong] = useState<SongWithNotes | null>(null);
     const [contentLoading, setContentLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
 
     // Scoring Normalization - Per Track
     const [trackScoreWeights, setTrackScoreWeights] = useState<number[]>([]);
@@ -219,6 +388,8 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
     // Reset state when song changes
     useEffect(() => {
         setIsFinished(false);
+        setIsPausedForScore(false);
+        setResults([]);
         setIsPlaying(false);
         setAudioSrc(undefined);
         setVideoSrc(undefined);
@@ -261,9 +432,11 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     calculateScoreNormalization(parsed);
                 } else {
                     console.error('Song content not found for', song.title);
+                    setLoadError(`Song content not found for "${song.title}". Please try re-scanning your library.`);
                 }
             } catch (e) {
                 console.error('Failed to load song content', e);
+                setLoadError("Failed to load song content: " + (e as Error).message);
             } finally {
                 setContentLoading(false);
             }
@@ -366,16 +539,29 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             const newPlayers: PlayerRuntime[] = [];
 
             activeSession.forEach(p => {
-                const profile = allProfiles.find(prof => prof.id === p.profileId);
-                if (profile) {
+                if (p.profileId === 'BOT') {
                     newPlayers.push(new PlayerRuntime({
-                        ...profile,
-                        deviceId: p.deviceId,
-                        volume: p.volume,
-                        muted: p.muted,
-                        latency: p.latency,
-                        isRemote: p.isRemote // Ensure isRemote is passed
+                        id: 'BOT',
+                        name: 'Bot',
+                        hue: 330, // Pink
+                        deviceId: 'BOT',
+                        volume: 0.8,
+                        muted: false,
+                        latency: 0,
+                        isRemote: false
                     }));
+                } else {
+                    const profile = allProfiles.find(prof => prof.id === p.profileId);
+                    if (profile) {
+                        newPlayers.push(new PlayerRuntime({
+                            ...profile,
+                            deviceId: p.deviceId,
+                            volume: p.volume,
+                            muted: p.muted,
+                            latency: p.latency,
+                            isRemote: p.isRemote
+                        }));
+                    }
                 }
             });
 
@@ -387,6 +573,15 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             console.warn("No dynamic settings found, falling back to empty session.");
             setReady(true);
         }
+
+        return () => {
+            console.log('[MelodiqSession] Cleaning up players on unmount...');
+            // Create a copy to cleanup, as ref might change
+            const playersToStop = [...playersRef.current];
+            playersToStop.forEach(p => {
+                p.stop().catch(e => console.warn("Error stopping player:", e));
+            });
+        };
     }, []);
 
     // Sync Players with WebRTC Peers
@@ -449,13 +644,22 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             let updatedPlayers = [...prevPlayers];
             let changed = false;
 
-            // 1. Attach/Add connected peers
+            // 1. Attach/Add/Update connected peers
             activePeers.forEach(peer => {
                 const existingIdx = updatedPlayers.findIndex(p => p.config.deviceId === peer.id);
 
                 if (existingIdx !== -1) {
-                    // Attach to existing player
+                    // Attach to existing player AND Update Details
                     const player = updatedPlayers[existingIdx];
+
+                    // Check for identity updates (Name/Hue)
+                    if (player.config.name !== peer.name || player.config.hue !== peer.hue) {
+                        console.log(`[Session] Updating details for ${player.config.name} -> ${peer.name}`);
+                        player.config.name = peer.name;
+                        if (peer.hue !== undefined) player.config.hue = peer.hue;
+                        changed = true;
+                    }
+
                     if (!player.webRtcManager) {
                         console.log(`[Session] Attaching Phone ${peer.name} to existing player ${player.config.name}`);
                         player.attachRemotePeer(manager, peer.id);
@@ -539,19 +743,75 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
 
     }, [manager, parsedSong, players.length, song.title]); // Trigger on players change (new connection) or song load
 
+    const pauseForScore = useCallback(() => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            if (videoRef.current) videoRef.current.pause();
+        }
+        setIsPlaying(false);
+        if (!isFinished) setIsPausedForScore(true);
+    }, [isFinished]);
+
+    const safePlay = useCallback(async () => {
+        if (!audioRef.current) return;
+        try {
+            playPromiseRef.current = audioRef.current.play();
+            await playPromiseRef.current;
+            if (videoRef.current) {
+                // Video play might fail if not fully loaded, ignore for now
+                videoRef.current.play().catch(e => console.warn("Video play failed", e));
+            }
+            setIsPlaying(true);
+        } catch (error: any) {
+            if (error.name === 'AbortError') {
+                console.log('[Session] Playback aborted (likely fast skip)');
+            } else {
+                console.error('[Session] Playback failed', error);
+            }
+            setIsPlaying(false);
+        } finally {
+            playPromiseRef.current = null;
+        }
+    }, []);
+
+    const resumeFromScore = useCallback(() => {
+        setIsPausedForScore(false);
+        if (audioRef.current && !isFinished) {
+            safePlay();
+        }
+    }, [isFinished, safePlay]);
+
     const togglePlay = useCallback(() => {
+        // If we are showing results (paused for score), togglePlay means RESUME
+        if (isPausedForScore) {
+            resumeFromScore();
+            return;
+        }
+
         if (audioRef.current) {
             if (isPlaying) {
                 audioRef.current.pause();
                 if (videoRef.current) videoRef.current.pause();
+                setIsPlaying(false);
             } else {
-                audioRef.current.volume = songVolume * masterVolume;
-                audioRef.current.play();
-                if (videoRef.current) videoRef.current.play();
+                audioRef.current.volume = muteAudio ? 0 : songVolume * masterVolume;
+                safePlay();
             }
-            setIsPlaying(!isPlaying);
         }
-    }, [isPlaying, songVolume, masterVolume]);
+    }, [isPlaying, songVolume, masterVolume, muteAudio, isPausedForScore, resumeFromScore, safePlay]);
+
+    const handleNext = useCallback((): boolean => {
+        // Returns true if the session handled the "Next" action (by showing scores)
+        // Returns false if the session ignored it (because it's already showing scores or finished)
+
+        if (!isFinished && !isPausedForScore) {
+            pauseForScore();
+            return true;
+        }
+        return false;
+    }, [isFinished, isPausedForScore, pauseForScore]);
+
+    // useImperativeHandle moved to end to access handleSongEnd
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -608,6 +868,34 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                 note: devOverride,
                 volume: 1.0
             };
+        } else if (player.config.deviceId === 'BOT') {
+            // Auto-Sing Logic
+            if (audioRef.current && isPlaying && parsedSong) {
+                const beatDuration = 60000 / ((parsedSong.bpm || 120) * bpmMultiplier);
+                const latency = player.config.latency || 0;
+                const currentBeat = ((audioRef.current.currentTime * 1000) - latency - (parsedSong.gap || 0)) / beatDuration;
+
+                const tIdx = player.trackIndex;
+                const notesSource = (parsedSong.tracks && parsedSong.tracks.length > 0 && parsedSong.tracks[tIdx])
+                    ? ((parsedSong.tracks[tIdx].notes ?? []) as any[])
+                    : (tIdx === 0 ? (parsedSong.notes || []) : []);
+
+                if (notesSource) {
+                    const activeNote = notesSource.find((n) =>
+                        n.type !== '-' &&
+                        currentBeat >= n.start &&
+                        currentBeat <= n.start + n.duration
+                    );
+
+                    if (activeNote) {
+                        pitch = {
+                            frequency: 440 * Math.pow(2, (activeNote.pitch - 69) / 12),
+                            note: activeNote.pitch,
+                            volume: 0.8 // Simulated volume
+                        };
+                    }
+                }
+            }
         } else {
             pitch = player.getPitch();
         }
@@ -618,63 +906,130 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             const latency = player.config.latency || 0;
             const currentBeat = ((audioRef.current.currentTime * 1000) - latency - (parsedSong.gap || 0)) / beatDuration;
 
-            const trackCount = (parsedSong.tracks && parsedSong.tracks.length > 0) ? parsedSong.tracks.length : 1;
+            // FIX: Only process the player's SELECTED TRACK. 
+            // Previous logic iterated all tracks, causing "0 score" updates from unselected tracks to overwrite the actual score in the UI.
+            const tIdx = player.trackIndex;
 
-            for (let tIdx = 0; tIdx < trackCount; tIdx++) {
-                const notesSource: any[] = (parsedSong.tracks && parsedSong.tracks[tIdx]) ? parsedSong.tracks[tIdx].notes : parsedSong.notes;
-                const currentScoreWeight = (trackScoreWeights.length > tIdx) ? trackScoreWeights[tIdx] : (trackScoreWeights[0] || 0);
+            // Ensure we fallback to main notes if tracks aren't defined or index is 0
+            const notesSource: any[] = (parsedSong.tracks && parsedSong.tracks.length > 0 && parsedSong.tracks[tIdx])
+                ? parsedSong.tracks[tIdx].notes
+                : (tIdx === 0 ? parsedSong.notes : []); // If tIdx > 0 but no tracks, return empty to avoid error
 
-                const activeNoteIndex = notesSource.findIndex((n) =>
-                    n.type !== '-' &&
-                    currentBeat >= n.start &&
-                    currentBeat <= n.start + n.duration
-                );
+            if (!notesSource || notesSource.length === 0) return;
 
-                if (activeNoteIndex !== -1) {
-                    const note = notesSource[activeNoteIndex];
-                    const targetPitch = note.pitch;
-                    const sungPitch = pitch.note;
+            const currentScoreWeight = (trackScoreWeights.length > tIdx) ? trackScoreWeights[tIdx] : (trackScoreWeights[0] || 0);
 
-                    const diff = Math.abs((sungPitch % 12) - (targetPitch % 12));
-                    const semitoneDiff = Math.min(diff, 12 - diff);
+            const activeNoteIndex = notesSource.findIndex((n) =>
+                n.type !== '-' &&
+                currentBeat >= n.start &&
+                currentBeat <= n.start + n.duration
+            );
 
-                    if (semitoneDiff < 1.0) {
-                        const durationUnitsCovered = deltaTimeMs / beatDuration;
-                        let points = durationUnitsCovered * currentScoreWeight;
-                        if (note.type === '*') points *= goldenNoteMultiplier;
+            if (activeNoteIndex !== -1) {
+                const note = notesSource[activeNoteIndex];
+                const targetPitch = note.pitch;
+                const sungPitch = pitch.note;
 
-                        // Award points to this track
-                        if (!player.trackScores[tIdx]) player.trackScores[tIdx] = 0;
-                        player.trackScores[tIdx] += points;
+                const diff = Math.abs((sungPitch % 12) - (targetPitch % 12));
+                const semitoneDiff = Math.min(diff, 12 - diff);
 
-                        // Update visualization segments for this track
-                        const record = player.segmentsRef.current;
-                        if (!record) continue; // Should not happen with RefObject init
+                if (semitoneDiff < 1.0) {
+                    const durationUnitsCovered = deltaTimeMs / beatDuration;
+                    let points = durationUnitsCovered * currentScoreWeight;
+                    if (note.type === '*') points *= goldenNoteMultiplier;
 
-                        const activeSeg = player.activeSegments[tIdx];
+                    // Award points to this track
+                    if (!player.trackScores[tIdx]) player.trackScores[tIdx] = 0;
+                    player.trackScores[tIdx] += points;
 
-                        if (activeSeg &&
-                            activeSeg.trackIndex === tIdx &&
-                            activeSeg.noteIndex === activeNoteIndex) {
-                            activeSeg.endBeat = currentBeat;
-                        } else {
-                            const newSegment = {
-                                noteIndex: activeNoteIndex,
-                                startBeat: currentBeat,
-                                endBeat: currentBeat,
-                                trackIndex: tIdx
-                            };
-                            player.activeSegments[tIdx] = newSegment;
+                    // Visual Feedback Trigger
+                    const activeSegment = player.activeSegments[tIdx];
+                    const wasHitting = activeSegment ? activeSegment.noteIndex === activeNoteIndex : false;
 
-                            if (!record[activeNoteIndex]) record[activeNoteIndex] = [];
-                            record[activeNoteIndex].push(newSegment);
-                        }
+                    if (!wasHitting) {
+                        // First frame of hitting this note
+                        player.combo += 1;
+                        if (player.combo > player.maxCombo) player.maxCombo = player.combo;
+
+                        // Determine Rating
+                        let rating: RatingType = 'Good';
+                        if (semitoneDiff < 0.2) rating = 'Perfect';
+                        else if (semitoneDiff < 0.5) rating = 'Good';
+                        else rating = 'Okay';
+
+                        // Trigger Visuals - Use TOTAL score logic if we were summing, but for now strict track score is fine
+                        const hitScore = Math.round(player.trackScores[tIdx] || 0);
+
+                        // Store last hit for sync
+                        player.lastHit = {
+                            rating,
+                            score: hitScore,
+                            timestamp: Date.now()
+                        };
+
+                        scoreDisplayRef.current?.triggerHit(
+                            player.config.id,
+                            rating,
+                            player.combo,
+                            hitScore
+                        );
                     } else {
-                        // Pitch mismatch, end active segment for this track
-                        player.activeSegments[tIdx] = null;
+                        // Sustained hit - Optimize updates
+                        if (Math.random() < 0.1) { // Approx every 10 frames
+                            scoreDisplayRef.current?.triggerHit(
+                                player.config.id,
+                                'Good',
+                                player.combo,
+                                Math.round(player.trackScores[tIdx])
+                            )
+                        }
+                    }
+
+                    // Update visualization segments for this track
+                    const record = player.segmentsRef.current;
+                    if (!record) return;
+
+                    const activeSeg = player.activeSegments[tIdx];
+
+                    if (activeSeg &&
+                        activeSeg.trackIndex === tIdx &&
+                        activeSeg.noteIndex === activeNoteIndex) {
+                        activeSeg.endBeat = currentBeat;
+                    } else {
+                        const newSegment = {
+                            noteIndex: activeNoteIndex,
+                            startBeat: currentBeat,
+                            endBeat: currentBeat,
+                            trackIndex: tIdx
+                        };
+                        player.activeSegments[tIdx] = newSegment;
+
+                        if (!record[activeNoteIndex]) record[activeNoteIndex] = [];
+                        record[activeNoteIndex].push(newSegment);
                     }
                 } else {
-                    // No active note, end active segment for this track
+                    // Pitch mismatch, end active segment
+                    if (player.activeSegments[tIdx] !== null) {
+                        player.combo = 0;
+                        const hitScore = Math.round(player.trackScores[tIdx] || 0);
+                        player.lastHit = {
+                            rating: 'Miss',
+                            score: hitScore,
+                            timestamp: Date.now()
+                        };
+
+                        scoreDisplayRef.current?.triggerHit(
+                            player.config.id,
+                            'Miss',
+                            0, // combo reset
+                            hitScore
+                        );
+                    }
+                    player.activeSegments[tIdx] = null;
+                }
+            } else {
+                // No active note
+                if (player.activeSegments[tIdx] !== null) {
                     player.activeSegments[tIdx] = null;
                 }
             }
@@ -710,6 +1065,21 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         const deltaTime = now - lastTimeRef.current;
         lastTimeRef.current = now;
 
+        const duration = (audioRef.current && Number.isFinite(audioRef.current.duration) && audioRef.current.duration > 0)
+            ? audioRef.current.duration
+            : (_duration > 0 ? _duration : 0);
+
+        const currentTime = audioRef.current ? audioRef.current.currentTime : 0;
+
+        if (onPlaybackUpdate) {
+            onPlaybackUpdate({
+                isPlaying,
+                currentTime,
+                duration,
+                progress: duration > 0 ? (currentTime / duration) * 100 : 0
+            });
+        }
+
         if (audioRef.current && isPlaying) {
             if (videoRef.current && Math.abs(videoRef.current.currentTime - audioRef.current.currentTime) > 0.2) {
                 videoRef.current.currentTime = audioRef.current.currentTime;
@@ -724,8 +1094,23 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                 : (_duration > 0 ? _duration : 0);
 
             if (duration > 0) {
-                const currentTime = audioRef.current ? audioRef.current.currentTime : 0;
-                const progress = Math.min(100, Math.max(0, (currentTime / duration) * 100));
+                // --- PASSIVE MODE BYPASS ---
+                // If passive (TV), we skip all audio processing/scoring logic. 
+                // We assume `players` state is updated via the useEffect syncing with `passiveState`.
+                // However, we still need to run the loop to keep the animation frame going for visuals? 
+                // Actually, if we update `pitchRef.current` in the effect, the visualizer components (if they use rAF) might need this loop?
+                // `PitchVisualizer` is a component. It might have its own loop or rely on props?
+                // Let's check `PitchVisualizer`. It usually takes `pitch` as a prop or ref.
+                // If it takes a ref, we need to make sure the ref is updated. We did that in the Effect.
+                // So we can just RETURN here if passive.
+                if (isPassive) {
+                    requestRef.current = requestAnimationFrame(updateLoop);
+                    return;
+                }
+
+                // 1. Get current time from audio
+                const now = audioRef.current?.currentTime || 0;
+                const progress = Math.min(100, Math.max(0, (now / duration) * 100));
                 progressLineRef.current.style.width = `${progress}%`;
             }
         }
@@ -750,19 +1135,19 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         }
 
         requestRef.current = requestAnimationFrame(updateLoop);
-    }, [isPlaying, devPitchOverride, parsedSong, bpmMultiplier, players, trackScoreWeights, goldenNoteMultiplier, _duration]);
+    }, [isPlaying, devPitchOverride, parsedSong, bpmMultiplier, players, trackScoreWeights, goldenNoteMultiplier, _duration, onPlaybackUpdate]);
 
     // Start/Stop Mics and Loop
     useEffect(() => {
         if (!ready) return;
 
         // Start mics if there are players
-        if (players.length > 0) {
+        if (!isPassive && players.length > 0) {
             players.forEach(p => {
                 p.start().catch(e => console.error(`Failed to start mic for ${p.config.name}`, e));
             });
         } else {
-            console.log("[MelodiqSession] No players active, starting loop for playback/visuals only.");
+            console.log("[MelodiqSession] No players active (or passive mode), starting loop for playback/visuals only.");
         }
 
         requestRef.current = requestAnimationFrame(updateLoop);
@@ -1010,12 +1395,20 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     let blobToUrl = fileOrBlob;
                     const type = fileOrBlob.type;
                     const name = fileName.toLowerCase();
+                    const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 
                     // Check for AVI by extension or type
                     // Note: fileOrBlob.type might be empty or wrong, so extension is important
                     if (name.endsWith('.avi') || type.includes('avi') || type === 'video/x-msvideo') {
-                        console.log('[Melodiq] Attempting to force-load AVI file by masking as MP4:', name, 'Type:', type);
-                        blobToUrl = new Blob([fileOrBlob], { type: 'video/mp4' });
+                        if (isFirefox) {
+                            console.warn('[Melodiq] Firefox detected: Skipping AVI-as-MP4 hack to prevent browser crash. Video may not play.');
+                            // We do NOT modify blobToUrl, leaving it as is. 
+                            // Firefox might still try to play it and fail safely, or just show black screen.
+                            // Better than crashing the tab!
+                        } else {
+                            console.log('[Melodiq] Attempting to force-load AVI file by masking as MP4:', name, 'Type:', type);
+                            blobToUrl = new Blob([fileOrBlob], { type: 'video/mp4' });
+                        }
                     }
 
                     activeUrl = URL.createObjectURL(blobToUrl);
@@ -1072,13 +1465,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
 
             const startPlay = async () => {
                 try {
-                    await audio.play();
-                    if (videoRef.current) {
-                        // Sync video time just in case
-                        videoRef.current.currentTime = audio.currentTime;
-                        await videoRef.current.play();
-                    }
-                    setIsPlaying(true);
+                    await safePlay();
                 } catch (e) {
                     console.error("Auto-start failed (likely browser policy):", e);
                     // Reset so user can try manually
@@ -1088,6 +1475,20 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
             startPlay();
         }
     }, [ready, contentLoading, parsedSong, audioSrc, songVolume, masterVolume, song.id, isFinished]);
+
+    // Immediately notify parent when isPlaying changes (don't wait for rAF loop)
+    useEffect(() => {
+        if (onPlaybackUpdate) {
+            const duration = audioRef.current?.duration || 0;
+            const currentTime = audioRef.current?.currentTime || 0;
+            onPlaybackUpdate({
+                isPlaying,
+                currentTime,
+                duration,
+                progress: duration > 0 ? (currentTime / duration) * 100 : 0
+            });
+        }
+    }, [isPlaying]);
 
     // Ref for hidden folder input (Firefox compatible)
     const folderInputRef = useRef<HTMLInputElement>(null);
@@ -1144,7 +1545,46 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         e.target.value = '';
     };
 
-    if (!ready || contentLoading || !parsedSong) return <Box sx={{ bgcolor: 'black', height: '100vh', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Typography>Loading...</Typography></Box>; // Loading black screen
+    useImperativeHandle(ref, () => ({
+        togglePlay,
+        isPlaying,
+        getDuration: () => audioRef.current?.duration || 0,
+        getCurrentTime: () => audioRef.current?.currentTime || 0,
+        finishSong: () => handleSongEnd(),
+        isFinished,
+        pauseForScore,
+        resumeFromScore,
+        isPausedForScore,
+        handleNext,
+        getGameState: () => ({
+            isPlaying,
+            isFinished,
+            isPausedForScore,
+            players: playersRef.current.map(p => ({
+                id: p.config.id,
+                name: p.config.name,
+                hue: p.config.hue,
+                score: p.score,
+                trackScores: p.trackScores,
+                currentPitch: p.pitchRef.current,
+                activeSegments: p.activeSegments,
+                combo: p.combo,
+                lastHit: p.lastHit
+            })),
+            currentTime: audioRef.current?.currentTime || 0
+        })
+    }), [togglePlay, isPlaying, handleSongEnd, isFinished, pauseForScore, resumeFromScore, isPausedForScore, handleNext]);
+
+    if (loadError) {
+        return (
+            <Box sx={{ bgcolor: 'black', height: '100vh', color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, p: 3 }}>
+                <Typography variant="h6" color="error" align="center">{loadError}</Typography>
+                <Button variant="contained" onClick={() => onExit(true)}>Go Back</Button>
+            </Box>
+        );
+    }
+
+    if (!isPausedForScore && (!ready || contentLoading || !parsedSong)) return <Box sx={{ bgcolor: 'black', height: '100vh', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Typography>Loading...</Typography></Box>; // Loading black screen
 
     // Show folder access prompt for FileList-imported songs
     if (needsFolderAccess) {
@@ -1183,7 +1623,8 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
         );
     }
 
-    if (isFinished) {
+
+    if (isFinished && !suppressResults) {
         // Prepare props for ScoreBoard from valid players state
         return <ScoreBoard players={results.length > 0 ? results : players.map(p => ({ config: p.config, score: p.score, history: [], isNewRecord: false }))} onExit={onExit} />;
     }
@@ -1208,7 +1649,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     style={{
                         position: 'absolute',
                         top: 0, left: 0, width: '100%', height: '100%',
-                        objectFit: 'cover', zIndex: 0, opacity: 0.6
+                        objectFit: 'cover', zIndex: 0, opacity: 1.0
                     }}
                     onError={(e) => {
                         console.warn("Video playback failed (likely unsupported codec/format).", e);
@@ -1229,11 +1670,8 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     {videoError}
                 </Alert>
             </Snackbar>
-            {
-                videoSrc && (
-                    <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, bgcolor: 'rgba(0,0,0,0.4)', zIndex: 1 }} />
-                )
-            }
+
+            {/* Removed global dimming overlay */}
 
             <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', flex: 1, pointerEvents: 'none' }}>
                 <Box sx={{
@@ -1252,37 +1690,33 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     opacity: isUIVisible ? 1 : 0,
                     transition: 'opacity 0.5s ease-in-out'
                 }}>
-                    <IconButton onClick={() => onExit(true)} color="inherit"><ArrowBackIcon /></IconButton>
-                    <Typography variant="h6">{song.artist} - {song.title}</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        {!isTVMode && <IconButton onClick={() => onExit(true)} color="inherit"><ArrowBackIcon /></IconButton>}
+                        {onMinimize && !isTVMode && (
+                            <IconButton onClick={onMinimize} color="inherit" sx={{ ml: 1 }}>
+                                <KeyboardArrowDownIcon />
+                            </IconButton>
+                        )}
+                    </Box>
+                    <Typography variant="h6" sx={{ fontSize: `${1.25 * uiScale}rem` }}>{song.artist} - {song.title}</Typography>
                     <Box sx={{ display: 'flex', gap: 4 }}>
-                        {players.map(p => {
-                            // Determine display name: Only show track suffix for duet songs (more than 1 track)
-                            const isDuet = parsedSong?.tracks && parsedSong.tracks.length > 1;
-                            const trackName = isDuet && parsedSong?.tracks?.[p.trackIndex] ? parsedSong.tracks[p.trackIndex].name : null;
-                            const displayName = trackName ? `${p.config.name} (${trackName})` : p.config.name;
-
-                            return (
-                                <Box key={p.config.id} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <Typography sx={{ color: `hsl(${p.config.hue}, 100%, 70%)` }} fontWeight="bold">
-                                        {displayName}: {scores[p.config.id] || 0}
-                                    </Typography>
-                                    {showMicStatus && (
-                                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.7rem' }}>
-                                            Mic: {p.mic?.isActive ? 'On' : (p.webRtcManager ? 'Remote' : 'Off')}
-                                        </Typography>
-                                    )}
-                                </Box>
-                            );
-                        })}
+                        {/* Mic Status - kept if needed, but scores moved to bottom */}
+                        {showMicStatus && players.map(p => (
+                            <Box key={p.config.id} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.7rem' }}>
+                                    {p.config.name}: {p.mic?.isActive ? 'On' : (p.webRtcManager ? 'Remote' : 'Off')}
+                                </Typography>
+                            </Box>
+                        ))}
                     </Box>
                 </Box>
 
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', minHeight: 0 }}>
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', minHeight: 0, pt: 10 }}>
                     {/* Dynamic Split Screen Container */}
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
                         {players.length === 0 && (
                             <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <LyricsDisplay song={parsedSong!} audioRef={audioRef} centered />
+                                <LyricsDisplay song={parsedSong!} audioRef={audioRef} centered uiScale={uiScale} />
                             </Box>
                         )}
 
@@ -1317,6 +1751,7 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                                                     showNoteLabels={showNoteLabels}
                                                     latency={player.config.latency}
                                                     trackIndex={player.trackIndex}
+                                                    scale={uiScale}
                                                 />
                                                 {/* Track Selector Overlay */}
                                                 {parsedSong?.tracks && parsedSong.tracks.length > 1 && (
@@ -1359,11 +1794,33 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                             pointerEvents: 'none',
                             zIndex: 10,
                             borderTop: '1px solid rgba(255,255,255,0.1)',
-                            bgcolor: 'rgba(0,0,0,0.2)'
+                            bgcolor: 'rgba(0,0,0,0.2)',
+                            position: 'relative' // Added for absolute positioning of scores
                         }}>
-                            <LyricsDisplay song={parsedSong!} audioRef={audioRef} />
+                            <LyricsDisplay song={parsedSong!} audioRef={audioRef} uiScale={uiScale} />
+
+                            {/* ScoreDisplay moved to root */}
                         </Box>
                     )}
+                </Box>
+
+                {/* Scores Overlay - Global Top Right */}
+                <Box sx={{
+                    position: 'absolute',
+                    top: 16, // Aligned with header
+                    right: 24,
+                    zIndex: 1500, // Very high z-index
+                    pointerEvents: 'none'
+                }}>
+                    <ScoreDisplay
+                        ref={scoreDisplayRef}
+                        players={players.map(p => ({
+                            id: p.config.id,
+                            name: p.config.name,
+                            hue: p.config.hue
+                        }))}
+                        scale={uiScale}
+                    />
                 </Box>
 
                 {/* Controls */}
@@ -1405,6 +1862,35 @@ export const MelodiqSession: React.FC<MelodiqSessionProps> = ({ song, onExit }) 
                     }}
                 />
             </Box>
+
+            {/* Paused-for-Score Overlay - rendered ON TOP to keep audio alive */}
+            {isPausedForScore && !suppressResults && (() => {
+                const pausedPlayers = players.map(p => ({
+                    config: p.config,
+                    score: Math.round(p.trackScores[p.trackIndex] || 0),
+                    history: [],
+                    isNewRecord: false
+                }));
+                return <ScoreBoard
+                    players={pausedPlayers}
+                    onExit={(forceHome) => {
+                        setIsPausedForScore(false);
+                        onExit(forceHome);
+                    }}
+                    onResume={resumeFromScore}
+                />;
+            })()}
         </Box >
     );
-};
+});
+MelodiqSessionContent.displayName = 'MelodiqSessionContent';
+
+export const MelodiqSession = forwardRef<MelodiqSessionHandle, MelodiqSessionProps>((props, ref) => (
+    <ErrorBoundary fallback={<Box sx={{ bgcolor: 'black', height: '100vh', color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <Typography variant="h5" color="error">Session Crashed</Typography>
+        <Button onClick={() => props.onExit(true)} sx={{ mt: 2 }} variant="contained">Exit</Button>
+    </Box>}>
+        <MelodiqSessionContent {...props} ref={ref} />
+    </ErrorBoundary>
+));
+MelodiqSession.displayName = 'MelodiqSession';

@@ -39,15 +39,15 @@ export const GlobalHeader: React.FC = () => {
         }
     };
 
-    // Strict Responsive Logic:
+    // Responsive Logic:
     // Large Screen: Show ALL items in toolbar.
-    // Small Screen: Show ALL items in burger menu.
+    // Small Screen: ALL items go into burger menu for a clean header.
     const visibleInToolbar = isLargeScreen ? menuItems : [];
     const overflowItems = isLargeScreen ? [] : menuItems;
 
     return (
         <AppBar position="static">
-            <Toolbar>
+            <Toolbar sx={{ alignItems: 'center' }}>
                 <IconButton
                     size="large"
                     edge="start"
@@ -85,6 +85,7 @@ export const GlobalHeader: React.FC = () => {
                     <div>
                         <IconButton
                             size="large"
+                            edge="end"
                             aria-label="menu"
                             aria-controls="menu-appbar"
                             aria-haspopup="true"

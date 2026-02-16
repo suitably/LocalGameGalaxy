@@ -105,9 +105,13 @@ export const useProfiles = (devices: MediaDeviceInfo[]) => {
             if (prev.some(ap => ap.profileId === profileId)) {
                 next = prev.filter(ap => ap.profileId !== profileId);
             } else {
-                const usedDevices = prev.map(ap => ap.deviceId).filter(Boolean);
-                const nextDevice = devices.find(d => !usedDevices.includes(d.deviceId))?.deviceId || '';
-                next = [...prev, { profileId, deviceId: nextDevice, volume: 0.8, muted: true, latency: 0 }];
+                if (profileId === 'BOT') {
+                    next = [...prev, { profileId: 'BOT', deviceId: 'BOT', volume: 0.8, muted: false, latency: 0 }];
+                } else {
+                    const usedDevices = prev.map(ap => ap.deviceId).filter(Boolean);
+                    const nextDevice = devices.find(d => !usedDevices.includes(d.deviceId))?.deviceId || '';
+                    next = [...prev, { profileId, deviceId: nextDevice, volume: 0.8, muted: true, latency: 0 }];
+                }
             }
             persistProfiles(profiles, next);
             return next;

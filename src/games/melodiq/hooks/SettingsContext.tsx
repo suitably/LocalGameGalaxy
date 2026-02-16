@@ -14,6 +14,8 @@ export interface SettingsState {
     helperUrl: string;
     enableHelper: boolean;
     goldenNoteMultiplier: number;
+    defaultSongClickAction: 'play_now' | 'play_next' | 'add_end';
+    defaultViewMode: 'list' | 'grid';
 }
 
 /** Default/Factory settings */
@@ -30,7 +32,9 @@ export const DEFAULT_SETTINGS: SettingsState = {
     masterVolume: 1.0,
     helperUrl: 'http://localhost:3000',
     enableHelper: false,
-    goldenNoteMultiplier: 2.0
+    goldenNoteMultiplier: 2.0,
+    defaultSongClickAction: 'add_end',
+    defaultViewMode: 'list'
 };
 
 export const loadSettings = (): SettingsState => ({
@@ -64,7 +68,9 @@ export const loadSettings = (): SettingsState => ({
     goldenNoteMultiplier: (() => {
         const stored = localStorage.getItem('melodiq_golden_note_multiplier');
         return stored ? parseFloat(stored) : 2.0;
-    })()
+    })(),
+    defaultSongClickAction: (localStorage.getItem('melodiq_default_song_click_action') as any) || 'add_end',
+    defaultViewMode: (localStorage.getItem('melodiq_default_view_mode') as any) || 'list'
 });
 
 const persistSettings = (s: SettingsState) => {
@@ -81,6 +87,8 @@ const persistSettings = (s: SettingsState) => {
     localStorage.setItem('melodiq_helper_url', s.helperUrl);
     localStorage.setItem('melodiq_enable_helper', String(s.enableHelper));
     localStorage.setItem('melodiq_golden_note_multiplier', String(s.goldenNoteMultiplier));
+    localStorage.setItem('melodiq_default_song_click_action', s.defaultSongClickAction);
+    localStorage.setItem('melodiq_default_view_mode', s.defaultViewMode);
 };
 
 interface SettingsContextValue {

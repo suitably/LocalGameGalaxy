@@ -75,13 +75,19 @@ export class MicrophoneManager {
         }
     }
 
-    public stop(): void {
+    public async stop(): Promise<void> {
         if (this.mediaStream) {
             this.mediaStream.getTracks().forEach(track => track.stop());
             this.mediaStream = null;
         }
         if (this.audioContext) {
-            this.audioContext.close();
+            if (this.audioContext.state !== 'closed') {
+                try {
+                    await this.audioContext.close();
+                } catch (e) {
+                    console.warn('[MicrophoneManager] Error closing AudioContext:', e);
+                }
+            }
             this.audioContext = null;
         }
         this.analyser = null;

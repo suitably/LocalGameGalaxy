@@ -1,29 +1,37 @@
 import React, { useState, useEffect } from 'react';
-import { VirtuosoGrid } from 'react-virtuoso';
-import { Box, Button, Typography, Card, Grid, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText, LinearProgress, Collapse } from '@mui/material';
+import { VirtuosoGrid, Virtuoso } from 'react-virtuoso';
+import { Box, Button, Typography, Card, Grid, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText, LinearProgress, Collapse, Dialog, DialogTitle, DialogContent, List, ListItemButton, ListItemIcon, Snackbar, Alert } from '@mui/material';
 import { type Song, type SongMeta } from './db';
-import { MelodiqSession } from './gameplay/MelodiqSession';
+
 
 import SettingsIcon from '@mui/icons-material/Settings';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { MelodiqSettings } from './MelodiqSettings';
-
-
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import AddToQueueIcon from '@mui/icons-material/AddToQueue';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
+import ViewListIcon from '@mui/icons-material/ViewList';
+
+import { MelodiqSettings } from './MelodiqSettings';
 
 import { useTranslation } from 'react-i18next';
 import { useLayout } from '../../context/LayoutContext';
 import { WebRTCProvider, useWebRTC } from './audio/WebRTCContext';
-import { SettingsProvider } from './hooks/SettingsContext';
+import { SettingsProvider, useMelodiqSettings } from './hooks/SettingsContext';
 import { MelodiqConnection } from './MelodiqConnection';
 import { SongCard } from './components/SongCard';
+import { SongListItem } from './components/SongListItem';
 import { useSongs, SongsProvider } from './hooks/useSongs';
 import { useQueue } from './hooks/useQueue';
 import { PhoneQueueBridge } from './components/PhoneQueueBridge';
-import { CastButton } from './components/CastButton';
+import { TVModeButton } from './components/TVModeButton';
+
+import { useTVMode } from './hooks/useTVMode';
+import { PlaybackManager } from './components/PlaybackManager';
+import { HostQueueDrawer } from './components/HostQueueDrawer';
 
 // Navigation State
 type View = 'Home' | 'Settings' | 'Session' | 'Connection';
@@ -39,10 +47,71 @@ export const MelodiqGameContent: React.FC = () => {
 
     // Use centralized song management hook
     const { songs, loadingProgress, refreshSongs, getSongById, isLoading } = useSongs();
-    const { queue, popNext, setNowPlaying } = useQueue();
+    const { queue, popNext, setNowPlaying, addToQueue, addNext } = useQueue();
+    const {
+        isTVConnected,
+        isPresentationAvailable,
+        openTVWindow,
+        startPresentation,
+        playSongOnTV,
+        lastEvent,
+        sendRemoteCommand,
+        sendGameUpdate,
+        disconnectTV
+    } = useTVMode();
+    const { manager } = useWebRTC();
+    const { settings } = useMelodiqSettings();
 
     // Search & Filter State
     const [searchQuery, setSearchQuery] = useState('');
+
+    // TV Remote State
+    const [remoteSong, setRemoteSong] = useState<SongMeta | null>(null);
+
+    // Queue Options State
+    const [selectedSongForQueue, setSelectedSongForQueue] = useState<SongMeta | null>(null);
+    const [queueDialogOpen, setQueueDialogOpen] = useState(false);
+    const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+    const [showQueueDrawer, setShowQueueDrawer] = useState(false);
+
+    // Handle TV Events
+    useEffect(() => {
+        if (lastEvent && lastEvent.type === 'PLAYBACK_STARTED') {
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            setFeedbackMessage(`TV Playback started: ${lastEvent.payload.title}`);
+            // If we don't have the song set locally as remoteSong, we could try to sync it here,
+            // but usually handleSelectSong sets it first.
+        } else if (lastEvent && lastEvent.type === 'SONG_ENDED') {
+            setRemoteSong(null);
+        }
+    }, [lastEvent]);
+
+
+
+    const handleSongLongPress = (song: SongMeta) => {
+        setSelectedSongForQueue(song);
+        setQueueDialogOpen(true);
+    };
+
+    const handleQueueOption = (action: 'play_now' | 'play_next' | 'add_end') => {
+        if (!selectedSongForQueue) return;
+
+        switch (action) {
+            case 'play_now':
+                if (isTVConnected) playSongOnTV(selectedSongForQueue.id, selectedSongForQueue);
+                else handleSelectSong(selectedSongForQueue);
+                break;
+            case 'play_next':
+                addNext(selectedSongForQueue);
+                setFeedbackMessage(`Added to start of queue: ${selectedSongForQueue.title}`);
+                break;
+            case 'add_end':
+                addToQueue(selectedSongForQueue);
+                setFeedbackMessage(`Added to queue: ${selectedSongForQueue.title}`);
+                break;
+        }
+        setQueueDialogOpen(false);
+    };
     const [activeFilters, setActiveFilters] = useState<{
         year: string[];
         genre: string[];
@@ -55,14 +124,63 @@ export const MelodiqGameContent: React.FC = () => {
         edition: []
     });
 
+    // Handle TV Events (Auto-Play Next)
+    useEffect(() => {
+        if (lastEvent?.type === 'SONG_ENDED') {
+            const nextItem = popNext();
+            if (nextItem) {
+                console.log('TV Song Ended. Playing next from queue:', nextItem.song.title);
+                playSongOnTV(nextItem.song.id, nextItem.song);
+            }
+        }
+    }, [lastEvent, popNext, playSongOnTV]);
+
+    // Forward Phone Commands to TV
+    useEffect(() => {
+        if (!manager || !isTVConnected) return;
+
+        const handleRemoteCommand = (_peerId: string, data: any) => {
+            // Forward commands to TV
+            if (data.type === 'remote.command') {
+                console.log('Forwarding remote command to TV:', data.command);
+                sendRemoteCommand(data.command, data.value);
+            }
+        };
+
+        manager.on('message', handleRemoteCommand);
+
+        return () => {
+            manager.off('message', handleRemoteCommand);
+        };
+    }, [manager, isTVConnected, sendRemoteCommand]);
+
     // View State
     const [currentView, setCurrentView] = useState<View>('Home');
     const [selectedSong, setSelectedSong] = useState<Song | null>(null);
 
     // Update Global Header based on state
-    // Update Global Header based on state
     // Filter Visibility State
-    const [showFilters, setShowFilters] = useState(true);
+    const [showFilters, setShowFilters] = useState(false);
+
+    // View Mode State (List vs Grid)
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
+
+    // Auto-Play on TV Connect
+    useEffect(() => {
+        if (isTVConnected && selectedSong && !remoteSong) {
+            console.log("TV Connected while playing locally, switching to TV...");
+            // Trigger play on TV
+            playSongOnTV(selectedSong.id, selectedSong);
+            setRemoteSong(selectedSong as unknown as SongMeta);
+        }
+    }, [isTVConnected, selectedSong, remoteSong, playSongOnTV]);
+
+    // Initialize view mode from settings
+    useEffect(() => {
+        if (settings.defaultViewMode) {
+            setViewMode(settings.defaultViewMode);
+        }
+    }, []); // Only on mount (or we could listen to settings changes if we want dynamic updates from settings panel)
 
     // Update Global Header based on state
     useEffect(() => {
@@ -72,15 +190,15 @@ export const MelodiqGameContent: React.FC = () => {
         if (currentView === 'Home') {
             setHeader(t('games.melodiq.title'), [
                 {
-                    label: showFilters ? 'Hide Filters' : 'Show Filters',
-                    icon: <FilterListIcon />,
-                    action: () => setShowFilters(prev => !prev),
+                    label: viewMode === 'grid' ? 'List View' : 'Grid View',
+                    icon: viewMode === 'grid' ? <ViewListIcon /> : <ViewModuleIcon />,
+                    action: () => setViewMode(prev => prev === 'grid' ? 'list' : 'grid'),
                     showAlways: true
                 },
                 {
                     label: `Queue (${queue.length})`,
                     icon: <PlaylistPlayIcon />,
-                    action: () => window.open('/games/melodiq/queue', '_blank')
+                    action: () => setShowQueueDrawer(true)
                 },
                 {
                     label: 'Refresh',
@@ -101,7 +219,15 @@ export const MelodiqGameContent: React.FC = () => {
                     showAlways: true
                 }
             ], homeAction);
-            setCustomHeaderActions(<CastButton />);
+            setCustomHeaderActions(
+                <TVModeButton
+                    isTVConnected={isTVConnected}
+                    isPresentationAvailable={isPresentationAvailable}
+                    onOpenTV={openTVWindow}
+                    onStartPresentation={startPresentation}
+                    onDisconnect={disconnectTV}
+                />
+            );
         } else {
             // Clear menu items for other views to avoid irrelevant actions
             setHeader(t('games.melodiq.title'), [], homeAction);
@@ -111,20 +237,59 @@ export const MelodiqGameContent: React.FC = () => {
             setHeader(null, [], null);
             setCustomHeaderActions(null);
         };
-    }, [currentView, queue.length, loadingProgress, refreshSongs, setCurrentView, t, setHeader, showFilters, setShowFilters, setCustomHeaderActions]);
+    }, [currentView, queue.length, loadingProgress, refreshSongs, setCurrentView, t, setHeader, showFilters, setShowFilters, setCustomHeaderActions, isTVConnected, openTVWindow, isPresentationAvailable, startPresentation, disconnectTV, viewMode]);
 
     // Handler to select and load a song for playback
-    const handleSelectSong = async (songMeta: SongMeta) => {
+    const handleSelectSong = async (songMeta: SongMeta, forcePlay: boolean = false) => {
         try {
-            const fullSong = await getSongById(songMeta.id);
-            if (fullSong) {
-                setSelectedSong(fullSong);
-                setNowPlaying(songMeta);
-                setCurrentView('Session');
+            // Check for default click action if something is already playing
+            // logic: if (playing && action != play_now) -> do action
+            // "playing" means either local playback (selectedSong is active) or TV playback (remoteSong)
+            const isPlaying = !!selectedSong || (isTVConnected && !!remoteSong);
+
+            // User Request: If something is playing, clicking a song should ALWAYS add to queue (end)
+            if (!forcePlay && isPlaying) {
+                addToQueue(songMeta);
+                setFeedbackMessage(`Added to queue: ${songMeta.title}`);
+                return;
+            }
+
+
+            if (isTVConnected) {
+                // Send media URLs to TV for audio/video playback
+                const fullSong = await getSongById(songMeta.id);
+                playSongOnTV(songMeta.id, fullSong || songMeta);
+                setRemoteSong(songMeta);
+
+                // Also start local session for pitch visualization & scoring
+                if (fullSong) {
+                    setSelectedSong(fullSong);
+                    setNowPlaying(songMeta);
+                    // setCurrentView('Session'); // User requested: don't open session view on Host by default if TV connected
+                }
+            } else {
+                // Standard local playback
+                const fullSong = await getSongById(songMeta.id);
+                if (fullSong) {
+                    setSelectedSong(fullSong);
+                    setNowPlaying(songMeta); // Update queue context
+                    setCurrentView('Session');
+                } else {
+                    console.error("Song content not found in DB");
+                }
             }
         } catch (e) {
-            console.error('Failed to load song:', e);
+            console.error("Failed to load song", e);
         }
+    };
+
+
+    const handleMinimizeSession = () => {
+        setCurrentView('Home');
+    };
+
+    const handleRestoreSession = () => {
+        setCurrentView('Session');
     };
 
     const filteredSongs = React.useMemo(() => {
@@ -175,35 +340,14 @@ export const MelodiqGameContent: React.FC = () => {
         [songs]);
 
     const clearFilters = () => {
-        setSearchQuery('');
+        // setSearchQuery(''); // Keep search query when clearing filters
         setActiveFilters({ year: [], genre: [], language: [], edition: [] });
     };
 
     // Render the active view inside a single shared WebRTCProvider
     const renderView = () => {
-        if (currentView === 'Session' && selectedSong) {
-            return <MelodiqSession
-                song={selectedSong}
-                onExit={(forceHome = false) => {
-                    setNowPlaying(null);
-
-                    if (!forceHome) {
-                        const nextItem = popNext();
-                        if (nextItem) {
-                            console.log("Playing next from queue:", nextItem.song.title);
-                            handleSelectSong(nextItem.song);
-                            return;
-                        }
-                    }
-
-                    setSelectedSong(null);
-                    setCurrentView('Home');
-                }}
-                showDebugOverlay={false}
-                showDevSlider={false}
-                showMicStatus={false}
-            />;
-        }
+        // We render MelodiqSession if selectedSong is present, but hide it if not in Session view
+        // NOTE: activeSong logic is now split: selectedSong (Local) vs remoteSong (TV)
 
         if (currentView === 'Settings') {
             return (
@@ -233,67 +377,82 @@ export const MelodiqGameContent: React.FC = () => {
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                overflow: 'hidden' // Prevent body scroll
+                overflow: 'hidden', // Prevent body scroll
+
+                pb: (selectedSong || remoteSong) ? '64px' : 0 // Add padding for MiniPlayer
             }}>
 
                 {/* Header removed, now using GlobalHeader */}
 
                 {/* Loading Progress */}
-                {loadingProgress && isLoading && (
-                    <Box sx={{ mb: 2, flexShrink: 0 }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                            Loading library... {loadingProgress.total > 0 ? `${loadingProgress.loaded} / ${loadingProgress.total}` : ''}
-                        </Typography>
-                        <LinearProgress
-                            variant="determinate"
-                            value={loadingProgress.total > 0 ? (loadingProgress.loaded / loadingProgress.total) * 100 : 0}
-                        />
-                    </Box>
-                )}
+                {
+                    loadingProgress && isLoading && (
+                        <Box sx={{ mb: 2, flexShrink: 0 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                Loading library... {loadingProgress.total > 0 ? `${loadingProgress.loaded} / ${loadingProgress.total}` : ''}
+                            </Typography>
+                            <LinearProgress
+                                variant="determinate"
+                                value={loadingProgress.total > 0 ? (loadingProgress.loaded / loadingProgress.total) * 100 : 0}
+                            />
+                        </Box>
+                    )
+                }
 
                 {/* Empty State */}
-                {songs?.length === 0 && !loadingProgress && !isLoading && (
-                    <Box sx={{ width: '100%', textAlign: 'center', py: 8, opacity: 0.7, flexGrow: 1 }}>
-                        <Typography variant="h5">Cannot connect to Melodiq Helper</Typography>
-                        <Typography sx={{ mt: 1 }}>
-                            To play local songs, you need the desktop helper app running.
-                        </Typography>
-                        <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'center' }}>
-                            <Button
-                                variant="contained"
-                                color="secondary"
-                                onClick={() => alert("Binaries are in server/dist/ folder!")}
-                                sx={{
-                                    borderRadius: 50,
-                                    px: 4,
-                                    py: 1.5,
-                                    backgroundImage: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
-                                    boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
-                                    color: 'white'
-                                }}
-                            >
-                                Download Helper
-                            </Button>
-                            <Button
-                                onClick={refreshSongs}
-                                variant="outlined"
-                                sx={{
-                                    borderRadius: 50,
-                                    px: 4,
-                                    py: 1.5
-                                }}
-                            >
-                                Retry Connection
-                            </Button>
+                {
+                    songs?.length === 0 && !loadingProgress && !isLoading && (
+                        <Box sx={{ width: '100%', textAlign: 'center', py: 8, opacity: 0.7, flexGrow: 1 }}>
+                            <Typography variant="h5">Cannot connect to Melodiq Helper</Typography>
+                            <Typography sx={{ mt: 1 }}>
+                                To play local songs, you need the desktop helper app running.
+                            </Typography>
+                            <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'center' }}>
+                                <Button
+                                    variant="contained"
+                                    color="secondary"
+                                    onClick={() => alert("Binaries are in server/dist/ folder!")}
+                                    sx={{
+                                        borderRadius: 50,
+                                        px: 4,
+                                        py: 1.5,
+                                        backgroundImage: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
+                                        boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
+                                        color: 'white'
+                                    }}
+                                >
+                                    Download Helper
+                                </Button>
+                                <Button
+                                    onClick={refreshSongs}
+                                    variant="outlined"
+                                    sx={{
+                                        borderRadius: 50,
+                                        px: 4,
+                                        py: 1.5
+                                    }}
+                                >
+                                    Retry Connection
+                                </Button>
+                            </Box>
                         </Box>
-                    </Box>
-                )}
+                    )
+                }
 
-                {/* Filter Toggle & Container */}
-                {songs.length > 0 && (
-                    <Box sx={{ mb: 2, flexShrink: 0 }}>
-                        <Collapse in={showFilters}>
-                            <Card sx={{ p: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                {/* Search & Filter Container */}
+                {
+                    songs.length > 0 && (
+                        <Box sx={{ flexShrink: 0 }}>
+                            <Box sx={{
+                                bgcolor: 'background.paper',
+                                pl: { xs: 2, sm: 3 },
+                                pr: { xs: 1, sm: 1.5 },
+                                py: 1,
+                                mb: showFilters ? 0 : 2,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                            }}>
                                 <TextField
                                     placeholder="Search title, artist..."
                                     variant="outlined"
@@ -316,193 +475,234 @@ export const MelodiqGameContent: React.FC = () => {
                                     }}
                                     sx={{
                                         flexGrow: 1,
-                                        minWidth: '200px',
-                                        '& .MuiOutlinedInput-root': { borderRadius: 50 }
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: 50,
+                                            bgcolor: 'rgba(255,255,255,0.08)',
+                                            height: 40,
+                                        }
                                     }}
                                 />
+                                <IconButton
+                                    onClick={() => setShowFilters(prev => !prev)}
+                                    color={showFilters ? 'primary' : 'inherit'}
+                                    size="large"
+                                    sx={{
+                                        flexShrink: 0,
+                                    }}
+                                >
+                                    <FilterListIcon />
+                                </IconButton>
+                            </Box>
 
-                                <FormControl size="small" sx={{ minWidth: 120, maxWidth: 200 }}>
-                                    <InputLabel>Genre</InputLabel>
-                                    <Select
-                                        multiple
-                                        value={activeFilters.genre}
-                                        label="Genre"
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            setActiveFilters(prev => ({
-                                                ...prev,
-                                                genre: typeof value === 'string' ? value.split(',') : value
-                                            }));
-                                        }}
-                                        renderValue={(selected) => selected.join(', ')}
-                                        sx={{ borderRadius: 50 }}
-                                    >
-                                        {availableGenres.map(g => (
-                                            <MenuItem key={g} value={g}>
-                                                <Checkbox checked={activeFilters.genre.indexOf(g) > -1} />
-                                                <ListItemText primary={g} />
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
+                            <Collapse in={showFilters}>
+                                <Card sx={{ p: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
 
-                                <FormControl size="small" sx={{ minWidth: 100, maxWidth: 150 }}>
-                                    <InputLabel>Year</InputLabel>
-                                    <Select
-                                        multiple
-                                        value={activeFilters.year}
-                                        label="Year"
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            setActiveFilters(prev => ({
-                                                ...prev,
-                                                year: typeof value === 'string' ? value.split(',') : value
-                                            }));
-                                        }}
-                                        renderValue={(selected) => selected.join(', ')}
-                                        sx={{ borderRadius: 50 }}
-                                    >
-                                        {availableYears.map(y => (
-                                            <MenuItem key={y} value={y}>
-                                                <Checkbox checked={activeFilters.year.indexOf(y) > -1} />
-                                                <ListItemText primary={y} />
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
+                                    <FormControl size="small" sx={{ minWidth: 120, maxWidth: 200 }}>
+                                        <InputLabel>Genre</InputLabel>
+                                        <Select
+                                            multiple
+                                            value={activeFilters.genre}
+                                            label="Genre"
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setActiveFilters(prev => ({
+                                                    ...prev,
+                                                    genre: typeof value === 'string' ? value.split(',') : value
+                                                }));
+                                            }}
+                                            renderValue={(selected) => selected.join(', ')}
+                                            sx={{ borderRadius: 50 }}
+                                        >
+                                            {availableGenres.map(g => (
+                                                <MenuItem key={g} value={g}>
+                                                    <Checkbox checked={activeFilters.genre.indexOf(g) > -1} />
+                                                    <ListItemText primary={g} />
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
 
-                                <FormControl size="small" sx={{ minWidth: 120, maxWidth: 200 }}>
-                                    <InputLabel>Language</InputLabel>
-                                    <Select
-                                        multiple
-                                        value={activeFilters.language}
-                                        label="Language"
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            setActiveFilters(prev => ({
-                                                ...prev,
-                                                language: typeof value === 'string' ? value.split(',') : value
-                                            }));
-                                        }}
-                                        renderValue={(selected) => selected.join(', ')}
-                                        sx={{ borderRadius: 50 }}
-                                    >
-                                        {availableLanguages.map(l => (
-                                            <MenuItem key={l} value={l}>
-                                                <Checkbox checked={activeFilters.language.indexOf(l) > -1} />
-                                                <ListItemText primary={l} />
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
+                                    <FormControl size="small" sx={{ minWidth: 100, maxWidth: 150 }}>
+                                        <InputLabel>Year</InputLabel>
+                                        <Select
+                                            multiple
+                                            value={activeFilters.year}
+                                            label="Year"
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setActiveFilters(prev => ({
+                                                    ...prev,
+                                                    year: typeof value === 'string' ? value.split(',') : value
+                                                }));
+                                            }}
+                                            renderValue={(selected) => selected.join(', ')}
+                                            sx={{ borderRadius: 50 }}
+                                        >
+                                            {availableYears.map(y => (
+                                                <MenuItem key={y} value={y}>
+                                                    <Checkbox checked={activeFilters.year.indexOf(y) > -1} />
+                                                    <ListItemText primary={y} />
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
 
-                                <FormControl size="small" sx={{ minWidth: 150, maxWidth: 250 }}>
-                                    <InputLabel>Edition</InputLabel>
-                                    <Select
-                                        multiple
-                                        value={activeFilters.edition}
-                                        label="Edition"
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            setActiveFilters(prev => ({
-                                                ...prev,
-                                                edition: typeof value === 'string' ? value.split(',') : value
-                                            }));
-                                        }}
-                                        renderValue={(selected) => selected.join(', ')}
-                                        sx={{ borderRadius: 50 }}
-                                    >
-                                        {availableEditions.map(ed => (
-                                            <MenuItem key={ed} value={ed}>
-                                                <Checkbox checked={activeFilters.edition.indexOf(ed) > -1} />
-                                                <ListItemText primary={ed} />
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
+                                    <FormControl size="small" sx={{ minWidth: 120, maxWidth: 200 }}>
+                                        <InputLabel>Language</InputLabel>
+                                        <Select
+                                            multiple
+                                            value={activeFilters.language}
+                                            label="Language"
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setActiveFilters(prev => ({
+                                                    ...prev,
+                                                    language: typeof value === 'string' ? value.split(',') : value
+                                                }));
+                                            }}
+                                            renderValue={(selected) => selected.join(', ')}
+                                            sx={{ borderRadius: 50 }}
+                                        >
+                                            {availableLanguages.map(l => (
+                                                <MenuItem key={l} value={l}>
+                                                    <Checkbox checked={activeFilters.language.indexOf(l) > -1} />
+                                                    <ListItemText primary={l} />
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
 
-                                {(searchQuery || activeFilters.year.length > 0 || activeFilters.genre.length > 0 || activeFilters.language.length > 0 || activeFilters.edition.length > 0) && (
-                                    <Button
-                                        size="small"
-                                        onClick={clearFilters}
-                                        color="inherit"
-                                        variant="outlined"
-                                        sx={{ borderRadius: 50 }}
-                                    >
-                                        Clear All
-                                    </Button>
-                                )}
+                                    <FormControl size="small" sx={{ minWidth: 150, maxWidth: 250 }}>
+                                        <InputLabel>Edition</InputLabel>
+                                        <Select
+                                            multiple
+                                            value={activeFilters.edition}
+                                            label="Edition"
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setActiveFilters(prev => ({
+                                                    ...prev,
+                                                    edition: typeof value === 'string' ? value.split(',') : value
+                                                }));
+                                            }}
+                                            renderValue={(selected) => selected.join(', ')}
+                                            sx={{ borderRadius: 50 }}
+                                        >
+                                            {availableEditions.map(ed => (
+                                                <MenuItem key={ed} value={ed}>
+                                                    <Checkbox checked={activeFilters.edition.indexOf(ed) > -1} />
+                                                    <ListItemText primary={ed} />
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
 
-                                <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
-                                    {filteredSongs.length} / {songs.length} songs
-                                </Typography>
-                            </Card>
-                        </Collapse>
-                    </Box>
-                )}
+                                    {(activeFilters.year.length > 0 || activeFilters.genre.length > 0 || activeFilters.language.length > 0 || activeFilters.edition.length > 0) && (
+                                        <Button
+                                            size="small"
+                                            onClick={clearFilters}
+                                            color="inherit"
+                                            variant="outlined"
+                                            sx={{ borderRadius: 50 }}
+                                        >
+                                            Clear Filters
+                                        </Button>
+                                    )}
+
+                                    <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
+                                        {filteredSongs.length} / {songs.length} songs
+                                    </Typography>
+                                </Card>
+                            </Collapse>
+                        </Box>
+                    )
+                }
 
                 {
                     filteredSongs?.length > 0 && (
                         <Box sx={{ flexGrow: 1, minHeight: 0 }}>
-                            <VirtuosoGrid
-                                style={{ height: '100%', width: '100%' }}
-                                totalCount={filteredSongs.length}
-                                components={{
-                                    List: React.forwardRef((props, ref) => <Grid container spacing={2} {...props} ref={ref as any} id="song-grid" />),
-                                    Item: React.forwardRef((props, ref) => {
-                                        // Read density preference (default to 'small' for high density)
-                                        const cardSize = localStorage.getItem('melodiq_card_size') || 'small';
+                            {viewMode === 'grid' ? (
+                                <VirtuosoGrid
+                                    style={{ height: '100%', width: '100%' }}
+                                    totalCount={filteredSongs.length}
+                                    components={{
+                                        List: React.forwardRef((props, ref) => <Grid container spacing={2} {...props} ref={ref as any} id="song-grid" />),
+                                        Item: React.forwardRef((props, ref) => {
+                                            // Read density preference (default to 'small' for high density)
+                                            const cardSize = localStorage.getItem('melodiq_card_size') || 'small';
 
-                                        // Define responsive grid sizes
-                                        let gridProps: any = { xs: 6, sm: 4, md: 3, lg: 2 }; // Default 'small' (dense)
+                                            // Define responsive grid sizes
+                                            let gridProps: any = { xs: 6, sm: 4, md: 3, lg: 2 }; // Default 'small' (dense)
 
-                                        if (cardSize === 'medium') {
-                                            gridProps = { xs: 6, sm: 4, md: 4, lg: 3 }; // 4 per row on desktop
-                                        } else if (cardSize === 'large') {
-                                            gridProps = { xs: 12, sm: 6, md: 4, lg: 3 }; // 4 per row but bigger on mobile
-                                        } else if (cardSize === 'custom') {
-                                            try {
-                                                const stored = localStorage.getItem('melodiq_custom_target_columns');
-                                                const target = stored ? parseInt(stored) : 6;
+                                            if (cardSize === 'medium') {
+                                                gridProps = { xs: 6, sm: 4, md: 4, lg: 3 }; // 4 per row on desktop
+                                            } else if (cardSize === 'large') {
+                                                gridProps = { xs: 12, sm: 6, md: 4, lg: 3 }; // 4 per row but bigger on mobile
+                                            } else if (cardSize === 'custom') {
+                                                try {
+                                                    const stored = localStorage.getItem('melodiq_custom_target_columns');
+                                                    const target = stored ? parseInt(stored) : 6;
 
-                                                // Calculate items per row for each breakpoint based on target (desktop/large)
-                                                // Scaling factors: lg=100%, md=75%, sm=50%, xs=33% (min 1)
-                                                const lgItems = Math.max(1, target);
-                                                const mdItems = Math.max(1, Math.round(target * 0.75)); // e.g. 6 -> 4 or 5
-                                                const smItems = Math.max(1, Math.round(target * 0.5));  // e.g. 6 -> 3
-                                                const xsItems = Math.max(1, Math.round(target * 0.33)); // e.g. 6 -> 2
+                                                    // Calculate items per row for each breakpoint based on target (desktop/large)
+                                                    // Scaling factors: lg=100%, md=75%, sm=50%, xs=33% (min 1)
+                                                    const lgItems = Math.max(1, target);
+                                                    const mdItems = Math.max(1, Math.round(target * 0.75)); // e.g. 6 -> 4 or 5
+                                                    const smItems = Math.max(1, Math.round(target * 0.5));  // e.g. 6 -> 3
+                                                    const xsItems = Math.max(1, Math.round(target * 0.33)); // e.g. 6 -> 2
 
-                                                gridProps = {
-                                                    xs: 12 / xsItems,
-                                                    sm: 12 / smItems,
-                                                    md: 12 / mdItems,
-                                                    lg: 12 / lgItems
-                                                };
-                                            } catch (e) {
-                                                console.error('Failed to parse custom target', e);
+                                                    gridProps = {
+                                                        xs: 12 / xsItems,
+                                                        sm: 12 / smItems,
+                                                        md: 12 / mdItems,
+                                                        lg: 12 / lgItems
+                                                    };
+                                                } catch (e) {
+                                                    console.error('Failed to parse custom target', e);
+                                                }
                                             }
-                                        }
 
-                                        return <Grid size={gridProps} {...props} ref={ref as any} />;
-                                    })
-                                }}
-                                itemContent={(index: number) => (
-                                    <SongCard
-                                        song={filteredSongs[index]}
-                                        onClick={() => handleSelectSong(filteredSongs[index])}
-                                    />
-                                )}
-                            />
+                                            return <Grid size={gridProps} {...props} ref={ref as any} />;
+                                        })
+                                    }}
+                                    itemContent={(index) => {
+                                        const song = filteredSongs[index];
+                                        return (
+                                            <SongCard
+                                                song={song}
+                                                onClick={() => handleSelectSong(song)}
+                                                onLongPress={() => handleSongLongPress(song)}
+                                            />
+                                        );
+                                    }}
+                                />
+                            ) : (
+                                <Virtuoso
+                                    style={{ height: '100%', width: '100%' }}
+                                    totalCount={filteredSongs.length}
+                                    itemContent={(index) => {
+                                        const song = filteredSongs[index];
+                                        return (
+                                            <Box sx={{ px: 2, py: 0.5 }}>
+                                                <SongListItem
+                                                    song={song}
+                                                    onClick={() => handleSelectSong(song)}
+                                                    onLongPress={() => handleSongLongPress(song)}
+                                                    onMenuClick={() => handleSongLongPress(song)}
+                                                />
+                                            </Box>
+                                        );
+                                    }}
+                                />
+                            )}
                         </Box>
                     )
                 }
+
             </Box >
         );
     };
 
     // --- Remote Configuration Listener ---
-    const { manager } = useWebRTC();
-
     useEffect(() => {
         if (!manager) return;
 
@@ -532,6 +732,69 @@ export const MelodiqGameContent: React.FC = () => {
     return (
         <Box sx={{ width: '100vw', height: '100%', overflow: 'hidden', bgcolor: 'background.default', color: 'text.primary' }}>
             {renderView()}
+
+            {/* Persistent Session & MiniPlayer (Managed by PlaybackManager) */}
+            <PlaybackManager
+                selectedSong={selectedSong}
+                remoteSong={remoteSong}
+                isTVConnected={isTVConnected}
+                currentView={currentView}
+                onExitSession={(forceHome = false) => {
+                    if (forceHome) {
+                        setCurrentView('Home');
+                        setSelectedSong(null);
+                    } else {
+                        setSelectedSong(null);
+                        setCurrentView('Home');
+                    }
+                }}
+                onMinimizeSession={handleMinimizeSession}
+                onRestoreSession={handleRestoreSession}
+                onSelectSong={handleSelectSong}
+                sendRemoteCommand={sendRemoteCommand}
+                setRemoteSong={setRemoteSong}
+                onShowQueue={() => setShowQueueDrawer(true)}
+                sendGameUpdate={sendGameUpdate}
+            />
+
+            {/* Host Queue Drawer */}
+            <HostQueueDrawer
+                open={showQueueDrawer}
+                onClose={() => setShowQueueDrawer(false)}
+            />
+
+            {/* Queue Options Dialog */}
+            <Dialog open={queueDialogOpen} onClose={() => setQueueDialogOpen(false)}>
+                <DialogTitle>Add to Queue</DialogTitle>
+                <DialogContent>
+                    <List>
+                        <ListItemButton onClick={() => { handleQueueOption('play_now'); setQueueDialogOpen(false); }}>
+                            <ListItemIcon><PlayArrowIcon /></ListItemIcon>
+                            <ListItemText primary="Play Now" secondary={isTVConnected ? "On TV" : "Locally"} />
+                        </ListItemButton>
+                        <ListItemButton onClick={() => { handleQueueOption('play_next'); setQueueDialogOpen(false); }}>
+                            <ListItemIcon><PlaylistPlayIcon /></ListItemIcon>
+                            <ListItemText primary="Play Next" secondary="Add to start of queue" />
+                        </ListItemButton>
+                        <ListItemButton onClick={() => { handleQueueOption('add_end'); setQueueDialogOpen(false); }}>
+                            <ListItemIcon><AddToQueueIcon /></ListItemIcon>
+                            <ListItemText primary="Add to Queue" secondary="Add to end of queue" />
+                        </ListItemButton>
+                    </List>
+                </DialogContent>
+            </Dialog>
+
+            {/* Playback Feedback */}
+            <Snackbar
+                open={!!feedbackMessage}
+                autoHideDuration={3000}
+                onClose={() => setFeedbackMessage(null)}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert severity="info" onClose={() => setFeedbackMessage(null)}>
+                    {feedbackMessage}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

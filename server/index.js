@@ -80,7 +80,10 @@ const limiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
 });
-app.use(limiter);
+
+if (!config.disableRateLimit) {
+    app.use(limiter);
+}
 app.use(requireAuth);
 
 let SONG_CACHE = [];

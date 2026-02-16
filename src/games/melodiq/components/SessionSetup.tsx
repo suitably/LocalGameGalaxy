@@ -71,7 +71,11 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
                 {/* Active Roster */}
                 <Typography variant="subtitle2">Active Roster (Ordered)</Typography>
                 {activePlayers.map((ap, index) => {
-                    const profile = profiles.find(p => p.id === ap.profileId);
+                    const isBot = ap.profileId === 'BOT';
+                    const profile = isBot
+                        ? { id: 'BOT', name: 'Bot (Auto-Sing)', hue: 0 }
+                        : profiles.find(p => p.id === ap.profileId);
+
                     if (!profile) return null;
                     return (
                         <Box key={ap.profileId} sx={{
@@ -93,7 +97,9 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
                                     </IconButton>
                                 </Box>
 
-                                <Avatar sx={{ bgcolor: `hsl(${profile.hue}, 100%, 50%)`, width: 32, height: 32 }}>{profile.name[0]}</Avatar>
+                                <Avatar sx={{ bgcolor: isBot ? '#FF4081' : `hsl(${profile.hue}, 100%, 50%)`, width: 32, height: 32 }}>
+                                    {isBot ? '🤖' : profile.name[0]}
+                                </Avatar>
                                 <Typography sx={{ flex: 1, fontWeight: 'bold' }}>{profile.name}</Typography>
                             </Box>
 
@@ -121,42 +127,48 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
                                     disabled={ap.muted}
                                 />
 
-                                <FormControl sx={{ minWidth: 150 }} size="small">
-                                    <Select
-                                        value={loadingDevices ? 'loading' : (
-                                            devices.some(d => d.deviceId === ap.deviceId) || connectedPreviewPeers.some(p => p.id === ap.deviceId)
-                                                ? ap.deviceId : ''
-                                        )}
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            const isPhone = connectedPreviewPeers.some(p => p.id === val);
-                                            onUpdateActivePlayerConfig(ap.profileId, { deviceId: val, isRemote: isPhone });
-                                        }}
-                                        disabled={loadingDevices}
-                                        displayEmpty
-                                        variant="standard"
-                                    >
-                                        <MenuItem value=""><em>No Device</em></MenuItem>
-                                        {loadingDevices && <MenuItem value="loading" disabled>Loading...</MenuItem>}
-                                        {devices.map(d => (
-                                            <MenuItem key={d.deviceId} value={d.deviceId}>{d.label || d.deviceId}</MenuItem>
-                                        ))}
-                                        {connectedPreviewPeers.length > 0 && <Divider />}
-                                        {connectedPreviewPeers.length > 0 && <MenuItem disabled><em>Phones</em></MenuItem>}
-                                        {connectedPreviewPeers.map(p => (
-                                            <MenuItem key={p.id} value={p.id}>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                    <Typography>📱 {p.name}</Typography>
-                                                    {p.hue && <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: `hsl(${p.hue}, 100%, 50%)` }} />}
-                                                </Box>
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
+                                {!isBot && (
+                                    <FormControl sx={{ minWidth: 150 }} size="small">
+                                        <Select
+                                            value={loadingDevices ? 'loading' : (
+                                                ap.deviceId === 'BOT' || devices.some(d => d.deviceId === ap.deviceId) || connectedPreviewPeers.some(p => p.id === ap.deviceId)
+                                                    ? ap.deviceId : ''
+                                            )}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                const isPhone = connectedPreviewPeers.some(p => p.id === val);
+                                                onUpdateActivePlayerConfig(ap.profileId, { deviceId: val, isRemote: isPhone });
+                                            }}
+                                            disabled={loadingDevices}
+                                            displayEmpty
+                                            variant="standard"
+                                        >
+                                            <MenuItem value=""><em>No Device</em></MenuItem>
+                                            {loadingDevices && <MenuItem value="loading" disabled>Loading...</MenuItem>}
+                                            {devices.map(d => (
+                                                <MenuItem key={d.deviceId} value={d.deviceId}>{d.label || d.deviceId}</MenuItem>
+                                            ))}
+                                            <Divider />
+                                            {connectedPreviewPeers.length > 0 && <Divider />}
+                                            {connectedPreviewPeers.length > 0 && <MenuItem disabled><em>Phones</em></MenuItem>}
+                                            {connectedPreviewPeers.map(p => (
+                                                <MenuItem key={p.id} value={p.id}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <Typography>📱 {p.name}</Typography>
+                                                        {p.hue && <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: `hsl(${p.hue}, 100%, 50%)` }} />}
+                                                    </Box>
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                )}
+                                {isBot && <Typography variant="caption" sx={{ minWidth: 150, textAlign: 'center' }}>Auto-Sing Enabled</Typography>}
 
-                                <IconButton size="small" onClick={(e) => handleSettingsClick(e, ap.profileId)}>
-                                    <SettingsIcon fontSize="small" />
-                                </IconButton>
+                                {!isBot && (
+                                    <IconButton size="small" onClick={(e) => handleSettingsClick(e, ap.profileId)}>
+                                        <SettingsIcon fontSize="small" />
+                                    </IconButton>
+                                )}
 
                                 <IconButton color="error" onClick={() => onToggleActivePlayer(ap.profileId)}>
                                     <CloseIcon />
@@ -235,6 +247,19 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
                             {p.name}
                         </Button>
                     ))}
+
+                    {/* Add Bot Button */}
+                    {!activePlayers.some(ap => ap.profileId === 'BOT') && (
+                        <Button
+                            variant="outlined"
+                            startIcon={<Typography>🤖</Typography>}
+                            onClick={() => onToggleActivePlayer('BOT')}
+                            sx={{ borderRadius: 50, borderColor: '#FF4081', color: '#FF4081' }}
+                        >
+                            Bot (Auto-Sing)
+                        </Button>
+                    )}
+
                     {profiles.length === 0 && <Typography variant="caption">Create profiles above.</Typography>}
 
                     {/* Inactive Phones */}

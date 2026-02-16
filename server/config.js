@@ -9,7 +9,8 @@ const defaultConfig = {
     directories: [],
     port: 3000,
     token: null, // Will be generated if missing
-    ssl: null // Will be generated if missing
+    ssl: null, // Will be generated if missing
+    disableRateLimit: false
 };
 
 let currentConfig = { ...defaultConfig };
@@ -108,5 +109,9 @@ module.exports = {
     set ssl(value) {
         currentConfig.ssl = value;
         saveConfig();
+    },
+
+    get disableRateLimit() {
+        return currentConfig.disableRateLimit;
     }
 };

@@ -43,3 +43,46 @@ export const formatDuration = (seconds: number): string => {
 
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
+
+/**
+ * Reads a file as text, attempting to detect the encoding.
+ * 
+ * Strategies:
+ * 1. Try UTF-8 first
+ * 2. If invalid characters are found (replacement char \uFFFD), fall back to Windows-1252 (ANSI)
+ * 
+ * @param file The file to read
+ * @returns The file content as a string
+ */
+export const readFileAsText = async (file: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            const buffer = e.target?.result as ArrayBuffer;
+            if (!buffer) {
+                resolve('');
+                return;
+            }
+
+            // 1. Try UTF-8
+            const utf8Decoder = new TextDecoder('utf-8', { fatal: true });
+            try {
+                const text = utf8Decoder.decode(buffer);
+                resolve(text);
+            } catch (e) {
+                // 2. Fallback to Windows-1252 (common for older UltraStar files, covers German/Danish)
+                console.log('UTF-8 decoding failed, falling back to windows-1252');
+                const win1252Decoder = new TextDecoder('windows-1252');
+                const text = win1252Decoder.decode(buffer);
+                resolve(text);
+            }
+        };
+
+        reader.onerror = () => {
+            reject(new Error('Failed to read file'));
+        };
+
+        reader.readAsArrayBuffer(file);
+    });
+};

@@ -22,7 +22,7 @@ interface WebRTCContextType {
     restoreDefaultTrackers: () => void;
 }
 
-const WebRTCContext = createContext<WebRTCContextType | null>(null);
+export const WebRTCContext = createContext<WebRTCContextType | null>(null);
 
 export const useWebRTC = () => {
     const context = useContext(WebRTCContext);

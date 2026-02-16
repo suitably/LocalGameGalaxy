@@ -100,8 +100,24 @@ export const useQueue = () => {
         channel.postMessage({ type: 'UPDATE_QUEUE', payload: next });
     }, [channel, syncQueue]);
 
-    // Move item in queue (reorder)
-    // Move item in queue (reorder)
+    const addNext = useCallback((song: SongMeta, requester?: string) => {
+        const newItem: QueueItem = {
+            id: crypto.randomUUID(),
+            song,
+            addedAt: Date.now(),
+            requester
+        };
+
+        // Prevent exact duplicate at the top
+        if (queue.length > 0 && queue[0].song.id === song.id) {
+            return;
+        }
+
+        const next = [newItem, ...queue];
+        syncQueue(next);
+        channel.postMessage({ type: 'UPDATE_QUEUE', payload: next }); // Use same type or new one? UPDATE_QUEUE covers whole list.
+    }, [queue, channel, syncQueue]);
+
     const moveItem = useCallback((fromIndex: number, toIndex: number) => {
         if (fromIndex < 0 || fromIndex >= queue.length || toIndex < 0 || toIndex >= queue.length) return;
 
@@ -117,6 +133,7 @@ export const useQueue = () => {
         queue,
         nowPlaying,
         addToQueue,
+        addNext,
         removeFromQueue,
         popNext,
         clearQueue,

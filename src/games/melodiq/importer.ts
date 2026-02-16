@@ -1,6 +1,6 @@
 import db, { type Song, type SongContent, type SongMeta, setCachedFiles } from './db';
 import { parseUltraStarTxt } from './parser';
-import { calculateSongDuration } from './utils';
+import { calculateSongDuration, readFileAsText } from './utils';
 
 /**
  * Generates a unique ID for a song based on its content/path.
@@ -217,7 +217,7 @@ export class MelodiqImporter {
                     try {
                         const txtHandle = await songDirHandle.getFileHandle(entry.txtFileName);
                         const txtFile = await txtHandle.getFile();
-                        txtContent = await txtFile.text();
+                        txtContent = await readFileAsText(txtFile);
                     } catch (e) {
                         console.warn(`Missing txt file for ${entry.title}`, e);
                         stats.errors++;
@@ -377,7 +377,7 @@ export class MelodiqImporter {
 
                     if (txtFile) {
                         const txtFileObj = await txtFile.getFile();
-                        const text = await txtFileObj.text();
+                        const text = await readFileAsText(txtFileObj);
                         const parsed = parseUltraStarTxt(text);
                         const title = parsed.headers['TITLE'] || dir.name;
                         const artist = parsed.headers['ARTIST'] || 'Unknown';
@@ -653,7 +653,7 @@ export class MelodiqImporter {
                     }
 
                     if (txtFile) {
-                        const text = await txtFile.text();
+                        const text = await readFileAsText(txtFile);
                         const parsed = parseUltraStarTxt(text);
                         const dirName = txtFile.webkitRelativePath.split('/').slice(-2, -1)[0];
                         const fullRelPath = txtFile.webkitRelativePath.split('/').slice(0, -1).join('/');

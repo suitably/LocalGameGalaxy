@@ -148,8 +148,14 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const getSongById = useCallback(async (id: string): Promise<Song | undefined> => {
         try {
-            const localSong = await import('../db').then(m => m.default.songs.get(id));
-            if (localSong) return localSong;
+            const [localSong, localContent] = await Promise.all([
+                import('../db').then(m => m.default.songs.get(id)),
+                import('../db').then(m => m.default.songsContent.get(id))
+            ]);
+
+            if (localSong) {
+                return { ...localSong, txtContent: localContent?.txtContent } as Song;
+            }
         } catch (e) {
             console.warn("Failed to check local DB for song", id);
         }

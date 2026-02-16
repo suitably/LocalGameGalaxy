@@ -33,3 +33,4 @@ dist-ssr
 # Build files
 out
 build
+server/config.json

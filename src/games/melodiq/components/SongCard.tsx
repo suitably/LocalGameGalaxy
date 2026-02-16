@@ -7,14 +7,48 @@ import { formatDuration } from '../utils';
 interface SongCardProps {
     song: SongMeta;
     onClick: () => void;
+    onLongPress?: () => void;
 }
 
 /**
  * SongCard displays lightweight SongMeta for fast rendering.
  * Cover is loaded on-demand from the full Song table when visible.
  */
-export const SongCard: React.FC<SongCardProps> = ({ song, onClick }) => {
+export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress }) => {
     const [coverUrl, setCoverUrl] = useState<string | null>(null);
+    const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isLongPressRef = React.useRef(false);
+
+    const handleStart = () => {
+        isLongPressRef.current = false;
+        longPressTimerRef.current = setTimeout(() => {
+            isLongPressRef.current = true;
+            if (onLongPress) {
+                onLongPress();
+            }
+        }, 600); // 600ms threshold
+    };
+
+    const handleEnd = (e: React.MouseEvent | React.TouchEvent) => {
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+        // If it was a long press, prevent the click
+        if (isLongPressRef.current) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    };
+
+    const handleClick = (e: React.MouseEvent) => {
+        if (isLongPressRef.current) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+        onClick();
+    };
 
     useEffect(() => {
         let active = true;
@@ -79,7 +113,16 @@ export const SongCard: React.FC<SongCardProps> = ({ song, onClick }) => {
                 }
             }}
             tabIndex={0}
-            onClick={onClick}
+            onClick={handleClick}
+            onMouseDown={handleStart}
+            onMouseUp={handleEnd}
+            onMouseLeave={handleEnd}
+            onTouchStart={handleStart}
+            onTouchEnd={handleEnd}
+            onContextMenu={(e) => {
+                // Prevent context menu on long press if we handled it
+                if (isLongPressRef.current) e.preventDefault();
+            }}
             onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();

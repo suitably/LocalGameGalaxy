@@ -1,0 +1,176 @@
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, IconButton } from '@mui/material';
+import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import db, { type SongMeta } from '../db';
+import { formatDuration } from '../utils';
+
+interface SongListItemProps {
+    song: SongMeta;
+    onClick: () => void;
+    onLongPress?: () => void;
+    onMenuClick?: (e: React.MouseEvent) => void;
+}
+
+export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLongPress, onMenuClick }) => {
+    const [coverUrl, setCoverUrl] = useState<string | null>(null);
+    const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isLongPressRef = React.useRef(false);
+
+    const handleStart = () => {
+        isLongPressRef.current = false;
+        longPressTimerRef.current = setTimeout(() => {
+            isLongPressRef.current = true;
+            if (onLongPress) {
+                onLongPress();
+            }
+        }, 600);
+    };
+
+    const handleEnd = (e: React.MouseEvent | React.TouchEvent) => {
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+        if (isLongPressRef.current) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    };
+
+    const handleClick = (e: React.MouseEvent) => {
+        if (isLongPressRef.current) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+        onClick();
+    };
+
+    useEffect(() => {
+        let active = true;
+        let objectUrl: string | null = null;
+
+        const loadCover = async () => {
+            if (!song.hasCover) return;
+
+            if (typeof song.cover === 'string' && song.cover.length > 0) {
+                setCoverUrl(song.cover);
+                return;
+            }
+
+            try {
+                const fullSong = await db.songs.get(song.id);
+                if (!fullSong?.cover || !active) return;
+
+                if (typeof fullSong.cover === 'string') {
+                    setCoverUrl(fullSong.cover);
+                } else if (fullSong.cover instanceof Blob) {
+                    objectUrl = URL.createObjectURL(fullSong.cover);
+                    if (active) setCoverUrl(objectUrl);
+                } else if ('getFile' in fullSong.cover && typeof fullSong.cover.getFile === 'function') {
+                    // @ts-ignore
+                    const file = await (fullSong.cover as FileSystemFileHandle).getFile();
+                    if (active) {
+                        objectUrl = URL.createObjectURL(file);
+                        setCoverUrl(objectUrl);
+                    }
+                }
+            } catch (e) {
+                if ((e as Error).name !== 'NotAllowedError') {
+                    console.warn("Failed to load cover", e);
+                }
+            }
+        };
+
+        loadCover();
+
+        return () => {
+            active = false;
+            // Revoke object URL to avoid memory leaks
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+        };
+    }, [song.id, song.hasCover]);
+
+    return (
+        <Box
+            sx={{
+                display: 'flex',
+                alignItems: 'center',
+                p: 1,
+                gap: 2,
+                borderRadius: 2,
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+                '&:hover': {
+                    bgcolor: 'action.hover'
+                },
+                '&:active': {
+                    bgcolor: 'action.selected'
+                }
+            }}
+            onClick={handleClick}
+            onMouseDown={handleStart}
+            onMouseUp={handleEnd}
+            onMouseLeave={handleEnd}
+            onTouchStart={handleStart}
+            onTouchEnd={handleEnd}
+        >
+            {/* Cover Art */}
+            <Box sx={{
+                width: 48,
+                height: 48,
+                flexShrink: 0,
+                bgcolor: 'action.selected',
+                borderRadius: 1,
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}>
+                {coverUrl ? (
+                    <img src={coverUrl} alt={song.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                    <MusicNoteIcon sx={{ fontSize: 24, opacity: 0.3 }} />
+                )}
+            </Box>
+
+            {/* Song Details */}
+            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                <Typography variant="body1" noWrap sx={{ fontWeight: 500 }}>
+                    {song.title}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" noWrap>
+                    {song.artist}
+                </Typography>
+            </Box>
+
+            {/* Metadata (Hidden on very small screens) */}
+            <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 2, color: 'text.secondary' }}>
+                {song.duration && (
+                    <Typography variant="body2" sx={{ minWidth: 40, textAlign: 'right' }}>
+                        {formatDuration(song.duration)}
+                    </Typography>
+                )}
+                {song.year && (
+                    <Typography variant="body2" sx={{ bgcolor: 'action.selected', px: 1, borderRadius: 4, fontSize: '0.75rem' }}>
+                        {song.year}
+                    </Typography>
+                )}
+            </Box>
+
+            {/* Menu Action (for touch devices mainly, or standard access) */}
+            {onMenuClick && (
+                <IconButton
+                    size="small"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onMenuClick(e);
+                    }}
+                >
+                    <MoreVertIcon fontSize="small" />
+                </IconButton>
+            )}
+        </Box>
+    );
+};

@@ -24,10 +24,31 @@ export const MelodiqConnection: React.FC<MelodiqConnectionProps> = ({ onBack }) 
     // UI State for adding new tracker
     const [newTrackerUrl, setNewTrackerUrl] = useState('');
     const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+    const [customBaseUrl, setCustomBaseUrl] = useState<string>(() => {
+        return localStorage.getItem('melodiq_host_base_url') || window.location.origin;
+    });
+
+    // Persist custom base URL
+    useEffect(() => {
+        localStorage.setItem('melodiq_host_base_url', customBaseUrl);
+    }, [customBaseUrl]);
 
     // Generate QR Code when Party ID or Trackers change
     useEffect(() => {
-        const url = new URL(`${window.location.origin}/games/melodiq/phone`);
+        let baseUrl = customBaseUrl;
+        // Basic validation/cleanup
+        if (!baseUrl.startsWith('http')) {
+            baseUrl = window.location.origin;
+        }
+
+        let url: URL;
+        try {
+            url = new URL(`${baseUrl}/games/melodiq/phone`);
+        } catch (e) {
+            // Fallback if custom URL is invalid
+            url = new URL(`${window.location.origin}/games/melodiq/phone`);
+        }
+
         url.searchParams.set('party', partyId);
 
         // Add all tracker URLs to the params
@@ -41,7 +62,7 @@ export const MelodiqConnection: React.FC<MelodiqConnectionProps> = ({ onBack }) 
         QRCode.toDataURL(url.toString(), { width: 300, margin: 2 })
             .then((url: string) => setQrCodeDataUrl(url))
             .catch((err: Error) => console.error('Failed to generate QR code:', err));
-    }, [partyId, trackerUrls]);
+    }, [partyId, trackerUrls, customBaseUrl]);
 
     return (
         <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
@@ -107,6 +128,21 @@ export const MelodiqConnection: React.FC<MelodiqConnectionProps> = ({ onBack }) 
 
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         <Box>
+                            <Typography variant="subtitle2" gutterBottom>Host Base URL</Typography>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                                Change this if your phone cannot reach the default address (e.g. use your LAN IP).
+                            </Typography>
+                            <TextField
+                                value={customBaseUrl}
+                                onChange={(e) => setCustomBaseUrl(e.target.value)}
+                                size="small"
+                                fullWidth
+                                variant="outlined"
+                                placeholder="http://192.168.1.X:3000"
+                            />
+                        </Box>
+
+                        <Box>
                             <Typography variant="subtitle2" gutterBottom>Party ID</Typography>
                             <Box sx={{ display: 'flex', gap: 2 }}>
                                 <TextField
@@ -131,7 +167,16 @@ export const MelodiqConnection: React.FC<MelodiqConnectionProps> = ({ onBack }) 
                             <Typography variant="subtitle2" gutterBottom>Manual URL</Typography>
                             <TextField
                                 value={(() => {
-                                    const url = new URL(`${window.location.origin}/games/melodiq/phone`);
+                                    let baseUrl = customBaseUrl;
+                                    if (!baseUrl.startsWith('http')) baseUrl = window.location.origin;
+
+                                    let url: URL;
+                                    try {
+                                        url = new URL(`${baseUrl}/games/melodiq/phone`);
+                                    } catch (e) {
+                                        url = new URL(`${window.location.origin}/games/melodiq/phone`);
+                                    }
+
                                     url.searchParams.set('party', partyId);
                                     trackerUrls.forEach(tracker => {
                                         if (!tracker.includes('localhost') && !tracker.includes('127.0.0.1')) {

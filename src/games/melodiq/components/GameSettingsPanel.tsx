@@ -26,6 +26,67 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                 />
 
                 <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom>Default View Mode</Typography>
+                    <ToggleButtonGroup
+                        value={settings.defaultViewMode || 'list'}
+                        exclusive
+                        onChange={(_, newVal) => newVal && onUpdateSetting('defaultViewMode', newVal)}
+                        aria-label="default view mode"
+                        size="small"
+                        fullWidth
+                        sx={{
+                            borderRadius: 50,
+                            '& .MuiToggleButton-root': {
+                                borderRadius: 50,
+                                border: '1px solid rgba(255, 255, 255, 0.23)',
+                                '&.Mui-selected': {
+                                    bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    borderColor: 'white'
+                                }
+                            }
+                        }}
+                    >
+                        <ToggleButton value="list">List View</ToggleButton>
+                        <ToggleButton value="grid">Grid View</ToggleButton>
+                    </ToggleButtonGroup>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                        Preferred song list layout on startup.
+                    </Typography>
+                </Box>
+
+                <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom>Default Click Action (When playing)</Typography>
+                    <ToggleButtonGroup
+                        value={settings.defaultSongClickAction}
+                        exclusive
+                        onChange={(_, newVal) => newVal && onUpdateSetting('defaultSongClickAction', newVal)}
+                        aria-label="default click action"
+                        size="small"
+                        fullWidth
+                        sx={{
+                            borderRadius: 50,
+                            '& .MuiToggleButton-root': {
+                                borderRadius: 50,
+                                border: '1px solid rgba(255, 255, 255, 0.23)',
+                                '&.Mui-selected': {
+                                    bgcolor: 'rgba(255, 255, 255, 0.1)',
+                                    color: 'white',
+                                    borderColor: 'white'
+                                }
+                            }
+                        }}
+                    >
+                        <ToggleButton value="play_now">Play Now</ToggleButton>
+                        <ToggleButton value="play_next">Play Next</ToggleButton>
+                        <ToggleButton value="add_end">Add to Queue</ToggleButton>
+                    </ToggleButtonGroup>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                        What happens when you click a song while another is already playing.
+                    </Typography>
+                </Box>
+
+                <Box sx={{ mt: 2 }}>
                     <Typography variant="subtitle2" gutterBottom>Card Size & Density</Typography>
                     <ToggleButtonGroup
                         value={settings.cardSize}
