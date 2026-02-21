@@ -16,9 +16,17 @@ export const MainLayout: React.FC = () => {
                     <Outlet />
                 </Box>
             ) : (
-                <Container maxWidth="md" sx={{ mt: 4, flex: 1, pb: 4, overflow: 'auto' }}>
+                <Box sx={{
+                    flex: 1,
+                    overflow: 'auto',
+                    px: { xs: 2, sm: 4, md: 8, lg: 12 },
+                    py: 4,
+                    width: '100%',
+                    maxWidth: '1920px',
+                    margin: '0 auto'
+                }}>
                     <Outlet />
-                </Container>
+                </Box>
             )}
         </Box>
     );
