@@ -301,14 +301,6 @@ const resources = {
                         "custom_categories": "Custom Categories",
                         "standard_categories": "Standard Categories"
                     }
-                },
-                "melodiq": {
-                    "title": "Melodiq",
-                    "description": "Sing your heart out with friends!",
-                    "library_empty": "Your library is empty",
-                    "load_folder": "Load Song Directory",
-                    "scanning": "Scanning...",
-                    "import_stats": "Found: {{found}} | Processed: {{processed}} | Errors: {{errors}}"
                 }
             },
             "common": {
@@ -326,6 +318,13 @@ const resources = {
                 "reset": "Reset",
                 "delete": "Delete",
                 "clear_all_players": "Clear All Players"
+            },
+            "settings": {
+                "title": "Settings",
+                "language_preferences": "Language Preferences",
+                "ui_language": "UI Language",
+                "english": "English",
+                "german": "Deutsch"
             }
         }
     },
@@ -628,14 +627,6 @@ const resources = {
                         "custom_categories": "Eigene Kategorien",
                         "standard_categories": "Standard-Kategorien"
                     }
-                },
-                "melodiq": {
-                    "title": "Melodiq",
-                    "description": "Sing dich frei mit Freunden!",
-                    "library_empty": "Deine Bibliothek ist leer",
-                    "load_folder": "Lieder-Ordner laden",
-                    "scanning": "Scanne...",
-                    "import_stats": "Gefunden: {{found}} | Verarbeitet: {{processed}} | Fehler: {{errors}}"
                 }
             },
             "common": {
@@ -653,6 +644,13 @@ const resources = {
                 "reset": "Zurücksetzen",
                 "delete": "Löschen",
                 "clear_all_players": "Alle Spieler löschen"
+            },
+            "settings": {
+                "title": "Einstellungen",
+                "language_preferences": "Spracheinstellungen",
+                "ui_language": "Sprache der Benutzeroberfläche",
+                "english": "English",
+                "german": "Deutsch"
             }
         }
     }

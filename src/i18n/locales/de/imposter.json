@@ -2078,5 +2078,41 @@
             "word": "Bikini",
             "hint": ""
         }
+    },
+    "info": {
+        "title": "So spielt man Imposter",
+        "rules": [
+            "Wähle deine Kategorien und die Anzahl der Imposter. Alle Spieler erhalten ein geheimes Wort – bis auf die Imposter.",
+            "Unschuldige sehen das geheime Wort. Imposter sehen nur die Kategorie oder einen vagen Hinweis.",
+            "Gebt das Gerät herum, damit jeder heimlich seine Rolle überprüfen kann.",
+            "Während der Timer-Phase sagen die Spieler abwechselnd ein Wort, das ihr geheimes Wort beschreibt. Das Ziel ist zu beweisen, dass du das Wort kennst, ohne es den Impostern zu verraten. Imposter müssen versuchen, sich anzupassen.",
+            "Diskutiert am Ende des Timers und stimmt ab, wer eurer Meinung nach der Imposter ist. Werft ihn raus!"
+        ],
+        "got_it": "Verstanden!"
+    },
+    "setup": {
+        "title": "Spieleinstellungen",
+        "select_category": "Kategorien auswählen",
+        "select_all": "Alle Auswählen",
+        "select_none": "Keine Auswählen",
+        "imposter_count": "Anzahl der Imposter",
+        "reset_to_default": "Zurücksetzen",
+        "timer_length": "Timer Länge",
+        "minutes": "Minuten",
+        "seconds": "Sekunden"
+    },
+    "handover": {
+        "pass_to": "Gerät an {{name}} weitergeben",
+        "you_are_imposter": "Du bist der Imposter!",
+        "imposter_hint": "Hinweis: {{hint}}",
+        "your_word": "Dein Wort ist:",
+        "understood": "Verstanden"
+    },
+    "result": {
+        "imposter": "Imposter",
+        "normal": "Unschuldiger",
+        "innocents_win": "Unschuldige Gewinnen!",
+        "imposters_win": "Imposter Gewinnen!",
+        "revealed_role": "{{name}} war ein {{role}}."
     }
 }

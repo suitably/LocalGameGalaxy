@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
 import { MainLayout } from './components/Layout/MainLayout';
 import { Hub } from './features/hub/Hub';
+import { Settings } from './features/settings/Settings';
 
 // Lazy load game components to reduce initial bundle size
 const WerewolfGame = lazy(() => import('./games/werewolf/WerewolfGame').then(m => ({ default: m.WerewolfGame })));
@@ -26,6 +27,7 @@ function App() {
     <Routes>
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Hub />} />
+        <Route path="settings" element={<Settings />} />
         <Route path="games/werewolf" element={
           <Suspense fallback={<LoadingFallback />}>
             <WerewolfGame />

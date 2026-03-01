@@ -1,17 +1,13 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Snackbar, Alert } from '@mui/material';
-import SimplePeer from 'simple-peer';
-import Client from 'bittorrent-tracker';
 import { computeRMS, autoCorrelate, freqToMidi } from './audio/AudioUtils';
-
-const MAX_CANDIDATES = 5;
-const CONNECTION_TIMEOUT_MS = 15000;
+import { useWebRTCClient } from '../../lib/webrtc/useWebRTCClient';
+import { initMelodiqI18n } from './i18n';
+import { useTranslation } from 'react-i18next';
 
 export const MelodiqPhoneClient = () => {
-    const [status, setStatus] = useState<{ message: string; className: string }>({
-        message: 'Initializing...',
-        className: 'status-connecting'
-    });
+    initMelodiqI18n();
+    const { t } = useTranslation();
     const [playerName, setPlayerName] = useState(() => localStorage.getItem('melodiq_phone_name') || `Phone ${Math.floor(Math.random() * 1000)}`);
     const [playerHue, setPlayerHue] = useState<number>(() => {
         const stored = localStorage.getItem('melodiq_phone_hue');
@@ -21,16 +17,10 @@ export const MelodiqPhoneClient = () => {
     const [selectedDeviceId, setSelectedDeviceId] = useState<string>(() => localStorage.getItem('melodiq_mic_id') || '');
     const [isActive, setIsActive] = useState(true);
 
-    // UI state for notifications
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
+    const handleSnackbarClose = () => setSnackbarOpen(false);
 
-    const handleSnackbarClose = () => {
-        setSnackbarOpen(false);
-    };
-    const [showReconnect, setShowReconnect] = useState(false);
-
-    // Audio visualization refs (Direct DOM manipulation for performance)
     const volumeBarRef = useRef<HTMLDivElement>(null);
     const pitchIndicatorRef = useRef<HTMLDivElement>(null);
     const noteNameRef = useRef<HTMLDivElement>(null);
@@ -39,165 +29,63 @@ export const MelodiqPhoneClient = () => {
     const [availableTracks, setAvailableTracks] = useState<string[]>([]);
     const [selectedTrackIndex, setSelectedTrackIndex] = useState<number>(0);
 
-    const handleTrackSelect = (index: number) => {
-        setSelectedTrackIndex(index);
+    const peerRef = useRef<any>(null);
 
-        // Send to host
-        if (isWebRTCConnectedRef.current && peerRef.current && (peerRef.current as any).connected) {
-            const msg = {
-                type: 'trackSelect',
-                trackIndex: index
-            };
-            peerRef.current.send(JSON.stringify(msg));
+    // --- Queue & Library State ---
+    const [activeTab, setActiveTab] = useState<'mic' | 'queue' | 'remote'>('mic');
+    const [queueSearchQuery, setQueueSearchQuery] = useState('');
+    const [showFilters, setShowFilters] = useState(false);
+    const [filters, setFilters] = useState({ genre: 'All', year: 'All', language: 'All' });
+    const [libraryResults, setLibraryResults] = useState<any[]>([]);
+    const [hostQueue, setHostQueue] = useState<any[]>([]);
+    const [nowPlaying, setNowPlaying] = useState<any>(null);
+
+    const sendSearch = useCallback((query: string) => {
+        if (!peerRef.current || !(peerRef.current as any).connected) return;
+        const msg = { type: 'library.search', query, filters };
+        peerRef.current.send(JSON.stringify(msg));
+    }, [filters]);
+
+    useEffect(() => {
+        if (activeTab === 'queue' && peerRef.current?.connected) {
+            sendSearch(queueSearchQuery);
         }
-    };
+    }, [activeTab, queueSearchQuery, sendSearch]);
 
-    // Refs
-    // Queue for pending peers to avoid overwhelming the browser
-    const pendingPeerCandidatesRef = useRef<any[]>([]);
-    const peerRef = useRef<SimplePeer.Instance | null>(null);
-    const trackerClientRef = useRef<Client | null>(null);
-    const mediaStreamRef = useRef<MediaStream | null>(null);
-    const handledTrackerPeersRef = useRef<Set<string>>(new Set()); // Track handled tracker peers to avoid duplicates
-    // const audioPeerCreatedRef = useRef<boolean>(false); // REMOVE (Replaced by race mode)
-    const candidatePeersRef = useRef<Set<any>>(new Set()); // Track all racing peers
-    const isWebRTCConnectedRef = useRef<boolean>(false); // For suppressing discovery spam
+    useEffect(() => {
+        localStorage.setItem('melodiq_phone_name', playerName);
+        localStorage.setItem('melodiq_phone_hue', String(playerHue));
+        if (selectedDeviceId) localStorage.setItem('melodiq_mic_id', selectedDeviceId);
 
-    // Audio processing refs
+        if (peerRef.current && peerRef.current.connected) {
+            peerRef.current.send(JSON.stringify({
+                type: 'identify',
+                name: playerName,
+                hue: playerHue,
+                connectionId: peerRef.current._connectionId
+            }));
+        }
+    }, [playerName, playerHue, selectedDeviceId]);
+
+    useEffect(() => {
+        const getDevices = async () => {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            setAudioInputDevices(devices.filter(d => d.kind === 'audioinput'));
+        };
+        getDevices();
+        navigator.mediaDevices.ondevicechange = getDevices;
+        return () => { navigator.mediaDevices.ondevicechange = null; };
+    }, []);
+
     const audioContextRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const bufferRef = useRef<Float32Array | null>(null);
     const animFrameRef = useRef<number | null>(null);
     const lastPitchSendTimeRef = useRef<number>(0);
 
-    // --- Queue & Library State ---
-    const [activeTab, setActiveTab] = useState<'mic' | 'queue' | 'remote'>('mic');
-    const [queueSearchQuery, setQueueSearchQuery] = useState('');
-    const [showFilters, setShowFilters] = useState(false);
-    const [filters, setFilters] = useState({
-        genre: 'All',
-        year: 'All',
-        language: 'All'
-    });
-
-    const [libraryResults, setLibraryResults] = useState<any[]>([]);
-    const [hostQueue, setHostQueue] = useState<any[]>([]);
-    const [nowPlaying, setNowPlaying] = useState<any>(null);
-
-    // Initial load of songs when switching to queue tab
-    useEffect(() => {
-        if (activeTab === 'queue' && peerRef.current && status.className === 'status-connected') {
-            sendSearch(queueSearchQuery);
-        }
-    }, [activeTab, status.className]);
-
-    // Save settings when changed
-    // Save settings when changed
-    useEffect(() => {
-        localStorage.setItem('melodiq_phone_name', playerName);
-        localStorage.setItem('melodiq_phone_hue', String(playerHue));
-        if (selectedDeviceId) localStorage.setItem('melodiq_mic_id', selectedDeviceId);
-
-        // Send update to Host if connected
-        if (isWebRTCConnectedRef.current && peerRef.current && (peerRef.current as any).connected) {
-            const identityMsg = {
-                type: 'identify',
-                name: playerName,
-                hue: playerHue,
-                connectionId: (peerRef.current as any)._connectionId
-            };
-            try {
-                peerRef.current.send(JSON.stringify(identityMsg));
-            } catch (e) {
-                console.error('[Phone] Failed to send identity update:', e);
-            }
-        }
-    }, [playerName, playerHue, selectedDeviceId]);
-
-    // Enumerate Devices
-    useEffect(() => {
-        const getDevices = async () => {
-            try {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const audioInputs = devices.filter(d => d.kind === 'audioinput');
-                setAudioInputDevices(audioInputs);
-
-                // If we have a stored ID but it's not in the list (anymore), default to empty (default device)
-                // actually, we might want to keep it if it's just temporarily unplugged, but for now let's leave it.
-            } catch (err) {
-                console.error('[Phone] Error enumerating devices:', err);
-            }
-        };
-        // Ask for permissions first to get labels? 
-        // We usually need an active stream to get labels on some browsers.
-        // We will call this again after getting the stream.
-        getDevices();
-
-        navigator.mediaDevices.ondevicechange = getDevices;
-        return () => { navigator.mediaDevices.ondevicechange = null; };
-    }, []);
-
-    const updateStatus = (message: string, className: string) => {
-        setStatus({ message, className });
-    };
-
-    const getPartyIdFromUrl = (): string | null => {
-        const params = new URLSearchParams(window.location.search);
-        return params.get('party');
-    };
-
-    const stringToInfoHash = (str: string): Uint8Array => {
-        const hash = new Uint8Array(20);
-        const encoder = new TextEncoder();
-        const strBuf = encoder.encode(str);
-        for (let i = 0; i < 20; i++) {
-            hash[i] = strBuf[i % strBuf.length];
-        }
-        return hash;
-    };
-
-    const generatePeerId = (): string => {
-        const array = new Uint8Array(10);
-        crypto.getRandomValues(array);
-        return '01234567890123456789' + Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
-    };
-
-    // Cleanup function
-    const cleanup = () => {
-        if (animFrameRef.current) {
-            cancelAnimationFrame(animFrameRef.current);
-            animFrameRef.current = null;
-        }
-        if (audioContextRef.current) {
-            audioContextRef.current.close();
-            audioContextRef.current = null;
-        }
-
-        if (peerRef.current) {
-            peerRef.current.destroy();
-            peerRef.current = null;
-        }
-        if (trackerClientRef.current) {
-            (trackerClientRef.current as any).stop();
-            trackerClientRef.current.destroy();
-            trackerClientRef.current = null;
-        }
-        if (mediaStreamRef.current) {
-            mediaStreamRef.current.getTracks().forEach(track => track.stop());
-            mediaStreamRef.current = null;
-        }
-        // Reset state refs
-        handledTrackerPeersRef.current.clear();
-        candidatePeersRef.current.forEach(p => {
-            try { p.destroy(); } catch (e) { }
-        });
-        candidatePeersRef.current.clear();
-        isWebRTCConnectedRef.current = false;
-    };
-
-    // Audio Loop
-    const startAudioProcessing = (stream: MediaStream) => {
+    const startAudioProcessing = useCallback((stream: MediaStream) => {
         try {
+            if (audioContextRef.current) return;
             const audioContext = new AudioContext({ latencyHint: 'interactive' });
             const analyser = audioContext.createAnalyser();
             analyser.fftSize = 2048;
@@ -211,26 +99,19 @@ export const MelodiqPhoneClient = () => {
 
             const processAudio = () => {
                 if (!analyserRef.current || !bufferRef.current || !audioContextRef.current) return;
-
                 analyserRef.current.getFloatTimeDomainData(bufferRef.current as any);
                 const volume = computeRMS(bufferRef.current);
 
-                // Update Visualization State (Direct DOM manipulation)
                 const visVolume = Math.min(1, volume * 5);
-                if (volumeBarRef.current) {
-                    volumeBarRef.current.style.width = `${visVolume * 100}%`;
-                }
+                if (volumeBarRef.current) volumeBarRef.current.style.width = `${visVolume * 100}%`;
 
                 if (volume > 0.01) {
                     const frequency = autoCorrelate(bufferRef.current, audioContextRef.current.sampleRate);
                     if (frequency !== -1) {
                         const note = freqToMidi(frequency);
-
-                        // Calculate note name
                         const roundedNote = Math.round(note);
                         const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-                        const noteIndex = ((roundedNote % 12) + 12) % 12;
-                        const noteName = noteNames[noteIndex];
+                        const noteName = noteNames[((roundedNote % 12) + 12) % 12];
                         const octave = Math.floor(roundedNote / 12) - 1;
 
                         if (noteNameRef.current) noteNameRef.current.innerText = `${noteName}${octave}`;
@@ -239,22 +120,12 @@ export const MelodiqPhoneClient = () => {
                             pitchIndicatorRef.current.style.left = `${((note - 36) / (84 - 36)) * 100}%`;
                         }
 
-                        // SEND TO HOST
                         const now = Date.now();
-                        // Send at max 30 times per second (approx every 33ms)
-                        if (isWebRTCConnectedRef.current && peerRef.current && (peerRef.current as any).connected) {
-                            if (now - lastPitchSendTimeRef.current > 33) {
-                                const msg = JSON.stringify({
-                                    type: 'pitch',
-                                    frequency,
-                                    note,
-                                    volume
-                                });
-                                try {
-                                    peerRef.current.send(msg);
-                                    lastPitchSendTimeRef.current = now;
-                                } catch (e) { /* Ignore send errors */ }
-                            }
+                        if (peerRef.current && (peerRef.current as any).connected && now - lastPitchSendTimeRef.current > 33) {
+                            try {
+                                peerRef.current.send(JSON.stringify({ type: 'pitch', frequency, note, volume }));
+                                lastPitchSendTimeRef.current = now;
+                            } catch (e) { }
                         }
                     } else {
                         if (noteNameRef.current) noteNameRef.current.innerText = '';
@@ -264,347 +135,20 @@ export const MelodiqPhoneClient = () => {
                     if (noteNameRef.current) noteNameRef.current.innerText = '';
                     if (pitchIndicatorRef.current) pitchIndicatorRef.current.style.display = 'none';
                 }
-
                 animFrameRef.current = requestAnimationFrame(processAudio);
             };
-
             processAudio();
-
         } catch (err) {
             console.error('[Phone] Failed to start local audio processing:', err);
         }
-    };
+    }, []);
 
-    const setupPeerConnection = (trackerPeer: any) => {
-        // Use the trackerPeer's unique ID to prevent duplicate audio peer creation
-        const trackerPeerId = trackerPeer._id || trackerPeer.channelName || Math.random().toString(36);
-        if (handledTrackerPeersRef.current.has(trackerPeerId)) {
-            // console.log('[Phone] Ignoring duplicate tracker peer:', trackerPeerId);
-            return;
-        }
-        handledTrackerPeersRef.current.add(trackerPeerId);
+    const params = new URLSearchParams(window.location.search);
+    const partyId = params.get('party');
+    const trackerUrls = Array.from(new Set(params.getAll('tracker')));
 
-        // Check concurrency limit
-        if (candidatePeersRef.current.size >= MAX_CANDIDATES) {
-            console.log(`[Phone] Queueing peer ${trackerPeerId} (Limit reached: ${candidatePeersRef.current.size}/${MAX_CANDIDATES})`);
-            pendingPeerCandidatesRef.current.push(trackerPeer);
-            return;
-        }
-
-        initiateConnection(trackerPeer, trackerPeerId);
-    };
-
-    const processNextPendingPeer = () => {
-        if (candidatePeersRef.current.size < MAX_CANDIDATES && pendingPeerCandidatesRef.current.length > 0) {
-            const nextPeer = pendingPeerCandidatesRef.current.shift();
-            // We already added it to handledTrackerPeersRef when we queued it, so we can just initiate
-            const trackerPeerId = nextPeer._id || nextPeer.channelName; // Re-derive ID simply
-            console.log('[Phone] Processing queued peer:', trackerPeerId);
-            initiateConnection(nextPeer, trackerPeerId);
-        }
-    };
-
-    const initiateConnection = (trackerPeer: any, trackerPeerId: string) => {
-        console.log('[Phone] Tracker peer found. Waiting for Host signal...', trackerPeerId);
-
-        const setupAudioPeer = () => {
-            // No early return for audioPeerCreatedRef - we allow racing!
-
-            console.log('[Phone] Tracker peer connected. Initiating audio handshake (Race Candidate)...');
-
-            let connectionTimeout: any = null;
-
-            try {
-                const peer = new SimplePeer({
-                    initiator: true, // Phone initiates to send stream immediately
-                    trickle: true,
-                    stream: mediaStreamRef.current!,
-                    config: {
-                        iceServers: [
-                            { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:global.stun.twilio.com:3478' },
-                        ],
-                    },
-                });
-
-                const connectionId = Math.random().toString(36).substring(2) + Date.now().toString(36);
-
-                // Track wrapped state
-                (peer as any)._connectionId = connectionId;
-
-                // Add to race candidates
-                candidatePeersRef.current.add(peer);
-
-                // Set safety timeout
-                connectionTimeout = setTimeout(() => {
-                    if (peer && !(peer as any).destroyed && !(peer as any).connected) {
-                        console.warn('[Phone] Connection timeout for candidate:', connectionId);
-                        peer.destroy();
-                        // This will trigger 'close' which handles cleanup and next peer
-                    }
-                }, CONNECTION_TIMEOUT_MS);
-
-
-                // Send our signals back to Host
-                peer.on('signal', (data: any) => {
-                    if (data.type !== 'candidate') {
-                        console.log('[Phone] Sending signal to host:', data.type, 'ConnID:', connectionId);
-                    }
-                    if (trackerPeer.connected) {
-                        try {
-                            const payload = { connectionId, signal: data };
-                            trackerPeer.send(JSON.stringify(payload) + '\n');
-                        } catch (e) {
-                            console.error('[Phone] Failed to send signal:', e);
-                        }
-                    }
-                });
-
-                const onData = (data: Uint8Array | string) => {
-                    try {
-                        const str = (typeof data === 'string') ? data : new TextDecoder().decode(data);
-                        const parts = str.split('\n');
-
-                        for (const part of parts) {
-                            if (!part.trim()) continue;
-
-                            try {
-                                const parsed = JSON.parse(part);
-
-                                if (parsed.type === 'songInfo') {
-                                    console.log('[Phone] Received song info:', parsed);
-                                    if (parsed.tracks && Array.isArray(parsed.tracks)) {
-                                        setAvailableTracks(parsed.tracks);
-                                        // Reset selection to 0 when song changes
-                                        setSelectedTrackIndex(0);
-                                    }
-                                    continue;
-                                }
-
-                                if (parsed.type === 'stats') {
-                                    console.log('[Phone] Received stats:', parsed);
-                                    const statsEntry = {
-                                        song: parsed.songTitle,
-                                        score: parsed.score,
-                                        date: new Date().toISOString()
-                                    };
-
-                                    // Store in localStorage
-                                    const historyStr = localStorage.getItem('melodiq_history');
-                                    const history = historyStr ? JSON.parse(historyStr) : [];
-                                    history.unshift(statsEntry);
-                                    // Limit history to 50 items
-                                    if (history.length > 50) history.pop();
-
-                                    localStorage.setItem('melodiq_history', JSON.stringify(history));
-                                    setLatestStats(statsEntry);
-
-                                    // Filter history for this song to determine record
-                                    const songHistory = history.filter((h: any) => h.song === parsed.songTitle);
-                                    const relevantScores = songHistory.map((h: any) => h.score);
-                                    const maxScore = relevantScores.length > 0 ? Math.max(...relevantScores) : 0;
-                                    const isNewRecord = statsEntry.score >= maxScore && statsEntry.score > 0;
-
-                                    // Send history report back to host
-                                    if (peer && (peer as any).connected) {
-                                        const report = {
-                                            type: 'history_report',
-                                            songTitle: parsed.songTitle,
-                                            history: songHistory,
-                                            isNewRecord
-                                        };
-                                        peer.send(JSON.stringify(report));
-                                    }
-
-                                    // Clear notify after 5s
-                                    // Clear notify after 5s
-                                    setTimeout(() => setLatestStats(null), 5000);
-                                    continue;
-                                }
-
-                                if (parsed.type === 'roster.update') {
-                                    if (peer && (peer as any)._connectionId) {
-                                        const myId = (peer as any)._connectionId;
-                                        // Check against connectionId, not peerId (which is host-assigned)
-                                        const amIInRoster = parsed.roster.some((p: any) => p.connectionId === myId);
-
-                                        console.log('[Phone] Roster Update. My ConnectionID:', myId);
-                                        console.log('[Phone] Roster:', parsed.roster);
-                                        console.log('[Phone] Am I in roster?', amIInRoster);
-
-                                        setIsActive(amIInRoster);
-                                    }
-                                    continue;
-                                }
-
-                                if (parsed.type === 'queue.update') {
-                                    console.log('[Phone] Received Queue Update:', parsed);
-                                    setHostQueue(parsed.queue || []);
-                                    setNowPlaying(parsed.nowPlaying);
-                                    continue;
-                                }
-
-                                if (parsed.type === 'library.results') {
-                                    console.log('[Phone] Received Library Results:', parsed);
-                                    setLibraryResults(parsed.results || []);
-                                    continue;
-                                }
-
-                                if (parsed.connectionId === connectionId && parsed.signal) {
-                                    const signal = parsed.signal;
-                                    if (peer && !(peer as any).destroyed) {
-                                        if (signal.type !== 'candidate') {
-                                            console.log('[Phone] Processing matched signal:', signal.type);
-                                        }
-                                        peer.signal(signal);
-                                    }
-                                }
-                            } catch (e) {
-                                console.error('[Phone] Failed to parse individual signal chunk:', part, e);
-                            }
-                        }
-                    } catch (e) {
-                        console.error('[Phone] Failed to process received data:', e);
-                    }
-                };
-
-                trackerPeer.on('data', onData);
-                peer.on('data', onData);
-
-                peer.on('connect', () => {
-                    clearTimeout(connectionTimeout);
-
-                    if (isWebRTCConnectedRef.current) {
-                        console.log('[Phone] Another peer won the race. Destroying late arrival.');
-                        peer.destroy();
-                        return;
-                    }
-
-                    console.log('[Phone] Connected to host! (We won the race)');
-                    isWebRTCConnectedRef.current = true;
-                    peerRef.current = peer; // Set winner as main peer
-                    updateStatus('✅ Connected', 'status-connected');
-                    setShowReconnect(false);
-                    updateStatus('✅ Connected', 'status-connected');
-                    setShowReconnect(false);
-                    // Send identity inside an envelope too? No, Host expects specific format for identity.
-                    // But we modified Host to check connectionId for identity too.
-                    const identityMsg = {
-                        type: 'identify',
-                        name: playerName,
-                        hue: playerHue,
-                        connectionId // Include matching connectionId
-                    };
-                    // Send via WebRTC data (fastest) and Tracker (fallback)
-                    if ((peer as any).connected) peer.send(JSON.stringify(identityMsg));
-                    if (trackerPeer.connected) trackerPeer.send(JSON.stringify(identityMsg) + '\n');
-
-                    // Destroy all other candidates
-                    candidatePeersRef.current.delete(peer);
-
-                    // Clear pending queue too? No, keep them just in case? 
-                    // Actually if we are connected, we don't need pending.
-                    // But if we disconnect, we might need them?
-                    // For now, let's just destroy candidates.
-                    candidatePeersRef.current.forEach(p => {
-                        try { p.destroy(); } catch (e) { }
-                    });
-                    candidatePeersRef.current.clear();
-
-                    // We don't clear pendingPeersRef because maybe we lose connection and want to try them? 
-                    // But usually we just reload or reconnect.
-                    // Let's clear them to be safe.
-                    pendingPeerCandidatesRef.current = [];
-
-                    // Request initial queue state
-                    // Request initial queue state and library
-                    // Retry a few times to ensure host is ready
-                    [500, 1500, 3000].forEach(delay => {
-                        setTimeout(() => {
-                            if ((peerRef.current as any).connected) {
-                                (peerRef.current as any).send(JSON.stringify({ type: 'queue.get' }));
-                                // Also fetch library if we are in queue tab (or just pre-fetch it)
-                                // Pre-fetching library ensures it's ready when user clicks tab
-                                peer.send(JSON.stringify({ type: 'library.search', query: '' }));
-                            }
-                        }, delay);
-                    });
-                });
-
-                peer.on('error', (err: Error) => {
-                    clearTimeout(connectionTimeout);
-                    candidatePeersRef.current.delete(peer);
-
-                    // Only show error if THIS was the connected peer
-                    if (isWebRTCConnectedRef.current && peerRef.current === peer) {
-                        console.error('[Phone] Peer error:', err);
-                        isWebRTCConnectedRef.current = false;
-                        updateStatus(`Connection lost: ${err.message}`, 'status-error');
-                        setShowReconnect(true);
-                        handledTrackerPeersRef.current.delete(trackerPeerId); // Allow retry
-                    } else {
-                        console.warn('[Phone] Candidate peer failed (ignored):', err.message);
-                        // If we are NOT connected, and this was the last candidate... maybe show error?
-                        // But usually better to stay "Connecting..."
-                    }
-                    trackerPeer.off('data', onData);
-
-                    // Trigger next
-                    if (!isWebRTCConnectedRef.current) {
-                        processNextPendingPeer();
-                    }
-                });
-
-                peer.on('close', () => {
-                    clearTimeout(connectionTimeout);
-                    candidatePeersRef.current.delete(peer);
-
-                    if (isWebRTCConnectedRef.current && peerRef.current === peer) {
-                        console.log('[Phone] Connection closed');
-                        isWebRTCConnectedRef.current = false;
-                        updateStatus('Disconnected', 'status-disconnected');
-                        setShowReconnect(true);
-                        handledTrackerPeersRef.current.delete(trackerPeerId);
-                    }
-                    trackerPeer.off('data', onData);
-
-                    // Trigger next
-                    if (!isWebRTCConnectedRef.current) {
-                        processNextPendingPeer();
-                    }
-                });
-
-                trackerPeer.on('close', () => {
-                    clearTimeout(connectionTimeout);
-                    peer.destroy();
-                    candidatePeersRef.current.delete(peer);
-                    handledTrackerPeersRef.current.delete(trackerPeerId);
-
-                    // Trigger next
-                    if (!isWebRTCConnectedRef.current) {
-                        processNextPendingPeer();
-                    }
-                });
-
-            } catch (err) {
-                console.error('[Phone] Failed to create/signal peer:', err);
-                handledTrackerPeersRef.current.delete(trackerPeerId);
-                if (connectionTimeout) clearTimeout(connectionTimeout);
-                processNextPendingPeer();
-            }
-        };
-
-        if (trackerPeer.connected) {
-            setupAudioPeer();
-        } else {
-            trackerPeer.on('connect', setupAudioPeer);
-        }
-    };
-
-    const connect = async (partyId: string, trackerUrls: string[]) => {
-        try {
-            updateStatus('Requesting microphone...', 'status-connecting');
-
+    const { statusMessage, statusClassName, isConnected, reconnect, peer } = useWebRTCClient(partyId, trackerUrls, {
+        getMediaStream: async () => {
             const constraints: MediaStreamConstraints = {
                 audio: {
                     deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
@@ -614,134 +158,88 @@ export const MelodiqPhoneClient = () => {
                 },
                 video: false,
             };
-
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
-
-            // Re-enumerate to get labels now that we have permission
             const devices = await navigator.mediaDevices.enumerateDevices();
             setAudioInputDevices(devices.filter(d => d.kind === 'audioinput'));
-
-            mediaStreamRef.current = stream;
-            // START LOCAL PROCESSING
             startAudioProcessing(stream);
-
-            updateStatus('Connecting to party...', 'status-connecting');
-
-            const infoHash = stringToInfoHash(partyId);
-            console.log('[Phone] Generated InfoHash for Party ID:', partyId);
-            // Convert Uint8Array to hex string manually for logging
-            const infoHashHex = Array.from(infoHash).map(b => b.toString(16).padStart(2, '0')).join('');
-            console.log('[Phone] InfoHash (Hex):', infoHashHex);
-
-            const peerId = generatePeerId();
-
-            const trackerClient = new Client({
-                infoHash,
-                peerId,
-                announce: trackerUrls,
-                port: 0,
-                rtcConfig: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:global.stun.twilio.com:3478' },
-                    ],
-                },
-                numWant: 4,
-            } as any);
-
-            trackerClientRef.current = trackerClient;
-
-            trackerClient.on('peer', (trackerPeer: any) => {
-                if (isWebRTCConnectedRef.current) {
-                    return; // Ignore spam if we already have a live WebRTC link
+            return stream;
+        },
+        getIdentity: () => ({ name: playerName, hue: playerHue }),
+        onMessage: (parsed) => {
+            if (parsed.type === 'songInfo') {
+                if (parsed.tracks && Array.isArray(parsed.tracks)) {
+                    setAvailableTracks(parsed.tracks);
+                    setSelectedTrackIndex(0);
                 }
+            } else if (parsed.type === 'stats') {
+                const statsEntry = { song: parsed.songTitle, score: parsed.score, date: new Date().toISOString() };
+                const historyStr = localStorage.getItem('melodiq_history');
+                const history = historyStr ? JSON.parse(historyStr) : [];
+                history.unshift(statsEntry);
+                if (history.length > 50) history.pop();
+                localStorage.setItem('melodiq_history', JSON.stringify(history));
+                setLatestStats(statsEntry);
 
-                // Prevent connecting to self
-                const tpId = trackerPeer._id || trackerPeer.id;
-                if (tpId === (trackerClient as any).peerId) {
-                    return;
+                const songHistory = history.filter((h: any) => h.song === parsed.songTitle);
+                const relevantScores = songHistory.map((h: any) => h.score);
+                const maxScore = relevantScores.length > 0 ? Math.max(...relevantScores) : 0;
+
+                if (peerRef.current?.connected) {
+                    peerRef.current.send(JSON.stringify({
+                        type: 'history_report',
+                        songTitle: parsed.songTitle,
+                        history: songHistory,
+                        isNewRecord: statsEntry.score >= maxScore && statsEntry.score > 0
+                    }));
                 }
-
-                console.log('[Phone] Tracker discovered host (Peer info):', trackerPeer);
-                setupPeerConnection(trackerPeer);
-            });
-
-            trackerClient.on('update', (data: any) => {
-                console.log('[Phone] Tracker Announce Update:', data);
-            });
-
-            trackerClient.on('warning', (err: Error) => {
-                console.warn('[Phone] Tracker warning:', err);
-            });
-
-            trackerClient.on('error', (err: Error) => {
-                console.error('[Phone] Tracker fatal error:', err);
-                updateStatus(`Connection error: ${err.message}`, 'status-error');
-                setShowReconnect(true);
-            });
-
-            trackerClient.start();
-        } catch (err: any) {
-            console.error('[Phone] Connect error:', err);
-            if (err.message && err.message.includes('Cannot create so many PeerConnections')) {
-                updateStatus('❌ Browser resource limit reached. Please close tab and restart browser.', 'status-error');
-            } else {
-                updateStatus(err.message || 'Failed to connect', 'status-error');
+                setTimeout(() => setLatestStats(null), 5000);
+            } else if (parsed.type === 'roster.update') {
+                if (peerRef.current && peerRef.current._connectionId) {
+                    const myId = peerRef.current._connectionId;
+                    setIsActive(parsed.roster.some((p: any) => p.connectionId === myId));
+                }
+            } else if (parsed.type === 'queue.update') {
+                setHostQueue(parsed.queue || []);
+                setNowPlaying(parsed.nowPlaying);
+            } else if (parsed.type === 'library.results') {
+                setLibraryResults(parsed.results || []);
             }
-            setShowReconnect(true);
         }
-    };
-
-    const handleReconnect = () => {
-        cleanup();
-        const partyId = getPartyIdFromUrl();
-        if (partyId) {
-            const params = new URLSearchParams(window.location.search);
-            const urlTrackers = params.getAll('tracker');
-
-            // Reliable public trackers only - SINGLE default to ensure matching
-            const reliableTrackers: string[] = [];
-
-
-
-            const uniqueTrackers = Array.from(new Set([...urlTrackers, ...reliableTrackers]));
-            connect(partyId, uniqueTrackers);
-        }
-    };
+    });
 
     useEffect(() => {
-        const partyId = getPartyIdFromUrl();
-        let startupTimeout: any;
-
-        if (!partyId) {
-            updateStatus('❌ No Party ID', 'status-error');
-        } else {
-            // Get trackers from URL params
-            const params = new URLSearchParams(window.location.search);
-            const urlTrackers = params.getAll('tracker');
-
-            // Reliable public trackers 
-            const reliableTrackers: string[] = [];
-
-            // Combine reliable trackers with URL-provided trackers
-            const allTrackers = [...urlTrackers, ...reliableTrackers];
-
-            // Deduplicate
-            const uniqueTrackers = Array.from(new Set(allTrackers));
-
-            console.log('[Phone] Connecting with trackers:', uniqueTrackers);
-
-            // Add a small delay to allow previous instances/GC to cleanup
-            startupTimeout = setTimeout(() => {
-                connect(partyId, uniqueTrackers);
-            }, 1000);
+        peerRef.current = peer;
+        if (peer && (peer as any).connected) {
+            [500, 1500, 3000].forEach(delay => {
+                setTimeout(() => {
+                    if (peerRef.current && (peerRef.current as any).connected) {
+                        peerRef.current.send(JSON.stringify({ type: 'queue.get' }));
+                        peerRef.current.send(JSON.stringify({ type: 'library.search', query: '' }));
+                    }
+                }, delay);
+            });
         }
+    }, [peer]);
 
+    useEffect(() => {
         return () => {
-            if (startupTimeout) clearTimeout(startupTimeout);
-            cleanup();
+            if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+            if (audioContextRef.current) audioContextRef.current.close();
         };
     }, []);
+
+    const handleTrackSelect = (index: number) => {
+        setSelectedTrackIndex(index);
+        if (isConnected && peerRef.current?.connected) {
+            peerRef.current.send(JSON.stringify({ type: 'trackSelect', trackIndex: index }));
+        }
+    };
+
+    const status = { message: statusMessage, className: statusClassName };
+    const showReconnect = !isConnected && statusClassName === 'status-error';
+    const handleReconnect = reconnect;
+
+
 
     // --- Remote Configuration State ---
     const [showRemoteSettings, setShowRemoteSettings] = useState(false);
@@ -771,42 +269,6 @@ export const MelodiqPhoneClient = () => {
             console.error(e);
         }
     };
-
-    // --- Queue Actions ---
-    const sendSearch = (query: string) => {
-        if (!peerRef.current) {
-            alert('Not connected (No Peea Ref)');
-            return;
-        }
-        if (!(peerRef.current as any).connected) {
-            alert('Not connected (Peer State: ' + (peerRef.current as any).connected + ')');
-            return;
-        }
-
-        const msg = {
-            type: 'library.search',
-            query,
-            filters: {
-                genre: filters.genre === 'All' ? undefined : filters.genre,
-                year: filters.year === 'All' ? undefined : filters.year,
-                language: filters.language === 'All' ? undefined : filters.language
-            }
-        };
-
-        try {
-            peerRef.current.send(JSON.stringify(msg));
-        } catch (e) {
-            console.error('Failed to send search:', e);
-            alert('Failed to send search: ' + e);
-        }
-    };
-
-    // Re-trigger search when filters change
-    useEffect(() => {
-        if (activeTab === 'queue') {
-            sendSearch(queueSearchQuery);
-        }
-    }, [filters]);
 
     const addToQueue = (songId: string) => {
         if (!peerRef.current || !(peerRef.current as any).connected) return;
@@ -839,11 +301,11 @@ export const MelodiqPhoneClient = () => {
     if (showRemoteSettings) {
         return (
             <div className="phone-client" style={{ padding: 20, textAlign: 'left' }}>
-                <h2>Host Settings</h2>
-                <p>Configure the TV/Host Server Connection remotely.</p>
+                <h2>{t('melodiq.host_settings')}</h2>
+                <p>{t('melodiq.host_desc')}</p>
 
                 <div style={{ marginBottom: 15 }}>
-                    <label style={{ display: 'block', marginBottom: 5 }}>Helper URL</label>
+                    <label style={{ display: 'block', marginBottom: 5 }}>{t('melodiq.helper_url')}</label>
                     <input
                         type="text"
                         value={remoteUrl}
@@ -854,7 +316,7 @@ export const MelodiqPhoneClient = () => {
                 </div>
 
                 <div style={{ marginBottom: 15 }}>
-                    <label style={{ display: 'block', marginBottom: 5 }}>Security Token</label>
+                    <label style={{ display: 'block', marginBottom: 5 }}>{t('melodiq.security_token')}</label>
                     <input
                         type="text"
                         value={remoteToken}
@@ -866,10 +328,10 @@ export const MelodiqPhoneClient = () => {
 
                 <div style={{ display: 'flex', gap: 10 }}>
                     <button onClick={sendRemoteConfig} style={{ flex: 1, padding: 15, background: '#4caf50', color: 'white', border: 'none', borderRadius: 8 }}>
-                        Send to TV
+                        {t('melodiq.send_tv')}
                     </button>
                     <button onClick={() => setShowRemoteSettings(false)} style={{ flex: 1, padding: 15, background: '#666', color: 'white', border: 'none', borderRadius: 8 }}>
-                        Cancel
+                        {t('melodiq.cancel')}
                     </button>
                 </div>
             </div>
@@ -920,7 +382,7 @@ export const MelodiqPhoneClient = () => {
                     }}
                 >
                     <span style={{ fontSize: 20 }}>🎤</span>
-                    <span style={{ fontSize: 12 }}>Mic</span>
+                    <span style={{ fontSize: 12 }}>{t('melodiq.mic')}</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('queue')}
@@ -931,7 +393,7 @@ export const MelodiqPhoneClient = () => {
                     }}
                 >
                     <span style={{ fontSize: 20 }}>🎵</span>
-                    <span style={{ fontSize: 12 }}>Queue</span>
+                    <span style={{ fontSize: 12 }}>{t('melodiq.queue')}</span>
                 </button>
                 <button
                     onClick={() => setActiveTab('remote')}
@@ -942,7 +404,7 @@ export const MelodiqPhoneClient = () => {
                     }}
                 >
                     <span style={{ fontSize: 20 }}>🎮</span>
-                    <span style={{ fontSize: 12 }}>Remote</span>
+                    <span style={{ fontSize: 12 }}>{t('melodiq.remote')}</span>
                 </button>
             </div>
 
@@ -1021,7 +483,7 @@ export const MelodiqPhoneClient = () => {
                                 marginTop: '20px',
                                 border: '1px solid rgba(255, 255, 255, 0.2)'
                             }}>
-                                <div style={{ fontSize: '0.9rem', color: '#aaa' }}>Last Performance</div>
+                                <div style={{ fontSize: '0.9rem', color: '#aaa' }}>{t('melodiq.last_performance')}</div>
                                 <div style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '5px 0' }}>{latestStats.song}</div>
                                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#4ade80' }}>{latestStats.score} pts</div>
                             </div>
@@ -1030,7 +492,7 @@ export const MelodiqPhoneClient = () => {
                         {/* Track Selector */}
                         {availableTracks.length > 1 && (
                             <div style={{ marginTop: '20px', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                                <div style={{ fontSize: '0.9rem', marginBottom: '10px', color: '#ccc' }}>Select Your Singer Part</div>
+                                <div style={{ fontSize: '0.9rem', marginBottom: '10px', color: '#ccc' }}>{t('melodiq.select_part')}</div>
                                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                                     {availableTracks.map((track, idx) => (
                                         <button
@@ -1058,7 +520,7 @@ export const MelodiqPhoneClient = () => {
                         {/* Roster Toggle */}
                         <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', textAlign: 'center' }}>
                             <div style={{ marginBottom: '10px', fontSize: '0.9rem', color: '#ccc' }}>
-                                {isActive ? 'You are in the game! 🎤' : 'You are sitting out. 💤'}
+                                {isActive ? t('melodiq.in_game') : t('melodiq.sitting_out')}
                             </div>
                             <button
                                 onClick={() => {
@@ -1086,14 +548,14 @@ export const MelodiqPhoneClient = () => {
                                     width: '100%'
                                 }}
                             >
-                                {isActive ? 'Leave Game' : 'Join Game'}
+                                {isActive ? t('melodiq.leave_game') : t('melodiq.join_game')}
                             </button>
                         </div>
 
                         {/* Identity Settings */}
                         <div className="identity-settings" style={{ marginTop: '20px', padding: '15px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
                             <div style={{ marginBottom: '10px' }}>
-                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>Your Name</label>
+                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>{t('melodiq.your_name')}</label>
                                 <input
                                     type="text"
                                     value={playerName}
@@ -1110,7 +572,7 @@ export const MelodiqPhoneClient = () => {
                                 />
                             </div>
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>Your Color</label>
+                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>{t('melodiq.your_color')}</label>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     <div
                                         style={{
@@ -1132,7 +594,7 @@ export const MelodiqPhoneClient = () => {
                                 </div>
                             </div>
                             <div style={{ marginTop: '15px' }}>
-                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>Microphone</label>
+                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '5px' }}>{t('melodiq.microphone')}</label>
                                 <select
                                     value={selectedDeviceId}
                                     onChange={(e) => {
@@ -1148,7 +610,7 @@ export const MelodiqPhoneClient = () => {
                                         fontSize: '1rem'
                                     }}
                                 >
-                                    <option value="">Default</option>
+                                    <option value="">{t('melodiq.default_mic')}</option>
                                     {audioInputDevices.map((device, i) => (
                                         <option key={device.deviceId} value={device.deviceId}>
                                             {device.label || `Microphone ${i + 1}`}
@@ -1160,7 +622,7 @@ export const MelodiqPhoneClient = () => {
 
                         {showReconnect && (
                             <button onClick={handleReconnect} className="reconnect-btn">
-                                Retry Connection
+                                {t('melodiq.retry_connection')}
                             </button>
                         )}
                     </>
@@ -1171,7 +633,7 @@ export const MelodiqPhoneClient = () => {
                         {/* Now Playing */}
                         {nowPlaying && (
                             <div style={{ padding: 10, background: '#333', borderRadius: 8, marginBottom: 15, borderLeft: '4px solid #4caf50' }}>
-                                <div style={{ fontSize: 10, textTransform: 'uppercase', color: '#888', marginBottom: 2 }}>Now Playing</div>
+                                <div style={{ fontSize: 10, textTransform: 'uppercase', color: '#888', marginBottom: 2 }}>{t('melodiq.now_playing')}</div>
                                 <div style={{ fontWeight: 'bold', fontSize: 16 }}>{nowPlaying.title}</div>
                                 <div style={{ fontSize: 12, color: '#bbb' }}>{nowPlaying.artist}</div>
                             </div>
@@ -1186,7 +648,7 @@ export const MelodiqPhoneClient = () => {
                                     setQueueSearchQuery(e.target.value);
                                     sendSearch(e.target.value); // Live search
                                 }}
-                                placeholder="Search songs..."
+                                placeholder={t('melodiq.search_songs')}
                                 style={{ flex: 1, padding: 10, borderRadius: 8, border: 'none', background: '#333', color: 'white', fontSize: 16 }}
                             />
                             <button
@@ -1237,7 +699,7 @@ export const MelodiqPhoneClient = () => {
                         {libraryResults.length > 0 ? (
                             <div style={{ marginBottom: 20 }}>
                                 <h4 style={{ margin: '0 0 10px 0', color: '#888' }}>
-                                    {queueSearchQuery || filters.genre !== 'All' ? 'Results' : 'Library'}
+                                    {queueSearchQuery || filters.genre !== 'All' ? t('melodiq.results') : t('melodiq.library')}
                                 </h4>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                     {libraryResults.map(song => (
@@ -1258,22 +720,22 @@ export const MelodiqPhoneClient = () => {
                             </div>
                         ) : (
                             <div style={{ marginBottom: 20, textAlign: 'center', padding: 20, color: '#666', background: '#222', borderRadius: 8 }}>
-                                <div>{queueSearchQuery ? 'No matches found' : 'Library not loaded'}</div>
+                                <div>{queueSearchQuery ? t('melodiq.no_matches') : t('melodiq.library_not_loaded')}</div>
                                 <button
                                     className="load-lib-btn"
                                     onClick={() => sendSearch(queueSearchQuery)}
                                     style={{ marginTop: 10, padding: '12px 24px', borderRadius: 8, border: 'none', background: '#444', color: 'white', fontSize: '16px', fontWeight: 'bold' }}
                                 >
-                                    ↻ Load Library
+                                    ↻ {t('melodiq.load_library_btn')}
                                 </button>
                             </div>
                         )}
 
                         {/* Queue List */}
                         <div>
-                            <h4 style={{ margin: '0 0 10px 0', color: '#888' }}>Up Next ({hostQueue.length})</h4>
+                            <h4 style={{ margin: '0 0 10px 0', color: '#888' }}>{t('melodiq.up_next', { count: hostQueue.length })}</h4>
                             {hostQueue.length === 0 ? (
-                                <div style={{ textAlign: 'center', color: '#666', padding: 20 }}>Queue is empty</div>
+                                <div style={{ textAlign: 'center', color: '#666', padding: 20 }}>{t('melodiq.queue_empty_phone')}</div>
                             ) : (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                     {hostQueue.map((item, idx) => (
@@ -1301,7 +763,7 @@ export const MelodiqPhoneClient = () => {
 
                 {activeTab === 'remote' && (
                     <div style={{ paddingTop: 20, textAlign: 'center' }}>
-                        <h3 style={{ color: '#aaa', marginBottom: 20 }}>Remote Control</h3>
+                        <h3 style={{ color: '#aaa', marginBottom: 20 }}>{t('melodiq.remote_control')}</h3>
 
                         {/* Playback Controls */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 30 }}>
@@ -1310,7 +772,7 @@ export const MelodiqPhoneClient = () => {
                                 className="remote-btn"
                                 style={{ background: '#4caf50', gridColumn: 'span 2' }}
                             >
-                                ⏯ Play / Pause
+                                ⏯ {t('melodiq.play_pause')}
                             </button>
 
                             <button
@@ -1318,7 +780,7 @@ export const MelodiqPhoneClient = () => {
                                 className="remote-btn"
                                 style={{ background: '#ff9800' }}
                             >
-                                ⏮ Restart
+                                ⏮ {t('melodiq.restart')}
                             </button>
 
                             <button
@@ -1326,7 +788,7 @@ export const MelodiqPhoneClient = () => {
                                 className="remote-btn"
                                 style={{ background: '#2196f3' }}
                             >
-                                ⏭ Next
+                                ⏭ {t('melodiq.next')}
                             </button>
                         </div>
 
@@ -1336,19 +798,19 @@ export const MelodiqPhoneClient = () => {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 15 }}>
                             <button
                                 onClick={() => {
-                                    if (confirm('Are you sure you want to stop the game?')) {
+                                    if (confirm(t('melodiq.stop_confirm'))) {
                                         sendRemoteCommand('exit');
                                     }
                                 }}
                                 className="remote-btn"
                                 style={{ background: '#f44336' }}
                             >
-                                ⏹ Exit Session
+                                ⏹ {t('melodiq.exit_session')}
                             </button>
                         </div>
 
                         <div style={{ marginTop: 40, fontSize: 12, color: '#666' }}>
-                            Control the main screen from your phone.
+                            {t('melodiq.control_desc')}
                         </div>
                     </div>
                 )}

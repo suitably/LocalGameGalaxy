@@ -156,7 +156,7 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
             const { action: nightAction, role } = action;
             let newPlayers = [...state.players];
             let newNightActionLog = [...state.nightActionLog];
-            let newNightDecisions = [...state.nightDecisions];
+            const newNightDecisions = [...state.nightDecisions];
 
             switch (nightAction.type) {
                 case 'KILL':

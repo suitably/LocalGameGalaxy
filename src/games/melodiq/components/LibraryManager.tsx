@@ -6,8 +6,10 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import db, { type Library } from '../db';
 import { runLibraryImport, runLegacyImport } from '../importer';
 import { useSongs } from '../hooks/useSongs';
+import { useTranslation } from 'react-i18next';
 
 export const LibraryManager: React.FC = () => {
+    const { t } = useTranslation();
     // ---- Settings Hook ----
     // const { settings } = useSettings(); // Might still need settings if we use other parts? Actually we don't use settings anymore here.
     const { refreshSongs } = useSongs();
@@ -101,7 +103,7 @@ export const LibraryManager: React.FC = () => {
 
 
     const handleRemoveBrowserLibrary = async (id: string) => {
-        if (!confirm("Remove this folder from Browser Storage? Songs will be deleted from the database.")) return;
+        if (!confirm(t('melodiq.remove_confirm'))) return;
 
         // Find songs in this library
         const songIds = await db.songs.where('libraryId').equals(id).primaryKeys();
@@ -116,22 +118,22 @@ export const LibraryManager: React.FC = () => {
 
     return (
         <Paper variant="outlined" sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>Local Song Libraries</Typography>
+            <Typography variant="h6" gutterBottom>{t('melodiq.local_libraries')}</Typography>
             <Divider sx={{ mb: 3 }} />
 
             {/* Browser Storage Section */}
             <Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
                     <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <FolderIcon fontSize="small" /> Browser Storage
+                        <FolderIcon fontSize="small" /> {t('melodiq.browser_storage')}
                     </Typography>
                     {importing && <CircularProgress size={16} />}
                 </Box>
 
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Stores metadata in database. Files accessed directly from disk.
+                    {t('melodiq.storage_desc')}
                     <br />
-                    <small>Note: Firefox may have storage limits.</small>
+                    <small>{t('melodiq.firefox_note')}</small>
                 </Typography>
 
                 <List dense sx={{ bgcolor: 'action.hover', borderRadius: 1, mb: 1 }}>
@@ -148,7 +150,7 @@ export const LibraryManager: React.FC = () => {
                     ))}
                     {libraries.length === 0 && (
                         <ListItem>
-                            <ListItemText primary="No local folders added." sx={{ fontStyle: 'italic', color: 'text.disabled' }} />
+                            <ListItemText primary={t('melodiq.no_folders')} sx={{ fontStyle: 'italic', color: 'text.disabled' }} />
                         </ListItem>
                     )}
                 </List>
@@ -180,7 +182,7 @@ export const LibraryManager: React.FC = () => {
                         color: 'white'
                     }}
                 >
-                    Add Local Folder
+                    {t('melodiq.load_folder')}
                 </Button>
             </Box>
         </Paper>

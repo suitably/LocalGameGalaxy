@@ -19,7 +19,7 @@ export const HandoverView: React.FC<HandoverViewProps> = ({ playerName, isImpost
     return (
         <Box sx={{ maxWidth: 'sm', mx: 'auto', textAlign: 'center', py: 5 }}>
             {!isRevealed ? (
-                <Paper sx={{ p: 4 }}>
+                <Paper sx={{ p: 4, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
                     <Typography variant="h5" gutterBottom>
                         {t('games.imposter.handover.pass_to', { name: playerName })}
                     </Typography>
@@ -34,7 +34,7 @@ export const HandoverView: React.FC<HandoverViewProps> = ({ playerName, isImpost
                     </Button>
                 </Paper>
             ) : (
-                <Paper sx={{ p: 4, bgcolor: isImposter ? 'error.light' : 'success.light' }}>
+                <Paper sx={{ p: 6, borderRadius: 3, bgcolor: isImposter ? 'rgba(211, 47, 47, 0.85)' : 'rgba(56, 142, 60, 0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)', boxShadow: 8 }}>
                     {isImposter ? (
                         <>
                             <Typography variant="h4" color="error.contrastText" gutterBottom sx={{ fontWeight: 'bold' }}>

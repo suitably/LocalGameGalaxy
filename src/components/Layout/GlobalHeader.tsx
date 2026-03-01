@@ -2,16 +2,18 @@ import React from 'react';
 import { AppBar, Toolbar, Typography, IconButton, Menu, MenuItem, Box, Tooltip, useMediaQuery, useTheme } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import HomeIcon from '@mui/icons-material/Home';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { useTranslation } from 'react-i18next';
 import { useLayout } from '../../context/LayoutContext';
 import { useTitle } from '../../context/TitleContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export const GlobalHeader: React.FC = () => {
     const { t } = useTranslation();
     const { title, menuItems, homeAction, customHeaderActions } = useLayout();
     const { pageTitle } = useTitle();
     const navigate = useNavigate();
+    const location = useLocation();
     const theme = useTheme();
     const isLargeScreen = useMediaQuery(theme.breakpoints.up('md'));
 
@@ -61,6 +63,19 @@ export const GlobalHeader: React.FC = () => {
                 <Typography variant="h6" component="div" sx={{ flexGrow: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {title || pageTitle || t('app.title')}
                 </Typography>
+
+                {/* Settings Icon (Global) - Hide on Melodiq routes because they have their own settings */}
+                {!location.pathname.startsWith('/games/melodiq') && (
+                    <Tooltip title={t('settings.title', 'Settings')}>
+                        <IconButton
+                            color="inherit"
+                            onClick={() => navigate('/settings')}
+                            sx={{ ml: 1 }}
+                        >
+                            <SettingsIcon />
+                        </IconButton>
+                    </Tooltip>
+                )}
 
                 {/* Always Visible Actions (Custom actions lik CastButton usually stay visible) */}
                 {customHeaderActions}

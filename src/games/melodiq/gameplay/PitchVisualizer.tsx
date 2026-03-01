@@ -232,7 +232,7 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
 
                 // Palette
                 let noteHue = hue; // Use prop hue by default
-                let sat = '100%';
+                const sat = '100%';
                 let lit = '50%';
                 if (note.type === '*') { noteHue = 40; lit = '60%'; } // Gold
                 if (note.type === 'F') { noteHue = 320; lit = '60%'; } // Freestyle

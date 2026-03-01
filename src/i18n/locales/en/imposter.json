@@ -2078,5 +2078,41 @@
             "word": "bikini",
             "hint": ""
         }
+    },
+    "info": {
+        "title": "How to play Imposter",
+        "rules": [
+            "Choose your categories and specify the number of Imposters. All players are given a secret word – except the Imposters.",
+            "Innocents will see the secret word. Imposters will only see the category or a vague hint.",
+            "Pass the device around so everyone can secretly check their role.",
+            "During the timer phase, players take turns saying one word to describe their secret word. The goal is to prove you know the word without giving it away to the Imposters. Imposters must blend in.",
+            "At the end of the timer, discuss and vote on who you think the Imposter is. Kick them out!"
+        ],
+        "got_it": "Got it!"
+    },
+    "setup": {
+        "title": "Game Setup",
+        "select_category": "Select Categories",
+        "select_all": "Select All",
+        "select_none": "Select None",
+        "imposter_count": "Number of Imposters",
+        "reset_to_default": "Reset",
+        "timer_length": "Timer Length",
+        "minutes": "Minutes",
+        "seconds": "Seconds"
+    },
+    "handover": {
+        "pass_to": "Pass device to {{name}}",
+        "you_are_imposter": "You are the Imposter!",
+        "imposter_hint": "Hint: {{hint}}",
+        "your_word": "Your word is:",
+        "understood": "Understood"
+    },
+    "result": {
+        "imposter": "Imposter",
+        "normal": "Innocent",
+        "innocents_win": "Innocents Win!",
+        "imposters_win": "Imposters Win!",
+        "revealed_role": "{{name}} was an {{role}}."
     }
 }

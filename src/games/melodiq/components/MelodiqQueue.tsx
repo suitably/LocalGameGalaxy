@@ -13,8 +13,10 @@ import SearchIcon from '@mui/icons-material/Search';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import CloseIcon from '@mui/icons-material/Close';
+import { useTranslation } from 'react-i18next';
 
 export const MelodiqQueue: React.FC = () => {
+    const { t } = useTranslation();
     const { queue, nowPlaying, removeFromQueue, moveItem, clearQueue, addToQueue } = useQueue();
     const { songs } = useSongs();
     const [searchQuery, setSearchQuery] = useState('');
@@ -91,7 +93,7 @@ export const MelodiqQueue: React.FC = () => {
         <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>
             <Typography variant="h4" sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                 <PlaylistPlayIcon fontSize="large" color="primary" />
-                Song Queue
+                {t('melodiq.song_queue')}
             </Typography>
 
             <Grid container spacing={4} sx={{ height: { md: 'calc(100% - 60px)' } }}>
@@ -99,7 +101,7 @@ export const MelodiqQueue: React.FC = () => {
                 <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column', height: { md: '100%' } }}>
                     {nowPlaying && (
                         <Paper sx={{ p: 2, mb: 4, bgcolor: 'rgba(76, 175, 80, 0.1)', border: '1px solid rgba(76, 175, 80, 0.3)' }}>
-                            <Typography variant="overline" color="success.main" fontWeight="bold">Now Playing</Typography>
+                            <Typography variant="overline" color="success.main" fontWeight="bold">{t('melodiq.now_playing')}</Typography>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
                                 <Avatar sx={{ bgcolor: 'success.main' }}>
                                     <MusicNoteIcon />
@@ -113,7 +115,7 @@ export const MelodiqQueue: React.FC = () => {
                     )}
 
                     <Paper sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="h6">Up Next ({queue.length})</Typography>
+                        <Typography variant="h6">{t('melodiq.up_next', { count: queue.length })}</Typography>
                         {queue.length > 0 && (
                             <Button
                                 size="small"
@@ -123,7 +125,7 @@ export const MelodiqQueue: React.FC = () => {
                                 variant="outlined"
                                 sx={{ borderRadius: 50 }}
                             >
-                                Clear All
+                                {t('melodiq.clear_all')}
                             </Button>
                         )}
                     </Paper>
@@ -166,7 +168,7 @@ export const MelodiqQueue: React.FC = () => {
                             ))}
                             {queue.length === 0 && (
                                 <Box sx={{ p: 4, textAlign: 'center', opacity: 0.6 }}>
-                                    <Typography>The queue is empty. Add some songs!</Typography>
+                                    <Typography>{t('melodiq.queue_empty')}</Typography>
                                 </Box>
                             )}
                         </List>
@@ -175,11 +177,11 @@ export const MelodiqQueue: React.FC = () => {
 
                 {/* Right Side: Add Songs */}
                 <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column', height: { md: '100%' } }}>
-                    <Typography variant="h6" sx={{ mb: 2 }}>Add Songs</Typography>
+                    <Typography variant="h6" sx={{ mb: 2 }}>{t('melodiq.add_songs')}</Typography>
 
                     <Card sx={{ mb: 2, p: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', flexShrink: 0 }}>
                         <TextField
-                            placeholder="Search to add..."
+                            placeholder={t('melodiq.search_add')}
                             variant="outlined"
                             size="small"
                             value={searchQuery}
@@ -207,11 +209,11 @@ export const MelodiqQueue: React.FC = () => {
                         />
 
                         <FormControl size="small" sx={{ minWidth: 120, maxWidth: 200 }}>
-                            <InputLabel>Genre</InputLabel>
+                            <InputLabel>{t('melodiq.genre')}</InputLabel>
                             <Select
                                 multiple
                                 value={activeFilters.genre}
-                                label="Genre"
+                                label={t('melodiq.genre')}
                                 onChange={(e) => {
                                     const value = e.target.value;
                                     setActiveFilters(prev => ({
@@ -232,11 +234,11 @@ export const MelodiqQueue: React.FC = () => {
                         </FormControl>
 
                         <FormControl size="small" sx={{ minWidth: 100, maxWidth: 150 }}>
-                            <InputLabel>Year</InputLabel>
+                            <InputLabel>{t('melodiq.year')}</InputLabel>
                             <Select
                                 multiple
                                 value={activeFilters.year}
-                                label="Year"
+                                label={t('melodiq.year')}
                                 onChange={(e) => {
                                     const value = e.target.value;
                                     setActiveFilters(prev => ({
@@ -257,11 +259,11 @@ export const MelodiqQueue: React.FC = () => {
                         </FormControl>
 
                         <FormControl size="small" sx={{ minWidth: 120, maxWidth: 150 }}>
-                            <InputLabel>Language</InputLabel>
+                            <InputLabel>{t('melodiq.language')}</InputLabel>
                             <Select
                                 multiple
                                 value={activeFilters.language}
-                                label="Language"
+                                label={t('melodiq.language')}
                                 onChange={(e) => {
                                     const value = e.target.value;
                                     setActiveFilters(prev => ({
@@ -282,11 +284,11 @@ export const MelodiqQueue: React.FC = () => {
                         </FormControl>
 
                         <FormControl size="small" sx={{ minWidth: 120, maxWidth: 150 }}>
-                            <InputLabel>Edition</InputLabel>
+                            <InputLabel>{t('melodiq.edition')}</InputLabel>
                             <Select
                                 multiple
                                 value={activeFilters.edition}
-                                label="Edition"
+                                label={t('melodiq.edition')}
                                 onChange={(e) => {
                                     const value = e.target.value;
                                     setActiveFilters(prev => ({

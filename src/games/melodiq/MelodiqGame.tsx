@@ -18,6 +18,7 @@ import ViewListIcon from '@mui/icons-material/ViewList';
 import { MelodiqSettings } from './MelodiqSettings';
 
 import { useTranslation } from 'react-i18next';
+import { initMelodiqI18n } from './i18n';
 import { useLayout } from '../../context/LayoutContext';
 import { WebRTCProvider, useWebRTC } from './audio/WebRTCContext';
 import { SettingsProvider, useMelodiqSettings } from './hooks/SettingsContext';
@@ -37,6 +38,7 @@ import { HostQueueDrawer } from './components/HostQueueDrawer';
 type View = 'Home' | 'Settings' | 'Session' | 'Connection';
 
 export const MelodiqGameContent: React.FC = () => {
+    initMelodiqI18n();
     const { t } = useTranslation();
 
     // Set the game title in the header
@@ -77,7 +79,7 @@ export const MelodiqGameContent: React.FC = () => {
     // Handle TV Events
     useEffect(() => {
         if (lastEvent && lastEvent.type === 'PLAYBACK_STARTED') {
-            // eslint-disable-next-line react-hooks/exhaustive-deps
+
             setFeedbackMessage(`TV Playback started: ${lastEvent.payload.title}`);
             // If we don't have the song set locally as remoteSong, we could try to sync it here,
             // but usually handleSelectSong sets it first.
@@ -389,7 +391,7 @@ export const MelodiqGameContent: React.FC = () => {
                     loadingProgress && isLoading && (
                         <Box sx={{ mb: 2, flexShrink: 0 }}>
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                                Loading library... {loadingProgress.total > 0 ? `${loadingProgress.loaded} / ${loadingProgress.total}` : ''}
+                                {loadingProgress.total > 0 ? t('melodiq.loading_library', { loaded: loadingProgress.loaded, total: loadingProgress.total }) : t('melodiq.scanning')}
                             </Typography>
                             <LinearProgress
                                 variant="determinate"
@@ -403,9 +405,9 @@ export const MelodiqGameContent: React.FC = () => {
                 {
                     songs?.length === 0 && !loadingProgress && !isLoading && (
                         <Box sx={{ width: '100%', textAlign: 'center', py: 8, opacity: 0.7, flexGrow: 1 }}>
-                            <Typography variant="h5">Cannot connect to Melodiq Helper</Typography>
+                            <Typography variant="h5">{t('melodiq.cannot_connect')}</Typography>
                             <Typography sx={{ mt: 1 }}>
-                                To play local songs, you need the desktop helper app running.
+                                {t('melodiq.helper_required')}
                             </Typography>
                             <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'center' }}>
                                 <Button
@@ -421,7 +423,7 @@ export const MelodiqGameContent: React.FC = () => {
                                         color: 'white'
                                     }}
                                 >
-                                    Download Helper
+                                    {t('melodiq.download_helper')}
                                 </Button>
                                 <Button
                                     onClick={refreshSongs}
@@ -432,7 +434,7 @@ export const MelodiqGameContent: React.FC = () => {
                                         py: 1.5
                                     }}
                                 >
-                                    Retry Connection
+                                    {t('melodiq.retry_connection')}
                                 </Button>
                             </Box>
                         </Box>
@@ -454,7 +456,7 @@ export const MelodiqGameContent: React.FC = () => {
                                 gap: 1,
                             }}>
                                 <TextField
-                                    placeholder="Search title, artist..."
+                                    placeholder={t('melodiq.search_placeholder')}
                                     variant="outlined"
                                     size="small"
                                     value={searchQuery}
@@ -498,11 +500,11 @@ export const MelodiqGameContent: React.FC = () => {
                                 <Card sx={{ p: 2, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
 
                                     <FormControl size="small" sx={{ minWidth: 120, maxWidth: 200 }}>
-                                        <InputLabel>Genre</InputLabel>
+                                        <InputLabel>{t('melodiq.genre')}</InputLabel>
                                         <Select
                                             multiple
                                             value={activeFilters.genre}
-                                            label="Genre"
+                                            label={t('melodiq.genre')}
                                             onChange={(e) => {
                                                 const value = e.target.value;
                                                 setActiveFilters(prev => ({
@@ -523,11 +525,11 @@ export const MelodiqGameContent: React.FC = () => {
                                     </FormControl>
 
                                     <FormControl size="small" sx={{ minWidth: 100, maxWidth: 150 }}>
-                                        <InputLabel>Year</InputLabel>
+                                        <InputLabel>{t('melodiq.year')}</InputLabel>
                                         <Select
                                             multiple
                                             value={activeFilters.year}
-                                            label="Year"
+                                            label={t('melodiq.year')}
                                             onChange={(e) => {
                                                 const value = e.target.value;
                                                 setActiveFilters(prev => ({
@@ -548,11 +550,11 @@ export const MelodiqGameContent: React.FC = () => {
                                     </FormControl>
 
                                     <FormControl size="small" sx={{ minWidth: 120, maxWidth: 200 }}>
-                                        <InputLabel>Language</InputLabel>
+                                        <InputLabel>{t('melodiq.language')}</InputLabel>
                                         <Select
                                             multiple
                                             value={activeFilters.language}
-                                            label="Language"
+                                            label={t('melodiq.language')}
                                             onChange={(e) => {
                                                 const value = e.target.value;
                                                 setActiveFilters(prev => ({
@@ -573,11 +575,11 @@ export const MelodiqGameContent: React.FC = () => {
                                     </FormControl>
 
                                     <FormControl size="small" sx={{ minWidth: 150, maxWidth: 250 }}>
-                                        <InputLabel>Edition</InputLabel>
+                                        <InputLabel>{t('melodiq.edition')}</InputLabel>
                                         <Select
                                             multiple
                                             value={activeFilters.edition}
-                                            label="Edition"
+                                            label={t('melodiq.edition')}
                                             onChange={(e) => {
                                                 const value = e.target.value;
                                                 setActiveFilters(prev => ({
@@ -605,12 +607,12 @@ export const MelodiqGameContent: React.FC = () => {
                                             variant="outlined"
                                             sx={{ borderRadius: 50 }}
                                         >
-                                            Clear Filters
+                                            {t('melodiq.clear_filters')}
                                         </Button>
                                     )}
 
                                     <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
-                                        {filteredSongs.length} / {songs.length} songs
+                                        {t('melodiq.songs_count', { filtered: filteredSongs.length, total: songs.length })}
                                     </Typography>
                                 </Card>
                             </Collapse>
@@ -765,20 +767,20 @@ export const MelodiqGameContent: React.FC = () => {
 
             {/* Queue Options Dialog */}
             <Dialog open={queueDialogOpen} onClose={() => setQueueDialogOpen(false)}>
-                <DialogTitle>Add to Queue</DialogTitle>
+                <DialogTitle>{t('melodiq.add_end')}</DialogTitle>
                 <DialogContent>
                     <List>
                         <ListItemButton onClick={() => { handleQueueOption('play_now'); setQueueDialogOpen(false); }}>
                             <ListItemIcon><PlayArrowIcon /></ListItemIcon>
-                            <ListItemText primary="Play Now" secondary={isTVConnected ? "On TV" : "Locally"} />
+                            <ListItemText primary={t('melodiq.play_now')} secondary={isTVConnected ? t('melodiq.play_now_tv_desc') : t('melodiq.play_now_locally_desc')} />
                         </ListItemButton>
                         <ListItemButton onClick={() => { handleQueueOption('play_next'); setQueueDialogOpen(false); }}>
                             <ListItemIcon><PlaylistPlayIcon /></ListItemIcon>
-                            <ListItemText primary="Play Next" secondary="Add to start of queue" />
+                            <ListItemText primary={t('melodiq.play_next')} secondary={t('melodiq.play_next_desc')} />
                         </ListItemButton>
                         <ListItemButton onClick={() => { handleQueueOption('add_end'); setQueueDialogOpen(false); }}>
                             <ListItemIcon><AddToQueueIcon /></ListItemIcon>
-                            <ListItemText primary="Add to Queue" secondary="Add to end of queue" />
+                            <ListItemText primary={t('melodiq.add_end')} secondary={t('melodiq.add_end_desc')} />
                         </ListItemButton>
                     </List>
                 </DialogContent>

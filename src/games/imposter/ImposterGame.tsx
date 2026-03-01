@@ -1,13 +1,15 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Box, Typography, Button, Paper } from '@mui/material';
+import { Box, Typography, Button, Paper, IconButton } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { GameSetup } from './components/GameSetup';
 import { HandoverView } from './components/HandoverView';
 import { GameTimer } from './components/GameTimer';
 import { VotingView } from './components/VotingView';
+import { GameInfoDialog } from './components/GameInfoDialog';
 import type { Player, GameState, DbCategory, DbWordPair } from './logic/types';
 import ReplayIcon from '@mui/icons-material/Replay';
 import HomeIcon from '@mui/icons-material/Home';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useNavigate } from 'react-router-dom';
 import { seedImposterDatabase } from './logic/dbSeeder';
 import { db } from '../../lib/db';
@@ -41,6 +43,20 @@ export const ImposterGame: React.FC = () => {
     useEffect(() => {
         seedImposterDatabase();
     }, []);
+
+    const [infoOpen, setInfoOpen] = useState(() => {
+        try {
+            return localStorage.getItem('imposter-has-seen-info') !== 'true';
+        } catch {
+            return true;
+        }
+    });
+
+    const handleCloseInfo = useCallback(() => {
+        setInfoOpen(false);
+        localStorage.setItem('imposter-has-seen-info', 'true');
+    }, []);
+
     const [gameState, setGameState] = useState<GameState>({
         phase: 'LOBBY',
         players: [],
@@ -186,7 +202,7 @@ export const ImposterGame: React.FC = () => {
 
                 return (
                     <Box sx={{ textAlign: 'center', py: 5 }}>
-                        <Paper sx={{ p: 4, mb: 4, bgcolor: gameState.winner === 'NORMAL' ? 'success.light' : 'error.light' }}>
+                        <Paper sx={{ p: 5, mb: 4, borderRadius: 3, bgcolor: gameState.winner === 'NORMAL' ? 'rgba(56, 142, 60, 0.85)' : 'rgba(211, 47, 47, 0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)', boxShadow: 8, color: '#fff' }}>
                             <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold' }}>
                                 {gameState.winner === 'NORMAL'
                                     ? t('games.imposter.result.innocents_win')
@@ -227,10 +243,16 @@ export const ImposterGame: React.FC = () => {
     };
 
     return (
-        <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>
-            <Box sx={{ py: 2 }}>
+        <Box sx={{ p: 2, height: '100%', overflow: 'auto', position: 'relative' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', position: 'absolute', top: 8, right: 8, zIndex: 10 }}>
+                <IconButton color="primary" onClick={() => setInfoOpen(true)} size="large">
+                    <InfoOutlinedIcon fontSize="inherit" />
+                </IconButton>
+            </Box>
+            <Box sx={{ py: 2, mt: 4 }}>
                 {renderPhase()}
             </Box>
+            <GameInfoDialog open={infoOpen} onClose={handleCloseInfo} />
         </Box>
     );
 };

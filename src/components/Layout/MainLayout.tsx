@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Box } from '@mui/material';
+import { Box } from '@mui/material';
 import { Outlet, useLocation } from 'react-router-dom';
 import { GlobalHeader } from './GlobalHeader';
 

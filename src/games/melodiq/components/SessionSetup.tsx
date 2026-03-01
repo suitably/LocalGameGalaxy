@@ -131,12 +131,12 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
                                     <FormControl sx={{ minWidth: 150 }} size="small">
                                         <Select
                                             value={loadingDevices ? 'loading' : (
-                                                ap.deviceId === 'BOT' || devices.some(d => d.deviceId === ap.deviceId) || connectedPreviewPeers.some(p => p.id === ap.deviceId)
+                                                ap.deviceId === 'BOT' || devices.some(d => d.deviceId === ap.deviceId) || connectedPreviewPeers.some(p => p.peerId === ap.deviceId)
                                                     ? ap.deviceId : ''
                                             )}
                                             onChange={(e) => {
                                                 const val = e.target.value;
-                                                const isPhone = connectedPreviewPeers.some(p => p.id === val);
+                                                const isPhone = connectedPreviewPeers.some(p => p.peerId === val);
                                                 onUpdateActivePlayerConfig(ap.profileId, { deviceId: val, isRemote: isPhone });
                                             }}
                                             disabled={loadingDevices}
@@ -152,7 +152,7 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
                                             {connectedPreviewPeers.length > 0 && <Divider />}
                                             {connectedPreviewPeers.length > 0 && <MenuItem disabled><em>Phones</em></MenuItem>}
                                             {connectedPreviewPeers.map(p => (
-                                                <MenuItem key={p.id} value={p.id}>
+                                                <MenuItem key={p.peerId} value={p.peerId}>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                         <Typography>📱 {p.name}</Typography>
                                                         {p.hue && <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: `hsl(${p.hue}, 100%, 50%)` }} />}
@@ -180,12 +180,12 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
 
                 {/* Active Phones in Roster */}
                 {activePeers.map((peer) => (
-                    <Box key={peer.id} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, border: '1px solid rgba(255,255,255,0.2)', borderRadius: 1, bgcolor: 'rgba(100,100,255,0.05)' }}>
+                    <Box key={peer.peerId} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, border: '1px solid rgba(255,255,255,0.2)', borderRadius: 1, bgcolor: 'rgba(100,100,255,0.05)' }}>
                         <Typography sx={{ width: 24, textAlign: 'center' }}>📱</Typography>
                         <Avatar sx={{ bgcolor: peer.hue ? `hsl(${peer.hue}, 100%, 50%)` : 'grey', width: 32, height: 32 }}>{peer.name[0]}</Avatar>
                         <Typography sx={{ flex: 1, fontWeight: 'bold' }}>{peer.name}</Typography>
                         <Chip label="Phone" size="small" variant="outlined" />
-                        <IconButton color="error" onClick={() => togglePeerActive(peer.id)}>
+                        <IconButton color="error" onClick={() => togglePeerActive(peer.peerId)}>
                             <CloseIcon />
                         </IconButton>
                     </Box>
@@ -265,10 +265,10 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
                     {/* Inactive Phones */}
                     {inactivePeers.map(peer => (
                         <Button
-                            key={peer.id}
+                            key={peer.peerId}
                             variant="outlined"
                             startIcon={<Typography>📱</Typography>}
-                            onClick={() => togglePeerActive(peer.id)}
+                            onClick={() => togglePeerActive(peer.peerId)}
                             sx={{ borderColor: peer.hue ? `hsl(${peer.hue}, 100%, 50%)` : undefined }}
                         >
                             {peer.name}

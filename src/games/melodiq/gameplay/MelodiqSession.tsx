@@ -589,7 +589,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         if (!manager) return;
 
         // Message Handling
-        manager.onMessage = (peerId, data) => {
+        manager.onMessage = (peerId: string, data: any) => {
             if (data.type === 'trackSelect' && typeof data.trackIndex === 'number') {
                 const currentPlayers = playersRef.current;
                 const pIdx = currentPlayers.findIndex(p => p.config.deviceId === peerId);
@@ -646,7 +646,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
 
             // 1. Attach/Add/Update connected peers
             activePeers.forEach(peer => {
-                const existingIdx = updatedPlayers.findIndex(p => p.config.deviceId === peer.id);
+                const existingIdx = updatedPlayers.findIndex(p => p.config.deviceId === peer.peerId);
 
                 if (existingIdx !== -1) {
                     // Attach to existing player AND Update Details
@@ -662,21 +662,21 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
 
                     if (!player.webRtcManager) {
                         console.log(`[Session] Attaching Phone ${peer.name} to existing player ${player.config.name}`);
-                        player.attachRemotePeer(manager, peer.id);
+                        player.attachRemotePeer(manager, peer.peerId);
                         changed = true;
                     }
                 } else {
                     // Create new Guest Player
                     console.log(`[Session] New Phone Guest: ${peer.name}`);
                     const newProfile: UserProfile = {
-                        id: peer.id,
+                        id: peer.peerId,
                         name: peer.name,
                         hue: peer.hue || Math.floor(Math.random() * 360)
                     };
 
                     const newPlayer = new PlayerRuntime({
                         ...newProfile,
-                        deviceId: peer.id, // Device ID is Peer ID
+                        deviceId: peer.peerId, // Device ID is Peer ID
                         volume: 1.0,
                         muted: false,
                         latency: 0,
@@ -690,7 +690,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
 
             // 2. Handle Disconnected Peers
             // Remove Guests who disconnected
-            const activePeerIds = new Set(activePeers.map(p => p.id));
+            const activePeerIds = new Set(activePeers.map(p => p.peerId));
             const filtered = updatedPlayers.filter(p => {
                 if (p.config.isRemote) {
                     // If peer is gone

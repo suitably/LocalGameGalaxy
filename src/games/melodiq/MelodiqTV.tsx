@@ -3,30 +3,34 @@ import { Box, Typography } from '@mui/material';
 import GamepadIcon from '@mui/icons-material/Gamepad';
 import { MelodiqSession, type PassiveGameState } from './gameplay/MelodiqSession';
 import { SettingsProvider } from './hooks/SettingsContext';
-import { WebRTCContext } from './audio/WebRTCContext';
+import { WebRTCHostContext, type WebRTCHostContextType } from '../../lib/webrtc/WebRTCHostContext';
 import db from './db';
+import { initMelodiqI18n } from './i18n';
 
 const MockWebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const mockContext: WebRTCHostContextType<any, any> = {
+        manager: null,
+        peers: [],
+        activePeers: [],
+        inactivePeers: [],
+        togglePeerActive: () => { },
+        partyId: 'TV-MODE',
+        regeneratePartyId: () => { },
+        trackerUrls: [],
+        addTrackerUrl: () => { },
+        removeTrackerUrl: () => { },
+        restoreDefaultTrackers: () => { },
+    };
+
     return (
-        <WebRTCContext.Provider value={{
-            manager: null,
-            peers: [],
-            activePeers: [],
-            inactivePeers: [],
-            togglePeerActive: () => { },
-            partyId: 'TV-MODE',
-            regeneratePartyId: () => { },
-            trackerUrls: [],
-            addTrackerUrl: () => { },
-            removeTrackerUrl: () => { },
-            restoreDefaultTrackers: () => { }
-        }}>
+        <WebRTCHostContext.Provider value={mockContext}>
             {children}
-        </WebRTCContext.Provider>
+        </WebRTCHostContext.Provider>
     );
 };
 
 export const MelodiqTV: React.FC = () => {
+    initMelodiqI18n();
     const [activeSong, setActiveSong] = useState<any | null>(null);
     const [passiveState, setPassiveState] = useState<PassiveGameState | null>(null);
     const [isConnected, setIsConnected] = useState(false);
