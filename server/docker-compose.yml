@@ -1,0 +1,17 @@
+services:
+  melodiq-server:
+    build: .
+    container_name: melodiq-server
+    restart: always
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - ./config.json:/app/config.json
+      # Pass your music library directories here. 
+      # You can add multiple volumes if you have songs in different locations.
+      # Example: - /home/user/Music:/music:ro
+      # Then in the UI, add "/music" as a library directory.
+      # - /path/to/your/music:/music:ro
+    environment:
+      - NODE_ENV=production
