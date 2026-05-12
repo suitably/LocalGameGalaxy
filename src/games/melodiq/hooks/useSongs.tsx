@@ -59,22 +59,17 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 })
                 : Promise.resolve([]);
 
-            // Dynamically import DB
-            const [serverSongs, localSongs] = await Promise.all([
-                serverPromise,
-                import('../db').then(m => m.default.songsMeta.toArray())
-            ]);
+            // Fetch from Server
+            const serverSongs = await serverPromise;
 
             if (mounted) {
-                console.log(`[SongsProvider] Loaded ${serverSongs.length} server, ${localSongs.length} local`);
+                console.log(`[SongsProvider] Loaded ${serverSongs.length} server songs`);
 
                 serverSongs.forEach((s: any) => {
                     if (s.id && s.txtContent) serverContentCache.current.set(s.id, s.txtContent);
                 });
 
-                const allSongs = [...serverSongs, ...localSongs];
-
-                const metas: SongMeta[] = allSongs.map((s: any) => {
+                const metas: SongMeta[] = serverSongs.map((s: any) => {
                     const processUrl = (url?: string | Blob | FileSystemFileHandle) => {
                         if (typeof url === 'string') {
                             if (url.startsWith('/media')) {
@@ -147,19 +142,6 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [loadSongs]);
 
     const getSongById = useCallback(async (id: string): Promise<Song | undefined> => {
-        try {
-            const [localSong, localContent] = await Promise.all([
-                import('../db').then(m => m.default.songs.get(id)),
-                import('../db').then(m => m.default.songsContent.get(id))
-            ]);
-
-            if (localSong) {
-                return { ...localSong, txtContent: localContent?.txtContent } as Song;
-            }
-        } catch (e) {
-            console.warn("Failed to check local DB for song", id);
-        }
-
         const found = songs.find(s => s.id === id);
         if (found) {
             const content = serverContentCache.current.get(id);

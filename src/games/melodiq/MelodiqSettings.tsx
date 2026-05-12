@@ -12,7 +12,7 @@ import { SessionSetup } from './components/SessionSetup';
 import { UserProfilesManager } from './components/UserProfilesManager';
 import { GameSettingsPanel } from './components/GameSettingsPanel';
 import { HelperConnection } from './components/HelperConnection';
-import { LibraryManager } from './components/LibraryManager';
+
 import type { UserProfile, ActivePlayer } from './types';
 
 // Re-export types for backwards compatibility
@@ -112,10 +112,6 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
 
                 <Divider />
 
-                {/* 1. Library Management (Local Browser Storage) */}
-                <LibraryManager />
-
-                <Divider />
 
                 {/* 2. Session Setup */}
                 <SessionSetup
