@@ -573,8 +573,9 @@ app.get('/media', (req, res) => {
     const safePath = resolveSecurePath(targetPath);
     if (!safePath) return res.status(403).send('Access Denied or File Not Found');
     
-    // Cache media files for 24 hours to prevent constant reloading when scrolling
-    res.setHeader('Cache-Control', 'public, max-age=86400');
+    // Cache media files for 7 days and make them 'immutable' so the browser
+    // doesn't even re-validate them on a hard page reload (F5).
+    res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
     res.sendFile(safePath);
 });
 
