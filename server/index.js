@@ -50,18 +50,30 @@ const requireAuth = (req, res, next) => {
     }
 };
 
-app.use(helmet({
+const helmetMiddleware = helmet({
     contentSecurityPolicy: false,
     crossOriginResourcePolicy: { policy: "cross-origin" },
     strictTransportSecurity: false
-}));
+});
 
 app.use((req, res, next) => {
-    const origin = req.headers.origin || '*';
-    res.setHeader('Access-Control-Allow-Origin', origin);
+    if (req.path === '/media') {
+        // Skip helmet for media to prevent strict ORB/CORP issues in Firefox
+        return next();
+    }
+    helmetMiddleware(req, res, next);
+});
+
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+    } else {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+    }
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,authorization');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Private-Network', 'true');
     res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count, X-Page, X-Limit');
 
