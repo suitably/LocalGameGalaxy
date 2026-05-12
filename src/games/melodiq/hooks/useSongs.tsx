@@ -34,85 +34,125 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Cache for server song content
     const serverContentCache = useRef(new Map<string, string>());
 
-    const loadSongs = useCallback(async () => {
+    const loadSongs = useCallback(async (forceRefresh = false) => {
         let mounted = true;
         const { url, token, enabled } = getHelperConfig();
         const helperUrl = url.replace(/\/$/, "");
 
-        try {
-            setIsLoading(true);
-            setLoadingProgress({ loaded: 0, total: 0 });
+        const processAndApply = (serverSongs: any[]) => {
+            serverSongs.forEach((s: any) => {
+                if (s.id && s.txtContent) serverContentCache.current.set(s.id, s.txtContent);
+            });
 
-            // Parallel fetch: Server + Local DB
-            const serverPromise = enabled
-                ? fetch(`${helperUrl}/api/songs`, {
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-                }).then(res => {
-                    if (res.status === 401) {
-                        console.warn('Helper Auth Failed');
-                        return [];
-                    }
-                    return res.ok ? res.json() : [];
-                }).catch((e) => {
-                    console.warn('Helper connection failed:', e);
-                    return [];
-                })
-                : Promise.resolve([]);
-
-            // Fetch from Server
-            const serverSongs = await serverPromise;
-
-            if (mounted) {
-                console.log(`[SongsProvider] Loaded ${serverSongs.length} server songs`);
-
-                serverSongs.forEach((s: any) => {
-                    if (s.id && s.txtContent) serverContentCache.current.set(s.id, s.txtContent);
-                });
-
-                const metas: SongMeta[] = serverSongs.map((s: any) => {
-                    const processUrl = (url?: string | Blob | FileSystemFileHandle) => {
-                        if (typeof url === 'string') {
-                            if (url.startsWith('/media')) {
-                                let final = `${helperUrl}${url}`;
-                                if (token && !final.includes('token=')) {
-                                    final += (final.includes('?') ? '&' : '?') + `token=${token}`;
-                                }
-                                return final;
+            const metas: SongMeta[] = serverSongs.map((s: any) => {
+                const processUrl = (url?: string | Blob | FileSystemFileHandle) => {
+                    if (typeof url === 'string') {
+                        if (url.startsWith('/media')) {
+                            let final = `${helperUrl}${url}`;
+                            if (token && !final.includes('token=')) {
+                                final += (final.includes('?') ? '&' : '?') + `token=${token}`;
                             }
-                            if (url.startsWith(helperUrl) && url.includes('/media') && token && !url.includes('token=')) {
-                                return url + (url.includes('?') ? '&' : '?') + `token=${token}`;
-                            }
+                            return final;
                         }
-                        return url;
-                    };
+                        if (url.startsWith(helperUrl) && url.includes('/media') && token && !url.includes('token=')) {
+                            return url + (url.includes('?') ? '&' : '?') + `token=${token}`;
+                        }
+                    }
+                    return url;
+                };
 
-                    return {
-                        id: s.id,
-                        title: s.title,
-                        artist: s.artist,
-                        bpm: s.bpm,
-                        year: s.year,
-                        language: s.language,
-                        genre: s.genre,
-                        cover: processUrl(s.cover),
-                        video: processUrl(s.video),
-                        audio: processUrl(s.audio),
-                        start: s.start,
-                        end: s.end,
-                        duration: s.duration,
-                        edition: s.edition,
-                        hasCover: s.hasCover ?? !!s.cover,
-                        hasVideo: s.hasVideo ?? !!s.video
-                    };
-                });
+                return {
+                    id: s.id,
+                    title: s.title,
+                    artist: s.artist,
+                    bpm: s.bpm,
+                    year: s.year,
+                    language: s.language,
+                    genre: s.genre,
+                    cover: processUrl(s.cover),
+                    video: processUrl(s.video),
+                    audio: processUrl(s.audio),
+                    start: s.start,
+                    end: s.end,
+                    duration: s.duration,
+                    edition: s.edition,
+                    hasCover: s.hasCover ?? !!s.cover,
+                    hasVideo: s.hasVideo ?? !!s.video
+                };
+            });
 
-                // Deduplicate
-                const unique = Array.from(new Map(metas.map(item => [item.id, item])).values());
-
+            const unique = Array.from(new Map(metas.map(item => [item.id, item])).values());
+            if (mounted) {
                 setSongs(unique);
                 setLoadingProgress({ loaded: unique.length, total: unique.length });
                 setIsLoading(false);
             }
+        };
+
+        try {
+            const cacheName = 'melodiq-api-cache';
+            const requestUrl = `${helperUrl}/api/songs`;
+
+            // Only show loading state if we are forcing a refresh or have nothing
+            setIsLoading(true);
+            setLoadingProgress({ loaded: 0, total: 0 });
+
+            let loadedFromCache = false;
+
+            // 1. Try to load instantly from Cache API (unless forcing refresh)
+            if (enabled && !forceRefresh) {
+                try {
+                    const cache = await caches.open(cacheName);
+                    const cachedRes = await cache.match(requestUrl);
+                    if (cachedRes) {
+                        const cachedData = await cachedRes.json();
+                        if (cachedData && cachedData.length > 0) {
+                            console.log(`[SongsProvider] Instant load: ${cachedData.length} songs from Cache API`);
+                            processAndApply(cachedData);
+                            loadedFromCache = true;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Cache API read failed', e);
+                }
+            }
+
+            // 2. Fetch fresh data from server in background (or immediately if no cache)
+            if (enabled) {
+                try {
+                    const res = await fetch(requestUrl, {
+                        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                    });
+                    
+                    if (res.status === 401) {
+                        console.warn('Helper Auth Failed');
+                        if (mounted && !loadedFromCache) {
+                            setIsLoading(false);
+                            setSongs([]);
+                        }
+                    } else if (res.ok) {
+                        // Store clone in Cache API for next reload
+                        const clone = res.clone();
+                        try {
+                            const cache = await caches.open(cacheName);
+                            cache.put(requestUrl, clone);
+                        } catch(e) {}
+                        
+                        const freshData = await res.json();
+                        console.log(`[SongsProvider] Fetched ${freshData.length} fresh server songs`);
+                        processAndApply(freshData);
+                    }
+                } catch (e) {
+                    console.warn('Helper connection failed:', e);
+                    if (mounted && !loadedFromCache) {
+                        setIsLoading(false);
+                        setLoadingProgress(null);
+                    }
+                }
+            } else if (mounted) {
+                setIsLoading(false);
+            }
+
         } catch (e) {
             console.error('Failed to load songs:', e);
             if (mounted) {
@@ -138,7 +178,7 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [loadSongs]);
 
     const refreshSongs = useCallback(async () => {
-        await loadSongs();
+        await loadSongs(true); // force fresh fetch
     }, [loadSongs]);
 
     const getSongById = useCallback(async (id: string): Promise<Song | undefined> => {
