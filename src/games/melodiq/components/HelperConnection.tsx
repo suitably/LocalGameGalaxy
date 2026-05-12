@@ -28,14 +28,14 @@ export const HelperConnection: React.FC = () => {
 
         try {
             const cleanUrl = url.replace(/\/$/, "");
-            const res = await fetch(`${cleanUrl}/api/songs?limit=1`, {
+            const res = await fetch(`${cleanUrl}/api/status`, {
                 headers: token ? { 'Authorization': `Bearer ${token}` } : {}
             });
 
             if (res.ok) {
                 const data = await res.json();
                 setStatus('success');
-                setStatusMsg(`Connected! Found ${res.headers.get('X-Total-Count') || data.length || 'songs'}.`);
+                setStatusMsg(`Connected! Found ${data.count || 0} songs.`);
             } else if (res.status === 401) {
                 setStatus('error');
                 setStatusMsg('Unauthorized. Check Token.');

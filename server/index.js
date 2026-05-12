@@ -63,6 +63,7 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,authorization');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Private-Network', 'true');
+    res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count, X-Page, X-Limit');
 
     if (req.method === 'OPTIONS') {
         res.sendStatus(200);
