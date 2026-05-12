@@ -413,7 +413,15 @@ export const MelodiqGameContent: React.FC = () => {
                                 <Button
                                     variant="contained"
                                     color="secondary"
-                                    onClick={() => alert("Binaries are in server/dist/ folder!")}
+                                    onClick={() => {
+                                        let filename = 'melodiq-server-win.zip';
+                                        if (navigator.userAgent.includes('Mac')) {
+                                            filename = 'melodiq-server-macos.tar.gz';
+                                        } else if (navigator.userAgent.includes('Linux') && !navigator.userAgent.includes('Android')) {
+                                            filename = 'melodiq-server-linux.tar.gz';
+                                        }
+                                        window.location.href = `https://github.com/suitably/LocalGameGalaxy/releases/latest/download/${filename}`;
+                                    }}
                                     sx={{
                                         borderRadius: 50,
                                         px: 4,
