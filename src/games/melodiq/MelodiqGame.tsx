@@ -43,7 +43,7 @@ export const MelodiqGameContent: React.FC = () => {
 
     // Set the game title in the header
     // Set the game title in the header using useLayout
-    // usePageTitle(t('games.melodiq.title'));
+    // usePageTitle(t('melodiq.title'));
 
     const { setHeader, setCustomHeaderActions } = useLayout();
 
@@ -190,7 +190,7 @@ export const MelodiqGameContent: React.FC = () => {
         const homeAction = () => setCurrentView('Home');
 
         if (currentView === 'Home') {
-            setHeader(t('games.melodiq.title'), [
+            setHeader(t('melodiq.title'), [
                 {
                     label: viewMode === 'grid' ? 'List View' : 'Grid View',
                     icon: viewMode === 'grid' ? <ViewListIcon /> : <ViewModuleIcon />,
@@ -232,7 +232,7 @@ export const MelodiqGameContent: React.FC = () => {
             );
         } else {
             // Clear menu items for other views to avoid irrelevant actions
-            setHeader(t('games.melodiq.title'), [], homeAction);
+            setHeader(t('melodiq.title'), [], homeAction);
             setCustomHeaderActions(null);
         }
         return () => {
@@ -403,7 +403,7 @@ export const MelodiqGameContent: React.FC = () => {
 
                 {/* Empty State */}
                 {
-                    songs?.length === 0 && !loadingProgress && !isLoading && (
+                    songs?.length === 0 && !isLoading && (
                         <Box sx={{ width: '100%', textAlign: 'center', py: 8, opacity: 0.7, flexGrow: 1 }}>
                             <Typography variant="h5">{t('melodiq.cannot_connect')}</Typography>
                             <Typography sx={{ mt: 1 }}>
