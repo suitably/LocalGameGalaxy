@@ -83,7 +83,7 @@ const limiter = rateLimit({
 });
 
 if (!config.disableRateLimit) {
-    app.use(limiter);
+    app.use('/api', limiter);
 }
 app.use(requireAuth);
 
@@ -560,6 +560,9 @@ app.get('/media', (req, res) => {
     if (!targetPath) return res.status(400).send('Missing path');
     const safePath = resolveSecurePath(targetPath);
     if (!safePath) return res.status(403).send('Access Denied or File Not Found');
+    
+    // Cache media files for 24 hours to prevent constant reloading when scrolling
+    res.setHeader('Cache-Control', 'public, max-age=86400');
     res.sendFile(safePath);
 });
 
