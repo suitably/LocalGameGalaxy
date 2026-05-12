@@ -20,8 +20,17 @@ const SongsContext = createContext<UseSongsResult | null>(null);
  * Provider component that manages the song library state.
  */
 export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [songs, setSongs] = useState<SongMeta[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [songs, setSongs] = useState<SongMeta[]>(() => {
+        try {
+            const cached = sessionStorage.getItem('melodiq_meta_cache');
+            return cached ? JSON.parse(cached) : [];
+        } catch { return []; }
+    });
+    const [isLoading, setIsLoading] = useState(() => {
+        try {
+            return !sessionStorage.getItem('melodiq_meta_cache');
+        } catch { return true; }
+    });
     const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null);
 
     // Read config from storage
@@ -84,6 +93,10 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const unique = Array.from(new Map(metas.map(item => [item.id, item])).values());
             if (mounted) {
                 setSongs(unique);
+                try {
+                    // Save lightweight meta state synchronously to prevent UI flash on reload
+                    sessionStorage.setItem('melodiq_meta_cache', JSON.stringify(unique.map(s => ({...s, txtContent: undefined}))));
+                } catch(e) {}
                 setLoadingProgress({ loaded: unique.length, total: unique.length });
                 setIsLoading(false);
             }
@@ -93,9 +106,13 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const cacheName = 'melodiq-api-cache';
             const requestUrl = `${helperUrl}/api/songs`;
 
-            // Only show loading state if we are forcing a refresh or have nothing
-            setIsLoading(true);
-            setLoadingProgress({ loaded: 0, total: 0 });
+            const hasExistingSongs = songs.length > 0 || !!sessionStorage.getItem('melodiq_meta_cache');
+
+            // Only show scanning state if we are forcing a refresh AND we have no songs
+            if (forceRefresh || !hasExistingSongs) {
+                setIsLoading(true);
+                setLoadingProgress({ loaded: 0, total: 0 });
+            }
 
             let loadedFromCache = false;
 
