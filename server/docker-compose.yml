@@ -1,6 +1,8 @@
 services:
   melodiq-server:
-    build: .
+    # Trage hier deinen Docker Hub Benutzernamen ein
+    image: DEIN_DOCKERHUB_NAME/melodiq-server:latest
+    # build: . (lokales Bauen wird nicht mehr benötigt)
     container_name: melodiq-server
     restart: always
     ports:
