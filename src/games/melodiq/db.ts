@@ -57,8 +57,8 @@ db.version(9).stores({
 export default db;
 
 // Dummy cache function to avoid breaking MelodiqSession which used it for legacy browser imports
-export const getCachedFiles = (songId: string): any | undefined => {
+export const getCachedFiles = (_songId: string): any | undefined => {
     return undefined;
 };
-export const setCachedFiles = (songId: string, files: any): void => {};
+export const setCachedFiles = (_songId: string, _files: any): void => {};
 export const clearFileCache = (): void => {};

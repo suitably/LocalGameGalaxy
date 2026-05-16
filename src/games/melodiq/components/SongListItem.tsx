@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import db, { type SongMeta } from '../db';
+import { type SongMeta } from '../db';
 import { formatDuration } from '../utils';
 
 interface SongListItemProps {
@@ -48,49 +48,13 @@ export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLon
     };
 
     useEffect(() => {
-        let active = true;
-        let objectUrl: string | null = null;
+        if (!song.hasCover) return;
 
-        const loadCover = async () => {
-            if (!song.hasCover) return;
-
-            if (typeof song.cover === 'string' && song.cover.length > 0) {
-                setCoverUrl(song.cover);
-                return;
-            }
-
-            try {
-                const fullSong = await db.songs.get(song.id);
-                if (!fullSong?.cover || !active) return;
-
-                if (typeof fullSong.cover === 'string') {
-                    setCoverUrl(fullSong.cover);
-                } else if (fullSong.cover instanceof Blob) {
-                    objectUrl = URL.createObjectURL(fullSong.cover);
-                    if (active) setCoverUrl(objectUrl);
-                } else if ('getFile' in fullSong.cover && typeof fullSong.cover.getFile === 'function') {
-                    // @ts-ignore
-                    const file = await (fullSong.cover as FileSystemFileHandle).getFile();
-                    if (active) {
-                        objectUrl = URL.createObjectURL(file);
-                        setCoverUrl(objectUrl);
-                    }
-                }
-            } catch (e) {
-                if ((e as Error).name !== 'NotAllowedError') {
-                    console.warn("Failed to load cover", e);
-                }
-            }
-        };
-
-        loadCover();
-
-        return () => {
-            active = false;
-            // Revoke object URL to avoid memory leaks
-            if (objectUrl) URL.revokeObjectURL(objectUrl);
-        };
-    }, [song.id, song.hasCover]);
+        // Cover is now always a string URL from the helper
+        if (typeof song.cover === 'string' && song.cover.length > 0) {
+            setCoverUrl(song.cover);
+        }
+    }, [song.id, song.hasCover, song.cover]);
 
     return (
         <Box

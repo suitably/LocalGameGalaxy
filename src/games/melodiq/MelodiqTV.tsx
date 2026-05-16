@@ -4,7 +4,7 @@ import GamepadIcon from '@mui/icons-material/Gamepad';
 import { MelodiqSession, type PassiveGameState } from './gameplay/MelodiqSession';
 import { SettingsProvider } from './hooks/SettingsContext';
 import { WebRTCHostContext, type WebRTCHostContextType } from '../../lib/webrtc/WebRTCHostContext';
-import db from './db';
+
 import { initMelodiqI18n } from './i18n';
 
 const MockWebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -40,19 +40,10 @@ export const MelodiqTV: React.FC = () => {
 
         const handleMessage = (type: string, payload: any) => {
             if (type === 'PLAY_SONG') {
-                // Prefer song data sent inline
                 if (payload.songData) {
                     setActiveSong(payload.songData);
                 } else {
-                    // Fallback to DB
-                    const songId = payload.songId;
-                    try {
-                        db.songs.get(songId).then(song => {
-                            if (song) setActiveSong(song);
-                        });
-                    } catch (e) {
-                        console.error('Failed to load song on TV:', e);
-                    }
+                    console.warn('[MelodiqTV] PLAY_SONG received without songData, ignoring.');
                 }
             } else if (type === 'STOP_SONG') {
                 setActiveSong(null);

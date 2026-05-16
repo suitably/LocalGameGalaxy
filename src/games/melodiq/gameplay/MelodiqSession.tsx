@@ -423,16 +423,9 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                     return;
                 }
 
-                const content = await db.songsContent.get(song.id);
-                if (content?.txtContent) {
-                    const parsed = parseUltraStarTxt(content.txtContent);
-                    const parsedWithMeta = { ...song, notes: parsed.notes, tracks: parsed.tracks, headers: parsed.headers, bpm: parsed.bpm, gap: parsed.gap };
-                    setParsedSong(parsedWithMeta);
-                    calculateScoreNormalization(parsed);
-                } else {
-                    console.error('Song content not found for', song.title);
-                    setLoadError(`Song content not found for "${song.title}". Please try re-scanning your library.`);
-                }
+                // songsContent table was removed — txtContent must be provided inline
+                console.error('Song content not found for', song.title, '(txtContent missing from song object)');
+                setLoadError(`Song content not found for "${song.title}". The Melodiq Helper must provide txtContent.`);
             } catch (e) {
                 console.error('Failed to load song content', e);
                 setLoadError("Failed to load song content: " + (e as Error).message);
