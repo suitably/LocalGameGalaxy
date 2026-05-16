@@ -286,9 +286,24 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
             // Sync Play State
             if (passiveState.isPlaying !== isPlaying) {
                 if (passiveState.isPlaying) {
-                    audioRef.current?.play().catch(e => console.log('[Session] Passive play interrupted:', e.name));
-                    videoRef.current?.play().catch(() => { });
-                    setIsPlaying(true);
+                    // First seek to the correct time BEFORE playing to avoid drift-sync spam
+                    if (audioRef.current && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 1.0) {
+                        audioRef.current.currentTime = passiveState.currentTime;
+                        if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
+                    }
+                    const tryPlay = async () => {
+                        try {
+                            await audioRef.current?.play();
+                            videoRef.current?.play().catch(() => { });
+                            setIsPlaying(true);
+                            setPassivePlayBlocked(false);
+                        } catch (e: any) {
+                            console.warn('[Session] Passive play blocked by autoplay policy:', e.name);
+                            setPassivePlayBlocked(true);
+                            // Don't set isPlaying to true — audio isn't actually playing
+                        }
+                    };
+                    tryPlay();
                 } else {
                     audioRef.current?.pause();
                     videoRef.current?.pause();
@@ -300,11 +315,9 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
             if (passiveState.isFinished !== isFinished) setIsFinished(passiveState.isFinished);
             if (passiveState.isPausedForScore !== isPausedForScore) setIsPausedForScore(passiveState.isPausedForScore);
 
-            // Sync Time (Drift Correction)
-            if (audioRef.current && passiveState.isPlaying && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 1.0) {
+            // Sync Time (Drift Correction) — only when audio is actually playing (not paused/blocked)
+            if (audioRef.current && passiveState.isPlaying && isPlaying && !audioRef.current.paused && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 1.0) {
                 console.log(`[Session] Syncing time drift: Local=${audioRef.current.currentTime.toFixed(2)} Remote=${passiveState.currentTime.toFixed(2)}`);
-                // Smooth sync: if only slightly off, maybe playbackRate adjustment? 
-                // For now, hard seek if > 1s off
                 audioRef.current.currentTime = passiveState.currentTime;
                 if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
             }
@@ -319,6 +332,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
     const [bpmMultiplier] = useState(4);
     const [isFinished, setIsFinished] = useState(false);
     const [isPausedForScore, setIsPausedForScore] = useState(false);
+    const [passivePlayBlocked, setPassivePlayBlocked] = useState(false);
 
     // UI State
     const [_duration, setDuration] = useState(0);
@@ -1662,6 +1676,46 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                     {videoError}
                 </Alert>
             </Snackbar>
+
+            {/* Autoplay Blocked Overlay - Click to Resume (TV/Passive mode) */}
+            {passivePlayBlocked && isPassive && (
+                <Box
+                    onClick={async () => {
+                        try {
+                            // Seek to current remote time first
+                            if (audioRef.current && passiveState?.currentTime) {
+                                audioRef.current.currentTime = passiveState.currentTime;
+                                if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
+                            }
+                            await audioRef.current?.play();
+                            videoRef.current?.play().catch(() => { });
+                            setIsPlaying(true);
+                            setPassivePlayBlocked(false);
+                        } catch (e) {
+                            console.error('[Session] Manual play also failed:', e);
+                        }
+                    }}
+                    sx={{
+                        position: 'absolute',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        zIndex: 100,
+                        bgcolor: 'rgba(0,0,0,0.85)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        gap: 2,
+                    }}
+                >
+                    <Typography variant="h3" sx={{ color: 'white', fontWeight: 'bold' }}>
+                        🔇 Audio blocked
+                    </Typography>
+                    <Typography variant="h5" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                        Tap anywhere to start playback
+                    </Typography>
+                </Box>
+            )}
 
             {/* Removed global dimming overlay */}
 
