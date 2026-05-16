@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { Box, Button, Typography, IconButton, Slider, Snackbar, Alert } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import db, { type Song, getCachedFiles } from '../db';
 import { parseUltraStarTxt } from '../parser';
@@ -1691,7 +1690,6 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                     transition: 'opacity 0.5s ease-in-out'
                 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        {!isTVMode && <IconButton onClick={() => onExit(true)} color="inherit"><ArrowBackIcon /></IconButton>}
                         {onMinimize && !isTVMode && (
                             <IconButton onClick={onMinimize} color="inherit" sx={{ ml: 1 }}>
                                 <KeyboardArrowDownIcon />

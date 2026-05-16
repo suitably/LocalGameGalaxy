@@ -352,6 +352,26 @@ app.get('/', (req, res) => {
             <script>
                 const API_TOKEN = "${AUTH_TOKEN}";
 
+                document.addEventListener('DOMContentLoaded', () => {
+                    const hostname = window.location.hostname;
+                    // Detect if hostname is an IP address or localhost
+                    const isIP = /^[0-9\.]+$/.test(hostname) || hostname.includes(':') || hostname.includes('[');
+                    const isLocalhost = hostname === 'localhost';
+
+                    if (!isIP && !isLocalhost) {
+                        // Accessed via domain name (likely reverse proxy with valid cert)
+                        const urlDisplay = document.getElementById('urlDisplay');
+                        if (urlDisplay) {
+                            urlDisplay.innerText = window.location.origin;
+                        }
+                        
+                        const warningBox = document.getElementById('tv-connection-warning');
+                        if (warningBox) {
+                            warningBox.style.display = 'none';
+                        }
+                    }
+                });
+
                 function copyText(id) {
                     const el = document.getElementById(id);
                     navigator.clipboard.writeText(el.innerText).then(() => {
@@ -454,7 +474,7 @@ app.get('/', (req, res) => {
                     </div>
                 </div>
                 
-                 <div style="background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
+                 <div id="tv-connection-warning" style="background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
                     <strong>TV Connection Info:</strong> Use the HTTPS URL below. When opening on TV/Mobile, you will assume a "Security Warning". Click "Advanced" -> "Proceed (Unsafe)" to accept the self-signed certificate. This is necessary for Mixed Content support.
                 </div>
 

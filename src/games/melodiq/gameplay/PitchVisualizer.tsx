@@ -79,6 +79,10 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
     const lastValidTimeRef = useRef<number>(0);
     const requestRef = useRef<number>(0);
 
+    // Interpolation state for smooth rendering
+    const lastAudioTimeRef = useRef<number>(0);
+    const lastRealTimeRef = useRef<number>(0);
+
     // FIX: Track the LATEST ref from props, because parent might pass a new object literal every render
     const latestPitchRef = useRef(currentPitchRef);
     const latestSungSegmentsRef = useRef(sungSegmentsRef);
@@ -160,8 +164,26 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
 
             // 1. Time
             let currentTime = 0;
+            const now = performance.now();
             if (audioRef.current) {
-                currentTime = audioRef.current.currentTime;
+                const rawTime = audioRef.current.currentTime;
+                
+                // If paused or ended, use raw time and reset interpolation
+                if (audioRef.current.paused || audioRef.current.ended || audioRef.current.readyState < 3) {
+                    currentTime = rawTime;
+                    lastAudioTimeRef.current = rawTime;
+                    lastRealTimeRef.current = now;
+                } else {
+                    // Audio is playing. If raw time changed from last frame, resync interpolation.
+                    if (rawTime !== lastAudioTimeRef.current) {
+                        lastAudioTimeRef.current = rawTime;
+                        lastRealTimeRef.current = now;
+                        currentTime = rawTime;
+                    } else {
+                        // Interpolate between audio time updates for 60fps smoothness
+                        currentTime = lastAudioTimeRef.current + (now - lastRealTimeRef.current) / 1000;
+                    }
+                }
             }
 
             // Assuming 4x multiplier as in original code
@@ -336,7 +358,6 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
             // --- persistent cursor logic ---
             // Access via `.current.current` because latestPitchRef holds the ref object from props
             const currentPitch = latestPitchRef.current.current;
-            const now = performance.now();
             let activePitchNote = -1;
 
             if (currentPitch && currentPitch.note > 0) {
