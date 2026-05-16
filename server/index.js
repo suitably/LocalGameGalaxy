@@ -64,20 +64,51 @@ app.use((req, res, next) => {
     helmetMiddleware(req, res, next);
 });
 
+// --- CORS ORIGIN ALLOWLIST ---
+// Configurable via environment variable ALLOWED_ORIGINS (comma-separated).
+// Example: ALLOWED_ORIGINS=https://nexumia.de,https://www.nexumia.de
+// If not set, all origins are allowed (open mode for simple local setups).
+const ENV_ORIGINS = process.env.ALLOWED_ORIGINS;
+const RESTRICT_ORIGINS = !!ENV_ORIGINS;
+const ALLOWED_ORIGINS = RESTRICT_ORIGINS
+    ? [
+        ...ENV_ORIGINS.split(',').map(o => o.trim()).filter(Boolean),
+        'http://localhost',   // Always allow local dev
+        'http://127.0.0.1',  // Always allow local dev
+      ]
+    : [];
+
+if (RESTRICT_ORIGINS) {
+    console.log(`[CORS] Restricted mode. Allowed origins: ${ALLOWED_ORIGINS.join(', ')}`);
+} else {
+    console.log('[CORS] Open mode (no ALLOWED_ORIGINS set). All origins permitted.');
+}
+
+const isOriginAllowed = (origin) => {
+    if (!origin) return true;  // No origin = direct access (curl, browser nav), handled by token auth
+    if (!RESTRICT_ORIGINS) return true; // Open mode: allow everything
+    return ALLOWED_ORIGINS.some(allowed => origin === allowed || origin.startsWith(allowed + ':'));
+};
+
 app.use((req, res, next) => {
     const origin = req.headers.origin;
-    if (origin) {
+
+    if (origin && isOriginAllowed(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);
         res.setHeader('Access-Control-Allow-Credentials', 'true');
-    } else {
-        res.setHeader('Access-Control-Allow-Origin', '*');
     }
+    // If origin is present but NOT allowed: no CORS headers → browser blocks the response.
+
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,authorization');
     res.setHeader('Access-Control-Allow-Private-Network', 'true');
     res.setHeader('Access-Control-Expose-Headers', 'X-Total-Count, X-Page, X-Limit');
 
     if (req.method === 'OPTIONS') {
+        // Only send 200 for allowed origins, otherwise 403
+        if (origin && !isOriginAllowed(origin)) {
+            return res.sendStatus(403);
+        }
         res.sendStatus(200);
     } else {
         next();
