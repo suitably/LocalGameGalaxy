@@ -1466,8 +1466,8 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
             hasStartedRef.current = true;
             const audio = audioRef.current;
 
-            // Set volume ensuring it's not overridden later by some other default
-            audio.volume = songVolume * masterVolume;
+            // Set volume — honour muteAudio (e.g. TV mode: host session must start silent)
+            audio.volume = muteAudio ? 0 : songVolume * masterVolume;
 
             const startPlay = async () => {
                 try {
@@ -1480,7 +1480,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
             };
             startPlay();
         }
-    }, [ready, contentLoading, parsedSong, audioSrc, songVolume, masterVolume, song.id, isFinished]);
+    }, [ready, contentLoading, parsedSong, audioSrc, songVolume, masterVolume, muteAudio, song.id, isFinished]);
 
     // Immediately notify parent when isPlaying changes (don't wait for rAF loop)
     useEffect(() => {
