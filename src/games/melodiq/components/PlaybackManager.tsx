@@ -79,11 +79,24 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     // Handle MiniPlayer Next Logic
     const handleMiniPlayerNext = () => {
         if (selectedSong) {
+            if (isTVConnected) {
+                // In TV mode, results are suppressed — skip the score pause entirely and
+                // jump straight to the next queued song (or exit).
+                const nextItem = popNext();
+                if (nextItem) {
+                    onSelectSong(nextItem.song, true);
+                } else {
+                    // No next song: finish the current session normally
+                    sessionRef.current?.finishSong();
+                }
+                return;
+            }
+
             // Smart Skip: Delegate logic to Session
             if (sessionRef.current && sessionRef.current.handleNext()) {
                 // Session handled it (paused for score).
-                // Restore Session view so user sees the ScoreBoard (ONLY if not TV mode)
-                if (currentView !== 'Session' && !isTVConnected) {
+                // Restore Session view so user sees the ScoreBoard
+                if (currentView !== 'Session') {
                     onRestoreSession();
                 }
                 return;
