@@ -1,5 +1,5 @@
 export interface Note {
-    type: string; // ':' | '*' | 'F'
+    type: string; // ':' | '*' | 'F' | 'R' | 'G'
     start: number;
     duration: number; // in beats, usually
     pitch: number;
@@ -76,7 +76,7 @@ export const parseUltraStarTxt = (content: string): ParsedSong => {
                     tracks.push({ name: `Player ${tracks.length + 1}`, notes: [] });
                 }
             }
-        } else if (line.startsWith(':') || line.startsWith('*') || line.startsWith('F')) {
+        } else if (line.startsWith(':') || line.startsWith('*') || line.startsWith('F') || line.startsWith('R') || line.startsWith('G')) {
             // Basic note parsing: TYPE START LENGTH PITCH LYRICS
             const parts = line.split(' ');
             if (parts.length >= 5) {

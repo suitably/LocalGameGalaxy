@@ -327,6 +327,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
 
     // Audio/Video logic
     const audioRef = useRef<HTMLAudioElement>(null);
+    const vocalsRef = useRef<HTMLAudioElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [bpmMultiplier] = useState(4);
@@ -338,6 +339,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
     const [_duration, setDuration] = useState(0);
     const [devPitchOverride, setDevPitchOverride] = useState<number | null>(null);
     const [audioSrc, setAudioSrc] = useState<string | undefined>(undefined);
+    const [vocalsSrc, setVocalsSrc] = useState<string | undefined>(undefined);
     const [videoSrc, setVideoSrc] = useState<string | undefined>(undefined);
     const [videoError, setVideoError] = useState<string | null>(null);
     const [needsFolderAccess, setNeedsFolderAccess] = useState(false);
@@ -348,7 +350,10 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         if (audioRef.current) {
             audioRef.current.volume = muteAudio ? 0 : songVolume * masterVolume;
         }
-    }, [songVolume, masterVolume, muteAudio]);
+        if (vocalsRef.current) {
+            vocalsRef.current.volume = muteAudio ? 0 : (settings.vocalsVolume ?? 1.0) * masterVolume;
+        }
+    }, [songVolume, masterVolume, settings.vocalsVolume, muteAudio]);
 
     // Auto-Hide UI State
     const [isUIVisible, setIsUIVisible] = useState(true);
@@ -405,6 +410,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         setResults([]);
         setIsPlaying(false);
         setAudioSrc(undefined);
+        setVocalsSrc(undefined);
         setVideoSrc(undefined);
         setParsedSong(null);
         setContentLoading(true);
@@ -412,6 +418,10 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
+        }
+        if (vocalsRef.current) {
+            vocalsRef.current.pause();
+            vocalsRef.current.currentTime = 0;
         }
         if (videoRef.current) {
             videoRef.current.pause();
@@ -752,6 +762,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
     const pauseForScore = useCallback(() => {
         if (audioRef.current) {
             audioRef.current.pause();
+            if (vocalsRef.current) vocalsRef.current.pause();
             if (videoRef.current) videoRef.current.pause();
         }
         setIsPlaying(false);
@@ -762,6 +773,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         if (!audioRef.current) return;
         try {
             playPromiseRef.current = audioRef.current.play();
+            if (vocalsRef.current) vocalsRef.current.play().catch(e => console.warn("Vocals play failed", e));
             await playPromiseRef.current;
             if (videoRef.current) {
                 // Video play might fail if not fully loaded, ignore for now
@@ -797,6 +809,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         if (audioRef.current) {
             if (isPlaying) {
                 audioRef.current.pause();
+                if (vocalsRef.current) vocalsRef.current.pause();
                 if (videoRef.current) videoRef.current.pause();
                 setIsPlaying(false);
             } else {
@@ -888,7 +901,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
 
                 if (notesSource) {
                     const activeNote = notesSource.find((n) =>
-                        n.type !== '-' &&
+                        n.type !== '-' && n.type !== 'R' && n.type !== 'G' &&
                         currentBeat >= n.start &&
                         currentBeat <= n.start + n.duration
                     );
@@ -926,7 +939,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
             const currentScoreWeight = (trackScoreWeights.length > tIdx) ? trackScoreWeights[tIdx] : (trackScoreWeights[0] || 0);
 
             const activeNoteIndex = notesSource.findIndex((n) =>
-                n.type !== '-' &&
+                n.type !== '-' && n.type !== 'R' && n.type !== 'G' &&
                 currentBeat >= n.start &&
                 currentBeat <= n.start + n.duration
             );
@@ -1326,6 +1339,31 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                 }
             }
             if (mounted) setAudioSrc(activeUrl);
+
+            // Attempt to resolve vocals track if present in parsedSong headers
+            if (mounted && parsedSong?.headers?.VOCALS && typeof song.audio === 'string') {
+                try {
+                    let vocalsUrlString = song.audio;
+                    if (!vocalsUrlString.startsWith('http') && !vocalsUrlString.startsWith('/')) {
+                        const helperUrl = localStorage.getItem('melodiq_helper_url')?.replace(/\/$/, "") || 'http://localhost:3000';
+                        vocalsUrlString = `${helperUrl}${vocalsUrlString.startsWith('/') ? '' : '/'}${vocalsUrlString}`;
+                    } else if (vocalsUrlString.startsWith('/')) {
+                        const helperUrl = window.location.origin.includes('3000') ? window.location.origin : (localStorage.getItem('melodiq_helper_url')?.replace(/\/$/, "") || 'http://localhost:3000');
+                        vocalsUrlString = `${helperUrl}${vocalsUrlString}`;
+                    }
+
+                    const url = new URL(vocalsUrlString);
+                    const pathParam = url.searchParams.get('path');
+                    if (pathParam) {
+                        const pathParts = pathParam.split('/');
+                        pathParts[pathParts.length - 1] = parsedSong.headers.VOCALS;
+                        url.searchParams.set('path', pathParts.join('/'));
+                        setVocalsSrc(url.toString());
+                    }
+                } catch (e) {
+                    console.warn("Could not resolve vocals URL", e);
+                }
+            }
         };
         loadAudio();
 
@@ -1468,6 +1506,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
 
             // Set volume — honour muteAudio (e.g. TV mode: host session must start silent)
             audio.volume = muteAudio ? 0 : songVolume * masterVolume;
+            if (vocalsRef.current) vocalsRef.current.volume = muteAudio ? 0 : (settings.vocalsVolume ?? 1.0) * masterVolume;
 
             const startPlay = async () => {
                 try {
@@ -1881,6 +1920,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
             </Box>
 
             {audioSrc && <audio ref={audioRef} src={audioSrc} onEnded={handleSongEnd} style={{ display: 'none' }} />}
+            {vocalsSrc && <audio ref={vocalsRef} src={vocalsSrc} style={{ display: 'none' }} />}
             {!audioSrc && <Typography color="error" sx={{ textAlign: 'center', position: 'relative', zIndex: 5 }}>No Audio Source Found</Typography>}
 
             {/* Progress Line - Fixed at bottom */}

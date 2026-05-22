@@ -127,7 +127,7 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
 
         let min = Infinity, max = -Infinity;
         notes.forEach(n => {
-            if (n.type !== '-') {
+            if (n.type !== '-' && n.type !== 'R' && n.type !== 'G') {
                 if (n.pitch < min) min = n.pitch;
                 if (n.pitch > max) max = n.pitch;
             }
@@ -239,7 +239,7 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
             const sungSegmentsRecord = latestSungSegmentsRef.current.current || {};
 
             notes.forEach((note, index) => {
-                if (note.type === '-') return;
+                if (note.type === '-' || note.type === 'R' || note.type === 'G') return;
                 // Visible check
                 // Note end > startBeat AND Note start < endBeat
                 const noteEnd = note.start + note.duration;
@@ -385,13 +385,13 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
                 // Optimization: We could binary search, but basic find is okay for small N.
                 // Search for note covering current beat, or first note after current beat.
                 const notes = trackNotesSource || [];
-                const activeNote = notes.find(n => n.type !== '-' && n.start <= currentBeat && (n.start + n.duration) >= currentBeat);
+                const activeNote = notes.find(n => n.type !== '-' && n.type !== 'R' && n.type !== 'G' && n.start <= currentBeat && (n.start + n.duration) >= currentBeat);
 
                 if (activeNote) {
                     targetOctaveCenter = activeNote.pitch;
                 } else {
                     // If no active note, look ahead slightly (e.g., 4 beats) to anticipate
-                    const futureNote = notes.find(n => n.type !== '-' && n.start > currentBeat && n.start < currentBeat + 4);
+                    const futureNote = notes.find(n => n.type !== '-' && n.type !== 'R' && n.type !== 'G' && n.start > currentBeat && n.start < currentBeat + 4);
                     if (futureNote) {
                         targetOctaveCenter = futureNote.pitch;
                     }
