@@ -18,6 +18,10 @@ interface PlaybackManagerProps {
     setRemoteSong: (song: SongMeta | null) => void;
     onShowQueue: () => void;
     sendGameUpdate?: (state: any) => void;
+    /** Song that was playing before the last page reload, restored from localStorage */
+    restoredSong?: SongMeta | null;
+    /** Clears the restored song state in the parent once the user resumes */
+    onClearRestoredSong?: () => void;
 }
 
 export interface PlaybackManagerHandle {
@@ -37,7 +41,9 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         sendRemoteCommand,
         setRemoteSong,
         onShowQueue,
-        sendGameUpdate
+        sendGameUpdate,
+        restoredSong = null,
+        onClearRestoredSong
     } = props;
 
     const { queue, popNext, setNowPlaying } = useQueue();
@@ -118,6 +124,20 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         }
     };
 
+    // Determine if we are in "restored" mode (page was reloaded while a song was playing)
+    const isInRestoredMode = !selectedSong && !remoteSong && !!restoredSong;
+
+    // The song to display in the MiniPlayer
+    const miniPlayerSong = selectedSong || remoteSong || (isInRestoredMode ? restoredSong : null);
+
+    // Handle Resume: load and start the restored song
+    const handleResume = () => {
+        if (restoredSong) {
+            onClearRestoredSong?.();
+            onSelectSong(restoredSong, true);
+        }
+    };
+
     return (
         <>
             {/* Persistent Session (Hidden or Visible) */}
@@ -155,15 +175,18 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                 </Box>
             )}
 
-            {/* Mini Player - Local OR Remote */}
+            {/* Mini Player - Local OR Remote OR Restored */}
             {
                 currentView === 'Home' && (
                     <MiniPlayer
-                        song={selectedSong || remoteSong || null}
+                        song={miniPlayerSong}
                         isPlaying={playbackState.isPlaying}
-                        progress={playbackState.progress}
+                        progress={isInRestoredMode ? 0 : playbackState.progress}
                         onTogglePlay={() => {
-                            if (selectedSong) {
+                            if (isInRestoredMode) {
+                                // Resume: reload and start the restored song
+                                handleResume();
+                            } else if (selectedSong) {
                                 sessionRef.current?.togglePlay();
                             } else if (remoteSong && isTVConnected) {
                                 // Toggle remote playback state locally for UI
@@ -190,6 +213,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                         }}
                         onShowQueue={onShowQueue}
                         queueLength={queue.length}
+                        isRestored={isInRestoredMode}
                     />
                 )
             }

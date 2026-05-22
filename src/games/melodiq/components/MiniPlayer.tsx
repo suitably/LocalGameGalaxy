@@ -1,10 +1,11 @@
 import React from 'react';
-import { Box, Typography, IconButton, LinearProgress, Card, Badge, useTheme } from '@mui/material';
+import { Box, Typography, IconButton, LinearProgress, Card, Badge, useTheme, Chip } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import QueueMusicIcon from '@mui/icons-material/QueueMusic';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import type { SongMeta, Song } from '../db';
 
 interface MiniPlayerProps {
@@ -16,6 +17,8 @@ interface MiniPlayerProps {
     onMaximize: () => void;
     onShowQueue: () => void;
     queueLength: number;
+    /** True when song was restored from localStorage after a page reload – no audio is loaded yet */
+    isRestored?: boolean;
 }
 
 export const MiniPlayer: React.FC<MiniPlayerProps> = ({
@@ -26,7 +29,8 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
     onNext,
     onMaximize,
     onShowQueue,
-    queueLength
+    queueLength,
+    isRestored = false
 }) => {
     const theme = useTheme();
 
@@ -67,22 +71,48 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
             />
 
             {/* Song Info */}
-            <Box sx={{ flexGrow: 1, overflow: 'hidden', mr: 2, cursor: song ? 'pointer' : 'default' }} onClick={() => { if (song) onMaximize(); }}>
-                <Typography variant="subtitle2" noWrap sx={{ fontWeight: 'bold', color: song ? 'text.primary' : 'text.disabled' }}>
-                    {song ? song.title : 'No Song Playing'}
-                </Typography>
+            <Box sx={{ flexGrow: 1, overflow: 'hidden', mr: 2, cursor: song ? 'pointer' : 'default' }} onClick={() => { if (song && !isRestored) onMaximize(); }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="subtitle2" noWrap sx={{ fontWeight: 'bold', color: song ? 'text.primary' : 'text.disabled' }}>
+                        {song ? song.title : 'No Song Playing'}
+                    </Typography>
+                    {isRestored && (
+                        <Chip
+                            label="Paused"
+                            size="small"
+                            sx={{
+                                height: 16,
+                                fontSize: '0.6rem',
+                                bgcolor: 'rgba(255,255,255,0.12)',
+                                color: 'text.secondary',
+                                flexShrink: 0
+                            }}
+                        />
+                    )}
+                </Box>
                 <Typography variant="caption" color="text.secondary" noWrap>
-                    {song ? song.artist : 'Select a song or play form queue'}
+                    {song ? song.artist : 'Select a song or play from queue'}
                 </Typography>
             </Box>
 
             {/* Controls */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <IconButton onClick={(e) => { e.stopPropagation(); onTogglePlay(); }} size="medium" sx={{ color: 'white' }}>
-                    {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
-                </IconButton>
+                {isRestored ? (
+                    <IconButton
+                        onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
+                        size="medium"
+                        sx={{ color: theme.palette.secondary.main }}
+                        title="Resume song"
+                    >
+                        <PlayCircleOutlineIcon />
+                    </IconButton>
+                ) : (
+                    <IconButton onClick={(e) => { e.stopPropagation(); onTogglePlay(); }} size="medium" sx={{ color: 'white' }}>
+                        {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
+                    </IconButton>
+                )}
 
-                <IconButton onClick={(e) => { e.stopPropagation(); onNext(); }} size="medium" sx={{ color: 'white' }}>
+                <IconButton onClick={(e) => { e.stopPropagation(); onNext(); }} size="medium" sx={{ color: 'white' }} disabled={isRestored}>
                     <SkipNextIcon />
                 </IconButton>
 

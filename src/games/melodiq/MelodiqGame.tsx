@@ -49,7 +49,7 @@ export const MelodiqGameContent: React.FC = () => {
 
     // Use centralized song management hook
     const { songs, loadingProgress, refreshSongs, getSongById, isLoading } = useSongs();
-    const { queue, popNext, setNowPlaying, addToQueue, addNext } = useQueue();
+    const { queue, popNext, setNowPlaying, addToQueue, addNext, nowPlaying } = useQueue();
     const {
         isTVConnected,
         isPresentationAvailable,
@@ -75,6 +75,10 @@ export const MelodiqGameContent: React.FC = () => {
     const [queueDialogOpen, setQueueDialogOpen] = useState(false);
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
     const [showQueueDrawer, setShowQueueDrawer] = useState(false);
+
+    // Restored Song State: last song from localStorage shown in MiniPlayer after reload
+    // Initialize once on mount from nowPlaying (persisted in localStorage)
+    const [restoredSong, setRestoredSong] = useState<SongMeta | null>(() => nowPlaying ?? null);
 
     // Handle TV Events
     useEffect(() => {
@@ -159,6 +163,13 @@ export const MelodiqGameContent: React.FC = () => {
     // View State
     const [currentView, setCurrentView] = useState<View>('Home');
     const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+
+    // Clear restoredSong as soon as a real session starts
+    useEffect(() => {
+        if (selectedSong || remoteSong) {
+            setRestoredSong(null);
+        }
+    }, [selectedSong, remoteSong]);
 
     // Update Global Header based on state
     // Filter Visibility State
@@ -765,6 +776,8 @@ export const MelodiqGameContent: React.FC = () => {
                 setRemoteSong={setRemoteSong}
                 onShowQueue={() => setShowQueueDrawer(true)}
                 sendGameUpdate={sendGameUpdate}
+                restoredSong={restoredSong}
+                onClearRestoredSong={() => setRestoredSong(null)}
             />
 
             {/* Host Queue Drawer */}
