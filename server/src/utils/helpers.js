@@ -1,0 +1,32 @@
+const { networkInterfaces } = require('os');
+
+const getLocalIp = () => {
+    const nets = networkInterfaces();
+    for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+            if (net.family === 'IPv4' && !net.internal) {
+                return net.address;
+            }
+        }
+    }
+    return 'localhost';
+};
+
+const sanitizeFilename = (str) => {
+    return str.replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ').trim();
+};
+
+const generateId = (title, artist, relPath) => {
+    // Ensure forward slashes for consistency with Client
+    const normalizedPath = relPath.replace(/\\/g, '/');
+    const str = `${artist}-${title}-${normalizedPath}`;
+
+    // Node Buffer is equivalent to UTF-8 encode
+    return Buffer.from(str, 'utf-8').toString('base64').replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
+};
+
+module.exports = {
+    getLocalIp,
+    sanitizeFilename,
+    generateId
+};

@@ -1,7 +1,5 @@
 {
   "directories": [
-    "/home/deck/Music/Ultrastar/Songs",
-    "/home/deck/Music/Ultrastar/Test",
     "/app/music"
   ],
   "port": 3000,

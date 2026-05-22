@@ -11,6 +11,8 @@
     "pkg": {
         "assets": [
             "config.js",
+            "public/**/*",
+            "src/**/*",
             "node_modules/**/*"
         ],
         "targets": [

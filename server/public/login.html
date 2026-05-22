@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Melodiq Helper Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f2f5; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 320px; }
+        input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #1877f2; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        button:hover { background: #166fe5; }
+        h2 { color: #1c1e21; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2 style="margin-top:0; text-align:center;">Melodiq Access</h2>
+        <form method="GET" action="/">
+            <input type="text" name="token" placeholder="Enter Access Token" required>
+            <button type="submit">Connect</button>
+        </form>
+    </div>
+</body>
+</html>

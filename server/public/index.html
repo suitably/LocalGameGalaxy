@@ -1,16 +1,896 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>local-game-galaxy</title>
-    <script type="module" crossorigin src="/assets/index-PqMdAP5q.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/react-vendor-CmxhQM6v.js">
-    <link rel="modulepreload" crossorigin href="/assets/mui-vendor-D0pmftHY.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-CLbN7fOK.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Melodiq Helper</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; background: #f0f2f5; color: #1c1e21; }
+        @media (max-width: 640px) { body { padding: 12px; } }
+        .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 24px; }
+        h1 { color: #1877f2; margin-top: 0; font-size: 1.5rem; }
+        .badge { background: #e7f3ff; color: #1877f2; padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; vertical-align: middle; }
+        button { cursor: pointer; padding: 10px 16px; background: #1877f2; color: white; border: none; border-radius: 6px; font-weight: 600; transition: background 0.2s; }
+        button:hover { background: #166fe5; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        button.secondary { background: #e4e6eb; color: #050505; }
+        button.secondary:hover { background: #d8dadf; }
+        button.danger { background: #fff; color: #dc3545; border: 1px solid #dc3545; padding: 4px 10px; font-size: 0.9rem; }
+        button.danger:hover { background: #dc3545; color: white; }
+        
+        .code-box { background: #242526; color: #4cd964; padding: 16px; font-family: 'SF Mono', Consolas, monospace; font-size: 1.1rem; border-radius: 8px; overflow-x: auto; margin: 10px 0; border: 1px solid #3e4042; }
+        .label { font-size: 0.9rem; font-weight: 600; color: #65676b; margin-bottom: 8px; display: block; }
+        .row { display: flex; gap: 10px; align-items: stretch; }
+        
+        .dir-list { list-style: none; padding: 0; margin: 0; }
+        .dir-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f7f8fa; border-radius: 6px; margin-bottom: 8px; }
+        .dir-path { font-family: monospace; word-break: break-all; font-size: 0.9rem; }
+        
+        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
+
+        a { color: #1877f2; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal-content { background: white; width: 90%; max-width: 500px; margin: 50px auto; padding: 20px; border-radius: 12px; height: 70vh; display: flex; flex-direction: column; }
+        .browser-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .browser-list { overflow-y: auto; flex: 1; border: 1px solid #ddd; border-radius: 4px; }
+        .browser-item { padding: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .browser-item:hover { background: #f5f5f5; }
+        .browser-item.selected { background: #e7f3ff; }
+        .folder-icon { color: #ffd700; width: 20px; display: inline-block; }
+    </style>
+    <script>
+        const API_TOKEN = "{{AUTH_TOKEN}}";
+        let usdbOffset = 0;
+        let usdbTotalResults = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const hostname = window.location.hostname;
+            // Detect if hostname is an IP address or localhost
+            const isIP = /^[0-9\.]+$/.test(hostname) || hostname.includes(':') || hostname.includes('[');
+            const isLocalhost = hostname === 'localhost';
+
+            if (!isIP && !isLocalhost) {
+                // Accessed via domain name (likely reverse proxy with valid cert)
+                const urlDisplay = document.getElementById('urlDisplay');
+                if (urlDisplay) {
+                    urlDisplay.innerText = window.location.origin;
+                }
+                
+                const warningBox = document.getElementById('tv-connection-warning');
+                if (warningBox) {
+                    warningBox.style.display = 'none';
+                }
+            }
+        });
+
+        function copyText(id) {
+            const el = document.getElementById(id);
+            navigator.clipboard.writeText(el.innerText).then(() => {
+                const btn = document.getElementById('btn-' + id);
+                const original = btn.innerText;
+                btn.innerText = 'Copied!';
+                setTimeout(() => btn.innerText = original, 2000);
+            });
+        }
+
+        async function addDir() {
+            const input = document.getElementById('newPath');
+            const path = input.value.trim();
+            if (!path) return;
+            
+            try {
+                 const res = await fetch('/api/config/directories?token=' + API_TOKEN, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ path })
+                });
+                if (res.ok) window.location.reload();
+                else alert('Failed to add directory. Ensure path exists.');
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        async function removeDir(path) {
+            if (!confirm('Remove this directory from configuration?')) return;
+            try {
+                 const res = await fetch('/api/config/directories?token=' + API_TOKEN, {
+                    method: 'DELETE',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ path })
+                });
+                if (res.ok) window.location.reload();
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        let currentBrowserPath = '';
+        
+        async function openBrowser() {
+            document.getElementById('browserModal').style.display = 'block';
+            loadPath('');
+        }
+
+        function closeBrowser() {
+            document.getElementById('browserModal').style.display = 'none';
+        }
+
+        async function loadPath(path) {
+            try {
+                const res = await fetch('/api/browse?path=' + encodeURIComponent(path));
+                 if (res.status === 401) throw new Error("Unauthorized");
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+                
+                currentBrowserPath = data.current;
+                document.getElementById('currentPathDisplay').innerText = data.current;
+                
+                const list = document.getElementById('browserList');
+                list.innerHTML = '';
+                
+                data.dirs.forEach(dir => {
+                    const div = document.createElement('div');
+                    div.className = 'browser-item';
+                    div.innerHTML = `<span class="folder-icon">📁</span> ${dir}`;
+                    div.onclick = () => {
+                        let newPath;
+                        if (dir === '..') {
+                            newPath = currentBrowserPath.endsWith('/') || currentBrowserPath.endsWith('\\') 
+                                ? currentBrowserPath + dir 
+                                : currentBrowserPath + '/' + dir; 
+                        } else {
+                            newPath = currentBrowserPath.endsWith('/') || currentBrowserPath.endsWith('\\') 
+                                ? currentBrowserPath + dir 
+                                : currentBrowserPath + '/' + dir;
+                        }
+                        loadPath(newPath);
+                    };
+                    list.appendChild(div);
+                });
+
+            } catch(e) {
+                alert('Error loading path: ' + e.message);
+            }
+        }
+
+        function selectCurrentPath() {
+            document.getElementById('newPath').value = currentBrowserPath;
+            closeBrowser();
+        }
+    </script>
+</head>
+<body>
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+            <div style="display:flex; align-items:center; gap: 10px;">
+                <h1>Melodiq Helper</h1>
+                <span class="badge">Online (HTTP/HTTPS)</span>
+            </div>
+        </div>
+        
+         <div id="tv-connection-warning" style="background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
+            <strong>TV Connection Info:</strong> Use the HTTPS URL below. When opening on TV/Mobile, you will assume a "Security Warning". Click "Advanced" -> "Proceed (Unsafe)" to accept the self-signed certificate. This is necessary for Mixed Content support.
+        </div>
+
+        <p><strong>{{SONG_COUNT}}</strong> songs cached.</p>
+        <div style="margin-top: 30px;">
+            <span class="label">Music Folders</span>
+            <ul class="dir-list">
+                {{DIRECTORIES}}
+            </ul>
+            <div class="row" style="margin-top: 10px;">
+                <input type="text" id="newPath" placeholder="/path/to/media/folder">
+                <button class="secondary" onclick="openBrowser()">Browse...</button>
+                <button class="secondary" onclick="addDir()">Add</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px;">
+           <span class="label">Network URL (HTTPS - Recommended for TV)</span>
+            <div class="row">
+                <div class="code-box" style="flex:1; margin:0; display:flex; align-items:center;" id="urlDisplay">{{NETWORK_URL}}</div>
+                <button class="secondary" id="btn-urlDisplay" onclick="copyText('urlDisplay')">Copy</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <span class="label">Security Token (Persistent)</span>
+            <div class="row">
+                <div class="code-box" style="flex:1; margin:0; display:flex; align-items:center;" id="tokenDisplay">{{AUTH_TOKEN}}</div>
+                <button class="secondary" id="btn-tokenDisplay" onclick="copyText('tokenDisplay')">Copy</button>
+            </div>
+        </div>
+        
+         <div style="margin-top: 20px;">
+            <span class="label">Alternative HTTP Link</span>
+             <div class="row">
+                <div class="code-box" style="flex:1; margin:0; display:flex; align-items:center; opacity: 0.7; font-size: 0.9rem;">http://{{LOCAL_IP}}:{{PORT}}</div>
+            </div>
+        </div>
+
+    <script>
+       async function rescanLibrary() {
+            const btn = document.getElementById('btn-rescan');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = 'Scanning Library...';
+            
+            try {
+                const res = await fetch('/api/songs/refresh?token=' + API_TOKEN, { method: 'POST' });
+                if (res.ok) {
+                     // Poll for status
+                     const pollInterval = setInterval(async () => {
+                         try {
+                             const statusRes = await fetch('/api/status?token=' + API_TOKEN);
+                             const status = await statusRes.json();
+                             if (!status.scanning) {
+                                 clearInterval(pollInterval);
+                                 btn.innerText = 'Scan Complete!';
+                                 setTimeout(() => window.location.reload(), 1000);
+                             }
+                         } catch(e) {
+                             console.error('Poll failed', e);
+                         }
+                     }, 1000);
+                } else {
+                    const txt = await res.text();
+                    alert('Scan failed to start: ' + txt);
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+    <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+        <button id="btn-rescan" onclick="rescanLibrary()" {{SCAN_DISABLED}} style="width:100%">
+            {{SCAN_TEXT}}
+        </button>
+    </div>
+    </div>
+    
+    <p style="text-align:center; color:#65676b; font-size: 0.9rem;">
+        <a href="/api/songs?limit=10&token={{AUTH_TOKEN}}" target="_blank">Test API Connection</a>
+    </p>
+
+    <div id="browserModal" class="modal">
+        <div class="modal-content">
+            <div class="browser-header">
+                <span style="font-weight:bold" id="currentPathDisplay">...</span>
+                <button class="secondary" onclick="closeBrowser()">Cancel</button>
+            </div>
+            <div class="browser-list" id="browserList">
+            </div>
+            <div style="margin-top: 15px; text-align: right;">
+                <button onclick="selectCurrentPath()">Select This Folder</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== USDB MANAGER CARD ===== -->
+    <div class="card" style="margin-top:24px; border: 1px solid #dde2eb;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 style="margin:0; font-size:1.15rem; color:#1877f2;">📥 USDB Song Manager</h2>
+            <button class="secondary" style="font-size:0.85rem;" onclick="toggleUsdbCard(event)">▲ Minimise</button>
+        </div>
+        <div id="usdb-card-body">
+
+            <!-- USDB Credentials -->
+            <div style="margin-bottom:18px; padding:14px; background:#f7f8fa; border-radius:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <div>
+                        <span class="label" style="margin:0;">USDB Account (usdb.animux.de)</span>
+                        <span id="usdb-creds-summary" style="font-size:0.85rem; color:#65676b; margin-left:8px; font-weight:600;"></span>
+                    </div>
+                    <button class="secondary" style="font-size:0.8rem; padding:2px 8px;" id="btn-toggle-creds" onclick="toggleUsdbCreds()">Edit</button>
+                </div>
+                <div id="usdb-creds-fields" style="margin-top:10px; display:none;">
+                    <div class="row" style="margin-bottom:8px;">
+                        <input type="text"     id="usdb-user" placeholder="Username" style="flex:1;">
+                        <input type="password" id="usdb-pass" placeholder="Password" style="flex:1;">
+                        <button onclick="saveUsdbCreds()" id="btn-save-creds">Save</button>
+                    </div>
+                    <div id="usdb-creds-status" style="font-size:0.85rem; color:#d32f2f;"></div>
+                </div>
+            </div>
+
+            <!-- Download Folder -->
+            <div style="margin-bottom:18px; padding:14px; background:#f7f8fa; border-radius:8px;">
+                <span class="label">Default Download Folder</span>
+                <div class="row">
+                    <input type="text" id="usdb-dldir" placeholder="/path/to/music" style="flex:1;" value="">
+                    <button class="secondary" onclick="openBrowserFor('usdb-dldir')">Browse…</button>
+                    <button onclick="saveDlDir()">Save</button>
+                </div>
+                <div id="usdb-dldir-status" style="font-size:0.85rem; color:#65676b; margin-top:4px;"></div>
+            </div>
+
+            <!-- Search & Filters -->
+            <div style="margin-bottom:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <span class="label" style="margin:0;">Search USDB</span>
+                    <button class="secondary" style="font-size:0.8rem; padding:4px 10px;" onclick="toggleFilters(event)">⚙ Filter</button>
+                </div>
+
+                <!-- Quick search row -->
+                <div class="row" style="margin-bottom:8px;">
+                    <input type="text" id="usdb-f-title" placeholder="Title (empty = any)" style="flex:1;"
+                           onkeydown="if(event.key==='Enter') usdbNewSearch()">
+                    <input type="text" id="usdb-f-artist" placeholder="Artist (empty = any)" style="flex:1;"
+                           onkeydown="if(event.key==='Enter') usdbNewSearch()">
+                    <button onclick="usdbNewSearch()" id="btn-usdb-search">🔍 Search</button>
+                </div>
+
+                <!-- Extended filters (collapsible) -->
+                <div id="usdb-filters" style="display:none; background:#f7f8fa; padding:12px; border-radius:8px; border:1px solid #e4e6eb;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+                        <div>
+                            <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Edition</label>
+                            <input type="text" id="usdb-f-edition" placeholder="any" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Language</label>
+                            <input type="text" id="usdb-f-language" placeholder="any" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Genre</label>
+                            <input type="text" id="usdb-f-genre" placeholder="any" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Year</label>
+                            <input type="text" id="usdb-f-year" placeholder="e.g. 2023" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Creator</label>
+                            <input type="text" id="usdb-f-creator" placeholder="any" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Results per page</label>
+                            <select id="usdb-f-limit" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem; border:1px solid #ddd; border-radius:6px;">
+                                <option value="20">20</option>
+                                <option value="30" selected>30</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+                        <div>
+                            <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Sort by</label>
+                            <select id="usdb-f-order" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem; border:1px solid #ddd; border-radius:6px;">
+                                <option value="id" selected>Date added</option>
+                                <option value="artist">Artist</option>
+                                <option value="title">Title</option>
+                                <option value="language">Language</option>
+                                <option value="edition">Edition</option>
+                                <option value="genre">Genre</option>
+                                <option value="year">Year</option>
+                                <option value="views">Views</option>
+                                <option value="rating">Rating</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Order</label>
+                            <select id="usdb-f-direction" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem; border:1px solid #ddd; border-radius:6px;">
+                                <option value="desc" selected>Descending</option>
+                                <option value="asc">Ascending</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.9rem; cursor:pointer;">
+                            <input type="checkbox" id="usdb-f-golden"> ⭐ Only with golden notes
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.9rem; cursor:pointer;">
+                            <input type="checkbox" id="usdb-f-sc"> 🎤 Only [SC] songs
+                        </label>
+                    </div>
+                    <div style="margin-top:10px; text-align:right;">
+                        <button class="secondary" style="font-size:0.85rem;" onclick="resetFilters()">↺ Reset filters</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results table -->
+            <div id="usdb-results-wrap" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <div style="font-size:0.85rem; color:#65676b;" id="usdb-result-count"></div>
+                    <button id="btn-usdb-bulk-download" onclick="startBulkDownload()" style="display:none; font-size:0.85rem; padding:4px 10px; background:#1877f2; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
+                        📥 Download Selected (0)
+                    </button>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table id="usdb-results-table" style="width:100%; border-collapse:collapse; font-size:0.85rem; white-space:nowrap;">
+                        <thead>
+                            <tr style="background:#f0f2f5; text-align:left;">
+                                <th style="padding:8px 6px; width:30px;"><input type="checkbox" id="usdb-select-all" onclick="toggleSelectAllOnPage(this.checked)"></th>
+                                <th style="padding:8px 6px;">Artist</th>
+                                <th style="padding:8px 6px;">Title</th>
+                                <th style="padding:8px 6px;">Genre</th>
+                                <th style="padding:8px 6px;">Year</th>
+                                <th style="padding:8px 6px;">Edition</th>
+                                <th style="padding:8px 6px;">⭐</th>
+                                <th style="padding:8px 6px;">Lang</th>
+                                <th style="padding:8px 6px;">Creator</th>
+                                <th style="padding:8px 6px;">Rating</th>
+                                <th style="padding:8px 6px;">Views</th>
+                                <th style="padding:8px 6px;">🎬 Video</th>
+                                <th style="padding:8px 6px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="usdb-results-body"></tbody>
+                    </table>
+                </div>
+                <!-- Pagination controls -->
+                <div id="usdb-pagination" style="display:none; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #e4e6eb; padding-top:10px; gap:10px;">
+                    <button class="secondary" id="btn-usdb-prev" onclick="changeUsdbPage(-1)" style="font-size:0.85rem; padding:4px 10px;">◀ Previous</button>
+                    <span id="usdb-page-info" style="font-size:0.85rem; font-weight:600; color:#4e5157;">Page 1</span>
+                    <button class="secondary" id="btn-usdb-next" onclick="changeUsdbPage(1)" style="font-size:0.85rem; padding:4px 10px;">Next ▶</button>
+                </div>
+            </div>
+
+            <!-- Error display -->
+            <div id="usdb-error" style="display:none; color:#dc3545; font-size:0.9rem; margin-top:8px;"></div>
+
+        </div><!-- /usdb-card-body -->
+    </div><!-- /USDB card -->
+
+    <!-- Background Jobs Dashboard -->
+    <div id="usdb-jobs-container" style="display:none; margin-top:20px; background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); padding:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h3 style="margin:0; font-size:1.1rem; color:#1c1e21;">⬇ Downloads Dashboard</h3>
+            <button class="secondary" style="font-size:0.8rem; padding:4px 8px;" onclick="pollJobs()">↻ Refresh</button>
+        </div>
+        <div id="usdb-jobs-list" style="display:flex; flex-direction:column; gap:8px; max-height:500px; overflow-y:auto; padding-right:6px;"></div>
+    </div>
+
+    <script>
+        // ---- USDB Manager JS ----
+        const selectedSongs = new Map();
+        let currentSearchSongs = [];
+        let jobsPollTimer = null;
+        let activeJob = null;
+        let pollTimer = null;
+        let usdbBrowserTarget = null;
+
+        // Load current settings on page load
+        (async () => {
+            try {
+                const r1 = await fetch('/api/config/usdb-credentials?token=' + API_TOKEN);
+                const d1 = await r1.json();
+                if (d1.username) {
+                    document.getElementById('usdb-user').value = d1.username;
+                    const summary = d1.hasPassword
+                        ? '✅ Saved' : '⚠️ No password';
+                    document.getElementById('usdb-creds-summary').textContent = summary;
+                    if (d1.hasPassword) {
+                        document.getElementById('usdb-pass').value = '********';
+                        document.getElementById('usdb-creds-fields').style.display = 'none';
+                        document.getElementById('btn-toggle-creds').textContent = 'Edit';
+                    } else {
+                        document.getElementById('usdb-creds-fields').style.display = '';
+                        document.getElementById('btn-toggle-creds').textContent = 'Hide';
+                    }
+                } else {
+                    document.getElementById('usdb-creds-fields').style.display = '';
+                    document.getElementById('btn-toggle-creds').textContent = 'Hide';
+                }
+            } catch(_) {}
+            try {
+                const r2 = await fetch('/api/config/download-dir?token=' + API_TOKEN);
+                const d2 = await r2.json();
+                if (d2.downloadDir) document.getElementById('usdb-dldir').value = d2.downloadDir;
+            } catch(_) {}
+            
+            // Poll for existing jobs on page load
+            if (typeof pollJobs === 'function') pollJobs();
+        })();
+
+        function toggleUsdbCard(event) {
+            const body = document.getElementById('usdb-card-body');
+            const btn  = event ? (event.currentTarget || event.target) : null;
+            if (!btn) return;
+            if (body.style.display === 'none') { body.style.display = ''; btn.textContent = '▲ Minimise'; }
+            else { body.style.display = 'none'; btn.textContent = '▼ Expand'; }
+        }
+
+        function toggleUsdbCreds() {
+            const fields = document.getElementById('usdb-creds-fields');
+            const btn = document.getElementById('btn-toggle-creds');
+            if (fields.style.display === 'none') {
+                fields.style.display = '';
+                btn.textContent = 'Hide';
+            } else {
+                fields.style.display = 'none';
+                btn.textContent = 'Edit';
+            }
+        }
+
+        async function saveUsdbCreds() {
+            const username = document.getElementById('usdb-user').value.trim();
+            const password = document.getElementById('usdb-pass').value;
+            if (!username) { alert('Username is required.'); return; }
+            const btn = document.getElementById('btn-save-creds');
+            btn.disabled = true; btn.textContent = 'Saving…';
+            document.getElementById('usdb-creds-status').textContent = '';
+            try {
+                const r = await fetch('/api/config/usdb-credentials?token=' + API_TOKEN, {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ username, password })
+                });
+                const d = await r.json();
+                if (d.ok) {
+                    document.getElementById('usdb-creds-summary').textContent = '✅ Saved';
+                    document.getElementById('usdb-creds-fields').style.display = 'none';
+                    document.getElementById('btn-toggle-creds').textContent = 'Edit';
+                    document.getElementById('usdb-creds-status').textContent = '';
+                } else {
+                    document.getElementById('usdb-creds-status').textContent = '❌ ' + (d.error || 'Error');
+                }
+            } catch(e) { document.getElementById('usdb-creds-status').textContent = '❌ ' + e.message; }
+            btn.disabled = false; btn.textContent = 'Save';
+        }
+
+        async function saveDlDir() {
+            const dir = document.getElementById('usdb-dldir').value.trim();
+            if (!dir) return;
+            const r = await fetch('/api/config/download-dir?token=' + API_TOKEN, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ dir })
+            });
+            const d = await r.json();
+            document.getElementById('usdb-dldir-status').textContent = d.downloadDir ? '✅ Saved: ' + d.downloadDir : '❌ ' + (d.error || 'Error');
+        }
+
+        // Override selectCurrentPath to support USDB folder picker
+        const _origSelect = selectCurrentPath;
+        function selectCurrentPath() {
+            if (usdbBrowserTarget) {
+                document.getElementById(usdbBrowserTarget).value = currentBrowserPath;
+                usdbBrowserTarget = null;
+                closeBrowser();
+            } else {
+                _origSelect();
+            }
+        }
+
+        function openBrowserFor(inputId) {
+            usdbBrowserTarget = inputId;
+            openBrowser();
+        }
+
+        function toggleFilters(event) {
+            const el = document.getElementById('usdb-filters');
+            const btn = event ? event.target : null;
+            if (!btn) return;
+            if (el.style.display === 'none') { el.style.display = 'block'; btn.textContent = '✕ Filter'; }
+            else { el.style.display = 'none'; btn.textContent = '⚙ Filter'; }
+        }
+        
+        function resetFilters() {
+            ['usdb-f-title','usdb-f-artist','usdb-f-edition','usdb-f-language',
+             'usdb-f-genre','usdb-f-year','usdb-f-creator'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('usdb-f-limit').value = '30';
+            document.getElementById('usdb-f-order').value = 'id';
+            document.getElementById('usdb-f-direction').value = 'desc';
+            document.getElementById('usdb-f-golden').checked = false;
+            document.getElementById('usdb-f-sc').checked = false;
+            usdbOffset = 0;
+            usdbTotalResults = 0;
+            document.getElementById('usdb-results-wrap').style.display = 'none';
+        }
+
+        function usdbNewSearch() {
+            usdbOffset = 0;
+            doUsdbSearch();
+        }
+
+        function changeUsdbPage(dir) {
+            const limit = parseInt(document.getElementById('usdb-f-limit').value, 10) || 30;
+            usdbOffset += dir * limit;
+            if (usdbOffset < 0) usdbOffset = 0;
+            doUsdbSearch();
+        }
+
+        async function doUsdbSearch() {
+            const title    = document.getElementById('usdb-f-title').value.trim();
+            const artist   = document.getElementById('usdb-f-artist').value.trim();
+            const edition  = document.getElementById('usdb-f-edition').value.trim();
+            const language = document.getElementById('usdb-f-language').value.trim();
+            const genre    = document.getElementById('usdb-f-genre').value.trim();
+            const year     = document.getElementById('usdb-f-year').value.trim();
+            const creator  = document.getElementById('usdb-f-creator').value.trim();
+            const limit    = document.getElementById('usdb-f-limit').value;
+            const order    = document.getElementById('usdb-f-order').value;
+            const dir      = document.getElementById('usdb-f-direction').value;
+            const golden   = document.getElementById('usdb-f-golden').checked ? '1' : '0';
+            const sc       = document.getElementById('usdb-f-sc').checked ? '1' : '0';
+
+            const btn = document.getElementById('btn-usdb-search');
+            btn.disabled = true; btn.textContent = '...';
+            document.getElementById('usdb-error').style.display = 'none';
+
+            const params = new URLSearchParams({
+                title, artist, edition, language, genre, year, creator,
+                limit, order, direction: dir, golden, sc, offset: usdbOffset
+            });
+
+            try {
+                const r = await fetch('/api/usdb/search?token=' + API_TOKEN + '&' + params.toString());
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.error || 'Search failed');
+                renderUsdbResults(data.songs, data.totalResults, parseInt(limit, 10));
+            } catch(e) {
+                const errEl = document.getElementById('usdb-error');
+                errEl.textContent = '❌ ' + e.message;
+                errEl.style.display = 'block';
+            }
+            btn.disabled = false; btn.textContent = '🔍 Search';
+        }
+
+        function renderUsdbResults(songs, totalResults, limit) {
+            const tbody = document.getElementById('usdb-results-body');
+            tbody.innerHTML = '';
+            
+            usdbTotalResults = totalResults || 0;
+            currentSearchSongs = songs;
+
+            if (usdbTotalResults > 0) {
+                const startNum = usdbOffset + 1;
+                const endNum = Math.min(usdbOffset + limit, usdbTotalResults);
+                document.getElementById('usdb-result-count').textContent = 
+                    usdbTotalResults + ' result(s) found (showing ' + startNum + '-' + endNum + ')';
+            } else {
+                document.getElementById('usdb-result-count').textContent = '0 result(s) found';
+            }
+
+            if (songs.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td colspan="13" style="padding:16px; text-align:center; color:#888;">No results found. Try different search terms.</td>';
+                tbody.appendChild(tr);
+                document.getElementById('usdb-pagination').style.display = 'none';
+                document.getElementById('usdb-results-wrap').style.display = 'block';
+                return;
+            }
+
+            const pag = document.getElementById('usdb-pagination');
+            if (usdbTotalResults > limit) {
+                pag.style.display = 'flex';
+                document.getElementById('btn-usdb-prev').disabled = (usdbOffset === 0);
+                document.getElementById('btn-usdb-next').disabled = (usdbOffset + limit >= usdbTotalResults);
+                
+                const currentPage = Math.floor(usdbOffset / limit) + 1;
+                const totalPages = Math.ceil(usdbTotalResults / limit);
+                document.getElementById('usdb-page-info').textContent = 'Page ' + currentPage + ' of ' + totalPages;
+            } else {
+                pag.style.display = 'none';
+            }
+
+            songs.forEach((s, i) => {
+                const esc = v => (v||'').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #f0f0f0';
+                tr.onmouseover = () => tr.style.background = '#f7f8fa';
+                tr.onmouseout  = () => tr.style.background = '';
+                const isSelected = selectedSongs.has(s.usdbId);
+                tr.innerHTML = `
+                    <td style="padding:8px 6px;"><input type="checkbox" class="usdb-row-checkbox" data-idx="${i}" ${isSelected ? 'checked' : ''} onchange="toggleSongSelection(${i}, this.checked)"></td>
+                    <td style="padding:8px 6px; max-width:160px; overflow:hidden; text-overflow:ellipsis;" title="${esc(s.artist)}">${esc(s.artist)}</td>
+                    <td style="padding:8px 6px; max-width:180px; overflow:hidden; text-overflow:ellipsis; font-weight:500;" title="${esc(s.title)}">${esc(s.title)}</td>
+                    <td style="padding:8px 6px; color:#888; font-size:0.8rem;">${esc(s.genre)}</td>
+                    <td style="padding:8px 6px; color:#888; font-size:0.8rem;">${esc(s.year)}</td>
+                    <td style="padding:8px 6px; color:#888; font-size:0.8rem; max-width:100px; overflow:hidden; text-overflow:ellipsis;" title="${esc(s.edition)}">${esc(s.edition)}</td>
+                    <td style="padding:8px 6px; text-align:center;">${s.goldenNotes || ''}</td>
+                    <td style="padding:8px 6px; color:#888; font-size:0.8rem;">${esc(s.language)}</td>
+                    <td style="padding:8px 6px; color:#888; font-size:0.8rem; max-width:90px; overflow:hidden; text-overflow:ellipsis;" title="${esc(s.creator)}">${esc(s.creator)}</td>
+                    <td style="padding:8px 6px; color:#f5a623; font-size:0.8rem; letter-spacing:-1px;">${esc(s.rating)}</td>
+                    <td style="padding:8px 6px; color:#888; font-size:0.8rem;">${esc(s.views)}</td>
+                    <td style="padding:8px 6px;">
+                        <select id="vmode-${i}" style="padding:4px 6px; border-radius:4px; border:1px solid #ddd; font-size:0.8rem;" onchange="updateVideoMode(${i}, this.value)">
+                            <option value="mp4">🎬 MP4</option>
+                            <option value="stream">📡 Stream</option>
+                            <option value="none" selected>🎵 Audio</option>
+                        </select>
+                    </td>
+                    <td style="padding:8px 6px; text-align:right;">
+                        <button id="dl-btn-${i}" onclick="startDownload(${i}, '${esc(s.usdbId)}')" style="padding:5px 10px; font-size:0.8rem;">
+                            ⬇
+                        </button>
+                    </td>
+                `;
+                tr.dataset.artist = s.artist;
+                tr.dataset.title  = s.title;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('usdb-results-wrap').style.display = 'block';
+            updateBulkDownloadButton();
+        }
+
+        function toggleSongSelection(idx, checked) {
+            const s = currentSearchSongs[idx];
+            const vmode = document.getElementById('vmode-' + idx).value;
+            if (checked) {
+                selectedSongs.set(s.usdbId, { usdbId: s.usdbId, artist: s.artist, title: s.title, videoMode: vmode });
+            } else {
+                selectedSongs.delete(s.usdbId);
+            }
+            updateBulkDownloadButton();
+        }
+
+        function toggleSelectAllOnPage(checked) {
+            const checkboxes = document.querySelectorAll('.usdb-row-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = checked;
+                const idx = parseInt(cb.dataset.idx, 10);
+                const s = currentSearchSongs[idx];
+                const vmode = document.getElementById('vmode-' + idx).value;
+                if (checked) {
+                    selectedSongs.set(s.usdbId, { usdbId: s.usdbId, artist: s.artist, title: s.title, videoMode: vmode });
+                } else {
+                    selectedSongs.delete(s.usdbId);
+                }
+            });
+            updateBulkDownloadButton();
+        }
+
+        function updateVideoMode(idx, value) {
+            const s = currentSearchSongs[idx];
+            if (selectedSongs.has(s.usdbId)) {
+                selectedSongs.get(s.usdbId).videoMode = value;
+            }
+        }
+
+        function updateBulkDownloadButton() {
+            const btn = document.getElementById('btn-usdb-bulk-download');
+            const count = selectedSongs.size;
+            if (count > 0) {
+                btn.style.display = 'inline-block';
+                btn.textContent = '📥 Download Selected (' + count + ')';
+            } else {
+                btn.style.display = 'none';
+            }
+            
+            const allCbs = document.querySelectorAll('.usdb-row-checkbox');
+            const allChecked = allCbs.length > 0 && Array.from(allCbs).every(cb => cb.checked);
+            const selectAllCb = document.getElementById('usdb-select-all');
+            if (selectAllCb) selectAllCb.checked = allChecked;
+        }
+
+        async function startBulkDownload() {
+            if (selectedSongs.size === 0) return;
+            const requests = Array.from(selectedSongs.values());
+            
+            const btn = document.getElementById('btn-usdb-bulk-download');
+            btn.disabled = true;
+            btn.textContent = '⏳ Enqueuing...';
+            
+            try {
+                const r = await fetch('/api/usdb/download?token=' + API_TOKEN, {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(requests)
+                });
+                const d = await r.json();
+                if (!r.ok) throw new Error(d.error || 'Failed to start downloads');
+                
+                // Clear selections
+                selectedSongs.clear();
+                document.querySelectorAll('.usdb-row-checkbox').forEach(cb => cb.checked = false);
+                updateBulkDownloadButton();
+                
+                pollJobs();
+            } catch(e) {
+                alert('Error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                updateBulkDownloadButton();
+            }
+        }
+
+        async function startDownload(idx, usdbId) {
+            const rows  = document.getElementById('usdb-results-body').children;
+            const row   = rows[idx];
+            const vmode = document.getElementById('vmode-' + idx).value;
+            const artist = row.dataset.artist;
+            const title  = row.dataset.title;
+
+            const btn = document.getElementById('dl-btn-' + idx);
+            btn.disabled = true; btn.textContent = '⏳';
+
+            try {
+                const r = await fetch('/api/usdb/download?token=' + API_TOKEN, {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify([{ usdbId, artist, title, videoMode: vmode }])
+                });
+                const d = await r.json();
+                if (!r.ok) throw new Error(d.error || 'Failed to start download');
+                
+                btn.textContent = '✅';
+                pollJobs();
+            } catch(e) {
+                alert('Error: ' + e.message);
+                btn.disabled = false; btn.textContent = '⬇ Download';
+            }
+        }
+
+        async function pollJobs() {
+            try {
+                const r = await fetch('/api/usdb/jobs?token=' + API_TOKEN);
+                if (!r.ok) return;
+                const jobsList = await r.json();
+                
+                const containerWrap = document.getElementById('usdb-jobs-container');
+                const listWrap = document.getElementById('usdb-jobs-list');
+                
+                if (jobsList.length === 0) {
+                    containerWrap.style.display = 'none';
+                    return;
+                }
+                
+                containerWrap.style.display = 'block';
+                
+                const openJobIds = new Set();
+                listWrap.querySelectorAll('details[open]').forEach(d => openJobIds.add(d.dataset.jobid));
+                listWrap.innerHTML = '';
+                
+                let activeCount = 0;
+                jobsList.slice().reverse().forEach(j => { // Newest top
+                    if (j.status === 'pending' || j.status === 'running') activeCount++;
+                    
+                    let color = '#65676b';
+                    let statusIcon = '⏳';
+                    if (j.status === 'running') { color = '#1877f2'; statusIcon = '▶️'; }
+                    else if (j.status === 'done') { color = '#28a745'; statusIcon = '✅'; }
+                    else if (j.status === 'error') { color = '#dc3545'; statusIcon = '❌'; }
+                    
+                    const div = document.createElement('div');
+                    div.style.border = '1px solid #e4e6eb';
+                    div.style.borderRadius = '6px';
+                    div.style.padding = '8px 12px';
+                    div.style.background = j.status === 'running' ? '#f0f7ff' : '#fff';
+                    
+                    const isOpen = openJobIds.has(j.jobId) || j.status === 'running';
+                    
+                    div.innerHTML = `
+                        <details data-jobid="${j.jobId}" ${isOpen ? 'open' : ''}>
+                            <summary style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; outline:none;">
+                                <div style="font-weight:600; font-size:0.9rem;">
+                                    ${statusIcon} ${j.artist} - ${j.title}
+                                </div>
+                                <div style="font-size:0.85rem; color:${color}; font-weight:bold;">
+                                    ${j.status === 'error' ? 'Error' : j.progress + '%'}
+                                </div>
+                            </summary>
+                            <div style="margin-top:8px;">
+                                <div style="background:#e4e6eb; border-radius:4px; height:6px; overflow:hidden; margin-bottom:8px;">
+                                    <div style="background:${color}; height:100%; width:${j.progress}%; transition:width 0.4s;"></div>
+                                </div>
+                                <div style="background:#1c1e21; color:#4cd964; font-family:monospace; font-size:0.75rem;
+                                               padding:8px; border-radius:4px; max-height:150px; overflow-y:auto; white-space:pre-wrap;">${(j.log || []).join('\n')}</div>
+                            </div>
+                        </details>
+                    `;
+                    listWrap.appendChild(div);
+                    
+                    if (j.status === 'running' || j.status === 'error' || j.status === 'pending') {
+                        setTimeout(() => {
+                            const logBox = div.querySelector('div[style*="overflow-y:auto"]');
+                            if (logBox) logBox.scrollTop = logBox.scrollHeight;
+                        }, 50);
+                    }
+                });
+                
+                if (activeCount > 0) {
+                    if (!jobsPollTimer) jobsPollTimer = setInterval(pollJobs, 1500);
+                } else {
+                    if (jobsPollTimer) { clearInterval(jobsPollTimer); jobsPollTimer = null; }
+                }
+            } catch (e) {}
+        }
+    </script>
+
+</body>
 </html>
