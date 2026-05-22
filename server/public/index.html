@@ -4,7 +4,7 @@
     <title>Melodiq Helper</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; background: #f0f2f5; color: #1c1e21; }
+        body { font-family: system-ui, -apple-system, sans-serif; max-width: 100%; margin: 0 auto; padding: 20px; background: #f0f2f5; color: #1c1e21; }
         @media (max-width: 640px) { body { padding: 12px; } }
         .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 24px; }
         h1 { color: #1877f2; margin-top: 0; font-size: 1.5rem; }
@@ -62,6 +62,8 @@
                     warningBox.style.display = 'none';
                 }
             }
+            // Auto-load local songs
+            searchLocalSongs();
         });
 
         function copyText(id) {
@@ -154,6 +156,284 @@
         function selectCurrentPath() {
             document.getElementById('newPath').value = currentBrowserPath;
             closeBrowser();
+        }
+
+        // --- LOCAL SONGS MANAGEMENT & CUSTOM DOWNLOADS JS ---
+        let localSongsPage = 1;
+        const localSongsLimit = 20;
+        let localSongsTotal = 0;
+        let currentLocalSongs = [];
+        let editingSongId = null;
+        let reDownloadingSongId = null;
+
+        function toggleLocalLibraryCard(event) {
+            const body = document.getElementById('local-library-card-body');
+            const btn  = event ? (event.currentTarget || event.target) : null;
+            if (!btn) return;
+            if (body.style.display === 'none') { body.style.display = ''; btn.textContent = '▲ Minimise'; }
+            else { body.style.display = 'none'; btn.textContent = '▼ Expand'; }
+        }
+
+        async function searchLocalSongs(resetPage = true) {
+            if (resetPage) localSongsPage = 1;
+            const searchVal = document.getElementById('local-search-input').value.trim();
+            const btn = document.getElementById('btn-local-search');
+            btn.disabled = true; btn.textContent = '...';
+
+            try {
+                const res = await fetch(`/api/songs?page=${localSongsPage}&limit=${localSongsLimit}&search=${encodeURIComponent(searchVal)}&token=${API_TOKEN}`);
+                if (!res.ok) throw new Error('Failed to load songs');
+                
+                const totalCount = parseInt(res.headers.get('X-Total-Count')) || 0;
+                localSongsTotal = totalCount;
+                
+                const songs = await res.json();
+                currentLocalSongs = songs;
+                renderLocalSongs(songs);
+            } catch(e) {
+                console.error(e);
+            } finally {
+                btn.disabled = false; btn.textContent = '🔍 Search';
+            }
+        }
+
+        function renderLocalSongs(songs) {
+            const tbody = document.getElementById('local-songs-body');
+            tbody.innerHTML = '';
+
+            const pag = document.getElementById('local-pagination');
+            if (localSongsTotal > localSongsLimit) {
+                pag.style.display = 'flex';
+                document.getElementById('btn-local-prev').disabled = (localSongsPage === 1);
+                document.getElementById('btn-local-next').disabled = (localSongsPage * localSongsLimit >= localSongsTotal);
+                
+                const totalPages = Math.ceil(localSongsTotal / localSongsLimit);
+                document.getElementById('local-page-info').textContent = 'Page ' + localSongsPage + ' of ' + totalPages;
+            } else {
+                pag.style.display = 'none';
+            }
+
+            if (songs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="padding:16px; text-align:center; color:#888;">No local songs found.</td></tr>';
+                return;
+            }
+
+            songs.forEach(song => {
+                const hasAudio = !!song.audio;
+                const hasVideo = !!song.video;
+                const hasCover = !!song.cover;
+                
+                let fileBadges = '';
+                if (hasAudio) fileBadges += '<span style="background:#d4edda; color:#155724; padding:2px 6px; border-radius:4px; font-size:0.75rem; margin-right:4px;">🎵 Audio</span>';
+                if (hasVideo) {
+                    const isStream = song.video.includes('youtube.com') || song.video.includes('youtu.be') || song.video.includes('&path=https');
+                    if (isStream) {
+                        fileBadges += '<span style="background:#e2e3e5; color:#383d41; padding:2px 6px; border-radius:4px; font-size:0.75rem; margin-right:4px;">📡 Stream</span>';
+                    } else {
+                        fileBadges += '<span style="background:#cce5ff; color:#004085; padding:2px 6px; border-radius:4px; font-size:0.75rem; margin-right:4px;">🎬 Video</span>';
+                    }
+                }
+                if (hasCover) fileBadges += '<span style="background:#fff3cd; color:#856404; padding:2px 6px; border-radius:4px; font-size:0.75rem; margin-right:4px;">🖼️ Cover</span>';
+
+                const esc = v => (v||'').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #f0f0f0';
+                tr.onmouseover = () => tr.style.background = '#f7f8fa';
+                tr.onmouseout  = () => tr.style.background = '';
+                
+                tr.innerHTML = `
+                    <td style="padding:8px 6px; max-width:200px; overflow:hidden; text-overflow:ellipsis;" title="${esc(song.artist)}">${esc(song.artist)}</td>
+                    <td style="padding:8px 6px; max-width:250px; overflow:hidden; text-overflow:ellipsis; font-weight:500;" title="${esc(song.title)}">${esc(song.title)}</td>
+                    <td style="padding:8px 6px;">${fileBadges}</td>
+                    <td style="padding:8px 6px; text-align:right;">
+                        <button class="secondary" style="padding:4px 8px; font-size:0.8rem; margin-right:4px;" onclick="openEditTxtModal('${esc(song.id)}')">✏️ Edit TXT</button>
+                        <button class="secondary" style="padding:4px 8px; font-size:0.8rem; margin-right:4px;" onclick="openReDownloadModal('${esc(song.id)}')">🔄 Re-download</button>
+                        <button class="danger" style="padding:4px 8px; font-size:0.8rem;" onclick="deleteSong('${esc(song.id)}', '${esc(song.artist)} - ${esc(song.title)}')">🗑️ Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function changeLocalPage(dir) {
+            localSongsPage += dir;
+            if (localSongsPage < 1) localSongsPage = 1;
+            searchLocalSongs(false);
+        }
+
+        async function startManualDownload() {
+            const artist = document.getElementById('manual-artist').value.trim();
+            const title = document.getElementById('manual-title').value.trim();
+            const youtubeUrl = document.getElementById('manual-yturl').value.trim();
+            const usdbId = document.getElementById('manual-usdbid').value.trim();
+            const videoMode = document.getElementById('manual-vmode').value;
+            const statusDiv = document.getElementById('manual-status');
+
+            if (!artist || !title || !youtubeUrl) {
+                alert('Artist, Title, and YouTube URL are required.');
+                return;
+            }
+
+            statusDiv.textContent = '⏳ Enqueuing download...';
+            try {
+                const res = await fetch('/api/usdb/download?token=' + API_TOKEN, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        usdbId: usdbId || null,
+                        artist,
+                        title,
+                        videoMode,
+                        youtubeUrl
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to start download');
+                
+                statusDiv.innerHTML = '<span style="color:#28a745;">✅ Download started. Check the Dashboard below!</span>';
+                document.getElementById('manual-artist').value = '';
+                document.getElementById('manual-title').value = '';
+                document.getElementById('manual-yturl').value = '';
+                document.getElementById('manual-usdbid').value = '';
+                
+                pollJobs();
+            } catch(e) {
+                statusDiv.innerHTML = `<span style="color:#dc3545;">❌ Error: ${e.message}</span>`;
+            }
+        }
+
+        function openEditTxtModal(songId) {
+            editingSongId = songId;
+            document.getElementById('editTxtStatus').textContent = '';
+            document.getElementById('editTxtContent').value = 'Loading...';
+            document.getElementById('editTxtModal').style.display = 'block';
+
+            const song = currentLocalSongs.find(s => s.id === songId);
+            if (!song) {
+                document.getElementById('editTxtContent').value = 'Error: Song details not found.';
+                return;
+            }
+            document.getElementById('editTxtTitle').textContent = `Edit TXT: ${song.artist} - ${song.title}`;
+            document.getElementById('editTxtContent').value = song.txtContent || '';
+        }
+
+        function closeEditTxtModal() {
+            document.getElementById('editTxtModal').style.display = 'none';
+            editingSongId = null;
+        }
+
+        async function saveTxtFile() {
+            if (!editingSongId) return;
+            const txtContent = document.getElementById('editTxtContent').value;
+            const statusSpan = document.getElementById('editTxtStatus');
+            statusSpan.textContent = 'Saving...';
+
+            try {
+                const res = await fetch(`/api/songs/${editingSongId}/txt?token=${API_TOKEN}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ txtContent })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to save');
+                
+                statusSpan.innerHTML = '<span style="color:#28a745;">✅ Saved successfully!</span>';
+                setTimeout(() => {
+                    closeEditTxtModal();
+                    searchLocalSongs(false);
+                }, 1000);
+            } catch(e) {
+                statusSpan.innerHTML = `<span style="color:#dc3545;">❌ Error: ${e.message}</span>`;
+            }
+        }
+
+        function openReDownloadModal(songId) {
+            reDownloadingSongId = songId;
+            const song = currentLocalSongs.find(s => s.id === songId);
+            if (!song) return;
+
+            document.getElementById('reDownloadTitle').textContent = `Re-download: ${song.artist} - ${song.title}`;
+            document.getElementById('redownload-yturl').value = '';
+            
+            const select = document.getElementById('redownload-vmode');
+            if (song.video) {
+                const isStream = song.video.includes('youtube.com') || song.video.includes('youtu.be') || song.video.includes('&path=https');
+                select.value = isStream ? 'stream' : 'mp4';
+            } else {
+                select.value = 'none';
+            }
+
+            document.getElementById('reDownloadStatus').textContent = '';
+            document.getElementById('reDownloadModal').style.display = 'block';
+        }
+
+        function closeReDownloadModal() {
+            document.getElementById('reDownloadModal').style.display = 'none';
+            reDownloadingSongId = null;
+        }
+
+        async function triggerReDownload() {
+            if (!reDownloadingSongId) return;
+            const song = currentLocalSongs.find(s => s.id === reDownloadingSongId);
+            if (!song) return;
+
+            const videoMode = document.getElementById('redownload-vmode').value;
+            const youtubeUrl = document.getElementById('redownload-yturl').value.trim();
+            const statusSpan = document.getElementById('reDownloadStatus');
+
+            statusSpan.textContent = 'Enqueuing...';
+
+            try {
+                let separator = '/';
+                if (song.txtPath && song.txtPath.includes('\\')) {
+                    separator = '\\';
+                }
+                const targetDir = song.txtPath ? song.txtPath.substring(0, song.txtPath.lastIndexOf(separator)) : null;
+                const txtFilename = song.txtPath ? song.txtPath.substring(song.txtPath.lastIndexOf(separator) + 1) : null;
+                const safeName = txtFilename ? txtFilename.substring(0, txtFilename.lastIndexOf('.')) : null;
+
+                const res = await fetch('/api/usdb/download?token=' + API_TOKEN, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        artist: song.artist,
+                        title: song.title,
+                        videoMode,
+                        youtubeUrl: youtubeUrl || null,
+                        targetDir: targetDir,
+                        safeName: safeName
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to start download');
+
+                statusSpan.innerHTML = '<span style="color:#28a745;">✅ Enqueued!</span>';
+                setTimeout(() => {
+                    closeReDownloadModal();
+                    pollJobs();
+                }, 1000);
+            } catch(e) {
+                statusSpan.innerHTML = `<span style="color:#dc3545;">❌ Error: ${e.message}</span>`;
+            }
+        }
+
+        async function deleteSong(songId, songLabel) {
+            if (!confirm(`Are you sure you want to delete "${songLabel}"? This will delete the song files and folder from disk.`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/songs/${songId}?token=${API_TOKEN}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to delete song');
+                
+                alert('Song deleted successfully.');
+                searchLocalSongs(false);
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
         }
     </script>
 </head>
@@ -268,6 +548,92 @@
         </div>
     </div>
 
+    <!-- ===== LOCAL SONGS LIBRARY CARD ===== -->
+    <div class="card" style="margin-top:24px; border: 1px solid #dde2eb;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 style="margin:0; font-size:1.15rem; color:#1877f2;">🎵 Local Songs Library</h2>
+            <button class="secondary" style="font-size:0.85rem;" onclick="toggleLocalLibraryCard(event)">▲ Minimise</button>
+        </div>
+        <div id="local-library-card-body">
+            <!-- Search row -->
+            <div class="row" style="margin-bottom:14px;">
+                <input type="text" id="local-search-input" placeholder="Search local songs (Artist / Title / Genre / Language...)" onkeydown="if(event.key==='Enter') searchLocalSongs()">
+                <button onclick="searchLocalSongs()" id="btn-local-search">🔍 Search</button>
+            </div>
+            
+            <!-- Results table -->
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.85rem; white-space:nowrap;">
+                    <thead>
+                        <tr style="background:#f0f2f5; text-align:left;">
+                            <th style="padding:8px 6px;">Artist</th>
+                            <th style="padding:8px 6px;">Title</th>
+                            <th style="padding:8px 6px;">Files</th>
+                            <th style="padding:8px 6px; text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="local-songs-body">
+                        <tr>
+                            <td colspan="4" style="padding:16px; text-align:center; color:#888;">Load songs by clicking Search or typing a query.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div id="local-pagination" style="display:none; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #e4e6eb; padding-top:10px; gap:10px;">
+                <button class="secondary" id="btn-local-prev" onclick="changeLocalPage(-1)" style="font-size:0.85rem; padding:4px 10px;">◀ Previous</button>
+                <span id="local-page-info" style="font-size:0.85rem; font-weight:600; color:#4e5157;">Page 1</span>
+                <button class="secondary" id="btn-local-next" onclick="changeLocalPage(1)" style="font-size:0.85rem; padding:4px 10px;">Next ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit TXT Modal -->
+    <div id="editTxtModal" class="modal">
+        <div class="modal-content" style="max-width: 700px; height: 85vh;">
+            <div class="browser-header">
+                <span style="font-weight:bold" id="editTxtTitle">Edit Song TXT</span>
+                <button class="secondary" onclick="closeEditTxtModal()">Cancel</button>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; margin-bottom:15px;">
+                <textarea id="editTxtContent" style="width:100%; flex:1; font-family:monospace; padding:10px; box-sizing:border-box; border:1px solid #ddd; border-radius:6px; resize:none;"></textarea>
+            </div>
+            <div style="text-align: right; display:flex; justify-content:space-between; align-items:center;">
+                <span id="editTxtStatus" style="font-size:0.85rem; color:#65676b;"></span>
+                <button onclick="saveTxtFile()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Re-download Modal -->
+    <div id="reDownloadModal" class="modal">
+        <div class="modal-content" style="max-width: 500px; height: auto; min-height: 250px;">
+            <div class="browser-header">
+                <span style="font-weight:bold" id="reDownloadTitle">Re-download Song</span>
+                <button class="secondary" onclick="closeReDownloadModal()">Cancel</button>
+            </div>
+            <div style="padding:10px 0;">
+                <div style="margin-bottom:12px;">
+                    <span class="label">Video Mode</span>
+                    <select id="redownload-vmode" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ddd; font-size:1rem;">
+                        <option value="mp4">🎬 MP4</option>
+                        <option value="stream">📡 Stream</option>
+                        <option value="none">🎵 Audio Only</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <span class="label">Custom YouTube URL (Optional)</span>
+                    <input type="text" id="redownload-yturl" placeholder="Paste specific video link to base song on">
+                </div>
+            </div>
+            <div style="text-align: right; display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+                <span id="reDownloadStatus" style="font-size:0.85rem; color:#65676b;"></span>
+                <button onclick="triggerReDownload()">Start Download</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== USDB MANAGER CARD ===== -->
     <div class="card" style="margin-top:24px; border: 1px solid #dde2eb;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
@@ -275,6 +641,30 @@
             <button class="secondary" style="font-size:0.85rem;" onclick="toggleUsdbCard(event)">▲ Minimise</button>
         </div>
         <div id="usdb-card-body">
+            
+            <!-- Manual Download Form -->
+            <div style="margin-bottom:18px; padding:14px; background:#f7f8fa; border-radius:8px; border:1px solid #e4e6eb;">
+                <span class="label" style="margin-top:0;">Download via specific YouTube Link</span>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+                    <div>
+                        <input type="text" id="manual-artist" placeholder="Artist (required)">
+                    </div>
+                    <div>
+                        <input type="text" id="manual-title" placeholder="Title (required)">
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; margin-bottom:8px; align-items:stretch;">
+                    <input type="text" id="manual-yturl" placeholder="YouTube URL (e.g. https://www.youtube.com/watch?...)" style="flex:1;">
+                    <input type="text" id="manual-usdbid" placeholder="Optional USDB ID" style="width:120px;">
+                    <select id="manual-vmode" style="padding:10px; border-radius:6px; border:1px solid #ddd; font-size:1rem; box-sizing:border-box;">
+                        <option value="mp4">🎬 MP4</option>
+                        <option value="stream">📡 Stream</option>
+                        <option value="none" selected>🎵 Audio Only</option>
+                    </select>
+                    <button onclick="startManualDownload()">Download</button>
+                </div>
+                <div id="manual-status" style="font-size:0.85rem; color:#65676b;"></div>
+            </div>
 
             <!-- USDB Credentials -->
             <div style="margin-bottom:18px; padding:14px; background:#f7f8fa; border-radius:8px;">
@@ -678,14 +1068,14 @@
                 const isSelected = selectedSongs.has(s.usdbId);
                 tr.innerHTML = `
                     <td style="padding:8px 6px;"><input type="checkbox" class="usdb-row-checkbox" data-idx="${i}" ${isSelected ? 'checked' : ''} onchange="toggleSongSelection(${i}, this.checked)"></td>
-                    <td style="padding:8px 6px; max-width:160px; overflow:hidden; text-overflow:ellipsis;" title="${esc(s.artist)}">${esc(s.artist)}</td>
-                    <td style="padding:8px 6px; max-width:180px; overflow:hidden; text-overflow:ellipsis; font-weight:500;" title="${esc(s.title)}">${esc(s.title)}</td>
+                    <td style="padding:8px 6px; max-width:300px; overflow:hidden; text-overflow:ellipsis;" title="${esc(s.artist)}">${esc(s.artist)}</td>
+                    <td style="padding:8px 6px; max-width:400px; overflow:hidden; text-overflow:ellipsis; font-weight:500;" title="${esc(s.title)}">${esc(s.title)}</td>
                     <td style="padding:8px 6px; color:#888; font-size:0.8rem;">${esc(s.genre)}</td>
                     <td style="padding:8px 6px; color:#888; font-size:0.8rem;">${esc(s.year)}</td>
-                    <td style="padding:8px 6px; color:#888; font-size:0.8rem; max-width:100px; overflow:hidden; text-overflow:ellipsis;" title="${esc(s.edition)}">${esc(s.edition)}</td>
+                    <td style="padding:8px 6px; color:#888; font-size:0.8rem; max-width:250px; overflow:hidden; text-overflow:ellipsis;" title="${esc(s.edition)}">${esc(s.edition)}</td>
                     <td style="padding:8px 6px; text-align:center;">${s.goldenNotes || ''}</td>
                     <td style="padding:8px 6px; color:#888; font-size:0.8rem;">${esc(s.language)}</td>
-                    <td style="padding:8px 6px; color:#888; font-size:0.8rem; max-width:90px; overflow:hidden; text-overflow:ellipsis;" title="${esc(s.creator)}">${esc(s.creator)}</td>
+                    <td style="padding:8px 6px; color:#888; font-size:0.8rem; max-width:200px; overflow:hidden; text-overflow:ellipsis;" title="${esc(s.creator)}">${esc(s.creator)}</td>
                     <td style="padding:8px 6px; color:#f5a623; font-size:0.8rem; letter-spacing:-1px;">${esc(s.rating)}</td>
                     <td style="padding:8px 6px; color:#888; font-size:0.8rem;">${esc(s.views)}</td>
                     <td style="padding:8px 6px;">

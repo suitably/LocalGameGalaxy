@@ -158,21 +158,31 @@ function spawnYtDlp(bin, args, onLine) {
 async function runDownloadJob(job) {
     try {
         job.status = 'running';
-        const { usdbId, artist, title, videoMode } = job;
+        const { usdbId, artist, title, videoMode, youtubeUrl, targetDir, safeName: jobSafeName } = job;
 
         // 1. Ensure yt-dlp is available
         const ytBin = await ensureYtDlp(job);
 
         // 2. Prepare output folder
         const dlBase = config.downloadDir || (config.directories[0] || process.cwd());
-        const safeName = `${sanitizeFilename(artist)} - ${sanitizeFilename(title)}`;
-        const songDir  = path.join(dlBase, safeName);
+        const safeName = jobSafeName || `${sanitizeFilename(artist)} - ${sanitizeFilename(title)}`;
+        const songDir  = targetDir || path.join(dlBase, safeName);
         fs.mkdirSync(songDir, { recursive: true });
         job.log.push(`📁 Folder: ${songDir}`);
 
-        // 3. Fetch .txt from USDB
+        // 3. Fetch .txt from USDB or recover existing local one
         let txtContent = null;
-        if (config.usdbUsername && config.usdbPassword) {
+        const txtPath = path.join(songDir, `${safeName}.txt`);
+        if (fs.existsSync(txtPath)) {
+            job.log.push('📄 Using existing local .txt file...');
+            try {
+                txtContent = fs.readFileSync(txtPath, 'utf-8');
+            } catch (err) {
+                job.log.push(`⚠️ Failed to read existing .txt: ${err.message}`);
+            }
+        }
+
+        if (!txtContent && usdbId && config.usdbUsername && config.usdbPassword) {
             job.log.push('🔐 Logging in to USDB...');
             try {
                 const cookie = await getUsdbCookie();
@@ -187,19 +197,20 @@ async function runDownloadJob(job) {
                     throw new Error(`Failed to fetch lyrics: ${err.message}`);
                 }
             }
-        } else {
-            job.log.push('⚠️ No USDB credentials – generating minimal .txt.');
+        } else if (!txtContent) {
+            job.log.push('⚠️ No USDB credentials / USDB ID – generating minimal .txt.');
         }
         job.progress = 15;
 
         // 4. Download audio and thumbnail via yt-dlp
         const audioOut = path.join(songDir, `${safeName}.mp3`);
         job.log.push('🎵 Downloading audio and cover...');
+        const audioSource = youtubeUrl || `ytsearch1:${artist} ${title} audio`;
         await spawnYtDlp(ytBin, [
             '--extract-audio', '--audio-format', 'mp3', '--audio-quality', '0',
             '--write-thumbnail', '--convert-thumbnails', 'jpg',
             '-o', audioOut, '--no-playlist',
-            `ytsearch1:${artist} ${title} audio`
+            audioSource
         ], l => job.log.push(l));
         
         // Rename cover thumbnail to a clean name (safeName-cover.jpg)
@@ -226,27 +237,32 @@ async function runDownloadJob(job) {
         if (videoMode === 'mp4') {
             const videoOut = path.join(songDir, `${safeName}.mp4`);
             job.log.push('🎬 Downloading video (MP4)...');
+            const videoSource = youtubeUrl || `ytsearch1:${artist} ${title}`;
             await spawnYtDlp(ytBin, [
                 '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
                 '--merge-output-format', 'mp4',
                 '-o', videoOut, '--no-playlist',
-                `ytsearch1:${artist} ${title}`
+                videoSource
             ], l => job.log.push(l));
             videoHeaderValue = `${safeName}.mp4`;
             job.log.push('✅ Video done.');
         } else if (videoMode === 'stream') {
-            job.log.push('📡 Resolving YouTube URL...');
-            const ytOut = await spawnYtDlp(ytBin, [
-                '--print', 'webpage_url', '--no-playlist',
-                `ytsearch1:${artist} ${title}`
-            ]);
-            videoHeaderValue = ytOut.trim().split('\n')[0];
-            job.log.push(`📡 Stream URL: ${videoHeaderValue}`);
+            if (youtubeUrl) {
+                videoHeaderValue = youtubeUrl;
+                job.log.push(`📡 Stream URL: ${videoHeaderValue}`);
+            } else {
+                job.log.push('📡 Resolving YouTube URL...');
+                const ytOut = await spawnYtDlp(ytBin, [
+                    '--print', 'webpage_url', '--no-playlist',
+                    `ytsearch1:${artist} ${title}`
+                ]);
+                videoHeaderValue = ytOut.trim().split('\n')[0];
+                job.log.push(`📡 Stream URL: ${videoHeaderValue}`);
+            }
         }
         job.progress = 85;
 
         // 6. Write .txt file
-        const txtPath = path.join(songDir, `${safeName}.txt`);
         if (txtContent && (txtContent.includes('#TITLE') || txtContent.includes('#ARTIST'))) {
             // Patch downloaded .txt: update MP3/VIDEO/COVER headers, remove unused BACKGROUND
             let lines = txtContent.split('\n');

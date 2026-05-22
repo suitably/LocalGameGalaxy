@@ -106,7 +106,8 @@ const scanSongs = async () => {
                         video: videoPath,
                         audio: audioPath,
                         cover: coverPath,
-                        background: backgroundPath,
+                                                background: backgroundPath,
+                        txtPath: txtPath,
                         txtContent: content,
                         duration: duration,
                         searchString: `${headers['TITLE']} ${headers['ARTIST']} ${headers['GENRE']} ${headers['LANGUAGE']}`.toLowerCase()

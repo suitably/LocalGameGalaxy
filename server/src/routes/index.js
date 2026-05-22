@@ -117,6 +117,64 @@ router.get('/api/songs', (req, res) => {
     res.json(paginated);
 });
 
+// --- DELETE SONG ---
+router.delete('/api/songs/:id', (req, res) => {
+    const songId = req.params.id;
+    const song = getSongCache().find(s => s.id === songId);
+    if (!song) return res.status(404).json({ error: 'Song not found in cache' });
+    if (!song.txtPath) return res.status(400).json({ error: 'Song does not have a text path' });
+
+    const songFolder = path.dirname(song.txtPath);
+    const safeFolder = resolveSecurePath(songFolder);
+    if (!safeFolder) {
+        return res.status(403).json({ error: 'Access denied or song directory not found' });
+    }
+
+    try {
+        const isRootConfigDir = config.directories.some(dir => path.normalize(dir) === safeFolder);
+        if (isRootConfigDir) {
+            // Root config directory - delete individual files to avoid deleting the library root folder
+            if (fs.existsSync(song.txtPath)) fs.unlinkSync(song.txtPath);
+            if (song.audio && fs.existsSync(song.audio)) fs.unlinkSync(song.audio);
+            if (song.video && fs.existsSync(song.video)) fs.unlinkSync(song.video);
+            if (song.cover && fs.existsSync(song.cover)) fs.unlinkSync(song.cover);
+            if (song.background && fs.existsSync(song.background)) fs.unlinkSync(song.background);
+        } else {
+            // Delete the full song directory
+            fs.rmSync(safeFolder, { recursive: true, force: true });
+        }
+
+        scanSongs();
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to delete song: ' + e.message });
+    }
+});
+
+// --- UPDATE SONG TXT ---
+router.put('/api/songs/:id/txt', (req, res) => {
+    const songId = req.params.id;
+    const { txtContent } = req.body;
+    if (!txtContent) return res.status(400).json({ error: 'Missing txtContent' });
+
+    const song = getSongCache().find(s => s.id === songId);
+    if (!song) return res.status(404).json({ error: 'Song not found in cache' });
+    if (!song.txtPath) return res.status(400).json({ error: 'Song does not have a text path' });
+
+    const safePath = resolveSecurePath(song.txtPath);
+    if (!safePath) {
+        return res.status(403).json({ error: 'Access denied or song file not found' });
+    }
+
+    try {
+        fs.writeFileSync(safePath, txtContent, 'utf-8');
+        scanSongs();
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to save song file: ' + e.message });
+    }
+});
+
 // --- SCAN STATUS ---
 router.get('/api/status', (req, res) => {
     res.json({
@@ -195,11 +253,24 @@ router.post('/api/usdb/download', (req, res) => {
     
     const jobIds = [];
     for (const reqItem of requests) {
-        const { usdbId, artist, title, videoMode } = reqItem;
-        if (!usdbId || !artist || !title) continue;
+        const { usdbId, artist, title, videoMode, youtubeUrl, targetDir, safeName } = reqItem;
+        if (!artist || !title) continue;
         const mode = ['mp4', 'stream', 'none'].includes(videoMode) ? videoMode : 'none';
         const jobId = crypto.randomBytes(8).toString('hex');
-        const job = { jobId, usdbId, artist, title, videoMode: mode, status: 'pending', progress: 0, log: [], error: null };
+        const job = {
+            jobId,
+            usdbId: usdbId || null,
+            artist,
+            title,
+            videoMode: mode,
+            youtubeUrl: youtubeUrl || null,
+            targetDir: targetDir || null,
+            safeName: safeName || null,
+            status: 'pending',
+            progress: 0,
+            log: [],
+            error: null
+        };
         DOWNLOAD_JOBS.set(jobId, job);
         jobQueue.push(job);
         jobIds.push(jobId);
