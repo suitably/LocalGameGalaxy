@@ -6,7 +6,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./config.json:/app/config.json
+      - ./config.json:/app/config.json:z
       # Pass your music library directories here. 
       # You can add multiple volumes if you have songs in different locations.
       # Example: - /home/user/Music:/music:ro

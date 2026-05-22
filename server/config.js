@@ -10,7 +10,10 @@ const defaultConfig = {
     port: 3000,
     token: null, // Will be generated if missing
     ssl: null, // Will be generated if missing
-    disableRateLimit: false
+    disableRateLimit: false,
+    downloadDir: null,       // Default folder for USDB downloads
+    usdbUsername: null,      // USDB login username
+    usdbPassword: null       // USDB login password
 };
 
 let currentConfig = { ...defaultConfig };
@@ -99,6 +102,29 @@ module.exports = {
 
     removeDirectory(dirPath) {
         currentConfig.directories = currentConfig.directories.filter(d => d !== dirPath);
+        saveConfig();
+    },
+
+    get downloadDir() {
+        return currentConfig.downloadDir;
+    },
+
+    set downloadDir(value) {
+        currentConfig.downloadDir = value;
+        saveConfig();
+    },
+
+    get usdbUsername() {
+        return currentConfig.usdbUsername;
+    },
+
+    get usdbPassword() {
+        return currentConfig.usdbPassword;
+    },
+
+    setUsdbCredentials(username, password) {
+        currentConfig.usdbUsername = username || null;
+        currentConfig.usdbPassword = password || null;
         saveConfig();
     },
 

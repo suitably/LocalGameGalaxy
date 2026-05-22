@@ -10,6 +10,8 @@ const crypto = require('crypto');
 const https = require('https');
 const http = require('http');
 const forge = require('node-forge');
+const { spawn, execFileSync } = require('child_process');
+const zlib = require('zlib');
 const config = require('./config');
 
 // Music Metadata
@@ -346,7 +348,8 @@ app.get('/', (req, res) => {
             <title>Melodiq Helper</title>
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <style>
-                body { font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f0f2f5; color: #1c1e21; }
+                body { font-family: system-ui, -apple-system, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; background: #f0f2f5; color: #1c1e21; }
+                @media (max-width: 640px) { body { padding: 12px; } }
                 .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 24px; }
                 h1 { color: #1877f2; margin-top: 0; font-size: 1.5rem; }
                 .badge { background: #e7f3ff; color: #1877f2; padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; vertical-align: middle; }
@@ -382,6 +385,8 @@ app.get('/', (req, res) => {
             </style>
             <script>
                 const API_TOKEN = "${AUTH_TOKEN}";
+                let usdbOffset = 0;
+                let usdbTotalResults = 0;
 
                 document.addEventListener('DOMContentLoaded', () => {
                     const hostname = window.location.hostname;
@@ -613,8 +618,520 @@ app.get('/', (req, res) => {
                     </div>
                 </div>
             </div>
+
+            <!-- ===== USDB MANAGER CARD ===== -->
+            <div class="card" style="margin-top:24px; border: 1px solid #dde2eb;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <h2 style="margin:0; font-size:1.15rem; color:#1877f2;">📥 USDB Song Manager</h2>
+                    <button class="secondary" style="font-size:0.85rem;" onclick="toggleUsdbCard()">▲ Minimise</button>
+                </div>
+                <div id="usdb-card-body">
+
+                    <!-- USDB Credentials -->
+                    <div style="margin-bottom:18px; padding:14px; background:#f7f8fa; border-radius:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                            <div>
+                                <span class="label" style="margin:0;">USDB Account (usdb.animux.de)</span>
+                                <span id="usdb-creds-summary" style="font-size:0.85rem; color:#65676b; margin-left:8px; font-weight:600;"></span>
+                            </div>
+                            <button class="secondary" style="font-size:0.8rem; padding:2px 8px;" id="btn-toggle-creds" onclick="toggleUsdbCreds()">Edit</button>
+                        </div>
+                        <div id="usdb-creds-fields" style="margin-top:10px; display:none;">
+                            <div class="row" style="margin-bottom:8px;">
+                                <input type="text"     id="usdb-user" placeholder="Username" style="flex:1;">
+                                <input type="password" id="usdb-pass" placeholder="Password" style="flex:1;">
+                                <button onclick="saveUsdbCreds()" id="btn-save-creds">Save</button>
+                            </div>
+                            <div id="usdb-creds-status" style="font-size:0.85rem; color:#d32f2f;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Download Folder -->
+                    <div style="margin-bottom:18px; padding:14px; background:#f7f8fa; border-radius:8px;">
+                        <span class="label">Default Download Folder</span>
+                        <div class="row">
+                            <input type="text" id="usdb-dldir" placeholder="/path/to/music" style="flex:1;" value="">
+                            <button class="secondary" onclick="openBrowserFor('usdb-dldir')">Browse…</button>
+                            <button onclick="saveDlDir()">Save</button>
+                        </div>
+                        <div id="usdb-dldir-status" style="font-size:0.85rem; color:#65676b; margin-top:4px;"></div>
+                    </div>
+
+                    <!-- Search & Filters -->
+                    <div style="margin-bottom:14px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <span class="label" style="margin:0;">Search USDB</span>
+                            <button class="secondary" style="font-size:0.8rem; padding:4px 10px;" onclick="toggleFilters()">⚙ Filter</button>
+                        </div>
+
+                        <!-- Quick search row -->
+                        <div class="row" style="margin-bottom:8px;">
+                            <input type="text" id="usdb-f-title" placeholder="Title (empty = any)" style="flex:1;"
+                                   onkeydown="if(event.key==='Enter') usdbNewSearch()">
+                            <input type="text" id="usdb-f-artist" placeholder="Artist (empty = any)" style="flex:1;"
+                                   onkeydown="if(event.key==='Enter') usdbNewSearch()">
+                            <button onclick="usdbNewSearch()" id="btn-usdb-search">🔍 Search</button>
+                        </div>
+
+                        <!-- Extended filters (collapsible) -->
+                        <div id="usdb-filters" style="display:none; background:#f7f8fa; padding:12px; border-radius:8px; border:1px solid #e4e6eb;">
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+                                <div>
+                                    <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Edition</label>
+                                    <input type="text" id="usdb-f-edition" placeholder="any" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem;">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Language</label>
+                                    <input type="text" id="usdb-f-language" placeholder="any" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem;">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Genre</label>
+                                    <input type="text" id="usdb-f-genre" placeholder="any" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem;">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Year</label>
+                                    <input type="text" id="usdb-f-year" placeholder="e.g. 2023" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem;">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Creator</label>
+                                    <input type="text" id="usdb-f-creator" placeholder="any" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem;">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Results per page</label>
+                                    <select id="usdb-f-limit" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem; border:1px solid #ddd; border-radius:6px;">
+                                        <option value="20">20</option>
+                                        <option value="30" selected>30</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+                                <div>
+                                    <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Sort by</label>
+                                    <select id="usdb-f-order" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem; border:1px solid #ddd; border-radius:6px;">
+                                        <option value="id" selected>Date added</option>
+                                        <option value="artist">Artist</option>
+                                        <option value="title">Title</option>
+                                        <option value="language">Language</option>
+                                        <option value="edition">Edition</option>
+                                        <option value="genre">Genre</option>
+                                        <option value="year">Year</option>
+                                        <option value="views">Views</option>
+                                        <option value="rating">Rating</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Order</label>
+                                    <select id="usdb-f-direction" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem; border:1px solid #ddd; border-radius:6px;">
+                                        <option value="desc" selected>Descending</option>
+                                        <option value="asc">Ascending</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                                <label style="display:flex; align-items:center; gap:6px; font-size:0.9rem; cursor:pointer;">
+                                    <input type="checkbox" id="usdb-f-golden"> ⭐ Only with golden notes
+                                </label>
+                                <label style="display:flex; align-items:center; gap:6px; font-size:0.9rem; cursor:pointer;">
+                                    <input type="checkbox" id="usdb-f-sc"> 🎤 Only [SC] songs
+                                </label>
+                            </div>
+                            <div style="margin-top:10px; text-align:right;">
+                                <button class="secondary" style="font-size:0.85rem;" onclick="resetFilters()">↺ Reset filters</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results table -->
+                    <div id="usdb-results-wrap" style="display:none;">
+                        <div style="font-size:0.85rem; color:#65676b; margin-bottom:6px;" id="usdb-result-count"></div>
+                        <div style="overflow-x:auto;">
+                            <table id="usdb-results-table" style="width:100%; border-collapse:collapse; font-size:0.85rem; white-space:nowrap;">
+                                <thead>
+                                    <tr style="background:#f0f2f5; text-align:left;">
+                                        <th style="padding:8px 6px;">Artist</th>
+                                        <th style="padding:8px 6px;">Title</th>
+                                        <th style="padding:8px 6px;">Genre</th>
+                                        <th style="padding:8px 6px;">Year</th>
+                                        <th style="padding:8px 6px;">Edition</th>
+                                        <th style="padding:8px 6px;">⭐</th>
+                                        <th style="padding:8px 6px;">Lang</th>
+                                        <th style="padding:8px 6px;">Creator</th>
+                                        <th style="padding:8px 6px;">Rating</th>
+                                        <th style="padding:8px 6px;">Views</th>
+                                        <th style="padding:8px 6px;">🎬 Video</th>
+                                        <th style="padding:8px 6px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usdb-results-body"></tbody>
+                            </table>
+                        </div>
+                        <!-- Pagination controls -->
+                        <div id="usdb-pagination" style="display:none; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #e4e6eb; padding-top:10px; gap:10px;">
+                            <button class="secondary" id="btn-usdb-prev" onclick="changeUsdbPage(-1)" style="font-size:0.85rem; padding:4px 10px;">◀ Previous</button>
+                            <span id="usdb-page-info" style="font-size:0.85rem; font-weight:600; color:#4e5157;">Page 1</span>
+                            <button class="secondary" id="btn-usdb-next" onclick="changeUsdbPage(1)" style="font-size:0.85rem; padding:4px 10px;">Next ▶</button>
+                        </div>
+                    </div>
+
+                    <!-- Error display -->
+                    <div id="usdb-error" style="display:none; color:#dc3545; font-size:0.9rem; margin-top:8px;"></div>
+
+                </div><!-- /usdb-card-body -->
+            </div><!-- /USDB card -->
+
+            <!-- Progress modal -->
+            <div id="usdb-progress-modal" class="modal" onclick="if(event.target===this && activeJob && activeJob.status==='done') closeProgressModal()">
+                <div class="modal-content" style="max-height:80vh; overflow:hidden;">
+                    <div class="browser-header">
+                        <span id="usdb-progress-title" style="font-weight:bold;">Downloading…</span>
+                        <button class="secondary" id="btn-close-progress" onclick="closeProgressModal()" style="display:none;">Close</button>
+                    </div>
+                    <div style="margin:10px 0;">
+                        <div style="background:#e4e6eb; border-radius:6px; height:10px; overflow:hidden;">
+                            <div id="usdb-progress-bar" style="background:#1877f2; height:100%; width:0%; transition:width 0.4s;"></div>
+                        </div>
+                        <div id="usdb-progress-pct" style="text-align:center; font-size:0.85rem; margin-top:4px; color:#65676b;">0%</div>
+                    </div>
+                    <div id="usdb-log-box" style="background:#1c1e21; color:#4cd964; font-family:monospace; font-size:0.8rem;
+                                                   padding:10px; border-radius:6px; height:300px; overflow-y:auto; white-space:pre-wrap;"></div>
+                </div>
+            </div>
+
+            <script>
+                // ---- USDB Manager JS ----
+                let activeJob = null;
+                let pollTimer = null;
+                let usdbBrowserTarget = null;
+
+                // Load current settings on page load
+                (async () => {
+                    try {
+                        const r1 = await fetch('/api/config/usdb-credentials?token=' + API_TOKEN);
+                        const d1 = await r1.json();
+                        if (d1.username) {
+                            document.getElementById('usdb-user').value = d1.username;
+                            const summary = d1.hasPassword
+                                ? '✅ Saved' : '⚠️ No password';
+                            document.getElementById('usdb-creds-summary').textContent = summary;
+                            if (d1.hasPassword) {
+                                document.getElementById('usdb-pass').value = '********';
+                                document.getElementById('usdb-creds-fields').style.display = 'none';
+                                document.getElementById('btn-toggle-creds').textContent = 'Edit';
+                            } else {
+                                document.getElementById('usdb-creds-fields').style.display = '';
+                                document.getElementById('btn-toggle-creds').textContent = 'Hide';
+                            }
+                        } else {
+                            document.getElementById('usdb-creds-fields').style.display = '';
+                            document.getElementById('btn-toggle-creds').textContent = 'Hide';
+                        }
+                    } catch(_) {}
+                    try {
+                        const r2 = await fetch('/api/config/download-dir?token=' + API_TOKEN);
+                        const d2 = await r2.json();
+                        if (d2.downloadDir) document.getElementById('usdb-dldir').value = d2.downloadDir;
+                    } catch(_) {}
+                })();
+
+                function toggleUsdbCard() {
+                    const body = document.getElementById('usdb-card-body');
+                    const btn  = event.currentTarget || event.target;
+                    if (body.style.display === 'none') { body.style.display = ''; btn.textContent = '▲ Minimise'; }
+                    else { body.style.display = 'none'; btn.textContent = '▼ Expand'; }
+                }
+
+                function toggleUsdbCreds() {
+                    const fields = document.getElementById('usdb-creds-fields');
+                    const btn = document.getElementById('btn-toggle-creds');
+                    if (fields.style.display === 'none') {
+                        fields.style.display = '';
+                        btn.textContent = 'Hide';
+                    } else {
+                        fields.style.display = 'none';
+                        btn.textContent = 'Edit';
+                    }
+                }
+
+                async function saveUsdbCreds() {
+                    const username = document.getElementById('usdb-user').value.trim();
+                    const password = document.getElementById('usdb-pass').value;
+                    if (!username) { alert('Username is required.'); return; }
+                    const btn = document.getElementById('btn-save-creds');
+                    btn.disabled = true; btn.textContent = 'Saving…';
+                    document.getElementById('usdb-creds-status').textContent = '';
+                    try {
+                        const r = await fetch('/api/config/usdb-credentials?token=' + API_TOKEN, {
+                            method: 'POST', headers: {'Content-Type':'application/json'},
+                            body: JSON.stringify({ username, password })
+                        });
+                        const d = await r.json();
+                        if (d.ok) {
+                            document.getElementById('usdb-creds-summary').textContent = '✅ Saved';
+                            document.getElementById('usdb-creds-fields').style.display = 'none';
+                            document.getElementById('btn-toggle-creds').textContent = 'Edit';
+                            document.getElementById('usdb-creds-status').textContent = '';
+                        } else {
+                            document.getElementById('usdb-creds-status').textContent = '❌ ' + (d.error || 'Error');
+                        }
+                    } catch(e) { document.getElementById('usdb-creds-status').textContent = '❌ ' + e.message; }
+                    btn.disabled = false; btn.textContent = 'Save';
+                }
+
+                async function saveDlDir() {
+                    const dir = document.getElementById('usdb-dldir').value.trim();
+                    if (!dir) return;
+                    const r = await fetch('/api/config/download-dir?token=' + API_TOKEN, {
+                        method: 'POST', headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify({ dir })
+                    });
+                    const d = await r.json();
+                    document.getElementById('usdb-dldir-status').textContent = d.downloadDir ? '✅ Saved: ' + d.downloadDir : '❌ ' + (d.error || 'Error');
+                }
+
+                // Override selectCurrentPath to support USDB folder picker
+                const _origSelect = selectCurrentPath;
+                function selectCurrentPath() {
+                    if (usdbBrowserTarget) {
+                        document.getElementById(usdbBrowserTarget).value = currentBrowserPath;
+                        usdbBrowserTarget = null;
+                        closeBrowser();
+                    } else {
+                        _origSelect();
+                    }
+                }
+
+                function openBrowserFor(inputId) {
+                    usdbBrowserTarget = inputId;
+                    openBrowser();
+                }
+
+                function toggleFilters() {
+                    const el = document.getElementById('usdb-filters');
+                    const btn = event.target;
+                    if (el.style.display === 'none') { el.style.display = 'block'; btn.textContent = '✕ Filter'; }
+                    else { el.style.display = 'none'; btn.textContent = '⚙ Filter'; }
+                }
+
+                function resetFilters() {
+                    ['usdb-f-title','usdb-f-artist','usdb-f-edition','usdb-f-language',
+                     'usdb-f-genre','usdb-f-year','usdb-f-creator'].forEach(id => {
+                        document.getElementById(id).value = '';
+                    });
+                    document.getElementById('usdb-f-limit').value = '30';
+                    document.getElementById('usdb-f-order').value = 'id';
+                    document.getElementById('usdb-f-direction').value = 'desc';
+                    document.getElementById('usdb-f-golden').checked = false;
+                    document.getElementById('usdb-f-sc').checked = false;
+                    usdbOffset = 0;
+                    usdbTotalResults = 0;
+                    document.getElementById('usdb-results-wrap').style.display = 'none';
+                }
+
+                function usdbNewSearch() {
+                    usdbOffset = 0;
+                    usdbSearch();
+                }
+
+                function changeUsdbPage(dir) {
+                    const limit = parseInt(document.getElementById('usdb-f-limit').value, 10);
+                    usdbOffset += dir * limit;
+                    if (usdbOffset < 0) usdbOffset = 0;
+                    if (usdbOffset >= usdbTotalResults) usdbOffset = usdbTotalResults - limit;
+                    usdbSearch();
+                }
+
+                async function usdbSearch() {
+                    const title   = document.getElementById('usdb-f-title').value.trim();
+                    const artist  = document.getElementById('usdb-f-artist').value.trim();
+                    const edition   = document.getElementById('usdb-f-edition').value.trim();
+                    const language  = document.getElementById('usdb-f-language').value.trim();
+                    const genre     = document.getElementById('usdb-f-genre').value.trim();
+                    const year      = document.getElementById('usdb-f-year').value.trim();
+                    const creator   = document.getElementById('usdb-f-creator').value.trim();
+                    const limit     = document.getElementById('usdb-f-limit').value;
+                    const order     = document.getElementById('usdb-f-order').value;
+                    const direction = document.getElementById('usdb-f-direction').value;
+                    const golden    = document.getElementById('usdb-f-golden').checked ? '1' : '0';
+                    const sc        = document.getElementById('usdb-f-sc').checked ? '1' : '0';
+
+                    if (!title && !artist && !edition && !language && !genre && !year && !creator && golden !== '1' && sc !== '1') return;
+
+                    const params = new URLSearchParams({
+                        token: API_TOKEN,
+                        title, artist, edition, language, genre, year, creator,
+                        limit, order, direction, golden, sc,
+                        offset: usdbOffset
+                    });
+
+                    const btn = document.getElementById('btn-usdb-search');
+                    btn.disabled = true; btn.textContent = '⏳ Searching…';
+                    document.getElementById('usdb-error').style.display = 'none';
+                    document.getElementById('usdb-results-wrap').style.display = 'none';
+                    try {
+                        const r = await fetch('/api/usdb/search?' + params);
+                        const data = await r.json();
+                        if (!r.ok) throw new Error(data.error || 'Search failed');
+                        renderUsdbResults(data.songs, data.totalResults, parseInt(limit, 10));
+                    } catch(e) {
+                        const errEl = document.getElementById('usdb-error');
+                        errEl.textContent = '❌ ' + e.message;
+                        errEl.style.display = 'block';
+                    }
+                    btn.disabled = false; btn.textContent = '🔍 Search';
+                }
+
+                function renderUsdbResults(songs, totalResults, limit) {
+                    const tbody = document.getElementById('usdb-results-body');
+                    tbody.innerHTML = '';
+                    
+                    usdbTotalResults = totalResults || 0;
+
+                    if (usdbTotalResults > 0) {
+                        const startNum = usdbOffset + 1;
+                        const endNum = Math.min(usdbOffset + limit, usdbTotalResults);
+                        document.getElementById('usdb-result-count').textContent = 
+                            usdbTotalResults + ' result(s) found (showing ' + startNum + '-' + endNum + ')';
+                    } else {
+                        document.getElementById('usdb-result-count').textContent = '0 result(s) found';
+                    }
+
+                    if (songs.length === 0) {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = '<td colspan="12" style="padding:16px; text-align:center; color:#888;">No results found. Try different search terms.</td>';
+                        tbody.appendChild(tr);
+                        document.getElementById('usdb-pagination').style.display = 'none';
+                        document.getElementById('usdb-results-wrap').style.display = 'block';
+                        return;
+                    }
+
+                    // Pagination controls display
+                    const pag = document.getElementById('usdb-pagination');
+                    if (usdbTotalResults > limit) {
+                        pag.style.display = 'flex';
+                        document.getElementById('btn-usdb-prev').disabled = (usdbOffset === 0);
+                        document.getElementById('btn-usdb-next').disabled = (usdbOffset + limit >= usdbTotalResults);
+                        
+                        const currentPage = Math.floor(usdbOffset / limit) + 1;
+                        const totalPages = Math.ceil(usdbTotalResults / limit);
+                        document.getElementById('usdb-page-info').textContent = 'Page ' + currentPage + ' of ' + totalPages;
+                    } else {
+                        pag.style.display = 'none';
+                    }
+
+                    songs.forEach((s, i) => {
+                        const esc = v => (v||'').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+                        const tr = document.createElement('tr');
+                        tr.style.borderBottom = '1px solid #f0f0f0';
+                        tr.onmouseover = () => tr.style.background = '#f7f8fa';
+                        tr.onmouseout  = () => tr.style.background = '';
+                        tr.innerHTML = \`
+                            <td style="padding:8px 6px; max-width:160px; overflow:hidden; text-overflow:ellipsis;" title="\${esc(s.artist)}">\${esc(s.artist)}</td>
+                            <td style="padding:8px 6px; max-width:180px; overflow:hidden; text-overflow:ellipsis; font-weight:500;" title="\${esc(s.title)}">\${esc(s.title)}</td>
+                            <td style="padding:8px 6px; color:#888; font-size:0.8rem;">\${esc(s.genre)}</td>
+                            <td style="padding:8px 6px; color:#888; font-size:0.8rem;">\${esc(s.year)}</td>
+                            <td style="padding:8px 6px; color:#888; font-size:0.8rem; max-width:100px; overflow:hidden; text-overflow:ellipsis;" title="\${esc(s.edition)}">\${esc(s.edition)}</td>
+                            <td style="padding:8px 6px; text-align:center;">\${s.goldenNotes || ''}</td>
+                            <td style="padding:8px 6px; color:#888; font-size:0.8rem;">\${esc(s.language)}</td>
+                            <td style="padding:8px 6px; color:#888; font-size:0.8rem; max-width:90px; overflow:hidden; text-overflow:ellipsis;" title="\${esc(s.creator)}">\${esc(s.creator)}</td>
+                            <td style="padding:8px 6px; color:#f5a623; font-size:0.8rem; letter-spacing:-1px;">\${esc(s.rating)}</td>
+                            <td style="padding:8px 6px; color:#888; font-size:0.8rem;">\${esc(s.views)}</td>
+                            <td style="padding:8px 6px;">
+                                <select id="vmode-\${i}" style="padding:4px 6px; border-radius:4px; border:1px solid #ddd; font-size:0.8rem;">
+                                    <option value="mp4">🎬 MP4</option>
+                                    <option value="stream">📡 Stream</option>
+                                    <option value="none" selected>🎵 Audio</option>
+                                </select>
+                            </td>
+                            <td style="padding:8px 6px; text-align:right;">
+                                <button id="dl-btn-\${i}" onclick="startDownload(\${i}, '\${esc(s.usdbId)}')" style="padding:5px 10px; font-size:0.8rem;">
+                                    ⬇
+                                </button>
+                            </td>
+                        \`;
+                        tr.dataset.artist = s.artist;
+                        tr.dataset.title  = s.title;
+                        tbody.appendChild(tr);
+                    });
+
+                    document.getElementById('usdb-results-wrap').style.display = 'block';
+                }
+
+                async function startDownload(idx, usdbId) {
+                    const rows  = document.getElementById('usdb-results-body').children;
+                    const row   = rows[idx];
+                    const vmode = document.getElementById('vmode-' + idx).value;
+                    const artist = row.dataset.artist;
+                    const title  = row.dataset.title;
+
+                    const btn = document.getElementById('dl-btn-' + idx);
+                    btn.disabled = true; btn.textContent = '⏳';
+
+                    try {
+                        const r = await fetch('/api/usdb/download?token=' + API_TOKEN, {
+                            method: 'POST', headers: {'Content-Type':'application/json'},
+                            body: JSON.stringify({ usdbId, artist, title, videoMode: vmode })
+                        });
+                        const d = await r.json();
+                        if (!r.ok) throw new Error(d.error || 'Failed to start download');
+                        openProgressModal(d.jobId, artist + ' – ' + title);
+                    } catch(e) {
+                        alert('Error: ' + e.message);
+                        btn.disabled = false; btn.textContent = '⬇ Download';
+                    }
+                }
+
+                function openProgressModal(jobId, label) {
+                    document.getElementById('usdb-progress-title').textContent = '⬇ ' + label;
+                    document.getElementById('usdb-progress-bar').style.width = '0%';
+                    document.getElementById('usdb-progress-pct').textContent = '0%';
+                    document.getElementById('usdb-log-box').textContent = '';
+                    document.getElementById('btn-close-progress').style.display = 'none';
+                    document.getElementById('usdb-progress-modal').style.display = 'block';
+
+                    activeJob = { jobId, status: 'pending' };
+                    if (pollTimer) clearInterval(pollTimer);
+                    pollTimer = setInterval(() => pollJob(jobId), 1200);
+                }
+
+                function closeProgressModal() {
+                    document.getElementById('usdb-progress-modal').style.display = 'none';
+                    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+                }
+
+                async function pollJob(jobId) {
+                    try {
+                        const r = await fetch('/api/usdb/status/' + jobId + '?token=' + API_TOKEN);
+                        const d = await r.json();
+                        activeJob = d;
+
+                        const pct = d.progress + '%';
+                        document.getElementById('usdb-progress-bar').style.width = pct;
+                        document.getElementById('usdb-progress-pct').textContent = pct;
+
+                        const logBox = document.getElementById('usdb-log-box');
+                        logBox.textContent = (d.log || []).join('\\n');
+                        logBox.scrollTop = logBox.scrollHeight;
+
+                        if (d.status === 'done' || d.status === 'error') {
+                            clearInterval(pollTimer); pollTimer = null;
+                            document.getElementById('btn-close-progress').style.display = 'inline-block';
+                            if (d.status === 'done') {
+                                document.getElementById('usdb-progress-bar').style.background = '#28a745';
+                                document.getElementById('usdb-progress-title').textContent = '✅ Download complete!';
+                            } else {
+                                document.getElementById('usdb-progress-bar').style.background = '#dc3545';
+                                document.getElementById('usdb-progress-title').textContent = '❌ Download failed';
+                            }
+                        }
+                    } catch(e) { /* ignore transient errors */ }
+                }
+            </script>
+
         </body>
         </html>
+
     `);
 });
 
@@ -713,6 +1230,664 @@ app.get('/api/browse', (req, res) => {
         res.json({ current: path.resolve(queryPath), dirs: dirs });
     } catch (e) {
         res.status(500).json({ error: e.message });
+    }
+});
+
+
+// ============================================================
+// USDB MANAGER – helpers, job system & API routes
+// ============================================================
+
+// In-memory job store
+const DOWNLOAD_JOBS = new Map();
+let USDB_SESSION_COOKIE = null;
+
+async function getUsdbCookie(forceRefresh = false) {
+    if (!config.usdbUsername || !config.usdbPassword) {
+        throw new Error('USDB credentials not set. Please save your credentials above.');
+    }
+    if (!USDB_SESSION_COOKIE || forceRefresh) {
+        USDB_SESSION_COOKIE = await usdbLogin(config.usdbUsername, config.usdbPassword);
+    }
+    return USDB_SESSION_COOKIE;
+}
+
+// --- yt-dlp helpers ---
+
+function findYtDlpBin() {
+    const candidates = [
+        'yt-dlp',
+        path.join(__dirname, 'yt-dlp'),
+        path.join(process.cwd(), 'yt-dlp'),
+        '/tmp/yt-dlp',
+        '/usr/local/bin/yt-dlp',
+        `${process.env.HOME || '/root'}/.local/bin/yt-dlp`,
+        `${process.env.HOME || '/root'}/.npm-global/bin/yt-dlp`,
+    ];
+    for (const bin of candidates) {
+        try { execFileSync(bin, ['--version'], { stdio: 'pipe', timeout: 4000 }); return bin; }
+        catch (_) { /* not found here */ }
+    }
+    return null;
+}
+
+function downloadYtDlpFile(dest, url) {
+    return new Promise((resolve) => {
+        const curl = spawn('curl', ['-L', url, '-o', dest]);
+        curl.on('close', code => {
+            if (code === 0) {
+                try { fs.chmodSync(dest, 0o755); resolve(true); } catch (_) { resolve(false); }
+            } else {
+                const wget = spawn('wget', [url, '-O', dest]);
+                wget.on('close', codeW => {
+                    if (codeW === 0) {
+                        try { fs.chmodSync(dest, 0o755); resolve(true); } catch (_) { resolve(false); }
+                    } else {
+                        resolve(false);
+                    }
+                });
+                wget.on('error', () => resolve(false));
+            }
+        });
+        curl.on('error', () => {
+            const wget = spawn('wget', [url, '-O', dest]);
+            wget.on('close', codeW => {
+                if (codeW === 0) {
+                    try { fs.chmodSync(dest, 0o755); resolve(true); } catch (_) { resolve(false); }
+                } else {
+                    resolve(false);
+                }
+            });
+            wget.on('error', () => resolve(false));
+        });
+    });
+}
+
+function installYtDlp(job) {
+    return new Promise((resolve) => {
+        job.log.push('Attempting to install yt-dlp via pip3...');
+        const proc = spawn('pip3', ['install', '--user', '--break-system-packages', '--quiet', 'yt-dlp'], { stdio: 'pipe' });
+        proc.on('close', async (code) => {
+            if (code === 0) {
+                const bin = findYtDlpBin();
+                if (bin) return resolve(true);
+            }
+            
+            job.log.push('pip3 installation failed. Downloading yt-dlp binary from GitHub...');
+            const destPaths = [
+                path.join(__dirname, 'yt-dlp'),
+                path.join(process.cwd(), 'yt-dlp'),
+                '/tmp/yt-dlp'
+            ];
+            const urls = [
+                'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp',
+                'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux'
+            ];
+            for (const dest of destPaths) {
+                for (const url of urls) {
+                    job.log.push(`Downloading ${url} to ${dest}...`);
+                    const ok = await downloadYtDlpFile(dest, url);
+                    if (ok) {
+                        try {
+                            execFileSync(dest, ['--version'], { stdio: 'pipe', timeout: 4000 });
+                            job.log.push(`Successfully downloaded and verified yt-dlp at ${dest}`);
+                            return resolve(true);
+                        } catch (e) {
+                            try { fs.unlinkSync(dest); } catch (_) {}
+                        }
+                    }
+                }
+            }
+            resolve(false);
+        });
+        proc.on('error', async () => {
+            job.log.push('pip3 not available. Downloading yt-dlp binary from GitHub...');
+            const destPaths = [
+                path.join(__dirname, 'yt-dlp'),
+                path.join(process.cwd(), 'yt-dlp'),
+                '/tmp/yt-dlp'
+            ];
+            const urls = [
+                'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp',
+                'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux'
+            ];
+            for (const dest of destPaths) {
+                for (const url of urls) {
+                    job.log.push(`Downloading ${url} to ${dest}...`);
+                    const ok = await downloadYtDlpFile(dest, url);
+                    if (ok) {
+                        try {
+                            execFileSync(dest, ['--version'], { stdio: 'pipe', timeout: 4000 });
+                            job.log.push(`Successfully downloaded and verified yt-dlp at ${dest}`);
+                            return resolve(true);
+                        } catch (e) {
+                            try { fs.unlinkSync(dest); } catch (_) {}
+                        }
+                    }
+                }
+            }
+            resolve(false);
+        });
+    });
+}
+
+async function ensureYtDlp(job) {
+    let bin = findYtDlpBin();
+    if (bin) return bin;
+    job.log.push('yt-dlp not found. Installing...');
+    const ok = await installYtDlp(job);
+    if (!ok) throw new Error('yt-dlp installation failed. Please install yt-dlp and ffmpeg manually on the host.');
+    bin = findYtDlpBin();
+    if (!bin) throw new Error('yt-dlp installed but not found in PATH. Restart the server.');
+    job.log.push('yt-dlp installed successfully.');
+    return bin;
+}
+
+function spawnYtDlp(bin, args, onLine) {
+    return new Promise((resolve, reject) => {
+        const proc = spawn(bin, args, { stdio: 'pipe' });
+        let out = '';
+        const handle = d => {
+            const s = d.toString();
+            out += s;
+            if (onLine) s.split('\n').filter(l => l.trim()).forEach(l => onLine(l));
+        };
+        proc.stdout.on('data', handle);
+        proc.stderr.on('data', handle);
+        proc.on('close', code => code === 0 ? resolve(out) : reject(new Error(`yt-dlp exit ${code}: ${out.slice(-300)}`)));
+        proc.on('error', reject);
+    });
+}
+
+// --- HTTP helpers (gzip-aware) ---
+
+function decompressResponse(res) {
+    const enc = res.headers['content-encoding'];
+    if (enc === 'gzip')    return res.pipe(zlib.createGunzip());
+    if (enc === 'deflate') return res.pipe(zlib.createInflate());
+    if (enc === 'br')      return res.pipe(zlib.createBrotliDecompress());
+    return res;
+}
+
+function httpsGetFollow(url, reqHeaders) {
+    return new Promise((resolve, reject) => {
+        const doReq = (u, redirects) => {
+            if (redirects > 5) return reject(new Error('Too many redirects'));
+            const lib = u.startsWith('https') ? https : http;
+            const headers = { 'User-Agent': 'Mozilla/5.0 (compatible)', 'Accept-Encoding': 'gzip, deflate', ...reqHeaders };
+            lib.get(u, { headers }, (res) => {
+                if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                    const next = res.headers.location.startsWith('http')
+                        ? res.headers.location
+                        : new URL(res.headers.location, u).href;
+                    res.resume();
+                    return doReq(next, redirects + 1);
+                }
+                const stream = decompressResponse(res);
+                const chunks = [];
+                stream.on('data', d => chunks.push(d));
+                stream.on('end', () => resolve({ status: res.statusCode, body: Buffer.concat(chunks).toString('utf-8'), headers: res.headers }));
+                stream.on('error', reject);
+            }).on('error', reject);
+        };
+        doReq(url, 0);
+    });
+}
+
+function httpsPost(url, bodyStr, extraHeaders) {
+    return new Promise((resolve, reject) => {
+        const parsedUrl = new URL(url);
+        const bodyBuf = Buffer.from(bodyStr);
+        const opts = {
+            hostname: parsedUrl.hostname,
+            path: parsedUrl.pathname + parsedUrl.search,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': bodyBuf.length,
+                'User-Agent': 'Mozilla/5.0 (compatible)',
+                'Accept-Encoding': 'gzip, deflate',
+                ...extraHeaders
+            }
+        };
+        const req = https.request(opts, (res) => {
+            const cookies = res.headers['set-cookie'] || [];
+            const stream = decompressResponse(res);
+            const chunks = [];
+            stream.on('data', d => chunks.push(d));
+            stream.on('end', () => resolve({ status: res.statusCode, body: Buffer.concat(chunks).toString('utf-8'), cookies }));
+            stream.on('error', reject);
+        });
+        req.on('error', reject);
+        req.write(bodyBuf);
+        req.end();
+    });
+}
+
+// --- USDB helpers ---
+
+async function usdbLogin(username, password) {
+    // Login via POST to index.php?link=login
+    const body = new URLSearchParams({ user: username, pass: password, login: 'Login' }).toString();
+    const res = await httpsPost('https://usdb.animux.de/index.php?link=login', body);
+    if (!res.body.includes('logout')) {
+        throw new Error('USDB login failed – check username/password.');
+    }
+    const cookie = (res.cookies || []).map(c => c.split(';')[0]).join('; ');
+    if (!cookie || !cookie.includes('PHPSESSID')) {
+        throw new Error('USDB login failed – session cookie not set.');
+    }
+    return cookie;
+}
+
+function stripHtml(s) {
+    return s
+        .replace(/<[^>]+>/g, '')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&nbsp;/g, ' ')
+        .trim();
+}
+
+function parseUsdbSearch(html) {
+    const songs = [];
+
+    const clean = (s) => s
+        .replace(/<[^>]+>/g, '')
+        .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
+        .trim();
+
+    const starCount = (s) => {
+        // USDB uses star images or ★ characters for rating
+        const imgs = (s.match(/star(?:_on|_off)?\.(?:gif|png|jpg)/gi) || []).filter(x => x.includes('on') || !x.includes('off'));
+        if (imgs.length) return '★'.repeat(imgs.length);
+        const stars = (s.match(/★/g) || []).length;
+        return stars ? '★'.repeat(stars) : clean(s).substring(0, 5);
+    };
+
+    // Extract all <td> contents from a row's HTML
+    const getTds = (rowHtml) => {
+        const tds = [];
+        const re = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+        let m;
+        while ((m = re.exec(rowHtml)) !== null) tds.push(m[1]);
+        return tds;
+    };
+
+    // Build a song object from a td array.
+    // USDB columns: [sample_cb, cover_img, artist_link, title_link, genre, year, edition, goldennotes, language, creator, rating_imgs, views, audio_icon]
+    const buildSong = (usdbId, tds) => {
+        let titleIdx = -1;
+        for (let i = 0; i < tds.length; i++) {
+            // The title column contains the link to the detail page (e.g., link=detail or id=)
+            if (/[?&]id=\d+/i.test(tds[i]) || /link=detail/i.test(tds[i]) || /view=detail/i.test(tds[i])) {
+                titleIdx = i;
+                break;
+            }
+        }
+        if (titleIdx <= 0 || titleIdx >= tds.length) {
+            return null;
+        }
+
+        const artistIdx = titleIdx - 1;
+        const artist = clean(tds[artistIdx]);
+        const title  = clean(tds[titleIdx]);
+        if (!artist || !title || artist === 'Artist' || artist === 'Interpret') {
+            return null;
+        }
+
+        const o = titleIdx;
+        return {
+            usdbId,
+            artist,
+            title,
+            genre:       clean(tds[o + 1] || ''),
+            year:        clean(tds[o + 2] || ''),
+            edition:     clean(tds[o + 3] || ''),
+            goldenNotes: /yes|ja|true|1/i.test(clean(tds[o + 4] || '')) ? '⭐' : '',
+            language:    clean(tds[o + 5] || ''),
+            creator:     clean(tds[o + 6] || ''),
+            rating:      starCount(tds[o + 7] || ''),
+            views:       clean(tds[o + 8] || ''),
+        };
+    };
+
+    // Strategy 1: rows with explicit data-songid attribute
+    const dataRe = /<tr[^>]+data-songid="(\d+)"[^>]*>([\s\S]*?)<\/tr>/gi;
+    let m;
+    let usedStrategy1 = false;
+    while ((m = dataRe.exec(html)) !== null) {
+        usedStrategy1 = true;
+        const song = buildSong(m[1], getTds(m[2]));
+        if (song) songs.push(song);
+    }
+
+    // Strategy 2: rows with explicit id= attribute naming (entry_N, row_N, song_N)
+    if (!usedStrategy1) {
+        const namedRe = /<tr[^>]+id="(?:entry_|row_|song_)(\d+)"[^>]*>([\s\S]*?)<\/tr>/gi;
+        while ((m = namedRe.exec(html)) !== null) {
+            usedStrategy1 = true;
+            const song = buildSong(m[1], getTds(m[2]));
+            if (song) songs.push(song);
+        }
+    }
+
+    // Strategy 3: any <tr> containing a view=detail or ?id=N link
+    if (!usedStrategy1) {
+        const anyRowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+        while ((m = anyRowRe.exec(html)) !== null) {
+            const rowHtml = m[1];
+            const idMatch = rowHtml.match(/view=detail[^"']*[?&]id=(\d+)/i)
+                         || rowHtml.match(/[?&]id=(\d+)/);
+            if (!idMatch) continue;
+            const song = buildSong(idMatch[1], getTds(rowHtml));
+            if (song) songs.push(song);
+        }
+    }
+
+    const match = html.match(/There are\s+(\d+)\s+results on\s+(\d+)\s+page/i);
+    let totalResults = songs.length;
+    let totalPages = 1;
+    if (match) {
+        totalResults = parseInt(match[1], 10);
+        totalPages = parseInt(match[2], 10);
+    }
+    return { songs, totalResults, totalPages };
+}
+
+async function searchUsdb(filters) {
+    // USDB uses POST to /?link=list (confirmed via HAR)
+    // Field names differ from what you'd expect:
+    //   artist -> interpret, direction -> ud, golden -> golden (val=1), sc -> songcheck
+    let cookie;
+    try {
+        cookie = await getUsdbCookie();
+    } catch (e) {
+        throw new Error('USDB requires login to search. Please save your credentials above.');
+    }
+
+    const {
+        title = '', artist = '', edition = '', language = '',
+        genre = '', year = '', creator = '',
+        limit = '30', order = 'id', direction = 'asc',
+        golden = '0', sc = '0', offset = '0'
+    } = filters;
+
+    const params = new URLSearchParams({
+        interpret: artist,
+        title,
+        edition,
+        language,
+        genre,
+        year,
+        creator,
+        user: '',
+        order,
+        ud: direction,
+        limit,
+        details: '1',
+        start: offset.toString(),
+        newsearch: 'Start Search',
+        ...(golden === '1' ? { golden: '1' } : {}),
+        ...(sc     === '1' ? { songcheck: '1' } : {}),
+    });
+
+    let res = await httpsPost(
+        'https://usdb.animux.de/?link=list',
+        params.toString(),
+        { Cookie: cookie }
+    );
+
+    if (res.status === 200 && res.body.includes('You are not logged in')) {
+        // Session expired, retry login once
+        try {
+            cookie = await getUsdbCookie(true);
+            res = await httpsPost(
+                'https://usdb.animux.de/?link=list',
+                params.toString(),
+                { Cookie: cookie }
+            );
+        } catch (e) {
+            throw new Error('USDB login failed. Please check your credentials.');
+        }
+    }
+
+    if (res.status !== 200) throw new Error(`USDB search HTTP ${res.status}`);
+    if (res.body.includes('You are not logged in')) {
+        throw new Error('USDB requires login to search. Please save your credentials above.');
+    }
+    return parseUsdbSearch(res.body);
+}
+
+async function fetchUsdbTxt(usdbId, cookie) {
+    const url = `https://usdb.animux.de/?link=gettxt&id=${usdbId}`;
+    const body = new URLSearchParams({ wd: '1' }).toString();
+    const res = await httpsPost(url, body, cookie ? { Cookie: cookie } : {});
+    if (res.status !== 200) throw new Error(`USDB txt fetch HTTP ${res.status}`);
+    
+    // Extract txt from textarea
+    const match = res.body.match(/<textarea[^>]*>([\s\S]*?)<\/textarea>/i);
+    if (!match) {
+        throw new Error('Could not find lyrics textarea in USDB response. Make sure you are logged in.');
+    }
+    return stripHtml(match[1]).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+}
+
+function sanitizeFilename(str) {
+    return str.replace(/[<>:"/\\|?*\x00-\x1F]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+// --- Download job runner ---
+
+async function runDownloadJob(job) {
+    try {
+        job.status = 'running';
+        const { usdbId, artist, title, videoMode } = job;
+
+        // 1. Ensure yt-dlp is available
+        const ytBin = await ensureYtDlp(job);
+
+        // 2. Prepare output folder
+        const dlBase = config.downloadDir || (config.directories[0] || process.cwd());
+        const safeName = `${sanitizeFilename(artist)} - ${sanitizeFilename(title)}`;
+        const songDir  = path.join(dlBase, safeName);
+        fs.mkdirSync(songDir, { recursive: true });
+        job.log.push(`📁 Folder: ${songDir}`);
+
+        // 3. Fetch .txt from USDB (Option A: with credentials)
+        let txtContent = null;
+        if (config.usdbUsername && config.usdbPassword) {
+            job.log.push('🔐 Logging in to USDB...');
+            try {
+                const cookie = await getUsdbCookie();
+                job.log.push('📄 Downloading lyrics (.txt)...');
+                txtContent = await fetchUsdbTxt(usdbId, cookie);
+            } catch (e) {
+                job.log.push('Session expired or error – re-logging in...');
+                try {
+                    const cookie = await getUsdbCookie(true);
+                    txtContent = await fetchUsdbTxt(usdbId, cookie);
+                } catch (err) {
+                    throw new Error(`Failed to fetch lyrics: ${err.message}`);
+                }
+            }
+        } else {
+            job.log.push('⚠️ No USDB credentials – generating minimal .txt.');
+        }
+        job.progress = 15;
+
+        // 4. Download audio and thumbnail via yt-dlp
+        const audioOut = path.join(songDir, `${safeName}.mp3`);
+        job.log.push('🎵 Downloading audio and cover...');
+        await spawnYtDlp(ytBin, [
+            '--extract-audio', '--audio-format', 'mp3', '--audio-quality', '0',
+            '--write-thumbnail', '--convert-thumbnails', 'jpg',
+            '-o', audioOut, '--no-playlist',
+            `ytsearch1:${artist} ${title} audio`
+        ], l => job.log.push(l));
+        
+        // Rename cover thumbnail to a clean name (safeName-cover.jpg)
+        const defaultThumb = `${audioOut}.jpg`;
+        const targetCover = path.join(songDir, `${safeName}-cover.jpg`);
+        if (fs.existsSync(defaultThumb)) {
+            try { fs.renameSync(defaultThumb, targetCover); } catch (_) {}
+        } else {
+            const possibleThumbExts = ['.png', '.jpeg', '.webp'];
+            for (const ext of possibleThumbExts) {
+                const thumbPath = `${audioOut}${ext}`;
+                if (fs.existsSync(thumbPath)) {
+                    try { fs.renameSync(thumbPath, targetCover); } catch (_) {}
+                    break;
+                }
+            }
+        }
+
+        job.progress = 55;
+        job.log.push('✅ Audio and cover done.');
+
+        // 5. Video handling
+        let videoHeaderValue = '';
+        if (videoMode === 'mp4') {
+            const videoOut = path.join(songDir, `${safeName}.mp4`);
+            job.log.push('🎬 Downloading video (MP4)...');
+            await spawnYtDlp(ytBin, [
+                '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+                '--merge-output-format', 'mp4',
+                '-o', videoOut, '--no-playlist',
+                `ytsearch1:${artist} ${title}`
+            ], l => job.log.push(l));
+            videoHeaderValue = `${safeName}.mp4`;
+            job.log.push('✅ Video done.');
+        } else if (videoMode === 'stream') {
+            job.log.push('📡 Resolving YouTube URL...');
+            const ytOut = await spawnYtDlp(ytBin, [
+                '--print', 'webpage_url', '--no-playlist',
+                `ytsearch1:${artist} ${title}`
+            ]);
+            videoHeaderValue = ytOut.trim().split('\n')[0];
+            job.log.push(`📡 Stream URL: ${videoHeaderValue}`);
+        }
+        job.progress = 85;
+
+        // 6. Write .txt file
+        const txtPath = path.join(songDir, `${safeName}.txt`);
+        if (txtContent && (txtContent.includes('#TITLE') || txtContent.includes('#ARTIST'))) {
+            // Patch downloaded .txt: update MP3/VIDEO/COVER headers, remove unused BACKGROUND
+            let lines = txtContent.split('\n');
+            lines = lines.filter(l => !l.match(/^#MP3:/i) && !l.match(/^#VIDEO:/i) && !l.match(/^#COVER:/i) && !l.match(/^#BACKGROUND:/i));
+            
+            const lastHeaderIdx = lines.reduce((acc, l, i) => l.startsWith('#') ? i : acc, 0);
+            lines.splice(lastHeaderIdx + 1, 0, `#MP3:${safeName}.mp3`);
+            
+            let offset = 2;
+            if (videoHeaderValue) {
+                lines.splice(lastHeaderIdx + offset, 0, `#VIDEO:${videoHeaderValue}`);
+                offset++;
+            }
+            
+            // Check for downloaded cover thumbnail
+            if (fs.existsSync(targetCover)) {
+                lines.splice(lastHeaderIdx + offset, 0, `#COVER:${safeName}-cover.jpg`);
+            }
+            
+            fs.writeFileSync(txtPath, lines.join('\n'), 'utf-8');
+        } else {
+            // Generate minimal UltraStar .txt
+            const lines = [
+                `#TITLE:${title}`,
+                `#ARTIST:${artist}`,
+                `#MP3:${safeName}.mp3`,
+                videoHeaderValue ? `#VIDEO:${videoHeaderValue}` : null,
+                fs.existsSync(targetCover) ? `#COVER:${safeName}-cover.jpg` : null,
+                `#BPM:200`,
+                `#GAP:0`,
+                `E`
+            ].filter(Boolean);
+            fs.writeFileSync(txtPath, lines.join('\n'), 'utf-8');
+        }
+        job.log.push('✅ .txt written.');
+        job.progress = 100;
+        job.status = 'done';
+        job.log.push(`🎉 Saved to: ${songDir}`);
+
+        // Auto-rescan library
+        setTimeout(scanSongs, 1000);
+    } catch (err) {
+        job.status = 'error';
+        job.error = err.message;
+        job.log.push(`❌ ${err.message}`);
+    }
+}
+
+// --- USDB API routes ---
+
+app.get('/api/usdb/search', async (req, res) => {
+    const { title, artist, edition, language, genre, year, creator,
+            limit, order, direction, golden, sc, offset } = req.query;
+    // Require at least one filter field
+    if (!title && !artist && !edition && !language && !genre && !year && !creator && golden !== '1' && sc !== '1') {
+        return res.json([]);
+    }
+    try {
+        const results = await searchUsdb({ title, artist, edition, language, genre, year, creator, limit, order, direction, golden, sc, offset });
+        res.json(results);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/usdb/download', (req, res) => {
+    const { usdbId, artist, title, videoMode } = req.body;
+    if (!usdbId || !artist || !title) return res.status(400).json({ error: 'Missing usdbId, artist or title' });
+    const mode = ['mp4', 'stream', 'none'].includes(videoMode) ? videoMode : 'none';
+    const jobId = crypto.randomBytes(8).toString('hex');
+    const job = { jobId, usdbId, artist, title, videoMode: mode, status: 'pending', progress: 0, log: [], error: null };
+    DOWNLOAD_JOBS.set(jobId, job);
+    runDownloadJob(job); // fire & forget
+    res.json({ jobId });
+});
+
+app.get('/api/usdb/status/:jobId', (req, res) => {
+    const job = DOWNLOAD_JOBS.get(req.params.jobId);
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    res.json({ status: job.status, progress: job.progress, log: job.log.slice(-30), error: job.error });
+});
+
+app.get('/api/config/download-dir', (req, res) => {
+    res.json({ downloadDir: config.downloadDir || config.directories[0] || null });
+});
+
+app.post('/api/config/download-dir', (req, res) => {
+    const { dir } = req.body;
+    if (!dir || !fs.existsSync(dir)) return res.status(400).json({ error: 'Directory does not exist' });
+    config.downloadDir = dir;
+    res.json({ downloadDir: config.downloadDir });
+});
+
+app.get('/api/config/usdb-credentials', (req, res) => {
+    res.json({ username: config.usdbUsername || '', hasPassword: !!config.usdbPassword });
+});
+
+app.post('/api/config/usdb-credentials', async (req, res) => {
+    const { username, password } = req.body;
+    if (!username) return res.status(400).json({ error: 'username required' });
+
+    let finalPassword = password;
+    if (password === '********' || !password) {
+        finalPassword = config.usdbPassword;
+    }
+
+    try {
+        const testCookie = await usdbLogin(username, finalPassword);
+        USDB_SESSION_COOKIE = testCookie;
+        config.setUsdbCredentials(username, finalPassword);
+        res.json({ ok: true });
+    } catch (e) {
+        res.status(400).json({ error: e.message });
     }
 });
 
