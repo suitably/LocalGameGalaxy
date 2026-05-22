@@ -745,11 +745,17 @@ app.get('/', (req, res) => {
 
                     <!-- Results table -->
                     <div id="usdb-results-wrap" style="display:none;">
-                        <div style="font-size:0.85rem; color:#65676b; margin-bottom:6px;" id="usdb-result-count"></div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <div style="font-size:0.85rem; color:#65676b;" id="usdb-result-count"></div>
+                            <button id="btn-usdb-bulk-download" onclick="startBulkDownload()" style="display:none; font-size:0.85rem; padding:4px 10px; background:#1877f2; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
+                                📥 Download Selected (0)
+                            </button>
+                        </div>
                         <div style="overflow-x:auto;">
                             <table id="usdb-results-table" style="width:100%; border-collapse:collapse; font-size:0.85rem; white-space:nowrap;">
                                 <thead>
                                     <tr style="background:#f0f2f5; text-align:left;">
+                                        <th style="padding:8px 6px; width:30px;"><input type="checkbox" id="usdb-select-all" onclick="toggleSelectAllOnPage(this.checked)"></th>
                                         <th style="padding:8px 6px;">Artist</th>
                                         <th style="padding:8px 6px;">Title</th>
                                         <th style="padding:8px 6px;">Genre</th>
@@ -781,26 +787,20 @@ app.get('/', (req, res) => {
                 </div><!-- /usdb-card-body -->
             </div><!-- /USDB card -->
 
-            <!-- Progress modal -->
-            <div id="usdb-progress-modal" class="modal" onclick="if(event.target===this && activeJob && activeJob.status==='done') closeProgressModal()">
-                <div class="modal-content" style="max-height:80vh; overflow:hidden;">
-                    <div class="browser-header">
-                        <span id="usdb-progress-title" style="font-weight:bold;">Downloading…</span>
-                        <button class="secondary" id="btn-close-progress" onclick="closeProgressModal()" style="display:none;">Close</button>
-                    </div>
-                    <div style="margin:10px 0;">
-                        <div style="background:#e4e6eb; border-radius:6px; height:10px; overflow:hidden;">
-                            <div id="usdb-progress-bar" style="background:#1877f2; height:100%; width:0%; transition:width 0.4s;"></div>
-                        </div>
-                        <div id="usdb-progress-pct" style="text-align:center; font-size:0.85rem; margin-top:4px; color:#65676b;">0%</div>
-                    </div>
-                    <div id="usdb-log-box" style="background:#1c1e21; color:#4cd964; font-family:monospace; font-size:0.8rem;
-                                                   padding:10px; border-radius:6px; height:300px; overflow-y:auto; white-space:pre-wrap;"></div>
+            <!-- Background Jobs Dashboard -->
+            <div id="usdb-jobs-container" style="display:none; margin-top:20px; background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); padding:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h3 style="margin:0; font-size:1.1rem; color:#1c1e21;">⬇ Downloads Dashboard</h3>
+                    <button class="secondary" style="font-size:0.8rem; padding:4px 8px;" onclick="pollJobs()">↻ Refresh</button>
                 </div>
+                <div id="usdb-jobs-list" style="display:flex; flex-direction:column; gap:8px; max-height:500px; overflow-y:auto; padding-right:6px;"></div>
             </div>
 
             <script>
                 // ---- USDB Manager JS ----
+                const selectedSongs = new Map();
+                let currentSearchSongs = [];
+                let jobsPollTimer = null;
                 let activeJob = null;
                 let pollTimer = null;
                 let usdbBrowserTarget = null;
@@ -833,6 +833,9 @@ app.get('/', (req, res) => {
                         const d2 = await r2.json();
                         if (d2.downloadDir) document.getElementById('usdb-dldir').value = d2.downloadDir;
                     } catch(_) {}
+                    
+                    // Poll for existing jobs on page load
+                    if (typeof pollJobs === 'function') pollJobs();
                 })();
 
                 function toggleUsdbCard() {
@@ -931,46 +934,41 @@ app.get('/', (req, res) => {
 
                 function usdbNewSearch() {
                     usdbOffset = 0;
-                    usdbSearch();
+                    doUsdbSearch();
                 }
 
                 function changeUsdbPage(dir) {
-                    const limit = parseInt(document.getElementById('usdb-f-limit').value, 10);
+                    const limit = parseInt(document.getElementById('usdb-f-limit').value, 10) || 30;
                     usdbOffset += dir * limit;
                     if (usdbOffset < 0) usdbOffset = 0;
-                    if (usdbOffset >= usdbTotalResults) usdbOffset = usdbTotalResults - limit;
-                    usdbSearch();
+                    doUsdbSearch();
                 }
 
-                async function usdbSearch() {
-                    const title   = document.getElementById('usdb-f-title').value.trim();
-                    const artist  = document.getElementById('usdb-f-artist').value.trim();
-                    const edition   = document.getElementById('usdb-f-edition').value.trim();
-                    const language  = document.getElementById('usdb-f-language').value.trim();
-                    const genre     = document.getElementById('usdb-f-genre').value.trim();
-                    const year      = document.getElementById('usdb-f-year').value.trim();
-                    const creator   = document.getElementById('usdb-f-creator').value.trim();
-                    const limit     = document.getElementById('usdb-f-limit').value;
-                    const order     = document.getElementById('usdb-f-order').value;
-                    const direction = document.getElementById('usdb-f-direction').value;
-                    const golden    = document.getElementById('usdb-f-golden').checked ? '1' : '0';
-                    const sc        = document.getElementById('usdb-f-sc').checked ? '1' : '0';
-
-                    if (!title && !artist && !edition && !language && !genre && !year && !creator && golden !== '1' && sc !== '1') return;
-
-                    const params = new URLSearchParams({
-                        token: API_TOKEN,
-                        title, artist, edition, language, genre, year, creator,
-                        limit, order, direction, golden, sc,
-                        offset: usdbOffset
-                    });
+                async function doUsdbSearch() {
+                    const title    = document.getElementById('usdb-f-title').value.trim();
+                    const artist   = document.getElementById('usdb-f-artist').value.trim();
+                    const edition  = document.getElementById('usdb-f-edition').value.trim();
+                    const language = document.getElementById('usdb-f-language').value.trim();
+                    const genre    = document.getElementById('usdb-f-genre').value.trim();
+                    const year     = document.getElementById('usdb-f-year').value.trim();
+                    const creator  = document.getElementById('usdb-f-creator').value.trim();
+                    const limit    = document.getElementById('usdb-f-limit').value;
+                    const order    = document.getElementById('usdb-f-order').value;
+                    const dir      = document.getElementById('usdb-f-direction').value;
+                    const golden   = document.getElementById('usdb-f-golden').checked ? '1' : '0';
+                    const sc       = document.getElementById('usdb-f-sc').checked ? '1' : '0';
 
                     const btn = document.getElementById('btn-usdb-search');
-                    btn.disabled = true; btn.textContent = '⏳ Searching…';
+                    btn.disabled = true; btn.textContent = '...';
                     document.getElementById('usdb-error').style.display = 'none';
-                    document.getElementById('usdb-results-wrap').style.display = 'none';
+
+                    const params = new URLSearchParams({
+                        title, artist, edition, language, genre, year, creator,
+                        limit, order, direction: dir, golden, sc, offset: usdbOffset
+                    });
+
                     try {
-                        const r = await fetch('/api/usdb/search?' + params);
+                        const r = await fetch('/api/usdb/search?token=' + API_TOKEN + '&' + params.toString());
                         const data = await r.json();
                         if (!r.ok) throw new Error(data.error || 'Search failed');
                         renderUsdbResults(data.songs, data.totalResults, parseInt(limit, 10));
@@ -987,6 +985,7 @@ app.get('/', (req, res) => {
                     tbody.innerHTML = '';
                     
                     usdbTotalResults = totalResults || 0;
+                    currentSearchSongs = songs;
 
                     if (usdbTotalResults > 0) {
                         const startNum = usdbOffset + 1;
@@ -999,14 +998,13 @@ app.get('/', (req, res) => {
 
                     if (songs.length === 0) {
                         const tr = document.createElement('tr');
-                        tr.innerHTML = '<td colspan="12" style="padding:16px; text-align:center; color:#888;">No results found. Try different search terms.</td>';
+                        tr.innerHTML = '<td colspan="13" style="padding:16px; text-align:center; color:#888;">No results found. Try different search terms.</td>';
                         tbody.appendChild(tr);
                         document.getElementById('usdb-pagination').style.display = 'none';
                         document.getElementById('usdb-results-wrap').style.display = 'block';
                         return;
                     }
 
-                    // Pagination controls display
                     const pag = document.getElementById('usdb-pagination');
                     if (usdbTotalResults > limit) {
                         pag.style.display = 'flex';
@@ -1026,7 +1024,9 @@ app.get('/', (req, res) => {
                         tr.style.borderBottom = '1px solid #f0f0f0';
                         tr.onmouseover = () => tr.style.background = '#f7f8fa';
                         tr.onmouseout  = () => tr.style.background = '';
+                        const isSelected = selectedSongs.has(s.usdbId);
                         tr.innerHTML = \`
+                            <td style="padding:8px 6px;"><input type="checkbox" class="usdb-row-checkbox" data-idx="\${i}" \${isSelected ? 'checked' : ''} onchange="toggleSongSelection(\${i}, this.checked)"></td>
                             <td style="padding:8px 6px; max-width:160px; overflow:hidden; text-overflow:ellipsis;" title="\${esc(s.artist)}">\${esc(s.artist)}</td>
                             <td style="padding:8px 6px; max-width:180px; overflow:hidden; text-overflow:ellipsis; font-weight:500;" title="\${esc(s.title)}">\${esc(s.title)}</td>
                             <td style="padding:8px 6px; color:#888; font-size:0.8rem;">\${esc(s.genre)}</td>
@@ -1038,7 +1038,7 @@ app.get('/', (req, res) => {
                             <td style="padding:8px 6px; color:#f5a623; font-size:0.8rem; letter-spacing:-1px;">\${esc(s.rating)}</td>
                             <td style="padding:8px 6px; color:#888; font-size:0.8rem;">\${esc(s.views)}</td>
                             <td style="padding:8px 6px;">
-                                <select id="vmode-\${i}" style="padding:4px 6px; border-radius:4px; border:1px solid #ddd; font-size:0.8rem;">
+                                <select id="vmode-\${i}" style="padding:4px 6px; border-radius:4px; border:1px solid #ddd; font-size:0.8rem;" onchange="updateVideoMode(\${i}, this.value)">
                                     <option value="mp4">🎬 MP4</option>
                                     <option value="stream">📡 Stream</option>
                                     <option value="none" selected>🎵 Audio</option>
@@ -1056,6 +1056,87 @@ app.get('/', (req, res) => {
                     });
 
                     document.getElementById('usdb-results-wrap').style.display = 'block';
+                    updateBulkDownloadButton();
+                }
+
+                function toggleSongSelection(idx, checked) {
+                    const s = currentSearchSongs[idx];
+                    const vmode = document.getElementById('vmode-' + idx).value;
+                    if (checked) {
+                        selectedSongs.set(s.usdbId, { usdbId: s.usdbId, artist: s.artist, title: s.title, videoMode: vmode });
+                    } else {
+                        selectedSongs.delete(s.usdbId);
+                    }
+                    updateBulkDownloadButton();
+                }
+
+                function toggleSelectAllOnPage(checked) {
+                    const checkboxes = document.querySelectorAll('.usdb-row-checkbox');
+                    checkboxes.forEach(cb => {
+                        cb.checked = checked;
+                        const idx = parseInt(cb.dataset.idx, 10);
+                        const s = currentSearchSongs[idx];
+                        const vmode = document.getElementById('vmode-' + idx).value;
+                        if (checked) {
+                            selectedSongs.set(s.usdbId, { usdbId: s.usdbId, artist: s.artist, title: s.title, videoMode: vmode });
+                        } else {
+                            selectedSongs.delete(s.usdbId);
+                        }
+                    });
+                    updateBulkDownloadButton();
+                }
+
+                function updateVideoMode(idx, value) {
+                    const s = currentSearchSongs[idx];
+                    if (selectedSongs.has(s.usdbId)) {
+                        selectedSongs.get(s.usdbId).videoMode = value;
+                    }
+                }
+
+                function updateBulkDownloadButton() {
+                    const btn = document.getElementById('btn-usdb-bulk-download');
+                    const count = selectedSongs.size;
+                    if (count > 0) {
+                        btn.style.display = 'inline-block';
+                        btn.textContent = '📥 Download Selected (' + count + ')';
+                    } else {
+                        btn.style.display = 'none';
+                    }
+                    
+                    const allCbs = document.querySelectorAll('.usdb-row-checkbox');
+                    const allChecked = allCbs.length > 0 && Array.from(allCbs).every(cb => cb.checked);
+                    const selectAllCb = document.getElementById('usdb-select-all');
+                    if (selectAllCb) selectAllCb.checked = allChecked;
+                }
+
+                async function startBulkDownload() {
+                    if (selectedSongs.size === 0) return;
+                    const requests = Array.from(selectedSongs.values());
+                    
+                    const btn = document.getElementById('btn-usdb-bulk-download');
+                    btn.disabled = true;
+                    btn.textContent = '⏳ Enqueuing...';
+                    
+                    try {
+                        const r = await fetch('/api/usdb/download?token=' + API_TOKEN, {
+                            method: 'POST', headers: {'Content-Type':'application/json'},
+                            body: JSON.stringify(requests)
+                        });
+                        const d = await r.json();
+                        if (!r.ok) throw new Error(d.error || 'Failed to start downloads');
+                        
+                        // Clear selections
+                        selectedSongs.clear();
+                        document.querySelectorAll('.usdb-row-checkbox').forEach(cb => cb.checked = false);
+                        updateBulkDownloadButton();
+                        
+                        pollJobs();
+                    } catch(e) {
+                        alert('Error: ' + e.message);
+                    } finally {
+                        btn.disabled = false;
+                        updateBulkDownloadButton();
+                    }
                 }
 
                 async function startDownload(idx, usdbId) {
@@ -1071,67 +1152,97 @@ app.get('/', (req, res) => {
                     try {
                         const r = await fetch('/api/usdb/download?token=' + API_TOKEN, {
                             method: 'POST', headers: {'Content-Type':'application/json'},
-                            body: JSON.stringify({ usdbId, artist, title, videoMode: vmode })
+                            body: JSON.stringify([{ usdbId, artist, title, videoMode: vmode }])
                         });
                         const d = await r.json();
                         if (!r.ok) throw new Error(d.error || 'Failed to start download');
-                        openProgressModal(d.jobId, artist + ' – ' + title);
+                        
+                        btn.textContent = '✅';
+                        pollJobs();
                     } catch(e) {
                         alert('Error: ' + e.message);
                         btn.disabled = false; btn.textContent = '⬇ Download';
                     }
                 }
 
-                function openProgressModal(jobId, label) {
-                    document.getElementById('usdb-progress-title').textContent = '⬇ ' + label;
-                    document.getElementById('usdb-progress-bar').style.width = '0%';
-                    document.getElementById('usdb-progress-pct').textContent = '0%';
-                    document.getElementById('usdb-log-box').textContent = '';
-                    document.getElementById('btn-close-progress').style.display = 'none';
-                    document.getElementById('usdb-progress-modal').style.display = 'block';
-
-                    activeJob = { jobId, status: 'pending' };
-                    if (pollTimer) clearInterval(pollTimer);
-                    pollTimer = setInterval(() => pollJob(jobId), 1200);
-                }
-
-                function closeProgressModal() {
-                    document.getElementById('usdb-progress-modal').style.display = 'none';
-                    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-                }
-
-                async function pollJob(jobId) {
+                async function pollJobs() {
                     try {
-                        const r = await fetch('/api/usdb/status/' + jobId + '?token=' + API_TOKEN);
-                        const d = await r.json();
-                        activeJob = d;
-
-                        const pct = d.progress + '%';
-                        document.getElementById('usdb-progress-bar').style.width = pct;
-                        document.getElementById('usdb-progress-pct').textContent = pct;
-
-                        const logBox = document.getElementById('usdb-log-box');
-                        logBox.textContent = (d.log || []).join('\\n');
-                        logBox.scrollTop = logBox.scrollHeight;
-
-                        if (d.status === 'done' || d.status === 'error') {
-                            clearInterval(pollTimer); pollTimer = null;
-                            document.getElementById('btn-close-progress').style.display = 'inline-block';
-                            if (d.status === 'done') {
-                                document.getElementById('usdb-progress-bar').style.background = '#28a745';
-                                document.getElementById('usdb-progress-title').textContent = '✅ Download complete!';
-                            } else {
-                                document.getElementById('usdb-progress-bar').style.background = '#dc3545';
-                                document.getElementById('usdb-progress-title').textContent = '❌ Download failed';
-                            }
+                        const r = await fetch('/api/usdb/jobs?token=' + API_TOKEN);
+                        if (!r.ok) return;
+                        const jobsList = await r.json();
+                        
+                        const containerWrap = document.getElementById('usdb-jobs-container');
+                        const listWrap = document.getElementById('usdb-jobs-list');
+                        
+                        if (jobsList.length === 0) {
+                            containerWrap.style.display = 'none';
+                            return;
                         }
-                    } catch(e) { /* ignore transient errors */ }
+                        
+                        containerWrap.style.display = 'block';
+                        
+                        const openJobIds = new Set();
+                        listWrap.querySelectorAll('details[open]').forEach(d => openJobIds.add(d.dataset.jobid));
+                        listWrap.innerHTML = '';
+                        
+                        let activeCount = 0;
+                        jobsList.slice().reverse().forEach(j => { // Newest top
+                            if (j.status === 'pending' || j.status === 'running') activeCount++;
+                            
+                            let color = '#65676b';
+                            let statusIcon = '⏳';
+                            if (j.status === 'running') { color = '#1877f2'; statusIcon = '▶️'; }
+                            else if (j.status === 'done') { color = '#28a745'; statusIcon = '✅'; }
+                            else if (j.status === 'error') { color = '#dc3545'; statusIcon = '❌'; }
+                            
+                            const div = document.createElement('div');
+                            div.style.border = '1px solid #e4e6eb';
+                            div.style.borderRadius = '6px';
+                            div.style.padding = '8px 12px';
+                            div.style.background = j.status === 'running' ? '#f0f7ff' : '#fff';
+                            
+                            const isOpen = openJobIds.has(j.jobId) || j.status === 'running';
+                            
+                            div.innerHTML = \`
+                                <details data-jobid="\${j.jobId}" \${isOpen ? 'open' : ''}>
+                                    <summary style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; outline:none;">
+                                        <div style="font-weight:600; font-size:0.9rem;">
+                                            \${statusIcon} \${j.artist} - \${j.title}
+                                        </div>
+                                        <div style="font-size:0.85rem; color:\${color}; font-weight:bold;">
+                                            \${j.status === 'error' ? 'Error' : j.progress + '%'}
+                                        </div>
+                                    </summary>
+                                    <div style="margin-top:8px;">
+                                        <div style="background:#e4e6eb; border-radius:4px; height:6px; overflow:hidden; margin-bottom:8px;">
+                                            <div style="background:\${color}; height:100%; width:\${j.progress}%; transition:width 0.4s;"></div>
+                                        </div>
+                                        <div style="background:#1c1e21; color:#4cd964; font-family:monospace; font-size:0.75rem;
+                                                       padding:8px; border-radius:4px; max-height:150px; overflow-y:auto; white-space:pre-wrap;">\${(j.log || []).join('\\n')}</div>
+                                    </div>
+                                </details>
+                            \`;
+                            listWrap.appendChild(div);
+                            
+                            if (j.status === 'running' || j.status === 'error' || j.status === 'pending') {
+                                setTimeout(() => {
+                                    const logBox = div.querySelector('div[style*="overflow-y:auto"]');
+                                    if (logBox) logBox.scrollTop = logBox.scrollHeight;
+                                }, 50);
+                            }
+                        });
+                        
+                        if (activeCount > 0) {
+                            if (!jobsPollTimer) jobsPollTimer = setInterval(pollJobs, 1500);
+                        } else {
+                            if (jobsPollTimer) { clearInterval(jobsPollTimer); jobsPollTimer = null; }
+                        }
+                    } catch (e) {}
                 }
             </script>
 
         </body>
         </html>
-
     `);
 });
 
@@ -1823,7 +1934,24 @@ async function runDownloadJob(job) {
     }
 }
 
-// --- USDB API routes ---
+// --- USDB API routes & Queue ---
+
+const jobQueue = [];
+let isQueueRunning = false;
+
+async function processJobQueue() {
+    if (isQueueRunning || jobQueue.length === 0) return;
+    isQueueRunning = true;
+    while (jobQueue.length > 0) {
+        const job = jobQueue.shift();
+        try {
+            await runDownloadJob(job);
+        } catch (e) {
+            console.error('Job failed:', e);
+        }
+    }
+    isQueueRunning = false;
+}
 
 app.get('/api/usdb/search', async (req, res) => {
     const { title, artist, edition, language, genre, year, creator,
@@ -1841,14 +1969,42 @@ app.get('/api/usdb/search', async (req, res) => {
 });
 
 app.post('/api/usdb/download', (req, res) => {
-    const { usdbId, artist, title, videoMode } = req.body;
-    if (!usdbId || !artist || !title) return res.status(400).json({ error: 'Missing usdbId, artist or title' });
-    const mode = ['mp4', 'stream', 'none'].includes(videoMode) ? videoMode : 'none';
-    const jobId = crypto.randomBytes(8).toString('hex');
-    const job = { jobId, usdbId, artist, title, videoMode: mode, status: 'pending', progress: 0, log: [], error: null };
-    DOWNLOAD_JOBS.set(jobId, job);
-    runDownloadJob(job); // fire & forget
-    res.json({ jobId });
+    let requests = req.body;
+    if (!Array.isArray(requests)) {
+        requests = [requests]; // Normalize to array
+    }
+    
+    const jobIds = [];
+    for (const reqItem of requests) {
+        const { usdbId, artist, title, videoMode } = reqItem;
+        if (!usdbId || !artist || !title) continue;
+        const mode = ['mp4', 'stream', 'none'].includes(videoMode) ? videoMode : 'none';
+        const jobId = crypto.randomBytes(8).toString('hex');
+        const job = { jobId, usdbId, artist, title, videoMode: mode, status: 'pending', progress: 0, log: [], error: null };
+        DOWNLOAD_JOBS.set(jobId, job);
+        jobQueue.push(job);
+        jobIds.push(jobId);
+    }
+    
+    if (jobIds.length === 0) return res.status(400).json({ error: 'No valid jobs provided' });
+    
+    processJobQueue(); // process sequentially
+    res.json({ jobIds });
+});
+
+app.get('/api/usdb/jobs', (req, res) => {
+    const jobsList = Array.from(DOWNLOAD_JOBS.values()).map(j => ({
+        jobId: j.jobId,
+        usdbId: j.usdbId,
+        artist: j.artist,
+        title: j.title,
+        videoMode: j.videoMode,
+        status: j.status,
+        progress: j.progress,
+        error: j.error,
+        log: j.log
+    }));
+    res.json(jobsList);
 });
 
 app.get('/api/usdb/status/:jobId', (req, res) => {
