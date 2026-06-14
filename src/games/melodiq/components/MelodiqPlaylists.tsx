@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, Button, Card, CardContent, CardActionArea, Grid, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Switch, FormControlLabel, Tooltip } from '@mui/material';
+import { Box, Typography, Button, Card, CardActionArea, Grid, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Switch, FormControlLabel, Tooltip } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloudSyncIcon from '@mui/icons-material/CloudSync';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
@@ -105,7 +105,7 @@ export const MelodiqPlaylists: React.FC<MelodiqPlaylistsProps> = ({ onBack, onSe
                 ) : (
                     <Grid container spacing={2}>
                         {playlists.map((playlist) => (
-                            <Grid item xs={12} sm={6} md={4} key={playlist.id}>
+                            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={playlist.id}>
                                 <Card sx={{ 
                                     height: '100%', 
                                     display: 'flex', 

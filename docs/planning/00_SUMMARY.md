@@ -4,5 +4,8 @@ This directory contains implementation plans for proposed changes. Each plan det
 - [Vocal Separation Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/vocal-separation-plan.md)
 - [Vocal Separation Monolith Fix Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/vocal-separation-monolith-fix-plan.md)
 - [Resolve Video Stream Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/resolve-video-stream-plan.md)
+- [WSS Integration Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/wss-integration-plan.md)
+- [Unify YouTube Search Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/unify-youtube-search-plan.md)
+- [Global Default Video Mode Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/global-vmode-plan.md)
 
 ID: DOCS-PLANNING-SUMMARY

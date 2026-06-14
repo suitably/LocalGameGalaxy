@@ -208,15 +208,33 @@ async function runDownloadJob(job) {
         }
         job.progress = 15;
 
+        // 3.5 Resolve YouTube URL if not provided to ensure consistency
+        let resolvedUrl = youtubeUrl;
+        if (!resolvedUrl) {
+            job.log.push('📡 Resolving YouTube URL...');
+            const cleanTitle = title.replace(/\[[^\]]*\]/g, '').replace(/\([^)]*\)/g, '').replace(/\s+/g, ' ').trim();
+            const cleanArtist = artist.replace(/\[[^\]]*\]/g, '').replace(/\([^)]*\)/g, '').replace(/\s+/g, ' ').trim();
+            const searchQuery = `ytsearch1:${cleanArtist} ${cleanTitle}`;
+            
+            const ytOut = await spawnYtDlp(ytBin, [
+                '--print', 'webpage_url', '--no-playlist',
+                searchQuery
+            ]);
+            resolvedUrl = ytOut.trim().split('\n')[0];
+            if (!resolvedUrl || (!resolvedUrl.startsWith('http://') && !resolvedUrl.startsWith('https://'))) {
+                throw new Error(`Failed to resolve YouTube URL for: ${artist} - ${title}`);
+            }
+            job.log.push(`📡 Resolved URL: ${resolvedUrl}`);
+        }
+
         // 4. Download audio and thumbnail via yt-dlp
         const audioOut = path.join(songDir, `${safeName}.mp3`);
         job.log.push('🎵 Downloading audio and cover...');
-        const audioSource = youtubeUrl || `ytsearch1:${artist} ${title} audio`;
         await spawnYtDlp(ytBin, [
             '--extract-audio', '--audio-format', 'mp3', '--audio-quality', '0',
             '--write-thumbnail', '--convert-thumbnails', 'jpg',
             '-o', audioOut, '--no-playlist',
-            audioSource
+            resolvedUrl
         ], l => job.log.push(l));
         
         // Rename cover thumbnail to a clean name (safeName-cover.jpg)
@@ -243,28 +261,17 @@ async function runDownloadJob(job) {
         if (videoMode === 'mp4') {
             const videoOut = path.join(songDir, `${safeName}.mp4`);
             job.log.push('🎬 Downloading video (MP4)...');
-            const videoSource = youtubeUrl || `ytsearch1:${artist} ${title}`;
             await spawnYtDlp(ytBin, [
                 '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
                 '--merge-output-format', 'mp4',
                 '-o', videoOut, '--no-playlist',
-                videoSource
+                resolvedUrl
             ], l => job.log.push(l));
             videoHeaderValue = `${safeName}.mp4`;
             job.log.push('✅ Video done.');
         } else if (videoMode === 'stream') {
-            if (youtubeUrl) {
-                videoHeaderValue = youtubeUrl;
-                job.log.push(`📡 Stream URL: ${videoHeaderValue}`);
-            } else {
-                job.log.push('📡 Resolving YouTube URL...');
-                const ytOut = await spawnYtDlp(ytBin, [
-                    '--print', 'webpage_url', '--no-playlist',
-                    `ytsearch1:${artist} ${title}`
-                ]);
-                videoHeaderValue = ytOut.trim().split('\n')[0];
-                job.log.push(`📡 Stream URL: ${videoHeaderValue}`);
-            }
+            videoHeaderValue = resolvedUrl;
+            job.log.push(`📡 Stream URL: ${videoHeaderValue}`);
         }
         job.progress = 85;
 

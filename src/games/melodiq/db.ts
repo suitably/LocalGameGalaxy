@@ -63,7 +63,7 @@ const db = new Dexie('MelodiqDB') as Dexie & {
 db.version(10).stores({
     scores: '++id, songId, profileId, score, date, difficulty',
     playlists: 'id, name, creatorToken, isGlobal, updatedAt'
-}).upgrade(tx => {
+}).upgrade(() => {
     // Initialization for upgrade if needed
 });
 

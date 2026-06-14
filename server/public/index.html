@@ -1077,7 +1077,13 @@
                                 <th style="padding:8px 6px;">Creator</th>
                                 <th style="padding:8px 6px;">Rating</th>
                                 <th style="padding:8px 6px;">Views</th>
-                                <th style="padding:8px 6px;">🎬 Video</th>
+                                <th style="padding:8px 6px;">
+                                    <select id="global-vmode" style="padding:2px 4px; border-radius:4px; border:1px solid #ccc; font-size:0.8rem; font-weight:bold; cursor:pointer;" onchange="changeGlobalVideoMode(this.value)">
+                                        <option value="none" selected>🎵 Audio Only</option>
+                                        <option value="mp4">🎬 MP4</option>
+                                        <option value="stream">📡 Stream</option>
+                                    </select>
+                                </th>
                                 <th style="padding:8px 6px;"></th>
                             </tr>
                         </thead>
@@ -1118,6 +1124,13 @@
 
         // Load current settings on page load
         (async () => {
+            // Load default video mode from localStorage
+            const defaultVmode = localStorage.getItem('usdb_default_vmode') || 'none';
+            const manualVmode = document.getElementById('manual-vmode');
+            if (manualVmode) manualVmode.value = defaultVmode;
+            const globalVmode = document.getElementById('global-vmode');
+            if (globalVmode) globalVmode.value = defaultVmode;
+
             try {
                 const r1 = await fetch('/api/config/usdb-credentials?token=' + API_TOKEN);
                 const d1 = await r1.json();
@@ -1300,6 +1313,11 @@
             usdbTotalResults = totalResults || 0;
             currentSearchSongs = songs;
 
+            // Sync global vmode select to persisted setting
+            const defaultVmode = localStorage.getItem('usdb_default_vmode') || 'none';
+            const globalVmode = document.getElementById('global-vmode');
+            if (globalVmode) globalVmode.value = defaultVmode;
+
             if (usdbTotalResults > 0) {
                 const startNum = usdbOffset + 1;
                 const endNum = Math.min(usdbOffset + limit, usdbTotalResults);
@@ -1338,6 +1356,7 @@
                 tr.onmouseover = () => tr.style.background = '#f7f8fa';
                 tr.onmouseout  = () => tr.style.background = '';
                 const isSelected = selectedSongs.has(s.usdbId);
+                const currentVmode = isSelected ? selectedSongs.get(s.usdbId).videoMode : defaultVmode;
                 tr.innerHTML = `
                     <td style="padding:8px 6px;"><input type="checkbox" class="usdb-row-checkbox" data-idx="${i}" ${isSelected ? 'checked' : ''} onchange="toggleSongSelection(${i}, this.checked)"></td>
                     <td style="padding:8px 6px; max-width:300px; overflow:hidden; text-overflow:ellipsis;" title="${esc(s.artist)}">${esc(s.artist)}</td>
@@ -1352,9 +1371,9 @@
                     <td style="padding:8px 6px; color:#888; font-size:0.8rem;">${esc(s.views)}</td>
                     <td style="padding:8px 6px;">
                         <select id="vmode-${i}" style="padding:4px 6px; border-radius:4px; border:1px solid #ddd; font-size:0.8rem;" onchange="updateVideoMode(${i}, this.value)">
-                            <option value="mp4">🎬 MP4</option>
-                            <option value="stream">📡 Stream</option>
-                            <option value="none" selected>🎵 Audio</option>
+                            <option value="mp4" ${currentVmode === 'mp4' ? 'selected' : ''}>🎬 MP4</option>
+                            <option value="stream" ${currentVmode === 'stream' ? 'selected' : ''}>📡 Stream</option>
+                            <option value="none" ${currentVmode === 'none' ? 'selected' : ''}>🎵 Audio</option>
                         </select>
                     </td>
                     <td style="padding:8px 6px; text-align:right;">
@@ -1404,6 +1423,26 @@
             if (selectedSongs.has(s.usdbId)) {
                 selectedSongs.get(s.usdbId).videoMode = value;
             }
+        }
+
+        function changeGlobalVideoMode(val) {
+            localStorage.setItem('usdb_default_vmode', val);
+            
+            // Sync manual video mode select element
+            const manualVmode = document.getElementById('manual-vmode');
+            if (manualVmode) manualVmode.value = val;
+            
+            // Update all row select elements in the current search results
+            currentSearchSongs.forEach((s, idx) => {
+                const el = document.getElementById('vmode-' + idx);
+                if (el) {
+                    el.value = val;
+                }
+                // If song is selected, update its mode in Map
+                if (selectedSongs.has(s.usdbId)) {
+                    selectedSongs.get(s.usdbId).videoMode = val;
+                }
+            });
         }
 
         function updateBulkDownloadButton() {

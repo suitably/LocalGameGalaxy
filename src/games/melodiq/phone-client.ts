@@ -210,22 +210,19 @@ function cleanup() {
     }
 }
 
+function getTrackersFromUrl(): string[] {
+    const params = new URLSearchParams(window.location.search);
+    const trackers = params.getAll('tracker');
+    return [...trackers, 'wss://tracker.openwebtorrent.com'];
+}
+
 async function reconnect() {
     cleanup();
     const partyId = getPartyIdFromUrl();
     if (partyId) {
-        // Deduplicate using Set
-        // Reliable public trackers only - SINGLE default to ensure matching
-        const reliableTrackers = [
-            'wss://tracker.openwebtorrent.com',
-        ];
-
-
-
-        const uniqueTrackers = Array.from(new Set(reliableTrackers));
-
+        const trackers = getTrackersFromUrl();
+        const uniqueTrackers = Array.from(new Set(trackers));
         console.log('[Phone] Starting with trackers:', uniqueTrackers);
-
         await connect(partyId, uniqueTrackers);
     }
 }
@@ -235,16 +232,8 @@ const partyId = getPartyIdFromUrl();
 if (!partyId) {
     setStatus('❌ No Party ID', 'status-error');
 } else {
-    // Reliable public trackers only - SINGLE default to ensure matching
-    const reliableTrackers = [
-        'wss://tracker.openwebtorrent.com',
-    ];
-
-
-
-    // Deduplicate
-    const uniqueTrackers = Array.from(new Set(reliableTrackers));
-
+    const trackers = getTrackersFromUrl();
+    const uniqueTrackers = Array.from(new Set(trackers));
     console.log('[Phone] Starting with trackers:', uniqueTrackers);
     connect(partyId, uniqueTrackers);
 }

@@ -51,6 +51,34 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
         return stored ? JSON.parse(stored) : [];
     });
 
+    // Computed active tracker URLs including helper server tracker if enabled
+    const activeTrackerUrls = useMemo(() => {
+        const urls = [...trackerUrls];
+        const isHelperEnabled = localStorage.getItem('melodiq_enable_helper') !== 'false';
+        if (isHelperEnabled) {
+            const helperUrlRaw = localStorage.getItem('melodiq_helper_url') || window.location.origin;
+            try {
+                const parsed = new URL(helperUrlRaw);
+                const wsProto = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
+                const localWsTracker = `${wsProto}//${parsed.hostname}${parsed.port ? `:${parsed.port}` : ''}`;
+                
+                // Only add if not already in the list
+                if (!urls.includes(localWsTracker)) {
+                    urls.unshift(localWsTracker); // Prepend to make it primary!
+                }
+            } catch (e) {
+                console.warn('[WebRTCHostProvider] Failed to parse helper URL for local tracker:', e);
+            }
+        }
+        
+        // If still empty, use a default fallback so it doesn't break
+        if (urls.length === 0) {
+            urls.push('wss://tracker.openwebtorrent.com');
+        }
+        
+        return Array.from(new Set(urls));
+    }, [trackerUrls]);
+
     // 2. Runtime State
     const [manager, setManager] = useState<M | null>(null);
     const [peers, setPeers] = useState<T[]>([]);
@@ -78,7 +106,7 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
 
     // 3. Manager Lifecycle
     useEffect(() => {
-        if (!partyId || trackerUrls.length === 0) return;
+        if (!partyId || activeTrackerUrls.length === 0) return;
 
         let managerInstance: M | null = null;
         let isCleanedUp = false;
@@ -88,9 +116,9 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
         const timer = setTimeout(() => {
             if (isCleanedUp) return;
 
-            console.log(`[WebRTCHostProvider:${gameId}] Initializing Manager with:`, { partyId, trackerUrls });
+            console.log(`[WebRTCHostProvider:${gameId}] Initializing Manager with:`, { partyId, trackerUrls: activeTrackerUrls });
 
-            managerInstance = createManager(partyId, trackerUrls, {
+            managerInstance = createManager(partyId, activeTrackerUrls, {
                 onPeerConnected: (peerId: string, name: string, hue?: number, connectionId?: string) => {
                     setPeers(prev => {
                         const existing = prev.find(p => p.peerId === peerId);
@@ -149,7 +177,7 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
                 setPeers([]);
             }
         };
-    }, [partyId, JSON.stringify(trackerUrls), gameId, createManager]);
+    }, [partyId, JSON.stringify(activeTrackerUrls), gameId, createManager]);
 
     // 4. Actions
     const regeneratePartyId = useCallback(() => {

@@ -9,7 +9,7 @@ interface PlaybackManagerProps {
     selectedSong: Song | null;
     remoteSong: SongMeta | null;
     isTVConnected: boolean;
-    currentView: 'Home' | 'Settings' | 'Session' | 'Connection';
+    currentView: string;
     onExitSession: (forceHome?: boolean) => void;
     onMinimizeSession: () => void;
     onRestoreSession: () => void;

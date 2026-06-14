@@ -62,11 +62,24 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
 
         url.searchParams.set('party', partyId);
 
+        // Resolve target hostname for the phone to connect to
+        let targetHost = '';
+        try {
+            targetHost = new URL(baseUrl).hostname;
+        } catch (e) {}
+
         // Add all tracker URLs to the params
         trackerUrls.forEach((tracker: string) => {
-            // Filter out localhost trackers for the phone QR code as they won't work on the phone
-            if (!tracker.includes('localhost') && !tracker.includes('127.0.0.1')) {
-                url.searchParams.append('tracker', tracker);
+            let resolvedTracker = tracker;
+            if (targetHost && (tracker.includes('localhost') || tracker.includes('127.0.0.1'))) {
+                // Swap localhost/127.0.0.1 with the actual reachable host IP/domain from baseUrl
+                resolvedTracker = tracker
+                    .replace('localhost', targetHost)
+                    .replace('127.0.0.1', targetHost);
+            }
+            // Add if it doesn't contain localhost/127.0.0.1 anymore (meaning it was resolved)
+            if (!resolvedTracker.includes('localhost') && !resolvedTracker.includes('127.0.0.1')) {
+                url.searchParams.append('tracker', resolvedTracker);
             }
         });
 
@@ -188,10 +201,21 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
                                         url = new URL(`${window.location.origin}${clientPath}`);
                                     }
 
+                                    let targetHost = '';
+                                    try {
+                                        targetHost = new URL(baseUrl).hostname;
+                                    } catch (e) {}
+
                                     url.searchParams.set('party', partyId);
                                     trackerUrls.forEach((tracker: string) => {
-                                        if (!tracker.includes('localhost') && !tracker.includes('127.0.0.1')) {
-                                            url.searchParams.append('tracker', tracker);
+                                        let resolvedTracker = tracker;
+                                        if (targetHost && (tracker.includes('localhost') || tracker.includes('127.0.0.1'))) {
+                                            resolvedTracker = tracker
+                                                .replace('localhost', targetHost)
+                                                .replace('127.0.0.1', targetHost);
+                                        }
+                                        if (!resolvedTracker.includes('localhost') && !resolvedTracker.includes('127.0.0.1')) {
+                                            url.searchParams.append('tracker', resolvedTracker);
                                         }
                                     });
                                     return url.toString();
