@@ -353,7 +353,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         if (vocalsRef.current) {
             vocalsRef.current.volume = muteAudio ? 0 : (settings.vocalsVolume ?? 1.0) * masterVolume;
         }
-    }, [songVolume, masterVolume, settings.vocalsVolume, muteAudio]);
+    }, [songVolume, masterVolume, settings.vocalsVolume, muteAudio, vocalsSrc]);
 
     // Auto-Hide UI State
     const [isUIVisible, setIsUIVisible] = useState(true);
@@ -1099,9 +1099,21 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
             });
         }
 
-        if (audioRef.current && isPlaying) {
+        if (audioRef.current) {
             if (videoRef.current && Math.abs(videoRef.current.currentTime - audioRef.current.currentTime) > 0.2) {
                 videoRef.current.currentTime = audioRef.current.currentTime;
+            }
+            if (vocalsRef.current) {
+                // Keep time in sync
+                if (Math.abs(vocalsRef.current.currentTime - audioRef.current.currentTime) > 0.15) {
+                    vocalsRef.current.currentTime = audioRef.current.currentTime;
+                }
+                // Keep play/pause state in sync (forces play if main track is playing, pauses if main track is paused)
+                if (isPlaying && !audioRef.current.paused && vocalsRef.current.paused) {
+                    vocalsRef.current.play().catch(e => console.warn("Vocals sync play failed", e));
+                } else if ((!isPlaying || audioRef.current.paused) && !vocalsRef.current.paused) {
+                    vocalsRef.current.pause();
+                }
             }
         }
 
@@ -1339,31 +1351,6 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                 }
             }
             if (mounted) setAudioSrc(activeUrl);
-
-            // Attempt to resolve vocals track if present in parsedSong headers
-            if (mounted && parsedSong?.headers?.VOCALS && typeof song.audio === 'string') {
-                try {
-                    let vocalsUrlString = song.audio;
-                    if (!vocalsUrlString.startsWith('http') && !vocalsUrlString.startsWith('/')) {
-                        const helperUrl = localStorage.getItem('melodiq_helper_url')?.replace(/\/$/, "") || 'http://localhost:3000';
-                        vocalsUrlString = `${helperUrl}${vocalsUrlString.startsWith('/') ? '' : '/'}${vocalsUrlString}`;
-                    } else if (vocalsUrlString.startsWith('/')) {
-                        const helperUrl = window.location.origin.includes('3000') ? window.location.origin : (localStorage.getItem('melodiq_helper_url')?.replace(/\/$/, "") || 'http://localhost:3000');
-                        vocalsUrlString = `${helperUrl}${vocalsUrlString}`;
-                    }
-
-                    const url = new URL(vocalsUrlString);
-                    const pathParam = url.searchParams.get('path');
-                    if (pathParam) {
-                        const pathParts = pathParam.split('/');
-                        pathParts[pathParts.length - 1] = parsedSong.headers.VOCALS;
-                        url.searchParams.set('path', pathParts.join('/'));
-                        setVocalsSrc(url.toString());
-                    }
-                } catch (e) {
-                    console.warn("Could not resolve vocals URL", e);
-                }
-            }
         };
         loadAudio();
 
@@ -1378,6 +1365,37 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
             }
         };
     }, [song.audio, song.id]);
+
+    // Resolve vocals track if present in parsedSong headers (separated from loadAudio to prevent React dependency bugs)
+    useEffect(() => {
+        if (!parsedSong?.headers?.VOCALS || typeof song.audio !== 'string') {
+            setVocalsSrc(undefined);
+            return;
+        }
+
+        try {
+            let vocalsUrlString = song.audio;
+            if (!vocalsUrlString.startsWith('http') && !vocalsUrlString.startsWith('/')) {
+                const helperUrl = localStorage.getItem('melodiq_helper_url')?.replace(/\/$/, "") || 'http://localhost:3000';
+                vocalsUrlString = `${helperUrl}${vocalsUrlString.startsWith('/') ? '' : '/'}${vocalsUrlString}`;
+            } else if (vocalsUrlString.startsWith('/')) {
+                const helperUrl = window.location.origin.includes('3000') ? window.location.origin : (localStorage.getItem('melodiq_helper_url')?.replace(/\/$/, "") || 'http://localhost:3000');
+                vocalsUrlString = `${helperUrl}${vocalsUrlString}`;
+            }
+
+            const url = new URL(vocalsUrlString);
+            const pathParam = url.searchParams.get('path');
+            if (pathParam) {
+                const pathParts = pathParam.split('/');
+                pathParts[pathParts.length - 1] = parsedSong.headers.VOCALS;
+                url.searchParams.set('path', pathParts.join('/'));
+                setVocalsSrc(url.toString());
+                console.log("[MelodiqSession] Resolved vocals track URL:", url.toString());
+            }
+        } catch (e) {
+            console.warn("Could not resolve vocals URL", e);
+        }
+    }, [parsedSong, song.audio]);
 
     useEffect(() => {
         let activeUrl: string | undefined;

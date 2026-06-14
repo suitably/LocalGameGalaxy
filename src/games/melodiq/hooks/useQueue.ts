@@ -100,6 +100,23 @@ export const useQueue = () => {
         channel.postMessage({ type: 'UPDATE_QUEUE', payload: next });
     }, [channel, syncQueue]);
 
+    const playPlaylistNow = useCallback((songs: SongMeta[], requester?: string) => {
+        const next: QueueItem[] = songs.map(song => ({
+            id: crypto.randomUUID(),
+            song,
+            addedAt: Date.now(),
+            requester
+        }));
+        syncQueue(next);
+        channel.postMessage({ type: 'UPDATE_QUEUE', payload: next });
+        
+        // Dispatch an event to play the first song immediately
+        if (next.length > 0) {
+            const event = new CustomEvent('melodiq_play_playlist_trigger', { detail: next[0].song });
+            window.dispatchEvent(event);
+        }
+    }, [channel, syncQueue]);
+
     const addNext = useCallback((song: SongMeta, requester?: string) => {
         const newItem: QueueItem = {
             id: crypto.randomUUID(),
@@ -138,6 +155,7 @@ export const useQueue = () => {
         popNext,
         clearQueue,
         moveItem,
-        setNowPlaying
+        setNowPlaying,
+        playPlaylistNow
     };
 };

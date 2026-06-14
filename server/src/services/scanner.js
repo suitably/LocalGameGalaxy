@@ -65,6 +65,9 @@ const scanSongs = async () => {
 
                     const getServeUrl = (filename) => {
                         if (!filename) return null;
+                        if (filename.startsWith('http://') || filename.startsWith('https://')) {
+                            return filename;
+                        }
                         const floatPath = path.resolve(dir, filename);
                         if (fs.existsSync(floatPath)) return floatPath;
                         return null;

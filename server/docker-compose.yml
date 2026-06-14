@@ -7,6 +7,7 @@ services:
       - "3000:3000"
     volumes:
       - ./config.json:/app/config.json:z
+      - ./models:/app/models:z
       # Pass your music library directories here. 
       # You can add multiple volumes if you have songs in different locations.
       # Example: - /home/user/Music:/music:ro
@@ -15,3 +16,4 @@ services:
       # Comma-separated list of allowed origins for CORS.
       # Remove or leave empty to allow ALL origins (open mode).
       - ALLOWED_ORIGINS=https://nexumia.de,https://www.nexumia.de
+

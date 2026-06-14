@@ -13,7 +13,8 @@ const defaultConfig = {
     disableRateLimit: false,
     downloadDir: null,       // Default folder for USDB downloads
     usdbUsername: null,      // USDB login username
-    usdbPassword: null       // USDB login password
+    usdbPassword: null,      // USDB login password
+    apiKeys: []              // Array of API key objects
 };
 
 let currentConfig = { ...defaultConfig };
@@ -49,6 +50,9 @@ function loadConfig() {
 
             if (!Array.isArray(currentConfig.directories)) {
                 currentConfig.directories = defaultConfig.directories;
+            }
+            if (!Array.isArray(currentConfig.apiKeys)) {
+                currentConfig.apiKeys = defaultConfig.apiKeys;
             }
         } catch (e) {
             console.error(`Failed to parse config at ${foundConfig}:`, e);
@@ -139,5 +143,37 @@ module.exports = {
 
     get disableRateLimit() {
         return currentConfig.disableRateLimit;
+    },
+
+    get apiKeys() {
+        return currentConfig.apiKeys || [];
+    },
+
+    createApiKey(name) {
+        if (!currentConfig.apiKeys) {
+            currentConfig.apiKeys = [];
+        }
+        const token = crypto.randomBytes(16).toString('hex');
+        const id = crypto.randomBytes(8).toString('hex');
+        const keyObj = {
+            id,
+            name: name || 'Unnamed Key',
+            token,
+            createdAt: new Date().toISOString()
+        };
+        currentConfig.apiKeys.push(keyObj);
+        saveConfig();
+        return keyObj;
+    },
+
+    deleteApiKey(id) {
+        if (!currentConfig.apiKeys) return false;
+        const initialLength = currentConfig.apiKeys.length;
+        currentConfig.apiKeys = currentConfig.apiKeys.filter(k => k.id !== id);
+        if (currentConfig.apiKeys.length !== initialLength) {
+            saveConfig();
+            return true;
+        }
+        return false;
     }
 };

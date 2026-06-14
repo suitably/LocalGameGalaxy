@@ -12,11 +12,19 @@ const requireAuth = (req, res, next) => {
     const token = req.headers['authorization'] || req.query.token;
     const cleanToken = token?.replace('Bearer ', '');
 
+    req.isMasterToken = false;
+
     if (token === config.token || cleanToken === config.token) {
-        next();
-    } else {
-        res.status(401).json({ error: 'Unauthorized. Invalid Token.' });
+        req.isMasterToken = true;
+        return next();
     }
+    
+    const isValidApiKey = config.apiKeys.some(k => k.token === token || k.token === cleanToken);
+    if (isValidApiKey) {
+        return next();
+    }
+    
+    res.status(401).json({ error: 'Unauthorized. Invalid Token.' });
 };
 
 const helmetMiddlewareInstance = helmet({

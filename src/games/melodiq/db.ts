@@ -1,5 +1,14 @@
 import Dexie, { type EntityTable } from 'dexie';
 
+export interface Playlist {
+    id: string; // uuid
+    name: string;
+    songs: string[]; // array of song IDs
+    creatorToken?: string; // backend token that created it, if any
+    isGlobal?: boolean; // if fetched from backend and creatorToken != currentToken
+    updatedAt: number;
+}
+
 export interface Song {
     id: string; // hash or unique identifier
     libraryId?: string; // ID of the library this song belongs to
@@ -46,12 +55,16 @@ export interface Score {
 }
 
 const db = new Dexie('MelodiqDB') as Dexie & {
-    scores: EntityTable<Score, 'id'>
+    scores: EntityTable<Score, 'id'>,
+    playlists: EntityTable<Playlist, 'id'>
 };
 
-// Version 9: Removed all local song library tables (songs, songsMeta, songsContent, cachedDirs, libraries)
-db.version(9).stores({
-    scores: '++id, songId, profileId, score, date, difficulty'
+// Version 10: Added playlists table
+db.version(10).stores({
+    scores: '++id, songId, profileId, score, date, difficulty',
+    playlists: 'id, name, creatorToken, isGlobal, updatedAt'
+}).upgrade(tx => {
+    // Initialization for upgrade if needed
 });
 
 export default db;

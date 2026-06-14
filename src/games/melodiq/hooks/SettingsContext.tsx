@@ -11,6 +11,7 @@ export interface SettingsState {
     customTarget: number;
     songVolume: number;
     masterVolume: number;
+    vocalsVolume: number;
     helperUrl: string;
     enableHelper: boolean;
     goldenNoteMultiplier: number;
@@ -30,6 +31,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
     customTarget: 6,
     songVolume: 0.7,
     masterVolume: 1.0,
+    vocalsVolume: 1.0,
     helperUrl: 'http://localhost:3000',
     enableHelper: false,
     goldenNoteMultiplier: 2.0,
@@ -63,6 +65,10 @@ export const loadSettings = (): SettingsState => ({
         const stored = localStorage.getItem('melodiq_master_volume');
         return stored ? parseFloat(stored) : 1.0;
     })(),
+    vocalsVolume: (() => {
+        const stored = localStorage.getItem('melodiq_vocals_volume');
+        return stored ? parseFloat(stored) : 1.0;
+    })(),
     helperUrl: localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000',
     enableHelper: localStorage.getItem('melodiq_enable_helper') === 'true',
     goldenNoteMultiplier: (() => {
@@ -84,6 +90,7 @@ const persistSettings = (s: SettingsState) => {
     localStorage.setItem('melodiq_custom_target_columns', String(s.customTarget));
     localStorage.setItem('melodiq_song_volume', String(s.songVolume));
     localStorage.setItem('melodiq_master_volume', String(s.masterVolume));
+    localStorage.setItem('melodiq_vocals_volume', String(s.vocalsVolume));
     localStorage.setItem('melodiq_helper_url', s.helperUrl);
     localStorage.setItem('melodiq_enable_helper', String(s.enableHelper));
     localStorage.setItem('melodiq_golden_note_multiplier', String(s.goldenNoteMultiplier));

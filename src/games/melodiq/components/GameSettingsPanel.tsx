@@ -164,6 +164,17 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                 </Box>
 
                 <Box sx={{ mt: 1 }}>
+                    <Typography gutterBottom>Vocals Volume (If Separated): {Math.round((settings.vocalsVolume ?? 1.0) * 100)}%</Typography>
+                    <Slider
+                        value={(settings.vocalsVolume ?? 1.0) * 100}
+                        onChange={(_, val) => onUpdateSetting('vocalsVolume', (val as number) / 100)}
+                        min={0}
+                        max={100}
+                        sx={{ width: '100%' }}
+                    />
+                </Box>
+
+                <Box sx={{ mt: 1 }}>
                     <Typography gutterBottom>Master Volume: {Math.round(settings.masterVolume * 100)}%</Typography>
                     <Slider
                         value={settings.masterVolume * 100}

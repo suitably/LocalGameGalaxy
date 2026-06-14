@@ -1,0 +1,5 @@
+- [x] Install `multer` dependency in server.
+- [x] Implement backend endpoint `POST /api/songs/:id/video` using `multer`.
+- [x] Update `server/public/index.html` with Add Video UI and logic.
+- [x] Test direct MP4 upload (Implemented, pending manual user verification).
+- [x] Test YouTube URL download/stream integration (Implemented, pending manual user verification).

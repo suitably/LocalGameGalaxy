@@ -77,7 +77,27 @@ export const melodiqResources = {
             control_desc: "Control the main screen from your phone.",
             no_matches: "No matches found",
             library_not_loaded: "Library not loaded",
-            load_library_btn: "Load Library"
+            load_library_btn: "Load Library",
+
+            // Playlists
+            playlists: "Playlists",
+            global_playlists: "Global Playlists",
+            create_playlist: "Create Playlist",
+            playlist_name: "Playlist Name",
+            no_playlists: "No playlists found.",
+            songs_count_short: "songs",
+            edit_playlist: "Edit Playlist",
+            confirm_delete_playlist: "Are you sure you want to delete this playlist?",
+            playlist_empty: "This playlist is empty.",
+            add_to_playlist: "Add to Playlist",
+            add_to_playlist_desc: "Add this song to an existing playlist",
+            select_playlist: "Select Playlist",
+            create: "Create",
+            save: "Save",
+            sync_enabled: "Sync Enabled",
+            sync_disabled: "Sync Disabled",
+            manage_playlists: "Manage Playlists",
+            playlist_created: "Playlist created!"
         }
     },
     de: {
@@ -156,7 +176,27 @@ export const melodiqResources = {
             control_desc: "Steuere den Hauptbildschirm von deinem Handy aus.",
             no_matches: "Keine Treffer gefunden",
             library_not_loaded: "Bibliothek nicht geladen",
-            load_library_btn: "Bibliothek laden"
+            load_library_btn: "Bibliothek laden",
+
+            // Playlists
+            playlists: "Playlists",
+            global_playlists: "Globale Playlists",
+            create_playlist: "Playlist erstellen",
+            playlist_name: "Playlist-Name",
+            no_playlists: "Keine Playlists gefunden.",
+            songs_count_short: "Lieder",
+            edit_playlist: "Playlist bearbeiten",
+            confirm_delete_playlist: "Bist du sicher, dass du diese Playlist löschen möchtest?",
+            playlist_empty: "Diese Playlist ist leer.",
+            add_to_playlist: "Zur Playlist hinzufügen",
+            add_to_playlist_desc: "Füge dieses Lied zu einer Playlist hinzu",
+            select_playlist: "Playlist auswählen",
+            create: "Erstellen",
+            save: "Speichern",
+            sync_enabled: "Synchronisierung aktiviert",
+            sync_disabled: "Synchronisierung deaktiviert",
+            manage_playlists: "Playlists verwalten",
+            playlist_created: "Playlist erstellt!"
         }
     }
 };

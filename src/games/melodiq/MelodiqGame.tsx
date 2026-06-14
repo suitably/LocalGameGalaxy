@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { VirtuosoGrid, Virtuoso } from 'react-virtuoso';
-import { Box, Button, Typography, Card, Grid, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText, LinearProgress, Collapse, Dialog, DialogTitle, DialogContent, List, ListItemButton, ListItemIcon, Snackbar, Alert } from '@mui/material';
+import { Box, Button, Typography, Card, Grid, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText, LinearProgress, Collapse, Dialog, DialogTitle, DialogContent, List, ListItemButton, ListItemIcon, Snackbar, Alert, Divider } from '@mui/material';
 import { type Song, type SongMeta } from './db';
 
 
@@ -14,8 +14,12 @@ import QrCodeIcon from '@mui/icons-material/QrCode';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import ViewListIcon from '@mui/icons-material/ViewList';
+import QueueMusicIcon from '@mui/icons-material/QueueMusic';
+import AddIcon from '@mui/icons-material/Add';
 
 import { MelodiqSettings } from './MelodiqSettings';
+import { MelodiqPlaylists } from './components/MelodiqPlaylists';
+import { PlaylistDetails } from './components/PlaylistDetails';
 
 import { useTranslation } from 'react-i18next';
 import { initMelodiqI18n } from './i18n';
@@ -23,6 +27,8 @@ import { useLayout } from '../../context/LayoutContext';
 import { WebRTCProvider, useWebRTC } from './audio/WebRTCContext';
 import { SettingsProvider, useMelodiqSettings } from './hooks/SettingsContext';
 import { MelodiqConnection } from './MelodiqConnection';
+import { usePlaylists } from './hooks/usePlaylists';
+import { type Playlist } from './db';
 import { SongCard } from './components/SongCard';
 import { SongListItem } from './components/SongListItem';
 import { useSongs, SongsProvider } from './hooks/useSongs';
@@ -35,7 +41,7 @@ import { PlaybackManager } from './components/PlaybackManager';
 import { HostQueueDrawer } from './components/HostQueueDrawer';
 
 // Navigation State
-type View = 'Home' | 'Settings' | 'Session' | 'Connection';
+type View = 'Home' | 'Settings' | 'Session' | 'Connection' | 'Playlists' | 'PlaylistDetails';
 
 export const MelodiqGameContent: React.FC = () => {
     initMelodiqI18n();
@@ -75,6 +81,11 @@ export const MelodiqGameContent: React.FC = () => {
     const [queueDialogOpen, setQueueDialogOpen] = useState(false);
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
     const [showQueueDrawer, setShowQueueDrawer] = useState(false);
+    
+    // Playlists State
+    const { playlists, addSongToPlaylist, createPlaylist } = usePlaylists();
+    const [playlistDialogOpen, setPlaylistDialogOpen] = useState(false);
+    const [activePlaylist, setActivePlaylist] = useState<Playlist | null>(null);
 
     // Restored Song State: last song from localStorage shown in MiniPlayer after reload
     // Initialize once on mount from nowPlaying (persisted in localStorage)
@@ -118,6 +129,16 @@ export const MelodiqGameContent: React.FC = () => {
         }
         setQueueDialogOpen(false);
     };
+
+    const handleAddToPlaylist = (playlistId: string) => {
+        if (selectedSongForQueue) {
+            addSongToPlaylist(playlistId, selectedSongForQueue.id);
+            setFeedbackMessage(`Added to playlist`);
+        }
+        setPlaylistDialogOpen(false);
+        setQueueDialogOpen(false);
+    };
+
     const [activeFilters, setActiveFilters] = useState<{
         year: string[];
         genre: string[];
@@ -140,6 +161,18 @@ export const MelodiqGameContent: React.FC = () => {
             }
         }
     }, [lastEvent, popNext, playSongOnTV]);
+
+    // Listen for Playlist Trigger (when playPlaylistNow is called)
+    useEffect(() => {
+        const handlePlaylistTrigger = (e: any) => {
+            const songToPlay = e.detail;
+            if (songToPlay) {
+                handleSelectSong(songToPlay, true);
+            }
+        };
+        window.addEventListener('melodiq_play_playlist_trigger', handlePlaylistTrigger);
+        return () => window.removeEventListener('melodiq_play_playlist_trigger', handlePlaylistTrigger);
+    }, [isTVConnected, playSongOnTV]);
 
     // Forward Phone Commands to TV
     useEffect(() => {
@@ -212,6 +245,11 @@ export const MelodiqGameContent: React.FC = () => {
                     label: `Queue (${queue.length})`,
                     icon: <PlaylistPlayIcon />,
                     action: () => setShowQueueDrawer(true)
+                },
+                {
+                    label: 'Playlists',
+                    icon: <QueueMusicIcon />,
+                    action: () => setCurrentView('Playlists')
                 },
                 {
                     label: 'Refresh',
@@ -366,11 +404,14 @@ export const MelodiqGameContent: React.FC = () => {
             return (
                 <Box sx={{ height: '100%', overflow: 'auto' }}>
                     <Box sx={{ height: '100%', overflow: 'auto' }}>
-                        <MelodiqSettings onBack={() => {
-                            // Refresh songs when returning from settings (in case import happened)
-                            refreshSongs();
-                            setCurrentView('Home');
-                        }} />
+                        <MelodiqSettings 
+                            onBack={() => {
+                                // Refresh songs when returning from settings (in case import happened)
+                                refreshSongs();
+                                setCurrentView('Home');
+                            }} 
+                            onNavigateToPlaylists={() => setCurrentView('Playlists')}
+                        />
                     </Box>
                 </Box>
             );
@@ -381,6 +422,27 @@ export const MelodiqGameContent: React.FC = () => {
                 <Box sx={{ height: '100%', overflow: 'auto' }}>
                     <MelodiqConnection onBack={() => setCurrentView('Home')} />
                 </Box>
+            );
+        }
+
+        if (currentView === 'Playlists') {
+            return (
+                <MelodiqPlaylists 
+                    onBack={() => setCurrentView('Home')} 
+                    onSelectPlaylist={(p) => {
+                        setActivePlaylist(p);
+                        setCurrentView('PlaylistDetails');
+                    }} 
+                />
+            );
+        }
+
+        if (currentView === 'PlaylistDetails' && activePlaylist) {
+            return (
+                <PlaylistDetails 
+                    playlist={activePlaylist} 
+                    onBack={() => setCurrentView('Playlists')} 
+                />
             );
         }
 
@@ -802,6 +864,42 @@ export const MelodiqGameContent: React.FC = () => {
                         <ListItemButton onClick={() => { handleQueueOption('add_end'); setQueueDialogOpen(false); }}>
                             <ListItemIcon><AddToQueueIcon /></ListItemIcon>
                             <ListItemText primary={t('melodiq.add_end')} secondary={t('melodiq.add_end_desc')} />
+                        </ListItemButton>
+                        <ListItemButton onClick={() => setPlaylistDialogOpen(true)}>
+                            <ListItemIcon><QueueMusicIcon /></ListItemIcon>
+                            <ListItemText primary={t('melodiq.add_to_playlist')} secondary={t('melodiq.add_to_playlist_desc')} />
+                        </ListItemButton>
+                    </List>
+                </DialogContent>
+            </Dialog>
+
+            {/* Select Playlist Dialog */}
+            <Dialog open={playlistDialogOpen} onClose={() => setPlaylistDialogOpen(false)}>
+                <DialogTitle>{t('melodiq.select_playlist')}</DialogTitle>
+                <DialogContent>
+                    {playlists.length === 0 ? (
+                        <Typography sx={{ p: 2 }}>{t('melodiq.no_playlists')}</Typography>
+                    ) : (
+                        <List>
+                            {playlists.map(p => (
+                                <ListItemButton key={p.id} onClick={() => handleAddToPlaylist(p.id)}>
+                                    <ListItemIcon><QueueMusicIcon /></ListItemIcon>
+                                    <ListItemText primary={p.name} />
+                                </ListItemButton>
+                            ))}
+                        </List>
+                    )}
+                    <Divider />
+                    <List>
+                        <ListItemButton onClick={async () => {
+                            const name = window.prompt(t('melodiq.playlist_name'));
+                            if (name && name.trim()) {
+                                await createPlaylist(name.trim());
+                                setFeedbackMessage(t('melodiq.playlist_created', 'Playlist created!'));
+                            }
+                        }}>
+                            <ListItemIcon><AddIcon /></ListItemIcon>
+                            <ListItemText primary={t('melodiq.create_playlist')} />
                         </ListItemButton>
                     </List>
                 </DialogContent>

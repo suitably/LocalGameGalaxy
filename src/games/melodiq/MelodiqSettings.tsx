@@ -20,9 +20,10 @@ export type { UserProfile, ActivePlayer } from './types';
 
 interface MelodiqSettingsProps {
     onBack: () => void;
+    onNavigateToPlaylists?: () => void;
 }
 
-export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
+export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack, onNavigateToPlaylists }) => {
     const { t, i18n } = useTranslation();
 
     // Audio Devices
@@ -112,6 +113,17 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack }) => {
 
                 <Divider />
 
+                {/* 1. Playlists Management Link */}
+                {onNavigateToPlaylists && (
+                    <Box>
+                        <Typography variant="h6" sx={{ mb: 2 }}>{t('melodiq.playlists', 'Playlists')}</Typography>
+                        <Button variant="outlined" onClick={onNavigateToPlaylists}>
+                            {t('melodiq.manage_playlists', 'Manage Playlists')}
+                        </Button>
+                    </Box>
+                )}
+
+                <Divider />
 
                 {/* 2. Session Setup */}
                 <SessionSetup

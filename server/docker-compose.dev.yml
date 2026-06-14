@@ -10,6 +10,7 @@ services:
       - "3003:3001"
     volumes:
       - ./config.json:/app/config.json:z
+      - ./models:/app/models:z
       # Mount your local music directories here (read-only).
       # Add as many as needed.
       - /home/deck/Music/Ultrastar/Songs:/music/songs:ro
@@ -18,3 +19,4 @@ services:
       - NODE_ENV=development
       # Empty = allow ALL origins (open CORS for local dev)
       - ALLOWED_ORIGINS=
+

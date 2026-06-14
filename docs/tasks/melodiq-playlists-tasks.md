@@ -1,0 +1,10 @@
+- [x] Backend: Create `server/src/services/playlists.js`
+- [x] Backend: Create `server/src/routes/playlists.js`
+- [x] Backend: Mount router in `server/index.js`
+- [x] Frontend: Update `src/games/melodiq/db.ts` with Playlist table
+- [x] Frontend: Create `src/games/melodiq/hooks/usePlaylists.ts` (CRUD and Sync logic)
+- [x] Frontend: Create `src/games/melodiq/components/MelodiqPlaylists.tsx`
+- [x] Frontend: Create `src/games/melodiq/components/PlaylistDetails.tsx`
+- [x] Frontend: Add Playlist sub-dialog to song long-press menu
+- [x] Frontend: Add Playlists view to `MelodiqGame.tsx` header actions
+- [x] Frontend: Update i18n translations for English and German

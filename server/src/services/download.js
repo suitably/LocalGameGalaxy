@@ -142,15 +142,21 @@ async function ensureYtDlp(job) {
 function spawnYtDlp(bin, args, onLine) {
     return new Promise((resolve, reject) => {
         const proc = spawn(bin, args, { stdio: 'pipe' });
-        let out = '';
-        const handle = d => {
+        let stdout = '';
+        let stderr = '';
+        const handleStdout = d => {
             const s = d.toString();
-            out += s;
+            stdout += s;
             if (onLine) s.split('\n').filter(l => l.trim()).forEach(l => onLine(l));
         };
-        proc.stdout.on('data', handle);
-        proc.stderr.on('data', handle);
-        proc.on('close', code => code === 0 ? resolve(out) : reject(new Error(`yt-dlp exit ${code}: ${out.slice(-300)}`)));
+        const handleStderr = d => {
+            const s = d.toString();
+            stderr += s;
+            if (onLine) s.split('\n').filter(l => l.trim()).forEach(l => onLine(l));
+        };
+        proc.stdout.on('data', handleStdout);
+        proc.stderr.on('data', handleStderr);
+        proc.on('close', code => code === 0 ? resolve(stdout) : reject(new Error(`yt-dlp exit ${code}: ${(stderr || stdout).slice(-300)}`)));
         proc.on('error', reject);
     });
 }
@@ -327,5 +333,7 @@ module.exports = {
     DOWNLOAD_JOBS,
     jobQueue,
     runDownloadJob,
-    processJobQueue
+    processJobQueue,
+    spawnYtDlp,
+    ensureYtDlp
 };

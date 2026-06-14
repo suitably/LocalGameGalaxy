@@ -7,8 +7,14 @@ const { getLocalIp } = require('../utils/helpers');
 const { getSongCache, isScanning, scanSongs } = require('../services/scanner');
 const { usdbLogin, searchUsdb, setUsdbSessionCookie } = require('../services/usdb');
 const { DOWNLOAD_JOBS, jobQueue, processJobQueue } = require('../services/download');
+const { SEPARATOR_JOBS, separatorQueue, processSeparatorQueue, checkIsInstalled } = require('../services/separator');
+const multer = require('multer');
 
 const router = express.Router();
+const playlistsRouter = require('./playlists');
+
+// --- PLAYLISTS ROUTER ---
+router.use('/api/playlists', playlistsRouter);
 
 const resolveSecurePath = (userPath) => {
     if (!userPath) return null;
@@ -16,6 +22,27 @@ const resolveSecurePath = (userPath) => {
     const isAllowed = config.directories.some(dir => safePath.startsWith(path.normalize(dir)));
     return isAllowed && fs.existsSync(safePath) ? safePath : null;
 };
+
+const videoStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const songId = req.params.id;
+        const song = getSongCache().find(s => s.id === songId);
+        if (!song || !song.txtPath) return cb(new Error('Song not found'));
+        const songDir = path.dirname(song.txtPath);
+        const safeFolder = resolveSecurePath(songDir);
+        if (!safeFolder) return cb(new Error('Access denied'));
+        cb(null, safeFolder);
+    },
+    filename: function (req, file, cb) {
+        const songId = req.params.id;
+        const song = getSongCache().find(s => s.id === songId);
+        const txtFilename = path.basename(song.txtPath);
+        const safeName = txtFilename.substring(0, txtFilename.lastIndexOf('.'));
+        const ext = path.extname(file.originalname) || '.mp4';
+        cb(null, `${safeName}${ext}`);
+    }
+});
+const videoUpload = multer({ storage: videoStorage });
 
 // --- UI ROUTE ---
 router.get('/', (req, res) => {
@@ -73,9 +100,38 @@ router.get('/', (req, res) => {
 });
 
 // --- MEDIA STREAMING ---
-router.get('/media', (req, res) => {
+router.get('/media', async (req, res) => {
     const targetPath = req.query.path;
     if (!targetPath) return res.status(400).send('Missing path');
+
+    // Check if targetPath is a remote web URL
+    if (targetPath.startsWith('http://') || targetPath.startsWith('https://')) {
+        try {
+            const { spawnYtDlp, ensureYtDlp } = require('../services/download');
+            // Create a mock job to pass to ensureYtDlp
+            const mockJob = { log: [] };
+            const ytBin = await ensureYtDlp(mockJob);
+            
+            // Resolve direct stream URL using yt-dlp
+            // Format: bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best to make sure browser can play it
+            const directUrl = await spawnYtDlp(ytBin, [
+                '-g',
+                '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+                targetPath
+            ]);
+            
+            const resolvedUrl = directUrl.trim().split('\n')[0];
+            if (resolvedUrl && (resolvedUrl.startsWith('http://') || resolvedUrl.startsWith('https://'))) {
+                return res.redirect(resolvedUrl);
+            } else {
+                throw new Error('Invalid resolved stream URL: ' + resolvedUrl);
+            }
+        } catch (e) {
+            console.error('[Media] Failed to resolve stream URL:', e.message);
+            return res.status(500).send('Failed to resolve stream URL: ' + e.message);
+        }
+    }
+
     const safePath = resolveSecurePath(targetPath);
     if (!safePath) return res.status(403).send('Access Denied or File Not Found');
     
@@ -172,6 +228,40 @@ router.put('/api/songs/:id/txt', (req, res) => {
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: 'Failed to save song file: ' + e.message });
+    }
+});
+
+// --- UPDATE SONG VIDEO ---
+router.post('/api/songs/:id/video', videoUpload.single('video'), (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No video file uploaded' });
+    
+    const songId = req.params.id;
+    const song = getSongCache().find(s => s.id === songId);
+    if (!song || !song.txtPath) return res.status(404).json({ error: 'Song not found' });
+    
+    const safePath = resolveSecurePath(song.txtPath);
+    if (!safePath) return res.status(403).json({ error: 'Access denied' });
+
+    try {
+        let txtContent = fs.readFileSync(safePath, 'utf-8');
+        let lines = txtContent.split('\n');
+        
+        // Remove existing #VIDEO
+        lines = lines.filter(l => !l.match(/^#VIDEO:/i));
+        
+        // Find MP3 line or TITLE to insert after
+        let insertIdx = lines.findIndex(l => l.match(/^#MP3:/i));
+        if (insertIdx === -1) insertIdx = lines.findIndex(l => l.match(/^#TITLE:/i));
+        if (insertIdx === -1) insertIdx = 0;
+        
+        const videoFilename = req.file.filename;
+        lines.splice(insertIdx + 1, 0, `#VIDEO:${videoFilename}`);
+        
+        fs.writeFileSync(safePath, lines.join('\n'), 'utf-8');
+        scanSongs();
+        res.json({ success: true, video: videoFilename });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to update song video: ' + e.message });
     }
 });
 
@@ -304,6 +394,86 @@ router.get('/api/usdb/status/:jobId', (req, res) => {
     res.json({ status: job.status, progress: job.progress, log: job.log.slice(-30), error: job.error });
 });
 
+// --- SEPARATOR JOBS ---
+router.get('/api/separator/status', async (req, res) => {
+    const isInstalled = await checkIsInstalled();
+    res.json({ installed: isInstalled });
+});
+
+router.post('/api/separator/install', async (req, res) => {
+    const isInstalled = await checkIsInstalled();
+    if (isInstalled) return res.json({ success: true, message: 'Already installed' });
+    
+    const jobId = crypto.randomBytes(8).toString('hex');
+    const job = {
+        jobId,
+        type: 'install',
+        status: 'pending',
+        progress: 0,
+        log: [],
+        error: null
+    };
+    SEPARATOR_JOBS.set(jobId, job);
+    separatorQueue.push(job);
+    processSeparatorQueue();
+    res.json({ jobId });
+});
+
+router.get('/api/separator/jobs', (req, res) => {
+    const jobsList = Array.from(SEPARATOR_JOBS.values()).map(j => ({
+        jobId: j.jobId,
+        type: j.type,
+        status: j.status,
+        progress: j.progress,
+        error: j.error,
+        log: j.log,
+        safeName: j.safeName
+    }));
+    res.json(jobsList);
+});
+
+router.get('/api/separator/status/:jobId', (req, res) => {
+    const job = SEPARATOR_JOBS.get(req.params.jobId);
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    res.json({ status: job.status, progress: job.progress, log: job.log.slice(-30), error: job.error });
+});
+
+router.post('/api/separator/job', (req, res) => {
+    let requests = req.body;
+    if (!Array.isArray(requests)) {
+        requests = [requests];
+    }
+    
+    const jobIds = [];
+    for (const reqItem of requests) {
+        const { songId, songDir, audioFile, txtFile, safeName } = reqItem;
+        if (!songId || !songDir || !audioFile) continue;
+        
+        const jobId = crypto.randomBytes(8).toString('hex');
+        const job = {
+            jobId,
+            type: 'separate',
+            songId,
+            songDir,
+            audioFile,
+            txtFile,
+            safeName,
+            status: 'pending',
+            progress: 0,
+            log: [],
+            error: null
+        };
+        SEPARATOR_JOBS.set(jobId, job);
+        separatorQueue.push(job);
+        jobIds.push(jobId);
+    }
+    
+    if (jobIds.length === 0) return res.status(400).json({ error: 'No valid jobs provided' });
+    
+    processSeparatorQueue();
+    res.json({ jobIds });
+});
+
 // --- CONFIG DOWNLOAD DIRECTORY ---
 router.get('/api/config/download-dir', (req, res) => {
     res.json({ downloadDir: config.downloadDir || config.directories[0] || null });
@@ -337,6 +507,29 @@ router.post('/api/config/usdb-credentials', async (req, res) => {
         res.json({ ok: true });
     } catch (e) {
         res.status(400).json({ error: e.message });
+    }
+});
+
+// --- API KEYS ---
+router.get('/api/config/apikeys', (req, res) => {
+    if (!req.isMasterToken) return res.status(403).json({ error: 'Master Token required' });
+    res.json(config.apiKeys);
+});
+
+router.post('/api/config/apikeys', (req, res) => {
+    if (!req.isMasterToken) return res.status(403).json({ error: 'Master Token required' });
+    const { name } = req.body;
+    const newKey = config.createApiKey(name);
+    res.json(newKey);
+});
+
+router.delete('/api/config/apikeys/:id', (req, res) => {
+    if (!req.isMasterToken) return res.status(403).json({ error: 'Master Token required' });
+    const success = config.deleteApiKey(req.params.id);
+    if (success) {
+        res.json({ success: true });
+    } else {
+        res.status(404).json({ error: 'API Key not found' });
     }
 });
 
