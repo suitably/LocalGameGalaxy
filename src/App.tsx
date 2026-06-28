@@ -9,7 +9,7 @@ import { Settings } from './features/settings/Settings';
 const WerewolfGame = lazy(() => import('./games/werewolf/WerewolfGame').then(m => ({ default: m.WerewolfGame })));
 const ImposterGame = lazy(() => import('./games/imposter/ImposterGame').then(m => ({ default: m.ImposterGame })));
 const MelodiqGame = lazy(() => import('./games/melodiq/MelodiqGame').then(m => ({ default: m.MelodiqGame })));
-const MelodiqPhoneClient = lazy(() => import('./games/melodiq/MelodiqPhoneClient').then(m => ({ default: m.MelodiqPhoneClient })));
+// MelodiqPhoneClient has been deprecated and merged into MelodiqGame
 const MelodiqQueue = lazy(() => import('./games/melodiq/components/MelodiqQueue').then(m => ({ default: m.MelodiqQueue })));
 const MelodiqTV = lazy(() => import('./games/melodiq/MelodiqTV').then(m => ({ default: m.MelodiqTV })));
 
@@ -43,11 +43,7 @@ function App() {
             <MelodiqGame />
           </Suspense>
         } />
-        <Route path="games/melodiq/phone" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <MelodiqPhoneClient />
-          </Suspense>
-        } />
+
         <Route path="games/melodiq/queue" element={
           <Suspense fallback={<LoadingFallback />}>
             <SongsProvider>

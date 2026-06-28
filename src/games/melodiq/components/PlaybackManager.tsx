@@ -4,6 +4,7 @@ import { type Song, type SongMeta } from '../db';
 import { MelodiqSession, type MelodiqSessionHandle } from '../gameplay/MelodiqSession';
 import { MiniPlayer } from './MiniPlayer';
 import { useQueue } from '../hooks/useQueue';
+import { useClientEngine } from '../PhoneClientEngine';
 
 interface PlaybackManagerProps {
     selectedSong: Song | null;
@@ -22,6 +23,8 @@ interface PlaybackManagerProps {
     restoredSong?: SongMeta | null;
     /** Clears the restored song state in the parent once the user resumes */
     onClearRestoredSong?: () => void;
+    /** True if this app is running in client/remote mode (no media rendering) */
+    isClient?: boolean;
 }
 
 export interface PlaybackManagerHandle {
@@ -43,7 +46,8 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         onShowQueue,
         sendGameUpdate,
         restoredSong = null,
-        onClearRestoredSong
+        onClearRestoredSong,
+        isClient = false
     } = props;
 
     const { queue, popNext, setNowPlaying } = useQueue();
@@ -55,6 +59,9 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         progress: 0
     });
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+
+    // Get client game state for remote playback sync
+    const { gameState: clientGameState } = isClient ? useClientEngine() : { gameState: null };
 
     // Broadcast Game State Loop
     useEffect(() => {
@@ -169,8 +176,11 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                         showDebugOverlay={false}
                         showDevSlider={false}
                         showMicStatus={false}
-                        muteAudio={isTVConnected}
+                        muteAudio={isTVConnected || isClient}
                         suppressResults={isTVConnected}
+                        isClient={isClient}
+                        isPassive={isClient}
+                        passiveState={isClient ? clientGameState : undefined}
                     />
                 </Box>
             )}

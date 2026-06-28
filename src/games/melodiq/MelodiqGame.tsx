@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { VirtuosoGrid, Virtuoso } from 'react-virtuoso';
 import { Box, Button, Typography, Card, Grid, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText, LinearProgress, Collapse, Dialog, DialogTitle, DialogContent, List, ListItemButton, ListItemIcon, Snackbar, Alert, Divider } from '@mui/material';
 import { type Song, type SongMeta } from './db';
@@ -34,6 +34,7 @@ import { SongListItem } from './components/SongListItem';
 import { useSongs, SongsProvider } from './hooks/useSongs';
 import { useQueue } from './hooks/useQueue';
 import { PhoneQueueBridge } from './components/PhoneQueueBridge';
+import { PhoneClientEngine } from './PhoneClientEngine';
 import { TVModeButton } from './components/TVModeButton';
 
 import { useTVMode } from './hooks/useTVMode';
@@ -46,6 +47,9 @@ type View = 'Home' | 'Settings' | 'Session' | 'Connection' | 'Playlists' | 'Play
 export const MelodiqGameContent: React.FC = () => {
     initMelodiqI18n();
     const { t } = useTranslation();
+
+    const params = new URLSearchParams(window.location.search);
+    const isClient = params.get('role') === 'client';
 
     // Set the game title in the header
     // Set the game title in the header using useLayout
@@ -234,7 +238,7 @@ export const MelodiqGameContent: React.FC = () => {
         const homeAction = () => setCurrentView('Home');
 
         if (currentView === 'Home') {
-            setHeader(t('melodiq.title'), [
+            const headerActions: any[] = [
                 {
                     label: viewMode === 'grid' ? 'List View' : 'Grid View',
                     icon: viewMode === 'grid' ? <ViewListIcon /> : <ViewModuleIcon />,
@@ -256,28 +260,35 @@ export const MelodiqGameContent: React.FC = () => {
                     icon: <SearchIcon />,
                     action: () => refreshSongs(),
                     disabled: loadingProgress !== null
-                },
-                {
+                }
+            ];
+
+            if (!isClient) {
+                headerActions.push({
                     label: 'Settings',
                     icon: <SettingsIcon />,
                     action: () => setCurrentView('Settings'),
                     showAlways: true
-                },
-                {
+                });
+                headerActions.push({
                     label: 'Connect Phones',
                     icon: <QrCodeIcon />,
                     action: () => setCurrentView('Connection'),
                     showAlways: true
-                }
-            ], homeAction);
+                });
+            }
+
+            setHeader(t('melodiq.title'), headerActions, homeAction);
             setCustomHeaderActions(
-                <TVModeButton
-                    isTVConnected={isTVConnected}
-                    isPresentationAvailable={isPresentationAvailable}
-                    onOpenTV={openTVWindow}
-                    onStartPresentation={startPresentation}
-                    onDisconnect={disconnectTV}
-                />
+                !isClient ? (
+                    <TVModeButton
+                        isTVConnected={isTVConnected}
+                        isPresentationAvailable={isPresentationAvailable}
+                        onOpenTV={openTVWindow}
+                        onStartPresentation={startPresentation}
+                        onDisconnect={disconnectTV}
+                    />
+                ) : null
             );
         } else {
             // Clear menu items for other views to avoid irrelevant actions
@@ -288,7 +299,7 @@ export const MelodiqGameContent: React.FC = () => {
             setHeader(null, [], null);
             setCustomHeaderActions(null);
         };
-    }, [currentView, queue.length, loadingProgress, refreshSongs, setCurrentView, t, setHeader, showFilters, setShowFilters, setCustomHeaderActions, isTVConnected, openTVWindow, isPresentationAvailable, startPresentation, disconnectTV, viewMode]);
+    }, [currentView, queue.length, loadingProgress, refreshSongs, setCurrentView, t, setHeader, showFilters, setShowFilters, setCustomHeaderActions, isTVConnected, openTVWindow, isPresentationAvailable, startPresentation, disconnectTV, viewMode, isClient]);
 
     // Handler to select and load a song for playback
     const handleSelectSong = async (songMeta: SongMeta, forcePlay: boolean = false) => {
@@ -812,6 +823,13 @@ export const MelodiqGameContent: React.FC = () => {
         }
     }, [manager, currentView, refreshSongs]);
 
+    const handleGameUpdate = useCallback((state: any) => {
+        sendGameUpdate(state); // send to TV
+        if (manager && !isClient) {
+            manager.broadcast({ type: 'game_state_update', state }); // send to Phones
+        }
+    }, [sendGameUpdate, manager, isClient]);
+
     return (
         <Box sx={{ width: '100vw', height: '100%', overflow: 'hidden', bgcolor: 'background.default', color: 'text.primary' }}>
             {renderView()}
@@ -837,9 +855,10 @@ export const MelodiqGameContent: React.FC = () => {
                 sendRemoteCommand={sendRemoteCommand}
                 setRemoteSong={setRemoteSong}
                 onShowQueue={() => setShowQueueDrawer(true)}
-                sendGameUpdate={sendGameUpdate}
+                sendGameUpdate={handleGameUpdate}
                 restoredSong={restoredSong}
                 onClearRestoredSong={() => setRestoredSong(null)}
+                isClient={isClient}
             />
 
             {/* Host Queue Drawer */}
@@ -921,14 +940,25 @@ export const MelodiqGameContent: React.FC = () => {
 };
 
 export const MelodiqGame: React.FC = () => {
+    const params = new URLSearchParams(window.location.search);
+    const isClient = params.get('role') === 'client';
+
     return (
         <SettingsProvider>
-            <WebRTCProvider>
-                <SongsProvider>
-                    <MelodiqGameContent />
-                    <PhoneQueueBridge />
-                </SongsProvider>
-            </WebRTCProvider>
+            {!isClient ? (
+                <WebRTCProvider>
+                    <SongsProvider>
+                        <MelodiqGameContent />
+                        <PhoneQueueBridge />
+                    </SongsProvider>
+                </WebRTCProvider>
+            ) : (
+                <PhoneClientEngine>
+                    <SongsProvider>
+                        <MelodiqGameContent />
+                    </SongsProvider>
+                </PhoneClientEngine>
+            )}
         </SettingsProvider>
     );
 };

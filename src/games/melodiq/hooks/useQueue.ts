@@ -1,8 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { SongMeta } from '../db';
 
+
+
 const QUEUE_STORAGE_KEY = 'melodiq_queue';
 const CHANNEL_NAME = 'melodiq_queue_channel';
+
+const isClient = new URLSearchParams(window.location.search).get('role') === 'client';
 
 export interface QueueItem {
     id: string;
@@ -13,11 +17,13 @@ export interface QueueItem {
 
 export const useQueue = () => {
     const [queue, setQueue] = useState<QueueItem[]>(() => {
+        if (isClient) return [];
         const stored = localStorage.getItem(QUEUE_STORAGE_KEY);
         return stored ? JSON.parse(stored) : [];
     });
 
     const [nowPlaying, setNowPlayingState] = useState<SongMeta | null>(() => {
+        if (isClient) return null;
         const stored = localStorage.getItem('melodiq_now_playing');
         return stored ? JSON.parse(stored) : null;
     });
@@ -27,20 +33,25 @@ export const useQueue = () => {
 
     const syncQueue = useCallback((newQueue: QueueItem[]) => {
         setQueue(newQueue);
-        localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(newQueue));
+        if (!isClient) {
+            localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(newQueue));
+        }
     }, []);
 
     const syncNowPlaying = useCallback((song: SongMeta | null) => {
         setNowPlayingState(song);
-        if (song) {
-            localStorage.setItem('melodiq_now_playing', JSON.stringify(song));
-        } else {
-            localStorage.removeItem('melodiq_now_playing');
+        if (!isClient) {
+            if (song) {
+                localStorage.setItem('melodiq_now_playing', JSON.stringify(song));
+            } else {
+                localStorage.removeItem('melodiq_now_playing');
+            }
         }
     }, []);
 
-    // Listen for updates from other tabs
+    // Listen for updates from other tabs (Host logic)
     useEffect(() => {
+        if (isClient) return;
         const handleMessage = (event: MessageEvent) => {
             if (event.data.type === 'UPDATE_QUEUE') {
                 setQueue(event.data.payload);
@@ -53,12 +64,30 @@ export const useQueue = () => {
         return () => channel.removeEventListener('message', handleMessage);
     }, [channel]);
 
+    // Listen for updates from PhoneClientEngine (Client logic)
+    useEffect(() => {
+        if (!isClient) return;
+        const handleClientUpdate = (e: any) => {
+            const data = e.detail;
+            if (data.queue) setQueue(data.queue);
+            if (data.nowPlaying !== undefined) setNowPlayingState(data.nowPlaying);
+        };
+        window.addEventListener('melodiq_client_queue_update', handleClientUpdate);
+        return () => window.removeEventListener('melodiq_client_queue_update', handleClientUpdate);
+    }, []);
+
     const setNowPlaying = useCallback((song: SongMeta | null) => {
+        if (isClient) return; // Client cannot set now playing
         syncNowPlaying(song);
         channel.postMessage({ type: 'UPDATE_NOW_PLAYING', payload: song });
     }, [channel, syncNowPlaying]);
 
     const addToQueue = useCallback((song: SongMeta, requester?: string) => {
+        if (isClient) {
+            window.dispatchEvent(new CustomEvent('melodiq_client_send_data', { detail: { type: 'queue.add', songId: song.id } }));
+            return;
+        }
+
         const newItem: QueueItem = {
             id: crypto.randomUUID(),
             song,
@@ -77,6 +106,11 @@ export const useQueue = () => {
     }, [queue, channel, syncQueue]);
 
     const removeFromQueue = useCallback((itemId: string) => {
+        if (isClient) {
+            window.dispatchEvent(new CustomEvent('melodiq_client_send_data', { detail: { type: 'queue.remove', itemId } }));
+            return;
+        }
+
         const next = queue.filter(item => item.id !== itemId);
         syncQueue(next);
         channel.postMessage({ type: 'UPDATE_QUEUE', payload: next });
@@ -95,6 +129,7 @@ export const useQueue = () => {
     }, [queue, channel, syncQueue]);
 
     const clearQueue = useCallback(() => {
+        if (isClient) return; // Client shouldn't clear entire queue usually
         const next: QueueItem[] = [];
         syncQueue(next);
         channel.postMessage({ type: 'UPDATE_QUEUE', payload: next });

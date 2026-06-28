@@ -65,6 +65,7 @@ interface MelodiqSessionProps {
     passiveState?: PassiveGameState | null;
     suppressResults?: boolean;
     uiScale?: number;
+    isClient?: boolean;
 }
 
 
@@ -175,7 +176,7 @@ class PlayerRuntime {
     }
 }
 
-const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlaybackUpdate, isTVMode = false, muteAudio = false, isPassive = false, passiveState, suppressResults = false, uiScale = 1.0 }: MelodiqSessionProps, ref: React.ForwardedRef<MelodiqSessionHandle>): React.ReactNode => {
+const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlaybackUpdate, isTVMode = false, muteAudio = false, isPassive = false, passiveState, suppressResults = false, uiScale = 1.0, isClient = false }: MelodiqSessionProps, ref: React.ForwardedRef<MelodiqSessionHandle>): React.ReactNode => {
     // Session State - Read from shared SettingsContext (reactive / live updates)
     const { settings } = useMelodiqSettings();
     const {
@@ -1290,7 +1291,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         let mounted = true;
 
         const loadAudio = async () => {
-            if (!song.audio) return;
+            if (!song.audio || isClient) return;
             try {
                 if (song.audio instanceof Blob) {
                     activeUrl = URL.createObjectURL(song.audio);
@@ -1402,7 +1403,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         let mounted = true;
 
         const loadVideo = async () => {
-            if (!song.video) return;
+            if (!song.video || isClient) return;
             try {
                 let fileOrBlob: Blob | File | null = null;
                 let fileName: string = '';

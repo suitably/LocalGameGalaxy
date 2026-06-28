@@ -13,7 +13,7 @@ export const MelodiqConnection: React.FC<MelodiqConnectionProps> = ({ onBack }) 
             title="Connect Phones"
             description="Connect your phone to use as a microphone. Scan the QR code below."
             gameId="melodiq"
-            clientPath="/games/melodiq/phone"
+            clientPath="/games/melodiq?role=client"
             WebRTCHostContextHook={useWebRTC}
         />
     );
