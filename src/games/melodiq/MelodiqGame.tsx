@@ -339,6 +339,15 @@ export const MelodiqGameContent: React.FC = () => {
     // Handler to select and load a song for playback
     const handleSelectSong = async (songMeta: SongMeta, forcePlay: boolean = false) => {
         try {
+            if (isClient) {
+                // If this is a phone/remote client, don't play locally. Just tell the host to select it!
+                window.dispatchEvent(new CustomEvent('melodiq_client_send_data', { 
+                    detail: { type: 'host.select_song', songId: songMeta.id, forcePlay } 
+                }));
+                setFeedbackMessage(`Sent to Host: ${songMeta.title}`);
+                return;
+            }
+
             // Check for default click action if something is already playing
             // logic: if (playing && action != play_now) -> do action
             // "playing" means either local playback (selectedSong is active) or TV playback (remoteSong)
@@ -350,7 +359,6 @@ export const MelodiqGameContent: React.FC = () => {
                 setFeedbackMessage(`Added to queue: ${songMeta.title}`);
                 return;
             }
-
 
             if (isTVConnected) {
                 // Send media URLs to TV for audio/video playback
@@ -364,10 +372,6 @@ export const MelodiqGameContent: React.FC = () => {
                     setNowPlaying(songMeta);
                     // setCurrentView('Session'); // User requested: don't open session view on Host by default if TV connected
                 }
-            } else if (isClient) {
-                // If this is a phone/remote client, don't play locally. Just queue it!
-                manager?.broadcast({ type: 'queue.add', songId: songMeta.id });
-                setFeedbackMessage(`Added to Queue: ${songMeta.title}`);
             } else {
                 // Standard local playback on Host
                 const fullSong = await getSongById(songMeta.id);
@@ -383,6 +387,23 @@ export const MelodiqGameContent: React.FC = () => {
             console.error("Failed to load song", e);
         }
     };
+
+    const handleSelectSongRef = React.useRef(handleSelectSong);
+    React.useEffect(() => {
+        handleSelectSongRef.current = handleSelectSong;
+    });
+
+    React.useEffect(() => {
+        const handleRemoteSelect = (e: any) => {
+            const { songId, forcePlay } = e.detail;
+            const song = songs.find(s => s.id === songId);
+            if (song) {
+                handleSelectSongRef.current(song, forcePlay);
+            }
+        };
+        window.addEventListener('melodiq_host_select_song', handleRemoteSelect);
+        return () => window.removeEventListener('melodiq_host_select_song', handleRemoteSelect);
+    }, [songs]);
 
 
     const handleMinimizeSession = () => {

@@ -67,6 +67,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
         setClientProfile(prev => {
             const next = { ...prev, ...updates };
             localStorage.setItem('melodiq_client_profile', JSON.stringify(next));
+            window.dispatchEvent(new Event('melodiq_profile_update'));
             return next;
         });
     }, []);
@@ -117,6 +118,17 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
                 sendData({ type: 'queue.get' });
             }, 500);
         }
+    }, [isConnected, sendData]);
+
+    // Listen for events from UI components (like useQueue) to forward to Host
+    useEffect(() => {
+        const handler = (e: any) => {
+            if (isConnected) {
+                sendData(e.detail);
+            }
+        };
+        window.addEventListener('melodiq_client_send_data', handler);
+        return () => window.removeEventListener('melodiq_client_send_data', handler);
     }, [isConnected, sendData]);
 
     // Microphone Processing Loop

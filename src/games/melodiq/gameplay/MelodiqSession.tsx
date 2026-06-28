@@ -285,7 +285,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
             });
 
             // Sync Play State
-            if (passiveState.isPlaying !== isPlaying) {
+            if (passiveState.isPlaying !== isPlayingRef.current) {
                 if (passiveState.isPlaying) {
                     // First seek to the correct time BEFORE playing to avoid drift-sync spam
                     if (audioRef.current && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 1.0) {
@@ -313,11 +313,11 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
             }
 
             // Sync Game State (Results/Pause)
-            if (passiveState.isFinished !== isFinished) setIsFinished(passiveState.isFinished);
-            if (passiveState.isPausedForScore !== isPausedForScore) setIsPausedForScore(passiveState.isPausedForScore);
+            setIsFinished(prev => passiveState.isFinished !== prev ? passiveState.isFinished : prev);
+            setIsPausedForScore(prev => passiveState.isPausedForScore !== prev ? passiveState.isPausedForScore : prev);
 
             // Sync Time (Drift Correction) — only when audio is actually playing (not paused/blocked)
-            if (audioRef.current && passiveState.isPlaying && isPlaying && !audioRef.current.paused && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 1.0) {
+            if (audioRef.current && passiveState.isPlaying && isPlayingRef.current && !audioRef.current.paused && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 1.0) {
                 console.log(`[Session] Syncing time drift: Local=${audioRef.current.currentTime.toFixed(2)} Remote=${passiveState.currentTime.toFixed(2)}`);
                 audioRef.current.currentTime = passiveState.currentTime;
                 if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
@@ -327,7 +327,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
             if (isClient) {
                 // To prevent network jitter, only force-sync if the drift is > 150ms or if not currently playing
                 const drift = Math.abs(virtualTimeRef.current - passiveState.currentTime);
-                if (!isPlaying || drift > 0.15) {
+                if (!isPlayingRef.current || drift > 0.15) {
                     virtualTimeRef.current = passiveState.currentTime;
                 }
             }
@@ -1756,7 +1756,12 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
 
     if (isFinished && !suppressResults) {
         // Prepare props for ScoreBoard from valid players state
-        return <ScoreBoard players={results.length > 0 ? results : players.map(p => ({ config: p.config, score: p.score, history: [], isNewRecord: false }))} onExit={onExit} />;
+        return <ScoreBoard 
+            players={results.length > 0 ? results : players.map(p => ({ config: p.config, score: p.score, history: [], isNewRecord: false }))} 
+            onExit={onExit} 
+            isPassive={isPassive}
+            onMinimize={onMinimize}
+        />;
     }
 
     return (

@@ -18,9 +18,11 @@ interface ScoreBoardProps {
     }[];
     onExit: (forceHome?: boolean) => void;
     onResume?: () => void;
+    isPassive?: boolean;
+    onMinimize?: () => void;
 }
 
-export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit, onResume }) => {
+export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit, onResume, isPassive, onMinimize }) => {
     const { queue } = useQueue();
 
     // 1. Session Ranking: Current players sorted by score
@@ -87,6 +89,13 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit, onResum
                 p: { xs: 2, md: 4 }
             }}
         >
+            {isPassive && onMinimize && (
+                <Box sx={{ position: 'absolute', top: 16, left: 16, zIndex: 10 }}>
+                    <Button variant="outlined" onClick={onMinimize} sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}>
+                        ▼ Minimize
+                    </Button>
+                </Box>
+            )}
             <Typography variant="h3" sx={{
                 textAlign: 'center',
                 mb: 3,
@@ -276,34 +285,42 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit, onResum
             </Grid>
 
             {/* ACTION FOOTER */}
-            <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', gap: 2 }}>
-                {onResume && (
-                    <Button variant="contained" size="large" onClick={onResume} startIcon={<PlayArrowIcon />} sx={{ borderRadius: 8, px: 4, bgcolor: 'rgba(255,255,255,0.1)' }}>
-                        Resume
+            {!isPassive ? (
+                <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', gap: 2 }}>
+                    {onResume && (
+                        <Button variant="contained" size="large" onClick={onResume} startIcon={<PlayArrowIcon />} sx={{ borderRadius: 8, px: 4, bgcolor: 'rgba(255,255,255,0.1)' }}>
+                            Resume
+                        </Button>
+                    )}
+                    {queue.length > 0 && (
+                        <Button variant="outlined" size="large" onClick={() => onExit(true)} sx={{ borderRadius: 8, px: 4, color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}>
+                            Main Menu
+                        </Button>
+                    )}
+                    <Button
+                        variant="contained"
+                        size="large"
+                        onClick={() => onExit(false)}
+                        sx={{
+                            borderRadius: 8,
+                            px: 6,
+                            py: 1.5,
+                            backgroundImage: 'linear-gradient(45deg, #FF6B6B 30%, #FF8E53 90%)',
+                            boxShadow: '0 4px 20px rgba(255, 107, 107, 0.4)',
+                            fontWeight: 'bold',
+                            fontSize: '1.2rem'
+                        }}
+                    >
+                        {queue.length > 0 ? `NEXT: ${queue[0].song.title}`.toUpperCase() : 'CONTINUE'}
                     </Button>
-                )}
-                {queue.length > 0 && (
-                    <Button variant="outlined" size="large" onClick={() => onExit(true)} sx={{ borderRadius: 8, px: 4, color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}>
-                        Main Menu
-                    </Button>
-                )}
-                <Button
-                    variant="contained"
-                    size="large"
-                    onClick={() => onExit(false)}
-                    sx={{
-                        borderRadius: 8,
-                        px: 6,
-                        py: 1.5,
-                        backgroundImage: 'linear-gradient(45deg, #FF6B6B 30%, #FF8E53 90%)',
-                        boxShadow: '0 4px 20px rgba(255, 107, 107, 0.4)',
-                        fontWeight: 'bold',
-                        fontSize: '1.2rem'
-                    }}
-                >
-                    {queue.length > 0 ? `NEXT: ${queue[0].song.title}`.toUpperCase() : 'CONTINUE'}
-                </Button>
-            </Box>
+                </Box>
+            ) : (
+                <Box sx={{ mt: 3, pt: 2, display: 'flex', justifyContent: 'center' }}>
+                    <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' }}>
+                        Waiting for Host to continue...
+                    </Typography>
+                </Box>
+            )}
         </Box>
     );
 };

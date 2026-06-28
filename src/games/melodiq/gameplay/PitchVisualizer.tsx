@@ -359,8 +359,10 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
             // Access via `.current.current` because latestPitchRef holds the ref object from props
             const currentPitch = latestPitchRef.current.current;
             let activePitchNote = -1;
+            
+            const isPaused = audioRef.current?.paused || false;
 
-            if (currentPitch && currentPitch.note > 0) {
+            if (!isPaused && currentPitch && currentPitch.note > 0) {
                 activePitchNote = currentPitch.note;
                 lastValidPitchRef.current = activePitchNote;
                 lastValidTimeRef.current = now;
@@ -370,7 +372,7 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
             let displayedPitch: number | null = null;
             if (activePitchNote > 0) {
                 displayedPitch = activePitchNote;
-            } else if (now - lastValidTimeRef.current < 2000 && lastValidPitchRef.current > 0) {
+            } else if (!isPaused && now - lastValidTimeRef.current < 2000 && lastValidPitchRef.current > 0) {
                 // Show sticky pitch
                 displayedPitch = lastValidPitchRef.current;
             }

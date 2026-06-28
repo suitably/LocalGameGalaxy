@@ -65,14 +65,14 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
 
     // Broadcast Game State Loop
     useEffect(() => {
-        if (!sendGameUpdate || !playbackState.isPlaying) return;
+        if (!sendGameUpdate || !selectedSong) return;
 
         let frameId: number;
         let lastSendTime = 0;
         const loop = (time: number) => {
             if (sessionRef.current && (time - lastSendTime > 100)) {
                 const state = sessionRef.current.getGameState();
-                sendGameUpdate({ ...state, activeSongId: selectedSong?.id });
+                sendGameUpdate({ ...state, activeSongId: selectedSong.id });
                 lastSendTime = time;
             }
             frameId = requestAnimationFrame(loop);
@@ -80,7 +80,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
 
         frameId = requestAnimationFrame(loop);
         return () => cancelAnimationFrame(frameId);
-    }, [isTVConnected, sendGameUpdate, playbackState.isPlaying]);
+    }, [isTVConnected, sendGameUpdate, selectedSong]);
 
     // Expose methods to parent
     useImperativeHandle(ref, () => ({

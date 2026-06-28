@@ -101,10 +101,18 @@ export const PhoneQueueBridge: React.FC = () => {
                     if (data.songId) {
                         const song = songs.find(s => s.id === data.songId);
                         if (song) {
-                            // Find peer name for requester
                             const peer = manager.getConnectedPeers().find(p => p.peerId === peerId);
                             addToQueue(song, peer ? peer.name : 'Remote');
                         }
+                    }
+                    break;
+                }
+
+                case 'host.select_song': {
+                    if (data.songId) {
+                        window.dispatchEvent(new CustomEvent('melodiq_host_select_song', { 
+                            detail: { songId: data.songId, forcePlay: data.forcePlay } 
+                        }));
                     }
                     break;
                 }
