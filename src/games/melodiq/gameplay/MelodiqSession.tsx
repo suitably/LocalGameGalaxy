@@ -323,14 +323,35 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                 if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
             }
 
+            // Always sync the virtual time for the client
+            if (isClient) {
+                // To prevent network jitter, only force-sync if the drift is > 150ms or if not currently playing
+                const drift = Math.abs(virtualTimeRef.current - passiveState.currentTime);
+                if (!isPlaying || drift > 0.15) {
+                    virtualTimeRef.current = passiveState.currentTime;
+                }
+            }
+
         }
-    }, [isPassive, passiveState]);
+    }, [isPassive, passiveState, isClient]);
 
     // Audio/Video logic
     const audioRef = useRef<HTMLAudioElement>(null);
+    const virtualTimeRef = useRef<number>(0);
+    const timeProxyRef = useRef<any>({
+        get currentTime() {
+            return isClient ? virtualTimeRef.current : (audioRef.current?.currentTime || 0);
+        }
+    });
     const vocalsRef = useRef<HTMLAudioElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
+    const isPlayingRef = useRef<boolean>(false);
+    
+    useEffect(() => {
+        isPlayingRef.current = isPlaying;
+    }, [isPlaying]);
+
     const [bpmMultiplier] = useState(4);
     const [isFinished, setIsFinished] = useState(false);
     const [isPausedForScore, setIsPausedForScore] = useState(false);
@@ -1085,6 +1106,16 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         const deltaTime = now - lastTimeRef.current;
         lastTimeRef.current = now;
 
+        // --- PASSIVE MODE BYPASS ---
+        // If passive (TV/Client), we skip all audio processing/scoring logic. 
+        if (isPassive) {
+            if (isClient && isPlayingRef.current) {
+                virtualTimeRef.current += (deltaTime / 1000);
+            }
+            requestRef.current = requestAnimationFrame(updateLoop);
+            return;
+        }
+
         const duration = (audioRef.current && Number.isFinite(audioRef.current.duration) && audioRef.current.duration > 0)
             ? audioRef.current.duration
             : (_duration > 0 ? _duration : 0);
@@ -1127,18 +1158,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
 
             if (duration > 0) {
                 // --- PASSIVE MODE BYPASS ---
-                // If passive (TV), we skip all audio processing/scoring logic. 
-                // We assume `players` state is updated via the useEffect syncing with `passiveState`.
-                // However, we still need to run the loop to keep the animation frame going for visuals? 
-                // Actually, if we update `pitchRef.current` in the effect, the visualizer components (if they use rAF) might need this loop?
-                // `PitchVisualizer` is a component. It might have its own loop or rely on props?
-                // Let's check `PitchVisualizer`. It usually takes `pitch` as a prop or ref.
-                // If it takes a ref, we need to make sure the ref is updated. We did that in the Effect.
-                // So we can just RETURN here if passive.
-                if (isPassive) {
-                    requestRef.current = requestAnimationFrame(updateLoop);
-                    return;
-                }
+
 
                 // 1. Get current time from audio
                 const now = audioRef.current?.currentTime || 0;
@@ -1167,7 +1187,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         }
 
         requestRef.current = requestAnimationFrame(updateLoop);
-    }, [isPlaying, devPitchOverride, parsedSong, bpmMultiplier, players, trackScoreWeights, goldenNoteMultiplier, _duration, onPlaybackUpdate]);
+    }, [devPitchOverride, parsedSong, bpmMultiplier, players, trackScoreWeights, goldenNoteMultiplier, _duration, onPlaybackUpdate]);
 
     // Start/Stop Mics and Loop
     useEffect(() => {
@@ -1819,7 +1839,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
                         {players.length === 0 && (
                             <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <LyricsDisplay song={parsedSong!} audioRef={audioRef} centered uiScale={uiScale} />
+                                <LyricsDisplay song={parsedSong!} audioRef={timeProxyRef} centered uiScale={uiScale} />
                             </Box>
                         )}
 
@@ -1845,7 +1865,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                                             >
                                                 <PitchVisualizer
                                                     song={parsedSong!}
-                                                    audioRef={audioRef}
+                                                    audioRef={timeProxyRef}
                                                     currentPitchRef={player.pitchRef}
                                                     sungSegmentsRef={player.segmentsRef}
                                                     showDebugOverlay={showDebugOverlay}
@@ -1900,7 +1920,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                             bgcolor: 'rgba(0,0,0,0.2)',
                             position: 'relative' // Added for absolute positioning of scores
                         }}>
-                            <LyricsDisplay song={parsedSong!} audioRef={audioRef} uiScale={uiScale} />
+                            <LyricsDisplay song={parsedSong!} audioRef={timeProxyRef} uiScale={uiScale} />
 
                             {/* ScoreDisplay moved to root */}
                         </Box>
@@ -1940,7 +1960,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
 
             {audioSrc && <audio ref={audioRef} src={audioSrc} onEnded={handleSongEnd} style={{ display: 'none' }} />}
             {vocalsSrc && <audio ref={vocalsRef} src={vocalsSrc} style={{ display: 'none' }} />}
-            {!audioSrc && <Typography color="error" sx={{ textAlign: 'center', position: 'relative', zIndex: 5 }}>No Audio Source Found</Typography>}
+            {!audioSrc && !isClient && <Typography color="error" sx={{ textAlign: 'center', position: 'relative', zIndex: 5 }}>No Audio Source Found</Typography>}
 
             {/* Progress Line - Fixed at bottom */}
             <Box sx={{

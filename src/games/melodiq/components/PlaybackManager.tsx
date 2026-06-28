@@ -65,7 +65,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
 
     // Broadcast Game State Loop
     useEffect(() => {
-        if (!isTVConnected || !sendGameUpdate || !playbackState.isPlaying) return;
+        if (!sendGameUpdate || !playbackState.isPlaying) return;
 
         let frameId: number;
         const loop = () => {

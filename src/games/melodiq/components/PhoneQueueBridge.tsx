@@ -15,16 +15,8 @@ export const PhoneQueueBridge: React.FC = () => {
 
         const payload = {
             type: 'queue.update',
-            queue: queue.map(item => ({
-                id: item.id,
-                title: item.song.title,
-                artist: item.song.artist,
-                requester: item.requester,
-            })),
-            nowPlaying: nowPlaying ? {
-                title: nowPlaying.title,
-                artist: nowPlaying.artist
-            } : null
+            queue,
+            nowPlaying
         };
 
         // Broadcast to all connected peers
@@ -44,16 +36,8 @@ export const PhoneQueueBridge: React.FC = () => {
                     // Send current queue to specific peer
                     const payload = {
                         type: 'queue.update',
-                        queue: queue.map(item => ({
-                            id: item.id,
-                            title: item.song.title,
-                            artist: item.song.artist,
-                            requester: item.requester,
-                        })),
-                        nowPlaying: nowPlaying ? {
-                            title: nowPlaying.title,
-                            artist: nowPlaying.artist
-                        } : null
+                        queue,
+                        nowPlaying
                     };
                     manager.sendToPeer(peerId, payload);
                     break;

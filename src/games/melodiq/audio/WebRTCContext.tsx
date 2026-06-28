@@ -1,5 +1,5 @@
 import React from 'react';
-import { WebRTCHostProvider, useWebRTCHost } from '../../../lib/webrtc/WebRTCHostContext';
+import { WebRTCHostProvider, useWebRTCHost, WebRTCHostContext } from '../../../lib/webrtc/WebRTCHostContext';
 import { WebRTCMicManager, type MicRemotePeer } from './WebRTCMicManager';
 
 export const useWebRTC = () => {
@@ -16,5 +16,26 @@ export const WebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         >
             {children}
         </WebRTCHostProvider>
+    );
+};
+
+export const WebRTCMockProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    return (
+        <WebRTCHostContext.Provider value={{
+            manager: null,
+            peers: [],
+            activePeers: [],
+            inactivePeers: [],
+            togglePeerActive: () => {},
+            partyId: '',
+            regeneratePartyId: () => {},
+            trackerUrls: [],
+            activeTrackerUrls: [],
+            addTrackerUrl: () => {},
+            removeTrackerUrl: () => {},
+            restoreDefaultTrackers: () => {}
+        }}>
+            {children}
+        </WebRTCHostContext.Provider>
     );
 };

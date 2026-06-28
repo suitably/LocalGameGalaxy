@@ -24,7 +24,7 @@ import { PlaylistDetails } from './components/PlaylistDetails';
 import { useTranslation } from 'react-i18next';
 import { initMelodiqI18n } from './i18n';
 import { useLayout } from '../../context/LayoutContext';
-import { WebRTCProvider, useWebRTC } from './audio/WebRTCContext';
+import { WebRTCProvider, WebRTCMockProvider, useWebRTC } from './audio/WebRTCContext';
 import { SettingsProvider, useMelodiqSettings } from './hooks/SettingsContext';
 import { MelodiqConnection } from './MelodiqConnection';
 import { usePlaylists } from './hooks/usePlaylists';
@@ -200,6 +200,39 @@ export const MelodiqGameContent: React.FC = () => {
     // View State
     const [currentView, setCurrentView] = useState<View>('Home');
     const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+
+    // Auto-sync Client View with Host's playing song via explicit session_sync
+    useEffect(() => {
+        if (!isClient) return;
+
+        const handleSessionSync = (e: any) => {
+            const data = e.detail;
+            if (data.activeSong) {
+                getSongById(data.activeSong.id).then(fullSong => {
+                    if (fullSong) {
+                        setSelectedSong(fullSong);
+                        setCurrentView('Session');
+                    }
+                }).catch(err => console.error("Failed to sync session song:", err));
+            } else {
+                setSelectedSong(null);
+                setCurrentView('Home');
+            }
+        };
+
+        window.addEventListener('melodiq_client_session_sync', handleSessionSync);
+        return () => window.removeEventListener('melodiq_client_session_sync', handleSessionSync);
+    }, [isClient]);
+
+    // Host: Broadcast session changes to WebRTC Clients
+    useEffect(() => {
+        if (!isClient && manager) {
+            manager.broadcast({
+                type: 'session_sync',
+                activeSong: selectedSong ? { id: selectedSong.id } : null
+            });
+        }
+    }, [isClient, selectedSong, manager]);
 
     // Clear restoredSong as soon as a real session starts
     useEffect(() => {
@@ -954,9 +987,11 @@ export const MelodiqGame: React.FC = () => {
                 </WebRTCProvider>
             ) : (
                 <PhoneClientEngine>
-                    <SongsProvider>
-                        <MelodiqGameContent />
-                    </SongsProvider>
+                    <WebRTCMockProvider>
+                        <SongsProvider>
+                            <MelodiqGameContent />
+                        </SongsProvider>
+                    </WebRTCMockProvider>
                 </PhoneClientEngine>
             )}
         </SettingsProvider>

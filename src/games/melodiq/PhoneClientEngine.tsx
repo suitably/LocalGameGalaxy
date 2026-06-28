@@ -52,6 +52,8 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
             // OR if we abstract useQueue to accept an external dispatcher, we do it here.
             // For now, we will use a global window event to sync the queue on the client
             window.dispatchEvent(new CustomEvent('melodiq_client_queue_update', { detail: data }));
+        } else if (data.type === 'session_sync') {
+            window.dispatchEvent(new CustomEvent('melodiq_client_session_sync', { detail: data }));
         }
     }, []);
 
@@ -83,7 +85,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
             if (!micRef.current) {
                 const mic = new MicrophoneManager();
                 micRef.current = mic;
-                mic.start(undefined, 1.0, false).then(() => {
+                mic.start(undefined, 0.0, true).then(() => {
                     console.log("[PhoneClientEngine] Microphone started successfully.");
                     const processAudio = () => {
                         const now = performance.now();

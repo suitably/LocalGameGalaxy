@@ -19,6 +19,7 @@ interface MiniPlayerProps {
     queueLength: number;
     /** True when song was restored from localStorage after a page reload – no audio is loaded yet */
     isRestored?: boolean;
+    isClient?: boolean;
 }
 
 export const MiniPlayer: React.FC<MiniPlayerProps> = ({
@@ -30,7 +31,8 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
     onMaximize,
     onShowQueue,
     queueLength,
-    isRestored = false
+    isRestored = false,
+    isClient = false
 }) => {
     const theme = useTheme();
 
@@ -97,24 +99,28 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
 
             {/* Controls */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {isRestored ? (
-                    <IconButton
-                        onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
-                        size="medium"
-                        sx={{ color: theme.palette.secondary.main }}
-                        title="Resume song"
-                    >
-                        <PlayCircleOutlineIcon />
-                    </IconButton>
-                ) : (
-                    <IconButton onClick={(e) => { e.stopPropagation(); onTogglePlay(); }} size="medium" sx={{ color: 'white' }}>
-                        {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
-                    </IconButton>
-                )}
+                {!isClient && (
+                    <>
+                        {isRestored ? (
+                            <IconButton
+                                onClick={(e) => { e.stopPropagation(); onTogglePlay(); }}
+                                size="medium"
+                                sx={{ color: theme.palette.secondary.main }}
+                                title="Resume song"
+                            >
+                                <PlayCircleOutlineIcon />
+                            </IconButton>
+                        ) : (
+                            <IconButton onClick={(e) => { e.stopPropagation(); onTogglePlay(); }} size="medium" sx={{ color: 'white' }}>
+                                {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
+                            </IconButton>
+                        )}
 
-                <IconButton onClick={(e) => { e.stopPropagation(); onNext(); }} size="medium" sx={{ color: 'white' }} disabled={isRestored}>
-                    <SkipNextIcon />
-                </IconButton>
+                        <IconButton onClick={(e) => { e.stopPropagation(); onNext(); }} size="medium" sx={{ color: 'white' }} disabled={isRestored}>
+                            <SkipNextIcon />
+                        </IconButton>
+                    </>
+                )}
 
                 <IconButton onClick={(e) => { e.stopPropagation(); onShowQueue(); }} size="medium" sx={{ color: 'white' }}>
                     <Badge badgeContent={queueLength} color="primary" max={99}
