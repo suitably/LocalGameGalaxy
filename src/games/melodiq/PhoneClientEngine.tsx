@@ -1,4 +1,4 @@
-import React, { useEffect, useState, createContext, useContext, useRef } from 'react';
+import React, { useEffect, useState, createContext, useContext, useRef, useCallback } from 'react';
 import { useWebRTCClient } from '../../lib/webrtc/useWebRTCClient';
 import { MicrophoneManager } from './audio/MicrophoneManager';
 import type { PassiveGameState } from './gameplay/MelodiqSession';
@@ -42,7 +42,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     // NOTE: This requires useQueue to expose a way to OVERRIDE local storage, or we just rely on BroadcastChannel
     // The BroadcastChannel in useQueue syncs all hooks in this tab, which is perfect!
 
-    const handleMessage = (data: any) => {
+    const handleMessage = useCallback((data: any) => {
         if (!data || !data.type) return;
 
         if (data.type === 'game_state_update') {
@@ -53,12 +53,14 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
             // For now, we will use a global window event to sync the queue on the client
             window.dispatchEvent(new CustomEvent('melodiq_client_queue_update', { detail: data }));
         }
-    };
+    }, []);
+
+    const getIdentity = useCallback(() => ({ name: 'Phone', hue: 120 }), []);
 
     const { isConnected, statusMessage, sendData } = useWebRTCClient(partyId, trackerUrls, {
         autoConnect: true,
         onMessage: handleMessage,
-        getIdentity: () => ({ name: 'Phone', hue: 120 })
+        getIdentity
     });
 
     // Request initial data on connect

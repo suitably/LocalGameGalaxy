@@ -14,7 +14,10 @@ export interface WebRTCClientOptions {
 }
 
 export function useWebRTCClient(partyId: string | null, trackerUrls: string[], options: WebRTCClientOptions = {}) {
-    const { onStatusChange, onMessage, autoConnect = true, getMediaStream, getIdentity } = options;
+    const optionsRef = useRef(options);
+    optionsRef.current = options;
+
+    const { autoConnect = true } = options;
 
     const [statusClassName, setStatusClassName] = useState('status-connecting');
     const [statusMessage, setStatusMessage] = useState('Initializing...');
@@ -31,8 +34,8 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
     const updateStatus = useCallback((message: string, className: string) => {
         setStatusMessage(message);
         setStatusClassName(className);
-        onStatusChange?.(message, className);
-    }, [onStatusChange]);
+        optionsRef.current.onStatusChange?.(message, className);
+    }, []);
 
     const cleanup = useCallback(() => {
         if (peerRef.current) {
@@ -84,7 +87,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
     }, []);
 
     const sendIdentity = useCallback((peer: SimplePeer.Instance, trackerPeer?: any) => {
-        const identity = getIdentity?.();
+        const identity = optionsRef.current.getIdentity?.();
         if (identity && (peer as any)._connectionId) {
             const identityMsg = {
                 type: 'identify',
@@ -95,7 +98,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
             if ((peer as any).connected) peer.send(JSON.stringify(identityMsg));
             if (trackerPeer && trackerPeer.connected) trackerPeer.send(JSON.stringify(identityMsg) + '\n');
         }
-    }, [getIdentity]);
+    }, []);
 
     const initiateConnection = useCallback((trackerPeer: any, trackerPeerId: string) => {
         console.log('[WebRTCClient] Tracker peer found. Waiting for Host signal...', trackerPeerId);
@@ -159,7 +162,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
 
                                 // Forward application-level messages directly
                                 if (peerRef.current === peer) {
-                                    onMessage?.(parsed);
+                                    optionsRef.current.onMessage?.(parsed);
                                 }
                             } catch (e) {
                                 // Ignore non-json parts
@@ -247,7 +250,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
         } else {
             trackerPeer.on('connect', setupAudioPeer);
         }
-    }, [updateStatus, processNextPendingPeer, onMessage, sendIdentity]);
+    }, [updateStatus, processNextPendingPeer, sendIdentity]);
 
     const setupPeerConnection = useCallback((trackerPeer: any) => {
         const trackerPeerId = trackerPeer.id || trackerPeer._id || trackerPeer.channelName || Math.random().toString(36);
@@ -272,8 +275,8 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
         try {
             updateStatus('Requesting permissions...', 'status-connecting');
 
-            if (getMediaStream) {
-                const stream = await getMediaStream();
+            if (optionsRef.current.getMediaStream) {
+                const stream = await optionsRef.current.getMediaStream();
                 mediaStreamRef.current = stream;
             }
 
@@ -315,7 +318,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
             console.error('[WebRTCClient] Connect error:', err);
             updateStatus(err.message || 'Failed to connect', 'status-error');
         }
-    }, [partyId, trackerUrls, cleanup, getMediaStream, updateStatus, setupPeerConnection]);
+    }, [partyId, trackerUrls, cleanup, updateStatus, setupPeerConnection]);
 
     const sendData = useCallback((data: any) => {
         if (isWebRTCConnectedRef.current && peerRef.current && (peerRef.current as any).connected) {
