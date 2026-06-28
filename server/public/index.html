@@ -1,20 +1,1802 @@
-<!doctype html>
-<html lang="en">
-
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>local-game-galaxy</title>
-  <script type="module" crossorigin src="/assets/index-B2Vw575E.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/react-vendor-CmxhQM6v.js">
-  <link rel="modulepreload" crossorigin href="/assets/mui-vendor-dtfBL5Pa.js">
-  <link rel="modulepreload" crossorigin href="/assets/lib-vendor-BW_A_Q1f.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-CLbN7fOK.css">
-<link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
+    <title>Melodiq Helper</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; max-width: 100%; margin: 0 auto; padding: 20px; background: #f0f2f5; color: #1c1e21; }
+        @media (max-width: 640px) { body { padding: 12px; } }
+        .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 24px; }
+        h1 { color: #1877f2; margin-top: 0; font-size: 1.5rem; }
+        .badge { background: #e7f3ff; color: #1877f2; padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; vertical-align: middle; }
+        button { cursor: pointer; padding: 10px 16px; background: #1877f2; color: white; border: none; border-radius: 6px; font-weight: 600; transition: background 0.2s; }
+        button:hover { background: #166fe5; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        button.secondary { background: #e4e6eb; color: #050505; }
+        button.secondary:hover { background: #d8dadf; }
+        button.danger { background: #fff; color: #dc3545; border: 1px solid #dc3545; padding: 4px 10px; font-size: 0.9rem; }
+        button.danger:hover { background: #dc3545; color: white; }
+        
+        .code-box { background: #242526; color: #4cd964; padding: 16px; font-family: 'SF Mono', Consolas, monospace; font-size: 1.1rem; border-radius: 8px; overflow-x: auto; margin: 10px 0; border: 1px solid #3e4042; }
+        .label { font-size: 0.9rem; font-weight: 600; color: #65676b; margin-bottom: 8px; display: block; }
+        .row { display: flex; gap: 10px; align-items: stretch; }
+        
+        .dir-list { list-style: none; padding: 0; margin: 0; }
+        .dir-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f7f8fa; border-radius: 6px; margin-bottom: 8px; }
+        .dir-path { font-family: monospace; word-break: break-all; font-size: 0.9rem; }
+        
+        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
 
+        a { color: #1877f2; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal-content { background: white; width: 90%; max-width: 500px; margin: 50px auto; padding: 20px; border-radius: 12px; height: 70vh; display: flex; flex-direction: column; }
+        .browser-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .browser-list { overflow-y: auto; flex: 1; border: 1px solid #ddd; border-radius: 4px; }
+        .browser-item { padding: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .browser-item:hover { background: #f5f5f5; }
+        .browser-item.selected { background: #e7f3ff; }
+        .folder-icon { color: #ffd700; width: 20px; display: inline-block; }
+    </style>
+    <script>
+        const API_TOKEN = "{{AUTH_TOKEN}}";
+        let usdbOffset = 0;
+        let usdbTotalResults = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const hostname = window.location.hostname;
+            // Detect if hostname is an IP address or localhost
+            const isIP = /^[0-9\.]+$/.test(hostname) || hostname.includes(':') || hostname.includes('[');
+            const isLocalhost = hostname === 'localhost';
+
+            if (!isIP && !isLocalhost) {
+                // Accessed via domain name (likely reverse proxy with valid cert)
+                const urlDisplay = document.getElementById('urlDisplay');
+                if (urlDisplay) {
+                    urlDisplay.innerText = window.location.origin;
+                }
+                
+                const warningBox = document.getElementById('tv-connection-warning');
+                if (warningBox) {
+                    warningBox.style.display = 'none';
+                }
+            }
+            // Auto-load local songs
+            searchLocalSongs();
+        });
+
+        function copyText(id) {
+            const el = document.getElementById(id);
+            navigator.clipboard.writeText(el.innerText).then(() => {
+                const btn = document.getElementById('btn-' + id);
+                const original = btn.innerText;
+                btn.innerText = 'Copied!';
+                setTimeout(() => btn.innerText = original, 2000);
+            });
+        }
+
+        async function addDir() {
+            const input = document.getElementById('newPath');
+            const path = input.value.trim();
+            if (!path) return;
+            
+            try {
+                 const res = await fetch('/api/config/directories?token=' + API_TOKEN, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ path })
+                });
+                if (res.ok) window.location.reload();
+                else alert('Failed to add directory. Ensure path exists.');
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        async function removeDir(path) {
+            if (!confirm('Remove this directory from configuration?')) return;
+            try {
+                 const res = await fetch('/api/config/directories?token=' + API_TOKEN, {
+                    method: 'DELETE',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ path })
+                });
+                if (res.ok) window.location.reload();
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        let currentBrowserPath = '';
+        
+        async function openBrowser() {
+            document.getElementById('browserModal').style.display = 'block';
+            loadPath('');
+        }
+
+        function closeBrowser() {
+            document.getElementById('browserModal').style.display = 'none';
+        }
+
+        async function loadPath(path) {
+            try {
+                const res = await fetch('/api/browse?path=' + encodeURIComponent(path));
+                 if (res.status === 401) throw new Error("Unauthorized");
+                const data = await res.json();
+                if (data.error) throw new Error(data.error);
+                
+                currentBrowserPath = data.current;
+                document.getElementById('currentPathDisplay').innerText = data.current;
+                
+                const list = document.getElementById('browserList');
+                list.innerHTML = '';
+                
+                data.dirs.forEach(dir => {
+                    const div = document.createElement('div');
+                    div.className = 'browser-item';
+                    div.innerHTML = `<span class="folder-icon">📁</span> ${dir}`;
+                    div.onclick = () => {
+                        let newPath;
+                        if (dir === '..') {
+                            newPath = currentBrowserPath.endsWith('/') || currentBrowserPath.endsWith('\\') 
+                                ? currentBrowserPath + dir 
+                                : currentBrowserPath + '/' + dir; 
+                        } else {
+                            newPath = currentBrowserPath.endsWith('/') || currentBrowserPath.endsWith('\\') 
+                                ? currentBrowserPath + dir 
+                                : currentBrowserPath + '/' + dir;
+                        }
+                        loadPath(newPath);
+                    };
+                    list.appendChild(div);
+                });
+
+            } catch(e) {
+                alert('Error loading path: ' + e.message);
+            }
+        }
+
+        function selectCurrentPath() {
+            document.getElementById('newPath').value = currentBrowserPath;
+            closeBrowser();
+        }
+
+        // --- LOCAL SONGS MANAGEMENT & CUSTOM DOWNLOADS JS ---
+        let localSongsPage = 1;
+        const localSongsLimit = 20;
+        let localSongsTotal = 0;
+        let currentLocalSongs = [];
+        let editingSongId = null;
+        let reDownloadingSongId = null;
+
+        function toggleLocalLibraryCard(event) {
+            const body = document.getElementById('local-library-card-body');
+            const btn  = event ? (event.currentTarget || event.target) : null;
+            if (!btn) return;
+            if (body.style.display === 'none') { body.style.display = ''; btn.textContent = '▲ Minimise'; }
+            else { body.style.display = 'none'; btn.textContent = '▼ Expand'; }
+        }
+
+        async function searchLocalSongs(resetPage = true) {
+            if (resetPage) localSongsPage = 1;
+            const searchVal = document.getElementById('local-search-input').value.trim();
+            const btn = document.getElementById('btn-local-search');
+            btn.disabled = true; btn.textContent = '...';
+
+            try {
+                const res = await fetch(`/api/songs?page=${localSongsPage}&limit=${localSongsLimit}&search=${encodeURIComponent(searchVal)}&token=${API_TOKEN}`);
+                if (!res.ok) throw new Error('Failed to load songs');
+                
+                const totalCount = parseInt(res.headers.get('X-Total-Count')) || 0;
+                localSongsTotal = totalCount;
+                
+                const songs = await res.json();
+                currentLocalSongs = songs;
+                renderLocalSongs(songs);
+            } catch(e) {
+                console.error(e);
+            } finally {
+                btn.disabled = false; btn.textContent = '🔍 Search';
+            }
+        }
+
+        function renderLocalSongs(songs) {
+            const tbody = document.getElementById('local-songs-body');
+            tbody.innerHTML = '';
+
+            const pag = document.getElementById('local-pagination');
+            if (localSongsTotal > localSongsLimit) {
+                pag.style.display = 'flex';
+                document.getElementById('btn-local-prev').disabled = (localSongsPage === 1);
+                document.getElementById('btn-local-next').disabled = (localSongsPage * localSongsLimit >= localSongsTotal);
+                
+                const totalPages = Math.ceil(localSongsTotal / localSongsLimit);
+                document.getElementById('local-page-info').textContent = 'Page ' + localSongsPage + ' of ' + totalPages;
+            } else {
+                pag.style.display = 'none';
+            }
+
+            if (songs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="padding:16px; text-align:center; color:#888;">No local songs found.</td></tr>';
+                return;
+            }
+
+            songs.forEach(song => {
+                const hasAudio = !!song.audio;
+                const hasVideo = !!song.video;
+                const hasCover = !!song.cover;
+                
+                let fileBadges = '';
+                if (hasAudio) fileBadges += '<span style="background:#d4edda; color:#155724; padding:2px 6px; border-radius:4px; font-size:0.75rem; margin-right:4px;">🎵 Audio</span>';
+                if (hasVideo) {
+                    const isStream = song.video.includes('youtube.com') || song.video.includes('youtu.be') || song.video.includes('&path=https');
+                    if (isStream) {
+                        fileBadges += '<span style="background:#e2e3e5; color:#383d41; padding:2px 6px; border-radius:4px; font-size:0.75rem; margin-right:4px;">📡 Stream</span>';
+                    } else {
+                        fileBadges += '<span style="background:#cce5ff; color:#004085; padding:2px 6px; border-radius:4px; font-size:0.75rem; margin-right:4px;">🎬 Video</span>';
+                    }
+                }
+                if (hasCover) fileBadges += '<span style="background:#fff3cd; color:#856404; padding:2px 6px; border-radius:4px; font-size:0.75rem; margin-right:4px;">🖼️ Cover</span>';
+
+                const esc = v => (v||'').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #f0f0f0';
+                tr.onmouseover = () => tr.style.background = '#f7f8fa';
+                tr.onmouseout  = () => tr.style.background = '';
+                
+                tr.innerHTML = `
+                    <td style="padding:8px 6px; max-width:200px; overflow:hidden; text-overflow:ellipsis;" title="${esc(song.artist)}">${esc(song.artist)}</td>
+                    <td style="padding:8px 6px; max-width:250px; overflow:hidden; text-overflow:ellipsis; font-weight:500;" title="${esc(song.title)}">${esc(song.title)}</td>
+                    <td style="padding:8px 6px;">${fileBadges}</td>
+                    <td style="padding:8px 6px; text-align:right;">
+                        <button class="secondary" style="padding:4px 8px; font-size:0.8rem; margin-right:4px;" onclick="openAddVideoModal('${esc(song.id)}')">🎬 Add Video</button>
+                        <button class="secondary" style="padding:4px 8px; font-size:0.8rem; margin-right:4px;" onclick="openEditTxtModal('${esc(song.id)}')">✏️ Edit TXT</button>
+                        <button class="secondary" style="padding:4px 8px; font-size:0.8rem; margin-right:4px;" onclick="openReDownloadModal('${esc(song.id)}')">🔄 Re-download</button>
+                        <button class="secondary" style="padding:4px 8px; font-size:0.8rem; margin-right:4px;" onclick="startVocalSeparation('${esc(song.id)}')">🎤 Separate Vocals</button>
+                        <button class="danger" style="padding:4px 8px; font-size:0.8rem;" onclick="deleteSong('${esc(song.id)}', '${esc(song.artist)} - ${esc(song.title)}')">🗑️ Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function changeLocalPage(dir) {
+            localSongsPage += dir;
+            if (localSongsPage < 1) localSongsPage = 1;
+            searchLocalSongs(false);
+        }
+
+        async function startManualDownload() {
+            const artist = document.getElementById('manual-artist').value.trim();
+            const title = document.getElementById('manual-title').value.trim();
+            const youtubeUrl = document.getElementById('manual-yturl').value.trim();
+            const usdbId = document.getElementById('manual-usdbid').value.trim();
+            const videoMode = document.getElementById('manual-vmode').value;
+            const statusDiv = document.getElementById('manual-status');
+
+            if (!artist || !title || !youtubeUrl) {
+                alert('Artist, Title, and YouTube URL are required.');
+                return;
+            }
+
+            statusDiv.textContent = '⏳ Enqueuing download...';
+            try {
+                const res = await fetch('/api/usdb/download?token=' + API_TOKEN, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        usdbId: usdbId || null,
+                        artist,
+                        title,
+                        videoMode,
+                        youtubeUrl
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to start download');
+                
+                statusDiv.innerHTML = '<span style="color:#28a745;">✅ Download started. Check the Dashboard below!</span>';
+                document.getElementById('manual-artist').value = '';
+                document.getElementById('manual-title').value = '';
+                document.getElementById('manual-yturl').value = '';
+                document.getElementById('manual-usdbid').value = '';
+                
+                pollJobs();
+            } catch(e) {
+                statusDiv.innerHTML = `<span style="color:#dc3545;">❌ Error: ${e.message}</span>`;
+            }
+        }
+
+        function openEditTxtModal(songId) {
+            editingSongId = songId;
+            document.getElementById('editTxtStatus').textContent = '';
+            document.getElementById('editTxtContent').value = 'Loading...';
+            document.getElementById('editTxtModal').style.display = 'block';
+
+            const song = currentLocalSongs.find(s => s.id === songId);
+            if (!song) {
+                document.getElementById('editTxtContent').value = 'Error: Song details not found.';
+                return;
+            }
+            document.getElementById('editTxtTitle').textContent = `Edit TXT: ${song.artist} - ${song.title}`;
+            document.getElementById('editTxtContent').value = song.txtContent || '';
+        }
+
+        function closeEditTxtModal() {
+            document.getElementById('editTxtModal').style.display = 'none';
+            editingSongId = null;
+        }
+
+        async function saveTxtFile() {
+            if (!editingSongId) return;
+            const txtContent = document.getElementById('editTxtContent').value;
+            const statusSpan = document.getElementById('editTxtStatus');
+            statusSpan.textContent = 'Saving...';
+
+            try {
+                const res = await fetch(`/api/songs/${editingSongId}/txt?token=${API_TOKEN}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ txtContent })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to save');
+                
+                statusSpan.innerHTML = '<span style="color:#28a745;">✅ Saved successfully!</span>';
+                setTimeout(() => {
+                    closeEditTxtModal();
+                    searchLocalSongs(false);
+                }, 1000);
+            } catch(e) {
+                statusSpan.innerHTML = `<span style="color:#dc3545;">❌ Error: ${e.message}</span>`;
+            }
+        }
+
+        function openReDownloadModal(songId) {
+            reDownloadingSongId = songId;
+            const song = currentLocalSongs.find(s => s.id === songId);
+            if (!song) return;
+
+            document.getElementById('reDownloadTitle').textContent = `Re-download: ${song.artist} - ${song.title}`;
+            document.getElementById('redownload-yturl').value = '';
+            
+            const select = document.getElementById('redownload-vmode');
+            if (song.video) {
+                const isStream = song.video.includes('youtube.com') || song.video.includes('youtu.be') || song.video.includes('&path=https');
+                select.value = isStream ? 'stream' : 'mp4';
+            } else {
+                select.value = 'none';
+            }
+
+            document.getElementById('reDownloadStatus').textContent = '';
+            document.getElementById('reDownloadModal').style.display = 'block';
+        }
+
+        function closeReDownloadModal() {
+            document.getElementById('reDownloadModal').style.display = 'none';
+            reDownloadingSongId = null;
+        }
+
+        async function triggerReDownload() {
+            if (!reDownloadingSongId) return;
+            const song = currentLocalSongs.find(s => s.id === reDownloadingSongId);
+            if (!song) return;
+
+            const videoMode = document.getElementById('redownload-vmode').value;
+            const youtubeUrl = document.getElementById('redownload-yturl').value.trim();
+            const statusSpan = document.getElementById('reDownloadStatus');
+
+            statusSpan.textContent = 'Enqueuing...';
+
+            try {
+                let separator = '/';
+                if (song.txtPath && song.txtPath.includes('\\')) {
+                    separator = '\\';
+                }
+                const targetDir = song.txtPath ? song.txtPath.substring(0, song.txtPath.lastIndexOf(separator)) : null;
+                const txtFilename = song.txtPath ? song.txtPath.substring(song.txtPath.lastIndexOf(separator) + 1) : null;
+                const safeName = txtFilename ? txtFilename.substring(0, txtFilename.lastIndexOf('.')) : null;
+
+                const res = await fetch('/api/usdb/download?token=' + API_TOKEN, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        artist: song.artist,
+                        title: song.title,
+                        videoMode,
+                        youtubeUrl: youtubeUrl || null,
+                        targetDir: targetDir,
+                        safeName: safeName
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to start download');
+
+                statusSpan.innerHTML = '<span style="color:#28a745;">✅ Enqueued!</span>';
+                setTimeout(() => {
+                    closeReDownloadModal();
+                    pollJobs();
+                }, 1000);
+            } catch(e) {
+                statusSpan.innerHTML = `<span style="color:#dc3545;">❌ Error: ${e.message}</span>`;
+            }
+        }
+
+        async function deleteSong(songId, songLabel) {
+            if (!confirm(`Are you sure you want to delete "${songLabel}"? This will delete the song files and folder from disk.`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/songs/${songId}?token=${API_TOKEN}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to delete song');
+                
+                alert('Song deleted successfully.');
+                searchLocalSongs(false);
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        // --- ADD VIDEO JS ---
+        let addingVideoSongId = null;
+        let addVideoMode = 'yt';
+
+        function switchAddVideoTab(mode) {
+            addVideoMode = mode;
+            if (mode === 'yt') {
+                document.getElementById('tab-yt').style.borderBottomColor = '#1877f2';
+                document.getElementById('tab-yt').style.color = '#1877f2';
+                document.getElementById('tab-mp4').style.borderBottomColor = 'transparent';
+                document.getElementById('tab-mp4').style.color = '#65676b';
+                
+                document.getElementById('addVideoYtSection').style.display = 'block';
+                document.getElementById('addVideoMp4Section').style.display = 'none';
+            } else {
+                document.getElementById('tab-mp4').style.borderBottomColor = '#1877f2';
+                document.getElementById('tab-mp4').style.color = '#1877f2';
+                document.getElementById('tab-yt').style.borderBottomColor = 'transparent';
+                document.getElementById('tab-yt').style.color = '#65676b';
+                
+                document.getElementById('addVideoMp4Section').style.display = 'block';
+                document.getElementById('addVideoYtSection').style.display = 'none';
+            }
+        }
+
+        function openAddVideoModal(songId) {
+            addingVideoSongId = songId;
+            const song = currentLocalSongs.find(s => s.id === songId);
+            if (!song) return;
+
+            document.getElementById('addVideoTitle').textContent = `Add Video: ${song.artist} - ${song.title}`;
+            document.getElementById('addvideo-yturl').value = '';
+            document.getElementById('addvideo-vmode').value = 'mp4';
+            document.getElementById('addvideo-file').value = '';
+            document.getElementById('addVideoStatus').textContent = '';
+            switchAddVideoTab('yt');
+            
+            document.getElementById('addVideoModal').style.display = 'block';
+        }
+
+        function closeAddVideoModal() {
+            document.getElementById('addVideoModal').style.display = 'none';
+            addingVideoSongId = null;
+        }
+
+        async function triggerAddVideo() {
+            if (!addingVideoSongId) return;
+            const song = currentLocalSongs.find(s => s.id === addingVideoSongId);
+            if (!song) return;
+
+            const statusSpan = document.getElementById('addVideoStatus');
+            
+            if (addVideoMode === 'yt') {
+                const videoMode = document.getElementById('addvideo-vmode').value;
+                const youtubeUrl = document.getElementById('addvideo-yturl').value.trim();
+                
+                if (!youtubeUrl) return alert("Please enter a YouTube URL");
+                statusSpan.textContent = 'Enqueuing YouTube video...';
+
+                try {
+                    let separator = '/';
+                    if (song.txtPath && song.txtPath.includes('\\')) separator = '\\';
+                    const targetDir = song.txtPath ? song.txtPath.substring(0, song.txtPath.lastIndexOf(separator)) : null;
+                    const txtFilename = song.txtPath ? song.txtPath.substring(song.txtPath.lastIndexOf(separator) + 1) : null;
+                    const safeName = txtFilename ? txtFilename.substring(0, txtFilename.lastIndexOf('.')) : null;
+
+                    const res = await fetch('/api/usdb/download?token=' + API_TOKEN, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            artist: song.artist,
+                            title: song.title,
+                            videoMode,
+                            youtubeUrl: youtubeUrl,
+                            targetDir: targetDir,
+                            safeName: safeName
+                        })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Failed to start video download');
+
+                    statusSpan.innerHTML = '<span style="color:#28a745;">✅ Enqueued!</span>';
+                    setTimeout(() => {
+                        closeAddVideoModal();
+                        if (typeof pollJobs === 'function') pollJobs();
+                    }, 1000);
+                } catch(e) {
+                    statusSpan.innerHTML = `<span style="color:#dc3545;">❌ Error: ${e.message}</span>`;
+                }
+            } else {
+                const fileInput = document.getElementById('addvideo-file');
+                if (fileInput.files.length === 0) return alert("Please select an MP4 file");
+                
+                const file = fileInput.files[0];
+                const formData = new FormData();
+                formData.append('video', file);
+                
+                statusSpan.textContent = 'Uploading MP4...';
+                
+                try {
+                    const res = await fetch(`/api/songs/${addingVideoSongId}/video?token=${API_TOKEN}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Failed to upload video');
+                    
+                    statusSpan.innerHTML = '<span style="color:#28a745;">✅ Upload complete!</span>';
+                    setTimeout(() => {
+                        closeAddVideoModal();
+                        searchLocalSongs(false);
+                    }, 1000);
+                } catch(e) {
+                    statusSpan.innerHTML = `<span style="color:#dc3545;">❌ Error: ${e.message}</span>`;
+                }
+            }
+        }
+    </script>
+</head>
 <body>
-  <div id="root"></div>
-</body>
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+            <div style="display:flex; align-items:center; gap: 10px;">
+                <h1>Melodiq Helper</h1>
+                <span class="badge">Online (HTTP/HTTPS)</span>
+            </div>
+        </div>
+        
+         <div id="tv-connection-warning" style="background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
+            <strong>TV Connection Info:</strong> Use the HTTPS URL below. When opening on TV/Mobile, you will assume a "Security Warning". Click "Advanced" -> "Proceed (Unsafe)" to accept the self-signed certificate. This is necessary for Mixed Content support.
+        </div>
 
+        <p><strong>{{SONG_COUNT}}</strong> songs cached.</p>
+        <div style="margin-top: 30px;">
+            <span class="label">Music Folders</span>
+            <ul class="dir-list">
+                {{DIRECTORIES}}
+            </ul>
+            <div class="row" style="margin-top: 10px;">
+                <input type="text" id="newPath" placeholder="/path/to/media/folder">
+                <button class="secondary" onclick="openBrowser()">Browse...</button>
+                <button class="secondary" onclick="addDir()">Add</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px;">
+           <span class="label">Network URL (HTTPS - Recommended for TV)</span>
+            <div class="row">
+                <div class="code-box" style="flex:1; margin:0; display:flex; align-items:center;" id="urlDisplay">{{NETWORK_URL}}</div>
+                <button class="secondary" id="btn-urlDisplay" onclick="copyText('urlDisplay')">Copy</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <span class="label">Security Token (Persistent)</span>
+            <div class="row">
+                <div class="code-box" style="flex:1; margin:0; display:flex; align-items:center;" id="tokenDisplay">{{AUTH_TOKEN}}</div>
+                <button class="secondary" id="btn-tokenDisplay" onclick="copyText('tokenDisplay')">Copy</button>
+            </div>
+        </div>
+        
+         <div style="margin-top: 20px;">
+            <span class="label">Alternative HTTP Link</span>
+             <div class="row">
+                <div class="code-box" style="flex:1; margin:0; display:flex; align-items:center; opacity: 0.7; font-size: 0.9rem;">http://{{LOCAL_IP}}:{{PORT}}</div>
+            </div>
+        </div>
+
+    <script>
+       async function rescanLibrary() {
+            const btn = document.getElementById('btn-rescan');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = 'Scanning Library...';
+            
+            try {
+                const res = await fetch('/api/songs/refresh?token=' + API_TOKEN, { method: 'POST' });
+                if (res.ok) {
+                     // Poll for status
+                     const pollInterval = setInterval(async () => {
+                         try {
+                             const statusRes = await fetch('/api/status?token=' + API_TOKEN);
+                             const status = await statusRes.json();
+                             if (!status.scanning) {
+                                 clearInterval(pollInterval);
+                                 btn.innerText = 'Scan Complete!';
+                                 setTimeout(() => window.location.reload(), 1000);
+                             }
+                         } catch(e) {
+                             console.error('Poll failed', e);
+                         }
+                     }, 1000);
+                } else {
+                    const txt = await res.text();
+                    alert('Scan failed to start: ' + txt);
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+    <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+        <button id="btn-rescan" onclick="rescanLibrary()" {{SCAN_DISABLED}} style="width:100%">
+            {{SCAN_TEXT}}
+        </button>
+    </div>
+    </div>
+    
+    <p style="text-align:center; color:#65676b; font-size: 0.9rem;">
+        <a href="/api/songs?limit=10&token={{AUTH_TOKEN}}" target="_blank">Test API Connection</a>
+    </p>
+
+    <!-- ===== API KEY MANAGEMENT CARD ===== -->
+    <div class="card" style="margin-top:24px; border: 1px solid #dde2eb;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 style="margin:0; font-size:1.15rem; color:#1877f2;">🔑 API Key Management</h2>
+            <button class="secondary" style="font-size:0.85rem;" onclick="toggleApiKeyCard(event)">▲ Minimise</button>
+        </div>
+        <div id="api-key-card-body">
+            <div style="margin-bottom:14px;">
+                <span class="label">Generate New API Key</span>
+                <div class="row">
+                    <input type="text" id="new-apikey-name" placeholder="User Name or App Name">
+                    <button onclick="createApiKey()">Generate</button>
+                </div>
+            </div>
+            
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.85rem; white-space:nowrap;">
+                    <thead>
+                        <tr style="background:#f0f2f5; text-align:left;">
+                            <th style="padding:8px 6px;">Name</th>
+                            <th style="padding:8px 6px;">Token</th>
+                            <th style="padding:8px 6px; text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="api-keys-body">
+                        <tr><td colspan="3" style="padding:16px; text-align:center; color:#888;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleApiKeyCard(event) {
+            const body = document.getElementById('api-key-card-body');
+            const btn = event.currentTarget || event.target;
+            if (body.style.display === 'none') { body.style.display = ''; btn.textContent = '▲ Minimise'; }
+            else { body.style.display = 'none'; btn.textContent = '▼ Expand'; }
+        }
+
+        async function loadApiKeys() {
+            try {
+                const res = await fetch('/api/config/apikeys?token=' + API_TOKEN);
+                if (!res.ok) throw new Error('Failed to load API keys');
+                const keys = await res.json();
+                
+                const tbody = document.getElementById('api-keys-body');
+                tbody.innerHTML = '';
+                if (keys.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="padding:16px; text-align:center; color:#888;">No API keys generated yet.</td></tr>';
+                    return;
+                }
+
+                keys.forEach(k => {
+                    const tr = document.createElement('tr');
+                    tr.style.borderBottom = '1px solid #f0f0f0';
+                    tr.innerHTML = `
+                        <td style="padding:8px 6px; font-weight:bold;">${k.name.replace(/</g, '&lt;')}</td>
+                        <td style="padding:8px 6px;">
+                            <code id="apikey-${k.id}" style="background:#f7f8fa; padding:4px 6px; border-radius:4px; user-select:all;">${k.token}</code>
+                        </td>
+                        <td style="padding:8px 6px; text-align:right;">
+                            <button class="secondary" style="padding:4px 8px; font-size:0.8rem; margin-right:4px;" id="btn-apikey-${k.id}" onclick="copyText('apikey-${k.id}')">Copy</button>
+                            <button class="danger" style="padding:4px 8px; font-size:0.8rem;" onclick="deleteApiKey('${k.id}')">Revoke</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        async function createApiKey() {
+            const nameInput = document.getElementById('new-apikey-name');
+            const name = nameInput.value.trim();
+            if (!name) return alert('Please enter a name for the API key');
+
+            try {
+                const res = await fetch('/api/config/apikeys?token=' + API_TOKEN, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+                if (!res.ok) throw new Error('Failed to create key');
+                nameInput.value = '';
+                loadApiKeys();
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        async function deleteApiKey(id) {
+            if (!confirm('Are you sure you want to revoke this API key? Users using it will immediately lose access.')) return;
+            try {
+                const res = await fetch('/api/config/apikeys/' + id + '?token=' + API_TOKEN, {
+                    method: 'DELETE'
+                });
+                if (!res.ok) throw new Error('Failed to delete key');
+                loadApiKeys();
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        // Call loadApiKeys when document is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            loadApiKeys();
+        });
+    </script>
+
+    <div id="browserModal" class="modal">
+        <div class="modal-content">
+            <div class="browser-header">
+                <span style="font-weight:bold" id="currentPathDisplay">...</span>
+                <button class="secondary" onclick="closeBrowser()">Cancel</button>
+            </div>
+            <div class="browser-list" id="browserList">
+            </div>
+            <div style="margin-top: 15px; text-align: right;">
+                <button onclick="selectCurrentPath()">Select This Folder</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== LOCAL SONGS LIBRARY CARD ===== -->
+    <div class="card" style="margin-top:24px; border: 1px solid #dde2eb;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 style="margin:0; font-size:1.15rem; color:#1877f2;">🎵 Local Songs Library</h2>
+            <button class="secondary" style="font-size:0.85rem;" onclick="toggleLocalLibraryCard(event)">▲ Minimise</button>
+        </div>
+        <div id="local-library-card-body">
+            <!-- Search row -->
+            <div class="row" style="margin-bottom:14px;">
+                <input type="text" id="local-search-input" placeholder="Search local songs (Artist / Title / Genre / Language...)" onkeydown="if(event.key==='Enter') searchLocalSongs()">
+                <button onclick="searchLocalSongs()" id="btn-local-search">🔍 Search</button>
+            </div>
+            
+            <!-- Results table -->
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.85rem; white-space:nowrap;">
+                    <thead>
+                        <tr style="background:#f0f2f5; text-align:left;">
+                            <th style="padding:8px 6px;">Artist</th>
+                            <th style="padding:8px 6px;">Title</th>
+                            <th style="padding:8px 6px;">Files</th>
+                            <th style="padding:8px 6px; text-align:right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="local-songs-body">
+                        <tr>
+                            <td colspan="4" style="padding:16px; text-align:center; color:#888;">Load songs by clicking Search or typing a query.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div id="local-pagination" style="display:none; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #e4e6eb; padding-top:10px; gap:10px;">
+                <button class="secondary" id="btn-local-prev" onclick="changeLocalPage(-1)" style="font-size:0.85rem; padding:4px 10px;">◀ Previous</button>
+                <span id="local-page-info" style="font-size:0.85rem; font-weight:600; color:#4e5157;">Page 1</span>
+                <button class="secondary" id="btn-local-next" onclick="changeLocalPage(1)" style="font-size:0.85rem; padding:4px 10px;">Next ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit TXT Modal -->
+    <div id="editTxtModal" class="modal">
+        <div class="modal-content" style="max-width: 700px; height: 85vh;">
+            <div class="browser-header">
+                <span style="font-weight:bold" id="editTxtTitle">Edit Song TXT</span>
+                <button class="secondary" onclick="closeEditTxtModal()">Cancel</button>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; margin-bottom:15px;">
+                <textarea id="editTxtContent" style="width:100%; flex:1; font-family:monospace; padding:10px; box-sizing:border-box; border:1px solid #ddd; border-radius:6px; resize:none;"></textarea>
+            </div>
+            <div style="text-align: right; display:flex; justify-content:space-between; align-items:center;">
+                <span id="editTxtStatus" style="font-size:0.85rem; color:#65676b;"></span>
+                <button onclick="saveTxtFile()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Re-download Modal -->
+    <div id="reDownloadModal" class="modal">
+        <div class="modal-content" style="max-width: 500px; height: auto; min-height: 250px;">
+            <div class="browser-header">
+                <span style="font-weight:bold" id="reDownloadTitle">Re-download Song</span>
+                <button class="secondary" onclick="closeReDownloadModal()">Cancel</button>
+            </div>
+            <div style="padding:10px 0;">
+                <div style="margin-bottom:12px;">
+                    <span class="label">Video Mode</span>
+                    <select id="redownload-vmode" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ddd; font-size:1rem;">
+                        <option value="mp4">🎬 MP4</option>
+                        <option value="stream">📡 Stream</option>
+                        <option value="none">🎵 Audio Only</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <span class="label">Custom YouTube URL (Optional)</span>
+                    <input type="text" id="redownload-yturl" placeholder="Paste specific video link to base song on">
+                </div>
+            </div>
+            <div style="text-align: right; display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+                <span id="reDownloadStatus" style="font-size:0.85rem; color:#65676b;"></span>
+                <button onclick="triggerReDownload()">Start Download</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Video Modal -->
+    <div id="addVideoModal" class="modal">
+        <div class="modal-content" style="max-width: 500px; height: auto; min-height: 280px;">
+            <div class="browser-header">
+                <span style="font-weight:bold" id="addVideoTitle">Add Video to Song</span>
+                <button class="secondary" onclick="closeAddVideoModal()">Cancel</button>
+            </div>
+            
+            <div style="display:flex; border-bottom:1px solid #ddd; margin-bottom:15px; margin-top:5px;">
+                <button id="tab-yt" style="flex:1; background:none; border:none; border-bottom:2px solid #1877f2; color:#1877f2; border-radius:0; padding:10px; font-weight:bold;" onclick="switchAddVideoTab('yt')">YouTube URL</button>
+                <button id="tab-mp4" style="flex:1; background:none; border:none; border-bottom:2px solid transparent; color:#65676b; border-radius:0; padding:10px; font-weight:bold;" onclick="switchAddVideoTab('mp4')">Upload MP4</button>
+            </div>
+
+            <div id="addVideoYtSection" style="padding:10px 0;">
+                <div style="margin-bottom:12px;">
+                    <span class="label">YouTube URL</span>
+                    <input type="text" id="addvideo-yturl" placeholder="Paste YouTube link here">
+                </div>
+                <div style="margin-bottom:12px;">
+                    <span class="label">Video Mode</span>
+                    <select id="addvideo-vmode" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ddd; font-size:1rem;">
+                        <option value="mp4">🎬 Download MP4</option>
+                        <option value="stream">📡 Embed Stream</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="addVideoMp4Section" style="padding:10px 0; display:none;">
+                <div style="margin-bottom:12px;">
+                    <span class="label">Select MP4 File</span>
+                    <input type="file" id="addvideo-file" accept=".mp4,video/mp4" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ddd; font-size:1rem; box-sizing:border-box;">
+                </div>
+            </div>
+
+            <div style="text-align: right; display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+                <span id="addVideoStatus" style="font-size:0.85rem; color:#65676b;"></span>
+                <button onclick="triggerAddVideo()">Add Video</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== USDB MANAGER CARD ===== -->
+    <div class="card" style="margin-top:24px; border: 1px solid #dde2eb;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 style="margin:0; font-size:1.15rem; color:#1877f2;">📥 USDB Song Manager</h2>
+            <button class="secondary" style="font-size:0.85rem;" onclick="toggleUsdbCard(event)">▲ Minimise</button>
+        </div>
+        <div id="usdb-card-body">
+            
+            <!-- Manual Download Form -->
+            <div style="margin-bottom:18px; padding:14px; background:#f7f8fa; border-radius:8px; border:1px solid #e4e6eb;">
+                <span class="label" style="margin-top:0;">Download via specific YouTube Link</span>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+                    <div>
+                        <input type="text" id="manual-artist" placeholder="Artist (required)">
+                    </div>
+                    <div>
+                        <input type="text" id="manual-title" placeholder="Title (required)">
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; margin-bottom:8px; align-items:stretch;">
+                    <input type="text" id="manual-yturl" placeholder="YouTube URL (e.g. https://www.youtube.com/watch?...)" style="flex:1;">
+                    <input type="text" id="manual-usdbid" placeholder="Optional USDB ID" style="width:120px;">
+                    <select id="manual-vmode" style="padding:10px; border-radius:6px; border:1px solid #ddd; font-size:1rem; box-sizing:border-box;">
+                        <option value="mp4">🎬 MP4</option>
+                        <option value="stream">📡 Stream</option>
+                        <option value="none" selected>🎵 Audio Only</option>
+                    </select>
+                    <button onclick="startManualDownload()">Download</button>
+                </div>
+                <div id="manual-status" style="font-size:0.85rem; color:#65676b;"></div>
+            </div>
+
+            <!-- USDB Credentials -->
+            <div style="margin-bottom:18px; padding:14px; background:#f7f8fa; border-radius:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <div>
+                        <span class="label" style="margin:0;">USDB Account (usdb.animux.de)</span>
+                        <span id="usdb-creds-summary" style="font-size:0.85rem; color:#65676b; margin-left:8px; font-weight:600;"></span>
+                    </div>
+                    <button class="secondary" style="font-size:0.8rem; padding:2px 8px;" id="btn-toggle-creds" onclick="toggleUsdbCreds()">Edit</button>
+                </div>
+                <div id="usdb-creds-fields" style="margin-top:10px; display:none;">
+                    <div class="row" style="margin-bottom:8px;">
+                        <input type="text"     id="usdb-user" placeholder="Username" style="flex:1;">
+                        <input type="password" id="usdb-pass" placeholder="Password" style="flex:1;">
+                        <button onclick="saveUsdbCreds()" id="btn-save-creds">Save</button>
+                    </div>
+                    <div id="usdb-creds-status" style="font-size:0.85rem; color:#d32f2f;"></div>
+                </div>
+            </div>
+
+            <!-- Download Folder -->
+            <div style="margin-bottom:18px; padding:14px; background:#f7f8fa; border-radius:8px;">
+                <span class="label">Default Download Folder</span>
+                <div class="row">
+                    <input type="text" id="usdb-dldir" placeholder="/path/to/music" style="flex:1;" value="">
+                    <button class="secondary" onclick="openBrowserFor('usdb-dldir')">Browse…</button>
+                    <button onclick="saveDlDir()">Save</button>
+                </div>
+                <div id="usdb-dldir-status" style="font-size:0.85rem; color:#65676b; margin-top:4px;"></div>
+            </div>
+
+            <!-- Search & Filters -->
+            <div style="margin-bottom:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <span class="label" style="margin:0;">Search USDB</span>
+                    <button class="secondary" style="font-size:0.8rem; padding:4px 10px;" onclick="toggleFilters(event)">⚙ Filter</button>
+                </div>
+
+                <!-- Quick search row -->
+                <div class="row" style="margin-bottom:8px;">
+                    <input type="text" id="usdb-f-title" placeholder="Title (empty = any)" style="flex:1;"
+                           onkeydown="if(event.key==='Enter') usdbNewSearch()">
+                    <input type="text" id="usdb-f-artist" placeholder="Artist (empty = any)" style="flex:1;"
+                           onkeydown="if(event.key==='Enter') usdbNewSearch()">
+                    <button onclick="usdbNewSearch()" id="btn-usdb-search">🔍 Search</button>
+                </div>
+
+                <!-- Extended filters (collapsible) -->
+                <div id="usdb-filters" style="display:none; background:#f7f8fa; padding:12px; border-radius:8px; border:1px solid #e4e6eb;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+                        <div>
+                            <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Edition</label>
+                            <input type="text" id="usdb-f-edition" placeholder="any" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Language</label>
+                            <input type="text" id="usdb-f-language" placeholder="any" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Genre</label>
+                            <input type="text" id="usdb-f-genre" placeholder="any" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Year</label>
+                            <input type="text" id="usdb-f-year" placeholder="e.g. 2023" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Creator</label>
+                            <input type="text" id="usdb-f-creator" placeholder="any" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem;">
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Results per page</label>
+                            <select id="usdb-f-limit" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem; border:1px solid #ddd; border-radius:6px;">
+                                <option value="20">20</option>
+                                <option value="30" selected>30</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+                        <div>
+                            <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Sort by</label>
+                            <select id="usdb-f-order" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem; border:1px solid #ddd; border-radius:6px;">
+                                <option value="id" selected>Date added</option>
+                                <option value="artist">Artist</option>
+                                <option value="title">Title</option>
+                                <option value="language">Language</option>
+                                <option value="edition">Edition</option>
+                                <option value="genre">Genre</option>
+                                <option value="year">Year</option>
+                                <option value="views">Views</option>
+                                <option value="rating">Rating</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:0.8rem; color:#65676b; display:block; margin-bottom:3px;">Order</label>
+                            <select id="usdb-f-direction" style="width:100%; box-sizing:border-box; padding:7px 9px; font-size:0.9rem; border:1px solid #ddd; border-radius:6px;">
+                                <option value="desc" selected>Descending</option>
+                                <option value="asc">Ascending</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.9rem; cursor:pointer;">
+                            <input type="checkbox" id="usdb-f-golden"> ⭐ Only with golden notes
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:0.9rem; cursor:pointer;">
+                            <input type="checkbox" id="usdb-f-sc"> 🎤 Only [SC] songs
+                        </label>
+                    </div>
+                    <div style="margin-top:10px; text-align:right;">
+                        <button class="secondary" style="font-size:0.85rem;" onclick="resetFilters()">↺ Reset filters</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results table -->
+            <div id="usdb-results-wrap" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <div style="font-size:0.85rem; color:#65676b;" id="usdb-result-count"></div>
+                    <button id="btn-usdb-bulk-download" onclick="startBulkDownload()" style="display:none; font-size:0.85rem; padding:4px 10px; background:#1877f2; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
+                        📥 Download Selected (0)
+                    </button>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table id="usdb-results-table" style="width:100%; border-collapse:collapse; font-size:0.85rem; white-space:nowrap;">
+                        <thead>
+                            <tr style="background:#f0f2f5; text-align:left;">
+                                <th style="padding:8px 6px; width:30px;"><input type="checkbox" id="usdb-select-all" onclick="toggleSelectAllOnPage(this.checked)"></th>
+                                <th style="padding:8px 6px;">Artist</th>
+                                <th style="padding:8px 6px;">Title</th>
+                                <th style="padding:8px 6px;">Genre</th>
+                                <th style="padding:8px 6px;">Year</th>
+                                <th style="padding:8px 6px;">Edition</th>
+                                <th style="padding:8px 6px;">⭐</th>
+                                <th style="padding:8px 6px;">Lang</th>
+                                <th style="padding:8px 6px;">Creator</th>
+                                <th style="padding:8px 6px;">Rating</th>
+                                <th style="padding:8px 6px;">Views</th>
+                                <th style="padding:8px 6px;">
+                                    <select id="global-vmode" style="padding:2px 4px; border-radius:4px; border:1px solid #ccc; font-size:0.8rem; font-weight:bold; cursor:pointer;" onchange="changeGlobalVideoMode(this.value)">
+                                        <option value="none" selected>🎵 Audio Only</option>
+                                        <option value="mp4">🎬 MP4</option>
+                                        <option value="stream">📡 Stream</option>
+                                    </select>
+                                </th>
+                                <th style="padding:8px 6px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="usdb-results-body"></tbody>
+                    </table>
+                </div>
+                <!-- Pagination controls -->
+                <div id="usdb-pagination" style="display:none; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #e4e6eb; padding-top:10px; gap:10px;">
+                    <button class="secondary" id="btn-usdb-prev" onclick="changeUsdbPage(-1)" style="font-size:0.85rem; padding:4px 10px;">◀ Previous</button>
+                    <span id="usdb-page-info" style="font-size:0.85rem; font-weight:600; color:#4e5157;">Page 1</span>
+                    <button class="secondary" id="btn-usdb-next" onclick="changeUsdbPage(1)" style="font-size:0.85rem; padding:4px 10px;">Next ▶</button>
+                </div>
+            </div>
+
+            <!-- Error display -->
+            <div id="usdb-error" style="display:none; color:#dc3545; font-size:0.9rem; margin-top:8px;"></div>
+
+        </div><!-- /usdb-card-body -->
+    </div><!-- /USDB card -->
+
+    <!-- Background Jobs Dashboard -->
+    <div id="usdb-jobs-container" style="display:none; margin-top:20px; background:#fff; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); padding:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h3 style="margin:0; font-size:1.1rem; color:#1c1e21;">⬇ Downloads Dashboard</h3>
+            <button class="secondary" style="font-size:0.8rem; padding:4px 8px;" onclick="pollJobs()">↻ Refresh</button>
+        </div>
+        <div id="usdb-jobs-list" style="display:flex; flex-direction:column; gap:8px; max-height:500px; overflow-y:auto; padding-right:6px;"></div>
+    </div>
+
+    <script>
+        // ---- USDB Manager JS ----
+        const selectedSongs = new Map();
+        let currentSearchSongs = [];
+        let jobsPollTimer = null;
+        let activeJob = null;
+        let pollTimer = null;
+        let usdbBrowserTarget = null;
+
+        // Load current settings on page load
+        (async () => {
+            // Load default video mode from localStorage
+            const defaultVmode = localStorage.getItem('usdb_default_vmode') || 'none';
+            const manualVmode = document.getElementById('manual-vmode');
+            if (manualVmode) manualVmode.value = defaultVmode;
+            const globalVmode = document.getElementById('global-vmode');
+            if (globalVmode) globalVmode.value = defaultVmode;
+
+            try {
+                const r1 = await fetch('/api/config/usdb-credentials?token=' + API_TOKEN);
+                const d1 = await r1.json();
+                if (d1.username) {
+                    document.getElementById('usdb-user').value = d1.username;
+                    const summary = d1.hasPassword
+                        ? '✅ Saved' : '⚠️ No password';
+                    document.getElementById('usdb-creds-summary').textContent = summary;
+                    if (d1.hasPassword) {
+                        document.getElementById('usdb-pass').value = '********';
+                        document.getElementById('usdb-creds-fields').style.display = 'none';
+                        document.getElementById('btn-toggle-creds').textContent = 'Edit';
+                    } else {
+                        document.getElementById('usdb-creds-fields').style.display = '';
+                        document.getElementById('btn-toggle-creds').textContent = 'Hide';
+                    }
+                } else {
+                    document.getElementById('usdb-creds-fields').style.display = '';
+                    document.getElementById('btn-toggle-creds').textContent = 'Hide';
+                }
+            } catch(_) {}
+            try {
+                const r2 = await fetch('/api/config/download-dir?token=' + API_TOKEN);
+                const d2 = await r2.json();
+                if (d2.downloadDir) document.getElementById('usdb-dldir').value = d2.downloadDir;
+            } catch(_) {}
+            
+            // Poll for existing jobs on page load
+            if (typeof pollJobs === 'function') pollJobs();
+        })();
+
+        function toggleUsdbCard(event) {
+            const body = document.getElementById('usdb-card-body');
+            const btn  = event ? (event.currentTarget || event.target) : null;
+            if (!btn) return;
+            if (body.style.display === 'none') { body.style.display = ''; btn.textContent = '▲ Minimise'; }
+            else { body.style.display = 'none'; btn.textContent = '▼ Expand'; }
+        }
+
+        function toggleUsdbCreds() {
+            const fields = document.getElementById('usdb-creds-fields');
+            const btn = document.getElementById('btn-toggle-creds');
+            if (fields.style.display === 'none') {
+                fields.style.display = '';
+                btn.textContent = 'Hide';
+            } else {
+                fields.style.display = 'none';
+                btn.textContent = 'Edit';
+            }
+        }
+
+        async function saveUsdbCreds() {
+            const username = document.getElementById('usdb-user').value.trim();
+            const password = document.getElementById('usdb-pass').value;
+            if (!username) { alert('Username is required.'); return; }
+            const btn = document.getElementById('btn-save-creds');
+            btn.disabled = true; btn.textContent = 'Saving…';
+            document.getElementById('usdb-creds-status').textContent = '';
+            try {
+                const r = await fetch('/api/config/usdb-credentials?token=' + API_TOKEN, {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ username, password })
+                });
+                const d = await r.json();
+                if (d.ok) {
+                    document.getElementById('usdb-creds-summary').textContent = '✅ Saved';
+                    document.getElementById('usdb-creds-fields').style.display = 'none';
+                    document.getElementById('btn-toggle-creds').textContent = 'Edit';
+                    document.getElementById('usdb-creds-status').textContent = '';
+                } else {
+                    document.getElementById('usdb-creds-status').textContent = '❌ ' + (d.error || 'Error');
+                }
+            } catch(e) { document.getElementById('usdb-creds-status').textContent = '❌ ' + e.message; }
+            btn.disabled = false; btn.textContent = 'Save';
+        }
+
+        async function saveDlDir() {
+            const dir = document.getElementById('usdb-dldir').value.trim();
+            if (!dir) return;
+            const r = await fetch('/api/config/download-dir?token=' + API_TOKEN, {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ dir })
+            });
+            const d = await r.json();
+            document.getElementById('usdb-dldir-status').textContent = d.downloadDir ? '✅ Saved: ' + d.downloadDir : '❌ ' + (d.error || 'Error');
+        }
+
+        // Override selectCurrentPath to support USDB folder picker
+        const _origSelect = selectCurrentPath;
+        function selectCurrentPath() {
+            if (usdbBrowserTarget) {
+                document.getElementById(usdbBrowserTarget).value = currentBrowserPath;
+                usdbBrowserTarget = null;
+                closeBrowser();
+            } else {
+                _origSelect();
+            }
+        }
+
+        function openBrowserFor(inputId) {
+            usdbBrowserTarget = inputId;
+            openBrowser();
+        }
+
+        function toggleFilters(event) {
+            const el = document.getElementById('usdb-filters');
+            const btn = event ? event.target : null;
+            if (!btn) return;
+            if (el.style.display === 'none') { el.style.display = 'block'; btn.textContent = '✕ Filter'; }
+            else { el.style.display = 'none'; btn.textContent = '⚙ Filter'; }
+        }
+        
+        function resetFilters() {
+            ['usdb-f-title','usdb-f-artist','usdb-f-edition','usdb-f-language',
+             'usdb-f-genre','usdb-f-year','usdb-f-creator'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('usdb-f-limit').value = '30';
+            document.getElementById('usdb-f-order').value = 'id';
+            document.getElementById('usdb-f-direction').value = 'desc';
+            document.getElementById('usdb-f-golden').checked = false;
+            document.getElementById('usdb-f-sc').checked = false;
+            usdbOffset = 0;
+            usdbTotalResults = 0;
+            document.getElementById('usdb-results-wrap').style.display = 'none';
+        }
+
+        function usdbNewSearch() {
+            usdbOffset = 0;
+            doUsdbSearch();
+        }
+
+        function changeUsdbPage(dir) {
+            const limit = parseInt(document.getElementById('usdb-f-limit').value, 10) || 30;
+            usdbOffset += dir * limit;
+            if (usdbOffset < 0) usdbOffset = 0;
+            doUsdbSearch();
+        }
+
+        async function doUsdbSearch() {
+            const title    = document.getElementById('usdb-f-title').value.trim();
+            const artist   = document.getElementById('usdb-f-artist').value.trim();
+            const edition  = document.getElementById('usdb-f-edition').value.trim();
+            const language = document.getElementById('usdb-f-language').value.trim();
+            const genre    = document.getElementById('usdb-f-genre').value.trim();
+            const year     = document.getElementById('usdb-f-year').value.trim();
+            const creator  = document.getElementById('usdb-f-creator').value.trim();
+            const limit    = document.getElementById('usdb-f-limit').value;
+            const order    = document.getElementById('usdb-f-order').value;
+            const dir      = document.getElementById('usdb-f-direction').value;
+            const golden   = document.getElementById('usdb-f-golden').checked ? '1' : '0';
+            const sc       = document.getElementById('usdb-f-sc').checked ? '1' : '0';
+
+            const btn = document.getElementById('btn-usdb-search');
+            btn.disabled = true; btn.textContent = '...';
+            document.getElementById('usdb-error').style.display = 'none';
+
+            const params = new URLSearchParams({
+                title, artist, edition, language, genre, year, creator,
+                limit, order, direction: dir, golden, sc, offset: usdbOffset
+            });
+
+            try {
+                const r = await fetch('/api/usdb/search?token=' + API_TOKEN + '&' + params.toString());
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.error || 'Search failed');
+                renderUsdbResults(data.songs, data.totalResults, parseInt(limit, 10));
+            } catch(e) {
+                const errEl = document.getElementById('usdb-error');
+                errEl.textContent = '❌ ' + e.message;
+                errEl.style.display = 'block';
+            }
+            btn.disabled = false; btn.textContent = '🔍 Search';
+        }
+
+        function renderUsdbResults(songs, totalResults, limit) {
+            const tbody = document.getElementById('usdb-results-body');
+            tbody.innerHTML = '';
+            
+            usdbTotalResults = totalResults || 0;
+            currentSearchSongs = songs;
+
+            // Sync global vmode select to persisted setting
+            const defaultVmode = localStorage.getItem('usdb_default_vmode') || 'none';
+            const globalVmode = document.getElementById('global-vmode');
+            if (globalVmode) globalVmode.value = defaultVmode;
+
+            if (usdbTotalResults > 0) {
+                const startNum = usdbOffset + 1;
+                const endNum = Math.min(usdbOffset + limit, usdbTotalResults);
+                document.getElementById('usdb-result-count').textContent = 
+                    usdbTotalResults + ' result(s) found (showing ' + startNum + '-' + endNum + ')';
+            } else {
+                document.getElementById('usdb-result-count').textContent = '0 result(s) found';
+            }
+
+            if (songs.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td colspan="13" style="padding:16px; text-align:center; color:#888;">No results found. Try different search terms.</td>';
+                tbody.appendChild(tr);
+                document.getElementById('usdb-pagination').style.display = 'none';
+                document.getElementById('usdb-results-wrap').style.display = 'block';
+                return;
+            }
+
+            const pag = document.getElementById('usdb-pagination');
+            if (usdbTotalResults > limit) {
+                pag.style.display = 'flex';
+                document.getElementById('btn-usdb-prev').disabled = (usdbOffset === 0);
+                document.getElementById('btn-usdb-next').disabled = (usdbOffset + limit >= usdbTotalResults);
+                
+                const currentPage = Math.floor(usdbOffset / limit) + 1;
+                const totalPages = Math.ceil(usdbTotalResults / limit);
+                document.getElementById('usdb-page-info').textContent = 'Page ' + currentPage + ' of ' + totalPages;
+            } else {
+                pag.style.display = 'none';
+            }
+
+            songs.forEach((s, i) => {
+                const esc = v => (v||'').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #f0f0f0';
+                tr.onmouseover = () => tr.style.background = '#f7f8fa';
+                tr.onmouseout  = () => tr.style.background = '';
+                const isSelected = selectedSongs.has(s.usdbId);
+                const currentVmode = isSelected ? selectedSongs.get(s.usdbId).videoMode : defaultVmode;
+                tr.innerHTML = `
+                    <td style="padding:8px 6px;"><input type="checkbox" class="usdb-row-checkbox" data-idx="${i}" ${isSelected ? 'checked' : ''} onchange="toggleSongSelection(${i}, this.checked)"></td>
+                    <td style="padding:8px 6px; max-width:300px; overflow:hidden; text-overflow:ellipsis;" title="${esc(s.artist)}">${esc(s.artist)}</td>
+                    <td style="padding:8px 6px; max-width:400px; overflow:hidden; text-overflow:ellipsis; font-weight:500;" title="${esc(s.title)}">${esc(s.title)}</td>
+                    <td style="padding:8px 6px; color:#888; font-size:0.8rem;">${esc(s.genre)}</td>
+                    <td style="padding:8px 6px; color:#888; font-size:0.8rem;">${esc(s.year)}</td>
+                    <td style="padding:8px 6px; color:#888; font-size:0.8rem; max-width:250px; overflow:hidden; text-overflow:ellipsis;" title="${esc(s.edition)}">${esc(s.edition)}</td>
+                    <td style="padding:8px 6px; text-align:center;">${s.goldenNotes || ''}</td>
+                    <td style="padding:8px 6px; color:#888; font-size:0.8rem;">${esc(s.language)}</td>
+                    <td style="padding:8px 6px; color:#888; font-size:0.8rem; max-width:200px; overflow:hidden; text-overflow:ellipsis;" title="${esc(s.creator)}">${esc(s.creator)}</td>
+                    <td style="padding:8px 6px; color:#f5a623; font-size:0.8rem; letter-spacing:-1px;">${esc(s.rating)}</td>
+                    <td style="padding:8px 6px; color:#888; font-size:0.8rem;">${esc(s.views)}</td>
+                    <td style="padding:8px 6px;">
+                        <select id="vmode-${i}" style="padding:4px 6px; border-radius:4px; border:1px solid #ddd; font-size:0.8rem;" onchange="updateVideoMode(${i}, this.value)">
+                            <option value="mp4" ${currentVmode === 'mp4' ? 'selected' : ''}>🎬 MP4</option>
+                            <option value="stream" ${currentVmode === 'stream' ? 'selected' : ''}>📡 Stream</option>
+                            <option value="none" ${currentVmode === 'none' ? 'selected' : ''}>🎵 Audio</option>
+                        </select>
+                    </td>
+                    <td style="padding:8px 6px; text-align:right;">
+                        <button id="dl-btn-${i}" onclick="startDownload(${i}, '${esc(s.usdbId)}')" style="padding:5px 10px; font-size:0.8rem;">
+                            ⬇
+                        </button>
+                    </td>
+                `;
+                tr.dataset.artist = s.artist;
+                tr.dataset.title  = s.title;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('usdb-results-wrap').style.display = 'block';
+            updateBulkDownloadButton();
+        }
+
+        function toggleSongSelection(idx, checked) {
+            const s = currentSearchSongs[idx];
+            const vmode = document.getElementById('vmode-' + idx).value;
+            if (checked) {
+                selectedSongs.set(s.usdbId, { usdbId: s.usdbId, artist: s.artist, title: s.title, videoMode: vmode });
+            } else {
+                selectedSongs.delete(s.usdbId);
+            }
+            updateBulkDownloadButton();
+        }
+
+        function toggleSelectAllOnPage(checked) {
+            const checkboxes = document.querySelectorAll('.usdb-row-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = checked;
+                const idx = parseInt(cb.dataset.idx, 10);
+                const s = currentSearchSongs[idx];
+                const vmode = document.getElementById('vmode-' + idx).value;
+                if (checked) {
+                    selectedSongs.set(s.usdbId, { usdbId: s.usdbId, artist: s.artist, title: s.title, videoMode: vmode });
+                } else {
+                    selectedSongs.delete(s.usdbId);
+                }
+            });
+            updateBulkDownloadButton();
+        }
+
+        function updateVideoMode(idx, value) {
+            const s = currentSearchSongs[idx];
+            if (selectedSongs.has(s.usdbId)) {
+                selectedSongs.get(s.usdbId).videoMode = value;
+            }
+        }
+
+        function changeGlobalVideoMode(val) {
+            localStorage.setItem('usdb_default_vmode', val);
+            
+            // Sync manual video mode select element
+            const manualVmode = document.getElementById('manual-vmode');
+            if (manualVmode) manualVmode.value = val;
+            
+            // Update all row select elements in the current search results
+            currentSearchSongs.forEach((s, idx) => {
+                const el = document.getElementById('vmode-' + idx);
+                if (el) {
+                    el.value = val;
+                }
+                // If song is selected, update its mode in Map
+                if (selectedSongs.has(s.usdbId)) {
+                    selectedSongs.get(s.usdbId).videoMode = val;
+                }
+            });
+        }
+
+        function updateBulkDownloadButton() {
+            const btn = document.getElementById('btn-usdb-bulk-download');
+            const count = selectedSongs.size;
+            if (count > 0) {
+                btn.style.display = 'inline-block';
+                btn.textContent = '📥 Download Selected (' + count + ')';
+            } else {
+                btn.style.display = 'none';
+            }
+            
+            const allCbs = document.querySelectorAll('.usdb-row-checkbox');
+            const allChecked = allCbs.length > 0 && Array.from(allCbs).every(cb => cb.checked);
+            const selectAllCb = document.getElementById('usdb-select-all');
+            if (selectAllCb) selectAllCb.checked = allChecked;
+        }
+
+        async function startBulkDownload() {
+            if (selectedSongs.size === 0) return;
+            const requests = Array.from(selectedSongs.values());
+            
+            const btn = document.getElementById('btn-usdb-bulk-download');
+            btn.disabled = true;
+            btn.textContent = '⏳ Enqueuing...';
+            
+            try {
+                const r = await fetch('/api/usdb/download?token=' + API_TOKEN, {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(requests)
+                });
+                const d = await r.json();
+                if (!r.ok) throw new Error(d.error || 'Failed to start downloads');
+                
+                // Clear selections
+                selectedSongs.clear();
+                document.querySelectorAll('.usdb-row-checkbox').forEach(cb => cb.checked = false);
+                updateBulkDownloadButton();
+                
+                pollJobs();
+            } catch(e) {
+                alert('Error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                updateBulkDownloadButton();
+            }
+        }
+
+        async function startDownload(idx, usdbId) {
+            const rows  = document.getElementById('usdb-results-body').children;
+            const row   = rows[idx];
+            const vmode = document.getElementById('vmode-' + idx).value;
+            const artist = row.dataset.artist;
+            const title  = row.dataset.title;
+
+            const btn = document.getElementById('dl-btn-' + idx);
+            btn.disabled = true; btn.textContent = '⏳';
+
+            try {
+                const r = await fetch('/api/usdb/download?token=' + API_TOKEN, {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify([{ usdbId, artist, title, videoMode: vmode }])
+                });
+                const d = await r.json();
+                if (!r.ok) throw new Error(d.error || 'Failed to start download');
+                
+                btn.textContent = '✅';
+                pollJobs();
+            } catch(e) {
+                alert('Error: ' + e.message);
+                btn.disabled = false; btn.textContent = '⬇ Download';
+            }
+        }
+
+        async function pollJobs() {
+            try {
+                const r = await fetch('/api/usdb/jobs?token=' + API_TOKEN);
+                if (!r.ok) return;
+                const jobsList = await r.json();
+                
+                const containerWrap = document.getElementById('usdb-jobs-container');
+                const listWrap = document.getElementById('usdb-jobs-list');
+                
+                if (jobsList.length === 0) {
+                    containerWrap.style.display = 'none';
+                    return;
+                }
+                
+                containerWrap.style.display = 'block';
+                
+                const openJobIds = new Set();
+                listWrap.querySelectorAll('details[open]').forEach(d => openJobIds.add(d.dataset.jobid));
+                listWrap.innerHTML = '';
+                
+                let activeCount = 0;
+                jobsList.slice().reverse().forEach(j => { // Newest top
+                    if (j.status === 'pending' || j.status === 'running') activeCount++;
+                    
+                    let color = '#65676b';
+                    let statusIcon = '⏳';
+                    if (j.status === 'running') { color = '#1877f2'; statusIcon = '▶️'; }
+                    else if (j.status === 'done') { color = '#28a745'; statusIcon = '✅'; }
+                    else if (j.status === 'error') { color = '#dc3545'; statusIcon = '❌'; }
+                    
+                    const div = document.createElement('div');
+                    div.style.border = '1px solid #e4e6eb';
+                    div.style.borderRadius = '6px';
+                    div.style.padding = '8px 12px';
+                    div.style.background = j.status === 'running' ? '#f0f7ff' : '#fff';
+                    
+                    const isOpen = openJobIds.has(j.jobId) || j.status === 'running';
+                    
+                    div.innerHTML = `
+                        <details data-jobid="${j.jobId}" ${isOpen ? 'open' : ''}>
+                            <summary style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; outline:none;">
+                                <div style="font-weight:600; font-size:0.9rem;">
+                                    ${statusIcon} ${j.artist} - ${j.title}
+                                </div>
+                                <div style="font-size:0.85rem; color:${color}; font-weight:bold;">
+                                    ${j.status === 'error' ? 'Error' : j.progress + '%'}
+                                </div>
+                            </summary>
+                            <div style="margin-top:8px;">
+                                <div style="background:#e4e6eb; border-radius:4px; height:6px; overflow:hidden; margin-bottom:8px;">
+                                    <div style="background:${color}; height:100%; width:${j.progress}%; transition:width 0.4s;"></div>
+                                </div>
+                                <div style="background:#1c1e21; color:#4cd964; font-family:monospace; font-size:0.75rem;
+                                               padding:8px; border-radius:4px; max-height:150px; overflow-y:auto; white-space:pre-wrap;">${(j.log || []).join('\n')}</div>
+                            </div>
+                        </details>
+                    `;
+                    listWrap.appendChild(div);
+                    
+                    if (j.status === 'running' || j.status === 'error' || j.status === 'pending') {
+                        setTimeout(() => {
+                            const logBox = div.querySelector('div[style*="overflow-y:auto"]');
+                            if (logBox) logBox.scrollTop = logBox.scrollHeight;
+                        }, 50);
+                    }
+                });
+                
+                if (activeCount > 0) {
+                    if (!jobsPollTimer) jobsPollTimer = setInterval(pollJobs, 1500);
+                } else {
+                    if (jobsPollTimer) { clearInterval(jobsPollTimer); jobsPollTimer = null; }
+                }
+            } catch (e) {}
+        }
+    </script>
+
+    <!-- ===== VOCAL SEPARATION MANAGER CARD ===== -->
+    <div class="card" style="margin-top:24px; border: 1px solid #dde2eb;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h2 style="margin:0; font-size:1.15rem; color:#1877f2;">🎤 Vocal Separation</h2>
+            <button class="secondary" style="font-size:0.85rem;" onclick="toggleSeparationCard(event)">▲ Minimise</button>
+        </div>
+        <div id="separation-card-body">
+            <div id="separator-install-box" style="margin-bottom:18px; padding:14px; background:#f7f8fa; border-radius:8px; display:none;">
+                <span class="label">Vocal Separation Engine Not Installed</span>
+                <p style="font-size:0.9rem; color:#65676b; margin-top:4px;">Install the Python audio-separator tool to enable removing vocals from songs. This may take a few minutes to download.</p>
+                <button onclick="installSeparator()">Install Tool</button>
+            </div>
+            <div id="separator-jobs-container" style="display:none; margin-top:10px;">
+                <span class="label">Active & Recent Separation Jobs</span>
+                <div id="separator-jobs-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+            </div>
+            <div id="separator-idle-box" style="font-size:0.9rem; color:#65676b;">
+                The tool is installed. Click "🎤 Separate Vocals" on any local song to remove vocals.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let separatorPollTimer = null;
+
+        function toggleSeparationCard(event) {
+            const body = document.getElementById('separation-card-body');
+            const btn  = event ? (event.currentTarget || event.target) : null;
+            if (!btn) return;
+            if (body.style.display === 'none') { body.style.display = ''; btn.textContent = '▲ Minimise'; }
+            else { body.style.display = 'none'; btn.textContent = '▼ Expand'; }
+        }
+
+        async function checkSeparatorStatus() {
+            try {
+                const r = await fetch('/api/separator/status?token=' + API_TOKEN);
+                if (r.ok) {
+                    const data = await r.json();
+                    if (!data.installed) {
+                        document.getElementById('separator-install-box').style.display = 'block';
+                        document.getElementById('separator-idle-box').style.display = 'none';
+                    } else {
+                        document.getElementById('separator-install-box').style.display = 'none';
+                        pollSeparatorJobs();
+                    }
+                }
+            } catch (e) {}
+        }
+
+        async function installSeparator() {
+            try {
+                const btn = document.querySelector('#separator-install-box button');
+                btn.disabled = true;
+                btn.textContent = 'Starting installation...';
+                const r = await fetch('/api/separator/install?token=' + API_TOKEN, { method: 'POST' });
+                if (r.ok) {
+                    pollSeparatorJobs();
+                } else {
+                    alert('Installation failed to start.');
+                    btn.disabled = false;
+                    btn.textContent = 'Install Tool';
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function startVocalSeparation(songId) {
+            const song = currentLocalSongs.find(s => s.id === songId);
+            if (!song || !song.audio) {
+                alert('No audio file found for this song.');
+                return;
+            }
+
+            try {
+                let separator = '/';
+                if (song.txtPath && song.txtPath.includes('\\')) separator = '\\';
+                const targetDir = song.txtPath ? song.txtPath.substring(0, song.txtPath.lastIndexOf(separator)) : null;
+                const txtFilename = song.txtPath ? song.txtPath.substring(song.txtPath.lastIndexOf(separator) + 1) : null;
+                const safeName = txtFilename ? txtFilename.substring(0, txtFilename.lastIndexOf('.')) : null;
+
+                // Extract audio filename from /media?path=...
+                let audioFilename = '';
+                if (song.audio.includes('path=')) {
+                    const fullPath = decodeURIComponent(song.audio.split('path=')[1].split('&')[0]);
+                    audioFilename = fullPath.substring(fullPath.lastIndexOf('/') + 1).substring(fullPath.lastIndexOf('\\') + 1);
+                } else {
+                    audioFilename = song.audio; // Fallback
+                }
+
+                const r = await fetch('/api/separator/job?token=' + API_TOKEN, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify([{
+                        songId: song.id,
+                        songDir: targetDir,
+                        audioFile: audioFilename,
+                        txtFile: txtFilename,
+                        safeName: safeName || song.title
+                    }])
+                });
+
+                const data = await r.json();
+                if (!r.ok) throw new Error(data.error || 'Failed to start job');
+
+                alert('Vocal separation job added to queue.');
+                checkSeparatorStatus(); // Refresh UI
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function pollSeparatorJobs() {
+            try {
+                const r = await fetch('/api/separator/jobs?token=' + API_TOKEN);
+                if (!r.ok) return;
+                const jobsList = await r.json();
+
+                const containerWrap = document.getElementById('separator-jobs-container');
+                const listWrap = document.getElementById('separator-jobs-list');
+                const idleBox = document.getElementById('separator-idle-box');
+
+                if (jobsList.length === 0) {
+                    containerWrap.style.display = 'none';
+                    if (document.getElementById('separator-install-box').style.display === 'none') {
+                        idleBox.style.display = 'block';
+                    }
+                    return;
+                }
+
+                containerWrap.style.display = 'block';
+                idleBox.style.display = 'none';
+
+                const openJobIds = new Set();
+                listWrap.querySelectorAll('details[open]').forEach(d => openJobIds.add(d.dataset.jobid));
+                listWrap.innerHTML = '';
+
+                let activeCount = 0;
+                let installDone = false;
+
+                jobsList.slice().reverse().forEach(j => {
+                    if (j.status === 'pending' || j.status === 'running') activeCount++;
+                    if (j.type === 'install' && j.status === 'done') installDone = true;
+
+                    let color = '#65676b';
+                    let statusIcon = '⏳';
+                    if (j.status === 'running') { color = '#1877f2'; statusIcon = '▶️'; }
+                    else if (j.status === 'done') { color = '#28a745'; statusIcon = '✅'; }
+                    else if (j.status === 'error') { color = '#dc3545'; statusIcon = '❌'; }
+
+                    const div = document.createElement('div');
+                    div.style.border = '1px solid #e4e6eb';
+                    div.style.borderRadius = '6px';
+                    div.style.padding = '8px 12px';
+                    div.style.background = j.status === 'running' ? '#f0f7ff' : '#fff';
+
+                    const isOpen = openJobIds.has(j.jobId) || j.status === 'running';
+                    const title = j.type === 'install' ? 'Tool Installation' : `Separating: ${j.safeName}`;
+
+                    div.innerHTML = `
+                        <details data-jobid="${j.jobId}" ${isOpen ? 'open' : ''}>
+                            <summary style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; outline:none;">
+                                <div style="font-weight:600; font-size:0.9rem;">
+                                    ${statusIcon} ${title}
+                                </div>
+                                <div style="font-size:0.85rem; color:${color}; font-weight:bold;">
+                                    ${j.status === 'error' ? 'Error' : j.progress + '%'}
+                                </div>
+                            </summary>
+                            <div style="margin-top:8px;">
+                                <div style="background:#e4e6eb; border-radius:4px; height:6px; overflow:hidden; margin-bottom:8px;">
+                                    <div style="background:${color}; height:100%; width:${j.progress}%; transition:width 0.4s;"></div>
+                                </div>
+                                <div style="background:#1c1e21; color:#4cd964; font-family:monospace; font-size:0.75rem;
+                                               padding:8px; border-radius:4px; max-height:150px; overflow-y:auto; white-space:pre-wrap;">${(j.log || []).join('\n')}</div>
+                            </div>
+                        </details>
+                    `;
+                    listWrap.appendChild(div);
+
+                    if (j.status === 'running' || j.status === 'error' || j.status === 'pending') {
+                        setTimeout(() => {
+                            const logBox = div.querySelector('div[style*="overflow-y:auto"]');
+                            if (logBox) logBox.scrollTop = logBox.scrollHeight;
+                        }, 50);
+                    }
+                });
+
+                if (installDone) {
+                    document.getElementById('separator-install-box').style.display = 'none';
+                }
+
+                if (activeCount > 0) {
+                    if (!separatorPollTimer) separatorPollTimer = setInterval(pollSeparatorJobs, 1500);
+                } else {
+                    if (separatorPollTimer) { clearInterval(separatorPollTimer); separatorPollTimer = null; }
+                }
+            } catch (e) {}
+        }
+
+        // Initialize status check
+        document.addEventListener('DOMContentLoaded', () => {
+            checkSeparatorStatus();
+        });
+    </script>
+</body>
 </html>
