@@ -3,11 +3,20 @@ import { useWebRTCClient } from '../../lib/webrtc/useWebRTCClient';
 import { MicrophoneManager } from './audio/MicrophoneManager';
 import type { PassiveGameState } from './gameplay/MelodiqSession';
 
+export interface ClientProfile {
+    name: string;
+    hue: number;
+    micDeviceId?: string;
+    displayMode?: 'lyrics' | 'self' | 'all';
+}
+
 interface ClientEngineContextType {
     isConnected: boolean;
     statusMessage: string;
     gameState: PassiveGameState | null;
     sendClientCommand: (command: string, data?: any) => void;
+    clientProfile: ClientProfile;
+    updateClientProfile: (updates: Partial<ClientProfile>) => void;
 }
 
 export const ClientEngineContext = createContext<ClientEngineContextType>({
@@ -15,6 +24,8 @@ export const ClientEngineContext = createContext<ClientEngineContextType>({
     statusMessage: 'Not connected',
     gameState: null,
     sendClientCommand: () => {},
+    clientProfile: { name: 'Phone', hue: 120 },
+    updateClientProfile: () => {},
 });
 
 export const useClientEngine = () => useContext(ClientEngineContext);
@@ -37,16 +48,50 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     }, []);
 
     const [gameState, setGameState] = useState<PassiveGameState | null>(null);
+
+    // Profile State
+    const [clientProfile, setClientProfile] = useState<ClientProfile>(() => {
+        const stored = localStorage.getItem('melodiq_client_profile');
+        if (stored) {
+            try { 
+                const parsed = JSON.parse(stored);
+                // Ensure default displayMode is set if missing
+                if (!parsed.displayMode) parsed.displayMode = 'lyrics';
+                return parsed;
+            } catch (e) {}
+        }
+        return { name: 'Phone', hue: Math.floor(Math.random() * 360), displayMode: 'lyrics' };
+    });
+
+    const updateClientProfile = useCallback((updates: Partial<ClientProfile>) => {
+        setClientProfile(prev => {
+            const next = { ...prev, ...updates };
+            localStorage.setItem('melodiq_client_profile', JSON.stringify(next));
+            return next;
+        });
+    }, []);
     
     // Using useQueue here to locally dispatch updates received from Host
     // NOTE: This requires useQueue to expose a way to OVERRIDE local storage, or we just rely on BroadcastChannel
     // The BroadcastChannel in useQueue syncs all hooks in this tab, which is perfect!
+    
+    const lastSyncedSongIdRef = useRef<string | null>(null);
 
     const handleMessage = useCallback((data: any) => {
         if (!data || !data.type) return;
 
         if (data.type === 'game_state_update') {
             setGameState(data.state);
+            
+            // Auto-sync session view if phone joined late or reloaded
+            const activeId = data.state.activeSongId;
+            if (activeId && activeId !== lastSyncedSongIdRef.current) {
+                lastSyncedSongIdRef.current = activeId;
+                window.dispatchEvent(new CustomEvent('melodiq_client_session_sync', { detail: { activeSong: { id: activeId } } }));
+            } else if (!activeId && lastSyncedSongIdRef.current) {
+                lastSyncedSongIdRef.current = null;
+                window.dispatchEvent(new CustomEvent('melodiq_client_session_sync', { detail: { activeSong: null } }));
+            }
         } else if (data.type === 'queue.update') {
             // Trigger a custom event that useQueue can listen to if needed, 
             // OR if we abstract useQueue to accept an external dispatcher, we do it here.
@@ -57,9 +102,9 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
         }
     }, []);
 
-    const getIdentity = useCallback(() => ({ name: 'Phone', hue: 120 }), []);
+    const getIdentity = useCallback(() => ({ name: clientProfile.name, hue: clientProfile.hue }), [clientProfile]);
 
-    const { isConnected, statusMessage, sendData } = useWebRTCClient(partyId, trackerUrls, {
+    const { isConnected, statusMessage, sendData, resendIdentity } = useWebRTCClient(partyId, trackerUrls, {
         autoConnect: true,
         onMessage: handleMessage,
         getIdentity
@@ -80,33 +125,56 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     const lastPitchSendTimeRef = useRef<number>(0);
 
     useEffect(() => {
-        // Start processing audio when the session is actually playing
-        if (gameState?.isPlaying) {
-            if (!micRef.current) {
-                const mic = new MicrophoneManager();
-                micRef.current = mic;
-                mic.start(undefined, 0.0, true).then(() => {
-                    console.log("[PhoneClientEngine] Microphone started successfully.");
-                    const processAudio = () => {
-                        const now = performance.now();
-                        if (now - lastPitchSendTimeRef.current > 33) { // ~30fps pitch send
-                            const pitch = mic.getPitch();
-                            // Always send volume so the host knows we are active, but frequency only if valid
-                            if (pitch) {
-                                sendData({ type: 'pitch', frequency: pitch.frequency, note: pitch.note, volume: pitch.volume });
-                            } else {
-                                const currentVol = mic.getCurrentVolume();
-                                sendData({ type: 'pitch', frequency: -1, note: -1, volume: currentVol });
-                            }
-                            lastPitchSendTimeRef.current = now;
-                        }
-                        animFrameRef.current = requestAnimationFrame(processAudio);
-                    };
-                    processAudio();
-                }).catch(err => {
-                    console.error("[PhoneClientEngine] Failed to start microphone:", err);
-                });
+        let mounted = true;
+
+        const startMic = async () => {
+            if (micRef.current) {
+                await micRef.current.stop();
+                micRef.current = null;
             }
+            if (animFrameRef.current) {
+                cancelAnimationFrame(animFrameRef.current);
+                animFrameRef.current = 0;
+            }
+
+            if (!gameState?.isPlaying || !mounted) return;
+
+            const mic = new MicrophoneManager();
+            micRef.current = mic;
+            
+            try {
+                await mic.start(clientProfile.micDeviceId, 0.0, true);
+                if (!mounted) {
+                    mic.stop();
+                    return;
+                }
+                
+                console.log("[PhoneClientEngine] Microphone started successfully.");
+                const processAudio = () => {
+                    if (!mounted) return;
+                    const now = performance.now();
+                    if (now - lastPitchSendTimeRef.current > 33) {
+                        const pitch = mic.getPitch();
+                        if (pitch) {
+                            sendData({ type: 'pitch', frequency: pitch.frequency, note: pitch.note, volume: pitch.volume });
+                            window.dispatchEvent(new CustomEvent('melodiq_local_pitch', { detail: { pitch } }));
+                        } else {
+                            const currentVol = mic.getCurrentVolume();
+                            sendData({ type: 'pitch', frequency: -1, note: -1, volume: currentVol });
+                            window.dispatchEvent(new CustomEvent('melodiq_local_pitch', { detail: { pitch: null } }));
+                        }
+                        lastPitchSendTimeRef.current = now;
+                    }
+                    animFrameRef.current = requestAnimationFrame(processAudio);
+                };
+                processAudio();
+            } catch (err) {
+                console.error("[PhoneClientEngine] Failed to start microphone:", err);
+            }
+        };
+
+        if (gameState?.isPlaying) {
+            startMic();
         } else {
             // Stop mic when session is not playing to save battery
             if (micRef.current) {
@@ -120,6 +188,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
         }
 
         return () => {
+            mounted = false;
             if (micRef.current) {
                 micRef.current.stop();
                 micRef.current = null;
@@ -128,14 +197,21 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
                 cancelAnimationFrame(animFrameRef.current);
             }
         };
-    }, [gameState?.isPlaying, sendData]);
+    }, [gameState?.isPlaying, sendData, clientProfile.micDeviceId]);
 
     const sendClientCommand = (command: string, data: any = {}) => {
         sendData({ type: 'remote.command', command, ...data });
     };
 
+    // Re-send identity if profile changes while connected
+    useEffect(() => {
+        if (isConnected && resendIdentity) {
+            resendIdentity();
+        }
+    }, [clientProfile.name, clientProfile.hue, isConnected, resendIdentity]);
+
     return (
-        <ClientEngineContext.Provider value={{ isConnected, statusMessage, gameState, sendClientCommand }}>
+        <ClientEngineContext.Provider value={{ isConnected, statusMessage, gameState, sendClientCommand, clientProfile, updateClientProfile }}>
             {/* Show a connection overlay if not connected yet */}
             {!isConnected && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>

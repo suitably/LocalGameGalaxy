@@ -20,6 +20,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { MelodiqSettings } from './MelodiqSettings';
 import { MelodiqPlaylists } from './components/MelodiqPlaylists';
 import { PlaylistDetails } from './components/PlaylistDetails';
+import { ClientSettings } from './components/ClientSettings';
 
 import { useTranslation } from 'react-i18next';
 import { initMelodiqI18n } from './i18n';
@@ -296,13 +297,14 @@ export const MelodiqGameContent: React.FC = () => {
                 }
             ];
 
+            headerActions.push({
+                label: 'Settings',
+                icon: <SettingsIcon />,
+                action: () => setCurrentView('Settings'),
+                showAlways: true
+            });
+
             if (!isClient) {
-                headerActions.push({
-                    label: 'Settings',
-                    icon: <SettingsIcon />,
-                    action: () => setCurrentView('Settings'),
-                    showAlways: true
-                });
                 headerActions.push({
                     label: 'Connect Phones',
                     icon: <QrCodeIcon />,
@@ -362,8 +364,12 @@ export const MelodiqGameContent: React.FC = () => {
                     setNowPlaying(songMeta);
                     // setCurrentView('Session'); // User requested: don't open session view on Host by default if TV connected
                 }
+            } else if (isClient) {
+                // If this is a phone/remote client, don't play locally. Just queue it!
+                manager?.broadcast({ type: 'queue.add', songId: songMeta.id });
+                setFeedbackMessage(`Added to Queue: ${songMeta.title}`);
             } else {
-                // Standard local playback
+                // Standard local playback on Host
                 const fullSong = await getSongById(songMeta.id);
                 if (fullSong) {
                     setSelectedSong(fullSong);
@@ -448,14 +454,18 @@ export const MelodiqGameContent: React.FC = () => {
             return (
                 <Box sx={{ height: '100%', overflow: 'auto' }}>
                     <Box sx={{ height: '100%', overflow: 'auto' }}>
-                        <MelodiqSettings 
-                            onBack={() => {
-                                // Refresh songs when returning from settings (in case import happened)
-                                refreshSongs();
-                                setCurrentView('Home');
-                            }} 
-                            onNavigateToPlaylists={() => setCurrentView('Playlists')}
-                        />
+                        {isClient ? (
+                            <ClientSettings onBack={() => setCurrentView('Home')} />
+                        ) : (
+                            <MelodiqSettings 
+                                onBack={() => {
+                                    // Refresh songs when returning from settings (in case import happened)
+                                    refreshSongs();
+                                    setCurrentView('Home');
+                                }} 
+                                onNavigateToPlaylists={() => setCurrentView('Playlists')}
+                            />
+                        )}
                     </Box>
                 </Box>
             );

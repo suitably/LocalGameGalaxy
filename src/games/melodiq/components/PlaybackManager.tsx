@@ -68,10 +68,12 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         if (!sendGameUpdate || !playbackState.isPlaying) return;
 
         let frameId: number;
-        const loop = () => {
-            if (sessionRef.current) {
+        let lastSendTime = 0;
+        const loop = (time: number) => {
+            if (sessionRef.current && (time - lastSendTime > 100)) {
                 const state = sessionRef.current.getGameState();
-                sendGameUpdate(state);
+                sendGameUpdate({ ...state, activeSongId: selectedSong?.id });
+                lastSendTime = time;
             }
             frameId = requestAnimationFrame(loop);
         };

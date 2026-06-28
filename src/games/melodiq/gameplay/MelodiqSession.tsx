@@ -335,6 +335,32 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         }
     }, [isPassive, passiveState, isClient]);
 
+    // Sync local pitch directly from PhoneClientEngine (bypassing network latency for the local cursor)
+    useEffect(() => {
+        if (!isClient) return;
+
+        const handleLocalPitch = (e: any) => {
+            const { pitch } = e.detail;
+            const storedProfile = localStorage.getItem('melodiq_client_profile');
+            let myName = 'Phone';
+            if (storedProfile) {
+                try {
+                    const parsed = JSON.parse(storedProfile);
+                    if (parsed.name) myName = parsed.name;
+                } catch (err) {}
+            }
+
+            playersRef.current.forEach(rt => {
+                if (rt.config.name === myName) {
+                    rt.pitchRef.current = pitch;
+                }
+            });
+        };
+
+        window.addEventListener('melodiq_local_pitch', handleLocalPitch);
+        return () => window.removeEventListener('melodiq_local_pitch', handleLocalPitch);
+    }, [isClient]);
+
     // Audio/Video logic
     const audioRef = useRef<HTMLAudioElement>(null);
     const virtualTimeRef = useRef<number>(0);
@@ -516,9 +542,29 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         console.log(`[MelodiqSession] Scoring Normalized Weights:`, weights);
     };
 
+    // Determine which players to show on screen (based on Client Profile settings)
+    const visiblePlayers = React.useMemo(() => {
+        if (!isClient) return players;
+        
+        let displayMode = 'lyrics';
+        let myName = 'Phone';
+        const storedProfile = localStorage.getItem('melodiq_client_profile');
+        if (storedProfile) {
+            try {
+                const p = JSON.parse(storedProfile);
+                if (p.displayMode) displayMode = p.displayMode;
+                if (p.name) myName = p.name;
+            } catch(e) {}
+        }
+        
+        if (displayMode === 'lyrics') return [];
+        if (displayMode === 'self') return players.filter(p => p.config.name === myName);
+        return players;
+    }, [players, isClient]);
+
     // Calculate Grid Layout
     const gridLayout = React.useMemo(() => {
-        const count = players.length;
+        const count = visiblePlayers.length;
         if (count === 0) return { rows: [], columnWidthPercent: 100 };
 
         let rowConfig: number[] = [];
@@ -1837,7 +1883,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', minHeight: 0, pt: 10 }}>
                     {/* Dynamic Split Screen Container */}
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
-                        {players.length === 0 && (
+                        {visiblePlayers.length === 0 && (
                             <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <LyricsDisplay song={parsedSong!} audioRef={timeProxyRef} centered uiScale={uiScale} />
                             </Box>
@@ -1849,7 +1895,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                             return gridLayout.rows.map((colsInRow, rowIndex) => (
                                 <Box key={rowIndex} sx={{ flex: 1, display: 'flex', minHeight: 0, borderBottom: rowIndex < gridLayout.rows.length - 1 ? '1px solid rgba(255,255,255,0.2)' : 'none' }}>
                                     {Array.from({ length: colsInRow }).map((_, colIndex) => {
-                                        const player = players[playerIndex++];
+                                        const player = visiblePlayers[playerIndex++];
                                         if (!player) return null;
 
                                         return (
@@ -1910,7 +1956,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                     </Box>
 
                     {/* Lyrics (Fixed height at bottom, outside the flex grid) - only show if there are players */}
-                    {players.length > 0 && (
+                    {visiblePlayers.length > 0 && (
                         <Box sx={{
                             flexShrink: 0,
                             width: '100%',

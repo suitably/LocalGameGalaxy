@@ -320,6 +320,12 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
         }
     }, [partyId, trackerUrls, cleanup, updateStatus, setupPeerConnection]);
 
+    const resendIdentity = useCallback(() => {
+        if (peerRef.current && (peerRef.current as any).connected) {
+            sendIdentity(peerRef.current);
+        }
+    }, [sendIdentity]);
+
     const sendData = useCallback((data: any) => {
         if (isWebRTCConnectedRef.current && peerRef.current && (peerRef.current as any).connected) {
             try {
@@ -352,6 +358,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
         isConnected: isWebRTCConnectedRef.current,
         sendData,
         reconnect: connect,
-        peer: peerRef.current
+        peer: peerRef.current,
+        resendIdentity
     };
 }
