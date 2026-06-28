@@ -7,5 +7,6 @@ This directory contains implementation plans for proposed changes. Each plan det
 - [WSS Integration Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/wss-integration-plan.md)
 - [Unify YouTube Search Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/unify-youtube-search-plan.md)
 - [Global Default Video Mode Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/global-vmode-plan.md)
+- [UI Auto-detect Self-Hosted Tracker Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/ui-autodetect-tracker-plan.md)
 
 ID: DOCS-PLANNING-SUMMARY

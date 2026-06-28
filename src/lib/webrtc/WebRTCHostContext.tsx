@@ -11,6 +11,7 @@ export interface WebRTCHostContextType<T extends RemotePeerBase = RemotePeerBase
     partyId: string;
     regeneratePartyId: () => void;
     trackerUrls: string[];
+    activeTrackerUrls: string[];
     addTrackerUrl: (url: string) => void;
     removeTrackerUrl: (url: string) => void;
     restoreDefaultTrackers: () => void;
@@ -236,6 +237,7 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
             partyId,
             regeneratePartyId,
             trackerUrls,
+            activeTrackerUrls,
             addTrackerUrl,
             removeTrackerUrl,
             restoreDefaultTrackers

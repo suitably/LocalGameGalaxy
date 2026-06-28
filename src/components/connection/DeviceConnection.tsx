@@ -21,12 +21,12 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
     clientPath,
     WebRTCHostContextHook
 }) => {
-    // WebRTC Context
     const {
         peers: connectedPreviewPeers,
         partyId,
         regeneratePartyId,
         trackerUrls,
+        activeTrackerUrls = [], // fallback if not loaded
         addTrackerUrl: contextAddTrackerUrl,
         removeTrackerUrl: contextRemoveTrackerUrl,
         restoreDefaultTrackers
@@ -69,7 +69,7 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
         } catch (e) {}
 
         // Add all tracker URLs to the params
-        trackerUrls.forEach((tracker: string) => {
+        activeTrackerUrls.forEach((tracker: string) => {
             let resolvedTracker = tracker;
             if (targetHost && (tracker.includes('localhost') || tracker.includes('127.0.0.1'))) {
                 // Swap localhost/127.0.0.1 with the actual reachable host IP/domain from baseUrl
@@ -86,7 +86,7 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
         QRCode.toDataURL(url.toString(), { width: 300, margin: 2 })
             .then((url: string) => setQrCodeDataUrl(url))
             .catch((err: Error) => console.error('Failed to generate QR code:', err));
-    }, [partyId, trackerUrls, customBaseUrl, clientPath]);
+    }, [partyId, activeTrackerUrls, customBaseUrl, clientPath]);
 
     return (
         <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
@@ -207,7 +207,7 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
                                     } catch (e) {}
 
                                     url.searchParams.set('party', partyId);
-                                    trackerUrls.forEach((tracker: string) => {
+                                    activeTrackerUrls.forEach((tracker: string) => {
                                         let resolvedTracker = tracker;
                                         if (targetHost && (tracker.includes('localhost') || tracker.includes('127.0.0.1'))) {
                                             resolvedTracker = tracker
@@ -248,25 +248,38 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
                             </Box>
 
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                {trackerUrls.map((url: string, index: number) => (
-                                    <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <TextField
-                                            value={url}
-                                            size="small"
-                                            fullWidth
-                                            variant="outlined"
-                                            InputProps={{ readOnly: true }}
-                                        />
-                                        <IconButton
-                                            color="error"
-                                            size="small"
-                                            onClick={() => contextRemoveTrackerUrl(url)}
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </Box>
-                                ))}
-                                {trackerUrls.length === 0 && (
+                                {activeTrackerUrls.map((url: string, index: number) => {
+                                    const isSelfHosted = !trackerUrls.includes(url);
+                                    return (
+                                        <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <TextField
+                                                value={url}
+                                                size="small"
+                                                fullWidth
+                                                variant="outlined"
+                                                InputProps={{ readOnly: true }}
+                                            />
+                                            {isSelfHosted ? (
+                                                <Chip
+                                                    label="Self-Hosted"
+                                                    color="success"
+                                                    variant="outlined"
+                                                    size="small"
+                                                    sx={{ height: 32, px: 1, borderRadius: 2 }}
+                                                />
+                                            ) : (
+                                                <IconButton
+                                                    color="error"
+                                                    size="small"
+                                                    onClick={() => contextRemoveTrackerUrl(url)}
+                                                >
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            )}
+                                        </Box>
+                                    );
+                                })}
+                                {activeTrackerUrls.length === 0 && (
                                     <Box sx={{ p: 2, bgcolor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 1 }}>
                                         <Typography variant="body2" color="error">
                                             ⚠️ No signaling servers configured. Connection will not be possible.

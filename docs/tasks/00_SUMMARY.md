@@ -7,5 +7,6 @@ This directory contains task checklists tracking the progress of work. Files are
 - [WSS Integration Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/wss-integration-tasks.md)
 - [Unify YouTube Search Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/unify-youtube-search-tasks.md)
 - [Global Default Video Mode Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/global-vmode-tasks.md)
+- [UI Auto-detect Self-Hosted Tracker Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/ui-autodetect-tracker-tasks.md)
 
 ID: DOCS-TASKS-SUMMARY

@@ -17,6 +17,7 @@ const MockWebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         partyId: 'TV-MODE',
         regeneratePartyId: () => { },
         trackerUrls: [],
+        activeTrackerUrls: [],
         addTrackerUrl: () => { },
         removeTrackerUrl: () => { },
         restoreDefaultTrackers: () => { },

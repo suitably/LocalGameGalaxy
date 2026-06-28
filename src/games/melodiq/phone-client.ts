@@ -94,7 +94,7 @@ async function connect(partyId: string, trackerUrls: string[]) {
 
 function setupPeerConnection(trackerPeer: any) {
     // Use the trackerPeer's unique ID to prevent duplicate audio peer creation
-    const trackerPeerId = trackerPeer._id || trackerPeer.channelName || Math.random().toString(36);
+    const trackerPeerId = trackerPeer.id || trackerPeer._id || trackerPeer.channelName || Math.random().toString(36);
     if (handledTrackerPeers.has(trackerPeerId)) {
         console.log('[Phone] Ignoring duplicate tracker peer:', trackerPeerId);
         return;

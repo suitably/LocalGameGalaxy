@@ -6,5 +6,6 @@ This directory contains walkthroughs and verification logs. These documents prov
 - [WebRTC Signaling Server Integration Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/wss-integration-walkthrough.md)
 - [Unify YouTube Search Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/unify-youtube-search-walkthrough.md)
 - [Global Default Video Mode Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/global-vmode-walkthrough.md)
+- [UI Auto-detect Self-Hosted Tracker Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/ui-autodetect-tracker-walkthrough.md)
 
 ID: DOCS-VERIFICATION-SUMMARY

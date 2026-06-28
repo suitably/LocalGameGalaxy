@@ -115,7 +115,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
     }
 
     private handleTrackerPeer(trackerPeer: any): void {
-        const trackerPeerId = trackerPeer._id || trackerPeer.channelName || Math.random().toString(36);
+        const trackerPeerId = trackerPeer.id || trackerPeer._id || trackerPeer.channelName || Math.random().toString(36);
         console.log('[WebRTCHostManager] Tracker peer found. Waiting for connection...', trackerPeerId);
 
         const onData = (data: Uint8Array | string) => {

@@ -78,7 +78,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
         handledTrackerPeersRef.current.delete(trackerPeerId); // allow retry just in case it was cleaned up
         if (candidatePeersRef.current.size < MAX_CANDIDATES && pendingPeerCandidatesRef.current.length > 0) {
             const nextPeer = pendingPeerCandidatesRef.current.shift();
-            const nextTpId = nextPeer._id || nextPeer.channelName || Math.random().toString(36);
+            const nextTpId = nextPeer.id || nextPeer._id || nextPeer.channelName || Math.random().toString(36);
             initiateConnection(nextPeer, nextTpId);
         }
     }, []);
@@ -250,7 +250,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
     }, [updateStatus, processNextPendingPeer, onMessage, sendIdentity]);
 
     const setupPeerConnection = useCallback((trackerPeer: any) => {
-        const trackerPeerId = trackerPeer._id || trackerPeer.channelName || Math.random().toString(36);
+        const trackerPeerId = trackerPeer.id || trackerPeer._id || trackerPeer.channelName || Math.random().toString(36);
         if (handledTrackerPeersRef.current.has(trackerPeerId)) {
             return;
         }
