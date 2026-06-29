@@ -102,6 +102,11 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             if (isTVConnected) {
                 // In TV mode, results are suppressed — skip the score pause entirely and
                 // jump straight to the next queued song (or exit).
+                if (queue.length > 0 && queue[0].song.isDownloading) {
+                    setFeedbackMessage("Waiting for download to finish...");
+                    sessionRef.current?.finishSong();
+                    return;
+                }
                 const nextItem = popNext();
                 if (nextItem) {
                     onSelectSong(nextItem.song, true);
@@ -123,18 +128,36 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             }
 
             // If session didn't handle it (already showing scores or finished), play next song
+            if (queue.length > 0 && queue[0].song.isDownloading) {
+                setFeedbackMessage("Waiting for download to finish...");
+                return;
+            }
             const nextItem = popNext();
             if (nextItem) {
                 onSelectSong(nextItem.song, true);
             }
         } else if (remoteSong && isTVConnected) {
             sendRemoteCommand('NEXT', {});
+            if (queue.length > 0 && queue[0].song.isDownloading) {
+                setFeedbackMessage("Waiting for download to finish...");
+                return;
+            }
             const nextItem = popNext();
             if (nextItem) {
                 onSelectSong(nextItem.song, true);
             } else {
                 setRemoteSong(null);
             }
+        } else {
+             // Try to start from empty state
+             if (queue.length > 0 && queue[0].song.isDownloading) {
+                 setFeedbackMessage("Waiting for download to finish...");
+                 return;
+             }
+             const nextItem = popNext();
+             if (nextItem) {
+                 onSelectSong(nextItem.song, true);
+             }
         }
     };
 

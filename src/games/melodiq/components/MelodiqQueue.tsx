@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
-import { Box, Typography, Button, IconButton, List, ListItem, ListItemText, ListItemAvatar, Avatar, Paper, Grid, MenuItem, Select, FormControl, InputLabel, Checkbox, Card } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Button, IconButton, List, ListItem, ListItemText, ListItemAvatar, Avatar, Paper, Grid, MenuItem, Select, FormControl, InputLabel, Checkbox, Card, CircularProgress } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
+import PublicIcon from '@mui/icons-material/Public';
 import { useQueue } from '../hooks/useQueue';
 import { useSongs } from '../hooks/useSongs';
+import { useDownloads } from '../hooks/useDownloads';
 import { SongCard } from './SongCard';
 import { VirtuosoGrid } from 'react-virtuoso';
 import SearchIcon from '@mui/icons-material/Search';
@@ -19,7 +21,11 @@ export const MelodiqQueue: React.FC = () => {
     const { t } = useTranslation();
     const { queue, nowPlaying, removeFromQueue, moveItem, clearQueue, addToQueue } = useQueue();
     const { songs } = useSongs();
+    const { jobs } = useDownloads();
     const [searchQuery, setSearchQuery] = useState('');
+    const [isOnlineSearch, setIsOnlineSearch] = useState(false);
+    const [onlineSongs, setOnlineSongs] = useState<any[]>([]);
+    const [isSearchingOnline, setIsSearchingOnline] = useState(false);
 
     const [activeFilters, setActiveFilters] = useState<{
         year: string[];
@@ -32,6 +38,105 @@ export const MelodiqQueue: React.FC = () => {
         language: [],
         edition: []
     });
+
+    // Handle online search
+    useEffect(() => {
+        if (!isOnlineSearch || !searchQuery) {
+            setOnlineSongs([]);
+            return;
+        }
+
+        const delayDebounceFn = setTimeout(async () => {
+            setIsSearchingOnline(true);
+            try {
+                const url = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
+                const token = localStorage.getItem('melodiq_helper_token') || '';
+                const helperUrl = url.replace(/\/$/, "");
+
+                const res = await fetch(`${helperUrl}/api/usdb/search?q=${encodeURIComponent(searchQuery)}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.songs) {
+                    setOnlineSongs(data.songs);
+                } else if (Array.isArray(data)) {
+                    setOnlineSongs(data);
+                } else {
+                    setOnlineSongs([]);
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setIsSearchingOnline(false);
+            }
+        }, 800);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchQuery, isOnlineSearch]);
+
+    const handleDownloadOnly = async (usdbSong: any) => {
+        try {
+            const url = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
+            const token = localStorage.getItem('melodiq_helper_token') || '';
+            const helperUrl = url.replace(/\/$/, "");
+
+            const res = await fetch(`${helperUrl}/api/usdb/download`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    usdbId: usdbSong.usdbId,
+                    artist: usdbSong.artist,
+                    title: usdbSong.title,
+                    videoMode: 'stream'
+                })
+            });
+            const data = await res.json();
+            if (data.jobIds && data.jobIds.length > 0) {
+                // Success
+            }
+        } catch (err) {
+            console.error('Download failed', err);
+        }
+    };
+
+    const handleDownloadAndQueue = async (usdbSong: any) => {
+        try {
+            const url = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
+            const token = localStorage.getItem('melodiq_helper_token') || '';
+            const helperUrl = url.replace(/\/$/, "");
+
+            const res = await fetch(`${helperUrl}/api/usdb/download`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    usdbId: usdbSong.usdbId,
+                    artist: usdbSong.artist,
+                    title: usdbSong.title,
+                    videoMode: 'stream'
+                })
+            });
+            const data = await res.json();
+            if (data.jobIds && data.jobIds.length > 0) {
+                const jobId = data.jobIds[0];
+                const dummySong = {
+                    id: `dl-${jobId}`,
+                    title: usdbSong.title,
+                    artist: usdbSong.artist,
+                    isDownloading: true,
+                    jobId: jobId
+                } as any;
+                addToQueue(dummySong, 'User');
+            }
+        } catch (err) {
+            console.error('Download failed', err);
+        }
+    };
 
     // Filter songs for the "Add to Queue" section
     const filteredSongs = React.useMemo(() => {
@@ -162,7 +267,7 @@ export const MelodiqQueue: React.FC = () => {
                                     </ListItemAvatar>
                                     <ListItemText
                                         primary={item.song.title}
-                                        secondary={`${item.song.artist} ${item.requester ? `(Requested by ${item.requester})` : ''}`}
+                                        secondary={`${item.song.artist} ${item.requester ? `(Requested by ${item.requester})` : ''} ${item.song.isDownloading ? '- Downloading...' : ''}`}
                                     />
                                 </ListItem>
                             ))}
@@ -192,10 +297,19 @@ export const MelodiqQueue: React.FC = () => {
                                         <SearchIcon />
                                     </InputAdornment>
                                 ),
-                                endAdornment: searchQuery && (
+                                endAdornment: (
                                     <InputAdornment position="end">
-                                        <IconButton onClick={() => setSearchQuery('')}>
-                                            <CloseIcon />
+                                        {searchQuery && (
+                                            <IconButton onClick={() => setSearchQuery('')} size="small">
+                                                <CloseIcon />
+                                            </IconButton>
+                                        )}
+                                        <IconButton 
+                                            onClick={() => setIsOnlineSearch(!isOnlineSearch)} 
+                                            color={isOnlineSearch ? "primary" : "default"}
+                                            title="Search Online"
+                                        >
+                                            <PublicIcon />
                                         </IconButton>
                                     </InputAdornment>
                                 )
@@ -312,22 +426,67 @@ export const MelodiqQueue: React.FC = () => {
                     {/* On mobile: explicit height since parent isn't flex-constrained.
                          On desktop: flexGrow fills the remaining space. */}
                     <Box sx={{ height: { xs: '60vh', md: 'auto' }, flexGrow: { md: 1 }, minHeight: { md: 0 } }}>
-                        <VirtuosoGrid
-                            style={{ height: '100%', width: '100%' }}
-                            totalCount={filteredSongs.length}
-                            components={{
-                                List: React.forwardRef((props, ref) => <Grid container spacing={2} {...props} ref={ref as any} />),
-                                Item: React.forwardRef((props, ref) => <Grid size={{ xs: 6, sm: 4 }} {...props} ref={ref as any} />)
-                            }}
-                            itemContent={(index) => (
-                                <SongCard
-                                    song={filteredSongs[index]}
-                                    onClick={() => {
-                                        addToQueue(filteredSongs[index], 'User');
+                        {isOnlineSearch ? (
+                            isSearchingOnline ? (
+                                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                                    <CircularProgress />
+                                </Box>
+                            ) : (
+                                <VirtuosoGrid
+                                    style={{ height: '100%', width: '100%' }}
+                                    totalCount={onlineSongs.length}
+                                    components={{
+                                        List: React.forwardRef((props, ref) => <Grid container spacing={2} {...props} ref={ref as any} />),
+                                        Item: React.forwardRef((props, ref) => <Grid size={{ xs: 6, sm: 4 }} {...props} ref={ref as any} />)
+                                    }}
+                                    itemContent={(index) => {
+                                        const song = onlineSongs[index];
+                                        // Find active job if downloading
+                                        const localSong = songs.find(s => s.title.toLowerCase() === song.title.toLowerCase() && s.artist.toLowerCase() === song.artist.toLowerCase());
+                                        const activeJob = jobs.find(j => j.usdbId === song.usdbId);
+                                        
+                                        const isDownloaded = !!localSong;
+                                        const isDl = !!(activeJob && activeJob.status !== 'error' && !isDownloaded);
+                                        const progress = activeJob ? activeJob.progress : 0;
+                                        return (
+                                            <SongCard
+                                                song={localSong || song}
+                                                isDownloading={isDl}
+                                                isDownloaded={isDownloaded}
+                                                downloadProgress={progress}
+                                                onClick={() => {
+                                                    if (isDownloaded && localSong) {
+                                                        addToQueue(localSong, 'User');
+                                                    } else if (!isDl && !isDownloaded) {
+                                                        handleDownloadAndQueue(song);
+                                                    }
+                                                }}
+                                                onActionClick={() => {
+                                                    if (!isDl && !isDownloaded) handleDownloadOnly(song);
+                                                }}
+                                            />
+                                        );
                                     }}
                                 />
-                            )}
-                        />
+                            )
+                        ) : (
+                            <VirtuosoGrid
+                                style={{ height: '100%', width: '100%' }}
+                                totalCount={filteredSongs.length}
+                                components={{
+                                    List: React.forwardRef((props, ref) => <Grid container spacing={2} {...props} ref={ref as any} />),
+                                    Item: React.forwardRef((props, ref) => <Grid size={{ xs: 6, sm: 4 }} {...props} ref={ref as any} />)
+                                }}
+                                itemContent={(index) => (
+                                    <SongCard
+                                        song={filteredSongs[index]}
+                                        onClick={() => {
+                                            addToQueue(filteredSongs[index], 'User');
+                                        }}
+                                    />
+                                )}
+                            />
+                        )}
                     </Box>
                 </Grid>
             </Grid>

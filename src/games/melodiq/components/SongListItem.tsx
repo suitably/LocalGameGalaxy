@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CircularProgress from '@mui/material/CircularProgress';
 import { type SongMeta } from '../db';
 import { formatDuration } from '../utils';
 
@@ -10,9 +13,13 @@ interface SongListItemProps {
     onClick: () => void;
     onLongPress?: () => void;
     onMenuClick?: (e: React.MouseEvent) => void;
+    onActionClick?: (e: React.MouseEvent) => void;
+    isDownloading?: boolean;
+    isDownloaded?: boolean;
+    downloadProgress?: number;
 }
 
-export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLongPress, onMenuClick }) => {
+export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLongPress, onMenuClick, onActionClick, isDownloading, isDownloaded, downloadProgress }) => {
     const [coverUrl, setCoverUrl] = useState<string | null>(null);
     const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPressRef = React.useRef(false);
@@ -71,7 +78,9 @@ export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLon
                 },
                 '&:active': {
                     bgcolor: 'action.selected'
-                }
+                },
+                opacity: isDownloading ? 0.6 : 1,
+                pointerEvents: isDownloading ? 'none' : 'auto',
             }}
             onClick={handleClick}
             onMouseDown={handleStart}
@@ -122,6 +131,34 @@ export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLon
                     </Typography>
                 )}
             </Box>
+
+            {/* Download Status */}
+            {isDownloading && (
+                <Box sx={{ display: 'flex', alignItems: 'center', ml: 2, mr: 1 }}>
+                    <CircularProgress variant={downloadProgress && downloadProgress > 0 ? "determinate" : "indeterminate"} value={downloadProgress || 0} size={24} />
+                </Box>
+            )}
+
+            {/* Downloaded Icon */}
+            {isDownloaded && !isDownloading && (
+                <Box sx={{ display: 'flex', alignItems: 'center', ml: 2, color: 'success.main' }}>
+                    <CheckCircleIcon />
+                </Box>
+            )}
+
+            {/* Cloud Icon for Online Search Items */}
+            {!isDownloading && !isDownloaded && song.usdbId && (
+                <IconButton 
+                    size="small" 
+                    sx={{ ml: 1, color: 'primary.main' }}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (onActionClick) onActionClick(e);
+                    }}
+                >
+                    <CloudDownloadIcon />
+                </IconButton>
+            )}
 
             {/* Menu Action (for touch devices mainly, or standard access) */}
             {onMenuClick && (

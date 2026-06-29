@@ -6,7 +6,7 @@ export interface DownloadJob {
     artist: string;
     title: string;
     videoMode: string;
-    status: 'pending' | 'running' | 'completed' | 'error';
+    status: 'pending' | 'running' | 'done' | 'error';
     progress: number;
     error: string | null;
     log: string[];
@@ -21,7 +21,14 @@ export function useDownloads(pollingIntervalMs: number = 2000) {
 
         const fetchJobs = async () => {
             try {
-                const response = await fetch('/api/usdb/jobs');
+                // Read config from storage
+                const url = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
+                const token = localStorage.getItem('melodiq_helper_token') || '';
+                const helperUrl = url.replace(/\/$/, "");
+
+                const response = await fetch(`${helperUrl}/api/usdb/jobs`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 if (response.ok) {
                     const data = await response.json();
                     if (isMounted) {

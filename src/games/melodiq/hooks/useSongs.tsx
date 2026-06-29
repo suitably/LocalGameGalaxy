@@ -9,6 +9,7 @@ interface LoadingProgress {
 interface UseSongsResult {
     songs: SongMeta[];
     isLoading: boolean;
+    hasConnectionError: boolean;
     loadingProgress: LoadingProgress | null;
     refreshSongs: () => Promise<void>;
     getSongById: (id: string) => Promise<Song | undefined>;
@@ -31,6 +32,7 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             return !sessionStorage.getItem('melodiq_meta_cache');
         } catch { return true; }
     });
+    const [hasConnectionError, setHasConnectionError] = useState(false);
     const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null);
 
     // Read config from storage
@@ -145,9 +147,11 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                         console.warn('Helper Auth Failed');
                         if (mounted && !loadedFromCache) {
                             setIsLoading(false);
+                            setHasConnectionError(true);
                             setSongs([]);
                         }
                     } else if (res.ok) {
+                        if (mounted) setHasConnectionError(false);
                         // Store clone in Cache API for next reload
                         const clone = res.clone();
                         try {
@@ -158,11 +162,16 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                         const freshData = await res.json();
                         console.log(`[SongsProvider] Fetched ${freshData.length} fresh server songs`);
                         processAndApply(freshData);
+                    } else {
+                        if (mounted && !loadedFromCache) {
+                            setHasConnectionError(true);
+                        }
                     }
                 } catch (e) {
                     console.warn('Helper connection failed:', e);
                     if (mounted && !loadedFromCache) {
                         setIsLoading(false);
+                        setHasConnectionError(true);
                         setLoadingProgress(null);
                     }
                 }
@@ -174,6 +183,7 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             console.error('Failed to load songs:', e);
             if (mounted) {
                 setIsLoading(false);
+                setHasConnectionError(true);
                 setLoadingProgress(null);
             }
         }
@@ -211,8 +221,8 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [songs]);
 
     const value = React.useMemo(() => ({
-        songs, isLoading, loadingProgress, refreshSongs, getSongById
-    }), [songs, isLoading, loadingProgress, refreshSongs, getSongById]);
+        songs, isLoading, hasConnectionError, loadingProgress, refreshSongs, getSongById
+    }), [songs, isLoading, hasConnectionError, loadingProgress, refreshSongs, getSongById]);
 
     return (
         <SongsContext.Provider value={value}>

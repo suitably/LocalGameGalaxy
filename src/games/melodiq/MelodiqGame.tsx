@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { VirtuosoGrid, Virtuoso } from 'react-virtuoso';
 import { Box, Button, Typography, Card, Grid, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText, LinearProgress, Collapse, Dialog, DialogTitle, DialogContent, List, ListItemButton, ListItemIcon, Snackbar, Alert, Divider } from '@mui/material';
 import { type Song, type SongMeta } from './db';
@@ -16,11 +16,18 @@ import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import QueueMusicIcon from '@mui/icons-material/QueueMusic';
 import AddIcon from '@mui/icons-material/Add';
+import PublicIcon from '@mui/icons-material/Public';
+import CircularProgress from '@mui/material/CircularProgress';
+import CancelIcon from '@mui/icons-material/Cancel';
+import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 import { MelodiqSettings } from './MelodiqSettings';
 import { MelodiqPlaylists } from './components/MelodiqPlaylists';
 import { PlaylistDetails } from './components/PlaylistDetails';
 import { ClientSettings } from './components/ClientSettings';
+import { YouTubeSearchDialog } from './components/YouTubeSearchDialog';
 
 import { useTranslation } from 'react-i18next';
 import { initMelodiqI18n } from './i18n';
@@ -34,6 +41,7 @@ import { SongCard } from './components/SongCard';
 import { SongListItem } from './components/SongListItem';
 import { useSongs, SongsProvider } from './hooks/useSongs';
 import { useQueue } from './hooks/useQueue';
+import { useDownloads } from './hooks/useDownloads';
 import { PhoneQueueBridge } from './components/PhoneQueueBridge';
 import { PhoneClientEngine } from './PhoneClientEngine';
 import { TVModeButton } from './components/TVModeButton';
@@ -59,8 +67,9 @@ export const MelodiqGameContent: React.FC = () => {
     const { setHeader, setCustomHeaderActions } = useLayout();
 
     // Use centralized song management hook
-    const { songs, loadingProgress, refreshSongs, getSongById, isLoading } = useSongs();
-    const { queue, popNext, setNowPlaying, addToQueue, addNext, nowPlaying } = useQueue();
+    const { songs, loadingProgress, refreshSongs, getSongById, isLoading, hasConnectionError } = useSongs();
+    const { queue, popNext, setNowPlaying, addToQueue, addNext, nowPlaying, removeFromQueue, replaceItem } = useQueue();
+    const { jobs } = useDownloads();
     const {
         isTVConnected,
         isPresentationAvailable,
@@ -77,6 +86,9 @@ export const MelodiqGameContent: React.FC = () => {
 
     // Search & Filter State
     const [searchQuery, setSearchQuery] = useState('');
+    const [isOnlineSearch, setIsOnlineSearch] = useState(false);
+    const [onlineSongs, setOnlineSongs] = useState<any[]>([]);
+    const [isSearchingOnline, setIsSearchingOnline] = useState(false);
 
     // TV Remote State
     const [remoteSong, setRemoteSong] = useState<SongMeta | null>(null);
@@ -90,6 +102,7 @@ export const MelodiqGameContent: React.FC = () => {
     // Playlists State
     const { playlists, addSongToPlaylist, createPlaylist } = usePlaylists();
     const [playlistDialogOpen, setPlaylistDialogOpen] = useState(false);
+    const [youTubeSearchDialogOpen, setYouTubeSearchDialogOpen] = useState(false);
     const [activePlaylist, setActivePlaylist] = useState<Playlist | null>(null);
 
     // Restored Song State: last song from localStorage shown in MiniPlayer after reload
@@ -107,6 +120,61 @@ export const MelodiqGameContent: React.FC = () => {
             setRemoteSong(null);
         }
     }, [lastEvent]);
+
+    // Handle Completed Downloads in Queue
+    const lastProcessedJobs = useRef<Set<string>>(new Set());
+
+    useEffect(() => {
+        if (isClient) return;
+
+        const checkDownloads = async () => {
+            const completedJobs = jobs.filter(j => j.status === 'done' && !lastProcessedJobs.current.has(j.jobId));
+            const newlyCompletedJobIds = completedJobs.map(j => j.jobId);
+
+            if (newlyCompletedJobIds.length > 0) {
+                // Wait briefly for scan
+                await new Promise(r => setTimeout(r, 1000));
+                await refreshSongs();
+
+                try {
+                    const url = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
+                    const token = localStorage.getItem('melodiq_helper_token') || '';
+                    const helperUrl = url.replace(/\/$/, "");
+
+                    const res = await fetch(`${helperUrl}/api/songs`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const freshSongs = await res.json();
+
+                    newlyCompletedJobIds.forEach(jobId => {
+                        const job = jobs.find(j => j.jobId === jobId);
+                        if (!job) return;
+
+                        const realSong = freshSongs.find((s: any) => 
+                            s.title.toLowerCase() === job.title.toLowerCase() &&
+                            s.artist.toLowerCase() === job.artist.toLowerCase()
+                        );
+
+                        // If song isn't in library yet, don't mark as processed. 
+                        // It will retry on next poll.
+                        if (!realSong) return;
+
+                        lastProcessedJobs.current.add(jobId);
+
+                        // If it's in the queue, swap the dummy
+                        const qItem = queue.find(q => q.song.isDownloading && q.song.jobId === jobId);
+                        if (qItem) {
+                            replaceItem(qItem.id, realSong);
+                        }
+                    });
+                } catch (e) {
+                    console.error('Failed to swap dummy song', e);
+                }
+            }
+        };
+
+        checkDownloads();
+    }, [jobs, queue, isClient, refreshSongs, replaceItem]);
 
 
 
@@ -144,6 +212,67 @@ export const MelodiqGameContent: React.FC = () => {
         setQueueDialogOpen(false);
     };
 
+    const handleDeleteSong = async () => {
+        if (!selectedSongForQueue) return;
+        const confirm = window.confirm(`Wirklich "${selectedSongForQueue.title}" von ${selectedSongForQueue.artist} löschen?`);
+        if (!confirm) return;
+
+        try {
+            const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
+            const token = localStorage.getItem('melodiq_helper_token') || '';
+            const res = await fetch(`${helperUrl}/api/songs/${selectedSongForQueue.id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                setFeedbackMessage('Song gelöscht');
+                await refreshSongs();
+            } else {
+                setFeedbackMessage('Fehler beim Löschen');
+            }
+        } catch (e) {
+            console.error('Failed to delete song', e);
+        }
+        setQueueDialogOpen(false);
+    };
+
+    const handleChangeVideoUrl = async (url: string) => {
+        if (!selectedSongForQueue) return;
+        setYouTubeSearchDialogOpen(false);
+        setQueueDialogOpen(false);
+
+        try {
+            const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
+            const token = localStorage.getItem('melodiq_helper_token') || '';
+            
+            // Re-use usdb/download endpoint to download the youtube url into the existing folder
+            const res = await fetch(`${helperUrl}/api/usdb/download`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify([{
+                    usdbId: selectedSongForQueue.usdbId,
+                    artist: selectedSongForQueue.artist,
+                    title: selectedSongForQueue.title,
+                    videoMode: 'mp4',
+                    youtubeUrl: url,
+                    targetDir: selectedSongForQueue.txtPath ? selectedSongForQueue.txtPath.replace(/\/[^/]+$/, '') : undefined,
+                    safeName: selectedSongForQueue.txtPath ? selectedSongForQueue.txtPath.split('/').pop()?.replace('.txt', '') : undefined
+                }])
+            });
+            
+            if (res.ok) {
+                setFeedbackMessage('Video-Download gestartet...');
+            } else {
+                setFeedbackMessage('Fehler beim Starten des Downloads');
+            }
+        } catch (e) {
+            console.error('Failed to change video', e);
+        }
+    };
+
     const [activeFilters, setActiveFilters] = useState<{
         year: string[];
         genre: string[];
@@ -155,6 +284,106 @@ export const MelodiqGameContent: React.FC = () => {
         language: [],
         edition: []
     });
+
+    // Handle online search
+    useEffect(() => {
+        if (!isOnlineSearch || !searchQuery) {
+            setOnlineSongs([]);
+            return;
+        }
+
+        const delayDebounceFn = setTimeout(async () => {
+            setIsSearchingOnline(true);
+            try {
+                const url = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
+                const token = localStorage.getItem('melodiq_helper_token') || '';
+                const helperUrl = url.replace(/\/$/, "");
+
+                const res = await fetch(`${helperUrl}/api/usdb/search?q=${encodeURIComponent(searchQuery)}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.songs) {
+                    setOnlineSongs(data.songs);
+                } else if (Array.isArray(data)) {
+                    setOnlineSongs(data);
+                } else {
+                    setOnlineSongs([]);
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setIsSearchingOnline(false);
+            }
+        }, 800);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchQuery, isOnlineSearch]);
+
+    const handleDownloadOnly = async (usdbSong: any) => {
+        try {
+            const url = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
+            const token = localStorage.getItem('melodiq_helper_token') || '';
+            const helperUrl = url.replace(/\/$/, "");
+
+            const res = await fetch(`${helperUrl}/api/usdb/download`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    usdbId: usdbSong.usdbId,
+                    artist: usdbSong.artist,
+                    title: usdbSong.title,
+                    videoMode: 'stream'
+                })
+            });
+            const data = await res.json();
+            if (data.jobIds && data.jobIds.length > 0) {
+                setFeedbackMessage(`Downloading: ${usdbSong.title}`);
+            }
+        } catch (err) {
+            console.error('Download failed', err);
+        }
+    };
+
+    const handleDownloadAndQueue = async (usdbSong: any) => {
+        try {
+            const url = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
+            const token = localStorage.getItem('melodiq_helper_token') || '';
+            const helperUrl = url.replace(/\/$/, "");
+
+            const res = await fetch(`${helperUrl}/api/usdb/download`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    usdbId: usdbSong.usdbId,
+                    artist: usdbSong.artist,
+                    title: usdbSong.title,
+                    videoMode: 'stream'
+                })
+            });
+            const data = await res.json();
+            if (data.jobIds && data.jobIds.length > 0) {
+                const jobId = data.jobIds[0];
+                const dummySong = {
+                    id: `dl-${jobId}`,
+                    title: usdbSong.title,
+                    artist: usdbSong.artist,
+                    isDownloading: true,
+                    jobId: jobId
+                } as any;
+                addToQueue(dummySong, 'User');
+                setFeedbackMessage(`Downloading and Queuing: ${usdbSong.title}`);
+            }
+        } catch (err) {
+            console.error('Download failed', err);
+        }
+    };
 
     // Handle TV Events (Auto-Play Next)
     useEffect(() => {
@@ -444,6 +673,28 @@ export const MelodiqGameContent: React.FC = () => {
         return result;
     }, [songs, searchQuery, activeFilters]);
 
+    const filteredOnlineSongs = React.useMemo(() => {
+        let result = onlineSongs;
+
+        if (activeFilters.year.length > 0) {
+            result = result.filter(song => song.year && activeFilters.year.includes(song.year));
+        }
+
+        if (activeFilters.genre.length > 0) {
+            result = result.filter(song => song.genre && activeFilters.genre.includes(song.genre));
+        }
+
+        if (activeFilters.language.length > 0) {
+            result = result.filter(song => song.language && activeFilters.language.includes(song.language));
+        }
+
+        if (activeFilters.edition.length > 0) {
+            result = result.filter(song => song.edition && activeFilters.edition.includes(song.edition));
+        }
+
+        return result;
+    }, [onlineSongs, activeFilters]);
+
     // Derive available options
     const availableYears = React.useMemo(() =>
         Array.from(new Set(songs.map(s => s.year).filter(Boolean))).sort().reverse() as string[],
@@ -549,9 +800,9 @@ export const MelodiqGameContent: React.FC = () => {
                     )
                 }
 
-                {/* Empty State */}
+                {/* Connection Error State */}
                 {
-                    songs?.length === 0 && !isLoading && (
+                    hasConnectionError && !isLoading && (
                         <Box sx={{ width: '100%', textAlign: 'center', py: 8, opacity: 0.7, flexGrow: 1 }}>
                             <Typography variant="h5">{t('melodiq.cannot_connect')}</Typography>
                             <Typography sx={{ mt: 1 }}>
@@ -597,9 +848,21 @@ export const MelodiqGameContent: React.FC = () => {
                     )
                 }
 
+                {/* Empty Library State (Connected but no songs) */}
+                {
+                    !hasConnectionError && !isLoading && songs?.length === 0 && !isOnlineSearch && (
+                        <Box sx={{ width: '100%', textAlign: 'center', py: 8, opacity: 0.7, flexGrow: 1 }}>
+                            <Typography variant="h5">Deine Bibliothek ist leer</Typography>
+                            <Typography sx={{ mt: 1 }}>
+                                Nutze das Suchfeld oder das Weltkugel-Symbol, um neue Songs online zu finden und herunterzuladen.
+                            </Typography>
+                        </Box>
+                    )
+                }
+
                 {/* Search & Filter Container */}
                 {
-                    songs.length > 0 && (
+                    !hasConnectionError && (
                         <Box sx={{ flexShrink: 0 }}>
                             <Box sx={{
                                 bgcolor: 'background.paper',
@@ -623,10 +886,20 @@ export const MelodiqGameContent: React.FC = () => {
                                                 <SearchIcon color="action" />
                                             </InputAdornment>
                                         ),
-                                        endAdornment: searchQuery && (
+                                        endAdornment: (
                                             <InputAdornment position="end">
-                                                <IconButton size="small" onClick={() => setSearchQuery('')}>
-                                                    <CloseIcon fontSize="small" />
+                                                {searchQuery && (
+                                                    <IconButton size="small" onClick={() => setSearchQuery('')}>
+                                                        <CloseIcon fontSize="small" />
+                                                    </IconButton>
+                                                )}
+                                                <IconButton 
+                                                    onClick={() => setIsOnlineSearch(!isOnlineSearch)} 
+                                                    color={isOnlineSearch ? "primary" : "default"}
+                                                    title="Search Online"
+                                                    size="small"
+                                                >
+                                                    <PublicIcon fontSize="small" />
                                                 </IconButton>
                                             </InputAdornment>
                                         )
@@ -776,8 +1049,99 @@ export const MelodiqGameContent: React.FC = () => {
                     )
                 }
 
+                {/* Online Search Content */}
+                {isOnlineSearch && (
+                    <Box sx={{ flexGrow: 1, minHeight: 0, px: { xs: 1, sm: 2 }, pb: 2 }}>
+                        {isSearchingOnline ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                                <CircularProgress />
+                            </Box>
+                        ) : viewMode === 'grid' ? (
+                            <VirtuosoGrid
+                                style={{ height: '100%', width: '100%' }}
+                                totalCount={filteredOnlineSongs.length}
+                                components={{
+                                    List: React.forwardRef((props, ref) => <Grid container spacing={2} {...props} ref={ref as any} />),
+                                    Item: React.forwardRef((props, ref) => <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} {...props} ref={ref as any} />)
+                                }}
+                                itemContent={(index) => {
+                                    const song = filteredOnlineSongs[index];
+                                    const localSong = songs.find(s => s.title.toLowerCase() === song.title.toLowerCase() && s.artist.toLowerCase() === song.artist.toLowerCase());
+                                    const activeJob = jobs.find(j => j.usdbId === song.usdbId);
+                                    
+                                    const isDownloaded = !!localSong;
+                                    const isDl = !!(activeJob && activeJob.status !== 'error' && !isDownloaded);
+                                    const progress = activeJob ? activeJob.progress : 0;
+                                    return (
+                                        <SongCard
+                                            song={localSong || song}
+                                            isDownloading={isDl}
+                                            isDownloaded={isDownloaded}
+                                            downloadProgress={progress}
+                                            onClick={() => {
+                                                if (isDownloaded && localSong) {
+                                                    handleSelectSong(localSong);
+                                                } else if (!isDl && !isDownloaded) {
+                                                    handleDownloadAndQueue(song);
+                                                }
+                                            }}
+                                            onLongPress={() => {
+                                                if (isDownloaded && localSong) handleSongLongPress(localSong);
+                                            }}
+                                            onActionClick={() => {
+                                                if (!isDl && !isDownloaded) handleDownloadOnly(song);
+                                            }}
+                                        />
+                                    );
+                                }}
+                            />
+                        ) : (
+                            <Virtuoso
+                                style={{ height: '100%', width: '100%' }}
+                                totalCount={filteredOnlineSongs.length}
+                                itemContent={(index) => {
+                                    const song = filteredOnlineSongs[index];
+                                    const localSong = songs.find(s => s.title.toLowerCase() === song.title.toLowerCase() && s.artist.toLowerCase() === song.artist.toLowerCase());
+                                    const activeJob = jobs.find(j => j.usdbId === song.usdbId);
+                                    
+                                    const isDownloaded = !!localSong;
+                                    const isDl = !!(activeJob && activeJob.status !== 'error' && !isDownloaded);
+                                    const progress = activeJob ? activeJob.progress : 0;
+                                    return (
+                                        <Box sx={{ px: 2, py: 0.5 }}>
+                                            <SongListItem
+                                                song={localSong || song}
+                                                isDownloading={isDl}
+                                                isDownloaded={isDownloaded}
+                                                downloadProgress={progress}
+                                                onClick={() => {
+                                                    if (isDownloaded && localSong) {
+                                                        handleSelectSong(localSong);
+                                                    } else if (!isDl && !isDownloaded) {
+                                                        handleDownloadAndQueue(song);
+                                                    }
+                                                }}
+                                                onLongPress={() => {
+                                                    if (isDownloaded && localSong) handleSongLongPress(localSong);
+                                                }}
+                                                onMenuClick={(e) => {
+                                                    if (isDownloaded && localSong) handleSongLongPress(localSong);
+                                                }}
+                                                onActionClick={() => {
+                                                    if (!isDl && !isDownloaded) handleDownloadOnly(song);
+                                                }}
+                                            />
+                                        </Box>
+                                    );
+                                }}
+                            />
+                        )}
+                    </Box>
+                )}
+
+                {/* Local Songs Content */}
                 {
-                    filteredSongs?.length > 0 && (
+                    filteredSongs?.length > 0 && !isOnlineSearch && (
                         <Box sx={{ flexGrow: 1, minHeight: 0 }}>
                             {viewMode === 'grid' ? (
                                 <VirtuosoGrid
@@ -952,9 +1316,25 @@ export const MelodiqGameContent: React.FC = () => {
                             <ListItemIcon><QueueMusicIcon /></ListItemIcon>
                             <ListItemText primary={t('melodiq.add_to_playlist')} secondary={t('melodiq.add_to_playlist_desc')} />
                         </ListItemButton>
+                        <Divider />
+                        <ListItemButton onClick={() => { setQueueDialogOpen(false); setYouTubeSearchDialogOpen(true); }}>
+                            <ListItemIcon><VideoLibraryIcon /></ListItemIcon>
+                            <ListItemText primary="Video/Audio ändern" secondary="Neues YouTube Video für diesen Song herunterladen" />
+                        </ListItemButton>
+                        <ListItemButton onClick={handleDeleteSong} sx={{ color: 'error.main' }}>
+                            <ListItemIcon sx={{ color: 'error.main' }}><DeleteIcon /></ListItemIcon>
+                            <ListItemText primary="Song löschen" secondary="Kompletten Song vom Server entfernen" />
+                        </ListItemButton>
                     </List>
                 </DialogContent>
             </Dialog>
+
+            <YouTubeSearchDialog
+                open={youTubeSearchDialogOpen}
+                onClose={() => setYouTubeSearchDialogOpen(false)}
+                initialQuery={selectedSongForQueue ? `${selectedSongForQueue.artist} ${selectedSongForQueue.title}` : ''}
+                onSelectUrl={handleChangeVideoUrl}
+            />
 
             {/* Select Playlist Dialog */}
             <Dialog open={playlistDialogOpen} onClose={() => setPlaylistDialogOpen(false)}>

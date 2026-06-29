@@ -170,6 +170,13 @@ export const useQueue = () => {
         channel.postMessage({ type: 'UPDATE_QUEUE', payload: next }); // Use same type or new one? UPDATE_QUEUE covers whole list.
     }, [queue, channel, syncQueue]);
 
+    const replaceItem = useCallback((itemId: string, newSong: SongMeta) => {
+        if (isClient) return;
+        const next = queue.map(item => item.id === itemId ? { ...item, song: newSong } : item);
+        syncQueue(next);
+        channel.postMessage({ type: 'UPDATE_QUEUE', payload: next });
+    }, [queue, channel, syncQueue]);
+
     const moveItem = useCallback((fromIndex: number, toIndex: number) => {
         if (fromIndex < 0 || fromIndex >= queue.length || toIndex < 0 || toIndex >= queue.length) return;
 
@@ -190,6 +197,7 @@ export const useQueue = () => {
         popNext,
         clearQueue,
         moveItem,
+        replaceItem,
         setNowPlaying,
         playPlaylistNow
     };

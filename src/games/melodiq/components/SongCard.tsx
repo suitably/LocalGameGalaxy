@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, Box, LinearProgress } from '@mui/material';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { type SongMeta } from '../db';
 import { formatDuration } from '../utils';
 
@@ -8,7 +10,9 @@ interface SongCardProps {
     song: SongMeta | any; // Allow USDB songs too
     onClick: () => void;
     onLongPress?: () => void;
+    onActionClick?: (e: React.MouseEvent) => void;
     isDownloading?: boolean;
+    isDownloaded?: boolean;
     downloadProgress?: number;
 }
 
@@ -16,7 +20,7 @@ interface SongCardProps {
  * SongCard displays lightweight SongMeta for fast rendering.
  * Cover is loaded on-demand from the full Song table when visible.
  */
-export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, isDownloading, downloadProgress }) => {
+export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, onActionClick, isDownloading, isDownloaded, downloadProgress }) => {
     const [coverUrl, setCoverUrl] = useState<string | null>(null);
     const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPressRef = React.useRef(false);
@@ -79,7 +83,8 @@ export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, 
                     transform: 'scale(1.05)',
                     boxShadow: '0 0 0 4px #FE6B8B', // High visibility focus ring
                     zIndex: 1
-                }
+                },
+                position: 'relative'
             }}
             tabIndex={0}
             onClick={handleClick}
@@ -127,6 +132,22 @@ export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, 
                         )}
                     </Box>
                 </Box>
+                {/* Download Status & Cloud Icon */}
+                {isDownloading && (
+                    <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', alignItems: 'center', bgcolor: 'rgba(0,0,0,0.5)', p: 0.5, borderRadius: 1 }}>
+                        <CloudDownloadIcon sx={{ color: 'white', fontSize: 20 }} />
+                    </Box>
+                )}
+                {isDownloaded && !isDownloading && (
+                    <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', alignItems: 'center', bgcolor: 'rgba(0,0,0,0.5)', p: 0.5, borderRadius: 1 }}>
+                        <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
+                    </Box>
+                )}
+                {!isDownloaded && !isDownloading && song.usdbId && (
+                    <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', alignItems: 'center', bgcolor: 'rgba(0,0,0,0.5)', p: 0.5, borderRadius: 1 }} onClick={onActionClick}>
+                        <CloudDownloadIcon sx={{ color: 'primary.main', fontSize: 20 }} />
+                    </Box>
+                )}
                 {isDownloading && (
                     <Box sx={{ mt: 1 }}>
                         <Typography variant="caption" color="primary">{downloadProgress}% Downloading...</Typography>

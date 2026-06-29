@@ -358,6 +358,51 @@ router.get('/api/usdb/search', async (req, res) => {
     }
 });
 
+// --- YOUTUBE SEARCH ---
+router.get('/api/youtube/search', async (req, res) => {
+    const query = req.query.q;
+    if (!query) return res.status(400).json({ error: 'Missing search query' });
+    
+    try {
+        const { spawnYtDlp, ensureYtDlp } = require('../services/download');
+        // We pass a dummy job for ensureYtDlp
+        const mockJob = { log: [] };
+        const ytBin = await ensureYtDlp(mockJob);
+        
+        // Search yt-dlp using ytsearchN:query, return JSON
+        const searchLimit = parseInt(req.query.limit) || 5;
+        const ytOut = await spawnYtDlp(ytBin, [
+            '--dump-json',
+            '--no-playlist',
+            `ytsearch${searchLimit}:${query}`
+        ]);
+        
+        // ytOut contains one JSON object per line
+        const lines = ytOut.split('\n').filter(l => l.trim() !== '');
+        const results = lines.map(line => {
+            try {
+                const data = JSON.parse(line);
+                return {
+                    id: data.id,
+                    title: data.title,
+                    duration: data.duration,
+                    duration_string: data.duration_string,
+                    uploader: data.uploader,
+                    url: data.webpage_url,
+                    thumbnail: data.thumbnail
+                };
+            } catch (e) {
+                return null;
+            }
+        }).filter(Boolean);
+        
+        res.json(results);
+    } catch (e) {
+        console.error('[YouTube Search] Failed:', e.message);
+        res.status(500).json({ error: 'Failed to search YouTube: ' + e.message });
+    }
+});
+
 // --- USDB DOWNLOAD ---
 router.post('/api/usdb/download', (req, res) => {
     let requests = req.body;
