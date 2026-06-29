@@ -320,13 +320,37 @@ router.get('/api/browse', (req, res) => {
 
 // --- USDB SEARCH ---
 router.get('/api/usdb/search', async (req, res) => {
-    const { title, artist, edition, language, genre, year, creator,
+    const { q, title, artist, edition, language, genre, year, creator,
             limit, order, direction, golden, sc, offset } = req.query;
             
-    if (!title && !artist && !edition && !language && !genre && !year && !creator && golden !== '1' && sc !== '1') {
-        return res.json([]);
-    }
     try {
+        if (q) {
+            const queryStr = q.trim();
+            if (queryStr.includes('-')) {
+                const parts = queryStr.split('-');
+                const pArtist = parts[0].trim();
+                const pTitle = parts.slice(1).join('-').trim();
+                const results = await searchUsdb({ artist: pArtist, title: pTitle, limit, offset });
+                return res.json(results);
+            } else {
+                const [artistResults, titleResults] = await Promise.all([
+                    searchUsdb({ artist: queryStr, limit, offset }),
+                    searchUsdb({ title: queryStr, limit, offset })
+                ]);
+                const merged = [...artistResults.songs, ...titleResults.songs];
+                const uniqueSongs = Array.from(new Map(merged.map(s => [s.usdbId, s])).values());
+                return res.json({ 
+                    songs: uniqueSongs, 
+                    totalResults: uniqueSongs.length, 
+                    totalPages: 1 
+                });
+            }
+        }
+
+        if (!title && !artist && !edition && !language && !genre && !year && !creator && golden !== '1' && sc !== '1') {
+            return res.json([]);
+        }
+        
         const results = await searchUsdb({ title, artist, edition, language, genre, year, creator, limit, order, direction, golden, sc, offset });
         res.json(results);
     } catch (e) {

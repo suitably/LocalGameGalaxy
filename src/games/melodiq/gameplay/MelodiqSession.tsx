@@ -367,6 +367,15 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
     const timeProxyRef = useRef<any>({
         get currentTime() {
             return isClient ? virtualTimeRef.current : (audioRef.current?.currentTime || 0);
+        },
+        get paused() {
+            return isClient ? !isPlayingRef.current : (audioRef.current?.paused ?? true);
+        },
+        get ended() {
+            return audioRef.current?.ended ?? false;
+        },
+        get readyState() {
+            return isClient ? 4 : (audioRef.current?.readyState ?? 0);
         }
     });
     const vocalsRef = useRef<HTMLAudioElement>(null);
@@ -984,11 +993,17 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                 }
             }
         } else {
-            pitch = player.getPitch();
+            pitch = devOverride !== null ? { frequency: 440, note: devOverride, volume: 0.5 } : player.getPitch();
         }
+
+        // Clear pitch if paused
+        if (!isPlayingRef.current) {
+            pitch = null;
+        }
+
         player.pitchRef.current = pitch;
 
-        if (pitch && pitch.note > 0 && isPlaying && parsedSong && parsedSong.notes && audioRef.current) {
+        if (pitch && pitch.note > 0 && isPlayingRef.current && parsedSong && parsedSong.notes && audioRef.current) {
             const beatDuration = 60000 / ((parsedSong.bpm || 120) * bpmMultiplier);
             const latency = player.config.latency || 0;
             const currentBeat = ((audioRef.current.currentTime * 1000) - latency - (parsedSong.gap || 0)) / beatDuration;
@@ -1170,7 +1185,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
 
         if (onPlaybackUpdate) {
             onPlaybackUpdate({
-                isPlaying,
+                isPlaying: isPassive && passiveState ? passiveState.isPlaying : !audioRef.current?.paused,
                 currentTime,
                 duration,
                 progress: duration > 0 ? (currentTime / duration) * 100 : 0
@@ -1187,9 +1202,9 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                     vocalsRef.current.currentTime = audioRef.current.currentTime;
                 }
                 // Keep play/pause state in sync (forces play if main track is playing, pauses if main track is paused)
-                if (isPlaying && !audioRef.current.paused && vocalsRef.current.paused) {
+                if (isPlayingRef.current && !audioRef.current.paused && vocalsRef.current.paused) {
                     vocalsRef.current.play().catch(e => console.warn("Vocals sync play failed", e));
-                } else if ((!isPlaying || audioRef.current.paused) && !vocalsRef.current.paused) {
+                } else if ((!isPlayingRef.current || audioRef.current.paused) && !vocalsRef.current.paused) {
                     vocalsRef.current.pause();
                 }
             }
@@ -1609,16 +1624,14 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
     // Immediately notify parent when isPlaying changes (don't wait for rAF loop)
     useEffect(() => {
         if (onPlaybackUpdate) {
-            const duration = audioRef.current?.duration || 0;
-            const currentTime = audioRef.current?.currentTime || 0;
             onPlaybackUpdate({
-                isPlaying,
-                currentTime,
-                duration,
-                progress: duration > 0 ? (currentTime / duration) * 100 : 0
+                isPlaying: isPassive && passiveState ? passiveState.isPlaying : isPlaying,
+                currentTime: audioRef.current?.currentTime || 0,
+                duration: audioRef.current?.duration || 0,
+                progress: audioRef.current?.duration ? (audioRef.current.currentTime / audioRef.current.duration) * 100 : 0
             });
         }
-    }, [isPlaying]);
+    }, [isPlaying, isPassive, passiveState?.isPlaying]);
 
     // Ref for hidden folder input (Firefox compatible)
     const folderInputRef = useRef<HTMLInputElement>(null);

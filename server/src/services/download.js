@@ -227,31 +227,45 @@ async function runDownloadJob(job) {
             job.log.push(`📡 Resolved URL: ${resolvedUrl}`);
         }
 
-        // 4. Download audio and thumbnail via yt-dlp
+        // 4. Download thumbnail first
+        job.log.push('🖼️ Downloading cover...');
         const audioOut = path.join(songDir, `${safeName}.mp3`);
-        job.log.push('🎵 Downloading audio and cover...');
+        const targetCover = path.join(songDir, `${safeName}-cover.jpg`);
+        
+        try {
+            await spawnYtDlp(ytBin, [
+                '--write-thumbnail', '--convert-thumbnails', 'jpg',
+                '--skip-download',
+                '-o', audioOut, '--no-playlist',
+                resolvedUrl
+            ], l => job.log.push(l));
+
+            // Rename cover thumbnail to a clean name (safeName-cover.jpg)
+            const defaultThumb = `${audioOut}.jpg`;
+            if (fs.existsSync(defaultThumb)) {
+                try { fs.renameSync(defaultThumb, targetCover); } catch (_) {}
+            } else {
+                const possibleThumbExts = ['.png', '.jpeg', '.webp'];
+                for (const ext of possibleThumbExts) {
+                    const thumbPath = `${audioOut}${ext}`;
+                    if (fs.existsSync(thumbPath)) {
+                        try { fs.renameSync(thumbPath, targetCover); } catch (_) {}
+                        break;
+                    }
+                }
+            }
+            job.progress = 25;
+        } catch (err) {
+            job.log.push('⚠️ Failed to download cover: ' + err.message);
+        }
+
+        // 4.5. Download audio via yt-dlp
+        job.log.push('🎵 Downloading audio...');
         await spawnYtDlp(ytBin, [
             '--extract-audio', '--audio-format', 'mp3', '--audio-quality', '0',
-            '--write-thumbnail', '--convert-thumbnails', 'jpg',
             '-o', audioOut, '--no-playlist',
             resolvedUrl
         ], l => job.log.push(l));
-        
-        // Rename cover thumbnail to a clean name (safeName-cover.jpg)
-        const defaultThumb = `${audioOut}.jpg`;
-        const targetCover = path.join(songDir, `${safeName}-cover.jpg`);
-        if (fs.existsSync(defaultThumb)) {
-            try { fs.renameSync(defaultThumb, targetCover); } catch (_) {}
-        } else {
-            const possibleThumbExts = ['.png', '.jpeg', '.webp'];
-            for (const ext of possibleThumbExts) {
-                const thumbPath = `${audioOut}${ext}`;
-                if (fs.existsSync(thumbPath)) {
-                    try { fs.renameSync(thumbPath, targetCover); } catch (_) {}
-                    break;
-                }
-            }
-        }
 
         job.progress = 55;
         job.log.push('✅ Audio and cover done.');

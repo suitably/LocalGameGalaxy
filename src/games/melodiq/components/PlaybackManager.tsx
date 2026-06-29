@@ -61,7 +61,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
     // Get client game state for remote playback sync
-    const { gameState: clientGameState } = isClient ? useClientEngine() : { gameState: null };
+    const { gameState: clientGameState, sendClientCommand } = isClient ? useClientEngine() : { gameState: null, sendClientCommand: undefined };
 
     // Broadcast Game State Loop
     useEffect(() => {
@@ -93,6 +93,11 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
 
     // Handle MiniPlayer Next Logic
     const handleMiniPlayerNext = () => {
+        if (isClient && sendClientCommand) {
+            sendClientCommand('next');
+            return;
+        }
+
         if (selectedSong) {
             if (isTVConnected) {
                 // In TV mode, results are suppressed — skip the score pause entirely and
@@ -198,6 +203,8 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                             if (isInRestoredMode) {
                                 // Resume: reload and start the restored song
                                 handleResume();
+                            } else if (isClient && sendClientCommand) {
+                                sendClientCommand('play');
                             } else if (selectedSong) {
                                 sessionRef.current?.togglePlay();
                             } else if (remoteSong && isTVConnected) {
