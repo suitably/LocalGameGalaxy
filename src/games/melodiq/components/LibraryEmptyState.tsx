@@ -15,8 +15,6 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    if (isLoading) return null;
-
     if (hasConnectionError) {
         return (
             <Box sx={{ width: '100%', textAlign: 'center', py: 8, opacity: 0.7, flexGrow: 1 }}>
