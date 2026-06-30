@@ -80,8 +80,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         showMicStatus,
         showNoteLabels,
         showVideoErrors,
-        layoutOverride,
-        songVolume,
+                songVolume,
         masterVolume,
         goldenNoteMultiplier,
         bpmMultiplier = 1,
@@ -94,8 +93,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
     const [isPausedForScore, setIsPausedForScore] = useState(false);
-    const [scores, setScores] = useState<Record<string, number>>({});
-    const [results, setResults] = useState<any[]>([]);
+        const [results, setResults] = useState<any[]>([]);
     const [_duration, setDuration] = useState(0);
     const [passivePlayBlocked, setPassivePlayBlocked] = useState(false);
     
@@ -128,7 +126,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                 }
                 const text = song.txtContent;
                 const parsed = parseUltraStarTxt(text);
-                if (mounted) setParsedSong(parsed);
+                if (mounted && parsed) setParsedSong(parsed as any);
             } catch (e) {
                 console.error("Failed to parse song TXT", e);
                 if (mounted) setLoadError("Failed to parse song format.");
@@ -171,8 +169,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         resumeFromScore,
         handleNext,
         safePlay,
-        playPromiseRef
-    } = usePlaybackControls({
+            } = usePlaybackControls({
         audioRef, vocalsRef, videoRef,
         isPlaying, setIsPlaying,
         isFinished,
@@ -180,7 +177,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         muteAudio, songVolume, masterVolume
     });
 
-    const { handleSongEnd } = useSessionEnd({
+    useSessionEnd({
         playersRef: useRef([]), // Updated below
         song, setResults, setIsFinished, setIsPlaying, videoRef
     });
@@ -211,11 +208,11 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
     useScoringEngine({
         players, ready, audioRef, vocalsRef, videoRef, scoreDisplayRef, progressLineRef, isPlayingRef,
         parsedSong, bpmMultiplier, trackScoreWeights, goldenNoteMultiplier, devPitchOverride,
-        isPassive, passiveState, isClient, _duration, onPlaybackUpdate, setScores
+        isPassive, passiveState, isClient, _duration, onPlaybackUpdate
     });
 
     usePassiveSync({
-        isPassive, passiveState, isClient, players, setPlayers, playersRef, scoreDisplayRef, audioRef, videoRef,
+        isPassive, passiveState: passiveState || null, isClient, players, setPlayers, playersRef, scoreDisplayRef, audioRef, videoRef,
         isPlayingRef, setIsPlaying, setIsFinished, setIsPausedForScore, setPassivePlayBlocked, virtualTimeRef
     });
 
@@ -344,6 +341,15 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         })
     }), [togglePlay, isPlaying, handleSongEndBound, isFinished, pauseForScore, resumeFromScore, isPausedForScore, handleNext, playersRef]);
 
+    const timeProxyRef = React.useMemo(() => ({
+        current: {
+            get currentTime() { return isClient ? virtualTimeRef.current : (audioRef.current?.currentTime || 0); },
+            get paused() { return !isPlayingRef.current; },
+            get ended() { return isFinished; },
+            get readyState() { return isClient ? 4 : (audioRef.current?.readyState || 0); }
+        }
+    }), [isClient, isFinished]) as any;
+
     if (loadError) {
         return (
             <Box sx={{ bgcolor: 'black', height: '100vh', color: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, p: 3 }}>
@@ -374,14 +380,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         return <ScoreBoard players={results.length > 0 ? results : players.map(p => ({ config: p.config, score: p.score, history: [], isNewRecord: false }))} onExit={onExit} isPassive={isPassive} onMinimize={onMinimize} />;
     }
 
-    const timeProxyRef = { 
-        current: { 
-            currentTime: isClient ? virtualTimeRef.current : (audioRef.current?.currentTime || 0),
-            paused: !isPlayingRef.current,
-            ended: isFinished,
-            readyState: isClient ? 4 : (audioRef.current?.readyState || 0)
-        } 
-    } as any;
+
 
     let visiblePlayers = players.filter(p => (!p.config.isRemote || (p.config.isRemote && (p.mic || p.webRtcManager))) && !p.config.hidePitch);
     
