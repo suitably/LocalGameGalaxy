@@ -35,18 +35,25 @@ export const useMelodiqGlobalEvents = ({
         handleSelectSongRef.current = handleSelectSong;
     }, [handleSelectSong]);
 
+    const processedEventRef = useRef<number | null>(null);
+
     // 1. Handle TV Events & Auto-Play Next
     useEffect(() => {
-        if (lastEvent && lastEvent.type === 'PLAYBACK_STARTED') {
+        if (!lastEvent || lastEvent.timestamp === processedEventRef.current) return;
+        
+        if (lastEvent.type === 'PLAYBACK_STARTED') {
+            processedEventRef.current = lastEvent.timestamp;
             setFeedbackMessage(`TV Playback started: ${lastEvent.payload.title}`);
-        } else if (lastEvent && lastEvent.type === 'SONG_ENDED') {
+        } else if (lastEvent.type === 'SONG_ENDED') {
+            processedEventRef.current = lastEvent.timestamp;
             setRemoteSong(null);
             const nextItem = popNext();
             if (nextItem) {
                 console.log('TV Song Ended. Playing next from queue:', nextItem.song.title);
                 playSongOnTV(nextItem.song.id, nextItem.song);
             }
-        } else if (lastEvent && lastEvent.type === 'TV_READY') {
+        } else if (lastEvent.type === 'TV_READY') {
+            processedEventRef.current = lastEvent.timestamp;
             if (selectedSong && !remoteSong) {
                 console.log("TV_READY received while playing locally, switching to TV...");
                 playSongOnTV(selectedSong.id, selectedSong);
