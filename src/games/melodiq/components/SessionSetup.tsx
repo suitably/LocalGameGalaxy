@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     Box, Button, Typography, FormControl, MenuItem, Select, Slider,
-    IconButton, Avatar, Popover, Chip, Divider
+    IconButton, Avatar, Popover, Chip, Divider, Switch, FormControlLabel
 } from '@mui/material';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
@@ -220,6 +220,22 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
                                     />
                                     <Typography variant="caption" color="text.secondary" display="block">
                                         Compensates for input delay.
+                                    </Typography>
+
+                                    <Divider sx={{ my: 1 }} />
+                                    
+                                    <FormControlLabel
+                                        control={
+                                            <Switch 
+                                                size="small" 
+                                                checked={!!activeP.hidePitch} 
+                                                onChange={(e) => onUpdateActivePlayerConfig(settingsProfileId!, { hidePitch: e.target.checked })}
+                                            />
+                                        }
+                                        label={<Typography variant="body2">Hide Pitch Curve</Typography>}
+                                    />
+                                    <Typography variant="caption" color="text.secondary" display="block">
+                                        Blind Mode: Player sings and gets points, but their pitch curve is not shown on screen.
                                     </Typography>
 
                                     <Divider sx={{ my: 1 }} />

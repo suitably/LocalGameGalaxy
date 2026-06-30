@@ -46,8 +46,14 @@ export const useMelodiqGlobalEvents = ({
                 console.log('TV Song Ended. Playing next from queue:', nextItem.song.title);
                 playSongOnTV(nextItem.song.id, nextItem.song);
             }
+        } else if (lastEvent && lastEvent.type === 'TV_READY') {
+            if (selectedSong && !remoteSong) {
+                console.log("TV_READY received while playing locally, switching to TV...");
+                playSongOnTV(selectedSong.id, selectedSong);
+                setRemoteSong(selectedSong as unknown as SongMeta);
+            }
         }
-    }, [lastEvent, popNext, playSongOnTV, setRemoteSong, setFeedbackMessage]);
+    }, [lastEvent, popNext, playSongOnTV, setRemoteSong, setFeedbackMessage, selectedSong, remoteSong]);
 
     // 2. Listen for Playlist Trigger (when playPlaylistNow is called)
     useEffect(() => {
@@ -150,6 +156,8 @@ export const useMelodiqGlobalEvents = ({
             console.log("TV Connected while playing locally, switching to TV...");
             playSongOnTV(selectedSong.id, selectedSong);
             setRemoteSong(selectedSong as unknown as SongMeta);
+        } else if (!isTVConnected && remoteSong) {
+            setRemoteSong(null);
         }
     }, [isTVConnected, selectedSong, remoteSong, playSongOnTV, setRemoteSong]);
 };

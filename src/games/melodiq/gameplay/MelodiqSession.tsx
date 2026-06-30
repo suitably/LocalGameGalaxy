@@ -70,6 +70,8 @@ export interface MelodiqSessionProps {
     isClient?: boolean;
 }
 
+const DEFAULT_TRACK_SCORE_WEIGHTS = [1, 1];
+
 const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlaybackUpdate, isTVMode = false, muteAudio = false, isPassive = false, passiveState, suppressResults = false, uiScale = 1.0, isClient = false }: MelodiqSessionProps, ref: React.ForwardedRef<MelodiqSessionHandle>): React.ReactNode => {
     const { settings } = useMelodiqSettings();
     const {
@@ -83,8 +85,8 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         masterVolume,
         goldenNoteMultiplier,
         bpmMultiplier = 1,
-        trackScoreWeights = [1, 1]
-    } = settings;
+        trackScoreWeights = DEFAULT_TRACK_SCORE_WEIGHTS
+    } = settings as any;
 
     const { manager, activePeers } = useWebRTC();
 
@@ -228,8 +230,22 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
     // Keyboard controls
     const resetUITimer = useCallback(() => {}, []); // Add UI visible logic if needed
     
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            if (audioRef.current) audioRef.current.pause();
+            if (vocalsRef.current) vocalsRef.current.pause();
+            if (videoRef.current) videoRef.current.pause();
+        };
+    }, []);
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            const activeTag = document.activeElement?.tagName.toLowerCase();
+            if (activeTag === 'input' || activeTag === 'textarea') {
+                return;
+            }
+
             switch (e.key) {
                 case ' ':
                 case 'Enter':
@@ -269,15 +285,22 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
     useEffect(() => {
         if (!hasStartedRef.current && ready && !contentLoading && parsedSong && audioSrc && audioRef.current && !isFinished) {
             hasStartedRef.current = true;
-            audioRef.current.volume = muteAudio ? 0 : songVolume * masterVolume;
-            if (vocalsRef.current) vocalsRef.current.volume = muteAudio ? 0 : (settings.vocalsVolume ?? 1.0) * masterVolume;
-
             const startPlay = async () => {
                 try { await safePlay(); } catch (e) { hasStartedRef.current = false; }
             };
             startPlay();
         }
-    }, [ready, contentLoading, parsedSong, audioSrc, songVolume, masterVolume, muteAudio, song.id, isFinished, safePlay, settings.vocalsVolume]);
+    }, [ready, contentLoading, parsedSong, audioSrc, song.id, isFinished, safePlay]);
+
+    // Dynamic Volume Sync
+    useEffect(() => {
+        if (audioRef.current) {
+            audioRef.current.volume = muteAudio ? 0 : (songVolume * masterVolume);
+        }
+        if (vocalsRef.current) {
+            vocalsRef.current.volume = muteAudio ? 0 : ((settings.vocalsVolume ?? 1.0) * masterVolume);
+        }
+    }, [muteAudio, songVolume, masterVolume, settings.vocalsVolume]);
 
     // Immediate playback update trigger
     useEffect(() => {
@@ -351,25 +374,49 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         return <ScoreBoard players={results.length > 0 ? results : players.map(p => ({ config: p.config, score: p.score, history: [], isNewRecord: false }))} onExit={onExit} isPassive={isPassive} onMinimize={onMinimize} />;
     }
 
-    const timeProxyRef = { current: { currentTime: isClient ? virtualTimeRef.current : (audioRef.current?.currentTime || 0) } } as any;
+    const timeProxyRef = { 
+        current: { 
+            currentTime: isClient ? virtualTimeRef.current : (audioRef.current?.currentTime || 0),
+            paused: !isPlayingRef.current,
+            ended: isFinished,
+            readyState: isClient ? 4 : (audioRef.current?.readyState || 0)
+        } 
+    } as any;
 
-    const visiblePlayers = players.filter(p => !p.config.isRemote || (p.config.isRemote && (p.mic || p.webRtcManager)));
+    let visiblePlayers = players.filter(p => (!p.config.isRemote || (p.config.isRemote && (p.mic || p.webRtcManager))) && !p.config.hidePitch);
     
     let gridLayout = { rows: [1], columnWidthPercent: 100 };
     const numPlayers = visiblePlayers.length;
-    if (layoutOverride && layoutOverride !== 'auto') {
-        const rows = layoutOverride.split('-').map(Number);
-        const maxCols = Math.max(...rows);
-        gridLayout = { rows, columnWidthPercent: 100 / maxCols };
-    } else if (numPlayers > 0) {
-        const cols = Math.ceil(Math.sqrt(numPlayers));
-        const numRows = Math.ceil(numPlayers / cols);
-        const rows = Array(numRows).fill(cols);
-        const remainder = numPlayers % cols;
-        if (remainder !== 0) {
-            rows[numRows - 1] = remainder;
+    
+    let layoutRule = settings.customLayouts ? settings.customLayouts[numPlayers] : '';
+
+    if (layoutRule === '0') {
+        visiblePlayers = [];
+    }
+
+    if (layoutRule && layoutRule !== 'auto' && layoutRule !== '0') {
+        const rows = layoutRule.split(/[\.\-]/).map(Number).filter(n => !isNaN(n) && n > 0);
+        if (rows.length > 0) {
+            const maxCols = Math.max(...rows);
+            gridLayout = { rows, columnWidthPercent: 100 / maxCols };
+        } else {
+            layoutRule = ''; // Fallback to auto
         }
-        gridLayout = { rows, columnWidthPercent: 100 / cols };
+    } 
+    
+    if (!layoutRule || layoutRule === 'auto') {
+        if (numPlayers > 0) {
+            const cols = Math.ceil(Math.sqrt(numPlayers));
+            const numRows = Math.ceil(numPlayers / cols);
+            const rows = Array(numRows).fill(cols);
+            const remainder = numPlayers % cols;
+            if (remainder !== 0) {
+                rows[numRows - 1] = remainder;
+            }
+            gridLayout = { rows, columnWidthPercent: 100 / cols };
+        } else {
+            gridLayout = { rows: [], columnWidthPercent: 100 };
+        }
     }
 
     const isUIVisible = true;
@@ -429,33 +476,50 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                                 <LyricsDisplay song={parsedSong!} audioRef={timeProxyRef} centered uiScale={uiScale} />
                             </Box>
                         )}
-                        {(() => {
-                            let playerIndex = 0;
-                            return gridLayout.rows.map((colsInRow, rowIndex) => (
-                                <Box key={rowIndex} sx={{ flex: 1, display: 'flex', minHeight: 0, borderBottom: rowIndex < gridLayout.rows.length - 1 ? '1px solid rgba(255,255,255,0.2)' : 'none' }}>
-                                    {Array.from({ length: colsInRow }).map((_, colIndex) => {
-                                        const player = visiblePlayers[playerIndex++];
-                                        if (!player) return null;
-                                        return (
-                                            <Box key={player.config.id} sx={{ width: `${gridLayout.columnWidthPercent}%`, flex: 1, minHeight: 0, position: 'relative', borderRight: colIndex < colsInRow - 1 ? '1px solid rgba(255,255,255,0.2)' : 'none' }}>
-                                                <PitchVisualizer song={parsedSong!} audioRef={timeProxyRef} currentPitchRef={player.pitchRef} sungSegmentsRef={player.segmentsRef} showDebugOverlay={showDebugOverlay} label={player.config.name} hue={player.config.hue} showNoteLabels={showNoteLabels} latency={player.config.latency} trackIndex={player.trackIndex} scale={uiScale} />
-                                                {parsedSong?.tracks && parsedSong.tracks.length > 1 && (
-                                                    <Box sx={{ position: 'absolute', top: 10, right: 10, zIndex: 10, pointerEvents: 'auto' }}>
-                                                        <Box sx={{ bgcolor: 'rgba(0,0,0,0.6)', borderRadius: 1, p: 0.5, display: 'flex', gap: 0.5 }}>
-                                                            {parsedSong.tracks.map((t: any, tIdx: number) => (
-                                                                <Button key={tIdx} variant={player.trackIndex === tIdx ? "contained" : "text"} size="small" sx={{ minWidth: 30, p: '2px 8px', fontSize: '0.75rem', bgcolor: player.trackIndex === tIdx ? `hsl(${player.config.hue}, 80%, 40%)` : 'transparent', color: 'white', '&:hover': { bgcolor: player.trackIndex === tIdx ? `hsl(${player.config.hue}, 80%, 50%)` : 'rgba(255,255,255,0.1)' } }} onClick={() => switchTrack(players.indexOf(player), tIdx)}>
-                                                                    {t.name || `P${tIdx + 1}`}
-                                                                </Button>
-                                                            ))}
-                                                        </Box>
-                                                    </Box>
-                                                )}
+                        <Box sx={{ flex: 1, display: 'flex', flexWrap: 'wrap', minHeight: 0, alignContent: 'stretch' }}>
+                            {visiblePlayers.map((player, idx) => {
+                                let remaining = idx;
+                                let rowIndex = 0;
+                                let colIndex = 0;
+                                let colsInRow = 1;
+                                for (let i = 0; i < gridLayout.rows.length; i++) {
+                                    if (remaining < gridLayout.rows[i]) {
+                                        rowIndex = i;
+                                        colIndex = remaining;
+                                        colsInRow = gridLayout.rows[i];
+                                        break;
+                                    }
+                                    remaining -= gridLayout.rows[i];
+                                }
+
+                                const widthPercent = 100 / colsInRow;
+                                const heightPercent = 100 / gridLayout.rows.length;
+
+                                return (
+                                    <Box key={player.config.id} sx={{
+                                        width: `${widthPercent}%`,
+                                        height: `${heightPercent}%`,
+                                        minHeight: 0,
+                                        position: 'relative',
+                                        borderRight: colIndex < colsInRow - 1 ? '1px solid rgba(255,255,255,0.2)' : 'none',
+                                        borderBottom: rowIndex < gridLayout.rows.length - 1 ? '1px solid rgba(255,255,255,0.2)' : 'none'
+                                    }}>
+                                        <PitchVisualizer song={parsedSong!} audioRef={timeProxyRef} currentPitchRef={player.pitchRef} sungSegmentsRef={player.segmentsRef} showDebugOverlay={showDebugOverlay} label={player.config.name} hue={player.config.hue} showNoteLabels={showNoteLabels} latency={player.config.latency} trackIndex={player.trackIndex} scale={uiScale} />
+                                        {parsedSong?.tracks && parsedSong.tracks.length > 1 && (
+                                            <Box sx={{ position: 'absolute', top: 10, right: 10, zIndex: 10, pointerEvents: 'auto' }}>
+                                                <Box sx={{ bgcolor: 'rgba(0,0,0,0.6)', borderRadius: 1, p: 0.5, display: 'flex', gap: 0.5 }}>
+                                                    {parsedSong.tracks.map((t: any, tIdx: number) => (
+                                                        <Button key={tIdx} variant={player.trackIndex === tIdx ? "contained" : "text"} size="small" sx={{ minWidth: 30, p: '2px 8px', fontSize: '0.75rem', bgcolor: player.trackIndex === tIdx ? `hsl(${player.config.hue}, 80%, 40%)` : 'transparent', color: 'white', '&:hover': { bgcolor: player.trackIndex === tIdx ? `hsl(${player.config.hue}, 80%, 50%)` : 'rgba(255,255,255,0.1)' } }} onClick={() => switchTrack(players.indexOf(player), tIdx)}>
+                                                            {t.name || `P${tIdx + 1}`}
+                                                        </Button>
+                                                    ))}
+                                                </Box>
                                             </Box>
-                                        );
-                                    })}
-                                </Box>
-                            ));
-                        })()}
+                                        )}
+                                    </Box>
+                                );
+                            })}
+                        </Box>
                     </Box>
                     {visiblePlayers.length > 0 && (
                         <Box sx={{ flexShrink: 0, width: '100%', pointerEvents: 'none', zIndex: 10, borderTop: '1px solid rgba(255,255,255,0.1)', bgcolor: 'rgba(0,0,0,0.2)', position: 'relative' }}>
@@ -477,8 +541,8 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                 )}
             </Box>
 
-            {audioSrc && <audio ref={audioRef} src={audioSrc} onEnded={handleSongEndBound} style={{ display: 'none' }} />}
-            {vocalsSrc && <audio ref={vocalsRef} src={vocalsSrc} style={{ display: 'none' }} />}
+            {audioSrc && <audio ref={audioRef} src={audioSrc} onEnded={handleSongEndBound} muted={muteAudio} style={{ display: 'none' }} />}
+            {vocalsSrc && <audio ref={vocalsRef} src={vocalsSrc} muted={muteAudio} style={{ display: 'none' }} />}
             {!audioSrc && !isClient && <Typography color="error" sx={{ textAlign: 'center', position: 'relative', zIndex: 5 }}>No Audio Source Found</Typography>}
 
             <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 6, bgcolor: 'rgba(255,255,255,0.2)', zIndex: 100, pointerEvents: 'none', opacity: isUIVisible ? 1 : 0, transition: 'opacity 0.5s ease-in-out' }}>

@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react';
 import {
-    Box, Typography, TextField, Switch, FormControlLabel, Slider, ToggleButton, ToggleButtonGroup
+    Box, Typography, TextField, Switch, FormControlLabel, Slider, ToggleButton, ToggleButtonGroup, IconButton, Button
 } from '@mui/material';
 import type { SettingsState } from '../hooks/useSettings';
 
@@ -12,18 +13,84 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
     settings,
     onUpdateSetting
 }) => {
+    const [newPlayerCount, setNewPlayerCount] = useState('');
+    const [newLayoutStr, setNewLayoutStr] = useState('');
+
+    const handleUpdateLayout = (playerCount: number, layout: string) => {
+        const updated = { ...settings.customLayouts, [playerCount]: layout };
+        onUpdateSetting('customLayouts', updated);
+    };
+
+    const handleDeleteLayout = (playerCount: number) => {
+        const updated = { ...settings.customLayouts };
+        delete updated[playerCount];
+        onUpdateSetting('customLayouts', updated);
+    };
+
+    const handleAddLayout = () => {
+        const count = parseInt(newPlayerCount);
+        if (!isNaN(count) && count > 0 && newLayoutStr.trim() !== '') {
+            handleUpdateLayout(count, newLayoutStr.trim());
+            setNewPlayerCount('');
+            setNewLayoutStr('');
+        }
+    };
+
     return (
         <Box>
             <Typography variant="h6" gutterBottom>Game Settings</Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <TextField
-                    label="Layout Override (e.g. 1.2 or 2.2)"
-                    helperText="Define rows and columns manually (e.g., '1.3' for 1 top, 3 bottom). Leave empty for auto."
-                    value={settings.layoutOverride}
-                    onChange={(e) => onUpdateSetting('layoutOverride', e.target.value)}
-                    fullWidth
-                    size="small"
-                />
+                
+                <Box>
+                    <Typography variant="subtitle2" gutterBottom>Custom Layouts per Player Count</Typography>
+                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
+                        Define rows and columns (e.g., '1.3' for 1 top, 3 bottom). Missing counts use auto.
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 1 }}>
+                        {Object.entries(settings.customLayouts || {}).map(([countStr, layout]) => {
+                            const count = parseInt(countStr);
+                            return (
+                                <Box key={count} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Typography sx={{ width: 80 }}>{count} Players:</Typography>
+                                    <TextField 
+                                        size="small" 
+                                        value={layout} 
+                                        onChange={(e) => handleUpdateLayout(count, e.target.value)}
+                                        sx={{ flex: 1 }}
+                                    />
+                                    <IconButton size="small" color="error" onClick={() => handleDeleteLayout(count)}>
+                                        <Typography variant="body2">✕</Typography>
+                                    </IconButton>
+                                </Box>
+                            );
+                        })}
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <TextField 
+                            size="small" 
+                            label="Players" 
+                            type="number" 
+                            value={newPlayerCount} 
+                            onChange={(e) => setNewPlayerCount(e.target.value)} 
+                            sx={{ width: 120 }}
+                        />
+                        <TextField 
+                            size="small" 
+                            label="Layout (e.g. 2.2)" 
+                            value={newLayoutStr} 
+                            onChange={(e) => setNewLayoutStr(e.target.value)} 
+                            sx={{ flex: 1 }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleAddLayout();
+                                }
+                            }}
+                        />
+                        <Button variant="contained" size="small" onClick={handleAddLayout}>Add</Button>
+                    </Box>
+                </Box>
 
                 <Box sx={{ mt: 2 }}>
                     <Typography variant="subtitle2" gutterBottom>Default View Mode</Typography>

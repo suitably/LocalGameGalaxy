@@ -17,6 +17,7 @@ export interface UserProfile {
     id: string;
     name: string;
     hue: number;
+    hidePitch?: boolean;
 }
 
 export interface ActivePlayer {
@@ -26,4 +27,5 @@ export interface ActivePlayer {
     muted?: boolean;
     latency?: number;
     isRemote?: boolean;
+    hidePitch?: boolean;
 }

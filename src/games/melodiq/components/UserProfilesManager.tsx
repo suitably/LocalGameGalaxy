@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-    Box, Button, Typography, TextField, IconButton, Avatar, Popover, Slider
+    Box, Button, Typography, TextField, IconButton, Avatar, Popover, Slider, Switch, FormControlLabel
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
@@ -86,6 +86,17 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
                                 title="Change Color"
                             />
                         </Box>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    size="small"
+                                    checked={!!profile.hidePitch}
+                                    onChange={(e) => onUpdateProfile(profile.id, { hidePitch: e.target.checked })}
+                                />
+                            }
+                            label={<Typography variant="caption">Hide Pitch</Typography>}
+                            labelPlacement="top"
+                        />
                         <IconButton onClick={() => onDeleteProfile(profile.id)} color="error" disabled={profiles.length <= 1}>
                             <DeleteIcon />
                         </IconButton>

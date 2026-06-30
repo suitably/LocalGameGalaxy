@@ -33,9 +33,9 @@ export class PlayerRuntime {
     // Duet: Current Track Index (0 = P1, 1 = P2)
     public trackIndex: number = 0;
 
-    public config: UserProfile & { deviceId: string; volume?: number; muted?: boolean; latency?: number; isRemote?: boolean };
+    public config: UserProfile & { deviceId: string; volume?: number; muted?: boolean; latency?: number; isRemote?: boolean; hidePitch?: boolean };
 
-    constructor(config: UserProfile & { deviceId?: string, volume?: number, muted?: number | boolean, latency?: number, isRemote?: boolean }, manager?: WebRTCMicManager) {
+    constructor(config: UserProfile & { deviceId?: string, volume?: number, muted?: number | boolean, latency?: number, isRemote?: boolean, hidePitch?: boolean }, manager?: WebRTCMicManager) {
         this.config = {
             id: config.id,
             name: config.name,
@@ -44,7 +44,8 @@ export class PlayerRuntime {
             volume: config.volume ?? 1.0,
             muted: (config.muted === 1 || config.muted === true),
             latency: config.latency ?? 0,
-            isRemote: config.isRemote ?? false
+            isRemote: config.isRemote ?? false,
+            hidePitch: config.hidePitch ?? false
         };
         this.pitchRef = { current: null };
         this.segmentsRef = { current: {} };

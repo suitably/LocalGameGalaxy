@@ -62,10 +62,11 @@ export function useSessionPlayers({
                         newPlayers.push(new PlayerRuntime({
                             ...profile,
                             deviceId: p.deviceId,
-                            volume: p.volume,
-                            muted: p.muted,
-                            latency: p.latency,
-                            isRemote: p.isRemote
+                            volume: p.volume ?? 1.0,
+                            muted: p.muted ?? false,
+                            latency: p.latency ?? 0,
+                            isRemote: p.isRemote ?? false,
+                            hidePitch: p.hidePitch ?? false
                         }));
                     }
                 }

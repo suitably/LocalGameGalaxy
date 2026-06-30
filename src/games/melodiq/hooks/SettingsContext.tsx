@@ -6,7 +6,7 @@ export interface SettingsState {
     showMicStatus: boolean;
     showNoteLabels: boolean;
     showVideoErrors: boolean;
-    layoutOverride: string;
+    customLayouts: Record<number, string>;
     cardSize: string;
     customTarget: number;
     songVolume: number;
@@ -26,7 +26,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
     showMicStatus: true,
     showNoteLabels: true,
     showVideoErrors: false,
-    layoutOverride: '',
+    customLayouts: { 1: '1', 2: '1.1', 3: '1.2', 4: '2.2' },
     cardSize: 'small',
     customTarget: 6,
     songVolume: 0.7,
@@ -51,7 +51,13 @@ export const loadSettings = (): SettingsState => ({
         return stored === null ? true : stored === 'true';
     })(),
     showVideoErrors: localStorage.getItem('melodiq_show_video_errors') === 'true',
-    layoutOverride: localStorage.getItem('melodiq_layout_override') || '',
+    customLayouts: (() => {
+        const stored = localStorage.getItem('melodiq_custom_layouts');
+        if (stored) {
+            try { return JSON.parse(stored); } catch (e) { console.error('Failed to parse custom layouts', e); }
+        }
+        return { 1: '1', 2: '1.1', 3: '1.2', 4: '2.2' };
+    })(),
     cardSize: localStorage.getItem('melodiq_card_size') || 'small',
     customTarget: (() => {
         const stored = localStorage.getItem('melodiq_custom_target_columns');
@@ -85,7 +91,7 @@ const persistSettings = (s: SettingsState) => {
     localStorage.setItem('melodiq_show_mic_status', String(s.showMicStatus));
     localStorage.setItem('melodiq_show_note_labels', String(s.showNoteLabels));
     localStorage.setItem('melodiq_show_video_errors', String(s.showVideoErrors));
-    localStorage.setItem('melodiq_layout_override', s.layoutOverride);
+    localStorage.setItem('melodiq_custom_layouts', JSON.stringify(s.customLayouts));
     localStorage.setItem('melodiq_card_size', s.cardSize);
     localStorage.setItem('melodiq_custom_target_columns', String(s.customTarget));
     localStorage.setItem('melodiq_song_volume', String(s.songVolume));

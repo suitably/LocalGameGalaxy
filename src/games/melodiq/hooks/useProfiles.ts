@@ -110,7 +110,8 @@ export const useProfiles = (devices: MediaDeviceInfo[]) => {
                 } else {
                     const usedDevices = prev.map(ap => ap.deviceId).filter(Boolean);
                     const nextDevice = devices.find(d => !usedDevices.includes(d.deviceId))?.deviceId || '';
-                    next = [...prev, { profileId, deviceId: nextDevice, volume: 0.8, muted: true, latency: 0 }];
+                    const profile = profiles.find(p => p.id === profileId);
+                    next = [...prev, { profileId, deviceId: nextDevice, volume: 0.8, muted: true, latency: 0, hidePitch: profile?.hidePitch }];
                 }
             }
             persistProfiles(profiles, next);

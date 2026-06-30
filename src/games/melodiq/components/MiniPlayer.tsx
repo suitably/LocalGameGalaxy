@@ -112,7 +112,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                             </IconButton>
                         ) : (
                             <IconButton onClick={(e) => { e.stopPropagation(); onTogglePlay(); }} size="medium" sx={{ color: 'white' }}>
-                                {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
+                                {(isPlaying && song) ? <PauseIcon /> : <PlayArrowIcon />}
                             </IconButton>
                         )}
 

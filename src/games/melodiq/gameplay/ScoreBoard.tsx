@@ -96,22 +96,48 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit, onResum
                     </Button>
                 </Box>
             )}
-            <Typography variant="h3" sx={{
-                textAlign: 'center',
-                mb: 3,
-                fontWeight: '900',
-                background: 'linear-gradient(45deg, #FFD700 30%, #FF8E53 90%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                textShadow: '0 0 30px rgba(255, 215, 0, 0.3)',
-                letterSpacing: 2,
-                fontSize: { xs: '2rem', md: '3.5rem' }
-            }}>
-                SESSION RESULTS
-            </Typography>
+            {players.length > 0 && (
+                <Typography variant="h3" sx={{
+                    textAlign: 'center',
+                    mb: 3,
+                    fontWeight: '900',
+                    background: 'linear-gradient(45deg, #FFD700 30%, #FF8E53 90%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    textShadow: '0 0 30px rgba(255, 215, 0, 0.3)',
+                    letterSpacing: 2,
+                    fontSize: { xs: '2rem', md: '3.5rem' }
+                }}>
+                    SESSION RESULTS
+                </Typography>
+            )}
 
-            <Grid container spacing={4} sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                {/* LEFT: SESSION RANKING */}
+            {players.length === 0 ? (
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                    <Typography variant="h4" sx={{ color: 'white', mb: 4, fontWeight: 'bold' }}>
+                        Song beendet
+                    </Typography>
+                    {queue.length > 0 ? (
+                        <Box sx={{ textAlign: 'center', p: 6, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 4, border: '1px solid rgba(255,255,255,0.1)' }}>
+                            <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.7)', mb: 2, letterSpacing: 3 }}>
+                                ALS NÄCHSTES
+                            </Typography>
+                            <Typography variant="h2" sx={{ color: '#FFD700', fontWeight: 'bold', mb: 1 }}>
+                                {queue[0].song.title}
+                            </Typography>
+                            <Typography variant="h4" sx={{ color: 'rgba(255,255,255,0.9)' }}>
+                                {queue[0].song.artist}
+                            </Typography>
+                        </Box>
+                    ) : (
+                        <Typography variant="h5" sx={{ color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' }}>
+                            Warteschlange ist leer.
+                        </Typography>
+                    )}
+                </Box>
+            ) : (
+                <Grid container spacing={4} sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                    {/* LEFT: SESSION RANKING */}
                 <Grid size={{ xs: 12, md: 7 }} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto', pr: 1, pb: 2 }}>
                         {sessionRanking.map((player, index) => {
@@ -283,6 +309,7 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit, onResum
                     </Paper>
                 </Grid>
             </Grid>
+            )}
 
             {/* ACTION FOOTER */}
             {!isPassive ? (

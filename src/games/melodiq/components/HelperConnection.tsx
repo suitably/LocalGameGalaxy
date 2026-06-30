@@ -21,6 +21,32 @@ export const HelperConnection: React.FC = () => {
         window.dispatchEvent(new Event('melodiq_settings_updated'));
     }, [url, token, enabled]);
 
+    const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        let val = e.target.value;
+        try {
+            if (val.includes('token=')) {
+                const parseUrl = val.startsWith('http') ? val : `http://${val}`;
+                const urlObj = new URL(parseUrl);
+                const extractedToken = urlObj.searchParams.get('token');
+                
+                if (extractedToken) {
+                    setToken(extractedToken);
+                    urlObj.searchParams.delete('token');
+                    
+                    if (val.startsWith('http')) {
+                        val = urlObj.toString();
+                    } else {
+                        val = urlObj.toString().replace(/^http:\/\//, '');
+                    }
+                    val = val.replace(/\?$/, '').replace(/\/$/, '');
+                }
+            }
+        } catch (err) {
+            // Ignore parse errors while typing
+        }
+        setUrl(val);
+    };
+
     const checkConnection = async () => {
         if (!enabled) return;
         setStatus('checking');
@@ -71,7 +97,7 @@ export const HelperConnection: React.FC = () => {
                         variant="outlined"
                         fullWidth
                         value={url}
-                        onChange={(e) => setUrl(e.target.value)}
+                        onChange={handleUrlChange}
                         placeholder="http://localhost:3000"
                         size="small"
                     />

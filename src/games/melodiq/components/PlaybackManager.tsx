@@ -99,35 +99,17 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         }
 
         if (selectedSong) {
-            if (isTVConnected) {
-                // In TV mode, results are suppressed — skip the score pause entirely and
-                // jump straight to the next queued song (or exit).
-                if (queue.length > 0 && queue[0].song.isDownloading) {
-                    setFeedbackMessage("Waiting for download to finish...");
-                    sessionRef.current?.finishSong();
-                    return;
-                }
-                const nextItem = popNext();
-                if (nextItem) {
-                    onSelectSong(nextItem.song, true);
-                } else {
-                    // No next song: finish the current session normally
-                    sessionRef.current?.finishSong();
-                }
-                return;
-            }
-
             // Smart Skip: Delegate logic to Session
             if (sessionRef.current && sessionRef.current.handleNext()) {
                 // Session handled it (paused for score).
-                // Restore Session view so user sees the ScoreBoard
-                if (currentView !== 'Session') {
+                // Restore Session view so user sees the ScoreBoard (or so TV displays it)
+                if (currentView !== 'Session' && !isTVConnected) {
                     onRestoreSession();
                 }
                 return;
             }
 
-            // If session didn't handle it (already showing scores or finished), play next song
+            // If session didn't handle it (already showing scores or finished), play next song or exit
             if (queue.length > 0 && queue[0].song.isDownloading) {
                 setFeedbackMessage("Waiting for download to finish...");
                 return;
@@ -135,6 +117,10 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             const nextItem = popNext();
             if (nextItem) {
                 onSelectSong(nextItem.song, true);
+            } else {
+                setNowPlaying(null);
+                setPlaybackState({ isPlaying: false, currentTime: 0, duration: 0, progress: 0 });
+                onExitSession();
             }
         } else if (remoteSong && isTVConnected) {
             sendRemoteCommand('NEXT', {});
@@ -199,6 +185,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                                     return;
                                 }
                             }
+                            setPlaybackState({ isPlaying: false, currentTime: 0, duration: 0, progress: 0 });
                             onExitSession(); // Clears selectedSong in parent
                         }}
                         onMinimize={onMinimizeSession}
@@ -207,7 +194,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                         showDevSlider={false}
                         showMicStatus={false}
                         muteAudio={isTVConnected || isClient}
-                        suppressResults={isTVConnected}
+                        suppressResults={false}
                         isClient={isClient}
                         isPassive={isClient}
                         passiveState={isClient ? clientGameState : undefined}
