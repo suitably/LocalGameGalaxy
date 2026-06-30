@@ -149,7 +149,7 @@ module.exports = {
         return currentConfig.apiKeys || [];
     },
 
-    createApiKey(name) {
+    createApiKey(name, rateLimits = {}, allowManagement) {
         if (!currentConfig.apiKeys) {
             currentConfig.apiKeys = [];
         }
@@ -159,11 +159,37 @@ module.exports = {
             id,
             name: name || 'Unnamed Key',
             token,
+            rateLimitSecond: rateLimits.second !== undefined && rateLimits.second !== '' ? parseInt(rateLimits.second, 10) : null,
+            rateLimitMinute: rateLimits.minute !== undefined && rateLimits.minute !== '' ? parseInt(rateLimits.minute, 10) : null,
+            rateLimitHour: rateLimits.hour !== undefined && rateLimits.hour !== '' ? parseInt(rateLimits.hour, 10) : null,
+            allowManagement: allowManagement === true,
             createdAt: new Date().toISOString()
         };
         currentConfig.apiKeys.push(keyObj);
         saveConfig();
         return keyObj;
+    },
+
+    updateApiKey(id, updates) {
+        if (!currentConfig.apiKeys) return false;
+        const keyIndex = currentConfig.apiKeys.findIndex(k => k.id === id);
+        if (keyIndex !== -1) {
+            if (updates.rateLimitSecond !== undefined) {
+                currentConfig.apiKeys[keyIndex].rateLimitSecond = updates.rateLimitSecond !== '' ? parseInt(updates.rateLimitSecond, 10) : null;
+            }
+            if (updates.rateLimitMinute !== undefined) {
+                currentConfig.apiKeys[keyIndex].rateLimitMinute = updates.rateLimitMinute !== '' ? parseInt(updates.rateLimitMinute, 10) : null;
+            }
+            if (updates.rateLimitHour !== undefined) {
+                currentConfig.apiKeys[keyIndex].rateLimitHour = updates.rateLimitHour !== '' ? parseInt(updates.rateLimitHour, 10) : null;
+            }
+            if (updates.allowManagement !== undefined) {
+                currentConfig.apiKeys[keyIndex].allowManagement = updates.allowManagement === true;
+            }
+            saveConfig();
+            return currentConfig.apiKeys[keyIndex];
+        }
+        return false;
     },
 
     deleteApiKey(id) {

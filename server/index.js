@@ -32,13 +32,13 @@ app.use(corsMiddleware);
 app.use(helmetMiddleware);
 app.use(express.json());
 app.use(morgan('dev'));
-app.use(rateLimitMiddleware);
 
 // Serve static assets without authentication
 const path = require('path');
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 app.use(requireAuth);
+app.use(rateLimitMiddleware);
 
 // Router
 app.use('/', apiRouter);

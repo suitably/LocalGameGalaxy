@@ -655,7 +655,7 @@
     </p>
 
     <!-- ===== API KEY MANAGEMENT CARD ===== -->
-    <div class="card" style="margin-top:24px; border: 1px solid #dde2eb;">
+    <div id="api-key-management-card" class="card" style="margin-top:24px; border: 1px solid #dde2eb;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
             <h2 style="margin:0; font-size:1.15rem; color:#1877f2;">🔑 API Key Management</h2>
             <button class="secondary" style="font-size:0.85rem;" onclick="toggleApiKeyCard(event)">▲ Minimise</button>
@@ -663,9 +663,16 @@
         <div id="api-key-card-body">
             <div style="margin-bottom:14px;">
                 <span class="label">Generate New API Key</span>
-                <div class="row">
+                <div class="row" style="align-items: center;">
                     <input type="text" id="new-apikey-name" placeholder="User Name or App Name">
-                    <button onclick="createApiKey()">Generate</button>
+                    <input type="number" id="new-apikey-ratelimit-sec" placeholder="Req/Sec" style="width: 80px; margin-left: 8px;">
+                    <input type="number" id="new-apikey-ratelimit-min" placeholder="Req/Min" style="width: 80px; margin-left: 8px;">
+                    <input type="number" id="new-apikey-ratelimit-hour" placeholder="Req/Hour" style="width: 90px; margin-left: 8px;">
+                    <label style="margin-left: 8px; font-size: 0.85rem; display: flex; align-items: center;">
+                        <input type="checkbox" id="new-apikey-allow-management" style="margin-right: 4px;">
+                        Allow Management UI
+                    </label>
+                    <button onclick="createApiKey()" style="margin-left: 8px;">Generate</button>
                 </div>
             </div>
             
@@ -675,11 +682,15 @@
                         <tr style="background:#f0f2f5; text-align:left;">
                             <th style="padding:8px 6px;">Name</th>
                             <th style="padding:8px 6px;">Token</th>
+                            <th style="padding:8px 6px;">Req/sec</th>
+                            <th style="padding:8px 6px;">Req/min</th>
+                            <th style="padding:8px 6px;">Req/hour</th>
+                            <th style="padding:8px 6px; text-align:center;">Management UI</th>
                             <th style="padding:8px 6px; text-align:right;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="api-keys-body">
-                        <tr><td colspan="3" style="padding:16px; text-align:center; color:#888;">Loading...</td></tr>
+                        <tr><td colspan="7" style="padding:16px; text-align:center; color:#888;">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -687,6 +698,14 @@
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const IS_ADMIN = {{IS_ADMIN}};
+            if (!IS_ADMIN) {
+                const card = document.getElementById('api-key-management-card');
+                if (card) card.style.display = 'none';
+            }
+        });
+
         function toggleApiKeyCard(event) {
             const body = document.getElementById('api-key-card-body');
             const btn = event.currentTarget || event.target;
@@ -703,7 +722,7 @@
                 const tbody = document.getElementById('api-keys-body');
                 tbody.innerHTML = '';
                 if (keys.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" style="padding:16px; text-align:center; color:#888;">No API keys generated yet.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" style="padding:16px; text-align:center; color:#888;">No API keys generated yet.</td></tr>';
                     return;
                 }
 
@@ -715,7 +734,20 @@
                         <td style="padding:8px 6px;">
                             <code id="apikey-${k.id}" style="background:#f7f8fa; padding:4px 6px; border-radius:4px; user-select:all;">${k.token}</code>
                         </td>
+                        <td style="padding:8px 6px;">
+                            <input type="number" id="ratelimit-sec-${k.id}" value="${k.rateLimitSecond !== null && k.rateLimitSecond !== undefined ? k.rateLimitSecond : ''}" placeholder="None" style="width: 50px; padding: 2px 4px; font-size: 0.8rem;">
+                        </td>
+                        <td style="padding:8px 6px;">
+                            <input type="number" id="ratelimit-min-${k.id}" value="${k.rateLimitMinute !== null && k.rateLimitMinute !== undefined ? k.rateLimitMinute : ''}" placeholder="None" style="width: 50px; padding: 2px 4px; font-size: 0.8rem;">
+                        </td>
+                        <td style="padding:8px 6px;">
+                            <input type="number" id="ratelimit-hour-${k.id}" value="${k.rateLimitHour !== null && k.rateLimitHour !== undefined ? k.rateLimitHour : ''}" placeholder="None" style="width: 60px; padding: 2px 4px; font-size: 0.8rem;">
+                        </td>
+                        <td style="padding:8px 6px; text-align:center;">
+                            <input type="checkbox" id="allowmanagement-${k.id}" ${k.allowManagement ? 'checked' : ''}>
+                        </td>
                         <td style="padding:8px 6px; text-align:right;">
+                            <button class="secondary" style="padding:4px 8px; font-size:0.8rem; margin-right:4px;" onclick="updateApiKeySettings('${k.id}', this)">Save</button>
                             <button class="secondary" style="padding:4px 8px; font-size:0.8rem; margin-right:4px;" id="btn-apikey-${k.id}" onclick="copyText('apikey-${k.id}')">Copy</button>
                             <button class="danger" style="padding:4px 8px; font-size:0.8rem;" onclick="deleteApiKey('${k.id}')">Revoke</button>
                         </td>
@@ -729,18 +761,54 @@
 
         async function createApiKey() {
             const nameInput = document.getElementById('new-apikey-name');
+            const rateLimitSecInput = document.getElementById('new-apikey-ratelimit-sec');
+            const rateLimitMinInput = document.getElementById('new-apikey-ratelimit-min');
+            const rateLimitHourInput = document.getElementById('new-apikey-ratelimit-hour');
+            const allowMgmtInput = document.getElementById('new-apikey-allow-management');
             const name = nameInput.value.trim();
+            const rateLimitSecond = rateLimitSecInput.value.trim();
+            const rateLimitMinute = rateLimitMinInput.value.trim();
+            const rateLimitHour = rateLimitHourInput.value.trim();
+            const allowManagement = allowMgmtInput.checked;
             if (!name) return alert('Please enter a name for the API key');
 
             try {
                 const res = await fetch('/api/config/apikeys?token=' + API_TOKEN, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name })
+                    body: JSON.stringify({ name, rateLimitSecond, rateLimitMinute, rateLimitHour, allowManagement })
                 });
                 if (!res.ok) throw new Error('Failed to create key');
                 nameInput.value = '';
+                rateLimitSecInput.value = '';
+                rateLimitMinInput.value = '';
+                rateLimitHourInput.value = '';
+                allowMgmtInput.checked = false;
                 loadApiKeys();
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        async function updateApiKeySettings(id, btn) {
+            const secInput = document.getElementById('ratelimit-sec-' + id);
+            const minInput = document.getElementById('ratelimit-min-' + id);
+            const hourInput = document.getElementById('ratelimit-hour-' + id);
+            const allowMgmtInput = document.getElementById('allowmanagement-' + id);
+            const rateLimitSecond = secInput.value.trim();
+            const rateLimitMinute = minInput.value.trim();
+            const rateLimitHour = hourInput.value.trim();
+            const allowManagement = allowMgmtInput.checked;
+            try {
+                const res = await fetch('/api/config/apikeys/' + id + '?token=' + API_TOKEN, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rateLimitSecond, rateLimitMinute, rateLimitHour, allowManagement })
+                });
+                if (!res.ok) throw new Error('Failed to update settings');
+                const originalText = btn.textContent;
+                btn.textContent = 'Saved!';
+                setTimeout(() => btn.textContent = originalText, 1500);
             } catch (e) {
                 alert(e.message);
             }

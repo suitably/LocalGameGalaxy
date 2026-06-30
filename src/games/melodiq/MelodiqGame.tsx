@@ -1,63 +1,38 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { VirtuosoGrid, Virtuoso } from 'react-virtuoso';
-import { Box, Button, Typography, Card, Grid, TextField, InputAdornment, IconButton, MenuItem, Select, FormControl, InputLabel, Checkbox, ListItemText, LinearProgress, Collapse, Dialog, DialogTitle, DialogContent, List, ListItemButton, ListItemIcon, Snackbar, Alert, Divider } from '@mui/material';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Box, Snackbar, Alert } from '@mui/material';
 import { type Song, type SongMeta } from './db';
-
-
-import SettingsIcon from '@mui/icons-material/Settings';
-import SearchIcon from '@mui/icons-material/Search';
-import CloseIcon from '@mui/icons-material/Close';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import AddToQueueIcon from '@mui/icons-material/AddToQueue';
-import QrCodeIcon from '@mui/icons-material/QrCode';
-import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
-import ViewModuleIcon from '@mui/icons-material/ViewModule';
-import ViewListIcon from '@mui/icons-material/ViewList';
-import QueueMusicIcon from '@mui/icons-material/QueueMusic';
-import AddIcon from '@mui/icons-material/Add';
-import PublicIcon from '@mui/icons-material/Public';
-import CircularProgress from '@mui/material/CircularProgress';
-import CancelIcon from '@mui/icons-material/Cancel';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
-import DeleteIcon from '@mui/icons-material/Delete';
-
 import { MelodiqSettings } from './MelodiqSettings';
 import { MelodiqPlaylists } from './components/MelodiqPlaylists';
 import { PlaylistDetails } from './components/PlaylistDetails';
 import { ClientSettings } from './components/ClientSettings';
-import { YouTubeSearchDialog } from './components/YouTubeSearchDialog';
 
 import { useTranslation } from 'react-i18next';
 import { initMelodiqI18n } from './i18n';
-import { useLayout } from '../../context/LayoutContext';
 import { WebRTCProvider, WebRTCMockProvider, useWebRTC } from './audio/WebRTCContext';
 import { SettingsProvider, useMelodiqSettings } from './hooks/SettingsContext';
 import { MelodiqConnection } from './MelodiqConnection';
-import { usePlaylists } from './hooks/usePlaylists';
 import { type Playlist } from './db';
-import { SongCard } from './components/SongCard';
-import { SongListItem } from './components/SongListItem';
 import { useSongs, SongsProvider } from './hooks/useSongs';
 import { useQueue } from './hooks/useQueue';
 import { useDownloads } from './hooks/useDownloads';
 import { PhoneQueueBridge } from './components/PhoneQueueBridge';
 import { PhoneClientEngine } from './PhoneClientEngine';
-import { TVModeButton } from './components/TVModeButton';
 
 import { useTVMode } from './hooks/useTVMode';
-
 import { useSearchFilters } from './hooks/useSearchFilters';
 import { MelodiqSearchBar } from './components/MelodiqSearchBar';
 import { LibraryEmptyState } from './components/LibraryEmptyState';
 import { OnlineSongsView } from './components/OnlineSongsView';
 import { LocalSongsView } from './components/LocalSongsView';
-
 import { PlaybackManager } from './components/PlaybackManager';
 import { HostQueueDrawer } from './components/HostQueueDrawer';
 
-// Navigation State
+// New extracted hooks & components
+import { SongActionDialogs } from './components/SongActionDialogs';
+import { useMelodiqHeader } from './hooks/useMelodiqHeader';
+import { useMelodiqGlobalEvents } from './hooks/useMelodiqGlobalEvents';
+import { useDownloadSync } from './hooks/useDownloadSync';
+
 type View = 'Home' | 'Settings' | 'Session' | 'Connection' | 'Playlists' | 'PlaylistDetails';
 
 export const MelodiqGameContent: React.FC = () => {
@@ -67,222 +42,106 @@ export const MelodiqGameContent: React.FC = () => {
     const params = new URLSearchParams(window.location.search);
     const isClient = params.get('role') === 'client';
 
-    // Set the game title in the header
-    // Set the game title in the header using useLayout
-    // usePageTitle(t('melodiq.title'));
-
-    const { setHeader, setCustomHeaderActions } = useLayout();
-
-    // Use centralized song management hook
     const { songs, loadingProgress, refreshSongs, getSongById, isLoading, hasConnectionError } = useSongs();
-    const { queue, popNext, setNowPlaying, addToQueue, addNext, nowPlaying, removeFromQueue, replaceItem } = useQueue();
+    const { queue, popNext, setNowPlaying, addToQueue, addNext, nowPlaying, replaceItem } = useQueue();
     const { jobs } = useDownloads();
+    
     const {
-        isTVConnected,
-        isPresentationAvailable,
-        openTVWindow,
-        startPresentation,
-        playSongOnTV,
-        lastEvent,
-        sendRemoteCommand,
-        sendGameUpdate,
-        disconnectTV
+        isTVConnected, isPresentationAvailable, openTVWindow, startPresentation,
+        playSongOnTV, lastEvent, sendRemoteCommand, sendGameUpdate, disconnectTV
     } = useTVMode();
+    
     const { manager } = useWebRTC();
     const { settings } = useMelodiqSettings();
 
-    // Search & Filter State from Hook
     const searchFilterState = useSearchFilters(songs);
-    const { 
-        searchQuery, isOnlineSearch, isSearchingOnline, onlineSongs,
-        showFilters, setShowFilters, clearFilters,
-        filteredSongs, filteredOnlineSongs
-    } = searchFilterState;
+    const { isOnlineSearch, isSearchingOnline, filteredSongs, filteredOnlineSongs } = searchFilterState;
 
-    // TV Remote State
     const [remoteSong, setRemoteSong] = useState<SongMeta | null>(null);
-
-    // Queue Options State
     const [selectedSongForQueue, setSelectedSongForQueue] = useState<SongMeta | null>(null);
     const [queueDialogOpen, setQueueDialogOpen] = useState(false);
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
     const [showQueueDrawer, setShowQueueDrawer] = useState(false);
     
-    // Playlists State
-    const { playlists, addSongToPlaylist, createPlaylist } = usePlaylists();
-    const [playlistDialogOpen, setPlaylistDialogOpen] = useState(false);
-    const [youTubeSearchDialogOpen, setYouTubeSearchDialogOpen] = useState(false);
     const [activePlaylist, setActivePlaylist] = useState<Playlist | null>(null);
-
-    // Restored Song State: last song from localStorage shown in MiniPlayer after reload
-    // Initialize once on mount from nowPlaying (persisted in localStorage)
     const [restoredSong, setRestoredSong] = useState<SongMeta | null>(() => nowPlaying ?? null);
+    
+    const [currentView, setCurrentView] = useState<View>('Home');
+    const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
 
-    // Handle TV Events
     useEffect(() => {
-        if (lastEvent && lastEvent.type === 'PLAYBACK_STARTED') {
-
-            setFeedbackMessage(`TV Playback started: ${lastEvent.payload.title}`);
-            // If we don't have the song set locally as remoteSong, we could try to sync it here,
-            // but usually handleSelectSong sets it first.
-        } else if (lastEvent && lastEvent.type === 'SONG_ENDED') {
-            setRemoteSong(null);
+        if (settings.defaultViewMode) {
+            setViewMode(settings.defaultViewMode);
         }
-    }, [lastEvent]);
+    }, [settings.defaultViewMode]);
 
-    // Handle Completed Downloads in Queue
-    const lastProcessedJobs = useRef<Set<string>>(new Set());
+    // --- Extracted Hooks ---
+    useDownloadSync({
+        isClient, jobs, queue, refreshSongs, replaceItem
+    });
 
-    useEffect(() => {
-        if (isClient) return;
+    useMelodiqHeader({
+        currentView, setCurrentView, viewMode, setViewMode,
+        queueLength: queue.length, loadingProgress, refreshSongs, setShowQueueDrawer,
+        isClient, isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV
+    });
 
-        const checkDownloads = async () => {
-            const completedJobs = jobs.filter(j => j.status === 'done' && !lastProcessedJobs.current.has(j.jobId));
-            const newlyCompletedJobIds = completedJobs.map(j => j.jobId);
+    const handleSelectSong = async (songMeta: SongMeta, forcePlay: boolean = false) => {
+        try {
+            if (isClient) {
+                window.dispatchEvent(new CustomEvent('melodiq_client_send_data', { 
+                    detail: { type: 'host.select_song', songId: songMeta.id, forcePlay } 
+                }));
+                setFeedbackMessage(`Sent to Host: ${songMeta.title}`);
+                return;
+            }
 
-            if (newlyCompletedJobIds.length > 0) {
-                // Wait briefly for scan
-                await new Promise(r => setTimeout(r, 1000));
-                await refreshSongs();
+            const isPlaying = !!selectedSong || (isTVConnected && !!remoteSong);
 
-                try {
-                    const url = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
-                    const token = localStorage.getItem('melodiq_helper_token') || '';
-                    const helperUrl = url.replace(/\/$/, "");
+            if (!forcePlay && isPlaying) {
+                addToQueue(songMeta);
+                setFeedbackMessage(`Added to queue: ${songMeta.title}`);
+                return;
+            }
 
-                    const res = await fetch(`${helperUrl}/api/songs`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    const freshSongs = await res.json();
+            if (isTVConnected) {
+                const fullSong = await getSongById(songMeta.id);
+                playSongOnTV(songMeta.id, fullSong || songMeta);
+                setRemoteSong(songMeta);
 
-                    newlyCompletedJobIds.forEach(jobId => {
-                        const job = jobs.find(j => j.jobId === jobId);
-                        if (!job) return;
-
-                        const realSong = freshSongs.find((s: any) => 
-                            s.title.toLowerCase() === job.title.toLowerCase() &&
-                            s.artist.toLowerCase() === job.artist.toLowerCase()
-                        );
-
-                        // If song isn't in library yet, don't mark as processed. 
-                        // It will retry on next poll.
-                        if (!realSong) return;
-
-                        lastProcessedJobs.current.add(jobId);
-
-                        // If it's in the queue, swap the dummy
-                        const qItem = queue.find(q => q.song.isDownloading && q.song.jobId === jobId);
-                        if (qItem) {
-                            replaceItem(qItem.id, realSong);
-                        }
-                    });
-                } catch (e) {
-                    console.error('Failed to swap dummy song', e);
+                if (fullSong) {
+                    setSelectedSong(fullSong);
+                    setNowPlaying(songMeta);
+                }
+            } else {
+                const fullSong = await getSongById(songMeta.id);
+                if (fullSong) {
+                    setSelectedSong(fullSong);
+                    setNowPlaying(songMeta);
+                    setCurrentView('Session');
+                } else {
+                    console.error("Song content not found in DB");
                 }
             }
-        };
+        } catch (e) {
+            console.error("Failed to load song", e);
+        }
+    };
 
-        checkDownloads();
-    }, [jobs, queue, isClient, refreshSongs, replaceItem]);
+    useMelodiqGlobalEvents({
+        lastEvent, popNext, playSongOnTV, setRemoteSong, setFeedbackMessage,
+        handleSelectSong, manager, isTVConnected, sendRemoteCommand,
+        currentView, refreshSongs, isClient, getSongById, setSelectedSong,
+        setCurrentView, selectedSong, remoteSong, songs
+    });
 
-
+    // --- Actions ---
 
     const handleSongLongPress = (song: SongMeta) => {
         setSelectedSongForQueue(song);
         setQueueDialogOpen(true);
     };
-
-    const handleQueueOption = (action: 'play_now' | 'play_next' | 'add_end') => {
-        if (!selectedSongForQueue) return;
-
-        switch (action) {
-            case 'play_now':
-                if (isTVConnected) playSongOnTV(selectedSongForQueue.id, selectedSongForQueue);
-                else handleSelectSong(selectedSongForQueue);
-                break;
-            case 'play_next':
-                addNext(selectedSongForQueue);
-                setFeedbackMessage(`Added to start of queue: ${selectedSongForQueue.title}`);
-                break;
-            case 'add_end':
-                addToQueue(selectedSongForQueue);
-                setFeedbackMessage(`Added to queue: ${selectedSongForQueue.title}`);
-                break;
-        }
-        setQueueDialogOpen(false);
-    };
-
-    const handleAddToPlaylist = (playlistId: string) => {
-        if (selectedSongForQueue) {
-            addSongToPlaylist(playlistId, selectedSongForQueue.id);
-            setFeedbackMessage(`Added to playlist`);
-        }
-        setPlaylistDialogOpen(false);
-        setQueueDialogOpen(false);
-    };
-
-    const handleDeleteSong = async () => {
-        if (!selectedSongForQueue) return;
-        const confirm = window.confirm(`Wirklich "${selectedSongForQueue.title}" von ${selectedSongForQueue.artist} löschen?`);
-        if (!confirm) return;
-
-        try {
-            const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
-            const token = localStorage.getItem('melodiq_helper_token') || '';
-            const res = await fetch(`${helperUrl}/api/songs/${selectedSongForQueue.id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                setFeedbackMessage('Song gelöscht');
-                await refreshSongs();
-            } else {
-                setFeedbackMessage('Fehler beim Löschen');
-            }
-        } catch (e) {
-            console.error('Failed to delete song', e);
-        }
-        setQueueDialogOpen(false);
-    };
-
-    const handleChangeVideoUrl = async (url: string) => {
-        if (!selectedSongForQueue) return;
-        setYouTubeSearchDialogOpen(false);
-        setQueueDialogOpen(false);
-
-        try {
-            const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
-            const token = localStorage.getItem('melodiq_helper_token') || '';
-            
-            // Re-use usdb/download endpoint to download the youtube url into the existing folder
-            const res = await fetch(`${helperUrl}/api/usdb/download`, {
-                method: 'POST',
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify([{
-                    usdbId: selectedSongForQueue.usdbId,
-                    artist: selectedSongForQueue.artist,
-                    title: selectedSongForQueue.title,
-                    videoMode: 'mp4',
-                    youtubeUrl: url,
-                    targetDir: selectedSongForQueue.txtPath ? selectedSongForQueue.txtPath.replace(/\/[^/]+$/, '') : undefined,
-                    safeName: selectedSongForQueue.txtPath ? selectedSongForQueue.txtPath.split('/').pop()?.replace('.txt', '') : undefined
-                }])
-            });
-            
-            if (res.ok) {
-                setFeedbackMessage('Video-Download gestartet...');
-            } else {
-                setFeedbackMessage('Fehler beim Starten des Downloads');
-            }
-        } catch (e) {
-            console.error('Failed to change video', e);
-        }
-    };
-
-
 
     const handleDownloadOnly = async (usdbSong: any) => {
         try {
@@ -349,287 +208,34 @@ export const MelodiqGameContent: React.FC = () => {
         }
     };
 
-    // Handle TV Events (Auto-Play Next)
-    useEffect(() => {
-        if (lastEvent?.type === 'SONG_ENDED') {
-            const nextItem = popNext();
-            if (nextItem) {
-                console.log('TV Song Ended. Playing next from queue:', nextItem.song.title);
-                playSongOnTV(nextItem.song.id, nextItem.song);
-            }
+    const handleGameUpdate = useCallback((state: any) => {
+        sendGameUpdate(state);
+        if (manager && !isClient) {
+            manager.broadcast({ type: 'game_state_update', state });
         }
-    }, [lastEvent, popNext, playSongOnTV]);
+    }, [sendGameUpdate, manager, isClient]);
 
-    // Listen for Playlist Trigger (when playPlaylistNow is called)
-    useEffect(() => {
-        const handlePlaylistTrigger = (e: any) => {
-            const songToPlay = e.detail;
-            if (songToPlay) {
-                handleSelectSong(songToPlay, true);
-            }
-        };
-        window.addEventListener('melodiq_play_playlist_trigger', handlePlaylistTrigger);
-        return () => window.removeEventListener('melodiq_play_playlist_trigger', handlePlaylistTrigger);
-    }, [isTVConnected, playSongOnTV]);
-
-    // Forward Phone Commands to TV
-    useEffect(() => {
-        if (!manager || !isTVConnected) return;
-
-        const handleRemoteCommand = (_peerId: string, data: any) => {
-            // Forward commands to TV
-            if (data.type === 'remote.command') {
-                console.log('Forwarding remote command to TV:', data.command);
-                sendRemoteCommand(data.command, data.value);
-            }
-        };
-
-        manager.on('message', handleRemoteCommand);
-
-        return () => {
-            manager.off('message', handleRemoteCommand);
-        };
-    }, [manager, isTVConnected, sendRemoteCommand]);
-
-    // View State
-    const [currentView, setCurrentView] = useState<View>('Home');
-    const [selectedSong, setSelectedSong] = useState<Song | null>(null);
-
-    // Auto-sync Client View with Host's playing song via explicit session_sync
-    useEffect(() => {
-        if (!isClient) return;
-
-        const handleSessionSync = (e: any) => {
-            const data = e.detail;
-            if (data.activeSong) {
-                getSongById(data.activeSong.id).then(fullSong => {
-                    if (fullSong) {
-                        setSelectedSong(fullSong);
-                        setCurrentView('Session');
-                    }
-                }).catch(err => console.error("Failed to sync session song:", err));
-            } else {
-                setSelectedSong(null);
-                setCurrentView('Home');
-            }
-        };
-
-        window.addEventListener('melodiq_client_session_sync', handleSessionSync);
-        return () => window.removeEventListener('melodiq_client_session_sync', handleSessionSync);
-    }, [isClient]);
-
-    // Host: Broadcast session changes to WebRTC Clients
-    useEffect(() => {
-        if (!isClient && manager) {
-            manager.broadcast({
-                type: 'session_sync',
-                activeSong: selectedSong ? { id: selectedSong.id } : null
-            });
-        }
-    }, [isClient, selectedSong, manager]);
-
-    // Clear restoredSong as soon as a real session starts
     useEffect(() => {
         if (selectedSong || remoteSong) {
             setRestoredSong(null);
         }
     }, [selectedSong, remoteSong]);
 
-    // Update Global Header based on state
-
-
-    // View Mode State (List vs Grid)
-    const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
-
-    // Auto-Play on TV Connect
-    useEffect(() => {
-        if (isTVConnected && selectedSong && !remoteSong) {
-            console.log("TV Connected while playing locally, switching to TV...");
-            // Trigger play on TV
-            playSongOnTV(selectedSong.id, selectedSong);
-            setRemoteSong(selectedSong as unknown as SongMeta);
-        }
-    }, [isTVConnected, selectedSong, remoteSong, playSongOnTV]);
-
-    // Initialize view mode from settings
-    useEffect(() => {
-        if (settings.defaultViewMode) {
-            setViewMode(settings.defaultViewMode);
-        }
-    }, []); // Only on mount (or we could listen to settings changes if we want dynamic updates from settings panel)
-
-    // Update Global Header based on state
-    useEffect(() => {
-        // Always intercept home button to keep user in Melodiq
-        const homeAction = () => setCurrentView('Home');
-
-        if (currentView === 'Home') {
-            const headerActions: any[] = [
-                {
-                    label: viewMode === 'grid' ? 'List View' : 'Grid View',
-                    icon: viewMode === 'grid' ? <ViewListIcon /> : <ViewModuleIcon />,
-                    action: () => setViewMode(prev => prev === 'grid' ? 'list' : 'grid'),
-                    showAlways: true
-                },
-                {
-                    label: `Queue (${queue.length})`,
-                    icon: <PlaylistPlayIcon />,
-                    action: () => setShowQueueDrawer(true)
-                },
-                {
-                    label: 'Playlists',
-                    icon: <QueueMusicIcon />,
-                    action: () => setCurrentView('Playlists')
-                },
-                {
-                    label: 'Refresh',
-                    icon: <SearchIcon />,
-                    action: () => refreshSongs(),
-                    disabled: loadingProgress !== null
-                }
-            ];
-
-            headerActions.push({
-                label: 'Settings',
-                icon: <SettingsIcon />,
-                action: () => setCurrentView('Settings'),
-                showAlways: true
-            });
-
-            if (!isClient) {
-                headerActions.push({
-                    label: 'Connect Phones',
-                    icon: <QrCodeIcon />,
-                    action: () => setCurrentView('Connection'),
-                    showAlways: true
-                });
-            }
-
-            setHeader(t('melodiq.title'), headerActions, homeAction);
-            setCustomHeaderActions(
-                !isClient ? (
-                    <TVModeButton
-                        isTVConnected={isTVConnected}
-                        isPresentationAvailable={isPresentationAvailable}
-                        onOpenTV={openTVWindow}
-                        onStartPresentation={startPresentation}
-                        onDisconnect={disconnectTV}
-                    />
-                ) : null
-            );
-        } else {
-            // Clear menu items for other views to avoid irrelevant actions
-            setHeader(t('melodiq.title'), [], homeAction);
-            setCustomHeaderActions(null);
-        }
-        return () => {
-            setHeader(null, [], null);
-            setCustomHeaderActions(null);
-        };
-    }, [currentView, queue.length, loadingProgress, refreshSongs, setCurrentView, t, setHeader, showFilters, setShowFilters, setCustomHeaderActions, isTVConnected, openTVWindow, isPresentationAvailable, startPresentation, disconnectTV, viewMode, isClient]);
-
-    // Handler to select and load a song for playback
-    const handleSelectSong = async (songMeta: SongMeta, forcePlay: boolean = false) => {
-        try {
-            if (isClient) {
-                // If this is a phone/remote client, don't play locally. Just tell the host to select it!
-                window.dispatchEvent(new CustomEvent('melodiq_client_send_data', { 
-                    detail: { type: 'host.select_song', songId: songMeta.id, forcePlay } 
-                }));
-                setFeedbackMessage(`Sent to Host: ${songMeta.title}`);
-                return;
-            }
-
-            // Check for default click action if something is already playing
-            // logic: if (playing && action != play_now) -> do action
-            // "playing" means either local playback (selectedSong is active) or TV playback (remoteSong)
-            const isPlaying = !!selectedSong || (isTVConnected && !!remoteSong);
-
-            // User Request: If something is playing, clicking a song should ALWAYS add to queue (end)
-            if (!forcePlay && isPlaying) {
-                addToQueue(songMeta);
-                setFeedbackMessage(`Added to queue: ${songMeta.title}`);
-                return;
-            }
-
-            if (isTVConnected) {
-                // Send media URLs to TV for audio/video playback
-                const fullSong = await getSongById(songMeta.id);
-                playSongOnTV(songMeta.id, fullSong || songMeta);
-                setRemoteSong(songMeta);
-
-                // Also start local session for pitch visualization & scoring
-                if (fullSong) {
-                    setSelectedSong(fullSong);
-                    setNowPlaying(songMeta);
-                    // setCurrentView('Session'); // User requested: don't open session view on Host by default if TV connected
-                }
-            } else {
-                // Standard local playback on Host
-                const fullSong = await getSongById(songMeta.id);
-                if (fullSong) {
-                    setSelectedSong(fullSong);
-                    setNowPlaying(songMeta); // Update queue context
-                    setCurrentView('Session');
-                } else {
-                    console.error("Song content not found in DB");
-                }
-            }
-        } catch (e) {
-            console.error("Failed to load song", e);
-        }
-    };
-
-    const handleSelectSongRef = React.useRef(handleSelectSong);
-    React.useEffect(() => {
-        handleSelectSongRef.current = handleSelectSong;
-    });
-
-    React.useEffect(() => {
-        const handleRemoteSelect = (e: any) => {
-            const { songId, forcePlay } = e.detail;
-            const song = songs.find(s => s.id === songId);
-            if (song) {
-                handleSelectSongRef.current(song, forcePlay);
-            }
-        };
-        window.addEventListener('melodiq_host_select_song', handleRemoteSelect);
-        return () => window.removeEventListener('melodiq_host_select_song', handleRemoteSelect);
-    }, [songs]);
-
-
-    const handleMinimizeSession = () => {
-        setCurrentView('Home');
-    };
-
-    const handleRestoreSession = () => {
-        setCurrentView('Session');
-    };
-
-
-
-    // Render the active view inside a single shared WebRTCProvider
     const renderView = () => {
-        // We render MelodiqSession if selectedSong is present, but hide it if not in Session view
-        // NOTE: activeSong logic is now split: selectedSong (Local) vs remoteSong (TV)
-
         if (currentView === 'Settings') {
             return (
                 <Box sx={{ height: '100%', overflow: 'auto' }}>
-                    <Box sx={{ height: '100%', overflow: 'auto' }}>
-                        {isClient ? (
-                            <ClientSettings onBack={() => setCurrentView('Home')} />
-                        ) : (
-                            <MelodiqSettings 
-                                onBack={() => {
-                                    // Refresh songs when returning from settings (in case import happened)
-                                    refreshSongs();
-                                    setCurrentView('Home');
-                                }} 
-                                onNavigateToPlaylists={() => setCurrentView('Playlists')}
-                            />
-                        )}
-                    </Box>
+                    {isClient ? (
+                        <ClientSettings onBack={() => setCurrentView('Home')} />
+                    ) : (
+                        <MelodiqSettings 
+                            onBack={() => {
+                                refreshSongs();
+                                setCurrentView('Home');
+                            }} 
+                            onNavigateToPlaylists={() => setCurrentView('Playlists')}
+                        />
+                    )}
                 </Box>
             );
         }
@@ -663,18 +269,14 @@ export const MelodiqGameContent: React.FC = () => {
             );
         }
 
-        // Home view
         return (
             <Box sx={{
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                overflow: 'hidden', // Prevent body scroll
-
-                pb: (selectedSong || remoteSong) ? '64px' : 0 // Add padding for MiniPlayer
+                overflow: 'hidden',
+                pb: (selectedSong || remoteSong) ? '64px' : 0
             }}>
-
-                {/* Search Bar - ALWAYS AT THE TOP */}
                 {!hasConnectionError && (
                     <MelodiqSearchBar 
                         {...searchFilterState} 
@@ -682,21 +284,6 @@ export const MelodiqGameContent: React.FC = () => {
                         totalSongsLength={songs.length} 
                     />
                 )}
-
-                {/* Loading Progress */}
-                {
-                    loadingProgress && isLoading && (
-                        <Box sx={{ mb: 2, flexShrink: 0 }}>
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                                {loadingProgress.total > 0 ? t('melodiq.loading_library', { loaded: loadingProgress.loaded, total: loadingProgress.total }) : t('melodiq.scanning')}
-                            </Typography>
-                            <LinearProgress
-                                variant="determinate"
-                                value={loadingProgress.total > 0 ? (loadingProgress.loaded / loadingProgress.total) * 100 : 0}
-                            />
-                        </Box>
-                    )
-                }
 
                 <LibraryEmptyState 
                     hasConnectionError={!!hasConnectionError}
@@ -732,45 +319,10 @@ export const MelodiqGameContent: React.FC = () => {
         );
     };
 
-    // --- Remote Configuration Listener ---
-    useEffect(() => {
-        if (!manager) return;
-
-        // When NOT in session (Session has its own handler), listen for global commands
-        // actually, PhoneQueueBridge handles queue/library commands now.
-        // We just need to handle configuration here if needed, or move it to bridge too.
-        // For now, keep config listener here but ensure Bridge is mounted.
-
-        if (currentView !== 'Session') {
-            const handleConfig = (peerId: string, data: any) => {
-                if (data.type === 'configure' && data.config) {
-                    console.log(`[Host] Received Remote Config from ${peerId}:`, data.config);
-                    if (data.config.url) localStorage.setItem('melodiq_helper_url', data.config.url);
-                    if (data.config.token) localStorage.setItem('melodiq_helper_token', data.config.token);
-                    // Enable helper if it was disabled
-                    localStorage.setItem('melodiq_enable_helper', 'true');
-                    // Notify user (simple alert for now, or use Snackbar if available)
-                    alert(`Configuration Updated by Remote Phone!\nURL: ${data.config.url}\nReloading...`);
-                    window.location.reload();
-                }
-            };
-            manager.on('message', handleConfig);
-            return () => manager.off('message', handleConfig);
-        }
-    }, [manager, currentView, refreshSongs]);
-
-    const handleGameUpdate = useCallback((state: any) => {
-        sendGameUpdate(state); // send to TV
-        if (manager && !isClient) {
-            manager.broadcast({ type: 'game_state_update', state }); // send to Phones
-        }
-    }, [sendGameUpdate, manager, isClient]);
-
     return (
         <Box sx={{ width: '100vw', height: '100%', overflow: 'hidden', bgcolor: 'background.default', color: 'text.primary' }}>
             {renderView()}
 
-            {/* Persistent Session & MiniPlayer (Managed by PlaybackManager) */}
             <PlaybackManager
                 selectedSong={selectedSong}
                 remoteSong={remoteSong}
@@ -785,8 +337,8 @@ export const MelodiqGameContent: React.FC = () => {
                         setCurrentView('Home');
                     }
                 }}
-                onMinimizeSession={handleMinimizeSession}
-                onRestoreSession={handleRestoreSession}
+                onMinimizeSession={() => setCurrentView('Home')}
+                onRestoreSession={() => setCurrentView('Session')}
                 onSelectSong={handleSelectSong}
                 sendRemoteCommand={sendRemoteCommand}
                 setRemoteSong={setRemoteSong}
@@ -797,86 +349,24 @@ export const MelodiqGameContent: React.FC = () => {
                 isClient={isClient}
             />
 
-            {/* Host Queue Drawer */}
             <HostQueueDrawer
                 open={showQueueDrawer}
                 onClose={() => setShowQueueDrawer(false)}
             />
 
-            {/* Queue Options Dialog */}
-            <Dialog open={queueDialogOpen} onClose={() => setQueueDialogOpen(false)}>
-                <DialogTitle>{t('melodiq.add_end')}</DialogTitle>
-                <DialogContent>
-                    <List>
-                        <ListItemButton onClick={() => { handleQueueOption('play_now'); setQueueDialogOpen(false); }}>
-                            <ListItemIcon><PlayArrowIcon /></ListItemIcon>
-                            <ListItemText primary={t('melodiq.play_now')} secondary={isTVConnected ? t('melodiq.play_now_tv_desc') : t('melodiq.play_now_locally_desc')} />
-                        </ListItemButton>
-                        <ListItemButton onClick={() => { handleQueueOption('play_next'); setQueueDialogOpen(false); }}>
-                            <ListItemIcon><PlaylistPlayIcon /></ListItemIcon>
-                            <ListItemText primary={t('melodiq.play_next')} secondary={t('melodiq.play_next_desc')} />
-                        </ListItemButton>
-                        <ListItemButton onClick={() => { handleQueueOption('add_end'); setQueueDialogOpen(false); }}>
-                            <ListItemIcon><AddToQueueIcon /></ListItemIcon>
-                            <ListItemText primary={t('melodiq.add_end')} secondary={t('melodiq.add_end_desc')} />
-                        </ListItemButton>
-                        <ListItemButton onClick={() => setPlaylistDialogOpen(true)}>
-                            <ListItemIcon><QueueMusicIcon /></ListItemIcon>
-                            <ListItemText primary={t('melodiq.add_to_playlist')} secondary={t('melodiq.add_to_playlist_desc')} />
-                        </ListItemButton>
-                        <Divider />
-                        <ListItemButton onClick={() => { setQueueDialogOpen(false); setYouTubeSearchDialogOpen(true); }}>
-                            <ListItemIcon><VideoLibraryIcon /></ListItemIcon>
-                            <ListItemText primary="Video/Audio ändern" secondary="Neues YouTube Video für diesen Song herunterladen" />
-                        </ListItemButton>
-                        <ListItemButton onClick={handleDeleteSong} sx={{ color: 'error.main' }}>
-                            <ListItemIcon sx={{ color: 'error.main' }}><DeleteIcon /></ListItemIcon>
-                            <ListItemText primary="Song löschen" secondary="Kompletten Song vom Server entfernen" />
-                        </ListItemButton>
-                    </List>
-                </DialogContent>
-            </Dialog>
-
-            <YouTubeSearchDialog
-                open={youTubeSearchDialogOpen}
-                onClose={() => setYouTubeSearchDialogOpen(false)}
-                initialQuery={selectedSongForQueue ? `${selectedSongForQueue.artist} ${selectedSongForQueue.title}` : ''}
-                onSelectUrl={handleChangeVideoUrl}
+            <SongActionDialogs
+                selectedSongForQueue={selectedSongForQueue}
+                queueDialogOpen={queueDialogOpen}
+                setQueueDialogOpen={setQueueDialogOpen}
+                isTVConnected={isTVConnected}
+                playSongOnTV={playSongOnTV}
+                handleSelectSong={handleSelectSong}
+                addNext={addNext}
+                addToQueue={addToQueue}
+                refreshSongs={refreshSongs}
+                setFeedbackMessage={setFeedbackMessage}
             />
 
-            {/* Select Playlist Dialog */}
-            <Dialog open={playlistDialogOpen} onClose={() => setPlaylistDialogOpen(false)}>
-                <DialogTitle>{t('melodiq.select_playlist')}</DialogTitle>
-                <DialogContent>
-                    {playlists.length === 0 ? (
-                        <Typography sx={{ p: 2 }}>{t('melodiq.no_playlists')}</Typography>
-                    ) : (
-                        <List>
-                            {playlists.map(p => (
-                                <ListItemButton key={p.id} onClick={() => handleAddToPlaylist(p.id)}>
-                                    <ListItemIcon><QueueMusicIcon /></ListItemIcon>
-                                    <ListItemText primary={p.name} />
-                                </ListItemButton>
-                            ))}
-                        </List>
-                    )}
-                    <Divider />
-                    <List>
-                        <ListItemButton onClick={async () => {
-                            const name = window.prompt(t('melodiq.playlist_name'));
-                            if (name && name.trim()) {
-                                await createPlaylist(name.trim());
-                                setFeedbackMessage(t('melodiq.playlist_created', 'Playlist created!'));
-                            }
-                        }}>
-                            <ListItemIcon><AddIcon /></ListItemIcon>
-                            <ListItemText primary={t('melodiq.create_playlist')} />
-                        </ListItemButton>
-                    </List>
-                </DialogContent>
-            </Dialog>
-
-            {/* Playback Feedback */}
             <Snackbar
                 open={!!feedbackMessage}
                 autoHideDuration={3000}
@@ -916,6 +406,3 @@ export const MelodiqGame: React.FC = () => {
         </SettingsProvider>
     );
 };
-
-
-

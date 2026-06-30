@@ -60,7 +60,29 @@ router.get('/', (req, res) => {
     const isLocal = remoteIp === '::1' || remoteIp === '127.0.0.1' || remoteIp === '::ffff:127.0.0.1';
     const clientToken = req.query.token;
 
-    if (!isLocal && clientToken !== config.token) {
+    let isAuthorized = false;
+    let isAdmin = false;
+    let injectedToken = config.token;
+
+    if (isLocal) {
+        isAuthorized = true;
+        isAdmin = true;
+    }
+
+    if (clientToken === config.token) {
+        isAuthorized = true;
+        isAdmin = true;
+        injectedToken = config.token;
+    } else if (clientToken) {
+        const apiKey = config.apiKeys.find(k => k.token === clientToken);
+        if (apiKey && apiKey.allowManagement) {
+            isAuthorized = true;
+            isAdmin = false;
+            injectedToken = apiKey.token;
+        }
+    }
+
+    if (!isAuthorized) {
         try {
             const loginHtmlPath = path.join(__dirname, '..', '..', 'public', 'login.html');
             const loginHtml = fs.readFileSync(loginHtmlPath, 'utf-8');
@@ -84,7 +106,8 @@ router.get('/', (req, res) => {
 
         // Replace placeholders
         html = html
-            .replace(/\{\{AUTH_TOKEN\}\}/g, config.token)
+            .replace(/\{\{AUTH_TOKEN\}\}/g, injectedToken)
+            .replace(/\{\{IS_ADMIN\}\}/g, isAdmin.toString())
             .replace(/\{\{SONG_COUNT\}\}/g, getSongCache().length.toString())
             .replace(/\{\{DIRECTORIES\}\}/g, dirListHtml)
             .replace(/\{\{NETWORK_URL\}\}/g, networkUrl)
@@ -587,9 +610,23 @@ router.get('/api/config/apikeys', (req, res) => {
 
 router.post('/api/config/apikeys', (req, res) => {
     if (!req.isMasterToken) return res.status(403).json({ error: 'Master Token required' });
-    const { name } = req.body;
-    const newKey = config.createApiKey(name);
+    const { name, rateLimitSecond, rateLimitMinute, rateLimitHour, allowManagement } = req.body;
+    const newKey = config.createApiKey(name, {
+        second: rateLimitSecond,
+        minute: rateLimitMinute,
+        hour: rateLimitHour
+    }, allowManagement);
     res.json(newKey);
+});
+
+router.put('/api/config/apikeys/:id', (req, res) => {
+    if (!req.isMasterToken) return res.status(403).json({ error: 'Master Token required' });
+    const updatedKey = config.updateApiKey(req.params.id, req.body);
+    if (updatedKey) {
+        res.json(updatedKey);
+    } else {
+        res.status(404).json({ error: 'API Key not found' });
+    }
 });
 
 router.delete('/api/config/apikeys/:id', (req, res) => {

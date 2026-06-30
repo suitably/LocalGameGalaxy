@@ -1,0 +1,146 @@
+import { useEffect } from 'react';
+import { PlayerRuntime } from './PlayerRuntime';
+import { type PassiveGameState } from '../MelodiqSession';
+import { type ScoreDisplayHandle } from '../ScoreDisplay';
+
+interface UsePassiveSyncProps {
+    isPassive: boolean;
+    passiveState: PassiveGameState | null;
+    isClient: boolean;
+    players: PlayerRuntime[];
+    setPlayers: React.Dispatch<React.SetStateAction<PlayerRuntime[]>>;
+    playersRef: React.RefObject<PlayerRuntime[]>;
+    scoreDisplayRef: React.RefObject<ScoreDisplayHandle>;
+    audioRef: React.RefObject<HTMLAudioElement>;
+    videoRef: React.RefObject<HTMLVideoElement>;
+    isPlayingRef: React.RefObject<boolean>;
+    setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
+    setIsFinished: React.Dispatch<React.SetStateAction<boolean>>;
+    setIsPausedForScore: React.Dispatch<React.SetStateAction<boolean>>;
+    setPassivePlayBlocked: React.Dispatch<React.SetStateAction<boolean>>;
+    virtualTimeRef: React.RefObject<number>;
+}
+
+export function usePassiveSync({
+    isPassive,
+    passiveState,
+    isClient,
+    players,
+    setPlayers,
+    playersRef,
+    scoreDisplayRef,
+    audioRef,
+    videoRef,
+    isPlayingRef,
+    setIsPlaying,
+    setIsFinished,
+    setIsPausedForScore,
+    setPassivePlayBlocked,
+    virtualTimeRef
+}: UsePassiveSyncProps) {
+
+    useEffect(() => {
+        if (isPassive && passiveState) {
+            if (players.length !== passiveState.players.length) {
+                const newPlayers = passiveState.players.map(p => new PlayerRuntime({
+                    id: p.id,
+                    name: p.name,
+                    hue: p.hue,
+                    isRemote: true
+                }));
+                setPlayers(newPlayers);
+                if (playersRef.current !== undefined) {
+                    (playersRef as any).current = newPlayers;
+                }
+            }
+
+            passiveState.players.forEach((pState, idx) => {
+                const rt = playersRef.current?.[idx];
+                if (rt) {
+                    rt.pitchRef.current = pState.currentPitch;
+                    rt.activeSegments = pState.activeSegments;
+                    rt.trackScores = pState.trackScores;
+                    rt.score = pState.score;
+                    rt.combo = pState.combo;
+
+                    if (pState.lastHit && (!rt.lastHit || pState.lastHit.timestamp > rt.lastHit.timestamp)) {
+                        rt.lastHit = pState.lastHit;
+                        scoreDisplayRef.current?.triggerHit(
+                            pState.id,
+                            pState.lastHit.rating,
+                            pState.combo,
+                            pState.lastHit.score
+                        );
+                    }
+                }
+            });
+
+            if (passiveState.isPlaying !== isPlayingRef.current) {
+                if (passiveState.isPlaying) {
+                    if (audioRef.current && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 1.0) {
+                        audioRef.current.currentTime = passiveState.currentTime;
+                        if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
+                    }
+                    const tryPlay = async () => {
+                        try {
+                            await audioRef.current?.play();
+                            videoRef.current?.play().catch(() => { });
+                            setIsPlaying(true);
+                            setPassivePlayBlocked(false);
+                        } catch (e: any) {
+                            console.warn('[Session] Passive play blocked by autoplay policy:', e.name);
+                            setPassivePlayBlocked(true);
+                        }
+                    };
+                    tryPlay();
+                } else {
+                    audioRef.current?.pause();
+                    videoRef.current?.pause();
+                    setIsPlaying(false);
+                }
+            }
+
+            setIsFinished(prev => passiveState.isFinished !== prev ? passiveState.isFinished : prev);
+            setIsPausedForScore(prev => passiveState.isPausedForScore !== prev ? passiveState.isPausedForScore : prev);
+
+            if (audioRef.current && passiveState.isPlaying && isPlayingRef.current && !audioRef.current.paused && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 1.0) {
+                console.log(`[Session] Syncing time drift: Local=${audioRef.current.currentTime.toFixed(2)} Remote=${passiveState.currentTime.toFixed(2)}`);
+                audioRef.current.currentTime = passiveState.currentTime;
+                if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
+            }
+
+            if (isClient) {
+                const drift = Math.abs(virtualTimeRef.current! - passiveState.currentTime);
+                if (!isPlayingRef.current || drift > 0.15) {
+                    (virtualTimeRef as any).current = passiveState.currentTime;
+                }
+            }
+        }
+    }, [isPassive, passiveState, isClient]);
+
+    // Sync local pitch directly from PhoneClientEngine (bypassing network latency for the local cursor)
+    useEffect(() => {
+        if (!isClient) return;
+
+        const handleLocalPitch = (e: any) => {
+            const { pitch } = e.detail;
+            const storedProfile = localStorage.getItem('melodiq_client_profile');
+            let myName = 'Phone';
+            if (storedProfile) {
+                try {
+                    const parsed = JSON.parse(storedProfile);
+                    if (parsed.name) myName = parsed.name;
+                } catch (err) { }
+            }
+
+            playersRef.current?.forEach(rt => {
+                if (rt.config.name === myName) {
+                    rt.pitchRef.current = pitch;
+                }
+            });
+        };
+
+        window.addEventListener('melodiq:local_pitch', handleLocalPitch);
+        return () => window.removeEventListener('melodiq:local_pitch', handleLocalPitch);
+    }, [isClient, playersRef]);
+}

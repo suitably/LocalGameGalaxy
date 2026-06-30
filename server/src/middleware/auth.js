@@ -6,7 +6,7 @@ const config = require('../../config');
 const requireAuth = (req, res, next) => {
     if (req.method === 'OPTIONS') return next();
 
-    if (req.path === '/' || req.path === '/favicon.ico' || req.path === '/api/browse') {
+    if (req.path === '/' || req.path === '/favicon.ico') {
         return next();
     }
     const token = req.headers['authorization'] || req.query.token;
@@ -19,8 +19,9 @@ const requireAuth = (req, res, next) => {
         return next();
     }
     
-    const isValidApiKey = config.apiKeys.some(k => k.token === token || k.token === cleanToken);
-    if (isValidApiKey) {
+    const validApiKey = config.apiKeys.find(k => k.token === token || k.token === cleanToken);
+    if (validApiKey) {
+        req.apiKey = validApiKey;
         return next();
     }
     
@@ -87,18 +88,45 @@ const corsMiddleware = (req, res, next) => {
     }
 };
 
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 1000,
+const createLimiter = (windowMs, limitField, defaultLimit) => rateLimit({
+    windowMs,
+    max: (req, res) => {
+        if (req.apiKey && req.apiKey[limitField] !== null && req.apiKey[limitField] !== undefined) {
+            return req.apiKey[limitField];
+        }
+        return defaultLimit;
+    },
+    keyGenerator: (req) => {
+        if (req.apiKey) return req.apiKey.id;
+        return req.ip;
+    },
+    skip: (req, res) => {
+        if (req.isMasterToken) return true;
+        if (req.apiKey) {
+            return req.apiKey[limitField] === null || req.apiKey[limitField] === undefined;
+        }
+        return false;
+    },
+    validate: { ip: false },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
+const limitSecond = createLimiter(1000, 'rateLimitSecond', 50);
+const limitMinute = createLimiter(60 * 1000, 'rateLimitMinute', 1000);
+const limitHour = createLimiter(60 * 60 * 1000, 'rateLimitHour', 10000);
+
 const rateLimitMiddleware = (req, res, next) => {
-    if (!config.disableRateLimit) {
-        return limiter(req, res, next);
+    if (config.disableRateLimit) {
+        return next();
     }
-    next();
+    limitSecond(req, res, (err) => {
+        if (err) return next(err);
+        limitMinute(req, res, (err) => {
+            if (err) return next(err);
+            limitHour(req, res, next);
+        });
+    });
 };
 
 module.exports = {

@@ -17,7 +17,9 @@
       "id": "67ca225538a8ecd5",
       "name": "Carsten",
       "token": "d5fb8ee1a94164aba1ad2d44f4abf333",
-      "createdAt": "2026-06-29T19:13:41.857Z"
+      "createdAt": "2026-06-29T19:13:41.857Z",
+      "rateLimit": 1000,
+      "allowManagement": true
     }
   ]
 }
