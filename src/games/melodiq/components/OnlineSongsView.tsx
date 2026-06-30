@@ -3,7 +3,6 @@ import { Box, CircularProgress, Grid } from '@mui/material';
 import { VirtuosoGrid, Virtuoso } from 'react-virtuoso';
 import { SongCard } from './SongCard';
 import { SongListItem } from './SongListItem';
-import { type SongMeta } from '../db';
 
 interface OnlineSongsViewProps {
     isSearchingOnline: boolean;
@@ -104,7 +103,7 @@ export const OnlineSongsView: React.FC<OnlineSongsViewProps> = ({
                                 onLongPress={() => {
                                     if (isDownloaded && localSong) handleSongLongPress(localSong);
                                 }}
-                                onMenuClick={(e) => {
+                                onMenuClick={() => {
                                     if (isDownloaded && localSong) handleSongLongPress(localSong);
                                 }}
                                 onActionClick={() => {

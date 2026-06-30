@@ -6,11 +6,11 @@ import { type RatingType, type ScoreDisplayHandle } from '../ScoreDisplay';
 interface UseScoringEngineProps {
     players: PlayerRuntime[];
     ready: boolean;
-    audioRef: React.RefObject<HTMLAudioElement>;
-    vocalsRef: React.RefObject<HTMLAudioElement>;
-    videoRef: React.RefObject<HTMLVideoElement>;
-    scoreDisplayRef: React.RefObject<ScoreDisplayHandle>;
-    progressLineRef: React.RefObject<HTMLDivElement>;
+    audioRef: React.RefObject<HTMLAudioElement | null>;
+    vocalsRef: React.RefObject<HTMLAudioElement | null>;
+    videoRef: React.RefObject<HTMLVideoElement | null>;
+    scoreDisplayRef: React.RefObject<ScoreDisplayHandle | null>;
+    progressLineRef: React.RefObject<HTMLDivElement | null>;
     isPlayingRef: React.RefObject<boolean>;
     parsedSong: any;
     bpmMultiplier: number;
@@ -22,7 +22,7 @@ interface UseScoringEngineProps {
     isClient: boolean;
     _duration: number;
     onPlaybackUpdate?: (state: any) => void;
-    setScores: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+    setScores?: React.Dispatch<React.SetStateAction<Record<string, number>>>;
 }
 
 export function useScoringEngine({
@@ -75,7 +75,7 @@ export function useScoringEngine({
                     : (tIdx === 0 ? (parsedSong.notes || []) : []);
 
                 if (notesSource) {
-                    const activeNote = notesSource.find((n) =>
+                    const activeNote = notesSource.find((n: any) =>
                         n.type !== '-' && n.type !== 'R' && n.type !== 'G' &&
                         currentBeat >= n.start &&
                         currentBeat <= n.start + n.duration
@@ -288,7 +288,7 @@ export function useScoringEngine({
                 const currentTrackScore = p.trackScores[p.trackIndex] || 0;
                 newScores[p.config.id] = Math.round(currentTrackScore);
             });
-            setScores(newScores);
+            setScores?.(newScores);
             lastScoreUpdateRef.current = now;
         }
 

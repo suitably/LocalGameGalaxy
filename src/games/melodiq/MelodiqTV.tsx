@@ -50,7 +50,7 @@ export const MelodiqTV: React.FC = () => {
                 setActiveSong(null);
                 setPassiveState(null);
             } else if (type === 'GAME_STATE') {
-                setPassiveState(payload);
+                window.dispatchEvent(new CustomEvent('melodiq_tv_game_state', { detail: payload }));
             } else if (type === 'PING') {
                 channel.postMessage({ type: 'PONG' });
             }

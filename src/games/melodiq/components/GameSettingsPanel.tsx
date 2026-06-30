@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
     Box, Typography, TextField, Switch, FormControlLabel, Slider, ToggleButton, ToggleButtonGroup, IconButton, Button
 } from '@mui/material';

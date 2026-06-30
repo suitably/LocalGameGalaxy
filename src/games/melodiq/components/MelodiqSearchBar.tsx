@@ -31,7 +31,7 @@ export const MelodiqSearchBar: React.FC<MelodiqSearchBarProps> = ({
     showFilters, setShowFilters,
     activeFilters, setActiveFilters,
     availableGenres, availableEditions,
-    availableYears, availableLanguages,
+    
     clearFilters, filteredSongsLength, totalSongsLength
 }) => {
     const { t } = useTranslation();

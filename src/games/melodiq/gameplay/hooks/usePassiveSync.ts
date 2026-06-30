@@ -10,9 +10,9 @@ interface UsePassiveSyncProps {
     players: PlayerRuntime[];
     setPlayers: React.Dispatch<React.SetStateAction<PlayerRuntime[]>>;
     playersRef: React.RefObject<PlayerRuntime[]>;
-    scoreDisplayRef: React.RefObject<ScoreDisplayHandle>;
-    audioRef: React.RefObject<HTMLAudioElement>;
-    videoRef: React.RefObject<HTMLVideoElement>;
+    scoreDisplayRef: React.RefObject<ScoreDisplayHandle | null>;
+    audioRef: React.RefObject<HTMLAudioElement | null>;
+    videoRef: React.RefObject<HTMLVideoElement | null>;
     isPlayingRef: React.RefObject<boolean>;
     setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
     setIsFinished: React.Dispatch<React.SetStateAction<boolean>>;
@@ -40,8 +40,12 @@ export function usePassiveSync({
 }: UsePassiveSyncProps) {
 
     useEffect(() => {
-        if (isPassive && passiveState) {
-            if (players.length !== passiveState.players.length) {
+        if (!isPassive) return;
+
+        const handleGameState = (passiveState: PassiveGameState) => {
+            if (!passiveState) return;
+
+            if (playersRef.current && playersRef.current.length !== passiveState.players.length) {
                 const newPlayers = passiveState.players.map(p => new PlayerRuntime({
                     id: p.id,
                     name: p.name,
@@ -115,8 +119,16 @@ export function usePassiveSync({
                     (virtualTimeRef as any).current = passiveState.currentTime;
                 }
             }
+        };
+
+        if (passiveState) {
+            handleGameState(passiveState);
         }
-    }, [isPassive, passiveState, isClient]);
+
+        const onEvent = (e: any) => handleGameState(e.detail);
+        window.addEventListener('melodiq_tv_game_state', onEvent);
+        return () => window.removeEventListener('melodiq_tv_game_state', onEvent);
+    }, [isPassive, isClient]);
 
     // Sync local pitch directly from PhoneClientEngine (bypassing network latency for the local cursor)
     useEffect(() => {

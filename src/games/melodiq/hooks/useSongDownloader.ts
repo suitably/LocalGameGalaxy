@@ -1,4 +1,3 @@
-import { useState } from 'react';
 
 interface UseSongDownloaderProps {
     addToQueue: (song: any, requester?: string) => void;

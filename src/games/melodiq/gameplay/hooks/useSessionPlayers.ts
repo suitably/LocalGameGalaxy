@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { PlayerRuntime } from './PlayerRuntime';
 import { type UserProfile, type ActivePlayer } from '../../MelodiqSettings';
-import { useWebRTC } from '../../audio/WebRTCContext';
 import { type Song } from '../../db';
 
 interface UseSessionPlayersProps {
@@ -13,8 +12,8 @@ interface UseSessionPlayersProps {
     setResults: React.Dispatch<React.SetStateAction<any[]>>;
     togglePlay: () => void;
     onExit: () => void;
-    audioRef: React.RefObject<HTMLAudioElement>;
-    videoRef: React.RefObject<HTMLVideoElement>;
+    audioRef: React.RefObject<HTMLAudioElement | null>;
+    videoRef: React.RefObject<HTMLVideoElement | null>;
 }
 
 export function useSessionPlayers({

@@ -41,8 +41,12 @@ export interface SongMeta {
     edition?: string;
     album?: string;
     cover?: string | Blob | FileSystemFileHandle; 
-    hasCover: boolean;  
-    hasVideo: boolean;  
+    hasCover?: boolean;  
+    hasVideo?: boolean;
+    usdbId?: number;
+    txtPath?: string;
+    isDownloading?: boolean;
+    jobId?: string;
 }
 
 export interface Score {

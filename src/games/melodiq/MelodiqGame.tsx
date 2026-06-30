@@ -6,7 +6,6 @@ import { MelodiqPlaylists } from './components/MelodiqPlaylists';
 import { PlaylistDetails } from './components/PlaylistDetails';
 import { ClientSettings } from './components/ClientSettings';
 
-import { useTranslation } from 'react-i18next';
 import { initMelodiqI18n } from './i18n';
 import { WebRTCProvider, WebRTCMockProvider, useWebRTC } from './audio/WebRTCContext';
 import { SettingsProvider, useMelodiqSettings } from './hooks/SettingsContext';
@@ -37,8 +36,7 @@ type View = 'Home' | 'Settings' | 'Session' | 'Connection' | 'Playlists' | 'Play
 
 export const MelodiqGameContent: React.FC = () => {
     initMelodiqI18n();
-    const { t } = useTranslation();
-
+    
     const params = new URLSearchParams(window.location.search);
     const isClient = params.get('role') === 'client';
 
@@ -83,7 +81,7 @@ export const MelodiqGameContent: React.FC = () => {
 
     useMelodiqHeader({
         currentView, setCurrentView, viewMode, setViewMode,
-        queueLength: queue.length, loadingProgress, refreshSongs, setShowQueueDrawer,
+        queueLength: queue.length, loadingProgress: loadingProgress as any, refreshSongs, setShowQueueDrawer,
         isClient, isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV
     });
 

@@ -9,7 +9,7 @@ interface UseSessionEndProps {
     setResults: React.Dispatch<React.SetStateAction<any[]>>;
     setIsFinished: React.Dispatch<React.SetStateAction<boolean>>;
     setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
-    videoRef: React.RefObject<HTMLVideoElement>;
+    videoRef: React.RefObject<HTMLVideoElement | null>;
 }
 
 export function useSessionEnd({

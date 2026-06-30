@@ -11,7 +11,7 @@ interface LibraryEmptyStateProps {
 }
 
 export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
-    hasConnectionError, isLoading, songsLength, isOnlineSearch, refreshSongs
+    hasConnectionError, songsLength, isOnlineSearch, refreshSongs
 }) => {
     const { t } = useTranslation();
 

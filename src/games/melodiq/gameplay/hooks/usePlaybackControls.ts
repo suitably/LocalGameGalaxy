@@ -1,9 +1,9 @@
-import { useCallback, useRef, type MutableRefObject } from 'react';
+import { useCallback, useRef } from 'react';
 
 interface UsePlaybackControlsProps {
-    audioRef: React.RefObject<HTMLAudioElement>;
-    vocalsRef: React.RefObject<HTMLAudioElement>;
-    videoRef: React.RefObject<HTMLVideoElement>;
+    audioRef: React.RefObject<HTMLAudioElement | null>;
+    vocalsRef: React.RefObject<HTMLAudioElement | null>;
+    videoRef: React.RefObject<HTMLVideoElement | null>;
     isPlaying: boolean;
     setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
     isFinished: boolean;
