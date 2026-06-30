@@ -52,3 +52,19 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
 ### Internationalization
 -   `src/i18n.ts` handles translations.
 -   All user-facing text must be internationalized.
+
+## 4. Component Design & SOLID Guidelines
+
+To ensure the codebase remains maintainable and free of spaghetti code, all future development MUST adhere to the following React-specific SOLID patterns:
+
+1.  **Single Responsibility Principle (SRP)**:
+    -   **Container vs. Presentational**: Separate components that fetch data or manage state (Containers) from components that purely render UI based on props (Presentational).
+    -   **Custom Hooks**: Extract complex `useEffect`, `useState`, or business logic into custom hooks (e.g., `useScoreCalculation.ts`) rather than bloating the React component body.
+2.  **Open/Closed Principle**:
+    -   Components should be open for extension but closed for modification. Use `children` props or render props to allow parents to customize internal content without modifying the core component.
+3.  **Interface Segregation**:
+    -   Don't pass massive objects as props if a component only needs one or two fields. Destructure or pass primitive values when possible, making components easier to reuse.
+4.  **Dependency Inversion**:
+    -   Avoid hardcoding deep imports to specific implementations if a Context or a passed prop can invert the dependency.
+
+**File Size Policy**: Any React component exceeding 250 lines is a strong candidate for refactoring into smaller sub-components. Agents must proactively plan the structural breakdown of a feature *before* writing code.
