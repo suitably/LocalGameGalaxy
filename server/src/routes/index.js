@@ -538,13 +538,13 @@ router.post('/api/separator/job', (req, res) => {
     
     const jobIds = [];
     for (const reqItem of requests) {
-        const { songId, songDir, audioFile, txtFile, safeName } = reqItem;
+        const { songId, songDir, audioFile, txtFile, safeName, type } = reqItem;
         if (!songId || !songDir || !audioFile) continue;
         
         const jobId = crypto.randomBytes(8).toString('hex');
         const job = {
             jobId,
-            type: 'separate',
+            type: type || 'separate',
             songId,
             songDir,
             audioFile,

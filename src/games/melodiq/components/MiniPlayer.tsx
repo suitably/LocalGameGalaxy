@@ -16,6 +16,7 @@ interface MiniPlayerProps {
     onNext: () => void;
     onMaximize: () => void;
     onShowQueue?: () => void;
+    onContextMenu?: (e: React.MouseEvent) => void;
     queueLength: number;
     /** True when song was restored from localStorage after a page reload – no audio is loaded yet */
     isRestored?: boolean;
@@ -30,6 +31,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
     onNext,
     onMaximize,
     onShowQueue,
+    onContextMenu,
     queueLength,
     isRestored = false,
     isClient = false
@@ -39,6 +41,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
     return (
         <Card
             elevation={8}
+            onContextMenu={onContextMenu}
             sx={{
                 position: 'absolute',
                 bottom: 0,

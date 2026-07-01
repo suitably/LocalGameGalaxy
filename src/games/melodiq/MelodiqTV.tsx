@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, CircularProgress } from '@mui/material';
 import GamepadIcon from '@mui/icons-material/Gamepad';
 import { MelodiqSession, type PassiveGameState } from './gameplay/MelodiqSession';
 import { SettingsProvider } from './hooks/SettingsContext';
@@ -35,6 +35,7 @@ export const MelodiqTV: React.FC = () => {
     const [activeSong, setActiveSong] = useState<any | null>(null);
     const [passiveState, setPassiveState] = useState<PassiveGameState | null>(null);
     const [isConnected, setIsConnected] = useState(false);
+    const [downloadingSong, setDownloadingSong] = useState<{title: string, artist: string} | null>(null);
 
     useEffect(() => {
         const channel = new BroadcastChannel('melodiq_tv_control');
@@ -42,13 +43,18 @@ export const MelodiqTV: React.FC = () => {
         const handleMessage = (type: string, payload: any) => {
             if (type === 'PLAY_SONG') {
                 if (payload.songData) {
+                    setDownloadingSong(null);
                     setActiveSong(payload.songData);
                 } else {
                     console.warn('[MelodiqTV] PLAY_SONG received without songData, ignoring.');
                 }
             } else if (type === 'STOP_SONG') {
+                setDownloadingSong(null);
                 setActiveSong(null);
                 setPassiveState(null);
+            } else if (type === 'REMOTE_COMMAND' && payload.command === 'WAIT_FOR_DOWNLOAD') {
+                setActiveSong(null);
+                setDownloadingSong({ title: payload.value.title, artist: payload.value.artist });
             } else if (type === 'GAME_STATE') {
                 window.dispatchEvent(new CustomEvent('melodiq_tv_game_state', { detail: payload }));
             } else if (type === 'PING') {
@@ -82,6 +88,30 @@ export const MelodiqTV: React.FC = () => {
 
         return () => channel.close();
     }, []);
+
+    if (downloadingSong) {
+        return (
+            <Box sx={{
+                width: '100vw',
+                height: '100vh',
+                bgcolor: '#121212',
+                color: 'white',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 4
+            }}>
+                <CircularProgress size={100} thickness={4} sx={{ color: '#FE6B8B' }} />
+                <Typography variant="h3" fontWeight="bold">
+                    Warte auf Download...
+                </Typography>
+                <Typography variant="h4" color="text.secondary">
+                    {downloadingSong.artist} - {downloadingSong.title}
+                </Typography>
+            </Box>
+        );
+    }
 
     if (activeSong) {
         return (

@@ -7,6 +7,8 @@ import QueueMusicIcon from '@mui/icons-material/QueueMusic';
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import TouchAppIcon from '@mui/icons-material/TouchApp';
 import { useTranslation } from 'react-i18next';
 
 import { type SongMeta } from '../db';
@@ -125,6 +127,37 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
         }
     };
 
+    const handleAutoSync = async () => {
+        if (!selectedSongForQueue) return;
+        setQueueDialogOpen(false);
+        try {
+            const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
+            const token = localStorage.getItem('melodiq_helper_token') || '';
+            const res = await fetch(`${helperUrl}/api/separator/job`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify([{
+                    songId: selectedSongForQueue.id,
+                    songDir: selectedSongForQueue.txtPath ? selectedSongForQueue.txtPath.replace(/\/[^/]+$/, '') : undefined,
+                    audioFile: selectedSongForQueue.audio ? selectedSongForQueue.audio.split('/').pop()?.split('?')[0] : undefined,
+                    txtFile: selectedSongForQueue.txtPath ? selectedSongForQueue.txtPath.split('/').pop() : undefined,
+                    safeName: selectedSongForQueue.title,
+                    type: 'auto-sync'
+                }])
+            });
+            if (res.ok) {
+                setFeedbackMessage('Auto-Sync (KI) Job gestartet...');
+            } else {
+                setFeedbackMessage('Fehler beim Starten des Auto-Syncs');
+            }
+        } catch (e) {
+            console.error('Failed to start auto-sync', e);
+        }
+    };
+
     return (
         <>
             <Dialog open={queueDialogOpen} onClose={() => setQueueDialogOpen(false)}>
@@ -157,6 +190,10 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                                 <ListItemButton onClick={() => { setQueueDialogOpen(false); setYouTubeSearchDialogOpen(true); }}>
                                     <ListItemIcon><VideoLibraryIcon /></ListItemIcon>
                                     <ListItemText primary="Video/Audio ändern" secondary="Neues YouTube Video für diesen Song herunterladen" />
+                                </ListItemButton>
+                                <ListItemButton onClick={handleAutoSync}>
+                                    <ListItemIcon><AutoFixHighIcon /></ListItemIcon>
+                                    <ListItemText primary="Auto-Sync (KI)" secondary="Song-Start automatisch analysieren und anpassen" />
                                 </ListItemButton>
                                 <ListItemButton onClick={handleDeleteSong} sx={{ color: 'error.main' }}>
                                     <ListItemIcon sx={{ color: 'error.main' }}><DeleteIcon /></ListItemIcon>

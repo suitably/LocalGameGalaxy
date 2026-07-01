@@ -32,8 +32,9 @@ import { SongActionDialogs } from './components/SongActionDialogs';
 import { useMelodiqHeader } from './hooks/useMelodiqHeader';
 import { useMelodiqGlobalEvents } from './hooks/useMelodiqGlobalEvents';
 import { useDownloadSync } from './hooks/useDownloadSync';
+import { DownloadWaitScreen } from './components/DownloadWaitScreen';
 
-type View = 'Home' | 'Settings' | 'Session' | 'Connection' | 'Playlists' | 'PlaylistDetails';
+type View = 'Home' | 'Settings' | 'Session' | 'Connection' | 'Playlists' | 'PlaylistDetails' | 'DownloadWait';
 
 export const MelodiqGameContent: React.FC = () => {
     initMelodiqI18n();
@@ -77,9 +78,18 @@ export const MelodiqGameContent: React.FC = () => {
         }
     }, [settings.defaultViewMode]);
 
-    // --- Extracted Hooks ---
+    const handleCurrentSongDownloaded = useCallback((realSong: any) => {
+        setSelectedSong(realSong);
+        setNowPlaying(realSong);
+        if (isTVConnected) {
+            playSongOnTV(realSong.id, realSong);
+            setRemoteSong(realSong);
+        }
+        setCurrentView('Session');
+    }, [isTVConnected, playSongOnTV, setRemoteSong, setSelectedSong, setNowPlaying, setCurrentView]);
+
     useDownloadSync({
-        isClient, jobs, queue, refreshSongs, replaceItem
+        isClient, jobs, queue, refreshSongs, replaceItem, selectedSong, onCurrentSongDownloaded: handleCurrentSongDownloaded
     });
 
     useMelodiqHeader({
@@ -120,13 +130,22 @@ export const MelodiqGameContent: React.FC = () => {
 
             if (isTVConnected) {
                 const fullSong = await getSongById(songMeta.id);
-                playSongOnTV(songMeta.id, fullSong || songMeta);
-                setRemoteSong(songMeta);
-
                 if (fullSong) {
+                    playSongOnTV(songMeta.id, fullSong);
+                    setRemoteSong(songMeta);
                     setSelectedSong(fullSong);
                     setNowPlaying(songMeta);
                     setActiveParticipants(participants || null);
+                } else if (songMeta.isDownloading) {
+                    sendRemoteCommand('WAIT_FOR_DOWNLOAD', { title: songMeta.title, artist: songMeta.artist });
+                    setRemoteSong(songMeta);
+                    setSelectedSong(songMeta as any);
+                    setNowPlaying(songMeta);
+                    setActiveParticipants(participants || null);
+                    setCurrentView('DownloadWait');
+                } else {
+                    playSongOnTV(songMeta.id, songMeta);
+                    setRemoteSong(songMeta);
                 }
             } else {
                 const fullSong = await getSongById(songMeta.id);
@@ -135,6 +154,11 @@ export const MelodiqGameContent: React.FC = () => {
                     setNowPlaying(songMeta);
                     setActiveParticipants(participants || null);
                     setCurrentView('Session');
+                } else if (songMeta.isDownloading) {
+                    setSelectedSong(songMeta as any);
+                    setNowPlaying(songMeta);
+                    setActiveParticipants(participants || null);
+                    setCurrentView('DownloadWait');
                 } else {
                     console.error("Song content not found in DB");
                 }
@@ -152,6 +176,25 @@ export const MelodiqGameContent: React.FC = () => {
     });
 
     // --- Actions ---
+
+    const handleSkipAndRequeue = useCallback(() => {
+        if (selectedSong && (selectedSong as any).isDownloading) {
+            // Re-queue the current downloading song at the end
+            addToQueue(selectedSong as any, 'System');
+            setFeedbackMessage(`${selectedSong.title} wurde hinten angestellt.`);
+            
+            // Pop the next one and play it
+            const nextItem = popNext();
+            if (nextItem) {
+                handleSelectSong(nextItem.song, true, nextItem.participants);
+            } else {
+                setSelectedSong(null);
+                setNowPlaying(null);
+                setRemoteSong(null);
+                setCurrentView('Home');
+            }
+        }
+    }, [selectedSong, addToQueue, popNext, setNowPlaying, setRemoteSong, handleSelectSong, setSelectedSong, setCurrentView, setFeedbackMessage]);
 
     const handleSongLongPress = (song: SongMeta) => {
         if (isClient && clientRole === 'singer') {
@@ -244,6 +287,16 @@ export const MelodiqGameContent: React.FC = () => {
             setRestoredSong(null);
         }
     }, [selectedSong, remoteSong]);
+
+    if (currentView === 'DownloadWait') {
+        return (
+            <DownloadWaitScreen 
+                songTitle={selectedSong?.title || ''}
+                artist={selectedSong?.artist || ''}
+                onSkipAndRequeue={handleSkipAndRequeue}
+            />
+        );
+    }
 
     const renderView = () => {
         if (currentView === 'Settings') {

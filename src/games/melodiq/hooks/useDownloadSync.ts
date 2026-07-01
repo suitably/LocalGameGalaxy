@@ -6,10 +6,12 @@ interface UseDownloadSyncProps {
     queue: any[];
     refreshSongs: () => Promise<void>;
     replaceItem: (id: string, song: any) => void;
+    selectedSong?: any;
+    onCurrentSongDownloaded?: (realSong: any) => void;
 }
 
 export const useDownloadSync = ({
-    isClient, jobs, queue, refreshSongs, replaceItem
+    isClient, jobs, queue, refreshSongs, replaceItem, selectedSong, onCurrentSongDownloaded
 }: UseDownloadSyncProps) => {
     const lastProcessedJobs = useRef<Set<string>>(new Set());
 
@@ -54,6 +56,13 @@ export const useDownloadSync = ({
                         const qItem = queue.find(q => q.song.isDownloading && q.song.jobId === jobId);
                         if (qItem) {
                             replaceItem(qItem.id, realSong);
+                        }
+
+                        // If it is currently selected and waiting, swap it there too
+                        if (selectedSong && selectedSong.isDownloading && selectedSong.jobId === jobId) {
+                            if (onCurrentSongDownloaded) {
+                                onCurrentSongDownloaded(realSong);
+                            }
                         }
                     });
                 } catch (e) {

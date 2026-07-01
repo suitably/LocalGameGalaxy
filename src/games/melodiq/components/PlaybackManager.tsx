@@ -1,5 +1,5 @@
 import { useState, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
-import { Box, Snackbar, Alert } from '@mui/material';
+import { Box, Snackbar, Alert, Menu, MenuItem } from '@mui/material';
 import { type Song, type SongMeta } from '../db';
 import { MelodiqSession, type MelodiqSessionHandle } from '../gameplay/MelodiqSession';
 import { MiniPlayer } from './MiniPlayer';
@@ -64,6 +64,65 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         progress: 0
     });
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+
+    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
+
+    const handleContextMenu = (event: React.MouseEvent) => {
+        if (!selectedSong) return;
+        event.preventDefault();
+        setContextMenu(
+            contextMenu === null
+                ? { mouseX: event.clientX + 2, mouseY: event.clientY - 6 }
+                : null,
+        );
+    };
+
+    const handleCloseContextMenu = () => {
+        setContextMenu(null);
+    };
+
+    const handleSyncHere = async () => {
+        handleCloseContextMenu();
+        if (!selectedSong || !selectedSong.txtPath) {
+             setFeedbackMessage("Fehler: Kein lokaler Song oder keine .txt Datei");
+             return;
+        }
+        
+        const currentTime = playbackState.currentTime; // seconds
+        
+        try {
+            setFeedbackMessage("KI Auto-Sync (Hybrid) gestartet...");
+            
+            const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
+            const token = localStorage.getItem('melodiq_helper_token') || '';
+            
+            const res = await fetch(`${helperUrl}/api/separator/job`, {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify([{
+                    songId: selectedSong.id,
+                    songDir: selectedSong.txtPath ? selectedSong.txtPath.replace(/\/[^/]+$/, '') : undefined,
+                    audioFile: selectedSong.audio ? selectedSong.audio.split('/').pop()?.split('?')[0] : undefined,
+                    txtFile: selectedSong.txtPath ? selectedSong.txtPath.split('/').pop() : undefined,
+                    safeName: selectedSong.title,
+                    type: 'auto-sync',
+                    approximateStartSec: currentTime
+                }])
+            });
+            
+            if (res.ok) {
+                setFeedbackMessage('Song-Sync (Hybrid) wird im Hintergrund berechnet!');
+            } else {
+                setFeedbackMessage('Fehler beim Starten des Auto-Syncs');
+            }
+        } catch (err: any) {
+            console.error(err);
+            setFeedbackMessage(err.message);
+        }
+    };
 
     // Get client game state for remote playback sync
     const { gameState: clientGameState, sendClientCommand } = isClient ? useClientEngine() : { gameState: null, sendClientCommand: undefined };
@@ -178,7 +237,9 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         <>
             {/* Persistent Session (Hidden or Visible) */}
             {selectedSong && (
-                <Box sx={{
+                <Box 
+                    onContextMenu={handleContextMenu}
+                    sx={{
                     position: 'fixed',
                     top: 0, left: 0, right: 0, bottom: 0,
                     zIndex: currentView === 'Session' ? 1400 : -1, // Below everything if hidden
@@ -261,6 +322,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                         queueLength={queue.length}
                         isRestored={isInRestoredMode}
                         isClient={isClient}
+                        onContextMenu={handleContextMenu}
                     />
                 )
             }
@@ -276,6 +338,19 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                     {feedbackMessage}
                 </Alert>
             </Snackbar>
+
+            <Menu
+                open={contextMenu !== null}
+                onClose={handleCloseContextMenu}
+                anchorReference="anchorPosition"
+                anchorPosition={
+                    contextMenu !== null
+                        ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+                        : undefined
+                }
+            >
+                <MenuItem onClick={handleSyncHere}>Startzeit hier setzen (Sync)</MenuItem>
+            </Menu>
         </>
     );
 });
