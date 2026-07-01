@@ -80,7 +80,8 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
 
     const handleSyncHere = async () => {
         handleCloseContextMenu();
-        if (!selectedSong || !selectedSong.txtPath) {
+        const songAny = selectedSong as any;
+        if (!selectedSong || !songAny.txtPath) {
              setFeedbackMessage("Fehler: Kein lokaler Song oder keine .txt Datei");
              return;
         }
@@ -101,9 +102,9 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                 },
                 body: JSON.stringify([{
                     songId: selectedSong.id,
-                    songDir: selectedSong.txtPath ? selectedSong.txtPath.replace(/\/[^/]+$/, '') : undefined,
-                    audioFile: selectedSong.audio ? selectedSong.audio.split('/').pop()?.split('?')[0] : undefined,
-                    txtFile: selectedSong.txtPath ? selectedSong.txtPath.split('/').pop() : undefined,
+                    songDir: songAny.txtPath ? songAny.txtPath.replace(/\/[^/]+$/, '') : undefined,
+                    audioFile: typeof selectedSong.audio === 'string' ? selectedSong.audio.split('/').pop()?.split('?')[0] : undefined,
+                    txtFile: songAny.txtPath ? songAny.txtPath.split('/').pop() : undefined,
                     safeName: selectedSong.title,
                     type: 'auto-sync',
                     approximateStartSec: currentTime

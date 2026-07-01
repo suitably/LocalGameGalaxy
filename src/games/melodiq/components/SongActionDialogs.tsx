@@ -8,7 +8,6 @@ import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import TouchAppIcon from '@mui/icons-material/TouchApp';
 import DialogActions from '@mui/material/DialogActions';
 import TextField from '@mui/material/TextField';
 import { Button } from '@mui/material';
@@ -160,7 +159,7 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                 body: JSON.stringify([{
                     songId: selectedSongForQueue.id,
                     songDir: selectedSongForQueue.txtPath ? selectedSongForQueue.txtPath.replace(/\/[^/]+$/, '') : undefined,
-                    audioFile: selectedSongForQueue.audio ? selectedSongForQueue.audio.split('/').pop()?.split('?')[0] : undefined,
+                    audioFile: (selectedSongForQueue as any).audio ? (selectedSongForQueue as any).audio.split('/').pop()?.split('?')[0] : undefined,
                     txtFile: selectedSongForQueue.txtPath ? selectedSongForQueue.txtPath.split('/').pop() : undefined,
                     safeName: selectedSongForQueue.title,
                     type: 'auto-sync',
