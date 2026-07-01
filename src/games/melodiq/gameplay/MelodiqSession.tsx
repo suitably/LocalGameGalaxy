@@ -532,7 +532,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                         </Box>
                     </Box>
                     <Box sx={{ flexShrink: 0, width: '100%', pointerEvents: 'none', zIndex: 10, borderTop: '1px solid rgba(255,255,255,0.1)', bgcolor: 'rgba(0,0,0,0.2)', position: 'relative' }}>
-                        <LyricsDisplay song={parsedSong!} audioRef={timeProxyRef} uiScale={uiScale} />
+                        <LyricsDisplay song={parsedSong!} audioRef={timeProxyRef} uiScale={uiScale * (settings.lyricsScale ?? 1.0)} />
                     </Box>
                 </Box>
 

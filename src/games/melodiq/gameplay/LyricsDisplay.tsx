@@ -215,7 +215,7 @@ const LyricsLane: React.FC<LyricsLaneProps & { bpm: number }> = React.memo(({ no
                                     key={idx}
                                     variant="h5"
                                     sx={{
-                                        fontSize: `${1.5 * scale}rem`,
+                                        fontSize: `${3.0 * scale}rem`,
                                         fontWeight: isActive ? 'bold' : 'normal',
                                         color: noteColor,
                                         textShadow: isActive ? `0 0 10px ${primaryColor}` : 'none',
@@ -247,7 +247,7 @@ const LyricsLane: React.FC<LyricsLaneProps & { bpm: number }> = React.memo(({ no
                                 key={idx}
                                 variant="body1"
                                 sx={{
-                                    fontSize: `${1.0 * scale}rem`,
+                                    fontSize: `${1.5 * scale}rem`,
                                     color: 'rgba(255,255,255,0.8)', // Slightly brighter since background is dark
                                     fontWeight: 'light',
                                     whiteSpace: 'pre'

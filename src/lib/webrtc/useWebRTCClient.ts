@@ -286,10 +286,23 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
             const infoHash = stringToInfoHash(partyId);
             const peerId = generatePeerId();
 
+            const isSecure = window.location.protocol === 'https:';
+            const validTrackers = trackerUrls.map(url => {
+                if (isSecure && url.startsWith('ws:')) {
+                    return url.replace('ws:', 'wss:');
+                }
+                return url;
+            }).filter(url => {
+                if (url.includes('localhost') || url.includes('127.0.0.1') || url.includes(':8000')) {
+                    return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                }
+                return true;
+            });
+
             const trackerClient = new Client({
                 infoHash,
                 peerId,
-                announce: trackerUrls,
+                announce: validTrackers,
                 port: 0,
                 rtcConfig: {
                     iceServers: [

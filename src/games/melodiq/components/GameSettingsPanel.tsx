@@ -267,6 +267,23 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                 </Box>
 
                 <Box sx={{ mt: 2 }}>
+                    <Typography gutterBottom>{t('melodiq.settings_panel.lyrics_scale', 'Lyrics Size')}: {Math.round((settings.lyricsScale ?? 1.0) * 100)}%</Typography>
+                    <Slider
+                        value={settings.lyricsScale ?? 1.0}
+                        onChange={(_, val) => onUpdateSetting('lyricsScale', val as number)}
+                        min={0.5}
+                        max={3.0}
+                        step={0.1}
+                        marks
+                        valueLabelDisplay="auto"
+                        sx={{ width: '100%' }}
+                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                        {t('melodiq.settings_panel.lyrics_scale_desc', 'Adjust the size of the lyrics on the main screen.')}
+                    </Typography>
+                </Box>
+
+                <Box sx={{ mt: 2 }}>
                     <Typography gutterBottom>{t('melodiq.settings_panel.song_volume')}: {Math.round(settings.songVolume * 100)}%</Typography>
                     <Slider
                         value={settings.songVolume * 100}
