@@ -9,6 +9,11 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import TouchAppIcon from '@mui/icons-material/TouchApp';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import { Button } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 
 import { type SongMeta } from '../db';
@@ -42,6 +47,10 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
     
     const [playlistDialogOpen, setPlaylistDialogOpen] = useState(false);
     const [youTubeSearchDialogOpen, setYouTubeSearchDialogOpen] = useState(false);
+    
+    // MUI Dialog state for Auto-Sync
+    const [syncTimeDialogOpen, setSyncTimeDialogOpen] = useState(false);
+    const [syncTimeInput, setSyncTimeInput] = useState('');
 
     const handleQueueOption = (action: 'play_now' | 'play_next' | 'add_end') => {
         if (!selectedSongForQueue) return;
@@ -130,6 +139,17 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
     const handleAutoSync = async () => {
         if (!selectedSongForQueue) return;
         setQueueDialogOpen(false);
+        setSyncTimeInput('');
+        setSyncTimeDialogOpen(true);
+    };
+    
+    const confirmAutoSync = async () => {
+        if (!selectedSongForQueue) return;
+        setSyncTimeDialogOpen(false);
+        
+        let approxTime = parseFloat(syncTimeInput.replace(',', '.'));
+        if (isNaN(approxTime)) approxTime = 0;
+
         try {
             const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
             const token = localStorage.getItem('melodiq_helper_token') || '';
@@ -145,7 +165,8 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                     audioFile: selectedSongForQueue.audio ? selectedSongForQueue.audio.split('/').pop()?.split('?')[0] : undefined,
                     txtFile: selectedSongForQueue.txtPath ? selectedSongForQueue.txtPath.split('/').pop() : undefined,
                     safeName: selectedSongForQueue.title,
-                    type: 'auto-sync'
+                    type: 'auto-sync',
+                    approximateStartSec: approxTime
                 }])
             });
             if (res.ok) {
@@ -241,6 +262,37 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                         </ListItemButton>
                     </List>
                 </DialogContent>
+            </Dialog>
+
+            {/* MUI Dialog for Auto-Sync Time */}
+            <Dialog open={syncTimeDialogOpen} onClose={() => setSyncTimeDialogOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>KI Auto-Sync</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body2" sx={{ mb: 3 }}>
+                        Die KI kann den Song automatisch analysieren. Wenn der Song ein langes gesprochenes Intro hat, kannst du hier die ungefähre Startzeit vorgeben (z. B. <code>25.5</code>).
+                    </Typography>
+                    
+                    <TextField
+                        fullWidth
+                        label="Ungefähre Startzeit in Sekunden (optional)"
+                        placeholder="z.B. 25.5"
+                        value={syncTimeInput}
+                        onChange={(e) => setSyncTimeInput(e.target.value)}
+                        type="number"
+                        inputProps={{ step: "0.1" }}
+                        sx={{ mb: 2 }}
+                    />
+                    
+                    <Alert severity="info" sx={{ mt: 1 }}>
+                        <strong>Tipp:</strong> Du kannst Lieder auch einfach abspielen und beim Hören unten rechts auf das <code>...</code> Menü klicken, um den Song direkt perfekt zu synchronisieren!
+                    </Alert>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setSyncTimeDialogOpen(false)} color="inherit">Abbrechen</Button>
+                    <Button onClick={confirmAutoSync} variant="contained" color="primary">
+                        KI Sync Starten
+                    </Button>
+                </DialogActions>
             </Dialog>
         </>
     );

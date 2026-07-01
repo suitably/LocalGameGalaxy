@@ -65,16 +65,13 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     });
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
-    const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number } | null>(null);
+    const [contextMenu, setContextMenu] = useState<HTMLElement | null>(null);
 
-    const handleContextMenu = (event: React.MouseEvent) => {
+    const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
         if (!selectedSong) return;
         event.preventDefault();
-        setContextMenu(
-            contextMenu === null
-                ? { mouseX: event.clientX + 2, mouseY: event.clientY - 6 }
-                : null,
-        );
+        event.stopPropagation();
+        setContextMenu(event.currentTarget);
     };
 
     const handleCloseContextMenu = () => {
@@ -238,7 +235,6 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             {/* Persistent Session (Hidden or Visible) */}
             {selectedSong && (
                 <Box 
-                    onContextMenu={handleContextMenu}
                     sx={{
                     position: 'fixed',
                     top: 0, left: 0, right: 0, bottom: 0,
@@ -322,7 +318,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                         queueLength={queue.length}
                         isRestored={isInRestoredMode}
                         isClient={isClient}
-                        onContextMenu={handleContextMenu}
+                        onMenuClick={handleMenuClick}
                     />
                 )
             }
@@ -340,14 +336,17 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             </Snackbar>
 
             <Menu
-                open={contextMenu !== null}
+                open={Boolean(contextMenu)}
                 onClose={handleCloseContextMenu}
-                anchorReference="anchorPosition"
-                anchorPosition={
-                    contextMenu !== null
-                        ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
-                        : undefined
-                }
+                anchorEl={contextMenu}
+                anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
+                transformOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }}
             >
                 <MenuItem onClick={handleSyncHere}>Startzeit hier setzen (Sync)</MenuItem>
             </Menu>
