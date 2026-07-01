@@ -88,24 +88,32 @@ export const MelodiqGameContent: React.FC = () => {
         isClient, isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV, clientRole
     });
 
-    const handleSelectSong = async (songMeta: SongMeta, forcePlay: boolean = false, participants?: any[]) => {
+    const handleSelectSong = async (songMeta: SongMeta, forcePlay: boolean = false, participants?: any[], requester?: string, requesterId?: string) => {
         try {
+            const isPlaying = !!selectedSong || (isTVConnected && !!remoteSong) || (isClient && !!remoteSong) || !!nowPlaying;
+
             if (isClient) {
+                if (clientRole === 'singer') {
+                    setFeedbackMessage('Als Sänger kannst du keine Lieder auswählen.');
+                    return;
+                }
+                
+                const willForcePlay = (clientRole === 'admin' || clientRole === 'queue_manager') && forcePlay;
+                
                 window.dispatchEvent(new CustomEvent('melodiq_client_send_data', { 
-                    detail: { type: 'host.select_song', songId: songMeta.id, forcePlay } 
+                    detail: { type: 'remote.select_song', songId: songMeta.id, forcePlay: willForcePlay } 
                 }));
-                setFeedbackMessage(`Sent to Host: ${songMeta.title}`);
+                
+                if (isPlaying && !willForcePlay) {
+                    setFeedbackMessage(`Zur Warteschlange hinzugefügt: ${songMeta.title}`);
+                } else {
+                    setFeedbackMessage(`Wird abgespielt: ${songMeta.title}`);
+                }
                 return;
             }
 
-            const isPlaying = !!selectedSong || (isTVConnected && !!remoteSong);
-
             if (!forcePlay && isPlaying) {
-                if (isClient && clientRole === 'singer') {
-                    setFeedbackMessage('Als Sänger kannst du keine Lieder zur Warteschlange hinzufügen.');
-                    return;
-                }
-                addToQueue(songMeta);
+                addToQueue(songMeta, requester, requesterId);
                 setFeedbackMessage(`Added to queue: ${songMeta.title}`);
                 return;
             }

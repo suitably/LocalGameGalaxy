@@ -8,7 +8,7 @@ interface UseMelodiqGlobalEventsProps {
     playSongOnTV: (id: string, song: SongMeta) => void;
     setRemoteSong: (song: SongMeta | null) => void;
     setFeedbackMessage: (msg: string | null) => void;
-    handleSelectSong: (song: SongMeta, forcePlay?: boolean) => void;
+    handleSelectSong: (song: SongMeta, forcePlay?: boolean, participants?: any[], requester?: string, requesterId?: string) => void;
     manager: any;
     isTVConnected: boolean;
     sendRemoteCommand: (command: string, value?: any) => void;
@@ -75,17 +75,17 @@ export const useMelodiqGlobalEvents = ({
         return () => window.removeEventListener('melodiq_play_playlist_trigger', handlePlaylistTrigger);
     }, []);
 
-    // 2.5 Listen for Host Select Song
+    // 2.5 Listen for Remote Select Song
     useEffect(() => {
         const handleRemoteSelect = (e: any) => {
-            const { songId, forcePlay } = e.detail;
+            const { songId, forcePlay, requester, requesterId } = e.detail;
             const song = songs.find(s => s.id === songId);
             if (song) {
-                handleSelectSongRef.current(song, forcePlay);
+                handleSelectSongRef.current(song, forcePlay, undefined, requester, requesterId);
             }
         };
-        window.addEventListener('melodiq_host_select_song', handleRemoteSelect);
-        return () => window.removeEventListener('melodiq_host_select_song', handleRemoteSelect);
+        window.addEventListener('melodiq_remote_select_song', handleRemoteSelect);
+        return () => window.removeEventListener('melodiq_remote_select_song', handleRemoteSelect);
     }, [songs]);
 
     // 3. Forward Phone Commands to TV & Handle Global Commands

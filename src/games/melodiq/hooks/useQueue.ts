@@ -248,7 +248,12 @@ export const useQueue = () => {
     }, [queue, isClient, channel, syncQueue]);
 
     const reorderQueueParticipant = useCallback((itemId: string, startIndex: number, endIndex: number) => {
-        if (isClient) return; // Only host handles reordering
+        if (isClient) {
+            window.dispatchEvent(new CustomEvent('melodiq_client_send_data', { 
+                detail: { type: 'queue.reorder_participant', itemId, startIndex, endIndex } 
+            }));
+            return;
+        }
         const next = queue.map(item => {
             if (item.id === itemId) {
                 const participants = Array.from(item.participants || []);

@@ -304,7 +304,7 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose 
                                             )}
                                         </IconButton>
                                     )}
-                                    {!isClient && (
+                                    {(!isClient || clientRole === 'admin' || clientRole === 'queue_manager') && (
                                         <IconButton
                                             size="small"
                                             onClick={(e) => {

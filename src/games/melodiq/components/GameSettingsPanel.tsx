@@ -305,16 +305,37 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                 />
 
                 <Box sx={{ mt: 1 }}>
-                    <TextField
-                        size="small"
-                        fullWidth
-                        label={t('melodiq.settings_panel.fallback_background_url', 'Fallback Background URL')}
-                        value={settings.fallbackBackgroundUrl || ''}
-                        onChange={(e) => onUpdateSetting('fallbackBackgroundUrl', e.target.value)}
-                        placeholder="e.g. https://example.com/loop.mp4"
-                    />
+                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                        <TextField
+                            size="small"
+                            fullWidth
+                            label={t('melodiq.settings_panel.fallback_background_url', 'Fallback Background URL')}
+                            value={settings.fallbackBackgroundUrl || ''}
+                            onChange={(e) => onUpdateSetting('fallbackBackgroundUrl', e.target.value)}
+                            placeholder="e.g. https://example.com/loop.mp4"
+                        />
+                        <Button variant="outlined" component="label" sx={{ height: 40, whiteSpace: 'nowrap' }}>
+                            {t('melodiq.settings_panel.browse', 'Browse...')}
+                            <input
+                                type="file"
+                                hidden
+                                accept="image/*,video/*"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        const url = URL.createObjectURL(file);
+                                        // We append the extension as a query param or hash so the player knows what it is
+                                        // But actually the file name works if we just use a fake hash for type hinting
+                                        const fakeHash = file.type.startsWith('video/') ? '#video.mp4' : '#image.jpg';
+                                        onUpdateSetting('fallbackBackgroundUrl', url + fakeHash);
+                                    }
+                                    e.target.value = '';
+                                }}
+                            />
+                        </Button>
+                    </Box>
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                        {t('melodiq.settings_panel.fallback_background_desc', 'Shown when a song has no video (and video is not hidden). Can be an image or video URL.')}
+                        {t('melodiq.settings_panel.fallback_background_desc', 'Shown when a song has no video. Use a web link or select a local file (local files may reset after reload).')}
                     </Typography>
                 </Box>
 
