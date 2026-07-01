@@ -82,9 +82,17 @@ To prevent spaghetti code and bloated files, agents **MUST** strictly adhere to 
 3.  **DRY (Don't Repeat Yourself)**: Before writing new code, use the search tools to check if a similar component, hook, or utility function already exists in `src/components`, `src/hooks`, or `src/lib`.
 4.  **Planning Phase Enforcement**: When creating an implementation plan (Phase 1), the agent **MUST** explicitly state the component hierarchy and how the feature will be split into multiple small, focused files to satisfy the SRP.
 
-## 5. Enforcement
+## 5. Localization (i18n)
+
+Agents **MUST** adhere to strict internationalization standards when working on UI code:
+1. **Never Hardcode Strings**: All user-facing text must use the translation function (e.g., `t('game.key')`).
+2. **Always Update Translation Files**: When adding a new translation key in a component, the agent **MUST** simultaneously update the corresponding translation files (like `i18n/index.ts` or JSONs) for **both** English and German (or all supported languages).
+3. **No Silent Failures**: Leaving translation files incomplete leads to raw keys showing in the UI. Double-check that every new key is mapped.
+
+## 6. Enforcement
 
 -   **Do not skip planning** for non-trivial tasks.
 -   **Always break down UI into small components** in your plan.
 -   **Do not skip verification**.
 -   **Always update the relevant docs** before marking the overall request as done.
+-   **Always implement i18n correctly** - never leave translations missing.
