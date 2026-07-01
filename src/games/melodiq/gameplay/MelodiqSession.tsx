@@ -51,6 +51,7 @@ export interface PassiveGameState {
     isFinished: boolean;
     isPausedForScore: boolean;
     currentTime: number;
+    hostTimestamp?: number;
 }
 
 export interface MelodiqSessionProps {
@@ -65,14 +66,16 @@ export interface MelodiqSessionProps {
     muteAudio?: boolean;
     isPassive?: boolean;
     passiveState?: PassiveGameState | null;
+    activeSessionOverride?: any[] | null;
     suppressResults?: boolean;
     uiScale?: number;
     isClient?: boolean;
+    clientDeviceId?: string;
 }
 
 const DEFAULT_TRACK_SCORE_WEIGHTS = [1, 1];
 
-const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlaybackUpdate, isTVMode = false, muteAudio = false, isPassive = false, passiveState, suppressResults = false, uiScale = 1.0, isClient = false }: MelodiqSessionProps, ref: React.ForwardedRef<MelodiqSessionHandle>): React.ReactNode => {
+const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlaybackUpdate, isTVMode = false, muteAudio = false, isPassive = false, passiveState, activeSessionOverride = null, suppressResults = false, uiScale = 1.0, isClient = false, clientDeviceId }: MelodiqSessionProps, ref: React.ForwardedRef<MelodiqSessionHandle>): React.ReactNode => {
     const { settings } = useMelodiqSettings();
     const {
         showDebugOverlay,
@@ -99,6 +102,10 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
     
     // Song Parsing State
     const [parsedSong, setParsedSong] = useState<SongWithNotes | null>(null);
+    const apiBase = (song.audioUrl || song.videoUrl)?.startsWith('/api/')
+        ? (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000')
+        : '';
+        
     const [contentLoading, setContentLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -192,7 +199,8 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         togglePlay,
         onExit,
         audioRef,
-        videoRef
+        videoRef,
+        activeSessionOverride
     });
 
     // Pass the real playersRef to useSessionEnd via a hack or fix useSessionEnd to take it directly
@@ -383,6 +391,11 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
 
 
     let visiblePlayers = players.filter(p => (!p.config.isRemote || (p.config.isRemote && (p.mic || p.webRtcManager))) && !p.config.hidePitch);
+
+    if (isClient && clientDeviceId) {
+        // Phone client should only see themselves (or nothing if they are a spectator/hidePitch is true)
+        visiblePlayers = visiblePlayers.filter(p => p.config.deviceId === clientDeviceId);
+    }
     
     let gridLayout = { rows: [1], columnWidthPercent: 100 };
     const numPlayers = visiblePlayers.length;

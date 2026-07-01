@@ -8,6 +8,8 @@ export interface ClientProfile {
     hue: number;
     micDeviceId?: string;
     displayMode?: 'lyrics' | 'self' | 'all';
+    latency?: number;
+    deviceId: string;
 }
 
 interface ClientEngineContextType {
@@ -16,7 +18,10 @@ interface ClientEngineContextType {
     gameState: PassiveGameState | null;
     sendClientCommand: (command: string, data?: any) => void;
     clientProfile: ClientProfile;
-    updateClientProfile: (updates: Partial<ClientProfile>) => void;
+    clientRole: string;
+    setClientRole: (role: string) => void;
+    promptedSongId: string | null;
+    setPromptedSongId: (id: string | null) => void;
 }
 
 export const ClientEngineContext = createContext<ClientEngineContextType>({
@@ -24,8 +29,11 @@ export const ClientEngineContext = createContext<ClientEngineContextType>({
     statusMessage: 'Not connected',
     gameState: null,
     sendClientCommand: () => {},
-    clientProfile: { name: 'Phone', hue: 120 },
-    updateClientProfile: () => {},
+    clientProfile: { name: 'Phone', hue: 120, deviceId: '' },
+    clientRole: 'spectator',
+    setClientRole: () => {},
+    promptedSongId: null,
+    setPromptedSongId: () => {},
 });
 
 export const useClientEngine = () => useContext(ClientEngineContext);
@@ -55,13 +63,25 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
         if (stored) {
             try { 
                 const parsed = JSON.parse(stored);
-                // Ensure default displayMode is set if missing
                 if (!parsed.displayMode) parsed.displayMode = 'lyrics';
+                if (!parsed.deviceId) {
+                    parsed.deviceId = crypto.randomUUID();
+                    localStorage.setItem('melodiq_client_profile', JSON.stringify(parsed));
+                }
                 return parsed;
             } catch (e) {}
         }
-        return { name: 'Phone', hue: Math.floor(Math.random() * 360), displayMode: 'lyrics' };
+        const newProfile: ClientProfile = { 
+            name: 'Phone', 
+            hue: Math.floor(Math.random() * 360), 
+            displayMode: 'lyrics',
+            deviceId: crypto.randomUUID()
+        };
+        localStorage.setItem('melodiq_client_profile', JSON.stringify(newProfile));
+        return newProfile;
     });
+    const [clientRole, setClientRole] = useState<string>('spectator');
+    const [promptedSongId, setPromptedSongId] = useState<string | null>(null);
 
     const updateClientProfile = useCallback((updates: Partial<ClientProfile>) => {
         setClientProfile(prev => {
@@ -94,16 +114,40 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
                 window.dispatchEvent(new CustomEvent('melodiq_client_session_sync', { detail: { activeSong: null } }));
             }
         } else if (data.type === 'queue.update') {
-            // Trigger a custom event that useQueue can listen to if needed, 
-            // OR if we abstract useQueue to accept an external dispatcher, we do it here.
-            // For now, we will use a global window event to sync the queue on the client
             window.dispatchEvent(new CustomEvent('melodiq_client_queue_update', { detail: data }));
         } else if (data.type === 'session_sync') {
             window.dispatchEvent(new CustomEvent('melodiq_client_session_sync', { detail: data }));
+            if (data.activeSong && data.participants) {
+                const isSinger = data.participants.some((p: any) => p.deviceId === clientProfile.deviceId);
+                if (isSinger) {
+                    setClientRole('singer');
+                    updateClientProfile({ displayMode: 'self' });
+                } else {
+                    setClientRole('spectator');
+                    updateClientProfile({ displayMode: 'lyrics' });
+                }
+            } else if (!data.activeSong) {
+                setClientRole('spectator');
+                updateClientProfile({ displayMode: 'lyrics' });
+            }
+        } else if (data.type === 'roster.update') {
+            // Find our role in the roster
+            if (data.roster && Array.isArray(data.roster)) {
+                const me = data.roster.find((r: any) => r.deviceId === clientProfile.deviceId);
+                if (me && me.role) {
+                    setClientRole(me.role);
+                }
+            }
         }
-    }, []);
+    }, [clientProfile.deviceId]);
 
-    const getIdentity = useCallback(() => ({ name: clientProfile.name, hue: clientProfile.hue }), [clientProfile]);
+    const getIdentity = useCallback(() => {
+        return {
+            name: clientProfile.name,
+            hue: clientProfile.hue,
+            deviceId: clientProfile.deviceId
+        };
+    }, [clientProfile.name, clientProfile.hue, clientProfile.deviceId]);
 
     const { isConnected, statusMessage, sendData, resendIdentity } = useWebRTCClient(partyId, trackerUrls, {
         autoConnect: true,
@@ -148,8 +192,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
                 cancelAnimationFrame(animFrameRef.current);
                 animFrameRef.current = 0;
             }
-
-            if (!gameState?.isPlaying || !mounted) return;
+            if (!gameState?.isPlaying || !mounted || clientRole === 'spectator') return;
 
             const mic = new MicrophoneManager();
             micRef.current = mic;
@@ -184,8 +227,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
                 console.error("[PhoneClientEngine] Failed to start microphone:", err);
             }
         };
-
-        if (gameState?.isPlaying) {
+        if (gameState?.isPlaying && clientRole === 'singer') {
             startMic();
         } else {
             // Stop mic when session is not playing to save battery
@@ -209,7 +251,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
                 cancelAnimationFrame(animFrameRef.current);
             }
         };
-    }, [gameState?.isPlaying, sendData, clientProfile.micDeviceId]);
+    }, [gameState?.isPlaying, sendData, clientProfile.micDeviceId, clientRole]);
 
     const sendClientCommand = (command: string, data: any = {}) => {
         sendData({ type: 'remote.command', command, ...data });
@@ -219,11 +261,16 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     useEffect(() => {
         if (isConnected && resendIdentity) {
             resendIdentity();
+            sendClientCommand('UPDATE_PROFILE', { latency: clientProfile.latency || 0 });
         }
-    }, [clientProfile.name, clientProfile.hue, isConnected, resendIdentity]);
+    }, [clientProfile.name, clientProfile.hue, clientProfile.latency, isConnected, resendIdentity]);
 
     return (
-        <ClientEngineContext.Provider value={{ isConnected, statusMessage, gameState, sendClientCommand, clientProfile, updateClientProfile }}>
+        <ClientEngineContext.Provider value={{ 
+            isConnected, statusMessage, gameState, sendClientCommand, 
+            clientProfile, updateClientProfile, clientRole, setClientRole,
+            promptedSongId, setPromptedSongId
+        }}>
             {/* Show a connection overlay if not connected yet */}
             {!isConnected && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>

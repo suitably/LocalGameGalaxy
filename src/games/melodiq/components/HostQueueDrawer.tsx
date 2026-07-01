@@ -9,7 +9,12 @@ import DragHandleIcon from '@mui/icons-material/DragHandle';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import MicIcon from '@mui/icons-material/Mic';
+import MicOffIcon from '@mui/icons-material/MicOff';
+import EditIcon from '@mui/icons-material/Edit';
 import { useQueue } from '../hooks/useQueue';
+import { useClientEngine } from '../PhoneClientEngine';
+import { QueueParticipantDialog } from './QueueParticipantDialog';
 
 interface HostQueueDrawerProps {
     open: boolean;
@@ -17,10 +22,16 @@ interface HostQueueDrawerProps {
 }
 
 export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose }) => {
-    const { queue, nowPlaying, removeFromQueue, moveItem, clearQueue } = useQueue();
+    const { queue, nowPlaying, removeFromQueue, moveItem, clearQueue, toggleQueueParticipant } = useQueue();
+    const { clientRole, clientProfile } = useClientEngine();
+    const isClient = new URLSearchParams(window.location.search).get('role') === 'client';
+    
+    const canManageQueue = !isClient || clientRole === 'admin' || clientRole === 'queue_manager';
+
     const [dragIndex, setDragIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
     const dragItemRef = useRef<number | null>(null);
+    const [manageParticipantsId, setManageParticipantsId] = useState<string | null>(null);
 
     const handleDragStart = useCallback((index: number) => {
         dragItemRef.current = index;
@@ -98,7 +109,7 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose 
                     )}
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    {queue.length > 0 && (
+                    {queue.length > 0 && canManageQueue && (
                         <Button
                             size="small"
                             color="error"
@@ -174,15 +185,21 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose 
                         {queue.map((item, index) => (
                             <ListItem
                                 key={item.id}
-                                draggable
-                                onDragStart={() => handleDragStart(index)}
-                                onDragOver={(e) => handleDragOver(e, index)}
-                                onDrop={(e) => handleDrop(e, index)}
+                                draggable={canManageQueue}
+                                onDragStart={(e) => {
+                                    if (canManageQueue) handleDragStart(index);
+                                }}
+                                onDragOver={(e) => {
+                                    if (canManageQueue) handleDragOver(e, index);
+                                }}
+                                onDrop={(e) => {
+                                    if (canManageQueue) handleDrop(e, index);
+                                }}
                                 onDragEnd={handleDragEnd}
                                 sx={{
                                     px: 2.5,
                                     py: 1,
-                                    cursor: 'grab',
+                                    cursor: canManageQueue ? 'grab' : 'default',
                                     transition: 'all 0.15s ease',
                                     opacity: dragIndex === index ? 0.4 : 1,
                                     bgcolor: dragOverIndex === index
@@ -198,27 +215,16 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose 
                                         cursor: 'grabbing',
                                     },
                                 }}
-                                secondaryAction={
-                                    <IconButton
-                                        edge="end"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            removeFromQueue(item.id);
-                                        }}
-                                        size="small"
-                                        sx={{ color: 'grey.500', '&:hover': { color: 'error.main' } }}
-                                    >
-                                        <DeleteIcon fontSize="small" />
-                                    </IconButton>
-                                }
                             >
                                 {/* Drag Handle */}
-                                <Box sx={{
-                                    display: 'flex', alignItems: 'center', mr: 1.5,
-                                    color: 'grey.600', cursor: 'grab',
-                                }}>
-                                    <DragHandleIcon fontSize="small" />
-                                </Box>
+                                {canManageQueue && (
+                                    <Box sx={{
+                                        display: 'flex', alignItems: 'center', mr: 1.5,
+                                        color: 'grey.600', cursor: 'grab',
+                                    }}>
+                                        <DragHandleIcon fontSize="small" />
+                                    </Box>
+                                )}
 
                                 {/* Position number */}
                                 <Typography
@@ -246,13 +252,88 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose 
                                     secondaryTypographyProps={{
                                         noWrap: true, fontSize: '0.8rem', color: 'grey.500',
                                     }}
-                                    sx={{ mr: 2 }}
+                                    sx={{ mr: 2, flex: 1 }}
                                 />
+
+                                {/* Participants and Join Button */}
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    {item.participants && item.participants.length > 0 ? (
+                                        <Box sx={{ display: 'flex', mr: 1 }}>
+                                            {item.participants.map((p: any, i: number) => (
+                                                <Avatar
+                                                    key={i}
+                                                    sx={{
+                                                        width: 24, height: 24, fontSize: '0.7rem',
+                                                        bgcolor: `hsl(${p.hue || 0}, 80%, 40%)`,
+                                                        border: '2px solid rgba(20, 20, 30, 0.98)',
+                                                        ml: i > 0 ? -1 : 0
+                                                    }}
+                                                >
+                                                    {p.name ? p.name.charAt(0).toUpperCase() : '?'}
+                                                </Avatar>
+                                            ))}
+                                        </Box>
+                                    ) : null}
+
+                                    {isClient && (
+                                        <IconButton
+                                            size="small"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleQueueParticipant(item.id, clientProfile.deviceId, clientProfile);
+                                            }}
+                                            sx={{
+                                                bgcolor: item.participants?.find((p: any) => p.deviceId === clientProfile.deviceId) ? 'primary.main' : 'rgba(255,255,255,0.1)',
+                                                color: 'white',
+                                                '&:hover': {
+                                                    bgcolor: item.participants?.find((p: any) => p.deviceId === clientProfile.deviceId) ? 'primary.dark' : 'rgba(255,255,255,0.2)',
+                                                }
+                                            }}
+                                        >
+                                            {item.participants?.find((p: any) => p.deviceId === clientProfile.deviceId) ? (
+                                                <MicIcon fontSize="small" />
+                                            ) : (
+                                                <MicOffIcon fontSize="small" />
+                                            )}
+                                        </IconButton>
+                                    )}
+                                    {!isClient && (
+                                        <IconButton
+                                            size="small"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setManageParticipantsId(item.id);
+                                            }}
+                                            sx={{ color: 'grey.500', '&:hover': { color: 'white' } }}
+                                        >
+                                            <EditIcon fontSize="small" />
+                                        </IconButton>
+                                    )}
+                                    
+                                    {(!isClient || canManageQueue || (clientRole === 'queue_contributor' && item.requesterId === clientProfile.deviceId)) && (
+                                        <IconButton
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeFromQueue(item.id);
+                                            }}
+                                            size="small"
+                                            sx={{ color: 'grey.500', '&:hover': { color: 'error.main' } }}
+                                        >
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    )}
+                                </Box>
                             </ListItem>
                         ))}
                     </List>
                 )}
             </Box>
+            
+            <QueueParticipantDialog
+                open={!!manageParticipantsId}
+                onClose={() => setManageParticipantsId(null)}
+                queueItemId={manageParticipantsId}
+            />
         </Drawer>
     );
 };

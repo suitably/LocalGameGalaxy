@@ -58,14 +58,33 @@ Agents must follow this cyclical process for every significant task:
         -   **Verification Results**: Screenshots, command outputs, or logs proving success.
         -   **Outstanding Issues**: detailed list of anything not fully resolved.
 
+### Phase 5: Documentation Maintenance
+**Goal**: Ensure the project's single source of truth remains perfectly accurate.
+
+1.  **Audit**: After your changes are verified, ask yourself: "Does the code I just wrote match the existing architecture docs?"
+2.  **Update `docs/tech/`**: If you introduced a new pattern, updated state management, or refactored a module, you MUST update `docs/tech/architecture.md`.
+3.  **Update Workflows**: If you discovered a new way to do things or established a new standard, document it in `docs/workflows/`.
+
 ## 3. Workflow Documentation
 
 If you encounter a repeatable process (e.g., "How to add a new game role"), document it in `docs/workflows/`.
 -   Use clear, step-by-step instructions.
 -   Add a summary in `docs/workflows/00_SUMMARY.md` if needed.
 
-## 4. Enforcement
+## 4. Code Quality & SOLID Principles
+
+To prevent spaghetti code and bloated files, agents **MUST** strictly adhere to the following when planning and executing:
+
+1.  **SOLID Principles**: 
+    -   **Single Responsibility Principle (SRP)**: Each file, component, or hook should have exactly *one* job. If a component handles UI layout, business logic, and data fetching, it must be split.
+    -   **Dependency Inversion**: Use hooks and contexts to inject state and logic into UI components rather than hardcoding complex logic inside views.
+2.  **File Size Limits**: Keep files small. If a React component exceeds ~250 lines, it is likely doing too much. Break it down into sub-components or extract logic into custom hooks (`useFeatureLogic.ts`).
+3.  **DRY (Don't Repeat Yourself)**: Before writing new code, use the search tools to check if a similar component, hook, or utility function already exists in `src/components`, `src/hooks`, or `src/lib`.
+4.  **Planning Phase Enforcement**: When creating an implementation plan (Phase 1), the agent **MUST** explicitly state the component hierarchy and how the feature will be split into multiple small, focused files to satisfy the SRP.
+
+## 5. Enforcement
 
 -   **Do not skip planning** for non-trivial tasks.
+-   **Always break down UI into small components** in your plan.
 -   **Do not skip verification**.
 -   **Always update the relevant docs** before marking the overall request as done.

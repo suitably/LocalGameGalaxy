@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { MicrophoneManager } from './audio/MicrophoneManager';
 import { useProfiles } from './hooks/useProfiles';
 import { useMelodiqSettings, DEFAULT_SETTINGS, type SettingsState } from './hooks/SettingsContext';
-import { SessionSetup } from './components/SessionSetup';
+import { HardwareMicSetup } from './components/HardwareMicSetup';
 import { UserProfilesManager } from './components/UserProfilesManager';
 import { GameSettingsPanel } from './components/GameSettingsPanel';
 import { HelperConnection } from './components/HelperConnection';
@@ -122,22 +122,13 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack, onNavi
                         </Button>
                     </Box>
                 )}
+                {/* 2. Hardware Microphones */}
+                <HardwareMicSetup />
 
                 <Divider />
-
-                {/* 2. Session Setup */}
-                <SessionSetup
-                    profiles={profilesHook.profiles}
-                    activePlayers={profilesHook.activePlayers}
-                    devices={devices}
-                    loadingDevices={loadingDevices}
-                    onRefreshDevices={refreshDevices}
-                    onToggleActivePlayer={profilesHook.toggleActivePlayer}
-                    onMoveActivePlayer={profilesHook.moveActivePlayer}
-                    onUpdateActivePlayerConfig={profilesHook.updateActivePlayerConfig}
-                />
-
                 <Divider />
+
+
 
                 {/* 3. User Profiles */}
                 <UserProfilesManager

@@ -143,7 +143,7 @@ export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, 
                         <CheckCircleIcon sx={{ color: 'success.main', fontSize: 20 }} />
                     </Box>
                 )}
-                {!isDownloaded && !isDownloading && song.usdbId && (
+                {!isDownloaded && !isDownloading && song.usdbId && onActionClick && (
                     <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', alignItems: 'center', bgcolor: 'rgba(0,0,0,0.5)', p: 0.5, borderRadius: 1 }} onClick={onActionClick}>
                         <CloudDownloadIcon sx={{ color: 'primary.main', fontSize: 20 }} />
                     </Box>

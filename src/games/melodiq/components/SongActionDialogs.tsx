@@ -26,12 +26,14 @@ interface SongActionDialogsProps {
     refreshSongs: () => Promise<void>;
     
     setFeedbackMessage: (msg: string | null) => void;
+    isClient?: boolean;
+    clientRole?: string;
 }
 
 export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
     selectedSongForQueue, queueDialogOpen, setQueueDialogOpen,
     isTVConnected, playSongOnTV, handleSelectSong, addNext, addToQueue, refreshSongs,
-    setFeedbackMessage
+    setFeedbackMessage, isClient, clientRole
 }) => {
     const { t } = useTranslation();
     const { playlists, addSongToPlaylist, createPlaylist } = usePlaylists();
@@ -130,10 +132,12 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                 <DialogTitle>{t('melodiq.add_end')}</DialogTitle>
                 <DialogContent>
                     <List>
-                        <ListItemButton onClick={() => handleQueueOption('play_now')}>
-                            <ListItemIcon><PlayArrowIcon /></ListItemIcon>
-                            <ListItemText primary={t('melodiq.play_now')} secondary={isTVConnected ? t('melodiq.play_now_tv_desc') : t('melodiq.play_now_locally_desc')} />
-                        </ListItemButton>
+                        {(!isClient || clientRole === 'admin') && (
+                            <ListItemButton onClick={() => handleQueueOption('play_now')}>
+                                <ListItemIcon><PlayArrowIcon /></ListItemIcon>
+                                <ListItemText primary={t('melodiq.play_now')} secondary={isTVConnected ? t('melodiq.play_now_tv_desc') : t('melodiq.play_now_locally_desc')} />
+                            </ListItemButton>
+                        )}
                         <ListItemButton onClick={() => handleQueueOption('play_next')}>
                             <ListItemIcon><PlaylistPlayIcon /></ListItemIcon>
                             <ListItemText primary={t('melodiq.play_next')} secondary={t('melodiq.play_next_desc')} />
@@ -142,19 +146,25 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                             <ListItemIcon><AddToQueueIcon /></ListItemIcon>
                             <ListItemText primary={t('melodiq.add_end')} secondary={t('melodiq.add_end_desc')} />
                         </ListItemButton>
-                        <ListItemButton onClick={() => setPlaylistDialogOpen(true)}>
-                            <ListItemIcon><QueueMusicIcon /></ListItemIcon>
-                            <ListItemText primary={t('melodiq.add_to_playlist')} secondary={t('melodiq.add_to_playlist_desc')} />
-                        </ListItemButton>
-                        <Divider />
-                        <ListItemButton onClick={() => { setQueueDialogOpen(false); setYouTubeSearchDialogOpen(true); }}>
-                            <ListItemIcon><VideoLibraryIcon /></ListItemIcon>
-                            <ListItemText primary="Video/Audio ändern" secondary="Neues YouTube Video für diesen Song herunterladen" />
-                        </ListItemButton>
-                        <ListItemButton onClick={handleDeleteSong} sx={{ color: 'error.main' }}>
-                            <ListItemIcon sx={{ color: 'error.main' }}><DeleteIcon /></ListItemIcon>
-                            <ListItemText primary="Song löschen" secondary="Kompletten Song vom Server entfernen" />
-                        </ListItemButton>
+                        {!isClient && (
+                            <ListItemButton onClick={() => setPlaylistDialogOpen(true)}>
+                                <ListItemIcon><QueueMusicIcon /></ListItemIcon>
+                                <ListItemText primary={t('melodiq.add_to_playlist')} secondary={t('melodiq.add_to_playlist_desc')} />
+                            </ListItemButton>
+                        )}
+                        {(!isClient || clientRole === 'admin') && (
+                            <>
+                                <Divider />
+                                <ListItemButton onClick={() => { setQueueDialogOpen(false); setYouTubeSearchDialogOpen(true); }}>
+                                    <ListItemIcon><VideoLibraryIcon /></ListItemIcon>
+                                    <ListItemText primary="Video/Audio ändern" secondary="Neues YouTube Video für diesen Song herunterladen" />
+                                </ListItemButton>
+                                <ListItemButton onClick={handleDeleteSong} sx={{ color: 'error.main' }}>
+                                    <ListItemIcon sx={{ color: 'error.main' }}><DeleteIcon /></ListItemIcon>
+                                    <ListItemText primary="Song löschen" secondary="Kompletten Song vom Server entfernen" />
+                                </ListItemButton>
+                            </>
+                        )}
                     </List>
                 </DialogContent>
             </Dialog>

@@ -6,7 +6,7 @@ import { useSongs } from '../hooks/useSongs';
 
 export const PhoneQueueBridge: React.FC = () => {
     const { manager } = useWebRTC();
-    const { queue, addToQueue, removeFromQueue, nowPlaying } = useQueue();
+    const { queue, addToQueue, removeFromQueue, nowPlaying, toggleQueueParticipant } = useQueue();
     const { songs } = useSongs();
 
     // Broadcast Queue Updates to all connected peers whenever queue changes
@@ -102,7 +102,18 @@ export const PhoneQueueBridge: React.FC = () => {
                         const song = songs.find(s => s.id === data.songId);
                         if (song) {
                             const peer = manager.getConnectedPeers().find(p => p.peerId === peerId);
-                            addToQueue(song, peer ? peer.name : 'Remote');
+                            if (peer) {
+                                const storedRoles = localStorage.getItem('melodiq_client_roles');
+                                let role = 'singer';
+                                if (storedRoles && peer.deviceId) {
+                                    try { role = JSON.parse(storedRoles)[peer.deviceId] || 'singer'; } catch (e) {}
+                                }
+                                if (role !== 'singer') {
+                                    addToQueue(song, peer.name, peer.deviceId);
+                                } else {
+                                    console.warn(`[PhoneQueueBridge] Denied queue.add from ${peer.name} (Role: ${role})`);
+                                }
+                            }
                         }
                     }
                     break;
@@ -110,16 +121,62 @@ export const PhoneQueueBridge: React.FC = () => {
 
                 case 'host.select_song': {
                     if (data.songId) {
-                        window.dispatchEvent(new CustomEvent('melodiq_host_select_song', { 
-                            detail: { songId: data.songId, forcePlay: data.forcePlay } 
-                        }));
+                        const peer = manager.getConnectedPeers().find(p => p.peerId === peerId);
+                        if (peer) {
+                            const storedRoles = localStorage.getItem('melodiq_client_roles');
+                            let role = 'singer';
+                            if (storedRoles && peer.deviceId) {
+                                try { role = JSON.parse(storedRoles)[peer.deviceId] || 'singer'; } catch (e) {}
+                            }
+                            if (role === 'admin') {
+                                window.dispatchEvent(new CustomEvent('melodiq_host_select_song', { 
+                                    detail: { songId: data.songId, forcePlay: data.forcePlay } 
+                                }));
+                            } else {
+                                console.warn(`[PhoneQueueBridge] Denied host.select_song from ${peer.name} (Role: ${role})`);
+                            }
+                        }
                     }
                     break;
                 }
 
                 case 'queue.remove': {
                     if (data.itemId) {
-                        removeFromQueue(data.itemId);
+                        const peer = manager.getConnectedPeers().find(p => p.peerId === peerId);
+                        if (peer) {
+                            const storedRoles = localStorage.getItem('melodiq_client_roles');
+                            let role = 'singer';
+                            if (storedRoles && peer.deviceId) {
+                                try { role = JSON.parse(storedRoles)[peer.deviceId] || 'singer'; } catch (e) {}
+                            }
+                            
+                            if (role === 'admin' || role === 'queue_manager') {
+                                removeFromQueue(data.itemId);
+                            } else if (role === 'queue_contributor') {
+                                // Find the item to check who added it
+                                const item = queue.find(i => i.id === data.itemId);
+                                if (item && item.requesterId === peer.deviceId) {
+                                    removeFromQueue(data.itemId);
+                                } else {
+                                    console.warn(`[PhoneQueueBridge] Denied queue.remove from ${peer.name} (Role: ${role}, Owner: ${item?.requesterId})`);
+                                }
+                            } else {
+                                console.warn(`[PhoneQueueBridge] Denied queue.remove from ${peer.name} (Role: ${role})`);
+                            }
+                        }
+                    }
+                    break;
+                }
+                case 'queue.toggle_participant': {
+                    if (data.itemId && data.deviceId) {
+                        const peer = manager.getConnectedPeers().find(p => p.peerId === peerId);
+                        if (peer) {
+                            // Any role can toggle participation for themselves
+                            if (data.deviceId === peer.deviceId || data.deviceId === peer.peerId) {
+                                // Call toggleQueueParticipant
+                                toggleQueueParticipant(data.itemId, data.deviceId, { name: peer.name, hue: peer.hue });
+                            }
+                        }
                     }
                     break;
                 }
@@ -131,7 +188,7 @@ export const PhoneQueueBridge: React.FC = () => {
         return () => {
             manager.off('message', handleMessage);
         };
-    }, [manager, songs, queue, addToQueue, removeFromQueue, nowPlaying]); // Dependencies need to be stable or this will re-bind constantly
+    }, [manager, songs, queue, addToQueue, removeFromQueue, nowPlaying, toggleQueueParticipant]); // Dependencies need to be stable or this will re-bind constantly
 
     return null;
 };

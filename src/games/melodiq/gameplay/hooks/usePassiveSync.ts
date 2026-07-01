@@ -114,9 +114,13 @@ export function usePassiveSync({
             }
 
             if (isClient) {
-                const drift = Math.abs(virtualTimeRef.current! - passiveState.currentTime);
+                // Calculate network latency if hostTimestamp is provided
+                const latency = passiveState.hostTimestamp ? (Date.now() - passiveState.hostTimestamp) / 1000 : 0;
+                const estimatedHostTime = passiveState.currentTime + latency;
+                
+                const drift = Math.abs(virtualTimeRef.current! - estimatedHostTime);
                 if (!isPlayingRef.current || drift > 0.15) {
-                    (virtualTimeRef as any).current = passiveState.currentTime;
+                    (virtualTimeRef as any).current = estimatedHostTime;
                 }
             }
         };

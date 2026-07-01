@@ -104,10 +104,12 @@ export class WebRTCMicManager extends WebRTCHostManager<MicRemotePeer> {
         return { frequency, note, volume };
     }
 
-    getConnectedPeers(): Array<{ peerId: string; name: string }> {
+    getConnectedPeers(): Array<{ peerId: string; name: string; hue?: number; deviceId?: string }> {
         return Array.from(this.peers.values()).map(p => ({
             peerId: p.peerId,
             name: p.name,
+            hue: p.hue,
+            deviceId: p.deviceId
         }));
     }
 }

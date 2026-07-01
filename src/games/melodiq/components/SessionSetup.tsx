@@ -11,6 +11,8 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import type { UserProfile, ActivePlayer } from '../types';
 import { LatencyCalibrator } from './LatencyCalibrator';
 import { useWebRTC } from '../audio/WebRTCContext';
+import { useClientRoles } from '../hooks/useClientRoles';
+import type { ClientRole } from '../types';
 
 interface SessionSetupProps {
     profiles: UserProfile[];
@@ -34,6 +36,7 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
     onUpdateActivePlayerConfig
 }) => {
     const { peers: connectedPreviewPeers, activePeers, inactivePeers, togglePeerActive } = useWebRTC();
+    const { getRole, setRole } = useClientRoles();
 
     // Player Settings Popover
     const [settingsAnchorEl, setSettingsAnchorEl] = useState<HTMLElement | null>(null);
@@ -184,7 +187,19 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
                         <Typography sx={{ width: 24, textAlign: 'center' }}>📱</Typography>
                         <Avatar sx={{ bgcolor: peer.hue ? `hsl(${peer.hue}, 100%, 50%)` : 'grey', width: 32, height: 32 }}>{peer.name[0]}</Avatar>
                         <Typography sx={{ flex: 1, fontWeight: 'bold' }}>{peer.name}</Typography>
-                        <Chip label="Phone" size="small" variant="outlined" />
+                        <Select
+                            size="small"
+                            value={getRole(peer.deviceId || peer.peerId)}
+                            onChange={(e) => {
+                                setRole(peer.deviceId || peer.peerId, e.target.value as ClientRole);
+                            }}
+                            sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.1)', height: 32, '& .MuiSelect-icon': { color: 'white' } }}
+                        >
+                            <MenuItem value="admin">Admin</MenuItem>
+                            <MenuItem value="queue_manager">Queue Manager</MenuItem>
+                            <MenuItem value="queue_contributor">Queue Contributor</MenuItem>
+                            <MenuItem value="singer">Singer</MenuItem>
+                        </Select>
                         <IconButton color="error" onClick={() => togglePeerActive(peer.peerId)}>
                             <CloseIcon />
                         </IconButton>

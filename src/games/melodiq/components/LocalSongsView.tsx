@@ -10,10 +10,11 @@ interface LocalSongsViewProps {
     filteredSongs: Song[];
     handleSelectSong: (song: Song) => void;
     handleSongLongPress: (song: Song) => void;
+    isSinger?: boolean;
 }
 
 export const LocalSongsView: React.FC<LocalSongsViewProps> = ({
-    viewMode, filteredSongs, handleSelectSong, handleSongLongPress
+    viewMode, filteredSongs, handleSelectSong, handleSongLongPress, isSinger
 }) => {
     if (filteredSongs.length === 0) return null;
 
@@ -59,8 +60,8 @@ export const LocalSongsView: React.FC<LocalSongsViewProps> = ({
                         return (
                             <SongCard
                                 song={song}
-                                onClick={() => handleSelectSong(song)}
-                                onLongPress={() => handleSongLongPress(song)}
+                                onClick={isSinger ? () => {} : () => handleSelectSong(song)}
+                                onLongPress={isSinger ? undefined : () => handleSongLongPress(song)}
                             />
                         );
                     }}
@@ -80,9 +81,9 @@ export const LocalSongsView: React.FC<LocalSongsViewProps> = ({
                         <Box sx={{ px: 2, py: 0.5 }}>
                             <SongListItem
                                 song={song}
-                                onClick={() => handleSelectSong(song)}
-                                onLongPress={() => handleSongLongPress(song)}
-                                onMenuClick={() => handleSongLongPress(song)}
+                                onClick={isSinger ? () => {} : () => handleSelectSong(song)}
+                                onLongPress={isSinger ? undefined : () => handleSongLongPress(song)}
+                                onMenuClick={isSinger ? undefined : () => handleSongLongPress(song)}
                             />
                         </Box>
                     );

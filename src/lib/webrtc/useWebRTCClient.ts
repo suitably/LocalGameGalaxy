@@ -93,6 +93,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
                 type: 'identify',
                 name: identity.name,
                 hue: identity.hue,
+                deviceId: identity.deviceId,
                 connectionId: (peer as any)._connectionId
             };
             if ((peer as any).connected) peer.send(JSON.stringify(identityMsg));

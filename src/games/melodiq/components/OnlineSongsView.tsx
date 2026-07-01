@@ -14,11 +14,12 @@ interface OnlineSongsViewProps {
     handleDownloadAndQueue: (song: any) => void;
     handleSongLongPress: (song: any) => void;
     handleDownloadOnly: (song: any) => void;
+    isSinger?: boolean;
 }
 
 export const OnlineSongsView: React.FC<OnlineSongsViewProps> = ({
     isSearchingOnline, viewMode, filteredOnlineSongs, songs, jobs,
-    handleSelectSong, handleDownloadAndQueue, handleSongLongPress, handleDownloadOnly
+    handleSelectSong, handleDownloadAndQueue, handleSongLongPress, handleDownloadOnly, isSinger
 }) => {
     if (isSearchingOnline) {
         return (
@@ -53,16 +54,17 @@ export const OnlineSongsView: React.FC<OnlineSongsViewProps> = ({
                                 isDownloaded={isDownloaded}
                                 downloadProgress={progress}
                                 onClick={() => {
+                                    if (isSinger) return;
                                     if (isDownloaded && localSong) {
                                         handleSelectSong(localSong);
                                     } else if (!isDl && !isDownloaded) {
                                         handleDownloadAndQueue(song);
                                     }
                                 }}
-                                onLongPress={() => {
+                                onLongPress={isSinger ? undefined : () => {
                                     if (isDownloaded && localSong) handleSongLongPress(localSong);
                                 }}
-                                onActionClick={() => {
+                                onActionClick={isSinger ? undefined : () => {
                                     if (!isDl && !isDownloaded) handleDownloadOnly(song);
                                 }}
                             />
@@ -94,19 +96,20 @@ export const OnlineSongsView: React.FC<OnlineSongsViewProps> = ({
                                 isDownloaded={isDownloaded}
                                 downloadProgress={progress}
                                 onClick={() => {
+                                    if (isSinger) return;
                                     if (isDownloaded && localSong) {
                                         handleSelectSong(localSong);
                                     } else if (!isDl && !isDownloaded) {
                                         handleDownloadAndQueue(song);
                                     }
                                 }}
-                                onLongPress={() => {
+                                onLongPress={isSinger ? undefined : () => {
                                     if (isDownloaded && localSong) handleSongLongPress(localSong);
                                 }}
-                                onMenuClick={() => {
+                                onMenuClick={isSinger ? undefined : () => {
                                     if (isDownloaded && localSong) handleSongLongPress(localSong);
                                 }}
-                                onActionClick={() => {
+                                onActionClick={isSinger ? undefined : () => {
                                     if (!isDl && !isDownloaded) handleDownloadOnly(song);
                                 }}
                             />

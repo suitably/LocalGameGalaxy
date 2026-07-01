@@ -27,12 +27,13 @@ interface UseMelodiqHeaderProps {
     openTVWindow: () => void;
     startPresentation: () => void;
     disconnectTV: () => void;
+    clientRole: string;
 }
 
 export const useMelodiqHeader = ({
     currentView, setCurrentView, viewMode, setViewMode, queueLength, loadingProgress,
     refreshSongs, setShowQueueDrawer, isClient,
-    isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV
+    isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV, clientRole
 }: UseMelodiqHeaderProps) => {
     const { t } = useTranslation();
     const { setHeader, setCustomHeaderActions } = useLayout();
@@ -48,24 +49,32 @@ export const useMelodiqHeader = ({
                     icon: viewMode === 'grid' ? <ViewListIcon /> : <ViewModuleIcon />,
                     action: () => setViewMode(prev => prev === 'grid' ? 'list' : 'grid'),
                     showAlways: true
-                },
-                {
-                    label: `Queue (${queueLength})`,
-                    icon: <PlaylistPlayIcon />,
-                    action: () => setShowQueueDrawer(true)
-                },
-                {
+                }
+            ];
+
+            const isSinger = isClient && clientRole === 'singer';
+            const isAdmin = !isClient || clientRole === 'admin';
+
+            headerActions.push({
+                label: `Queue (${queueLength})`,
+                icon: <PlaylistPlayIcon />,
+                action: () => setShowQueueDrawer(true)
+            });
+
+            if (isAdmin) {
+                headerActions.push({
                     label: 'Playlists',
                     icon: <QueueMusicIcon />,
                     action: () => setCurrentView('Playlists')
-                },
-                {
-                    label: 'Refresh',
-                    icon: <SearchIcon />,
-                    action: () => refreshSongs(),
-                    disabled: loadingProgress !== null
-                }
-            ];
+                });
+            }
+
+            headerActions.push({
+                label: 'Refresh',
+                icon: <SearchIcon />,
+                action: () => refreshSongs(),
+                disabled: loadingProgress !== null
+            });
 
             headerActions.push({
                 label: 'Settings',
@@ -109,6 +118,6 @@ export const useMelodiqHeader = ({
         currentView, queueLength, loadingProgress, refreshSongs, setCurrentView, t, 
         setHeader, setCustomHeaderActions, isTVConnected, openTVWindow, 
         isPresentationAvailable, startPresentation, disconnectTV, viewMode, isClient,
-        setViewMode, setShowQueueDrawer
+        setViewMode, setShowQueueDrawer, clientRole
     ]);
 };

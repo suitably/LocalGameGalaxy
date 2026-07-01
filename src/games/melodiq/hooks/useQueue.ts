@@ -13,6 +13,8 @@ export interface QueueItem {
     song: SongMeta;
     addedAt: number;
     requester?: string;
+    requesterId?: string;
+    participants?: any[]; // using any[] to avoid circular dependency or needing ActivePlayer import if not available here
 }
 
 export const useQueue = () => {
@@ -82,17 +84,28 @@ export const useQueue = () => {
         channel.postMessage({ type: 'UPDATE_NOW_PLAYING', payload: song });
     }, [channel, syncNowPlaying]);
 
-    const addToQueue = useCallback((song: SongMeta, requester?: string) => {
+    const addToQueue = useCallback((song: SongMeta, requester?: string, requesterId?: string) => {
         if (isClient) {
             window.dispatchEvent(new CustomEvent('melodiq_client_send_data', { detail: { type: 'queue.add', songId: song.id } }));
             return;
         }
 
+        const activeSession = JSON.parse(localStorage.getItem('melodiq_active_session') || '[]');
+        const storedProfiles = JSON.parse(localStorage.getItem('melodiq_profiles') || '[]');
+        
+        const enrichedSession = activeSession.map((p: any) => {
+            if (p.profileId === 'BOT') return { ...p, name: 'Bot Player', hue: 330, isRemote: false };
+            const profile = storedProfiles.find((prof: any) => prof.id === p.profileId);
+            return profile ? { ...p, name: profile.name, hue: profile.hue, isRemote: false } : p;
+        });
+        
         const newItem: QueueItem = {
             id: crypto.randomUUID(),
             song,
             addedAt: Date.now(),
-            requester
+            requester,
+            requesterId,
+            participants: enrichedSession
         };
 
         // Prevent exact duplicates if user clicks twice fast
@@ -136,11 +149,21 @@ export const useQueue = () => {
     }, [channel, syncQueue]);
 
     const playPlaylistNow = useCallback((songs: SongMeta[], requester?: string) => {
+        const activeSession = JSON.parse(localStorage.getItem('melodiq_active_session') || '[]');
+        const storedProfiles = JSON.parse(localStorage.getItem('melodiq_profiles') || '[]');
+        
+        const enrichedSession = activeSession.map((p: any) => {
+            if (p.profileId === 'BOT') return { ...p, name: 'Bot Player', hue: 330, isRemote: false };
+            const profile = storedProfiles.find((prof: any) => prof.id === p.profileId);
+            return profile ? { ...p, name: profile.name, hue: profile.hue, isRemote: false } : p;
+        });
+
         const next: QueueItem[] = songs.map(song => ({
             id: crypto.randomUUID(),
             song,
             addedAt: Date.now(),
-            requester
+            requester,
+            participants: enrichedSession
         }));
         syncQueue(next);
         channel.postMessage({ type: 'UPDATE_QUEUE', payload: next });
@@ -152,12 +175,23 @@ export const useQueue = () => {
         }
     }, [channel, syncQueue]);
 
-    const addNext = useCallback((song: SongMeta, requester?: string) => {
+    const addNext = useCallback((song: SongMeta, requester?: string, requesterId?: string) => {
+        const activeSession = JSON.parse(localStorage.getItem('melodiq_active_session') || '[]');
+        const storedProfiles = JSON.parse(localStorage.getItem('melodiq_profiles') || '[]');
+        
+        const enrichedSession = activeSession.map((p: any) => {
+            if (p.profileId === 'BOT') return { ...p, name: 'Bot Player', hue: 330, isRemote: false };
+            const profile = storedProfiles.find((prof: any) => prof.id === p.profileId);
+            return profile ? { ...p, name: profile.name, hue: profile.hue, isRemote: false } : p;
+        });
+
         const newItem: QueueItem = {
             id: crypto.randomUUID(),
             song,
             addedAt: Date.now(),
-            requester
+            requester,
+            requesterId,
+            participants: enrichedSession
         };
 
         // Prevent exact duplicate at the top
@@ -173,6 +207,59 @@ export const useQueue = () => {
     const replaceItem = useCallback((itemId: string, newSong: SongMeta) => {
         if (isClient) return;
         const next = queue.map(item => item.id === itemId ? { ...item, song: newSong } : item);
+        syncQueue(next);
+        channel.postMessage({ type: 'UPDATE_QUEUE', payload: next });
+    }, [queue, channel, syncQueue]);
+
+    const toggleQueueParticipant = useCallback((itemId: string, deviceId: string, profile: any) => {
+        if (isClient) {
+            window.dispatchEvent(new CustomEvent('melodiq_client_send_data', { detail: { type: 'queue.toggle_participant', itemId, deviceId, profile } }));
+            return;
+        }
+
+        const next = queue.map(item => {
+            if (item.id === itemId) {
+                const participants = item.participants || [];
+                const exists = participants.find((p: any) => p.deviceId === deviceId || p.profileId === deviceId || (profile?.peerId && p.deviceId === profile.peerId));
+                let newParticipants;
+                if (exists) {
+                    newParticipants = participants.filter((p: any) => p.deviceId !== deviceId && p.profileId !== deviceId && !(profile?.peerId && p.deviceId === profile.peerId));
+                } else {
+                    newParticipants = [...participants, {
+                        profileId: deviceId, // Phone guests use deviceId as profileId
+                        deviceId: deviceId,
+                        volume: 0.8,
+                        muted: false,
+                        latency: 0,
+                        isRemote: profile?.isRemote || false,
+                        name: profile?.name,
+                        hue: profile?.hue
+                    }];
+                }
+                if (!isClient) {
+                    localStorage.setItem('melodiq_active_session', JSON.stringify(newParticipants));
+                }
+                return { ...item, participants: newParticipants };
+            }
+            return item;
+        });
+        
+        syncQueue(next);
+        channel.postMessage({ type: 'UPDATE_QUEUE', payload: next });
+    }, [queue, isClient, channel, syncQueue]);
+
+    const reorderQueueParticipant = useCallback((itemId: string, startIndex: number, endIndex: number) => {
+        if (isClient) return; // Only host handles reordering
+        const next = queue.map(item => {
+            if (item.id === itemId) {
+                const participants = Array.from(item.participants || []);
+                const [removed] = participants.splice(startIndex, 1);
+                participants.splice(endIndex, 0, removed);
+                localStorage.setItem('melodiq_active_session', JSON.stringify(participants));
+                return { ...item, participants };
+            }
+            return item;
+        });
         syncQueue(next);
         channel.postMessage({ type: 'UPDATE_QUEUE', payload: next });
     }, [queue, channel, syncQueue]);
@@ -198,6 +285,8 @@ export const useQueue = () => {
         clearQueue,
         moveItem,
         replaceItem,
+        toggleQueueParticipant,
+        reorderQueueParticipant,
         setNowPlaying,
         playPlaylistNow
     };

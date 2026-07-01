@@ -3,6 +3,7 @@ import { Box, Button, Typography, TextField, Select, MenuItem, FormControl, Inpu
 import { useTranslation } from 'react-i18next';
 import { useClientEngine } from '../PhoneClientEngine';
 import { MicrophoneManager, type PitchResult } from '../audio/MicrophoneManager';
+import { RemoteLatencyCalibrator } from './RemoteLatencyCalibrator';
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const getNoteName = (midiNote: number): string => {
@@ -72,12 +73,13 @@ interface ClientSettingsProps {
 
 export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const { clientProfile, updateClientProfile } = useClientEngine();
+    const { clientProfile, updateClientProfile, sendClientCommand, gameState } = useClientEngine();
 
     const [name, setName] = useState(clientProfile.name);
     const [hue, setHue] = useState(clientProfile.hue);
     const [deviceId, setDeviceId] = useState(clientProfile.micDeviceId || '');
     const [displayMode, setDisplayMode] = useState(clientProfile.displayMode || 'lyrics');
+    const [latency, setLatency] = useState(clientProfile.latency || 0);
     
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
     const [permissionError, setPermissionError] = useState(false);
@@ -113,7 +115,8 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack }) => {
             name,
             hue,
             micDeviceId: deviceId || undefined,
-            displayMode: displayMode as any
+            displayMode: displayMode as any,
+            latency
         });
         onBack();
     };
@@ -186,6 +189,24 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack }) => {
                         <MenuItem value="all">{t('melodiq.display_all_pitch', 'Everyone\'s Pitch')}</MenuItem>
                     </Select>
                 </FormControl>
+
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 2 }}>
+                    <Typography variant="subtitle1" sx={{ color: '#fff', mb: 1 }}>Sync & Latency</Typography>
+                    <Typography variant="body2" sx={{ color: '#aaa', mb: 2 }}>
+                        Current Latency Offset: {latency}ms
+                    </Typography>
+                    {gameState?.activeSongId ? (
+                        <Typography variant="caption" color="error">
+                            Cannot calibrate while a song is playing.
+                        </Typography>
+                    ) : (
+                        <RemoteLatencyCalibrator 
+                            deviceId={deviceId} 
+                            sendClientCommand={sendClientCommand} 
+                            onComplete={(ms) => setLatency(ms)} 
+                        />
+                    )}
+                </Box>
 
                 <LiveMicTest deviceId={deviceId} />
 

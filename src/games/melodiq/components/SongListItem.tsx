@@ -147,13 +147,13 @@ export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLon
             )}
 
             {/* Cloud Icon for Online Search Items */}
-            {!isDownloading && !isDownloaded && song.usdbId && (
+            {!isDownloading && !isDownloaded && song.usdbId && onActionClick && (
                 <IconButton 
                     size="small" 
                     sx={{ ml: 1, color: 'primary.main' }}
                     onClick={(e) => {
                         e.stopPropagation();
-                        if (onActionClick) onActionClick(e);
+                        onActionClick(e);
                     }}
                 >
                     <CloudDownloadIcon />

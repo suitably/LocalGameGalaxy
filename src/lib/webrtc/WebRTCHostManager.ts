@@ -7,12 +7,13 @@ export type RemotePeerBase = {
     connectionId?: string; // The ID used by Phone for signaling
     name: string; // Display name for the phone
     hue?: number; // Hue for avatar
+    deviceId?: string; // Persistent ID from phone
 };
 
 export interface WebRTCHostManagerCallbacks<T extends RemotePeerBase> {
-    onPeerConnected?: (peerId: string, name: string, hue?: number, connectionId?: string) => void;
+    onPeerConnected?: (peerId: string, name: string, hue?: number, connectionId?: string, deviceId?: string) => void;
     onPeerDisconnected?: (peerId: string) => void;
-    onPeerUpdated?: (peerId: string, name: string, hue?: number, connectionId?: string) => void;
+    onPeerUpdated?: (peerId: string, name: string, hue?: number, connectionId?: string, deviceId?: string) => void;
     onMessage?: (peerId: string, data: any) => void;
     onStream?: (peerId: string, stream: MediaStream) => void;
     createRemotePeer?: (peerId: string, connectionId: string, name: string, peer: SimplePeer.Instance) => T;
@@ -134,10 +135,11 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
                                 (trackerPeer as any)._currentConnectionId === parsedData.connectionId
                             );
                             if (remotePeer) {
-                                console.log('[WebRTCHostManager] Received identity from phone (tracker):', parsedData.name, parsedData.hue);
+                                console.log('[WebRTCHostManager] Received identity from phone (tracker):', parsedData.name, parsedData.hue, parsedData.deviceId);
                                 remotePeer.name = parsedData.name || remotePeer.name;
                                 remotePeer.hue = parsedData.hue;
-                                this.callbacks?.onPeerUpdated?.(remotePeer.peerId, remotePeer.name, remotePeer.hue, remotePeer.connectionId);
+                                remotePeer.deviceId = parsedData.deviceId;
+                                this.callbacks?.onPeerUpdated?.(remotePeer.peerId, remotePeer.name, remotePeer.hue, remotePeer.connectionId, remotePeer.deviceId);
                             } else {
                                 console.warn('[WebRTCHostManager] Received identity for unknown or mismatched peer:', parsedData.connectionId);
                             }
@@ -254,7 +256,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
         dataPeer.on('connect', () => {
             console.log('[WebRTCHostManager] Data Peer connected:', peerId);
             // Some peers might just be data
-            this.callbacks?.onPeerConnected?.(peerId, remotePeer.name, remotePeer.hue, remotePeer.connectionId);
+            this.callbacks?.onPeerConnected?.(peerId, remotePeer.name, remotePeer.hue, remotePeer.connectionId, remotePeer.deviceId);
         });
 
         dataPeer.on('data', (data: Uint8Array | string) => {
@@ -266,10 +268,11 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
                     const msg = JSON.parse(part);
 
                     if (msg.type === 'identify') {
-                        console.log('[WebRTCHostManager] Received identity (WebRTC):', msg.name, msg.hue);
+                        console.log('[WebRTCHostManager] Received identity (WebRTC):', msg.name, msg.hue, msg.deviceId);
                         remotePeer.name = msg.name || remotePeer.name;
                         remotePeer.hue = msg.hue;
-                        this.callbacks?.onPeerUpdated?.(remotePeer.peerId, remotePeer.name, remotePeer.hue, remotePeer.connectionId);
+                        remotePeer.deviceId = msg.deviceId;
+                        this.callbacks?.onPeerUpdated?.(remotePeer.peerId, remotePeer.name, remotePeer.hue, remotePeer.connectionId, remotePeer.deviceId);
                     } else {
                         // Pass to subclass handles or generic listeners
                         if (!this.handleCustomWebRTCMessage(msg, remotePeer)) {

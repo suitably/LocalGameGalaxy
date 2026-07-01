@@ -14,6 +14,7 @@ interface UseSessionPlayersProps {
     onExit: () => void;
     audioRef: React.RefObject<HTMLAudioElement | null>;
     videoRef: React.RefObject<HTMLVideoElement | null>;
+    activeSessionOverride?: any[] | null;
 }
 
 export function useSessionPlayers({
@@ -26,7 +27,8 @@ export function useSessionPlayers({
     togglePlay,
     onExit,
     audioRef,
-    videoRef
+    videoRef,
+    activeSessionOverride
 }: UseSessionPlayersProps) {
     const [players, setPlayers] = useState<PlayerRuntime[]>([]);
     const [ready, setReady] = useState(false);
@@ -35,11 +37,31 @@ export function useSessionPlayers({
     // Initialization Effect: Load Players from Settings
     useEffect(() => {
         const storedProfiles = localStorage.getItem('melodiq_profiles');
-        const storedActive = localStorage.getItem('melodiq_active_session');
+        
+        let activeSession: ActivePlayer[] = [];
+        const storedActive = JSON.parse(localStorage.getItem('melodiq_active_session') || '[]');
+        
+        if (activeSessionOverride) {
+            activeSession = activeSessionOverride;
+        } else {
+            activeSession = storedActive;
+        }
 
-        if (storedProfiles && storedActive) {
+        const storedMicSlots = JSON.parse(localStorage.getItem('melodiq_mic_slots') || '[]');
+        let localMicIndex = 0;
+
+        activeSession = activeSession.map(p => {
+            if (p.isRemote || p.profileId === 'BOT') return p;
+            
+            // Assign from mic slots
+            const assignedDeviceId = storedMicSlots[localMicIndex] || '';
+            localMicIndex++;
+
+            return { ...p, deviceId: assignedDeviceId };
+        });
+
+        if (storedProfiles && activeSession.length > 0) {
             const allProfiles: UserProfile[] = JSON.parse(storedProfiles);
-            const activeSession: ActivePlayer[] = JSON.parse(storedActive);
 
             const newPlayers: PlayerRuntime[] = [];
 
@@ -124,6 +146,19 @@ export function useSessionPlayers({
             if (data.type === 'remote.command') {
                 console.log(`[Session] Remote command from ${peerId}:`, data.command);
                 switch (data.command) {
+                    case 'UPDATE_PROFILE':
+                        if (data.latency !== undefined) {
+                            setPlayers(prevPlayers => {
+                                const newPlayers = [...prevPlayers];
+                                const pIdx = newPlayers.findIndex(p => p.config.deviceId === peerId);
+                                if (pIdx !== -1) {
+                                    newPlayers[pIdx].config.latency = data.latency;
+                                }
+                                playersRef.current = newPlayers;
+                                return newPlayers;
+                            });
+                        }
+                        break;
                     case 'play':
                         togglePlay();
                         break;
@@ -141,6 +176,21 @@ export function useSessionPlayers({
                         break;
                     case 'exit':
                         onExit();
+                        break;
+                    case 'session.join_mode':
+                        const mode = data.mode; // 'singer' or 'spectator'
+                        const isSpectator = mode === 'spectator';
+                        setPlayers(prevPlayers => {
+                            const newPlayers = [...prevPlayers];
+                            const pIdx = newPlayers.findIndex(p => p.config.deviceId === peerId);
+                            if (pIdx !== -1) {
+                                console.log(`[Session] Phone ${peerId} changed join mode to ${mode}`);
+                                newPlayers[pIdx].config.hidePitch = isSpectator;
+                                // If they become a spectator, we could also clear their current score, but it's fine
+                            }
+                            playersRef.current = newPlayers;
+                            return newPlayers;
+                        });
                         break;
                 }
             }
@@ -186,7 +236,8 @@ export function useSessionPlayers({
                         volume: 1.0,
                         muted: false,
                         latency: 0,
-                        isRemote: true
+                        isRemote: true,
+                        hidePitch: true // Default to spectator
                     }, manager);
 
                     updatedPlayers.push(newPlayer);

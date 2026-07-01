@@ -11,6 +11,7 @@ export interface DeviceConnectionProps {
     gameId: string; // Identifier used for setting UI properties locally
     clientPath: string; // the path for the phone app, e.g. '/games/melodiq/phone'
     WebRTCHostContextHook: () => any; // we pass useWebRTC down
+    renderPeerExtra?: (peer: any) => React.ReactNode;
 }
 
 export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
@@ -19,7 +20,8 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
     description = "Connect your phone to use as a controller. Scan the QR code below.",
     gameId,
     clientPath,
-    WebRTCHostContextHook
+    WebRTCHostContextHook,
+    renderPeerExtra
 }) => {
     const {
         peers: connectedPreviewPeers,
@@ -126,14 +128,16 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
                             <Typography variant="subtitle1" sx={{ color: '#4ade80', display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                                 ✅ {connectedPreviewPeers.length} Device(s) Connected
                             </Typography>
-                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', flexDirection: 'column' }}>
                                 {connectedPreviewPeers.map((peer: any) => (
-                                    <Chip
-                                        key={peer.peerId}
-                                        avatar={<Avatar sx={{ bgcolor: peer.hue ? `hsl(${peer.hue}, 100%, 50%)` : undefined }}>{peer.name[0]}</Avatar>}
-                                        label={peer.name}
-                                        sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white' }}
-                                    />
+                                    <Box key={peer.peerId} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Chip
+                                            avatar={<Avatar sx={{ bgcolor: peer.hue ? `hsl(${peer.hue}, 100%, 50%)` : undefined }}>{peer.name[0]}</Avatar>}
+                                            label={peer.name}
+                                            sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white' }}
+                                        />
+                                        {renderPeerExtra && renderPeerExtra(peer)}
+                                    </Box>
                                 ))}
                             </Box>
                         </Box>

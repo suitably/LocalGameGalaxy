@@ -15,7 +15,7 @@ interface MiniPlayerProps {
     onTogglePlay: () => void;
     onNext: () => void;
     onMaximize: () => void;
-    onShowQueue: () => void;
+    onShowQueue?: () => void;
     queueLength: number;
     /** True when song was restored from localStorage after a page reload – no audio is loaded yet */
     isRestored?: boolean;
@@ -122,13 +122,15 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                     </>
                 )}
 
-                <IconButton onClick={(e) => { e.stopPropagation(); onShowQueue(); }} size="medium" sx={{ color: 'white' }}>
-                    <Badge badgeContent={queueLength} color="primary" max={99}
-                        sx={{ '& .MuiBadge-badge': { fontSize: '0.65rem', minWidth: 16, height: 16 } }}
-                    >
-                        <QueueMusicIcon fontSize="small" />
-                    </Badge>
-                </IconButton>
+                {onShowQueue && (
+                    <IconButton onClick={(e) => { e.stopPropagation(); onShowQueue(); }} size="medium" sx={{ color: 'white' }}>
+                        <Badge badgeContent={queueLength} color="primary" max={99}
+                            sx={{ '& .MuiBadge-badge': { fontSize: '0.65rem', minWidth: 16, height: 16 } }}
+                        >
+                            <QueueMusicIcon fontSize="small" />
+                        </Badge>
+                    </IconButton>
+                )}
 
                 <IconButton onClick={(e) => { e.stopPropagation(); onMaximize(); }} size="medium" sx={{ color: 'white', ml: 1 }} disabled={!song}>
                     <OpenInFullIcon fontSize="small" />

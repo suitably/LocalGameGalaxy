@@ -21,13 +21,14 @@ interface UseMelodiqGlobalEventsProps {
     selectedSong: Song | null;
     remoteSong: SongMeta | null;
     songs: SongMeta[];
+    activeParticipants?: any[] | null;
 }
 
 export const useMelodiqGlobalEvents = ({
     lastEvent, popNext, playSongOnTV, setRemoteSong, setFeedbackMessage,
     handleSelectSong, manager, isTVConnected, sendRemoteCommand,
     currentView, refreshSongs, isClient, getSongById, setSelectedSong,
-    setCurrentView, selectedSong, remoteSong, songs
+    setCurrentView, selectedSong, remoteSong, songs, activeParticipants
 }: UseMelodiqGlobalEventsProps) => {
 
     const handleSelectSongRef = useRef(handleSelectSong);
@@ -87,14 +88,38 @@ export const useMelodiqGlobalEvents = ({
         return () => window.removeEventListener('melodiq_host_select_song', handleRemoteSelect);
     }, [songs]);
 
-    // 3. Forward Phone Commands to TV
+    // 3. Forward Phone Commands to TV & Handle Global Commands
     useEffect(() => {
-        if (!manager || !isTVConnected) return;
+        if (!manager) return;
 
-        const handleRemoteCommand = (_peerId: string, data: any) => {
+        const handleRemoteCommand = (peerId: string, data: any) => {
             if (data.type === 'remote.command') {
-                console.log('Forwarding remote command to TV:', data.command);
-                sendRemoteCommand(data.command, data.value);
+                if (data.command === 'CALIBRATE_PLAY_BEEP') {
+                    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(880, ctx.currentTime);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    
+                    const startTime = ctx.currentTime;
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.15);
+                    gain.gain.setValueAtTime(0, startTime);
+                    gain.gain.setValueAtTime(1.0, startTime);
+                    gain.gain.setValueAtTime(0, startTime + 0.15);
+                    
+                    setTimeout(() => ctx.close(), 500);
+                    
+                    manager.sendTo(peerId, { type: 'remote.command', command: 'CALIBRATE_BEEP_PLAYED', hostTimestamp: Date.now() });
+                    return;
+                }
+            
+                if (isTVConnected) {
+                    console.log('Forwarding remote command to TV:', data.command);
+                    sendRemoteCommand(data.command, data.value);
+                }
             }
         };
 
@@ -147,15 +172,15 @@ export const useMelodiqGlobalEvents = ({
         return () => window.removeEventListener('melodiq_client_session_sync', handleSessionSync);
     }, [isClient, getSongById, setSelectedSong, setCurrentView]);
 
-    // 6. Host: Broadcast session changes to WebRTC Clients
     useEffect(() => {
         if (!isClient && manager) {
             manager.broadcast({
                 type: 'session_sync',
-                activeSong: selectedSong ? { id: selectedSong.id } : null
+                activeSong: selectedSong ? { id: selectedSong.id } : null,
+                participants: activeParticipants
             });
         }
-    }, [isClient, selectedSong, manager]);
+    }, [isClient, selectedSong, activeParticipants, manager]);
 
     // 7. Auto-Play on TV Connect
     useEffect(() => {

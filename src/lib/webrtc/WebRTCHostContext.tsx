@@ -57,7 +57,10 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
         const urls = [...trackerUrls];
         const isHelperEnabled = localStorage.getItem('melodiq_enable_helper') !== 'false';
         if (isHelperEnabled) {
-            const helperUrlRaw = localStorage.getItem('melodiq_helper_url') || window.location.origin;
+            let helperUrlRaw = localStorage.getItem('melodiq_helper_url');
+            if (!helperUrlRaw) {
+                helperUrlRaw = `${window.location.protocol}//${window.location.hostname}:3000`;
+            }
             try {
                 const parsed = new URL(helperUrlRaw);
                 const wsProto = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -120,11 +123,11 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
             console.log(`[WebRTCHostProvider:${gameId}] Initializing Manager with:`, { partyId, trackerUrls: activeTrackerUrls });
 
             managerInstance = createManager(partyId, activeTrackerUrls, {
-                onPeerConnected: (peerId: string, name: string, hue?: number, connectionId?: string) => {
+                onPeerConnected: (peerId: string, name: string, hue?: number, connectionId?: string, deviceId?: string) => {
                     setPeers(prev => {
                         const existing = prev.find(p => p.peerId === peerId);
                         if (existing) {
-                            return prev.map(p => p.peerId === peerId ? { ...p, name, hue, connectionId } : p);
+                            return prev.map(p => p.peerId === peerId ? { ...p, name, hue, connectionId, deviceId } : p);
                         }
                         // It will get created in onPeerCreated or here if it represents an abstract view
                         return prev;
@@ -134,11 +137,11 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
                 onPeerDisconnected: (peerId: string) => {
                     setPeers(prev => prev.filter(p => p.peerId !== peerId));
                 },
-                onPeerUpdated: (peerId: string, name: string, hue?: number, connectionId?: string) => {
+                onPeerUpdated: (peerId: string, name: string, hue?: number, connectionId?: string, deviceId?: string) => {
                     setPeers(prev => {
                         const existing = prev.find(p => p.peerId === peerId);
                         if (existing) {
-                            return prev.map(p => p.peerId === peerId ? { ...p, name, hue, connectionId: connectionId || p.connectionId } : p);
+                            return prev.map(p => p.peerId === peerId ? { ...p, name, hue, connectionId: connectionId || p.connectionId, deviceId: deviceId || p.deviceId } : p);
                         }
                         return prev;
                     });
@@ -212,13 +215,21 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
     const inactivePeers = useMemo(() => peers.filter(p => !activePeerIds.includes(p.peerId)), [peers, activePeerIds]);
 
     // Broadcast roster updates
-    useEffect(() => {
+    const broadcastRoster = useCallback(() => {
         if (manager) {
+            const storedRoles = localStorage.getItem('melodiq_client_roles');
+            let parsedRoles: Record<string, string> = {};
+            if (storedRoles) {
+                try { parsedRoles = JSON.parse(storedRoles); } catch (e) {}
+            }
+
             const roster = activePeers.map(p => ({
                 id: p.peerId, // Legacy format expectation maybe?
                 connectionId: p.connectionId,
                 name: p.name,
-                hue: p.hue
+                hue: p.hue,
+                deviceId: p.deviceId,
+                role: (p.deviceId ? parsedRoles[p.deviceId] : undefined) || 'singer'
             }));
             manager.broadcast({
                 type: 'roster.update',
@@ -226,6 +237,16 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
             });
         }
     }, [activePeers, manager]);
+
+    useEffect(() => {
+        broadcastRoster();
+    }, [broadcastRoster]);
+
+    useEffect(() => {
+        const handler = () => broadcastRoster();
+        window.addEventListener('melodiq_roles_updated', handler);
+        return () => window.removeEventListener('melodiq_roles_updated', handler);
+    }, [broadcastRoster]);
 
     return (
         <WebRTCHostContext.Provider value={{

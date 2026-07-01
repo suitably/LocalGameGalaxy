@@ -13,6 +13,8 @@ export const COLOR_PRESETS = [
     { name: 'Orange', hue: 30, color: 'hsl(30, 100%, 50%)' },
 ];
 
+export type ClientRole = 'admin' | 'queue_manager' | 'queue_contributor' | 'singer';
+
 export interface UserProfile {
     id: string;
     name: string;

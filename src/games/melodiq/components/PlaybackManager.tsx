@@ -25,6 +25,9 @@ interface PlaybackManagerProps {
     onClearRestoredSong?: () => void;
     /** True if this app is running in client/remote mode (no media rendering) */
     isClient?: boolean;
+    /** The participants for the active song, from the queue */
+    activeParticipants?: any[] | null;
+    clientDeviceId?: string;
 }
 
 export interface PlaybackManagerHandle {
@@ -47,7 +50,9 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         sendGameUpdate,
         restoredSong = null,
         onClearRestoredSong,
-        isClient = false
+        isClient = false,
+        activeParticipants = null,
+        clientDeviceId
     } = props;
 
     const { queue, popNext, setNowPlaying } = useQueue();
@@ -61,11 +66,16 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
     // Get client game state for remote playback sync
-    const { gameState: clientGameState, sendClientCommand } = isClient ? useClientEngine() : { gameState: null, sendClientCommand: undefined };
+    const { gameState: clientGameState, sendClientCommand, clientRole } = isClient ? useClientEngine() : { gameState: null, sendClientCommand: undefined, clientRole: 'admin' };
 
     // Broadcast Game State Loop
     useEffect(() => {
-        if (!sendGameUpdate || !selectedSong) return;
+        if (!sendGameUpdate || !selectedSong) {
+            if (sendGameUpdate) {
+                sendGameUpdate({ isPlaying: false, currentTime: 0, activeSongId: null });
+            }
+            return;
+        }
 
         let frameId: number;
         let lastSendTime = 0;
@@ -79,8 +89,11 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         };
 
         frameId = requestAnimationFrame(loop);
-        return () => cancelAnimationFrame(frameId);
-    }, [isTVConnected, sendGameUpdate, selectedSong]);
+        return () => {
+            cancelAnimationFrame(frameId);
+            sendGameUpdate({ isPlaying: false, currentTime: 0, activeSongId: null });
+        };
+    }, [sendGameUpdate, selectedSong]);
 
     // Expose methods to parent
     useImperativeHandle(ref, () => ({
@@ -116,7 +129,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             }
             const nextItem = popNext();
             if (nextItem) {
-                onSelectSong(nextItem.song, true);
+                onSelectSong(nextItem.song, true, nextItem.participants);
             } else {
                 setNowPlaying(null);
                 setPlaybackState({ isPlaying: false, currentTime: 0, duration: 0, progress: 0 });
@@ -130,7 +143,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             }
             const nextItem = popNext();
             if (nextItem) {
-                onSelectSong(nextItem.song, true);
+                onSelectSong(nextItem.song, true, nextItem.participants);
             } else {
                 setRemoteSong(null);
             }
@@ -142,7 +155,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
              }
              const nextItem = popNext();
              if (nextItem) {
-                 onSelectSong(nextItem.song, true);
+                 onSelectSong(nextItem.song, true, nextItem.participants);
              }
         }
     };
@@ -181,7 +194,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                             if (!forceHome) {
                                 const nextItem = popNext();
                                 if (nextItem) {
-                                    onSelectSong(nextItem.song, true); // forcePlay=true
+                                    onSelectSong(nextItem.song, true, nextItem.participants); // forcePlay=true
                                     return;
                                 }
                             }
@@ -198,6 +211,8 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                         isClient={isClient}
                         isPassive={isClient}
                         passiveState={isClient ? clientGameState : undefined}
+                        activeSessionOverride={activeParticipants}
+                        clientDeviceId={clientDeviceId}
                     />
                 </Box>
             )}
@@ -243,6 +258,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                         onShowQueue={onShowQueue}
                         queueLength={queue.length}
                         isRestored={isInRestoredMode}
+                        isClient={isClient}
                     />
                 )
             }
