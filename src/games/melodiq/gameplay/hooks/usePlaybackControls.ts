@@ -44,10 +44,8 @@ export function usePlaybackControls({
         try {
             playPromiseRef.current = audioRef.current.play();
             if (vocalsRef.current) vocalsRef.current.play().catch(e => console.warn("Vocals play failed", e));
+            if (videoRef.current) videoRef.current.play().catch(e => console.warn("Video play failed", e));
             await playPromiseRef.current;
-            if (videoRef.current) {
-                videoRef.current.play().catch(e => console.warn("Video play failed", e));
-            }
             setIsPlaying(true);
         } catch (error: any) {
             if (error.name === 'AbortError') {

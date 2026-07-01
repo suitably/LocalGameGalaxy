@@ -18,6 +18,7 @@ import { useScoringEngine } from './hooks/useScoringEngine';
 import { usePassiveSync } from './hooks/usePassiveSync';
 import { useSessionEnd } from './hooks/useSessionEnd';
 import { usePlaybackControls } from './hooks/usePlaybackControls';
+import { useLocalMediaSync } from './hooks/useLocalMediaSync';
 
 export interface MelodiqSessionHandle {
     togglePlay: () => void;
@@ -222,6 +223,8 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         isPassive, passiveState: passiveState || null, isClient, players, setPlayers, playersRef, scoreDisplayRef, audioRef, videoRef,
         isPlayingRef, setIsPlaying, setIsFinished, setIsPausedForScore, setPassivePlayBlocked, virtualTimeRef
     });
+
+    useLocalMediaSync({ audioRef, videoRef, vocalsRef, isPlaying });
 
     // Audio Metadata
     useEffect(() => {
