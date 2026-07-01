@@ -51,7 +51,7 @@ export const useMelodiqGlobalEvents = ({
             const nextItem = popNext();
             if (nextItem) {
                 console.log('TV Song Ended. Playing next from queue:', nextItem.song.title);
-                playSongOnTV(nextItem.song.id, nextItem.song);
+                handleSelectSongRef.current(nextItem.song, true, nextItem.participants);
             }
         } else if (lastEvent.type === 'TV_READY') {
             processedEventRef.current = lastEvent.timestamp;

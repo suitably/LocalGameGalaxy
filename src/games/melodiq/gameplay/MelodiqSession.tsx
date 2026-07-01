@@ -258,7 +258,11 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                 case 'Enter':
                 case 'MediaPlayPause':
                     e.preventDefault();
-                    togglePlay();
+                    if (isFinished || isPausedForScore) {
+                        onExit(false);
+                    } else {
+                        togglePlay();
+                    }
                     break;
                 case 'ArrowRight':
                 case 'MediaFastForward':
@@ -355,6 +359,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         current: {
             get currentTime() { return isClient ? virtualTimeRef.current : (audioRef.current?.currentTime || 0); },
             get paused() { return !isPlayingRef.current; },
+            get isFinished() { return isFinished; },
             get ended() { return isFinished; },
             get readyState() { return isClient ? 4 : (audioRef.current?.readyState || 0); }
         }

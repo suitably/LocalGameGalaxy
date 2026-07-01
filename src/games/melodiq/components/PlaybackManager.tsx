@@ -225,12 +225,15 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                         progress={isInRestoredMode ? 0 : playbackState.progress}
                         onTogglePlay={() => {
                             if (isInRestoredMode) {
-                                // Resume: reload and start the restored song
                                 handleResume();
                             } else if (isClient && sendClientCommand) {
                                 sendClientCommand('play');
                             } else if (selectedSong) {
-                                sessionRef.current?.togglePlay();
+                                if (sessionRef.current?.isFinished) {
+                                    handleMiniPlayerNext();
+                                } else {
+                                    sessionRef.current?.togglePlay();
+                                }
                             } else if (remoteSong && isTVConnected) {
                                 // Toggle remote playback state locally for UI
                                 setPlaybackState(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
