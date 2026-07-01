@@ -42,7 +42,7 @@ export const GameTimer: React.FC<GameTimerProps> = ({ timerLength, onTimeUp, onE
 
     return (
         <Box sx={{ maxWidth: 'sm', mx: 'auto', textAlign: 'center', py: 5 }}>
-            <Paper sx={{ p: 4, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
+            <Paper sx={{ p: 4, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
                 <Typography variant="h4" gutterBottom>
                     {t('games.imposter.game.timer')}
                 </Typography>

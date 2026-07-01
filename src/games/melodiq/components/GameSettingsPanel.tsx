@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Box, Typography, TextField, Switch, FormControlLabel, Slider, ToggleButton, ToggleButtonGroup, IconButton, Button,
-    Accordion, AccordionSummary, AccordionDetails
+    Accordion, AccordionSummary, AccordionDetails, Select, MenuItem, InputLabel, FormControl
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import type { SettingsState } from '../hooks/useSettings';
+import type { SettingsState } from '../hooks/SettingsContext';
 
 interface GameSettingsPanelProps {
     settings: SettingsState;
@@ -15,6 +16,7 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
     settings,
     onUpdateSetting
 }) => {
+    const { t } = useTranslation();
     const [newPlayerCount, setNewPlayerCount] = useState('');
     const [newLayoutStr, setNewLayoutStr] = useState('');
 
@@ -40,20 +42,20 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
 
     return (
         <Box>
-            <Typography variant="h6" gutterBottom>Game Settings</Typography>
+            <Typography variant="h6" gutterBottom>{t('melodiq.settings_panel.title')}</Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 
                 <Box>
-                    <Typography variant="subtitle2" gutterBottom>Custom Layouts per Player Count</Typography>
+                    <Typography variant="subtitle2" gutterBottom>{t('melodiq.settings_panel.custom_layouts')}</Typography>
                     <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                        Define rows and columns (e.g., '1.3' for 1 top, 3 bottom). Missing counts use auto.
+                        {t('melodiq.settings_panel.custom_layouts_desc')}
                     </Typography>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 1 }}>
                         {Object.entries(settings.customLayouts || {}).map(([countStr, layout]) => {
                             const count = parseInt(countStr);
                             return (
                                 <Box key={count} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Typography sx={{ width: 80 }}>{count} Players:</Typography>
+                                    <Typography sx={{ width: 80 }}>{count} {t('melodiq.settings_panel.players')}:</Typography>
                                     <TextField 
                                         size="small" 
                                         value={layout} 
@@ -70,7 +72,7 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <TextField 
                             size="small" 
-                            label="Players" 
+                            label={t('melodiq.settings_panel.players')} 
                             type="number" 
                             value={newPlayerCount} 
                             onChange={(e) => setNewPlayerCount(e.target.value)} 
@@ -78,7 +80,7 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                         />
                         <TextField 
                             size="small" 
-                            label="Layout (e.g. 2.2)" 
+                            label={t('melodiq.settings_panel.layout_example')} 
                             value={newLayoutStr} 
                             onChange={(e) => setNewLayoutStr(e.target.value)} 
                             sx={{ flex: 1 }}
@@ -90,12 +92,12 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                                 }
                             }}
                         />
-                        <Button variant="contained" size="small" onClick={handleAddLayout}>Add</Button>
+                        <Button variant="contained" size="small" onClick={handleAddLayout}>{t('melodiq.settings_panel.add')}</Button>
                     </Box>
                 </Box>
 
                 <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2" gutterBottom>Default View Mode</Typography>
+                    <Typography variant="subtitle2" gutterBottom>{t('melodiq.settings_panel.default_view')}</Typography>
                     <ToggleButtonGroup
                         value={settings.defaultViewMode || 'list'}
                         exclusive
@@ -116,16 +118,59 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                             }
                         }}
                     >
-                        <ToggleButton value="list">List View</ToggleButton>
-                        <ToggleButton value="grid">Grid View</ToggleButton>
+                        <ToggleButton value="list">{t('melodiq.settings_panel.list_view')}</ToggleButton>
+                        <ToggleButton value="grid">{t('melodiq.settings_panel.grid_view')}</ToggleButton>
                     </ToggleButtonGroup>
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                        Preferred song list layout on startup.
+                        {t('melodiq.settings_panel.default_view_desc')}
                     </Typography>
                 </Box>
 
                 <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2" gutterBottom>Default Click Action (When playing)</Typography>
+                    <Typography variant="subtitle2" gutterBottom>{t('melodiq.settings_panel.autoplay')}</Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+                        <FormControl size="small" fullWidth>
+                            <InputLabel>{t('melodiq.settings_panel.autoplay_no_singers')}</InputLabel>
+                            <Select
+                                value={settings.autoplayNoPlayersDelay}
+                                label="{t('melodiq.settings_panel.autoplay_no_singers')}"
+                                onChange={(e) => onUpdateSetting('autoplayNoPlayersDelay', e.target.value as number)}
+                                sx={{ borderRadius: 2 }}
+                            >
+                                <MenuItem value={0}>{t('melodiq.settings_panel.off_manual')}</MenuItem>
+                                <MenuItem value={5}>{t('melodiq.settings_panel.seconds', { count: 5 })}</MenuItem>
+                                <MenuItem value={10}>{t('melodiq.settings_panel.seconds', { count: 10 })}</MenuItem>
+                                <MenuItem value={15}>{t('melodiq.settings_panel.seconds', { count: 15 })}</MenuItem>
+                                <MenuItem value={30}>{t('melodiq.settings_panel.seconds', { count: 30 })}</MenuItem>
+                            </Select>
+                            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                                {t('melodiq.settings_panel.autoplay_no_singers_desc')}
+                            </Typography>
+                        </FormControl>
+
+                        <FormControl size="small" fullWidth>
+                            <InputLabel>{t('melodiq.settings_panel.autoplay_singers')}</InputLabel>
+                            <Select
+                                value={settings.autoplayWithPlayersDelay}
+                                label="{t('melodiq.settings_panel.autoplay_singers')}"
+                                onChange={(e) => onUpdateSetting('autoplayWithPlayersDelay', e.target.value as number)}
+                                sx={{ borderRadius: 2 }}
+                            >
+                                <MenuItem value={0}>{t('melodiq.settings_panel.off_manual')}</MenuItem>
+                                <MenuItem value={10}>{t('melodiq.settings_panel.seconds', { count: 10 })}</MenuItem>
+                                <MenuItem value={20}>{t('melodiq.settings_panel.seconds', { count: 20 })}</MenuItem>
+                                <MenuItem value={30}>{t('melodiq.settings_panel.seconds', { count: 30 })}</MenuItem>
+                                <MenuItem value={60}>{t('melodiq.settings_panel.seconds', { count: 60 })}</MenuItem>
+                            </Select>
+                            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                                {t('melodiq.settings_panel.autoplay_singers_desc')}
+                            </Typography>
+                        </FormControl>
+                    </Box>
+                </Box>
+
+                <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom>{t('melodiq.settings_panel.default_click')}</Typography>
                     <ToggleButtonGroup
                         value={settings.defaultSongClickAction}
                         exclusive
@@ -146,17 +191,17 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                             }
                         }}
                     >
-                        <ToggleButton value="play_now">Play Now</ToggleButton>
-                        <ToggleButton value="play_next">Play Next</ToggleButton>
-                        <ToggleButton value="add_end">Add to Queue</ToggleButton>
+                        <ToggleButton value="play_now">{t('melodiq.settings_panel.play_now')}</ToggleButton>
+                        <ToggleButton value="play_next">{t('melodiq.settings_panel.play_next')}</ToggleButton>
+                        <ToggleButton value="add_end">{t('melodiq.settings_panel.add_queue')}</ToggleButton>
                     </ToggleButtonGroup>
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                        What happens when you click a song while another is already playing.
+                        {t('melodiq.settings_panel.default_click_desc')}
                     </Typography>
                 </Box>
 
                 <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2" gutterBottom>Card Size & Density</Typography>
+                    <Typography variant="subtitle2" gutterBottom>{t('melodiq.settings_panel.card_size')}</Typography>
                     <ToggleButtonGroup
                         value={settings.cardSize}
                         exclusive
@@ -177,15 +222,15 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                             }
                         }}
                     >
-                        <ToggleButton value="small">Small</ToggleButton>
-                        <ToggleButton value="medium">Medium</ToggleButton>
-                        <ToggleButton value="large">Large</ToggleButton>
-                        <ToggleButton value="custom">Custom</ToggleButton>
+                        <ToggleButton value="small">{t('melodiq.settings_panel.small')}</ToggleButton>
+                        <ToggleButton value="medium">{t('melodiq.settings_panel.medium')}</ToggleButton>
+                        <ToggleButton value="large">{t('melodiq.settings_panel.large')}</ToggleButton>
+                        <ToggleButton value="custom">{t('melodiq.settings_panel.custom')}</ToggleButton>
                     </ToggleButtonGroup>
 
                     {settings.cardSize === 'custom' && (
                         <Box sx={{ mt: 2 }}>
-                            <Typography gutterBottom>Max Items per Row (Large Screen): {settings.customTarget}</Typography>
+                            <Typography gutterBottom>{t('melodiq.settings_panel.max_items')}: {settings.customTarget}</Typography>
                             <Slider
                                 value={settings.customTarget}
                                 onChange={(_, val) => onUpdateSetting('customTarget', val as number)}
@@ -197,7 +242,7 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                                 sx={{ width: '100%' }}
                             />
                             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                                Set the maximum number of songs in a row. The game will automatically adjust for smaller screens.
+                                {t('melodiq.settings_panel.max_items_desc')}
                             </Typography>
                         </Box>
                     )}
@@ -205,7 +250,7 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
 
 
                 <Box sx={{ mt: 2 }}>
-                    <Typography gutterBottom>Golden Note Multiplier: {settings.goldenNoteMultiplier}x</Typography>
+                    <Typography gutterBottom>{t('melodiq.settings_panel.golden_multiplier')}: {settings.goldenNoteMultiplier}x</Typography>
                     <Slider
                         value={settings.goldenNoteMultiplier}
                         onChange={(_, val) => onUpdateSetting('goldenNoteMultiplier', val as number)}
@@ -217,12 +262,12 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                         sx={{ width: '100%' }}
                     />
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                        Multiplier for golden notes (marked with *).
+                        {t('melodiq.settings_panel.golden_multiplier_desc')}
                     </Typography>
                 </Box>
 
                 <Box sx={{ mt: 2 }}>
-                    <Typography gutterBottom>Song Volume: {Math.round(settings.songVolume * 100)}%</Typography>
+                    <Typography gutterBottom>{t('melodiq.settings_panel.song_volume')}: {Math.round(settings.songVolume * 100)}%</Typography>
                     <Slider
                         value={settings.songVolume * 100}
                         onChange={(_, val) => onUpdateSetting('songVolume', (val as number) / 100)}
@@ -233,7 +278,7 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                 </Box>
 
                 <Box sx={{ mt: 1 }}>
-                    <Typography gutterBottom>Vocals Volume (If Separated): {Math.round((settings.vocalsVolume ?? 1.0) * 100)}%</Typography>
+                    <Typography gutterBottom>{t('melodiq.settings_panel.vocals_volume')}: {Math.round((settings.vocalsVolume ?? 1.0) * 100)}%</Typography>
                     <Slider
                         value={(settings.vocalsVolume ?? 1.0) * 100}
                         onChange={(_, val) => onUpdateSetting('vocalsVolume', (val as number) / 100)}
@@ -244,7 +289,7 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                 </Box>
 
                 <Box sx={{ mt: 1 }}>
-                    <Typography gutterBottom>Master Volume: {Math.round(settings.masterVolume * 100)}%</Typography>
+                    <Typography gutterBottom>{t('melodiq.settings_panel.master_volume')}: {Math.round(settings.masterVolume * 100)}%</Typography>
                     <Slider
                         value={settings.masterVolume * 100}
                         onChange={(_, val) => onUpdateSetting('masterVolume', (val as number) / 100)}
@@ -255,25 +300,44 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                 </Box>
 
                 <FormControlLabel
+                    control={<Switch checked={settings.hideBackgroundVideo} onChange={(e) => onUpdateSetting('hideBackgroundVideo', e.target.checked)} />}
+                    label={t('melodiq.settings_panel.hide_video', 'Hide Background Video')}
+                />
+
+                <Box sx={{ mt: 1 }}>
+                    <TextField
+                        size="small"
+                        fullWidth
+                        label={t('melodiq.settings_panel.fallback_background_url', 'Fallback Background URL')}
+                        value={settings.fallbackBackgroundUrl || ''}
+                        onChange={(e) => onUpdateSetting('fallbackBackgroundUrl', e.target.value)}
+                        placeholder="e.g. https://example.com/loop.mp4"
+                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                        {t('melodiq.settings_panel.fallback_background_desc', 'Shown when a song has no video (and video is not hidden). Can be an image or video URL.')}
+                    </Typography>
+                </Box>
+
+                <FormControlLabel
                     control={<Switch checked={settings.showNoteLabels} onChange={(e) => onUpdateSetting('showNoteLabels', e.target.checked)} />}
-                    label="Show Pitch Note Labels"
+                    label={t('melodiq.settings_panel.show_pitch')}
                 />
                 <Accordion sx={{ mt: 2, bgcolor: 'rgba(255, 255, 255, 0.05)', '&:before': { display: 'none' } }}>
                     <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}>
-                        <Typography variant="subtitle2">Developer / Debug Options</Typography>
+                        <Typography variant="subtitle2">{t('melodiq.settings_panel.dev_options')}</Typography>
                     </AccordionSummary>
                     <AccordionDetails sx={{ display: 'flex', flexDirection: 'column' }}>
                         <FormControlLabel
                             control={<Switch checked={settings.showDebugOverlay} onChange={(e) => onUpdateSetting('showDebugOverlay', e.target.checked)} />}
-                            label="Show Debug Overlay"
+                            label={t('melodiq.settings_panel.show_debug')}
                         />
                         <FormControlLabel
                             control={<Switch checked={settings.showDevSlider} onChange={(e) => onUpdateSetting('showDevSlider', e.target.checked)} />}
-                            label="Show Tech/Dev Slider"
+                            label={t('melodiq.settings_panel.show_dev_slider')}
                         />
                         <FormControlLabel
                             control={<Switch checked={settings.showVideoErrors} onChange={(e) => onUpdateSetting('showVideoErrors', e.target.checked)} />}
-                            label="Show Video Error Messages"
+                            label={t('melodiq.settings_panel.show_video_errors')}
                         />
                     </AccordionDetails>
                 </Accordion>

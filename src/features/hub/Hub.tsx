@@ -10,7 +10,6 @@ const cardStyle = (gradientStart: string, gradientEnd: string, hoverColor: strin
     height: '100%',
     borderRadius: 4,
     background: `linear-gradient(135deg, ${alpha(gradientStart, 0.1)} 0%, ${alpha(gradientEnd, 0.2)} 100%)`,
-    backdropFilter: 'blur(10px)',
     border: `1px solid ${alpha(gradientStart, 0.2)}`,
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     position: 'relative',
@@ -80,7 +79,7 @@ export const Hub: React.FC = () => {
                     {t('app.welcome')}
                 </Typography>
                 <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto', fontWeight: 400 }}>
-                    Select a game to start playing with your friends.
+                    {t('app.select_game')}
                 </Typography>
             </Box>
 
@@ -135,10 +134,10 @@ export const Hub: React.FC = () => {
                         <CardContent sx={contentStyle}>
                             <GraphicEqIcon sx={{ ...iconStyle, color: '#81c784' }} />
                             <Typography variant="h4" component="h2" fontWeight="bold">
-                                Melodiq
+                                {t('games.melodiq.title')}
                             </Typography>
                             <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                                Challenge your friends in this ultimate Karaoke showdown! Sing to the beat and hit the right notes.
+                                {t('games.melodiq.description')}
                             </Typography>
                         </CardContent>
                     </CardActionArea>

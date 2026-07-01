@@ -138,17 +138,17 @@ export function usePassiveSync({
     useEffect(() => {
         if (!isClient) return;
 
+        let myName = 'Phone';
+        const storedProfile = localStorage.getItem('melodiq_client_profile');
+        if (storedProfile) {
+            try {
+                const parsed = JSON.parse(storedProfile);
+                if (parsed.name) myName = parsed.name;
+            } catch (err) { }
+        }
+
         const handleLocalPitch = (e: any) => {
             const { pitch } = e.detail;
-            const storedProfile = localStorage.getItem('melodiq_client_profile');
-            let myName = 'Phone';
-            if (storedProfile) {
-                try {
-                    const parsed = JSON.parse(storedProfile);
-                    if (parsed.name) myName = parsed.name;
-                } catch (err) { }
-            }
-
             playersRef.current?.forEach(rt => {
                 if (rt.config.name === myName) {
                     rt.pitchRef.current = pitch;
@@ -156,7 +156,7 @@ export function usePassiveSync({
             });
         };
 
-        window.addEventListener('melodiq:local_pitch', handleLocalPitch);
-        return () => window.removeEventListener('melodiq:local_pitch', handleLocalPitch);
+        window.addEventListener('melodiq_local_pitch', handleLocalPitch);
+        return () => window.removeEventListener('melodiq_local_pitch', handleLocalPitch);
     }, [isClient, playersRef]);
 }

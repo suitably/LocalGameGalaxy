@@ -86,7 +86,9 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
         masterVolume,
         goldenNoteMultiplier,
         bpmMultiplier = 1,
-        trackScoreWeights = DEFAULT_TRACK_SCORE_WEIGHTS
+        trackScoreWeights = DEFAULT_TRACK_SCORE_WEIGHTS,
+        hideBackgroundVideo,
+        fallbackBackgroundUrl
     } = settings as any;
 
     const { manager, activePeers } = useWebRTC();
@@ -434,11 +436,18 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
 
     return (
         <Box sx={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, bgcolor: 'black', color: 'white', zIndex: 1300, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            {videoSrc && (
+            {videoSrc && !hideBackgroundVideo && (
                 <video ref={videoRef} src={videoSrc} muted style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, opacity: 1.0 }} onError={(e) => {
                     console.warn("Video playback failed.", e);
                     setVideoError("Video format not supported");
                 }} />
+            )}
+            {!videoSrc && !hideBackgroundVideo && fallbackBackgroundUrl && (
+                fallbackBackgroundUrl.match(/\.(mp4|webm|mov|ogg)$/i) ? (
+                    <video src={fallbackBackgroundUrl} autoPlay loop muted style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, opacity: 1.0 }} />
+                ) : (
+                    <img src={fallbackBackgroundUrl} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, opacity: 1.0 }} alt="Background" />
+                )
             )}
             <Snackbar open={!!videoError && showVideoErrors} autoHideDuration={6000} onClose={() => setVideoError(null)} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
                 <Alert onClose={() => setVideoError(null)} severity="warning" sx={{ width: '100%' }}>{videoError}</Alert>
@@ -462,7 +471,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
             )}
 
             <Box sx={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', flex: 1, pointerEvents: 'none' }}>
-                <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', zIndex: 20, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', pointerEvents: isUIVisible ? 'auto' : 'none', opacity: isUIVisible ? 1 : 0, transition: 'opacity 0.5s ease-in-out' }}>
+                <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', zIndex: 20, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', bgcolor: 'rgba(0,0,0,0.5)', pointerEvents: isUIVisible ? 'auto' : 'none', opacity: isUIVisible ? 1 : 0, transition: 'opacity 0.5s ease-in-out' }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         {onMinimize && !isTVMode && (
                             <IconButton onClick={onMinimize} color="inherit" sx={{ ml: 1 }}><KeyboardArrowDownIcon /></IconButton>
@@ -476,11 +485,6 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
 
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', minHeight: 0, pt: 10 }}>
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
-                        {visiblePlayers.length === 0 && (
-                            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <LyricsDisplay song={parsedSong!} audioRef={timeProxyRef} centered uiScale={uiScale} />
-                            </Box>
-                        )}
                         <Box sx={{ flex: 1, display: 'flex', flexWrap: 'wrap', minHeight: 0, alignContent: 'stretch' }}>
                             {visiblePlayers.map((player, idx) => {
                                 let remaining = idx;
@@ -526,11 +530,9 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                             })}
                         </Box>
                     </Box>
-                    {visiblePlayers.length > 0 && (
-                        <Box sx={{ flexShrink: 0, width: '100%', pointerEvents: 'none', zIndex: 10, borderTop: '1px solid rgba(255,255,255,0.1)', bgcolor: 'rgba(0,0,0,0.2)', position: 'relative' }}>
-                            <LyricsDisplay song={parsedSong!} audioRef={timeProxyRef} uiScale={uiScale} />
-                        </Box>
-                    )}
+                    <Box sx={{ flexShrink: 0, width: '100%', pointerEvents: 'none', zIndex: 10, borderTop: '1px solid rgba(255,255,255,0.1)', bgcolor: 'rgba(0,0,0,0.2)', position: 'relative' }}>
+                        <LyricsDisplay song={parsedSong!} audioRef={timeProxyRef} uiScale={uiScale} />
+                    </Box>
                 </Box>
 
 

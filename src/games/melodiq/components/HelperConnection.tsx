@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Button, TextField, Typography, Paper, Switch, FormControlLabel } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 
 export const HelperConnection: React.FC = () => {
+    const { t } = useTranslation();
     const [url, setUrl] = useState(() => localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000');
     const [token, setToken] = useState(() => localStorage.getItem('melodiq_helper_token') || '');
     const [enabled, setEnabled] = useState(() => localStorage.getItem('melodiq_enable_helper') !== 'false');
@@ -50,7 +52,7 @@ export const HelperConnection: React.FC = () => {
     const checkConnection = async () => {
         if (!enabled) return;
         setStatus('checking');
-        setStatusMsg('Connecting...');
+        setStatusMsg(t('melodiq.helper.connecting', 'Connecting...'));
 
         try {
             const cleanUrl = url.replace(/\/$/, "");
@@ -61,39 +63,38 @@ export const HelperConnection: React.FC = () => {
             if (res.ok) {
                 const data = await res.json();
                 setStatus('success');
-                setStatusMsg(`Connected! Found ${data.count || 0} songs.`);
+                setStatusMsg(t('melodiq.helper.connected', { count: data.count || 0, defaultValue: `Connected! Found ${data.count || 0} songs.` }));
             } else if (res.status === 401) {
                 setStatus('error');
-                setStatusMsg('Unauthorized. Check Token.');
+                setStatusMsg(t('melodiq.helper.unauthorized', 'Unauthorized. Check Token.'));
             } else {
                 setStatus('error');
-                setStatusMsg(`Error: ${res.statusText}`);
+                setStatusMsg(t('melodiq.helper.error_status', { status: res.statusText, defaultValue: `Error: ${res.statusText}` }));
             }
         } catch (e: any) {
             setStatus('error');
-            setStatusMsg('Connection Failed. Check URL or Network.');
+            setStatusMsg(t('melodiq.helper.conn_failed', 'Connection Failed. Check URL or Network.'));
         }
     };
 
     return (
         <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
-                Helper Server Connection
+                {t('melodiq.helper.title', 'Helper Server Connection')}
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-                Connect to a Melodiq Helper (PC/Server) to load 8000+ songs.
-                Enter the URL (e.g., http://192.168.1.50:3000) and the Security Token shown on the Helper screen.
+                {t('melodiq.helper.desc', 'Connect to a Melodiq Helper (PC/Server) to load 8000+ songs. Enter the URL (e.g., http://192.168.1.50:3000) and the Security Token shown on the Helper screen.')}
             </Typography>
 
             <FormControlLabel
                 control={<Switch checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />}
-                label="Enable Helper Connection"
+                label={t("melodiq.helper.enable", "Enable Helper Connection")}
             />
 
             {enabled && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
                     <TextField
-                        label="Server URL"
+                        label={t("melodiq.helper.server_url", "Server URL")}
                         variant="outlined"
                         fullWidth
                         value={url}
@@ -102,12 +103,12 @@ export const HelperConnection: React.FC = () => {
                         size="small"
                     />
                     <TextField
-                        label="Security Token"
+                        label={t("melodiq.helper.token", "Security Token")}
                         variant="outlined"
                         fullWidth
                         value={token}
                         onChange={(e) => setToken(e.target.value)}
-                        placeholder="Copy from Helper Console/Screen"
+                        placeholder={t("melodiq.helper.token_placeholder", "Copy from Helper Console/Screen")}
                         size="small"
                         type="password"
                     />
@@ -126,7 +127,7 @@ export const HelperConnection: React.FC = () => {
                                 color: 'white'
                             }}
                         >
-                            Test Connection
+                            {t("melodiq.helper.test", "Test Connection")}
                         </Button>
 
                         {status === 'success' && (

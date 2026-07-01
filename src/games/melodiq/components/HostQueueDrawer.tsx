@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Drawer, Box, Typography, IconButton, List, ListItem,
     ListItemText, ListItemAvatar, Avatar, Button, Badge, Divider
@@ -24,6 +25,7 @@ interface HostQueueDrawerProps {
 }
 
 export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose }) => {
+    const { t } = useTranslation();
     const { queue, nowPlaying, removeFromQueue, moveItem, clearQueue, toggleQueueParticipant } = useQueue();
     const { clientRole, clientProfile } = useClientEngine();
     const isClient = new URLSearchParams(window.location.search).get('role') === 'client';
@@ -75,7 +77,6 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose 
                     borderTopLeftRadius: 16,
                     borderTopRightRadius: 16,
                     bgcolor: 'rgba(20, 20, 30, 0.98)',
-                    backdropFilter: 'blur(20px)',
                     display: 'flex',
                     flexDirection: 'column',
                 }
@@ -102,7 +103,7 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose 
             }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <PlaylistPlayIcon color="primary" />
-                    <Typography variant="h6" fontWeight="bold">Queue</Typography>
+                    <Typography variant="h6" fontWeight="bold">{t('melodiq.queue')}</Typography>
                     {queue.length > 0 && (
                         <Badge
                             badgeContent={queue.length}

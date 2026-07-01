@@ -202,7 +202,7 @@ export const ImposterGame: React.FC = () => {
 
                 return (
                     <Box sx={{ textAlign: 'center', py: 5 }}>
-                        <Paper sx={{ p: 5, mb: 4, borderRadius: 3, bgcolor: gameState.winner === 'NORMAL' ? 'rgba(56, 142, 60, 0.85)' : 'rgba(211, 47, 47, 0.85)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)', boxShadow: 8, color: '#fff' }}>
+                        <Paper sx={{ p: 5, mb: 4, borderRadius: 3, bgcolor: gameState.winner === 'NORMAL' ? 'rgba(56, 142, 60, 0.85)' : 'rgba(211, 47, 47, 0.85)', border: '1px solid rgba(255, 255, 255, 0.2)', boxShadow: 8, color: '#fff' }}>
                             <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold' }}>
                                 {gameState.winner === 'NORMAL'
                                     ? t('games.imposter.result.innocents_win')

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Box, Typography, Button, Paper, Avatar, Chip, Grid } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'; // Trophy icon
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -6,6 +6,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import StarIcon from '@mui/icons-material/Star';
 import type { UserProfile } from '../MelodiqSettings';
 import { useQueue } from '../hooks/useQueue';
+import { useMelodiqSettings } from '../hooks/SettingsContext';
 
 interface ScoreBoardProps {
     players: {
@@ -24,6 +25,44 @@ interface ScoreBoardProps {
 
 export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit, onResume, isPassive, onMinimize }) => {
     const { queue } = useQueue();
+    const { settings } = useMelodiqSettings();
+    const [countdown, setCountdown] = useState<number | null>(null);
+    const [autoPlayCanceled, setAutoPlayCanceled] = useState(false);
+    
+    // Stabilize onExit callback
+    const onExitRef = useRef(onExit);
+    useEffect(() => {
+        onExitRef.current = onExit;
+    }, [onExit]);
+
+    // Auto-play / Next Song logic
+    useEffect(() => {
+        if (isPassive || autoPlayCanceled) return; // Only host handles auto-play
+        
+        const delay = players.length === 0 ? settings.autoplayNoPlayersDelay : settings.autoplayWithPlayersDelay;
+        if (delay && delay > 0) {
+            setCountdown(delay);
+            
+            const timer = setInterval(() => {
+                setCountdown(prev => {
+                    if (prev === null) return null;
+                    if (prev <= 1) {
+                        clearInterval(timer);
+                        onExitRef.current(false);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            
+            return () => clearInterval(timer);
+        }
+    }, [players.length, settings.autoplayNoPlayersDelay, settings.autoplayWithPlayersDelay, isPassive, autoPlayCanceled]);
+
+    const cancelAutoPlay = () => {
+        setAutoPlayCanceled(true);
+        setCountdown(null);
+    };
 
     // 1. Session Ranking: Current players sorted by score
     const sessionRanking = useMemo(() => {
@@ -324,6 +363,11 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit, onResum
                             Main Menu
                         </Button>
                     )}
+                    {countdown !== null && (
+                        <Button variant="outlined" size="large" onClick={cancelAutoPlay} sx={{ borderRadius: 8, px: 4, color: 'rgba(255,255,255,0.7)', borderColor: 'rgba(255,255,255,0.3)' }}>
+                            Cancel Auto-Skip
+                        </Button>
+                    )}
                     <Button
                         variant="contained"
                         size="large"
@@ -338,7 +382,9 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit, onResum
                             fontSize: '1.2rem'
                         }}
                     >
-                        {queue.length > 0 ? `NEXT: ${queue[0].song.title}`.toUpperCase() : 'CONTINUE'}
+                        {queue.length > 0 
+                            ? `NEXT: ${queue[0].song.title}${countdown !== null ? ` (${countdown}s)` : ''}`.toUpperCase() 
+                            : `CONTINUE${countdown !== null ? ` (${countdown}s)` : ''}`}
                     </Button>
                 </Box>
             ) : (

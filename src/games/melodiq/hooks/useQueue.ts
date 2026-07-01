@@ -53,7 +53,9 @@ export const useQueue = () => {
 
     // Listen for updates from other tabs (Host logic)
     useEffect(() => {
-        if (isClient) return;
+        if (isClient) {
+            return;
+        }
         const handleMessage = (event: MessageEvent) => {
             if (event.data.type === 'UPDATE_QUEUE') {
                 setQueue(event.data.payload);
@@ -61,9 +63,10 @@ export const useQueue = () => {
                 setNowPlayingState(event.data.payload);
             }
         };
-
         channel.addEventListener('message', handleMessage);
-        return () => channel.removeEventListener('message', handleMessage);
+        return () => {
+            channel.removeEventListener('message', handleMessage);
+        };
     }, [channel]);
 
     // Listen for updates from PhoneClientEngine (Client logic)
@@ -108,10 +111,8 @@ export const useQueue = () => {
             participants: enrichedSession
         };
 
-        // Prevent exact duplicates if user clicks twice fast
-        if (queue.length > 0 && queue[queue.length - 1].song.id === song.id) {
-            return;
-        }
+        // The strict duplicate check was removed to allow users to queue the same song back-to-back.
+        // If accidental double clicks become an issue, we should implement a time-based debounce instead.
 
         const next = [...queue, newItem];
         syncQueue(next);
@@ -194,10 +195,8 @@ export const useQueue = () => {
             participants: enrichedSession
         };
 
-        // Prevent exact duplicate at the top
-        if (queue.length > 0 && queue[0].song.id === song.id) {
-            return;
-        }
+        // The strict duplicate check was removed to allow users to queue the same song back-to-back.
+        // If accidental double clicks become an issue, we should implement a time-based debounce instead.
 
         const next = [newItem, ...queue];
         syncQueue(next);

@@ -20,7 +20,7 @@ interface SongActionDialogsProps {
     
     isTVConnected: boolean;
     playSongOnTV: (id: string, song: SongMeta) => void;
-    handleSelectSong: (song: SongMeta) => void;
+    handleSelectSong: (song: SongMeta, forcePlay?: boolean) => void;
     addNext: (song: SongMeta) => void;
     addToQueue: (song: SongMeta) => void;
     refreshSongs: () => Promise<void>;
@@ -45,8 +45,7 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
         if (!selectedSongForQueue) return;
         switch (action) {
             case 'play_now':
-                if (isTVConnected) playSongOnTV(selectedSongForQueue.id, selectedSongForQueue);
-                else handleSelectSong(selectedSongForQueue);
+                handleSelectSong(selectedSongForQueue, true);
                 break;
             case 'play_next':
                 addNext(selectedSongForQueue);

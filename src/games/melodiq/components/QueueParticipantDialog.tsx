@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogTitle, DialogContent, List, ListItem, ListItemAvatar, Avatar, ListItemText, Switch, Button, DialogActions, Box, Typography } from '@mui/material';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
@@ -12,6 +13,7 @@ interface QueueParticipantDialogProps {
 }
 
 export const QueueParticipantDialog: React.FC<QueueParticipantDialogProps> = ({ open, onClose, queueItemId }) => {
+    const { t } = useTranslation();
     const { queue, toggleQueueParticipant, reorderQueueParticipant } = useQueue();
     const { activePeers } = useWebRTC();
 
@@ -160,7 +162,7 @@ export const QueueParticipantDialog: React.FC<QueueParticipantDialogProps> = ({ 
                 )}
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose}>Close</Button>
+                <Button onClick={onClose}>{t('common.close')}</Button>
             </DialogActions>
         </Dialog>
     );

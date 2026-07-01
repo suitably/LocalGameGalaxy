@@ -6,7 +6,6 @@ import type { Note } from '../parser';
 interface LyricsDisplayProps {
     song: SongWithNotes;
     audioRef: React.RefObject<HTMLAudioElement | null>;
-    centered?: boolean; // When true, show lyrics centered for full-screen display (no players)
     uiScale?: number;
 }
 
@@ -178,7 +177,6 @@ const LyricsLane: React.FC<LyricsLaneProps & { bpm: number }> = React.memo(({ no
                 py: 1,
                 borderRadius: 2,
                 bgcolor: 'rgba(0,0,0,0.5)', // Always dark background
-                backdropFilter: 'blur(4px)',
                 width: 'fit-content',
                 alignItems: align === 'center' ? 'center' : (align === 'right' ? 'flex-end' : 'flex-start'),
                 opacity: showCountdown ? 1 : opacity,
@@ -265,7 +263,7 @@ const LyricsLane: React.FC<LyricsLaneProps & { bpm: number }> = React.memo(({ no
     );
 });
 
-export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, audioRef, centered, uiScale = 1.0 }) => {
+export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, audioRef, uiScale = 1.0 }) => {
     const [currentBeat, setCurrentBeat] = useState(0);
 
     // Calculate BPM once or memoize it to pass down safely
@@ -295,8 +293,8 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, a
 
     return (
         <Box sx={{
-            py: centered ? 4 : (isSmallScreen ? 0.5 : 2),
-            minHeight: centered ? 200 : (isSmallScreen ? 60 : 120),
+            py: isSmallScreen ? 0.5 : 2,
+            minHeight: isSmallScreen ? 60 : 120,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

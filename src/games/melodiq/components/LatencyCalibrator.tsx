@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Box, Button, Typography, CircularProgress } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { MicrophoneManager } from '../audio/MicrophoneManager';
 
 interface LatencyCalibratorProps {
@@ -8,6 +9,7 @@ interface LatencyCalibratorProps {
 }
 
 export const LatencyCalibrator: React.FC<LatencyCalibratorProps> = ({ onComplete, deviceId }) => {
+    const { t } = useTranslation();
     const [status, setStatus] = useState<'idle' | 'running' | 'success' | 'failed'>('idle');
     const [message, setMessage] = useState('');
     const [volume, setVolume] = useState(0);
@@ -178,7 +180,7 @@ export const LatencyCalibrator: React.FC<LatencyCalibratorProps> = ({ onComplete
                 <Box sx={{ width: '100%', height: 4, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
                     <Box sx={{ width: `${Math.min(100, volume * 300)}%`, height: '100%', bgcolor: volume > 0.1 ? '#4caf50' : '#ffa726', transition: 'width 0.1s' }} />
                 </Box>
-                <Typography variant="caption" sx={{ fontSize: '0.6rem', opacity: 0.7 }}>Mic Input Level</Typography>
+                <Typography variant="caption" sx={{ fontSize: '0.6rem', opacity: 0.7 }}>{t('melodiq.calibrator.mic_level', 'Mic Input Level')}</Typography>
             </Box>
 
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 1 }}>
@@ -196,7 +198,7 @@ export const LatencyCalibrator: React.FC<LatencyCalibratorProps> = ({ onComplete
                         color: 'white'
                     }}
                 >
-                    {status === 'running' ? 'Calibrating...' : 'Auto Calibrate'}
+                    {status === 'running' ? t('melodiq.calibrator.calibrating', 'Calibrating...') : t('melodiq.calibrator.auto', 'Auto Calibrate')}
                 </Button>
                 {status === 'running' && <CircularProgress size={20} />}
             </Box>
@@ -210,7 +212,7 @@ export const LatencyCalibrator: React.FC<LatencyCalibratorProps> = ({ onComplete
 
             {status === 'idle' && (
                 <Typography variant="caption" color="text.secondary">
-                    Requires speakers on. Plays sounds.
+                    {t('melodiq.calibrator.requires_speakers', 'Requires speakers on. Plays sounds.')}
                 </Typography>
             )}
         </Box>

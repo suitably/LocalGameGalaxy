@@ -250,13 +250,25 @@ export function useScoringEngine({
         }
 
         if (audioRef.current) {
-            if (videoRef.current && Math.abs(videoRef.current.currentTime - audioRef.current.currentTime) > 0.2) {
-                videoRef.current.currentTime = audioRef.current.currentTime;
+            const currentAudioTime = audioRef.current.currentTime;
+            
+            if (videoRef.current) {
+                const diff = currentAudioTime - videoRef.current.currentTime;
+                if (Math.abs(diff) > 0.3) {
+                    videoRef.current.currentTime = currentAudioTime;
+                } else if (diff > 0.05) {
+                    videoRef.current.playbackRate = 1.05;
+                } else if (diff < -0.05) {
+                    videoRef.current.playbackRate = 0.95;
+                } else {
+                    videoRef.current.playbackRate = 1.0;
+                }
             }
             if (vocalsRef.current) {
-                if (Math.abs(vocalsRef.current.currentTime - audioRef.current.currentTime) > 0.15) {
-                    vocalsRef.current.currentTime = audioRef.current.currentTime;
+                if (Math.abs(currentAudioTime - vocalsRef.current.currentTime) > 0.25) {
+                    vocalsRef.current.currentTime = currentAudioTime;
                 }
+                
                 if (isPlayingRef.current && !audioRef.current.paused && vocalsRef.current.paused) {
                     vocalsRef.current.play().catch(e => console.warn("Vocals sync play failed", e));
                 } else if ((!isPlayingRef.current || audioRef.current.paused) && !vocalsRef.current.paused) {

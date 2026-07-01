@@ -80,7 +80,6 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({ open, onClose }) =
                 sx: {
                     width: { xs: '100%', sm: 400 },
                     bgcolor: 'rgba(20, 20, 30, 0.98)',
-                    backdropFilter: 'blur(20px)',
                     display: 'flex',
                     flexDirection: 'column',
                 }

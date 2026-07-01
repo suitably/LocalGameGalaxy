@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Typography, Button, List, ListItem, ListItemText, Switch, LinearProgress, IconButton, TextField } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
 import { MicrophoneManager } from '../audio/MicrophoneManager';
 
 const MicVolumeMeter: React.FC<{ deviceId: string }> = ({ deviceId }) => {
+    const { t } = useTranslation();
     const [volume, setVolume] = useState(0);
 
     useEffect(() => {
@@ -58,6 +60,7 @@ const MicVolumeMeter: React.FC<{ deviceId: string }> = ({ deviceId }) => {
 };
 
 export const HardwareMicSetup: React.FC = () => {
+    const { t } = useTranslation();
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
     const [enabledMics, setEnabledMics] = useState<string[]>([]);
     const [customNames, setCustomNames] = useState<Record<string, string>>({});
@@ -106,7 +109,7 @@ export const HardwareMicSetup: React.FC = () => {
     return (
         <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="h6">Hardware Microphones</Typography>
+                <Typography variant="h6">{t('melodiq.hardware_mic')}</Typography>
                 <Button variant="outlined" size="small" onClick={loadDevices}>Refresh Devices</Button>
             </Box>
             

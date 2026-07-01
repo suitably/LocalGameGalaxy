@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Box, Button, Typography, FormControl, MenuItem, Select, Slider,
     IconButton, Avatar, Popover, Chip, Divider, Switch, FormControlLabel
@@ -35,6 +36,7 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
     onMoveActivePlayer,
     onUpdateActivePlayerConfig
 }) => {
+    const { t } = useTranslation();
     const { peers: connectedPreviewPeers, activePeers, inactivePeers, togglePeerActive } = useWebRTC();
     const { getRole, setRole } = useClientRoles();
 
@@ -147,7 +149,7 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
                                             variant="standard"
                                         >
                                             <MenuItem value=""><em>No Device</em></MenuItem>
-                                            {loadingDevices && <MenuItem value="loading" disabled>Loading...</MenuItem>}
+                                            {loadingDevices && <MenuItem value="loading" disabled>{t('melodiq.loading')}</MenuItem>}
                                             {devices.map(d => (
                                                 <MenuItem key={d.deviceId} value={d.deviceId}>{d.label || d.deviceId}</MenuItem>
                                             ))}

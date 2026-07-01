@@ -49,7 +49,6 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                 alignItems: 'center',
                 px: 2,
                 bgcolor: 'rgba(20, 20, 30, 0.95)',
-                backdropFilter: 'blur(10px)',
                 borderTop: '1px solid rgba(255, 255, 255, 0.1)',
                 zIndex: 1200, // Higher than FAB but below Dialogs
                 borderRadius: 0

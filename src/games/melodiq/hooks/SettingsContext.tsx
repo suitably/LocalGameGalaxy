@@ -16,6 +16,10 @@ export interface SettingsState {
     goldenNoteMultiplier: number;
     defaultSongClickAction: 'play_now' | 'play_next' | 'add_end';
     defaultViewMode: 'list' | 'grid';
+    autoplayNoPlayersDelay: number;
+    autoplayWithPlayersDelay: number;
+    hideBackgroundVideo: boolean;
+    fallbackBackgroundUrl: string;
 }
 
 /** Default/Factory settings */
@@ -34,7 +38,11 @@ export const DEFAULT_SETTINGS: SettingsState = {
     enableHelper: false,
     goldenNoteMultiplier: 2.0,
     defaultSongClickAction: 'add_end',
-    defaultViewMode: 'list'
+    defaultViewMode: 'list',
+    autoplayNoPlayersDelay: 10,
+    autoplayWithPlayersDelay: 0,
+    hideBackgroundVideo: false,
+    fallbackBackgroundUrl: ''
 };
 
 export const loadSettings = (): SettingsState => ({
@@ -76,7 +84,17 @@ export const loadSettings = (): SettingsState => ({
         return stored ? parseFloat(stored) : 2.0;
     })(),
     defaultSongClickAction: (localStorage.getItem('melodiq_default_song_click_action') as any) || 'add_end',
-    defaultViewMode: (localStorage.getItem('melodiq_default_view_mode') as any) || 'list'
+    defaultViewMode: (localStorage.getItem('melodiq_default_view_mode') as any) || 'list',
+    autoplayNoPlayersDelay: (() => {
+        const stored = localStorage.getItem('melodiq_autoplay_no_players');
+        return stored ? parseInt(stored) : 10;
+    })(),
+    autoplayWithPlayersDelay: (() => {
+        const stored = localStorage.getItem('melodiq_autoplay_with_players');
+        return stored ? parseInt(stored) : 0;
+    })(),
+    hideBackgroundVideo: localStorage.getItem('melodiq_hide_background_video') === 'true',
+    fallbackBackgroundUrl: localStorage.getItem('melodiq_fallback_background_url') || ''
 });
 
 const persistSettings = (s: SettingsState) => {
@@ -95,6 +113,10 @@ const persistSettings = (s: SettingsState) => {
     localStorage.setItem('melodiq_golden_note_multiplier', String(s.goldenNoteMultiplier));
     localStorage.setItem('melodiq_default_song_click_action', s.defaultSongClickAction);
     localStorage.setItem('melodiq_default_view_mode', s.defaultViewMode);
+    localStorage.setItem('melodiq_autoplay_no_players', String(s.autoplayNoPlayersDelay));
+    localStorage.setItem('melodiq_autoplay_with_players', String(s.autoplayWithPlayersDelay));
+    localStorage.setItem('melodiq_hide_background_video', String(s.hideBackgroundVideo));
+    localStorage.setItem('melodiq_fallback_background_url', s.fallbackBackgroundUrl);
 };
 
 interface SettingsContextValue {
