@@ -10,7 +10,6 @@ export const melodiqResources = {
             scanning: "Scanning...",
             import_stats: "Found: {{found}} | Processed: {{processed}} | Errors: {{errors}}",
 
-            // New additions based on the UI
             play_now: "Play Now",
             play_next: "Play Next",
             add_end: "Add to Queue",
@@ -31,7 +30,6 @@ export const melodiqResources = {
             clear_filters: "Clear Filters",
             loading_library: "Loading library... {{loaded}} / {{total}}",
 
-            // Library Manager
             local_libraries: "Local Song Libraries",
             browser_storage: "Browser Storage",
             storage_desc: "Stores metadata in database. Files accessed directly from disk.",
@@ -39,7 +37,6 @@ export const melodiqResources = {
             no_folders: "No local folders added.",
             remove_confirm: "Remove this folder from Browser Storage? Songs will be deleted from the database.",
 
-            // Queue
             song_queue: "Song Queue",
             now_playing: "Now Playing",
             up_next: "Up Next ({{count}})",
@@ -47,8 +44,8 @@ export const melodiqResources = {
             queue_empty: "The queue is empty. Add some songs!",
             add_songs: "Add Songs",
             search_add: "Search to add...",
+            loading: "Loading...",
 
-            // Phone Client
             host_settings: "Host Settings",
             host_desc: "Configure the TV/Host Server Connection remotely.",
             helper_url: "Helper URL",
@@ -78,11 +75,21 @@ export const melodiqResources = {
             no_matches: "No matches found",
             library_not_loaded: "Library not loaded",
             load_library_btn: "Load Library",
+            hardware_mic: "Hardware Mic",
+            name: "Your Name",
+            color: "Your Color",
+            mic_permission_denied: "Permission denied. Could not load microphone names.",
 
-            // Playlists
+            client_settings: "Player Profile",
+            display_mode: "Display Mode",
+            display_lyrics_only: "Only Lyrics",
+            display_self_pitch: "My Pitch & Lyrics",
+            display_all_pitch: "Everyone's Pitch",
+
             playlists: "Playlists",
             global_playlists: "Global Playlists",
             create_playlist: "Create Playlist",
+            create_new_playlist: "Create New Playlist",
             playlist_name: "Playlist Name",
             no_playlists: "No playlists found.",
             songs_count_short: "songs",
@@ -91,13 +98,89 @@ export const melodiqResources = {
             playlist_empty: "This playlist is empty.",
             add_to_playlist: "Add to Playlist",
             add_to_playlist_desc: "Add this song to an existing playlist",
+            add_selected_to_playlist: "Add Selected to Playlist",
             select_playlist: "Select Playlist",
             create: "Create",
             save: "Save",
             sync_enabled: "Sync Enabled",
             sync_disabled: "Sync Disabled",
             manage_playlists: "Manage Playlists",
-            playlist_created: "Playlist created!"
+            playlist_created: "Playlist created!",
+            playlist_created_add_later: "Playlist created! You can add songs to it later.",
+
+            add_to_queue: "Add to Queue",
+            history: "History",
+            no_history: "No history found.",
+
+            calibrator: {
+                auto: "Auto Calibration",
+                calibrating: "Calibrating...",
+                mic_level: "Mic Level",
+                requires_speakers: "Requires speakers to be turned on."
+            },
+
+            helper: {
+                connected: "Connected",
+                connecting: "Connecting...",
+                conn_failed: "Connection failed",
+                desc: "Melodiq Helper is a background application that plays local songs.",
+                enable: "Enable Helper",
+                error_status: "Error",
+                server_url: "Server URL",
+                test: "Test Connection",
+                title: "Melodiq Helper",
+                token: "Token",
+                token_placeholder: "Security Token",
+                unauthorized: "Unauthorized"
+            },
+
+            settings_panel: {
+                title: "Game Settings",
+                custom_layouts: "Custom Layouts",
+                custom_layouts_desc: "Define CSS grid templates for specific player counts (e.g. '1fr 1fr' or '1fr \\n 1fr').",
+                players: "Players",
+                layout_example: "Layout (e.g. '1fr 1fr')",
+                add: "Add",
+                default_view: "Default View",
+                list_view: "List",
+                grid_view: "Grid",
+                default_view_desc: "Choose whether the song library defaults to a list or grid view.",
+                autoplay: "Autoplay Delay",
+                autoplay_no_singers: "No Singers",
+                off_manual: "Off (Manual)",
+                seconds: "{{count}} Seconds",
+                autoplay_no_singers_desc: "Time before autoplaying the next song if no one is singing.",
+                autoplay_singers: "With Singers",
+                autoplay_singers_desc: "Time before autoplaying the next song when singers are active.",
+                default_click: "Default Click Action",
+                play_now: "Play Now",
+                play_next: "Play Next",
+                add_queue: "Add to Queue",
+                default_click_desc: "Action when clicking a song in the library.",
+                card_size: "Grid Card Size",
+                small: "Small",
+                medium: "Medium",
+                large: "Large",
+                custom: "Custom",
+                max_items: "Items per row",
+                max_items_desc: "Maximum number of cards to display per row.",
+                golden_multiplier: "Golden Note Multiplier",
+                golden_multiplier_desc: "Score multiplier for hitting golden notes perfectly.",
+                lyrics_scale: "Lyrics Size",
+                lyrics_scale_desc: "Adjust the size of the lyrics on the main screen.",
+                song_volume: "Song Volume",
+                vocals_volume: "Vocals Volume",
+                master_volume: "Master Volume",
+                hide_video: "Hide Background Video",
+                fallback_background_url: "Fallback Background URL",
+                browse: "Browse...",
+                fallback_background_desc: "Shown when a song has no video. Use a web link or select a local file (local files may reset after reload).",
+                show_pitch: "Show Note Pitch Lines",
+                dev_options: "Developer Options",
+                show_debug: "Show Debug Overlay",
+                show_dev_slider: "Show Dev Audio Slider",
+                show_video_errors: "Show Video Errors"
+            }
         }
     },
     de: {
@@ -109,7 +192,6 @@ export const melodiqResources = {
             scanning: "Scanne...",
             import_stats: "Gefunden: {{found}} | Verarbeitet: {{processed}} | Fehler: {{errors}}",
 
-            // New additions based on the UI
             play_now: "Jetzt abspielen",
             play_next: "Als nächstes abspielen",
             add_end: "Zur Warteschlange hinzufügen",
@@ -130,7 +212,6 @@ export const melodiqResources = {
             clear_filters: "Filter zurücksetzen",
             loading_library: "Lade Bibliothek... {{loaded}} / {{total}}",
 
-            // Library Manager
             local_libraries: "Lokale Liederkataloge",
             browser_storage: "Browser-Speicher",
             storage_desc: "Speichert Metadaten in der Datenbank. Dateien werden direkt von der Festplatte gelesen.",
@@ -138,7 +219,6 @@ export const melodiqResources = {
             no_folders: "Keine lokalen Ordner hinzugefügt.",
             remove_confirm: "Diesen Ordner aus dem Browser-Speicher entfernen? Lieder werden aus der Datenbank gelöscht.",
 
-            // Queue
             song_queue: "Warteschlange",
             now_playing: "Läuft jetzt",
             up_next: "Als Nächstes ({{count}})",
@@ -146,8 +226,8 @@ export const melodiqResources = {
             queue_empty: "Die Warteschlange ist leer. Füge Lieder hinzu!",
             add_songs: "Lieder hinzufügen",
             search_add: "Suchen zum Hinzufügen...",
+            loading: "Lädt...",
 
-            // Phone Client
             host_settings: "Host-Einstellungen",
             host_desc: "Remote-Konfiguration für die TV/Host-Serververbindung.",
             helper_url: "Helper-URL",
@@ -177,11 +257,21 @@ export const melodiqResources = {
             no_matches: "Keine Treffer gefunden",
             library_not_loaded: "Bibliothek nicht geladen",
             load_library_btn: "Bibliothek laden",
+            hardware_mic: "Hardware-Mikrofon",
+            name: "Dein Name",
+            color: "Deine Farbe",
+            mic_permission_denied: "Berechtigung verweigert. Mikrofonnamen konnten nicht geladen werden.",
 
-            // Playlists
+            client_settings: "Spielerprofil",
+            display_mode: "Anzeigemodus",
+            display_lyrics_only: "Nur Songtext",
+            display_self_pitch: "Meine Tonhöhe & Text",
+            display_all_pitch: "Alle Tonhöhen",
+
             playlists: "Playlists",
             global_playlists: "Globale Playlists",
             create_playlist: "Playlist erstellen",
+            create_new_playlist: "Neue Playlist erstellen",
             playlist_name: "Playlist-Name",
             no_playlists: "Keine Playlists gefunden.",
             songs_count_short: "Lieder",
@@ -190,13 +280,89 @@ export const melodiqResources = {
             playlist_empty: "Diese Playlist ist leer.",
             add_to_playlist: "Zur Playlist hinzufügen",
             add_to_playlist_desc: "Füge dieses Lied zu einer Playlist hinzu",
+            add_selected_to_playlist: "Ausgewählte zur Playlist hinzufügen",
             select_playlist: "Playlist auswählen",
             create: "Erstellen",
             save: "Speichern",
             sync_enabled: "Synchronisierung aktiviert",
             sync_disabled: "Synchronisierung deaktiviert",
             manage_playlists: "Playlists verwalten",
-            playlist_created: "Playlist erstellt!"
+            playlist_created: "Playlist erstellt!",
+            playlist_created_add_later: "Playlist erstellt! Du kannst später Lieder hinzufügen.",
+
+            add_to_queue: "Zur Warteschlange hinzufügen",
+            history: "Verlauf",
+            no_history: "Kein Verlauf gefunden.",
+
+            calibrator: {
+                auto: "Automatische Kalibrierung",
+                calibrating: "Kalibriere...",
+                mic_level: "Mikrofonpegel",
+                requires_speakers: "Lautsprecher müssen eingeschaltet sein."
+            },
+
+            helper: {
+                connected: "Verbunden",
+                connecting: "Verbinde...",
+                conn_failed: "Verbindung fehlgeschlagen",
+                desc: "Melodiq Helper ist eine Hintergrundanwendung, die lokale Lieder abspielt.",
+                enable: "Helper aktivieren",
+                error_status: "Fehler",
+                server_url: "Server-URL",
+                test: "Verbindung testen",
+                title: "Melodiq Helper",
+                token: "Token",
+                token_placeholder: "Sicherheits-Token",
+                unauthorized: "Nicht autorisiert"
+            },
+
+            settings_panel: {
+                title: "Spieleinstellungen",
+                custom_layouts: "Benutzerdefinierte Layouts",
+                custom_layouts_desc: "Definiere CSS-Grid-Vorlagen für bestimmte Spieleranzahlen (z.B. '1fr 1fr' oder '1fr \\n 1fr').",
+                players: "Spieler",
+                layout_example: "Layout (z.B. '1fr 1fr')",
+                add: "Hinzufügen",
+                default_view: "Standardansicht",
+                list_view: "Liste",
+                grid_view: "Raster",
+                default_view_desc: "Wähle, ob die Liedersammlung standardmäßig als Liste oder Raster angezeigt wird.",
+                autoplay: "Autoplay-Verzögerung",
+                autoplay_no_singers: "Ohne Sänger",
+                off_manual: "Aus (Manuell)",
+                seconds: "{{count}} Sekunden",
+                autoplay_no_singers_desc: "Zeit bis das nächste Lied automatisch startet, wenn niemand singt.",
+                autoplay_singers: "Mit Sängern",
+                autoplay_singers_desc: "Zeit bis das nächste Lied automatisch startet, wenn Sänger aktiv sind.",
+                default_click: "Standard-Klickaktion",
+                play_now: "Jetzt abspielen",
+                play_next: "Als nächstes abspielen",
+                add_queue: "Zur Warteschlange hinzufügen",
+                default_click_desc: "Aktion beim Anklicken eines Liedes in der Bibliothek.",
+                card_size: "Raster-Kartengröße",
+                small: "Klein",
+                medium: "Mittel",
+                large: "Groß",
+                custom: "Benutzerdefiniert",
+                max_items: "Elemente pro Zeile",
+                max_items_desc: "Maximale Anzahl an Karten, die pro Zeile angezeigt werden.",
+                golden_multiplier: "Goldene-Note-Multiplikator",
+                golden_multiplier_desc: "Punkte-Multiplikator für das perfekte Treffen goldener Noten.",
+                lyrics_scale: "Songtext-Größe",
+                lyrics_scale_desc: "Passe die Größe des Songtexts auf dem Hauptbildschirm an.",
+                song_volume: "Song-Lautstärke",
+                vocals_volume: "Gesang-Lautstärke",
+                master_volume: "Gesamtlautstärke",
+                hide_video: "Hintergrundvideo ausblenden",
+                fallback_background_url: "Ersatz-Hintergrund-URL",
+                browse: "Durchsuchen...",
+                fallback_background_desc: "Wird angezeigt, wenn ein Lied kein Video hat. Verwende einen Weblink oder wähle eine lokale Datei (lokale Dateien werden nach Neuladen möglicherweise zurückgesetzt).",
+                show_pitch: "Tonhöhenlinien anzeigen",
+                dev_options: "Entwickleroptionen",
+                show_debug: "Debug-Overlay anzeigen",
+                show_dev_slider: "Entwickler-Audio-Regler anzeigen",
+                show_video_errors: "Video-Fehler anzeigen"
+            }
         }
     }
 };
