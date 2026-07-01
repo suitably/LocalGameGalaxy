@@ -15,7 +15,7 @@ const MicVolumeMeter: React.FC<{ deviceId: string }> = ({ deviceId }) => {
         const startMic = async () => {
             try {
                 // start(deviceId, initialVolume, initialMuted)
-                await mic.start(deviceId, 1.0, true);
+                await mic.start(deviceId);
                 
                 const updateVolume = () => {
                     if (!active) return;

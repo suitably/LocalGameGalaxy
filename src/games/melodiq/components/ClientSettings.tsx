@@ -22,7 +22,7 @@ const LiveMicTest: React.FC<{ deviceId: string }> = ({ deviceId }) => {
         let lastTime = 0;
         const mic = new MicrophoneManager();
 
-        mic.start(deviceId || undefined, 0.0, true).then(() => {
+        mic.start(deviceId || undefined).then(() => {
             if (!mounted) {
                 mic.stop();
                 return;

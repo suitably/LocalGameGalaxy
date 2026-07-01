@@ -14,7 +14,9 @@ const defaultConfig = {
     downloadDir: null,       // Default folder for USDB downloads
     usdbUsername: null,      // USDB login username
     usdbPassword: null,      // USDB login password
-    apiKeys: []              // Array of API key objects
+    apiKeys: [],             // Array of API key objects
+    defaultDownloadMode: 'stream', // 'stream', 'mp4', or 'none'
+    autoVocalSeparation: false // Automatically separate vocals after download
 };
 
 let currentConfig = { ...defaultConfig };
@@ -143,6 +145,24 @@ module.exports = {
 
     get disableRateLimit() {
         return currentConfig.disableRateLimit;
+    },
+
+    get defaultDownloadMode() {
+        return currentConfig.defaultDownloadMode;
+    },
+
+    set defaultDownloadMode(value) {
+        currentConfig.defaultDownloadMode = value;
+        saveConfig();
+    },
+
+    get autoVocalSeparation() {
+        return currentConfig.autoVocalSeparation;
+    },
+
+    set autoVocalSeparation(value) {
+        currentConfig.autoVocalSeparation = value;
+        saveConfig();
     },
 
     get apiKeys() {

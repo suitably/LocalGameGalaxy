@@ -80,7 +80,6 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
     const {
         showDebugOverlay,
         showDevSlider,
-        showMicStatus,
         showNoteLabels,
         showVideoErrors,
                 songVolume,
@@ -470,14 +469,8 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                         )}
                     </Box>
                     <Typography variant="h6" sx={{ fontSize: `${1.25 * uiScale}rem` }}>{song.artist} - {song.title}</Typography>
-                    <Box sx={{ display: 'flex', gap: 4 }}>
-                        {showMicStatus && players.map(p => (
-                            <Box key={p.config.id} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.7rem' }}>
-                                    {p.config.name}: {p.mic?.isActive ? 'On' : (p.webRtcManager ? 'Remote' : 'Off')}
-                                </Typography>
-                            </Box>
-                        ))}
+                    <Box sx={{ display: 'flex', gap: 4, pointerEvents: 'none' }}>
+                        <ScoreDisplay ref={scoreDisplayRef} players={visiblePlayers.map(p => ({ id: p.config.id, name: p.config.name, hue: p.config.hue }))} scale={uiScale} />
                     </Box>
                 </Box>
 
@@ -540,9 +533,7 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
                     )}
                 </Box>
 
-                <Box sx={{ position: 'absolute', top: 16, right: 24, zIndex: 1500, pointerEvents: 'none' }}>
-                    <ScoreDisplay ref={scoreDisplayRef} players={players.map(p => ({ id: p.config.id, name: p.config.name, hue: p.config.hue }))} scale={uiScale} />
-                </Box>
+
 
                 {showDevSlider && (
                     <Box sx={{ width: 400, alignSelf: 'center', display: 'flex', alignItems: 'center', gap: 2, bgcolor: 'rgba(0,0,0,0.5)', p: 2, borderRadius: 2, pointerEvents: 'auto', mt: 2 }}>

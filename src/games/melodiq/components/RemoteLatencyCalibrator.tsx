@@ -41,7 +41,7 @@ export const RemoteLatencyCalibrator: React.FC<RemoteLatencyCalibratorProps> = (
                 micRef.current = new MicrophoneManager();
             }
             // Mute volume for calibration
-            await micRef.current.start(deviceId, 0, true);
+            await micRef.current.start(deviceId);
 
             if (!micRef.current.context) throw new Error("No Audio Context");
 

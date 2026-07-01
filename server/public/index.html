@@ -43,6 +43,7 @@
         const API_TOKEN = "{{AUTH_TOKEN}}";
         let usdbOffset = 0;
         let usdbTotalResults = 0;
+        let prefDefaultDownloadMode = 'stream';
 
         document.addEventListener('DOMContentLoaded', () => {
             const hostname = window.location.hostname;
@@ -117,7 +118,7 @@
 
         async function loadPath(path) {
             try {
-                const res = await fetch('/api/browse?path=' + encodeURIComponent(path));
+                const res = await fetch('/api/browse?path=' + encodeURIComponent(path) + '&token=' + API_TOKEN);
                  if (res.status === 401) throw new Error("Unauthorized");
                 const data = await res.json();
                 if (data.error) throw new Error(data.error);
@@ -362,7 +363,7 @@
                 const isStream = song.video.includes('youtube.com') || song.video.includes('youtu.be') || song.video.includes('&path=https');
                 select.value = isStream ? 'stream' : 'mp4';
             } else {
-                select.value = 'none';
+                select.value = prefDefaultDownloadMode;
             }
 
             document.getElementById('reDownloadStatus').textContent = '';
@@ -470,7 +471,7 @@
 
             document.getElementById('addVideoTitle').textContent = `Add Video: ${song.artist} - ${song.title}`;
             document.getElementById('addvideo-yturl').value = '';
-            document.getElementById('addvideo-vmode').value = 'mp4';
+            document.getElementById('addvideo-vmode').value = prefDefaultDownloadMode;
             document.getElementById('addvideo-file').value = '';
             document.getElementById('addVideoStatus').textContent = '';
             switchAddVideoTab('yt');
@@ -1036,6 +1037,31 @@
                 <div id="usdb-dldir-status" style="font-size:0.85rem; color:#65676b; margin-top:4px;"></div>
             </div>
 
+            <!-- Global Preferences -->
+            <div style="margin-bottom:18px; padding:14px; background:#f7f8fa; border-radius:8px;">
+                <span class="label">Helper Preferences</span>
+                <div class="row" style="align-items: center; gap: 20px;">
+                    <div>
+                        <span style="font-size:0.85rem; font-weight:600; display:block; margin-bottom:4px;">Default Download Mode</span>
+                        <select id="pref-vmode" style="padding:6px; border-radius:4px; border:1px solid #ccc;">
+                            <option value="none">🎵 Audio Only</option>
+                            <option value="mp4">🎬 MP4</option>
+                            <option value="stream">📡 Stream</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.85rem; font-weight:600; display:flex; align-items:center; cursor:pointer;">
+                            <input type="checkbox" id="pref-autovocal" style="margin-right:6px; transform:scale(1.2);">
+                            Auto Vocal Separation
+                        </label>
+                    </div>
+                    <div style="flex:1; text-align:right;">
+                        <button onclick="savePreferences()">Save Preferences</button>
+                    </div>
+                </div>
+                <div id="pref-status" style="font-size:0.85rem; color:#65676b; margin-top:4px;"></div>
+            </div>
+
             <!-- Search & Filters -->
             <div style="margin-bottom:14px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -1192,12 +1218,25 @@
 
         // Load current settings on page load
         (async () => {
-            // Load default video mode from localStorage
-            const defaultVmode = localStorage.getItem('usdb_default_vmode') || 'none';
-            const manualVmode = document.getElementById('manual-vmode');
-            if (manualVmode) manualVmode.value = defaultVmode;
-            const globalVmode = document.getElementById('global-vmode');
-            if (globalVmode) globalVmode.value = defaultVmode;
+            // Load default video mode from preferences API
+            try {
+                const rPref = await fetch('/api/config/preferences?token=' + API_TOKEN);
+                const prefData = await rPref.json();
+                const defaultVmode = prefData.defaultDownloadMode || 'stream';
+                prefDefaultDownloadMode = defaultVmode;
+                
+                const manualVmode = document.getElementById('manual-vmode');
+                if (manualVmode) manualVmode.value = defaultVmode;
+                const globalVmode = document.getElementById('global-vmode');
+                if (globalVmode) globalVmode.value = defaultVmode;
+                
+                const prefVmode = document.getElementById('pref-vmode');
+                if (prefVmode) prefVmode.value = defaultVmode;
+                const prefAuto = document.getElementById('pref-autovocal');
+                if (prefAuto) prefAuto.checked = !!prefData.autoVocalSeparation;
+            } catch(e) {
+                console.error('Failed to load preferences', e);
+            }
 
             try {
                 const r1 = await fetch('/api/config/usdb-credentials?token=' + API_TOKEN);
@@ -1284,6 +1323,32 @@
             });
             const d = await r.json();
             document.getElementById('usdb-dldir-status').textContent = d.downloadDir ? '✅ Saved: ' + d.downloadDir : '❌ ' + (d.error || 'Error');
+        }
+
+        async function savePreferences() {
+            const vmode = document.getElementById('pref-vmode').value;
+            const autoVocal = document.getElementById('pref-autovocal').checked;
+            const statusDiv = document.getElementById('pref-status');
+            statusDiv.textContent = 'Saving...';
+            try {
+                const r = await fetch('/api/config/preferences?token=' + API_TOKEN, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ defaultDownloadMode: vmode, autoVocalSeparation: autoVocal })
+                });
+                const d = await r.json();
+                if (d.ok) {
+                    statusDiv.innerHTML = '<span style="color:#28a745;">✅ Preferences saved</span>';
+                    // Update current UI select boxes
+                    document.getElementById('global-vmode').value = vmode;
+                    document.getElementById('manual-vmode').value = vmode;
+                    setTimeout(() => statusDiv.textContent = '', 2000);
+                } else {
+                    statusDiv.innerHTML = '<span style="color:#dc3545;">❌ Error saving</span>';
+                }
+            } catch(e) {
+                statusDiv.innerHTML = `<span style="color:#dc3545;">❌ ${e.message}</span>`;
+            }
         }
 
         // Override selectCurrentPath to support USDB folder picker

@@ -151,6 +151,24 @@ export const usePlaylists = () => {
         }
     };
 
+    const addSongsToPlaylist = async (playlistId: string, songIds: string[]) => {
+        const p = await db.playlists.get(playlistId);
+        if (p) {
+            let changed = false;
+            for (const id of songIds) {
+                if (!p.songs.includes(id)) {
+                    p.songs.push(id);
+                    changed = true;
+                }
+            }
+            if (changed) {
+                p.updatedAt = Date.now();
+                await db.playlists.put(p);
+                await pushToServer(p);
+            }
+        }
+    };
+
     const removeSongFromPlaylist = async (playlistId: string, songId: string) => {
         const p = await db.playlists.get(playlistId);
         if (p) {
@@ -202,6 +220,7 @@ export const usePlaylists = () => {
         deletePlaylist,
         updatePlaylistName,
         addSongToPlaylist,
+        addSongsToPlaylist,
         removeSongFromPlaylist,
         moveSongInPlaylist
     };

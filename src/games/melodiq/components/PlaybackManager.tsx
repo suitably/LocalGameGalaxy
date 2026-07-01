@@ -205,7 +205,6 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                         onPlaybackUpdate={setPlaybackState}
                         showDebugOverlay={false}
                         showDevSlider={false}
-                        showMicStatus={false}
                         muteAudio={isTVConnected || isClient}
                         suppressResults={false}
                         isClient={isClient}

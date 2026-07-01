@@ -1,10 +1,12 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { spawn, execFileSync } = require('child_process');
 const config = require('../../config');
 const { sanitizeFilename } = require('../utils/helpers');
 const { getUsdbCookie, fetchUsdbTxt } = require('./usdb');
 const { scanSongs } = require('./scanner');
+const { SEPARATOR_JOBS, separatorQueue, processSeparatorQueue } = require('./separator');
 
 const DOWNLOAD_JOBS = new Map();
 const jobQueue = [];
@@ -326,6 +328,27 @@ async function runDownloadJob(job) {
         job.progress = 100;
         job.status = 'done';
         job.log.push(`🎉 Saved to: ${songDir}`);
+
+        if (config.autoVocalSeparation) {
+            job.log.push(`🎤 Auto Vocal Separation is enabled. Queuing separator job...`);
+            const sepJobId = crypto.randomBytes(8).toString('hex');
+            const sepJob = {
+                jobId: sepJobId,
+                type: 'separate',
+                songId: safeName,
+                songDir: songDir,
+                audioFile: `${safeName}.mp3`,
+                txtFile: `${safeName}.txt`,
+                safeName: safeName,
+                status: 'pending',
+                progress: 0,
+                log: [],
+                error: null
+            };
+            SEPARATOR_JOBS.set(sepJobId, sepJob);
+            separatorQueue.push(sepJob);
+            processSeparatorQueue();
+        }
 
         // Auto-rescan library
         setTimeout(scanSongs, 1000);

@@ -198,7 +198,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
             micRef.current = mic;
             
             try {
-                await mic.start(clientProfile.micDeviceId, 0.0, true);
+                await mic.start(clientProfile.micDeviceId);
                 if (!mounted) {
                     mic.stop();
                     return;

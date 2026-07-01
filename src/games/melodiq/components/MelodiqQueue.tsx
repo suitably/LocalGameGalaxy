@@ -12,6 +12,9 @@ import { MelodiqSearchBar } from './MelodiqSearchBar';
 import { QueueList } from './QueueList';
 import { LocalSongsView } from './LocalSongsView';
 import { OnlineSongsView } from './OnlineSongsView';
+import { HistoryDrawer } from './HistoryDrawer';
+import HistoryIcon from '@mui/icons-material/History';
+import { IconButton, Tooltip } from '@mui/material';
 
 export const MelodiqQueue: React.FC = () => {
     const { t } = useTranslation();
@@ -20,6 +23,7 @@ export const MelodiqQueue: React.FC = () => {
     const { jobs } = useDownloads();
 
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+    const [historyOpen, setHistoryOpen] = useState(false);
 
     const searchFilterState = useSearchFilters(songs);
     const { 
@@ -34,10 +38,17 @@ export const MelodiqQueue: React.FC = () => {
 
     return (
         <Box sx={{ p: 2, height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <Typography variant="h4" sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexShrink: 0 }}>
-                <PlaylistPlayIcon fontSize="large" color="primary" />
-                {t('melodiq.song_queue')}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, flexShrink: 0 }}>
+                <Typography variant="h4" sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <PlaylistPlayIcon fontSize="large" color="primary" />
+                    {t('melodiq.song_queue') || 'Song Queue'}
+                </Typography>
+                <Tooltip title={t('melodiq.history') || 'History'}>
+                    <IconButton onClick={() => setHistoryOpen(true)} color="primary" sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+                        <HistoryIcon />
+                    </IconButton>
+                </Tooltip>
+            </Box>
 
             <Grid container spacing={4} sx={{ flexGrow: 1, overflow: 'hidden' }}>
                 {/* Left Side: Current Queue */}
@@ -101,6 +112,8 @@ export const MelodiqQueue: React.FC = () => {
                     {feedbackMessage}
                 </Alert>
             </Snackbar>
+
+            <HistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} />
         </Box>
     );
 };

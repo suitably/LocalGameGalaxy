@@ -3,7 +3,6 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 export interface SettingsState {
     showDebugOverlay: boolean;
     showDevSlider: boolean;
-    showMicStatus: boolean;
     showNoteLabels: boolean;
     showVideoErrors: boolean;
     customLayouts: Record<number, string>;
@@ -23,7 +22,6 @@ export interface SettingsState {
 export const DEFAULT_SETTINGS: SettingsState = {
     showDebugOverlay: false,
     showDevSlider: false,
-    showMicStatus: true,
     showNoteLabels: true,
     showVideoErrors: false,
     customLayouts: { 1: '1', 2: '1.1', 3: '1.2', 4: '2.2' },
@@ -42,10 +40,6 @@ export const DEFAULT_SETTINGS: SettingsState = {
 export const loadSettings = (): SettingsState => ({
     showDebugOverlay: localStorage.getItem('melodiq_show_overlay') === 'true',
     showDevSlider: localStorage.getItem('melodiq_show_slider') === 'true',
-    showMicStatus: (() => {
-        const stored = localStorage.getItem('melodiq_show_mic_status');
-        return stored === null ? true : stored === 'true';
-    })(),
     showNoteLabels: (() => {
         const stored = localStorage.getItem('melodiq_show_note_labels');
         return stored === null ? true : stored === 'true';
@@ -88,7 +82,6 @@ export const loadSettings = (): SettingsState => ({
 const persistSettings = (s: SettingsState) => {
     localStorage.setItem('melodiq_show_overlay', String(s.showDebugOverlay));
     localStorage.setItem('melodiq_show_slider', String(s.showDevSlider));
-    localStorage.setItem('melodiq_show_mic_status', String(s.showMicStatus));
     localStorage.setItem('melodiq_show_note_labels', String(s.showNoteLabels));
     localStorage.setItem('melodiq_show_video_errors', String(s.showVideoErrors));
     localStorage.setItem('melodiq_custom_layouts', JSON.stringify(s.customLayouts));

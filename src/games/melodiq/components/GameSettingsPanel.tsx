@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import {
-    Box, Typography, TextField, Switch, FormControlLabel, Slider, ToggleButton, ToggleButtonGroup, IconButton, Button
+    Box, Typography, TextField, Switch, FormControlLabel, Slider, ToggleButton, ToggleButtonGroup, IconButton, Button,
+    Accordion, AccordionSummary, AccordionDetails
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import type { SettingsState } from '../hooks/useSettings';
 
 interface GameSettingsPanelProps {
@@ -253,25 +255,28 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                 </Box>
 
                 <FormControlLabel
-                    control={<Switch checked={settings.showDebugOverlay} onChange={(e) => onUpdateSetting('showDebugOverlay', e.target.checked)} />}
-                    label="Show Debug Overlay"
-                />
-                <FormControlLabel
-                    control={<Switch checked={settings.showDevSlider} onChange={(e) => onUpdateSetting('showDevSlider', e.target.checked)} />}
-                    label="Show Tech/Dev Slider"
-                />
-                <FormControlLabel
-                    control={<Switch checked={settings.showMicStatus} onChange={(e) => onUpdateSetting('showMicStatus', e.target.checked)} />}
-                    label="Show Mic Status"
-                />
-                <FormControlLabel
                     control={<Switch checked={settings.showNoteLabels} onChange={(e) => onUpdateSetting('showNoteLabels', e.target.checked)} />}
                     label="Show Pitch Note Labels"
                 />
-                <FormControlLabel
-                    control={<Switch checked={settings.showVideoErrors} onChange={(e) => onUpdateSetting('showVideoErrors', e.target.checked)} />}
-                    label="Show Video Error Messages"
-                />
+                <Accordion sx={{ mt: 2, bgcolor: 'rgba(255, 255, 255, 0.05)', '&:before': { display: 'none' } }}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}>
+                        <Typography variant="subtitle2">Developer / Debug Options</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <FormControlLabel
+                            control={<Switch checked={settings.showDebugOverlay} onChange={(e) => onUpdateSetting('showDebugOverlay', e.target.checked)} />}
+                            label="Show Debug Overlay"
+                        />
+                        <FormControlLabel
+                            control={<Switch checked={settings.showDevSlider} onChange={(e) => onUpdateSetting('showDevSlider', e.target.checked)} />}
+                            label="Show Tech/Dev Slider"
+                        />
+                        <FormControlLabel
+                            control={<Switch checked={settings.showVideoErrors} onChange={(e) => onUpdateSetting('showVideoErrors', e.target.checked)} />}
+                            label="Show Video Error Messages"
+                        />
+                    </AccordionDetails>
+                </Accordion>
             </Box>
         </Box>
     );

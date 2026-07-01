@@ -88,7 +88,7 @@ export class PlayerRuntime {
 
     start(): Promise<void> {
         if (this.mic && this.config.deviceId && this.config.deviceId !== 'BOT' && !this.config.isRemote) {
-            return this.mic.start(this.config.deviceId, this.config.volume, this.config.muted);
+            return this.mic.start(this.config.deviceId);
         }
         return Promise.resolve();
     }

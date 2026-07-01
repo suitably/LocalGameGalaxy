@@ -12,9 +12,11 @@ import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
 import EditIcon from '@mui/icons-material/Edit';
+import HistoryIcon from '@mui/icons-material/History';
 import { useQueue } from '../hooks/useQueue';
 import { useClientEngine } from '../PhoneClientEngine';
 import { QueueParticipantDialog } from './QueueParticipantDialog';
+import { HistoryDrawer } from './HistoryDrawer';
 
 interface HostQueueDrawerProps {
     open: boolean;
@@ -32,6 +34,7 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose 
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
     const dragItemRef = useRef<number | null>(null);
     const [manageParticipantsId, setManageParticipantsId] = useState<string | null>(null);
+    const [historyOpen, setHistoryOpen] = useState(false);
 
     const handleDragStart = useCallback((index: number) => {
         dragItemRef.current = index;
@@ -120,6 +123,9 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose 
                             Clear
                         </Button>
                     )}
+                    <IconButton onClick={() => setHistoryOpen(true)} size="small" sx={{ color: 'grey.400' }}>
+                        <HistoryIcon />
+                    </IconButton>
                     <IconButton onClick={onClose} size="small" sx={{ color: 'grey.400' }}>
                         <CloseIcon />
                     </IconButton>
@@ -334,6 +340,8 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose 
                 onClose={() => setManageParticipantsId(null)}
                 queueItemId={manageParticipantsId}
             />
+
+            <HistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} />
         </Drawer>
     );
 };

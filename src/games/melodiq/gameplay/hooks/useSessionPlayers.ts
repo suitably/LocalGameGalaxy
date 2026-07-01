@@ -60,6 +60,9 @@ export function useSessionPlayers({
             return { ...p, deviceId: assignedDeviceId };
         });
 
+        // Filter out local users without a mic!
+        activeSession = activeSession.filter(p => p.isRemote || p.profileId === 'BOT' || p.deviceId !== '');
+
         if (storedProfiles && activeSession.length > 0) {
             const allProfiles: UserProfile[] = JSON.parse(storedProfiles);
 
@@ -120,7 +123,7 @@ export function useSessionPlayers({
         manager.onMessage = (peerId: string, data: any) => {
             if (data.type === 'trackSelect' && typeof data.trackIndex === 'number') {
                 const currentPlayers = playersRef.current;
-                const pIdx = currentPlayers.findIndex(p => p.config.deviceId === peerId);
+                const pIdx = currentPlayers.findIndex(p => p.remotePeerId === peerId);
                 if (pIdx !== -1) {
                     console.log(`[Session] Remote track switch for ${currentPlayers[pIdx].config.name} -> Track ${data.trackIndex}`);
                     switchTrack(pIdx, data.trackIndex);
@@ -130,7 +133,7 @@ export function useSessionPlayers({
             if (data.type === 'history_report') {
                 console.log(`[Session] Received history from ${peerId}`, data);
                 setResults(prev => prev.map(r => {
-                    if (r.config.deviceId === peerId && r.isRemote) {
+                    if (r.remotePeerId === peerId && r.config.isRemote) {
                         return {
                             ...r,
                             history: data.history,
@@ -150,7 +153,7 @@ export function useSessionPlayers({
                         if (data.latency !== undefined) {
                             setPlayers(prevPlayers => {
                                 const newPlayers = [...prevPlayers];
-                                const pIdx = newPlayers.findIndex(p => p.config.deviceId === peerId);
+                                const pIdx = newPlayers.findIndex(p => p.remotePeerId === peerId);
                                 if (pIdx !== -1) {
                                     newPlayers[pIdx].config.latency = data.latency;
                                 }
@@ -182,7 +185,7 @@ export function useSessionPlayers({
                         const isSpectator = mode === 'spectator';
                         setPlayers(prevPlayers => {
                             const newPlayers = [...prevPlayers];
-                            const pIdx = newPlayers.findIndex(p => p.config.deviceId === peerId);
+                            const pIdx = newPlayers.findIndex(p => p.remotePeerId === peerId);
                             if (pIdx !== -1) {
                                 console.log(`[Session] Phone ${peerId} changed join mode to ${mode}`);
                                 newPlayers[pIdx].config.hidePitch = isSpectator;
@@ -202,7 +205,10 @@ export function useSessionPlayers({
 
             // 1. Attach/Add/Update connected peers
             activePeers.forEach(peer => {
-                const existingIdx = updatedPlayers.findIndex(p => p.config.deviceId === peer.peerId);
+                const existingIdx = updatedPlayers.findIndex(p => 
+                    (peer.deviceId && p.config.deviceId === peer.deviceId) || 
+                    p.config.deviceId === peer.peerId
+                );
 
                 if (existingIdx !== -1) {
                     // Attach to existing player AND Update Details
@@ -232,13 +238,15 @@ export function useSessionPlayers({
 
                     const newPlayer = new PlayerRuntime({
                         ...newProfile,
-                        deviceId: peer.peerId, // Device ID is Peer ID
+                        deviceId: peer.deviceId || peer.peerId, // Device ID is persistent ID if available
                         volume: 1.0,
                         muted: false,
                         latency: 0,
                         isRemote: true,
                         hidePitch: true // Default to spectator
                     }, manager);
+
+                    newPlayer.attachRemotePeer(manager, peer.peerId);
 
                     updatedPlayers.push(newPlayer);
                     changed = true;
@@ -251,8 +259,8 @@ export function useSessionPlayers({
             const filtered = updatedPlayers.filter(p => {
                 if (p.config.isRemote) {
                     // If peer is gone
-                    if (!activePeerIds.has(p.config.deviceId)) {
-                        // If Guest (profileId matches deviceId basically)
+                    if (!p.remotePeerId || !activePeerIds.has(p.remotePeerId)) {
+                        // If Guest (profileId matches deviceId basically, meaning not from activeSession)
                         if (p.config.id === p.config.deviceId) {
                             console.log(`[Session] removing disconnected guest ${p.config.name}`);
                             changed = true;

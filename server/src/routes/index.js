@@ -578,6 +578,25 @@ router.post('/api/config/download-dir', (req, res) => {
     res.json({ downloadDir: config.downloadDir });
 });
 
+// --- CONFIG PREFERENCES ---
+router.get('/api/config/preferences', (req, res) => {
+    res.json({
+        defaultDownloadMode: config.defaultDownloadMode || 'stream',
+        autoVocalSeparation: !!config.autoVocalSeparation
+    });
+});
+
+router.post('/api/config/preferences', (req, res) => {
+    const { defaultDownloadMode, autoVocalSeparation } = req.body;
+    if (defaultDownloadMode) {
+        config.defaultDownloadMode = defaultDownloadMode;
+    }
+    if (typeof autoVocalSeparation === 'boolean') {
+        config.autoVocalSeparation = autoVocalSeparation;
+    }
+    res.json({ ok: true });
+});
+
 // --- CONFIG USDB CREDENTIALS ---
 router.get('/api/config/usdb-credentials', (req, res) => {
     res.json({ username: config.usdbUsername || '', hasPassword: !!config.usdbPassword });

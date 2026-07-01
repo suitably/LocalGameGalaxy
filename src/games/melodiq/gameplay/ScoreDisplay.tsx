@@ -65,8 +65,7 @@ const PlayerScoreDisplay = ({ state, config }: { state: PlayerVisualState, confi
         <Box sx={{
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'flex-end',
-            marginBottom: 1, // Reduced margin
+            alignItems: 'center', // Center align within the player block
             position: 'relative',
             opacity: 0.9
         }}>
@@ -77,8 +76,8 @@ const PlayerScoreDisplay = ({ state, config }: { state: PlayerVisualState, confi
                     variant="h6" // Smaller variant
                     sx={{
                         position: 'absolute',
-                        right: 100, // Closer
-                        top: 4,
+                        top: -24, // Above the score
+                        right: 0,
                         fontWeight: 900,
                         color: state.lastRating === 'Perfect' ? '#ffeb3b' : (state.lastRating === 'Good' ? '#4caf50' : '#fff'),
                         textShadow: '0 0 5px rgba(0,0,0,0.8)',
@@ -175,9 +174,9 @@ export const ScoreDisplay = forwardRef<ScoreDisplayHandle, ScoreDisplayProps>(({
     return (
         <Box sx={{
             display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-end',
-            paddingRight: 1
+            flexDirection: 'row', // Horizontal!
+            alignItems: 'center',
+            gap: 4 // Space between players
         }}>
             {players.map(p => {
                 const state = visualStates[p.id] || { id: p.id, score: 0, combo: 0, lastRating: null, ratingId: 0 };

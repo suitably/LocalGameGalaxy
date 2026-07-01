@@ -11,7 +11,6 @@ export class MicrophoneManager {
     private audioContext: AudioContext | null = null;
     private analyser: AnalyserNode | null = null;
     private mediaStream: MediaStream | null = null;
-    private gainNode: GainNode | null = null;
     private buffer: Float32Array | null = null;
     private source: MediaStreamAudioSourceNode | null = null;
 
@@ -22,7 +21,7 @@ export class MicrophoneManager {
         return devices.filter(d => d.kind === 'audioinput');
     }
 
-    public async start(deviceId?: string, initialVolume: number = 1.0, initialMuted: boolean = false): Promise<void> {
+    public async start(deviceId?: string): Promise<void> {
         if (this.audioContext) return;
 
         try {
@@ -57,17 +56,10 @@ export class MicrophoneManager {
             this.analyser = this.audioContext.createAnalyser();
             this.analyser.fftSize = 2048;
 
-            this.gainNode = this.audioContext.createGain();
-            this.gainNode.gain.value = initialMuted ? 0 : initialVolume;
-
             this.source = this.audioContext.createMediaStreamSource(this.mediaStream);
 
             // Branch 1: Analysis (Always raw input)
             this.source.connect(this.analyser);
-
-            // Branch 2: Monitoring (Volume controlled)
-            this.source.connect(this.gainNode);
-            this.gainNode.connect(this.audioContext.destination);
 
             this.buffer = new Float32Array(this.analyser.fftSize);
         } catch (err) {
@@ -76,13 +68,7 @@ export class MicrophoneManager {
         }
     }
 
-    public setVolume(volume: number): void {
-        if (this.gainNode && this.audioContext) {
-            // Instant change for responsiveness, or slight ramp to prevent clicks
-            this.gainNode.gain.cancelScheduledValues(this.audioContext.currentTime);
-            this.gainNode.gain.setValueAtTime(volume, this.audioContext.currentTime);
-        }
-    }
+
 
     public async stop(): Promise<void> {
         if (this.mediaStream) {
@@ -100,7 +86,6 @@ export class MicrophoneManager {
             this.audioContext = null;
         }
         this.analyser = null;
-        this.gainNode = null;
         this.source = null;
         this.buffer = null;
     }
