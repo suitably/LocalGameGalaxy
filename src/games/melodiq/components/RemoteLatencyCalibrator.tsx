@@ -116,7 +116,7 @@ export const RemoteLatencyCalibrator: React.FC<RemoteLatencyCalibratorProps> = (
     };
 
     const measureOneSample = (mic: MicrophoneManager, threshold: number): Promise<{ found: boolean, latency: number, peak: number }> => {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const checkStart = Date.now();
             let detected = false;
             let peakVol = 0;

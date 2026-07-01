@@ -193,7 +193,7 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose 
                             <ListItem
                                 key={item.id}
                                 draggable={canManageQueue}
-                                onDragStart={(e) => {
+                                onDragStart={() => {
                                     if (canManageQueue) handleDragStart(index);
                                 }}
                                 onDragOver={(e) => {

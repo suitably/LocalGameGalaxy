@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import db, { type Score, type SongMeta } from '../db';
+import db, { type SongMeta } from '../db';
 import { type UserProfile } from '../types';
 
 export interface HistorySession {

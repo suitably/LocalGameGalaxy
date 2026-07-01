@@ -25,7 +25,7 @@ export function usePassiveSync({
     isPassive,
     passiveState,
     isClient,
-    players,
+
     setPlayers,
     playersRef,
     scoreDisplayRef,

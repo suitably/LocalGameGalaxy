@@ -52,7 +52,7 @@ export const useMelodiqHeader = ({
                 }
             ];
 
-            const isSinger = isClient && clientRole === 'singer';
+
             const isAdmin = !isClient || clientRole === 'admin';
 
             headerActions.push({

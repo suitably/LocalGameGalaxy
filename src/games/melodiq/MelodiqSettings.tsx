@@ -28,7 +28,7 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack, onNavi
 
     // Audio Devices
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
-    const [loadingDevices, setLoadingDevices] = useState(true);
+    const [, setLoadingDevices] = useState(true);
 
     // Custom Hooks for state management
     const profilesHook = useProfiles(devices);
@@ -53,19 +53,7 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack, onNavi
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Device Refresh Logic
-    const refreshDevices = async () => {
-        setLoadingDevices(true);
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const devs = await MicrophoneManager.getDevices();
-            setDevices(devs);
-            setLoadingDevices(false);
-            stream.getTracks().forEach(t => t.stop());
-        } catch (err) {
-            console.error('Failed to get permissions:', err);
-            setLoadingDevices(false);
-        }
-    };
+
 
     // Initialize: Load Devices
     useEffect(() => {

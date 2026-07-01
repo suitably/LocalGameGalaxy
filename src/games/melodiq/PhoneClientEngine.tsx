@@ -22,6 +22,7 @@ interface ClientEngineContextType {
     setClientRole: (role: string) => void;
     promptedSongId: string | null;
     setPromptedSongId: (id: string | null) => void;
+    updateClientProfile: (updates: Partial<ClientProfile>) => void;
 }
 
 export const ClientEngineContext = createContext<ClientEngineContextType>({
@@ -34,6 +35,7 @@ export const ClientEngineContext = createContext<ClientEngineContextType>({
     setClientRole: () => {},
     promptedSongId: null,
     setPromptedSongId: () => {},
+    updateClientProfile: () => {},
 });
 
 export const useClientEngine = () => useContext(ClientEngineContext);

@@ -6,7 +6,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import { MicrophoneManager } from '../audio/MicrophoneManager';
 
 const MicVolumeMeter: React.FC<{ deviceId: string }> = ({ deviceId }) => {
-    const { t } = useTranslation();
+
     const [volume, setVolume] = useState(0);
 
     useEffect(() => {

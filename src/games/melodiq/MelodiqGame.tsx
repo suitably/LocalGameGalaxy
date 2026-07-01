@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Snackbar, Alert } from '@mui/material';
 import { type Song, type SongMeta } from './db';
 import { MelodiqSettings } from './MelodiqSettings';
@@ -383,7 +383,7 @@ export const MelodiqGameContent: React.FC = () => {
                 queueDialogOpen={queueDialogOpen}
                 setQueueDialogOpen={setQueueDialogOpen}
                 isTVConnected={isTVConnected}
-                playSongOnTV={playSongOnTV}
+
                 handleSelectSong={handleSelectSong}
                 addNext={addNext}
                 addToQueue={addToQueue}

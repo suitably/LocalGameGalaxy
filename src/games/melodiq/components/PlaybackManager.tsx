@@ -14,7 +14,7 @@ interface PlaybackManagerProps {
     onExitSession: (forceHome?: boolean) => void;
     onMinimizeSession: () => void;
     onRestoreSession: () => void;
-    onSelectSong: (song: SongMeta, forcePlay?: boolean) => void;
+    onSelectSong: (song: SongMeta, forcePlay?: boolean, participants?: any[]) => void;
     sendRemoteCommand: (command: string, value: any) => void;
     setRemoteSong: (song: SongMeta | null) => void;
     onShowQueue: () => void;
@@ -66,7 +66,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
     // Get client game state for remote playback sync
-    const { gameState: clientGameState, sendClientCommand, clientRole } = isClient ? useClientEngine() : { gameState: null, sendClientCommand: undefined, clientRole: 'admin' };
+    const { gameState: clientGameState, sendClientCommand } = isClient ? useClientEngine() : { gameState: null, sendClientCommand: undefined };
 
     // Broadcast Game State Loop
     useEffect(() => {

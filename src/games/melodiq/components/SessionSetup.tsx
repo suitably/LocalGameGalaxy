@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Box, Button, Typography, FormControl, MenuItem, Select, Slider,
-    IconButton, Avatar, Popover, Chip, Divider, Switch, FormControlLabel
+    IconButton, Avatar, Popover, Divider, Switch, FormControlLabel
 } from '@mui/material';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';

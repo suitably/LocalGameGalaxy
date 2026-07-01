@@ -52,6 +52,7 @@ export interface PassiveGameState {
     isPausedForScore: boolean;
     currentTime: number;
     hostTimestamp?: number;
+    activeSongId?: string | null;
 }
 
 export interface MelodiqSessionProps {
@@ -103,9 +104,6 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
     
     // Song Parsing State
     const [parsedSong, setParsedSong] = useState<SongWithNotes | null>(null);
-    const apiBase = (song.audioUrl || song.videoUrl)?.startsWith('/api/')
-        ? (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000')
-        : '';
         
     const [contentLoading, setContentLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);

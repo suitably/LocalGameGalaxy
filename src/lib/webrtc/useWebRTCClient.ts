@@ -10,7 +10,7 @@ export interface WebRTCClientOptions {
     onMessage?: (message: any) => void;
     autoConnect?: boolean;
     getMediaStream?: () => Promise<MediaStream | null>; // Provide a stream (e.g. microphone)
-    getIdentity?: () => { name: string; hue: number };
+    getIdentity?: () => { name: string; hue: number; deviceId?: string; };
 }
 
 export function useWebRTCClient(partyId: string | null, trackerUrls: string[], options: WebRTCClientOptions = {}) {

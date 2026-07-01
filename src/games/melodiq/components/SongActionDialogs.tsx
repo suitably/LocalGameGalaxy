@@ -19,7 +19,7 @@ interface SongActionDialogsProps {
     setQueueDialogOpen: (open: boolean) => void;
     
     isTVConnected: boolean;
-    playSongOnTV: (id: string, song: SongMeta) => void;
+
     handleSelectSong: (song: SongMeta, forcePlay?: boolean) => void;
     addNext: (song: SongMeta) => void;
     addToQueue: (song: SongMeta) => void;
@@ -32,7 +32,7 @@ interface SongActionDialogsProps {
 
 export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
     selectedSongForQueue, queueDialogOpen, setQueueDialogOpen,
-    isTVConnected, playSongOnTV, handleSelectSong, addNext, addToQueue, refreshSongs,
+    isTVConnected, handleSelectSong, addNext, addToQueue, refreshSongs,
     setFeedbackMessage, isClient, clientRole
 }) => {
     const { t } = useTranslation();
