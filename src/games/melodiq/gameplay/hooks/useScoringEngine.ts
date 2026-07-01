@@ -226,14 +226,6 @@ export function useScoringEngine({
         const deltaTime = now - lastTimeRef.current;
         lastTimeRef.current = now;
 
-        if (isPassive) {
-            if (isClient && isPlayingRef.current) {
-                virtualTimeRef.current += (deltaTime / 1000);
-            }
-            requestRef.current = requestAnimationFrame(updateLoop);
-            return;
-        }
-
         const duration = (audioRef.current && Number.isFinite(audioRef.current.duration) && audioRef.current.duration > 0)
             ? audioRef.current.duration
             : (_duration > 0 ? _duration : 0);
@@ -287,6 +279,14 @@ export function useScoringEngine({
                 const progress = Math.min(100, Math.max(0, (audioNow / dur) * 100));
                 progressLineRef.current.style.width = `${progress}%`;
             }
+        }
+
+        if (isPassive) {
+            if (isClient && isPlayingRef.current) {
+                virtualTimeRef.current += (deltaTime / 1000);
+            }
+            requestRef.current = requestAnimationFrame(updateLoop);
+            return;
         }
 
         players.forEach((player, index) => {
