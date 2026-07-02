@@ -12,11 +12,13 @@ import {
     List,
     ListItem,
     ListItemAvatar,
-    ListItemText,
     ListItemButton,
+    ListItemText,
     Avatar,
     InputAdornment,
-    IconButton
+    IconButton,
+    FormControlLabel,
+    Checkbox
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -36,7 +38,7 @@ interface YouTubeSearchDialogProps {
     open: boolean;
     onClose: () => void;
     initialQuery: string;
-    onSelectUrl: (url: string) => void;
+    onSelectUrl: (url: string, skipAudio: boolean) => void;
 }
 
 export const YouTubeSearchDialog: React.FC<YouTubeSearchDialogProps> = ({
@@ -50,6 +52,7 @@ export const YouTubeSearchDialog: React.FC<YouTubeSearchDialogProps> = ({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [selectedUrl, setSelectedUrl] = useState<string>('');
+    const [skipAudio, setSkipAudio] = useState<boolean>(false);
 
     React.useEffect(() => {
         if (open) {
@@ -97,7 +100,7 @@ export const YouTubeSearchDialog: React.FC<YouTubeSearchDialogProps> = ({
 
     const handleConfirm = () => {
         if (selectedUrl) {
-            onSelectUrl(selectedUrl);
+            onSelectUrl(selectedUrl, skipAudio);
         }
     };
 
@@ -179,6 +182,19 @@ export const YouTubeSearchDialog: React.FC<YouTubeSearchDialogProps> = ({
                         </Typography>
                     </Box>
                 ) : null}
+                
+                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+                    <FormControlLabel
+                        control={
+                            <Checkbox 
+                                checked={skipAudio} 
+                                onChange={(e) => setSkipAudio(e.target.checked)} 
+                                color="primary" 
+                            />
+                        }
+                        label="Nur Video ersetzen (Audio behalten)"
+                    />
+                </Box>
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose} color="inherit">Cancel</Button>
