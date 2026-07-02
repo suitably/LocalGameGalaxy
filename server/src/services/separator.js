@@ -10,8 +10,14 @@ let isSeparatorRunning = false;
 async function checkIsInstalled() {
     return new Promise((resolve) => {
         exec('audio-separator --version', (error) => {
-            if (error) resolve(false);
-            else resolve(true);
+            if (error) {
+                resolve(false);
+            } else {
+                exec('python3 -c "import whisper_timestamped"', (err) => {
+                    if (err) resolve(false);
+                    else resolve(true);
+                });
+            }
         });
     });
 }
@@ -83,11 +89,11 @@ async function runInstallJob(job) {
             '--index-url', 'https://download.pytorch.org/whl/cpu'
         ], 10, 50);
 
-        job.log.push("Step 2/2: Installing audio-separator[cpu]...");
+        job.log.push("Step 2/2: Installing audio-separator[cpu] and whisper-timestamped...");
         await runPip([
             'install', 
             '--default-timeout=1000', 
-            'audio-separator[cpu]'
+            'audio-separator[cpu]', 'whisper-timestamped'
         ], 50, 95);
 
         job.progress = 100;
@@ -111,6 +117,11 @@ async function runSeparatorJob(job) {
         
         if (job.type === 'auto-sync') {
             await runAutoSyncJob(job);
+            return;
+        }
+
+        if (job.type === 'full-sync') {
+            await runFullSyncJob(job);
             return;
         }
 
@@ -474,3 +485,139 @@ module.exports = {
     processSeparatorQueue,
     checkIsInstalled
 };
+
+async function runFullSyncJob(job) {
+    try {
+        job.status = 'running';
+        const { songId, songDir, audioFile, txtFile, safeName } = job;
+        
+        job.log.push(`Full AI Syncing ${safeName}...`);
+        job.progress = 5;
+
+        const txtPath = txtFile ? path.join(songDir, txtFile) : null;
+        if (!txtPath || !fs.existsSync(txtPath)) {
+            throw new Error(`Text file not found: ${txtPath}`);
+        }
+
+        // 1. Find Vocals file
+        const files = fs.readdirSync(songDir);
+        let vocalsFile = null;
+        for (const f of files) {
+            if (f.endsWith('.mp3') && f.includes('Vocals')) {
+                vocalsFile = f;
+                break;
+            }
+        }
+
+        const audioPath = path.join(songDir, audioFile);
+
+        // 2. Separate if needed
+        if (!vocalsFile) {
+            job.log.push("Vocals not found. Separating vocals first...");
+            const isInstalled = await checkIsInstalled();
+            if (!isInstalled) {
+                throw new Error('audio-separator is not installed.');
+            }
+
+            const model = 'UVR-MDX-NET-Inst_HQ_3.onnx';
+            const modelsDir = path.join(process.cwd(), 'models');
+
+            await new Promise((resolve, reject) => {
+                const cmd = spawn('audio-separator', [
+                    audioPath,
+                    '--model_filename', model,
+                    '--model_file_dir', modelsDir,
+                    '--output_dir', songDir,
+                    '--output_format', 'mp3'
+                ]);
+
+                cmd.stdout.on('data', (data) => {
+                    const lines = data.toString().split('\n');
+                    for (const line of lines) {
+                        if (line.trim()) {
+                            job.log.push(line.trim());
+                            if (line.includes('%')) job.progress = 30; // Scale progress
+                        }
+                    }
+                });
+
+                cmd.stderr.on('data', (data) => {
+                    const lines = data.toString().split('\n');
+                    for (const line of lines) {
+                        if (line.trim()) {
+                            job.log.push(line.trim());
+                            if (line.includes('%')) job.progress = 30;
+                        }
+                    }
+                });
+
+                cmd.on('close', (code) => {
+                    if (code !== 0) reject(new Error(`audio-separator failed with code ${code}`));
+                    else resolve();
+                });
+            });
+
+            // Re-find vocals
+            const newFiles = fs.readdirSync(songDir);
+            for (const f of newFiles) {
+                if (f.endsWith('.mp3') && f.includes('Vocals')) {
+                    vocalsFile = f;
+                    break;
+                }
+            }
+        }
+
+        if (!vocalsFile) {
+            throw new Error("Could not extract or find Vocals MP3.");
+        }
+
+        const vocalsPath = path.join(songDir, vocalsFile);
+        job.progress = 50;
+
+        // 3. Run align_lyrics.py
+        job.log.push("Running AI Forced Alignment (this will take a few minutes)...");
+        
+        await new Promise((resolve, reject) => {
+            const scriptPath = path.join(__dirname, '..', 'scripts', 'align_lyrics.py');
+            const cmd = spawn('python3', [scriptPath, txtPath, vocalsPath]);
+
+            cmd.stdout.on('data', (data) => {
+                const lines = data.toString().split('\n');
+                for (const line of lines) {
+                    if (line.trim()) {
+                        job.log.push(line.trim());
+                    }
+                }
+            });
+
+            cmd.stderr.on('data', (data) => {
+                const lines = data.toString().split('\n');
+                for (const line of lines) {
+                    if (line.trim()) {
+                        // Avoid prefixing progress bars with 'Script Error'
+                        if (line.includes('%|') || line.includes('it/s') || line.includes('MiB/s')) {
+                            job.log.push(line.trim());
+                        } else {
+                            job.log.push(`[Script Warning/Error] ${line.trim()}`);
+                        }
+                    }
+                }
+            });
+
+            cmd.on('close', (code) => {
+                if (code !== 0) reject(new Error(`align_lyrics.py failed with code ${code}`));
+                else resolve();
+            });
+        });
+
+        job.log.push("Successfully aligned lyrics!");
+        job.progress = 100;
+        job.status = 'done';
+        
+        setTimeout(scanSongs, 1000);
+    } catch (err) {
+        job.status = 'error';
+        job.error = err.message;
+        job.log.push(`❌ ${err.message}`);
+    }
+}

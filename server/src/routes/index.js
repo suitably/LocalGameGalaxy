@@ -198,6 +198,9 @@ router.get('/api/songs', (req, res) => {
 
 // --- DELETE SONG ---
 router.delete('/api/songs/:id', (req, res) => {
+    if (!req.isMasterToken && (!req.apiKey || !req.apiKey.allowSongDeletion)) {
+        return res.status(403).json({ error: 'Permission denied: Song deletion not allowed' });
+    }
     const songId = req.params.id;
     const song = getSongCache().find(s => s.id === songId);
     if (!song) return res.status(404).json({ error: 'Song not found in cache' });
@@ -646,12 +649,12 @@ router.get('/api/config/apikeys', (req, res) => {
 
 router.post('/api/config/apikeys', (req, res) => {
     if (!req.isMasterToken) return res.status(403).json({ error: 'Master Token required' });
-    const { name, rateLimitSecond, rateLimitMinute, rateLimitHour, allowManagement } = req.body;
+    const { name, rateLimitSecond, rateLimitMinute, rateLimitHour, allowManagement, allowSongDeletion } = req.body;
     const newKey = config.createApiKey(name, {
         second: rateLimitSecond,
         minute: rateLimitMinute,
         hour: rateLimitHour
-    }, allowManagement);
+    }, allowManagement, allowSongDeletion);
     res.json(newKey);
 });
 
