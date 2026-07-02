@@ -45,9 +45,10 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
     const [playlistDialogOpen, setPlaylistDialogOpen] = useState(false);
     const [youTubeSearchDialogOpen, setYouTubeSearchDialogOpen] = useState(false);
     
-    // MUI Dialog state for Auto-Sync
+    // MUI Dialog state    // Auto Sync
     const [syncTimeDialogOpen, setSyncTimeDialogOpen] = useState(false);
     const [syncTimeInput, setSyncTimeInput] = useState('');
+    const [syncJobId, setSyncJobId] = useState<string | null>(null);
 
     // Download Job State
     const [downloadJobId, setDownloadJobId] = useState<string | null>(null);
@@ -85,6 +86,37 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
         }, 1000);
         return () => clearInterval(interval);
     }, [downloadJobId, refreshSongs, setFeedbackMessage]);
+
+    // Sync Job Polling
+    useEffect(() => {
+        if (!syncJobId) return;
+        const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
+        const token = localStorage.getItem('melodiq_helper_token') || '';
+        
+        const interval = setInterval(async () => {
+            try {
+                const res = await fetch(`${helperUrl}/api/separator/status/${syncJobId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.status === 'done' || data.status === 'error') {
+                        clearInterval(interval);
+                        setSyncJobId(null);
+                        if (data.status === 'done') {
+                            setFeedbackMessage('Auto-Sync abgeschlossen! Song ist jetzt perfekt synchronisiert.');
+                            refreshSongs();
+                        } else {
+                            setFeedbackMessage('Fehler beim Auto-Sync: ' + (data.error || 'Unbekannt'));
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }, 1500);
+        return () => clearInterval(interval);
+    }, [syncJobId, refreshSongs, setFeedbackMessage]);
 
     const handleQueueOption = (action: 'play_now' | 'play_next' | 'add_end') => {
         if (!selectedSongForQueue) return;
@@ -136,7 +168,7 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
         setQueueDialogOpen(false);
     };
 
-    const handleChangeVideoUrl = async (url: string) => {
+    const handleChangeVideoUrl = async (url: string, skipAudio: boolean) => {
         if (!selectedSongForQueue) return;
         setYouTubeSearchDialogOpen(false);
         setQueueDialogOpen(false);
@@ -157,7 +189,9 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                     videoMode: 'mp4',
                     youtubeUrl: url,
                     targetDir: selectedSongForQueue.txtPath ? selectedSongForQueue.txtPath.replace(/\/[^/]+$/, '') : undefined,
-                    safeName: selectedSongForQueue.txtPath ? selectedSongForQueue.txtPath.split('/').pop()?.replace('.txt', '') : undefined
+                    safeName: selectedSongForQueue.txtPath ? selectedSongForQueue.txtPath.split('/').pop()?.replace('.txt', '') : undefined,
+                    skipAudio: skipAudio,
+                    audioFile: (selectedSongForQueue as any).audio ? (selectedSongForQueue as any).audio.split('/').pop()?.split('?')[0] : undefined
                 }])
             });
             if (res.ok) {
@@ -206,7 +240,13 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                 }])
             });
             if (res.ok) {
-                setFeedbackMessage('Auto-Sync (KI) Job gestartet...');
+                const data = await res.json();
+                if (data.jobIds && data.jobIds.length > 0) {
+                    setSyncJobId(data.jobIds[0]);
+                    setFeedbackMessage('Auto-Sync (KI) Job gestartet...');
+                } else {
+                    setFeedbackMessage('Auto-Sync (KI) Job gestartet...');
+                }
             } else {
                 setFeedbackMessage('Fehler beim Starten des Auto-Syncs');
             }

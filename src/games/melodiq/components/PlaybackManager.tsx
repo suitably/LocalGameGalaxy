@@ -66,6 +66,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
     const [contextMenu, setContextMenu] = useState<HTMLElement | null>(null);
+    const [syncJobId, setSyncJobId] = useState<string | null>(null);
 
     const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
         if (!selectedSong) return;
@@ -107,6 +108,10 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             });
             
             if (res.ok) {
+                const data = await res.json();
+                if (data.jobIds && data.jobIds.length > 0) {
+                    setSyncJobId(data.jobIds[0]);
+                }
                 setFeedbackMessage('Song-Sync (Hybrid) wird im Hintergrund berechnet!');
             } else {
                 setFeedbackMessage('Fehler beim Starten des Auto-Syncs');
@@ -119,6 +124,36 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
 
     // Get client game state for remote playback sync
     const { gameState: clientGameState, sendClientCommand } = isClient ? useClientEngine() : { gameState: null, sendClientCommand: undefined };
+
+    // Sync Job Polling
+    useEffect(() => {
+        if (!syncJobId) return;
+        const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
+        const token = localStorage.getItem('melodiq_helper_token') || '';
+        
+        const interval = setInterval(async () => {
+            try {
+                const res = await fetch(`${helperUrl}/api/separator/status/${syncJobId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.status === 'done' || data.status === 'error') {
+                        clearInterval(interval);
+                        setSyncJobId(null);
+                        if (data.status === 'done') {
+                            setFeedbackMessage('Auto-Sync abgeschlossen! Song ist jetzt perfekt synchronisiert (Bitte Song neu laden, falls gewünscht).');
+                        } else {
+                            setFeedbackMessage('Fehler beim Auto-Sync: ' + (data.error || 'Unbekannt'));
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }, 1500);
+        return () => clearInterval(interval);
+    }, [syncJobId]);
 
     // Broadcast Game State Loop
     useEffect(() => {
