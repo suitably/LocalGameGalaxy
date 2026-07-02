@@ -244,13 +244,13 @@
                 
                 tr.innerHTML = `
                     <td style="padding:8px 6px; max-width:200px; overflow:hidden; text-overflow:ellipsis;" title="${esc(song.artist)}">${esc(song.artist)}</td>
-                    <td style="padding:8px 6px; max-width:250px; overflow:hidden; text-overflow:ellipsis; font-weight:500;" title="${esc(song.title)}">${esc(song.title)}</td>
                     <td style="padding:8px 6px;">${fileBadges}</td>
                     <td style="padding:8px 6px; text-align:right;">
                         <button class="secondary" style="padding:4px 8px; font-size:0.8rem; margin-right:4px;" onclick="openAddVideoModal('${esc(song.id)}')">🎬 Add Video</button>
                         <button class="secondary" style="padding:4px 8px; font-size:0.8rem; margin-right:4px;" onclick="openEditTxtModal('${esc(song.id)}')">✏️ Edit TXT</button>
                         <button class="secondary" style="padding:4px 8px; font-size:0.8rem; margin-right:4px;" onclick="openReDownloadModal('${esc(song.id)}')">🔄 Re-download</button>
                         <button class="secondary" style="padding:4px 8px; font-size:0.8rem; margin-right:4px;" onclick="startVocalSeparation('${esc(song.id)}')">🎤 Separate Vocals</button>
+                        <button class="secondary" style="padding:4px 8px; font-size:0.8rem; margin-right:4px;" onclick="startFullSync('${esc(song.id)}')">🤖 Full AI Sync</button>
                         <button class="danger" style="padding:4px 8px; font-size:0.8rem;" onclick="deleteSong('${esc(song.id)}', '${esc(song.artist)} - ${esc(song.title)}')">🗑️ Delete</button>
                     </td>
                 `;
@@ -673,6 +673,10 @@
                         <input type="checkbox" id="new-apikey-allow-management" style="margin-right: 4px;">
                         Allow Management UI
                     </label>
+                    <label style="margin-left: 8px; font-size: 0.85rem; display: flex; align-items: center;">
+                        <input type="checkbox" id="new-apikey-allow-deletion" style="margin-right: 4px;">
+                        Allow Song Deletion
+                    </label>
                     <button onclick="createApiKey()" style="margin-left: 8px;">Generate</button>
                 </div>
             </div>
@@ -687,6 +691,7 @@
                             <th style="padding:8px 6px;">Req/min</th>
                             <th style="padding:8px 6px;">Req/hour</th>
                             <th style="padding:8px 6px; text-align:center;">Management UI</th>
+                            <th style="padding:8px 6px; text-align:center;">Song Deletion</th>
                             <th style="padding:8px 6px; text-align:right;">Actions</th>
                         </tr>
                     </thead>
@@ -747,6 +752,9 @@
                         <td style="padding:8px 6px; text-align:center;">
                             <input type="checkbox" id="allowmanagement-${k.id}" ${k.allowManagement ? 'checked' : ''}>
                         </td>
+                        <td style="padding:8px 6px; text-align:center;">
+                            <input type="checkbox" id="allowdeletion-${k.id}" ${k.allowSongDeletion ? 'checked' : ''}>
+                        </td>
                         <td style="padding:8px 6px; text-align:right;">
                             <button class="secondary" style="padding:4px 8px; font-size:0.8rem; margin-right:4px;" onclick="updateApiKeySettings('${k.id}', this)">Save</button>
                             <button class="secondary" style="padding:4px 8px; font-size:0.8rem; margin-right:4px;" id="btn-apikey-${k.id}" onclick="copyText('apikey-${k.id}')">Copy</button>
@@ -766,18 +774,20 @@
             const rateLimitMinInput = document.getElementById('new-apikey-ratelimit-min');
             const rateLimitHourInput = document.getElementById('new-apikey-ratelimit-hour');
             const allowMgmtInput = document.getElementById('new-apikey-allow-management');
+            const allowDelInput = document.getElementById('new-apikey-allow-deletion');
             const name = nameInput.value.trim();
             const rateLimitSecond = rateLimitSecInput.value.trim();
             const rateLimitMinute = rateLimitMinInput.value.trim();
             const rateLimitHour = rateLimitHourInput.value.trim();
             const allowManagement = allowMgmtInput.checked;
+            const allowSongDeletion = allowDelInput.checked;
             if (!name) return alert('Please enter a name for the API key');
 
             try {
                 const res = await fetch('/api/config/apikeys?token=' + API_TOKEN, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, rateLimitSecond, rateLimitMinute, rateLimitHour, allowManagement })
+                    body: JSON.stringify({ name, rateLimitSecond, rateLimitMinute, rateLimitHour, allowManagement, allowSongDeletion })
                 });
                 if (!res.ok) throw new Error('Failed to create key');
                 nameInput.value = '';
@@ -785,6 +795,7 @@
                 rateLimitMinInput.value = '';
                 rateLimitHourInput.value = '';
                 allowMgmtInput.checked = false;
+                allowDelInput.checked = false;
                 loadApiKeys();
             } catch (e) {
                 alert(e.message);
@@ -796,15 +807,17 @@
             const minInput = document.getElementById('ratelimit-min-' + id);
             const hourInput = document.getElementById('ratelimit-hour-' + id);
             const allowMgmtInput = document.getElementById('allowmanagement-' + id);
+            const allowDelInput = document.getElementById('allowdeletion-' + id);
             const rateLimitSecond = secInput.value.trim();
             const rateLimitMinute = minInput.value.trim();
             const rateLimitHour = hourInput.value.trim();
             const allowManagement = allowMgmtInput.checked;
+            const allowSongDeletion = allowDelInput.checked;
             try {
                 const res = await fetch('/api/config/apikeys/' + id + '?token=' + API_TOKEN, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ rateLimitSecond, rateLimitMinute, rateLimitHour, allowManagement })
+                    body: JSON.stringify({ rateLimitSecond, rateLimitMinute, rateLimitHour, allowManagement, allowSongDeletion })
                 });
                 if (!res.ok) throw new Error('Failed to update settings');
                 const originalText = btn.textContent;
@@ -1729,7 +1742,7 @@
     <!-- ===== VOCAL SEPARATION MANAGER CARD ===== -->
     <div class="card" style="margin-top:24px; border: 1px solid #dde2eb;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-            <h2 style="margin:0; font-size:1.15rem; color:#1877f2;">🎤 Vocal Separation</h2>
+            <h2 style="margin:0; font-size:1.15rem; color:#1877f2;">🤖 AI Jobs (Sync & Separation)</h2>
             <button class="secondary" style="font-size:0.85rem;" onclick="toggleSeparationCard(event)">▲ Minimise</button>
         </div>
         <div id="separation-card-body">
@@ -1883,7 +1896,11 @@
                     div.style.background = j.status === 'running' ? '#f0f7ff' : '#fff';
 
                     const isOpen = openJobIds.has(j.jobId) || j.status === 'running';
-                    const title = j.type === 'install' ? 'Tool Installation' : `Separating: ${j.safeName}`;
+                    let title = `Processing: ${j.safeName}`;
+                    if (j.type === 'install') title = 'Tool Installation';
+                    else if (j.type === 'full-sync') title = `Full AI Sync: ${j.safeName}`;
+                    else if (j.type === 'auto-sync') title = `Auto-Sync: ${j.safeName}`;
+                    else if (j.type === 'separate') title = `Vocal Separation: ${j.safeName}`;
 
                     div.innerHTML = `
                         <details data-jobid="${j.jobId}" ${isOpen ? 'open' : ''}>
