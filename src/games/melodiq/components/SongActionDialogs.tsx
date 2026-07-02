@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, List, ListItemButton, ListItemIcon, ListItemText, Divider, Typography, Alert } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogTitle, DialogContent, List, ListItemButton, ListItemIcon, ListItemText, Divider, Typography, Alert, LinearProgress, Box } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AddToQueueIcon from '@mui/icons-material/AddToQueue';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
@@ -48,6 +48,43 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
     // MUI Dialog state for Auto-Sync
     const [syncTimeDialogOpen, setSyncTimeDialogOpen] = useState(false);
     const [syncTimeInput, setSyncTimeInput] = useState('');
+
+    // Download Job State
+    const [downloadJobId, setDownloadJobId] = useState<string | null>(null);
+    const [downloadProgress, setDownloadProgress] = useState<{status: string, progress: number, log: string[]}>({ status: '', progress: 0, log: [] });
+    
+    useEffect(() => {
+        if (!downloadJobId) return;
+        const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
+        const token = localStorage.getItem('melodiq_helper_token') || '';
+        
+        const interval = setInterval(async () => {
+            try {
+                const res = await fetch(`${helperUrl}/api/usdb/status/${downloadJobId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setDownloadProgress(data);
+                    if (data.status === 'done' || data.status === 'error') {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            setDownloadJobId(null);
+                            refreshSongs();
+                            if (data.status === 'done') {
+                                setFeedbackMessage('Download abgeschlossen! Song wurde aktualisiert.');
+                            } else {
+                                setFeedbackMessage('Fehler beim Download.');
+                            }
+                        }, 2000);
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [downloadJobId, refreshSongs, setFeedbackMessage]);
 
     const handleQueueOption = (action: 'play_now' | 'play_next' | 'add_end') => {
         if (!selectedSongForQueue) return;
@@ -124,7 +161,13 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                 }])
             });
             if (res.ok) {
-                setFeedbackMessage('Video-Download gestartet...');
+                const data = await res.json();
+                if (data.jobIds && data.jobIds.length > 0) {
+                    setDownloadJobId(data.jobIds[0]);
+                    setDownloadProgress({ status: 'pending', progress: 0, log: ['Download gestartet...'] });
+                } else {
+                    setFeedbackMessage('Video-Download gestartet...');
+                }
             } else {
                 setFeedbackMessage('Fehler beim Starten des Downloads');
             }
@@ -158,10 +201,6 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                 },
                 body: JSON.stringify([{
                     songId: selectedSongForQueue.id,
-                    songDir: selectedSongForQueue.txtPath ? selectedSongForQueue.txtPath.replace(/\/[^/]+$/, '') : undefined,
-                    audioFile: (selectedSongForQueue as any).audio ? (selectedSongForQueue as any).audio.split('/').pop()?.split('?')[0] : undefined,
-                    txtFile: selectedSongForQueue.txtPath ? selectedSongForQueue.txtPath.split('/').pop() : undefined,
-                    safeName: selectedSongForQueue.title,
                     type: 'auto-sync',
                     approximateStartSec: approxTime
                 }])
@@ -290,6 +329,26 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                         KI Sync Starten
                     </Button>
                 </DialogActions>
+            </Dialog>
+
+            {/* Download Progress Dialog */}
+            <Dialog open={!!downloadJobId} onClose={() => {}} maxWidth="sm" fullWidth>
+                <DialogTitle>Song wird aktualisiert...</DialogTitle>
+                <DialogContent>
+                    <Box sx={{ width: '100%', mt: 2, mb: 2 }}>
+                        <LinearProgress variant="determinate" value={downloadProgress.progress || 0} />
+                    </Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mb: 2 }}>
+                        {downloadProgress.progress}% - {downloadProgress.status === 'running' ? 'Lädt herunter...' : downloadProgress.status}
+                    </Typography>
+                    <Box sx={{ maxHeight: 150, overflowY: 'auto', bgcolor: 'background.paper', p: 1, borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+                        {downloadProgress.log.slice(-10).map((l, i) => (
+                            <Typography key={i} variant="caption" component="div" sx={{ fontFamily: 'monospace' }}>
+                                {l}
+                            </Typography>
+                        ))}
+                    </Box>
+                </DialogContent>
             </Dialog>
         </>
     );

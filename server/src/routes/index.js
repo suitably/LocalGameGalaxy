@@ -538,7 +538,20 @@ router.post('/api/separator/job', (req, res) => {
     
     const jobIds = [];
     for (const reqItem of requests) {
-        const { songId, songDir, audioFile, txtFile, safeName, type } = reqItem;
+        let { songId, songDir, audioFile, txtFile, safeName, type, approximateStartSec } = reqItem;
+        
+        if (songId) {
+            const song = getSongCache().find(s => s.id === songId);
+            if (song && song.txtPath) {
+                songDir = songDir || path.dirname(song.txtPath);
+                txtFile = txtFile || path.basename(song.txtPath);
+                safeName = safeName || song.title;
+                if (song.audio) {
+                    audioFile = audioFile || path.basename(song.audio.split('?')[0]);
+                }
+            }
+        }
+
         if (!songId || !songDir || !audioFile) continue;
         
         const jobId = crypto.randomBytes(8).toString('hex');
@@ -550,6 +563,7 @@ router.post('/api/separator/job', (req, res) => {
             audioFile,
             txtFile,
             safeName,
+            approximateStartSec,
             status: 'pending',
             progress: 0,
             log: [],
