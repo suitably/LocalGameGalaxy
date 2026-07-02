@@ -88,7 +88,9 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     duration: s.duration,
                     edition: s.edition,
                     hasCover: s.hasCover ?? !!s.cover,
-                    hasVideo: s.hasVideo ?? !!s.video
+                    hasVideo: s.hasVideo ?? !!s.video,
+                    usdbId: s.usdbId,
+                    txtPath: s.txtPath
                 };
             });
 

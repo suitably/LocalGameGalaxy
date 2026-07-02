@@ -16,8 +16,6 @@ export const useDownloadSync = ({
     const lastProcessedJobs = useRef<Set<string>>(new Set());
 
     useEffect(() => {
-        if (isClient) return;
-
         const checkDownloads = async () => {
             const completedJobs = jobs.filter(j => j.status === 'done' && !lastProcessedJobs.current.has(j.jobId));
             const newlyCompletedJobIds = completedJobs.map(j => j.jobId);
@@ -26,6 +24,11 @@ export const useDownloadSync = ({
                 // Wait briefly for scan
                 await new Promise(r => setTimeout(r, 1000));
                 await refreshSongs();
+
+                if (isClient) {
+                    newlyCompletedJobIds.forEach(jobId => lastProcessedJobs.current.add(jobId));
+                    return;
+                }
 
                 try {
                     const url = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
@@ -41,10 +44,14 @@ export const useDownloadSync = ({
                         const job = jobs.find(j => j.jobId === jobId);
                         if (!job) return;
 
-                        const realSong = freshSongs.find((s: any) => 
-                            s.title.toLowerCase() === job.title.toLowerCase() &&
-                            s.artist.toLowerCase() === job.artist.toLowerCase()
-                        );
+                        const realSong = freshSongs.find((s: any) => {
+                            const sTitle = s.title || "";
+                            const jTitle = job.title || "";
+                            const sArtist = s.artist || "";
+                            const jArtist = job.artist || "";
+                            return sTitle.toLowerCase() === jTitle.toLowerCase() &&
+                                   sArtist.toLowerCase() === jArtist.toLowerCase();
+                        });
 
                         // If song isn't in library yet, don't mark as processed. 
                         // It will retry on next poll.

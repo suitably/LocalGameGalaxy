@@ -8,7 +8,7 @@ export interface ActiveFilters {
     edition: string[];
 }
 
-export function useSearchFilters(songs: Song[]) {
+export function useSearchFilters(songs: Song[], jobs?: any[]) {
     const [searchQuery, setSearchQuery] = useState('');
     const [isOnlineSearch, setIsOnlineSearch] = useState(false);
     const [onlineSongs, setOnlineSongs] = useState<any[]>([]);
@@ -59,6 +59,34 @@ export function useSearchFilters(songs: Song[]) {
 
     const filteredSongs = useMemo(() => {
         let result = songs;
+
+        if (jobs) {
+            const activeJobs = jobs.filter(j => (j.status === 'pending' || j.status === 'running') && j.title);
+            const dummySongs = activeJobs.map(j => ({
+                id: `job-${j.jobId}`,
+                title: j.title || "Unknown",
+                artist: j.artist || "Unknown",
+                isDownloading: true,
+                jobId: j.jobId,
+                usdbId: j.usdbId,
+                hasCover: false,
+                hasVideo: false,
+                bpm: 0,
+                year: "",
+                language: "",
+                genre: "",
+                start: 0,
+                end: 0,
+                duration: 0,
+                edition: ""
+            })) as unknown as Song[];
+            
+            const uniqueDummies = dummySongs.filter(d => 
+                !result.some(s => s.title?.toLowerCase() === d.title.toLowerCase() && s.artist?.toLowerCase() === d.artist.toLowerCase())
+            );
+            
+            result = [...uniqueDummies, ...result];
+        }
 
         if (searchQuery) {
             const lowerQuery = searchQuery.toLowerCase();

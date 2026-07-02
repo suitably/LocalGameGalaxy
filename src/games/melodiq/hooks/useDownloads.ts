@@ -26,13 +26,18 @@ export function useDownloads(pollingIntervalMs: number = 2000) {
                 const token = localStorage.getItem('melodiq_helper_token') || '';
                 const helperUrl = url.replace(/\/$/, "");
 
-                const response = await fetch(`${helperUrl}/api/usdb/jobs`, {
+                const responseUsdb = await fetch(`${helperUrl}/api/usdb/jobs`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                if (response.ok) {
-                    const data = await response.json();
+                const responseSeparator = await fetch(`${helperUrl}/api/separator/jobs`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (responseUsdb.ok && responseSeparator.ok) {
+                    const dataUsdb = await responseUsdb.json();
+                    const dataSeparator = await responseSeparator.json();
                     if (isMounted) {
-                        setJobs(data);
+                        setJobs([...dataUsdb, ...dataSeparator]);
                     }
                 }
             } catch (err) {

@@ -166,6 +166,38 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return () => window.removeEventListener('storage', handleStorage);
     }, []);
 
+    // Parse URL parameters for initial setup
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        let updated = false;
+        
+        const urlHelper = params.get('helperUrl');
+        const urlToken = params.get('token') || params.get('apiKey');
+
+        if (urlHelper) {
+            localStorage.setItem('melodiq_helper_url', urlHelper);
+            localStorage.setItem('melodiq_enable_helper', 'true');
+            params.delete('helperUrl');
+            updated = true;
+        }
+
+        if (urlToken) {
+            localStorage.setItem('melodiq_helper_token', urlToken);
+            params.delete('token');
+            params.delete('apiKey');
+            updated = true;
+        }
+
+        if (updated) {
+            // Update the URL without reloading the page
+            const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '') + window.location.hash;
+            window.history.replaceState({}, '', newUrl);
+            
+            // Apply the new settings to the state immediately
+            setSettings(loadSettings());
+        }
+    }, []);
+
     return (
         <SettingsContext.Provider value={{ settings, updateSetting, resetSettings, saveSettings }}>
             {children}
