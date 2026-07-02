@@ -240,7 +240,7 @@ async function processSeparatorQueue() {
 async function runAutoSyncJob(job) {
     try {
         job.status = 'running';
-        const { songId, songDir, audioFile, txtFile, safeName, approximateStartSec } = job;
+        const { songId, songDir, audioFile, txtFile, safeName, approximateStartSec, isPaused } = job;
         
         job.log.push(`Auto-Syncing ${safeName}...${approximateStartSec ? ` (Near ${approximateStartSec.toFixed(1)}s)` : ''}`);
         job.progress = 5;
@@ -321,73 +321,81 @@ async function runAutoSyncJob(job) {
         job.log.push(`Using vocals file: ${vocalsFile}`);
         job.progress = 60;
 
-        // 2. Run ffmpeg silencedetect
-        job.log.push(`Running silence detection...`);
-        const vocalsPath = path.join(songDir, vocalsFile);
+        // 2. Run ffmpeg silencedetect (or bypass if paused for exact manual sync)
+        let vocalsStartMs = 0;
         
-        const firstSoundStartSec = await new Promise((resolve, reject) => {
-            // ffmpeg -i file -af silencedetect=noise=-30dB:d=0.2 -f null -
-            const cmd = spawn('ffmpeg', [
-                '-i', vocalsPath,
-                '-af', 'silencedetect=noise=-30dB:d=0.2',
-                '-f', 'null', '-'
-            ]);
+        if (isPaused && approximateStartSec && approximateStartSec > 0) {
+            job.log.push(`User manually paused and synced. Bypassing AI silence detection.`);
+            vocalsStartMs = Math.round(approximateStartSec * 1000);
+        } else {
+            job.log.push(`Running silence detection...`);
+            const vocalsPath = path.join(songDir, vocalsFile);
+            
+            const firstSoundStartSec = await new Promise((resolve, reject) => {
+                // ffmpeg -i file -af silencedetect=noise=-30dB:d=0.2 -f null -
+                const cmd = spawn('ffmpeg', [
+                    '-i', vocalsPath,
+                    '-af', 'silencedetect=noise=-30dB:d=0.2',
+                    '-f', 'null', '-'
+                ]);
 
-            let startSec = 0;
-            let output = '';
+                let startSec = 0;
+                let output = '';
 
-            cmd.stderr.on('data', (data) => {
-                output += data.toString();
-            });
+                cmd.stderr.on('data', (data) => {
+                    output += data.toString();
+                });
 
-            cmd.on('close', (code) => {
-                // Parse output
-                const lines = output.split('\n');
-                let foundSilenceEnd = false;
-                let minDiff = Infinity;
-                
-                for (const line of lines) {
-                    if (line.includes('silence_end')) {
-                        const match = line.match(/silence_end:\s+([\d.]+)/);
-                        if (match) {
-                            const time = parseFloat(match[1]);
-                            
-                            if (approximateStartSec && approximateStartSec > 0) {
-                                // User tapped: find the silence_end closest to the tap.
-                                // We subtract 0.3s from tap time assuming human reaction delay.
-                                const targetTime = approximateStartSec - 0.3;
-                                const diff = Math.abs(time - targetTime);
+                cmd.on('close', (code) => {
+                    // Parse output
+                    const lines = output.split('\n');
+                    let foundSilenceEnd = false;
+                    let minDiff = Infinity;
+                    
+                    for (const line of lines) {
+                        if (line.includes('silence_end')) {
+                            const match = line.match(/silence_end:\s+([\d.]+)/);
+                            if (match) {
+                                const time = parseFloat(match[1]);
                                 
-                                // Only consider it if it's within a reasonable window (e.g., +/- 4 seconds)
-                                if (diff < minDiff && diff < 4.0) {
-                                    minDiff = diff;
+                                if (approximateStartSec && approximateStartSec > 0) {
+                                    // User tapped: find the silence_end closest to the tap.
+                                    // We subtract 0.3s from tap time assuming human reaction delay.
+                                    const targetTime = approximateStartSec - 0.3;
+                                    const diff = Math.abs(time - targetTime);
+                                    
+                                    // Only consider it if it's within a reasonable window (e.g., +/- 4 seconds)
+                                    if (diff < minDiff && diff < 4.0) {
+                                        minDiff = diff;
+                                        startSec = time;
+                                        foundSilenceEnd = true;
+                                    }
+                                } else {
+                                    // No user tap: take the very first silence end
                                     startSec = time;
                                     foundSilenceEnd = true;
+                                    break;
                                 }
-                            } else {
-                                // No user tap: take the very first silence end
-                                startSec = time;
-                                foundSilenceEnd = true;
-                                break;
                             }
                         }
                     }
-                }
-                
-                if (!foundSilenceEnd) {
-                    if (approximateStartSec && approximateStartSec > 0) {
-                        // If we didn't find any silence near the tap, fallback to the tap itself
-                        startSec = approximateStartSec - 0.3;
-                    } else {
-                        // If no silence found at the beginning, vocals start at 0
-                        startSec = 0;
+                    
+                    if (!foundSilenceEnd) {
+                        if (approximateStartSec && approximateStartSec > 0) {
+                            // If we didn't find any silence near the tap, fallback to the tap itself
+                            startSec = approximateStartSec - 0.3;
+                        } else {
+                            // If no silence found at the beginning, vocals start at 0
+                            startSec = 0;
+                        }
                     }
-                }
-                resolve(startSec);
+                    resolve(startSec);
+                });
             });
-        });
 
-        const vocalsStartMs = Math.round(firstSoundStartSec * 1000);
+            vocalsStartMs = Math.round(firstSoundStartSec * 1000);
+        }
+
         job.log.push(`Detected vocals start at: ${vocalsStartMs} ms`);
         job.progress = 80;
 

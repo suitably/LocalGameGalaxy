@@ -435,7 +435,7 @@ router.post('/api/usdb/download', (req, res) => {
     
     const jobIds = [];
     for (const reqItem of requests) {
-        const { usdbId, artist, title, videoMode, youtubeUrl, targetDir, safeName } = reqItem;
+        const { usdbId, artist, title, videoMode, youtubeUrl, targetDir, safeName, skipAudio, audioFile } = reqItem;
         if (!artist || !title) continue;
         const mode = ['mp4', 'stream', 'none'].includes(videoMode) ? videoMode : 'none';
         const jobId = crypto.randomBytes(8).toString('hex');
@@ -448,6 +448,8 @@ router.post('/api/usdb/download', (req, res) => {
             youtubeUrl: youtubeUrl || null,
             targetDir: targetDir || null,
             safeName: safeName || null,
+            skipAudio: !!skipAudio,
+            audioFile: audioFile || null,
             status: 'pending',
             progress: 0,
             log: [],
@@ -538,7 +540,7 @@ router.post('/api/separator/job', (req, res) => {
     
     const jobIds = [];
     for (const reqItem of requests) {
-        let { songId, songDir, audioFile, txtFile, safeName, type, approximateStartSec } = reqItem;
+        let { songId, songDir, audioFile, txtFile, safeName, type, approximateStartSec, isPaused } = reqItem;
         
         if (songId) {
             const song = getSongCache().find(s => s.id === songId);
@@ -564,6 +566,7 @@ router.post('/api/separator/job', (req, res) => {
             txtFile,
             safeName,
             approximateStartSec,
+            isPaused,
             status: 'pending',
             progress: 0,
             log: [],
