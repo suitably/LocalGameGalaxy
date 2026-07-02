@@ -52,6 +52,14 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
         return stored ? JSON.parse(stored) : [];
     });
 
+    const [helperSettingsHash, setHelperSettingsHash] = useState(0);
+
+    useEffect(() => {
+        const handleSettingsUpdate = () => setHelperSettingsHash(h => h + 1);
+        window.addEventListener('melodiq_settings_updated', handleSettingsUpdate);
+        return () => window.removeEventListener('melodiq_settings_updated', handleSettingsUpdate);
+    }, []);
+
     // Computed active tracker URLs including helper server tracker if enabled
     const activeTrackerUrls = useMemo(() => {
         const urls = [...trackerUrls];
@@ -81,7 +89,7 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
         }
         
         return Array.from(new Set(urls));
-    }, [trackerUrls]);
+    }, [trackerUrls, helperSettingsHash]);
 
     // 2. Runtime State
     const [manager, setManager] = useState<M | null>(null);

@@ -100,7 +100,7 @@ export const MelodiqGameContent: React.FC = () => {
 
     const handleSelectSong = async (songMeta: SongMeta, forcePlay: boolean = false, participants?: any[], requester?: string, requesterId?: string) => {
         try {
-            const isPlaying = !!selectedSong || (isTVConnected && !!remoteSong) || (isClient && !!remoteSong) || !!nowPlaying;
+            const isPlaying = !!selectedSong || (isTVConnected && !!remoteSong) || (isClient && !!remoteSong);
 
             if (isClient) {
                 if (clientRole === 'singer') {
@@ -352,7 +352,7 @@ export const MelodiqGameContent: React.FC = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
-                pb: (selectedSong || remoteSong) ? '64px' : 0
+                pb: '64px'
             }}>
                 {!hasConnectionError && (
                     <MelodiqSearchBar 
@@ -392,6 +392,7 @@ export const MelodiqGameContent: React.FC = () => {
                         handleSelectSong={handleSelectSong}
                         handleSongLongPress={handleSongLongPress}
                         isSinger={isClient && clientRole === 'singer'}
+                        jobs={jobs}
                     />
                 )}
             </Box >

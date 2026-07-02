@@ -166,7 +166,7 @@ function spawnYtDlp(bin, args, onLine) {
 async function runDownloadJob(job) {
     try {
         job.status = 'running';
-        const { usdbId, artist, title, videoMode, youtubeUrl, targetDir, safeName: jobSafeName } = job;
+        const { usdbId, artist, title, videoMode, youtubeUrl, targetDir, safeName: jobSafeName, skipAudio, audioFile } = job;
 
         // 1. Ensure yt-dlp is available
         const ytBin = await ensureYtDlp(job);
@@ -262,12 +262,16 @@ async function runDownloadJob(job) {
         }
 
         // 4.5. Download audio via yt-dlp
-        job.log.push('🎵 Downloading audio...');
-        await spawnYtDlp(ytBin, [
-            '--extract-audio', '--audio-format', 'mp3', '--audio-quality', '0',
-            '-o', audioOut, '--no-playlist',
-            resolvedUrl
-        ], l => job.log.push(l));
+        if (!skipAudio) {
+            job.log.push('🎵 Downloading audio...');
+            await spawnYtDlp(ytBin, [
+                '--extract-audio', '--audio-format', 'mp3', '--audio-quality', '0',
+                '-o', audioOut, '--no-playlist',
+                resolvedUrl
+            ], l => job.log.push(l));
+        } else {
+            job.log.push('⏩ Skipping audio download as requested.');
+        }
 
         job.progress = 55;
         job.log.push('✅ Audio and cover done.');
@@ -298,7 +302,9 @@ async function runDownloadJob(job) {
             lines = lines.filter(l => !l.match(/^#MP3:/i) && !l.match(/^#VIDEO:/i) && !l.match(/^#COVER:/i) && !l.match(/^#BACKGROUND:/i));
             
             const lastHeaderIdx = lines.reduce((acc, l, i) => l.startsWith('#') ? i : acc, 0);
-            lines.splice(lastHeaderIdx + 1, 0, `#MP3:${safeName}.mp3`);
+            
+            const targetAudioFile = skipAudio && audioFile ? audioFile : `${safeName}.mp3`;
+            lines.splice(lastHeaderIdx + 1, 0, `#MP3:${targetAudioFile}`);
             
             let offset = 2;
             if (videoHeaderValue) {
@@ -312,10 +318,11 @@ async function runDownloadJob(job) {
             
             fs.writeFileSync(txtPath, lines.join('\n'), 'utf-8');
         } else {
+            const targetAudioFile = skipAudio && audioFile ? audioFile : `${safeName}.mp3`;
             const lines = [
                 `#TITLE:${title}`,
                 `#ARTIST:${artist}`,
-                `#MP3:${safeName}.mp3`,
+                `#MP3:${targetAudioFile}`,
                 videoHeaderValue ? `#VIDEO:${videoHeaderValue}` : null,
                 fs.existsSync(targetCover) ? `#COVER:${safeName}-cover.jpg` : null,
                 `#BPM:200`,

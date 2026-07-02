@@ -11,10 +11,11 @@ interface LocalSongsViewProps {
     handleSelectSong: (song: Song) => void;
     handleSongLongPress: (song: Song) => void;
     isSinger?: boolean;
+    jobs?: any[];
 }
 
 export const LocalSongsView: React.FC<LocalSongsViewProps> = ({
-    viewMode, filteredSongs, handleSelectSong, handleSongLongPress, isSinger
+    viewMode, filteredSongs, handleSelectSong, handleSongLongPress, isSinger, jobs
 }) => {
     if (filteredSongs.length === 0) return null;
 
@@ -57,9 +58,16 @@ export const LocalSongsView: React.FC<LocalSongsViewProps> = ({
                     }}
                     itemContent={(index) => {
                         const song = filteredSongs[index];
+                        const safeName = song.txtPath ? song.txtPath.split('/').pop()?.replace('.txt', '') : undefined;
+                        const activeJob = jobs?.find(j => j.status !== 'error' && (j.jobId === song.jobId || j.safeName === safeName || j.usdbId === song.usdbId));
+                        const isDl = !!activeJob || song.isDownloading;
+                        const progress = activeJob ? activeJob.progress : 0;
+                        
                         return (
                             <SongCard
                                 song={song}
+                                isDownloading={isDl}
+                                downloadProgress={progress}
                                 onClick={isSinger ? () => {} : () => handleSelectSong(song)}
                                 onLongPress={isSinger ? undefined : () => handleSongLongPress(song)}
                             />
@@ -77,10 +85,17 @@ export const LocalSongsView: React.FC<LocalSongsViewProps> = ({
                 totalCount={filteredSongs.length}
                 itemContent={(index) => {
                     const song = filteredSongs[index];
+                    const safeName = song.txtPath ? song.txtPath.split('/').pop()?.replace('.txt', '') : undefined;
+                    const activeJob = jobs?.find(j => j.status !== 'error' && (j.jobId === song.jobId || j.safeName === safeName || j.usdbId === song.usdbId));
+                    const isDl = !!activeJob || song.isDownloading;
+                    const progress = activeJob ? activeJob.progress : 0;
+
                     return (
                         <Box sx={{ px: 2, py: 0.5 }}>
                             <SongListItem
                                 song={song}
+                                isDownloading={isDl}
+                                downloadProgress={progress}
                                 onClick={isSinger ? () => {} : () => handleSelectSong(song)}
                                 onLongPress={isSinger ? undefined : () => handleSongLongPress(song)}
                                 onMenuClick={isSinger ? undefined : () => handleSongLongPress(song)}

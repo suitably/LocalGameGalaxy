@@ -1,4 +1,4 @@
-import { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo } from 'react';
+import { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo, useCallback } from 'react';
 import { Box, Snackbar, Alert, Menu, MenuItem } from '@mui/material';
 import { type Song, type SongMeta } from '../db';
 import { MelodiqSession, type MelodiqSessionHandle } from '../gameplay/MelodiqSession';
@@ -116,7 +116,8 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                 body: JSON.stringify([{
                     songId: selectedSong.id,
                     type: 'auto-sync',
-                    approximateStartSec: currentTime
+                    approximateStartSec: currentTime,
+                    isPaused: !playbackState.isPlaying
                 }])
             });
             
@@ -279,6 +280,13 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         }
     };
 
+    const handlePlaybackUpdate = useCallback((state: any) => {
+        setPlaybackState(state);
+        if (selectedSong && state.currentTime > 0) {
+            localStorage.setItem('melodiq_saved_time', JSON.stringify({ id: selectedSong.id, time: state.currentTime }));
+        }
+    }, [selectedSong]);
+
     return (
         <>
             {/* Persistent Session (Hidden or Visible) */}
@@ -310,12 +318,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                             onExitSession(); // Clears selectedSong in parent
                         }}
                         onMinimize={onMinimizeSession}
-                        onPlaybackUpdate={(state) => {
-                            setPlaybackState(state);
-                            if (selectedSong && state.currentTime > 0) {
-                                localStorage.setItem('melodiq_saved_time', JSON.stringify({ id: selectedSong.id, time: state.currentTime }));
-                            }
-                        }}
+                        onPlaybackUpdate={handlePlaybackUpdate}
                         showDebugOverlay={false}
                         showDevSlider={false}
                         muteAudio={isTVConnected || isClient}

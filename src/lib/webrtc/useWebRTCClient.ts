@@ -222,6 +222,14 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
                     if (isWebRTCConnectedRef.current && peerRef.current === peer) {
                         isWebRTCConnectedRef.current = false;
                         updateStatus('Disconnected', 'status-disconnected');
+                        
+                        if (optionsRef.current.autoConnect) {
+                            setTimeout(() => {
+                                if (!isWebRTCConnectedRef.current) {
+                                    connect();
+                                }
+                            }, 2000);
+                        }
                     }
                     trackerPeer.off('data', onData);
 

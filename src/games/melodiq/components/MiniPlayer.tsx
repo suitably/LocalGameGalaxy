@@ -118,7 +118,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                             </IconButton>
                         )}
 
-                        <IconButton onClick={(e) => { e.stopPropagation(); onNext(); }} size="medium" sx={{ color: 'white' }} disabled={isRestored}>
+                        <IconButton onClick={(e) => { e.stopPropagation(); onNext(); }} size="medium" sx={{ color: 'white' }}>
                             <SkipNextIcon />
                         </IconButton>
                     </>

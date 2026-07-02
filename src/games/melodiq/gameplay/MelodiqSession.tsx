@@ -58,6 +58,7 @@ export interface PassiveGameState {
 
 export interface MelodiqSessionProps {
     song: Song;
+    initialTime?: number;
     onExit: (forceHome?: boolean) => void;
     onMinimize?: () => void;
     onPlaybackUpdate?: (state: { isPlaying: boolean; currentTime: number; duration: number; progress: number }) => void;
@@ -77,7 +78,7 @@ export interface MelodiqSessionProps {
 
 const DEFAULT_TRACK_SCORE_WEIGHTS = [1, 1];
 
-const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlaybackUpdate, isTVMode = false, muteAudio = false, isPassive = false, passiveState, activeSessionOverride = null, suppressResults = false, uiScale = 1.0, isClient = false, clientDeviceId }: MelodiqSessionProps, ref: React.ForwardedRef<MelodiqSessionHandle>): React.ReactNode => {
+const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimize, onPlaybackUpdate, isTVMode = false, muteAudio = false, isPassive = false, passiveState, activeSessionOverride = null, suppressResults = false, uiScale = 1.0, isClient = false, clientDeviceId }: MelodiqSessionProps, ref: React.ForwardedRef<MelodiqSessionHandle>): React.ReactNode => {
     const { settings } = useMelodiqSettings();
     const {
         showDebugOverlay,
@@ -296,12 +297,17 @@ const MelodiqSessionContent = forwardRef(({ song, onExit, onMinimize, onPlayback
     useEffect(() => {
         if (!hasStartedRef.current && ready && !contentLoading && parsedSong && audioSrc && audioRef.current && !isFinished) {
             hasStartedRef.current = true;
+            if (initialTime && initialTime > 0) {
+                audioRef.current.currentTime = initialTime;
+                if (videoRef.current) videoRef.current.currentTime = initialTime;
+                if (vocalsRef.current) vocalsRef.current.currentTime = initialTime;
+            }
             const startPlay = async () => {
                 try { await safePlay(); } catch (e) { hasStartedRef.current = false; }
             };
             startPlay();
         }
-    }, [ready, contentLoading, parsedSong, audioSrc, song.id, isFinished, safePlay]);
+    }, [ready, contentLoading, parsedSong, audioSrc, song.id, isFinished, safePlay, initialTime]);
 
     // Dynamic Volume Sync
     useEffect(() => {
