@@ -17,9 +17,10 @@ interface SongListItemProps {
     isDownloading?: boolean;
     isDownloaded?: boolean;
     downloadProgress?: number;
+    hasActiveJob?: boolean;
 }
 
-export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLongPress, onMenuClick, onActionClick, isDownloading, isDownloaded, downloadProgress }) => {
+export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLongPress, onMenuClick, onActionClick, isDownloading, isDownloaded, downloadProgress, hasActiveJob }) => {
     const [coverUrl, setCoverUrl] = useState<string | null>(null);
     const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPressRef = React.useRef(false);
@@ -133,7 +134,7 @@ export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLon
             </Box>
 
             {/* Download Status */}
-            {isDownloading && (
+            {(isDownloading || hasActiveJob) && (
                 <Box sx={{ display: 'flex', alignItems: 'center', ml: 2, mr: 1 }}>
                     <CircularProgress variant={downloadProgress && downloadProgress > 0 ? "determinate" : "indeterminate"} value={downloadProgress || 0} size={24} />
                 </Box>

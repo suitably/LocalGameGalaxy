@@ -14,13 +14,14 @@ interface SongCardProps {
     isDownloading?: boolean;
     isDownloaded?: boolean;
     downloadProgress?: number;
+    hasActiveJob?: boolean;
 }
 
 /**
  * SongCard displays lightweight SongMeta for fast rendering.
  * Cover is loaded on-demand from the full Song table when visible.
  */
-export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, onActionClick, isDownloading, isDownloaded, downloadProgress }) => {
+export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, onActionClick, isDownloading, isDownloaded, downloadProgress, hasActiveJob }) => {
     const [coverUrl, setCoverUrl] = useState<string | null>(null);
     const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPressRef = React.useRef(false);
@@ -148,9 +149,9 @@ export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, 
                         <CloudDownloadIcon sx={{ color: 'primary.main', fontSize: 20 }} />
                     </Box>
                 )}
-                {isDownloading && (
+                {(isDownloading || hasActiveJob) && (
                     <Box sx={{ mt: 1 }}>
-                        <Typography variant="caption" color="primary">{downloadProgress}% Downloading...</Typography>
+                        <Typography variant="caption" color="primary">{downloadProgress}% {isDownloading ? 'Downloading...' : 'Processing...'}</Typography>
                         <LinearProgress variant={downloadProgress !== undefined && downloadProgress > 0 ? "determinate" : "indeterminate"} value={downloadProgress} sx={{ height: 6, borderRadius: 3, mt: 0.5 }} />
                     </Box>
                 )}

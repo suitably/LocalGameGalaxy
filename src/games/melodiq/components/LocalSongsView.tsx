@@ -59,14 +59,22 @@ export const LocalSongsView: React.FC<LocalSongsViewProps> = ({
                     itemContent={(index) => {
                         const song = filteredSongs[index];
                         const safeName = song.txtPath ? song.txtPath.split('/').pop()?.replace('.txt', '') : undefined;
-                        const activeJob = jobs?.find(j => j.status !== 'error' && (j.jobId === song.jobId || j.safeName === safeName || j.usdbId === song.usdbId));
-                        const isDl = !!activeJob || song.isDownloading;
+                        const activeJob = jobs?.find(j => 
+                            j.status !== 'error' && 
+                            j.status !== 'done' && (
+                                (song.jobId && j.jobId === song.jobId) || 
+                                (safeName && j.safeName === safeName) || 
+                                (song.usdbId && j.usdbId === song.usdbId)
+                            )
+                        );
+                        const isDl = song.isDownloading === true;
                         const progress = activeJob ? activeJob.progress : 0;
                         
                         return (
                             <SongCard
                                 song={song}
                                 isDownloading={isDl}
+                                hasActiveJob={!!activeJob}
                                 downloadProgress={progress}
                                 onClick={isSinger ? () => {} : () => handleSelectSong(song)}
                                 onLongPress={isSinger ? undefined : () => handleSongLongPress(song)}
@@ -86,8 +94,15 @@ export const LocalSongsView: React.FC<LocalSongsViewProps> = ({
                 itemContent={(index) => {
                     const song = filteredSongs[index];
                     const safeName = song.txtPath ? song.txtPath.split('/').pop()?.replace('.txt', '') : undefined;
-                    const activeJob = jobs?.find(j => j.status !== 'error' && (j.jobId === song.jobId || j.safeName === safeName || j.usdbId === song.usdbId));
-                    const isDl = !!activeJob || song.isDownloading;
+                    const activeJob = jobs?.find(j => 
+                        j.status !== 'error' && 
+                        j.status !== 'done' && (
+                            (song.jobId && j.jobId === song.jobId) || 
+                            (safeName && j.safeName === safeName) || 
+                            (song.usdbId && j.usdbId === song.usdbId)
+                        )
+                    );
+                    const isDl = song.isDownloading === true;
                     const progress = activeJob ? activeJob.progress : 0;
 
                     return (
@@ -95,6 +110,7 @@ export const LocalSongsView: React.FC<LocalSongsViewProps> = ({
                             <SongListItem
                                 song={song}
                                 isDownloading={isDl}
+                                hasActiveJob={!!activeJob}
                                 downloadProgress={progress}
                                 onClick={isSinger ? () => {} : () => handleSelectSong(song)}
                                 onLongPress={isSinger ? undefined : () => handleSongLongPress(song)}

@@ -55,7 +55,7 @@ export const MelodiqGameContent: React.FC = () => {
     const { settings } = useMelodiqSettings();
     const { clientRole, clientProfile } = useClientEngine();
 
-    const searchFilterState = useSearchFilters(songs);
+    const searchFilterState = useSearchFilters(songs, jobs);
     const { isOnlineSearch, isSearchingOnline, filteredSongs, filteredOnlineSongs } = searchFilterState;
 
     const [remoteSong, setRemoteSong] = useState<SongMeta | null>(null);
@@ -365,7 +365,7 @@ export const MelodiqGameContent: React.FC = () => {
                 <LibraryEmptyState 
                     hasConnectionError={!!hasConnectionError}
                     isLoading={isLoading}
-                    songsLength={songs?.length || 0}
+                    songsLength={isOnlineSearch ? (songs?.length || 0) : (filteredSongs?.length || 0)}
                     isOnlineSearch={isOnlineSearch}
                     refreshSongs={refreshSongs}
                 />
