@@ -295,6 +295,10 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                     sx={{
                     position: 'fixed',
                     top: 0, left: 0, right: 0, bottom: 0,
+                    pt: 'var(--safe-area-inset-top, env(safe-area-inset-top, 0px))',
+                    pb: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))',
+                    pl: 'var(--safe-area-inset-left, env(safe-area-inset-left, 0px))',
+                    pr: 'var(--safe-area-inset-right, env(safe-area-inset-right, 0px))',
                     zIndex: currentView === 'Session' ? 1400 : -1, // Below everything if hidden
                     visibility: currentView === 'Session' ? 'visible' : 'hidden',
                     display: 'flex', flexDirection: 'column'

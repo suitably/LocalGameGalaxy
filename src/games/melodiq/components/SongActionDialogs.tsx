@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, List, ListItemButton, ListItemIcon, ListItemText, Divider, Typography, Alert } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AddToQueueIcon from '@mui/icons-material/AddToQueue';
@@ -174,37 +174,6 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
         }
     };
 
-    const handleFullSync = async () => {
-        if (!selectedSongForQueue) return;
-        
-        const confirm = window.confirm("Achtung: Dies dauert mehrere Minuten! Der komplette Text wird mithilfe von KI (Whisper) auf die Vokal-Spur synchronisiert. Fortfahren?");
-        if (!confirm) return;
-
-        setQueueDialogOpen(false);
-        
-        try {
-            const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
-            const token = localStorage.getItem('melodiq_helper_token') || '';
-            const res = await fetch(`${helperUrl}/api/separator/job`, {
-                method: 'POST',
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify([{
-                    songId: selectedSongForQueue.id,
-                    type: 'full-sync'
-                }])
-            });
-            if (res.ok) {
-                setFeedbackMessage('Full KI Sync im Hintergrund gestartet...');
-            } else {
-                setFeedbackMessage('Fehler beim Starten des Full-Syncs');
-            }
-        } catch (e) {
-            console.error('Failed to start full-sync', e);
-        }
-    };
 
     return (
         <>

@@ -96,3 +96,19 @@ Agents **MUST** adhere to strict internationalization standards when working on 
 -   **Do not skip verification**.
 -   **Always update the relevant docs** before marking the overall request as done.
 -   **Always implement i18n correctly** - never leave translations missing.
+
+## 7. Web-to-Android (Capacitor) UI Guidelines
+
+When building web UI that will be deployed as an Android app via Capacitor, agents **MUST** adhere to the following rules:
+
+1. **Edge-to-Edge Display & Safe Areas**:
+    - Modern Android (API 35+) enforces Edge-to-Edge displays. The WebView extends under the system status bar and navigation bar.
+    - Always use the `capacitor-plugin-safe-area` CSS variables (`var(--safe-area-inset-top)`, etc.) for padding on root containers (e.g., `MainLayout`) and full-screen overlays (e.g., `PlaybackManager`).
+    - Fall back to standard browser environment variables if needed: `var(--safe-area-inset-top, env(safe-area-inset-top, 0px))`.
+2. **Native Feel (CSS Adjustments)**:
+    - Set `user-select: none` and `-webkit-touch-callout: none` to prevent text selection and native context menus on long presses, except on input fields.
+    - Set `-webkit-tap-highlight-color: transparent` to disable the default gray highlight when tapping elements.
+    - Use `100dvh` instead of `100vh` to properly account for dynamic mobile browser bars (even though less critical in a standalone Capacitor app, it prevents bugs).
+    - Prevent pull-to-refresh on scrollable containers by using `overscroll-behavior-y: contain` or `none` on the `body`.
+3. **Hardware Back Button**:
+    - Ensure routing and modals are aware of the Android hardware back button. Listen to the Capacitor `App.addListener('backButton', ...)` event to close modals, dismiss menus, or navigate back instead of immediately exiting the app.

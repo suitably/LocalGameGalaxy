@@ -5,4 +5,11 @@ body {
   background-color: #121212;
   color: #fff;
   overscroll-behavior: none; /* Prevent pull-to-refresh on mobile if needed */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
 }

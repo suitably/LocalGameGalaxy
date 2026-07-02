@@ -195,6 +195,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             
             // Apply the new settings to the state immediately
             setSettings(loadSettings());
+
+            // Notify hooks (e.g. useSongs) that helper config changed so they reload
+            window.dispatchEvent(new Event('melodiq_settings_updated'));
         }
     }, []);
 

@@ -8,7 +8,16 @@ export const MainLayout: React.FC = () => {
     const isGame = location.pathname.includes('/games/');
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+        <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            height: '100vh', 
+            overflow: 'hidden',
+            pt: 'var(--safe-area-inset-top, env(safe-area-inset-top, 0px))',
+            pb: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))',
+            pl: 'var(--safe-area-inset-left, env(safe-area-inset-left, 0px))',
+            pr: 'var(--safe-area-inset-right, env(safe-area-inset-right, 0px))'
+        }}>
             <GlobalHeader />
 
             {isGame ? (

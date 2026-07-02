@@ -3,6 +3,9 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
 }
 
 .logo {

@@ -37,6 +37,8 @@ export const useMelodiqGlobalEvents = ({
     }, [handleSelectSong]);
 
     const processedEventRef = useRef<number | null>(null);
+    // Holds the song ID from the last session_sync when songs hadn't loaded yet
+    const pendingSyncIdRef = useRef<string | null>(null);
 
     // 1. Handle TV Events & Auto-Play Next
     useEffect(() => {
@@ -156,13 +158,18 @@ export const useMelodiqGlobalEvents = ({
         const handleSessionSync = (e: any) => {
             const data = e.detail;
             if (data.activeSong) {
+                pendingSyncIdRef.current = data.activeSong.id;
                 getSongById(data.activeSong.id).then(fullSong => {
                     if (fullSong) {
+                        pendingSyncIdRef.current = null;
                         setSelectedSong(fullSong);
                         setCurrentView('Session');
                     }
+                    // If not found yet, pendingSyncIdRef retains the id.
+                    // The effect below will retry once songs are available.
                 }).catch(err => console.error("Failed to sync session song:", err));
             } else {
+                pendingSyncIdRef.current = null;
                 setSelectedSong(null);
                 setCurrentView('Home');
             }
@@ -171,6 +178,22 @@ export const useMelodiqGlobalEvents = ({
         window.addEventListener('melodiq_client_session_sync', handleSessionSync);
         return () => window.removeEventListener('melodiq_client_session_sync', handleSessionSync);
     }, [isClient, getSongById, setSelectedSong, setCurrentView]);
+
+    // Retry session sync when the songs list updates (covers the race where the
+    // sync event arrived before songs were loaded from the helper server)
+    useEffect(() => {
+        if (!isClient) return;
+        const pendingId = pendingSyncIdRef.current;
+        if (!pendingId || songs.length === 0) return;
+
+        getSongById(pendingId).then(fullSong => {
+            if (fullSong) {
+                pendingSyncIdRef.current = null;
+                setSelectedSong(fullSong);
+                setCurrentView('Session');
+            }
+        }).catch(() => {});
+    }, [isClient, songs, getSongById, setSelectedSong, setCurrentView]);
 
     useEffect(() => {
         if (!isClient && manager) {

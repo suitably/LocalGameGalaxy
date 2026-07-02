@@ -1,6 +1,7 @@
-import { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { lazy, Suspense, useEffect } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
+import { App as CapacitorApp } from '@capacitor/app';
 import { MainLayout } from './components/Layout/MainLayout';
 import { Hub } from './features/hub/Hub';
 import { Settings } from './features/settings/Settings';
@@ -22,7 +23,25 @@ const LoadingFallback = () => (
 
 import { SongsProvider } from './games/melodiq/hooks/useSongs';
 
-function App() {
+// Inner component to use navigation hook
+function AppRoutes() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleBackButton = () => {
+      if (window.location.pathname === '/') {
+        CapacitorApp.exitApp();
+      } else {
+        navigate(-1);
+      }
+    };
+    
+    const listener = CapacitorApp.addListener('backButton', handleBackButton);
+    return () => {
+      listener.then(l => l.remove());
+    };
+  }, [navigate]);
+
   return (
     <Routes>
       <Route path="/" element={<MainLayout />}>
@@ -59,6 +78,10 @@ function App() {
       } />
     </Routes>
   );
+}
+
+function App() {
+  return <AppRoutes />;
 }
 
 export default App;

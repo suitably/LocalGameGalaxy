@@ -9,6 +9,25 @@ import { LayoutProvider } from './context/LayoutContext';
 import './i18n';
 import './index.css';
 
+import { SafeArea } from 'capacitor-plugin-safe-area';
+
+const initSafeArea = async () => {
+  try {
+    const { insets } = await SafeArea.getSafeAreaInsets();
+    for (const [key, value] of Object.entries(insets)) {
+      document.documentElement.style.setProperty(`--safe-area-inset-${key}`, `${value}px`);
+    }
+    SafeArea.addListener('safeAreaChanged', data => {
+      for (const [key, value] of Object.entries(data.insets)) {
+        document.documentElement.style.setProperty(`--safe-area-inset-${key}`, `${value}px`);
+      }
+    });
+  } catch (e) {
+    console.warn('SafeArea plugin not available (probably running in browser)', e);
+  }
+};
+initSafeArea();
+
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <BrowserRouter>

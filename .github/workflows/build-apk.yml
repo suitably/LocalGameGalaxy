@@ -3,6 +3,9 @@ name: Build Android APK
 on:
   release:
     types: [published]
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: write
@@ -41,9 +44,9 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Rename APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk melodiq.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk nexumia.apk
 
       - name: Attach APK to Release
         uses: softprops/action-gh-release@v2
         with:
-          files: melodiq.apk
+          files: nexumia.apk

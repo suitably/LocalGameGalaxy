@@ -20,6 +20,8 @@ export const MelodiqConnection: React.FC<MelodiqConnectionProps> = ({ onBack }) 
             gameId="melodiq"
             clientPath="/games/melodiq?role=client"
             WebRTCHostContextHook={useWebRTC}
+            helperStorageKey="melodiq_helper_url"
+            helperTokenKey="melodiq_helper_token"
             renderPeerExtra={(peer) => (
                 <Select
                     size="small"

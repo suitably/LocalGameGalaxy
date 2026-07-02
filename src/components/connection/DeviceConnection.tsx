@@ -1,17 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Typography, TextField, IconButton, Avatar, Paper, Container, Chip, Divider } from '@mui/material';
+import { Box, Button, Typography, TextField, IconButton, Avatar, Paper, Container, Chip, Divider, Tooltip } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
+import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import QRCode from 'qrcode';
+import { useNavigate } from 'react-router-dom';
+import { QRScannerDialog } from './QRScannerDialog';
 
 export interface DeviceConnectionProps {
     onBack: () => void;
     title?: string;
     description?: string;
     gameId: string; // Identifier used for setting UI properties locally
-    clientPath: string; // the path for the phone app, e.g. '/games/melodiq/phone'
+    clientPath: string; // the path for the phone app, e.g. '/games/melodiq?role=client'
     WebRTCHostContextHook: () => any; // we pass useWebRTC down
     renderPeerExtra?: (peer: any) => React.ReactNode;
+    /** localStorage key for the helper server URL (e.g. 'melodiq_helper_url').
+     *  If provided, this URL (with localhost swapped for the target IP) is embedded
+     *  in the QR code so the phone can reach the song library automatically. */
+    helperStorageKey?: string;
+    /** localStorage key for the helper auth token (e.g. 'melodiq_helper_token'). */
+    helperTokenKey?: string;
 }
 
 export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
@@ -21,8 +30,11 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
     gameId,
     clientPath,
     WebRTCHostContextHook,
-    renderPeerExtra
+    renderPeerExtra,
+    helperStorageKey,
+    helperTokenKey,
 }) => {
+    const navigate = useNavigate();
     const {
         peers: connectedPreviewPeers,
         partyId,
@@ -37,9 +49,49 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
     // UI State for adding new tracker
     const [newTrackerUrl, setNewTrackerUrl] = useState('');
     const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+    const [scannerOpen, setScannerOpen] = useState(false);
     const [customBaseUrl, setCustomBaseUrl] = useState<string>(() => {
         return localStorage.getItem(`${gameId}_host_base_url`) || window.location.origin;
     });
+
+    /**
+     * Called when a QR code is successfully scanned.
+     *
+     * IMPORTANT: SettingsProvider stays mounted when navigating within the same
+     * route (host → client), so its [] useEffect does NOT re-run and cannot
+     * parse helperUrl/token from the new URL. We therefore write the values
+     * directly to localStorage here, then navigate.
+     */
+    const handleScanSuccess = (rawText: string) => {
+        setScannerOpen(false);
+        try {
+            const scannedUrl = new URL(rawText);
+            const scannedParams = scannedUrl.searchParams;
+
+            // Apply helper config from scanned URL directly to localStorage
+            const urlHelper = scannedParams.get('helperUrl');
+            const urlToken = scannedParams.get('token') || scannedParams.get('apiKey');
+
+            if (urlHelper) {
+                localStorage.setItem('melodiq_helper_url', urlHelper);
+                localStorage.setItem('melodiq_enable_helper', 'true');
+            }
+            if (urlToken) {
+                localStorage.setItem('melodiq_helper_token', urlToken);
+            }
+
+            // Tell useSongs to reload with the new config
+            if (urlHelper || urlToken) {
+                window.dispatchEvent(new Event('melodiq_settings_updated'));
+            }
+
+            // Navigate to the full path including all query params
+            const clientTarget = scannedUrl.pathname + scannedUrl.search + scannedUrl.hash;
+            navigate(clientTarget);
+        } catch {
+            console.error('[QRScanner] Invalid URL scanned:', rawText);
+        }
+    };
 
     // Persist custom base URL
     useEffect(() => {
@@ -85,10 +137,30 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
             }
         });
 
+        // Embed helper URL + token so that the phone can load songs after scanning.
+        // Use the stored helper URL (real server, e.g. port 3000), NOT the web-app base URL.
+        const rawHelperUrl = helperStorageKey
+            ? localStorage.getItem(helperStorageKey) || ''
+            : '';
+        if (rawHelperUrl) {
+            // Replace localhost / 127.0.0.1 with the reachable IP from customBaseUrl
+            let resolvedHelperUrl = rawHelperUrl;
+            if (targetHost && (rawHelperUrl.includes('localhost') || rawHelperUrl.includes('127.0.0.1'))) {
+                resolvedHelperUrl = rawHelperUrl
+                    .replace(/localhost/g, targetHost)
+                    .replace(/127\.0\.0\.1/g, targetHost);
+            }
+            url.searchParams.set('helperUrl', resolvedHelperUrl);
+        }
+        const token = helperTokenKey ? localStorage.getItem(helperTokenKey) || '' : '';
+        if (token) {
+            url.searchParams.set('token', token);
+        }
+
         QRCode.toDataURL(url.toString(), { width: 300, margin: 2 })
             .then((url: string) => setQrCodeDataUrl(url))
             .catch((err: Error) => console.error('Failed to generate QR code:', err));
-    }, [partyId, activeTrackerUrls, customBaseUrl, clientPath]);
+    }, [partyId, activeTrackerUrls, customBaseUrl, clientPath, helperStorageKey, helperTokenKey]);
 
     return (
         <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
@@ -121,6 +193,35 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
                             <img src={qrCodeDataUrl} alt="QR Code" style={{ display: 'block', width: 250, height: 250 }} />
                         </Box>
                     )}
+
+                    {/* Scan to Join Button */}
+                    <Tooltip title="Open camera to scan another host's QR code and join as a client">
+                        <Button
+                            variant="outlined"
+                            startIcon={<QrCodeScannerIcon />}
+                            onClick={() => setScannerOpen(true)}
+                            sx={{
+                                borderRadius: 50,
+                                px: 3,
+                                py: 1,
+                                borderColor: 'rgba(144,202,249,0.5)',
+                                color: '#90caf9',
+                                '&:hover': {
+                                    borderColor: '#90caf9',
+                                    bgcolor: 'rgba(144,202,249,0.08)',
+                                }
+                            }}
+                        >
+                            Scan QR to Join another Host
+                        </Button>
+                    </Tooltip>
+
+                    {/* QR Scanner Dialog */}
+                    <QRScannerDialog
+                        open={scannerOpen}
+                        onClose={() => setScannerOpen(false)}
+                        onScan={handleScanSuccess}
+                    />
 
                     {/* Connection Status */}
                     {connectedPreviewPeers.length > 0 ? (
@@ -190,6 +291,44 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
                                 </Button>
                             </Box>
                         </Box>
+
+                        {/* Show what helperUrl gets sent in the QR code */}
+                        {helperStorageKey && (() => {
+                            const rawH = localStorage.getItem(helperStorageKey) || '';
+                            if (!rawH) return null;
+                            let tHost = '';
+                            try {
+                                tHost = new URL(customBaseUrl.startsWith('http') ? customBaseUrl : window.location.origin).hostname;
+                            } catch {}
+                            const resolvedH = tHost && (rawH.includes('localhost') || rawH.includes('127.0.0.1'))
+                                ? rawH.replace(/localhost/g, tHost).replace(/127\.0\.0\.1/g, tHost)
+                                : rawH;
+                            const isLocalhost = resolvedH.includes('localhost') || resolvedH.includes('127.0.0.1');
+                            return (
+                                <Box>
+                                    <Typography variant="subtitle2" gutterBottom>Helper URL (sent to phones)</Typography>
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                                        This URL is embedded in the QR code so phones can load songs.
+                                    </Typography>
+                                    <TextField
+                                        value={resolvedH}
+                                        size="small"
+                                        fullWidth
+                                        variant="outlined"
+                                        InputProps={{ readOnly: true }}
+                                        sx={{
+                                            fontFamily: 'monospace',
+                                            '& .MuiOutlinedInput-root': isLocalhost
+                                                ? { '& fieldset': { borderColor: '#f59e0b' } }
+                                                : {}
+                                        }}
+                                        helperText={isLocalhost
+                                            ? '⚠️ localhost is not reachable from the phone! Set Host Base URL to your LAN IP or public domain.'
+                                            : '✓ Will be sent to phone in QR code'}
+                                    />
+                                </Box>
+                            );
+                        })()}
 
                         <Box>
                             <Typography variant="subtitle2" gutterBottom>Manual URL</Typography>
