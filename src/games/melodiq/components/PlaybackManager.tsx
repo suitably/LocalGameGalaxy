@@ -1,9 +1,10 @@
-import { useState, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
+import { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo } from 'react';
 import { Box, Snackbar, Alert, Menu, MenuItem } from '@mui/material';
 import { type Song, type SongMeta } from '../db';
 import { MelodiqSession, type MelodiqSessionHandle } from '../gameplay/MelodiqSession';
 import { MiniPlayer } from './MiniPlayer';
 import { useQueue } from '../hooks/useQueue';
+import { useSongs } from '../hooks/useSongs';
 import { useClientEngine } from '../PhoneClientEngine';
 
 interface PlaybackManagerProps {
@@ -56,6 +57,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     } = props;
 
     const { queue, popNext, setNowPlaying } = useQueue();
+    const { refreshSongs, getSongById } = useSongs();
     const sessionRef = useRef<MelodiqSessionHandle>(null);
     const [playbackState, setPlaybackState] = useState({
         isPlaying: false,
@@ -65,13 +67,24 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     });
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
+    const initialTime = useMemo(() => {
+        if (!selectedSong) return 0;
+        try {
+            const saved = JSON.parse(localStorage.getItem('melodiq_saved_time') || '{}');
+            if (saved.id === selectedSong.id) return saved.time;
+        } catch (e) {}
+        return 0;
+    }, [selectedSong?.id]);
+
     const [contextMenu, setContextMenu] = useState<HTMLElement | null>(null);
     const [syncJobId, setSyncJobId] = useState<string | null>(null);
+    const [syncTargetTime, setSyncTargetTime] = useState<number | null>(null);
 
     const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
         if (!selectedSong) return;
         event.preventDefault();
         event.stopPropagation();
+        setSyncTargetTime(playbackState.currentTime);
         setContextMenu(event.currentTarget);
     };
 
@@ -86,7 +99,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
              return;
         }
         
-        const currentTime = playbackState.currentTime; // seconds
+        const currentTime = syncTargetTime !== null ? syncTargetTime : playbackState.currentTime; // seconds
         
         try {
             setFeedbackMessage("KI Auto-Sync (Hybrid) gestartet...");
@@ -142,7 +155,12 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                         clearInterval(interval);
                         setSyncJobId(null);
                         if (data.status === 'done') {
-                            setFeedbackMessage('Auto-Sync abgeschlossen! Song ist jetzt perfekt synchronisiert (Bitte Song neu laden, falls gewünscht).');
+                            setFeedbackMessage('Auto-Sync abgeschlossen! Neue Lyrics geladen.');
+                            await refreshSongs();
+                            if (selectedSong) {
+                                const newSong = await getSongById(selectedSong.id);
+                                if (newSong) onSelectSong(newSong, false, activeParticipants || undefined);
+                            }
                         } else {
                             setFeedbackMessage('Fehler beim Auto-Sync: ' + (data.error || 'Unbekannt'));
                         }
@@ -153,7 +171,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             }
         }, 1500);
         return () => clearInterval(interval);
-    }, [syncJobId]);
+    }, [syncJobId, refreshSongs, getSongById, selectedSong, onSelectSong, activeParticipants]);
 
     // Broadcast Game State Loop
     useEffect(() => {
@@ -277,8 +295,10 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                         key={selectedSong.id}
                         ref={sessionRef}
                         song={selectedSong}
+                        initialTime={initialTime}
                         onExit={(forceHome = false) => {
                             setNowPlaying(null);
+                            localStorage.removeItem('melodiq_saved_time');
                             if (!forceHome) {
                                 const nextItem = popNext();
                                 if (nextItem) {
@@ -290,7 +310,12 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                             onExitSession(); // Clears selectedSong in parent
                         }}
                         onMinimize={onMinimizeSession}
-                        onPlaybackUpdate={setPlaybackState}
+                        onPlaybackUpdate={(state) => {
+                            setPlaybackState(state);
+                            if (selectedSong && state.currentTime > 0) {
+                                localStorage.setItem('melodiq_saved_time', JSON.stringify({ id: selectedSong.id, time: state.currentTime }));
+                            }
+                        }}
                         showDebugOverlay={false}
                         showDevSlider={false}
                         muteAudio={isTVConnected || isClient}
