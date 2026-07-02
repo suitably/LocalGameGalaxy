@@ -169,7 +169,7 @@ module.exports = {
         return currentConfig.apiKeys || [];
     },
 
-    createApiKey(name, rateLimits = {}, allowManagement) {
+    createApiKey(name, rateLimits = {}, allowManagement, allowSongDeletion) {
         if (!currentConfig.apiKeys) {
             currentConfig.apiKeys = [];
         }
@@ -183,6 +183,7 @@ module.exports = {
             rateLimitMinute: rateLimits.minute !== undefined && rateLimits.minute !== '' ? parseInt(rateLimits.minute, 10) : null,
             rateLimitHour: rateLimits.hour !== undefined && rateLimits.hour !== '' ? parseInt(rateLimits.hour, 10) : null,
             allowManagement: allowManagement === true,
+            allowSongDeletion: allowSongDeletion === true,
             createdAt: new Date().toISOString()
         };
         currentConfig.apiKeys.push(keyObj);
@@ -205,6 +206,9 @@ module.exports = {
             }
             if (updates.allowManagement !== undefined) {
                 currentConfig.apiKeys[keyIndex].allowManagement = updates.allowManagement === true;
+            }
+            if (updates.allowSongDeletion !== undefined) {
+                currentConfig.apiKeys[keyIndex].allowSongDeletion = updates.allowSongDeletion === true;
             }
             saveConfig();
             return currentConfig.apiKeys[keyIndex];
