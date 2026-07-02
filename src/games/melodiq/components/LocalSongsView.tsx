@@ -3,13 +3,13 @@ import { Box, Grid } from '@mui/material';
 import { VirtuosoGrid, Virtuoso } from 'react-virtuoso';
 import { SongCard } from './SongCard';
 import { SongListItem } from './SongListItem';
-import { type Song } from '../db';
+import { type SongMeta } from '../db';
 
 interface LocalSongsViewProps {
     viewMode: 'list' | 'grid';
-    filteredSongs: Song[];
-    handleSelectSong: (song: Song) => void;
-    handleSongLongPress: (song: Song) => void;
+    filteredSongs: SongMeta[];
+    handleSelectSong: (song: SongMeta) => void;
+    handleSongLongPress: (song: SongMeta) => void;
     isSinger?: boolean;
     jobs?: any[];
 }

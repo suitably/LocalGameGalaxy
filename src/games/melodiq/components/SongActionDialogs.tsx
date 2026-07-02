@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogTitle, DialogContent, List, ListItemButton, ListItemIcon, ListItemText, Divider, Typography, Alert, LinearProgress, Box } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, List, ListItemButton, ListItemIcon, ListItemText, Divider, Typography, Alert } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AddToQueueIcon from '@mui/icons-material/AddToQueue';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
