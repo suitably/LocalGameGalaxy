@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { melodiqFetch } from '../api/melodiqFetch';
 
 export interface DownloadJob {
     jobId: string;
@@ -21,24 +22,11 @@ export function useDownloads(pollingIntervalMs: number = 2000) {
 
         const fetchJobs = async () => {
             try {
-                // Read config from storage
-                const url = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
-                const token = localStorage.getItem('melodiq_helper_token') || '';
-                const helperUrl = url.replace(/\/$/, "");
+                const dataUsdb = await melodiqFetch('/api/usdb/jobs');
+                const dataSeparator = await melodiqFetch('/api/separator/jobs');
 
-                const responseUsdb = await fetch(`${helperUrl}/api/usdb/jobs`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const responseSeparator = await fetch(`${helperUrl}/api/separator/jobs`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (responseUsdb.ok && responseSeparator.ok) {
-                    const dataUsdb = await responseUsdb.json();
-                    const dataSeparator = await responseSeparator.json();
-                    if (isMounted) {
-                        setJobs([...dataUsdb, ...dataSeparator]);
-                    }
+                if (isMounted) {
+                    setJobs([...dataUsdb, ...dataSeparator]);
                 }
             } catch (err) {
                 console.error("Failed to fetch jobs", err);

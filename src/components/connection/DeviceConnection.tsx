@@ -137,25 +137,8 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
             }
         });
 
-        // Embed helper URL + token so that the phone can load songs after scanning.
-        // Use the stored helper URL (real server, e.g. port 3000), NOT the web-app base URL.
-        const rawHelperUrl = helperStorageKey
-            ? localStorage.getItem(helperStorageKey) || ''
-            : '';
-        if (rawHelperUrl) {
-            // Replace localhost / 127.0.0.1 with the reachable IP from customBaseUrl
-            let resolvedHelperUrl = rawHelperUrl;
-            if (targetHost && (rawHelperUrl.includes('localhost') || rawHelperUrl.includes('127.0.0.1'))) {
-                resolvedHelperUrl = rawHelperUrl
-                    .replace(/localhost/g, targetHost)
-                    .replace(/127\.0\.0\.1/g, targetHost);
-            }
-            url.searchParams.set('helperUrl', resolvedHelperUrl);
-        }
-        const token = helperTokenKey ? localStorage.getItem(helperTokenKey) || '' : '';
-        if (token) {
-            url.searchParams.set('token', token);
-        }
+        // No longer embed helper URL + token in QR code for security.
+        // The Host acts as a WebRTC API proxy to forward requests without exposing the API key.
 
         QRCode.toDataURL(url.toString(), { width: 300, margin: 2 })
             .then((url: string) => setQrCodeDataUrl(url))
@@ -292,43 +275,7 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
                             </Box>
                         </Box>
 
-                        {/* Show what helperUrl gets sent in the QR code */}
-                        {helperStorageKey && (() => {
-                            const rawH = localStorage.getItem(helperStorageKey) || '';
-                            if (!rawH) return null;
-                            let tHost = '';
-                            try {
-                                tHost = new URL(customBaseUrl.startsWith('http') ? customBaseUrl : window.location.origin).hostname;
-                            } catch {}
-                            const resolvedH = tHost && (rawH.includes('localhost') || rawH.includes('127.0.0.1'))
-                                ? rawH.replace(/localhost/g, tHost).replace(/127\.0\.0\.1/g, tHost)
-                                : rawH;
-                            const isLocalhost = resolvedH.includes('localhost') || resolvedH.includes('127.0.0.1');
-                            return (
-                                <Box>
-                                    <Typography variant="subtitle2" gutterBottom>Helper URL (sent to phones)</Typography>
-                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                                        This URL is embedded in the QR code so phones can load songs.
-                                    </Typography>
-                                    <TextField
-                                        value={resolvedH}
-                                        size="small"
-                                        fullWidth
-                                        variant="outlined"
-                                        InputProps={{ readOnly: true }}
-                                        sx={{
-                                            fontFamily: 'monospace',
-                                            '& .MuiOutlinedInput-root': isLocalhost
-                                                ? { '& fieldset': { borderColor: '#f59e0b' } }
-                                                : {}
-                                        }}
-                                        helperText={isLocalhost
-                                            ? '⚠️ localhost is not reachable from the phone! Set Host Base URL to your LAN IP or public domain.'
-                                            : '✓ Will be sent to phone in QR code'}
-                                    />
-                                </Box>
-                            );
-                        })()}
+                        {/* Helper URL is now proxied over WebRTC, so it is no longer embedded in the QR Code or manually needed on the phone */}
 
                         <Box>
                             <Typography variant="subtitle2" gutterBottom>Manual URL</Typography>

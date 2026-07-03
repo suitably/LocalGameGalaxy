@@ -6,7 +6,8 @@ import { useClientEngine } from '../PhoneClientEngine';
 
 export const PhoneJoinPrompt: React.FC = () => {
     const { 
-        gameState, 
+        isSessionPlaying,
+        activeSongId: contextActiveSongId,
         promptedSongId, 
         setPromptedSongId, 
         setClientRole, 
@@ -15,11 +16,8 @@ export const PhoneJoinPrompt: React.FC = () => {
     } = useClientEngine();
 
     // Only show if the game is playing, and we haven't prompted for this song yet.
-    // Also, ensure we have an activeSongId to track against.
-    // @ts-ignore - activeSongId is injected in PlaybackManager broadcast
-    const activeSongId = gameState?.activeSongId || 'unknown';
-
-    const open = !!gameState?.isPlaying && promptedSongId !== activeSongId;
+    const activeSongId = contextActiveSongId || 'unknown';
+    const open = isSessionPlaying && promptedSongId !== activeSongId;
 
     const handleChoice = (mode: 'singer' | 'spectator') => {
         setClientRole(mode);

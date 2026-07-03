@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
 import { type Song, type SongMeta } from '../db';
+import { melodiqFetch } from '../api/melodiqFetch';
 
 interface LoadingProgress {
     loaded: number;
@@ -141,45 +142,30 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             // 2. Fetch fresh data from server in background (or immediately if no cache)
             if (enabled) {
                 try {
-                    const res = await fetch(requestUrl, {
-                        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-                    });
+                    const freshData = await melodiqFetch('/api/songs');
+                    console.log(`[SongsProvider] Fetched ${freshData.length} fresh server songs`);
+                    if (mounted) setHasConnectionError(false);
                     
-                    if (res.status === 401) {
-                        console.warn('Helper Auth Failed');
-                        if (mounted && !loadedFromCache) {
-                            setIsLoading(false);
-                            setHasConnectionError(true);
-                            setSongs([]);
-                        }
-                    } else if (res.ok) {
-                        if (mounted) setHasConnectionError(false);
-                        // Store clone in Cache API for next reload
-                        const clone = res.clone();
-                        try {
-                            const cache = await caches.open(cacheName);
-                            cache.put(requestUrl, clone);
-                        } catch(e) {}
-                        
-                        const freshData = await res.json();
-                        console.log(`[SongsProvider] Fetched ${freshData.length} fresh server songs`);
-                        processAndApply(freshData);
-                    } else {
-                        if (mounted && !loadedFromCache) {
-                            setHasConnectionError(true);
-                        }
-                    }
+                    // Store clone in Cache API for next reload (using a synthetic Response)
+                    try {
+                        const cache = await caches.open(cacheName);
+                        cache.put(requestUrl, new Response(JSON.stringify(freshData)));
+                    } catch(e) {}
+                    
+                    processAndApply(freshData);
                 } catch (e) {
                     console.warn('Helper connection failed:', e);
                     if (mounted && !loadedFromCache) {
                         setIsLoading(false);
                         setHasConnectionError(true);
                         setLoadingProgress(null);
+                        setSongs([]);
                     }
                 }
             } else if (mounted) {
                 setIsLoading(false);
             }
+
 
         } catch (e) {
             console.error('Failed to load songs:', e);

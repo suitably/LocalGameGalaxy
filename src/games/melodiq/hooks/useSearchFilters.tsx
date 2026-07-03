@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { type Song } from '../db';
+import { melodiqFetch } from '../api/melodiqFetch';
 
 export interface ActiveFilters {
     year: string[];
@@ -32,14 +33,7 @@ export function useSearchFilters(songs: Song[], jobs?: any[]) {
         const delayDebounceFn = setTimeout(async () => {
             setIsSearchingOnline(true);
             try {
-                const url = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
-                const token = localStorage.getItem('melodiq_helper_token') || '';
-                const helperUrl = url.replace(/\/$/, "");
-
-                const res = await fetch(`${helperUrl}/api/usdb/search?q=${encodeURIComponent(searchQuery)}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await res.json();
+                const data = await melodiqFetch(`/api/usdb/search?q=${encodeURIComponent(searchQuery)}`);
                 if (data.songs) {
                     setOnlineSongs(data.songs);
                 } else if (Array.isArray(data)) {

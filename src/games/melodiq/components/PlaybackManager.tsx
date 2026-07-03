@@ -136,8 +136,8 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         }
     };
 
-    // Get client game state for remote playback sync
-    const { gameState: clientGameState, sendClientCommand } = isClient ? useClientEngine() : { gameState: null, sendClientCommand: undefined };
+    // sendClientCommand is used to control the remote session.
+    const { sendClientCommand } = isClient ? useClientEngine() : { sendClientCommand: undefined };
 
     // Sync Job Polling
     useEffect(() => {
@@ -329,7 +329,6 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                         suppressResults={false}
                         isClient={isClient}
                         isPassive={isClient}
-                        passiveState={isClient ? clientGameState : undefined}
                         activeSessionOverride={activeParticipants}
                         clientDeviceId={clientDeviceId}
                     />

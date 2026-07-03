@@ -51,8 +51,8 @@ export const melodiqFetch = async (path: string, options: RequestInit = {}): Pro
             
             window.addEventListener(`melodiq_api_response_${reqId}`, handleResponse);
             
-            window.dispatchEvent(new CustomEvent('melodiq_api_request', {
-                detail: { reqId, path, options }
+            window.dispatchEvent(new CustomEvent('melodiq_client_send_data', {
+                detail: { type: 'api_request', reqId, path, options }
             }));
             
             // Timeout after 30 seconds

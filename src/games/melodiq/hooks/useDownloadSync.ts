@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { melodiqFetch } from '../api/melodiqFetch';
 
 interface UseDownloadSyncProps {
     isClient: boolean;
@@ -31,14 +32,7 @@ export const useDownloadSync = ({
                 }
 
                 try {
-                    const url = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
-                    const token = localStorage.getItem('melodiq_helper_token') || '';
-                    const helperUrl = url.replace(/\/$/, "");
-
-                    const res = await fetch(`${helperUrl}/api/songs`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    const freshSongs = await res.json();
+                    const freshSongs = await melodiqFetch('/api/songs');
 
                     newlyCompletedJobIds.forEach(jobId => {
                         const job = jobs.find(j => j.jobId === jobId);

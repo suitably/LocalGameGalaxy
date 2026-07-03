@@ -73,7 +73,7 @@ interface ClientSettingsProps {
 
 export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const { clientProfile, updateClientProfile, sendClientCommand, gameState } = useClientEngine();
+    const { clientProfile, updateClientProfile, sendClientCommand, activeSongId } = useClientEngine();
 
     const [name, setName] = useState(clientProfile.name);
     const [hue, setHue] = useState(clientProfile.hue);
@@ -195,7 +195,7 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack }) => {
                     <Typography variant="body2" sx={{ color: '#aaa', mb: 2 }}>
                         Current Latency Offset: {latency}ms
                     </Typography>
-                    {gameState?.activeSongId ? (
+                    {activeSongId ? (
                         <Typography variant="caption" color="error">
                             Cannot calibrate while a song is playing.
                         </Typography>

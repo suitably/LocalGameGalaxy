@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import db, { type Playlist } from '../db';
+import { melodiqFetch } from '../api/melodiqFetch';
 
 export const usePlaylists = () => {
     const [showGlobalPlaylists, setShowGlobalPlaylists] = useState(false);
@@ -25,18 +26,10 @@ export const usePlaylists = () => {
     const syncWithServer = useCallback(async () => {
         const { url, token, enabled } = getHelperConfig();
         if (!enabled || !url) return;
-        
         setIsSyncing(true);
         try {
-            const helperUrl = url.replace(/\/$/, "");
-            
             // 1. Fetch from server
-            const res = await fetch(`${helperUrl}/api/playlists`, {
-                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-            });
-            
-            if (!res.ok) throw new Error('Failed to fetch playlists');
-            const serverPlaylists: Playlist[] = await res.json();
+            const serverPlaylists: Playlist[] = await melodiqFetch('/api/playlists');
             
             const localPlaylistsList = await db.playlists.toArray();
             
@@ -74,17 +67,12 @@ export const usePlaylists = () => {
     }, []);
 
     const pushToServer = async (playlist: Playlist) => {
-        const { url, token, enabled } = getHelperConfig();
+        const { url, enabled } = getHelperConfig();
         if (!enabled || !url) return;
         
-        const helperUrl = url.replace(/\/$/, "");
         try {
-            await fetch(`${helperUrl}/api/playlists`, {
+            await melodiqFetch('/api/playlists', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                },
                 body: JSON.stringify(playlist)
             });
         } catch (e) {
@@ -93,14 +81,12 @@ export const usePlaylists = () => {
     };
 
     const deleteFromServer = async (id: string) => {
-        const { url, token, enabled } = getHelperConfig();
+        const { url, enabled } = getHelperConfig();
         if (!enabled || !url) return;
         
-        const helperUrl = url.replace(/\/$/, "");
         try {
-            await fetch(`${helperUrl}/api/playlists/${id}`, {
-                method: 'DELETE',
-                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            await melodiqFetch(`/api/playlists/${id}`, {
+                method: 'DELETE'
             });
         } catch (e) {
             console.error('Failed to delete playlist from server:', e);

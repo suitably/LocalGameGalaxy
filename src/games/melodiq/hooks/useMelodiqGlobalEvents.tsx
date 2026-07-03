@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { melodiqFetchDirect } from '../api/melodiqFetch';
 import { type Song, type SongMeta } from '../db';
 import { type TVEvent } from './useTVMode';
 
@@ -94,18 +95,25 @@ export const useMelodiqGlobalEvents = ({
     useEffect(() => {
         if (!manager) return;
 
-        const handleRemoteCommand = (peerId: string, data: any) => {
+        const handleRemoteCommand = async (peerId: string, data: any) => {
             if (data.type === 'remote.command') {
-                if (data.command === 'CALIBRATE_PLAY_BEEP') {
-                    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                if (data.command === 'PING') {
+                    manager.sendTo(peerId, { type: 'remote.command', command: 'PONG', value: Date.now() });
+                    return;
+                }
+                
+                if (data.command === 'CALIBRATE_BEEP') {
+                    const ctx = new window.AudioContext();
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
-                    osc.type = 'square';
+                    
+                    osc.type = 'sine';
                     osc.frequency.setValueAtTime(880, ctx.currentTime);
+                    
                     osc.connect(gain);
                     gain.connect(ctx.destination);
                     
-                    const startTime = ctx.currentTime;
+                    const startTime = ctx.currentTime + 0.05;
                     osc.start(startTime);
                     osc.stop(startTime + 0.15);
                     gain.gain.setValueAtTime(0, startTime);
@@ -113,14 +121,50 @@ export const useMelodiqGlobalEvents = ({
                     gain.gain.setValueAtTime(0, startTime + 0.15);
                     
                     setTimeout(() => ctx.close(), 500);
-                    
-                    manager.sendTo(peerId, { type: 'remote.command', command: 'CALIBRATE_BEEP_PLAYED', hostTimestamp: Date.now() });
                     return;
                 }
             
                 if (isTVConnected) {
                     console.log('Forwarding remote command to TV:', data.command);
                     sendRemoteCommand(data.command, data.value);
+                }
+            } else if (data.type === 'api_request') {
+                // Host handles API requests on behalf of Client
+                try {
+                    const resData = await melodiqFetchDirect(data.path, data.options);
+                    const jsonStr = JSON.stringify({
+                        type: 'api_response',
+                        reqId: data.reqId,
+                        status: 200,
+                        data: resData
+                    });
+                    
+                    const chunkSize = 16000;
+                    const totalChunks = Math.ceil(jsonStr.length / chunkSize);
+                    for (let i = 0; i < totalChunks; i++) {
+                        manager.sendTo(peerId, {
+                            type: 'api_response_chunk',
+                            reqId: data.reqId,
+                            chunk: jsonStr.substring(i * chunkSize, (i + 1) * chunkSize),
+                            index: i,
+                            total: totalChunks
+                        });
+                    }
+                } catch (error: any) {
+                    const errorStr = JSON.stringify({
+                        type: 'api_response',
+                        reqId: data.reqId,
+                        status: 500,
+                        error: error.message || 'Host API Request Failed'
+                    });
+                    
+                    manager.sendTo(peerId, {
+                        type: 'api_response_chunk',
+                        reqId: data.reqId,
+                        chunk: errorStr,
+                        index: 0,
+                        total: 1
+                    });
                 }
             }
         };
@@ -202,6 +246,14 @@ export const useMelodiqGlobalEvents = ({
                 activeSong: selectedSong ? { id: selectedSong.id } : null,
                 participants: activeParticipants
             });
+            // Also broadcast public helper URL so clients can load images
+            const helperUrl = localStorage.getItem('melodiq_helper_url');
+            if (helperUrl) {
+                manager.broadcast({
+                    type: 'helper_config',
+                    url: helperUrl
+                });
+            }
         }
     }, [isClient, selectedSong, activeParticipants, manager]);
 
