@@ -163,6 +163,8 @@ export function useSessionPlayers({
                         }
                         break;
                     case 'play':
+                    case 'pause':
+                    case 'toggle':
                         togglePlay();
                         break;
                     case 'restart':
