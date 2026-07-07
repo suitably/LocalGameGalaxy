@@ -131,13 +131,23 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
             // Dispatch the full game state for lightweight event listeners (lyrics, etc.)
             window.dispatchEvent(new CustomEvent('melodiq_tv_game_state', { detail: data.state }));
 
-            // Auto-sync session view if phone joined late or reloaded
+            const activeSong = data.state.activeSong || (activeId ? { id: activeId } : null);
+            
+            // Auto-sync session view if phone joined late, reloaded, or a new song started
+            const participants = data.state.players?.map((p: any) => p.config || {
+                profileId: p.id,
+                deviceId: p.deviceId || p.id,
+                name: p.name,
+                hue: p.hue,
+                isRemote: true
+            });
+
             if (activeId && activeId !== lastSyncedSongIdRef.current) {
                 lastSyncedSongIdRef.current = activeId;
-                window.dispatchEvent(new CustomEvent('melodiq_client_session_sync', { detail: { activeSong: { id: activeId } } }));
+                window.dispatchEvent(new CustomEvent('melodiq_client_session_sync', { detail: { activeSong, participants } }));
             } else if (!activeId && lastSyncedSongIdRef.current) {
                 lastSyncedSongIdRef.current = null;
-                window.dispatchEvent(new CustomEvent('melodiq_client_session_sync', { detail: { activeSong: null } }));
+                window.dispatchEvent(new CustomEvent('melodiq_client_session_sync', { detail: { activeSong: null, participants } }));
             }
 
         } else if (data.type === 'queue.update') {
@@ -201,8 +211,6 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
             if (data.url) {
                 localStorage.setItem('melodiq_helper_url', data.url);
                 localStorage.setItem('melodiq_enable_helper', 'true');
-                // Remove token to ensure client never has it
-                localStorage.removeItem('melodiq_helper_token');
                 window.dispatchEvent(new Event('melodiq_settings_updated'));
             }
         }
@@ -221,6 +229,18 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
         onMessage: handleMessage,
         getIdentity
     });
+
+    // Signal connection state for melodiqFetch waitForConnection()
+    useEffect(() => {
+        if (isConnected) {
+            sessionStorage.setItem('melodiq_rtc_connected', 'true');
+            (window as any).__melodiq_rtc_connected = true;
+            window.dispatchEvent(new Event('melodiq_rtc_connected'));
+        } else {
+            sessionStorage.removeItem('melodiq_rtc_connected');
+            (window as any).__melodiq_rtc_connected = false;
+        }
+    }, [isConnected]);
 
     // Request initial data on connect
     useEffect(() => {

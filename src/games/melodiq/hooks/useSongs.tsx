@@ -179,7 +179,14 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, []);
 
     useEffect(() => {
-        loadSongs();
+        const isClient = new URLSearchParams(window.location.search).get('role') === 'client';
+        
+        // On client mode: don't load songs at mount — wait for helper_config which fires
+        // melodiq_settings_updated once the WebRTC connection is established.
+        // On host/standalone: load immediately.
+        if (!isClient) {
+            loadSongs();
+        }
 
         const handleSettingsUpdate = () => {
             console.log('[SongsProvider] Settings updated, reloading songs...');
@@ -197,12 +204,27 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [loadSongs]);
 
     const getSongById = useCallback(async (id: string): Promise<Song | undefined> => {
-        const found = songs.find(s => s.id === id);
-        if (found) {
-            const content = serverContentCache.current.get(id);
-            if (content) {
-                return { ...found, txtContent: content } as unknown as Song;
+        let found = songs.find(s => s.id === id);
+        let content = serverContentCache.current.get(id);
+
+        if (found && content) {
+            return { ...found, txtContent: content } as unknown as Song;
+        }
+
+        // Dynamically fetch missing data from Host (which includes txtContent)
+        try {
+            const res = await melodiqFetch(`/api/songs/${id}`);
+            if (res) {
+                if (res.txtContent) {
+                    serverContentCache.current.set(id, res.txtContent);
+                }
+                return { ...(found || res), txtContent: res.txtContent || content } as unknown as Song;
             }
+        } catch (e) {
+            console.warn("[SongsProvider] Failed to fetch full song data for", id, e);
+        }
+
+        if (found) {
             return found as unknown as Song;
         }
         return undefined;
