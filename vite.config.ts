@@ -77,15 +77,12 @@ export default defineConfig({
             '@emotion/react',
             '@emotion/styled'
           ],
-          // Split other heavy libraries
-          'lib-vendor': [
-            'dexie',
-            'simple-peer',
-            'bittorrent-tracker',
-            'html5-qrcode',
-            'qrcode',
-            'qrcode.react'
-          ],
+          // Split network libraries (Melodiq)
+          'lib-network': ['bittorrent-tracker', 'simple-peer'],
+          // Split QR code libraries
+          'lib-qrcode': ['html5-qrcode', 'qrcode', 'qrcode.react'],
+          // Split storage
+          'lib-storage': ['dexie', 'dexie-react-hooks', 'lz-string'],
         },
       },
     },

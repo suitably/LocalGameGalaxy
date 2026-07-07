@@ -3,10 +3,10 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
 import { App as CapacitorApp } from '@capacitor/app';
 import { MainLayout } from './components/Layout/MainLayout';
-import { Hub } from './features/hub/Hub';
-import { Settings } from './features/settings/Settings';
 
 // Lazy load game components to reduce initial bundle size
+const Hub = lazy(() => import('./features/hub/Hub').then(m => ({ default: m.Hub })));
+const Settings = lazy(() => import('./features/settings/Settings').then(m => ({ default: m.Settings })));
 const WerewolfGame = lazy(() => import('./games/werewolf/WerewolfGame').then(m => ({ default: m.WerewolfGame })));
 const ImposterGame = lazy(() => import('./games/imposter/ImposterGame').then(m => ({ default: m.ImposterGame })));
 const MelodiqGame = lazy(() => import('./games/melodiq/MelodiqGame').then(m => ({ default: m.MelodiqGame })));
@@ -45,8 +45,16 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<MainLayout />}>
-        <Route index element={<Hub />} />
-        <Route path="settings" element={<Settings />} />
+        <Route index element={
+          <Suspense fallback={<LoadingFallback />}>
+            <Hub />
+          </Suspense>
+        } />
+        <Route path="settings" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <Settings />
+          </Suspense>
+        } />
         <Route path="games/werewolf" element={
           <Suspense fallback={<LoadingFallback />}>
             <WerewolfGame />
@@ -81,7 +89,11 @@ function AppRoutes() {
 }
 
 function App() {
-  return <AppRoutes />;
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <AppRoutes />
+    </Suspense>
+  );
 }
 
 export default App;
