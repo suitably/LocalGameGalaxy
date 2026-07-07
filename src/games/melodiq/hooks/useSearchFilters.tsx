@@ -85,8 +85,8 @@ export function useSearchFilters(songs: Song[], jobs?: any[]) {
         if (searchQuery) {
             const lowerQuery = searchQuery.toLowerCase();
             result = result.filter(song =>
-                song.title.toLowerCase().includes(lowerQuery) ||
-                song.artist.toLowerCase().includes(lowerQuery)
+                (song.title || '').toLowerCase().includes(lowerQuery) ||
+                (song.artist || '').toLowerCase().includes(lowerQuery)
             );
         }
 
