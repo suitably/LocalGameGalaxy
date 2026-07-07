@@ -108,6 +108,11 @@ module.exports = {
 
     removeDirectory(dirPath) {
         currentConfig.directories = currentConfig.directories.filter(d => d !== dirPath);
+        // If the removed dir was the current downloadDir, fall back to the first remaining dir
+        if (currentConfig.downloadDir === dirPath) {
+            currentConfig.downloadDir = currentConfig.directories[0] || null;
+            console.log(`[Config] downloadDir was removed. Falling back to: ${currentConfig.downloadDir}`);
+        }
         saveConfig();
     },
 

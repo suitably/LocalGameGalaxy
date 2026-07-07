@@ -1048,6 +1048,9 @@
                     <button onclick="saveDlDir()">Save</button>
                 </div>
                 <div id="usdb-dldir-status" style="font-size:0.85rem; color:#65676b; margin-top:4px;"></div>
+                <div id="dldir-orphan-warning" style="display:none; margin-top:8px; padding:8px 12px; background:#fff3cd; border:1px solid #ffc107; border-radius:6px; font-size:0.85rem; color:#856404;">
+                    ⚠️ <strong>Warning:</strong> The Default Download Folder is <em>not inside</em> any of your configured Music Directories above. Downloaded songs will not appear in the library until you fix this.
+                </div>
             </div>
 
             <!-- Global Preferences -->
@@ -1275,7 +1278,16 @@
             try {
                 const r2 = await fetch('/api/config/download-dir?token=' + API_TOKEN);
                 const d2 = await r2.json();
-                if (d2.downloadDir) document.getElementById('usdb-dldir').value = d2.downloadDir;
+                if (d2.downloadDir) {
+                    document.getElementById('usdb-dldir').value = d2.downloadDir;
+                    // Check if downloadDir is inside a configured directory
+                    const rDirs = await fetch('/api/config/directories?token=' + API_TOKEN);
+                    const dirs = await rDirs.json();
+                    const isOrphaned = Array.isArray(dirs) && dirs.length > 0 &&
+                        !dirs.some(d => d2.downloadDir.startsWith(d));
+                    const warningEl = document.getElementById('dldir-orphan-warning');
+                    if (warningEl) warningEl.style.display = isOrphaned ? 'block' : 'none';
+                }
             } catch(_) {}
             
             // Poll for existing jobs on page load
@@ -1365,8 +1377,10 @@
         }
 
         // Override selectCurrentPath to support USDB folder picker
+        // NOTE: must use a variable (not a function declaration) here so that JS hoisting
+        // does not replace the original selectCurrentPath before _origSelect is captured.
         const _origSelect = selectCurrentPath;
-        function selectCurrentPath() {
+        selectCurrentPath = function () {
             if (usdbBrowserTarget) {
                 document.getElementById(usdbBrowserTarget).value = currentBrowserPath;
                 usdbBrowserTarget = null;
@@ -1374,7 +1388,7 @@
             } else {
                 _origSelect();
             }
-        }
+        };
 
         function openBrowserFor(inputId) {
             usdbBrowserTarget = inputId;
