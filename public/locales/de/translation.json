@@ -1,0 +1,423 @@
+{
+  "app": {
+    "title": "Lokale Spiele Galaxy",
+    "welcome": "Willkommen im Hub",
+    "select_game": "Wähle ein Spiel, um mit deinen Freunden zu spielen."
+  },
+  "games": {
+    "werewolf": {
+      "title": "Werwolf",
+      "description": "Ein Spiel um Täuschung und Deduktion.",
+      "role_reveal": "Rollenverteilung",
+      "pass_device_instruction": "Gerät an {{name}} geben",
+      "reveal_role": "Rolle aufdecken",
+      "start_night": "Nacht starten",
+      "roles": {
+        "VILLAGER": "Dorfbewohner",
+        "WEREWOLF": "Werwolf",
+        "SEER": "Seherin",
+        "WITCH": "Hexe",
+        "HUNTER": "Jäger",
+        "CUPID": "Amor",
+        "LITTLE_GIRL": "Blinzelndes Mädchen",
+        "DETECTIVE": "Detektiv",
+        "GUARDIAN": "Beschützer",
+        "BLACK_CAT": "Schwarze Katze",
+        "WISE": "Der Weise",
+        "BLACK_WEREWOLF": "Schwarzer Werwolf",
+        "WHITE_WEREWOLF": "Weißer Werwolf (BETA)",
+        "ANGEL": "Engel",
+        "EASTER_BUNNY": "Osterhase",
+        "WOLFDOG": "Wolfshund (BETA)",
+        "RIPPER": "Ripper",
+        "SURVIVOR": "Überlebender (DEV)",
+        "PYROMANIAC": "Pyromane (DEV)",
+        "THIEF": "Dieb",
+        "DORFMATRATZE": "Dorfmatratze"
+      },
+      "role_descriptions": {
+        "VILLAGER": "Ein gewöhnlicher Bewohner des Dorfes. Du hast in der Nacht keine besonderen Kräfte, aber deine Stimme und deine Stimme sind am Tag deine einzige Waffe. Arbeite mit anderen zusammen, um die Werwölfe und andere Bedrohungen zu finden und zu eliminieren.",
+        "WEREWOLF": "Eine furchterregende Kreatur der Nacht. Jede Nacht wählst du mit deinem Rudel einen Bewohner aus, der gefressen werden soll. Am Tag musst du dich anpassen und deine wahre Natur verbergen, um nicht gehängt zu werden. Ihr gewinnt, wenn ihr genug Dorfbewohner eliminiert habt.",
+        "SEER": "Ein Mystiker mit der Gabe der Vorhersehung. Jede Nacht wachst du allein auf und wählst einen Spieler. Der Erzähler zeigt dir dessen wahre Rollenkarte. Nutze dieses Wissen weise, um das Dorf zu führen, aber sei vorsichtig, dich nicht als Ziel für die Wölfe zu verraten.",
+        "WITCH": "Eine Meisterin der Alchemie mit zwei mächtigen Tränken. Einmal pro Spiel kannst du mit deinem Heiltrank ein Opfer der Werwölfe retten. Einmal pro Spiel kannst du mit deinem Gifttrank einen beliebigen Spieler eliminieren. Du kannst beide Tränke in derselben Nacht verwenden.",
+        "HUNTER": "Ein erfahrener Schütze. Deine Kraft wird erst im Moment deines Todes aktiviert. Wenn du aus dem Spiel ausscheidest (durch Wölfe oder die Dorf-Abstimmung), darfst du sofort einen letzten Schuss abgeben und einen anderen Spieler deiner Wahl mit in den Tod nehmen.",
+        "CUPID": "Der Überbringer von Liebe und Schicksal. In der allerersten Nacht wählst du zwei Spieler aus (du kannst auch dich selbst wählen), die zum Liebespaar werden. Stirbt einer von ihnen, stirbt der andere sofort an gebrochenem Herzen. Ihre Schicksale sind nun untrennbar verbunden.",
+        "LITTLE_GIRL": "Ein mutiges Kind mit neugierigen Augen. In der Nacht, während die Werwölfe ihr Opfer wählen, darfst du blinzeln und versuchen, sie zu identifizieren. Wenn du einen Wolf erkennst, ist das ein großer Vorteil, aber wenn sie dich erwischen, wirst du sofort gefressen!",
+        "DETECTIVE": "Ein scharfsinniger Ermittler der Gesinnung. Jede Nacht wählst du zwei Spieler aus. Der Erzähler verrät dir, ob sie zum selben Team gehören (z. B. beide Dorfbewohner oder beide Werwölfe) oder zu verschiedenen Lagern. Perfekt, um das Rudel aufzudecken.",
+        "GUARDIAN": "Ein selbstloser Beschützer. Jede Nacht wählst du einen Spieler aus, den du vor den Werwölfen bewachst. Er kann heute Nacht nicht durch einen Werwolf-Angriff sterben. Du darfst dich selbst schützen, aber niemals dieselbe Person zwei Nächte hintereinander.",
+        "BLACK_CAT": "Ein Bote des Unglücks. Jede Nacht kannst du einen Spieler verfluchen. Dieser Spieler erhält bei der nächsten Dorf-Abstimmung automatisch eine unsichtbare Zusatzstimme gegen sich, was es einfacher macht, ihn aus dem Dorf zu werfen.",
+        "WISE": "Ein Ältester mit uralter Widerstandskraft. Du bist so robust, dass du den ersten erfolgreichen Angriff der Werwölfe überleben kannst. Du stirbst nicht und das Spiel geht weiter. Erst bei einem zweiten Angriff (durch Wölfe oder Mörder) wirst du wie jeder andere sterben.",
+        "BLACK_WEREWOLF": "Der Alpha des Rudels. Du bist ein normaler Werwolf mit einer Sonderkraft: Einmal pro Spiel kannst du wählen, das Opfer der Werwölfe zu infizieren, anstatt es zu töten. Das Opfer verliert seine ursprüngliche Rolle und gehört fortan heimlich zu eurem Werwolf-Rudel.",
+        "WHITE_WEREWOLF": "Ein einsamer Abtrünniger, der ein doppeltes Spiel spielt. Jede Nacht wachst du zuerst mit den anderen Werwölfen auf, um gemeinsam zu jagen. Sobald diese schlafen, wachst du heimlich erneut auf, um einen anderen Werwolf zu eliminieren. Du gewinnst nur, wenn du der letzte Überlebende bist.",
+        "ANGEL": "Ein himmlisches Wesen, das einen schnellen Abgang sucht. Dein Ziel ist ungewöhnlich: Du gewinnst das Spiel sofort, wenn es dir gelingt, in der allerersten Abstimmungsphase des Tages hingerichtet zu werden. Überlebst du den ersten Tag, wirst du zu einem einfachen Dorfbewohner.",
+        "EASTER_BUNNY": "Ein mysteriöser Besucher mit einer Geheimmission. Jede Nacht gibst du zwei Spielern Eier. Dein Ziel ist es, jedem lebenden Spieler im Dorf ein Ei zu geben. Wenn dir das gelingt und du selbst noch lebst, gewinnst du das Spiel ganz allein.",
+        "WOLFDOG": "Eine Hybrid-Rolle, die durch ihre Wahl in der ersten Nacht definiert wird. In der allerersten Nacht musst du dich entscheiden: Bleibst du ein treuer Dorfbewohner oder schließt du dich dem Werwolf-Rudel an? Deine Wahl bestimmt dein Ziel für den Rest des Spiels.",
+        "RIPPER": "Ein kaltblütiger Serienmörder, der völlig allein handelt. Du bist kein Wolf und kein Dorfbewohner. Jede Nacht wachst du auf, um einen Spieler deiner Wahl zu eliminieren. Dein Ziel ist brutal: Du gewinnst, wenn du am Ende als einziger Überlebender im Dorf übrig bleibst.",
+        "SURVIVOR": "Ein zäher Einzelgänger in einer Welt voller Monster. Du gehörst zum Dorf-Lager, hast aber keine aktiven Kräfte für andere. Stattdessen hast du zwei persönliche Schutzschilde, die du nachts aktivieren kannst, um gegen Angriffe immun zu sein.",
+        "PYROMANIAC": "Ein zerstörerischer Brandstifter mit einem Langzeitplan. Jede Nacht übergießt du zwei Spieler mit Öl. Diese wissen nichts davon. Zu jedem späteren Zeitpunkt kannst du wählen, das Öl zu entzünden, wodurch alle markierten Spieler gleichzeitig in einer Nacht sterben.",
+        "THIEF": "Ein listiger Opportunist, der ohne eigene Rolle startet. In der ersten Nacht wählst du einen Spieler und stiehlst seine Identität. Du übernimmst seine Rolle und Kräfte, während das Opfer zu einem einfachen Dorfbewohner ohne Fähigkeiten wird.",
+        "DORFMATRATZE": "Du schläfst jede Nacht bei einem anderen. Wenn die Werwölfe dich zuhause angreifen, während du weg bist, überlebst du. Aber Vorsicht: Wenn dein Gastgeber stirbt, stirbst du mit ihm!"
+      },
+      "narrator": {
+        "night_start": "Die Nacht bricht herein. Alle schließen die Augen.",
+        "werewolves_wake": "Werwölfe, erwacht.",
+        "werewolves_sleep": "Werwölfe, schlaft wieder ein.",
+        "day_start": "Die Sonne geht auf. Alle erwachen!",
+        "day_intro": "Es ist ein neuer Tag.",
+        "died_night": "{{names}} ist/sind gestorben.",
+        "noone_died": "Niemand ist gestorben.",
+        "morning_coming": "Der Morgen naht...",
+        "dashboard_title": "Erzähler-Dashboard (Nacht {{round}})",
+        "wait_for_werewolves": "Warte auf die Entscheidung der Werwölfe...",
+        "werewolves_label": "Werwölfe:",
+        "select_victim": "Opfer auswählen:",
+        "skip_to_morning": "Zum Morgen springen",
+        "night_label": "Nacht {{round}}",
+        "day_label": "Tag {{round}}",
+        "night_summary_label": "Nacht-Zusammenfassung (Nur für Erzähler)"
+      },
+      "night_summary": {
+        "kill": "{{role}} hat sich entschieden, {{target}} zu eliminieren.",
+        "heal": "{{role}} hat sich entschieden, {{target}} zu heilen.",
+        "protect": "{{role}} hat sich entschieden, {{target}} zu beschützen.",
+        "infect": "{{role}} hat sich entschieden, {{target}} zu infizieren.",
+        "link_lovers": "{{role}} hat {{target1}} und {{target2}} als Liebespaar verbunden.",
+        "check_role": "{{role}} hat die Rolle von {{target}} überprüft ({{result}}).",
+        "compare_camps": "{{role}} hat das Lager von {{target1}} und {{target2}} verglichen ({{result}}).",
+        "oil": "{{role}} hat {{targets}} mit Öl übergossen.",
+        "burn": "{{role}} hat das Feuer entfacht!",
+        "give_egg": "{{role}} hat Eier an {{targets}} verteilt.",
+        "choose_camp": "{{role}} hat sich für das Lager der {{camp}} entschieden.",
+        "steal_role": "{{role}} hat die Identität von {{target}} gestohlen.",
+        "peek": "{{role}} hat in der Nacht geblinzelt.",
+        "curse": "{{role}} hat {{target}} verflucht.",
+        "sleep": "{{role}} hat bei {{target}} geschlafen.",
+        "survive": "{{role}} hat den Angriff überlebt."
+      },
+      "ui": {
+        "died_last_night": "Letzte Nacht gestorben:",
+        "peaceful_night": "Eine friedliche Nacht.",
+        "start_vote": "Abstimmung starten",
+        "narrator_mode": "Erzählermodus",
+        "narrator_select": "Wer ist der Erzähler?",
+        "tap_to_act": "ANTIPPEN",
+        "hide_screen": "Verstecken",
+        "pass_to_werewolf": "Handy an einen Werwolf geben oder in die Mitte legen.",
+        "player_name": "Spielername",
+        "add": "Hinzufügen",
+        "add_players_hint": "Füge mindestens 3 Spieler hinzu.",
+        "select_roles_hint": "Wähle die Rollen für das Spiel:",
+        "num_werewolves": "Anzahl der Werwölfe",
+        "too_many_roles": "Zu viele Rollen für die Anzahl der Spieler ausgewählt!",
+        "too_many_werewolf_roles": "Zu viele spezielle Werwolf-Rollen für die Gesamtzahl der Werwölfe ausgewählt!",
+        "witch": {
+          "save_player": "Die Werwölfe haben zugeschlagen. Wirst du deinen Heiltrank nutzen, um {{name}} eine zweite Chance auf ein Leben zu gewähren?",
+          "select_kill": "Die Nacht ist ruhig... zu ruhig. Wirst du dein Gift nutzen, um jemanden zu eliminieren, den du des Bösen verdächtigst?",
+          "use_heal": "Heiltrank nutzen",
+          "use_kill": "Gifttrank nutzen"
+        },
+        "seer": {
+          "instruction": "Schließe deine Augen und konzentriere dich. In wessen Seele sollen wir heute Nacht blicken, um ihre wahre Natur zu enthüllen?"
+        },
+        "cupid": {
+          "instruction": "Liebe liegt in der Luft, aber sie fordert einen hohen Preis. Wähle zwei Seelen, deren Herzen für immer miteinander verbunden sein sollen."
+        },
+        "detective": {
+          "instruction": "Ein Geheimnis hat sich entfaltet. Wähle zwei Spieler und ich werde dir sagen, ob ihre Loyalität dem gleichen Lager gilt.",
+          "same_camp": "Gleiches Team",
+          "different_camps": "Verschiedene Teams"
+        },
+        "guardian": {
+          "instruction": "Die Schatten werden länger. Wen wirst du heute Nacht bewachen, um sicherzustellen, dass er bis zum Morgen überlebt?"
+        },
+        "black_werewolf": {
+          "instruction": "Deine Macht ist uralt. Wähle ein Opfer, um es mit dem Fluch des Mondes zu infizieren und zu einem Bruder des Rudels zu machen.",
+          "infect_victim": "{{name}} infizieren"
+        },
+        "white_werewolf": {
+          "instruction": "Das Rudel schläft und die Luft ist rein. Welchen deiner Werwolf-Artgenossen wirst du heute Nacht eliminieren, um deinem Einzelsieg näher zu kommen?"
+        },
+        "easter_bunny": {
+          "instruction": "Der Frühling naht. Wähle zwei Spieler aus, die deine geheimnisvollen Eier erhalten sollen. Dein ultimatives Geschenk ist fast bereit."
+        },
+        "hunter": {
+          "shot_subtitle": "Die Stunde der Rache ist für {{name}} gekommen.",
+          "instruction": "Öffne deine Augen und reiße einen letzten Spieler mit in den Tod."
+        },
+        "wolfdog": {
+          "instruction": "In dieser ersten Nacht musst du dich entscheiden. Bleibst du dem Dorf treu, das dich aufgezogen hat, oder gibst du deiner wilden Seite nach und schließt dich dem Rudel der Werwölfe an?"
+        },
+        "ripper": {
+          "instruction": "Die Klinge ist scharf und die Nacht ist lang. Wähle dein nächstes Opfer, das den kalten Stahl des Rippers spüren soll."
+        },
+        "survivor": {
+          "instruction": "Du gehst allein einen gefährlichen Weg. Wirst du deinen Schutz aktivieren, um dich vor den Schrecken der Nacht abzuschirmen?",
+          "use_protection": "Selbstschutz ({{count}} übrig)"
+        },
+        "pyromaniac": {
+          "instruction_oil": "Mit jedem Tropfen Öl wird ein Feuer vorbereitet. Wähle zwei Spieler aus, um sie für einen zukünftigen Brand zu markieren.",
+          "instruction_burn": "Die Bühne ist bereit. Sollen wir das Zündholz anreißen und zusehen, wie das Dorf mit all deinen Zielen brennt?",
+          "burn_action": "Alle verbrennen!",
+          "oil_action": "Spieler einölen"
+        },
+        "thief": {
+          "instruction": "Ein Leben in Bequemlichkeit oder ein Leben in Macht? Wähle, wessen Existenz du heute Nacht für dich beanspruchen wirst."
+        },
+        "little_girl": {
+          "instruction": "Ein mutiges Kind mit neugierigen Augen. In der Nacht, während die Werwölfe ihr Opfer wählen, darfst du blinzeln und versuchen, sie zu identifizieren. Aber Vorsicht: Wenn sie dich beim Gucken erwischen, werden sie dich sicher finden!"
+        },
+        "black_cat": {
+          "instruction": "Die Nacht ruft nach Unglück. Wähle einen Spieler zum Verfluchen. Morgen wird eine unsichtbare Kraft das Dorf dazu treiben, gegen ihn zu stimmen."
+        },
+        "lovers": {
+          "label": "Liebespaar"
+        },
+        "dorfmatratze": {
+          "instruction": "Bei wem möchtest du heute Nacht schlafen? Wenn er stirbt, stirbst du auch. Wenn du zuhause angegriffen wirst, überlebst du."
+        },
+        "editor": {
+          "title": "Rollen-Editor",
+          "add_role": "Rolle hinzufügen",
+          "edit_role": "Rolle bearbeiten",
+          "new_role": "Neue Rolle",
+          "role_name": "Rollenname",
+          "alignment": "Gesinnung",
+          "inherits_from": "Erbt von",
+          "inherits_from_none": "Keine",
+          "description": "Beschreibung",
+          "narrator_text": "Nacht-Erzähltext",
+          "narrator_text_hint": "Text, den der Erzähler nachts vorliest. Leer lassen für Standard.",
+          "abilities": "Fähigkeiten",
+          "add_ability": "Fähigkeit hinzufügen",
+          "ability_type": "Aktion",
+          "timing": "Zeitpunkt",
+          "targets": "Ziele",
+          "ability_instruction_kill": "Wähle ein Opfer zum Eliminieren.",
+          "ability_instruction_heal": "Wähle einen Spieler zum Retten.",
+          "ability_instruction_protect": "Wähle einen Spieler zum Beschützen.",
+          "ability_instruction_infect": "Wähle einen Spieler zum Infizieren.",
+          "ability_instruction_check_role": "Wähle einen Spieler, um seine Rolle zu sehen.",
+          "ability_instruction_link_lovers": "Wähle zwei Spieler, die sich verlieben sollen.",
+          "ability_instruction_give_egg": "Wähle Spieler, die einen Gegenstand erhalten.",
+          "ability_instruction_choose_camp": "Wähle dein Team für den Rest des Spiels.",
+          "ability_instruction_steal_role": "Wähle einen Spieler, dessen Rolle du stiehlst.",
+          "alignments": {
+            "villager": "Dorfbewohner",
+            "werewolf": "Werwolf",
+            "neutral": "Neutral"
+          },
+          "ability_types": {
+            "kill": "Eliminieren",
+            "heal": "Heilen",
+            "protect": "Beschützen",
+            "infect": "Infizieren",
+            "check_role": "Rolle prüfen",
+            "link_lovers": "Liebespaar verbinden",
+            "give_egg": "Gegenstand geben",
+            "choose_camp": "Lager wählen",
+            "steal_role": "Rolle stehlen"
+          },
+          "timing_options": {
+            "every_night": "Jede Nacht",
+            "first_night": "Nur erste Nacht",
+            "round_number": "Bestimmte Runde"
+          }
+        }
+      },
+      "continue": {
+        "title": "Spiel fortsetzen?",
+        "message": "Ein gespeichertes Spiel wurde gefunden. Möchtest du fortfahren oder ein neues Spiel starten?",
+        "round": "Runde {{round}}",
+        "phase": "Phase: {{phase}}",
+        "players": "{{count}} Spieler",
+        "continue_game": "Fortsetzen",
+        "new_game": "Neues Spiel"
+      },
+      "voting": {
+        "title": "Dorfabstimmung (Tag {{round}})",
+        "select_player": "Wer soll eliminiert werden?",
+        "instruction": "Tippe auf den Spieler, den das Dorf eliminieren möchte.",
+        "skip": "Abstimmung überspringen / Keine Eliminierung"
+      },
+      "game_over": "Spiel vorbei",
+      "winner_label": "Gewinner: {{winner}}",
+      "werewolves_win": "Die Werwölfe gewinnen!",
+      "villagers_win": "Die Dorfbewohner gewinnen!",
+      "play_again": "Nochmal spielen"
+    },
+    "imposter": {
+      "title": "Imposter",
+      "description": "Finde den Imposter, bevor er untertaucht!",
+      "rules": "Regeln: Normale Spieler erhalten ein Wort. Der Imposter erhält ein Hinweiswort. Diskutiert und findet den Imposter!",
+      "setup": {
+        "title": "Imposter Setup",
+        "imposter_count": "Anzahl der Imposter",
+        "timer_length": "Timer",
+        "minutes": "Minuten",
+        "seconds": "Sekunden",
+        "select_category": "Kategorien wählen",
+        "select_all": "Alle auswählen",
+        "select_none": "Keine auswählen",
+        "reset_to_default": "Zurücksetzen"
+      },
+      "handover": {
+        "pass_to": "Handy an {{name}} geben",
+        "your_word": "Dein Wort ist:",
+        "you_are_imposter": "Du bist der IMPOSTER",
+        "imposter_hint": "Tipp: {{hint}}",
+        "understood": "Ich habe es verstanden"
+      },
+      "game": {
+        "timer": "Diskussionszeit",
+        "pause": "Pause",
+        "resume": "Weiter",
+        "end_round": "Runde beenden",
+        "confirm_end": "Bist du sicher, dass du die Runde vorzeitig beenden möchtest?",
+        "kick_title": "Wer ist der Imposter?"
+      },
+      "result": {
+        "imposters_win": "Die Imposter gewinnen!",
+        "innocents_win": "Die Unschuldigen gewinnen!",
+        "imposter": "der Imposter",
+        "normal": "ein Unschuldiger",
+        "revealed_role": "{{name}} war {{role}}!"
+      },
+      "editor": {
+        "title": "Kategorien-Editor",
+        "add_category": "Kategorie hinzufügen",
+        "edit_category": "Kategorie bearbeiten",
+        "category_name_en": "Kategorienname (EN)",
+        "category_name_de": "Kategorienname (DE)",
+        "words": "Wörter",
+        "add_word": "Wort hinzufügen",
+        "word_en": "Wort (EN)",
+        "word_de": "Wort (DE)",
+        "hint_en": "Hinweis (EN)",
+        "hint_de": "Hinweis (DE)",
+        "custom_categories": "Eigene Kategorien",
+        "standard_categories": "Standard-Kategorien"
+      }
+    },
+    "melodiq": {
+      "title": "Melodiq",
+      "description": "Fordere deine Freunde im ultimativen Karaoke-Showdown heraus! Singe im Takt und triff die richtigen Töne.",
+      "queue": "Warteschlange",
+      "search": "YouTube durchsuchen",
+      "playlists": "Wiedergabelisten",
+      "history": "Verlauf",
+      "settings": "Einstellungen",
+      "join": "Beitreten",
+      "host": "Hosten",
+      "play": "Abspielen",
+      "pause": "Pause",
+      "skip": "Überspringen",
+      "add_to_queue": "Zur Warteschlange hinzufügen",
+      "remove": "Entfernen",
+      "microphone": "Mikrofon",
+      "latency": "Latenz",
+      "calibration": "Kalibrierung",
+      "calibrate": "Kalibrieren",
+      "score": "Punktzahl",
+      "no_songs": "Keine Songs gefunden.",
+      "loading": "Wird geladen...",
+      "error": "Ein Fehler ist aufgetreten.",
+      "connecting": "Verbinden...",
+      "connected": "Verbunden",
+      "disconnected": "Getrennt",
+      "volume": "Lautstärke",
+      "pitch": "Tonhöhe",
+      "lyrics": "Songtext",
+      "tv_mode": "TV-Modus",
+      "phone_mode": "Handy-Modus",
+      "hardware_mic": "Hardware-Mikrofone",
+      "hardware_mic_desc": "Verwende dies, wenn physische Mikrofone an dieses Gerät angeschlossen sind.",
+      "enable_mic": "Mikrofon aktivieren",
+      "hardware_mic_setup": "Hardware-Mikrofon-Setup",
+      "host_tv_setup": "Host-TV-Setup",
+      "connect_phone": "Handy verbinden",
+      "host_queue": "Host-Warteschlange",
+      "clear": "Leeren",
+      "empty_queue": "Leere Warteschlange",
+      "queue_empty_desc": "Noch keine Songs in der Warteschlange.",
+      "helper": {
+        "title": "Helper-Server Verbindung",
+        "desc": "Verbinde dich mit einem Melodiq Helper (PC/Server), um über 8000 Songs zu laden. Gib die URL (z.B. http://192.168.1.50:3000) und das Sicherheitstoken vom Helper-Bildschirm ein.",
+        "enable": "Helper-Verbindung aktivieren",
+        "server_url": "Server-URL",
+        "token": "Sicherheitstoken",
+        "token_placeholder": "Vom Helper-Bildschirm kopieren",
+        "test": "Verbindung testen",
+        "connecting": "Verbinden...",
+        "connected": "Verbunden! {{count}} Songs gefunden.",
+        "unauthorized": "Nicht autorisiert. Überprüfe das Token.",
+        "error_status": "Fehler: {{status}}",
+        "conn_failed": "Verbindung fehlgeschlagen. Überprüfe die URL oder das Netzwerk."
+      },
+      "scan_qr": "QR-Code scannen, um beizutreten",
+      "settings_panel": {
+        "title": "Spieleinstellungen",
+        "custom_layouts": "Benutzerdefinierte Layouts pro Spieleranzahl",
+        "custom_layouts_desc": "Zeilen und Spalten definieren (z. B. '1.3' für 1 oben, 3 unten). Fehlende Anzahlen verwenden Auto.",
+        "players": "Spieler",
+        "layout_example": "Layout (z. B. 2.2)",
+        "add": "Hinzufügen",
+        "default_view": "Standard-Ansichtsmodus",
+        "list_view": "Listenansicht",
+        "grid_view": "Rasteransicht",
+        "default_view_desc": "Bevorzugtes Layout der Songliste beim Start.",
+        "autoplay": "Autoplay-Einstellungen",
+        "autoplay_no_singers": "Autoplay (Keine Sänger)",
+        "autoplay_no_singers_desc": "Automatisch zum nächsten Song springen, wenn niemand singt (Jukebox-Modus).",
+        "autoplay_singers": "Autoplay (Mit Sängern)",
+        "autoplay_singers_desc": "Automatisch nach Anzeige der Punktzahl überspringen (Party-Modus).",
+        "off_manual": "Aus / Manuell",
+        "seconds": "{{count}} Sekunden",
+        "default_click": "Standard-Klickaktion (Während Wiedergabe)",
+        "play_now": "Jetzt abspielen",
+        "play_next": "Als Nächstes abspielen",
+        "add_queue": "Zur Warteschlange hinzufügen",
+        "default_click_desc": "Was passiert, wenn du auf einen Song klickst, während bereits ein anderer läuft.",
+        "card_size": "Kartengröße & Dichte",
+        "small": "Klein",
+        "medium": "Mittel",
+        "large": "Groß",
+        "custom": "Benutzerdefiniert",
+        "max_items": "Max. Elemente pro Zeile (Großer Bildschirm)",
+        "max_items_desc": "Legt die maximale Anzahl von Songs in einer Zeile fest. Das Spiel passt sich automatisch an kleinere Bildschirme an.",
+        "golden_multiplier": "Goldene Noten Multiplikator",
+        "golden_multiplier_desc": "Multiplikator für goldene Noten (markiert mit *).",
+        "song_volume": "Song-Lautstärke",
+        "vocals_volume": "Gesangslautstärke (falls getrennt)",
+        "master_volume": "Gesamtlautstärke",
+        "show_pitch": "Tonhöhen-Labels anzeigen",
+        "dev_options": "Entwickler- / Debug-Optionen",
+        "show_debug": "Debug-Overlay anzeigen",
+        "show_dev_slider": "Tech-/Dev-Slider anzeigen",
+        "show_video_errors": "Video-Fehlermeldungen anzeigen"
+      }
+    }
+  },
+  "common": {
+    "start": "Spiel starten",
+    "back": "Zurück",
+    "next": "Weiter",
+    "players": "Spieler",
+    "yes": "Ja",
+    "no": "Nein",
+    "skip": "Überspringen",
+    "close": "Schließen",
+    "save": "Speichern",
+    "save_all": "Alles speichern",
+    "modified": "Geändert",
+    "reset": "Zurücksetzen",
+    "delete": "Löschen",
+    "clear_all_players": "Alle Spieler löschen"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "language_preferences": "Spracheinstellungen",
+    "ui_language": "Sprache der Benutzeroberfläche",
+    "english": "English",
+    "german": "Deutsch"
+  }
+}

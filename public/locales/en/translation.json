@@ -1,0 +1,423 @@
+{
+  "app": {
+    "title": "Local Game Galaxy",
+    "welcome": "Welcome to the Hub",
+    "select_game": "Select a game to start playing with your friends."
+  },
+  "games": {
+    "werewolf": {
+      "title": "Werewolf",
+      "description": "A game of deception and deduction.",
+      "role_reveal": "Role Reveal",
+      "pass_device_instruction": "Pass device to {{name}}",
+      "reveal_role": "Reveal Role",
+      "start_night": "Start Night",
+      "roles": {
+        "VILLAGER": "Villager",
+        "WEREWOLF": "Werewolf",
+        "SEER": "Seer",
+        "WITCH": "Witch",
+        "HUNTER": "Hunter",
+        "CUPID": "Cupid",
+        "LITTLE_GIRL": "Little Girl",
+        "DETECTIVE": "Detective",
+        "GUARDIAN": "Guardian",
+        "BLACK_CAT": "Black Cat",
+        "WISE": "Wise",
+        "BLACK_WEREWOLF": "Black Werewolf",
+        "WHITE_WEREWOLF": "White Werewolf",
+        "ANGEL": "Angel",
+        "EASTER_BUNNY": "Easter Bunny",
+        "WOLFDOG": "Wolfdog",
+        "RIPPER": "Ripper",
+        "SURVIVOR": "Survivor",
+        "PYROMANIAC": "Pyromaniac",
+        "THIEF": "Thief",
+        "DORFMATRATZE": "Village Mattress"
+      },
+      "role_descriptions": {
+        "VILLAGER": "An ordinary inhabitant of the village. You have no special powers during the night, but your voice and your vote are your dual weapons during the day. Your goal is to work with others to identify, discuss, and eliminate all threats (Werewolves and other killers) to the village's peace.",
+        "WEREWOLF": "A fearsome shapeshifter. Each night, you wake up with your fellow werewolves to choose one villager to eliminate. During the day, you must act like an innocent villager to avoid execution. You win when you have eliminated enough villagers to equal your own numbers.",
+        "SEER": "A mystic with the power of foresight. Each night, you awaken alone and choose one player. The narrator will reveal that player's specific role card to you. Use this secret knowledge to guide the village's votes without making yourself an obvious target for the wolves.",
+        "WITCH": "A master of alchemy with two unique potions. Once per game, you can use your Healing Potion to save the player chosen by the werewolves. Once per game, you can use your Poison Potion to eliminate any player of your choice. You can use both potions in the same night.",
+        "HUNTER": "A skilled marksman. Your unique power only activates at the moment of your death. When you are eliminated (either by wolves or by the village vote), you must immediately choose one other player to take with you to the grave. They are eliminated instantly.",
+        "CUPID": "The bringer of love. On the very first night, you choose two players to become Lovers. You can even choose yourself. If one of the Lovers dies, the other immediately dies of a broken heart. Their alignment is bound together for the rest of the game.",
+        "LITTLE_GIRL": "A brave but fragile child. During the night phase when the werewolves are choosing their victim, you have the special permission to peek. If you successfully identify a wolf, the village gains a major advantage. However, if the wolves catch you looking, you will be eaten immediately.",
+        "DETECTIVE": "A keen investigator of alignments. Each night, you select two players. The narrator will tell you if they belong to the same camp (e.g., both are Villagers or both are Werewolves) or different camps. This is a powerful tool for mapping out the pack.",
+        "GUARDIAN": "A selfless protector. Each night, you choose one player to protect against the werewolves. That player cannot be eliminated by a werewolf attack tonight. You may protect yourself, but you cannot choose the same person two nights in a row.",
+        "BLACK_CAT": "A harbinger of bad luck. Each night, you can choose a player to curse. This player will implicitly receive an additional vote against them during the next day's village meeting, making it easier for the village to execute them.",
+        "WISE": "An elder with ancient resilience. You are so sturdy that you can survive the first successful attack from the werewolves. You will not die and life goes on. However, if the wolves (or another killer) attack you a second time, you will perish like anyone else.",
+        "BLACK_WEREWOLF": "The alpha of the pack. You are a regular werewolf, but you have one special gift: once per game, you can choose to infect the prey instead of killing them. The victim's role is replaced, and they join the werewolf pack secretly from that night forward.",
+        "WHITE_WEREWOLF": "A lonely renegade playing a dangerous double game. Each night, you wake up with the other werewolves to hunt together. However, once the pack sleeps, you wake up a second time alone to eliminate one of your fellow werewolves. You win only if you are the sole survivor.",
+        "ANGEL": "A celestial being seeking a quick exit. Your goal is unusual: you win the game instantly if you manage to get yourself eliminated during the very first day's voting session. If you survive past the first day, you become a regular villager without any powers.",
+        "EASTER_BUNNY": "A mysterious visitor with a secret mission. Each night, you give eggs to two players. Your goal is to give an egg to every single player currently alive in the village. If you achieve this while staying alive yourself, you win the game alone.",
+        "WOLFDOG": "A hybrid role defined by its first-night choice. On the very first night, you must decide: will you stay a faithful Villager or join the Werewolf pack? Once your choice is made, you assume that role's alignment and goals for the rest of the game.",
+        "RIPPER": "A cold-blooded serial killer acting entirely alone. You are not a wolf and not a villager. Each night, you wake up to eliminate one player of your choice. Your goal is simple but brutal: you win by being the last person alive in the village.",
+        "SURVIVOR": "A resilient loner in a world of monsters. You belong to the village camp but have no active powers to help them. Instead, you have two personal shields. Up to twice per game, you can choose to protect yourself during the night, making you immune to any attack.",
+        "PYROMANIAC": "A destructive arsonist with a long-term plan. Each night, you can douse two players in oil. These players won't know they are oiled. At any later point, you can choose to ignite the oil, instantly eliminating every single player you have previously marked.",
+        "THIEF": "A cunning opportunist who starts with nothing. On the very first night, you choose a player. You swap roles with them: you take their identity and powers, and they become a regular Villager. Use this to seize the most powerful role in the game.",
+        "DORFMATRATZE": "You sleep in a different bed every night. If the werewolves attack your home while you are away, you survive. However, if the person you are sleeping with is killed, you die with them."
+      },
+      "narrator": {
+        "night_start": "Night falls. Everyone close your eyes.",
+        "werewolves_wake": "Werewolves, wake up.",
+        "werewolves_sleep": "Werewolves, go back to sleep.",
+        "day_start": "The sun rises. Everyone wake up!",
+        "day_intro": "It is a new day.",
+        "died_night": "{{names}} died last night.",
+        "noone_died": "No one died last night.",
+        "morning_coming": "Morning is coming...",
+        "dashboard_title": "Narrator Dashboard (Night {{round}})",
+        "wait_for_werewolves": "Wait for Werewolves to decide...",
+        "werewolves_label": "Werewolves:",
+        "select_victim": "Select Victim:",
+        "skip_to_morning": "Skip to Morning",
+        "night_label": "Night {{round}}",
+        "day_label": "Day {{round}}",
+        "night_summary_label": "Night Summary (Narrator only)"
+      },
+      "night_summary": {
+        "kill": "{{role}} decided to kill {{target}}.",
+        "heal": "{{role}} decided to heal {{target}}.",
+        "protect": "{{role}} decided to protect {{target}}.",
+        "infect": "{{role}} decided to infect {{target}}.",
+        "link_lovers": "{{role}} linked {{target1}} and {{target2}} to be lovers.",
+        "check_role": "{{role}} checked the role of {{target}} ({{result}}).",
+        "compare_camps": "{{role}} compared the camps of {{target1}} and {{target2}} ({{result}}).",
+        "oil": "{{role}} oiled {{targets}}.",
+        "burn": "{{role}} ignited the fire!",
+        "give_egg": "{{role}} gave eggs to {{targets}}.",
+        "choose_camp": "{{role}} chose the {{camp}} camp.",
+        "steal_role": "{{role}} stole the identity of {{target}}.",
+        "peek": "{{role}} peeked during the night.",
+        "curse": "{{role}} cursed {{target}}.",
+        "sleep": "{{role}} slept at {{target}}'s place.",
+        "survive": "{{role}} survived the attack."
+      },
+      "ui": {
+        "died_last_night": "Died last night:",
+        "peaceful_night": "Peaceful night.",
+        "start_vote": "Start Voting",
+        "narrator_mode": "Narrator Mode",
+        "narrator_select": "Who is the Narrator?",
+        "tap_to_act": "TAP TO ACT",
+        "hide_screen": "Hide Screen",
+        "pass_to_werewolf": "Pass phone to any Werewolf or place in middle.",
+        "player_name": "Player Name",
+        "add": "Add",
+        "add_players_hint": "Add at least 3 players to start.",
+        "select_roles_hint": "Select roles to include:",
+        "num_werewolves": "Number of Werewolves",
+        "too_many_roles": "Too many roles selected for the number of players!",
+        "too_many_werewolf_roles": "Too many special werewolf roles selected for the total number of werewolves!",
+        "witch": {
+          "save_player": "The werewolves have struck. Will you use your healing potion to grant {{name}} a second chance at life?",
+          "select_kill": "The night is quiet... too quiet. Will you use your poison to eliminate someone you suspect of evil?",
+          "use_heal": "Use Healing Potion",
+          "use_kill": "Use Kill Potion"
+        },
+        "seer": {
+          "instruction": "Close your eyes and focus. Whose soul shall we peer into tonight to reveal their true nature?"
+        },
+        "cupid": {
+          "instruction": "Love is in the air, but it carries a heavy price. Choose two souls whose hearts shall be bound together forever."
+        },
+        "detective": {
+          "instruction": "A mystery unfolded. Select two players and I will tell you if their loyalties lie within the same camp.",
+          "same_camp": "Same Camp",
+          "different_camps": "Different Camps"
+        },
+        "guardian": {
+          "instruction": "The shadows are lengthening. Whom will you stand watch over tonight to ensure they survive until morning?"
+        },
+        "black_werewolf": {
+          "instruction": "Your power is ancient. Choose a victim to infect with the curse of the moon, making them a brother of the pack.",
+          "infect_victim": "Infect {{name}}"
+        },
+        "white_werewolf": {
+          "instruction": "The pack is asleep and the coast is clear. Which of your fellow werewolves will you eliminate tonight to get closer to your solitary victory?"
+        },
+        "easter_bunny": {
+          "instruction": "Spring is coming. Select two players to receive your mysterious eggs. Your ultimate gift is almost ready."
+        },
+        "hunter": {
+          "shot_subtitle": "The hour of revenge has come for {{name}}.",
+          "instruction": "Open your eyes and take one last player with you to the grave."
+        },
+        "wolfdog": {
+          "instruction": "The first night is your time of choice. Do you remain loyal to the Village that raised you, or do you embrace your wild side and join the Werewolf pack?"
+        },
+        "ripper": {
+          "instruction": "The blade is sharp and the night is long. Choose your next victim to feel the cold steel of the Ripper."
+        },
+        "survivor": {
+          "instruction": "You walk a dangerous path alone. Will you activate your protection to shield yourself from the terrors of the night?",
+          "use_protection": "Protect Myself ({{count}} left)"
+        },
+        "pyromaniac": {
+          "instruction_oil": "With every drop of oil, a fire is prepared. Select two players to mark for a future blaze.",
+          "instruction_burn": "The stage is set. Shall we strike the match and watch the village burn with all your oiled targets?",
+          "burn_action": "Burn them all!",
+          "oil_action": "Oil Players"
+        },
+        "thief": {
+          "instruction": "A life of comfort or a life of power? Choose whose existence you will seize for yourself tonight."
+        },
+        "little_girl": {
+          "instruction": "A brave child with curious eyes. During the night, while the werewolves choose their victim, you can peek and try to identify them. But beware: if they catch you looking, they will surely find you!"
+        },
+        "black_cat": {
+          "instruction": "The night calls for misfortune. Choose a player to curse. Tomorrow, an invisible force will push the village to vote against them."
+        },
+        "lovers": {
+          "label": "Lovers"
+        },
+        "dorfmatratze": {
+          "instruction": "Choose whose bed you want to sleep in tonight. If they die, you die. If you are attacked at home, you survive."
+        },
+        "editor": {
+          "title": "Role Editor",
+          "add_role": "Add Role",
+          "edit_role": "Edit Role",
+          "new_role": "New Role",
+          "role_name": "Role Name",
+          "alignment": "Alignment",
+          "inherits_from": "Inherits From",
+          "inherits_from_none": "None",
+          "description": "Description",
+          "narrator_text": "Night Narration",
+          "narrator_text_hint": "Text read by narrator at night. Leave empty to use default.",
+          "abilities": "Abilities",
+          "add_ability": "Add Ability",
+          "ability_type": "Action",
+          "timing": "Timing",
+          "targets": "Targets",
+          "ability_instruction_kill": "Choose a victim to eliminate.",
+          "ability_instruction_heal": "Choose a player to save from death.",
+          "ability_instruction_protect": "Choose a player to protect tonight.",
+          "ability_instruction_infect": "Choose a player to infect.",
+          "ability_instruction_check_role": "Choose a player to reveal their secret role.",
+          "ability_instruction_link_lovers": "Choose two players to fall in love.",
+          "ability_instruction_give_egg": "Choose players to receive a special item.",
+          "ability_instruction_choose_camp": "Choose your loyalty for the rest of the game.",
+          "ability_instruction_steal_role": "Choose a player to swap roles with.",
+          "alignments": {
+            "villager": "Villager",
+            "werewolf": "Werewolf",
+            "neutral": "Neutral"
+          },
+          "ability_types": {
+            "kill": "Kill",
+            "heal": "Heal",
+            "protect": "Protect",
+            "infect": "Infect",
+            "check_role": "Check Role",
+            "link_lovers": "Link Lovers",
+            "give_egg": "Give Item",
+            "choose_camp": "Choose Camp",
+            "steal_role": "Steal Role"
+          },
+          "timing_options": {
+            "every_night": "Every Night",
+            "first_night": "First Night Only",
+            "round_number": "Specific Round"
+          }
+        }
+      },
+      "continue": {
+        "title": "Continue Game?",
+        "message": "A saved game was found. Would you like to continue or start a new game?",
+        "round": "Round {{round}}",
+        "phase": "Phase: {{phase}}",
+        "players": "{{count}} players",
+        "continue_game": "Continue",
+        "new_game": "New Game"
+      },
+      "voting": {
+        "title": "Village Vote (Day {{round}})",
+        "select_player": "Who should be eliminated?",
+        "instruction": "Tap on the player the village wants to eliminate.",
+        "skip": "Skip Vote / No Elimination"
+      },
+      "game_over": "Game Over",
+      "winner_label": "Winner: {{winner}}",
+      "werewolves_win": "The Werewolves Win!",
+      "villagers_win": "The Villagers Win!",
+      "play_again": "Play Again"
+    },
+    "imposter": {
+      "title": "Imposter",
+      "description": "Find the imposter before they blend in!",
+      "rules": "Rules: Normal players get a word. Imposter gets a hint. Discuss and find the imposter!",
+      "setup": {
+        "title": "Imposter Setup",
+        "imposter_count": "Number of Imposters",
+        "timer_length": "Timer",
+        "minutes": "Minutes",
+        "seconds": "Seconds",
+        "select_category": "Select Categories",
+        "select_all": "Select All",
+        "select_none": "Select None",
+        "reset_to_default": "Reset to Default"
+      },
+      "handover": {
+        "pass_to": "Pass phone to {{name}}",
+        "your_word": "Your word is:",
+        "you_are_imposter": "You are the IMPOSTER",
+        "imposter_hint": "Tip: {{hint}}",
+        "understood": "I understood"
+      },
+      "game": {
+        "timer": "Discussion Time",
+        "pause": "Pause",
+        "resume": "Resume",
+        "end_round": "End Round",
+        "confirm_end": "Are you sure you want to end the round early?",
+        "kick_title": "Who is the Imposter?"
+      },
+      "result": {
+        "imposters_win": "Imposters Win!",
+        "innocents_win": "Innocents Win!",
+        "imposter": "the Imposter",
+        "normal": "an Innocent",
+        "revealed_role": "{{name}} was {{role}}!"
+      },
+      "editor": {
+        "title": "Category Editor",
+        "add_category": "Add Category",
+        "edit_category": "Edit Category",
+        "category_name_en": "Category Name (EN)",
+        "category_name_de": "Category Name (DE)",
+        "words": "Words",
+        "add_word": "Add Word",
+        "word_en": "Word (EN)",
+        "word_de": "Word (DE)",
+        "hint_en": "Hint (EN)",
+        "hint_de": "Hint (DE)",
+        "custom_categories": "Custom Categories",
+        "standard_categories": "Standard Categories"
+      }
+    },
+    "melodiq": {
+      "title": "Melodiq",
+      "description": "Challenge your friends in this ultimate Karaoke showdown! Sing to the beat and hit the right notes.",
+      "queue": "Queue",
+      "search": "Search YouTube",
+      "playlists": "Playlists",
+      "history": "History",
+      "settings": "Settings",
+      "join": "Join",
+      "host": "Host",
+      "play": "Play",
+      "pause": "Pause",
+      "skip": "Skip",
+      "add_to_queue": "Add to Queue",
+      "remove": "Remove",
+      "microphone": "Microphone",
+      "latency": "Latency",
+      "calibration": "Calibration",
+      "calibrate": "Calibrate",
+      "score": "Score",
+      "no_songs": "No songs found.",
+      "loading": "Loading...",
+      "error": "An error occurred.",
+      "connecting": "Connecting...",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "volume": "Volume",
+      "pitch": "Pitch",
+      "lyrics": "Lyrics",
+      "tv_mode": "TV Mode",
+      "phone_mode": "Phone Mode",
+      "hardware_mic": "Hardware Microphones",
+      "hardware_mic_desc": "Use this if you have physical microphones connected to this device.",
+      "enable_mic": "Enable Mic",
+      "hardware_mic_setup": "Hardware Mic Setup",
+      "host_tv_setup": "Host TV Setup",
+      "connect_phone": "Connect Phone",
+      "host_queue": "Host Queue",
+      "clear": "Clear",
+      "empty_queue": "Empty Queue",
+      "queue_empty_desc": "No songs in the queue yet.",
+      "helper": {
+        "title": "Helper Server Connection",
+        "desc": "Connect to a Melodiq Helper (PC/Server) to load 8000+ songs. Enter the URL (e.g., http://192.168.1.50:3000) and the Security Token shown on the Helper screen.",
+        "enable": "Enable Helper Connection",
+        "server_url": "Server URL",
+        "token": "Security Token",
+        "token_placeholder": "Copy from Helper Console/Screen",
+        "test": "Test Connection",
+        "connecting": "Connecting...",
+        "connected": "Connected! Found {{count}} songs.",
+        "unauthorized": "Unauthorized. Check Token.",
+        "error_status": "Error: {{status}}",
+        "conn_failed": "Connection Failed. Check URL or Network."
+      },
+      "scan_qr": "Scan QR Code to Join",
+      "settings_panel": {
+        "title": "Game Settings",
+        "custom_layouts": "Custom Layouts per Player Count",
+        "custom_layouts_desc": "Define rows and columns (e.g., '1.3' for 1 top, 3 bottom). Missing counts use auto.",
+        "players": "Players",
+        "layout_example": "Layout (e.g. 2.2)",
+        "add": "Add",
+        "default_view": "Default View Mode",
+        "list_view": "List View",
+        "grid_view": "Grid View",
+        "default_view_desc": "Preferred song list layout on startup.",
+        "autoplay": "Autoplay Settings",
+        "autoplay_no_singers": "Autoplay (No Singers)",
+        "autoplay_no_singers_desc": "Automatically skip to the next song when nobody is singing (Jukebox mode).",
+        "autoplay_singers": "Autoplay (With Singers)",
+        "autoplay_singers_desc": "Automatically skip after scores are shown (Party mode).",
+        "off_manual": "Off / Manual",
+        "seconds": "{{count}} Seconds",
+        "default_click": "Default Click Action (When playing)",
+        "play_now": "Play Now",
+        "play_next": "Play Next",
+        "add_queue": "Add to Queue",
+        "default_click_desc": "What happens when you click a song while another is already playing.",
+        "card_size": "Card Size & Density",
+        "small": "Small",
+        "medium": "Medium",
+        "large": "Large",
+        "custom": "Custom",
+        "max_items": "Max Items per Row (Large Screen)",
+        "max_items_desc": "Set the maximum number of songs in a row. The game will automatically adjust for smaller screens.",
+        "golden_multiplier": "Golden Note Multiplier",
+        "golden_multiplier_desc": "Multiplier for golden notes (marked with *).",
+        "song_volume": "Song Volume",
+        "vocals_volume": "Vocals Volume (If Separated)",
+        "master_volume": "Master Volume",
+        "show_pitch": "Show Pitch Note Labels",
+        "dev_options": "Developer / Debug Options",
+        "show_debug": "Show Debug Overlay",
+        "show_dev_slider": "Show Tech/Dev Slider",
+        "show_video_errors": "Show Video Error Messages"
+      }
+    }
+  },
+  "common": {
+    "start": "Start Game",
+    "back": "Back",
+    "next": "Next",
+    "players": "Players",
+    "yes": "Yes",
+    "no": "No",
+    "skip": "Skip",
+    "close": "Close",
+    "save": "Save",
+    "save_all": "Save All",
+    "modified": "Modified",
+    "reset": "Reset",
+    "delete": "Delete",
+    "clear_all_players": "Clear All Players"
+  },
+  "settings": {
+    "title": "Settings",
+    "language_preferences": "Language Preferences",
+    "ui_language": "UI Language",
+    "english": "English",
+    "german": "Deutsch"
+  }
+}
