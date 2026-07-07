@@ -196,6 +196,31 @@ router.get('/api/songs', (req, res) => {
     res.json(paginated);
 });
 
+// --- GET SINGLE SONG ---
+router.get('/api/songs/:id', (req, res) => {
+    const songId = req.params.id;
+    const song = getSongCache().find(s => s.id === songId);
+    
+    if (!song) {
+        return res.status(404).send('Song not found');
+    }
+
+    const secureUrl = (absPath) => {
+        if (!absPath) return null;
+        return '/media?path=' + encodeURIComponent(absPath) + '&token=' + config.token;
+    };
+
+    const clientSong = {
+        ...song,
+        video: secureUrl(song.video),
+        audio: secureUrl(song.audio),
+        cover: secureUrl(song.cover),
+        background: secureUrl(song.background)
+    };
+
+    res.json(clientSong);
+});
+
 // --- DELETE SONG ---
 router.delete('/api/songs/:id', (req, res) => {
     if (!req.isMasterToken && (!req.apiKey || !req.apiKey.allowSongDeletion)) {
