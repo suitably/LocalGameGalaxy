@@ -19,9 +19,9 @@ interface MiniPlayerProps {
     onShowQueue?: () => void;
     onMenuClick?: (e: React.MouseEvent<HTMLElement>) => void;
     queueLength: number;
-    /** True when song was restored from localStorage after a page reload – no audio is loaded yet */
     isRestored?: boolean;
     isClient?: boolean;
+    canControlPlayback?: boolean;
 }
 
 export const MiniPlayer: React.FC<MiniPlayerProps> = ({
@@ -35,7 +35,8 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
     onMenuClick,
     queueLength,
     isRestored = false,
-    isClient = false
+
+    canControlPlayback = true
 }) => {
     const theme = useTheme();
 
@@ -101,7 +102,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
 
             {/* Controls */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {!isClient && (
+                {canControlPlayback && (
                     <>
                         {isRestored ? (
                             <IconButton

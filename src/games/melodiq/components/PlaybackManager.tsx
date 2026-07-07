@@ -137,7 +137,10 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     };
 
     // sendClientCommand is used to control the remote session.
-    const { sendClientCommand } = isClient ? useClientEngine() : { sendClientCommand: undefined };
+    const { sendClientCommand, isSessionPlaying } = isClient ? useClientEngine() : { sendClientCommand: undefined, isSessionPlaying: false };
+
+    const canControlPlayback = true; // All users can control playback by default now
+    const actualIsPlaying = isClient ? isSessionPlaying : playbackState.isPlaying;
 
     // Sync Job Polling
     useEffect(() => {
@@ -178,26 +181,25 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     useEffect(() => {
         if (!sendGameUpdate || !selectedSong) {
             if (sendGameUpdate) {
-                sendGameUpdate({ isPlaying: false, currentTime: 0, activeSongId: null });
+                sendGameUpdate({ isPlaying: false, currentTime: 0, activeSongId: null, players: [] });
             }
             return;
         }
 
-        let frameId: number;
-        let lastSendTime = 0;
-        const loop = (time: number) => {
-            if (sessionRef.current && (time - lastSendTime > 100)) {
+        const intervalId = setInterval(() => {
+            if (sessionRef.current) {
                 const state = sessionRef.current.getGameState();
-                sendGameUpdate({ ...state, activeSongId: selectedSong.id });
-                lastSendTime = time;
+                sendGameUpdate({ 
+                    ...state, 
+                    activeSongId: selectedSong.id,
+                    activeSong: { id: selectedSong.id, title: selectedSong.title, artist: selectedSong.artist }
+                });
             }
-            frameId = requestAnimationFrame(loop);
-        };
+        }, 100);
 
-        frameId = requestAnimationFrame(loop);
         return () => {
-            cancelAnimationFrame(frameId);
-            sendGameUpdate({ isPlaying: false, currentTime: 0, activeSongId: null });
+            clearInterval(intervalId);
+            sendGameUpdate({ isPlaying: false, currentTime: 0, activeSongId: null, players: [] });
         };
     }, [sendGameUpdate, selectedSong]);
 
@@ -209,6 +211,27 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             }
         }
     }));
+
+    // Listen for local host commands (from proxy or UI)
+    useEffect(() => {
+        if (isClient) return; // Clients don't handle host commands locally
+
+        const handleHostCommand = (e: any) => {
+            const command = (e.detail.command || '').toLowerCase();
+            if (command === 'play' || command === 'pause' || command === 'toggle') {
+                if (selectedSong) {
+                    sessionRef.current?.togglePlay();
+                } else if (!selectedSong && queue.length > 0) {
+                    handleMiniPlayerNext();
+                }
+            } else if (command === 'next') {
+                handleMiniPlayerNext();
+            }
+        };
+
+        window.addEventListener('melodiq_host_command', handleHostCommand);
+        return () => window.removeEventListener('melodiq_host_command', handleHostCommand);
+    }, [isClient, selectedSong, queue.length]);
 
     // Handle MiniPlayer Next Logic
     const handleMiniPlayerNext = () => {
@@ -270,7 +293,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     const isInRestoredMode = !selectedSong && !remoteSong && !!restoredSong;
 
     // The song to display in the MiniPlayer
-    const miniPlayerSong = selectedSong || remoteSong || (isInRestoredMode ? restoredSong : null);
+    const miniPlayerSong = selectedSong || remoteSong || (isInRestoredMode ? restoredSong : (queue.length > 0 ? queue[0].song : null));
 
     // Handle Resume: load and start the restored song
     const handleResume = () => {
@@ -280,10 +303,19 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         }
     };
 
+    const lastUpdateRef = useRef<number>(0);
+    const lastStorageRef = useRef<number>(0);
+
     const handlePlaybackUpdate = useCallback((state: any) => {
-        setPlaybackState(state);
-        if (selectedSong && state.currentTime > 0) {
-            localStorage.setItem('melodiq_saved_time', JSON.stringify({ id: selectedSong.id, time: state.currentTime }));
+        const now = Date.now();
+        if (now - lastUpdateRef.current > 100) {
+            setPlaybackState(state);
+            lastUpdateRef.current = now;
+            
+            if (selectedSong && state.currentTime > 0 && (now - lastStorageRef.current > 1000)) {
+                localStorage.setItem('melodiq_saved_time', JSON.stringify({ id: selectedSong.id, time: state.currentTime }));
+                lastStorageRef.current = now;
+            }
         }
     }, [selectedSong]);
 
@@ -335,33 +367,30 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                 </Box>
             )}
 
-            {/* Mini Player - Local OR Remote OR Restored */}
             {
-                currentView === 'Home' && (
-                    <MiniPlayer
-                        song={miniPlayerSong}
-                        isPlaying={playbackState.isPlaying}
-                        progress={isInRestoredMode ? 0 : playbackState.progress}
-                        onTogglePlay={() => {
-                            if (isInRestoredMode) {
-                                handleResume();
-                            } else if (isClient && sendClientCommand) {
-                                sendClientCommand('play');
-                            } else if (selectedSong) {
-                                if (sessionRef.current?.isFinished) {
-                                    handleMiniPlayerNext();
-                                } else {
+                (currentView === 'Home') && (
+                    <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1500 }}>
+                        <MiniPlayer
+                            song={miniPlayerSong}
+                            isPlaying={actualIsPlaying}
+                            progress={isInRestoredMode ? 0 : playbackState.progress}
+                            onTogglePlay={() => {
+                                if (isInRestoredMode) {
+                                    handleResume();
+                                } else if (isClient && sendClientCommand) {
+                                    sendClientCommand(actualIsPlaying ? 'pause' : 'play');
+                                } else if (selectedSong) {
                                     sessionRef.current?.togglePlay();
-                                }
-                            } else if (remoteSong && isTVConnected) {
-                                // Toggle remote playback state locally for UI
-                                setPlaybackState(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
-                                // Send command
-                                if (playbackState.isPlaying) {
-                                    sendRemoteCommand('PAUSE', {});
-                                } else {
-                                    sendRemoteCommand('RESUME', {});
-                                }
+                                    if (!actualIsPlaying && !isTVConnected) {
+                                        onRestoreSession();
+                                    }
+                                } else if (remoteSong && isTVConnected) {
+                                    setPlaybackState(prev => ({ ...prev, isPlaying: !prev.isPlaying }));
+                                    if (actualIsPlaying) {
+                                        sendRemoteCommand('PAUSE', {});
+                                    } else {
+                                        sendRemoteCommand('RESUME', {});
+                                    }
                             } else {
                                 // No song selected, try to play from queue
                                 handleMiniPlayerNext();
@@ -381,7 +410,9 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                         isRestored={isInRestoredMode}
                         isClient={isClient}
                         onMenuClick={handleMenuClick}
+                        canControlPlayback={canControlPlayback}
                     />
+                    </Box>
                 )
             }
 

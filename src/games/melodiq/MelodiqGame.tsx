@@ -14,6 +14,7 @@ import { type Playlist } from './db';
 import { useSongs, SongsProvider } from './hooks/useSongs';
 import { useQueue } from './hooks/useQueue';
 import { useDownloads } from './hooks/useDownloads';
+import { melodiqFetch } from './api/melodiqFetch';
 import { PhoneQueueBridge } from './components/PhoneQueueBridge';
 import { PhoneClientEngine, useClientEngine } from './PhoneClientEngine';
 
@@ -44,7 +45,7 @@ export const MelodiqGameContent: React.FC = () => {
 
     const { songs, loadingProgress, refreshSongs, getSongById, isLoading, hasConnectionError } = useSongs();
     const { queue, popNext, setNowPlaying, addToQueue, addNext, nowPlaying, replaceItem } = useQueue();
-    const { jobs } = useDownloads();
+    const { jobs } = useDownloads(isClient ? 0 : 2000);
     
     const {
         isTVConnected, isPresentationAvailable, openTVWindow, startPresentation,
@@ -71,6 +72,7 @@ export const MelodiqGameContent: React.FC = () => {
     const [currentView, setCurrentView] = useState<View>('Home');
     const [selectedSong, setSelectedSong] = useState<Song | null>(null);
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
+
 
     useEffect(() => {
         if (settings.defaultViewMode) {
@@ -100,7 +102,7 @@ export const MelodiqGameContent: React.FC = () => {
 
     const handleSelectSong = async (songMeta: SongMeta, forcePlay: boolean = false, participants?: any[], requester?: string, requesterId?: string) => {
         try {
-            const isPlaying = !!selectedSong || (isTVConnected && !!remoteSong) || (isClient && !!remoteSong);
+
 
             if (isClient) {
                 if (clientRole === 'singer') {
@@ -114,7 +116,7 @@ export const MelodiqGameContent: React.FC = () => {
                     detail: { type: 'remote.select_song', songId: songMeta.id, forcePlay: willForcePlay } 
                 }));
                 
-                if (isPlaying && !willForcePlay) {
+                if (selectedSong && !willForcePlay) {
                     setFeedbackMessage(`Zur Warteschlange hinzugefügt: ${songMeta.title}`);
                 } else {
                     setFeedbackMessage(`Wird abgespielt: ${songMeta.title}`);
@@ -122,9 +124,14 @@ export const MelodiqGameContent: React.FC = () => {
                 return;
             }
 
-            if (!forcePlay && isPlaying) {
+            let actualForcePlay = forcePlay;
+            if (!forcePlay && !selectedSong && !remoteSong && !nowPlaying) {
+                actualForcePlay = true;
+            }
+
+            if (!actualForcePlay) {
                 addToQueue(songMeta, requester, requesterId);
-                setFeedbackMessage(`Added to queue: ${songMeta.title}`);
+                setFeedbackMessage(`Zur Warteschlange hinzugefügt: ${songMeta.title}`);
                 return;
             }
 
@@ -144,16 +151,18 @@ export const MelodiqGameContent: React.FC = () => {
                     setActiveParticipants(participants || null);
                     setCurrentView('DownloadWait');
                 } else {
-                    playSongOnTV(songMeta.id, songMeta);
+                    playSongOnTV(songMeta.id, songMeta as any);
                     setRemoteSong(songMeta);
                 }
             } else {
                 const fullSong = await getSongById(songMeta.id);
                 if (fullSong) {
                     setSelectedSong(fullSong);
+                    if (actualForcePlay) {
+                        setCurrentView('Session');
+                    }
                     setNowPlaying(songMeta);
                     setActiveParticipants(participants || null);
-                    setCurrentView('Session');
                 } else if (songMeta.isDownloading) {
                     setSelectedSong(songMeta as any);
                     setNowPlaying(songMeta);
@@ -172,7 +181,8 @@ export const MelodiqGameContent: React.FC = () => {
         lastEvent, popNext, playSongOnTV, setRemoteSong, setFeedbackMessage,
         handleSelectSong, manager, isTVConnected, sendRemoteCommand,
         currentView, refreshSongs, isClient, getSongById, setSelectedSong,
-        setCurrentView, selectedSong, remoteSong, songs, activeParticipants
+        setCurrentView, selectedSong, remoteSong, songs, activeParticipants,
+        setActiveParticipants
     });
 
     // --- Actions ---
@@ -206,17 +216,14 @@ export const MelodiqGameContent: React.FC = () => {
     };
 
     const handleDownloadOnly = async (usdbSong: any) => {
+        // Only queue managers and admins can trigger downloads
+        if (isClient && clientRole !== 'admin' && clientRole !== 'queue_manager') {
+            setFeedbackMessage('Nur Queue Manager können Songs herunterladen.');
+            return;
+        }
         try {
-            const url = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
-            const token = localStorage.getItem('melodiq_helper_token') || '';
-            const helperUrl = url.replace(/\/$/, "");
-
-            const res = await fetch(`${helperUrl}/api/usdb/download`, {
+            const data = await melodiqFetch('/api/usdb/download', {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
                 body: JSON.stringify({
                     usdbId: usdbSong.usdbId,
                     artist: usdbSong.artist,
@@ -224,27 +231,24 @@ export const MelodiqGameContent: React.FC = () => {
                     videoMode: 'stream'
                 })
             });
-            const data = await res.json();
             if (data.jobIds && data.jobIds.length > 0) {
                 setFeedbackMessage(`Downloading: ${usdbSong.title}`);
             }
         } catch (err) {
             console.error('Download failed', err);
+            setFeedbackMessage('Download fehlgeschlagen.');
         }
     };
 
     const handleDownloadAndQueue = async (usdbSong: any) => {
+        // Only queue managers and admins can trigger downloads
+        if (isClient && clientRole !== 'admin' && clientRole !== 'queue_manager') {
+            setFeedbackMessage('Nur Queue Manager können Songs herunterladen.');
+            return;
+        }
         try {
-            const url = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
-            const token = localStorage.getItem('melodiq_helper_token') || '';
-            const helperUrl = url.replace(/\/$/, "");
-
-            const res = await fetch(`${helperUrl}/api/usdb/download`, {
+            const data = await melodiqFetch('/api/usdb/download', {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
                 body: JSON.stringify({
                     usdbId: usdbSong.usdbId,
                     artist: usdbSong.artist,
@@ -252,7 +256,6 @@ export const MelodiqGameContent: React.FC = () => {
                     videoMode: 'stream'
                 })
             });
-            const data = await res.json();
             if (data.jobIds && data.jobIds.length > 0) {
                 const jobId = data.jobIds[0];
                 const dummySong = {
@@ -267,6 +270,7 @@ export const MelodiqGameContent: React.FC = () => {
             }
         } catch (err) {
             console.error('Download failed', err);
+            setFeedbackMessage('Download fehlgeschlagen.');
         }
     };
 
@@ -382,6 +386,7 @@ export const MelodiqGameContent: React.FC = () => {
                         handleSongLongPress={handleSongLongPress}
                         handleDownloadOnly={handleDownloadOnly}
                         isSinger={isClient && clientRole === 'singer'}
+                        canDownload={!isClient || clientRole === 'admin' || clientRole === 'queue_manager'}
                     />
                 )}
 

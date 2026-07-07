@@ -30,7 +30,7 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose 
     const { clientRole, clientProfile } = useClientEngine();
     const isClient = new URLSearchParams(window.location.search).get('role') === 'client';
     
-    const canManageQueue = !isClient || clientRole === 'admin' || clientRole === 'queue_manager';
+    const canManageQueue = true; // All users can manage the queue now
 
     const [dragIndex, setDragIndex] = useState<number | null>(null);
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -79,6 +79,7 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose 
                     bgcolor: 'rgba(20, 20, 30, 0.98)',
                     display: 'flex',
                     flexDirection: 'column',
+                    marginBottom: '64px',
                 }
             }}
             slotProps={{

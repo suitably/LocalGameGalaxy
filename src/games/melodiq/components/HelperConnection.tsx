@@ -56,9 +56,15 @@ export const HelperConnection: React.FC = () => {
 
         try {
             const cleanUrl = url.replace(/\/$/, "");
+            
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            
             const res = await fetch(`${cleanUrl}/api/status`, {
-                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
 
             if (res.ok) {
                 const data = await res.json();

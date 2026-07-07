@@ -152,7 +152,7 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({ open, onClose }) =
             </Box>
 
             {/* Bottom Action Bar */}
-            <Box sx={{ p: 2, borderTop: '1px solid rgba(255,255,255,0.08)', bgcolor: 'rgba(0,0,0,0.2)' }}>
+            <Box sx={{ p: 2, pb: 'calc(16px + 64px)', borderTop: '1px solid rgba(255,255,255,0.08)', bgcolor: 'rgba(0,0,0,0.2)' }}>
                 <Button
                     variant="contained"
                     fullWidth

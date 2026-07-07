@@ -29,7 +29,10 @@ export function useDownloads(pollingIntervalMs: number = 2000) {
                     setJobs([...dataUsdb, ...dataSeparator]);
                 }
             } catch (err) {
-                console.error("Failed to fetch jobs", err);
+                if (err instanceof Error && (err.message.includes('Unauthorized') || err.message.includes('401') || err.message.includes('403'))) {
+                    console.error("Helper server token invalid. Stopping download polling.");
+                    isMounted = false; // Stop polling
+                }
             }
 
             if (isMounted) {
@@ -37,6 +40,9 @@ export function useDownloads(pollingIntervalMs: number = 2000) {
             }
         };
 
+        // 0 means disabled (e.g., on client phones, download tracking is irrelevant)
+        if (pollingIntervalMs === 0) return;
+        
         fetchJobs();
 
         return () => {

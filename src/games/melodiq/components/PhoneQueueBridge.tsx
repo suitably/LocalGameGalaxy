@@ -40,6 +40,19 @@ export const PhoneQueueBridge: React.FC = () => {
                         nowPlaying
                     };
                     manager.sendToPeer(peerId, payload);
+
+                    // Also send helper_config so the client knows the helper URL
+                    // and can load songs via the WebRTC proxy.
+                    // This is the trigger for the client's useSongs to start loading.
+                    const helperUrl = localStorage.getItem('melodiq_helper_url');
+                    const helperToken = localStorage.getItem('melodiq_helper_token');
+                    if (helperUrl) {
+                        manager.sendToPeer(peerId, {
+                            type: 'helper_config',
+                            url: helperUrl,
+                            token: helperToken
+                        });
+                    }
                     break;
                 }
 
