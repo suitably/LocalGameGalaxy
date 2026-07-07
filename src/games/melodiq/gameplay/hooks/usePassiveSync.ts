@@ -45,8 +45,10 @@ export function usePassiveSync({
         const handleGameState = (passiveState: PassiveGameState) => {
             if (!passiveState) return;
 
-            if (playersRef.current && playersRef.current.length !== passiveState.players.length) {
-                const newPlayers = passiveState.players.map(p => new PlayerRuntime({
+            const remotePlayers = passiveState.players || [];
+
+            if (playersRef.current && playersRef.current.length !== remotePlayers.length) {
+                const newPlayers = remotePlayers.map(p => new PlayerRuntime({
                     id: p.id,
                     name: p.name,
                     hue: p.hue,
@@ -58,7 +60,7 @@ export function usePassiveSync({
                 }
             }
 
-            passiveState.players.forEach((pState, idx) => {
+            remotePlayers.forEach((pState, idx) => {
                 const rt = playersRef.current?.[idx];
                 if (rt) {
                     rt.pitchRef.current = pState.currentPitch;
@@ -80,20 +82,24 @@ export function usePassiveSync({
             });
 
             if (passiveState.isPlaying !== isPlayingRef.current) {
+                // Immediately update ref to prevent duplicate trigger loops
+                if (isPlayingRef.current !== undefined) {
+                    (isPlayingRef as any).current = passiveState.isPlaying;
+                }
+                
                 if (passiveState.isPlaying) {
                     if (audioRef.current && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 1.0) {
                         audioRef.current.currentTime = passiveState.currentTime;
                         if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
                     }
                     const tryPlay = async () => {
+                        setIsPlaying(true);
                         try {
-                            await audioRef.current?.play();
-                            videoRef.current?.play().catch(() => { });
-                            setIsPlaying(true);
+                            if (audioRef.current) await audioRef.current.play();
+                            if (videoRef.current) videoRef.current.play().catch(() => { });
                             setPassivePlayBlocked(false);
                         } catch (e: any) {
                             console.warn('[Session] Passive play blocked by autoplay policy:', e.name);
-                            setPassivePlayBlocked(true);
                         }
                     };
                     tryPlay();
@@ -114,8 +120,9 @@ export function usePassiveSync({
             }
 
             if (isClient) {
-                // Calculate network latency if hostTimestamp is provided
-                const latency = passiveState.hostTimestamp ? (Date.now() - passiveState.hostTimestamp) / 1000 : 0;
+                // Ignore hostTimestamp because Date.now() on different devices is not synchronized (clock drift)
+                // Assume a fixed ~20ms latency for LAN WebRTC
+                const latency = 0.02;
                 const estimatedHostTime = passiveState.currentTime + latency;
                 
                 const drift = Math.abs(virtualTimeRef.current! - estimatedHostTime);

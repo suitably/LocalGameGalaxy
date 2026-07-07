@@ -23,6 +23,7 @@ interface UseScoringEngineProps {
     _duration: number;
     onPlaybackUpdate?: (state: any) => void;
     setScores?: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+    virtualTimeRef: React.RefObject<number>;
 }
 
 export function useScoringEngine({
@@ -44,12 +45,12 @@ export function useScoringEngine({
     isClient,
     _duration,
     onPlaybackUpdate,
-    setScores
+    setScores,
+    virtualTimeRef
 }: UseScoringEngineProps) {
     const requestRef = useRef<number>(0);
     const lastTimeRef = useRef<number>(performance.now());
     const lastScoreUpdateRef = useRef<number>(0);
-    const virtualTimeRef = useRef<number>(0);
 
     const processPlayer = useCallback((
         player: PlayerRuntime,
@@ -223,18 +224,25 @@ export function useScoringEngine({
 
     const updateLoop = useCallback(() => {
         const now = performance.now();
-        const deltaTime = now - lastTimeRef.current;
+        let deltaTime = now - lastTimeRef.current;
+        if (deltaTime > 100) deltaTime = 100; // Cap to 100ms to prevent massive jumps when tab is backgrounded
         lastTimeRef.current = now;
 
         const duration = (audioRef.current && Number.isFinite(audioRef.current.duration) && audioRef.current.duration > 0)
             ? audioRef.current.duration
             : (_duration > 0 ? _duration : 0);
 
-        const currentTime = audioRef.current ? audioRef.current.currentTime : 0;
+        let currentTime = (isPassive && isClient) ? virtualTimeRef.current! : (audioRef.current ? audioRef.current.currentTime : 0);
+
+        // Interpolate time for fully passive clients
+        if (isPassive && isClient && isPlayingRef.current) {
+            currentTime += (deltaTime / 1000);
+            (virtualTimeRef as any).current = currentTime;
+        }
 
         if (onPlaybackUpdate) {
             onPlaybackUpdate({
-                isPlaying: isPassive && passiveState ? passiveState.isPlaying : !audioRef.current?.paused,
+                isPlaying: isPassive ? isPlayingRef.current : !audioRef.current?.paused,
                 currentTime,
                 duration,
                 progress: duration > 0 ? (currentTime / duration) * 100 : 0
@@ -270,21 +278,13 @@ export function useScoringEngine({
         }
 
         if (progressLineRef.current) {
-            const dur = (audioRef.current && Number.isFinite(audioRef.current.duration) && audioRef.current.duration > 0)
-                ? audioRef.current.duration
-                : (_duration > 0 ? _duration : 0);
-
-            if (dur > 0) {
-                const audioNow = audioRef.current?.currentTime || 0;
-                const progress = Math.min(100, Math.max(0, (audioNow / dur) * 100));
+            if (duration > 0) {
+                const progress = Math.min(100, Math.max(0, (currentTime / duration) * 100));
                 progressLineRef.current.style.width = `${progress}%`;
             }
         }
 
         if (isPassive) {
-            if (isClient && isPlayingRef.current) {
-                virtualTimeRef.current += (deltaTime / 1000);
-            }
             requestRef.current = requestAnimationFrame(updateLoop);
             return;
         }

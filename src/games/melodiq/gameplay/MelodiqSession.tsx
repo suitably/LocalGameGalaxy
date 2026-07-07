@@ -217,7 +217,7 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
     useScoringEngine({
         players, ready, audioRef, vocalsRef, videoRef, scoreDisplayRef, progressLineRef, isPlayingRef,
         parsedSong, bpmMultiplier, trackScoreWeights, goldenNoteMultiplier, devPitchOverride,
-        isPassive, passiveState, isClient, _duration, onPlaybackUpdate
+        isPassive, passiveState, isClient, _duration, onPlaybackUpdate, virtualTimeRef
     });
 
     usePassiveSync({
@@ -347,6 +347,7 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
             isFinished,
             isPausedForScore,
             players: playersRef.current.map(p => ({
+                config: p.config,
                 id: p.config.id,
                 name: p.config.name,
                 hue: p.config.hue,
