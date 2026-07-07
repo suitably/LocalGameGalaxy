@@ -23,13 +23,15 @@ interface UseMelodiqGlobalEventsProps {
     remoteSong: SongMeta | null;
     songs: SongMeta[];
     activeParticipants?: any[] | null;
+    setActiveParticipants: (p: any[] | null) => void;
 }
 
 export const useMelodiqGlobalEvents = ({
     lastEvent, popNext, playSongOnTV, setRemoteSong, setFeedbackMessage,
     handleSelectSong, manager, isTVConnected, sendRemoteCommand,
     currentView, refreshSongs, isClient, getSongById, setSelectedSong,
-    setCurrentView, selectedSong, remoteSong, songs, activeParticipants
+    setCurrentView, selectedSong, remoteSong, songs, activeParticipants,
+    setActiveParticipants
 }: UseMelodiqGlobalEventsProps) => {
 
     const handleSelectSongRef = useRef(handleSelectSong);
@@ -98,7 +100,7 @@ export const useMelodiqGlobalEvents = ({
         const handleRemoteCommand = async (peerId: string, data: any) => {
             if (data.type === 'remote.command') {
                 if (data.command === 'PING') {
-                    manager.sendTo(peerId, { type: 'remote.command', command: 'PONG', value: Date.now() });
+                    manager.sendToPeer(peerId, { type: 'remote.command', command: 'PONG', value: Date.now() });
                     return;
                 }
                 
@@ -127,11 +129,39 @@ export const useMelodiqGlobalEvents = ({
                 if (isTVConnected) {
                     console.log('Forwarding remote command to TV:', data.command);
                     sendRemoteCommand(data.command, data.value);
+                } else {
+                    console.log('Handling remote command locally:', data.command);
+                    window.dispatchEvent(new CustomEvent('melodiq_host_command', { detail: { command: data.command, value: data.value } }));
                 }
             } else if (data.type === 'api_request') {
                 // Host handles API requests on behalf of Client
                 try {
-                    const resData = await melodiqFetchDirect(data.path, data.options);
+                    let resData;
+                    
+                    // Intercept single song requests and serve from Host memory if possible
+                    // This prevents 404s for newly downloaded songs not yet indexed by the helper server
+                    if (data.path.startsWith('/api/songs/') && data.path.split('/').length === 4) {
+                        const songId = data.path.split('/')[3];
+                        if (songId !== 'refresh') {
+                            const fullSong = await getSongById(songId);
+                            if (fullSong && fullSong.txtContent) {
+                                resData = fullSong;
+                            }
+                        }
+                    }
+
+                    if (!resData) {
+                        resData = await melodiqFetchDirect(data.path, data.options);
+                    }
+                    
+                    // Strip heavy fields from /api/songs to keep payload manageable
+                    if (data.path === '/api/songs' && Array.isArray(resData)) {
+                        resData = resData.map((s: any) => {
+                            const { txtContent, ...rest } = s;
+                            return rest;
+                        });
+                    }
+                    
                     const jsonStr = JSON.stringify({
                         type: 'api_response',
                         reqId: data.reqId,
@@ -142,7 +172,7 @@ export const useMelodiqGlobalEvents = ({
                     const chunkSize = 16000;
                     const totalChunks = Math.ceil(jsonStr.length / chunkSize);
                     for (let i = 0; i < totalChunks; i++) {
-                        manager.sendTo(peerId, {
+                        manager.sendToPeer(peerId, {
                             type: 'api_response_chunk',
                             reqId: data.reqId,
                             chunk: jsonStr.substring(i * chunkSize, (i + 1) * chunkSize),
@@ -158,7 +188,7 @@ export const useMelodiqGlobalEvents = ({
                         error: error.message || 'Host API Request Failed'
                     });
                     
-                    manager.sendTo(peerId, {
+                    manager.sendToPeer(peerId, {
                         type: 'api_response_chunk',
                         reqId: data.reqId,
                         chunk: errorStr,
@@ -207,10 +237,15 @@ export const useMelodiqGlobalEvents = ({
                     if (fullSong) {
                         pendingSyncIdRef.current = null;
                         setSelectedSong(fullSong);
+                        if (data.participants) setActiveParticipants(data.participants);
+                        setCurrentView('Session');
+                    } else if (data.activeSong && data.activeSong.title) {
+                        // If it's an online song, use the partial data from host
+                        pendingSyncIdRef.current = null;
+                        setSelectedSong(data.activeSong as any);
+                        if (data.participants) setActiveParticipants(data.participants);
                         setCurrentView('Session');
                     }
-                    // If not found yet, pendingSyncIdRef retains the id.
-                    // The effect below will retry once songs are available.
                 }).catch(err => console.error("Failed to sync session song:", err));
             } else {
                 pendingSyncIdRef.current = null;
@@ -243,15 +278,17 @@ export const useMelodiqGlobalEvents = ({
         if (!isClient && manager) {
             manager.broadcast({
                 type: 'session_sync',
-                activeSong: selectedSong ? { id: selectedSong.id } : null,
+                activeSong: selectedSong ? { id: selectedSong.id, title: selectedSong.title, artist: selectedSong.artist } : null,
                 participants: activeParticipants
             });
             // Also broadcast public helper URL so clients can load images
             const helperUrl = localStorage.getItem('melodiq_helper_url');
+            const helperToken = localStorage.getItem('melodiq_helper_token');
             if (helperUrl) {
                 manager.broadcast({
                     type: 'helper_config',
-                    url: helperUrl
+                    url: helperUrl,
+                    token: helperToken
                 });
             }
         }
