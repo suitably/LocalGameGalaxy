@@ -86,9 +86,11 @@ export const QRScannerDialog: React.FC<QRScannerDialogProps> = ({ open, onClose,
             // Stop and clear the scanner on unmount / close
             const scanner = scannerRef.current;
             if (scanner) {
-                scanner.isScanning
-                    ? scanner.stop().then(() => scanner.clear()).catch(() => {})
-                    : scanner.clear();
+                if (scanner.isScanning) {
+                    scanner.stop().then(() => scanner.clear()).catch(() => {});
+                } else {
+                    scanner.clear();
+                }
                 scannerRef.current = null;
             }
         };

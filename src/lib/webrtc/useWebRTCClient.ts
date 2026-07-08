@@ -15,12 +15,16 @@ export interface WebRTCClientOptions {
 
 export function useWebRTCClient(partyId: string | null, trackerUrls: string[], options: WebRTCClientOptions = {}) {
     const optionsRef = useRef(options);
-    optionsRef.current = options;
+    useEffect(() => {
+        optionsRef.current = options;
+    }, [options]);
 
     const { autoConnect = true } = options;
 
     const [statusClassName, setStatusClassName] = useState('status-connecting');
     const [statusMessage, setStatusMessage] = useState('Initializing...');
+    const [isConnected, setIsConnected] = useState(false);
+    const [peer, setPeer] = useState<SimplePeer.Instance | null>(null);
 
     const peerRef = useRef<SimplePeer.Instance | null>(null);
     const trackerClientRef = useRef<Client | null>(null);
@@ -30,6 +34,8 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
     const candidatePeersRef = useRef<Set<any>>(new Set());
     const pendingPeerCandidatesRef = useRef<any[]>([]);
     const isWebRTCConnectedRef = useRef<boolean>(false);
+    const connectRef = useRef<(() => Promise<void>) | undefined>(undefined);
+    const initiateConnectionRef = useRef<((trackerPeer: any, trackerPeerId: string) => void) | undefined>(undefined);
 
     const updateStatus = useCallback((message: string, className: string) => {
         setStatusMessage(message);
@@ -41,6 +47,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
         if (peerRef.current) {
             peerRef.current.destroy();
             peerRef.current = null;
+            setPeer(null);
         }
         if (trackerClientRef.current) {
             (trackerClientRef.current as any).stop();
@@ -58,6 +65,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
         });
         candidatePeersRef.current.clear();
         isWebRTCConnectedRef.current = false;
+        setIsConnected(false);
         pendingPeerCandidatesRef.current = [];
     }, []);
 
@@ -82,7 +90,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
         if (candidatePeersRef.current.size < MAX_CANDIDATES && pendingPeerCandidatesRef.current.length > 0) {
             const nextPeer = pendingPeerCandidatesRef.current.shift();
             const nextTpId = nextPeer.id || nextPeer._id || nextPeer.channelName || Math.random().toString(36);
-            initiateConnection(nextPeer, nextTpId);
+            initiateConnectionRef.current?.(nextPeer, nextTpId);
         }
     }, []);
 
@@ -187,7 +195,9 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
 
                     console.log('[WebRTCClient] Connected to host! (We won the race)');
                     isWebRTCConnectedRef.current = true;
+                    setIsConnected(true);
                     peerRef.current = peer;
+                    setPeer(peer);
                     updateStatus('✅ Connected', 'status-connected');
 
                     sendIdentity(peer, trackerPeer);
@@ -206,6 +216,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
 
                     if (isWebRTCConnectedRef.current && peerRef.current === peer) {
                         isWebRTCConnectedRef.current = false;
+                        setIsConnected(false);
                         updateStatus(`Connection lost: ${err.message}`, 'status-error');
                     }
                     trackerPeer.off('data', onData);
@@ -221,12 +232,13 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
 
                     if (isWebRTCConnectedRef.current && peerRef.current === peer) {
                         isWebRTCConnectedRef.current = false;
+                        setIsConnected(false);
                         updateStatus('Disconnected', 'status-disconnected');
                         
                         if (optionsRef.current.autoConnect) {
                             setTimeout(() => {
                                 if (!isWebRTCConnectedRef.current) {
-                                    connect();
+                                    connectRef.current?.();
                                 }
                             }, 2000);
                         }
@@ -260,6 +272,8 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
             trackerPeer.on('connect', setupAudioPeer);
         }
     }, [updateStatus, processNextPendingPeer, sendIdentity]);
+
+
 
     const setupPeerConnection = useCallback((trackerPeer: any) => {
         const trackerPeerId = trackerPeer.id || trackerPeer._id || trackerPeer.channelName || Math.random().toString(36);
@@ -342,6 +356,8 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
         }
     }, [partyId, trackerUrls, cleanup, updateStatus, setupPeerConnection]);
 
+
+
     const resendIdentity = useCallback(() => {
         if (peerRef.current && (peerRef.current as any).connected) {
             sendIdentity(peerRef.current);
@@ -369,6 +385,12 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
         }
     }, [connect, autoConnect]);
 
+    // Sync refs with callbacks
+    useEffect(() => {
+        connectRef.current = connect;
+        initiateConnectionRef.current = initiateConnection;
+    }, [connect, initiateConnection]);
+
     // Cleanup on unmount
     useEffect(() => {
         return cleanup;
@@ -377,10 +399,10 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
     return {
         statusMessage,
         statusClassName,
-        isConnected: isWebRTCConnectedRef.current,
+        isConnected,
         sendData,
         reconnect: connect,
-        peer: peerRef.current,
+        peer,
         resendIdentity
     };
 }

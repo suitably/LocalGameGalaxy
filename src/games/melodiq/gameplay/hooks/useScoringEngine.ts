@@ -49,8 +49,9 @@ export function useScoringEngine({
     virtualTimeRef
 }: UseScoringEngineProps) {
     const requestRef = useRef<number>(0);
-    const lastTimeRef = useRef<number>(performance.now());
+    const lastTimeRef = useRef<number>(0);
     const lastScoreUpdateRef = useRef<number>(0);
+    const updateLoopRef = useRef<(() => void) | undefined>(undefined);
 
     const processPlayer = useCallback((
         player: PlayerRuntime,
@@ -285,7 +286,7 @@ export function useScoringEngine({
         }
 
         if (isPassive) {
-            requestRef.current = requestAnimationFrame(updateLoop);
+            requestRef.current = requestAnimationFrame(() => updateLoopRef.current?.());
             return;
         }
 
@@ -304,7 +305,7 @@ export function useScoringEngine({
             lastScoreUpdateRef.current = now;
         }
 
-        requestRef.current = requestAnimationFrame(updateLoop);
+        requestRef.current = requestAnimationFrame(() => updateLoopRef.current?.());
     }, [
         audioRef, videoRef, vocalsRef,
         isPassive, isClient, isPlayingRef,
@@ -313,6 +314,11 @@ export function useScoringEngine({
     ]);
 
     useEffect(() => {
+        updateLoopRef.current = updateLoop;
+    }, [updateLoop]);
+
+    useEffect(() => {
+        lastTimeRef.current = performance.now();
         if (!ready) return;
 
         if (!isPassive && players.length > 0) {
@@ -323,7 +329,7 @@ export function useScoringEngine({
             console.log("[MelodiqSession] No players active (or passive mode), starting loop for playback/visuals only.");
         }
 
-        requestRef.current = requestAnimationFrame(updateLoop);
+        requestRef.current = requestAnimationFrame(() => updateLoopRef.current?.());
 
         return () => {
             cancelAnimationFrame(requestRef.current);

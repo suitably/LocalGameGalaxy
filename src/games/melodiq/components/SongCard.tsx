@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, Typography, Box, LinearProgress } from '@mui/material';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
@@ -22,9 +22,12 @@ interface SongCardProps {
  * Cover is loaded on-demand from the full Song table when visible.
  */
 export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, onActionClick, isDownloading, isDownloaded, downloadProgress, hasActiveJob }) => {
-    const [coverUrl, setCoverUrl] = useState<string | null>(null);
     const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPressRef = React.useRef(false);
+
+    const coverUrl = (song.hasCover !== false && song.cover && typeof song.cover === 'string' && song.cover.length > 0)
+        ? song.cover
+        : null;
 
     const handleStart = () => {
         if (isDownloading) return;
@@ -59,14 +62,6 @@ export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, 
         }
         onClick();
     };
-
-    useEffect(() => {
-        // Handle both local songs (song.hasCover) and usdb songs (no cover logic yet)
-        if (song.hasCover === false) return;
-        if (song.cover && typeof song.cover === 'string' && song.cover.length > 0) {
-            setCoverUrl(song.cover);
-        }
-    }, [song.id, song.hasCover, song.cover]);
 
     return (
         <Card

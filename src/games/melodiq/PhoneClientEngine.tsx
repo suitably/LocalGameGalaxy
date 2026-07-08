@@ -45,18 +45,19 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     const params = new URLSearchParams(window.location.search);
     const partyId = params.get('party');
 
-    const [trackerUrls, setTrackerUrls] = useState<string[]>([]);
-    useEffect(() => {
-        // Parse trackers from URL
-        const urls = params.getAll('tracker');
+    const [trackerUrls] = useState<string[]>(() => {
+        const urls = new URLSearchParams(window.location.search).getAll('tracker');
         if (urls.length > 0) {
-            setTrackerUrls(urls);
-        } else {
-            // Fallback to local storage if empty
-            const stored = localStorage.getItem('melodiq_tracker_urls');
-            if (stored) setTrackerUrls(JSON.parse(stored));
+            return urls;
         }
-    }, []);
+        const stored = localStorage.getItem('melodiq_tracker_urls');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch (e) {}
+        }
+        return [];
+    });
 
     // Profile State
     const [clientProfile, setClientProfile] = useState<ClientProfile>(() => {

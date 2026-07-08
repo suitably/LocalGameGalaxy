@@ -62,8 +62,22 @@ const MicVolumeMeter: React.FC<{ deviceId: string }> = ({ deviceId }) => {
 export const HardwareMicSetup: React.FC = () => {
     const { t } = useTranslation();
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
-    const [enabledMics, setEnabledMics] = useState<string[]>([]);
-    const [customNames, setCustomNames] = useState<Record<string, string>>({});
+    const [enabledMics, setEnabledMics] = useState<string[]>(() => {
+        try {
+            const stored = localStorage.getItem('melodiq_mic_slots');
+            return stored ? JSON.parse(stored).filter((id: string) => id) : [];
+        } catch {
+            return [];
+        }
+    });
+    const [customNames, setCustomNames] = useState<Record<string, string>>(() => {
+        try {
+            const stored = localStorage.getItem('melodiq_mic_names');
+            return stored ? JSON.parse(stored) : {};
+        } catch {
+            return {};
+        }
+    });
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editValue, setEditValue] = useState('');
 
@@ -88,11 +102,8 @@ export const HardwareMicSetup: React.FC = () => {
     };
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadDevices();
-        const stored = JSON.parse(localStorage.getItem('melodiq_mic_slots') || '[]');
-        setEnabledMics(stored.filter((id: string) => id));
-        const storedNames = JSON.parse(localStorage.getItem('melodiq_mic_names') || '{}');
-        setCustomNames(storedNames);
     }, []);
 
     const toggleMic = (deviceId: string) => {

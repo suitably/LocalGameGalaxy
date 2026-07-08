@@ -78,6 +78,7 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
     const lastValidPitchRef = useRef<number>(-1);
     const lastValidTimeRef = useRef<number>(0);
     const requestRef = useRef<number>(0);
+    const animateRef = useRef<(() => void) | undefined>(undefined);
 
     // Interpolation state for smooth rendering
     const lastAudioTimeRef = useRef<number>(0);
@@ -469,8 +470,12 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
             console.error("Error in PitchVisualizer animate loop:", e);
         }
 
-        requestRef.current = requestAnimationFrame(animate);
+        requestRef.current = requestAnimationFrame(() => animateRef.current?.());
     }, [song, audioRef, showDebugOverlay, label, dimensions, centerPitch, showNoteLabels, trackIndex, hue, latency]); // Deps for loop recreation
+
+    useEffect(() => {
+        animateRef.current = animate;
+    }, [animate]);
 
     useEffect(() => {
         const canvas = canvasRef.current;

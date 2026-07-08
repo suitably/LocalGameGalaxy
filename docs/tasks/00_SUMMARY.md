@@ -8,5 +8,7 @@ This directory contains task checklists tracking the progress of work. Files are
 - [Unify YouTube Search Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/unify-youtube-search-tasks.md)
 - [Global Default Video Mode Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/global-vmode-tasks.md)
 - [UI Auto-detect Self-Hosted Tracker Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/ui-autodetect-tracker-tasks.md)
+- [ESLint Warning and State Effect Cleanup Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/eslint-cleanup-tasks.md)
+- [Responsive Lyrics Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/responsive-lyrics-tasks.md)
 
 ID: DOCS-TASKS-SUMMARY

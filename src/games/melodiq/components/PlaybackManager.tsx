@@ -137,7 +137,8 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     };
 
     // sendClientCommand is used to control the remote session.
-    const { sendClientCommand, isSessionPlaying } = isClient ? useClientEngine() : { sendClientCommand: undefined, isSessionPlaying: false };
+    const clientEngine = useClientEngine();
+    const { sendClientCommand, isSessionPlaying } = isClient ? clientEngine : { sendClientCommand: undefined, isSessionPlaying: false };
 
     const canControlPlayback = true; // All users can control playback by default now
     const actualIsPlaying = isClient ? isSessionPlaying : playbackState.isPlaying;
@@ -212,27 +213,6 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         }
     }));
 
-    // Listen for local host commands (from proxy or UI)
-    useEffect(() => {
-        if (isClient) return; // Clients don't handle host commands locally
-
-        const handleHostCommand = (e: any) => {
-            const command = (e.detail.command || '').toLowerCase();
-            if (command === 'play' || command === 'pause' || command === 'toggle') {
-                if (selectedSong) {
-                    sessionRef.current?.togglePlay();
-                } else if (!selectedSong && queue.length > 0) {
-                    handleMiniPlayerNext();
-                }
-            } else if (command === 'next') {
-                handleMiniPlayerNext();
-            }
-        };
-
-        window.addEventListener('melodiq_host_command', handleHostCommand);
-        return () => window.removeEventListener('melodiq_host_command', handleHostCommand);
-    }, [isClient, selectedSong, queue.length]);
-
     // Handle MiniPlayer Next Logic
     const handleMiniPlayerNext = () => {
         if (isClient && sendClientCommand) {
@@ -288,6 +268,29 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
              }
         }
     };
+
+    // Listen for local host commands (from proxy or UI)
+    useEffect(() => {
+        if (isClient) return; // Clients don't handle host commands locally
+
+        const handleHostCommand = (e: any) => {
+            const command = (e.detail.command || '').toLowerCase();
+            if (command === 'play' || command === 'pause' || command === 'toggle') {
+                if (selectedSong) {
+                    sessionRef.current?.togglePlay();
+                } else if (!selectedSong && queue.length > 0) {
+                    handleMiniPlayerNext();
+                }
+            } else if (command === 'next') {
+                handleMiniPlayerNext();
+            }
+        };
+
+        window.addEventListener('melodiq_host_command', handleHostCommand);
+        return () => window.removeEventListener('melodiq_host_command', handleHostCommand);
+    }, [isClient, selectedSong, queue.length]);
+
+;
 
     // Determine if we are in "restored" mode (page was reloaded while a song was playing)
     const isInRestoredMode = !selectedSong && !remoteSong && !!restoredSong;

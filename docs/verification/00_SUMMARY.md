@@ -7,5 +7,7 @@ This directory contains walkthroughs and verification logs. These documents prov
 - [Unify YouTube Search Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/unify-youtube-search-walkthrough.md)
 - [Global Default Video Mode Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/global-vmode-walkthrough.md)
 - [UI Auto-detect Self-Hosted Tracker Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/ui-autodetect-tracker-walkthrough.md)
+- [ESLint Warning and State Effect Cleanup Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/eslint-cleanup-walkthrough.md)
+- [Responsive Lyrics Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/responsive-lyrics-walkthrough.md)
 
 ID: DOCS-VERIFICATION-SUMMARY

@@ -89,24 +89,20 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
         return allCategories.map(c => c.id);
     });
 
+    const resolvedImposterCount = isManualImposterCount
+        ? imposterCount
+        : Math.max(1, Math.floor(players.length / 4));
+
     // Save settings to localStorage whenever they change
     useEffect(() => {
         localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify({
-            imposterCount,
+            imposterCount: resolvedImposterCount,
             isManualImposterCount,
             timerMinutes,
             timerSeconds,
             selectedCategoryIds
         }));
-    }, [imposterCount, isManualImposterCount, timerMinutes, timerSeconds, selectedCategoryIds]);
-
-    // Auto-calculate imposter count based on players
-    useEffect(() => {
-        if (!isManualImposterCount) {
-            const calculated = Math.max(1, Math.floor(players.length / 4));
-            setImposterCount(calculated);
-        }
-    }, [players.length, isManualImposterCount]);
+    }, [resolvedImposterCount, isManualImposterCount, timerMinutes, timerSeconds, selectedCategoryIds]);
 
     const handleAdd = () => {
         if (newName.trim()) {

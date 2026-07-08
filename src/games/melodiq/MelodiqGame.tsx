@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Box, Snackbar, Alert } from '@mui/material';
 import { type Song, type SongMeta } from './db';
 import { MelodiqSettings } from './MelodiqSettings';
@@ -74,11 +74,13 @@ export const MelodiqGameContent: React.FC = () => {
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
 
 
-    useEffect(() => {
+    const [prevDefaultViewMode, setPrevDefaultViewMode] = useState(settings.defaultViewMode);
+    if (settings.defaultViewMode !== prevDefaultViewMode) {
+        setPrevDefaultViewMode(settings.defaultViewMode);
         if (settings.defaultViewMode) {
             setViewMode(settings.defaultViewMode);
         }
-    }, [settings.defaultViewMode]);
+    }
 
     const handleCurrentSongDownloaded = useCallback((realSong: any) => {
         setSelectedSong(realSong);
@@ -286,11 +288,9 @@ export const MelodiqGameContent: React.FC = () => {
         }
     }, [sendGameUpdate, manager, isClient]);
 
-    useEffect(() => {
-        if (selectedSong || remoteSong) {
-            setRestoredSong(null);
-        }
-    }, [selectedSong, remoteSong]);
+    if ((selectedSong || remoteSong) && restoredSong !== null) {
+        setRestoredSong(null);
+    }
 
     if (currentView === 'DownloadWait') {
         return (

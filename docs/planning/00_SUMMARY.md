@@ -8,5 +8,7 @@ This directory contains implementation plans for proposed changes. Each plan det
 - [Unify YouTube Search Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/unify-youtube-search-plan.md)
 - [Global Default Video Mode Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/global-vmode-plan.md)
 - [UI Auto-detect Self-Hosted Tracker Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/ui-autodetect-tracker-plan.md)
+- [ESLint Warning and State Effect Cleanup Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/eslint-cleanup-plan.md)
+- [Responsive Lyrics Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/responsive-lyrics-plan.md)
 
 ID: DOCS-PLANNING-SUMMARY

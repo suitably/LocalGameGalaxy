@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -21,9 +21,12 @@ interface SongListItemProps {
 }
 
 export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLongPress, onMenuClick, onActionClick, isDownloading, isDownloaded, downloadProgress, hasActiveJob }) => {
-    const [coverUrl, setCoverUrl] = useState<string | null>(null);
     const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPressRef = React.useRef(false);
+
+    const coverUrl = (song.hasCover && typeof song.cover === 'string' && song.cover.length > 0)
+        ? song.cover
+        : null;
 
     const handleStart = () => {
         isLongPressRef.current = false;
@@ -54,15 +57,6 @@ export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLon
         }
         onClick();
     };
-
-    useEffect(() => {
-        if (!song.hasCover) return;
-
-        // Cover is now always a string URL from the helper
-        if (typeof song.cover === 'string' && song.cover.length > 0) {
-            setCoverUrl(song.cover);
-        }
-    }, [song.id, song.hasCover, song.cover]);
 
     return (
         <Box
