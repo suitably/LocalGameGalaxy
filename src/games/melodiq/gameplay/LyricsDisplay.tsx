@@ -194,7 +194,11 @@ const LyricsLane: React.FC<LyricsLaneProps & { bpm: number }> = React.memo(({ no
                         <Typography
                             variant="h4"
                             sx={{
-                                fontSize: `${2.0 * scale}rem`,
+                                fontSize: {
+                                    xs: `${2.0 * scale}rem`,
+                                    md: `${3.0 * scale}rem`,
+                                    lg: `${3.5 * scale}rem`,
+                                },
                                 fontWeight: 'bold',
                                 color: primaryColor,
                                 textShadow: `0 0 20px ${primaryColor}`,
@@ -215,7 +219,11 @@ const LyricsLane: React.FC<LyricsLaneProps & { bpm: number }> = React.memo(({ no
                                     key={idx}
                                     variant="h5"
                                     sx={{
-                                        fontSize: `${3.0 * scale}rem`,
+                                        fontSize: {
+                                            xs: `${3.0 * scale}rem`,
+                                            md: `${4.5 * scale}rem`,
+                                            lg: `${5.5 * scale}rem`,
+                                        },
                                         fontWeight: isActive ? 'bold' : 'normal',
                                         color: noteColor,
                                         textShadow: isActive ? `0 0 10px ${primaryColor}` : 'none',
@@ -247,7 +255,11 @@ const LyricsLane: React.FC<LyricsLaneProps & { bpm: number }> = React.memo(({ no
                                 key={idx}
                                 variant="body1"
                                 sx={{
-                                    fontSize: `${1.5 * scale}rem`,
+                                    fontSize: {
+                                        xs: `${1.5 * scale}rem`,
+                                        md: `${2.0 * scale}rem`,
+                                        lg: `${2.5 * scale}rem`,
+                                    },
                                     color: 'rgba(255,255,255,0.8)', // Slightly brighter since background is dark
                                     fontWeight: 'light',
                                     whiteSpace: 'pre'
