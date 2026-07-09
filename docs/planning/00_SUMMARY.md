@@ -10,5 +10,6 @@ This directory contains implementation plans for proposed changes. Each plan det
 - [UI Auto-detect Self-Hosted Tracker Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/ui-autodetect-tracker-plan.md)
 - [ESLint Warning and State Effect Cleanup Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/eslint-cleanup-plan.md)
 - [Responsive Lyrics Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/responsive-lyrics-plan.md)
+- [GitHub Issues Integration Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/github-issues-integration-plan.md)
 
 ID: DOCS-PLANNING-SUMMARY

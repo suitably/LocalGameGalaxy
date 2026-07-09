@@ -418,6 +418,15 @@
     "language_preferences": "Language Preferences",
     "ui_language": "UI Language",
     "english": "English",
-    "german": "Deutsch"
+    "german": "Deutsch",
+    "feedback_title": "Feedback & Bug Report",
+    "feedback_desc": "Found a bug or have a suggestion? Submit it here to create a GitHub issue via your helper server.",
+    "issue_title": "Title",
+    "issue_body": "Description",
+    "submit": "Submit Feedback",
+    "submitting": "Submitting...",
+    "submit_success": "Feedback successfully submitted!",
+    "submit_error": "Failed to submit feedback: {{error}}",
+    "view_issue": "View on GitHub"
   }
 }

@@ -418,6 +418,15 @@
     "language_preferences": "Spracheinstellungen",
     "ui_language": "Sprache der Benutzeroberfläche",
     "english": "English",
-    "german": "Deutsch"
+    "german": "Deutsch",
+    "feedback_title": "Feedback & Fehlerberichte",
+    "feedback_desc": "Fehler gefunden oder einen Vorschlag? Sende ihn hier ab, um automatisch ein GitHub-Issue über deinen Helper-Server zu erstellen.",
+    "issue_title": "Titel",
+    "issue_body": "Beschreibung",
+    "submit": "Feedback absenden",
+    "submitting": "Wird gesendet...",
+    "submit_success": "Feedback erfolgreich gesendet!",
+    "submit_error": "Feedback konnte nicht gesendet werden: {{error}}",
+    "view_issue": "Auf GitHub ansehen"
   }
 }

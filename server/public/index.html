@@ -1078,6 +1078,29 @@
                 <div id="pref-status" style="font-size:0.85rem; color:#65676b; margin-top:4px;"></div>
             </div>
 
+            <!-- GitHub Issue Integration -->
+            <div style="margin-bottom:18px; padding:14px; background:#f7f8fa; border-radius:8px;">
+                <span class="label">GitHub Issue Integration</span>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+                    <div>
+                        <span style="font-size:0.85rem; font-weight:600; display:block; margin-bottom:4px;">Repository Owner</span>
+                        <input type="text" id="github-owner" placeholder="suitably" style="width:100%;">
+                    </div>
+                    <div>
+                        <span style="font-size:0.85rem; font-weight:600; display:block; margin-bottom:4px;">Repository Name</span>
+                        <input type="text" id="github-repo" placeholder="LocalGameGalaxy" style="width:100%;">
+                    </div>
+                </div>
+                <div>
+                    <span style="font-size:0.85rem; font-weight:600; display:block; margin-bottom:4px;">Personal Access Token (PAT)</span>
+                    <div class="row">
+                        <input type="password" id="github-token" placeholder="GitHub PAT (requires 'issues' write permission)" style="flex:1;">
+                        <button onclick="saveGithubConfig()">Save Integration</button>
+                    </div>
+                </div>
+                <div id="github-status" style="font-size:0.85rem; color:#65676b; margin-top:4px;"></div>
+            </div>
+
             <!-- Search & Filters -->
             <div style="margin-bottom:14px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -1290,6 +1313,22 @@
                 }
             } catch(_) {}
             
+            try {
+                const rGit = await fetch('/api/config/github?token=' + API_TOKEN);
+                const gitData = await rGit.json();
+                if (gitData.githubOwner) {
+                    document.getElementById('github-owner').value = gitData.githubOwner;
+                }
+                if (gitData.githubRepo) {
+                    document.getElementById('github-repo').value = gitData.githubRepo;
+                }
+                if (gitData.hasToken) {
+                    document.getElementById('github-token').value = '********';
+                }
+            } catch(e) {
+                console.error('Failed to load GitHub config', e);
+            }
+            
             // Poll for existing jobs on page load
             if (typeof pollJobs === 'function') pollJobs();
         })();
@@ -1367,6 +1406,34 @@
                     // Update current UI select boxes
                     document.getElementById('global-vmode').value = vmode;
                     document.getElementById('manual-vmode').value = vmode;
+                    setTimeout(() => statusDiv.textContent = '', 2000);
+                } else {
+                    statusDiv.innerHTML = '<span style="color:#dc3545;">❌ Error saving</span>';
+                }
+            } catch(e) {
+                statusDiv.innerHTML = `<span style="color:#dc3545;">❌ ${e.message}</span>`;
+            }
+        }
+
+        async function saveGithubConfig() {
+            const owner = document.getElementById('github-owner').value.trim();
+            const repo = document.getElementById('github-repo').value.trim();
+            const token = document.getElementById('github-token').value;
+            const statusDiv = document.getElementById('github-status');
+            
+            statusDiv.textContent = 'Saving...';
+            try {
+                const r = await fetch('/api/config/github?token=' + API_TOKEN, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ owner, repo, token })
+                });
+                const d = await r.json();
+                if (d.ok) {
+                    statusDiv.innerHTML = '<span style="color:#28a745;">✅ GitHub integration settings saved</span>';
+                    if (token && token !== '********') {
+                        document.getElementById('github-token').value = '********';
+                    }
                     setTimeout(() => statusDiv.textContent = '', 2000);
                 } else {
                     statusDiv.innerHTML = '<span style="color:#dc3545;">❌ Error saving</span>';

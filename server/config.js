@@ -16,7 +16,10 @@ const defaultConfig = {
     usdbPassword: null,      // USDB login password
     apiKeys: [],             // Array of API key objects
     defaultDownloadMode: 'stream', // 'stream', 'mp4', or 'none'
-    autoVocalSeparation: false // Automatically separate vocals after download
+    autoVocalSeparation: false, // Automatically separate vocals after download
+    githubOwner: 'suitably',
+    githubRepo: 'LocalGameGalaxy',
+    githubToken: null
 };
 
 let currentConfig = { ...defaultConfig };
@@ -230,5 +233,32 @@ module.exports = {
             return true;
         }
         return false;
+    },
+
+    get githubOwner() {
+        return currentConfig.githubOwner || 'suitably';
+    },
+
+    set githubOwner(value) {
+        currentConfig.githubOwner = value || 'suitably';
+        saveConfig();
+    },
+
+    get githubRepo() {
+        return currentConfig.githubRepo || 'LocalGameGalaxy';
+    },
+
+    set githubRepo(value) {
+        currentConfig.githubRepo = value || 'LocalGameGalaxy';
+        saveConfig();
+    },
+
+    get githubToken() {
+        return currentConfig.githubToken || null;
+    },
+
+    set githubToken(value) {
+        currentConfig.githubToken = value || null;
+        saveConfig();
     }
 };

@@ -703,4 +703,87 @@ router.delete('/api/config/apikeys/:id', (req, res) => {
     }
 });
 
+// --- CONFIG GITHUB INTEGRATION ---
+router.get('/api/config/github', (req, res) => {
+    res.json({
+        githubOwner: config.githubOwner,
+        githubRepo: config.githubRepo,
+        hasToken: !!config.githubToken
+    });
+});
+
+router.post('/api/config/github', (req, res) => {
+    const { owner, repo, token } = req.body;
+    if (owner !== undefined) config.githubOwner = owner;
+    if (repo !== undefined) config.githubRepo = repo;
+    if (token !== undefined && token !== '********') {
+        config.githubToken = token || null;
+    }
+    res.json({ ok: true });
+});
+
+// --- FEEDBACK / ISSUE SUBMISSION ---
+router.post('/api/feedback', async (req, res) => {
+    const { title, body, type } = req.body;
+    if (!title || !body) {
+        return res.status(400).json({ error: 'Missing title or body' });
+    }
+
+    const token = config.githubToken;
+    const owner = config.githubOwner;
+    const repo = config.githubRepo;
+
+    if (!token) {
+        return res.status(400).json({ 
+            error: 'GitHub Token is not configured on the backend server. Please configure it in the server settings.' 
+        });
+    }
+
+    // Map types to GitHub labels and title prefixes
+    let labels = ['user-feedback'];
+    let prefix = '[Feedback]';
+    
+    if (type === 'bug') {
+        labels.push('bug');
+        prefix = '[Bug]';
+    } else if (type === 'feature') {
+        labels.push('enhancement');
+        prefix = '[Feature Request]';
+    } else if (type === 'suggestion') {
+        labels.push('question');
+        prefix = '[Suggestion]';
+    }
+
+    try {
+        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `token ${token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'LocalGameGalaxy-Server',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                title: `${prefix} ${title}`,
+                body: body,
+                labels: labels
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.error('[GitHub API Error]', data);
+            return res.status(response.status).json({ 
+                error: data.message || 'Failed to create GitHub issue' 
+            });
+        }
+
+        res.json({ success: true, issueUrl: data.html_url, number: data.number });
+    } catch (e) {
+        console.error('[Feedback Error]', e);
+        res.status(500).json({ error: 'Failed to submit feedback: ' + e.message });
+    }
+});
+
 module.exports = router;
