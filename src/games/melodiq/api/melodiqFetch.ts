@@ -67,9 +67,13 @@ export const melodiqFetch = async (path: string, options: RequestInit = {}): Pro
 
         return new Promise((resolve, reject) => {
             const reqId = crypto.randomUUID();
+            let timer: ReturnType<typeof setTimeout> | undefined;
             
             const handleResponse = (e: Event) => {
                 const customEvent = e as CustomEvent;
+                if (timer) {
+                    clearTimeout(timer);
+                }
                 window.removeEventListener(`melodiq_api_response_${reqId}`, handleResponse);
                 
                 if (customEvent.detail.status >= 200 && customEvent.detail.status < 300) {
@@ -81,15 +85,15 @@ export const melodiqFetch = async (path: string, options: RequestInit = {}): Pro
             
             window.addEventListener(`melodiq_api_response_${reqId}`, handleResponse);
             
-            window.dispatchEvent(new CustomEvent('melodiq_client_send_data', {
-                detail: { type: 'api_request', reqId, path, options }
-            }));
-            
             // Timeout after 45 seconds (chunked large responses need more time)
-            setTimeout(() => {
+            timer = setTimeout(() => {
                 window.removeEventListener(`melodiq_api_response_${reqId}`, handleResponse);
                 reject(new Error('API Request Timeout'));
             }, 45000);
+            
+            window.dispatchEvent(new CustomEvent('melodiq_client_send_data', {
+                detail: { type: 'api_request', reqId, path, options }
+            }));
         });
     }
 
