@@ -187,7 +187,7 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
 
     useSessionEnd({
         playersRef: useRef([]), // Updated below
-        song, setResults, setIsFinished, setIsPlaying, videoRef
+        song, setResults, setIsFinished, setIsPlaying, videoRef, isTVMode
     });
 
     const { players, setPlayers, playersRef, ready } = useSessionPlayers({
@@ -209,7 +209,7 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
     // Fixed by relying on the playersRef returned by useSessionPlayers.
 
     const { handleSongEnd: handleSongEndBound } = useSessionEnd({
-        playersRef, song, setResults, setIsFinished, setIsPlaying, videoRef
+        playersRef, song, setResults, setIsFinished, setIsPlaying, videoRef, isTVMode
     });
 
     const [devPitchOverride, setDevPitchOverride] = useState<number | null>(null);

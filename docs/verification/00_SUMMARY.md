@@ -12,6 +12,7 @@ This directory contains walkthroughs and verification logs. These documents prov
 - [GitHub Issues Integration Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/github-issues-integration-walkthrough.md)
 - [Unstable WebRTC Manager Recreation Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/unstable-webrtc-manager-recreation-walkthrough.md)
 - [Stale Pitch Scoring Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/stale-pitch-scoring-walkthrough.md)
+- [TV Song End Fix Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/tv-song-end-fix-walkthrough.md)
 
 
 ID: DOCS-VERIFICATION-SUMMARY
