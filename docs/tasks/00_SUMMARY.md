@@ -11,5 +11,7 @@ This directory contains task checklists tracking the progress of work. Files are
 - [ESLint Warning and State Effect Cleanup Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/eslint-cleanup-tasks.md)
 - [Responsive Lyrics Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/responsive-lyrics-tasks.md)
 - [GitHub Issues Integration Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/github-issues-integration-tasks.md)
+- [Unstable WebRTC Manager Recreation Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/unstable-webrtc-manager-recreation-tasks.md)
+
 
 ID: DOCS-TASKS-SUMMARY

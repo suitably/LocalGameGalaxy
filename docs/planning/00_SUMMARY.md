@@ -11,5 +11,7 @@ This directory contains implementation plans for proposed changes. Each plan det
 - [ESLint Warning and State Effect Cleanup Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/eslint-cleanup-plan.md)
 - [Responsive Lyrics Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/responsive-lyrics-plan.md)
 - [GitHub Issues Integration Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/github-issues-integration-plan.md)
+- [Unstable WebRTC Manager Recreation Fix Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/unstable-webrtc-manager-recreation-plan.md)
+
 
 ID: DOCS-PLANNING-SUMMARY

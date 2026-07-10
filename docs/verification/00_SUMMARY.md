@@ -10,5 +10,7 @@ This directory contains walkthroughs and verification logs. These documents prov
 - [ESLint Warning and State Effect Cleanup Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/eslint-cleanup-walkthrough.md)
 - [Responsive Lyrics Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/responsive-lyrics-walkthrough.md)
 - [GitHub Issues Integration Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/github-issues-integration-walkthrough.md)
+- [Unstable WebRTC Manager Recreation Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/unstable-webrtc-manager-recreation-walkthrough.md)
+
 
 ID: DOCS-VERIFICATION-SUMMARY

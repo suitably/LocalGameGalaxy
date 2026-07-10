@@ -6,18 +6,21 @@ export const useWebRTC = () => {
     return useWebRTCHost<MicRemotePeer, WebRTCMicManager>();
 };
 
+const createMicManager = (partyId: string, trackerUrls: string[], callbacks: any) => {
+    return new WebRTCMicManager(partyId, trackerUrls, callbacks);
+};
+
 export const WebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
         <WebRTCHostProvider<MicRemotePeer, WebRTCMicManager>
             gameId="melodiq"
-            createManager={(partyId, trackerUrls, callbacks) => {
-                return new WebRTCMicManager(partyId, trackerUrls, callbacks);
-            }}
+            createManager={createMicManager}
         >
             {children}
         </WebRTCHostProvider>
     );
 };
+
 
 export const WebRTCMockProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return (
