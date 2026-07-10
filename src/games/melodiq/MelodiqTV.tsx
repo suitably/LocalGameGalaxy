@@ -3,7 +3,6 @@ import { Box, Typography, CircularProgress } from '@mui/material';
 import GamepadIcon from '@mui/icons-material/Gamepad';
 import { MelodiqSession } from './gameplay/MelodiqSession';
 import { type PassiveGameState } from './types';
-import { SettingsProvider } from './hooks/SettingsContext';
 import { WebRTCHostContext, type WebRTCHostContextType } from '../../lib/webrtc';
 
 import { initMelodiqI18n } from './i18n';
@@ -116,23 +115,21 @@ export const MelodiqTV: React.FC = () => {
 
     if (activeSong) {
         return (
-            <SettingsProvider>
-                <MockWebRTCProvider>
-                    <Box sx={{ width: '100vw', height: '100vh', bgcolor: 'black', overflow: 'hidden' }}>
-                        <MelodiqSession
-                            key={activeSong.id}
-                            song={activeSong}
-                            isTVMode={true}
-                            isPassive={true}
-                            passiveState={passiveState}
-                            onExit={() => setActiveSong(null)}
-                            // We don't mute audio on TV, it should play!
-                            muteAudio={false}
-                            uiScale={2.0}
-                        />
-                    </Box>
-                </MockWebRTCProvider>
-            </SettingsProvider>
+            <MockWebRTCProvider>
+                <Box sx={{ width: '100vw', height: '100vh', bgcolor: 'black', overflow: 'hidden' }}>
+                    <MelodiqSession
+                        key={activeSong.id}
+                        song={activeSong}
+                        isTVMode={true}
+                        isPassive={true}
+                        passiveState={passiveState}
+                        onExit={() => setActiveSong(null)}
+                        // We don't mute audio on TV, it should play!
+                        muteAudio={false}
+                        uiScale={2.0}
+                    />
+                </Box>
+            </MockWebRTCProvider>
         );
     }
 

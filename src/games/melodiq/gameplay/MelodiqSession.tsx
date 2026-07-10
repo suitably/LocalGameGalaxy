@@ -160,7 +160,8 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
         isPlaying, setIsPlaying,
         isFinished,
         isPausedForScore, setIsPausedForScore,
-        muteAudio, songVolume, masterVolume
+        muteAudio, songVolume, masterVolume,
+        vocalsVolume: settings.vocalsVolume ?? 1.0
     });
 
     useSessionEnd({

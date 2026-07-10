@@ -1,7 +1,7 @@
 import React from 'react';
 import { MicrophoneManager, type PitchResult } from '../../audio/MicrophoneManager';
 import { WebRTCMicManager } from '../../audio/WebRTCMicManager';
-import { type UserProfile } from '../../MelodiqSettings';
+import { type UserProfile } from '../../types';
 import { type RatingType } from '../ScoreDisplay';
 import { type SungSegment } from '../PitchVisualizer';
 

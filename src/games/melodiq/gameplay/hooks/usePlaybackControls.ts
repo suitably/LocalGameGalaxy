@@ -12,6 +12,7 @@ interface UsePlaybackControlsProps {
     muteAudio: boolean;
     songVolume: number;
     masterVolume: number;
+    vocalsVolume: number;
 }
 
 export function usePlaybackControls({
@@ -25,7 +26,8 @@ export function usePlaybackControls({
     setIsPausedForScore,
     muteAudio,
     songVolume,
-    masterVolume
+    masterVolume,
+    vocalsVolume
 }: UsePlaybackControlsProps) {
     const playPromiseRef = useRef<Promise<void> | null>(null);
 
@@ -41,6 +43,13 @@ export function usePlaybackControls({
 
     const safePlay = useCallback(async () => {
         if (!audioRef.current) return;
+        // Apply volume settings before every play() call to ensure they are correct
+        // even on the very first autostart (when the volume useEffect may have run
+        // before audioRef was attached to the DOM element).
+        audioRef.current.volume = muteAudio ? 0 : songVolume * masterVolume;
+        if (vocalsRef.current) {
+            vocalsRef.current.volume = muteAudio ? 0 : vocalsVolume * masterVolume;
+        }
         try {
             playPromiseRef.current = audioRef.current.play();
             if (vocalsRef.current) vocalsRef.current.play().catch(e => console.warn("Vocals play failed", e));
@@ -57,7 +66,7 @@ export function usePlaybackControls({
         } finally {
             playPromiseRef.current = null;
         }
-    }, [audioRef, vocalsRef, videoRef, setIsPlaying]);
+    }, [audioRef, vocalsRef, videoRef, setIsPlaying, muteAudio, songVolume, masterVolume, vocalsVolume]);
 
     const resumeFromScore = useCallback(() => {
         setIsPausedForScore(false);

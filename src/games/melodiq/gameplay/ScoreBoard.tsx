@@ -4,7 +4,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'; // Trophy icon
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import HistoryIcon from '@mui/icons-material/History';
 import StarIcon from '@mui/icons-material/Star';
-import type { UserProfile } from '../MelodiqSettings';
+import type { UserProfile } from '../types';
 import { useQueue } from '../hooks/useQueue';
 import { useMelodiqSettings } from '../hooks/SettingsContext';
 

@@ -3,6 +3,7 @@ import { AppBar, Toolbar, Typography, IconButton, Menu, MenuItem, Box, Tooltip, 
 import MenuIcon from '@mui/icons-material/Menu';
 import HomeIcon from '@mui/icons-material/Home';
 import SettingsIcon from '@mui/icons-material/Settings';
+import FeedbackIcon from '@mui/icons-material/Feedback';
 import { useTranslation } from 'react-i18next';
 import { useLayout } from '../../context/LayoutContext';
 import { useTitle } from '../../context/TitleContext';
@@ -79,6 +80,18 @@ export const GlobalHeader: React.FC = () => {
                         </IconButton>
                     </Tooltip>
                 )}
+
+                {/* Feedback Icon - always visible */}
+                <Tooltip title={t('settings.feedback_title', 'Feedback & Bug Report')}>
+                    <IconButton
+                        id="feedback-button"
+                        color="inherit"
+                        onClick={() => window.dispatchEvent(new Event('feedback:open'))}
+                        sx={{ ml: 1 }}
+                    >
+                        <FeedbackIcon />
+                    </IconButton>
+                </Tooltip>
 
                 {/* Always Visible Actions (Custom actions lik CastButton usually stay visible) */}
                 {customHeaderActions}

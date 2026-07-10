@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { PlayerRuntime } from './PlayerRuntime';
-import { type UserProfile, type ActivePlayer } from '../../MelodiqSettings';
+import { type UserProfile, type ActivePlayer } from '../../types';
 import { type Song } from '../../db';
 
 interface UseSessionPlayersProps {

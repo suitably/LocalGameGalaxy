@@ -1,164 +1,126 @@
 import React, { useState } from 'react';
-import { Box, Typography, Paper, FormControl, InputLabel, Select, MenuItem, TextField, Button, Alert, CircularProgress } from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material';
+import { Box, Typography, Tabs, Tab, IconButton, useTheme, useMediaQuery, Paper } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useTranslation } from 'react-i18next';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePageTitle } from '../../context/TitleContext';
+import { GeneralSettings } from './components/GeneralSettings';
+import { MelodiqSettingsCategory } from './components/MelodiqSettingsCategory';
 
-export const Settings: React.FC = () => {
-    const { t, i18n } = useTranslation();
+interface SettingsProps {
+    activeGameId?: string;
+    onBack?: () => void;
+    onNavigateToPlaylists?: () => void;
+}
+
+type TabType = 'general' | 'melodiq';
+
+export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavigateToPlaylists }) => {
+    const { t } = useTranslation();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const theme = useTheme();
+    const isMediumScreen = useMediaQuery(theme.breakpoints.up('md'));
 
     // Set page title
     usePageTitle(t('settings.title', 'Settings'));
 
-    const [feedbackTitle, setFeedbackTitle] = useState('');
-    const [feedbackBody, setFeedbackBody] = useState('');
-    const [submitting, setSubmitting] = useState(false);
-    const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string; url?: string } | null>(null);
+    // Determine initial tab from props or URL
+    const gameParam = activeGameId || searchParams.get('game') || '';
+    const initialTab: TabType = gameParam.toLowerCase() === 'melodiq' ? 'melodiq' : 'general';
 
-    const handleLanguageChange = (event: SelectChangeEvent) => {
-        i18n.changeLanguage(event.target.value);
+    const [activeTab, setActiveTab] = useState<TabType>(initialTab);
+
+    const handleTabChange = (_event: React.SyntheticEvent, newValue: TabType) => {
+        setActiveTab(newValue);
     };
 
-    const handleFeedbackSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!feedbackTitle.trim() || !feedbackBody.trim()) return;
-
-        setSubmitting(true);
-        setStatus(null);
-
-        const baseUrl = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
-        const token = localStorage.getItem('melodiq_helper_token') || '';
-        const cleanBaseUrl = baseUrl.replace(/\/$/, "");
-
-        try {
-            const res = await fetch(`${cleanBaseUrl}/api/feedback`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                },
-                body: JSON.stringify({
-                    title: feedbackTitle.trim(),
-                    body: feedbackBody.trim()
-                })
-            });
-
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.error || 'Failed to submit feedback');
+    const handleBackClick = () => {
+        if (onBack) {
+            onBack();
+        } else {
+            // Default back navigation
+            const game = searchParams.get('game');
+            if (game) {
+                navigate(`/games/${game}`);
+            } else {
+                navigate('/');
             }
-
-            setStatus({
-                type: 'success',
-                message: t('settings.submit_success', 'Feedback successfully submitted!'),
-                url: data.issueUrl
-            });
-            setFeedbackTitle('');
-            setFeedbackBody('');
-        } catch (err: any) {
-            setStatus({
-                type: 'error',
-                message: t('settings.submit_error', 'Failed to submit feedback: {{error}}', { error: err.message })
-            });
-        } finally {
-            setSubmitting(false);
         }
     };
 
     return (
-        <Box sx={{ maxWidth: 'sm', mx: 'auto', mt: 4, pb: 6 }}>
-            <Typography variant="h4" gutterBottom>
-                {t('settings.title', 'Settings')}
-            </Typography>
+        <Box sx={{ width: '100%', maxWidth: 'lg', mx: 'auto', mt: { xs: 2, md: 4 }, pb: 6 }}>
+            {/* Header */}
+            <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
+                <IconButton onClick={handleBackClick} color="primary" aria-label="back">
+                    <ArrowBackIcon />
+                </IconButton>
+                <Box>
+                    <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+                        {t('settings.title', 'Settings')}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                        {activeTab === 'melodiq' ? t('games.melodiq.title', 'Melodiq') : t('settings.title', 'Settings')}
+                    </Typography>
+                </Box>
+            </Box>
 
-            <Paper sx={{ p: 4, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
-                <Typography variant="h6" gutterBottom>
-                    {t('settings.language_preferences', 'Language Preferences')}
-                </Typography>
-
-                <FormControl fullWidth sx={{ mt: 2 }}>
-                    <InputLabel id="language-select-label">{t('settings.ui_language', 'UI Language')}</InputLabel>
-                    <Select
-                        labelId="language-select-label"
-                        id="language-select"
-                        value={i18n.language.startsWith('de') ? 'de' : 'en'}
-                        label={t('settings.ui_language', 'UI Language')}
-                        onChange={handleLanguageChange}
+            {/* Layout Grid */}
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
+                {/* Sidebar Navigation */}
+                <Paper sx={{ 
+                    p: 1.5, 
+                    borderRadius: 3, 
+                    bgcolor: 'rgba(30, 30, 40, 0.7)', 
+                    border: '1px solid rgba(255, 255, 255, 0.1)', 
+                    boxShadow: 6,
+                    minWidth: { md: 220 },
+                    alignSelf: 'flex-start'
+                }}>
+                    <Tabs
+                        value={activeTab}
+                        onChange={handleTabChange}
+                        orientation={isMediumScreen ? 'vertical' : 'horizontal'}
+                        variant={isMediumScreen ? 'standard' : 'fullWidth'}
+                        textColor="primary"
+                        indicatorColor="primary"
+                        sx={{
+                            borderRight: isMediumScreen ? 1 : 0,
+                            borderBottom: !isMediumScreen ? 1 : 0,
+                            borderColor: 'divider',
+                            '.MuiTab-root': {
+                                alignItems: isMediumScreen ? 'flex-start' : 'center',
+                                textTransform: 'none',
+                                fontWeight: 'bold',
+                                py: 1.5,
+                                fontSize: '1rem',
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                '&.Mui-selected': {
+                                    color: 'primary.main'
+                                }
+                            }
+                        }}
                     >
-                        <MenuItem value="en">{t('settings.english', 'English')}</MenuItem>
-                        <MenuItem value="de">{t('settings.german', 'Deutsch')}</MenuItem>
-                    </Select>
-                </FormControl>
-            </Paper>
+                        <Tab 
+                            label={t('settings.title', 'General')} 
+                            value="general" 
+                        />
+                        <Tab 
+                            label={t('games.melodiq.title', 'Melodiq')} 
+                            value="melodiq" 
+                        />
+                    </Tabs>
+                </Paper>
 
-            <Paper sx={{ p: 4, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6, mt: 3 }}>
-                <Typography variant="h6" gutterBottom>
-                    {t('settings.feedback_title', 'Feedback & Bug Report')}
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 3 }}>
-                    {t('settings.feedback_desc', 'Found a bug or have a suggestion? Submit it here to create a GitHub issue via your helper server.')}
-                </Typography>
-
-                <form onSubmit={handleFeedbackSubmit}>
-                    <TextField
-                        fullWidth
-                        label={t('settings.issue_title', 'Title')}
-                        value={feedbackTitle}
-                        onChange={(e) => setFeedbackTitle(e.target.value)}
-                        disabled={submitting}
-                        required
-                        variant="outlined"
-                        sx={{ mb: 2 }}
-                    />
-                    <TextField
-                        fullWidth
-                        label={t('settings.issue_body', 'Description')}
-                        value={feedbackBody}
-                        onChange={(e) => setFeedbackBody(e.target.value)}
-                        disabled={submitting}
-                        required
-                        multiline
-                        rows={4}
-                        variant="outlined"
-                        sx={{ mb: 3 }}
-                    />
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        color="primary"
-                        fullWidth
-                        disabled={submitting || !feedbackTitle.trim() || !feedbackBody.trim()}
-                        startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : null}
-                    >
-                        {submitting ? t('settings.submitting', 'Submitting...') : t('settings.submit', 'Submit Feedback')}
-                    </Button>
-                </form>
-
-                {status && (
-                    <Alert
-                        severity={status.type}
-                        sx={{ mt: 3, bgcolor: status.type === 'success' ? 'rgba(46, 125, 50, 0.2)' : 'rgba(211, 47, 47, 0.2)', color: '#fff', border: `1px solid ${status.type === 'success' ? '#2e7d32' : '#d32f2f'}` }}
-                        onClose={() => setStatus(null)}
-                    >
-                        <Typography variant="body2">{status.message}</Typography>
-                        {status.url && (
-                            <Box sx={{ mt: 1.5 }}>
-                                <Button
-                                    variant="outlined"
-                                    size="small"
-                                    color="inherit"
-                                    href={status.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    sx={{ borderColor: 'rgba(255, 255, 255, 0.5)', '&:hover': { borderColor: '#fff' } }}
-                                >
-                                    {t('settings.view_issue', 'View on GitHub')}
-                                </Button>
-                            </Box>
-                        )}
-                    </Alert>
-                )}
-            </Paper>
+                {/* Content Panel */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    {activeTab === 'general' && <GeneralSettings />}
+                    {activeTab === 'melodiq' && (
+                        <MelodiqSettingsCategory onNavigateToPlaylists={onNavigateToPlaylists} />
+                    )}
+                </Box>
+            </Box>
         </Box>
     );
 };

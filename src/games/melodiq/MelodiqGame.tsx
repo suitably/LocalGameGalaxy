@@ -1,18 +1,18 @@
 import React, { useState, useCallback } from 'react';
 import { Box, Snackbar, Alert } from '@mui/material';
 import { type Song, type SongMeta } from './db';
-import { MelodiqSettings } from './MelodiqSettings';
+import { Settings } from '../../features/settings/Settings';
 import { MelodiqPlaylists } from './components/MelodiqPlaylists';
 import { PlaylistDetails } from './components/PlaylistDetails';
 import { ClientSettings } from './components/ClientSettings';
 
 import { initMelodiqI18n } from './i18n';
 import { WebRTCProvider, WebRTCMockProvider, useWebRTC } from './audio/WebRTCContext';
-import { SettingsProvider, useMelodiqSettings } from './hooks/SettingsContext';
+import { useMelodiqSettings } from './hooks/SettingsContext';
 import { MelodiqConnection } from './MelodiqConnection';
 import { type Playlist } from './db';
 import { useSongs, SongsProvider } from './hooks/useSongs';
-import { useQueue } from './hooks/useQueue';
+import { useQueue, QueueProvider } from './hooks/useQueue';
 import { useDownloads } from './hooks/useDownloads';
 import { melodiqFetch } from './api/melodiqFetch';
 import { PhoneQueueBridge } from './components/PhoneQueueBridge';
@@ -309,7 +309,8 @@ export const MelodiqGameContent: React.FC = () => {
                     {isClient ? (
                         <ClientSettings onBack={() => setCurrentView('Home')} />
                     ) : (
-                        <MelodiqSettings 
+                        <Settings 
+                            activeGameId="melodiq"
                             onBack={() => {
                                 refreshSongs();
                                 setCurrentView('Home');
@@ -473,23 +474,27 @@ export const MelodiqGame: React.FC = () => {
     const isClient = params.get('role') === 'client';
 
     return (
-        <SettingsProvider>
+        <>
             {!isClient ? (
                 <WebRTCProvider>
                     <SongsProvider>
-                        <MelodiqGameContent />
-                        <PhoneQueueBridge />
+                        <QueueProvider>
+                            <MelodiqGameContent />
+                            <PhoneQueueBridge />
+                        </QueueProvider>
                     </SongsProvider>
                 </WebRTCProvider>
             ) : (
                 <PhoneClientEngine>
                     <WebRTCMockProvider>
                         <SongsProvider>
-                            <MelodiqGameContent />
+                            <QueueProvider>
+                                <MelodiqGameContent />
+                            </QueueProvider>
                         </SongsProvider>
                     </WebRTCMockProvider>
                 </PhoneClientEngine>
             )}
-        </SettingsProvider>
+        </>
     );
 };

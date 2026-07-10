@@ -6,6 +6,7 @@ import App from './App';
 import theme from './theme';
 import { TitleProvider } from './context/TitleContext';
 import { LayoutProvider } from './context/LayoutContext';
+import { SettingsProvider } from './games/melodiq';
 import './i18n';
 import './index.css';
 
@@ -33,11 +34,13 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <BrowserRouter>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <TitleProvider>
-          <LayoutProvider>
-            <App />
-          </LayoutProvider>
-        </TitleProvider>
+        <SettingsProvider>
+          <TitleProvider>
+            <LayoutProvider>
+              <App />
+            </LayoutProvider>
+          </TitleProvider>
+        </SettingsProvider>
       </ThemeProvider>
     </BrowserRouter>
   </React.StrictMode>,

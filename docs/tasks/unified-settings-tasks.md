@@ -1,0 +1,22 @@
+# Tasks: Unified Settings Layout [ID: UNIFIED-SETTINGS-TASKS]
+
+- [/] Phase 1: Context & Planning
+  - [x] Analyze settings components and context
+  - [x] Create implementation plan (`unified-settings-plan.md`)
+  - [x] Create tasks tracking file (`unified-settings-tasks.md`)
+- [x] Phase 2: Core Architecture & Global Context
+  - [x] Wrap the application in `SettingsProvider` at root level (`src/main.tsx` or `src/App.tsx`)
+- [x] Phase 3: Create Sub-Components
+  - [x] Create `GeneralSettings.tsx` containing language select and feedback form
+  - [x] Create `MelodiqSettingsCategory.tsx` containing Helper, Mic, Profiles, and Game Settings Panel
+- [x] Phase 4: Redesign main Settings component
+  - [x] Update `src/features/settings/Settings.tsx` to support category navigation (General / Melodiq tabs)
+- [/] Phase 5: Integrate and clean up
+  - [ ] Modify `src/games/melodiq/MelodiqGame.tsx` to use unified Settings component
+  - [ ] Update `src/components/Layout/GlobalHeader.tsx` to allow settings icon click navigation
+  - [ ] Remove or stub obsolete `src/games/melodiq/MelodiqSettings.tsx`
+- [ ] Phase 6: Verification
+  - [ ] Run `npm run lint` and verify no errors
+  - [ ] Run `npm run build` and verify successful bundle compilation
+  - [ ] Perform manual functional and visual verification
+  - [ ] Create walkthrough documentation (`unified-settings-walkthrough.md`)
