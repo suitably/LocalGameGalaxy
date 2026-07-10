@@ -7,6 +7,38 @@ export interface AudioStats {
     contextState: string;
 }
 
+/**
+ * `MicrophoneManager` — Local Microphone Audio Capture & Pitch Detection
+ *
+ * Manages the complete lifecycle of microphone access and real-time pitch
+ * analysis for **local** users (i.e., the phone client running the app
+ * in their own browser tab).
+ *
+ * ## Pipeline
+ * ```
+ * getUserMedia() → MediaStream
+ *       ↓
+ * AudioContext → MediaStreamAudioSourceNode
+ *       ↓
+ *  AnalyserNode (fftSize=2048, raw float32 PCM)
+ *       ↓
+ * computeRMS()  → volume gate
+ * autoCorrelate() → fundamental frequency (Hz)
+ * freqToMidi()  → MIDI note number
+ * ```
+ *
+ * ## Device Fallback
+ * If the requested `deviceId` is not found (`OverconstrainedError`), the
+ * manager automatically falls back to the system default microphone.
+ *
+ * ## AudioContext Suspension
+ * Mobile browsers suspend AudioContext until a user gesture. `start()` calls
+ * `resume()` immediately after creation and guards against race conditions
+ * where the context might be torn down during the async await.
+ *
+ * @see {@link AudioUtils} for the signal processing algorithms.
+ * @see {@link WebRTCMicManager} for remote peer pitch detection.
+ */
 export class MicrophoneManager {
     private audioContext: AudioContext | null = null;
     private analyser: AnalyserNode | null = null;

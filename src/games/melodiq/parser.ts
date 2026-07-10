@@ -1,24 +1,78 @@
+/**
+ * UltraStar TXT Lyric & Duet Parser
+ *
+ * Parses raw UltraStar-format `.txt` files into a structured `ParsedSong` object.
+ *
+ * ## UltraStar Format Overview
+ * Lines beginning with `#` are header tags (e.g., `#BPM:120`, `#GAP:5000`).
+ * Note lines follow the format: `TYPE START DURATION PITCH LYRICS`
+ *
+ * ### Note Types
+ * | Type | Meaning |
+ * |------|---------|
+ * | `:`  | Normal note (scores points) |
+ * | `*`  | Golden note (bonus multiplier) |
+ * | `F`  | Freestyle note (no scoring) |
+ * | `R`  | Rap note |
+ * | `G`  | Golden rap note |
+ * | `-`  | Line break marker |
+ *
+ * ### Timing Conversion
+ * `time_ms = (beat / BPM * 60_000 / 4) + GAP_ms`
+ * where BPM is from the `#BPM` header and GAP from `#GAP`.
+ *
+ * ### Duet Support
+ * Lines starting with `P 1` or `P 2` switch the active track.
+ * Track names come from `#DUETSINGERP1` / `#DUETSINGERP2` headers.
+ */
+
+/** A single scored or structural note in an UltraStar song track. */
 export interface Note {
-    type: string; // ':' | '*' | 'F' | 'R' | 'G'
+    /** Note type: `:` normal, `*` golden, `F` freestyle, `R` rap, `G` golden rap, `-` line break */
+    type: string;
+    /** Start beat (absolute, from the beginning of the song after GAP offset) */
     start: number;
-    duration: number; // in beats, usually
+    /** Duration in beats */
+    duration: number;
+    /** MIDI pitch number (0 = silence for line breaks) */
     pitch: number;
+    /** Lyric syllable text displayed at this note */
     text: string;
 }
 
+/** A single singer's track, containing all their notes in order. */
 export interface SongTrack {
-    name: string; // "Player 1", "Bob", etc.
+    /** Display name of the singer (e.g., "Player 1" or the value from #DUETSINGERP1) */
+    name: string;
     notes: Note[];
 }
 
+/** Fully parsed representation of an UltraStar `.txt` file. */
 export interface ParsedSong {
+    /** Raw key-value header map (keys uppercased, e.g., `BPM`, `TITLE`, `ARTIST`, `GAP`) */
     headers: Record<string, string>;
-    notes: Note[]; // @deprecated - kept for backward compatibility (usually Track 1 or merged)
+    /** @deprecated Use `tracks[0].notes` instead. Kept for backwards compatibility. */
+    notes: Note[];
+    /** All singer tracks. Single-singer songs have exactly one track. */
     tracks: SongTrack[];
+    /** Beats per minute (parsed from `#BPM` header, comma-normalized, defaults to 120) */
     bpm: number;
+    /** Timing gap in milliseconds before the first note (from `#GAP` header, defaults to 0) */
     gap: number;
 }
 
+
+/**
+ * Parses the raw text content of an UltraStar `.txt` file into a structured `ParsedSong`.
+ *
+ * Handles both single-singer and duet formats. Track switches (`P 1` / `P 2`) are
+ * processed in order; tracks are lazily created if a `P N` marker appears.
+ *
+ * European comma-decimal formats in BPM/GAP values are normalized before parsing.
+ *
+ * @param content - Raw UTF-8 string content of the `.txt` file.
+ * @returns Fully structured `ParsedSong` with headers, tracks, and derived BPM/GAP.
+ */
 export const parseUltraStarTxt = (content: string): ParsedSong => {
     const lines = content.split(/\r?\n/);
     const headers: Record<string, string> = {};

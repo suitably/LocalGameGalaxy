@@ -1,5 +1,5 @@
 import React from 'react';
-import { WebRTCHostProvider, useWebRTCHost, WebRTCHostContext } from '../../../lib/webrtc/WebRTCHostContext';
+import { WebRTCHostProvider, useWebRTCHost, WebRTCHostContext } from '../../../lib/webrtc';
 import { WebRTCMicManager, type MicRemotePeer } from './WebRTCMicManager';
 
 export const useWebRTC = () => {

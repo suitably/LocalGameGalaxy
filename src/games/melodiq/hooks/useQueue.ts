@@ -33,6 +33,12 @@ export const useQueue = () => {
     // Broadcast channel for cross-tab sync
     const [channel] = useState(() => new BroadcastChannel(CHANNEL_NAME));
 
+    useEffect(() => {
+        return () => {
+            channel.close();
+        };
+    }, [channel]);
+
     const syncQueue = useCallback((newQueue: QueueItem[]) => {
         setQueue(newQueue);
         if (!isClient) {

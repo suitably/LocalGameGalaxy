@@ -2,9 +2,7 @@ import React from 'react';
 import { Typography, Box, Card, CardContent, CardActionArea, alpha } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import PersonSearchIcon from '@mui/icons-material/PersonSearch';
-import GraphicEqIcon from '@mui/icons-material/GraphicEq';
+import { gameRegistry } from '../../lib/gameRegistry';
 
 const cardStyle = (gradientStart: string, gradientEnd: string, hoverColor: string) => ({
     height: '100%',
@@ -51,12 +49,6 @@ const contentStyle = {
     gap: 2
 };
 
-const iconStyle = {
-    fontSize: 72,
-    mb: 2,
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-};
-
 export const Hub: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -92,56 +84,31 @@ export const Hub: React.FC = () => {
                 },
                 gap: 4
             }}>
-                <Card sx={cardStyle('#90caf9', '#1e88e5', '#1e88e5')}>
-                    <CardActionArea
-                        onClick={() => navigate('/games/werewolf')}
-                        sx={{ height: '100%' }}
-                    >
-                        <CardContent sx={contentStyle}>
-                            <SportsEsportsIcon sx={{ ...iconStyle, color: '#90caf9' }} />
-                            <Typography variant="h4" component="h2" fontWeight="bold">
-                                {t('games.werewolf.title')}
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                                {t('games.werewolf.description')}
-                            </Typography>
-                        </CardContent>
-                    </CardActionArea>
-                </Card>
-
-                <Card sx={cardStyle('#f48fb1', '#d81b60', '#d81b60')}>
-                    <CardActionArea
-                        onClick={() => navigate('/games/imposter')}
-                        sx={{ height: '100%' }}
-                    >
-                        <CardContent sx={contentStyle}>
-                            <PersonSearchIcon sx={{ ...iconStyle, color: '#f48fb1' }} />
-                            <Typography variant="h4" component="h2" fontWeight="bold">
-                                {t('games.imposter.title')}
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                                {t('games.imposter.description')}
-                            </Typography>
-                        </CardContent>
-                    </CardActionArea>
-                </Card>
-
-                <Card sx={cardStyle('#81c784', '#388e3c', '#388e3c')}>
-                    <CardActionArea
-                        onClick={() => navigate('/games/melodiq')}
-                        sx={{ height: '100%' }}
-                    >
-                        <CardContent sx={contentStyle}>
-                            <GraphicEqIcon sx={{ ...iconStyle, color: '#81c784' }} />
-                            <Typography variant="h4" component="h2" fontWeight="bold">
-                                {t('games.melodiq.title')}
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.6 }}>
-                                {t('games.melodiq.description')}
-                            </Typography>
-                        </CardContent>
-                    </CardActionArea>
-                </Card>
+                {gameRegistry.getGames().map(game => (
+                    <Card key={game.id} sx={cardStyle(game.colorStart, game.colorEnd, game.hoverColor)}>
+                        <CardActionArea
+                            onClick={() => navigate(`/${game.route}`)}
+                            sx={{ height: '100%' }}
+                        >
+                            <CardContent sx={contentStyle}>
+                                {React.cloneElement(game.icon as React.ReactElement<any>, {
+                                    sx: {
+                                        fontSize: 72,
+                                        mb: 2,
+                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                        color: game.colorStart
+                                    }
+                                })}
+                                <Typography variant="h4" component="h2" fontWeight="bold">
+                                    {t(game.titleKey)}
+                                </Typography>
+                                <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                                    {t(game.descriptionKey)}
+                                </Typography>
+                            </CardContent>
+                        </CardActionArea>
+                    </Card>
+                ))}
             </Box>
 
             <style>

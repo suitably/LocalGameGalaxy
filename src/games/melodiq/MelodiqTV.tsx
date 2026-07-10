@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, CircularProgress } from '@mui/material';
 import GamepadIcon from '@mui/icons-material/Gamepad';
-import { MelodiqSession, type PassiveGameState } from './gameplay/MelodiqSession';
+import { MelodiqSession } from './gameplay/MelodiqSession';
+import { type PassiveGameState } from './types';
 import { SettingsProvider } from './hooks/SettingsContext';
-import { WebRTCHostContext, type WebRTCHostContextType } from '../../lib/webrtc/WebRTCHostContext';
+import { WebRTCHostContext, type WebRTCHostContextType } from '../../lib/webrtc';
 
 import { initMelodiqI18n } from './i18n';
 

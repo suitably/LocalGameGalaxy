@@ -3,29 +3,76 @@ import { type PlayerRuntime } from './PlayerRuntime';
 import { type PitchResult } from '../../audio/MicrophoneManager';
 import { type RatingType, type ScoreDisplayHandle } from '../ScoreDisplay';
 
+/**
+ * Props for `useScoringEngine`. Separate from the component signature to allow
+ * clear documentation of each timing and mode control surface.
+ */
 interface UseScoringEngineProps {
+    /** All connected players (local + remote) with their `MicrophoneManager` / `WebRTCMicManager` references. */
     players: PlayerRuntime[];
+    /** Set to `true` once audio is loaded and playback can begin. Gates the rAF loop. */
     ready: boolean;
+    /** Ref to the main mixed audio element (used for `currentTime` as the timing source of truth). */
     audioRef: React.RefObject<HTMLAudioElement | null>;
+    /** Ref to the optional vocals-only audio element (played/muted alongside the main track). */
     vocalsRef: React.RefObject<HTMLAudioElement | null>;
     videoRef: React.RefObject<HTMLVideoElement | null>;
     scoreDisplayRef: React.RefObject<ScoreDisplayHandle | null>;
     progressLineRef: React.RefObject<HTMLDivElement | null>;
+    /** Ref flag indicating whether audio is actively playing (used to skip scoring when paused). */
     isPlayingRef: React.RefObject<boolean>;
+    /** The fully parsed UltraStar song data (tracks, notes, BPM, GAP). */
     parsedSong: any;
+    /** Multiplier applied to BPM for slower/faster lyric scroll (default 1.0). */
     bpmMultiplier: number;
+    /** Per-track score weights: `[1.0]` for single singer, `[0.5, 0.5]` for duets. */
     trackScoreWeights: number[];
+    /** Score multiplier for golden notes (`*` type). Typically 2.0. */
     goldenNoteMultiplier: number;
+    /** Dev-only: Override all pitch detection with a fixed MIDI note number for testing. */
     devPitchOverride: number | null;
+    /** If `true`, this instance is in TV/passive mode — reads pitch from `passiveState` rather than mic. */
     isPassive: boolean;
+    /** State object received from the host via `GAME_STATE` BroadcastChannel message (TV mode). */
     passiveState: any;
+    /** If `true`, this instance is a remote phone client — runs a reduced local loop. */
     isClient: boolean;
     _duration: number;
     onPlaybackUpdate?: (state: any) => void;
     setScores?: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+    /** Ref to the current virtual audio time in seconds (used for lyric sync when audioRef is unavailable). */
     virtualTimeRef: React.RefObject<number>;
 }
 
+/**
+ * `useScoringEngine` — Real-Time Pitch Matching & Scoring Engine
+ *
+ * The core scoring hook for Melodiq. Runs a high-frequency `requestAnimationFrame`
+ * loop that, on every frame:
+ * 1. Reads current audio position from `audioRef.current.currentTime` (single source of truth).
+ * 2. Identifies the active UltraStar note at that timestamp using `parsedSong`.
+ * 3. For each active player, reads the current pitch from their `MicrophoneManager` or
+ *    `WebRTCMicManager` (or uses `devPitchOverride` in dev mode).
+ * 4. Compares the detected MIDI note to the target note, accounting for octave shifts
+ *    (singers naturally sing at half/double octave of the reference pitch).
+ * 5. Calculates a normalized score contribution based on how close the pitch is
+ *    (within a configurable semitone tolerance).
+ * 6. Applies the `goldenNoteMultiplier` for `*` note types and the per-track `trackScoreWeights`.
+ * 7. Updates the `ScoreDisplay` UI ref and the `scores` state at a throttled rate.
+ *
+ * ## Modes
+ * - **Active (Host)**: Full pitch detection from local mic or WebRTC peers.
+ * - **Passive (TV Mode)**: Reads pre-calculated pitch and score state from `passiveState`
+ *   (received via `GAME_STATE` BroadcastChannel). No local audio capture.
+ * - **Client (Phone)**: Reduced loop — only sends local mic pitch upstream, no scoring.
+ *
+ * ## Timing Invariant
+ * **Never** use `setTimeout`/`setInterval` for note timing. The only valid clock
+ * is `audioRef.current.currentTime`, which is synchronized with the browser's
+ * audio renderer and is immune to JavaScript timer throttling.
+ *
+ * @param props - See `UseScoringEngineProps` for full prop documentation.
+ */
 export function useScoringEngine({
     players,
     ready,

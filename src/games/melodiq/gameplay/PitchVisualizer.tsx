@@ -6,44 +6,76 @@ import type { PitchResult } from '../audio/MicrophoneManager';
 
 export type SongWithNotes = Song & { notes?: Note[], tracks?: SongTrack[], bpm?: number, gap?: number, headers?: any };
 
+/**
+ * Represents a historical segment of successfully sung notes by a user.
+ * Used to draw the filled progress inside target note rectangles.
+ */
 export interface SungSegment {
-    noteIndex: number; // Index of the note in song.notes
-    startBeat: number; // Relative to song start
+    /** Index of the note in the track's notes list. */
+    noteIndex: number;
+    /** The start beat of the successful pitch match. */
+    startBeat: number;
+    /** The end beat of the successful pitch match. */
     endBeat: number;
-    trackIndex?: number; // Which track this segment belongs to
+    /** The index of the track this segment was sung on. */
+    trackIndex?: number;
 }
 
+/**
+ * Props for the PitchVisualizer component.
+ */
 interface PitchVisualizerProps {
+    /** The song metadata containing the note tracks. */
     song: SongWithNotes;
-    // Removed currentBeat prop, using audioRef instead
+    /** Ref to the audio element acting as the master timing clock. */
     audioRef: React.RefObject<HTMLAudioElement | null>;
+    /** Optional custom canvas height (falls back to container auto-resize). */
     height?: number;
-    // Using refs for high-frequency data to avoid re-renders
+    /** React Ref containing the player's latest real-time pitch result. */
     currentPitchRef: React.RefObject<PitchResult | null>;
+    /** React Ref recording all matching segments sung by the player. */
     sungSegmentsRef: React.MutableRefObject<Record<number, SungSegment[]>>;
+    /** Show debugging info (current beat, culling stats, center pitch). */
     showDebugOverlay?: boolean;
+    /** Label to overlay on the top left (e.g., player name). */
     label?: string;
+    /** Hue rotation (0-360) for player-specific color styling. */
     hue?: number;
+    /** Toggle displaying note name labels (e.g., C4, D#5). */
     showNoteLabels?: boolean;
+    /** Calibrated microphone input latency offset in milliseconds. */
     latency?: number;
+    /** Which duet/instrument track index to visualize. */
     trackIndex?: number;
+    /** Horizontal zoom multiplier scale. */
     scale?: number;
 }
 
+/**
+ * Emitter particle for correct pitch visualization sparks.
+ */
 interface Particle {
+    /** Horizontal canvas coordinate in pixels. */
     x: number;
+    /** Vertical canvas coordinate in pixels. */
     y: number;
+    /** Horizontal velocity in pixels per frame. */
     vx: number;
+    /** Vertical velocity in pixels per frame. */
     vy: number;
+    /** Particle opacity/life multiplier (decayed over time). */
     life: number;
+    /** HSL color string. */
     color: string;
+    /** Visual radius in pixels. */
     size: number;
 }
 
-
-
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
+/**
+ * Translates a MIDI note number into a standard notation label (e.g. C4).
+ */
 const getNoteName = (midiNote: number): string => {
     const note = Math.round(midiNote);
     const octave = Math.floor(note / 12) - 1;
@@ -51,8 +83,8 @@ const getNoteName = (midiNote: number): string => {
     return `${name}${octave}`;
 };
 
-
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
+
 
 // ... (keep existing types)
 
@@ -151,7 +183,17 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
         return { centerPitch: center, noteHeight: calculatedHeight };
     }, [song.tracks, song.notes, trackIndex, dimensions.height, scale]);
 
-    // Main Animate Loop
+    /**
+     * High-Frequency canvas rendering loop (requestAnimationFrame).
+     * 
+     * Orchestrates:
+     * 1. Dynamic audio timeline interpolation (compensates for low frequency HTMLAudioElement currentTime updates).
+     * 2. Coordinate conversions: mapping song beats to horizontal pixel coordinates and MIDI pitches to vertical positions.
+     * 3. Frustum/viewport culling: filtering and rendering only the notes currently visible on screen.
+     * 4. Filled sung segments: overlays progress indicators over matching notes.
+     * 5. Particle physics updates: simulates floating sparkles when singing pitch matches note target.
+     * 6. Smart Octave Folding: dynamically matches octave shifts of the singer's pitch to target notes to avoid wrapping.
+     */
     const animate = useCallback(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;

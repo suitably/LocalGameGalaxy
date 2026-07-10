@@ -1,6 +1,8 @@
+import { storage } from '../../../lib/storage';
+
 export const melodiqFetchDirect = async (path: string, options: RequestInit = {}): Promise<any> => {
-    const baseUrl = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
-    const token = localStorage.getItem('melodiq_helper_token') || '';
+    const baseUrl = storage.getHelperUrl();
+    const token = storage.getHelperToken();
     const cleanBaseUrl = baseUrl.replace(/\/$/, "");
     
     const headers: Record<string, string> = {

@@ -30,6 +30,13 @@ async function usdbLogin(username, password) {
     return cookie;
 }
 
+/**
+ * Strips HTML tags and decodes common HTML entities from a string.
+ * Used to clean lyrics text fetched from USDB textareas.
+ * 
+ * @param {string} s - Raw HTML/Text string.
+ * @returns {string} Cleaned plain-text string.
+ */
 function stripHtml(s) {
     return s
         .replace(/<[^>]+>/g, '')
@@ -42,15 +49,42 @@ function stripHtml(s) {
         .trim();
 }
 
+/**
+ * Scrapes and parses the HTML of the USDB list page to extract search results.
+ * 
+ * ## Table Structure and Parsing Offsets
+ * The scraper dynamically finds the index of the column containing the song's title
+ * by searching for detail links (like `?id=123`). This index acts as the anchor `titleIdx`.
+ * 
+ * Mappings relative to the title index:
+ * - `titleIdx - 1` : Artist name
+ * - `titleIdx`     : Song Title
+ * - `titleIdx + 1` : Genre
+ * - `titleIdx + 2` : Year
+ * - `titleIdx + 3` : Edition
+ * - `titleIdx + 4` : Golden Notes boolean check
+ * - `titleIdx + 5` : Language
+ * - `titleIdx + 6` : Creator / Uploader
+ * - `titleIdx + 7` : Rating (GIF stars or unicode stars)
+ * - `titleIdx + 8` : View count
+ * 
+ * @param {string} html - Raw HTML from USDB list request.
+ * @returns {Object} Result object containing:
+ *   - songs {Array} Array of parsed song objects.
+ *   - totalResults {number} Total results reported by USDB.
+ *   - totalPages {number} Total pages of results.
+ */
 function parseUsdbSearch(html) {
     const songs = [];
 
+    /** Cleans and trims HTML entities. */
     const clean = (s) => s
         .replace(/<[^>]+>/g, '')
         .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
         .trim();
 
+    /** Parses rating column images or unicode symbols to generate a star string. */
     const starCount = (s) => {
         const imgs = (s.match(/star(?:_on|_off)?\.(?:gif|png|jpg)/gi) || []).filter(x => x.includes('on') || !x.includes('off'));
         if (imgs.length) return '★'.repeat(imgs.length);
@@ -58,6 +92,7 @@ function parseUsdbSearch(html) {
         return stars ? '★'.repeat(stars) : clean(s).substring(0, 5);
     };
 
+    /** Extracts content of all <td> elements in a row. */
     const getTds = (rowHtml) => {
         const tds = [];
         const re = /<td[^>]*>([\s\S]*?)<\/td>/gi;
@@ -66,6 +101,7 @@ function parseUsdbSearch(html) {
         return tds;
     };
 
+    /** Constructs a song object from td elements using anchor-relative offsets. */
     const buildSong = (usdbId, tds) => {
         let titleIdx = -1;
         for (let i = 0; i < tds.length; i++) {
@@ -101,6 +137,7 @@ function parseUsdbSearch(html) {
         };
     };
 
+    // Strategy 1: Find rows matching data-songid attributes
     const dataRe = /<tr[^>]+data-songid="(\d+)"[^>]*>([\s\S]*?)<\/tr>/gi;
     let m;
     let usedStrategy1 = false;
@@ -110,6 +147,7 @@ function parseUsdbSearch(html) {
         if (song) songs.push(song);
     }
 
+    // Strategy 2: Fallback to rows matching id="entry_XXXX"
     if (!usedStrategy1) {
         const namedRe = /<tr[^>]+id="(?:entry_|row_|song_)(\d+)"[^>]*>([\s\S]*?)<\/tr>/gi;
         while ((m = namedRe.exec(html)) !== null) {
@@ -119,8 +157,9 @@ function parseUsdbSearch(html) {
         }
     }
 
+    // Strategy 3: General fallback checking any <tr> that contains a view=detail link
     if (!usedStrategy1) {
-        const anyRowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+        const anyRowRe = /<tr[^]*>([\s\S]*?)<\/tr>/gi;
         while ((m = anyRowRe.exec(html)) !== null) {
             const rowHtml = m[1];
             const idMatch = rowHtml.match(/view=detail[^"']*[?&]id=(\d+)/i)

@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "tracker": "node scripts/start-tracker.js",
     "preview": "vite preview",
-    "host": "cd server && npm start"
+    "host": "cd server && npm start",
+    "test": "vitest run"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
@@ -52,10 +53,12 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "prettier": "3.9.5",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4",
     "vite-plugin-node-polyfills": "^0.25.0",
-    "vite-plugin-pwa": "^1.2.0"
+    "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^4.1.10"
   }
 }

@@ -7,7 +7,7 @@ import RestoreIcon from '@mui/icons-material/Restore';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
 import { useTranslation } from 'react-i18next';
 import type { DbCategory } from '../logic/types';
-import { db } from '../../../lib/db';
+import { getImposterCategories } from '../logic/imposterRepository';
 
 const STORAGE_KEY_SETTINGS = 'imposter-setup-settings';
 
@@ -31,7 +31,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
     // Fetch categories from database
     useEffect(() => {
         const fetchCategories = async () => {
-            const cats = await db.imposter_categories.toArray();
+            const cats = await getImposterCategories();
             setAllCategories(cats);
         };
         fetchCategories();

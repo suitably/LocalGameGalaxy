@@ -1,14 +1,51 @@
 // SimplePeer import removed
 import { type PitchResult, computeRMS, autoCorrelate, freqToMidi } from './AudioUtils';
-import { WebRTCHostManager, type RemotePeerBase, type WebRTCHostManagerCallbacks } from '../../../lib/webrtc/WebRTCHostManager';
+import { WebRTCHostManager, type RemotePeerBase, type WebRTCHostManagerCallbacks } from '../../../lib/webrtc';
 
+/**
+ * Extends `RemotePeerBase` with audio analysis state for a connected phone client.
+ * Each remote singer gets their own `AudioContext` + `AnalyserNode` pipeline.
+ */
 export type MicRemotePeer = RemotePeerBase & {
     audioContext: AudioContext | null;
     analyser: AnalyserNode | null;
     buffer: Float32Array | null;
+    /** Most recent pitch result received via WebRTC DataChannel, with a `timestamp` for staleness checks. */
     lastPitch?: (PitchResult & { timestamp: number }) | null;
 };
 
+/**
+ * `WebRTCMicManager` — Remote Peer Audio Streaming & Pitch Detection
+ *
+ * Extends `WebRTCHostManager` to manage **remote** phone client audio streams
+ * for multi-player Melodiq sessions. Handles two parallel pitch detection paths:
+ *
+ * ## Pitch Detection Strategy
+ *
+ * ### Path 1: Phone-Sent Pitch (Preferred)
+ * The phone client runs `autoCorrelate()` locally and sends the result over
+ * the WebRTC DataChannel as `{ type: 'pitch', frequency, note, volume }`.
+ * The host stores this in `remotePeer.lastPitch` and uses it if the timestamp
+ * is less than 200ms old.
+ *
+ * ### Path 2: Local Analysis Fallback
+ * If the DataChannel pitch data is stale (> 200ms) or absent, the host falls
+ * back to analyzing the raw `MediaStream` received over WebRTC audio track
+ * using the same autocorrelation pipeline as `MicrophoneManager`.
+ *
+ * ## Audio Pipeline (per remote peer)
+ * ```
+ * WebRTC MediaStream (remote audio track)
+ *       ↓
+ * AudioContext → MediaStreamAudioSourceNode
+ *       ↓
+ * AnalyserNode (fftSize=2048) → Float32Array buffer
+ *       ↓
+ * computeRMS() + autoCorrelate() + freqToMidi()
+ * ```
+ *
+ * @see {@link MicrophoneManager} for the local microphone equivalent.
+ */
 export class WebRTCMicManager extends WebRTCHostManager<MicRemotePeer> {
 
     constructor(

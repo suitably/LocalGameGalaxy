@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useLayout } from '../../context/LayoutContext';
 import { useTitle } from '../../context/TitleContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { gameRegistry } from '../../lib/gameRegistry';
 
 export const GlobalHeader: React.FC = () => {
     const { t } = useTranslation();
@@ -16,6 +17,8 @@ export const GlobalHeader: React.FC = () => {
     const location = useLocation();
     const theme = useTheme();
     const isLargeScreen = useMediaQuery(theme.breakpoints.up('md'));
+    const activeGame = gameRegistry.findGameByPath(location.pathname);
+    const hasSettings = activeGame?.hasSettings ?? false;
 
     // State for Burger Menu
     const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -64,8 +67,8 @@ export const GlobalHeader: React.FC = () => {
                     {title || pageTitle || t('app.title')}
                 </Typography>
 
-                {/* Settings Icon (Global) - Hide on Melodiq routes because they have their own settings */}
-                {!location.pathname.startsWith('/games/melodiq') && (
+                {/* Settings Icon (Global) - Hide on game routes because they have their own settings */}
+                {!hasSettings && (
                     <Tooltip title={t('settings.title', 'Settings')}>
                         <IconButton
                             color="inherit"

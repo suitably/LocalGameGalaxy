@@ -19,13 +19,13 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'Melodiq',
-        short_name: 'Melodiq',
-        description: 'The ultimate local music game experience.',
+        name: 'LocalGameGalaxy',
+        short_name: 'GameGalaxy',
+        description: 'Local multiplayer party game hub.',
         theme_color: '#000000',
         background_color: '#000000',
         display: 'standalone',
-        start_url: '/games/melodiq',
+        start_url: '/',
         scope: '/',
         icons: [
           {

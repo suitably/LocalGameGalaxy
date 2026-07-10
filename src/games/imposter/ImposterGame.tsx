@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Box, Typography, Button, Paper, IconButton } from '@mui/material';
+import { Box, Typography, Button, Paper, IconButton, CircularProgress } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { GameSetup } from './components/GameSetup';
 import { HandoverView } from './components/HandoverView';
@@ -12,7 +12,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useNavigate } from 'react-router-dom';
 import { seedImposterDatabase } from './logic/dbSeeder';
-import { db } from '../../lib/db';
+import { getWordPairsByCategories } from './logic/imposterRepository';
 import { usePageTitle } from '../../context/TitleContext';
 
 const STORAGE_KEY_PLAYERS = 'imposter-setup-players';
@@ -39,9 +39,15 @@ export const ImposterGame: React.FC = () => {
         localStorage.setItem(STORAGE_KEY_PLAYERS, JSON.stringify(players));
     }, [players]);
 
+    const [isDbReady, setIsDbReady] = useState(false);
+
     // Initialize database
     useEffect(() => {
-        seedImposterDatabase();
+        const initDb = async () => {
+            await seedImposterDatabase();
+            setIsDbReady(true);
+        };
+        initDb();
     }, []);
 
     const [infoOpen, setInfoOpen] = useState(() => {
@@ -82,10 +88,7 @@ export const ImposterGame: React.FC = () => {
     const startGame = async (setup: { categories: DbCategory[]; imposterCount: number; timerLength: number }) => {
         // Fetch word pairs from selected categories
         const categoryIds = setup.categories.map(c => c.id);
-        const pairs = await db.imposter_word_pairs
-            .where('categoryIds')
-            .anyOf(categoryIds)
-            .toArray();
+        const pairs = await getWordPairsByCategories(categoryIds);
 
         if (pairs.length === 0) return;
 
@@ -157,6 +160,13 @@ export const ImposterGame: React.FC = () => {
     const renderPhase = () => {
         switch (gameState.phase) {
             case 'LOBBY':
+                if (!isDbReady) {
+                    return (
+                        <Box display="flex" justifyContent="center" alignItems="center" py={10}>
+                            <CircularProgress />
+                        </Box>
+                    );
+                }
                 return (
                     <GameSetup
                         players={players}

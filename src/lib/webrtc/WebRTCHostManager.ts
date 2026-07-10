@@ -1,15 +1,26 @@
 import SimplePeer from 'simple-peer';
 import Client from 'bittorrent-tracker';
 
+/**
+ * Base type for a remote peer entry stored in the peers Map.
+ * Subclasses extend this to add domain-specific state (e.g., audio processing nodes).
+ */
 export type RemotePeerBase = {
+    /** The SimplePeer WebRTC connection instance for this peer. */
     peer: SimplePeer.Instance;
+    /** Unique host-assigned UUID for this peer session. */
     peerId: string;
-    connectionId?: string; // The ID used by Phone for signaling
-    name: string; // Display name for the phone
-    hue?: number; // Hue for avatar
-    deviceId?: string; // Persistent ID from phone
+    /** The connection ID assigned by the Phone during its signaling offer. Used to match tracker signals. */
+    connectionId?: string;
+    /** Display name sent by the phone during the `identify` handshake. */
+    name: string;
+    /** Hue value (0-360) for avatar color, sent during handshake. */
+    hue?: number;
+    /** Persistent device ID sent by the phone for reconnection handling. */
+    deviceId?: string;
 };
 
+/** Callback hooks for peer lifecycle events. Use these to update React state from outside the manager. */
 export interface WebRTCHostManagerCallbacks<T extends RemotePeerBase> {
     onPeerConnected?: (peerId: string, name: string, hue?: number, connectionId?: string, deviceId?: string) => void;
     onPeerDisconnected?: (peerId: string) => void;
@@ -21,6 +32,60 @@ export interface WebRTCHostManagerCallbacks<T extends RemotePeerBase> {
     onPeerRemoved?: (peerId: string, peer: T) => void;
 }
 
+/**
+ * `WebRTCHostManager` — BitTorrent Tracker-Based WebRTC Connection Manager
+ *
+ * Manages the full lifecycle of WebRTC peer connections for the Host side of a
+ * Melodiq multiplayer session. Uses `bittorrent-tracker` for peer discovery
+ * and `simple-peer` for WebRTC negotiation.
+ *
+ * ## Two-Channel Signaling Architecture
+ *
+ * Connection establishment uses **two distinct SimplePeer connections**:
+ *
+ * ### Channel 1: Tracker Peer (Signaling Layer)
+ * Created by the BitTorrent tracker protocol. Used exclusively to exchange
+ * WebRTC offers/answers (wrapped in `{ connectionId, signal }` JSON envelopes).
+ * Not used for application data.
+ *
+ * ### Channel 2: Data Peer (Application Layer)
+ * Created via `initDataPeer()` once a valid offer arrives on Channel 1.
+ * This is the actual WebRTC connection carrying:
+ * - DataChannel: JSON game messages (`identify`, `pitch`, queue updates, etc.)
+ * - MediaStream track: Phone microphone audio for pitch detection.
+ *
+ * ## Peer Lifecycle
+ * ```
+ * Tracker announces Host → Tracker discovers Phone peer
+ *       ↓
+ * Channel 1 opens (tracker.on('peer'))
+ *       ↓
+ * Phone sends wrapped offer: { connectionId, signal: { type: 'offer' } }
+ *       ↓
+ * Host creates SimplePeer Data Peer (initiator: false) via initDataPeer()
+ *       ↓
+ * SDP exchange completes (ICE negotiation via STUN servers)
+ *       ↓
+ * Data Peer 'connect' fires → onPeerConnected() callback
+ *       ↓
+ * Phone sends `identify` message → name/hue/deviceId stored on remotePeer
+ *       ↓
+ * Application messages and audio stream flow over Data Peer
+ *       ↓
+ * Data Peer 'close'/'error' → removePeer() → onPeerDisconnected() callback
+ * ```
+ *
+ * ## Reconnection
+ * If a Phone reconnects with the same `deviceId`, the `onPeerUpdated` callback
+ * fires instead of `onPeerConnected` so the UI can restore the existing player slot.
+ *
+ * ## Extension Points (for subclasses)
+ * - `handleCustomTrackerMessage()`: Override to process tracker-channel messages before default handling.
+ * - `handleCustomWebRTCMessage()`: Override to process DataChannel messages before generic dispatch.
+ * - `createRemotePeer` callback: Override to inject subclass-specific peer state.
+ *
+ * @see {@link WebRTCMicManager} for the Melodiq audio-streaming specialization.
+ */
 export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
     protected peers: Map<string, T> = new Map();
 

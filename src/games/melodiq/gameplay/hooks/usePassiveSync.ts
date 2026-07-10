@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { PlayerRuntime } from './PlayerRuntime';
-import { type PassiveGameState } from '../MelodiqSession';
+import { type PassiveGameState } from '../../types';
 import { type ScoreDisplayHandle } from '../ScoreDisplay';
 
 interface UsePassiveSyncProps {

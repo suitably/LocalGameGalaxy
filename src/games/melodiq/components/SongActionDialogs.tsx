@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { melodiqFetch } from '../api/melodiqFetch';
 import { Dialog, DialogTitle, DialogContent, List, ListItemButton, ListItemIcon, ListItemText, Divider, Typography, Alert } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import AddToQueueIcon from '@mui/icons-material/AddToQueue';
@@ -81,13 +82,10 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
         const confirm = window.confirm(`Wirklich "${selectedSongForQueue.title}" von ${selectedSongForQueue.artist} löschen?`);
         if (!confirm) return;
         try {
-            const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
-            const token = localStorage.getItem('melodiq_helper_token') || '';
-            const res = await fetch(`${helperUrl}/api/songs/${selectedSongForQueue.id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+            const data = await melodiqFetch(`/api/songs/${selectedSongForQueue.id}`, {
+                method: 'DELETE'
             });
-            if (res.ok) {
+            if (data) {
                 setFeedbackMessage('Song gelöscht');
                 await refreshSongs();
             } else {
@@ -105,14 +103,8 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
         setQueueDialogOpen(false);
 
         try {
-            const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
-            const token = localStorage.getItem('melodiq_helper_token') || '';
-            const res = await fetch(`${helperUrl}/api/usdb/download`, {
+            const data = await melodiqFetch('/api/usdb/download', {
                 method: 'POST',
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify([{
                     usdbId: selectedSongForQueue.usdbId,
                     artist: selectedSongForQueue.artist,
@@ -125,7 +117,7 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                     audioFile: (selectedSongForQueue as any).audio ? (selectedSongForQueue as any).audio.split('/').pop()?.split('?')[0] : undefined
                 }])
             });
-            if (res.ok) {
+            if (data) {
                 setFeedbackMessage('Video-Download gestartet...');
             } else {
                 setFeedbackMessage('Fehler beim Starten des Downloads');
@@ -150,21 +142,15 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
         if (isNaN(approxTime)) approxTime = 0;
 
         try {
-            const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
-            const token = localStorage.getItem('melodiq_helper_token') || '';
-            const res = await fetch(`${helperUrl}/api/separator/job`, {
+            const data = await melodiqFetch('/api/separator/job', {
                 method: 'POST',
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify([{
                     songId: selectedSongForQueue.id,
                     type: 'auto-sync',
                     approximateStartSec: approxTime
                 }])
             });
-            if (res.ok) {
+            if (data) {
                 setFeedbackMessage('Auto-Sync (KI) Hintergrund-Job gestartet...');
             } else {
                 setFeedbackMessage('Fehler beim Starten des Auto-Syncs');

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
-import db from '../../db';
 import { PlayerRuntime } from './PlayerRuntime';
 import { type Song } from '../../db';
+import { addPlayerScore, getPlayerScores } from '../../logic/melodiqRepository';
 
 interface UseSessionEndProps {
     playersRef: React.RefObject<PlayerRuntime[]>;
@@ -57,16 +57,14 @@ export function useSessionEnd({
                 });
             } else {
                 try {
-                    await db.scores.add({
+                    await addPlayerScore({
                         songId: song.id,
                         profileId: p.config.id,
                         score: totalScore,
                         date: isoDate
                     });
 
-                    const allScores = await db.scores
-                        .where({ songId: song.id, profileId: p.config.id })
-                        .toArray();
+                    const allScores = await getPlayerScores(song.id, p.config.id);
 
                     const sorted = allScores.sort((a, b) => b.score - a.score);
                     const isRecord = sorted.length > 0 && sorted[0].date === isoDate;

@@ -72,17 +72,17 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
             const urlHelper = scannedParams.get('helperUrl');
             const urlToken = scannedParams.get('token') || scannedParams.get('apiKey');
 
-            if (urlHelper) {
-                localStorage.setItem('melodiq_helper_url', urlHelper);
-                localStorage.setItem('melodiq_enable_helper', 'true');
+            if (urlHelper && helperStorageKey) {
+                localStorage.setItem(helperStorageKey, urlHelper);
+                localStorage.setItem(`${gameId}_enable_helper`, 'true');
             }
-            if (urlToken) {
-                localStorage.setItem('melodiq_helper_token', urlToken);
+            if (urlToken && helperTokenKey) {
+                localStorage.setItem(helperTokenKey, urlToken);
             }
 
-            // Tell useSongs to reload with the new config
+            // Tell listeners to reload with the new config
             if (urlHelper || urlToken) {
-                window.dispatchEvent(new Event('melodiq_settings_updated'));
+                window.dispatchEvent(new Event(`${gameId}_settings_updated`));
             }
 
             // Navigate to the full path including all query params

@@ -1,56 +1,56 @@
-# Workflow: Lokaler Dev-Server mit Docker Compose
+# Workflow: Local Dev Server with Docker Compose
 
-## Zweck
+## Purpose
 
-Diesen Workflow nutzen, um den Melodiq-Helper-Server **lokal** zu bauen und zu testen, ohne das veröffentlichte Docker-Image von Docker Hub zu verwenden.
+Use this workflow to build and test the Melodiq helper server **locally**, without pulling the published Docker image from Docker Hub.
 
-## Voraussetzungen
+## Prerequisites
 
-- Docker & Docker Compose installiert
-- `config.json` im `server/`-Verzeichnis vorhanden (von `config.example.json` kopieren und anpassen)
+- Docker & Docker Compose installed
+- `config.json` present in the `server/` directory (copy from `config.example.json` and customize)
 
-## Schritte
+## Steps
 
-### 1. `config.json` prüfen
+### 1. Verify `config.json`
 
 ```bash
 cd server/
-# Falls noch nicht vorhanden:
+# If not already present:
 cp config.example.json config.json
-# Dann Pfade, Token usw. anpassen
+# Then adjust paths, tokens, etc.
 ```
 
 > [!IMPORTANT]
-> Die `directories`-Felder in `config.json` sollten die **Container-Pfade** referenzieren (z. B. `/music/songs`), die über die Volumes in `docker-compose.dev.yml` gemountet werden.
+> The `directories` fields in `config.json` should reference the container paths (e.g., `/music/songs`) that are mounted via volumes in `docker-compose.dev.yml`.
 
-### 2. Dev-Container starten
+### 2. Start the Dev Container
 
 ```bash
 cd server/
 docker compose -f docker-compose.dev.yml up --build
 ```
 
-- `--build` sorgt dafür, dass das Image jedes Mal neu gebaut wird.
-- Ohne `--build` wird das gecachte Image verwendet.
+- `--build` ensures that the image is rebuilt every time.
+- Without `--build`, the cached image will be used.
 
-### 3. Server prüfen
+### 3. Check the Server
 
-Nach dem Start ist der Server erreichbar unter:
+Once started, the server is accessible at:
 - HTTP: `http://localhost:3000`
-- HTTPS (wenn SSL konfiguriert): `https://localhost:3000`
+- HTTPS (if SSL is configured): `https://localhost:3000`
 
-### 4. Container stoppen
+### 4. Stop the Container
 
 ```bash
 docker compose -f docker-compose.dev.yml down
 ```
 
-## Unterschiede zur Produktion (`docker-compose.yml`)
+## Differences from Production (`docker-compose.yml`)
 
-| Eigenschaft        | Produktion                   | Dev                          |
+| Feature            | Production                   | Dev                          |
 |--------------------|------------------------------|------------------------------|
-| Image-Quelle       | `nexumia/melodiq-server:latest` (Pull) | Lokaler Build via `Dockerfile` |
-| `restart`-Policy   | `always`                     | `no`                         |
-| `ALLOWED_ORIGINS`  | `https://nexumia.de,...`     | leer (alle Origins erlaubt)  |
+| Image Source       | `nexumia/melodiq-server:latest` (Pull) | Local build via `Dockerfile` |
+| `restart` Policy   | `always`                     | `no`                         |
+| `ALLOWED_ORIGINS`  | `https://nexumia.de,...`     | Empty (all origins allowed)  |
 | `NODE_ENV`         | `production`                 | `development`                |
-| Container-Name     | `melodiq-server`             | `melodiq-server-dev`         |
+| Container Name     | `melodiq-server`             | `melodiq-server-dev`         |

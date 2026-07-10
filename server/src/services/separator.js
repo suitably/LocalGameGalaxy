@@ -3,6 +3,28 @@ const path = require('path');
 const { spawn, exec } = require('child_process');
 const { scanSongs } = require('./scanner');
 
+/**
+ * AI Audio Vocal Separation & Installation Service
+ * 
+ * Manages CPU-only vocal separation using PyTorch and the `audio-separator` CLI.
+ * 
+ * ## Job Processing Architecture
+ * - Uses a central `separatorQueue` array to process jobs sequentially.
+ * - `SEPARATOR_JOBS` map holds active job status/logs in memory for API querying.
+ * - Spawns shell processes (`spawn`, `exec`) for installation and separation.
+ * 
+ * ## PyTorch Environment Installation
+ * - First checks if `audio-separator` and Python dependencies are present.
+ * - Checks if the system python package manager requires the `--break-system-packages` override flag.
+ * - Forces installation of CPU-only PyTorch build:
+ *   `pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu`
+ *   to avoid downloading massive CUDA binaries (~1GB+).
+ * 
+ * ## Vocal Separation execution
+ * - Spawns `audio-separator` with `UVR-MDX-NET-Inst_HQ_3.onnx` ONNX model.
+ * - Logs and maps outputs (`Instrumental` and `Vocals` stems) to the song folder.
+ * - Patches UltraStar `.txt` files with `#MP3:instrumental.mp3` and `#VOCALS:vocals.mp3` headers.
+ */
 const SEPARATOR_JOBS = new Map();
 const separatorQueue = [];
 let isSeparatorRunning = false;
@@ -34,6 +56,14 @@ async function checkBreakSystemPackagesSupport() {
     });
 }
 
+/**
+ * Executes a pip3 installation sequence.
+ * Installs PyTorch (CPU variant) first, then audio-separator and whisper-timestamped.
+ * Handles system-managed python environments with break-system-packages support.
+ * Updates job progress and log array reactively.
+ * 
+ * @param {Object} job - The installation job definition.
+ */
 async function runInstallJob(job) {
     job.log.push("Starting installation...");
     job.progress = 10;
@@ -106,6 +136,13 @@ async function runInstallJob(job) {
     }
 }
 
+/**
+ * Routes and runs the requested separation or synchronization job.
+ * Spawns the audio-separator ONNX model child process and monitors stdout/stderr for progress.
+ * Locates the output files and updates the UltraStar .txt file headers accordingly.
+ * 
+ * @param {Object} job - The separation/sync/install job request.
+ */
 async function runSeparatorJob(job) {
     try {
         job.status = 'running';

@@ -5,7 +5,25 @@ import { type UserProfile } from '../../MelodiqSettings';
 import { type RatingType } from '../ScoreDisplay';
 import { type SungSegment } from '../PitchVisualizer';
 
-// Helper class to manage runtime state for a single player
+/**
+ * `PlayerRuntime` — Real-Time Multiplayer State Manager
+ * 
+ * Manages the high-frequency runtime gameplay state for a single player
+ * (either a local player using the host microphone or a remote player streaming via WebRTC).
+ * 
+ * ## Local vs Remote Audio Routing
+ * - If `isRemote` is `false`, instantiates a local `MicrophoneManager`.
+ * - If `isRemote` is `true`, routes pitch queries to the global `WebRTCMicManager` using the remote client's `peerId`.
+ * 
+ * ## Performance Throttling
+ * Pitch detection algorithms are CPU-heavy. `getPitch()` enforces a throttle window of `PITCH_THROTTLE_MS` (~30fps)
+ * by caching and returning the last calculated `PitchResult` instead of calling `autoCorrelate` on every animation frame.
+ * 
+ * ## Rendering Optimization
+ * To prevent React from re-rendering the DOM at 60fps during game loops:
+ * - High-frequency updates (current pitch, sung line segments) are stored in standard React `RefObject`s (`pitchRef`, `segmentsRef`).
+ * - These refs are read directly by the HTML5 Canvas in `PitchVisualizer.tsx`, bypassing React's virtual DOM diffing entirely.
+ */
 export class PlayerRuntime {
     // Local Mic
     public mic: MicrophoneManager | null = null;

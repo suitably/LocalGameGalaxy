@@ -1,4 +1,5 @@
 import { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo, useCallback } from 'react';
+import { melodiqFetch } from '../api/melodiqFetch';
 import { Box, Snackbar, Alert, Menu, MenuItem } from '@mui/material';
 import { type Song, type SongMeta } from '../db';
 import { MelodiqSession, type MelodiqSessionHandle } from '../gameplay/MelodiqSession';
@@ -104,15 +105,8 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         try {
             setFeedbackMessage("KI Auto-Sync (Hybrid) gestartet...");
             
-            const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
-            const token = localStorage.getItem('melodiq_helper_token') || '';
-            
-            const res = await fetch(`${helperUrl}/api/separator/job`, {
+            const data = await melodiqFetch('/api/separator/job', {
                 method: 'POST',
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify([{
                     songId: selectedSong.id,
                     type: 'auto-sync',
@@ -121,8 +115,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                 }])
             });
             
-            if (res.ok) {
-                const data = await res.json();
+            if (data) {
                 if (data.jobIds && data.jobIds.length > 0) {
                     setSyncJobId(data.jobIds[0]);
                 }
@@ -146,16 +139,10 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     // Sync Job Polling
     useEffect(() => {
         if (!syncJobId) return;
-        const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
-        const token = localStorage.getItem('melodiq_helper_token') || '';
-        
         const interval = setInterval(async () => {
             try {
-                const res = await fetch(`${helperUrl}/api/separator/status/${syncJobId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
+                const data = await melodiqFetch(`/api/separator/status/${syncJobId}`);
+                if (data) {
                     if (data.status === 'done' || data.status === 'error') {
                         clearInterval(interval);
                         setSyncJobId(null);

@@ -13,6 +13,11 @@ This directory contains walkthroughs and verification logs. These documents prov
 - [Unstable WebRTC Manager Recreation Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/unstable-webrtc-manager-recreation-walkthrough.md)
 - [Stale Pitch Scoring Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/stale-pitch-scoring-walkthrough.md)
 - [TV Song End Fix Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/tv-song-end-fix-walkthrough.md)
+- [Phase 1 Onboarding Documentation Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/phase-1-onboarding-walkthrough.md)
+- [Phase 2 Architectural Documentation Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/phase-2-arch-docs-walkthrough.md)
+- [Phase 3 Code Component & Logic Documentation Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/phase-3-code-docs-walkthrough.md)
+- [Phase 4 Operational & DevOps Documentation Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/phase-4-operational-docs-walkthrough.md)
+- [Phase 5 Cleanups Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/phase-5-cleanups-walkthrough.md)
 
 
 ID: DOCS-VERIFICATION-SUMMARY

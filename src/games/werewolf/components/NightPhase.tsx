@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Box, Typography, Button, IconButton, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Box, Typography, Button, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Paper } from '@mui/material';
 import type { Player, NightAction, Role, RoleDefinition } from '../logic/types';
 import { isWerewolf } from '../logic/utils';
 import { DEFAULT_ROLES } from '../logic/defaultRoles';
@@ -44,6 +44,17 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
     const [currentRoleIndex, setCurrentRoleIndex] = useState(0);
     const [isMorningComing, setIsMorningComing] = useState(false);
     const [isInfoOpen, setIsInfoOpen] = useState(false);
+
+    // States for custom multi-ability / multi-target roles
+    const [selectedAbilityIndex, setSelectedAbilityIndex] = useState<number | null>(null);
+    const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
+    const [completedAbilities, setCompletedAbilities] = useState<number[]>([]);
+
+    useEffect(() => {
+        setSelectedAbilityIndex(null);
+        setSelectedTargets([]);
+        setCompletedAbilities([]);
+    }, [currentRoleIndex]);
 
     const rolesToAct = useMemo(() => {
         const standardRoles = NIGHT_ROLE_ORDER.filter(role => {
@@ -112,6 +123,13 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
         nextRole();
     };
 
+    const handleAbilityAction = (action: NightAction) => {
+        onNightAction(action, activeRole || 'WEREWOLF');
+        setCompletedAbilities(prev => [...prev, selectedAbilityIndex!]);
+        setSelectedAbilityIndex(null);
+        setSelectedTargets([]);
+    };
+
     const getDescription = () => {
         if (!activeRole) return '';
         const customRole = customRoles.find(cr => cr.id === activeRole);
@@ -165,19 +183,104 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
         const customInstruction = getInstruction();
 
         if (activeCustomRole) {
-            const ability = activeCustomRole.abilities[0];
-            if (!ability) return <Box textAlign="center" mt={10}><Button variant="outlined" onClick={nextRole}>{t('common.skip')} {activeRole}</Button></Box>;
+            const abilities = activeCustomRole.abilities || [];
+            const activeAbilities = abilities.filter(ability => {
+                if (ability.timing === 'FIRST_NIGHT' && round > 1) return false;
+                if (ability.timing === 'ROUND_NUMBER' && ability.roundNumber !== round) return false;
+                return true;
+            });
+
+            if (activeAbilities.length === 0) {
+                return (
+                    <Box textAlign="center" mt={10}>
+                        <Button variant="outlined" onClick={nextRole}>
+                            {t('common.skip')} {activeCustomRole.name}
+                        </Button>
+                    </Box>
+                );
+            }
+
+            // Render Ability Selector if no ability is currently selected
+            if (selectedAbilityIndex === null) {
+                const remainingAbilities = activeAbilities.filter((_, idx) => !completedAbilities.includes(idx));
+                if (remainingAbilities.length === 0) {
+                    return (
+                        <Box textAlign="center" mt={10}>
+                            <Typography variant="h5" gutterBottom>{activeCustomRole.name} has finished acting.</Typography>
+                            <Button variant="contained" color="primary" onClick={nextRole}>
+                                {t('common.finish_turn', 'Finish Turn')}
+                            </Button>
+                        </Box>
+                    );
+                }
+
+                return (
+                    <Box maxWidth="sm" mx="auto" textAlign="center" mt={4}>
+                        <Typography variant="h1" sx={{ mb: 2 }}>{activeCustomRole.icon}</Typography>
+                        <Typography variant="h4" gutterBottom>{activeCustomRole.name}</Typography>
+                        <Typography variant="body1" color="text.secondary" gutterBottom>{activeCustomRole.description}</Typography>
+                        
+                        <Paper sx={{ p: 4, mt: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <Typography variant="h6" gutterBottom>{t('games.werewolf.narrator.choose_ability', 'Choose an ability to execute:')}</Typography>
+                            {activeAbilities.map((ability, idx) => {
+                                const isUsed = completedAbilities.includes(idx);
+                                return (
+                                    <Button
+                                        key={idx}
+                                        variant={isUsed ? "outlined" : "contained"}
+                                        disabled={isUsed}
+                                        onClick={() => setSelectedAbilityIndex(idx)}
+                                        sx={{ py: 1.5 }}
+                                    >
+                                        {ability.type} (Targets: {ability.targetCount || 1}) {isUsed ? ' - ' + t('common.used', 'Used') : ''}
+                                    </Button>
+                                );
+                            })}
+                        </Paper>
+                        <Button variant="outlined" color="secondary" onClick={nextRole} sx={{ mt: 3 }} fullWidth>
+                            {t('common.skip')} / {t('common.done', 'Done')}
+                        </Button>
+                    </Box>
+                );
+            }
+
+            const ability = activeAbilities[selectedAbilityIndex];
+            const targetCount = ability.targetCount || 1;
+            const currentTargetNum = selectedTargets.length + 1;
+            
+            const instructionText = customInstruction || 
+                (t(`games.werewolf.editor.ability_instruction_${ability.type.toLowerCase()}`, { count: targetCount }) + 
+                (targetCount > 1 ? ` (${t('common.target', 'Target')} ${currentTargetNum}/${targetCount})` : ''));
 
             return (
                 <PlayerSelectionView
                     icon={<Typography variant="h1">{activeCustomRole.icon}</Typography>}
-                    title={activeCustomRole.name}
+                    title={`${activeCustomRole.name} - ${ability.type}`}
                     subtitle={activeCustomRole.description}
-                    instruction={customInstruction || t(`games.werewolf.editor.ability_instruction_${ability.type.toLowerCase()}`, { count: ability.targetCount })}
-                    players={players.filter(p => p.isAlive)}
-                    onSelect={(id) => handleAction({ type: ability.type as any, targetId: id })}
-                    onSkip={nextRole}
-                    skipLabel={t('common.skip')}
+                    instruction={instructionText}
+                    players={players.filter(p => p.isAlive && !selectedTargets.includes(p.id))}
+                    onSelect={(id) => {
+                        if (targetCount <= 1) {
+                            handleAbilityAction({ type: ability.type as any, targetId: id });
+                        } else {
+                            const newTargets = [...selectedTargets, id];
+                            if (newTargets.length === targetCount) {
+                                newTargets.forEach(targetId => {
+                                    onNightAction({ type: ability.type as any, targetId }, activeRole || 'WEREWOLF');
+                                });
+                                setCompletedAbilities(prev => [...prev, selectedAbilityIndex!]);
+                                setSelectedAbilityIndex(null);
+                                setSelectedTargets([]);
+                            } else {
+                                setSelectedTargets(newTargets);
+                            }
+                        }
+                    }}
+                    onSkip={() => {
+                        setSelectedAbilityIndex(null);
+                        setSelectedTargets([]);
+                    }}
+                    skipLabel={t('common.back')}
                     buttonColor="primary"
                 />
             );

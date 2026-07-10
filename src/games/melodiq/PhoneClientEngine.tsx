@@ -1,5 +1,5 @@
 import React, { useEffect, useState, createContext, useContext, useRef, useCallback } from 'react';
-import { useWebRTCClient } from '../../lib/webrtc/useWebRTCClient';
+import { useWebRTCClient } from '../../lib/webrtc';
 import { MicrophoneManager } from './audio/MicrophoneManager';
 
 export interface ClientProfile {

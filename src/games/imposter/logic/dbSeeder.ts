@@ -1,4 +1,4 @@
-import { db } from '../../../lib/db';
+import { countCategories, countWordPairs, seedCategories, seedWordPairs } from './imposterRepository';
 import { WORD_PAIRS_EN } from './wordPairs_en';
 import { WORD_PAIRS_DE } from './wordPairs_de';
 import { CATEGORIES, type WordPair, type WordPairCategory } from './wordPairCategories';
@@ -7,9 +7,9 @@ import { CATEGORIES, type WordPair, type WordPairCategory } from './wordPairCate
  * Seeds the Imposter game database with initial categories and word pairs.
  * Skips if the database is already seeded.
  */
-export async function seedImposterDatabase() {
-    const categoryCount = await db.imposter_categories.count();
-    const wordPairCount = await db.imposter_word_pairs.count();
+export async function seedImposterDatabase(): Promise<void> {
+    const categoryCount = await countCategories();
+    const wordPairCount = await countWordPairs();
 
     if (categoryCount > 0 && wordPairCount > 0) {
         console.log('Imposter database already seeded.');
@@ -23,7 +23,7 @@ export async function seedImposterDatabase() {
         id: cat.id,
         name: cat.name
     }));
-    await db.imposter_categories.bulkPut(categoriesToSeed);
+    await seedCategories(categoriesToSeed);
 
     // Seed word pairs (merging EN and DE)
     // We assume they are aligned by index
@@ -38,6 +38,6 @@ export async function seedImposterDatabase() {
         };
     });
 
-    await db.imposter_word_pairs.bulkAdd(pairsToSeed);
+    await seedWordPairs(pairsToSeed);
     console.log(`Seeded ${categoriesToSeed.length} categories and ${pairsToSeed.length} word pairs.`);
 }

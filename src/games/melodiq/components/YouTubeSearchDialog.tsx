@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { melodiqFetch } from '../api/melodiqFetch';
 import {
     Dialog,
     DialogTitle,
@@ -81,15 +82,7 @@ export const YouTubeSearchDialog: React.FC<YouTubeSearchDialogProps> = ({
         setLoading(true);
         setError(null);
         try {
-            const helperUrl = (localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000').replace(/\/$/, "");
-            const token = localStorage.getItem('melodiq_helper_token') || '';
-            
-            const res = await fetch(`${helperUrl}/api/youtube/search?q=${encodeURIComponent(q)}&limit=5`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!res.ok) throw new Error('Search failed');
-            
-            const data = await res.json();
+            const data = await melodiqFetch(`/api/youtube/search?q=${encodeURIComponent(q)}&limit=5`);
             setResults(data);
         } catch (err: any) {
             setError(err.message);

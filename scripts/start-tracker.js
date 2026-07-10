@@ -8,7 +8,7 @@ const server = new Server({
     stats: true, // Enable stats
 });
 
-const PORT = 8000;
+const PORT = process.env.PORT || process.env.TRACKER_PORT || 8000;
 
 server.on('error', function (err) {
     // fatal server error!

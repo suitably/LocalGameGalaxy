@@ -1,0 +1,22 @@
+# Tasks - Refactoring Bloated Express Router [ID: TASK-BLOATED-ROUTER]
+
+- [/] Phase 1: Planning and Preparation <!-- id: 0 -->
+  - [x] Analyze codebase router dependencies <!-- id: 1 -->
+  - [x] Create implementation plan (`docs/planning/bloated-router-plan.md`) <!-- id: 2 -->
+  - [ ] Create tasks list (`docs/tasks/bloated-router-tasks.md`) <!-- id: 3 -->
+- [ ] Phase 2: Create Services <!-- id: 4 -->
+  - [ ] Create `server/src/services/streaming.js` <!-- id: 5 -->
+  - [ ] Create `server/src/services/queueManager.js` <!-- id: 6 -->
+- [ ] Phase 3: Create Controllers <!-- id: 7 -->
+  - [ ] Create `server/src/controllers/viewController.js` <!-- id: 8 -->
+  - [ ] Create `server/src/controllers/mediaController.js` <!-- id: 9 -->
+  - [ ] Create `server/src/controllers/songController.js` <!-- id: 10 -->
+  - [ ] Create `server/src/controllers/configController.js` <!-- id: 11 -->
+  - [ ] Create `server/src/controllers/jobController.js` <!-- id: 12 -->
+- [ ] Phase 4: Update Router and App Entry Points <!-- id: 13 -->
+  - [ ] Refactor `server/src/routes/index.js` to map endpoints to controllers <!-- id: 14 -->
+- [ ] Phase 5: Verification & Walkthrough <!-- id: 15 -->
+  - [ ] Build and lint project to ensure no warnings/errors were introduced <!-- id: 16 -->
+  - [ ] Validate server endpoints and dynamic HTML page rendering manually <!-- id: 17 -->
+  - [ ] Create `docs/verification/bloated-router-walkthrough.md` <!-- id: 18 -->
+  - [ ] Push to Git and close the GitHub issue <!-- id: 19 -->

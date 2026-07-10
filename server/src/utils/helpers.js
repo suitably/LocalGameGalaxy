@@ -1,4 +1,7 @@
 const { networkInterfaces } = require('os');
+const fs = require('fs');
+const path = require('path');
+const config = require('../../config');
 
 const getLocalIp = () => {
     const nets = networkInterfaces();
@@ -25,8 +28,17 @@ const generateId = (title, artist, relPath) => {
     return Buffer.from(str, 'utf-8').toString('base64').replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
 };
 
+const resolveSecurePath = (userPath) => {
+    if (!userPath) return null;
+    const safePath = path.normalize(userPath);
+    const isAllowed = config.directories.some(dir => safePath.startsWith(path.normalize(dir)));
+    return isAllowed && fs.existsSync(safePath) ? safePath : null;
+};
+
 module.exports = {
     getLocalIp,
     sanitizeFilename,
-    generateId
+    generateId,
+    resolveSecurePath
 };
+

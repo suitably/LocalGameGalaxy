@@ -5,6 +5,43 @@ import { getDeathCascade, getWinningFaction, isWerewolfRole } from './utils';
 import { DEFAULT_ROLES } from './defaultRoles';
 
 
+/**
+ * `gameReducer` — Werewolf Game State Reducer
+ *
+ * Pure Redux-pattern reducer that manages all Werewolf game state transitions.
+ * All game logic passes through this single function — it is the authoritative
+ * source of truth for the game's state machine.
+ *
+ * ## Key Action Groups
+ *
+ * ### Setup Actions
+ * - `ADD_PLAYER` / `REMOVE_PLAYER` / `CLEAR_ALL_PLAYERS`: Manage the player list before the game starts.
+ * - `START_GAME`: Shuffles and assigns roles; initializes per-role `powerState` fields.
+ * - `SAVE_CUSTOM_ROLES`: Persists the user-defined custom role library into the state.
+ *
+ * ### Phase Transitions
+ * - `NEXT_PHASE`: Advances the game phase following the sequence:
+ *   `SETUP → ROLE_REVEAL → NIGHT → DAY → VOTING → NIGHT → ...`
+ *   On `NIGHT → DAY`: Night decisions are **resolved in full** before the phase changes.
+ *
+ * ### Night Action Collection
+ * - `NIGHT_ACTION`: Each role submits one `NightDecision` per night turn. Actions are
+ *   collected into `nightDecisions[]` and resolved atomically when NEXT_PHASE fires.
+ *
+ * ### Night Resolution Order (inside NEXT_PHASE, NIGHT→DAY)
+ * 1. Guardian / Survivor protections applied.
+ * 2. Werewolf KILL applied (blocked by protection).
+ * 3. Witch HEAL overrides kill; Witch KILL applied.
+ * 4. Black Werewolf INFECT applied.
+ * 5. Pyromaniac BURN applied to all oiled targets.
+ * 6. Death cascade via `getDeathCascade()` (Lovers die together).
+ * 7. Hunter `HUNTER_SHOT` phase injected if a Hunter was killed.
+ * 8. Win condition evaluated via `getWinningFaction()`.
+ *
+ * @param state - The current immutable `GameState`.
+ * @param action - A discriminated union `Action` describing the transition.
+ * @returns A new `GameState` object; never mutates the input.
+ */
 export const gameReducer = (state: GameState, action: Action): GameState => {
     switch (action.type) {
         case 'ADD_PLAYER':

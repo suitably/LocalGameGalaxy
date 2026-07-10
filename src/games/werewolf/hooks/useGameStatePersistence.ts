@@ -10,6 +10,22 @@ export interface SavedGameInfo {
     savedAt: string;
 }
 
+/**
+ * `useGameStatePersistence` — Werewolf Session Persistence Hook
+ *
+ * Provides crash-recovery and session-resume functionality by serializing
+ * the active `GameState` to `localStorage` under the key `'werewolf-game-state'`.
+ *
+ * State is **only saved if the game has started** (i.e., phase !== `'SETUP'`)
+ * to avoid persisting pre-game configuration.
+ *
+ * @returns Object with five stable callback functions:
+ *   - `saveGameState(state)` — Serializes and saves the given state.
+ *   - `loadGameState()` — Deserializes and returns the saved state, or `null`.
+ *   - `getSavedGameInfo()` — Returns lightweight metadata (round, phase, playerCount) without deserializing the full state.
+ *   - `clearSavedGame()` — Removes the persisted state (call on game reset).
+ *   - `hasSavedGame()` — Returns `true` if a persisted session exists.
+ */
 export const useGameStatePersistence = () => {
     const saveGameState = useCallback((state: GameState) => {
         // Only save if game has started (not in SETUP phase)
@@ -19,6 +35,8 @@ export const useGameStatePersistence = () => {
                 savedAt: new Date().toISOString()
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+        } else {
+            localStorage.removeItem(STORAGE_KEY);
         }
     }, []);
 

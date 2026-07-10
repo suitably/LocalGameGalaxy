@@ -8,6 +8,34 @@ const { getUsdbCookie, fetchUsdbTxt } = require('./usdb');
 const { scanSongs } = require('./scanner');
 const { SEPARATOR_JOBS, separatorQueue, processSeparatorQueue } = require('./separator');
 
+/**
+ * Song Download & Dependency Installation Service
+ * 
+ * Orchestrates downloading song audio/video from YouTube via `yt-dlp`, scraping 
+ * lyrics/metadata from `USDB`, and preparing the local song package directories.
+ * 
+ * ## Core Architecture
+ * - Uses a central `jobQueue` array to process download jobs sequentially (`DOWNLOAD_JOBS`).
+ * - Manages automatic resolution of the `yt-dlp` binary.
+ * 
+ * ## Dependency Isolation and Installers
+ * - Exposes `findYtDlpBin` which checks standard binary paths and fallback temp dirs.
+ * - If missing, runs `installYtDlp` which first tries `pip3 install --user --break-system-packages yt-dlp`.
+ * - If pip fails, downloads direct compiled binary releases from GitHub using `curl` or `wget`.
+ * - Automatically grants execution permissions to downloaded binaries via `fs.chmodSync(dest, 0o755)`.
+ * 
+ * ## Child Process execution
+ * - Spawns `yt-dlp` and `ffmpeg` as asynchronous child processes.
+ * - Streams output lines into job logs in real time.
+ * - Catches non-zero exit codes and extracts the trailing error buffer.
+ * 
+ * ## UltraStar .txt File Patching
+ * - Normalizes header tags (filtering stale `#MP3`, `#VIDEO`, `#VOCALS`, `#COVER`, `#BACKGROUND` tags).
+ * - Splices in updated tags pointing to downloaded media assets:
+ *   - `#MP3:<filename>`
+ *   - `#VIDEO:<filename>`
+ *   - `#COVER:<filename>`
+ */
 const DOWNLOAD_JOBS = new Map();
 const jobQueue = [];
 let isQueueRunning = false;
@@ -129,6 +157,12 @@ function installYtDlp(job) {
     });
 }
 
+/**
+ * Ensures yt-dlp binary is present. Triggers automatic installer if missing.
+ * 
+ * @param {Object} job - Active job context for logging.
+ * @returns {Promise<string>} Path to executable yt-dlp binary.
+ */
 async function ensureYtDlp(job) {
     let bin = findYtDlpBin();
     if (bin) return bin;
@@ -141,6 +175,14 @@ async function ensureYtDlp(job) {
     return bin;
 }
 
+/**
+ * Spawns a yt-dlp child process and streams standard output and standard error.
+ * 
+ * @param {string} bin - Executable binary path.
+ * @param {Array<string>} args - Command-line arguments.
+ * @param {Function} [onLine] - Callback function called for each line of stdout/stderr.
+ * @returns {Promise<string>} Raw stdout buffer content.
+ */
 function spawnYtDlp(bin, args, onLine) {
     return new Promise((resolve, reject) => {
         const proc = spawn(bin, args, { stdio: 'pipe' });
@@ -163,6 +205,18 @@ function spawnYtDlp(bin, args, onLine) {
     });
 }
 
+/**
+ * Main orchestration entrypoint for downloading a song.
+ * 1. Checks and resolves dependencies (yt-dlp).
+ * 2. Creates the target song directory.
+ * 3. Downloads lyrics (.txt) from USDB if a usdbId is provided.
+ * 4. Resolves the YouTube URL (performs video search if none provided).
+ * 5. Downloads the song thumbnail, converting it to a clean JPG cover image.
+ * 6. Downloads the audio (or video) track, transcoding it to MP3 via ffmpeg.
+ * 7. Patches the UltraStar .txt file headers with local filenames.
+ * 
+ * @param {Object} job - The download job request.
+ */
 async function runDownloadJob(job) {
     try {
         job.status = 'running';

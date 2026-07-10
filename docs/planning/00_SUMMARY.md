@@ -14,6 +14,9 @@ This directory contains implementation plans for proposed changes. Each plan det
 - [Unstable WebRTC Manager Recreation Fix Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/unstable-webrtc-manager-recreation-plan.md)
 - [Stale Pitch Scoring Fix Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/stale-pitch-scoring-plan.md)
 - [TV Song End Fix Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/tv-song-end-fix-plan.md)
+- [Issues Resolution Roadmap Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/issues-roadmap-plan.md)
+- [Phase 4: Operational & DevOps Documentation Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/phase-4-operational-docs-plan.md)
+- [Phase 5: Architecture & Code Cleanups Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/phase-5-cleanups-plan.md)
 
 
 ID: DOCS-PLANNING-SUMMARY

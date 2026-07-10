@@ -31,3 +31,29 @@ export interface ActivePlayer {
     isRemote?: boolean;
     hidePitch?: boolean;
 }
+
+import { type SungSegment } from './gameplay/PitchVisualizer';
+import { type PitchResult } from './audio/MicrophoneManager';
+import { type RatingType } from './gameplay/ScoreDisplay';
+
+export interface PassivePlayerState {
+    id: string;
+    name: string;
+    hue: number;
+    score: number;
+    trackScores: Record<number, number>;
+    currentPitch: PitchResult | null;
+    activeSegments: Record<number, SungSegment | null>;
+    combo: number;
+    lastHit: { rating: RatingType, score: number, timestamp: number } | null;
+}
+
+export interface PassiveGameState {
+    players: PassivePlayerState[];
+    isPlaying: boolean;
+    isFinished: boolean;
+    isPausedForScore: boolean;
+    currentTime: number;
+    hostTimestamp?: number;
+    activeSongId?: string | null;
+}

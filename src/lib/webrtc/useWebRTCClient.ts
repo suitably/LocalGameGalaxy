@@ -5,14 +5,34 @@ import Client from 'bittorrent-tracker';
 const MAX_CANDIDATES = 5;
 const CONNECTION_TIMEOUT_MS = 15000;
 
+/**
+ * Options for configuring the WebRTC Client hook.
+ */
 export interface WebRTCClientOptions {
+    /** Callback triggered when the connection status changes. */
     onStatusChange?: (message: string, className: string) => void;
+    /** Callback triggered when a data channel message is received from the host. */
     onMessage?: (message: any) => void;
+    /** Whether to automatically connect to the party on mount or when partyId changes. */
     autoConnect?: boolean;
-    getMediaStream?: () => Promise<MediaStream | null>; // Provide a stream (e.g. microphone)
+    /** Async callback to request and return the microphone audio MediaStream. */
+    getMediaStream?: () => Promise<MediaStream | null>;
+    /** Callback to obtain player identity info (name, color hue, persistent deviceId). */
     getIdentity?: () => { name: string; hue: number; deviceId?: string; };
 }
 
+/**
+ * Hook managing the client-side (Phone/Singer) WebRTC connection and signaling lifecycle.
+ *
+ * It initiates a WebSocket-based BitTorrent tracker client, announces the party room,
+ * discovers the host, and establishes a secure peer-to-peer data and audio stream connection.
+ *
+ * Handles concurrent candidate connection racing, timeout-based retries, and automatic reconnection.
+ *
+ * @param partyId - The unique session room code.
+ * @param trackerUrls - List of tracker WebSockets urls to try.
+ * @param options - Event handlers and data getters.
+ */
 export function useWebRTCClient(partyId: string | null, trackerUrls: string[], options: WebRTCClientOptions = {}) {
     const optionsRef = useRef(options);
     useEffect(() => {

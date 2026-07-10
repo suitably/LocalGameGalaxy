@@ -31,6 +31,26 @@ export default defineConfig([
       'prefer-const': 'warn',
       'react-hooks/preserve-manual-memoization': 'warn',
       'react-hooks/immutability': 'warn',
+      'no-restricted-imports': ['error', {
+        patterns: [
+          {
+            group: ['**/games/melodiq/components/**', '**/games/melodiq/hooks/**'],
+            message: 'Import from the public entry point "src/games/melodiq" instead of internal directories.'
+          },
+          {
+            group: ['**/games/werewolf/components/**', '**/games/werewolf/hooks/**'],
+            message: 'Import from the public entry point "src/games/werewolf" instead of internal directories.'
+          },
+          {
+            group: ['**/games/imposter/components/**', '**/games/imposter/hooks/**'],
+            message: 'Import from the public entry point "src/games/imposter" instead of internal directories.'
+          },
+          {
+            group: ['**/lib/webrtc/*HostContext', '**/lib/webrtc/*HostManager', '**/lib/webrtc/useWebRTCClient'],
+            message: 'Import from the public entry point "src/lib/webrtc" instead of internal files.'
+          }
+        ]
+      }]
     },
   },
 ])

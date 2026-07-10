@@ -1,73 +1,95 @@
-# React + TypeScript + Vite
+# LocalGameGalaxy
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+LocalGameGalaxy is a purely client-side, offline-first web application suite designed to act as a hub for local group games (like Werewolf, Imposter, and Melodiq). It allows players to use their smartphones as controller screens while looking at a main television screen (TV/Host mode), synchronized via a local peer-to-peer WebRTC network.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 1. Project Architecture Overview
 
-## React Compiler
+LocalGameGalaxy is composed of two main units:
+1. **React Frontend Application (main workspace)**: A client-side Single Page Application (SPA) built with React, TypeScript, and Vite. It runs in the web browser or as a native Android app via Capacitor.
+2. **Companion Server & Tracker (`/server`)**: A lightweight Node/Express helper running locally to host the media server, coordinate local file ingestion (e.g., song downloads/processing), and host a local BitTorrent signaling tracker for WebRTC discovery.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 2. Prerequisites
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+To set up the development environment, ensure you have:
+- **Node.js**: Version 20.x or higher is recommended.
+- **Python**: Version 3.10+ (required for vocal separation, pitch analysis, and audio forced-alignment scripts).
+- **Android SDK / Android Studio**: Required if building and running the mobile client as a native Android app via Capacitor.
+- **FFmpeg**: Required on the system path for song processing and audio separation tasks.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 3. Local Development Setup
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Follow these steps to set up the repository locally:
+
+### Step 1: Install Dependencies
+Install dependencies at the root workspace:
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Install dependencies for the companion server:
+```bash
+cd server
+npm install
+cd ..
 ```
+
+### Step 2: Configure Environment Settings
+Copy the example configuration to initialize the local server and client settings:
+```bash
+cp config.example.json config.json
+```
+For advanced steps, local SSL certificates, and generating security tokens, refer to the [Secrets & Local Configuration Guide](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/secrets-management.md).
+
+---
+
+## 4. Running the Applications
+
+To run the local development suite, you need to start the three core processes:
+
+### 1. Start the local WebRTC signaling tracker
+```bash
+npm run tracker
+```
+This starts the BitTorrent-based tracker on the port configured for peer discovery.
+
+### 2. Start the local companion host server
+```bash
+npm run host
+```
+This runs the companion server inside the `server/` directory, which handles song ingestion, vocal separation, and static asset distribution.
+
+### 3. Start the React frontend application
+```bash
+npm run dev
+```
+By default, this launches Vite on `http://localhost:5173`. Open this URL to access the main game hub.
+
+---
+
+## 5. Building and Testing
+
+- **Linting**: Enforce code style and TypeScript rules:
+  ```bash
+  npm run lint
+  ```
+- **Building**: Compile and bundle the web application:
+  ```bash
+  npm run build
+  ```
+- **Testing**: For detailed instructions on running unit and integration tests, refer to the [Testing Guide](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/testing-guide.md) (coming soon).
+
+---
+
+## 6. Documentation Resources
+
+For deeper technical information, please consult the `docs/` directory:
+- [System Architecture](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/architecture.md)
+- [Secrets & Local Configuration](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/secrets-management.md)
+- [Melodiq Game Architecture](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/melodiq-architecture.md)
+- [Data Models Specification](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/data-models.md)

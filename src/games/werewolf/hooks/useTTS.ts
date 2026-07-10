@@ -1,6 +1,25 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+/**
+ * `useTTS` — Werewolf Narrator Text-to-Speech Hook
+ *
+ * Provides narrator speech output during the Werewolf night phase using the
+ * browser's **Web Speech API** (`window.speechSynthesis`). Automatically
+ * selects the best available voice for the current i18n language (`en` / `de`).
+ *
+ * **Browser Requirement**: The Web Speech API must be supported. Falls back
+ * silently if `speechSynthesis` is unavailable (e.g., in WebViews).
+ *
+ * @returns `{ speak, cancel }`
+ *   - `speak(text)` — Cancels any in-progress speech and immediately reads `text`.
+ *   - `cancel()` — Stops any currently playing utterance.
+ *
+ * @example
+ * const { speak, cancel } = useTTS();
+ * speak(role.narratorText); // Read the narrator line for the current role
+ * return () => cancel();    // Clean up on unmount
+ */
 export const useTTS = () => {
     const { i18n } = useTranslation();
     const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);

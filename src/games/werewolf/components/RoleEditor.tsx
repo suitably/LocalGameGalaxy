@@ -35,10 +35,17 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { RoleDefinition, Ability, RoleAlignment } from '../logic/types';
 
+/**
+ * Props for configuring the RoleEditor component.
+ */
 interface RoleEditorProps {
+    /** The list of currently saved custom/modified role definitions. */
     customRoles: RoleDefinition[];
+    /** The base built-in roles that can be overridden or cloned. */
     defaultRoles?: RoleDefinition[];
+    /** Callback triggered when the updated list of custom/overridden roles is saved. */
     onSaveRoles: (roles: RoleDefinition[]) => void;
+    /** Close handler to discard changes or return to setup screen. */
     onClose: () => void;
 }
 
@@ -48,6 +55,25 @@ const EMPTY_ABILITY: Ability = {
     targetCount: 1,
 };
 
+/**
+ * `RoleEditor` — Werewolf Custom Role Creator & Override UI
+ * 
+ * Provides an interactive UI to customize Werewolf role properties and abilities.
+ * 
+ * ## Custom Role Overriding Rules
+ * - **Overrides**: If a custom role's `id` matches a built-in role ID, the custom definition
+ *   overrides the default built-in role behaviors, while preserving `isCustom: false` to represent
+ *   it is an override of a default role.
+ * - **Customs**: If the ID is new (generated as a random UUID), it is treated as a fully custom role
+ *   with `isCustom: true` and alignment.
+ * 
+ * ## Ability Specifications Schema
+ * New abilities can be added to custom roles using the {@link Ability} schema:
+ * - `type`: Action type (e.g. `KILL`, `HEAL`, `PROTECT`, `INFECT`, `CHECK_ROLE`, `LINK_LOVERS`, `OIL`, `BURN`, `GIVE_EGG`, `CHOOSE_CAMP`, `STEAL_ROLE`).
+ * - `timing`: Action occurrence (`EVERY_NIGHT`, `FIRST_NIGHT`, `ROUND_NUMBER`).
+ * - `targetCount`: Number of target players needed.
+ * - `usesPerGame` / `usesPerNight`: Optional limits.
+ */
 export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, defaultRoles = [], onSaveRoles, onClose }) => {
     const { t } = useTranslation();
     // mergedRoles contains all unique roles. If a custom role shares an ID with a default role, it overrides it.

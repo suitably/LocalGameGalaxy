@@ -1,0 +1,12 @@
+{
+  "directories": [
+    "/path/to/your/ultrastar/songs/directory1",
+    "/path/to/your/ultrastar/songs/directory2"
+  ],
+  "port": 3000,
+  "token": "YOUR_GENERATE_TOKEN_HERE (32-character hex token recommended)",
+  "ssl": {
+    "key": "-----BEGIN RSA PRIVATE KEY-----\n[YOUR PRIVATE KEY PEM DATA HERE]\n-----END RSA PRIVATE KEY-----",
+    "cert": "-----BEGIN CERTIFICATE-----\n[YOUR CERTIFICATE PEM DATA HERE]\n-----END CERTIFICATE-----"
+  }
+}

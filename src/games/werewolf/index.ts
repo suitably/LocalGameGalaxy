@@ -1,0 +1,1 @@
+export { WerewolfGame } from './WerewolfGame';

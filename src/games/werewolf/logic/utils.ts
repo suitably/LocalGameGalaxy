@@ -1,5 +1,18 @@
 import type { Player, RoleDefinition, Role } from './types';
 
+/**
+ * Returns `true` if a **player instance** is currently aligned with the Werewolf faction.
+ *
+ * Checks in priority order:
+ * 1. **Infection**: If `player.powerState.isInfected` is set (Black Werewolf ability), returns `true` regardless of role.
+ * 2. **Standard Roles**: `WEREWOLF`, `BLACK_WEREWOLF`, `WHITE_WEREWOLF` are always werewolves.
+ * 3. **Wolfdog Camp Choice**: If `WOLFDOG` player chose the `WEREWOLF` camp on night 1.
+ * 4. **Custom Role Inheritance**: Recursively checks the `inheritsFrom` chain for `WEREWOLF` alignment.
+ *
+ * @param player - The player instance to evaluate.
+ * @param allRoles - Optional custom role definitions for inheritance lookups.
+ * @returns `true` if the player is currently on the werewolf team.
+ */
 export const isWerewolf = (player: Player, allRoles?: RoleDefinition[]): boolean => {
     // If infected, they count as a werewolf regardless of original role
     if (player.powerState?.isInfected) {
@@ -43,6 +56,18 @@ export const isWerewolf = (player: Player, allRoles?: RoleDefinition[]): boolean
     return false;
 };
 
+/**
+ * Returns `true` if a **role ID** is classified as a Werewolf-aligned role.
+ *
+ * Unlike `isWerewolf()`, this operates on the role definition rather than a
+ * player instance, so infection and runtime camp choices are not considered.
+ *
+ * Used during game setup validation and win-condition checks.
+ *
+ * @param roleId - The role identifier string to check.
+ * @param allRoles - All role definitions (built-in + custom) for inheritance resolution.
+ * @returns `true` if the role is of werewolf alignment.
+ */
 export const isWerewolfRole = (roleId: Role, allRoles: RoleDefinition[]): boolean => {
     // Fast path for standard roles
     if (roleId === 'WEREWOLF' || roleId === 'BLACK_WEREWOLF' || roleId === 'WHITE_WEREWOLF') {
@@ -73,6 +98,17 @@ export const isWerewolfRole = (roleId: Role, allRoles: RoleDefinition[]): boolea
     return checkRole(roleId, new Set<string>());
 };
 
+/**
+ * Computes the full set of players who die as a result of an initial set of victims,
+ * expanding deaths via the **Lovers cascade** (Cupid link).
+ *
+ * If a player has `powerState.loverIds`, all of their living lovers also die.
+ * The expansion is breadth-first, so chains of lovers (A loves B loves C) are fully resolved.
+ *
+ * @param initialVictims - Array of player IDs who are the direct victims (e.g., from Werewolf kill).
+ * @param players - The full current player list (used to look up lover links and alive status).
+ * @returns A deduplicated array of all player IDs who should die, including cascade deaths.
+ */
 export const getDeathCascade = (initialVictims: string[], players: Player[]): string[] => {
     const toDie = new Set<string>(initialVictims);
     const queue = [...initialVictims];
@@ -98,6 +134,25 @@ export const getDeathCascade = (initialVictims: string[], players: Player[]): st
     return Array.from(toDie);
 };
 
+/**
+ * Evaluates all win conditions and returns the winning faction, or `null` if the game continues.
+ *
+ * Called after every death event and after the Pyromaniac BURN phase resolves.
+ *
+ * ## Win Condition Priority
+ * Conditions are evaluated in order; the first match wins:
+ * 1. **Angel**: Eliminated during `VOTING` in Round 1.
+ * 2. **Easter Bunny**: All alive players hold an egg (given by Easter Bunny's `GIVE_EGG` action).
+ * 3. **Villagers**: All werewolves are dead.
+ * 4. **Werewolves**: Werewolf count ≥ Villager count (and at least 1 werewolf alive).
+ *
+ * @param players - Current full player list.
+ * @param allRoles - All role definitions for alignment lookups.
+ * @param phase - Current game phase (needed for Angel's round-1 vote check).
+ * @param round - Current round number.
+ * @param latestVictims - IDs of players who just died in this resolution cycle (for Angel check).
+ * @returns The winning faction key, or `null` if no win condition is met.
+ */
 export const getWinningFaction = (
     players: Player[],
     allRoles: RoleDefinition[],

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { WebRTCHostManager } from './WebRTCHostManager';
 import type { RemotePeerBase } from './WebRTCHostManager';
 
@@ -40,6 +40,10 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
     gameId = 'generic',
     createManager
 }: WebRTCHostProviderProps<T, M>) {
+    const createManagerRef = useRef(createManager);
+    useEffect(() => {
+        createManagerRef.current = createManager;
+    }, [createManager]);
 
     // 1. Configuration State (Persisted)
     const [partyId, setPartyId] = useState(() => {
@@ -130,7 +134,7 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
 
             console.log(`[WebRTCHostProvider:${gameId}] Initializing Manager with:`, { partyId, trackerUrls: activeTrackerUrls });
 
-            managerInstance = createManager(partyId, activeTrackerUrls, {
+            managerInstance = createManagerRef.current(partyId, activeTrackerUrls, {
                 onPeerConnected: (peerId: string, name: string, hue?: number, connectionId?: string, deviceId?: string) => {
                     setPeers(prev => {
                         const existing = prev.find(p => p.peerId === peerId);
@@ -189,7 +193,7 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
                 setPeers([]);
             }
         };
-    }, [partyId, JSON.stringify(activeTrackerUrls), gameId, createManager]);
+    }, [partyId, JSON.stringify(activeTrackerUrls), gameId]);
 
     // 4. Actions
     const regeneratePartyId = useCallback(() => {

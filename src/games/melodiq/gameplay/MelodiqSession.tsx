@@ -2,12 +2,12 @@ import React, { useState, useRef, useEffect, useCallback, forwardRef, useImperat
 import { Box, Button, Typography, IconButton, Slider, Snackbar, Alert } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { type Song } from '../db';
+import { type PassiveGameState } from '../types';
 import { parseUltraStarTxt } from '../parser';
-import { PitchVisualizer, type SongWithNotes, type SungSegment } from './PitchVisualizer';
+import { PitchVisualizer, type SongWithNotes } from './PitchVisualizer';
 import { LyricsDisplay } from './LyricsDisplay';
-import { type PitchResult } from '../audio/MicrophoneManager';
 import { ScoreBoard } from './ScoreBoard';
-import { ScoreDisplay, type ScoreDisplayHandle, type RatingType } from './ScoreDisplay';
+import { ScoreDisplay, type ScoreDisplayHandle } from './ScoreDisplay';
 import { useMelodiqSettings } from '../hooks/SettingsContext';
 import { useWebRTC } from '../audio/WebRTCContext';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
@@ -32,28 +32,6 @@ export interface MelodiqSessionHandle {
     isPausedForScore: boolean;
     handleNext: () => boolean;
     getGameState: () => PassiveGameState;
-}
-
-export interface PassivePlayerState {
-    id: string;
-    name: string;
-    hue: number;
-    score: number;
-    trackScores: Record<number, number>;
-    currentPitch: PitchResult | null;
-    activeSegments: Record<number, SungSegment | null>;
-    combo: number;
-    lastHit: { rating: RatingType, score: number, timestamp: number } | null;
-}
-
-export interface PassiveGameState {
-    players: PassivePlayerState[];
-    isPlaying: boolean;
-    isFinished: boolean;
-    isPausedForScore: boolean;
-    currentTime: number;
-    hostTimestamp?: number;
-    activeSongId?: string | null;
 }
 
 export interface MelodiqSessionProps {
