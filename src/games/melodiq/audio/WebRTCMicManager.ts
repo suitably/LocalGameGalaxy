@@ -6,7 +6,7 @@ export type MicRemotePeer = RemotePeerBase & {
     audioContext: AudioContext | null;
     analyser: AnalyserNode | null;
     buffer: Float32Array | null;
-    lastPitch?: PitchResult | null;
+    lastPitch?: (PitchResult & { timestamp: number }) | null;
 };
 
 export class WebRTCMicManager extends WebRTCHostManager<MicRemotePeer> {
@@ -46,7 +46,8 @@ export class WebRTCMicManager extends WebRTCHostManager<MicRemotePeer> {
             remotePeer.lastPitch = {
                 frequency: msg.frequency,
                 note: msg.note,
-                volume: msg.volume
+                volume: msg.volume,
+                timestamp: Date.now()
             };
             return true;
         }
@@ -79,7 +80,11 @@ export class WebRTCMicManager extends WebRTCHostManager<MicRemotePeer> {
 
         // Prefer the pitch calculated by the phone itself
         if (remotePeer.lastPitch) {
-            return remotePeer.lastPitch;
+            if (Date.now() - remotePeer.lastPitch.timestamp < 200) {
+                return remotePeer.lastPitch;
+            } else {
+                remotePeer.lastPitch = null; // Clear stale pitch
+            }
         }
 
         // Fallback to local calculation if we have raw audio but no data stream

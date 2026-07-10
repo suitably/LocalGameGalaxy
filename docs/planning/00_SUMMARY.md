@@ -12,6 +12,7 @@ This directory contains implementation plans for proposed changes. Each plan det
 - [Responsive Lyrics Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/responsive-lyrics-plan.md)
 - [GitHub Issues Integration Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/github-issues-integration-plan.md)
 - [Unstable WebRTC Manager Recreation Fix Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/unstable-webrtc-manager-recreation-plan.md)
+- [Stale Pitch Scoring Fix Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/stale-pitch-scoring-plan.md)
 
 
 ID: DOCS-PLANNING-SUMMARY

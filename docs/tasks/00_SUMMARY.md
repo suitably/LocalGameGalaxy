@@ -12,6 +12,7 @@ This directory contains task checklists tracking the progress of work. Files are
 - [Responsive Lyrics Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/responsive-lyrics-tasks.md)
 - [GitHub Issues Integration Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/github-issues-integration-tasks.md)
 - [Unstable WebRTC Manager Recreation Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/unstable-webrtc-manager-recreation-tasks.md)
+- [Stale Pitch Scoring Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/stale-pitch-scoring-tasks.md)
 
 
 ID: DOCS-TASKS-SUMMARY
