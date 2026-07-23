@@ -71,16 +71,6 @@ export const MelodiqGameContent: React.FC = () => {
     
     const [currentView, setCurrentView] = useState<View>('Home');
     const [selectedSong, setSelectedSong] = useState<Song | null>(null);
-    const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
-
-
-    const [prevDefaultViewMode, setPrevDefaultViewMode] = useState(settings.defaultViewMode);
-    if (settings.defaultViewMode !== prevDefaultViewMode) {
-        setPrevDefaultViewMode(settings.defaultViewMode);
-        if (settings.defaultViewMode) {
-            setViewMode(settings.defaultViewMode);
-        }
-    }
 
     const handleCurrentSongDownloaded = useCallback((realSong: any) => {
         setSelectedSong(realSong);
@@ -97,8 +87,8 @@ export const MelodiqGameContent: React.FC = () => {
     });
 
     useMelodiqHeader({
-        currentView, setCurrentView, viewMode, setViewMode,
-        queueLength: queue.length, loadingProgress: loadingProgress as any, refreshSongs, setShowQueueDrawer,
+        currentView, setCurrentView,
+        loadingProgress: loadingProgress as any, refreshSongs,
         isClient, isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV, clientRole
     });
 
@@ -378,7 +368,7 @@ export const MelodiqGameContent: React.FC = () => {
                 {isOnlineSearch && (
                     <OnlineSongsView 
                         isSearchingOnline={isSearchingOnline}
-                        viewMode={viewMode}
+                        viewMode={settings.defaultViewMode}
                         filteredOnlineSongs={filteredOnlineSongs}
                         songs={songs}
                         jobs={jobs}
@@ -393,7 +383,7 @@ export const MelodiqGameContent: React.FC = () => {
 
                 {!isOnlineSearch && (
                     <LocalSongsView 
-                        viewMode={viewMode}
+                        viewMode={settings.defaultViewMode}
                         filteredSongs={filteredSongs as any}
                         handleSelectSong={handleSelectSong}
                         handleSongLongPress={handleSongLongPress}

@@ -352,7 +352,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setNowPlaying,
         playPlaylistNow,
     };
-
+    // eslint-disable-next-line react-compiler/react-compiler
     return React.createElement(QueueContext.Provider, { value }, children);
 };
 

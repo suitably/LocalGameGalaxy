@@ -4,10 +4,6 @@ import { useLayout } from '../../../context/LayoutContext';
 
 import SettingsIcon from '@mui/icons-material/Settings';
 import SearchIcon from '@mui/icons-material/Search';
-import ViewModuleIcon from '@mui/icons-material/ViewModule';
-import ViewListIcon from '@mui/icons-material/ViewList';
-import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
-import QueueMusicIcon from '@mui/icons-material/QueueMusic';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 
 import { TVModeButton } from '../components/TVModeButton';
@@ -15,12 +11,8 @@ import { TVModeButton } from '../components/TVModeButton';
 interface UseMelodiqHeaderProps {
     currentView: string;
     setCurrentView: (view: any) => void;
-    viewMode: 'list' | 'grid';
-    setViewMode: (val: 'list' | 'grid' | ((prev: 'list' | 'grid') => 'list' | 'grid')) => void;
-    queueLength: number;
     loadingProgress: number | null;
     refreshSongs: () => Promise<void>;
-    setShowQueueDrawer: (show: boolean) => void;
     isClient: boolean;
     isTVConnected: boolean;
     isPresentationAvailable: boolean;
@@ -31,8 +23,8 @@ interface UseMelodiqHeaderProps {
 }
 
 export const useMelodiqHeader = ({
-    currentView, setCurrentView, viewMode, setViewMode, queueLength, loadingProgress,
-    refreshSongs, setShowQueueDrawer, isClient,
+    currentView, setCurrentView, loadingProgress,
+    refreshSongs, isClient,
     isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV, clientRole
 }: UseMelodiqHeaderProps) => {
     const { t } = useTranslation();
@@ -43,31 +35,7 @@ export const useMelodiqHeader = ({
         const homeAction = () => setCurrentView('Home');
 
         if (currentView === 'Home') {
-            const headerActions: any[] = [
-                {
-                    label: viewMode === 'grid' ? 'List View' : 'Grid View',
-                    icon: viewMode === 'grid' ? <ViewListIcon /> : <ViewModuleIcon />,
-                    action: () => setViewMode(prev => prev === 'grid' ? 'list' : 'grid'),
-                    showAlways: true
-                }
-            ];
-
-
-            const isAdmin = !isClient || clientRole === 'admin';
-
-            headerActions.push({
-                label: `Queue (${queueLength})`,
-                icon: <PlaylistPlayIcon />,
-                action: () => setShowQueueDrawer(true)
-            });
-
-            if (isAdmin) {
-                headerActions.push({
-                    label: 'Playlists',
-                    icon: <QueueMusicIcon />,
-                    action: () => setCurrentView('Playlists')
-                });
-            }
+            const headerActions: any[] = [];
 
             headerActions.push({
                 label: 'Refresh',
@@ -115,9 +83,9 @@ export const useMelodiqHeader = ({
             setCustomHeaderActions(null);
         };
     }, [
-        currentView, queueLength, loadingProgress, refreshSongs, setCurrentView, t, 
+        currentView, loadingProgress, refreshSongs, setCurrentView, t, 
         setHeader, setCustomHeaderActions, isTVConnected, openTVWindow, 
-        isPresentationAvailable, startPresentation, disconnectTV, viewMode, isClient,
-        setViewMode, setShowQueueDrawer, clientRole
+        isPresentationAvailable, startPresentation, disconnectTV, isClient,
+        clientRole
     ]);
 };

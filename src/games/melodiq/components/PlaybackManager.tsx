@@ -59,6 +59,14 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
 
     const { queue, popNext, setNowPlaying } = useQueue();
     const { refreshSongs, getSongById } = useSongs();
+
+    const [prevSong, setPrevSong] = useState<Song | null>(null);
+    const [playbackId, setPlaybackId] = useState<number>(0);
+
+    if (selectedSong !== prevSong) {
+        setPrevSong(selectedSong);
+        setPlaybackId(id => id + 1);
+    }
     const sessionRef = useRef<MelodiqSessionHandle>(null);
     const [playbackState, setPlaybackState] = useState({
         isPlaying: false,
@@ -326,7 +334,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                     display: 'flex', flexDirection: 'column'
                 }}>
                     <MelodiqSession
-                        key={selectedSong.id}
+                        key={`${selectedSong.id}-${playbackId}`}
                         ref={sessionRef}
                         song={selectedSong}
                         initialTime={initialTime}
