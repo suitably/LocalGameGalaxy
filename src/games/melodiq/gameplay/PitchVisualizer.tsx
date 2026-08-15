@@ -212,7 +212,7 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
                 const rawTime = audioRef.current.currentTime;
                 
                 // If paused or ended, use raw time and reset interpolation
-                if (audioRef.current.paused || audioRef.current.ended || audioRef.current.readyState < 3) {
+                if (audioRef.current.paused || audioRef.current.ended) {
                     currentTime = rawTime;
                     lastAudioTimeRef.current = rawTime;
                     lastRealTimeRef.current = now;
@@ -223,8 +223,8 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
                         lastRealTimeRef.current = now;
                         currentTime = rawTime;
                     } else {
-                        // Interpolate between audio time updates for 60fps smoothness
-                        currentTime = lastAudioTimeRef.current + (now - lastRealTimeRef.current) / 1000;
+                        // Interpolate between audio time updates for 60fps smoothness (clamped to prevent runaway)
+                        currentTime = Math.min(rawTime + 0.3, lastAudioTimeRef.current + (now - lastRealTimeRef.current) / 1000);
                     }
                 }
             }
@@ -411,31 +411,33 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
                 lastValidTimeRef.current = now;
             }
 
-            // Determine what to show
+            // Determine what to show with responsive 300ms fade-out
             let displayedPitch: number | null = null;
+            let cursorAlpha = 1.0;
+            const timeSinceValid = now - lastValidTimeRef.current;
+
             if (activePitchNote > 0) {
                 displayedPitch = activePitchNote;
-            } else if (!isPaused && now - lastValidTimeRef.current < 2000 && lastValidPitchRef.current > 0) {
-                // Show sticky pitch
+                cursorAlpha = 1.0;
+            } else if (!isPaused && timeSinceValid < 300 && lastValidPitchRef.current > 0) {
+                // Smooth fade-out instead of remaining frozen at one spot
                 displayedPitch = lastValidPitchRef.current;
+                cursorAlpha = Math.max(0, 1 - (timeSinceValid / 300));
             }
 
-            if (displayedPitch !== null) {
+            if (displayedPitch !== null && cursorAlpha > 0.01) {
                 // --- Smart Octave Folding ---
                 // Dynamic Target: Prefer the pitch of the active (or nearest future) note.
                 // This ensures that if the song goes high, our "center" goes high, preventing wrapping.
                 let targetOctaveCenter = centerPitch;
 
                 // Find active note or nearest future note
-                // Optimization: We could binary search, but basic find is okay for small N.
-                // Search for note covering current beat, or first note after current beat.
                 const notes = trackNotesSource || [];
                 const activeNote = notes.find(n => n.type !== '-' && n.type !== 'R' && n.type !== 'G' && n.start <= currentBeat && (n.start + n.duration) >= currentBeat);
 
                 if (activeNote) {
                     targetOctaveCenter = activeNote.pitch;
                 } else {
-                    // If no active note, look ahead slightly (e.g., 4 beats) to anticipate
                     const futureNote = notes.find(n => n.type !== '-' && n.type !== 'R' && n.type !== 'G' && n.start > currentBeat && n.start < currentBeat + 4);
                     if (futureNote) {
                         targetOctaveCenter = futureNote.pitch;
@@ -447,9 +449,6 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
 
                 const currentShift = lastOctaveShiftRef.current;
                 let finalShift = currentShift;
-
-                // Hysteresis calculation (Only update shift if actively singing to avoid jumping around when silent?)
-                // Actually allow shift update even if sticky, so it stays near the notes if the song moves.
 
                 const pitchWithCurrent = displayedPitch + currentShift;
                 const pitchWithIdeal = displayedPitch + idealShift;
@@ -466,15 +465,15 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
                 const relPitch = displayedPitch - centerPitch;
                 const y = (dimensions.height / 2) - (relPitch * noteHeight) - (noteHeight / 2);
 
-                // Draw Cursor
-                // Glow (reduced for perf)
+                // Draw Cursor with smooth alpha
+                ctx.save();
+                ctx.globalAlpha = cursorAlpha;
                 ctx.shadowBlur = 10;
                 ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
                 ctx.fillStyle = `hsl(${hue}, 100%, 70%)`;
                 ctx.beginPath();
                 ctx.arc(PLAYHEAD_X, y + noteHeight / 2, 8, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.shadowBlur = 0;
 
                 // Label
                 if (showNoteLabels) {
@@ -486,6 +485,7 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
                     ctx.textBaseline = 'middle';
                     ctx.fillText(getNoteName(displayedPitch), PLAYHEAD_X + (20 * scale), y + noteHeight / 2);
                 }
+                ctx.restore();
             }
 
             // --- Debug ---

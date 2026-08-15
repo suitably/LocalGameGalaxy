@@ -18,6 +18,12 @@ export function useLocalMediaSync({ audioRef, videoRef, vocalsRef, isPlaying }: 
                 cancelAnimationFrame(rAFRef.current);
                 rAFRef.current = null;
             }
+            if (vocalsRef.current && !vocalsRef.current.paused) {
+                vocalsRef.current.pause();
+            }
+            if (videoRef.current && !videoRef.current.paused) {
+                videoRef.current.pause();
+            }
             return;
         }
 
@@ -28,68 +34,55 @@ export function useLocalMediaSync({ audioRef, videoRef, vocalsRef, isPlaying }: 
 
             if (audio) {
                 const masterTime = audio.currentTime;
-                
-                // Sync Video
+                const baseRate = audio.playbackRate || 1.0;
+                const isAudioPlaying = !audio.paused && !audio.ended;
+
+                // Sync Video Play/Pause & Timing
                 if (video) {
-                    // Check if audio is buffering/stalled
-                    if (audio.readyState < 3 && !video.paused) {
-                        video.pause();
-                    } else if (audio.readyState >= 3 && video.paused && !audio.paused) {
+                    if (isAudioPlaying && video.paused && video.readyState >= 2) {
                         video.play().catch(() => {});
+                    } else if (!isAudioPlaying && !video.paused) {
+                        video.pause();
                     }
 
-                    if (video.readyState > 0 && !audio.paused) {
-                        const drift = masterTime - video.currentTime; // Positive if video is behind
+                    if (video.readyState >= 2 && isAudioPlaying) {
+                        const drift = masterTime - video.currentTime;
                         const absDrift = Math.abs(drift);
-                        const baseRate = audio.playbackRate;
 
-                        if (absDrift > 2.0) {
-                            // Only hard-snap if it's massively out of sync (> 2 seconds)
+                        if (absDrift > 0.5) {
                             video.currentTime = masterTime;
                             video.playbackRate = baseRate;
-                        } else if (drift > 0.25) {
-                            // Medium lag (e.g. short buffer): fast catch-up
-                            video.playbackRate = baseRate + 0.25;
-                        } else if (drift < -0.25) {
-                            video.playbackRate = baseRate - 0.25;
                         } else if (drift > 0.05) {
-                            // Micro lag: smooth catch-up
                             video.playbackRate = baseRate + 0.05;
                         } else if (drift < -0.05) {
                             video.playbackRate = baseRate - 0.05;
-                        } else {
-                            // In sync
-                            if (video.playbackRate !== baseRate) video.playbackRate = baseRate;
+                        } else if (video.playbackRate !== baseRate) {
+                            video.playbackRate = baseRate;
                         }
                     }
                 }
 
-                // Sync Vocals
+                // Sync Vocals Play/Pause & Timing
                 if (vocals) {
-                    if (audio.readyState < 3 && !vocals.paused) {
-                        vocals.pause();
-                    } else if (audio.readyState >= 3 && vocals.paused && !audio.paused) {
+                    if (isAudioPlaying && vocals.paused && vocals.readyState >= 2) {
                         vocals.play().catch(() => {});
+                    } else if (!isAudioPlaying && !vocals.paused) {
+                        vocals.pause();
                     }
 
-                    if (vocals.readyState > 0 && !audio.paused) {
+                    if (vocals.readyState >= 2 && isAudioPlaying) {
                         const drift = masterTime - vocals.currentTime;
                         const absDrift = Math.abs(drift);
-                        const baseRate = audio.playbackRate;
 
-                        if (absDrift > 2.0) {
+                        if (absDrift > 0.25) {
                             vocals.currentTime = masterTime;
                             vocals.playbackRate = baseRate;
-                        } else if (drift > 0.25) {
-                            vocals.playbackRate = baseRate + 0.25;
-                        } else if (drift < -0.25) {
-                            vocals.playbackRate = baseRate - 0.25;
-                        } else if (drift > 0.05) {
-                            vocals.playbackRate = baseRate + 0.05;
-                        } else if (drift < -0.05) {
-                            vocals.playbackRate = baseRate - 0.05;
-                        } else {
-                            if (vocals.playbackRate !== baseRate) vocals.playbackRate = baseRate;
+                        } else if (drift > 0.03) {
+                            vocals.playbackRate = baseRate + 0.03;
+                        } else if (drift < -0.03) {
+                            vocals.playbackRate = baseRate - 0.03;
+                        } else if (vocals.playbackRate !== baseRate) {
+                            vocals.playbackRate = baseRate;
                         }
                     }
                 }
@@ -103,6 +96,7 @@ export function useLocalMediaSync({ audioRef, videoRef, vocalsRef, isPlaying }: 
         return () => {
             if (rAFRef.current !== null) {
                 cancelAnimationFrame(rAFRef.current);
+                rAFRef.current = null;
             }
         };
     }, [isPlaying, audioRef, videoRef, vocalsRef]);

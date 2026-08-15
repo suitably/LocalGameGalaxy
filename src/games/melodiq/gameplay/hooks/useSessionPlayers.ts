@@ -34,6 +34,10 @@ export function useSessionPlayers({
     const [ready, setReady] = useState(false);
     const playersRef = useRef<PlayerRuntime[]>([]);
 
+    useEffect(() => {
+        playersRef.current = players;
+    }, [players]);
+
     // Initialization Effect: Load Players from Settings
     useEffect(() => {
         const storedProfiles = localStorage.getItem('melodiq_profiles');

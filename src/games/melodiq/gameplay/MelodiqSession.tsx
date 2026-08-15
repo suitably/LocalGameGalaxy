@@ -183,18 +183,13 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
         resumeFromScore,
         handleNext,
         safePlay,
-            } = usePlaybackControls({
+    } = usePlaybackControls({
         audioRef, vocalsRef, videoRef,
         isPlaying, setIsPlaying,
         isFinished,
         isPausedForScore, setIsPausedForScore,
         muteAudio, songVolume, masterVolume,
         vocalsVolume: settings.vocalsVolume ?? 1.0
-    });
-
-    useSessionEnd({
-        playersRef: useRef([]), // Updated below
-        song, setResults, setIsFinished, setIsPlaying, videoRef, isTVMode
     });
 
     const { players, setPlayers, playersRef, ready } = useSessionPlayers({
@@ -210,10 +205,6 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
         activeSessionOverride,
         isPassive
     });
-
-    // Pass the real playersRef to useSessionEnd via a hack or fix useSessionEnd to take it directly
-    // Wait, useSessionPlayers returns playersRef. Let's make useSessionEnd take it.
-    // Fixed by relying on the playersRef returned by useSessionPlayers.
 
     const { handleSongEnd: handleSongEndBound } = useSessionEnd({
         playersRef, song, setResults, setIsFinished, setIsPlaying, videoRef, isTVMode

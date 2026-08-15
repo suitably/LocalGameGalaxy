@@ -77,8 +77,8 @@ export function useScoringEngine({
     players,
     ready,
     audioRef,
-    vocalsRef,
-    videoRef,
+    vocalsRef: _vocalsRef,
+    videoRef: _videoRef,
     scoreDisplayRef,
     progressLineRef,
     isPlayingRef,
@@ -88,7 +88,7 @@ export function useScoringEngine({
     goldenNoteMultiplier,
     devPitchOverride,
     isPassive,
-    passiveState,
+    passiveState: _passiveState,
     isClient,
     _duration,
     onPlaybackUpdate,
@@ -100,12 +100,17 @@ export function useScoringEngine({
     const lastScoreUpdateRef = useRef<number>(0);
     const updateLoopRef = useRef<(() => void) | undefined>(undefined);
 
+    const ULTRASTAR_BEAT_DIVISOR = 4;
+
     const processPlayer = useCallback((
         player: PlayerRuntime,
         devOverride: number | null,
         deltaTimeMs: number
     ) => {
         let pitch: PitchResult | null = null;
+        const effectiveBpmMultiplier = (bpmMultiplier || 1) * ULTRASTAR_BEAT_DIVISOR;
+        const beatDuration = 60000 / ((parsedSong?.bpm || 120) * effectiveBpmMultiplier);
+
         if (devOverride !== null) {
             pitch = {
                 frequency: 440 * Math.pow(2, (devOverride - 69) / 12),
@@ -114,7 +119,6 @@ export function useScoringEngine({
             };
         } else if (player.config.deviceId === 'BOT') {
             if (audioRef.current && isPlayingRef.current && parsedSong) {
-                const beatDuration = 60000 / ((parsedSong.bpm || 120) * bpmMultiplier);
                 const latency = player.config.latency || 0;
                 const currentBeat = ((audioRef.current.currentTime * 1000) - latency - (parsedSong.gap || 0)) / beatDuration;
 
@@ -149,19 +153,18 @@ export function useScoringEngine({
 
         player.pitchRef.current = pitch;
 
-        if (pitch && pitch.note > 0 && isPlayingRef.current && parsedSong && parsedSong.notes && audioRef.current) {
-            const beatDuration = 60000 / ((parsedSong.bpm || 120) * bpmMultiplier);
+        if (pitch && pitch.note > 0 && isPlayingRef.current && parsedSong && audioRef.current) {
             const latency = player.config.latency || 0;
             const currentBeat = ((audioRef.current.currentTime * 1000) - latency - (parsedSong.gap || 0)) / beatDuration;
 
             const tIdx = player.trackIndex;
             const notesSource: any[] = (parsedSong.tracks && parsedSong.tracks.length > 0 && parsedSong.tracks[tIdx])
                 ? parsedSong.tracks[tIdx].notes
-                : (tIdx === 0 ? parsedSong.notes : []);
+                : (tIdx === 0 ? (parsedSong.notes || []) : []);
 
             if (!notesSource || notesSource.length === 0) return;
 
-            const currentScoreWeight = (trackScoreWeights.length > tIdx) ? trackScoreWeights[tIdx] : (trackScoreWeights[0] || 0);
+            const currentScoreWeight = (trackScoreWeights.length > tIdx) ? trackScoreWeights[tIdx] : (trackScoreWeights[0] || 1);
 
             const activeNoteIndex = notesSource.findIndex((n) =>
                 n.type !== '-' && n.type !== 'R' && n.type !== 'G' &&
@@ -177,13 +180,20 @@ export function useScoringEngine({
                 const diff = Math.abs((sungPitch % 12) - (targetPitch % 12));
                 const semitoneDiff = Math.min(diff, 12 - diff);
 
-                if (semitoneDiff < 1.0) {
+                if (semitoneDiff < 1.2) {
+                    // Standard UltraStar target score: 10,000 points per track
+                    const totalTrackBeats = notesSource
+                        .filter(n => n.type !== '-' && n.type !== 'R' && n.type !== 'G')
+                        .reduce((sum, n) => sum + (n.duration * (n.type === '*' ? goldenNoteMultiplier : 1)), 0);
+                    const pointsPerBeat = totalTrackBeats > 0 ? (10000 / totalTrackBeats) : 10;
+
                     const durationUnitsCovered = deltaTimeMs / beatDuration;
-                    let points = durationUnitsCovered * currentScoreWeight;
+                    let points = durationUnitsCovered * pointsPerBeat * currentScoreWeight;
                     if (note.type === '*') points *= goldenNoteMultiplier;
 
                     if (!player.trackScores[tIdx]) player.trackScores[tIdx] = 0;
                     player.trackScores[tIdx] += points;
+                    player.score = Math.round(Object.values(player.trackScores).reduce((a, b) => a + b, 0));
 
                     const activeSegment = player.activeSegments[tIdx];
                     const wasHitting = activeSegment ? activeSegment.noteIndex === activeNoteIndex : false;
@@ -193,8 +203,8 @@ export function useScoringEngine({
                         if (player.combo > player.maxCombo) player.maxCombo = player.combo;
 
                         let rating: RatingType = 'Good';
-                        if (semitoneDiff < 0.2) rating = 'Perfect';
-                        else if (semitoneDiff < 0.5) rating = 'Good';
+                        if (semitoneDiff < 0.3) rating = 'Perfect';
+                        else if (semitoneDiff < 0.7) rating = 'Good';
                         else rating = 'Okay';
 
                         const hitScore = Math.round(player.trackScores[tIdx] || 0);
@@ -223,25 +233,25 @@ export function useScoringEngine({
                     }
 
                     const record = player.segmentsRef.current;
-                    if (!record) return;
+                    if (record) {
+                        const activeSeg = player.activeSegments[tIdx];
 
-                    const activeSeg = player.activeSegments[tIdx];
+                        if (activeSeg &&
+                            activeSeg.trackIndex === tIdx &&
+                            activeSeg.noteIndex === activeNoteIndex) {
+                            activeSeg.endBeat = currentBeat;
+                        } else {
+                            const newSegment = {
+                                noteIndex: activeNoteIndex,
+                                startBeat: currentBeat,
+                                endBeat: currentBeat,
+                                trackIndex: tIdx
+                            };
+                            player.activeSegments[tIdx] = newSegment;
 
-                    if (activeSeg &&
-                        activeSeg.trackIndex === tIdx &&
-                        activeSeg.noteIndex === activeNoteIndex) {
-                        activeSeg.endBeat = currentBeat;
-                    } else {
-                        const newSegment = {
-                            noteIndex: activeNoteIndex,
-                            startBeat: currentBeat,
-                            endBeat: currentBeat,
-                            trackIndex: tIdx
-                        };
-                        player.activeSegments[tIdx] = newSegment;
-
-                        if (!record[activeNoteIndex]) record[activeNoteIndex] = [];
-                        record[activeNoteIndex].push(newSegment);
+                            if (!record[activeNoteIndex]) record[activeNoteIndex] = [];
+                            record[activeNoteIndex].push(newSegment);
+                        }
                     }
                 } else {
                     if (player.activeSegments[tIdx] !== null) {
@@ -297,36 +307,6 @@ export function useScoringEngine({
             });
         }
 
-        if (audioRef.current) {
-            const currentAudioTime = audioRef.current.currentTime;
-            
-            if (videoRef.current) {
-                const diff = currentAudioTime - videoRef.current.currentTime;
-                if (Math.abs(diff) > 0.3) {
-                    videoRef.current.currentTime = currentAudioTime;
-                } else if (diff > 0.05) {
-                    videoRef.current.playbackRate = 1.05;
-                } else if (diff < -0.05) {
-                    videoRef.current.playbackRate = 0.95;
-                } else {
-                    videoRef.current.playbackRate = 1.0;
-                }
-            }
-            if (vocalsRef.current) {
-                if (Math.abs(currentAudioTime - vocalsRef.current.currentTime) > 0.25) {
-                    vocalsRef.current.currentTime = currentAudioTime;
-                }
-                
-                if (isPlayingRef.current && !audioRef.current.paused && vocalsRef.current.paused) {
-                    vocalsRef.current.play().catch(e => {
-                        if (e?.name !== 'AbortError') console.warn("Vocals sync play failed", e);
-                    });
-                } else if ((!isPlayingRef.current || audioRef.current.paused) && !vocalsRef.current.paused) {
-                    vocalsRef.current.pause();
-                }
-            }
-        }
-
         if (progressLineRef.current) {
             if (duration > 0) {
                 const progress = Math.min(100, Math.max(0, (currentTime / duration) * 100));
@@ -344,7 +324,7 @@ export function useScoringEngine({
             processPlayer(player, override, deltaTime);
         });
 
-        if (now - lastScoreUpdateRef.current > 200) {
+        if (now - lastScoreUpdateRef.current > 150) {
             const newScores: Record<string, number> = {};
             players.forEach(p => {
                 const currentTrackScore = p.trackScores[p.trackIndex] || 0;
@@ -356,9 +336,9 @@ export function useScoringEngine({
 
         requestRef.current = requestAnimationFrame(() => updateLoopRef.current?.());
     }, [
-        audioRef, videoRef, vocalsRef,
+        audioRef,
         isPassive, isClient, isPlayingRef,
-        _duration, onPlaybackUpdate, passiveState,
+        _duration, onPlaybackUpdate,
         progressLineRef, players, devPitchOverride, processPlayer, setScores
     ]);
 
