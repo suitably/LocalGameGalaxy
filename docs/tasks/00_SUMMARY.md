@@ -19,6 +19,8 @@ This directory contains task checklists tracking the progress of work. Files are
 - [Phase 3 Code Component & Logic Documentation Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/phase-3-code-docs-tasks.md)
 - [Phase 4 Operational & DevOps Documentation Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/phase-4-operational-docs-tasks.md)
 - [Phase 5 Architecture & Code Cleanups Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/phase-5-cleanups-tasks.md)
+- [Scoreboard QR Code Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/scoreboard-qr-code-tasks.md)
+- [WebRTC Connection Stability Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/webrtc-connection-stability-tasks.md)
 
 
 ID: DOCS-TASKS-SUMMARY

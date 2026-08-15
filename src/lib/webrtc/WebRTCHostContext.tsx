@@ -80,17 +80,24 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
                 
                 // Only add if not already in the list
                 if (!urls.includes(localWsTracker)) {
-                    urls.unshift(localWsTracker); // Prepend to make it primary!
+                    urls.push(localWsTracker);
                 }
             } catch (e) {
                 console.warn('[WebRTCHostProvider] Failed to parse helper URL for local tracker:', e);
             }
         }
         
-        // If still empty, use a default fallback so it doesn't break
-        if (urls.length === 0) {
-            urls.push('wss://tracker.openwebtorrent.com');
-        }
+        // Always ensure reliable public fallback trackers are included
+        const defaultFallbacks = [
+            'wss://tracker.openwebtorrent.com',
+            'wss://tracker.btorrent.xyz',
+            'wss://tracker.webtorrent.dev'
+        ];
+        defaultFallbacks.forEach(fallback => {
+            if (!urls.includes(fallback)) {
+                urls.push(fallback);
+            }
+        });
         
         return Array.from(new Set(urls));
     }, [trackerUrls, helperSettingsHash]);
@@ -137,12 +144,15 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
             managerInstance = createManagerRef.current(partyId, activeTrackerUrls, {
                 onPeerConnected: (peerId: string, name: string, hue?: number, connectionId?: string, deviceId?: string) => {
                     setPeers(prev => {
-                        const existing = prev.find(p => p.peerId === peerId);
-                        if (existing) {
-                            return prev.map(p => p.peerId === peerId ? { ...p, name, hue, connectionId, deviceId } : p);
+                        let list = prev;
+                        if (deviceId) {
+                            list = prev.filter(p => p.peerId === peerId || p.deviceId !== deviceId);
                         }
-                        // It will get created in onPeerCreated or here if it represents an abstract view
-                        return prev;
+                        const existing = list.find(p => p.peerId === peerId);
+                        if (existing) {
+                            return list.map(p => p.peerId === peerId ? { ...p, name, hue, connectionId, deviceId } : p);
+                        }
+                        return list;
                     });
                     setActivePeerIds(prev => prev.includes(peerId) ? prev : [...prev, peerId]);
                 },
@@ -151,17 +161,24 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
                 },
                 onPeerUpdated: (peerId: string, name: string, hue?: number, connectionId?: string, deviceId?: string) => {
                     setPeers(prev => {
-                        const existing = prev.find(p => p.peerId === peerId);
-                        if (existing) {
-                            return prev.map(p => p.peerId === peerId ? { ...p, name, hue, connectionId: connectionId || p.connectionId, deviceId: deviceId || p.deviceId } : p);
+                        let list = prev;
+                        if (deviceId) {
+                            list = prev.filter(p => p.peerId === peerId || p.deviceId !== deviceId);
                         }
-                        return prev;
+                        const existing = list.find(p => p.peerId === peerId);
+                        if (existing) {
+                            return list.map(p => p.peerId === peerId ? { ...p, name, hue, connectionId: connectionId || p.connectionId, deviceId: deviceId || p.deviceId } : p);
+                        }
+                        return list;
                     });
                     setActivePeerIds(prev => prev.includes(peerId) ? prev : [...prev, peerId]);
                 },
                 onPeerCreated: (peerId: string, remotePeer: T) => {
                     setPeers(prev => {
                         if (prev.some(p => p.peerId === peerId)) return prev;
+                        if (remotePeer.deviceId && prev.some(p => p.deviceId === remotePeer.deviceId)) {
+                            return prev.map(p => p.deviceId === remotePeer.deviceId ? remotePeer : p);
+                        }
                         return [...prev, remotePeer];
                     });
                 },

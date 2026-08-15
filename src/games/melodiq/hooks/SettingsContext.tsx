@@ -21,7 +21,10 @@ export interface SettingsState {
     hideBackgroundVideo: boolean;
     fallbackBackgroundUrl: string;
     lyricsScale: number;
+    enableLyricsZoom: boolean;
+    lyricsPosition: 'bottom' | 'center';
     audioPlaybackMode: 'separated' | 'original';
+    showScoreboardQrCode: boolean;
 }
 
 /** Default/Factory settings */
@@ -46,7 +49,10 @@ export const DEFAULT_SETTINGS: SettingsState = {
     hideBackgroundVideo: false,
     fallbackBackgroundUrl: '',
     lyricsScale: 1.0,
-    audioPlaybackMode: 'separated'
+    enableLyricsZoom: false,
+    lyricsPosition: 'bottom',
+    audioPlaybackMode: 'separated',
+    showScoreboardQrCode: true
 };
 
 export const loadSettings = (): SettingsState => ({
@@ -103,7 +109,13 @@ export const loadSettings = (): SettingsState => ({
         const stored = localStorage.getItem('melodiq_lyrics_scale');
         return stored ? parseFloat(stored) : 1.0;
     })(),
-    audioPlaybackMode: (localStorage.getItem('melodiq_audio_playback_mode') as any) || 'separated'
+    enableLyricsZoom: localStorage.getItem('melodiq_enable_lyrics_zoom') === 'true',
+    lyricsPosition: (localStorage.getItem('melodiq_lyrics_position') as any) || 'bottom',
+    audioPlaybackMode: (localStorage.getItem('melodiq_audio_playback_mode') as any) || 'separated',
+    showScoreboardQrCode: (() => {
+        const stored = localStorage.getItem('melodiq_show_scoreboard_qr_code');
+        return stored === null ? true : stored === 'true';
+    })()
 });
 
 const persistSettings = (s: SettingsState) => {
@@ -127,7 +139,10 @@ const persistSettings = (s: SettingsState) => {
     localStorage.setItem('melodiq_hide_background_video', String(s.hideBackgroundVideo));
     localStorage.setItem('melodiq_fallback_background_url', s.fallbackBackgroundUrl);
     localStorage.setItem('melodiq_lyrics_scale', String(s.lyricsScale));
+    localStorage.setItem('melodiq_enable_lyrics_zoom', String(s.enableLyricsZoom));
+    localStorage.setItem('melodiq_lyrics_position', s.lyricsPosition);
     localStorage.setItem('melodiq_audio_playback_mode', s.audioPlaybackMode);
+    localStorage.setItem('melodiq_show_scoreboard_qr_code', String(s.showScoreboardQrCode));
 };
 
 interface SettingsContextValue {
@@ -144,22 +159,44 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     const updateSetting = useCallback(<K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
         setSettings(prev => {
+            if (prev[key] === value) return prev;
             const next = { ...prev, [key]: value };
             persistSettings(next);
             return next;
         });
+
+        if (typeof BroadcastChannel !== 'undefined') {
+            try {
+                const channel = new BroadcastChannel('melodiq_tv_control');
+                channel.postMessage({ type: 'SETTINGS_UPDATE', payload: { [key]: value } });
+                channel.close();
+            } catch (e) { }
+        }
+        window.dispatchEvent(new CustomEvent('melodiq_settings_updated', { detail: { [key]: value } }));
     }, []);
 
     const resetSettings = useCallback((newState: SettingsState) => {
-        setSettings(newState);
-        persistSettings(newState);
+        setSettings(prev => {
+            if (JSON.stringify(prev) === JSON.stringify(newState)) return prev;
+            persistSettings(newState);
+            return newState;
+        });
+
+        if (typeof BroadcastChannel !== 'undefined') {
+            try {
+                const channel = new BroadcastChannel('melodiq_tv_control');
+                channel.postMessage({ type: 'SETTINGS_UPDATE', payload: newState });
+                channel.close();
+            } catch (e) { }
+        }
+        window.dispatchEvent(new CustomEvent('melodiq_settings_updated', { detail: newState }));
     }, []);
 
     const saveSettings = useCallback(() => {
         persistSettings(settings);
     }, [settings]);
 
-    // Listen for cross-tab storage changes so settings sync if changed in another tab
+    // Listen for cross-tab storage changes and BroadcastChannel updates so settings sync if changed in another tab or window
     useEffect(() => {
         const handleStorage = (e: StorageEvent) => {
             if (e.key && e.key.startsWith('melodiq_')) {
@@ -167,7 +204,23 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             }
         };
         window.addEventListener('storage', handleStorage);
-        return () => window.removeEventListener('storage', handleStorage);
+
+        let channel: BroadcastChannel | null = null;
+        if (typeof BroadcastChannel !== 'undefined') {
+            try {
+                channel = new BroadcastChannel('melodiq_tv_control');
+                channel.onmessage = (event) => {
+                    if (event.data?.type === 'SETTINGS_UPDATE') {
+                        setSettings(loadSettings());
+                    }
+                };
+            } catch (e) { }
+        }
+
+        return () => {
+            window.removeEventListener('storage', handleStorage);
+            channel?.close();
+        };
     }, []);
 
     // Parse URL parameters for initial setup

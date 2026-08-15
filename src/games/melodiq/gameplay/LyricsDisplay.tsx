@@ -7,6 +7,7 @@ interface LyricsDisplayProps {
     song: SongWithNotes;
     audioRef: React.RefObject<HTMLAudioElement | null>;
     uiScale?: number;
+    enableZoom?: boolean;
 }
 
 interface LyricsLaneProps {
@@ -16,9 +17,10 @@ interface LyricsLaneProps {
     color?: string;
     secondary?: boolean;
     scale?: number;
+    enableZoom?: boolean;
 }
 
-const LyricsLane: React.FC<LyricsLaneProps & { bpm: number }> = React.memo(({ notes, currentBeat, align = 'center', color, secondary, scale = 1.0, bpm }) => {
+const LyricsLane: React.FC<LyricsLaneProps & { bpm: number }> = React.memo(({ notes, currentBeat, align = 'center', color, secondary, scale = 1.0, enableZoom = false, bpm }) => {
     // Group notes into lines
     const lines = useMemo(() => {
         const rawNotes = (notes || []) as Note[];
@@ -165,117 +167,140 @@ const LyricsLane: React.FC<LyricsLaneProps & { bpm: number }> = React.memo(({ no
             flexDirection: 'column',
             gap: 0.5,
             width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box',
             alignItems: align === 'center' ? 'center' : (align === 'right' ? 'flex-end' : 'flex-start'),
             opacity: containerOpacity
         }}>
-            {/* Scoped Background Container ("The Field") */}
+            {/* Lyrics Container */}
             <Box sx={{
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 0, // Gap between active and next
-                px: 2,
-                py: 1,
-                borderRadius: 2,
-                bgcolor: 'rgba(0,0,0,0.5)', // Always dark background
-                width: 'fit-content',
+                px: { xs: 1.5, md: 3 },
+                py: { xs: 0.5, md: 1 },
+                width: '100%',
+                maxWidth: '100%',
+                boxSizing: 'border-box',
                 alignItems: align === 'center' ? 'center' : (align === 'right' ? 'flex-end' : 'flex-start'),
                 opacity: showCountdown ? 1 : opacity,
                 transition: 'opacity 0.5s ease-out'
             }}>
                 {/* Active Line / Countdown */}
                 <Box sx={{
-                    display: 'flex',
-                    justifyContent: align,
-                    gap: '4px',
-                    flexWrap: 'wrap',
-                    minHeight: '40px'
+                    minHeight: '32px',
+                    textAlign: align,
+                    width: '100%'
                 }}>
                     {showCountdown ? (
                         <Typography
                             variant="h4"
                             sx={{
                                 fontSize: {
-                                    xs: `${2.0 * scale}rem`,
-                                    md: `${3.0 * scale}rem`,
-                                    lg: `${3.5 * scale}rem`,
+                                    xs: `${1.5 * scale}rem`,
+                                    md: `${2.0 * scale}rem`,
+                                    lg: `${2.5 * scale}rem`,
                                 },
                                 fontWeight: 'bold',
                                 color: primaryColor,
-                                textShadow: `0 0 20px ${primaryColor}`,
-                                animation: 'pulse 1s infinite'
+                                textShadow: `0 0 20px ${primaryColor}, 0 2px 8px rgba(0,0,0,0.9)`,
+                                animation: 'pulse 1s infinite',
+                                textAlign: align
                             }}
                         >
                             {countdownValue}
                         </Typography>
                     ) : (
-                        activeLine ? activeLine.map((note, idx) => {
-                            const isPast = currentBeat >= (note.start + note.duration);
-                            const isActive = currentBeat >= note.start && currentBeat < (note.start + note.duration);
+                        activeLine ? (
+                            <Typography
+                                component="div"
+                                sx={{
+                                    textAlign: align,
+                                    lineHeight: 1.3,
+                                    fontSize: {
+                                        xs: `${1.25 * scale}rem`,
+                                        md: `${1.6 * scale}rem`,
+                                        lg: `${2.0 * scale}rem`,
+                                    },
+                                    fontWeight: 600, // Constant weight guarantees zero font metric layout shift
+                                    whiteSpace: 'pre-wrap',
+                                    wordBreak: 'break-word'
+                                }}
+                            >
+                                {activeLine.map((note, idx) => {
+                                    const isPast = currentBeat >= (note.start + note.duration);
+                                    const isActive = currentBeat >= note.start && currentBeat < (note.start + note.duration);
+                                    const noteColor = isActive ? primaryColor : (isPast ? '#ffffff' : 'rgba(255,255,255,0.7)');
+                                    const baseShadow = '0 2px 6px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8)';
+                                    const activeGlow = `0 0 12px ${primaryColor}, 0 0 24px ${primaryColor}`;
 
-                            const noteColor = isActive ? primaryColor : (isPast ? '#ffffff' : 'rgba(255,255,255,0.6)');
-
-                            return (
-                                <Typography
-                                    key={idx}
-                                    variant="h5"
-                                    sx={{
-                                        fontSize: {
-                                            xs: `${3.0 * scale}rem`,
-                                            md: `${4.5 * scale}rem`,
-                                            lg: `${5.5 * scale}rem`,
-                                        },
-                                        fontWeight: isActive ? 'bold' : 'normal',
-                                        color: noteColor,
-                                        textShadow: isActive ? `0 0 10px ${primaryColor}` : 'none',
-                                        transition: 'color 0.05s',
-                                        whiteSpace: 'pre'
-                                    }}
-                                >
-                                    {note.text}
-                                </Typography>
-                            );
-                        }) : (
-                            <Typography variant="h6" color="gray">...</Typography>
+                                    return (
+                                        <Box
+                                            key={idx}
+                                            component="span"
+                                            sx={{
+                                                display: 'inline-block',
+                                                color: noteColor,
+                                                textShadow: (enableZoom && isActive) ? `${activeGlow}, ${baseShadow}` : baseShadow,
+                                                transform: (enableZoom && isActive) ? 'scale(1.08)' : 'none',
+                                                transformOrigin: 'center bottom',
+                                                transition: enableZoom ? 'color 0.05s ease-out, transform 0.1s ease-out, text-shadow 0.05s ease-out' : 'color 0.05s ease-out',
+                                                whiteSpace: 'pre'
+                                            }}
+                                        >
+                                            {note.text}
+                                        </Box>
+                                    );
+                                })}
+                            </Typography>
+                        ) : (
+                            <Typography variant="h6" color="gray" sx={{ textAlign: align }}>...</Typography>
                         )
                     )}
                 </Box>
 
                 {/* Next Line Preview */}
                 {nextLine && (
-                    <Box sx={{
-                        display: 'flex',
-                        justifyContent: align,
-                        gap: '4px',
-                        flexWrap: 'wrap',
-                        mt: 0.5,
-                        opacity: 0.6 // Relative to parent
-                    }}>
+                    <Typography
+                        component="div"
+                        sx={{
+                            textAlign: align,
+                            lineHeight: 1.3,
+                            fontSize: {
+                                xs: `${0.85 * scale}rem`,
+                                md: `${1.05 * scale}rem`,
+                                lg: `${1.25 * scale}rem`,
+                            },
+                            fontWeight: 400,
+                            color: 'rgba(255,255,255,0.85)',
+                            mt: 0.5,
+                            opacity: 0.6, // Relative to parent
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word',
+                            width: '100%'
+                        }}
+                    >
                         {nextLine.map((note, idx) => (
-                            <Typography
+                            <Box
                                 key={idx}
-                                variant="body1"
+                                component="span"
                                 sx={{
-                                    fontSize: {
-                                        xs: `${1.5 * scale}rem`,
-                                        md: `${2.0 * scale}rem`,
-                                        lg: `${2.5 * scale}rem`,
-                                    },
-                                    color: 'rgba(255,255,255,0.8)', // Slightly brighter since background is dark
-                                    fontWeight: 'light',
-                                    whiteSpace: 'pre'
+                                    display: 'inline-block',
+                                    whiteSpace: 'pre',
+                                    textShadow: '0 2px 5px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7)'
                                 }}
                             >
                                 {note.text}
-                            </Typography>
+                            </Box>
                         ))}
-                    </Box>
+                    </Typography>
                 )}
             </Box>
         </Box>
     );
 });
 
-export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, audioRef, uiScale = 1.0 }) => {
+export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, audioRef, uiScale = 1.0, enableZoom = false }) => {
     const [currentBeat, setCurrentBeat] = useState(0);
 
     // Calculate BPM once or memoize it to pass down safely
@@ -311,6 +336,8 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, a
             alignItems: 'center',
             justifyContent: 'center',
             width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box',
             flexDirection: isDuet ? 'row' : 'column' // Duets: left/right, Solo: centered column
         }}>
             {isDuet ? (
@@ -323,6 +350,7 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, a
                             align="right"
                             color="#40c4ff" // Blue
                             scale={uiScale}
+                            enableZoom={enableZoom}
                             bpm={bpm}
                         />
                         <Typography variant="caption" sx={{ display: 'block', textAlign: 'right', pr: 2, mt: 0.5, color: '#40c4ff', opacity: 0.5, fontSize: isSmallScreen ? '0.65rem' : '0.75rem' }}>
@@ -337,6 +365,7 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, a
                             color="#ff4081" // Pink
                             secondary
                             scale={uiScale}
+                            enableZoom={enableZoom}
                             bpm={bpm}
                         />
                         <Typography variant="caption" sx={{ display: 'block', textAlign: 'left', pl: 2, mt: 0.5, color: '#ff4081', opacity: 0.5, fontSize: isSmallScreen ? '0.65rem' : '0.75rem' }}>
@@ -351,6 +380,7 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, a
                     currentBeat={currentBeat}
                     align="center"
                     scale={uiScale}
+                    enableZoom={enableZoom}
                     bpm={bpm}
                 />
             )}

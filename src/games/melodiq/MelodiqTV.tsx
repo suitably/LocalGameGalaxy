@@ -5,6 +5,8 @@ import { MelodiqSession } from './gameplay/MelodiqSession';
 import { type PassiveGameState } from './types';
 import { WebRTCHostContext, type WebRTCHostContextType } from '../../lib/webrtc';
 import { QueueProvider } from './hooks/useQueue';
+import { useMelodiqSettings } from './hooks/SettingsContext';
+import { ScoreBoardQrCode } from './gameplay/ScoreBoardQrCode';
 
 import { initMelodiqI18n } from './i18n';
 
@@ -33,6 +35,7 @@ const MockWebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
 export const MelodiqTV: React.FC = () => {
     initMelodiqI18n();
+    const { updateSetting } = useMelodiqSettings();
     const [activeSong, setActiveSong] = useState<any | null>(null);
     const [passiveState, setPassiveState] = useState<PassiveGameState | null>(null);
     const [isConnected, setIsConnected] = useState(false);
@@ -64,6 +67,12 @@ export const MelodiqTV: React.FC = () => {
             } else if (type === 'REMOTE_COMMAND' && payload.command === 'WAIT_FOR_DOWNLOAD') {
                 setActiveSong(null);
                 setDownloadingSong({ title: payload.value.title, artist: payload.value.artist });
+            } else if (type === 'SETTINGS_UPDATE') {
+                if (payload) {
+                    Object.entries(payload).forEach(([k, v]) => {
+                        updateSetting(k as any, v as any);
+                    });
+                }
             } else if (type === 'GAME_STATE') {
                 setPassiveState(payload);
                 window.dispatchEvent(new CustomEvent('melodiq_tv_game_state', { detail: payload }));
@@ -147,35 +156,41 @@ export const MelodiqTV: React.FC = () => {
     }
 
     return (
-        <Box sx={{
-            width: '100vw',
-            height: '100vh',
-            bgcolor: '#121212',
-            color: 'white',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 3
-        }}>
-            <GamepadIcon sx={{ fontSize: 80, color: isConnected ? '#4CAF50' : '#757575' }} />
-            <Typography variant="h2" fontWeight="bold" sx={{
-                background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
+        <MockWebRTCProvider>
+            <Box sx={{
+                width: '100vw',
+                height: '100vh',
+                bgcolor: '#121212',
+                color: 'white',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 3,
+                p: 3
             }}>
-                Melodiq TV
-            </Typography>
-            <Typography variant="h5" color="text.secondary">
-                {isConnected ? 'Connected to Controller' : 'Waiting for Controller...'}
-            </Typography>
-            {!isConnected && (
-                <Box sx={{ mt: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ opacity: 0.7 }}>
-                        Stuck? Try reloading this page or the host.
-                    </Typography>
-                </Box>
-            )}
-        </Box>
+                <GamepadIcon sx={{ fontSize: 80, color: isConnected ? '#4CAF50' : '#757575' }} />
+                <Typography variant="h2" fontWeight="bold" sx={{
+                    background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent'
+                }}>
+                    Melodiq TV
+                </Typography>
+                <Typography variant="h5" color="text.secondary">
+                    {isConnected ? 'Connected to Controller' : 'Waiting for Controller...'}
+                </Typography>
+                
+                <ScoreBoardQrCode sx={{ maxWidth: 450, width: '100%', mt: 1 }} />
+
+                {!isConnected && (
+                    <Box sx={{ mt: 1 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ opacity: 0.7 }}>
+                            Stuck? Try reloading this page or the host.
+                        </Typography>
+                    </Box>
+                )}
+            </Box>
+        </MockWebRTCProvider>
     );
 };

@@ -103,6 +103,21 @@ export const useTVMode = () => {
         }
     }, []);
 
+    // Sync settings changes to active PresentationConnection
+    useEffect(() => {
+        const handleSettings = (e: any) => {
+            if (presentationConnectionRef.current && presentationConnectionRef.current.state === 'connected') {
+                try {
+                    presentationConnectionRef.current.send(JSON.stringify({ type: 'SETTINGS_UPDATE', payload: e.detail || {} }));
+                } catch (err) {
+                    console.error('Failed to send SETTINGS_UPDATE to PresentationConnection:', err);
+                }
+            }
+        };
+        window.addEventListener('melodiq_settings_updated', handleSettings);
+        return () => window.removeEventListener('melodiq_settings_updated', handleSettings);
+    }, []);
+
     // Unified Sender
     const sendMessage = useCallback((type: string, payload?: any) => {
         const msg = { type, payload };

@@ -284,6 +284,40 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                 </Box>
 
                 <Box sx={{ mt: 2 }}>
+                    <FormControlLabel
+                        control={<Switch checked={settings.enableLyricsZoom ?? false} onChange={(e) => onUpdateSetting('enableLyricsZoom', e.target.checked)} />}
+                        label={t('melodiq.settings_panel.lyrics_zoom', 'Lyrics Zoom Animation')}
+                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 4 }}>
+                        {t('melodiq.settings_panel.lyrics_zoom_desc', 'Zoom and glow active lyric syllables during singing. Disable for simple color highlighting.')}
+                    </Typography>
+                </Box>
+
+                <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                        {t('melodiq.settings_panel.lyrics_position', 'Lyrics Position (No Singers)')}
+                    </Typography>
+                    <ToggleButtonGroup
+                        value={settings.lyricsPosition ?? 'bottom'}
+                        exclusive
+                        onChange={(_, val) => { if (val) onUpdateSetting('lyricsPosition', val); }}
+                        size="small"
+                        fullWidth
+                        sx={{ mb: 1 }}
+                    >
+                        <ToggleButton value="bottom">
+                            {t('melodiq.settings_panel.lyrics_position_bottom', 'Bottom')}
+                        </ToggleButton>
+                        <ToggleButton value="center">
+                            {t('melodiq.settings_panel.lyrics_position_center', 'Center')}
+                        </ToggleButton>
+                    </ToggleButtonGroup>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                        {t('melodiq.settings_panel.lyrics_position_desc', 'Choose whether lyrics appear at the bottom or in the center when no singers are active.')}
+                    </Typography>
+                </Box>
+
+                <Box sx={{ mt: 2 }}>
                     <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
                         {t('melodiq.settings_panel.audio_playback_mode', 'Audio Playback Mode')}
                     </Typography>
@@ -389,6 +423,11 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                 <FormControlLabel
                     control={<Switch checked={settings.showNoteLabels} onChange={(e) => onUpdateSetting('showNoteLabels', e.target.checked)} />}
                     label={t('melodiq.settings_panel.show_pitch')}
+                />
+
+                <FormControlLabel
+                    control={<Switch checked={settings.showScoreboardQrCode} onChange={(e) => onUpdateSetting('showScoreboardQrCode', e.target.checked)} />}
+                    label={t('melodiq.settings_panel.show_scoreboard_qr', 'Show QR Code on Score Screen')}
                 />
                 <Accordion sx={{ mt: 2, bgcolor: 'rgba(255, 255, 255, 0.05)', '&:before': { display: 'none' } }}>
                     <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}>

@@ -182,7 +182,23 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
 
     private handleTrackerPeer(trackerPeer: any): void {
         const trackerPeerId = trackerPeer.id || trackerPeer._id || trackerPeer.channelName || Math.random().toString(36);
-        console.log('[WebRTCHostManager] Tracker peer found. Waiting for connection...', trackerPeerId);
+        console.log('[WebRTCHostManager] Tracker peer found. Sending host_hello...', trackerPeerId);
+
+        const sendHostHello = () => {
+            if (trackerPeer.connected) {
+                try {
+                    trackerPeer.send(JSON.stringify({ type: 'host_hello', partyId: this.partyId }) + '\n');
+                } catch (e) {
+                    console.error('[WebRTCHostManager] Failed to send host_hello:', e);
+                }
+            }
+        };
+
+        if (trackerPeer.connected) {
+            sendHostHello();
+        } else {
+            trackerPeer.once('connect', sendHostHello);
+        }
 
         const onData = (data: Uint8Array | string) => {
             try {
@@ -194,6 +210,11 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
                     try {
                         const parsedData = JSON.parse(part);
 
+                        if (parsedData.type === 'client_probe') {
+                            sendHostHello();
+                            return;
+                        }
+
                         if (parsedData.type === 'identify' && parsedData.connectionId) {
                             const remotePeer = Array.from(this.peers.values()).find(p =>
                                 (trackerPeer as any)._audioPeerInstance === p.peer &&
@@ -204,6 +225,19 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
                                 remotePeer.name = parsedData.name || remotePeer.name;
                                 remotePeer.hue = parsedData.hue;
                                 remotePeer.deviceId = parsedData.deviceId;
+
+                                // Deduplicate by deviceId
+                                if (parsedData.deviceId) {
+                                    for (const [existingPeerId, existingPeer] of this.peers.entries()) {
+                                        if (existingPeerId !== remotePeer.peerId && existingPeer.deviceId === parsedData.deviceId) {
+                                            console.log(`[WebRTCHostManager] Replacing stale peer ${existingPeerId} with ${remotePeer.peerId} for deviceId ${parsedData.deviceId}`);
+                                            existingPeer.peer.destroy();
+                                            this.peers.delete(existingPeerId);
+                                            this.callbacks?.onPeerRemoved?.(existingPeerId, existingPeer);
+                                        }
+                                    }
+                                }
+
                                 this.callbacks?.onPeerUpdated?.(remotePeer.peerId, remotePeer.name, remotePeer.hue, remotePeer.connectionId, remotePeer.deviceId);
                             } else {
                                 console.warn('[WebRTCHostManager] Received identity for unknown or mismatched peer:', parsedData.connectionId);
@@ -230,8 +264,9 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
         trackerPeer.on('data', onData);
 
         trackerPeer.on('close', () => {
-            if ((trackerPeer as any)._audioPeerInstance) {
-                (trackerPeer as any)._audioPeerInstance.destroy();
+            const audioPeer = (trackerPeer as any)._audioPeerInstance;
+            if (audioPeer && !audioPeer.connected && !audioPeer.destroyed) {
+                audioPeer.destroy();
                 delete (trackerPeer as any)._audioPeerInstance;
             }
             this.pendingTrackerPeers.delete(trackerPeerId);
@@ -337,6 +372,19 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
                         remotePeer.name = msg.name || remotePeer.name;
                         remotePeer.hue = msg.hue;
                         remotePeer.deviceId = msg.deviceId;
+
+                        // Deduplicate by deviceId
+                        if (msg.deviceId) {
+                            for (const [existingPeerId, existingPeer] of this.peers.entries()) {
+                                if (existingPeerId !== remotePeer.peerId && existingPeer.deviceId === msg.deviceId) {
+                                    console.log(`[WebRTCHostManager] Replacing stale peer ${existingPeerId} with ${remotePeer.peerId} for deviceId ${msg.deviceId}`);
+                                    existingPeer.peer.destroy();
+                                    this.peers.delete(existingPeerId);
+                                    this.callbacks?.onPeerRemoved?.(existingPeerId, existingPeer);
+                                }
+                            }
+                        }
+
                         this.callbacks?.onPeerUpdated?.(remotePeer.peerId, remotePeer.name, remotePeer.hue, remotePeer.connectionId, remotePeer.deviceId);
                     } else {
                         // Pass to subclass handles or generic listeners

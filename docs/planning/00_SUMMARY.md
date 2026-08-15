@@ -17,6 +17,8 @@ This directory contains implementation plans for proposed changes. Each plan det
 - [Issues Resolution Roadmap Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/issues-roadmap-plan.md)
 - [Phase 4: Operational & DevOps Documentation Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/phase-4-operational-docs-plan.md)
 - [Phase 5: Architecture & Code Cleanups Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/phase-5-cleanups-plan.md)
+- [Scoreboard QR Code Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/scoreboard-qr-code-plan.md)
+- [WebRTC Connection Stability Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/webrtc-connection-stability-plan.md)
 
 
 ID: DOCS-PLANNING-SUMMARY

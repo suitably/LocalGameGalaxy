@@ -56,4 +56,7 @@ export interface PassiveGameState {
     currentTime: number;
     hostTimestamp?: number;
     activeSongId?: string | null;
+    lyricsScale?: number;
+    enableLyricsZoom?: boolean;
+    lyricsPosition?: 'bottom' | 'center';
 }

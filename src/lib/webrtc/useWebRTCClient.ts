@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import SimplePeer from 'simple-peer';
 import Client from 'bittorrent-tracker';
 
-const MAX_CANDIDATES = 5;
-const CONNECTION_TIMEOUT_MS = 15000;
+const MAX_CANDIDATES = 4;
+const CONNECTION_TIMEOUT_MS = 6000;
 
 /**
  * Options for configuring the WebRTC Client hook.
@@ -63,6 +63,8 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
         optionsRef.current.onStatusChange?.(message, className);
     }, []);
 
+    const initiatedTrackersRef = useRef<Set<string>>(new Set());
+
     const cleanup = useCallback(() => {
         if (peerRef.current) {
             peerRef.current.destroy();
@@ -80,6 +82,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
         }
 
         handledTrackerPeersRef.current.clear();
+        initiatedTrackersRef.current.clear();
         candidatePeersRef.current.forEach(p => {
             try { p.destroy(); } catch (e) { }
         });
@@ -107,6 +110,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
 
     const processNextPendingPeer = useCallback((trackerPeerId: string) => {
         handledTrackerPeersRef.current.delete(trackerPeerId); // allow retry just in case it was cleaned up
+        initiatedTrackersRef.current.delete(trackerPeerId);
         if (candidatePeersRef.current.size < MAX_CANDIDATES && pendingPeerCandidatesRef.current.length > 0) {
             const nextPeer = pendingPeerCandidatesRef.current.shift();
             const nextTpId = nextPeer.id || nextPeer._id || nextPeer.channelName || Math.random().toString(36);
@@ -130,7 +134,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
     }, []);
 
     const initiateConnection = useCallback((trackerPeer: any, trackerPeerId: string) => {
-        console.log('[WebRTCClient] Tracker peer found. Waiting for Host signal...', trackerPeerId);
+        console.log('[WebRTCClient] Host verified on tracker. Initiating WebRTC Data & Audio peer...', trackerPeerId);
 
         const setupAudioPeer = () => {
             let connectionTimeout: any = null;
@@ -155,6 +159,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
 
                 connectionTimeout = setTimeout(() => {
                     if (peer && !(peer as any).destroyed && !(peer as any).connected) {
+                        console.warn('[WebRTCClient] Candidate connection timed out:', connectionId);
                         peer.destroy();
                     }
                 }, CONNECTION_TIMEOUT_MS);
@@ -260,7 +265,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
                                 if (!isWebRTCConnectedRef.current) {
                                     connectRef.current?.();
                                 }
-                            }, 2000);
+                            }, 1500);
                         }
                     }
                     trackerPeer.off('data', onData);
@@ -272,10 +277,9 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
 
                 trackerPeer.on('close', () => {
                     clearTimeout(connectionTimeout);
-                    peer.destroy();
-                    candidatePeersRef.current.delete(peer);
-
-                    if (!isWebRTCConnectedRef.current) {
+                    if (!isWebRTCConnectedRef.current && peerRef.current !== peer) {
+                        peer.destroy();
+                        candidatePeersRef.current.delete(peer);
                         processNextPendingPeer(trackerPeerId);
                     }
                 });
@@ -293,8 +297,6 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
         }
     }, [updateStatus, processNextPendingPeer, sendIdentity]);
 
-
-
     const setupPeerConnection = useCallback((trackerPeer: any) => {
         const trackerPeerId = trackerPeer.id || trackerPeer._id || trackerPeer.channelName || Math.random().toString(36);
         if (handledTrackerPeersRef.current.has(trackerPeerId)) {
@@ -302,13 +304,59 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
         }
         handledTrackerPeersRef.current.add(trackerPeerId);
 
-        if (candidatePeersRef.current.size >= MAX_CANDIDATES) {
-            pendingPeerCandidatesRef.current.push(trackerPeer);
-            return;
+        console.log('[WebRTCClient] Tracker discovered peer, sending client probe...', trackerPeerId);
+
+        const sendProbe = () => {
+            if (trackerPeer.connected) {
+                try {
+                    const identity = optionsRef.current.getIdentity?.();
+                    trackerPeer.send(JSON.stringify({
+                        type: 'client_probe',
+                        partyId,
+                        deviceId: identity?.deviceId,
+                        name: identity?.name
+                    }) + '\n');
+                } catch (e) {
+                    console.error('[WebRTCClient] Failed to send client probe:', e);
+                }
+            }
+        };
+
+        if (trackerPeer.connected) {
+            sendProbe();
+        } else {
+            trackerPeer.once('connect', sendProbe);
         }
 
-        initiateConnection(trackerPeer, trackerPeerId);
-    }, [initiateConnection]);
+        const onTrackerDiscoveryData = (data: Uint8Array | string) => {
+            try {
+                const str = (typeof data === 'string') ? data : new TextDecoder().decode(data);
+                const parts = str.split('\n');
+                for (const part of parts) {
+                    if (!part.trim()) continue;
+                    try {
+                        const parsed = JSON.parse(part);
+                        // If peer identifies as Host with matching partyId
+                        if (parsed.type === 'host_hello' && parsed.partyId === partyId) {
+                            if (!isWebRTCConnectedRef.current && !initiatedTrackersRef.current.has(trackerPeerId)) {
+                                initiatedTrackersRef.current.add(trackerPeerId);
+                                if (candidatePeersRef.current.size >= MAX_CANDIDATES) {
+                                    pendingPeerCandidatesRef.current.push(trackerPeer);
+                                } else {
+                                    initiateConnection(trackerPeer, trackerPeerId);
+                                }
+                            }
+                        }
+                    } catch (e) {}
+                }
+            } catch (e) {}
+        };
+
+        trackerPeer.on('data', onTrackerDiscoveryData);
+        trackerPeer.once('close', () => {
+            trackerPeer.off('data', onTrackerDiscoveryData);
+        });
+    }, [partyId, initiateConnection]);
 
     const connect = useCallback(async () => {
         if (!partyId || trackerUrls.length === 0) return;

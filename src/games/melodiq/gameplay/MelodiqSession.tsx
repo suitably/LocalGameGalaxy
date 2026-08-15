@@ -74,6 +74,17 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
 
     const { manager, activePeers } = useWebRTC();
 
+    const activeLyricsScale = (isPassive && passiveState?.lyricsScale !== undefined)
+        ? passiveState.lyricsScale
+        : (settings.lyricsScale ?? 1.0);
+    const activeLyricsZoom = (isPassive && passiveState?.enableLyricsZoom !== undefined)
+        ? passiveState.enableLyricsZoom
+        : (settings.enableLyricsZoom ?? false);
+    const activeLyricsPosition = (isPassive && passiveState?.lyricsPosition !== undefined)
+        ? passiveState.lyricsPosition
+        : (settings.lyricsPosition ?? 'bottom');
+    const lyricsUiScale = uiScale * activeLyricsScale;
+
     // Local State
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
@@ -360,6 +371,9 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
             isPlaying,
             isFinished,
             isPausedForScore,
+            lyricsScale: settings.lyricsScale ?? 1.0,
+            enableLyricsZoom: settings.enableLyricsZoom ?? false,
+            lyricsPosition: settings.lyricsPosition ?? 'bottom',
             players: playersRef.current.map(p => ({
                 config: p.config,
                 id: p.config.id,
@@ -374,7 +388,7 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
             })),
             currentTime: audioRef.current?.currentTime || 0
         })
-    }), [togglePlay, isPlaying, handleSongEndBound, isFinished, pauseForScore, resumeFromScore, isPausedForScore, handleNext, playersRef]);
+    }), [togglePlay, isPlaying, handleSongEndBound, isFinished, pauseForScore, resumeFromScore, isPausedForScore, handleNext, playersRef, settings.lyricsScale, settings.enableLyricsZoom, settings.lyricsPosition]);
 
     const timeProxyRef = React.useMemo(() => ({
         current: {
@@ -530,9 +544,28 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
 
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', minHeight: 0, pt: 10 }}>
                     {visiblePlayers.length === 0 ? (
-                        // No active singers: show lyrics centered in the full area
-                        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 0, overflow: 'hidden', px: 2 }}>
-                            <LyricsDisplay song={parsedSong!} audioRef={timeProxyRef} uiScale={(uiScale * (settings.lyricsScale ?? 1.0)) * 1.4} />
+                        // No active singers: lyrics placed according to lyricsPosition setting ('bottom' or 'center')
+                        <Box sx={{
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: activeLyricsPosition === 'bottom' ? 'flex-end' : 'center',
+                            minHeight: 0,
+                            overflow: 'hidden',
+                            px: 2,
+                            pb: activeLyricsPosition === 'bottom' ? { xs: 2, md: 4 } : 0
+                        }}>
+                            <Box sx={{
+                                width: '100%',
+                                maxWidth: '100%',
+                                bgcolor: activeLyricsPosition === 'bottom' ? 'rgba(0,0,0,0.25)' : 'transparent',
+                                borderTop: activeLyricsPosition === 'bottom' ? '1px solid rgba(255,255,255,0.1)' : 'none',
+                                borderRadius: activeLyricsPosition === 'bottom' ? 2 : 0,
+                                py: activeLyricsPosition === 'bottom' ? 1 : 0
+                            }}>
+                                <LyricsDisplay song={parsedSong!} audioRef={timeProxyRef} uiScale={lyricsUiScale * (activeLyricsPosition === 'bottom' ? 1.0 : 1.2)} enableZoom={activeLyricsZoom} />
+                            </Box>
                         </Box>
                     ) : (
                         // Active singers: pitch visualizer grid + lyrics strip at bottom
@@ -582,7 +615,7 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
                                 })}
                             </Box>
                             <Box sx={{ flexShrink: 0, width: '100%', pointerEvents: 'none', zIndex: 10, borderTop: '1px solid rgba(255,255,255,0.1)', bgcolor: 'rgba(0,0,0,0.2)', position: 'relative' }}>
-                                <LyricsDisplay song={parsedSong!} audioRef={timeProxyRef} uiScale={uiScale * (settings.lyricsScale ?? 1.0)} />
+                                <LyricsDisplay song={parsedSong!} audioRef={timeProxyRef} uiScale={lyricsUiScale} enableZoom={activeLyricsZoom} />
                             </Box>
                         </Box>
                     )}

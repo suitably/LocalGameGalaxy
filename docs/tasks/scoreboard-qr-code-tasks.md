@@ -1,0 +1,21 @@
+# Tasks: Scoreboard QR Code Toggle & Display
+
+- [x] 1. Settings State & Context Updates <!-- id: task-001 -->
+  - [x] Update `SettingsState` interface in `SettingsContext.tsx` with `showScoreboardQrCode` <!-- id: task-001a -->
+  - [x] Update `DEFAULT_SETTINGS`, `loadSettings`, and `persistSettings` <!-- id: task-001b -->
+- [x] 2. Internationalization (i18n) <!-- id: task-002 -->
+  - [x] Add translation keys to `src/games/melodiq/i18n/index.ts` for English and German <!-- id: task-002a -->
+- [x] 3. Connection URL Utility <!-- id: task-003 -->
+  - [x] Create `src/components/connection/connectionUrl.ts` for centralized URL and QR construction <!-- id: task-003a -->
+  - [x] Update `DeviceConnection.tsx` to use `buildDeviceConnectionUrl` <!-- id: task-003b -->
+- [x] 4. Connect Phones & Settings Panel Toggles <!-- id: task-004 -->
+  - [x] Support `extraOptions` in `DeviceConnection.tsx` <!-- id: task-004a -->
+  - [x] Implement toggle in `MelodiqConnection.tsx` <!-- id: task-004b -->
+  - [x] Implement toggle in `GameSettingsPanel.tsx` <!-- id: task-004c -->
+- [x] 5. ScoreBoard QR Code Component & Integration <!-- id: task-005 -->
+  - [x] Create `src/games/melodiq/gameplay/ScoreBoardQrCode.tsx` <!-- id: task-005a -->
+  - [x] Integrate `ScoreBoardQrCode` in `src/games/melodiq/gameplay/ScoreBoard.tsx` <!-- id: task-005b -->
+- [x] 6. Verification & Documentation <!-- id: task-006 -->
+  - [x] Run `npm run lint` and `npm run build` <!-- id: task-006a -->
+  - [x] Create `docs/verification/scoreboard-qr-code-walkthrough.md` <!-- id: task-006b -->
+  - [x] Update `docs/planning/00_SUMMARY.md`, `docs/tasks/00_SUMMARY.md`, `docs/verification/00_SUMMARY.md` <!-- id: task-006c -->

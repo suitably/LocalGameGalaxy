@@ -6,6 +6,7 @@ import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import QRCode from 'qrcode';
 import { useNavigate } from 'react-router-dom';
 import { QRScannerDialog } from './QRScannerDialog';
+import { buildDeviceConnectionUrl } from './connectionUrl';
 
 export interface DeviceConnectionProps {
     onBack: () => void;
@@ -15,6 +16,8 @@ export interface DeviceConnectionProps {
     clientPath: string; // the path for the phone app, e.g. '/games/melodiq?role=client'
     WebRTCHostContextHook: () => any; // we pass useWebRTC down
     renderPeerExtra?: (peer: any) => React.ReactNode;
+    /** Extra settings / toggles to render on the connection screen */
+    extraOptions?: React.ReactNode;
     /** localStorage key for the helper server URL (e.g. 'melodiq_helper_url').
      *  If provided, this URL (with localhost swapped for the target IP) is embedded
      *  in the QR code so the phone can reach the song library automatically. */
@@ -31,6 +34,7 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
     clientPath,
     WebRTCHostContextHook,
     renderPeerExtra,
+    extraOptions,
     helperStorageKey,
     helperTokenKey,
 }) => {
@@ -100,47 +104,17 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
 
     // Generate QR Code when Party ID or Trackers change
     useEffect(() => {
-        let baseUrl = customBaseUrl;
-        // Basic validation/cleanup
-        if (!baseUrl.startsWith('http')) {
-            baseUrl = window.location.origin;
-        }
-
-        let url: URL;
-        try {
-            url = new URL(`${baseUrl}${clientPath}`);
-        } catch (e) {
-            // Fallback if custom URL is invalid
-            url = new URL(`${window.location.origin}${clientPath}`);
-        }
-
-        url.searchParams.set('party', partyId);
-
-        // Resolve target hostname for the phone to connect to
-        let targetHost = '';
-        try {
-            targetHost = new URL(baseUrl).hostname;
-        } catch (e) {}
-
-        // Add all tracker URLs to the params
-        activeTrackerUrls.forEach((tracker: string) => {
-            let resolvedTracker = tracker;
-            if (targetHost && (tracker.includes('localhost') || tracker.includes('127.0.0.1'))) {
-                // Swap localhost/127.0.0.1 with the actual reachable host IP/domain from baseUrl
-                resolvedTracker = tracker
-                    .replace('localhost', targetHost)
-                    .replace('127.0.0.1', targetHost);
-            }
-            // Add if it doesn't contain localhost/127.0.0.1 anymore (meaning it was resolved)
-            if (!resolvedTracker.includes('localhost') && !resolvedTracker.includes('127.0.0.1')) {
-                url.searchParams.append('tracker', resolvedTracker);
-            }
+        const fullUrl = buildDeviceConnectionUrl({
+            baseUrl: customBaseUrl,
+            clientPath,
+            partyId,
+            trackerUrls: activeTrackerUrls
         });
 
         // No longer embed helper URL + token in QR code for security.
         // The Host acts as a WebRTC API proxy to forward requests without exposing the API key.
 
-        QRCode.toDataURL(url.toString(), { width: 300, margin: 2 })
+        QRCode.toDataURL(fullUrl, { width: 300, margin: 2 })
             .then((url: string) => setQrCodeDataUrl(url))
             .catch((err: Error) => console.error('Failed to generate QR code:', err));
     }, [partyId, activeTrackerUrls, customBaseUrl, clientPath, helperStorageKey, helperTokenKey]);
@@ -230,6 +204,9 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
                             Waiting for connections...
                         </Typography>
                     )}
+
+                    {/* Extra Options (e.g. Scoreboard QR toggle) */}
+                    {extraOptions}
                 </Box>
 
                 <Divider />
@@ -280,36 +257,12 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
                         <Box>
                             <Typography variant="subtitle2" gutterBottom>Manual URL</Typography>
                             <TextField
-                                value={(() => {
-                                    let baseUrl = customBaseUrl;
-                                    if (!baseUrl.startsWith('http')) baseUrl = window.location.origin;
-
-                                    let url: URL;
-                                    try {
-                                        url = new URL(`${baseUrl}${clientPath}`);
-                                    } catch (e) {
-                                        url = new URL(`${window.location.origin}${clientPath}`);
-                                    }
-
-                                    let targetHost = '';
-                                    try {
-                                        targetHost = new URL(baseUrl).hostname;
-                                    } catch (e) {}
-
-                                    url.searchParams.set('party', partyId);
-                                    activeTrackerUrls.forEach((tracker: string) => {
-                                        let resolvedTracker = tracker;
-                                        if (targetHost && (tracker.includes('localhost') || tracker.includes('127.0.0.1'))) {
-                                            resolvedTracker = tracker
-                                                .replace('localhost', targetHost)
-                                                .replace('127.0.0.1', targetHost);
-                                        }
-                                        if (!resolvedTracker.includes('localhost') && !resolvedTracker.includes('127.0.0.1')) {
-                                            url.searchParams.append('tracker', resolvedTracker);
-                                        }
-                                    });
-                                    return url.toString();
-                                })()}
+                                value={buildDeviceConnectionUrl({
+                                    baseUrl: customBaseUrl,
+                                    clientPath,
+                                    partyId,
+                                    trackerUrls: activeTrackerUrls
+                                })}
                                 size="small"
                                 fullWidth
                                 variant="outlined"

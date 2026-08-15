@@ -18,6 +18,8 @@ This directory contains walkthroughs and verification logs. These documents prov
 - [Phase 3 Code Component & Logic Documentation Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/phase-3-code-docs-walkthrough.md)
 - [Phase 4 Operational & DevOps Documentation Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/phase-4-operational-docs-walkthrough.md)
 - [Phase 5 Cleanups Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/phase-5-cleanups-walkthrough.md)
+- [Scoreboard QR Code Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/scoreboard-qr-code-walkthrough.md)
+- [WebRTC Connection Stability Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/webrtc-connection-stability-walkthrough.md)
 
 
 ID: DOCS-VERIFICATION-SUMMARY

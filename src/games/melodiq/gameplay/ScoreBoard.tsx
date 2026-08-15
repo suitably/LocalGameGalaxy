@@ -7,6 +7,7 @@ import StarIcon from '@mui/icons-material/Star';
 import type { UserProfile } from '../types';
 import { useQueue } from '../hooks/useQueue';
 import { useMelodiqSettings } from '../hooks/SettingsContext';
+import { ScoreBoardQrCode } from './ScoreBoardQrCode';
 
 interface ScoreBoardProps {
     players: {
@@ -173,6 +174,7 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit, onResum
                             Warteschlange ist leer.
                         </Typography>
                     )}
+                    <ScoreBoardQrCode sx={{ mt: 3, maxWidth: 440, width: '100%' }} />
                 </Box>
             ) : (
                 <Grid container spacing={4} sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
@@ -276,9 +278,10 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit, onResum
                 </Grid>
 
                 {/* RIGHT: HISTORICAL RANKING (Subtle/Dezent) */}
-                <Grid size={{ xs: 12, md: 5 }} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+                <Grid size={{ xs: 12, md: 5 }} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', gap: 2 }}>
                     <Paper sx={{
                         flex: 1,
+                        minHeight: 0,
                         bgcolor: 'rgba(0,0,0,0.4)',
                         borderRadius: 4,
                         border: '1px solid rgba(255,255,255,0.1)',
@@ -346,6 +349,8 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit, onResum
                             )}
                         </Box>
                     </Paper>
+
+                    <ScoreBoardQrCode />
                 </Grid>
             </Grid>
             )}

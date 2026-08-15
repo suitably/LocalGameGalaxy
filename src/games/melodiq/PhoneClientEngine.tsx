@@ -53,10 +53,17 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
         const stored = localStorage.getItem('melodiq_tracker_urls');
         if (stored) {
             try {
-                return JSON.parse(stored);
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    return parsed;
+                }
             } catch (e) {}
         }
-        return [];
+        return [
+            'wss://tracker.openwebtorrent.com',
+            'wss://tracker.btorrent.xyz',
+            'wss://tracker.webtorrent.dev'
+        ];
     });
 
     // Profile State

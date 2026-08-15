@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, Button, CircularProgress } from '@mui/material';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
+import { ScoreBoardQrCode } from '../gameplay/ScoreBoardQrCode';
 
 interface DownloadWaitScreenProps {
     songTitle: string;
@@ -20,9 +21,10 @@ export const DownloadWaitScreen: React.FC<DownloadWaitScreenProps> = ({ songTitl
             bgcolor: 'background.default',
             color: 'text.primary',
             p: 3,
-            gap: 4
+            gap: 3,
+            overflow: 'auto'
         }}>
-            <CircularProgress size={80} thickness={4} sx={{ color: 'primary.main' }} />
+            <CircularProgress size={70} thickness={4} sx={{ color: 'primary.main' }} />
             
             <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h4" fontWeight="bold" gutterBottom>
@@ -31,7 +33,7 @@ export const DownloadWaitScreen: React.FC<DownloadWaitScreenProps> = ({ songTitl
                 <Typography variant="h5" color="text.secondary">
                     {artist} - {songTitle}
                 </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ mt: 2, opacity: 0.8 }}>
+                <Typography variant="body1" color="text.secondary" sx={{ mt: 1.5, opacity: 0.8 }}>
                     Der Song wird im Hintergrund heruntergeladen und startet automatisch, sobald er bereit ist.
                 </Typography>
             </Box>
@@ -42,10 +44,9 @@ export const DownloadWaitScreen: React.FC<DownloadWaitScreenProps> = ({ songTitl
                 startIcon={<SkipNextIcon />}
                 onClick={onSkipAndRequeue}
                 sx={{
-                    mt: 2,
                     borderRadius: 4,
                     px: 4,
-                    py: 1.5,
+                    py: 1.25,
                     borderWidth: 2,
                     '&:hover': {
                         borderWidth: 2,
@@ -54,6 +55,8 @@ export const DownloadWaitScreen: React.FC<DownloadWaitScreenProps> = ({ songTitl
             >
                 Überspringen & für später einreihen
             </Button>
+
+            <ScoreBoardQrCode sx={{ maxWidth: 450, width: '100%', mt: 1 }} />
         </Box>
     );
 };
