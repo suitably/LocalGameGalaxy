@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, createContext, useContext, useRef } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import React from 'react';
 import type { SongMeta } from '../db';
 
@@ -36,6 +36,20 @@ interface QueueContextValue {
 
 const QueueContext = createContext<QueueContextValue | null>(null);
 
+let queueBroadcastChannel: BroadcastChannel | null = null;
+
+const getBroadcastChannel = (): BroadcastChannel | null => {
+    if (typeof window === 'undefined' || typeof BroadcastChannel === 'undefined' || isClient) return null;
+    if (!queueBroadcastChannel) {
+        try {
+            queueBroadcastChannel = new BroadcastChannel(CHANNEL_NAME);
+        } catch (e) {
+            console.warn('Failed to create BroadcastChannel', e);
+        }
+    }
+    return queueBroadcastChannel;
+};
+
 export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [queue, setQueue] = useState<QueueItem[]>(() => {
         if (isClient) return [];
@@ -49,18 +63,11 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return stored ? JSON.parse(stored) : null;
     });
 
-    // Ref for stable callbacks that need current queue value without re-creating
-    const queueRef = useRef(queue);
-    useEffect(() => { queueRef.current = queue; }, [queue]);
-
-    // Broadcast channel for cross-tab sync — managed in a single useEffect for proper cleanup
-    const channelRef = useRef<BroadcastChannel | null>(null);
-
     useEffect(() => {
         if (isClient) return;
 
-        const channel = new BroadcastChannel(CHANNEL_NAME);
-        channelRef.current = channel;
+        const channel = getBroadcastChannel();
+        if (!channel) return;
 
         const handleMessage = (event: MessageEvent) => {
             if (event.data.type === 'UPDATE_QUEUE') {
@@ -74,8 +81,6 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         return () => {
             channel.removeEventListener('message', handleMessage);
-            channel.close();
-            channelRef.current = null;
         };
     }, []);
 
@@ -92,11 +97,11 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, []);
 
     const broadcastQueue = useCallback((newQueue: QueueItem[]) => {
-        channelRef.current?.postMessage({ type: 'UPDATE_QUEUE', payload: newQueue });
+        getBroadcastChannel()?.postMessage({ type: 'UPDATE_QUEUE', payload: newQueue });
     }, []);
 
     const broadcastNowPlaying = useCallback((song: SongMeta | null) => {
-        channelRef.current?.postMessage({ type: 'UPDATE_NOW_PLAYING', payload: song });
+        getBroadcastChannel()?.postMessage({ type: 'UPDATE_NOW_PLAYING', payload: song });
     }, []);
 
     const syncQueue = useCallback((newQueue: QueueItem[]) => {
@@ -135,7 +140,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const enrichedSession = activeSession.map((p: any) => {
             if (p.profileId === 'BOT') return { ...p, name: 'Bot Player', hue: 330, isRemote: false };
             const profile = storedProfiles.find((prof: any) => prof.id === p.profileId);
-            return profile ? { ...p, name: profile.name, hue: profile.hue, isRemote: false } : p;
+            return profile ? { ...p, name: profile.name, hue: profile.hue, isRemote: p.isRemote ?? false } : p;
         });
         
         const newItem: QueueItem = {
@@ -173,18 +178,16 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [broadcastQueue]);
 
     const popNext = useCallback((): QueueItem | null => {
-        // Use ref to avoid stale closure; we need the *current* queue at call time
-        const current = queueRef.current;
-        if (current.length === 0) return null;
+        if (queue.length === 0) return null;
 
-        const nextItem = current[0];
-        const next = current.slice(1);
+        const nextItem = queue[0];
+        const next = queue.slice(1);
 
         syncQueue(next);
         broadcastQueue(next);
 
         return nextItem;
-    }, [syncQueue, broadcastQueue]);
+    }, [queue, syncQueue, broadcastQueue]);
 
     const clearQueue = useCallback(() => {
         if (isClient) return; // Client shouldn't clear entire queue usually
@@ -200,7 +203,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const enrichedSession = activeSession.map((p: any) => {
             if (p.profileId === 'BOT') return { ...p, name: 'Bot Player', hue: 330, isRemote: false };
             const profile = storedProfiles.find((prof: any) => prof.id === p.profileId);
-            return profile ? { ...p, name: profile.name, hue: profile.hue, isRemote: false } : p;
+            return profile ? { ...p, name: profile.name, hue: profile.hue, isRemote: p.isRemote ?? false } : p;
         });
 
         const next: QueueItem[] = songs.map(song => ({
@@ -227,7 +230,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const enrichedSession = activeSession.map((p: any) => {
             if (p.profileId === 'BOT') return { ...p, name: 'Bot Player', hue: 330, isRemote: false };
             const profile = storedProfiles.find((prof: any) => prof.id === p.profileId);
-            return profile ? { ...p, name: profile.name, hue: profile.hue, isRemote: false } : p;
+            return profile ? { ...p, name: profile.name, hue: profile.hue, isRemote: p.isRemote ?? false } : p;
         });
 
         const newItem: QueueItem = {
@@ -337,7 +340,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
     }, [broadcastQueue]);
 
-    const value: QueueContextValue = {
+    const value = React.useMemo<QueueContextValue>(() => ({
         queue,
         nowPlaying,
         addToQueue,
@@ -351,15 +354,42 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         reorderQueueParticipant,
         setNowPlaying,
         playPlaylistNow,
-    };
-    // eslint-disable-next-line react-compiler/react-compiler
+    }), [
+        queue,
+        nowPlaying,
+        addToQueue,
+        addNext,
+        removeFromQueue,
+        popNext,
+        clearQueue,
+        moveItem,
+        replaceItem,
+        toggleQueueParticipant,
+        reorderQueueParticipant,
+        setNowPlaying,
+        playPlaylistNow,
+    ]);
+
     return React.createElement(QueueContext.Provider, { value }, children);
+};
+
+const defaultQueueContext: QueueContextValue = {
+    queue: [],
+    nowPlaying: null,
+    addToQueue: () => {},
+    addNext: () => {},
+    removeFromQueue: () => {},
+    clearQueue: () => {},
+    moveItem: () => {},
+    popNext: () => null,
+    setNowPlaying: () => {},
+    playPlaylistNow: () => {},
+    replaceItem: () => {},
+    toggleQueueParticipant: () => {},
+    reorderQueueParticipant: () => {}
 };
 
 export const useQueue = (): QueueContextValue => {
     const ctx = useContext(QueueContext);
-    if (!ctx) {
-        throw new Error('useQueue must be used within a QueueProvider');
-    }
-    return ctx;
+    return ctx || defaultQueueContext;
 };

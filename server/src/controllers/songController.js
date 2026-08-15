@@ -24,6 +24,10 @@ function getSongs(req, res) {
             ...s,
             video: secureUrl(s.video),
             audio: secureUrl(s.audio),
+            originalAudio: secureUrl(s.originalAudio),
+            instrumentalAudio: secureUrl(s.instrumentalAudio),
+            vocalsAudio: secureUrl(s.vocalsAudio),
+            hasSeparation: !!s.hasSeparation,
             cover: secureUrl(s.cover),
             background: secureUrl(s.background)
         };
@@ -62,6 +66,10 @@ function getSongById(req, res) {
         ...song,
         video: secureUrl(song.video),
         audio: secureUrl(song.audio),
+        originalAudio: secureUrl(song.originalAudio),
+        instrumentalAudio: secureUrl(song.instrumentalAudio),
+        vocalsAudio: secureUrl(song.vocalsAudio),
+        hasSeparation: !!song.hasSeparation,
         cover: secureUrl(song.cover),
         background: secureUrl(song.background)
     };

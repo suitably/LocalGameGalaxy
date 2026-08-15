@@ -73,21 +73,59 @@ const scanSongs = async () => {
                         return null;
                     };
 
-                    const audioPath = getServeUrl(headers['MP3']);
+                    const audioPath = getServeUrl(headers['MP3'] || headers['AUDIO']);
+                    let instrumentalPath = getServeUrl(headers['INSTRUMENTAL']);
+                    let vocalsPath = getServeUrl(headers['VOCALS']);
+                    let originalAudioPath = getServeUrl(headers['ORIGINAL'] || headers['ORIGINALAUDIO']);
                     const videoPath = getServeUrl(headers['VIDEO']);
                     const coverPath = getServeUrl(headers['COVER']);
                     const backgroundPath = getServeUrl(headers['BACKGROUND']);
 
+                    if (!instrumentalPath && audioPath && (headers['MP3'] || '').toLowerCase().includes('instrumental')) {
+                        instrumentalPath = audioPath;
+                    }
+
+                    try {
+                        const dirFiles = fs.readdirSync(dir);
+                        if (!vocalsPath) {
+                            const vFile = dirFiles.find(f => f.toLowerCase().endsWith('.mp3') && f.toLowerCase().includes('vocals'));
+                            if (vFile) vocalsPath = path.resolve(dir, vFile);
+                        }
+                        if (!instrumentalPath) {
+                            const iFile = dirFiles.find(f => f.toLowerCase().endsWith('.mp3') && f.toLowerCase().includes('instrumental'));
+                            if (iFile) instrumentalPath = path.resolve(dir, iFile);
+                        }
+                        if (!originalAudioPath) {
+                            if (vocalsPath || instrumentalPath) {
+                                const oFile = dirFiles.find(f => {
+                                    const lower = f.toLowerCase();
+                                    const isAudio = lower.endsWith('.mp3') || lower.endsWith('.m4a') || lower.endsWith('.ogg') || lower.endsWith('.flac') || lower.endsWith('.wav');
+                                    return isAudio && !lower.includes('instrumental') && !lower.includes('vocals');
+                                });
+                                if (oFile) originalAudioPath = path.resolve(dir, oFile);
+                            } else {
+                                originalAudioPath = audioPath;
+                            }
+                        }
+                    } catch (e) { /* ignore */ }
+
+                    if (!originalAudioPath && audioPath) {
+                        originalAudioPath = audioPath;
+                    }
+
+                    const hasSeparation = !!(vocalsPath && (instrumentalPath || audioPath));
+
                     // DURATION CALCULATION
                     let duration = 0;
-                    if (audioPath) {
+                    const durationAudioTarget = originalAudioPath || audioPath || instrumentalPath;
+                    if (durationAudioTarget) {
                         try {
-                            const metadata = await mm.parseFile(audioPath, { duration: true, skipCovers: true });
+                            const metadata = await mm.parseFile(durationAudioTarget, { duration: true, skipCovers: true });
                             if (metadata.format.duration) {
                                 duration = metadata.format.duration;
                             }
                         } catch (e) {
-                            console.warn(`[Scanner] Failed to read duration for ${audioPath}:`, e.message);
+                            console.warn(`[Scanner] Failed to read duration for ${durationAudioTarget}:`, e.message);
                         }
                     }
 
@@ -108,8 +146,12 @@ const scanSongs = async () => {
                         year: headers['YEAR'],
                         video: videoPath,
                         audio: audioPath,
+                        originalAudio: originalAudioPath,
+                        instrumentalAudio: instrumentalPath,
+                        vocalsAudio: vocalsPath,
+                        hasSeparation: hasSeparation,
                         cover: coverPath,
-                                                background: backgroundPath,
+                        background: backgroundPath,
                         txtPath: txtPath,
                         txtContent: content,
                         duration: duration,

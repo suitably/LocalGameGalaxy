@@ -78,12 +78,19 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
 
     const initialTime = useMemo(() => {
         if (!selectedSong) return 0;
+        if (typeof (selectedSong as any).currentTime === 'number' && (selectedSong as any).currentTime > 0) {
+            return (selectedSong as any).currentTime;
+        }
         try {
             const saved = JSON.parse(localStorage.getItem('melodiq_saved_time') || '{}');
-            if (saved.id === selectedSong.id) return saved.time;
+            if (saved.id === selectedSong.id && saved.time > 0) return saved.time;
+        } catch (e) {}
+        try {
+            const restored = JSON.parse(localStorage.getItem('melodiq_restored_song') || '{}');
+            if (restored.id === selectedSong.id && restored.currentTime > 0) return restored.currentTime;
         } catch (e) {}
         return 0;
-    }, [selectedSong?.id]);
+    }, [selectedSong]);
 
     const [contextMenu, setContextMenu] = useState<HTMLElement | null>(null);
     const [syncJobId, setSyncJobId] = useState<string | null>(null);
@@ -306,6 +313,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
 
     const handlePlaybackUpdate = useCallback((state: any) => {
         const now = Date.now();
+        (window as any).__melodiq_current_time = state.currentTime;
         if (now - lastUpdateRef.current > 100) {
             setPlaybackState(state);
             lastUpdateRef.current = now;

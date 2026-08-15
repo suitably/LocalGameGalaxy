@@ -22,9 +22,21 @@ import { HistoryDrawer } from './HistoryDrawer';
 interface HostQueueDrawerProps {
     open: boolean;
     onClose: () => void;
+    /** Participants for the currently playing song, for editing. */
+    activeParticipants?: any[] | null;
+    /** Called when a participant is toggled on/off for the current song. */
+    onToggleCurrentParticipant?: (deviceId: string, profile: any) => void;
+    /** Called when participants are reordered for the current song. */
+    onReorderCurrentParticipant?: (startIndex: number, endIndex: number) => void;
 }
 
-export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose }) => {
+export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({
+    open,
+    onClose,
+    activeParticipants,
+    onToggleCurrentParticipant,
+    onReorderCurrentParticipant,
+}) => {
     const { t } = useTranslation();
     const { queue, nowPlaying, removeFromQueue, moveItem, clearQueue, toggleQueueParticipant } = useQueue();
     const { clientRole, clientProfile } = useClientEngine();
@@ -36,6 +48,7 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose 
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
     const dragItemRef = useRef<number | null>(null);
     const [manageParticipantsId, setManageParticipantsId] = useState<string | null>(null);
+    const [editCurrentParticipantsOpen, setEditCurrentParticipantsOpen] = useState(false);
     const [historyOpen, setHistoryOpen] = useState(false);
 
     const handleDragStart = useCallback((index: number) => {
@@ -159,14 +172,42 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose 
                             }}>
                                 <MusicNoteIcon />
                             </Avatar>
-                            <Box sx={{ minWidth: 0 }}>
+                            <Box sx={{ minWidth: 0, flex: 1 }}>
                                 <Typography variant="subtitle1" fontWeight="bold" noWrap>
                                     {nowPlaying.title}
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary" noWrap>
                                     {nowPlaying.artist}
                                 </Typography>
+                                {/* Active singer avatars */}
+                                {activeParticipants && activeParticipants.length > 0 && (
+                                    <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
+                                        {activeParticipants.map((p: any, i: number) => (
+                                            <Avatar
+                                                key={i}
+                                                sx={{
+                                                    width: 20, height: 20, fontSize: '0.65rem',
+                                                    bgcolor: `hsl(${p.hue || 0}, 80%, 40%)`,
+                                                    border: '2px solid rgba(20, 20, 30, 0.98)',
+                                                }}
+                                            >
+                                                {p.name ? p.name.charAt(0).toUpperCase() : '?'}
+                                            </Avatar>
+                                        ))}
+                                    </Box>
+                                )}
                             </Box>
+                            {/* Edit participants button for current song */}
+                            {(!isClient || clientRole === 'admin' || clientRole === 'queue_manager') && (
+                                <IconButton
+                                    size="small"
+                                    onClick={() => setEditCurrentParticipantsOpen(true)}
+                                    sx={{ color: 'success.light', '&:hover': { color: 'white' } }}
+                                    title={t('melodiq.manage_current_participants')}
+                                >
+                                    <EditIcon />
+                                </IconButton>
+                            )}
                         </Box>
                     </Box>
                 )}
@@ -341,6 +382,16 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({ open, onClose 
                 open={!!manageParticipantsId}
                 onClose={() => setManageParticipantsId(null)}
                 queueItemId={manageParticipantsId}
+            />
+
+            {/* Dialog for editing current song participants */}
+            <QueueParticipantDialog
+                open={editCurrentParticipantsOpen}
+                onClose={() => setEditCurrentParticipantsOpen(false)}
+                queueItemId={null}
+                directParticipants={activeParticipants}
+                onDirectToggle={onToggleCurrentParticipant}
+                onDirectReorder={onReorderCurrentParticipant}
             />
 
             <HistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} />

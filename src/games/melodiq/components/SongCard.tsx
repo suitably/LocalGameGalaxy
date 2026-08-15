@@ -112,9 +112,16 @@ export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, 
                 <Typography variant="caption" display="block" color="text.secondary" noWrap title={song.artist} sx={{ lineHeight: 1.2 }}>{song.artist}</Typography>
 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                    <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.7rem' }}>
-                        {song.duration ? formatDuration(song.duration) : '0:00'}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.7rem' }}>
+                            {song.duration ? formatDuration(song.duration) : '0:00'}
+                        </Typography>
+                        {(song.hasSeparation || song.vocalsAudio) && (
+                            <Typography variant="caption" sx={{ bgcolor: 'rgba(156, 39, 176, 0.15)', color: '#ce93d8', px: 0.5, borderRadius: 0.5, fontSize: '0.65rem', fontWeight: 'bold' }}>
+                                🎤 Stems
+                            </Typography>
+                        )}
+                    </Box>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
                         {song.year && (
                             <Typography variant="caption" sx={{ bgcolor: 'action.selected', px: 0.5, borderRadius: 0.5, fontSize: '0.65rem' }}>

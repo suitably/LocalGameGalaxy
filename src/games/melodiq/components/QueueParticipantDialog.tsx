@@ -9,16 +9,32 @@ import { useWebRTC } from '../audio/WebRTCContext';
 interface QueueParticipantDialogProps {
     open: boolean;
     onClose: () => void;
+    /** ID of a queue item (upcoming songs mode). Mutually exclusive with `directParticipants`. */
     queueItemId: string | null;
+    /** Participants list for the current song (direct mode). Mutually exclusive with `queueItemId`. */
+    directParticipants?: any[] | null;
+    /** Called when toggling a participant in direct mode. */
+    onDirectToggle?: (deviceId: string, profile: any) => void;
+    /** Called when reordering participants in direct mode. */
+    onDirectReorder?: (startIndex: number, endIndex: number) => void;
 }
 
-export const QueueParticipantDialog: React.FC<QueueParticipantDialogProps> = ({ open, onClose, queueItemId }) => {
+export const QueueParticipantDialog: React.FC<QueueParticipantDialogProps> = ({
+    open,
+    onClose,
+    queueItemId,
+    directParticipants,
+    onDirectToggle,
+    onDirectReorder,
+}) => {
     const { t } = useTranslation();
     const { queue, toggleQueueParticipant, reorderQueueParticipant } = useQueue();
     const { activePeers } = useWebRTC();
 
-    const item = queue.find((q) => q.id === queueItemId);
-    
+    // Resolve the participants list from either queue item or direct props
+    const isDirectMode = !queueItemId && directParticipants !== undefined;
+    const item = isDirectMode ? null : queue.find((q) => q.id === queueItemId);
+
     // Combine local profiles and connected remote peers
     const storedProfiles = localStorage.getItem('melodiq_profiles');
     const localProfiles = storedProfiles ? JSON.parse(storedProfiles) : [];
@@ -29,18 +45,19 @@ export const QueueParticipantDialog: React.FC<QueueParticipantDialogProps> = ({ 
         hue: peer.hue || 0,
         isRemote: true
     }));
-    
+
     // Explicitly add the bot so it can be toggled
     const botProfile = { id: 'BOT', name: 'Bot Player', hue: 330, isRemote: false };
     const allProfiles = [botProfile, ...localProfiles, ...remoteProfiles];
 
-    if (!item) return null;
+    // In queue-item mode, bail out if the item is not found
+    if (!isDirectMode && !item) return null;
 
-    const participants = item.participants || [];
-    
+    const participants = isDirectMode ? (directParticipants || []) : (item!.participants || []);
+
     // Identify which profiles are not currently participating
     const nonParticipatingProfiles = allProfiles.filter(profile => {
-        const isParticipating = !!participants.find((p: any) => 
+        const isParticipating = !!participants.find((p: any) =>
             p.profileId === profile.id || p.deviceId === profile.id || (profile.peerId && p.deviceId === profile.peerId)
         );
         return !isParticipating;
@@ -49,13 +66,24 @@ export const QueueParticipantDialog: React.FC<QueueParticipantDialogProps> = ({ 
     const handleDragEnd = (result: DropResult) => {
         if (!result.destination) return;
         if (result.destination.index === result.source.index) return;
-        if (!reorderQueueParticipant) return;
-        reorderQueueParticipant(item.id, result.source.index, result.destination.index);
+        if (isDirectMode) {
+            onDirectReorder?.(result.source.index, result.destination.index);
+        } else if (item && reorderQueueParticipant) {
+            reorderQueueParticipant(item.id, result.source.index, result.destination.index);
+        }
+    };
+
+    const handleToggle = (deviceId: string, profile: any) => {
+        if (isDirectMode) {
+            onDirectToggle?.(deviceId, profile);
+        } else if (item) {
+            toggleQueueParticipant(item.id, deviceId, profile);
+        }
     };
 
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>Manage Participants</DialogTitle>
+            <DialogTitle>{isDirectMode ? t('melodiq.manage_current_participants') : t('melodiq.manage_participants')}</DialogTitle>
             <DialogContent dividers sx={{ p: 0 }}>
                 <Box sx={{ p: 2, bgcolor: 'background.default' }}>
                     <Typography variant="overline" color="text.secondary">Active Singers (Drag to reorder Player 1 / Player 2)</Typography>
@@ -119,8 +147,7 @@ export const QueueParticipantDialog: React.FC<QueueParticipantDialogProps> = ({ 
                                                         edge="end"
                                                         checked={true}
                                                         onChange={() => {
-                                                            // Toggle off
-                                                            toggleQueueParticipant(item.id, p.profileId || p.deviceId, p);
+                                                            handleToggle(p.profileId || p.deviceId, p);
                                                         }}
                                                     />
                                                 </ListItem>
@@ -153,7 +180,7 @@ export const QueueParticipantDialog: React.FC<QueueParticipantDialogProps> = ({ 
                                     <Switch
                                         edge="end"
                                         checked={false}
-                                        onChange={() => toggleQueueParticipant(item.id, profile.id, profile)}
+                                        onChange={() => handleToggle(profile.id, profile)}
                                     />
                                 </ListItem>
                             ))}

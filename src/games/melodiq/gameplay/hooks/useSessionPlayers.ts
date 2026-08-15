@@ -10,11 +10,11 @@ interface UseSessionPlayersProps {
     song: Song;
     switchTrack: (playerIndex: number, trackIndex: number) => void;
     setResults: React.Dispatch<React.SetStateAction<any[]>>;
-    togglePlay: () => void;
     onExit: () => void;
     audioRef: React.RefObject<HTMLAudioElement | null>;
     videoRef: React.RefObject<HTMLVideoElement | null>;
     activeSessionOverride?: any[] | null;
+    isPassive?: boolean;
 }
 
 export function useSessionPlayers({
@@ -24,11 +24,11 @@ export function useSessionPlayers({
     song,
     switchTrack,
     setResults,
-    togglePlay,
     onExit,
     audioRef,
     videoRef,
-    activeSessionOverride
+    activeSessionOverride,
+    isPassive = false
 }: UseSessionPlayersProps) {
     const [players, setPlayers] = useState<PlayerRuntime[]>([]);
     const [ready, setReady] = useState(false);
@@ -96,6 +96,11 @@ export function useSessionPlayers({
                 }
             });
 
+            newPlayers.forEach(p => {
+                if (!p.config.isRemote) {
+                    p.start().catch(e => console.warn('[Session] Failed to start player mic:', e));
+                }
+            });
             console.log('[MelodiqSession] Initialized players:', newPlayers.length);
             setPlayers(newPlayers);
             playersRef.current = newPlayers;
@@ -115,7 +120,164 @@ export function useSessionPlayers({
         };
     }, []);
 
+    // Reactive update: sync player list when activeSessionOverride changes mid-session.
+    // NOTE: This effect identifies players by profileId/deviceId — it does NOT re-assign mic
+    // device IDs (that was done once at initialization). The goal is purely to add/remove
+    // players and toggle hidePitch for phones based on the desired participant list.
+    useEffect(() => {
+        // Only run after initial mount (ready ensures initialization is done)
+        if (!ready) return;
+        if (isPassive) return; // Passive/TV displays get players from Host via GAME_STATE
+        // Only relevant when an override is actively provided
+        if (activeSessionOverride === null || activeSessionOverride === undefined) return;
+
+        const storedProfiles = localStorage.getItem('melodiq_profiles');
+        const allProfiles: UserProfile[] = storedProfiles ? JSON.parse(storedProfiles) : [];
+        const storedMicSlots: string[] = JSON.parse(localStorage.getItem('melodiq_mic_slots') || '[]');
+
+        const activePeerDeviceIds = new Set(activePeers.map(p => p.deviceId).filter(Boolean));
+        const activePeerIds = new Set(activePeers.map(p => p.peerId));
+
+        // Get all existing remote player identifiers currently loaded in playersRef
+        const existingRemoteIds = new Set<string>();
+        (playersRef.current || []).forEach(p => {
+            if (p.config.isRemote) {
+                if (p.config.id) existingRemoteIds.add(p.config.id);
+                if (p.config.deviceId) existingRemoteIds.add(p.config.deviceId);
+                if (p.remotePeerId) existingRemoteIds.add(p.remotePeerId);
+            }
+        });
+
+        const isRemoteParticipant = (p: any) => {
+            if (p.isRemote) return true;
+            const id = p.profileId || p.deviceId;
+            return activePeerDeviceIds.has(id) ||
+                   activePeerIds.has(id) ||
+                   activePeerDeviceIds.has(p.deviceId) ||
+                   activePeerIds.has(p.deviceId) ||
+                   existingRemoteIds.has(id) ||
+                   existingRemoteIds.has(p.deviceId);
+        };
+
+        // Build sets of desired profileIds/keys for quick lookup
+        const desiredLocalProfileIds = new Set<string>();
+        const desiredRemoteKeys = new Set<string>();
+        activeSessionOverride.forEach((p: any) => {
+            if (isRemoteParticipant(p)) {
+                if (p.deviceId) desiredRemoteKeys.add(p.deviceId);
+                if (p.profileId) desiredRemoteKeys.add(p.profileId);
+            } else {
+                desiredLocalProfileIds.add(p.profileId || p.deviceId);
+            }
+        });
+
+        setPlayers(prev => {
+            const updated = [...prev];
+            let changed = false;
+
+            // 1. Add participants (local or remote) present in activeSessionOverride but not yet in players list
+            let localMicIndex = 0;
+            activeSessionOverride.forEach((p: any) => {
+                const profileId = p.profileId || p.deviceId;
+                const isRemote = isRemoteParticipant(p);
+                const alreadyExists = updated.find(existing => 
+                    existing.config.id === profileId || 
+                    (p.deviceId && existing.config.deviceId === p.deviceId) ||
+                    (p.deviceId && existing.remotePeerId === p.deviceId)
+                );
+
+                if (!alreadyExists) {
+                    let newPlayer: PlayerRuntime | null = null;
+                    if (isRemote) {
+                        const peer = activePeers.find(ap => ap.deviceId === p.deviceId || ap.peerId === p.deviceId || ap.peerId === p.profileId);
+                        newPlayer = new PlayerRuntime({
+                            id: profileId,
+                            name: p.name || peer?.name || 'Phone User',
+                            hue: p.hue || peer?.hue || Math.floor(Math.random() * 360),
+                            deviceId: p.deviceId || profileId,
+                            volume: 1.0,
+                            muted: false,
+                            latency: 0,
+                            isRemote: true,
+                            hidePitch: false
+                        }, manager);
+                        if (peer) {
+                            newPlayer.attachRemotePeer(manager, peer.peerId);
+                        }
+                    } else if (profileId === 'BOT') {
+                        newPlayer = new PlayerRuntime({
+                            id: 'BOT', name: 'Bot', hue: 330,
+                            deviceId: 'BOT', volume: 0.8, muted: false, latency: 0, isRemote: false
+                        });
+                    } else {
+                        const profile = allProfiles.find(prof => prof.id === profileId);
+                        if (profile) {
+                            const assignedDeviceId = storedMicSlots[localMicIndex] || '';
+                            if (assignedDeviceId) {
+                                newPlayer = new PlayerRuntime({
+                                    ...profile,
+                                    deviceId: assignedDeviceId,
+                                    volume: p.volume ?? 1.0,
+                                    muted: p.muted ?? false,
+                                    latency: p.latency ?? 0,
+                                    isRemote: false,
+                                    hidePitch: false
+                                });
+                            }
+                        }
+                    }
+
+                    if (newPlayer) {
+                        if (!isRemote) {
+                            newPlayer.start().catch(e => console.warn('[Session] Failed to start new player mic:', e));
+                        }
+                        console.log('[Session] Participant added live:', profileId, 'isRemote:', isRemote);
+                        updated.push(newPlayer);
+                        changed = true;
+                    }
+                }
+                if (!isRemote) localMicIndex++;
+            });
+
+            // 2. Remove participants no longer in activeSessionOverride
+            const filteredOut = updated.filter(existing => {
+                const devId = existing.config.deviceId;
+                const profId = existing.config.id;
+                const peerId = existing.remotePeerId;
+                const wantedInSession = (profId && (desiredLocalProfileIds.has(profId) || desiredRemoteKeys.has(profId))) ||
+                                        (devId && (desiredLocalProfileIds.has(devId) || desiredRemoteKeys.has(devId))) ||
+                                        (peerId && desiredRemoteKeys.has(peerId));
+                if (!wantedInSession) {
+                    console.log('[Session] Participant removed live:', profId);
+                    if (!existing.config.isRemote) {
+                        existing.stop().catch(e => console.warn('[Session] Error stopping removed player:', e));
+                    }
+                    changed = true;
+                    return false; // Remove from array
+                }
+                return true;
+            });
+
+            // 3. For remaining remote (phone) players: ensure hidePitch is false if in active session
+            filteredOut.forEach(existing => {
+                if (!existing.config.isRemote) return;
+                if (existing.config.hidePitch !== false) {
+                    existing.config.hidePitch = false;
+                    changed = true;
+                }
+            });
+
+            if (changed) {
+                playersRef.current = filteredOut;
+                return [...filteredOut]; // new array reference to trigger re-render
+            }
+            return prev;
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeSessionOverride, ready, activePeers]);
+
     // Sync Players with WebRTC Peers
+
     useEffect(() => {
         if (!manager) return;
 
@@ -152,20 +314,16 @@ export function useSessionPlayers({
                     case 'UPDATE_PROFILE':
                         if (data.latency !== undefined) {
                             setPlayers(prevPlayers => {
-                                const newPlayers = [...prevPlayers];
-                                const pIdx = newPlayers.findIndex(p => p.remotePeerId === peerId);
-                                if (pIdx !== -1) {
+                                const pIdx = prevPlayers.findIndex(p => p.remotePeerId === peerId);
+                                if (pIdx !== -1 && prevPlayers[pIdx].config.latency !== data.latency) {
+                                    const newPlayers = [...prevPlayers];
                                     newPlayers[pIdx].config.latency = data.latency;
+                                    playersRef.current = newPlayers;
+                                    return newPlayers;
                                 }
-                                playersRef.current = newPlayers;
-                                return newPlayers;
+                                return prevPlayers; // No re-render if unchanged
                             });
                         }
-                        break;
-                    case 'play':
-                    case 'pause':
-                    case 'toggle':
-                        togglePlay();
                         break;
                     case 'restart':
                         if (audioRef.current) {
@@ -174,7 +332,6 @@ export function useSessionPlayers({
                         }
                         break;
                     case 'next':
-                        // Skip to end to trigger song-end handler
                         if (audioRef.current && audioRef.current.duration) {
                             audioRef.current.currentTime = audioRef.current.duration - 0.1;
                         }
@@ -186,15 +343,33 @@ export function useSessionPlayers({
                         const mode = data.mode; // 'singer' or 'spectator'
                         const isSpectator = mode === 'spectator';
                         setPlayers(prevPlayers => {
-                            const newPlayers = [...prevPlayers];
-                            const pIdx = newPlayers.findIndex(p => p.remotePeerId === peerId);
+                            const pIdx = prevPlayers.findIndex(p => p.remotePeerId === peerId);
                             if (pIdx !== -1) {
-                                console.log(`[Session] Phone ${peerId} changed join mode to ${mode}`);
-                                newPlayers[pIdx].config.hidePitch = isSpectator;
-                                // If they become a spectator, we could also clear their current score, but it's fine
+                                const targetPlayer = prevPlayers[pIdx];
+                                const devId = targetPlayer.config.deviceId;
+                                const profId = targetPlayer.config.id;
+                                const desiredKeys = new Set<string>();
+                                if (activeSessionOverride) {
+                                    activeSessionOverride.forEach((p: any) => {
+                                        if (p.deviceId) desiredKeys.add(p.deviceId);
+                                        if (p.profileId) desiredKeys.add(p.profileId);
+                                    });
+                                }
+                                const isWantedByHost = activeSessionOverride === null || activeSessionOverride === undefined ||
+                                    (devId && desiredKeys.has(devId)) ||
+                                    (profId && desiredKeys.has(profId)) ||
+                                    desiredKeys.has(peerId);
+                                const targetHide = isSpectator || !isWantedByHost;
+
+                                if (targetPlayer.config.hidePitch !== targetHide) {
+                                    console.log(`[Session] Phone ${peerId} hidePitch set to ${targetHide} (isSpectator: ${isSpectator}, isWantedByHost: ${isWantedByHost})`);
+                                    const newPlayers = [...prevPlayers];
+                                    newPlayers[pIdx].config.hidePitch = targetHide;
+                                    playersRef.current = newPlayers;
+                                    return newPlayers;
+                                }
                             }
-                            playersRef.current = newPlayers;
-                            return newPlayers;
+                            return prevPlayers; // No re-render if unchanged
                         });
                         break;
                 }
@@ -205,18 +380,35 @@ export function useSessionPlayers({
             let updatedPlayers = [...prevPlayers];
             let changed = false;
 
+            // Check desired remote keys from activeSessionOverride if available
+            const desiredRemoteKeys = new Set<string>();
+            if (activeSessionOverride) {
+                activeSessionOverride.forEach((p: any) => {
+                    if (p.deviceId) desiredRemoteKeys.add(p.deviceId);
+                    if (p.profileId) desiredRemoteKeys.add(p.profileId);
+                });
+            }
+
             // 1. Attach/Add/Update connected peers
             activePeers.forEach(peer => {
                 const existingIdx = updatedPlayers.findIndex(p => 
                     (peer.deviceId && p.config.deviceId === peer.deviceId) || 
-                    p.config.deviceId === peer.peerId
+                    p.config.deviceId === peer.peerId ||
+                    p.config.id === peer.peerId
                 );
 
+                const isWantedInSession = activeSessionOverride === null || activeSessionOverride === undefined ||
+                                          (peer.deviceId && desiredRemoteKeys.has(peer.deviceId)) ||
+                                          desiredRemoteKeys.has(peer.peerId);
+
                 if (existingIdx !== -1) {
-                    // Attach to existing player AND Update Details
                     const player = updatedPlayers[existingIdx];
 
-                    // Check for identity updates (Name/Hue)
+                    if (player.config.hidePitch !== !isWantedInSession) {
+                        player.config.hidePitch = !isWantedInSession;
+                        changed = true;
+                    }
+
                     if (player.config.name !== peer.name || player.config.hue !== peer.hue) {
                         console.log(`[Session] Updating details for ${player.config.name} -> ${peer.name}`);
                         player.config.name = peer.name;
@@ -229,9 +421,8 @@ export function useSessionPlayers({
                         player.attachRemotePeer(manager, peer.peerId);
                         changed = true;
                     }
-                } else {
-                    // Create new Guest Player
-                    console.log(`[Session] New Phone Guest: ${peer.name}`);
+                } else if (isWantedInSession) {
+                    console.log(`[Session] New Phone Guest selected in session: ${peer.name}`);
                     const newProfile: UserProfile = {
                         id: peer.peerId,
                         name: peer.name,
@@ -240,12 +431,12 @@ export function useSessionPlayers({
 
                     const newPlayer = new PlayerRuntime({
                         ...newProfile,
-                        deviceId: peer.deviceId || peer.peerId, // Device ID is persistent ID if available
+                        deviceId: peer.deviceId || peer.peerId,
                         volume: 1.0,
                         muted: false,
                         latency: 0,
                         isRemote: true,
-                        hidePitch: true // Default to spectator
+                        hidePitch: false
                     }, manager);
 
                     newPlayer.attachRemotePeer(manager, peer.peerId);

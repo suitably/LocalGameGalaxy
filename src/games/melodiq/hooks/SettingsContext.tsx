@@ -21,6 +21,7 @@ export interface SettingsState {
     hideBackgroundVideo: boolean;
     fallbackBackgroundUrl: string;
     lyricsScale: number;
+    audioPlaybackMode: 'separated' | 'original';
 }
 
 /** Default/Factory settings */
@@ -44,7 +45,8 @@ export const DEFAULT_SETTINGS: SettingsState = {
     autoplayWithPlayersDelay: 0,
     hideBackgroundVideo: false,
     fallbackBackgroundUrl: '',
-    lyricsScale: 1.0
+    lyricsScale: 1.0,
+    audioPlaybackMode: 'separated'
 };
 
 export const loadSettings = (): SettingsState => ({
@@ -100,7 +102,8 @@ export const loadSettings = (): SettingsState => ({
     lyricsScale: (() => {
         const stored = localStorage.getItem('melodiq_lyrics_scale');
         return stored ? parseFloat(stored) : 1.0;
-    })()
+    })(),
+    audioPlaybackMode: (localStorage.getItem('melodiq_audio_playback_mode') as any) || 'separated'
 });
 
 const persistSettings = (s: SettingsState) => {
@@ -124,6 +127,7 @@ const persistSettings = (s: SettingsState) => {
     localStorage.setItem('melodiq_hide_background_video', String(s.hideBackgroundVideo));
     localStorage.setItem('melodiq_fallback_background_url', s.fallbackBackgroundUrl);
     localStorage.setItem('melodiq_lyrics_scale', String(s.lyricsScale));
+    localStorage.setItem('melodiq_audio_playback_mode', s.audioPlaybackMode);
 };
 
 interface SettingsContextValue {

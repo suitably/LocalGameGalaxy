@@ -246,7 +246,13 @@ async function runSeparatorJob(job) {
             const content = fs.readFileSync(txtPath, 'utf-8');
             let lines = content.split('\n');
             
-            lines = lines.filter(l => !l.toLowerCase().startsWith('#mp3:') && !l.toLowerCase().startsWith('#vocals:'));
+            lines = lines.filter(l => 
+                !l.toLowerCase().startsWith('#mp3:') && 
+                !l.toLowerCase().startsWith('#vocals:') &&
+                !l.toLowerCase().startsWith('#instrumental:') &&
+                !l.toLowerCase().startsWith('#original:') &&
+                !l.toLowerCase().startsWith('#originalaudio:')
+            );
             
             let lastHeader = 0;
             for (let i = 0; i < lines.length; i++) {
@@ -255,6 +261,8 @@ async function runSeparatorJob(job) {
             
             lines.splice(lastHeader + 1, 0, `#MP3:${instrumentalFile}`);
             lines.splice(lastHeader + 2, 0, `#VOCALS:${vocalsFile}`);
+            lines.splice(lastHeader + 3, 0, `#INSTRUMENTAL:${instrumentalFile}`);
+            lines.splice(lastHeader + 4, 0, `#ORIGINAL:${path.basename(audioPath)}`);
             
             fs.writeFileSync(txtPath, lines.join('\n'), 'utf-8');
             job.log.push(".txt patched successfully.");

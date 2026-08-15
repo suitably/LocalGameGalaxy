@@ -31,6 +31,12 @@ Melodiq follows a strict separation of concerns, divided into domains:
 -   **Client Data Sync**: Custom DOM Events (`melodiq_client_send_data`) and React states sync the Host queue with the Phone clients.
 -   **Audio Streaming**: `WebRTCContext.tsx` and `MicrophoneManager.ts` handle low-latency audio streaming from phone mics to the host browser.
 
+### 2.4 Audio Stem Separation & Playback Mode
+-   **Separation Backend**: `server/src/services/separator.js` and `scanner.js` extract and index separated stems (`(Instrumental)`, `(Vocals)`).
+-   **Playback Modes**: Configurable via `settings.audioPlaybackMode` (`'separated'` vs `'original'`):
+    -   `'separated'`: Plays instrumental on master audio element and vocal stem on secondary audio element with continuous millisecond drift alignment (`useLocalMediaSync.ts`). Allows independent vocal volume reduction.
+    -   `'original'`: Plays the untouched original mix directly without secondary vocal stem.
+-   **Audio Track Resolution**: `useMediaLoaders.ts` resolves stem paths and URLs automatically based on the user's selected mode and available files.
 ## 3. Known Technical Debt & Refactoring Goals
 
 To ensure Melodiq aligns perfectly with the SOLID principles outlined in the main architecture doc, the following areas are targeted for future refactoring:

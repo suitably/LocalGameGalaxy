@@ -318,7 +318,9 @@ export function useScoringEngine({
                 }
                 
                 if (isPlayingRef.current && !audioRef.current.paused && vocalsRef.current.paused) {
-                    vocalsRef.current.play().catch(e => console.warn("Vocals sync play failed", e));
+                    vocalsRef.current.play().catch(e => {
+                        if (e?.name !== 'AbortError') console.warn("Vocals sync play failed", e);
+                    });
                 } else if ((!isPlayingRef.current || audioRef.current.paused) && !vocalsRef.current.paused) {
                     vocalsRef.current.pause();
                 }
@@ -368,19 +370,10 @@ export function useScoringEngine({
         lastTimeRef.current = performance.now();
         if (!ready) return;
 
-        if (!isPassive && players.length > 0) {
-            players.forEach(p => {
-                p.start().catch(e => console.error(`Failed to start mic for ${p.config.name}`, e));
-            });
-        } else {
-            console.log("[MelodiqSession] No players active (or passive mode), starting loop for playback/visuals only.");
-        }
-
         requestRef.current = requestAnimationFrame(() => updateLoopRef.current?.());
 
         return () => {
             cancelAnimationFrame(requestRef.current);
-            players.forEach(p => p.stop());
         };
-    }, [ready, players, isPassive, updateLoop]);
+    }, [ready]);
 }

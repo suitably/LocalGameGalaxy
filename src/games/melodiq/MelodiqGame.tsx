@@ -65,6 +65,58 @@ export const MelodiqGameContent: React.FC = () => {
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
     const [showQueueDrawer, setShowQueueDrawer] = useState(false);
     const [activeParticipants, setActiveParticipants] = useState<any[] | null>(null);
+
+    const handleToggleCurrentParticipant = useCallback((deviceId: string, profile: any) => {
+        setActiveParticipants(prev => {
+            // Fall back to current localStorage session when no override is set yet
+            const participants = prev ?? JSON.parse(localStorage.getItem('melodiq_active_session') || '[]');
+            const exists = participants.find((p: any) =>
+                p.deviceId === deviceId || p.profileId === deviceId || (profile?.peerId && p.deviceId === profile.peerId)
+            );
+            let next: any[];
+            if (exists) {
+                next = participants.filter((p: any) =>
+                    p.deviceId !== deviceId && p.profileId !== deviceId && !(profile?.peerId && p.deviceId === profile.peerId)
+                );
+            } else {
+                next = [...participants, {
+                    profileId: deviceId,
+                    deviceId: deviceId,
+                    volume: 0.8,
+                    muted: false,
+                    latency: 0,
+                    isRemote: profile?.isRemote || false,
+                    name: profile?.name,
+                    hue: profile?.hue
+                }];
+            }
+            localStorage.setItem('melodiq_active_session', JSON.stringify(next));
+            return next;
+        });
+    }, []);
+
+    const handleReorderCurrentParticipant = useCallback((startIndex: number, endIndex: number) => {
+        setActiveParticipants(prev => {
+            // Fall back to current localStorage session when no override is set yet
+            const base = prev ?? JSON.parse(localStorage.getItem('melodiq_active_session') || '[]');
+            const next = Array.from(base);
+            const [removed] = next.splice(startIndex, 1);
+            next.splice(endIndex, 0, removed);
+            localStorage.setItem('melodiq_active_session', JSON.stringify(next));
+            return next;
+        });
+    }, []);
+
+    // Participants to display in the drawer dialog — fall back to melodiq_active_session
+    // when activeParticipants hasn't been set yet (e.g. song started directly, not from queue).
+    const currentDisplayParticipants = React.useMemo(() => {
+        if (activeParticipants !== null) return activeParticipants;
+        try {
+            return JSON.parse(localStorage.getItem('melodiq_active_session') || '[]');
+        } catch {
+            return [];
+        }
+    }, [activeParticipants]);
     
     const [activePlaylist, setActivePlaylist] = useState<Playlist | null>(null);
     const [restoredSong, setRestoredSong] = useState<SongMeta | null>(() => nowPlaying ?? null);
@@ -426,6 +478,9 @@ export const MelodiqGameContent: React.FC = () => {
             <HostQueueDrawer
                 open={showQueueDrawer}
                 onClose={() => setShowQueueDrawer(false)}
+                activeParticipants={currentDisplayParticipants}
+                onToggleCurrentParticipant={handleToggleCurrentParticipant}
+                onReorderCurrentParticipant={handleReorderCurrentParticipant}
             />
 
             <SongActionDialogs

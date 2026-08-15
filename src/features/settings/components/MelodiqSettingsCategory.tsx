@@ -4,15 +4,20 @@ import UndoIcon from '@mui/icons-material/Undo';
 import RestoreIcon from '@mui/icons-material/Restore';
 import { useTranslation } from 'react-i18next';
 
-import { MicrophoneManager } from '../../../games/melodiq/audio/MicrophoneManager';
-import { useProfiles } from '../../../games/melodiq/hooks/useProfiles';
-import { useMelodiqSettings, DEFAULT_SETTINGS, type SettingsState } from '../../../games/melodiq/hooks/SettingsContext';
-import { HardwareMicSetup } from '../../../games/melodiq/components/HardwareMicSetup';
-import { UserProfilesManager } from '../../../games/melodiq/components/UserProfilesManager';
-import { GameSettingsPanel } from '../../../games/melodiq/components/GameSettingsPanel';
-import { HelperConnection } from '../../../games/melodiq/components/HelperConnection';
-import type { UserProfile, ActivePlayer } from '../../../games/melodiq/types';
-import { initMelodiqI18n } from '../../../games/melodiq/i18n';
+import {
+    MicrophoneManager,
+    useProfiles,
+    useMelodiqSettings,
+    DEFAULT_SETTINGS,
+    type SettingsState,
+    HardwareMicSetup,
+    UserProfilesManager,
+    GameSettingsPanel,
+    HelperConnection,
+    type UserProfile,
+    type ActivePlayer,
+    initMelodiqI18n
+} from '../../../games/melodiq';
 
 interface MelodiqSettingsCategoryProps {
     onNavigateToPlaylists?: () => void;

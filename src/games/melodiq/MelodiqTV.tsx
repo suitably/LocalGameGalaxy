@@ -4,6 +4,7 @@ import GamepadIcon from '@mui/icons-material/Gamepad';
 import { MelodiqSession } from './gameplay/MelodiqSession';
 import { type PassiveGameState } from './types';
 import { WebRTCHostContext, type WebRTCHostContextType } from '../../lib/webrtc';
+import { QueueProvider } from './hooks/useQueue';
 
 import { initMelodiqI18n } from './i18n';
 
@@ -44,7 +45,15 @@ export const MelodiqTV: React.FC = () => {
             if (type === 'PLAY_SONG') {
                 if (payload.songData) {
                     setDownloadingSong(null);
-                    setActiveSong(payload.songData);
+                    setActiveSong((prev: any) => {
+                        if (prev && prev.id === payload.songData.id && payload.currentTime === undefined) {
+                            return prev;
+                        }
+                        return {
+                            ...payload.songData,
+                            initialTime: payload.currentTime || 0
+                        };
+                    });
                 } else {
                     console.warn('[MelodiqTV] PLAY_SONG received without songData, ignoring.');
                 }
@@ -56,6 +65,7 @@ export const MelodiqTV: React.FC = () => {
                 setActiveSong(null);
                 setDownloadingSong({ title: payload.value.title, artist: payload.value.artist });
             } else if (type === 'GAME_STATE') {
+                setPassiveState(payload);
                 window.dispatchEvent(new CustomEvent('melodiq_tv_game_state', { detail: payload }));
             } else if (type === 'PING') {
                 channel.postMessage({ type: 'PONG' });
@@ -115,21 +125,24 @@ export const MelodiqTV: React.FC = () => {
 
     if (activeSong) {
         return (
-            <MockWebRTCProvider>
-                <Box sx={{ width: '100vw', height: '100vh', bgcolor: 'black', overflow: 'hidden' }}>
-                    <MelodiqSession
-                        key={activeSong.id}
-                        song={activeSong}
-                        isTVMode={true}
-                        isPassive={true}
-                        passiveState={passiveState}
-                        onExit={() => setActiveSong(null)}
-                        // We don't mute audio on TV, it should play!
-                        muteAudio={false}
-                        uiScale={2.0}
-                    />
-                </Box>
-            </MockWebRTCProvider>
+            <QueueProvider>
+                <MockWebRTCProvider>
+                    <Box sx={{ width: '100vw', height: '100vh', bgcolor: 'black', overflow: 'hidden' }}>
+                        <MelodiqSession
+                            key={activeSong.id}
+                            song={activeSong}
+                            initialTime={activeSong.initialTime || 0}
+                            isTVMode={true}
+                            isPassive={true}
+                            passiveState={passiveState}
+                            onExit={() => setActiveSong(null)}
+                            // We don't mute audio on TV, it should play!
+                            muteAudio={false}
+                            uiScale={2.0}
+                        />
+                    </Box>
+                </MockWebRTCProvider>
+            </QueueProvider>
         );
     }
 

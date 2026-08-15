@@ -191,8 +191,8 @@ export const useTVMode = () => {
         }, 1000);
     }, []);
 
-    const playSongOnTV = useCallback((songId: string, songData?: any) => {
-        sendMessage('PLAY_SONG', { songId, songData });
+    const playSongOnTV = useCallback((songId: string, songData?: any, currentTime?: number) => {
+        sendMessage('PLAY_SONG', { songId, songData, currentTime: currentTime || 0 });
     }, [sendMessage]);
 
     const stopSongOnTV = useCallback(() => {

@@ -6,7 +6,7 @@ import { type TVEvent } from './useTVMode';
 interface UseMelodiqGlobalEventsProps {
     lastEvent: TVEvent | null;
     popNext: () => any;
-    playSongOnTV: (id: string, song: SongMeta) => void;
+    playSongOnTV: (id: string, song: SongMeta, currentTime?: number) => void;
     setRemoteSong: (song: SongMeta | null) => void;
     setFeedbackMessage: (msg: string | null) => void;
     handleSelectSong: (song: SongMeta, forcePlay?: boolean, participants?: any[], requester?: string, requesterId?: string) => void;
@@ -62,7 +62,8 @@ export const useMelodiqGlobalEvents = ({
             processedEventRef.current = lastEvent.timestamp;
             if (selectedSong && !remoteSong) {
                 console.log("TV_READY received while playing locally, switching to TV...");
-                playSongOnTV(selectedSong.id, selectedSong);
+                const currentTime = (window as any).__melodiq_current_time || 0;
+                playSongOnTV(selectedSong.id, selectedSong, currentTime);
                 setRemoteSong(selectedSong as unknown as SongMeta);
             }
         }
@@ -232,6 +233,11 @@ export const useMelodiqGlobalEvents = ({
         const handleSessionSync = (e: any) => {
             const data = e.detail;
             if (data.activeSong) {
+                // If the song ID hasn't changed, only update activeParticipants — DO NOT re-set selectedSong
+                if (selectedSong && selectedSong.id === data.activeSong.id) {
+                    if (data.participants) setActiveParticipants(data.participants);
+                    return;
+                }
                 pendingSyncIdRef.current = data.activeSong.id;
                 getSongById(data.activeSong.id).then(fullSong => {
                     if (fullSong) {
@@ -256,7 +262,7 @@ export const useMelodiqGlobalEvents = ({
 
         window.addEventListener('melodiq_client_session_sync', handleSessionSync);
         return () => window.removeEventListener('melodiq_client_session_sync', handleSessionSync);
-    }, [isClient, getSongById, setSelectedSong, setCurrentView]);
+    }, [isClient, getSongById, setSelectedSong, setCurrentView, selectedSong, setActiveParticipants]);
 
     // Retry session sync when the songs list updates (covers the race where the
     // sync event arrived before songs were loaded from the helper server)

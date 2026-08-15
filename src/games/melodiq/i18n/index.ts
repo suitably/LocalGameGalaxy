@@ -45,6 +45,8 @@ export const melodiqResources = {
             add_songs: "Add Songs",
             search_add: "Search to add...",
             loading: "Loading...",
+            manage_participants: "Manage Participants",
+            manage_current_participants: "Change Participants (Current Song)",
 
             host_settings: "Host Settings",
             host_desc: "Configure the TV/Host Server Connection remotely.",
@@ -165,7 +167,12 @@ export const melodiqResources = {
                 max_items: "Items per row",
                 max_items_desc: "Maximum number of cards to display per row.",
                 golden_multiplier: "Golden Note Multiplier",
-                golden_multiplier_desc: "Score multiplier for hitting golden notes perfectly.",
+                audio_playback_mode: "Audio Playback Mode",
+                mode_separated: "Separated Stems",
+                mode_original: "Original Audio",
+                mode_separated_desc: "Plays separated instrumental and vocal stems when available. Allows independent vocal volume control.",
+                mode_original_desc: "Plays the untouched original audio track directly.",
+                disabled_in_original_mode: "Separated stems only",
                 lyrics_scale: "Lyrics Size",
                 lyrics_scale_desc: "Adjust the size of the lyrics on the main screen.",
                 song_volume: "Song Volume",
@@ -180,7 +187,11 @@ export const melodiqResources = {
                 show_debug: "Show Debug Overlay",
                 show_dev_slider: "Show Dev Audio Slider",
                 show_video_errors: "Show Video Errors"
-            }
+            },
+            audio_mode_stems: "Stems",
+            audio_mode_original: "Original",
+            audio_mode_separated_tooltip: "Currently playing: Separated Stems. Click to switch to Original Audio",
+            audio_mode_original_tooltip: "Currently playing: Original Audio. Click to switch to Separated Stems"
         }
     },
     de: {
@@ -227,6 +238,8 @@ export const melodiqResources = {
             add_songs: "Lieder hinzufügen",
             search_add: "Suchen zum Hinzufügen...",
             loading: "Lädt...",
+            manage_participants: "Teilnehmer verwalten",
+            manage_current_participants: "Teilnehmer ändern (Aktuelles Lied)",
 
             host_settings: "Host-Einstellungen",
             host_desc: "Remote-Konfiguration für die TV/Host-Serververbindung.",
@@ -347,7 +360,12 @@ export const melodiqResources = {
                 max_items: "Elemente pro Zeile",
                 max_items_desc: "Maximale Anzahl an Karten, die pro Zeile angezeigt werden.",
                 golden_multiplier: "Goldene-Note-Multiplikator",
-                golden_multiplier_desc: "Punkte-Multiplikator für das perfekte Treffen goldener Noten.",
+                audio_playback_mode: "Audio-Wiedergabemodus",
+                mode_separated: "Getrennte Spuren",
+                mode_original: "Original-Audio",
+                mode_separated_desc: "Spielt getrennte Instrumental- und Gesangsspuren ab, falls verfügbar. Ermöglicht separate Lautstärkeregelung für Gesang.",
+                mode_original_desc: "Spielt die unveränderte Original-Tonspur direkt ab.",
+                disabled_in_original_mode: "Nur bei getrennten Spuren",
                 lyrics_scale: "Songtext-Größe",
                 lyrics_scale_desc: "Passe die Größe des Songtexts auf dem Hauptbildschirm an.",
                 song_volume: "Song-Lautstärke",
@@ -362,7 +380,11 @@ export const melodiqResources = {
                 show_debug: "Debug-Overlay anzeigen",
                 show_dev_slider: "Entwickler-Audio-Regler anzeigen",
                 show_video_errors: "Video-Fehler anzeigen"
-            }
+            },
+            audio_mode_stems: "Stems",
+            audio_mode_original: "Original",
+            audio_mode_separated_tooltip: "Aktuell aktiv: Getrennte Spuren (Stems). Klicken für Original-Audio",
+            audio_mode_original_tooltip: "Aktuell aktiv: Original-Audio. Klicken für getrennte Spuren (Stems)"
         }
     }
 };

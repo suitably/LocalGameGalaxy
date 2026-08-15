@@ -17,6 +17,10 @@ export interface Song {
     cover?: string | Blob | FileSystemFileHandle; 
     background?: string | Blob | FileSystemFileHandle; 
     audio?: string | Blob | FileSystemFileHandle; 
+    originalAudio?: string | Blob | FileSystemFileHandle; 
+    instrumentalAudio?: string | Blob | FileSystemFileHandle; 
+    vocalsAudio?: string | Blob | FileSystemFileHandle; 
+    hasSeparation?: boolean;
     video?: string | Blob | FileSystemFileHandle; 
     dirPath?: string; 
     updatedAt?: number;
@@ -41,6 +45,11 @@ export interface SongMeta {
     edition?: string;
     album?: string;
     cover?: string | Blob | FileSystemFileHandle; 
+    audio?: string | Blob | FileSystemFileHandle;
+    originalAudio?: string | Blob | FileSystemFileHandle;
+    instrumentalAudio?: string | Blob | FileSystemFileHandle;
+    vocalsAudio?: string | Blob | FileSystemFileHandle;
+    hasSeparation?: boolean;
     hasCover?: boolean;  
     hasVideo?: boolean;
     usdbId?: number;

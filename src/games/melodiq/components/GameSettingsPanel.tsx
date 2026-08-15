@@ -284,6 +284,32 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                 </Box>
 
                 <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                        {t('melodiq.settings_panel.audio_playback_mode', 'Audio Playback Mode')}
+                    </Typography>
+                    <ToggleButtonGroup
+                        value={settings.audioPlaybackMode ?? 'separated'}
+                        exclusive
+                        onChange={(_, val) => { if (val) onUpdateSetting('audioPlaybackMode', val); }}
+                        size="small"
+                        fullWidth
+                        sx={{ mb: 1 }}
+                    >
+                        <ToggleButton value="separated">
+                            {t('melodiq.settings_panel.mode_separated', 'Separated Stems')}
+                        </ToggleButton>
+                        <ToggleButton value="original">
+                            {t('melodiq.settings_panel.mode_original', 'Original Audio')}
+                        </ToggleButton>
+                    </ToggleButtonGroup>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                        {(settings.audioPlaybackMode ?? 'separated') === 'separated'
+                            ? t('melodiq.settings_panel.mode_separated_desc', 'Plays separated instrumental and vocal stems when available. Allows independent vocal volume control.')
+                            : t('melodiq.settings_panel.mode_original_desc', 'Plays the untouched original audio track directly.')}
+                    </Typography>
+                </Box>
+
+                <Box sx={{ mt: 2 }}>
                     <Typography gutterBottom>{t('melodiq.settings_panel.song_volume')}: {Math.round(settings.songVolume * 100)}%</Typography>
                     <Slider
                         value={settings.songVolume * 100}
@@ -294,9 +320,13 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                     />
                 </Box>
 
-                <Box sx={{ mt: 1 }}>
-                    <Typography gutterBottom>{t('melodiq.settings_panel.vocals_volume')}: {Math.round((settings.vocalsVolume ?? 1.0) * 100)}%</Typography>
+                <Box sx={{ mt: 1, opacity: settings.audioPlaybackMode === 'original' ? 0.5 : 1 }}>
+                    <Typography gutterBottom>
+                        {t('melodiq.settings_panel.vocals_volume')}: {Math.round((settings.vocalsVolume ?? 1.0) * 100)}%
+                        {settings.audioPlaybackMode === 'original' && ` (${t('melodiq.settings_panel.disabled_in_original_mode', 'Separated stems only')})`}
+                    </Typography>
                     <Slider
+                        disabled={settings.audioPlaybackMode === 'original'}
                         value={(settings.vocalsVolume ?? 1.0) * 100}
                         onChange={(_, val) => onUpdateSetting('vocalsVolume', (val as number) / 100)}
                         min={0}

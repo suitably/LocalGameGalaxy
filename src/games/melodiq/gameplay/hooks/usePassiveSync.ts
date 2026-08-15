@@ -7,6 +7,7 @@ interface UsePassiveSyncProps {
     isPassive: boolean;
     passiveState: PassiveGameState | null;
     isClient: boolean;
+    isTVMode?: boolean;
     players: PlayerRuntime[];
     setPlayers: React.Dispatch<React.SetStateAction<PlayerRuntime[]>>;
     playersRef: React.RefObject<PlayerRuntime[]>;
@@ -25,7 +26,7 @@ export function usePassiveSync({
     isPassive,
     passiveState,
     isClient,
-
+    isTVMode = false,
     setPlayers,
     playersRef,
     scoreDisplayRef,
@@ -46,8 +47,10 @@ export function usePassiveSync({
             if (!passiveState) return;
 
             const remotePlayers = passiveState.players || [];
+            const currentIds = (playersRef.current || []).map(p => p.config.id).join(',');
+            const remoteIds = remotePlayers.map(p => p.id).join(',');
 
-            if (playersRef.current && playersRef.current.length !== remotePlayers.length) {
+            if (currentIds !== remoteIds) {
                 const newPlayers = remotePlayers.map(p => new PlayerRuntime({
                     id: p.id,
                     name: p.name,
@@ -55,9 +58,7 @@ export function usePassiveSync({
                     isRemote: true
                 }));
                 setPlayers(newPlayers);
-                if (playersRef.current !== undefined) {
-                    (playersRef as any).current = newPlayers;
-                }
+                playersRef.current = newPlayers;
             }
 
             remotePlayers.forEach((pState, idx) => {
@@ -113,8 +114,7 @@ export function usePassiveSync({
             setIsFinished(prev => passiveState.isFinished !== prev ? passiveState.isFinished : prev);
             setIsPausedForScore(prev => passiveState.isPausedForScore !== prev ? passiveState.isPausedForScore : prev);
 
-            if (audioRef.current && passiveState.isPlaying && isPlayingRef.current && !audioRef.current.paused && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 1.0) {
-                console.log(`[Session] Syncing time drift: Local=${audioRef.current.currentTime.toFixed(2)} Remote=${passiveState.currentTime.toFixed(2)}`);
+            if (!isClient && !isTVMode && audioRef.current && passiveState.isPlaying && isPlayingRef.current && !audioRef.current.paused && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 2.0) {
                 audioRef.current.currentTime = passiveState.currentTime;
                 if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
             }

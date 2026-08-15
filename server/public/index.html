@@ -223,9 +223,11 @@
                 const hasAudio = !!song.audio;
                 const hasVideo = !!song.video;
                 const hasCover = !!song.cover;
+                const hasStems = !!song.hasSeparation || !!song.vocalsAudio;
                 
                 let fileBadges = '';
                 if (hasAudio) fileBadges += '<span style="background:#d4edda; color:#155724; padding:2px 6px; border-radius:4px; font-size:0.75rem; margin-right:4px;">🎵 Audio</span>';
+                if (hasStems) fileBadges += '<span style="background:#e8daef; color:#6c3483; padding:2px 6px; border-radius:4px; font-size:0.75rem; margin-right:4px;">🎤 Stems</span>';
                 if (hasVideo) {
                     const isStream = song.video.includes('youtube.com') || song.video.includes('youtu.be') || song.video.includes('&path=https');
                     if (isStream) {
