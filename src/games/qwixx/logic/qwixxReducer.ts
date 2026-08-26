@@ -69,7 +69,7 @@ export const INITIAL_STATE: QwixxGameState = {
 export function canCrossNumber(rowNumbers: number[], crossed: number[], numToCross: number): boolean {
     const targetIndex = rowNumbers.indexOf(numToCross);
     if (targetIndex === -1) return false;
-    if (crossed.includes(numToCross)) return true; // Can uncross if it's the last one
+    if (crossed.includes(numToCross)) return false; // Already crossed — use canUncrossNumber instead
 
     // Must be to the right of all previously crossed numbers
     const lastCrossed = crossed[crossed.length - 1];
@@ -79,6 +79,11 @@ export function canCrossNumber(rowNumbers: number[], crossed: number[], numToCro
     }
 
     return true;
+}
+
+export function canUncrossNumber(crossed: number[], num: number): boolean {
+    // Can only uncross the most recently crossed number
+    return crossed.length > 0 && crossed[crossed.length - 1] === num;
 }
 
 export function canLockRow(rowNumbers: number[], crossed: number[], numToCross: number): boolean {
@@ -100,12 +105,11 @@ export function qwixxReducer(state: QwixxGameState, action: QwixxAction): QwixxG
             let newIsLocked: boolean = currentRow.isLocked;
 
             if (isAlreadyCrossed) {
-                // Only allow uncrossing if it's the most recently crossed number
-                if (currentRow.crossed[currentRow.crossed.length - 1] === number) {
-                    newCrossed = currentRow.crossed.slice(0, -1);
-                } else {
+                // Only allow uncrossing the most recently crossed number
+                if (!canUncrossNumber(currentRow.crossed, number)) {
                     return state;
                 }
+                newCrossed = currentRow.crossed.slice(0, -1);
             } else {
                 if (!canCrossNumber(numbers, currentRow.crossed, number)) {
                     return state;

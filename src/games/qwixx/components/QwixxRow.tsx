@@ -4,7 +4,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import CloseIcon from '@mui/icons-material/Close';
 import type { RowColor, RowState } from '../logic/types';
-import { ROW_NUMBERS, canCrossNumber } from '../logic/qwixxReducer';
+import { ROW_NUMBERS, canCrossNumber, canUncrossNumber } from '../logic/qwixxReducer';
 
 interface QwixxRowProps {
     color: RowColor;
@@ -87,13 +87,15 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
                 {numbers.map((num) => {
                     const isCrossed = rowState.crossed.includes(num);
                     const isAllowed = canCrossNumber(numbers, rowState.crossed, num);
+                    const isUncrossable = canUncrossNumber(rowState.crossed, num);
+                    const isClickable = isCrossed ? isUncrossable : isAllowed;
                     const isLast = num === lastNumber;
 
                     return (
                         <ButtonBase
                             key={num}
-                            onClick={() => !disabled && !rowState.isLocked && onCrossNumber(color, num)}
-                            disabled={disabled || rowState.isLocked || (!isCrossed && !isAllowed)}
+                            onClick={() => !disabled && !rowState.isLocked && isClickable && onCrossNumber(color, num)}
+                            disabled={disabled || rowState.isLocked || !isClickable}
                             sx={{
                                 width: { xs: 26, sm: 36, md: 44 },
                                 height: { xs: 32, sm: 42, md: 50 },
@@ -108,7 +110,7 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
                                 justifyContent: 'center',
                                 transition: 'all 0.15s ease',
                                 transform: isCrossed ? 'scale(0.96)' : 'none',
-                                opacity: (!isCrossed && !isAllowed) ? 0.35 : 1,
+                                opacity: !isClickable ? 0.35 : 1,
                                 boxShadow: isCrossed ? 'inset 0 2px 4px rgba(0,0,0,0.4)' : '0 2px 4px rgba(0,0,0,0.2)',
                                 '&:active': {
                                     transform: 'scale(0.92)'
