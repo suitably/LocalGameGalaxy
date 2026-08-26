@@ -1,8 +1,22 @@
 import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import React from 'react';
 import type { SongMeta } from '../db';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 
-
+function recordSongToHistory(song: SongMeta) {
+    try {
+        const history = storage.getJson<any[]>(STORAGE_KEYS.SONG_HISTORY, []);
+        const filtered = history.filter((item: any) => item.id !== song.id);
+        const updated = [{
+            id: song.id,
+            title: song.title,
+            artist: song.artist,
+            year: song.year,
+            playedAt: Date.now()
+        }, ...filtered].slice(0, 50);
+        storage.setJson(STORAGE_KEYS.SONG_HISTORY, updated);
+    } catch {}
+}
 
 const QUEUE_STORAGE_KEY = 'melodiq_queue';
 const CHANNEL_NAME = 'melodiq_queue_channel';
@@ -161,6 +175,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             broadcastQueue(next);
             return next;
         });
+        recordSongToHistory(song);
     }, [broadcastQueue]);
 
     const removeFromQueue = useCallback((itemId: string) => {
@@ -257,6 +272,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             broadcastQueue(next);
             return next;
         });
+        recordSongToHistory(song);
     }, [broadcastQueue]);
 
     const replaceItem = useCallback((itemId: string, newSong: SongMeta) => {

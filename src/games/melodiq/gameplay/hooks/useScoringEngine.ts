@@ -38,6 +38,7 @@ interface UseScoringEngineProps {
     /** If `true`, this instance is a remote phone client — runs a reduced local loop. */
     isClient: boolean;
     _duration: number;
+    micLatency?: number;
     onPlaybackUpdate?: (state: any) => void;
     setScores?: React.Dispatch<React.SetStateAction<Record<string, number>>>;
     /** Ref to the current virtual audio time in seconds (used for lyric sync when audioRef is unavailable). */
@@ -91,6 +92,7 @@ export function useScoringEngine({
     passiveState: _passiveState,
     isClient,
     _duration,
+    micLatency = 0,
     onPlaybackUpdate,
     setScores,
     virtualTimeRef
@@ -154,7 +156,7 @@ export function useScoringEngine({
         player.pitchRef.current = pitch;
 
         if (pitch && pitch.note > 0 && isPlayingRef.current && parsedSong && audioRef.current) {
-            const latency = player.config.latency || 0;
+            const latency = (player.config.latency || 0) + micLatency;
             const currentBeat = ((audioRef.current.currentTime * 1000) - latency - (parsedSong.gap || 0)) / beatDuration;
 
             const tIdx = player.trackIndex;

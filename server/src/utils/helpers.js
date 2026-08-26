@@ -38,10 +38,20 @@ const resolveSecurePath = (userPath) => {
     return isAllowed && fs.existsSync(safePath) ? safePath : null;
 };
 
+const apiSuccess = (res, data = {}, status = 200) => {
+    return res.status(status).json({ success: true, ...data });
+};
+
+const apiError = (res, message = 'Internal server error', status = 500, details = null) => {
+    return res.status(status).json({ success: false, error: message, ...(details ? { details } : {}) });
+};
+
 module.exports = {
     getLocalIp,
     sanitizeFilename,
     generateId,
-    resolveSecurePath
+    resolveSecurePath,
+    apiSuccess,
+    apiError
 };
 

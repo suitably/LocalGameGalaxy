@@ -25,6 +25,7 @@ export interface SettingsState {
     lyricsPosition: 'bottom' | 'center';
     audioPlaybackMode: 'separated' | 'original';
     showScoreboardQrCode: boolean;
+    micLatency: number;
 }
 
 /** Default/Factory settings */
@@ -52,7 +53,8 @@ export const DEFAULT_SETTINGS: SettingsState = {
     enableLyricsZoom: false,
     lyricsPosition: 'bottom',
     audioPlaybackMode: 'separated',
-    showScoreboardQrCode: true
+    showScoreboardQrCode: true,
+    micLatency: 0
 };
 
 export const loadSettings = (): SettingsState => ({
@@ -115,6 +117,10 @@ export const loadSettings = (): SettingsState => ({
     showScoreboardQrCode: (() => {
         const stored = localStorage.getItem('melodiq_show_scoreboard_qr_code');
         return stored === null ? true : stored === 'true';
+    })(),
+    micLatency: (() => {
+        const stored = localStorage.getItem('melodiq_mic_latency');
+        return stored ? parseInt(stored) : 0;
     })()
 });
 
@@ -143,6 +149,7 @@ const persistSettings = (s: SettingsState) => {
     localStorage.setItem('melodiq_lyrics_position', s.lyricsPosition);
     localStorage.setItem('melodiq_audio_playback_mode', s.audioPlaybackMode);
     localStorage.setItem('melodiq_show_scoreboard_qr_code', String(s.showScoreboardQrCode));
+    localStorage.setItem('melodiq_mic_latency', String(s.micLatency));
 };
 
 interface SettingsContextValue {

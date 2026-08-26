@@ -10,6 +10,8 @@ import { ScoreBoardQrCode } from './gameplay/ScoreBoardQrCode';
 
 import { useTranslation } from 'react-i18next';
 import { initMelodiqI18n } from './i18n';
+import { useWakeLock } from '../../hooks/useWakeLock';
+import { useScreenOrientation } from '../../hooks/useScreenOrientation';
 
 const MockWebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const mockContext: WebRTCHostContextType<any, any> = {
@@ -38,6 +40,10 @@ export const MelodiqTV: React.FC = () => {
     initMelodiqI18n();
     const { t } = useTranslation();
     const { updateSetting } = useMelodiqSettings();
+
+    useWakeLock(true);
+    useScreenOrientation('landscape');
+
     const [activeSong, setActiveSong] = useState<any | null>(null);
     const [passiveState, setPassiveState] = useState<PassiveGameState | null>(null);
     const [isConnected, setIsConnected] = useState(false);

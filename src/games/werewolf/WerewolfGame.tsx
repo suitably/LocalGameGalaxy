@@ -12,6 +12,7 @@ import { ContinueGameDialog } from './components/ContinueGameDialog';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
 import { WerewolfGameProvider, useWerewolfGame } from './context/WerewolfGameContext';
+import { useWakeLock } from '../../hooks/useWakeLock';
 
 const WerewolfGameContent: React.FC = () => {
     const { t } = useTranslation();
@@ -34,6 +35,8 @@ const WerewolfGameContent: React.FC = () => {
         executeNightAction,
         executeHunterShot,
     } = useWerewolfGame();
+
+    useWakeLock(gameState.phase !== 'SETUP');
 
     return (
         <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>

@@ -18,6 +18,7 @@ export const STORAGE_KEYS = {
     // Queue & play state
     NOW_PLAYING: 'melodiq_now_playing',
     QUEUE: 'melodiq_queue',
+    SONG_HISTORY: 'melodiq_song_history',
     
     // Werewolf game state
     WEREWOLF_STATE: 'werewolf-game-state',

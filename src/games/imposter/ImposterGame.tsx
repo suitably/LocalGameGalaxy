@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { seedImposterDatabase } from './logic/dbSeeder';
 import { getWordPairsByCategories } from './logic/imposterRepository';
 import { usePageTitle } from '../../context/TitleContext';
+import { useWakeLock } from '../../hooks/useWakeLock';
 
 import { storage, STORAGE_KEYS } from '../../lib/storage';
 
@@ -67,6 +68,8 @@ export const ImposterGame: React.FC = () => {
         currentPlayerIndex: 0,
         winner: null,
     });
+
+    useWakeLock(gameState.phase !== 'LOBBY');
 
     const addPlayer = useCallback((name: string) => {
         setLobbyPlayers(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), name, isImposter: false, isKicked: false }]);

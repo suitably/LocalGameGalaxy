@@ -23,6 +23,9 @@ import { MatratzeView } from './roles/MatratzeView';
 import { PlayerSelectionView } from './PlayerSelectionView';
 import InfoIcon from '@mui/icons-material/Info';
 import CloseIcon from '@mui/icons-material/Close';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import { useTTS } from '../hooks/useTTS';
 
 interface NightPhaseProps {
     players: Player[];
@@ -41,6 +44,7 @@ const NIGHT_ROLE_ORDER: Role[] = [
 
 export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [], round, nightActionLog, onNextPhase, onNightAction }) => {
     const { t } = useTranslation();
+    const { speak, enabled: ttsEnabled, setEnabled: setTtsEnabled } = useTTS();
     const [currentRoleIndex, setCurrentRoleIndex] = useState(0);
     const [isMorningComing, setIsMorningComing] = useState(false);
     const [isInfoOpen, setIsInfoOpen] = useState(false);
@@ -143,6 +147,21 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
         if (customRole) return customRole.name;
         return t(`games.werewolf.roles.${activeRole}`);
     };
+
+    // Narrate active role instructions when turn transitions
+    useEffect(() => {
+        if (isMorningComing) {
+            speak(t('games.werewolf.narrator.morning_coming'));
+            return;
+        }
+        if (activeRole) {
+            const roleName = getRoleName();
+            const customRole = customRoles.find(cr => cr.id === activeRole);
+            const customText = customRole?.narratorText;
+            const textToSpeak = customText || `${roleName}. ${getDescription()}`;
+            speak(textToSpeak);
+        }
+    }, [activeRole, isMorningComing, speak, t]);
 
     if (isMorningComing) {
         return (
@@ -359,8 +378,11 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
 
     return (
         <Box sx={{ position: 'relative' }}>
-            <Box sx={{ position: 'absolute', top: -48, right: 0, zIndex: 10 }}>
-                <IconButton onClick={() => setIsInfoOpen(true)} color="info">
+            <Box sx={{ position: 'absolute', top: -48, right: 0, zIndex: 10, display: 'flex', gap: 1 }}>
+                <IconButton onClick={() => setTtsEnabled(!ttsEnabled)} color={ttsEnabled ? 'primary' : 'default'} size="small">
+                    {ttsEnabled ? <VolumeUpIcon /> : <VolumeOffIcon />}
+                </IconButton>
+                <IconButton onClick={() => setIsInfoOpen(true)} color="info" size="small">
                     <InfoIcon />
                 </IconButton>
             </Box>

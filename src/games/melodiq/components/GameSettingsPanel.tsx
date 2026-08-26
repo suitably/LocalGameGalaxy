@@ -5,7 +5,9 @@ import {
     Accordion, AccordionSummary, AccordionDetails, Select, MenuItem, InputLabel, FormControl
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import SpeedIcon from '@mui/icons-material/Speed';
 import type { SettingsState } from '../hooks/SettingsContext';
+import { LatencyCalibratorDialog } from './LatencyCalibratorDialog';
 
 interface GameSettingsPanelProps {
     settings: SettingsState;
@@ -19,6 +21,7 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
     const { t } = useTranslation();
     const [newPlayerCount, setNewPlayerCount] = useState('');
     const [newLayoutStr, setNewLayoutStr] = useState('');
+    const [calibratorOpen, setCalibratorOpen] = useState(false);
 
     const handleUpdateLayout = (playerCount: number, layout: string) => {
         const updated = { ...settings.customLayouts, [playerCount]: layout };
@@ -380,6 +383,40 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                     />
                 </Box>
 
+                <Box sx={{ mt: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                        <Typography gutterBottom sx={{ mb: 0 }}>
+                            {t('melodiq.settings_panel.mic_latency', 'Microphone Latency Offset')}: {settings.micLatency ?? 0} ms
+                        </Typography>
+                        <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<SpeedIcon />}
+                            onClick={() => setCalibratorOpen(true)}
+                        >
+                            {t('melodiq.settings_panel.calibrate', 'Calibrate')}
+                        </Button>
+                    </Box>
+                    <Slider
+                        value={settings.micLatency ?? 0}
+                        onChange={(_, val) => onUpdateSetting('micLatency', val as number)}
+                        min={-100}
+                        max={500}
+                        step={5}
+                        marks={[
+                            { value: 0, label: '0ms' },
+                            { value: 100, label: '100ms' },
+                            { value: 250, label: '250ms' },
+                            { value: 500, label: '500ms' }
+                        ]}
+                        valueLabelDisplay="auto"
+                        sx={{ width: '100%' }}
+                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                        {t('melodiq.settings_panel.mic_latency_desc', 'Compensates for microphone and audio hardware delay to align pitch detection with note bars.')}
+                    </Typography>
+                </Box>
+
                 <FormControlLabel
                     control={<Switch checked={settings.hideBackgroundVideo} onChange={(e) => onUpdateSetting('hideBackgroundVideo', e.target.checked)} />}
                     label={t('melodiq.settings_panel.hide_video', 'Hide Background Video')}
@@ -449,6 +486,8 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                     </AccordionDetails>
                 </Accordion>
             </Box>
+
+            <LatencyCalibratorDialog open={calibratorOpen} onClose={() => setCalibratorOpen(false)} />
         </Box>
     );
 };

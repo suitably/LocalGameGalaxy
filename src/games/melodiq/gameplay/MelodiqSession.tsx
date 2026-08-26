@@ -19,6 +19,8 @@ import { usePassiveSync } from './hooks/usePassiveSync';
 import { useSessionEnd } from './hooks/useSessionEnd';
 import { usePlaybackControls } from './hooks/usePlaybackControls';
 import { useLocalMediaSync } from './hooks/useLocalMediaSync';
+import { useWakeLock } from '../../../hooks/useWakeLock';
+import { useScreenOrientation } from '../../../hooks/useScreenOrientation';
 
 export interface MelodiqSessionHandle {
     togglePlay: () => void;
@@ -88,6 +90,9 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
     // Local State
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
+
+    useWakeLock(isPlaying && !isFinished);
+    useScreenOrientation('landscape');
     const [isPausedForScore, setIsPausedForScore] = useState(false);
     const [results, setResults] = useState<any[]>([]);
     const [_duration, setDuration] = useState(0);
@@ -238,7 +243,7 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
     useScoringEngine({
         players, ready, audioRef, vocalsRef, videoRef, scoreDisplayRef, progressLineRef, isPlayingRef,
         parsedSong, bpmMultiplier, trackScoreWeights, goldenNoteMultiplier, devPitchOverride,
-        isPassive, passiveState, isClient, _duration, onPlaybackUpdate, virtualTimeRef
+        isPassive, passiveState, isClient, _duration, micLatency: settings.micLatency || 0, onPlaybackUpdate, virtualTimeRef
     });
 
     usePassiveSync({
