@@ -58,6 +58,7 @@
         "THIEF": "Ein listiger Opportunist, der ohne eigene Rolle startet. In der ersten Nacht wählst du einen Spieler und stiehlst seine Identität. Du übernimmst seine Rolle und Kräfte, während das Opfer zu einem einfachen Dorfbewohner ohne Fähigkeiten wird.",
         "DORFMATRATZE": "Du schläfst jede Nacht bei einem anderen. Wenn die Werwölfe dich zuhause angreifen, während du weg bist, überlebst du. Aber Vorsicht: Wenn dein Gastgeber stirbt, stirbst du mit ihm!"
       },
+      "ability_btn": "{{type}} (Ziele: {{count}}){{status}}",
       "narrator": {
         "night_start": "Die Nacht bricht herein. Alle schließen die Augen.",
         "werewolves_wake": "Werwölfe, erwacht.",
@@ -249,6 +250,17 @@
       "title": "Imposter",
       "description": "Finde den Imposter, bevor er untertaucht!",
       "rules": "Regeln: Normale Spieler erhalten ein Wort. Der Imposter erhält ein Hinweiswort. Diskutiert und findet den Imposter!",
+      "info": {
+        "title": "Spielanleitung",
+        "got_it": "Verstanden!",
+        "rules": [
+          "Jeder normale Spieler sieht ein geheimes Wort.",
+          "Der Imposter sieht nur einen allgemeinen Hinweis, nicht das Wort selbst.",
+          "Reihum nennt jeder Spieler ein Wort oder einen kurzen Hinweis, der zum Begriff passt.",
+          "Diskutiert und stimmt ab, wer der Imposter ist!",
+          "Wird der Imposter enttarnt, gewinnen die Unschuldigen. Ansonsten gewinnt der Imposter."
+        ]
+      },
       "setup": {
         "title": "Imposter Setup",
         "imposter_count": "Anzahl der Imposter",

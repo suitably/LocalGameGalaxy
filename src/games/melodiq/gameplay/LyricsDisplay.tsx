@@ -10,6 +10,169 @@ interface LyricsDisplayProps {
     enableZoom?: boolean;
 }
 
+interface LineGroup {
+    notes: Note[];
+    startBeat: number;
+    endBeat: number;
+}
+
+interface LeadInIndicatorProps {
+    timeUntilStartSec: number;
+    totalGapSec: number;
+    primaryColor: string;
+    scale?: number;
+    align?: 'left' | 'center' | 'right';
+}
+
+/**
+ * Renders a beat-accurate, non-intrusive countdown indicator:
+ * - When approaching singing start (<= 3.0s): 3 rhythmic beat dots (● ● ●).
+ * - During long instrumental breaks (> 3.0s remaining, gap >= 5.0s): A sleek pause badge.
+ * Lyrics text is NEVER hidden or replaced by this indicator.
+ */
+const LeadInIndicator: React.FC<LeadInIndicatorProps> = React.memo(({
+    timeUntilStartSec,
+    totalGapSec,
+    primaryColor,
+    scale = 1.0,
+    align = 'center',
+}) => {
+    if (timeUntilStartSec <= 0 || totalGapSec < 2.5) {
+        return <Box sx={{ height: `${1.2 * scale}rem` }} />;
+    }
+
+    const isCountdownActive = timeUntilStartSec <= 3.0;
+    const isLongBreak = timeUntilStartSec > 3.0 && totalGapSec >= 5.0;
+
+    return (
+        <Box sx={{
+            height: `${1.2 * scale}rem`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: align === 'center' ? 'center' : (align === 'right' ? 'flex-end' : 'flex-start'),
+            gap: 1,
+            mb: 0.25,
+            transition: 'opacity 0.2s ease-in-out',
+            opacity: (isCountdownActive || isLongBreak) ? 1 : 0
+        }}>
+            {isCountdownActive ? (
+                // 3 Lead-In Countdown Dots
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {[3, 2, 1].map((step) => {
+                        const isLit = timeUntilStartSec <= step;
+                        return (
+                            <Box
+                                key={step}
+                                sx={{
+                                    width: `${0.65 * scale}rem`,
+                                    height: `${0.65 * scale}rem`,
+                                    borderRadius: '50%',
+                                    bgcolor: isLit ? primaryColor : 'rgba(255,255,255,0.25)',
+                                    boxShadow: isLit ? `0 0 12px ${primaryColor}, 0 0 4px #ffffff` : 'none',
+                                    transform: isLit ? 'scale(1.2)' : 'scale(1.0)',
+                                    transition: 'all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                                }}
+                            />
+                        );
+                    })}
+                </Box>
+            ) : isLongBreak ? (
+                // Sleek Instrumental Pause Badge
+                <Box sx={{
+                    px: 1.2,
+                    py: 0.2,
+                    borderRadius: 3,
+                    bgcolor: 'rgba(0,0,0,0.5)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5
+                }}>
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            fontSize: `${0.75 * scale}rem`,
+                            color: 'rgba(255,255,255,0.85)',
+                            fontWeight: 600,
+                            letterSpacing: '0.04em'
+                        }}
+                    >
+                        ♪ In {Math.ceil(timeUntilStartSec)}s
+                    </Typography>
+                </Box>
+            ) : null}
+        </Box>
+    );
+});
+LeadInIndicator.displayName = 'LeadInIndicator';
+
+interface LyricsLineProps {
+    line: LineGroup;
+    currentBeat: number;
+    primaryColor: string;
+    align: 'left' | 'center' | 'right';
+    scale: number;
+    enableZoom: boolean;
+}
+
+/**
+ * Renders the active singing line with real-time syllable highlighting.
+ */
+const LyricsLine: React.FC<LyricsLineProps> = React.memo(({
+    line,
+    currentBeat,
+    primaryColor,
+    align,
+    scale,
+    enableZoom
+}) => {
+    return (
+        <Typography
+            component="div"
+            sx={{
+                textAlign: align,
+                lineHeight: 1.3,
+                fontSize: {
+                    xs: `${1.35 * scale}rem`,
+                    md: `${1.75 * scale}rem`,
+                    lg: `${2.25 * scale}rem`,
+                },
+                fontWeight: 700, // Constant weight guarantees zero font metric layout shift
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                width: '100%'
+            }}
+        >
+            {line.notes.map((note, idx) => {
+                const noteEnd = note.start + note.duration;
+                const isPast = currentBeat >= noteEnd;
+                const isActive = currentBeat >= note.start && currentBeat < noteEnd;
+                const noteColor = isActive ? primaryColor : (isPast ? '#ffffff' : 'rgba(255,255,255,0.72)');
+                const baseShadow = '0 2px 6px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8)';
+                const activeGlow = `0 0 16px ${primaryColor}, 0 0 32px ${primaryColor}, 0 2px 6px rgba(0,0,0,0.9)`;
+
+                return (
+                    <Box
+                        key={idx}
+                        component="span"
+                        sx={{
+                            display: 'inline-block',
+                            color: noteColor,
+                            textShadow: isActive ? activeGlow : baseShadow,
+                            filter: (enableZoom && isActive) ? 'brightness(1.25)' : 'none',
+                            transition: 'color 0.05s ease-out, text-shadow 0.05s ease-out, filter 0.05s ease-out',
+                            whiteSpace: 'pre'
+                        }}
+                    >
+                        {note.text}
+                    </Box>
+                );
+            })}
+        </Typography>
+    );
+});
+LyricsLine.displayName = 'LyricsLine';
+
 interface LyricsLaneProps {
     notes: Note[];
     currentBeat: number;
@@ -18,147 +181,94 @@ interface LyricsLaneProps {
     secondary?: boolean;
     scale?: number;
     enableZoom?: boolean;
+    bpm: number;
 }
 
-const LyricsLane: React.FC<LyricsLaneProps & { bpm: number }> = React.memo(({ notes, currentBeat, align = 'center', color, secondary, scale = 1.0, enableZoom = false, bpm }) => {
-    // Group notes into lines
-    const lines = useMemo(() => {
+const LINGER_SECONDS = 0.8; // Duration the completed line stays visible before advancing to next line
+
+const LyricsLane: React.FC<LyricsLaneProps> = React.memo(({
+    notes,
+    currentBeat,
+    align = 'center',
+    color,
+    secondary,
+    scale = 1.0,
+    enableZoom = false,
+    bpm
+}) => {
+    // Group notes into line objects with pre-calculated bounds
+    const lines = useMemo<LineGroup[]>(() => {
         const rawNotes = (notes || []) as Note[];
-        const groups: Note[][] = [];
+        const groups: LineGroup[] = [];
         let currentGroup: Note[] = [];
+
+        const pushGroup = (grp: Note[]) => {
+            if (grp.length === 0) return;
+            const firstNote = grp[0];
+            const lastNote = grp[grp.length - 1];
+            groups.push({
+                notes: grp,
+                startBeat: firstNote.start,
+                endBeat: lastNote.start + lastNote.duration
+            });
+        };
 
         for (const note of rawNotes) {
             if (note.type === '-') {
-                if (currentGroup.length > 0) groups.push(currentGroup);
-                currentGroup = [];
+                if (currentGroup.length > 0) {
+                    pushGroup(currentGroup);
+                    currentGroup = [];
+                }
             } else {
                 currentGroup.push(note);
             }
         }
-        if (currentGroup.length > 0) groups.push(currentGroup);
+        if (currentGroup.length > 0) {
+            pushGroup(currentGroup);
+        }
         return groups;
     }, [notes]);
 
-    // Find active line
-    // Optimization: This runs every frame. Keeping it simple as N is small.
-    const activeLineIndex = lines.findIndex((line, index) => {
-        if (line.length === 0) return false;
+    const msPerBeat = 60000 / (bpm * 4);
+    const lingerBeats = (LINGER_SECONDS * 1000) / msPerBeat;
 
-        // Use a more generous window to keep the line "active" even after it finishes, until the next one starts
-        // This allows us to handle the "post-line" logic (fade out / countdown) within the same "active" line context
-        const firstStart = line[0].start;
+    // Determine active line index:
+    // Line 0 is active from start until its endBeat + lingerBeats.
+    // Subsequent Line i is active immediately after Line i-1 reaches (endBeat + lingerBeats).
+    const activeLineIndex = useMemo(() => {
+        if (lines.length === 0) return -1;
 
-        const nextLine = lines[index + 1];
-        const nextStart = nextLine ? nextLine[0].start : Infinity;
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const lineEndWithLinger = line.endBeat + lingerBeats;
 
-        // Standard active: within the line's duration
-        // Post-active: between this line end and next line start
-        // Pre-active: slightly before start (moved to 50 beats for smoother anticipation if needed, kept at 20)
-        return currentBeat >= (firstStart - 20) && currentBeat < nextStart;
-    });
+            if (currentBeat <= lineEndWithLinger) {
+                return i;
+            }
+        }
+        return -1; // Song lyrics complete
+    }, [lines, currentBeat, lingerBeats]);
 
     const activeLine = activeLineIndex !== -1 ? lines[activeLineIndex] : null;
-    const nextLine = activeLineIndex !== -1 ? lines[activeLineIndex + 1] : (lines.length > 0 ? lines[0] : undefined);
+    const nextLine = activeLineIndex !== -1 && activeLineIndex + 1 < lines.length
+        ? lines[activeLineIndex + 1]
+        : null;
 
-    const primaryColor = color || (secondary ? '#ff80ab' : '#00ffff'); // Pink for P2, Cyan for P1/Solo override
+    const primaryColor = color || (secondary ? '#ff80ab' : '#00ffff');
 
-    // Logic for Fade Out & Countdown
-    let opacity = 1;
-    let showCountdown = false;
-    let countdownValue = 0;
-
-    const msPerBeat = 60000 / (bpm * 4);
+    // Lead-in timing calculation
+    let timeUntilStartSec = 0;
+    let totalGapSec = 0;
 
     if (activeLine) {
-        const lastNote = activeLine[activeLine.length - 1];
-        const lineEndBeat = lastNote.start + lastNote.duration;
-
-        if (currentBeat > lineEndBeat) {
-            // Line has finished
-            const timeSinceEnd = (currentBeat - lineEndBeat) * msPerBeat / 1000;
-
-            if (timeSinceEnd > 3.0) {
-                // Fade out text
-                opacity = 0;
-
-                // Check for Countdown
-                if (nextLine) {
-                    const nextStartBeat = nextLine[0].start;
-                    const gapBeats = nextStartBeat - lineEndBeat;
-                    const gapSeconds = gapBeats * msPerBeat / 1000;
-
-                    const beatsUntilNext = nextStartBeat - currentBeat;
-                    const secondsUntilNext = beatsUntilNext * msPerBeat / 1000;
-
-                    if (gapSeconds >= 8.0) {
-                        // Long Gap: Show Countdown
-                        showCountdown = true;
-
-                        const countdownSecs = Math.ceil(secondsUntilNext);
-                        countdownValue = Math.max(0, countdownSecs);
-
-                        if (countdownValue > 0) {
-                            opacity = 1;
-                        } else {
-                            showCountdown = false;
-                        }
-                    } else {
-                        // Short/Medium Gap: Fade back in 5 seconds before next line
-                        if (secondsUntilNext <= 5.0) {
-                            opacity = 1;
-                        }
-                    }
-                }
-            } else {
-                if (timeSinceEnd > 2.5) {
-                    opacity = 1 - ((timeSinceEnd - 2.5) / 0.5);
-                    if (opacity < 0) opacity = 0;
-                }
-            }
-        }
-    } else {
-        // No active line (Pre-Song or specific gap state)
-        opacity = 0; // Default hidden
-
-        // Check for Pre-Song Countdown or Preview
-        if (nextLine) {
-            const nextStartBeat = nextLine[0].start;
-            const totalGapSeconds = nextStartBeat * msPerBeat / 1000; // Time from 0 to Start
-
-            const secondsSinceStart = currentBeat * msPerBeat / 1000;
-            const beatsUntilNext = nextStartBeat - currentBeat;
-            const secondsUntilNext = beatsUntilNext * msPerBeat / 1000;
-
-            if (totalGapSeconds >= 8.0) {
-                // Long Intro: Countdown
-                if (secondsSinceStart > 3.0) {
-                    showCountdown = true;
-                    const countdownSecs = Math.ceil(secondsUntilNext);
-                    countdownValue = Math.max(0, countdownSecs);
-
-                    if (countdownValue > 0) {
-                        opacity = 1;
-                    } else {
-                        showCountdown = false;
-                    }
-                }
-            } else {
-                // Short Intro: Just show it if within 5 seconds (or start immediately if very short)
-                if (secondsUntilNext <= 5.0) {
-                    opacity = 1;
-                }
-            }
+        timeUntilStartSec = (activeLine.startBeat - currentBeat) * msPerBeat / 1000;
+        if (activeLineIndex === 0) {
+            totalGapSec = activeLine.startBeat * msPerBeat / 1000;
+        } else {
+            const prevLine = lines[activeLineIndex - 1];
+            totalGapSec = (activeLine.startBeat - prevLine.endBeat) * msPerBeat / 1000;
         }
     }
-
-    // Link next line visibility to active line visibility
-    // If we are fading out, fade out the preview too.
-    // However, now the parent container handles the fade-out, so kids just sit tight.
-
-    // activeLine logic handles opacity.
-
-    // Also handle case where neither is active (gap or pre-song)
-    const containerOpacity = (!activeLine && !nextLine) ? 0.5 : 1;
 
     return (
         <Box sx={{
@@ -169,141 +279,126 @@ const LyricsLane: React.FC<LyricsLaneProps & { bpm: number }> = React.memo(({ no
             width: '100%',
             maxWidth: '100%',
             boxSizing: 'border-box',
-            alignItems: align === 'center' ? 'center' : (align === 'right' ? 'flex-end' : 'flex-start'),
-            opacity: containerOpacity
+            alignItems: align === 'center' ? 'center' : (align === 'right' ? 'flex-end' : 'flex-start')
         }}>
-            {/* Lyrics Container */}
             <Box sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 0, // Gap between active and next
                 px: { xs: 1.5, md: 3 },
                 py: { xs: 0.5, md: 1 },
                 width: '100%',
                 maxWidth: '100%',
                 boxSizing: 'border-box',
-                alignItems: align === 'center' ? 'center' : (align === 'right' ? 'flex-end' : 'flex-start'),
-                opacity: showCountdown ? 1 : opacity,
-                transition: 'opacity 0.5s ease-out'
+                alignItems: align === 'center' ? 'center' : (align === 'right' ? 'flex-end' : 'flex-start')
             }}>
-                {/* Active Line / Countdown */}
+                {/* Lead-in Indicator / Countdown */}
+                <LeadInIndicator
+                    timeUntilStartSec={timeUntilStartSec}
+                    totalGapSec={totalGapSec}
+                    primaryColor={primaryColor}
+                    scale={scale}
+                    align={align}
+                />
+
+                {/* Active Line (Zeile 1 / Groß) */}
                 <Box sx={{
-                    minHeight: '32px',
+                    minHeight: {
+                        xs: `${2.8 * scale}rem`,
+                        md: `${3.5 * scale}rem`,
+                        lg: `${4.2 * scale}rem`
+                    },
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: align === 'center' ? 'center' : (align === 'right' ? 'flex-end' : 'flex-start'),
                     textAlign: align,
                     width: '100%'
                 }}>
-                    {showCountdown ? (
+                    {activeLine ? (
+                        <LyricsLine
+                            line={activeLine}
+                            currentBeat={currentBeat}
+                            primaryColor={primaryColor}
+                            align={align}
+                            scale={scale}
+                            enableZoom={enableZoom}
+                        />
+                    ) : (
                         <Typography
-                            variant="h4"
+                            component="div"
                             sx={{
-                                fontSize: {
-                                    xs: `${1.5 * scale}rem`,
-                                    md: `${2.0 * scale}rem`,
-                                    lg: `${2.5 * scale}rem`,
-                                },
-                                fontWeight: 'bold',
-                                color: primaryColor,
-                                textShadow: `0 0 20px ${primaryColor}, 0 2px 8px rgba(0,0,0,0.9)`,
-                                animation: 'pulse 1s infinite',
+                                color: 'rgba(255,255,255,0.3)',
+                                fontStyle: 'italic',
+                                fontSize: { xs: `${1.1 * scale}rem`, md: `${1.3 * scale}rem` },
                                 textAlign: align
                             }}
                         >
-                            {countdownValue}
+                            ♪ ♫ ♪
                         </Typography>
-                    ) : (
-                        activeLine ? (
-                            <Typography
-                                component="div"
-                                sx={{
-                                    textAlign: align,
-                                    lineHeight: 1.3,
-                                    fontSize: {
-                                        xs: `${1.25 * scale}rem`,
-                                        md: `${1.6 * scale}rem`,
-                                        lg: `${2.0 * scale}rem`,
-                                    },
-                                    fontWeight: 600, // Constant weight guarantees zero font metric layout shift
-                                    whiteSpace: 'pre-wrap',
-                                    wordBreak: 'break-word'
-                                }}
-                            >
-                                {activeLine.map((note, idx) => {
-                                    const isPast = currentBeat >= (note.start + note.duration);
-                                    const isActive = currentBeat >= note.start && currentBeat < (note.start + note.duration);
-                                    const noteColor = isActive ? primaryColor : (isPast ? '#ffffff' : 'rgba(255,255,255,0.7)');
-                                    const baseShadow = '0 2px 6px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8)';
-                                    const activeGlow = `0 0 12px ${primaryColor}, 0 0 24px ${primaryColor}`;
-
-                                    return (
-                                        <Box
-                                            key={idx}
-                                            component="span"
-                                            sx={{
-                                                display: 'inline-block',
-                                                color: noteColor,
-                                                textShadow: (enableZoom && isActive) ? `${activeGlow}, ${baseShadow}` : baseShadow,
-                                                transform: (enableZoom && isActive) ? 'scale(1.08)' : 'none',
-                                                transformOrigin: 'center bottom',
-                                                transition: enableZoom ? 'color 0.05s ease-out, transform 0.1s ease-out, text-shadow 0.05s ease-out' : 'color 0.05s ease-out',
-                                                whiteSpace: 'pre'
-                                            }}
-                                        >
-                                            {note.text}
-                                        </Box>
-                                    );
-                                })}
-                            </Typography>
-                        ) : (
-                            <Typography variant="h6" color="gray" sx={{ textAlign: align }}>...</Typography>
-                        )
                     )}
                 </Box>
 
-                {/* Next Line Preview */}
-                {nextLine && (
-                    <Typography
-                        component="div"
-                        sx={{
-                            textAlign: align,
-                            lineHeight: 1.3,
-                            fontSize: {
-                                xs: `${0.85 * scale}rem`,
-                                md: `${1.05 * scale}rem`,
-                                lg: `${1.25 * scale}rem`,
-                            },
-                            fontWeight: 400,
-                            color: 'rgba(255,255,255,0.85)',
-                            mt: 0.5,
-                            opacity: 0.6, // Relative to parent
-                            whiteSpace: 'pre-wrap',
-                            wordBreak: 'break-word',
-                            width: '100%'
-                        }}
-                    >
-                        {nextLine.map((note, idx) => (
-                            <Box
-                                key={idx}
-                                component="span"
-                                sx={{
-                                    display: 'inline-block',
-                                    whiteSpace: 'pre',
-                                    textShadow: '0 2px 5px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7)'
-                                }}
-                            >
-                                {note.text}
-                            </Box>
-                        ))}
-                    </Typography>
-                )}
+                {/* Next Line Preview (Zeile 2 / Dezent) */}
+                <Box sx={{
+                    minHeight: {
+                        xs: `${1.4 * scale}rem`,
+                        md: `${1.8 * scale}rem`,
+                        lg: `${2.2 * scale}rem`
+                    },
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: align === 'center' ? 'center' : (align === 'right' ? 'flex-end' : 'flex-start'),
+                    width: '100%',
+                    mt: 0.5
+                }}>
+                    {nextLine && (
+                        <Typography
+                            component="div"
+                            sx={{
+                                textAlign: align,
+                                lineHeight: 1.3,
+                                fontSize: {
+                                    xs: `${0.95 * scale}rem`,
+                                    md: `${1.2 * scale}rem`,
+                                    lg: `${1.4 * scale}rem`,
+                                },
+                                fontWeight: 500,
+                                color: 'rgba(255,255,255,0.85)',
+                                opacity: 0.65,
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
+                                width: '100%'
+                            }}
+                        >
+                            {nextLine.notes.map((note, idx) => (
+                                <Box
+                                    key={idx}
+                                    component="span"
+                                    sx={{
+                                        display: 'inline-block',
+                                        whiteSpace: 'pre',
+                                        textShadow: '0 2px 5px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7)'
+                                    }}
+                                >
+                                    {note.text}
+                                </Box>
+                            ))}
+                        </Typography>
+                    )}
+                </Box>
             </Box>
         </Box>
     );
 });
+LyricsLane.displayName = 'LyricsLane';
 
-export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, audioRef, uiScale = 1.0, enableZoom = false }) => {
+export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({
+    song,
+    audioRef,
+    uiScale = 1.0,
+    enableZoom = false
+}) => {
     const [currentBeat, setCurrentBeat] = useState(0);
 
-    // Calculate BPM once or memoize it to pass down safely
     const bpm = song.bpm || 120;
 
     useEffect(() => {
@@ -324,13 +419,11 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, a
     }, [song, audioRef, bpm]);
 
     const isDuet = song.tracks && song.tracks.length > 1;
-
-    // Use media query for mobile/small screens
     const isSmallScreen = useMediaQuery('(max-width:600px), (max-height:500px)');
 
     return (
         <Box sx={{
-            py: isSmallScreen ? 0.5 : 2,
+            py: isSmallScreen ? 0.5 : 1.5,
             minHeight: isSmallScreen ? 60 : 120,
             display: 'flex',
             alignItems: 'center',
@@ -338,37 +431,61 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, a
             width: '100%',
             maxWidth: '100%',
             boxSizing: 'border-box',
-            flexDirection: isDuet ? 'row' : 'column' // Duets: left/right, Solo: centered column
+            flexDirection: isDuet ? 'row' : 'column' // Duets: 50/50 split, Solo: centered column
         }}>
             {isDuet ? (
-                // Duet View: Split 50/50
+                // Duet View: Unified 50/50 split with centered alignment for both players
                 <>
-                    <Box sx={{ flex: 1, borderRight: '1px solid rgba(255,255,255,0.1)' }}>
+                    <Box sx={{ flex: 1, borderRight: '1px solid rgba(255,255,255,0.12)', px: { xs: 1, md: 2 } }}>
                         <LyricsLane
                             notes={song.tracks![0].notes}
                             currentBeat={currentBeat}
-                            align="right"
-                            color="#40c4ff" // Blue
+                            align="center"
+                            color="#40c4ff" // Blue / Cyan
                             scale={uiScale}
                             enableZoom={enableZoom}
                             bpm={bpm}
                         />
-                        <Typography variant="caption" sx={{ display: 'block', textAlign: 'right', pr: 2, mt: 0.5, color: '#40c4ff', opacity: 0.5, fontSize: isSmallScreen ? '0.65rem' : '0.75rem' }}>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                display: 'block',
+                                textAlign: 'center',
+                                mt: 0.5,
+                                color: '#40c4ff',
+                                opacity: 0.65,
+                                fontWeight: 600,
+                                fontSize: isSmallScreen ? '0.65rem' : '0.75rem',
+                                letterSpacing: '0.04em'
+                            }}
+                        >
                             {song.tracks![0].name || "Player 1"}
                         </Typography>
                     </Box>
-                    <Box sx={{ flex: 1 }}>
+                    <Box sx={{ flex: 1, px: { xs: 1, md: 2 } }}>
                         <LyricsLane
                             notes={song.tracks![1].notes}
                             currentBeat={currentBeat}
-                            align="left"
-                            color="#ff4081" // Pink
+                            align="center"
+                            color="#ff4081" // Pink / Magenta
                             secondary
                             scale={uiScale}
                             enableZoom={enableZoom}
                             bpm={bpm}
                         />
-                        <Typography variant="caption" sx={{ display: 'block', textAlign: 'left', pl: 2, mt: 0.5, color: '#ff4081', opacity: 0.5, fontSize: isSmallScreen ? '0.65rem' : '0.75rem' }}>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                display: 'block',
+                                textAlign: 'center',
+                                mt: 0.5,
+                                color: '#ff4081',
+                                opacity: 0.65,
+                                fontWeight: 600,
+                                fontSize: isSmallScreen ? '0.65rem' : '0.75rem',
+                                letterSpacing: '0.04em'
+                            }}
+                        >
                             {song.tracks![1].name || "Player 2"}
                         </Typography>
                     </Box>
@@ -387,3 +504,4 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(({ song, a
         </Box>
     );
 });
+LyricsDisplay.displayName = 'LyricsDisplay';

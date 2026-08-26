@@ -322,15 +322,32 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
     useEffect(() => {
         if (!hasStartedRef.current && ready && !contentLoading && parsedSong && audioSrc && audioRef.current && !isFinished) {
             hasStartedRef.current = true;
-            if (initialTime && initialTime > 0) {
-                audioRef.current.currentTime = initialTime;
-                if (videoRef.current) videoRef.current.currentTime = initialTime;
-                if (vocalsRef.current) vocalsRef.current.currentTime = initialTime;
-            }
-            const startPlay = async () => {
-                try { await safePlay(); } catch (e) { hasStartedRef.current = false; }
+            const startPlayback = async () => {
+                const targetAudio = audioRef.current;
+                if (!targetAudio) return;
+
+                if (initialTime && initialTime > 0) {
+                    if (targetAudio.readyState < 1) {
+                        await new Promise<void>(resolve => {
+                            const onLoaded = () => {
+                                targetAudio.removeEventListener('loadedmetadata', onLoaded);
+                                resolve();
+                            };
+                            targetAudio.addEventListener('loadedmetadata', onLoaded, { once: true });
+                        });
+                    }
+                    targetAudio.currentTime = initialTime;
+                    if (videoRef.current) videoRef.current.currentTime = initialTime;
+                    if (vocalsRef.current) vocalsRef.current.currentTime = initialTime;
+                }
+
+                try { 
+                    await safePlay(); 
+                } catch (e) { 
+                    hasStartedRef.current = false; 
+                }
             };
-            startPlay();
+            startPlayback();
         }
     }, [ready, contentLoading, parsedSong, audioSrc, song.id, isFinished, safePlay, initialTime]);
 
@@ -383,6 +400,7 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
                 trackScores: p.trackScores,
                 currentPitch: p.pitchRef.current,
                 activeSegments: p.activeSegments,
+                sungSegments: p.segmentsRef.current,
                 combo: p.combo,
                 lastHit: p.lastHit
             })),
@@ -544,29 +562,55 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
 
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', minHeight: 0, pt: 10 }}>
                     {visiblePlayers.length === 0 ? (
-                        // No active singers: lyrics placed according to lyricsPosition setting ('bottom' or 'center')
-                        <Box sx={{
-                            flex: 1,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: activeLyricsPosition === 'bottom' ? 'flex-end' : 'center',
-                            minHeight: 0,
-                            overflow: 'hidden',
-                            px: 2,
-                            pb: activeLyricsPosition === 'bottom' ? { xs: 2, md: 4 } : 0
-                        }}>
+                        // No active singers: Full-screen Party Sing-Along / Center or Bottom Mode
+                        activeLyricsPosition === 'center' ? (
+                            // Center Mode: Centered vertically & horizontally across the screen
                             <Box sx={{
-                                width: '100%',
-                                maxWidth: '100%',
-                                bgcolor: activeLyricsPosition === 'bottom' ? 'rgba(0,0,0,0.25)' : 'transparent',
-                                borderTop: activeLyricsPosition === 'bottom' ? '1px solid rgba(255,255,255,0.1)' : 'none',
-                                borderRadius: activeLyricsPosition === 'bottom' ? 2 : 0,
-                                py: activeLyricsPosition === 'bottom' ? 1 : 0
+                                flex: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                minHeight: 0,
+                                overflow: 'hidden',
+                                px: { xs: 2, md: 6 }
                             }}>
-                                <LyricsDisplay song={parsedSong!} audioRef={timeProxyRef} uiScale={lyricsUiScale * (activeLyricsPosition === 'bottom' ? 1.0 : 1.2)} enableZoom={activeLyricsZoom} />
+                                <Box sx={{ width: '100%', maxWidth: '1400px' }}>
+                                    <LyricsDisplay
+                                        song={parsedSong!}
+                                        audioRef={timeProxyRef}
+                                        uiScale={lyricsUiScale * 1.45}
+                                        enableZoom={activeLyricsZoom}
+                                    />
+                                </Box>
                             </Box>
-                        </Box>
+                        ) : (
+                            // Bottom Mode: Full-width edge-to-edge bottom bar (exact same as with-singers mode)
+                            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+                                <Box sx={{ flex: 1 }} />
+                                <Box sx={{
+                                    flexShrink: 0,
+                                    width: '100%',
+                                    pointerEvents: 'none',
+                                    zIndex: 10,
+                                    borderTop: '1px solid rgba(255,255,255,0.12)',
+                                    bgcolor: 'rgba(0,0,0,0.4)',
+                                    backdropFilter: 'blur(8px)',
+                                    position: 'relative',
+                                    display: 'flex',
+                                    justifyContent: 'center'
+                                }}>
+                                    <Box sx={{ width: '100%', maxWidth: '1400px' }}>
+                                        <LyricsDisplay
+                                            song={parsedSong!}
+                                            audioRef={timeProxyRef}
+                                            uiScale={lyricsUiScale}
+                                            enableZoom={activeLyricsZoom}
+                                        />
+                                    </Box>
+                                </Box>
+                            </Box>
+                        )
                     ) : (
                         // Active singers: pitch visualizer grid + lyrics strip at bottom
                         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
@@ -603,7 +647,7 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
                                                 <Box sx={{ position: 'absolute', top: 10, right: 10, zIndex: 10, pointerEvents: 'auto' }}>
                                                     <Box sx={{ bgcolor: 'rgba(0,0,0,0.6)', borderRadius: 1, p: 0.5, display: 'flex', gap: 0.5 }}>
                                                         {parsedSong.tracks.map((t: any, tIdx: number) => (
-                                                            <Button key={tIdx} variant={player.trackIndex === tIdx ? "contained" : "text"} size="small" sx={{ minWidth: 30, p: '2px 8px', fontSize: '0.75rem', bgcolor: player.trackIndex === tIdx ? `hsl(${player.config.hue}, 80%, 40%)` : 'transparent', color: 'white', '&:hover': { bgcolor: player.trackIndex === tIdx ? `hsl(${player.config.hue}, 80%, 50%)` : 'rgba(255,255,255,0.1)' } }} onClick={() => switchTrack(players.indexOf(player), tIdx)}>
+                                                             <Button key={tIdx} variant={player.trackIndex === tIdx ? "contained" : "text"} size="small" sx={{ minWidth: 30, p: '2px 8px', fontSize: '0.75rem', bgcolor: player.trackIndex === tIdx ? `hsl(${player.config.hue}, 80%, 40%)` : 'transparent', color: 'white', '&:hover': { bgcolor: player.trackIndex === tIdx ? `hsl(${player.config.hue}, 80%, 50%)` : 'rgba(255,255,255,0.1)' } }} onClick={() => switchTrack(players.indexOf(player), tIdx)}>
                                                                 {t.name || `P${tIdx + 1}`}
                                                             </Button>
                                                         ))}
@@ -614,8 +658,21 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
                                     );
                                 })}
                             </Box>
-                            <Box sx={{ flexShrink: 0, width: '100%', pointerEvents: 'none', zIndex: 10, borderTop: '1px solid rgba(255,255,255,0.1)', bgcolor: 'rgba(0,0,0,0.2)', position: 'relative' }}>
-                                <LyricsDisplay song={parsedSong!} audioRef={timeProxyRef} uiScale={lyricsUiScale} enableZoom={activeLyricsZoom} />
+                            <Box sx={{
+                                flexShrink: 0,
+                                width: '100%',
+                                pointerEvents: 'none',
+                                zIndex: 10,
+                                borderTop: '1px solid rgba(255,255,255,0.12)',
+                                bgcolor: 'rgba(0,0,0,0.4)',
+                                backdropFilter: 'blur(8px)',
+                                position: 'relative',
+                                display: 'flex',
+                                justifyContent: 'center'
+                            }}>
+                                <Box sx={{ width: '100%', maxWidth: '1400px' }}>
+                                    <LyricsDisplay song={parsedSong!} audioRef={timeProxyRef} uiScale={lyricsUiScale} enableZoom={activeLyricsZoom} />
+                                </Box>
                             </Box>
                         </Box>
                     )}

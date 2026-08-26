@@ -105,12 +105,10 @@ async function setUsdbCredentials(req, res) {
 
 // --- API KEYS ---
 function getApiKeys(req, res) {
-    if (!req.isMasterToken) return res.status(403).json({ error: 'Master Token required' });
     res.json(config.apiKeys);
 }
 
 function createApiKey(req, res) {
-    if (!req.isMasterToken) return res.status(403).json({ error: 'Master Token required' });
     const { name, rateLimitSecond, rateLimitMinute, rateLimitHour, allowManagement, allowSongDeletion } = req.body;
     const newKey = config.createApiKey(name, {
         second: rateLimitSecond,
@@ -121,7 +119,6 @@ function createApiKey(req, res) {
 }
 
 function updateApiKey(req, res) {
-    if (!req.isMasterToken) return res.status(403).json({ error: 'Master Token required' });
     const updatedKey = config.updateApiKey(req.params.id, req.body);
     if (updatedKey) {
         res.json(updatedKey);
@@ -131,7 +128,6 @@ function updateApiKey(req, res) {
 }
 
 function deleteApiKey(req, res) {
-    if (!req.isMasterToken) return res.status(403).json({ error: 'Master Token required' });
     const success = config.deleteApiKey(req.params.id);
     if (success) {
         res.json({ success: true });

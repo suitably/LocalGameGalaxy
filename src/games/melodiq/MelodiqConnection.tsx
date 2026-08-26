@@ -16,6 +16,7 @@ export const MelodiqConnection: React.FC<MelodiqConnectionProps> = ({ onBack }) 
     const { getRole, setRole } = useClientRoles();
     const { settings, updateSetting } = useMelodiqSettings();
     const { t } = useTranslation();
+    const webrtcData = useWebRTC();
 
     return (
         <DeviceConnection
@@ -24,7 +25,7 @@ export const MelodiqConnection: React.FC<MelodiqConnectionProps> = ({ onBack }) 
             description="Connect your phone to use as a microphone. Scan the QR code below."
             gameId="melodiq"
             clientPath="/games/melodiq?role=client"
-            WebRTCHostContextHook={useWebRTC}
+            webrtcData={webrtcData}
             helperStorageKey="melodiq_helper_url"
             helperTokenKey="melodiq_helper_token"
             renderPeerExtra={(peer) => (

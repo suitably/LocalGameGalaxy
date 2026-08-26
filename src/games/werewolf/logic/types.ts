@@ -48,29 +48,40 @@ export type Role =
 export type PlayerId = string;
 
 export interface PlayerPowerState {
+    // Witch
     hasHealPotion?: boolean;
     hasKillPotion?: boolean;
+    isDeadSoon?: boolean;
+    // Survivor
     protectionsLeft?: number;
+    isProtectedBySurvivor?: boolean;
+    // Wise
     canSurviveWerewolf?: boolean;
+    isProtectedByWise?: boolean;
+    // Black Werewolf
     hasInfected?: boolean;
-    isOiled?: boolean;
-    hasEgg?: boolean;
-    loverIds?: PlayerId[];
-    isProtectedByGuardian?: boolean;
-    isDragonInfected?: boolean; // Wait, Black Werewolf infects, let's call it isInfected
     isInfected?: boolean;
+    // Pyromaniac
+    isOiled?: boolean;
+    wasOiled?: boolean;
+    // Easter Bunny
+    hasEgg?: boolean;
+    eggCount?: number;
+    // Cupid
+    loverIds?: PlayerId[];
+    // Guardian
+    isProtectedByGuardian?: boolean;
+    // Voting
     isDoubleVoted?: boolean;
     isCursed?: boolean;
-    chosenCamp?: 'VILLAGER' | 'WEREWOLF'; // For Wolfdog
-    hasEGG?: boolean; // Wait, hasEgg was already there
-    eggCount?: number;
-    wasOiled?: boolean;
-    isProtectedBySurvivor?: boolean;
-    isProtectedByWise?: boolean;
-    isDeadSoon?: boolean; // For Witch's victim
-    isProtected?: boolean; // Unified protection flag (Guardian, Survivor, etc.)
-    hasShot?: boolean; // For Hunter
-    sleepingAt?: PlayerId; // For Dorfmatratze
+    // Wolfdog
+    chosenCamp?: 'VILLAGER' | 'WEREWOLF';
+    // Hunter
+    hasShot?: boolean;
+    // Dorfmatratze
+    sleepingAt?: PlayerId;
+    // Unified protection flag (set by Guardian, Survivor, etc. for night resolution)
+    isProtected?: boolean;
 }
 
 export type NightAction =

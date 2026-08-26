@@ -43,6 +43,15 @@ export function usePlaybackControls({
 
     const safePlay = useCallback(async () => {
         if (!audioRef.current) return;
+        // Synchronize stems before playing to prevent desync
+        const currentPos = audioRef.current.currentTime;
+        if (vocalsRef.current && Math.abs(vocalsRef.current.currentTime - currentPos) > 0.05) {
+            vocalsRef.current.currentTime = currentPos;
+        }
+        if (videoRef.current && Math.abs(videoRef.current.currentTime - currentPos) > 0.1) {
+            videoRef.current.currentTime = currentPos;
+        }
+
         // Apply volume settings before every play() call to ensure they are correct
         // even on the very first autostart (when the volume useEffect may have run
         // before audioRef was attached to the DOM element).

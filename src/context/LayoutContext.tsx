@@ -73,6 +73,8 @@ export const useLayout = () => {
 // Hook for components to register their header configuration
 export const useHeader = (title: string, items: MenuItem[] = []) => {
     const { setHeader } = useLayout();
+    // Stable dependency: serialize item labels to avoid spreading dynamic arrays
+    const itemLabels = JSON.stringify(items.map(i => i.label));
 
     useEffect(() => {
         setHeader(title, items);
@@ -80,5 +82,6 @@ export const useHeader = (title: string, items: MenuItem[] = []) => {
             // Reset header on unmount to prevent stale state
             setHeader(null, []);
         };
-    }, [title, setHeader, ...items.map(i => i.label)]); // Basic dependency check
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [title, setHeader, itemLabels]);
 };

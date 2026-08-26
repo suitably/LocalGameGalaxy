@@ -24,13 +24,9 @@ export const DayPhase: React.FC<DayPhaseProps> = ({ players, round, onNextPhase,
 
     useEffect(() => {
         // Announce deaths
-        let message = t('games.werewolf.narrator.day_intro');
-        if (killedPlayers.length > 0) {
-            const names = killedPlayers.map(p => p.name).join(', ');
-            message += ` ${t('games.werewolf.narrator.died_night', { names })}`;
-        } else {
-            message += ` ${t('games.werewolf.narrator.noone_died')}`;
-        }
+        const message = killedPlayers.length > 0
+            ? `${t('games.werewolf.narrator.day_intro')} ${t('games.werewolf.narrator.died_night', { names: killedPlayers.map(p => p.name).join(', ') })}`
+            : `${t('games.werewolf.narrator.day_intro')} ${t('games.werewolf.narrator.noone_died')}`;
 
         speak(message);
     }, [killedPlayers, speak, t]);

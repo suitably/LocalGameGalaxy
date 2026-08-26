@@ -1,5 +1,5 @@
 import { INITIAL_STATE, getNextPhase } from './types';
-import type { GameState, Role, Action } from './types';
+import type { GameState, Role, Action, PlayerPowerState } from './types';
 
 import { getDeathCascade, getWinningFaction, isWerewolfRole } from './utils';
 import { DEFAULT_ROLES } from './defaultRoles';
@@ -79,7 +79,7 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
             // Assign roles to ALL players and initialize power states
             const newPlayers = state.players.map((p, idx) => {
                 const role = (shuffledRoles[idx] || 'VILLAGER') as Role;
-                const powerState: any = {}; // Using any for initialization convenience
+                const powerState: PlayerPowerState = {}; // Using any for initialization convenience
 
                 if (role === 'WITCH') {
                     powerState.hasHealPotion = true;
@@ -90,6 +90,17 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                     powerState.canSurviveWerewolf = true;
                 } else if (role === 'BLACK_WEREWOLF') {
                     powerState.hasInfected = true;
+                }
+
+                // Initialize custom role power states dynamically based on abilities
+                const customRole = state.customRoles.find(cr => cr.id === role);
+                if (customRole && customRole.abilities) {
+                    customRole.abilities.forEach(ab => {
+                        if (ab.type === 'HEAL') powerState.hasHealPotion = true;
+                        if (ab.type === 'KILL') powerState.hasKillPotion = true;
+                        if (ab.type === 'PROTECT') powerState.protectionsLeft = ab.usesPerGame ?? 2;
+                        if (ab.type === 'INFECT') powerState.hasInfected = true;
+                    });
                 }
 
                 return {
@@ -377,7 +388,7 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                             if (p.id === thief.id) {
                                 // Thief takes victim's role and initializes fresh power state
                                 const newRole = victim.role || 'VILLAGER';
-                                let newPowerState: any = {};
+                                let newPowerState: PlayerPowerState = {};
 
                                 // Initialize power state for the stolen role
                                 if (newRole === 'WITCH') {
@@ -414,6 +425,11 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                             ? { ...p, powerState: { ...p.powerState, sleepingAt: nightAction.targetId } }
                             : p
                     );
+                    break;
+                case 'CHECK_ROLE':
+                case 'COMPARE_CAMPS':
+                case 'PEEK':
+                    // Informational actions: logged to nightDecisions without player state mutations
                     break;
             }
 

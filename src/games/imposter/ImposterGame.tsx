@@ -15,7 +15,7 @@ import { seedImposterDatabase } from './logic/dbSeeder';
 import { getWordPairsByCategories } from './logic/imposterRepository';
 import { usePageTitle } from '../../context/TitleContext';
 
-const STORAGE_KEY_PLAYERS = 'imposter-setup-players';
+import { storage, STORAGE_KEYS } from '../../lib/storage';
 
 export const ImposterGame: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -24,20 +24,15 @@ export const ImposterGame: React.FC = () => {
     // Set the game title in the header
     usePageTitle(t('games.imposter.title'));
 
-    // Load players from localStorage on init
-    const [players, setPlayers] = useState<Player[]>(() => {
-        try {
-            const saved = localStorage.getItem(STORAGE_KEY_PLAYERS);
-            return saved ? JSON.parse(saved) : [];
-        } catch {
-            return [];
-        }
-    });
+    // Load lobby setup players from persistent storage on init
+    const [lobbyPlayers, setLobbyPlayers] = useState<Player[]>(() => 
+        storage.getJson<Player[]>(STORAGE_KEYS.IMPOSTER_SETUP_PLAYERS, [])
+    );
 
-    // Save players to localStorage whenever they change
+    // Save lobby players to storage whenever they change
     useEffect(() => {
-        localStorage.setItem(STORAGE_KEY_PLAYERS, JSON.stringify(players));
-    }, [players]);
+        storage.setJson(STORAGE_KEYS.IMPOSTER_SETUP_PLAYERS, lobbyPlayers);
+    }, [lobbyPlayers]);
 
     const [isDbReady, setIsDbReady] = useState(false);
 
@@ -50,17 +45,13 @@ export const ImposterGame: React.FC = () => {
         initDb();
     }, []);
 
-    const [infoOpen, setInfoOpen] = useState(() => {
-        try {
-            return localStorage.getItem('imposter-has-seen-info') !== 'true';
-        } catch {
-            return true;
-        }
-    });
+    const [infoOpen, setInfoOpen] = useState(() => 
+        storage.get(STORAGE_KEYS.IMPOSTER_SEEN_INFO) !== 'true'
+    );
 
     const handleCloseInfo = useCallback(() => {
         setInfoOpen(false);
-        localStorage.setItem('imposter-has-seen-info', 'true');
+        storage.set(STORAGE_KEYS.IMPOSTER_SEEN_INFO, 'true');
     }, []);
 
     const [gameState, setGameState] = useState<GameState>({
@@ -78,11 +69,11 @@ export const ImposterGame: React.FC = () => {
     });
 
     const addPlayer = useCallback((name: string) => {
-        setPlayers(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), name, isImposter: false, isKicked: false }]);
+        setLobbyPlayers(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), name, isImposter: false, isKicked: false }]);
     }, []);
 
     const removePlayer = useCallback((id: string) => {
-        setPlayers(prev => prev.filter(p => p.id !== id));
+        setLobbyPlayers(prev => prev.filter(p => p.id !== id));
     }, []);
 
     const startGame = async (setup: { categories: DbCategory[]; imposterCount: number; timerLength: number }) => {
@@ -97,10 +88,10 @@ export const ImposterGame: React.FC = () => {
 
         const [word, hint] = randomPair.words[currentLang];
 
-        const shuffled = [...players].sort(() => 0.5 - Math.random());
+        const shuffled = [...lobbyPlayers].sort(() => 0.5 - Math.random());
         const imposterIds = new Set(shuffled.slice(0, setup.imposterCount).map(p => p.id));
 
-        const updatedPlayers = players.map(p => ({
+        const updatedPlayers = lobbyPlayers.map(p => ({
             ...p,
             isImposter: imposterIds.has(p.id),
             isKicked: false
@@ -169,10 +160,10 @@ export const ImposterGame: React.FC = () => {
                 }
                 return (
                     <GameSetup
-                        players={players}
+                        players={lobbyPlayers}
                         onAddPlayer={addPlayer}
                         onRemovePlayer={removePlayer}
-                        onClearAllPlayers={() => setPlayers([])}
+                        onClearAllPlayers={() => setLobbyPlayers([])}
                         onStartGame={startGame}
                     />
                 );

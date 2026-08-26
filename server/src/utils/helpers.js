@@ -31,7 +31,10 @@ const generateId = (title, artist, relPath) => {
 const resolveSecurePath = (userPath) => {
     if (!userPath) return null;
     const safePath = path.normalize(userPath);
-    const isAllowed = config.directories.some(dir => safePath.startsWith(path.normalize(dir)));
+    const isAllowed = config.directories.some(dir => {
+        const normalizedDir = path.normalize(dir);
+        return safePath === normalizedDir || safePath.startsWith(normalizedDir + path.sep);
+    });
     return isAllowed && fs.existsSync(safePath) ? safePath : null;
 };
 

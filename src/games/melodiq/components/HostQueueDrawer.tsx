@@ -178,6 +178,7 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary" noWrap>
                                     {nowPlaying.artist}
+                                    {(nowPlaying as any).requester ? ` · ${t('melodiq.queue_added_by', { name: (nowPlaying as any).requester })}` : ''}
                                 </Typography>
                                 {/* Active singer avatars */}
                                 {activeParticipants && activeParticipants.length > 0 && (

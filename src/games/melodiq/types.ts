@@ -44,6 +44,7 @@ export interface PassivePlayerState {
     trackScores: Record<number, number>;
     currentPitch: PitchResult | null;
     activeSegments: Record<number, SungSegment | null>;
+    sungSegments?: Record<number, SungSegment[]>;
     combo: number;
     lastHit: { rating: RatingType, score: number, timestamp: number } | null;
 }

@@ -128,6 +128,7 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
     }, [activePeerIds, gameId]);
 
     // 3. Manager Lifecycle
+    const activeTrackersKey = activeTrackerUrls.join(',');
     useEffect(() => {
         if (!partyId || activeTrackerUrls.length === 0) return;
 
@@ -210,7 +211,7 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
                 setPeers([]);
             }
         };
-    }, [partyId, JSON.stringify(activeTrackerUrls), gameId]);
+    }, [partyId, activeTrackersKey, gameId]);
 
     // 4. Actions
     const regeneratePartyId = useCallback(() => {

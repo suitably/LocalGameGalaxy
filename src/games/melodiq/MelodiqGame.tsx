@@ -20,6 +20,7 @@ import { PhoneClientEngine, useClientEngine } from './PhoneClientEngine';
 
 import { useTVMode } from './hooks/useTVMode';
 import { useSearchFilters } from './hooks/useSearchFilters';
+import { storage, STORAGE_KEYS } from '../../lib/storage';
 import { MelodiqSearchBar } from './components/MelodiqSearchBar';
 import { LibraryEmptyState } from './components/LibraryEmptyState';
 import { OnlineSongsView } from './components/OnlineSongsView';
@@ -64,12 +65,15 @@ export const MelodiqGameContent: React.FC = () => {
     const [queueDialogOpen, setQueueDialogOpen] = useState(false);
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
     const [showQueueDrawer, setShowQueueDrawer] = useState(false);
-    const [activeParticipants, setActiveParticipants] = useState<any[] | null>(null);
+    const [activeParticipants, setActiveParticipants] = useState<any[] | null>(() => 
+        storage.getJson<any[] | null>(STORAGE_KEYS.CURRENT_SONG_PARTICIPANTS, null)
+    );
+    const [sessionInstanceId, setSessionInstanceId] = useState<number>(0);
 
     const handleToggleCurrentParticipant = useCallback((deviceId: string, profile: any) => {
         setActiveParticipants(prev => {
-            // Fall back to current localStorage session when no override is set yet
-            const participants = prev ?? JSON.parse(localStorage.getItem('melodiq_active_session') || '[]');
+            // Fall back to current lobby session when no override is set yet
+            const participants = prev ?? storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
             const exists = participants.find((p: any) =>
                 p.deviceId === deviceId || p.profileId === deviceId || (profile?.peerId && p.deviceId === profile.peerId)
             );
@@ -90,32 +94,28 @@ export const MelodiqGameContent: React.FC = () => {
                     hue: profile?.hue
                 }];
             }
-            localStorage.setItem('melodiq_active_session', JSON.stringify(next));
+            storage.setJson(STORAGE_KEYS.CURRENT_SONG_PARTICIPANTS, next);
             return next;
         });
     }, []);
 
     const handleReorderCurrentParticipant = useCallback((startIndex: number, endIndex: number) => {
         setActiveParticipants(prev => {
-            // Fall back to current localStorage session when no override is set yet
-            const base = prev ?? JSON.parse(localStorage.getItem('melodiq_active_session') || '[]');
+            // Fall back to current lobby session when no override is set yet
+            const base = prev ?? storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
             const next = Array.from(base);
             const [removed] = next.splice(startIndex, 1);
             next.splice(endIndex, 0, removed);
-            localStorage.setItem('melodiq_active_session', JSON.stringify(next));
+            storage.setJson(STORAGE_KEYS.CURRENT_SONG_PARTICIPANTS, next);
             return next;
         });
     }, []);
 
-    // Participants to display in the drawer dialog — fall back to melodiq_active_session
+    // Participants to display in the drawer dialog — fall back to ACTIVE_SESSION
     // when activeParticipants hasn't been set yet (e.g. song started directly, not from queue).
     const currentDisplayParticipants = React.useMemo(() => {
         if (activeParticipants !== null) return activeParticipants;
-        try {
-            return JSON.parse(localStorage.getItem('melodiq_active_session') || '[]');
-        } catch {
-            return [];
-        }
+        return storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
     }, [activeParticipants]);
     
     const [activePlaylist, setActivePlaylist] = useState<Playlist | null>(null);
@@ -177,6 +177,13 @@ export const MelodiqGameContent: React.FC = () => {
                 addToQueue(songMeta, requester, requesterId);
                 setFeedbackMessage(`Zur Warteschlange hinzugefügt: ${songMeta.title}`);
                 return;
+            }
+
+            setSessionInstanceId(prev => prev + 1);
+            if (participants) {
+                storage.setJson(STORAGE_KEYS.CURRENT_SONG_PARTICIPANTS, participants);
+            } else {
+                storage.remove(STORAGE_KEYS.CURRENT_SONG_PARTICIPANTS);
             }
 
             if (isTVConnected) {
@@ -456,9 +463,11 @@ export const MelodiqGameContent: React.FC = () => {
                 remoteSong={remoteSong}
                 isTVConnected={isTVConnected}
                 currentView={currentView}
+                sessionInstanceId={sessionInstanceId}
                 onExitSession={() => {
                     setSelectedSong(null);
                     setActiveParticipants(null);
+                    storage.remove(STORAGE_KEYS.CURRENT_SONG_PARTICIPANTS);
                     setCurrentView('Home');
                 }}
                 onMinimizeSession={() => setCurrentView('Home')}

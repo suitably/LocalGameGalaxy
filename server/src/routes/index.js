@@ -7,6 +7,8 @@ const { resolveSecurePath } = require('../utils/helpers');
 const router = express.Router();
 const playlistsRouter = require('./playlists');
 
+const { requireMasterToken } = require('../middleware/auth');
+
 // Import controllers
 const viewController = require('../controllers/viewController');
 const mediaController = require('../controllers/mediaController');
@@ -77,10 +79,10 @@ router.get('/api/config/usdb-credentials', configController.getUsdbCredentials);
 router.post('/api/config/usdb-credentials', configController.setUsdbCredentials);
 
 // --- API KEYS ---
-router.get('/api/config/apikeys', configController.getApiKeys);
-router.post('/api/config/apikeys', configController.createApiKey);
-router.put('/api/config/apikeys/:id', configController.updateApiKey);
-router.delete('/api/config/apikeys/:id', configController.deleteApiKey);
+router.get('/api/config/apikeys', requireMasterToken, configController.getApiKeys);
+router.post('/api/config/apikeys', requireMasterToken, configController.createApiKey);
+router.put('/api/config/apikeys/:id', requireMasterToken, configController.updateApiKey);
+router.delete('/api/config/apikeys/:id', requireMasterToken, configController.deleteApiKey);
 
 // --- CONFIG GITHUB INTEGRATION ---
 router.get('/api/config/github', configController.getGithubConfig);

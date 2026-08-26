@@ -58,6 +58,7 @@
         "THIEF": "A cunning opportunist who starts with nothing. On the very first night, you choose a player. You swap roles with them: you take their identity and powers, and they become a regular Villager. Use this to seize the most powerful role in the game.",
         "DORFMATRATZE": "You sleep in a different bed every night. If the werewolves attack your home while you are away, you survive. However, if the person you are sleeping with is killed, you die with them."
       },
+      "ability_btn": "{{type}} (Targets: {{count}}){{status}}",
       "narrator": {
         "night_start": "Night falls. Everyone close your eyes.",
         "werewolves_wake": "Werewolves, wake up.",
@@ -249,6 +250,17 @@
       "title": "Imposter",
       "description": "Find the imposter before they blend in!",
       "rules": "Rules: Normal players get a word. Imposter gets a hint. Discuss and find the imposter!",
+      "info": {
+        "title": "How to play",
+        "got_it": "Got it!",
+        "rules": [
+          "Every normal player sees a secret word.",
+          "The Imposter only sees a general hint, not the word itself.",
+          "Each player says one word or clue related to their secret word.",
+          "Discuss and vote on who you think the Imposter is!",
+          "If the Imposter is voted out, the innocents win. Otherwise, the Imposter wins."
+        ]
+      },
       "setup": {
         "title": "Imposter Setup",
         "imposter_count": "Number of Imposters",

@@ -7,6 +7,7 @@ import { MiniPlayer } from './MiniPlayer';
 import { useQueue } from '../hooks/useQueue';
 import { useSongs } from '../hooks/useSongs';
 import { useClientEngine } from '../PhoneClientEngine';
+import { useTranslation } from 'react-i18next';
 
 interface PlaybackManagerProps {
     selectedSong: Song | null;
@@ -30,6 +31,7 @@ interface PlaybackManagerProps {
     /** The participants for the active song, from the queue */
     activeParticipants?: any[] | null;
     clientDeviceId?: string;
+    sessionInstanceId?: number;
 }
 
 export interface PlaybackManagerHandle {
@@ -54,17 +56,21 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         onClearRestoredSong,
         isClient = false,
         activeParticipants = null,
-        clientDeviceId
+        clientDeviceId,
+        sessionInstanceId = 0
     } = props;
 
+    const { t } = useTranslation();
     const { queue, popNext, setNowPlaying } = useQueue();
     const { refreshSongs, getSongById } = useSongs();
 
     const [prevSong, setPrevSong] = useState<Song | null>(null);
+    const [prevSessionId, setPrevSessionId] = useState<number>(sessionInstanceId);
     const [playbackId, setPlaybackId] = useState<number>(0);
 
-    if (selectedSong !== prevSong) {
+    if (selectedSong !== prevSong || sessionInstanceId !== prevSessionId) {
         setPrevSong(selectedSong);
+        setPrevSessionId(sessionInstanceId);
         setPlaybackId(id => id + 1);
     }
     const sessionRef = useRef<MelodiqSessionHandle>(null);
@@ -81,16 +87,11 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         if (typeof (selectedSong as any).currentTime === 'number' && (selectedSong as any).currentTime > 0) {
             return (selectedSong as any).currentTime;
         }
-        try {
-            const saved = JSON.parse(localStorage.getItem('melodiq_saved_time') || '{}');
-            if (saved.id === selectedSong.id && saved.time > 0) return saved.time;
-        } catch (e) {}
-        try {
-            const restored = JSON.parse(localStorage.getItem('melodiq_restored_song') || '{}');
-            if (restored.id === selectedSong.id && restored.currentTime > 0) return restored.currentTime;
-        } catch (e) {}
+        if (restoredSong && restoredSong.id === selectedSong.id && typeof (restoredSong as any).currentTime === 'number' && (restoredSong as any).currentTime > 0) {
+            return (restoredSong as any).currentTime;
+        }
         return 0;
-    }, [selectedSong]);
+    }, [selectedSong, restoredSong]);
 
     const [contextMenu, setContextMenu] = useState<HTMLElement | null>(null);
     const [syncJobId, setSyncJobId] = useState<string | null>(null);
@@ -111,14 +112,14 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     const handleSyncHere = async () => {
         handleCloseContextMenu();
         if (!selectedSong) {
-             setFeedbackMessage("Fehler: Kein lokaler Song");
+             setFeedbackMessage(t('melodiq.error_no_local_song'));
              return;
         }
         
         const currentTime = syncTargetTime !== null ? syncTargetTime : playbackState.currentTime; // seconds
         
         try {
-            setFeedbackMessage("KI Auto-Sync (Hybrid) gestartet...");
+            setFeedbackMessage(t('melodiq.sync_started'));
             
             const data = await melodiqFetch('/api/separator/job', {
                 method: 'POST',
@@ -134,9 +135,9 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                 if (data.jobIds && data.jobIds.length > 0) {
                     setSyncJobId(data.jobIds[0]);
                 }
-                setFeedbackMessage('Song-Sync (Hybrid) wird im Hintergrund berechnet!');
+                setFeedbackMessage(t('melodiq.sync_background'));
             } else {
-                setFeedbackMessage('Fehler beim Starten des Auto-Syncs');
+                setFeedbackMessage(t('melodiq.sync_error'));
             }
         } catch (err: any) {
             console.error(err);
@@ -162,14 +163,14 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                         clearInterval(interval);
                         setSyncJobId(null);
                         if (data.status === 'done') {
-                            setFeedbackMessage('Auto-Sync abgeschlossen! Neue Lyrics geladen.');
+                            setFeedbackMessage(t('melodiq.sync_completed'));
                             await refreshSongs();
                             if (selectedSong) {
                                 const newSong = await getSongById(selectedSong.id);
                                 if (newSong) onSelectSong(newSong, false, activeParticipants || undefined);
                             }
                         } else {
-                            setFeedbackMessage('Fehler beim Auto-Sync: ' + (data.error || 'Unbekannt'));
+                            setFeedbackMessage(t('melodiq.sync_failed', { error: data.error || 'Unknown' }));
                         }
                     }
                 }
@@ -178,9 +179,19 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             }
         }, 1500);
         return () => clearInterval(interval);
-    }, [syncJobId, refreshSongs, getSongById, selectedSong, onSelectSong, activeParticipants]);
+    }, [syncJobId, refreshSongs, getSongById, selectedSong, onSelectSong, activeParticipants, t]);
 
-    // Broadcast Game State Loop
+    // Broadcast Game State: piggyback on handlePlaybackUpdate instead of a separate interval
+    // This ref allows the playback callback to access broadcast without being a dependency
+    const sendGameUpdateRef = useRef(sendGameUpdate);
+    const selectedSongRef = useRef(selectedSong);
+    
+    useEffect(() => {
+        sendGameUpdateRef.current = sendGameUpdate;
+        selectedSongRef.current = selectedSong;
+    });
+
+    // Send stop state when song is deselected or sendGameUpdate changes
     useEffect(() => {
         if (!sendGameUpdate || !selectedSong) {
             if (sendGameUpdate) {
@@ -188,20 +199,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             }
             return;
         }
-
-        const intervalId = setInterval(() => {
-            if (sessionRef.current) {
-                const state = sessionRef.current.getGameState();
-                sendGameUpdate({ 
-                    ...state, 
-                    activeSongId: selectedSong.id,
-                    activeSong: { id: selectedSong.id, title: selectedSong.title, artist: selectedSong.artist }
-                });
-            }
-        }, 100);
-
         return () => {
-            clearInterval(intervalId);
             sendGameUpdate({ isPlaying: false, currentTime: 0, activeSongId: null, players: [] });
         };
     }, [sendGameUpdate, selectedSong]);
@@ -238,6 +236,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                 setFeedbackMessage("Waiting for download to finish...");
                 return;
             }
+            localStorage.removeItem('melodiq_saved_time');
             const nextItem = popNext();
             if (nextItem) {
                 onSelectSong(nextItem.song, true, nextItem.participants);
@@ -314,16 +313,29 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     const handlePlaybackUpdate = useCallback((state: any) => {
         const now = Date.now();
         (window as any).__melodiq_current_time = state.currentTime;
-        if (now - lastUpdateRef.current > 100) {
+        
+        // Broadcast game state to TV (replaces the old separate setInterval loop)
+        const song = selectedSongRef.current;
+        if (sendGameUpdateRef.current && song) {
+            sendGameUpdateRef.current({ 
+                ...state, 
+                activeSongId: song.id,
+                activeSong: { id: song.id, title: song.title, artist: song.artist }
+            });
+        }
+        
+        // Update isPlaying immediately (state change), but throttle progress updates to ~1/s
+        const isPlayingChanged = state.isPlaying !== playbackState.isPlaying;
+        if (isPlayingChanged || now - lastUpdateRef.current > 1000) {
             setPlaybackState(state);
             lastUpdateRef.current = now;
-            
-            if (selectedSong && state.currentTime > 0 && (now - lastStorageRef.current > 1000)) {
-                localStorage.setItem('melodiq_saved_time', JSON.stringify({ id: selectedSong.id, time: state.currentTime }));
-                lastStorageRef.current = now;
-            }
         }
-    }, [selectedSong]);
+            
+        if (selectedSong && state.currentTime > 0 && (now - lastStorageRef.current > 1000)) {
+            localStorage.setItem('melodiq_saved_time', JSON.stringify({ id: selectedSong.id, time: state.currentTime }));
+            lastStorageRef.current = now;
+        }
+    }, [selectedSong, playbackState.isPlaying]);
 
     return (
         <>
@@ -342,7 +354,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                     display: 'flex', flexDirection: 'column'
                 }}>
                     <MelodiqSession
-                        key={`${selectedSong.id}-${playbackId}`}
+                        key={`${selectedSong.id}-${playbackId}-${sessionInstanceId}`}
                         ref={sessionRef}
                         song={selectedSong}
                         initialTime={initialTime}
@@ -408,7 +420,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                                 onRestoreSession();
                             } else {
                                 // If remote, show feedback
-                                setFeedbackMessage("Playing on TV");
+                                setFeedbackMessage(t('melodiq.playing_on_tv'));
                             }
                         }}
                         onShowQueue={onShowQueue}
@@ -447,7 +459,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                     horizontal: 'right',
                 }}
             >
-                <MenuItem onClick={handleSyncHere}>Startzeit hier setzen (Sync)</MenuItem>
+                <MenuItem onClick={handleSyncHere}>{t('melodiq.sync_here')}</MenuItem>
             </Menu>
         </>
     );

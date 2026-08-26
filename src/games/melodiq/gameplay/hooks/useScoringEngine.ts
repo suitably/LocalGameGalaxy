@@ -303,7 +303,20 @@ export function useScoringEngine({
                 isPlaying: isPassive ? isPlayingRef.current : !audioRef.current?.paused,
                 currentTime,
                 duration,
-                progress: duration > 0 ? (currentTime / duration) * 100 : 0
+                progress: duration > 0 ? (currentTime / duration) * 100 : 0,
+                players: isPassive ? undefined : players.map(p => ({
+                    config: p.config,
+                    id: p.config.id,
+                    name: p.config.name,
+                    hue: p.config.hue,
+                    score: p.score,
+                    trackScores: p.trackScores,
+                    currentPitch: p.pitchRef.current,
+                    activeSegments: p.activeSegments,
+                    sungSegments: p.segmentsRef.current,
+                    combo: p.combo,
+                    lastHit: p.lastHit
+                }))
             });
         }
 

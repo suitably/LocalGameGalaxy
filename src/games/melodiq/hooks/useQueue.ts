@@ -186,7 +186,13 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         syncQueue(next);
         broadcastQueue(next);
 
-        return nextItem;
+        return {
+            ...nextItem,
+            song: {
+                ...nextItem.song,
+                requester: nextItem.requester
+            }
+        };
     }, [queue, syncQueue, broadcastQueue]);
 
     const clearQueue = useCallback(() => {
@@ -289,9 +295,6 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                             hue: profile?.hue
                         }];
                     }
-                    if (!isClient) {
-                        localStorage.setItem('melodiq_active_session', JSON.stringify(newParticipants));
-                    }
                     return { ...item, participants: newParticipants };
                 }
                 return item;
@@ -315,7 +318,6 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     const participants = Array.from(item.participants || []);
                     const [removed] = participants.splice(startIndex, 1);
                     participants.splice(endIndex, 0, removed);
-                    localStorage.setItem('melodiq_active_session', JSON.stringify(participants));
                     return { ...item, participants };
                 }
                 return item;

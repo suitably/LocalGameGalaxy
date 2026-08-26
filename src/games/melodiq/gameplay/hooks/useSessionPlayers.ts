@@ -264,10 +264,24 @@ export function useSessionPlayers({
 
             // 3. For remaining remote (phone) players: ensure hidePitch is false if in active session
             filteredOut.forEach(existing => {
-                if (!existing.config.isRemote) return;
-                if (existing.config.hidePitch !== false) {
+                if (existing.config.isRemote && existing.config.hidePitch !== false) {
                     existing.config.hidePitch = false;
                     changed = true;
+                }
+                const match = activeSessionOverride.find((p: any) => 
+                    p.profileId === existing.config.id || 
+                    p.deviceId === existing.config.deviceId || 
+                    (existing.remotePeerId && p.deviceId === existing.remotePeerId)
+                );
+                if (match) {
+                    if (match.muted !== undefined && existing.config.muted !== match.muted) {
+                        existing.config.muted = match.muted;
+                        changed = true;
+                    }
+                    if (match.volume !== undefined && existing.config.volume !== match.volume) {
+                        existing.config.volume = match.volume;
+                        changed = true;
+                    }
                 }
             });
 

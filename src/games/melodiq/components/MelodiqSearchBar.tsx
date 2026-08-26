@@ -1,11 +1,12 @@
-import React from 'react';
-import { Box, TextField, InputAdornment, IconButton, Card, Collapse, FormControl, InputLabel, Select, MenuItem, Checkbox, ListItemText, Button, Typography } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, TextField, InputAdornment, IconButton, Card, Collapse, FormControl, InputLabel, Select, MenuItem, Checkbox, ListItemText, Button, Typography, Menu } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import PublicIcon from '@mui/icons-material/Public';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import SortIcon from '@mui/icons-material/Sort';
 import { useTranslation } from 'react-i18next';
-import { type ActiveFilters } from '../hooks/useSearchFilters';
+import { type ActiveFilters, type SortOption } from '../hooks/useSearchFilters';
 
 interface MelodiqSearchBarProps {
     searchQuery: string;
@@ -14,6 +15,8 @@ interface MelodiqSearchBarProps {
     setIsOnlineSearch: (s: boolean) => void;
     showFilters: boolean;
     setShowFilters: (s: boolean | ((prev: boolean) => boolean)) => void;
+    sortOption?: SortOption;
+    setSortOption?: (s: SortOption) => void;
     activeFilters: ActiveFilters;
     setActiveFilters: (f: ActiveFilters | ((prev: ActiveFilters) => ActiveFilters)) => void;
     availableGenres: string[];
@@ -29,12 +32,27 @@ export const MelodiqSearchBar: React.FC<MelodiqSearchBarProps> = ({
     searchQuery, setSearchQuery,
     isOnlineSearch, setIsOnlineSearch,
     showFilters, setShowFilters,
+    sortOption, setSortOption,
     activeFilters, setActiveFilters,
     availableGenres, availableEditions,
     
     clearFilters, filteredSongsLength, totalSongsLength
 }) => {
     const { t } = useTranslation();
+    const [sortAnchor, setSortAnchor] = useState<null | HTMLElement>(null);
+
+    const handleSortClick = (event: React.MouseEvent<HTMLElement>) => {
+        setSortAnchor(event.currentTarget);
+    };
+
+    const handleSortClose = () => {
+        setSortAnchor(null);
+    };
+
+    const handleSelectSort = (opt: SortOption) => {
+        setSortOption?.(opt);
+        setSortAnchor(null);
+    };
 
     return (
         <Box sx={{ flexShrink: 0 }}>
@@ -87,6 +105,47 @@ export const MelodiqSearchBar: React.FC<MelodiqSearchBarProps> = ({
                         }
                     }}
                 />
+
+                {setSortOption && (
+                    <>
+                        <IconButton
+                            onClick={handleSortClick}
+                            color={sortOption && sortOption !== 'title-asc' ? 'primary' : 'inherit'}
+                            size="large"
+                            title={t('melodiq.sort_by')}
+                            sx={{ flexShrink: 0 }}
+                        >
+                            <SortIcon />
+                        </IconButton>
+                        <Menu
+                            anchorEl={sortAnchor}
+                            open={Boolean(sortAnchor)}
+                            onClose={handleSortClose}
+                            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                        >
+                            <MenuItem selected={sortOption === 'title-asc'} onClick={() => handleSelectSort('title-asc')}>
+                                {t('melodiq.sort_title_asc')}
+                            </MenuItem>
+                            <MenuItem selected={sortOption === 'title-desc'} onClick={() => handleSelectSort('title-desc')}>
+                                {t('melodiq.sort_title_desc')}
+                            </MenuItem>
+                            <MenuItem selected={sortOption === 'artist-asc'} onClick={() => handleSelectSort('artist-asc')}>
+                                {t('melodiq.sort_artist_asc')}
+                            </MenuItem>
+                            <MenuItem selected={sortOption === 'artist-desc'} onClick={() => handleSelectSort('artist-desc')}>
+                                {t('melodiq.sort_artist_desc')}
+                            </MenuItem>
+                            <MenuItem selected={sortOption === 'year-desc'} onClick={() => handleSelectSort('year-desc')}>
+                                {t('melodiq.sort_year_desc')}
+                            </MenuItem>
+                            <MenuItem selected={sortOption === 'year-asc'} onClick={() => handleSelectSort('year-asc')}>
+                                {t('melodiq.sort_year_asc')}
+                            </MenuItem>
+                        </Menu>
+                    </>
+                )}
+
                 <IconButton
                     onClick={() => setShowFilters(prev => !prev)}
                     color={showFilters ? 'primary' : 'inherit'}

@@ -8,13 +8,24 @@ import { useNavigate } from 'react-router-dom';
 import { QRScannerDialog } from './QRScannerDialog';
 import { buildDeviceConnectionUrl } from './connectionUrl';
 
+export interface WebRTCConnectionData {
+    peers: any[];
+    partyId: string;
+    regeneratePartyId: () => void;
+    trackerUrls: string[];
+    activeTrackerUrls: string[];
+    addTrackerUrl: (url: string) => void;
+    removeTrackerUrl: (url: string) => void;
+    restoreDefaultTrackers: () => void;
+}
+
 export interface DeviceConnectionProps {
     onBack: () => void;
     title?: string;
     description?: string;
     gameId: string; // Identifier used for setting UI properties locally
     clientPath: string; // the path for the phone app, e.g. '/games/melodiq?role=client'
-    WebRTCHostContextHook: () => any; // we pass useWebRTC down
+    webrtcData: WebRTCConnectionData;
     renderPeerExtra?: (peer: any) => React.ReactNode;
     /** Extra settings / toggles to render on the connection screen */
     extraOptions?: React.ReactNode;
@@ -32,7 +43,7 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
     description = "Connect your phone to use as a controller. Scan the QR code below.",
     gameId,
     clientPath,
-    WebRTCHostContextHook,
+    webrtcData,
     renderPeerExtra,
     extraOptions,
     helperStorageKey,
@@ -48,7 +59,7 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
         addTrackerUrl: contextAddTrackerUrl,
         removeTrackerUrl: contextRemoveTrackerUrl,
         restoreDefaultTrackers
-    } = WebRTCHostContextHook();
+    } = webrtcData;
 
     // UI State for adding new tracker
     const [newTrackerUrl, setNewTrackerUrl] = useState('');

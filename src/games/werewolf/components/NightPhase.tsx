@@ -232,7 +232,11 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
                                         onClick={() => setSelectedAbilityIndex(idx)}
                                         sx={{ py: 1.5 }}
                                     >
-                                        {ability.type} (Targets: {ability.targetCount || 1}) {isUsed ? ' - ' + t('common.used', 'Used') : ''}
+                                        {t('games.werewolf.ability_btn', {
+                                            type: ability.type,
+                                            count: ability.targetCount || 1,
+                                            status: isUsed ? ` - ${t('common.used')}` : ''
+                                        })}
                                     </Button>
                                 );
                             })}
@@ -266,7 +270,7 @@ export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [
                             const newTargets = [...selectedTargets, id];
                             if (newTargets.length === targetCount) {
                                 newTargets.forEach(targetId => {
-                                    onNightAction({ type: ability.type as any, targetId }, activeRole || 'WEREWOLF');
+                                    onNightAction({ type: ability.type as any, targetId }, activeRole || activeCustomRole.id);
                                 });
                                 setCompletedAbilities(prev => [...prev, selectedAbilityIndex!]);
                                 setSelectedAbilityIndex(null);

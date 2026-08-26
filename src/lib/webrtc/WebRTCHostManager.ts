@@ -111,16 +111,24 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
         this.callbacks = callbacks;
     }
 
-    on(event: 'message', listener: (peerId: string, data: any) => void): void {
+    on(event: 'message', listener: (peerId: string, data: any) => void): () => void {
         if (event === 'message') {
             this.messageListeners.add(listener);
         }
+        return () => {
+            this.off(event, listener);
+        };
     }
 
     off(event: 'message', listener: (peerId: string, data: any) => void): void {
         if (event === 'message') {
             this.messageListeners.delete(listener);
         }
+    }
+
+    removeAllListeners(): void {
+        this.messageListeners.clear();
+        this.onMessage = undefined;
     }
 
     async start(): Promise<void> {
@@ -228,12 +236,19 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
 
                                 // Deduplicate by deviceId
                                 if (parsedData.deviceId) {
+                                    const stalePeerIds: string[] = [];
                                     for (const [existingPeerId, existingPeer] of this.peers.entries()) {
                                         if (existingPeerId !== remotePeer.peerId && existingPeer.deviceId === parsedData.deviceId) {
-                                            console.log(`[WebRTCHostManager] Replacing stale peer ${existingPeerId} with ${remotePeer.peerId} for deviceId ${parsedData.deviceId}`);
-                                            existingPeer.peer.destroy();
-                                            this.peers.delete(existingPeerId);
-                                            this.callbacks?.onPeerRemoved?.(existingPeerId, existingPeer);
+                                            stalePeerIds.push(existingPeerId);
+                                        }
+                                    }
+                                    for (const stalePeerId of stalePeerIds) {
+                                        const stalePeer = this.peers.get(stalePeerId);
+                                        if (stalePeer) {
+                                            console.log(`[WebRTCHostManager] Replacing stale peer ${stalePeerId} with ${remotePeer.peerId} for deviceId ${parsedData.deviceId}`);
+                                            stalePeer.peer.destroy();
+                                            this.peers.delete(stalePeerId);
+                                            this.callbacks?.onPeerRemoved?.(stalePeerId, stalePeer);
                                         }
                                     }
                                 }
@@ -375,12 +390,19 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
 
                         // Deduplicate by deviceId
                         if (msg.deviceId) {
+                            const stalePeerIds: string[] = [];
                             for (const [existingPeerId, existingPeer] of this.peers.entries()) {
                                 if (existingPeerId !== remotePeer.peerId && existingPeer.deviceId === msg.deviceId) {
-                                    console.log(`[WebRTCHostManager] Replacing stale peer ${existingPeerId} with ${remotePeer.peerId} for deviceId ${msg.deviceId}`);
-                                    existingPeer.peer.destroy();
-                                    this.peers.delete(existingPeerId);
-                                    this.callbacks?.onPeerRemoved?.(existingPeerId, existingPeer);
+                                    stalePeerIds.push(existingPeerId);
+                                }
+                            }
+                            for (const stalePeerId of stalePeerIds) {
+                                const stalePeer = this.peers.get(stalePeerId);
+                                if (stalePeer) {
+                                    console.log(`[WebRTCHostManager] Replacing stale peer ${stalePeerId} with ${remotePeer.peerId} for deviceId ${msg.deviceId}`);
+                                    stalePeer.peer.destroy();
+                                    this.peers.delete(stalePeerId);
+                                    this.callbacks?.onPeerRemoved?.(stalePeerId, stalePeer);
                                 }
                             }
                         }
@@ -444,6 +466,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
     }
 
     stop(): void {
+        this.removeAllListeners();
         if (this.trackerClient) {
             (this.trackerClient as any).stop();
             this.trackerClient.destroy();

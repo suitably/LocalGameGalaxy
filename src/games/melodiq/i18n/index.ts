@@ -28,6 +28,14 @@ export const melodiqResources = {
             language: "Language",
             edition: "Edition",
             clear_filters: "Clear Filters",
+            sort_by: "Sort By",
+            sort_title_asc: "Title (A-Z)",
+            sort_title_desc: "Title (Z-A)",
+            sort_artist_asc: "Artist (A-Z)",
+            sort_artist_desc: "Artist (Z-A)",
+            sort_year_desc: "Year (Newest)",
+            sort_year_asc: "Year (Oldest)",
+            queue_added_by: "Added by {{name}}",
             loading_library: "Loading library... {{loaded}} / {{total}}",
 
             local_libraries: "Local Song Libraries",
@@ -202,7 +210,16 @@ export const melodiqResources = {
             audio_mode_stems: "Stems",
             audio_mode_original: "Original",
             audio_mode_separated_tooltip: "Currently playing: Separated Stems. Click to switch to Original Audio",
-            audio_mode_original_tooltip: "Currently playing: Original Audio. Click to switch to Separated Stems"
+            audio_mode_original_tooltip: "Currently playing: Original Audio. Click to switch to Separated Stems",
+            waiting_for_download: "Waiting for download...",
+            error_no_local_song: "Error: No local song",
+            sync_started: "AI Auto-Sync (Hybrid) started...",
+            sync_background: "Song sync is being calculated in the background!",
+            sync_error: "Error starting Auto-Sync",
+            sync_completed: "Auto-Sync complete! New lyrics loaded.",
+            sync_failed: "Error during Auto-Sync: {{error}}",
+            sync_here: "Set start time here (Sync)",
+            playing_on_tv: "Playing on TV"
         }
     },
     de: {
@@ -232,6 +249,14 @@ export const melodiqResources = {
             language: "Sprache",
             edition: "Edition",
             clear_filters: "Filter zurücksetzen",
+            sort_by: "Sortieren nach",
+            sort_title_asc: "Titel (A-Z)",
+            sort_title_desc: "Titel (Z-A)",
+            sort_artist_asc: "Künstler (A-Z)",
+            sort_artist_desc: "Künstler (Z-A)",
+            sort_year_desc: "Jahr (Neueste)",
+            sort_year_asc: "Jahr (Älteste)",
+            queue_added_by: "Hinzugefügt von {{name}}",
             loading_library: "Lade Bibliothek... {{loaded}} / {{total}}",
 
             local_libraries: "Lokale Liederkataloge",
@@ -406,7 +431,16 @@ export const melodiqResources = {
             audio_mode_stems: "Stems",
             audio_mode_original: "Original",
             audio_mode_separated_tooltip: "Aktuell aktiv: Getrennte Spuren (Stems). Klicken für Original-Audio",
-            audio_mode_original_tooltip: "Aktuell aktiv: Original-Audio. Klicken für getrennte Spuren (Stems)"
+            audio_mode_original_tooltip: "Aktuell aktiv: Original-Audio. Klicken für getrennte Spuren (Stems)",
+            waiting_for_download: "Warte auf Download...",
+            error_no_local_song: "Fehler: Kein lokaler Song",
+            sync_started: "KI Auto-Sync (Hybrid) gestartet...",
+            sync_background: "Song-Sync (Hybrid) wird im Hintergrund berechnet!",
+            sync_error: "Fehler beim Starten des Auto-Syncs",
+            sync_completed: "Auto-Sync abgeschlossen! Neue Lyrics geladen.",
+            sync_failed: "Fehler beim Auto-Sync: {{error}}",
+            sync_here: "Startzeit hier setzen (Sync)",
+            playing_on_tv: "Wird auf dem Fernseher abgespielt"
         }
     }
 };

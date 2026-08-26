@@ -21,6 +21,7 @@ This directory contains task checklists tracking the progress of work. Files are
 - [Phase 5 Architecture & Code Cleanups Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/phase-5-cleanups-tasks.md)
 - [Scoreboard QR Code Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/scoreboard-qr-code-tasks.md)
 - [WebRTC Connection Stability Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/webrtc-connection-stability-tasks.md)
+- [Melodiq Lyrics Timing Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/melodiq-lyrics-timing-tasks.md)
 
 
 ID: DOCS-TASKS-SUMMARY

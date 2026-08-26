@@ -54,7 +54,7 @@ function getSongById(req, res) {
     const song = getSongCache().find(s => s.id === songId);
     
     if (!song) {
-        return res.status(404).send('Song not found');
+        return res.status(404).json({ error: 'Song not found' });
     }
 
     const secureUrl = (absPath) => {
@@ -80,7 +80,7 @@ function getSongById(req, res) {
 /**
  * Deletes a song by its ID.
  */
-function deleteSong(req, res) {
+async function deleteSong(req, res) {
     if (!req.isMasterToken && (!req.apiKey || !req.apiKey.allowSongDeletion)) {
         return res.status(403).json({ error: 'Permission denied: Song deletion not allowed' });
     }
@@ -99,14 +99,14 @@ function deleteSong(req, res) {
         const isRootConfigDir = config.directories.some(dir => path.normalize(dir) === safeFolder);
         if (isRootConfigDir) {
             // Root config directory - delete individual files to avoid deleting the library root folder
-            if (fs.existsSync(song.txtPath)) fs.unlinkSync(song.txtPath);
-            if (song.audio && fs.existsSync(song.audio)) fs.unlinkSync(song.audio);
-            if (song.video && fs.existsSync(song.video)) fs.unlinkSync(song.video);
-            if (song.cover && fs.existsSync(song.cover)) fs.unlinkSync(song.cover);
-            if (song.background && fs.existsSync(song.background)) fs.unlinkSync(song.background);
+            if (fs.existsSync(song.txtPath)) await fs.promises.unlink(song.txtPath);
+            if (song.audio && fs.existsSync(song.audio)) await fs.promises.unlink(song.audio);
+            if (song.video && fs.existsSync(song.video)) await fs.promises.unlink(song.video);
+            if (song.cover && fs.existsSync(song.cover)) await fs.promises.unlink(song.cover);
+            if (song.background && fs.existsSync(song.background)) await fs.promises.unlink(song.background);
         } else {
             // Delete the full song directory
-            fs.rmSync(safeFolder, { recursive: true, force: true });
+            await fs.promises.rm(safeFolder, { recursive: true, force: true });
         }
 
         scanSongs();
@@ -119,7 +119,7 @@ function deleteSong(req, res) {
 /**
  * Updates a song's lyrics/text content.
  */
-function updateSongTxt(req, res) {
+async function updateSongTxt(req, res) {
     const songId = req.params.id;
     const { txtContent } = req.body;
     if (!txtContent) return res.status(400).json({ error: 'Missing txtContent' });
@@ -134,7 +134,7 @@ function updateSongTxt(req, res) {
     }
 
     try {
-        fs.writeFileSync(safePath, txtContent, 'utf-8');
+        await fs.promises.writeFile(safePath, txtContent, 'utf-8');
         scanSongs();
         res.json({ success: true });
     } catch (e) {
@@ -145,7 +145,7 @@ function updateSongTxt(req, res) {
 /**
  * Uploads a video file for a song and updates its TXT file to point to it.
  */
-function uploadSongVideo(req, res) {
+async function uploadSongVideo(req, res) {
     if (!req.file) return res.status(400).json({ error: 'No video file uploaded' });
     
     const songId = req.params.id;
@@ -156,7 +156,7 @@ function uploadSongVideo(req, res) {
     if (!safePath) return res.status(403).json({ error: 'Access denied' });
 
     try {
-        let txtContent = fs.readFileSync(safePath, 'utf-8');
+        let txtContent = await fs.promises.readFile(safePath, 'utf-8');
         let lines = txtContent.split('\n');
         
         // Remove existing #VIDEO
@@ -170,7 +170,7 @@ function uploadSongVideo(req, res) {
         const videoFilename = req.file.filename;
         lines.splice(insertIdx + 1, 0, `#VIDEO:${videoFilename}`);
         
-        fs.writeFileSync(safePath, lines.join('\n'), 'utf-8');
+        await fs.promises.writeFile(safePath, lines.join('\n'), 'utf-8');
         scanSongs();
         res.json({ success: true, video: videoFilename });
     } catch (e) {
@@ -192,9 +192,9 @@ function getScanStatus(req, res) {
  * Refreshes/rescans the song library.
  */
 async function refreshLibrary(req, res) {
-    if (isScanning()) return res.status(409).send('Scan already in progress');
+    if (isScanning()) return res.status(409).json({ error: 'Scan already in progress' });
     scanSongs();
-    res.send('Scan started');
+    res.json({ message: 'Scan started' });
 }
 
 /**

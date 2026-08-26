@@ -26,7 +26,7 @@ export function usePassiveSync({
     isPassive,
     passiveState,
     isClient,
-    isTVMode = false,
+    isTVMode: _isTVMode = false,
     setPlayers,
     playersRef,
     scoreDisplayRef,
@@ -66,6 +66,9 @@ export function usePassiveSync({
                 if (rt) {
                     rt.pitchRef.current = pState.currentPitch;
                     rt.activeSegments = pState.activeSegments;
+                    if (pState.sungSegments) {
+                        rt.segmentsRef.current = pState.sungSegments;
+                    }
                     rt.trackScores = pState.trackScores;
                     rt.score = pState.score;
                     rt.combo = pState.combo;
@@ -114,7 +117,9 @@ export function usePassiveSync({
             setIsFinished(prev => passiveState.isFinished !== prev ? passiveState.isFinished : prev);
             setIsPausedForScore(prev => passiveState.isPausedForScore !== prev ? passiveState.isPausedForScore : prev);
 
-            if (!isClient && !isTVMode && audioRef.current && passiveState.isPlaying && isPlayingRef.current && !audioRef.current.paused && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 2.0) {
+            // Drift threshold: 0.5s ensures TV catches up quickly after initial load
+            // (fixes race condition where TV starts behind host due to load delay)
+            if (!isClient && audioRef.current && passiveState.isPlaying && isPlayingRef.current && !audioRef.current.paused && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 0.5) {
                 audioRef.current.currentTime = passiveState.currentTime;
                 if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
             }

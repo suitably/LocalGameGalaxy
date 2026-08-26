@@ -2,6 +2,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { type Song } from '../db';
 import { melodiqFetch } from '../api/melodiqFetch';
 
+export type SortOption = 'title-asc' | 'title-desc' | 'artist-asc' | 'artist-desc' | 'year-desc' | 'year-asc';
+
 export interface ActiveFilters {
     year: string[];
     genre: string[];
@@ -15,6 +17,7 @@ export function useSearchFilters(songs: Song[], jobs?: any[]) {
     const [onlineSongs, setOnlineSongs] = useState<any[]>([]);
     const [isSearchingOnline, setIsSearchingOnline] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
+    const [sortOption, setSortOption] = useState<SortOption>('title-asc');
     
     const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
         year: [],
@@ -106,8 +109,30 @@ export function useSearchFilters(songs: Song[], jobs?: any[]) {
             result = result.filter(song => song.edition && activeFilters.edition.includes(song.edition));
         }
 
-        return result;
-    }, [songs, searchQuery, activeFilters]);
+        const sorted = [...result];
+        sorted.sort((a, b) => {
+            if (sortOption === 'title-asc') {
+                return (a.title || '').localeCompare(b.title || '');
+            } else if (sortOption === 'title-desc') {
+                return (b.title || '').localeCompare(a.title || '');
+            } else if (sortOption === 'artist-asc') {
+                return (a.artist || '').localeCompare(b.artist || '');
+            } else if (sortOption === 'artist-desc') {
+                return (b.artist || '').localeCompare(a.artist || '');
+            } else if (sortOption === 'year-desc') {
+                const ya = parseInt(a.year || '0') || 0;
+                const yb = parseInt(b.year || '0') || 0;
+                return yb - ya;
+            } else if (sortOption === 'year-asc') {
+                const ya = parseInt(a.year || '9999') || 9999;
+                const yb = parseInt(b.year || '9999') || 9999;
+                return ya - yb;
+            }
+            return 0;
+        });
+
+        return sorted;
+    }, [songs, jobs, searchQuery, activeFilters, sortOption]);
 
     const filteredOnlineSongs = useMemo(() => {
         let result = onlineSongs;
@@ -128,8 +153,30 @@ export function useSearchFilters(songs: Song[], jobs?: any[]) {
             result = result.filter(song => song.edition && activeFilters.edition.includes(song.edition));
         }
 
-        return result;
-    }, [onlineSongs, activeFilters]);
+        const sorted = [...result];
+        sorted.sort((a, b) => {
+            if (sortOption === 'title-asc') {
+                return (a.title || '').localeCompare(b.title || '');
+            } else if (sortOption === 'title-desc') {
+                return (b.title || '').localeCompare(a.title || '');
+            } else if (sortOption === 'artist-asc') {
+                return (a.artist || '').localeCompare(b.artist || '');
+            } else if (sortOption === 'artist-desc') {
+                return (b.artist || '').localeCompare(a.artist || '');
+            } else if (sortOption === 'year-desc') {
+                const ya = parseInt(a.year || '0') || 0;
+                const yb = parseInt(b.year || '0') || 0;
+                return yb - ya;
+            } else if (sortOption === 'year-asc') {
+                const ya = parseInt(a.year || '9999') || 9999;
+                const yb = parseInt(b.year || '9999') || 9999;
+                return ya - yb;
+            }
+            return 0;
+        });
+
+        return sorted;
+    }, [onlineSongs, activeFilters, sortOption]);
 
     const availableYears = useMemo(() =>
         Array.from(new Set(songs.map(s => s.year).filter(Boolean))).sort().reverse() as string[],
@@ -156,6 +203,7 @@ export function useSearchFilters(songs: Song[], jobs?: any[]) {
         isOnlineSearch, setIsOnlineSearch,
         onlineSongs, isSearchingOnline,
         showFilters, setShowFilters,
+        sortOption, setSortOption,
         activeFilters, setActiveFilters,
         filteredSongs, filteredOnlineSongs,
         availableYears, availableGenres, availableLanguages, availableEditions,

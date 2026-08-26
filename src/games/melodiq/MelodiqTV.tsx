@@ -8,6 +8,7 @@ import { QueueProvider } from './hooks/useQueue';
 import { useMelodiqSettings } from './hooks/SettingsContext';
 import { ScoreBoardQrCode } from './gameplay/ScoreBoardQrCode';
 
+import { useTranslation } from 'react-i18next';
 import { initMelodiqI18n } from './i18n';
 
 const MockWebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -35,6 +36,7 @@ const MockWebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
 export const MelodiqTV: React.FC = () => {
     initMelodiqI18n();
+    const { t } = useTranslation();
     const { updateSetting } = useMelodiqSettings();
     const [activeSong, setActiveSong] = useState<any | null>(null);
     const [passiveState, setPassiveState] = useState<PassiveGameState | null>(null);
@@ -123,7 +125,7 @@ export const MelodiqTV: React.FC = () => {
             }}>
                 <CircularProgress size={100} thickness={4} sx={{ color: '#FE6B8B' }} />
                 <Typography variant="h3" fontWeight="bold">
-                    Warte auf Download...
+                    {t('melodiq.waiting_for_download')}
                 </Typography>
                 <Typography variant="h4" color="text.secondary">
                     {downloadingSong.artist} - {downloadingSong.title}

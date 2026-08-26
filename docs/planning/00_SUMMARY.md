@@ -19,6 +19,7 @@ This directory contains implementation plans for proposed changes. Each plan det
 - [Phase 5: Architecture & Code Cleanups Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/phase-5-cleanups-plan.md)
 - [Scoreboard QR Code Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/scoreboard-qr-code-plan.md)
 - [WebRTC Connection Stability Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/webrtc-connection-stability-plan.md)
+- [Melodiq Lyrics Timing Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/melodiq-lyrics-timing-plan.md)
 
 
 ID: DOCS-PLANNING-SUMMARY

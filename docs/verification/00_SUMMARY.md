@@ -20,6 +20,7 @@ This directory contains walkthroughs and verification logs. These documents prov
 - [Phase 5 Cleanups Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/phase-5-cleanups-walkthrough.md)
 - [Scoreboard QR Code Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/scoreboard-qr-code-walkthrough.md)
 - [WebRTC Connection Stability Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/webrtc-connection-stability-walkthrough.md)
+- [Melodiq Lyrics Timing Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/melodiq-lyrics-timing-walkthrough.md)
 
 
 ID: DOCS-VERIFICATION-SUMMARY

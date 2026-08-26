@@ -13,6 +13,7 @@ export const STORAGE_KEYS = {
     CLIENT_PROFILE: 'melodiq_client_profile',
     PROFILES: 'melodiq_profiles',
     ACTIVE_SESSION: 'melodiq_active_session',
+    CURRENT_SONG_PARTICIPANTS: 'melodiq_current_song_participants',
     
     // Queue & play state
     NOW_PLAYING: 'melodiq_now_playing',
@@ -25,6 +26,8 @@ export const STORAGE_KEYS = {
     
     // Imposter game settings
     IMPOSTER_SETTINGS: 'imposter-setup-settings',
+    IMPOSTER_SETUP_PLAYERS: 'imposter-setup-players',
+    IMPOSTER_SEEN_INFO: 'imposter-has-seen-info',
 } as const;
 
 export const storage = {

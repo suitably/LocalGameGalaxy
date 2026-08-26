@@ -3,13 +3,13 @@ import { Box, Typography, Button } from '@mui/material';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { useTranslation } from 'react-i18next';
 import { PlayerSelectionView } from '../PlayerSelectionView';
-import type { Player, NightAction } from '../../logic/types';
+import type { Player, NightAction, PlayerPowerState } from '../../logic/types';
 
 interface RoleViewProps {
     players: Player[];
     onAction: (action: NightAction) => void;
     onSkip: () => void;
-    powerState?: any;
+    powerState?: PlayerPowerState;
     instruction?: string;
 }
 

@@ -9,7 +9,23 @@ import { useTranslation } from 'react-i18next';
 import type { DbCategory } from '../logic/types';
 import { getImposterCategories } from '../logic/imposterRepository';
 
-const STORAGE_KEY_SETTINGS = 'imposter-setup-settings';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
+
+interface ImposterSetupSettings {
+    imposterCount: number;
+    isManualImposterCount: boolean;
+    timerMinutes: number;
+    timerSeconds: number;
+    selectedCategoryIds: string[];
+}
+
+const DEFAULT_SETTINGS: ImposterSetupSettings = {
+    imposterCount: 1,
+    isManualImposterCount: false,
+    timerMinutes: 5,
+    timerSeconds: 0,
+    selectedCategoryIds: []
+};
 
 interface GameSetupProps {
     players: { id: string; name: string }[];
@@ -28,81 +44,40 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
     const [newName, setNewName] = useState('');
     const [allCategories, setAllCategories] = useState<DbCategory[]>([]);
 
+    // Consolidated settings initialized from central storage
+    const [settings, setSettings] = useState<ImposterSetupSettings>(() => 
+        storage.getJson<ImposterSetupSettings>(STORAGE_KEYS.IMPOSTER_SETTINGS, DEFAULT_SETTINGS)
+    );
+
     // Fetch categories from database
     useEffect(() => {
         const fetchCategories = async () => {
             const cats = await getImposterCategories();
             setAllCategories(cats);
+            // If no categories were saved yet, default to all available categories
+            setSettings(prev => {
+                if (prev.selectedCategoryIds.length === 0 && cats.length > 0) {
+                    return { ...prev, selectedCategoryIds: cats.map(c => c.id) };
+                }
+                return prev;
+            });
         };
         fetchCategories();
     }, []);
 
-    // Load settings from localStorage
-    const [imposterCount, setImposterCount] = useState(() => {
-        try {
-            const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                return parsed.imposterCount ?? 1;
-            }
-        } catch { }
-        return 1;
-    });
-    const [isManualImposterCount, setIsManualImposterCount] = useState(() => {
-        try {
-            const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                return parsed.isManualImposterCount ?? false;
-            }
-        } catch { }
-        return false;
-    });
-    const [timerMinutes, setTimerMinutes] = useState(() => {
-        try {
-            const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                return parsed.timerMinutes ?? 5;
-            }
-        } catch { }
-        return 5;
-    });
-    const [timerSeconds, setTimerSeconds] = useState(() => {
-        try {
-            const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                return parsed.timerSeconds ?? 0;
-            }
-        } catch { }
-        return 0;
-    });
-    const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(() => {
-        try {
-            const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                if (parsed.selectedCategoryIds) return parsed.selectedCategoryIds;
-            }
-        } catch { }
-        return allCategories.map(c => c.id);
-    });
+    const { imposterCount, isManualImposterCount, timerMinutes, timerSeconds, selectedCategoryIds } = settings;
 
     const resolvedImposterCount = isManualImposterCount
         ? imposterCount
         : Math.max(1, Math.floor(players.length / 4));
 
-    // Save settings to localStorage whenever they change
+    // Save settings to storage whenever they change
     useEffect(() => {
-        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify({
-            imposterCount: resolvedImposterCount,
-            isManualImposterCount,
-            timerMinutes,
-            timerSeconds,
-            selectedCategoryIds
-        }));
-    }, [resolvedImposterCount, isManualImposterCount, timerMinutes, timerSeconds, selectedCategoryIds]);
+        storage.setJson(STORAGE_KEYS.IMPOSTER_SETTINGS, {
+            ...settings,
+            imposterCount: resolvedImposterCount
+        });
+    }, [settings, resolvedImposterCount]);
 
     const handleAdd = () => {
         if (newName.trim()) {
@@ -123,26 +98,25 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
     };
 
     const toggleCategory = (id: string) => {
-        setSelectedCategoryIds(prev =>
-            prev.includes(id)
-                ? prev.filter(cid => cid !== id)
-                : [...prev, id]
-        );
+        setSettings(prev => ({
+            ...prev,
+            selectedCategoryIds: prev.selectedCategoryIds.includes(id)
+                ? prev.selectedCategoryIds.filter(cid => cid !== id)
+                : [...prev.selectedCategoryIds, id]
+        }));
     };
 
     const handleImposterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = parseInt(e.target.value);
         if (!isNaN(val)) {
-            setImposterCount(val);
-            setIsManualImposterCount(true);
+            setSettings(prev => ({ ...prev, imposterCount: val, isManualImposterCount: true }));
         } else if (e.target.value === '') {
-            setImposterCount(0);
-            setIsManualImposterCount(true);
+            setSettings(prev => ({ ...prev, imposterCount: 0, isManualImposterCount: true }));
         }
     };
 
     const resetImposterCount = () => {
-        setIsManualImposterCount(false);
+        setSettings(prev => ({ ...prev, isManualImposterCount: false }));
     };
 
     const currentLang = i18n.language.startsWith('de') ? 'de' : 'en';
@@ -204,10 +178,10 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
                             {t('games.imposter.setup.select_category')}
                         </Typography>
                         <Box sx={{ mb: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
-                            <Button size="small" onClick={() => setSelectedCategoryIds(allCategories.map(c => c.id))}>
+                            <Button size="small" onClick={() => setSettings(prev => ({ ...prev, selectedCategoryIds: allCategories.map(c => c.id) }))}>
                                 {t('games.imposter.setup.select_all')}
                             </Button>
-                            <Button size="small" onClick={() => setSelectedCategoryIds([])}>
+                            <Button size="small" onClick={() => setSettings(prev => ({ ...prev, selectedCategoryIds: [] }))}>
                                 {t('games.imposter.setup.select_none')}
                             </Button>
                         </Box>
@@ -254,7 +228,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
                                 label={t('games.imposter.setup.minutes')}
                                 type="number"
                                 value={timerMinutes}
-                                onChange={(e) => setTimerMinutes(Math.max(0, parseInt(e.target.value) || 0))}
+                                onChange={(e) => setSettings(prev => ({ ...prev, timerMinutes: Math.max(0, parseInt(e.target.value) || 0) }))}
                                 InputProps={{
                                     endAdornment: <InputAdornment position="end">m</InputAdornment>,
                                 }}
@@ -263,7 +237,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
                                 label={t('games.imposter.setup.seconds')}
                                 type="number"
                                 value={timerSeconds}
-                                onChange={(e) => setTimerSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
+                                onChange={(e) => setSettings(prev => ({ ...prev, timerSeconds: Math.max(0, Math.min(59, parseInt(e.target.value) || 0)) }))}
                                 InputProps={{
                                     endAdornment: <InputAdornment position="end">s</InputAdornment>,
                                 }}

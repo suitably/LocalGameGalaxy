@@ -56,6 +56,8 @@ export interface SongMeta {
     txtPath?: string;
     isDownloading?: boolean;
     jobId?: string;
+    requester?: string;
+    requesterId?: string;
 }
 
 export interface Score {

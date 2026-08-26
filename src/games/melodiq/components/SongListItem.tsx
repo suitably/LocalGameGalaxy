@@ -115,11 +115,6 @@ export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLon
 
             {/* Metadata (Hidden on very small screens) */}
             <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1.5, color: 'text.secondary' }}>
-                {(song.hasSeparation || song.vocalsAudio) && (
-                    <Typography variant="body2" sx={{ bgcolor: 'rgba(156, 39, 176, 0.15)', color: '#ce93d8', px: 0.8, py: 0.2, borderRadius: 1, fontSize: '0.75rem', fontWeight: 'bold' }}>
-                        🎤 Stems
-                    </Typography>
-                )}
                 {song.duration && (
                     <Typography variant="body2" sx={{ minWidth: 40, textAlign: 'right' }}>
                         {formatDuration(song.duration)}

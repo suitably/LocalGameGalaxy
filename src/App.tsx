@@ -20,6 +20,13 @@ function AppRoutes() {
 
   useEffect(() => {
     const handleBackButton = () => {
+      // If a modal, dialog or drawer is currently open, close it first via Escape
+      const openModal = document.querySelector('dialog[open], .MuiDialog-root, .MuiModal-root:not([aria-hidden="true"])');
+      if (openModal) {
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }));
+        return;
+      }
+
       if (window.location.pathname === '/') {
         CapacitorApp.exitApp();
       } else {

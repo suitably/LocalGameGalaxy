@@ -116,11 +116,6 @@ export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, 
                         <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.7rem' }}>
                             {song.duration ? formatDuration(song.duration) : '0:00'}
                         </Typography>
-                        {(song.hasSeparation || song.vocalsAudio) && (
-                            <Typography variant="caption" sx={{ bgcolor: 'rgba(156, 39, 176, 0.15)', color: '#ce93d8', px: 0.5, borderRadius: 0.5, fontSize: '0.65rem', fontWeight: 'bold' }}>
-                                🎤 Stems
-                            </Typography>
-                        )}
                     </Box>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
                         {song.year && (

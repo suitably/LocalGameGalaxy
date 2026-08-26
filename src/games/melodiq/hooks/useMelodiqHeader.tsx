@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useLayout } from '../../../context/LayoutContext';
 
 import SettingsIcon from '@mui/icons-material/Settings';
-import SearchIcon from '@mui/icons-material/Search';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 
 import { TVModeButton } from '../components/TVModeButton';
@@ -36,13 +35,6 @@ export const useMelodiqHeader = ({
 
         if (currentView === 'Home') {
             const headerActions: any[] = [];
-
-            headerActions.push({
-                label: 'Refresh',
-                icon: <SearchIcon />,
-                action: () => refreshSongs(),
-                disabled: loadingProgress !== null
-            });
 
             headerActions.push({
                 label: 'Settings',

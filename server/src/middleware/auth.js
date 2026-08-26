@@ -28,6 +28,13 @@ const requireAuth = (req, res, next) => {
     res.status(401).json({ error: 'Unauthorized. Invalid Token.' });
 };
 
+const requireMasterToken = (req, res, next) => {
+    if (!req.isMasterToken) {
+        return res.status(403).json({ error: 'Master Token required' });
+    }
+    next();
+};
+
 const helmetMiddlewareInstance = helmet({
     contentSecurityPolicy: false,
     crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -131,6 +138,7 @@ const rateLimitMiddleware = (req, res, next) => {
 
 module.exports = {
     requireAuth,
+    requireMasterToken,
     helmetMiddleware,
     corsMiddleware,
     rateLimitMiddleware
