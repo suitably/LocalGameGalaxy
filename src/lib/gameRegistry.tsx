@@ -2,6 +2,7 @@ import React, { lazy } from 'react';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
+import CasinoIcon from '@mui/icons-material/Casino';
 import { SongsProvider } from '../games/melodiq';
 
 export interface GameRouteDefinition {
@@ -29,6 +30,7 @@ const ImposterGame = lazy(() => import('../games/imposter').then(m => ({ default
 const MelodiqGame = lazy(() => import('../games/melodiq').then(m => ({ default: m.MelodiqGame })));
 const MelodiqQueue = lazy(() => import('../games/melodiq').then(m => ({ default: m.MelodiqQueue })));
 const MelodiqTV = lazy(() => import('../games/melodiq').then(m => ({ default: m.MelodiqTV })));
+const QwixxGame = lazy(() => import('../games/qwixx').then(m => ({ default: m.QwixxGame })));
 
 class GameRegistry {
     private games: GameDefinition[] = [
@@ -81,6 +83,17 @@ class GameRegistry {
                     component: <MelodiqTV />
                 }
             ]
+        },
+        {
+            id: 'qwixx',
+            route: 'games/qwixx',
+            titleKey: 'games.qwixx.title',
+            descriptionKey: 'games.qwixx.description',
+            icon: <CasinoIcon sx={{ fontSize: 72, mb: 2 }} />,
+            colorStart: '#ffb74d',
+            colorEnd: '#f57c00',
+            hoverColor: '#f57c00',
+            component: <QwixxGame />
         }
     ];
 

@@ -310,6 +310,10 @@
         "standard_categories": "Standard Categories"
       }
     },
+    "qwixx": {
+      "title": "Qwixx",
+      "description": "Tactical dice-rolling score sheet game. Cross numbers, lock rows, and maximize your score!"
+    },
     "melodiq": {
       "title": "Melodiq",
       "description": "Challenge your friends in this ultimate Karaoke showdown! Sing to the beat and hit the right notes.",
