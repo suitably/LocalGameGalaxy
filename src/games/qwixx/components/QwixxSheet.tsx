@@ -8,6 +8,7 @@ interface QwixxSheetProps {
     sheet: PlayerSheet;
     onCrossNumber: (color: RowColor, number: number) => void;
     onLockRow: (color: RowColor) => void;
+    onUnlockRow: (color: RowColor) => void;
     onAddMiss: () => void;
     onRemoveMiss: () => void;
     readOnly?: boolean;
@@ -17,6 +18,7 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
     sheet,
     onCrossNumber,
     onLockRow,
+    onUnlockRow,
     onAddMiss,
     onRemoveMiss,
     readOnly = false
@@ -28,6 +30,7 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
                 rowState={sheet.red}
                 onCrossNumber={onCrossNumber}
                 onLockRow={onLockRow}
+                onUnlockRow={onUnlockRow}
                 disabled={readOnly}
             />
             <QwixxRow
@@ -35,6 +38,7 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
                 rowState={sheet.yellow}
                 onCrossNumber={onCrossNumber}
                 onLockRow={onLockRow}
+                onUnlockRow={onUnlockRow}
                 disabled={readOnly}
             />
             <QwixxRow
@@ -42,6 +46,7 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
                 rowState={sheet.green}
                 onCrossNumber={onCrossNumber}
                 onLockRow={onLockRow}
+                onUnlockRow={onUnlockRow}
                 disabled={readOnly}
             />
             <QwixxRow
@@ -49,6 +54,7 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
                 rowState={sheet.blue}
                 onCrossNumber={onCrossNumber}
                 onLockRow={onLockRow}
+                onUnlockRow={onUnlockRow}
                 disabled={readOnly}
             />
 

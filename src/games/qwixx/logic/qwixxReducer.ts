@@ -88,7 +88,9 @@ export function canUncrossNumber(crossed: number[], num: number): boolean {
 
 export function canLockRow(rowNumbers: number[], crossed: number[], numToCross: number): boolean {
     const lastNumber = rowNumbers[rowNumbers.length - 1];
-    return numToCross === lastNumber && crossed.length >= 5;
+    // crossed does NOT yet include numToCross, so total after crossing = crossed.length + 1
+    // Qwixx rule: need at least 5 crosses INCLUDING the lock number
+    return numToCross === lastNumber && crossed.length + 1 >= 5;
 }
 
 export function qwixxReducer(state: QwixxGameState, action: QwixxAction): QwixxGameState {
@@ -155,6 +157,23 @@ export function qwixxReducer(state: QwixxGameState, action: QwixxAction): QwixxG
                     [color]: {
                         ...currentRow,
                         isLocked: true
+                    }
+                }
+            };
+        }
+
+        case 'UNLOCK_ROW': {
+            const { color } = action;
+            const currentRow = state.mySheet[color];
+            if (!currentRow.isLocked) return state;
+
+            return {
+                ...state,
+                mySheet: {
+                    ...state.mySheet,
+                    [color]: {
+                        ...currentRow,
+                        isLocked: false
                     }
                 }
             };

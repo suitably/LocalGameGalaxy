@@ -88,6 +88,7 @@ export const QwixxOpponentView: React.FC<QwixxOpponentViewProps> = ({ opponents 
                             sheet={selectedOpponent}
                             onCrossNumber={() => {}}
                             onLockRow={() => {}}
+                            onUnlockRow={() => {}}
                             onAddMiss={() => {}}
                             onRemoveMiss={() => {}}
                             readOnly

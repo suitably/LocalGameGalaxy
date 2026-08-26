@@ -38,6 +38,7 @@ export interface QwixxGameState {
 export type QwixxAction =
     | { type: 'CROSS_NUMBER'; color: RowColor; number: number }
     | { type: 'LOCK_ROW'; color: RowColor }
+    | { type: 'UNLOCK_ROW'; color: RowColor }
     | { type: 'ADD_MISS' }
     | { type: 'REMOVE_MISS' }
     | { type: 'SET_DICE'; dice: DiceValues }

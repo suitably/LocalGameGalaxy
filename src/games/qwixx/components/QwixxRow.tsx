@@ -11,6 +11,7 @@ interface QwixxRowProps {
     rowState: RowState;
     onCrossNumber: (color: RowColor, number: number) => void;
     onLockRow: (color: RowColor) => void;
+    onUnlockRow: (color: RowColor) => void;
     disabled?: boolean;
 }
 
@@ -50,6 +51,7 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
     rowState,
     onCrossNumber,
     onLockRow,
+    onUnlockRow,
     disabled = false
 }) => {
     const numbers = ROW_NUMBERS[color];
@@ -141,7 +143,13 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
 
                 {/* Lock Button */}
                 <ButtonBase
-                    onClick={() => canLock && onLockRow(color)}
+                    onClick={() => {
+                        if (rowState.isLocked) {
+                            onUnlockRow(color);
+                        } else if (canLock) {
+                            onLockRow(color);
+                        }
+                    }}
                     disabled={!canLock && !rowState.isLocked}
                     sx={{
                         width: { xs: 28, sm: 38, md: 46 },

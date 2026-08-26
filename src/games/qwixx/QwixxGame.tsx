@@ -118,6 +118,10 @@ export const QwixxGame: React.FC = () => {
         dispatch({ type: 'LOCK_ROW', color });
     }, []);
 
+    const handleUnlockRow = useCallback((color: RowColor) => {
+        dispatch({ type: 'UNLOCK_ROW', color });
+    }, []);
+
     const handleAddMiss = useCallback(() => {
         dispatch({ type: 'ADD_MISS' });
     }, []);
@@ -211,6 +215,7 @@ export const QwixxGame: React.FC = () => {
                 sheet={state.mySheet}
                 onCrossNumber={handleCrossNumber}
                 onLockRow={handleLockRow}
+                onUnlockRow={handleUnlockRow}
                 onAddMiss={handleAddMiss}
                 onRemoveMiss={handleRemoveMiss}
             />
