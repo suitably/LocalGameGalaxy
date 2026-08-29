@@ -30,7 +30,8 @@ export const qwixxTranslations = {
                 player_name: "Player Name",
                 dice_roller: "Dice Roller",
                 show_dice: "Show Dice",
-                hide_dice: "Hide Dice"
+                hide_dice: "Hide Dice",
+                tap_die_hint: "Tap a die to highlight crossable numbers"
             }
         }
     },
@@ -63,7 +64,8 @@ export const qwixxTranslations = {
                 player_name: "Spielername",
                 dice_roller: "Würfelbecher",
                 show_dice: "Würfel anzeigen",
-                hide_dice: "Würfel verbergen"
+                hide_dice: "Würfel verbergen",
+                tap_die_hint: "Tippe auf einen Würfel, um ankreuzbare Zahlen hervorzuheben"
             }
         }
     }

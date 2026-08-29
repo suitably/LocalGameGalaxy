@@ -3,11 +3,14 @@ import { Box, Paper, Typography, Button } from '@mui/material';
 import CasinoIcon from '@mui/icons-material/Casino';
 import { useTranslation } from 'react-i18next';
 import type { DiceValues } from '../logic/types';
+import type { DieKey } from '../logic/diceHighlight';
 
 interface QwixxDiceRollerProps {
     dice: DiceValues;
     isRolling: boolean;
     onRoll: (dice: DiceValues) => void;
+    onDieClick?: (dieKey: DieKey) => void;
+    selectedDie?: DieKey | null;
     disabled?: boolean;
 }
 
@@ -24,6 +27,8 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
     dice,
     isRolling,
     onRoll,
+    onDieClick,
+    selectedDie = null,
     disabled = false
 }) => {
     const { t } = useTranslation();
@@ -57,25 +62,30 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
 
     const renderDie = (key: keyof DiceValues, val: number) => {
         const c = DIE_COLORS[key];
+        const isSelected = selectedDie === key;
+        const isClickable = !animating && !isRolling && !!onDieClick;
         return (
             <Paper
                 key={key}
-                elevation={animating ? 8 : 4}
+                elevation={animating ? 8 : (isSelected ? 6 : 4)}
+                onClick={() => isClickable && onDieClick(key)}
                 sx={{
                     width: { xs: 40, sm: 52 },
                     height: { xs: 40, sm: 52 },
                     borderRadius: 2,
                     bgcolor: c.bg,
                     color: c.text,
-                    border: `2px solid ${c.border}`,
+                    border: `2px solid ${isSelected ? '#ffd54f' : c.border}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: { xs: '1.25rem', sm: '1.6rem' },
                     fontWeight: '900',
-                    boxShadow: 3,
-                    transform: animating ? 'rotate(-6deg) scale(1.08)' : 'none',
-                    transition: 'all 0.15s ease'
+                    boxShadow: isSelected ? '0 0 10px 2px rgba(255, 213, 79, 0.7)' : 3,
+                    transform: animating ? 'rotate(-6deg) scale(1.08)' : (isSelected ? 'scale(1.1)' : 'none'),
+                    transition: 'all 0.15s ease',
+                    cursor: isClickable ? 'pointer' : 'default',
+                    '&:active': isClickable ? { transform: 'scale(0.95)' } : {}
                 }}
             >
                 {val}

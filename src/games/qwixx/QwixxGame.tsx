@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useState, useCallback } from 'react';
+import React, { useReducer, useEffect, useState, useCallback, useRef } from 'react';
 import {
     Box,
     Container,
@@ -21,6 +21,8 @@ import { usePageTitle } from '../../context/TitleContext';
 import { useWakeLock } from '../../hooks/useWakeLock';
 import { storage } from '../../lib/storage';
 import { qwixxReducer, INITIAL_STATE, createInitialSheet } from './logic/qwixxReducer';
+import { computeHighlightedNumbers } from './logic/diceHighlight';
+import type { DieKey } from './logic/diceHighlight';
 import type { RowColor, DiceValues, PlayerSheet } from './logic/types';
 import { QwixxSheet } from './components/QwixxSheet';
 import { QwixxDiceRoller } from './components/QwixxDiceRoller';
@@ -55,6 +57,11 @@ export const QwixxGame: React.FC = () => {
     const [roomDialogOpen, setRoomDialogOpen] = useState(false);
     const [roomInput, setRoomInput] = useState(state.roomId);
     const [nameInput, setNameInput] = useState(state.mySheet.name);
+
+    // Dice highlight feature state
+    const [selectedDie, setSelectedDie] = useState<DieKey | null>(null);
+    const [highlightedNumbers, setHighlightedNumbers] = useState<Partial<Record<RowColor, number[]>> | null>(null);
+    const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Save sheet state locally on changes
     useEffect(() => {
@@ -132,6 +139,13 @@ export const QwixxGame: React.FC = () => {
 
     const handleRoll = useCallback((newDice: DiceValues) => {
         dispatch({ type: 'FINISH_ROLL', dice: newDice });
+        // Clear any active highlight when new dice are rolled
+        setSelectedDie(null);
+        setHighlightedNumbers(null);
+        if (highlightTimerRef.current) {
+            clearTimeout(highlightTimerRef.current);
+            highlightTimerRef.current = null;
+        }
         if (state.roomId) {
             try {
                 const channel = new BroadcastChannel(`qwixx_room_${state.roomId}`);
@@ -140,6 +154,41 @@ export const QwixxGame: React.FC = () => {
             } catch {}
         }
     }, [state.roomId]);
+
+    const handleDieClick = useCallback((dieKey: DieKey) => {
+        // Clear any existing timer
+        if (highlightTimerRef.current) {
+            clearTimeout(highlightTimerRef.current);
+            highlightTimerRef.current = null;
+        }
+
+        // Toggle off if clicking the same die again
+        if (selectedDie === dieKey) {
+            setSelectedDie(null);
+            setHighlightedNumbers(null);
+            return;
+        }
+
+        const highlighted = computeHighlightedNumbers(dieKey, state.dice, state.mySheet);
+        setSelectedDie(dieKey);
+        setHighlightedNumbers(highlighted);
+
+        // Auto-clear after 2.5 seconds
+        highlightTimerRef.current = setTimeout(() => {
+            setSelectedDie(null);
+            setHighlightedNumbers(null);
+            highlightTimerRef.current = null;
+        }, 2500);
+    }, [selectedDie, state.dice, state.mySheet]);
+
+    // Cleanup highlight timer on unmount
+    useEffect(() => {
+        return () => {
+            if (highlightTimerRef.current) {
+                clearTimeout(highlightTimerRef.current);
+            }
+        };
+    }, []);
 
     const handleResetConfirm = () => {
         dispatch({ type: 'RESET_GAME' });
@@ -207,6 +256,8 @@ export const QwixxGame: React.FC = () => {
                     dice={state.dice}
                     isRolling={state.isRolling}
                     onRoll={handleRoll}
+                    onDieClick={handleDieClick}
+                    selectedDie={selectedDie}
                 />
             )}
 
@@ -218,6 +269,7 @@ export const QwixxGame: React.FC = () => {
                 onUnlockRow={handleUnlockRow}
                 onAddMiss={handleAddMiss}
                 onRemoveMiss={handleRemoveMiss}
+                highlightedNumbers={highlightedNumbers}
             />
 
             {/* Multiplayer Opponents View */}

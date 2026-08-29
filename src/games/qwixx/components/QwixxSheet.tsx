@@ -12,6 +12,7 @@ interface QwixxSheetProps {
     onAddMiss: () => void;
     onRemoveMiss: () => void;
     readOnly?: boolean;
+    highlightedNumbers?: Partial<Record<RowColor, number[]>> | null;
 }
 
 export const QwixxSheet: React.FC<QwixxSheetProps> = ({
@@ -21,7 +22,8 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
     onUnlockRow,
     onAddMiss,
     onRemoveMiss,
-    readOnly = false
+    readOnly = false,
+    highlightedNumbers = null
 }) => {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1, sm: 1.5 } }}>
@@ -32,6 +34,7 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
                 onLockRow={onLockRow}
                 onUnlockRow={onUnlockRow}
                 disabled={readOnly}
+                highlightedNumbers={highlightedNumbers?.red}
             />
             <QwixxRow
                 color="yellow"
@@ -40,6 +43,7 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
                 onLockRow={onLockRow}
                 onUnlockRow={onUnlockRow}
                 disabled={readOnly}
+                highlightedNumbers={highlightedNumbers?.yellow}
             />
             <QwixxRow
                 color="green"
@@ -48,6 +52,7 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
                 onLockRow={onLockRow}
                 onUnlockRow={onUnlockRow}
                 disabled={readOnly}
+                highlightedNumbers={highlightedNumbers?.green}
             />
             <QwixxRow
                 color="blue"
@@ -56,6 +61,7 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
                 onLockRow={onLockRow}
                 onUnlockRow={onUnlockRow}
                 disabled={readOnly}
+                highlightedNumbers={highlightedNumbers?.blue}
             />
 
             <QwixxScoreSummary

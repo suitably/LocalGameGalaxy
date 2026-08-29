@@ -13,6 +13,7 @@ interface QwixxRowProps {
     onLockRow: (color: RowColor) => void;
     onUnlockRow: (color: RowColor) => void;
     disabled?: boolean;
+    highlightedNumbers?: number[];
 }
 
 const ROW_COLORS: Record<RowColor, { bg: string; border: string; text: string; buttonBg: string; buttonCrossed: string }> = {
@@ -52,7 +53,8 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
     onCrossNumber,
     onLockRow,
     onUnlockRow,
-    disabled = false
+    disabled = false,
+    highlightedNumbers
 }) => {
     const numbers = ROW_NUMBERS[color];
     const colors = ROW_COLORS[color];
@@ -92,6 +94,7 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
                     const isUncrossable = canUncrossNumber(rowState.crossed, num);
                     const isClickable = isCrossed ? isUncrossable : isAllowed;
                     const isLast = num === lastNumber;
+                    const isHighlighted = !isCrossed && highlightedNumbers?.includes(num);
 
                     return (
                         <ButtonBase
@@ -111,9 +114,24 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 transition: 'all 0.15s ease',
-                                transform: isCrossed ? 'scale(0.96)' : 'none',
+                                transform: isCrossed ? 'scale(0.96)' : (isHighlighted ? 'scale(1.08)' : 'none'),
                                 opacity: !isClickable ? 0.35 : 1,
-                                boxShadow: isCrossed ? 'inset 0 2px 4px rgba(0,0,0,0.4)' : '0 2px 4px rgba(0,0,0,0.2)',
+                                boxShadow: isHighlighted
+                                    ? '0 0 12px 4px rgba(255, 213, 79, 0.85), 0 0 24px 8px rgba(255, 152, 0, 0.4)'
+                                    : (isCrossed ? 'inset 0 2px 4px rgba(0,0,0,0.4)' : '0 2px 4px rgba(0,0,0,0.2)'),
+                                border: isHighlighted ? '2px solid #ffd54f' : 'none',
+                                animation: isHighlighted ? 'diceHighlightPulse 1s ease-in-out infinite' : 'none',
+                                zIndex: isHighlighted ? 2 : 'auto',
+                                '@keyframes diceHighlightPulse': {
+                                    '0%, 100%': {
+                                        boxShadow: '0 0 8px 2px rgba(255, 213, 79, 0.6), 0 0 16px 4px rgba(255, 152, 0, 0.25)',
+                                        transform: 'scale(1.06)'
+                                    },
+                                    '50%': {
+                                        boxShadow: '0 0 16px 6px rgba(255, 213, 79, 0.9), 0 0 32px 10px rgba(255, 152, 0, 0.45)',
+                                        transform: 'scale(1.12)'
+                                    }
+                                },
                                 '&:active': {
                                     transform: 'scale(0.92)'
                                 }
