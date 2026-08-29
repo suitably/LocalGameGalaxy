@@ -12,6 +12,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import QrCode2Icon from '@mui/icons-material/QrCode2';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import QRCode from 'qrcode';
 import { storage } from '../../lib/storage';
 
@@ -19,9 +20,8 @@ import { storage } from '../../lib/storage';
  * ServerAdminPanel [ID: COMP-SERVER-ADMIN]
  *
  * Admin panel for managing API keys and permissions on the Nexumia Server.
- * Only visible when connected with the master token.
  * Allows creating and editing API keys with granular permissions,
- * as well as generating shareable web links and QR codes.
+ * as well as generating shareable web links and QR codes for friends.
  */
 
 interface ApiKey {
@@ -36,7 +36,7 @@ interface ApiKey {
     createdAt: string;
 }
 
-type LoadStatus = 'idle' | 'loading' | 'loaded' | 'error';
+type LoadStatus = 'idle' | 'loading' | 'loaded' | 'forbidden' | 'error';
 
 export const ServerAdminPanel: React.FC = () => {
     const { t } = useTranslation();
@@ -57,8 +57,6 @@ export const ServerAdminPanel: React.FC = () => {
     const [editAllowSongDeletion, setEditAllowSongDeletion] = useState(false);
     const [savingEdit, setSavingEdit] = useState(false);
 
-    const [isAdmin, setIsAdmin] = useState(false);
-
     // QR dialog state
     const [qrOpen, setQrOpen] = useState(false);
     const [qrDataUrl, setQrDataUrl] = useState('');
@@ -77,8 +75,12 @@ export const ServerAdminPanel: React.FC = () => {
         const helperUrl = storage.getHelperUrl();
         const helperToken = storage.getHelperToken();
 
-        if (!storage.isHelperActive() || !helperUrl || !helperToken) {
-            setIsAdmin(false);
+        if (!storage.isHelperActive()) {
+            setLoadStatus('idle');
+            return;
+        }
+
+        if (!helperToken) {
             setLoadStatus('idle');
             return;
         }
@@ -93,23 +95,20 @@ export const ServerAdminPanel: React.FC = () => {
             });
 
             if (res.status === 403 || res.status === 401) {
-                setIsAdmin(false);
-                setLoadStatus('idle');
+                setLoadStatus('forbidden');
                 return;
             }
             if (!res.ok) {
-                setIsAdmin(false);
-                setLoadStatus('idle');
-                return;
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
             }
 
             const data = await res.json();
-            setApiKeys(data);
-            setIsAdmin(true);
+            setApiKeys(Array.isArray(data) ? data : []);
             setLoadStatus('loaded');
-        } catch {
-            setIsAdmin(false);
-            setLoadStatus('idle');
+        } catch (e: unknown) {
+            setLoadStatus('error');
+            const message = e instanceof Error ? e.message : 'Unknown connection error';
+            setError(message);
         }
     }, []);
 
@@ -250,151 +249,183 @@ export const ServerAdminPanel: React.FC = () => {
         }
     };
 
-    if (!storage.isHelperActive() || !isAdmin) return null;
+    if (!storage.isHelperActive()) return null;
 
     return (
-        <Paper sx={{ p: 3 }}>
+        <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                 <Box>
-                    <Typography variant="h6">
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
                         {t('server.admin.title', 'API Key Management')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                         {t('server.admin.desc', 'Create API keys for friends so they can connect to your server. Share a connection link or QR code.')}
                     </Typography>
                 </Box>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={handleOpenCreate}
-                    disabled={loadStatus !== 'loaded'}
-                    sx={{ borderRadius: 50, px: 3 }}
-                >
-                    {t('server.admin.create', 'Create Key')}
-                </Button>
+                {loadStatus === 'loaded' && (
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={handleOpenCreate}
+                        sx={{ borderRadius: 50, px: 3 }}
+                    >
+                        {t('server.admin.create', 'Create Key')}
+                    </Button>
+                )}
             </Box>
 
-            {/* Web App URL Configuration */}
-            <Box sx={{ mb: 3, p: 2, bgcolor: 'rgba(255, 255, 255, 0.03)', borderRadius: 2, border: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                <Typography variant="subtitle2" gutterBottom>
-                    {t('server.admin.webapp_url', 'Web App Base URL')}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                    {t('server.admin.webapp_url_desc', 'The web application address that friends will open. Links and QR codes will point here and automatically configure the server.')}
-                </Typography>
-                <TextField
-                    value={webAppUrl}
-                    onChange={(e) => setWebAppUrl(e.target.value)}
-                    size="small"
-                    fullWidth
-                    variant="outlined"
-                    placeholder="https://nexumia.de"
-                />
-            </Box>
-
-            {loadStatus === 'loading' && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                    <CircularProgress />
-                </Box>
-            )}
-
-            {loadStatus === 'error' && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {error}
+            {/* When no token entered or server not yet checked */}
+            {loadStatus === 'idle' && (
+                <Alert severity="info" sx={{ mt: 2, bgcolor: 'rgba(2, 136, 209, 0.1)', border: '1px solid rgba(2, 136, 209, 0.3)' }}>
+                    <Typography variant="body2">
+                        {t('server.admin.need_token', 'Enter your Master Security Token above and test the connection to manage API keys for friends.')}
+                    </Typography>
                 </Alert>
             )}
 
-            {loadStatus === 'loaded' && apiKeys.length === 0 && (
-                <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
-                    {t('server.admin.no_keys', 'No API keys yet. Create one to share access with friends.')}
-                </Typography>
+            {/* When user is connected as non-admin / guest */}
+            {loadStatus === 'forbidden' && (
+                <Alert severity="warning" sx={{ mt: 2, bgcolor: 'rgba(237, 108, 2, 0.1)', border: '1px solid rgba(237, 108, 2, 0.3)' }}>
+                    <Typography variant="body2">
+                        {t('server.admin.forbidden', 'You are connected with a standard API key. API key management is only available with the Master Security Token.')}
+                    </Typography>
+                </Alert>
             )}
 
-            {loadStatus === 'loaded' && apiKeys.length > 0 && (
-                <TableContainer>
-                    <Table size="small">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>{t('server.admin.key_name', 'Name')}</TableCell>
-                                <TableCell>{t('server.admin.key_permissions', 'Permissions')}</TableCell>
-                                <TableCell>{t('server.admin.key_created', 'Created')}</TableCell>
-                                <TableCell align="right">{t('server.admin.key_actions', 'Actions')}</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {apiKeys.map((key) => (
-                                <TableRow key={key.id}>
-                                    <TableCell>
-                                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                                            {key.name}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
-                                            {key.allowManagement && (
-                                                <Chip
-                                                    label={t('server.admin.perm_manage', 'Admin')}
-                                                    size="small"
-                                                    color="warning"
-                                                    variant="outlined"
-                                                />
-                                            )}
-                                            {key.allowSongDeletion && (
-                                                <Chip
-                                                    label={t('server.admin.perm_delete', 'Delete Songs')}
-                                                    size="small"
-                                                    color="error"
-                                                    variant="outlined"
-                                                />
-                                            )}
-                                            {!key.allowManagement && !key.allowSongDeletion && (
-                                                <Chip
-                                                    label={t('server.admin.perm_readonly', 'Read Only')}
-                                                    size="small"
-                                                    color="success"
-                                                    variant="outlined"
-                                                />
-                                            )}
-                                            <Tooltip title={t('server.admin.edit_permissions', 'Edit Permissions')}>
-                                                <IconButton size="small" onClick={() => handleOpenEdit(key)}>
-                                                    <EditIcon fontSize="small" sx={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.6)' }} />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {new Date(key.createdAt).toLocaleDateString()}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-                                            <Tooltip title={t('server.admin.copy_link', 'Copy Connection Link')}>
-                                                <IconButton size="small" onClick={() => copyLink(key)}>
-                                                    <ContentCopyIcon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title={t('server.admin.show_qr', 'Show QR Code')}>
-                                                <IconButton size="small" onClick={() => showQR(key)}>
-                                                    <QrCode2Icon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title={t('server.admin.delete_key', 'Delete Key')}>
-                                                <IconButton
-                                                    size="small"
-                                                    color="error"
-                                                    onClick={() => handleDeleteKey(key.id)}
-                                                >
-                                                    <DeleteIcon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </Box>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+            {/* Loading */}
+            {loadStatus === 'loading' && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                    <CircularProgress size={32} />
+                </Box>
+            )}
+
+            {/* Error with Retry */}
+            {loadStatus === 'error' && (
+                <Alert
+                    severity="error"
+                    sx={{ mt: 2, bgcolor: 'rgba(211, 47, 47, 0.1)', border: '1px solid rgba(211, 47, 47, 0.3)' }}
+                    action={
+                        <Button color="inherit" size="small" startIcon={<RefreshIcon />} onClick={fetchApiKeys}>
+                            {t('server.admin.retry', 'Retry')}
+                        </Button>
+                    }
+                >
+                    <Typography variant="body2">{error}</Typography>
+                </Alert>
+            )}
+
+            {/* Active Admin Section */}
+            {loadStatus === 'loaded' && (
+                <>
+                    {/* Web App URL Configuration */}
+                    <Box sx={{ my: 3, p: 2, bgcolor: 'rgba(255, 255, 255, 0.03)', borderRadius: 2, border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                        <Typography variant="subtitle2" gutterBottom>
+                            {t('server.admin.webapp_url', 'Web App Base URL')}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                            {t('server.admin.webapp_url_desc', 'The web application address that friends will open. Links and QR codes will point here and automatically configure the server.')}
+                        </Typography>
+                        <TextField
+                            value={webAppUrl}
+                            onChange={(e) => setWebAppUrl(e.target.value)}
+                            size="small"
+                            fullWidth
+                            variant="outlined"
+                            placeholder="https://nexumia.de"
+                        />
+                    </Box>
+
+                    {apiKeys.length === 0 ? (
+                        <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+                            {t('server.admin.no_keys', 'No API keys yet. Create one to share access with friends.')}
+                        </Typography>
+                    ) : (
+                        <TableContainer>
+                            <Table size="small">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>{t('server.admin.key_name', 'Name')}</TableCell>
+                                        <TableCell>{t('server.admin.key_permissions', 'Permissions')}</TableCell>
+                                        <TableCell>{t('server.admin.key_created', 'Created')}</TableCell>
+                                        <TableCell align="right">{t('server.admin.key_actions', 'Actions')}</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {apiKeys.map((key) => (
+                                        <TableRow key={key.id}>
+                                            <TableCell>
+                                                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                                                    {key.name}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
+                                                    {key.allowManagement && (
+                                                        <Chip
+                                                            label={t('server.admin.perm_manage', 'Admin')}
+                                                            size="small"
+                                                            color="warning"
+                                                            variant="outlined"
+                                                        />
+                                                    )}
+                                                    {key.allowSongDeletion && (
+                                                        <Chip
+                                                            label={t('server.admin.perm_delete', 'Delete Songs')}
+                                                            size="small"
+                                                            color="error"
+                                                            variant="outlined"
+                                                        />
+                                                    )}
+                                                    {!key.allowManagement && !key.allowSongDeletion && (
+                                                        <Chip
+                                                            label={t('server.admin.perm_readonly', 'Read Only')}
+                                                            size="small"
+                                                            color="success"
+                                                            variant="outlined"
+                                                        />
+                                                    )}
+                                                    <Tooltip title={t('server.admin.edit_permissions', 'Edit Permissions')}>
+                                                        <IconButton size="small" onClick={() => handleOpenEdit(key)}>
+                                                            <EditIcon fontSize="small" sx={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.6)' }} />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {new Date(key.createdAt).toLocaleDateString()}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+                                                    <Tooltip title={t('server.admin.copy_link', 'Copy Connection Link')}>
+                                                        <IconButton size="small" onClick={() => copyLink(key)}>
+                                                            <ContentCopyIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title={t('server.admin.show_qr', 'Show QR Code')}>
+                                                        <IconButton size="small" onClick={() => showQR(key)}>
+                                                            <QrCode2Icon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title={t('server.admin.delete_key', 'Delete Key')}>
+                                                        <IconButton
+                                                            size="small"
+                                                            color="error"
+                                                            onClick={() => handleDeleteKey(key.id)}
+                                                        >
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </Box>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )}
+                </>
             )}
 
             {/* Create Key Dialog */}

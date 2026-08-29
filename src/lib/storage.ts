@@ -93,7 +93,8 @@ export const storage = {
     },
     
     isHelperActive(): boolean {
-        return this.get(STORAGE_KEYS.HELPER_ACTIVE) === 'true';
+        const val = this.get(STORAGE_KEYS.HELPER_ACTIVE);
+        return val !== 'false';
     },
     
     setHelperActive(active: boolean): void {

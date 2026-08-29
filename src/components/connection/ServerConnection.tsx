@@ -37,8 +37,9 @@ export const ServerConnection: React.FC = () => {
         storage.setHelperToken(token);
         storage.setHelperActive(enabled);
 
-        // Notify listeners (Melodiq settings, etc.)
+        // Notify listeners (Melodiq settings, Admin Panel, etc.)
         window.dispatchEvent(new Event('melodiq_settings_updated'));
+        window.dispatchEvent(new Event('server_connection_updated'));
     }, [url, token, enabled]);
 
     const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -90,6 +91,7 @@ export const ServerConnection: React.FC = () => {
                         defaultValue: `Connected! Found ${data.count || 0} songs.`,
                     }),
                 );
+                window.dispatchEvent(new Event('server_connection_updated'));
             } else if (res.status === 401) {
                 setStatus('error');
                 setStatusMsg(t('server.unauthorized', 'Unauthorized. Check Token.'));
