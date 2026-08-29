@@ -4,21 +4,24 @@ import {
     Box, Button, Typography, Paper, TextField, IconButton,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Chip, Dialog, DialogTitle, DialogContent, DialogActions,
-    Tooltip, CircularProgress, Alert,
+    Tooltip, CircularProgress, Alert, FormControlLabel, Switch, Divider,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import QrCode2Icon from '@mui/icons-material/QrCode2';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import QRCode from 'qrcode';
 import { storage } from '../../lib/storage';
 
 /**
  * ServerAdminPanel [ID: COMP-SERVER-ADMIN]
  *
- * Admin panel for managing API keys on the Nexumia Server.
+ * Admin panel for managing API keys and permissions on the Nexumia Server.
  * Only visible when connected with the master token.
- * Allows creating API keys for friends and generating shareable connection links.
+ * Allows creating and editing API keys with granular permissions,
+ * as well as generating shareable web links and QR codes.
  */
 
 interface ApiKey {
@@ -44,12 +47,29 @@ export const ServerAdminPanel: React.FC = () => {
     // Create dialog state
     const [createOpen, setCreateOpen] = useState(false);
     const [newKeyName, setNewKeyName] = useState('');
+    const [newAllowManagement, setNewAllowManagement] = useState(false);
+    const [newAllowSongDeletion, setNewAllowSongDeletion] = useState(false);
     const [creating, setCreating] = useState(false);
+
+    // Edit dialog state
+    const [editKey, setEditKey] = useState<ApiKey | null>(null);
+    const [editAllowManagement, setEditAllowManagement] = useState(false);
+    const [editAllowSongDeletion, setEditAllowSongDeletion] = useState(false);
+    const [savingEdit, setSavingEdit] = useState(false);
 
     // QR dialog state
     const [qrOpen, setQrOpen] = useState(false);
     const [qrDataUrl, setQrDataUrl] = useState('');
     const [qrKeyName, setQrKeyName] = useState('');
+    const [qrFullLink, setQrFullLink] = useState('');
+
+    const [webAppUrl, setWebAppUrl] = useState(() => {
+        return localStorage.getItem('nexumia_share_webapp_url') || window.location.origin;
+    });
+
+    useEffect(() => {
+        localStorage.setItem('nexumia_share_webapp_url', webAppUrl);
+    }, [webAppUrl]);
 
     const helperUrl = storage.getHelperUrl();
     const helperToken = storage.getHelperToken();
@@ -89,6 +109,13 @@ export const ServerAdminPanel: React.FC = () => {
         }
     }, [fetchApiKeys]);
 
+    const handleOpenCreate = () => {
+        setNewKeyName('');
+        setNewAllowManagement(false);
+        setNewAllowSongDeletion(false);
+        setCreateOpen(true);
+    };
+
     const handleCreateKey = async () => {
         if (!newKeyName.trim()) return;
         setCreating(true);
@@ -101,12 +128,15 @@ export const ServerAdminPanel: React.FC = () => {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${helperToken}`,
                 },
-                body: JSON.stringify({ name: newKeyName.trim() }),
+                body: JSON.stringify({
+                    name: newKeyName.trim(),
+                    allowManagement: newAllowManagement,
+                    allowSongDeletion: newAllowSongDeletion,
+                }),
             });
 
             if (!res.ok) throw new Error('Failed to create API key');
 
-            setNewKeyName('');
             setCreateOpen(false);
             await fetchApiKeys();
         } catch (e: unknown) {
@@ -114,6 +144,42 @@ export const ServerAdminPanel: React.FC = () => {
             setError(message);
         } finally {
             setCreating(false);
+        }
+    };
+
+    const handleOpenEdit = (key: ApiKey) => {
+        setEditKey(key);
+        setEditAllowManagement(key.allowManagement);
+        setEditAllowSongDeletion(key.allowSongDeletion);
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editKey) return;
+        setSavingEdit(true);
+
+        try {
+            const cleanUrl = helperUrl.replace(/\/$/, '');
+            const res = await fetch(`${cleanUrl}/api/config/apikeys/${editKey.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${helperToken}`,
+                },
+                body: JSON.stringify({
+                    allowManagement: editAllowManagement,
+                    allowSongDeletion: editAllowSongDeletion,
+                }),
+            });
+
+            if (!res.ok) throw new Error('Failed to update API key permissions');
+
+            setEditKey(null);
+            await fetchApiKeys();
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : 'Unknown error';
+            setError(message);
+        } finally {
+            setSavingEdit(false);
         }
     };
 
@@ -132,8 +198,9 @@ export const ServerAdminPanel: React.FC = () => {
     };
 
     const generateConnectionLink = (key: ApiKey): string => {
-        const cleanUrl = helperUrl.replace(/\/$/, '');
-        return `${cleanUrl}?token=${key.token}`;
+        const cleanWeb = webAppUrl.trim().replace(/\/$/, '');
+        const cleanServer = helperUrl.trim().replace(/\/$/, '');
+        return `${cleanWeb}/?serverUrl=${encodeURIComponent(cleanServer)}&token=${encodeURIComponent(key.token)}`;
     };
 
     const copyLink = (key: ApiKey) => {
@@ -146,6 +213,7 @@ export const ServerAdminPanel: React.FC = () => {
             const dataUrl = await QRCode.toDataURL(link, { width: 300, margin: 2 });
             setQrDataUrl(dataUrl);
             setQrKeyName(key.name);
+            setQrFullLink(link);
             setQrOpen(true);
         } catch {
             console.error('Failed to generate QR code');
@@ -168,12 +236,30 @@ export const ServerAdminPanel: React.FC = () => {
                 <Button
                     variant="contained"
                     startIcon={<AddIcon />}
-                    onClick={() => setCreateOpen(true)}
+                    onClick={handleOpenCreate}
                     disabled={loadStatus !== 'loaded'}
                     sx={{ borderRadius: 50, px: 3 }}
                 >
                     {t('server.admin.create', 'Create Key')}
                 </Button>
+            </Box>
+
+            {/* Web App URL Configuration */}
+            <Box sx={{ mb: 3, p: 2, bgcolor: 'rgba(255, 255, 255, 0.03)', borderRadius: 2, border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <Typography variant="subtitle2" gutterBottom>
+                    {t('server.admin.webapp_url', 'Web App Base URL')}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                    {t('server.admin.webapp_url_desc', 'The web application address that friends will open. Links and QR codes will point here and automatically configure the server.')}
+                </Typography>
+                <TextField
+                    value={webAppUrl}
+                    onChange={(e) => setWebAppUrl(e.target.value)}
+                    size="small"
+                    fullWidth
+                    variant="outlined"
+                    placeholder="https://nexumia.de"
+                />
             </Box>
 
             {loadStatus === 'loading' && (
@@ -214,16 +300,36 @@ export const ServerAdminPanel: React.FC = () => {
                                         </Typography>
                                     </TableCell>
                                     <TableCell>
-                                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
                                             {key.allowManagement && (
-                                                <Chip label={t('server.admin.perm_manage', 'Admin')} size="small" color="warning" variant="outlined" />
+                                                <Chip
+                                                    label={t('server.admin.perm_manage', 'Admin')}
+                                                    size="small"
+                                                    color="warning"
+                                                    variant="outlined"
+                                                />
                                             )}
                                             {key.allowSongDeletion && (
-                                                <Chip label={t('server.admin.perm_delete', 'Delete Songs')} size="small" color="error" variant="outlined" />
+                                                <Chip
+                                                    label={t('server.admin.perm_delete', 'Delete Songs')}
+                                                    size="small"
+                                                    color="error"
+                                                    variant="outlined"
+                                                />
                                             )}
                                             {!key.allowManagement && !key.allowSongDeletion && (
-                                                <Chip label={t('server.admin.perm_readonly', 'Read Only')} size="small" color="default" variant="outlined" />
+                                                <Chip
+                                                    label={t('server.admin.perm_readonly', 'Read Only')}
+                                                    size="small"
+                                                    color="success"
+                                                    variant="outlined"
+                                                />
                                             )}
+                                            <Tooltip title={t('server.admin.edit_permissions', 'Edit Permissions')}>
+                                                <IconButton size="small" onClick={() => handleOpenEdit(key)}>
+                                                    <EditIcon fontSize="small" sx={{ fontSize: '1rem', color: 'rgba(255, 255, 255, 0.6)' }} />
+                                                </IconButton>
+                                            </Tooltip>
                                         </Box>
                                     </TableCell>
                                     <TableCell>
@@ -271,14 +377,54 @@ export const ServerAdminPanel: React.FC = () => {
                         label={t('server.admin.key_name_label', 'Key Name (e.g. friend\'s name)')}
                         value={newKeyName}
                         onChange={(e) => setNewKeyName(e.target.value)}
-                        sx={{ mt: 1 }}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleCreateKey();
-                            }
-                        }}
+                        sx={{ mt: 1, mb: 2 }}
                     />
+
+                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                        {t('server.admin.key_permissions', 'Permissions')}
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2 }}>
+                        <Box>
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={newAllowManagement}
+                                        onChange={(e) => setNewAllowManagement(e.target.checked)}
+                                        color="warning"
+                                    />
+                                }
+                                label={t('server.admin.perm_manage', 'Admin / Server Management')}
+                            />
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 4 }}>
+                                {t('server.admin.perm_manage_desc', 'Allows accessing the admin dashboard, changing music directories, and managing other API keys.')}
+                            </Typography>
+                        </Box>
+
+                        <Box>
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={newAllowSongDeletion}
+                                        onChange={(e) => setNewAllowSongDeletion(e.target.checked)}
+                                        color="error"
+                                    />
+                                }
+                                label={t('server.admin.perm_delete', 'Delete Songs')}
+                            />
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 4 }}>
+                                {t('server.admin.perm_delete_desc', 'Allows permanently deleting song files from the hard drive.')}
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    {!newAllowManagement && !newAllowSongDeletion && (
+                        <Alert severity="info" icon={<InfoOutlinedIcon fontSize="small" />} sx={{ mt: 1 }}>
+                            <Typography variant="caption">
+                                {t('server.admin.perm_readonly_desc', 'Read-Only Mode: Can search songs, stream audio/video, and sing, but cannot delete files or modify server settings.')}
+                            </Typography>
+                        </Alert>
+                    )}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setCreateOpen(false)}>
@@ -295,18 +441,109 @@ export const ServerAdminPanel: React.FC = () => {
                 </DialogActions>
             </Dialog>
 
+            {/* Edit Permissions Dialog */}
+            <Dialog open={!!editKey} onClose={() => setEditKey(null)} maxWidth="xs" fullWidth>
+                <DialogTitle>
+                    {t('server.admin.edit_permissions', 'Edit Permissions')} – {editKey?.name}
+                </DialogTitle>
+                <DialogContent>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+                        {t('server.admin.perm_desc', 'Permissions control what this key is allowed to do on your server.')}
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+                        <Box>
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={editAllowManagement}
+                                        onChange={(e) => setEditAllowManagement(e.target.checked)}
+                                        color="warning"
+                                    />
+                                }
+                                label={t('server.admin.perm_manage', 'Admin / Server Management')}
+                            />
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 4 }}>
+                                {t('server.admin.perm_manage_desc', 'Allows accessing the admin dashboard, changing music directories, and managing other API keys.')}
+                            </Typography>
+                        </Box>
+
+                        <Divider />
+
+                        <Box>
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={editAllowSongDeletion}
+                                        onChange={(e) => setEditAllowSongDeletion(e.target.checked)}
+                                        color="error"
+                                    />
+                                }
+                                label={t('server.admin.perm_delete', 'Delete Songs')}
+                            />
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 4 }}>
+                                {t('server.admin.perm_delete_desc', 'Allows permanently deleting song files from the hard drive.')}
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    {!editAllowManagement && !editAllowSongDeletion && (
+                        <Alert severity="info" icon={<InfoOutlinedIcon fontSize="small" />} sx={{ mt: 1 }}>
+                            <Typography variant="caption">
+                                {t('server.admin.perm_readonly_desc', 'Read-Only Mode: Can search songs, stream audio/video, and sing, but cannot delete files or modify server settings.')}
+                            </Typography>
+                        </Alert>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setEditKey(null)}>
+                        {t('common.cancel', 'Cancel')}
+                    </Button>
+                    <Button
+                        onClick={handleSaveEdit}
+                        variant="contained"
+                        disabled={savingEdit}
+                        startIcon={savingEdit ? <CircularProgress size={16} /> : null}
+                    >
+                        {t('server.admin.save', 'Save Changes')}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
             {/* QR Code Dialog */}
-            <Dialog open={qrOpen} onClose={() => setQrOpen(false)} maxWidth="xs">
+            <Dialog open={qrOpen} onClose={() => setQrOpen(false)} maxWidth="sm" fullWidth>
                 <DialogTitle>
                     {t('server.admin.qr_title', 'Connection QR Code')}
                 </DialogTitle>
                 <DialogContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" textAlign="center">
                         {t('server.admin.qr_desc', 'Scan this QR code to connect to the server as "{{name}}"', { name: qrKeyName })}
                     </Typography>
                     {qrDataUrl && (
-                        <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2 }}>
+                        <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, boxShadow: 3 }}>
                             <img src={qrDataUrl} alt="QR Code" style={{ display: 'block', width: 250, height: 250 }} />
+                        </Box>
+                    )}
+                    {qrFullLink && (
+                        <Box sx={{ width: '100%', mt: 1, display: 'flex', gap: 1 }}>
+                            <TextField
+                                value={qrFullLink}
+                                size="small"
+                                fullWidth
+                                variant="outlined"
+                                slotProps={{ input: { readOnly: true } }}
+                                sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}
+                            />
+                            <Tooltip title={t('server.admin.copy_link', 'Copy Connection Link')}>
+                                <Button
+                                    variant="outlined"
+                                    startIcon={<ContentCopyIcon />}
+                                    onClick={() => navigator.clipboard.writeText(qrFullLink)}
+                                    sx={{ whiteSpace: 'nowrap' }}
+                                >
+                                    {t('common.copy', 'Copy')}
+                                </Button>
+                            </Tooltip>
                         </Box>
                     )}
                 </DialogContent>

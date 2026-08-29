@@ -6,6 +6,7 @@ import { MainLayout } from './components/Layout/MainLayout';
 import { gameRegistry } from './lib/gameRegistry';
 import { Hub } from './features/hub/Hub';
 import { Settings } from './features/settings/Settings';
+import { useServerUrlAutoConnect } from './hooks/useServerUrlAutoConnect';
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -17,6 +18,7 @@ const LoadingFallback = () => (
 // Inner component to use navigation hook
 function AppRoutes() {
   const navigate = useNavigate();
+  useServerUrlAutoConnect();
 
   useEffect(() => {
     const handleBackButton = () => {

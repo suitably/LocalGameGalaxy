@@ -109,8 +109,9 @@ export const ServerConnection: React.FC = () => {
     };
 
     const copyConnectionUrl = () => {
-        const cleanUrl = url.replace(/\/$/, '');
-        const connectionLink = `${cleanUrl}?token=${token}`;
+        const cleanWeb = window.location.origin;
+        const cleanServer = url.replace(/\/$/, '');
+        const connectionLink = `${cleanWeb}/?serverUrl=${encodeURIComponent(cleanServer)}&token=${encodeURIComponent(token)}`;
         navigator.clipboard.writeText(connectionLink);
     };
 
