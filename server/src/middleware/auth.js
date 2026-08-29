@@ -9,19 +9,25 @@ const requireAuth = (req, res, next) => {
     if (req.path === '/' || req.path === '/favicon.ico') {
         return next();
     }
-    const token = req.headers['authorization'] || req.query.token;
-    const cleanToken = token?.replace('Bearer ', '');
+    const rawToken = req.headers['authorization'] || req.query.token;
+    if (!rawToken) {
+        return res.status(401).json({ error: 'Unauthorized. No Token provided.' });
+    }
+    const cleanToken = String(rawToken).replace(/^Bearer\s+/i, '').trim();
 
     req.isMasterToken = false;
 
-    if (token === config.token || cleanToken === config.token) {
+    if (cleanToken === config.token) {
         req.isMasterToken = true;
         return next();
     }
     
-    const validApiKey = config.apiKeys.find(k => k.token === token || k.token === cleanToken);
+    const validApiKey = config.apiKeys.find(k => k.token === cleanToken);
     if (validApiKey) {
         req.apiKey = validApiKey;
+        if (validApiKey.allowManagement) {
+            req.isMasterToken = true;
+        }
         return next();
     }
     
@@ -29,8 +35,8 @@ const requireAuth = (req, res, next) => {
 };
 
 const requireMasterToken = (req, res, next) => {
-    if (!req.isMasterToken) {
-        return res.status(403).json({ error: 'Master Token required' });
+    if (!req.isMasterToken && (!req.apiKey || !req.apiKey.allowManagement)) {
+        return res.status(403).json({ error: 'Master Token or Management permission required' });
     }
     next();
 };

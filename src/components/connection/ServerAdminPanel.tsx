@@ -71,20 +71,22 @@ export const ServerAdminPanel: React.FC = () => {
         localStorage.setItem('nexumia_share_webapp_url', webAppUrl);
     }, [webAppUrl]);
 
-    const fetchApiKeys = useCallback(async () => {
+    const lastCheckedRef = React.useRef<{ url: string; token: string } | null>(null);
+
+    const fetchApiKeys = useCallback(async (force = false) => {
         const helperUrl = storage.getHelperUrl();
         const helperToken = storage.getHelperToken();
 
-        if (!storage.isHelperActive()) {
+        if (!storage.isHelperActive() || !helperToken) {
             setLoadStatus('idle');
             return;
         }
 
-        if (!helperToken) {
-            setLoadStatus('idle');
+        if (!force && lastCheckedRef.current?.url === helperUrl && lastCheckedRef.current?.token === helperToken) {
             return;
         }
 
+        lastCheckedRef.current = { url: helperUrl, token: helperToken };
         setLoadStatus('loading');
         setError('');
 
@@ -115,13 +117,11 @@ export const ServerAdminPanel: React.FC = () => {
     useEffect(() => {
         fetchApiKeys();
 
-        const handleUpdate = () => fetchApiKeys();
+        const handleUpdate = () => fetchApiKeys(true);
         window.addEventListener('server_connection_updated', handleUpdate);
-        window.addEventListener('melodiq_settings_updated', handleUpdate);
 
         return () => {
             window.removeEventListener('server_connection_updated', handleUpdate);
-            window.removeEventListener('melodiq_settings_updated', handleUpdate);
         };
     }, [fetchApiKeys]);
 
@@ -158,7 +158,7 @@ export const ServerAdminPanel: React.FC = () => {
             if (!res.ok) throw new Error('Failed to create API key');
 
             setCreateOpen(false);
-            await fetchApiKeys();
+            await fetchApiKeys(true);
         } catch (e: unknown) {
             const message = e instanceof Error ? e.message : 'Unknown error';
             setError(message);
@@ -198,7 +198,7 @@ export const ServerAdminPanel: React.FC = () => {
             if (!res.ok) throw new Error('Failed to update API key permissions');
 
             setEditKey(null);
-            await fetchApiKeys();
+            await fetchApiKeys(true);
         } catch (e: unknown) {
             const message = e instanceof Error ? e.message : 'Unknown error';
             setError(message);
@@ -218,7 +218,7 @@ export const ServerAdminPanel: React.FC = () => {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${helperToken}` },
             });
-            await fetchApiKeys();
+            await fetchApiKeys(true);
         } catch (e: unknown) {
             const message = e instanceof Error ? e.message : 'Unknown error';
             setError(message);
@@ -305,7 +305,7 @@ export const ServerAdminPanel: React.FC = () => {
                     severity="error"
                     sx={{ mt: 2, bgcolor: 'rgba(211, 47, 47, 0.1)', border: '1px solid rgba(211, 47, 47, 0.3)' }}
                     action={
-                        <Button color="inherit" size="small" startIcon={<RefreshIcon />} onClick={fetchApiKeys}>
+                        <Button color="inherit" size="small" startIcon={<RefreshIcon />} onClick={() => fetchApiKeys(true)}>
                             {t('server.admin.retry', 'Retry')}
                         </Button>
                     }

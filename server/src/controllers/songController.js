@@ -182,9 +182,18 @@ async function uploadSongVideo(req, res) {
  * Checks if the library is currently scanning.
  */
 function getScanStatus(req, res) {
+    const isAdmin = !!(req.isMasterToken || (req.apiKey && req.apiKey.allowManagement));
+    const allowSongDeletion = !!(req.isMasterToken || (req.apiKey && req.apiKey.allowSongDeletion));
+
     res.json({
         scanning: isScanning(),
-        count: getSongCache().length
+        count: getSongCache().length,
+        authenticated: true,
+        isAdmin,
+        allowManagement: isAdmin,
+        allowSongDeletion,
+        role: isAdmin ? 'admin' : 'guest',
+        name: req.apiKey ? req.apiKey.name : 'Master'
     });
 }
 

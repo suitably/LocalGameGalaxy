@@ -54,6 +54,7 @@ router.delete('/api/songs/:id', songController.deleteSong);
 router.put('/api/songs/:id/txt', songController.updateSongTxt);
 router.post('/api/songs/:id/video', videoUpload.single('video'), songController.uploadSongVideo);
 router.get('/api/status', songController.getScanStatus);
+router.get('/api/auth/me', songController.getScanStatus);
 router.post('/api/songs/refresh', songController.refreshLibrary);
 
 // --- EXTERNAL SEARCH ---

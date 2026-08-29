@@ -32,7 +32,14 @@ export const ServerConnection: React.FC = () => {
     const [status, setStatus] = useState<ConnectionStatus>('idle');
     const [statusMsg, setStatusMsg] = useState('');
 
+    const isInitialMount = React.useRef(true);
+
     useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+
         storage.setHelperUrl(url);
         storage.setHelperToken(token);
         storage.setHelperActive(enabled);
