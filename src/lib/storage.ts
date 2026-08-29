@@ -29,6 +29,11 @@ export const STORAGE_KEYS = {
     IMPOSTER_SETTINGS: 'imposter-setup-settings',
     IMPOSTER_SETUP_PLAYERS: 'imposter-setup-players',
     IMPOSTER_SEEN_INFO: 'imposter-has-seen-info',
+    
+    // GitHub direct integration
+    GITHUB_TOKEN: 'nexumia_github_token',
+    GITHUB_OWNER: 'nexumia_github_owner',
+    GITHUB_REPO: 'nexumia_github_repo',
 } as const;
 
 export const storage = {

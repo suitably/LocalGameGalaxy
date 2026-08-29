@@ -1,7 +1,11 @@
 services:
-  melodiq-server:
-    image: nexumia/melodiq-server:latest
-    container_name: melodiq-server
+  nexumia-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: base
+    image: nexumia/nexumia-server:latest
+    container_name: nexumia-server
     restart: always
     ports:
       - "3000:3000"
@@ -9,12 +13,26 @@ services:
     volumes:
       - ./config.json:/app/config.json:z
       - ./models:/app/models:z
-      # Pass your music library directories here. 
-      # You can add multiple volumes if you have songs in different locations.
-      # Example: - /home/user/Music:/music:ro
     environment:
       - NODE_ENV=production
-      # Comma-separated list of allowed origins for CORS.
-      # Remove or leave empty to allow ALL origins (open mode).
       - ALLOWED_ORIGINS=https://nexumia.de,https://www.nexumia.de
 
+  nexumia-server-full:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: full
+    image: nexumia/nexumia-server:full
+    container_name: nexumia-server
+    restart: always
+    profiles:
+      - melodiq
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - ./config.json:/app/config.json:z
+      - ./models:/app/models:z
+    environment:
+      - NODE_ENV=production
+      - ALLOWED_ORIGINS=https://nexumia.de,https://www.nexumia.de

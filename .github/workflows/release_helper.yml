@@ -1,15 +1,19 @@
-name: Release Melodiq Helper
+name: Release Nexumia Server
 
 on:
   release:
     types: [published]
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   build-and-release:
-    name: Build & Release Helper
+    name: Build & Release Nexumia Server
     runs-on: ubuntu-latest
 
     steps:
@@ -36,30 +40,30 @@ jobs:
           mkdir -p release/linux release/windows release/macos
           
           # Linux
-          cp server/dist/melodiq-server-linux release/linux/
+          cp server/dist/nexumia-server-linux release/linux/
           cp server/release-scripts/start-server.sh release/linux/
-          cp server/release-scripts/MelodiqServer.desktop release/linux/
-          chmod +x release/linux/melodiq-server-linux release/linux/start-server.sh
+          cp server/release-scripts/NexumiaServer.desktop release/linux/
+          chmod +x release/linux/nexumia-server-linux release/linux/start-server.sh
           
           # Windows
-          cp server/dist/melodiq-server-win.exe release/windows/
+          cp server/dist/nexumia-server-win.exe release/windows/
           cp server/release-scripts/start-server.bat release/windows/
           
           # macOS
-          cp server/dist/melodiq-server-macos release/macos/
+          cp server/dist/nexumia-server-macos release/macos/
           cp server/release-scripts/start-server.command release/macos/
-          chmod +x release/macos/melodiq-server-macos release/macos/start-server.command
+          chmod +x release/macos/nexumia-server-macos release/macos/start-server.command
 
       - name: Create Archives
         run: |
-          cd release/linux && tar -czf ../../melodiq-server-linux.tar.gz * && cd ../..
-          cd release/windows && zip -r ../../melodiq-server-win.zip * && cd ../..
-          cd release/macos && tar -czf ../../melodiq-server-macos.tar.gz * && cd ../..
+          cd release/linux && tar -czf ../../nexumia-server-linux.tar.gz * && cd ../..
+          cd release/windows && zip -r ../../nexumia-server-win.zip * && cd ../..
+          cd release/macos && tar -czf ../../nexumia-server-macos.tar.gz * && cd ../..
 
       - name: Attach Server Binaries to Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            melodiq-server-linux.tar.gz
-            melodiq-server-macos.tar.gz
-            melodiq-server-win.zip
+            nexumia-server-linux.tar.gz
+            nexumia-server-macos.tar.gz
+            nexumia-server-win.zip

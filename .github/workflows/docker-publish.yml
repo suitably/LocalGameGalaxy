@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Images
 
 on:
   push:
@@ -6,7 +6,9 @@ on:
       - main
     paths:
       - 'server/**'
-  workflow_dispatch: # Ermöglicht das manuelle Starten des Workflows
+    tags:
+      - 'v*'
+  workflow_dispatch: # Allows manual workflow triggering
 
 jobs:
   build-and-push:
@@ -24,12 +26,30 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push
+      # 1. Build & Push Lightweight Base Image (~200MB) -> :latest, :base
+      - name: Build and Push Base Image
         uses: docker/build-push-action@v5
         with:
           context: ./server
           file: ./server/Dockerfile
+          target: base
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:buildcache,mode=max
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:base
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:buildcache-base
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:buildcache-base,mode=max
+
+      # 2. Build & Push Full Image with PyTorch & AI Vocal Separation (~2GB) -> :full, :melodiq
+      - name: Build and Push Full Image (Melodiq AI)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./server
+          file: ./server/Dockerfile
+          target: full
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:full
+            ${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:melodiq
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:buildcache-full
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:buildcache-full,mode=max

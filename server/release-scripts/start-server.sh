@@ -17,7 +17,7 @@ fi
 # Check if port 3000 is in use
 if lsof -Pi :3000 -sTCP:LISTEN -t >/dev/null ; then
     echo "⚠️  WARNING: Port 3000 is already in use!"
-    echo "The Melodiq Server requires port 3000 to be free."
+    echo "The Nexumia Server requires port 3000 to be free."
     
     # Try to identify the process
     PID=$(lsof -Pi :3000 -sTCP:LISTEN -t)
@@ -45,8 +45,8 @@ if lsof -Pi :3000 -sTCP:LISTEN -t >/dev/null ; then
     fi
 fi
 
-echo "Starting Melodiq Server..."
-./melodiq-server-linux
+echo "Starting Nexumia Server..."
+./nexumia-server-linux
 EXIT_CODE=$?
 echo "Server exited with code $EXIT_CODE"
 echo "Press Enter to close this window..."

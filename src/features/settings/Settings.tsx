@@ -6,6 +6,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePageTitle } from '../../context/TitleContext';
 import { GeneralSettings } from './components/GeneralSettings';
 import { MelodiqSettingsCategory } from './components/MelodiqSettingsCategory';
+import { ServerConnection } from '../../components/connection/ServerConnection';
+import { ServerAdminPanel } from '../../components/connection/ServerAdminPanel';
 
 interface SettingsProps {
     activeGameId?: string;
@@ -13,7 +15,7 @@ interface SettingsProps {
     onNavigateToPlaylists?: () => void;
 }
 
-type TabType = 'general' | 'melodiq';
+type TabType = 'general' | 'server' | 'melodiq';
 
 export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavigateToPlaylists }) => {
     const { t } = useTranslation();
@@ -27,9 +29,15 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
 
     // Determine initial tab from props or URL
     const gameParam = activeGameId || searchParams.get('game') || '';
-    const initialTab: TabType = gameParam.toLowerCase() === 'melodiq' ? 'melodiq' : 'general';
+    const tabParam = searchParams.get('tab') || '';
 
-    const [activeTab, setActiveTab] = useState<TabType>(initialTab);
+    const resolveInitialTab = (): TabType => {
+        if (tabParam === 'server') return 'server';
+        if (gameParam.toLowerCase() === 'melodiq') return 'melodiq';
+        return 'general';
+    };
+
+    const [activeTab, setActiveTab] = useState<TabType>(resolveInitialTab);
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: TabType) => {
         setActiveTab(newValue);
@@ -61,7 +69,11 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
                         {t('settings.title', 'Settings')}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                        {activeTab === 'melodiq' ? t('games.melodiq.title', 'Melodiq') : t('settings.title', 'Settings')}
+                        {activeTab === 'melodiq'
+                            ? t('games.melodiq.title', 'Melodiq')
+                            : activeTab === 'server'
+                              ? t('settings.server_tab', 'Server')
+                              : t('settings.title', 'Settings')}
                     </Typography>
                 </Box>
             </Box>
@@ -103,8 +115,12 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
                         }}
                     >
                         <Tab 
-                            label={t('settings.title', 'General')} 
+                            label={t('settings.general_tab', 'General')} 
                             value="general" 
+                        />
+                        <Tab 
+                            label={t('settings.server_tab', 'Server')} 
+                            value="server" 
                         />
                         <Tab 
                             label={t('games.melodiq.title', 'Melodiq')} 
@@ -116,6 +132,12 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
                 {/* Content Panel */}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                     {activeTab === 'general' && <GeneralSettings />}
+                    {activeTab === 'server' && (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            <ServerConnection />
+                            <ServerAdminPanel />
+                        </Box>
+                    )}
                     {activeTab === 'melodiq' && (
                         <MelodiqSettingsCategory onNavigateToPlaylists={onNavigateToPlaylists} />
                     )}

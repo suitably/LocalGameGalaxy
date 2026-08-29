@@ -7,6 +7,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useTranslation } from 'react-i18next';
 import { usePWAInstall } from '../../../hooks/usePWAInstall';
 import { PWAInstallDialog } from '../../../components/pwa';
+import { GitHubSettings } from './GitHubSettings';
 
 export const GeneralSettings: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -79,6 +80,9 @@ export const GeneralSettings: React.FC = () => {
                     </Select>
                 </FormControl>
             </Paper>
+
+            {/* GitHub Integration */}
+            <GitHubSettings />
 
             {/* Feedback & Bug Report */}
             <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>

@@ -57,7 +57,7 @@ const httpsServer = https.createServer(httpsOptions, app);
 httpsServer.listen(SSL_PORT, '0.0.0.0', () => {
     const localIp = getLocalIp();
     console.log(`---------------------------------------------------`);
-    console.log(`MELODIQ HELPER RUNNING (HTTPS)`);
+    console.log(`NEXUMIA SERVER RUNNING (HTTPS)`);
     console.log(`---------------------------------------------------`);
     console.log(`Local Access:   http://localhost:${PORT}`);
     console.log(`Secure Access:  https://${localIp}:${SSL_PORT}`);

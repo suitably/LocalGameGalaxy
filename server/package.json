@@ -1,7 +1,7 @@
 {
-    "name": "melodiq-server",
+    "name": "nexumia-server",
     "version": "1.0.0",
-    "description": "Local server for Melodiq song library",
+    "description": "Local server for Nexumia library",
     "main": "index.js",
     "scripts": {
         "start": "node index.js",

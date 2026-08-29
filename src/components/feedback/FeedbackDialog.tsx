@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Box, Typography, TextField, Button, CircularProgress, Alert, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useTranslation } from 'react-i18next';
+import { resolveGitHubConfig, createGitHubIssue } from '../../lib/github';
+import { storage } from '../../lib/storage';
 
 export const FeedbackDialog: React.FC = () => {
     const { t } = useTranslation();
@@ -38,37 +40,69 @@ export const FeedbackDialog: React.FC = () => {
         setSubmitting(true);
         setStatus(null);
 
-        const baseUrl = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
-        const token = localStorage.getItem('melodiq_helper_token') || '';
-        const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+        const { config: ghConfig, source } = resolveGitHubConfig();
 
         try {
-            const res = await fetch(`${cleanBaseUrl}/api/feedback`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                },
-                body: JSON.stringify({
-                    title: feedbackTitle.trim(),
+            if (source === 'local' && ghConfig) {
+                // Direct GitHub API call with local PAT
+                const result = await createGitHubIssue(ghConfig, {
+                    title: `[Feedback] ${feedbackTitle.trim()}`,
                     body: feedbackBody.trim(),
-                }),
-            });
+                    labels: ['user-feedback'],
+                });
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to submit feedback');
+                if (result.success) {
+                    setStatus({
+                        type: 'success',
+                        message: t('settings.submit_success', 'Feedback successfully submitted!'),
+                        url: result.issueUrl,
+                    });
+                    setFeedbackTitle('');
+                    setFeedbackBody('');
+                } else {
+                    throw new Error(result.error || 'Failed to create issue');
+                }
+            } else if (source === 'server') {
+                // Proxy through Nexumia Server
+                const baseUrl = storage.getHelperUrl();
+                const token = storage.getHelperToken();
+                const cleanBaseUrl = baseUrl.replace(/\/$/, '');
 
-            setStatus({
-                type: 'success',
-                message: t('settings.submit_success', 'Feedback successfully submitted!'),
-                url: data.issueUrl,
-            });
-            setFeedbackTitle('');
-            setFeedbackBody('');
-        } catch (err: any) {
+                const res = await fetch(`${cleanBaseUrl}/api/feedback`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    },
+                    body: JSON.stringify({
+                        title: feedbackTitle.trim(),
+                        body: feedbackBody.trim(),
+                    }),
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to submit feedback');
+
+                setStatus({
+                    type: 'success',
+                    message: t('settings.submit_success', 'Feedback successfully submitted!'),
+                    url: data.issueUrl,
+                });
+                setFeedbackTitle('');
+                setFeedbackBody('');
+            } else {
+                throw new Error(
+                    t(
+                        'settings.feedback_no_config',
+                        'No GitHub connection configured. Please set up a GitHub Token in General Settings or connect a Nexumia Server.',
+                    ),
+                );
+            }
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Unknown error';
             setStatus({
                 type: 'error',
-                message: t('settings.submit_error', 'Failed to submit feedback: {{error}}', { error: err.message }),
+                message: t('settings.submit_error', 'Failed to submit feedback: {{error}}', { error: message }),
             });
         } finally {
             setSubmitting(false);
@@ -104,7 +138,7 @@ export const FeedbackDialog: React.FC = () => {
                             {t('settings.feedback_title', 'Feedback & Bug Report')}
                         </Typography>
                         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
-                            {t('settings.feedback_desc', 'Creates a GitHub issue via your Helper Server.')}
+                            {t('settings.feedback_desc', 'Creates a GitHub issue via your configured connection.')}
                         </Typography>
                     </Box>
                     <IconButton onClick={handleClose} size="small" sx={{ color: 'rgba(255,255,255,0.6)', '&:hover': { color: 'white' } }}>

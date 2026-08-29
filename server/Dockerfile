@@ -1,11 +1,7 @@
-FROM node:20-bookworm-slim
+FROM node:20-bookworm-slim AS base
 
-# Install Python, pip, ffmpeg and yt-dlp
+# Only install essential tools: ffmpeg, yt-dlp, deno
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 \
-    python3-pip \
-    python3-dev \
-    build-essential \
     ffmpeg \
     curl \
     ca-certificates \
@@ -16,26 +12,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=docker.io/denoland/deno:bin /deno /usr/local/bin/deno
 
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm install --production
+COPY . .
 
-# Pre-install CPU-only PyTorch and audio-separator (enables out-of-the-box vocal separation)
+EXPOSE 3000
+EXPOSE 3001
+
+CMD ["node", "index.js"]
+
+FROM base AS full
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    python3-dev \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN pip3 install --no-cache-dir --break-system-packages \
     torch torchvision torchaudio \
     --index-url https://download.pytorch.org/whl/cpu \
     && pip3 install --no-cache-dir --break-system-packages \
     "audio-separator[cpu]" "whisper-timestamped"
-
-WORKDIR /app
-
-# Copy package files and install dependencies
-COPY package.json package-lock.json ./
-RUN npm install --production
-
-# Copy server source code
-COPY . .
-
-# Expose ports (default config uses 3000 and 3001)
-EXPOSE 3000
-EXPOSE 3001
-
-# Command to run the server
-CMD ["node", "index.js"]

@@ -85,10 +85,6 @@ function saveConfig() {
 // Initial load
 loadConfig();
 
-
-// Initial load
-loadConfig();
-
 module.exports = {
     get port() {
         return currentConfig.port;

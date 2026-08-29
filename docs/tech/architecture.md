@@ -57,6 +57,18 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
     -   Dynamic dice highlight engine (`diceHighlight.ts`) and variant-aware scoring reducer (`qwixxReducer.ts`).
     -   See [Qwixx Sheet Rules](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/qwixx-sheet-rules.md) for full variant specifications.
 
+### Nexumia Server & Multi-Game Companion
+The backend helper server (`server/`) is generalized as **Nexumia Server**:
+- Provides local song library management and streaming (`/api/songs`, `/media`)
+- BitTorrent WebRTC signaling tracker (`bittorrent-tracker` on HTTP/HTTPS upgrade)
+- API key generation and friend access delegation with per-key rate limits and permissions
+- GitHub issue & GuessArt catalogue Pull Request publishing proxy (`/api/feedback`, `/api/guessart/publish-catalogue`)
+- **Docker Architecture**: Multi-stage build with `base` (lightweight ~200MB Node.js + yt-dlp/ffmpeg) and `full` (Python, PyTorch, whisper, audio-separator for Melodiq vocal separation), selected via Docker Compose profiles (`melodiq`).
+
+### GitHub Integration Architecture
+- **Hybrid Model**: Direct GitHub API client (`src/lib/github.ts`) using a locally stored Personal Access Token (PAT) as priority, with fallback to the Nexumia Server proxy.
+- Enables submitting feedback, reporting bugs, and publishing GuessArt word catalogues directly from the browser/PWA without requiring a local helper server.
+
 ### State Management
 -   **Reducers / Engine**: Complex game logic is handled by standard Redux-pattern reducers or explicit state machines (`LocalGameEngine`).
 -   **Context / Hooks**: Pass dispatch/state down the tree with custom hooks (`useGuessArtGame`, `useGuessArtLobby`).

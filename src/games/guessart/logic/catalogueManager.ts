@@ -1,6 +1,7 @@
 import { STORE_CATALOGUES, STORE_METADATA, clearStore, getByKey, putItem } from './db';
 import { DEFAULT_CATEGORIES, DEFAULT_WORDS } from './defaultLexicon';
 import { normalizeLanguageCode } from './hintResolver';
+import { resolveGitHubConfig, createGitHubPR } from '../../../lib/github';
 import type {
   CatalogueDiffSummary,
   CategoryItem,
@@ -233,7 +234,8 @@ export const DEFAULT_WORDS: WordItem[] = ${wordsJson};
 };
 
 /**
- * Publishes the catalogue changes to GitHub via the helper server PR API.
+ * Publishes the catalogue changes to GitHub.
+ * Strategy: Try direct GitHub API (local PAT) first, fall back to server proxy.
  */
 export const publishCatalogueToGit = async (options: {
   baseUrl: string;
@@ -286,6 +288,37 @@ export const publishCatalogueToGit = async (options: {
     summaryMarkdown += `\n`;
   }
 
+  const prTitle = options.prTitle || '[GuessArt] Update Word & Category Catalogue';
+  const prBody = summaryMarkdown + '\n---\n*Created automatically via LocalGameGalaxy In-Game Catalogue Editor.*';
+
+  // Strategy 1: Try direct GitHub API with local PAT
+  const { config: ghConfig, source } = resolveGitHubConfig();
+
+  if (source === 'local' && ghConfig) {
+    const result = await createGitHubPR(ghConfig, {
+      filePath: 'src/games/guessart/logic/defaultLexicon.ts',
+      fileContent: tsContent,
+      branchPrefix: 'guessart/catalogue-update',
+      commitMessage: 'feat(guessart): update word and category catalogue',
+      prTitle,
+      prBody,
+    });
+
+    if (result.success && result.prUrl && result.prNumber !== undefined && result.branch) {
+      return {
+        success: true,
+        prUrl: result.prUrl,
+        prNumber: result.prNumber,
+        branch: result.branch,
+      };
+    }
+    // If direct fails and no server is available, throw error
+    if (!options.baseUrl) {
+      throw new Error(result.error || 'Failed to publish catalogue via GitHub API');
+    }
+  }
+
+  // Strategy 2: Fall back to server proxy
   const cleanBaseUrl = options.baseUrl.replace(/\/$/, '');
   const response = await fetch(`${cleanBaseUrl}/api/guessart/publish-catalogue`, {
     method: 'POST',
@@ -296,7 +329,7 @@ export const publishCatalogueToGit = async (options: {
     body: JSON.stringify({
       content: tsContent,
       summary: summaryMarkdown,
-      prTitle: options.prTitle || '[GuessArt] Update Word & Category Catalogue',
+      prTitle,
     }),
   });
 
@@ -312,3 +345,4 @@ export const publishCatalogueToGit = async (options: {
     branch: data.branch,
   };
 };
+

@@ -1,9 +1,10 @@
 services:
-  melodiq-server:
+  nexumia-server:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: melodiq-server-dev
+      target: base
+    container_name: nexumia-server-dev
     restart: "no"
     ports:
       - "3000:3000"

@@ -1,8 +1,8 @@
 #!/usr/bin/env xdg-open
 [Desktop Entry]
 Type=Application
-Name=Melodiq Server
-Comment=Start the Melodiq Server
+Name=Nexumia Server
+Comment=Start the Nexumia Server
 Exec=/home/deck/Projects/LocalGameGalaxy/server/dist/start-server.sh
 Icon=utilities-terminal
 Terminal=true
