@@ -17,34 +17,55 @@ export default defineConfig({
     }),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      injectRegister: 'auto',
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg', 'pwa/*.png'],
       manifest: {
         name: 'LocalGameGalaxy',
         short_name: 'GameGalaxy',
         description: 'Local multiplayer party game hub.',
-        theme_color: '#000000',
-        background_color: '#000000',
+        theme_color: '#121212',
+        background_color: '#121212',
         display: 'standalone',
+        display_override: ['standalone', 'window-controls-overlay', 'minimal-ui'],
         start_url: '/',
         scope: '/',
+        id: '/',
+        orientation: 'any',
+        categories: ['games', 'entertainment'],
         icons: [
           {
-            src: 'pwa/android-chrome-192x192.png',
+            src: '/pwa/android-chrome-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: 'pwa/android-chrome-512x512.png',
+            src: '/pwa/android-chrome-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: 'pwa/maskable_icon.png',
+            src: '/pwa/maskable_icon.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
+          },
+          {
+            src: '/pwa/icon_full.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any'
           }
         ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff,woff2}'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//]
+      },
+      devOptions: {
+        enabled: true
       }
     }),
     {

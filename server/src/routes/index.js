@@ -91,6 +91,9 @@ router.post('/api/config/github', configController.setGithubConfig);
 // --- FEEDBACK / ISSUE SUBMISSION ---
 router.post('/api/feedback', configController.submitFeedback);
 
+// --- GUESSART CATALOGUE PUBLISHING ---
+router.post('/api/guessart/publish-catalogue', configController.publishGuessArtCatalogue);
+
 // --- USDB DOWNLOAD JOBS ---
 router.post('/api/usdb/download', jobController.downloadUsdb);
 router.get('/api/usdb/jobs', jobController.getUsdbJobs);

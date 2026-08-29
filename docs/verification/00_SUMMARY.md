@@ -21,6 +21,7 @@ This directory contains walkthroughs and verification logs. These documents prov
 - [Scoreboard QR Code Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/scoreboard-qr-code-walkthrough.md)
 - [WebRTC Connection Stability Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/webrtc-connection-stability-walkthrough.md)
 - [Melodiq Lyrics Timing Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/melodiq-lyrics-timing-walkthrough.md)
-
+- [GuessArt Local-First Integration Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/guessart-walkthrough.md)
+- [Qwixx Sheet Variants & Selector Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/qwixx-sheet-variants-walkthrough.md)
 
 ID: DOCS-VERIFICATION-SUMMARY

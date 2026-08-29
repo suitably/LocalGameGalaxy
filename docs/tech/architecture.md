@@ -41,16 +41,28 @@ src/
 ## 3. Core Concepts
 
 ### Game Modules (`src/games/*`)
-Each game is self-contained. It typically exports a main component (e.g., `WerewolfGame`) and manages its own internal state via a `gameReducer`.
+Each game is self-contained. It typically exports a main component (e.g., `WerewolfGame`, `GuessArtGame`) and manages its own internal state via a state machine / reducer / repository.
 -   **Logic Separation**: Business logic (rules, win conditions) resides in `logic/`. It should be testable without UI.
 -   **UI**: Components reside in `components/`.
+-   **GuessArt (`src/games/guessart`)**:
+    -   Offline-first drawing & guessing game with native pass-and-play mechanics.
+    -   IndexedDB storage via `guessart-local` database (`games`, `rounds`, `catalogues`, `metadata` stores).
+    -   In-game Category & Word Catalogue Editor (`CatalogueEditorDialog`) with local IndexedDB persistence and automated Git Pull Request publishing pipeline via helper server (`POST /api/guessart/publish-catalogue`).
+    -   Integrated Excalidraw drawing canvas & animated stroke replay engine (`ExcalidrawViewer`).
+    -   Fuzzy evaluation engine with German umlaut transliteration, diacritic normalization, and inflection generation (`guessEvaluator`, `lingo`).
+    -   Deterministic multi-stage hint provider (`HintWordSlots`, `HintLetterChips`).
+-   **Qwixx (`src/games/qwixx`)**:
+    -   Tactical roll-and-write dice game with real-time peer sync over `BroadcastChannel`.
+    -   Modular sheet configuration engine (`sheetDefinitions.ts`) supporting official expansions (Classic, Gemixxt A/B, Big Points, Connected, Double, Bonus).
+    -   Dynamic dice highlight engine (`diceHighlight.ts`) and variant-aware scoring reducer (`qwixxReducer.ts`).
+    -   See [Qwixx Sheet Rules](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/qwixx-sheet-rules.md) for full variant specifications.
 
 ### State Management
--   **Reducers**: Complex game logic is handled by standard Redux-pattern reducers (`state + action = new_state`).
--   **Context**: Pass dispatch/state down the tree.
+-   **Reducers / Engine**: Complex game logic is handled by standard Redux-pattern reducers or explicit state machines (`LocalGameEngine`).
+-   **Context / Hooks**: Pass dispatch/state down the tree with custom hooks (`useGuessArtGame`, `useGuessArtLobby`).
 
 ### Internationalization
--   `src/i18n.ts` handles translations.
+-   `src/i18n.ts` and `public/locales/{de,en}/translation.json` handle translations.
 -   All user-facing text must be internationalized.
 
 ## 4. Component Design & SOLID Guidelines
@@ -59,7 +71,7 @@ To ensure the codebase remains maintainable and free of spaghetti code, all futu
 
 1.  **Single Responsibility Principle (SRP)**:
     -   **Container vs. Presentational**: Separate components that fetch data or manage state (Containers) from components that purely render UI based on props (Presentational).
-    -   **Custom Hooks**: Extract complex `useEffect`, `useState`, or business logic into custom hooks (e.g., `useScoreCalculation.ts`) rather than bloating the React component body.
+    -   **Custom Hooks**: Extract complex `useEffect`, `useState`, or business logic into custom hooks (e.g., `useScoreCalculation.ts`, `useGuessArtGame.ts`) rather than bloating the React component body.
 2.  **Open/Closed Principle**:
     -   Components should be open for extension but closed for modification. Use `children` props or render props to allow parents to customize internal content without modifying the core component.
 3.  **Interface Segregation**:

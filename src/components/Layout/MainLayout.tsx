@@ -13,7 +13,9 @@ export const MainLayout: React.FC = () => {
             <Box sx={{ 
                 display: 'flex', 
                 flexDirection: 'column', 
-                height: '100vh', 
+                height: '100dvh', 
+                maxHeight: '100dvh',
+                width: '100vw',
                 overflow: 'hidden',
                 pt: 'var(--safe-area-inset-top, env(safe-area-inset-top, 0px))',
                 pb: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))',
@@ -29,9 +31,11 @@ export const MainLayout: React.FC = () => {
                 ) : (
                     <Box sx={{
                         flex: 1,
-                        overflow: 'auto',
-                        px: { xs: 2, sm: 4, md: 8, lg: 12 },
-                        py: 4,
+                        overflowY: 'auto',
+                        overflowX: 'hidden',
+                        WebkitOverflowScrolling: 'touch',
+                        px: { xs: 1.5, sm: 3, md: 6, lg: 10 },
+                        py: { xs: 2, sm: 3, md: 4 },
                         width: '100%',
                         maxWidth: '1920px',
                         margin: '0 auto'

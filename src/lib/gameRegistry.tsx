@@ -3,6 +3,7 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import CasinoIcon from '@mui/icons-material/Casino';
+import PaletteIcon from '@mui/icons-material/Palette';
 import { SongsProvider } from '../games/melodiq';
 
 export interface GameRouteDefinition {
@@ -31,6 +32,7 @@ const MelodiqGame = lazy(() => import('../games/melodiq').then(m => ({ default: 
 const MelodiqQueue = lazy(() => import('../games/melodiq').then(m => ({ default: m.MelodiqQueue })));
 const MelodiqTV = lazy(() => import('../games/melodiq').then(m => ({ default: m.MelodiqTV })));
 const QwixxGame = lazy(() => import('../games/qwixx').then(m => ({ default: m.QwixxGame })));
+const GuessArtGame = lazy(() => import('../games/guessart').then(m => ({ default: m.GuessArtGame })));
 
 class GameRegistry {
     private games: GameDefinition[] = [
@@ -94,6 +96,17 @@ class GameRegistry {
             colorEnd: '#f57c00',
             hoverColor: '#f57c00',
             component: <QwixxGame />
+        },
+        {
+            id: 'guessart',
+            route: 'games/guessart',
+            titleKey: 'games.guessart.title',
+            descriptionKey: 'games.guessart.description',
+            icon: <PaletteIcon sx={{ fontSize: 72, mb: 2 }} />,
+            colorStart: '#80deea',
+            colorEnd: '#00838f',
+            hoverColor: '#00838f',
+            component: <GuessArtGame />
         }
     ];
 

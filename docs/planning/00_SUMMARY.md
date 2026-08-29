@@ -20,6 +20,8 @@ This directory contains implementation plans for proposed changes. Each plan det
 - [Scoreboard QR Code Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/scoreboard-qr-code-plan.md)
 - [WebRTC Connection Stability Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/webrtc-connection-stability-plan.md)
 - [Melodiq Lyrics Timing Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/melodiq-lyrics-timing-plan.md)
-
+- [PWA & Smartphone UI Enhancement Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/pwa-mobile-ui-plan.md)
+- [GuessArt Local-First Integration Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/guessart-plan.md)
+- [Qwixx Sheet Variants & Selector Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/qwixx-sheet-variants-plan.md)
 
 ID: DOCS-PLANNING-SUMMARY

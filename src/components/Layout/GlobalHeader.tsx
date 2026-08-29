@@ -4,11 +4,14 @@ import MenuIcon from '@mui/icons-material/Menu';
 import HomeIcon from '@mui/icons-material/Home';
 import SettingsIcon from '@mui/icons-material/Settings';
 import FeedbackIcon from '@mui/icons-material/Feedback';
+import InstallMobileIcon from '@mui/icons-material/InstallMobile';
 import { useTranslation } from 'react-i18next';
 import { useLayout } from '../../context/LayoutContext';
 import { useTitle } from '../../context/TitleContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { gameRegistry } from '../../lib/gameRegistry';
+import { usePWAInstall } from '../../hooks/usePWAInstall';
+import { PWAInstallDialog } from '../pwa/PWAInstallDialog';
 
 export const GlobalHeader: React.FC = () => {
     const { t } = useTranslation();
@@ -18,8 +21,10 @@ export const GlobalHeader: React.FC = () => {
     const location = useLocation();
     const theme = useTheme();
     const isLargeScreen = useMediaQuery(theme.breakpoints.up('md'));
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const activeGame = gameRegistry.findGameByPath(location.pathname);
     const hasSettings = activeGame?.hasSettings ?? false;
+    const { isStandalone, isInstallable, installApp, showIOSGuide, setShowIOSGuide } = usePWAInstall();
 
     // State for Burger Menu
     const [menuAnchorEl, setMenuAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -52,108 +57,148 @@ export const GlobalHeader: React.FC = () => {
     const overflowItems = isLargeScreen ? [] : menuItems;
 
     return (
-        <AppBar position="static">
-            <Toolbar sx={{ alignItems: 'center' }}>
-                <IconButton
-                    size="large"
-                    edge="start"
-                    color="inherit"
-                    aria-label="home"
-                    sx={{ mr: 2 }}
-                    onClick={handleHomeClick}
-                >
-                    <HomeIcon />
-                </IconButton>
-                <Typography variant="h6" component="div" sx={{ flexGrow: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {title || pageTitle || t('app.title')}
-                </Typography>
-
-                {/* Settings Icon (Global) - Hide on game routes because they have their own settings */}
-                {!hasSettings && (
-                    <Tooltip title={t('settings.title', 'Settings')}>
-                        <IconButton
-                            color="inherit"
-                            onClick={() => navigate('/settings')}
-                            sx={{ ml: 1 }}
-                        >
-                            <SettingsIcon />
-                        </IconButton>
-                    </Tooltip>
-                )}
-
-                {/* Feedback Icon - always visible */}
-                <Tooltip title={t('settings.feedback_title', 'Feedback & Bug Report')}>
+        <>
+            <AppBar 
+                position="static" 
+                elevation={1}
+                sx={{ 
+                    bgcolor: '#18181b',
+                    backgroundImage: 'none',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+                }}
+            >
+                <Toolbar sx={{ alignItems: 'center', minHeight: { xs: 56, sm: 64 }, px: { xs: 1, sm: 2 } }}>
                     <IconButton
-                        id="feedback-button"
+                        size="medium"
+                        edge="start"
                         color="inherit"
-                        onClick={() => window.dispatchEvent(new Event('feedback:open'))}
-                        sx={{ ml: 1 }}
+                        aria-label="home"
+                        sx={{ mr: { xs: 1, sm: 2 }, p: 1.25 }}
+                        onClick={handleHomeClick}
                     >
-                        <FeedbackIcon />
+                        <HomeIcon fontSize={isSmallScreen ? "small" : "medium"} />
                     </IconButton>
-                </Tooltip>
+                    <Typography 
+                        variant="h6" 
+                        component="div" 
+                        sx={{ 
+                            flexGrow: 1, 
+                            fontSize: { xs: '1.05rem', sm: '1.25rem' },
+                            fontWeight: 600,
+                            overflow: 'hidden', 
+                            textOverflow: 'ellipsis', 
+                            whiteSpace: 'nowrap' 
+                        }}
+                    >
+                        {title || pageTitle || t('app.title')}
+                    </Typography>
 
-                {/* Always Visible Actions (Custom actions lik CastButton usually stay visible) */}
-                {customHeaderActions}
+                    {/* PWA Install Button when not in standalone mode */}
+                    {!isStandalone && isInstallable && (
+                        <Tooltip title={t('app.install_pwa', 'Install App')}>
+                            <IconButton
+                                color="primary"
+                                onClick={installApp}
+                                sx={{ ml: 0.5, p: 1.25 }}
+                                aria-label={t('app.install_pwa', 'Install App')}
+                            >
+                                <InstallMobileIcon fontSize={isSmallScreen ? "small" : "medium"} />
+                            </IconButton>
+                        </Tooltip>
+                    )}
 
-                {/* Toolbar Items (Desktop) */}
-                {visibleInToolbar.map((item, index) => (
-                    <Tooltip key={index} title={item.label}>
-                        <span>
+                    {/* Settings Icon (Global) - Hide on game routes because they have their own settings */}
+                    {!hasSettings && (
+                        <Tooltip title={t('settings.title', 'Settings')}>
                             <IconButton
                                 color="inherit"
-                                onClick={item.action}
-                                disabled={item.disabled}
+                                onClick={() => navigate('/settings')}
+                                sx={{ ml: 0.5, p: 1.25 }}
                             >
-                                {item.icon}
+                                <SettingsIcon fontSize={isSmallScreen ? "small" : "medium"} />
                             </IconButton>
-                        </span>
-                    </Tooltip>
-                ))}
+                        </Tooltip>
+                    )}
 
-                {/* Burger Menu (Mobile - ONLY if there are overflow items) */}
-                {overflowItems.length > 0 && (
-                    <div>
+                    {/* Feedback Icon - always visible */}
+                    <Tooltip title={t('settings.feedback_title', 'Feedback & Bug Report')}>
                         <IconButton
-                            size="large"
-                            edge="end"
-                            aria-label="menu"
-                            aria-controls="menu-appbar"
-                            aria-haspopup="true"
-                            onClick={handleMenuOpen}
+                            id="feedback-button"
                             color="inherit"
+                            onClick={() => window.dispatchEvent(new Event('feedback:open'))}
+                            sx={{ ml: 0.5, p: 1.25 }}
                         >
-                            <MenuIcon />
+                            <FeedbackIcon fontSize={isSmallScreen ? "small" : "medium"} />
                         </IconButton>
-                        <Menu
-                            id="menu-appbar"
-                            anchorEl={menuAnchorEl}
-                            anchorOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
-                            }}
-                            keepMounted
-                            transformOrigin={{
-                                vertical: 'top',
-                                horizontal: 'right',
-                            }}
-                            open={Boolean(menuAnchorEl)}
-                            onClose={handleMenuClose}
-                        >
-                            {overflowItems.map((item, index) => (
-                                <MenuItem
-                                    key={index}
-                                    onClick={() => handleAction(item.action)}
+                    </Tooltip>
+
+                    {/* Always Visible Actions (Custom actions like CastButton usually stay visible) */}
+                    {customHeaderActions}
+
+                    {/* Toolbar Items (Desktop) */}
+                    {visibleInToolbar.map((item, index) => (
+                        <Tooltip key={index} title={item.label}>
+                            <span>
+                                <IconButton
+                                    color="inherit"
+                                    onClick={item.action}
                                     disabled={item.disabled}
+                                    sx={{ p: 1.25 }}
                                 >
-                                    {item.icon && <Box component="span" sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>{item.icon}</Box>}
-                                    {item.label}
-                                </MenuItem>
-                            ))}
-                        </Menu>
-                    </div>
-                )}
-            </Toolbar >
-        </AppBar >
+                                    {item.icon}
+                                </IconButton>
+                            </span>
+                        </Tooltip>
+                    ))}
+
+                    {/* Burger Menu (Mobile - ONLY if there are overflow items) */}
+                    {overflowItems.length > 0 && (
+                        <div>
+                            <IconButton
+                                size="medium"
+                                edge="end"
+                                aria-label="menu"
+                                aria-controls="menu-appbar"
+                                aria-haspopup="true"
+                                onClick={handleMenuOpen}
+                                color="inherit"
+                                sx={{ ml: 0.5, p: 1.25 }}
+                            >
+                                <MenuIcon fontSize={isSmallScreen ? "small" : "medium"} />
+                            </IconButton>
+                            <Menu
+                                id="menu-appbar"
+                                anchorEl={menuAnchorEl}
+                                anchorOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                                keepMounted
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                                open={Boolean(menuAnchorEl)}
+                                onClose={handleMenuClose}
+                            >
+                                {overflowItems.map((item, index) => (
+                                    <MenuItem
+                                        key={index}
+                                        onClick={() => handleAction(item.action)}
+                                        disabled={item.disabled}
+                                        sx={{ minHeight: 48, py: 1.5 }}
+                                    >
+                                        {item.icon && <Box component="span" sx={{ mr: 1.5, display: 'flex', alignItems: 'center' }}>{item.icon}</Box>}
+                                        {item.label}
+                                    </MenuItem>
+                                ))}
+                            </Menu>
+                        </div>
+                    )}
+                </Toolbar>
+            </AppBar>
+            <PWAInstallDialog open={showIOSGuide} onClose={() => setShowIOSGuide(false)} />
+        </>
     );
 };
+

@@ -9,6 +9,18 @@ import { LayoutProvider } from './context/LayoutContext';
 import { SettingsProvider } from './games/melodiq';
 import './i18n';
 import './index.css';
+import { registerSW } from 'virtual:pwa-register';
+
+// Auto-register service worker for PWA offline capabilities and update management
+registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    console.log('PWA update available, will refresh automatically.');
+  },
+  onOfflineReady() {
+    console.log('PWA is ready to work offline.');
+  },
+});
 
 import { SafeArea } from 'capacitor-plugin-safe-area';
 

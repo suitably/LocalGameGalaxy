@@ -1,11 +1,16 @@
 import React from 'react';
-import { Typography, Paper, FormControl, InputLabel, Select, MenuItem, Box, Button } from '@mui/material';
+import { Typography, Paper, FormControl, InputLabel, Select, MenuItem, Box, Button, Chip } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
 import FeedbackIcon from '@mui/icons-material/Feedback';
+import InstallMobileIcon from '@mui/icons-material/InstallMobile';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useTranslation } from 'react-i18next';
+import { usePWAInstall } from '../../../hooks/usePWAInstall';
+import { PWAInstallDialog } from '../../../components/pwa';
 
 export const GeneralSettings: React.FC = () => {
     const { t, i18n } = useTranslation();
+    const { isStandalone, isInstallable, installApp, showIOSGuide, setShowIOSGuide } = usePWAInstall();
 
     const handleLanguageChange = (event: SelectChangeEvent) => {
         i18n.changeLanguage(event.target.value);
@@ -13,7 +18,49 @@ export const GeneralSettings: React.FC = () => {
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            <Paper sx={{ p: 4, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
+            {/* PWA / App Installation Info */}
+            <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5, mb: 1.5 }}>
+                    <Typography variant="h6">
+                        {t('settings.pwa_title', 'App Installation (PWA)')}
+                    </Typography>
+                    {isStandalone ? (
+                        <Chip 
+                            icon={<CheckCircleIcon />} 
+                            label={t('app.pwa_installed', 'Installed (Standalone)')} 
+                            color="success" 
+                            size="small" 
+                            variant="outlined"
+                        />
+                    ) : (
+                        <Chip 
+                            label="Web Browser" 
+                            color="default" 
+                            size="small" 
+                            variant="outlined" 
+                        />
+                    )}
+                </Box>
+                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 2.5 }}>
+                    {isStandalone 
+                        ? t('settings.pwa_status_standalone', 'The app is currently running in full-screen standalone mode (PWA).')
+                        : t('settings.pwa_status_browser', 'The app is running inside a web browser. Install the PWA to remove browser toolbars and search bars for a native mobile experience.')}
+                </Typography>
+                {!isStandalone && isInstallable && (
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<InstallMobileIcon />}
+                        onClick={installApp}
+                        sx={{ borderRadius: 2 }}
+                    >
+                        {t('app.install_pwa', 'Install App')}
+                    </Button>
+                )}
+            </Paper>
+
+            {/* Language Preferences */}
+            <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
                 <Typography variant="h6" gutterBottom>
                     {t('settings.language_preferences', 'Language Preferences')}
                 </Typography>
@@ -33,7 +80,8 @@ export const GeneralSettings: React.FC = () => {
                 </FormControl>
             </Paper>
 
-            <Paper sx={{ p: 4, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
+            {/* Feedback & Bug Report */}
+            <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
                 <Typography variant="h6" gutterBottom>
                     {t('settings.feedback_title', 'Feedback & Bug Report')}
                 </Typography>
@@ -48,6 +96,9 @@ export const GeneralSettings: React.FC = () => {
                     {t('settings.submit', 'Submit Feedback')}
                 </Button>
             </Paper>
+
+            <PWAInstallDialog open={showIOSGuide} onClose={() => setShowIOSGuide(false)} />
         </Box>
     );
 };
+

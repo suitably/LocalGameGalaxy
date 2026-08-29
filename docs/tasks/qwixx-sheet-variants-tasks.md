@@ -1,0 +1,28 @@
+# Qwixx Sheet Variants & Selector — Tasks [ID: TASK-QWIXX-SHEETS]
+
+- [x] Research official Qwixx sheet expansions and write comprehensive rulebook (`docs/tech/qwixx-sheet-rules.md`) <!-- id: 0 -->
+- [x] Create implementation plan and task tracking <!-- id: 1 -->
+    - [x] Create `docs/planning/qwixx-sheet-variants-plan.md` <!-- id: 1.1 -->
+    - [x] Create `docs/tasks/qwixx-sheet-variants-tasks.md` <!-- id: 1.2 -->
+    - [x] Update `docs/planning/00_SUMMARY.md`, `docs/tasks/00_SUMMARY.md`, `docs/tech/00_SUMMARY.md`, and `docs/tech/architecture.md` <!-- id: 1.3 -->
+- [x] Define Sheet Layout Data & Types <!-- id: 2 -->
+    - [x] Implement `src/games/qwixx/logic/sheetDefinitions.ts` with layout matrices for Classic, Gemixxt A/B, Big Points, Connected, Double, Bonus <!-- id: 2.1 -->
+    - [x] Update `src/games/qwixx/logic/types.ts` with sheet types, extended row models, and actions <!-- id: 2.2 -->
+- [x] Refactor Reducer, Scoring & Highlight Engine <!-- id: 3 -->
+    - [x] Update `src/games/qwixx/logic/qwixxReducer.ts` for dynamic row layouts, locking conditions, and variant scoring formulas <!-- id: 3.1 -->
+    - [x] Update `src/games/qwixx/logic/diceHighlight.ts` to support multi-colored rows and non-linear sequences <!-- id: 3.2 -->
+- [x] Build UI Components & Sheet Selector <!-- id: 4 -->
+    - [x] Create `src/games/qwixx/components/QwixxMiniSheet.tsx` for miniature sheet visual previews <!-- id: 4.0 -->
+    - [x] Create `src/games/qwixx/components/QwixxRulesDialog.tsx` for reading comprehensive rules per variant <!-- id: 4.1 -->
+    - [x] Create `src/games/qwixx/components/QwixxSheetSelector.tsx` for variant selection with preview, random button, and rules <!-- id: 4.2 -->
+    - [x] Update `src/games/qwixx/components/QwixxRow.tsx` for individual cell color segments, staircase highlights, and badges <!-- id: 4.3 -->
+    - [x] Update `src/games/qwixx/components/QwixxSheet.tsx` for dynamic rows and bonus rows <!-- id: 4.4 -->
+    - [x] Update `src/games/qwixx/components/QwixxScoreSummary.tsx` for variant score breakdowns <!-- id: 4.5 -->
+    - [x] Update `src/games/qwixx/components/QwixxOpponentView.tsx` to handle variant sheet rendering <!-- id: 4.6 -->
+    - [x] Update `src/games/qwixx/QwixxGame.tsx` to integrate the selector, storage persistence, and multiplayer sync <!-- id: 4.7 -->
+- [x] Localization (i18n) <!-- id: 5 -->
+    - [x] Add English & German translations for all sheet names, descriptions, badges, and rules in `src/games/qwixx/i18n/index.ts` <!-- id: 5.1 -->
+- [x] Verification & Documentation <!-- id: 6 -->
+    - [x] Run `npm run lint` and `npm run build` <!-- id: 6.1 -->
+    - [x] Create `docs/verification/qwixx-sheet-variants-walkthrough.md` <!-- id: 6.2 -->
+    - [x] Update `docs/tech/architecture.md` <!-- id: 6.3 -->

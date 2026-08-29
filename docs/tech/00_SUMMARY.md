@@ -17,6 +17,7 @@ This directory contains technical documentation and architectural decisions.
 - [werewolf-architecture.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/werewolf-architecture.md): Werewolf game module: state machine, roles, night resolution, and TTS.
 - [deployment.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/deployment.md): Deployment modes — Vite build, Capacitor Android, Docker, standalone binaries.
 - [styling.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/styling.md): MUI theming, safe area insets, mobile-native CSS, and multi-device layout.
+- [qwixx-sheet-rules.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/qwixx-sheet-rules.md): Official rules and layout definitions for all Qwixx score sheet variants (Gemixxt, Big Points, Connected, Double, Bonus).
 
 For production setup, runbooks, backups, scaling, troubleshooting, and incident management procedures, see the [Operational & DevOps Documentation Index](file:///home/deck/Projects/LocalGameGalaxy/docs/operations/00_SUMMARY.md).
 

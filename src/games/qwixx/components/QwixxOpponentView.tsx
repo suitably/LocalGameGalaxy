@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Box, Paper, Typography, Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
+import { Box, Paper, Typography, Dialog, DialogTitle, DialogContent, IconButton, Chip } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import CloseIcon from '@mui/icons-material/Close';
 import { useTranslation } from 'react-i18next';
 import type { PlayerSheet } from '../logic/types';
 import { calculateTotalScore } from '../logic/qwixxReducer';
+import { getSheetDefinition } from '../logic/sheetDefinitions';
 import { QwixxSheet } from './QwixxSheet';
 
 interface QwixxOpponentViewProps {
@@ -21,12 +22,13 @@ export const QwixxOpponentView: React.FC<QwixxOpponentViewProps> = ({ opponents 
         <Box sx={{ mt: 3 }}>
             <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <VisibilityIcon color="primary" />
-                {t('games.qwixx.opponents', 'Opponents')}
+                {t('games.qwixx.opponents', 'Mitspieler')}
             </Typography>
 
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(auto-fit, minmax(220px, 1fr))' }, gap: 2 }}>
                 {opponents.map((opp) => {
                     const score = calculateTotalScore(opp);
+                    const oppSheetDef = getSheetDefinition(opp.sheetType || 'classic');
                     return (
                         <Paper
                             key={opp.id}
@@ -45,7 +47,7 @@ export const QwixxOpponentView: React.FC<QwixxOpponentViewProps> = ({ opponents 
                                 }
                             }}
                         >
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
                                 <Typography variant="subtitle1" fontWeight="bold">
                                     {opp.name}
                                 </Typography>
@@ -53,6 +55,13 @@ export const QwixxOpponentView: React.FC<QwixxOpponentViewProps> = ({ opponents 
                                     {score.total} pts
                                 </Typography>
                             </Box>
+
+                            <Chip
+                                size="small"
+                                label={t(oppSheetDef.nameKey)}
+                                sx={{ mb: 1, fontSize: '0.7rem', height: 20 }}
+                                variant="outlined"
+                            />
 
                             <Box sx={{ display: 'flex', gap: 0.5, height: 6, borderRadius: 1, overflow: 'hidden', mb: 1 }}>
                                 <Box sx={{ flex: Math.max(1, opp.red.crossed.length), bgcolor: '#d32f2f' }} />
@@ -62,7 +71,7 @@ export const QwixxOpponentView: React.FC<QwixxOpponentViewProps> = ({ opponents 
                             </Box>
 
                             <Typography variant="caption" color="text.secondary">
-                                {t('games.qwixx.tap_to_view', 'Tap to view full sheet')}
+                                {t('games.qwixx.tap_to_view', 'Tippen für Details')}
                             </Typography>
                         </Paper>
                     );
@@ -77,7 +86,7 @@ export const QwixxOpponentView: React.FC<QwixxOpponentViewProps> = ({ opponents 
                 fullWidth
             >
                 <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    {selectedOpponent?.name} - {t('games.qwixx.sheet', 'Sheet')}
+                    {selectedOpponent?.name} - {t('games.qwixx.sheet', 'Qwixx-Zettel')}
                     <IconButton onClick={() => setSelectedOpponent(null)} size="small">
                         <CloseIcon />
                     </IconButton>

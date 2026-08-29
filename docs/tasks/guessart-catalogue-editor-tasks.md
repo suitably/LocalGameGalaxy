@@ -1,0 +1,22 @@
+# GuessArt Catalogue Editor & Git PR Publisher Tasks [ID: TASKS-GUESSART-CATALOGUE-001]
+
+- [x] 1. Backend Helper Server PR Publishing Endpoint <!-- id: 1 -->
+  - [x] 1.1 Add `publishGuessArtCatalogue` controller in `server/src/controllers/configController.js` <!-- id: 1.1 -->
+  - [x] 1.2 Register `POST /api/guessart/publish-catalogue` route in `server/src/routes/index.js` <!-- id: 1.2 -->
+- [x] 2. GuessArt Catalogue Logic & Code Generator <!-- id: 2 -->
+  - [x] 2.1 Update `src/games/guessart/logic/types.ts` with catalogue management and PR payload interfaces <!-- id: 2.1 -->
+  - [x] 2.2 Enhance `src/games/guessart/logic/catalogueManager.ts` with full CRUD, changelog diffing, and `generateLexiconTsCode` <!-- id: 2.2 -->
+  - [x] 2.3 Add unit tests in `src/games/guessart/logic/guessart.test.ts` <!-- id: 2.3 -->
+- [x] 3. UI Components for Catalogue Editor <!-- id: 3 -->
+  - [x] 3.1 Create `CategoryEditorTab.tsx` for category CRUD <!-- id: 3.1 -->
+  - [x] 3.2 Create `WordEditorTab.tsx` for word CRUD with multi-language inputs (`de`, `en`) and synonyms <!-- id: 3.2 -->
+  - [x] 3.3 Create `PublishCatalogueTab.tsx` for diff review and GitHub PR creation <!-- id: 3.3 -->
+  - [x] 3.4 Create `CatalogueEditorDialog.tsx` combining all tabs with reset confirmation <!-- id: 3.4 -->
+- [x] 4. In-Game Integration <!-- id: 4 -->
+  - [x] 4.1 Add catalogue editor launcher in `GameSetup.tsx` and `WordSelector.tsx` <!-- id: 4.1 -->
+  - [x] 4.2 Connect `CatalogueEditorDialog` in `GuessArtGame.tsx` <!-- id: 4.2 -->
+- [x] 5. Localization & Verification <!-- id: 5 -->
+  - [x] 5.1 Add German & English i18n translation keys in `translation.json` <!-- id: 5.1 -->
+  - [x] 5.2 Run unit tests (`npx vitest run`), lint (`npm run lint`), and build (`npm run build`) <!-- id: 5.2 -->
+  - [x] 5.3 Create verification walkthrough in `docs/verification/guessart-catalogue-editor-walkthrough.md` <!-- id: 5.3 -->
+  - [x] 5.4 Update `docs/tech/architecture.md` <!-- id: 5.4 -->

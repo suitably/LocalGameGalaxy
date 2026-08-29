@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist', 'android', 'node_modules']),
+  globalIgnores(['dist', 'dev-dist', 'android', 'node_modules']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -44,6 +44,10 @@ export default defineConfig([
           {
             group: ['**/games/imposter/components/**', '**/games/imposter/hooks/**'],
             message: 'Import from the public entry point "src/games/imposter" instead of internal directories.'
+          },
+          {
+            group: ['**/games/guessart/components/**', '**/games/guessart/hooks/**'],
+            message: 'Import from the public entry point "src/games/guessart" instead of internal directories.'
           },
           {
             group: ['**/lib/webrtc/*HostContext', '**/lib/webrtc/*HostManager', '**/lib/webrtc/useWebRTCClient'],

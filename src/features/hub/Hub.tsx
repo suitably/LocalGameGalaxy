@@ -3,13 +3,14 @@ import { Typography, Box, Card, CardContent, CardActionArea, alpha } from '@mui/
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { gameRegistry } from '../../lib/gameRegistry';
+import { PWAInstallBanner } from '../../components/pwa';
 
 const cardStyle = (gradientStart: string, gradientEnd: string, hoverColor: string) => ({
     height: '100%',
     borderRadius: 4,
     background: `linear-gradient(135deg, ${alpha(gradientStart, 0.1)} 0%, ${alpha(gradientEnd, 0.2)} 100%)`,
     border: `1px solid ${alpha(gradientStart, 0.2)}`,
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
     position: 'relative',
     overflow: 'hidden',
     '&::before': {
@@ -24,7 +25,7 @@ const cardStyle = (gradientStart: string, gradientEnd: string, hoverColor: strin
         transition: 'opacity 0.3s ease',
     },
     '&:hover': {
-        transform: 'translateY(-8px)',
+        transform: 'translateY(-6px)',
         boxShadow: `0 12px 24px ${alpha(hoverColor, 0.2)}`,
         border: `1px solid ${alpha(gradientStart, 0.4)}`,
         background: `linear-gradient(135deg, ${alpha(gradientStart, 0.15)} 0%, ${alpha(gradientEnd, 0.25)} 100%)`,
@@ -32,21 +33,24 @@ const cardStyle = (gradientStart: string, gradientEnd: string, hoverColor: strin
             opacity: 1,
         },
         '& .MuiSvgIcon-root': {
-            transform: 'scale(1.1) rotate(5deg)',
+            transform: 'scale(1.08) rotate(4deg)',
             filter: `drop-shadow(0 0 12px ${alpha(gradientStart, 0.6)})`,
         }
+    },
+    '&:active': {
+        transform: 'scale(0.98)',
     }
 });
 
 const contentStyle = {
     textAlign: 'center',
-    py: 6,
-    px: 4,
+    py: { xs: 3, sm: 4, md: 5 },
+    px: { xs: 2.5, sm: 3, md: 4 },
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     height: '100%',
-    gap: 2
+    gap: { xs: 1, sm: 1.5, md: 2 }
 };
 
 export const Hub: React.FC = () => {
@@ -54,14 +58,15 @@ export const Hub: React.FC = () => {
     const navigate = useNavigate();
 
     return (
-        <Box sx={{ width: '100%', animation: 'fadeIn 0.5s ease-out' }}>
-            <Box mb={6} textAlign="center">
+        <Box sx={{ width: '100%', animation: 'fadeIn 0.4s ease-out' }}>
+            <Box mb={{ xs: 3, sm: 4, md: 6 }} textAlign="center">
                 <Typography
                     variant="h2"
                     component="h1"
                     gutterBottom
                     sx={{
                         fontWeight: 800,
+                        fontSize: { xs: '1.85rem', sm: '2.5rem', md: '3.25rem' },
                         background: 'linear-gradient(90deg, #90caf9, #f48fb1)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
@@ -70,10 +75,22 @@ export const Hub: React.FC = () => {
                 >
                     {t('app.welcome')}
                 </Typography>
-                <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto', fontWeight: 400 }}>
+                <Typography 
+                    variant="body1" 
+                    color="text.secondary" 
+                    sx={{ 
+                        maxWidth: 600, 
+                        mx: 'auto', 
+                        fontSize: { xs: '0.95rem', sm: '1.05rem', md: '1.15rem' },
+                        fontWeight: 400 
+                    }}
+                >
                     {t('app.select_game')}
                 </Typography>
             </Box>
+
+            {/* PWA Mobile Fullscreen Install Callout */}
+            <PWAInstallBanner />
 
             <Box sx={{
                 display: 'grid',
@@ -82,7 +99,7 @@ export const Hub: React.FC = () => {
                     sm: 'repeat(2, 1fr)',
                     md: 'repeat(3, 1fr)'
                 },
-                gap: 4
+                gap: { xs: 2.5, sm: 3, md: 4 }
             }}>
                 {gameRegistry.getGames().map(game => (
                     <Card key={game.id} sx={cardStyle(game.colorStart, game.colorEnd, game.hoverColor)}>
@@ -91,18 +108,30 @@ export const Hub: React.FC = () => {
                             sx={{ height: '100%' }}
                         >
                             <CardContent sx={contentStyle}>
-                                {React.cloneElement(game.icon as React.ReactElement<any>, {
+                                {React.cloneElement(game.icon as React.ReactElement<{ sx?: Record<string, unknown> }>, {
                                     sx: {
-                                        fontSize: 72,
-                                        mb: 2,
+                                        fontSize: { xs: 48, sm: 58, md: 72 },
+                                        mb: 1.5,
                                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                         color: game.colorStart
                                     }
                                 })}
-                                <Typography variant="h4" component="h2" fontWeight="bold">
+                                <Typography 
+                                    variant="h5" 
+                                    component="h2" 
+                                    fontWeight="bold" 
+                                    sx={{ fontSize: { xs: '1.35rem', sm: '1.5rem', md: '1.75rem' } }}
+                                >
                                     {t(game.titleKey)}
                                 </Typography>
-                                <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.6 }}>
+                                <Typography 
+                                    variant="body2" 
+                                    color="text.secondary" 
+                                    sx={{ 
+                                        lineHeight: 1.5,
+                                        fontSize: { xs: '0.875rem', sm: '0.925rem', md: '1rem' } 
+                                    }}
+                                >
                                     {t(game.descriptionKey)}
                                 </Typography>
                             </CardContent>
@@ -114,7 +143,7 @@ export const Hub: React.FC = () => {
             <style>
                 {`
                     @keyframes fadeIn {
-                        from { opacity: 0; transform: translateY(20px); }
+                        from { opacity: 0; transform: translateY(16px); }
                         to { opacity: 1; transform: translateY(0); }
                     }
                 `}
@@ -122,3 +151,4 @@ export const Hub: React.FC = () => {
         </Box>
     );
 };
+

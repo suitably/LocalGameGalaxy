@@ -1,9 +1,11 @@
 import React from 'react';
-import { Box, Paper, Typography, ButtonBase } from '@mui/material';
+import { Box, Paper, Typography, ButtonBase, Chip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { useTranslation } from 'react-i18next';
 import type { PlayerSheet } from '../logic/types';
 import { calculateTotalScore } from '../logic/qwixxReducer';
+import { getSheetDefinition } from '../logic/sheetDefinitions';
 
 interface QwixxScoreSummaryProps {
     sheet: PlayerSheet;
@@ -20,6 +22,7 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
 }) => {
     const { t } = useTranslation();
     const scores = calculateTotalScore(sheet);
+    const sheetDef = getSheetDefinition(sheet.sheetType || 'classic');
 
     return (
         <Paper
@@ -32,6 +35,22 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
                 mt: 2
             }}
         >
+            {/* Sheet Type Badge */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body2" color="text.secondary" fontWeight="bold">
+                        {t('games.qwixx.mode_label', 'Modus:')}
+                    </Typography>
+                    <Chip
+                        size="small"
+                        label={t(sheetDef.nameKey)}
+                        color="primary"
+                        variant="outlined"
+                        sx={{ fontWeight: 'bold' }}
+                    />
+                </Box>
+            </Box>
+
             {/* Row Point Breakdown */}
             <Box
                 sx={{
@@ -44,35 +63,49 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
             >
                 {/* Points Formula Overview */}
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(211, 47, 47, 0.25)', border: '1px solid #d32f2f', textAlign: 'center', minWidth: 50 }}>
+                    <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(211, 47, 47, 0.25)', border: '1px solid #d32f2f', textAlign: 'center', minWidth: 48 }}>
                         <Typography variant="caption" sx={{ color: '#ef5350', display: 'block', fontWeight: 'bold' }}>{t('games.qwixx.red', 'Red')}</Typography>
                         <Typography variant="h6" sx={{ color: '#ffffff', fontWeight: 'bold' }}>{scores.red}</Typography>
                     </Box>
 
                     <Typography variant="h6" color="text.secondary">+</Typography>
 
-                    <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(251, 192, 45, 0.25)', border: '1px solid #fbc02d', textAlign: 'center', minWidth: 50 }}>
+                    <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(251, 192, 45, 0.25)', border: '1px solid #fbc02d', textAlign: 'center', minWidth: 48 }}>
                         <Typography variant="caption" sx={{ color: '#ffee58', display: 'block', fontWeight: 'bold' }}>{t('games.qwixx.yellow', 'Yellow')}</Typography>
                         <Typography variant="h6" sx={{ color: '#ffffff', fontWeight: 'bold' }}>{scores.yellow}</Typography>
                     </Box>
 
                     <Typography variant="h6" color="text.secondary">+</Typography>
 
-                    <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(56, 142, 60, 0.25)', border: '1px solid #388e3c', textAlign: 'center', minWidth: 50 }}>
+                    <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(56, 142, 60, 0.25)', border: '1px solid #388e3c', textAlign: 'center', minWidth: 48 }}>
                         <Typography variant="caption" sx={{ color: '#66bb6a', display: 'block', fontWeight: 'bold' }}>{t('games.qwixx.green', 'Green')}</Typography>
                         <Typography variant="h6" sx={{ color: '#ffffff', fontWeight: 'bold' }}>{scores.green}</Typography>
                     </Box>
 
                     <Typography variant="h6" color="text.secondary">+</Typography>
 
-                    <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(25, 118, 210, 0.25)', border: '1px solid #1976d2', textAlign: 'center', minWidth: 50 }}>
+                    <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(25, 118, 210, 0.25)', border: '1px solid #1976d2', textAlign: 'center', minWidth: 48 }}>
                         <Typography variant="caption" sx={{ color: '#42a5f5', display: 'block', fontWeight: 'bold' }}>{t('games.qwixx.blue', 'Blue')}</Typography>
                         <Typography variant="h6" sx={{ color: '#ffffff', fontWeight: 'bold' }}>{scores.blue}</Typography>
                     </Box>
 
+                    {/* Optional Stairs Bonus (Connected Stairs) */}
+                    {scores.stairsBonus !== undefined && (
+                        <>
+                            <Typography variant="h6" color="text.secondary">+</Typography>
+                            <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(255, 215, 0, 0.2)', border: '1px solid #ffd700', textAlign: 'center', minWidth: 52 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.25 }}>
+                                    <EmojiEventsIcon sx={{ fontSize: '0.85rem', color: '#ffd700' }} />
+                                    <Typography variant="caption" sx={{ color: '#ffd700', fontWeight: 'bold' }}>{t('games.qwixx.stairs', 'Treppe')}</Typography>
+                                </Box>
+                                <Typography variant="h6" sx={{ color: '#ffd700', fontWeight: 'bold' }}>{scores.stairsBonus}</Typography>
+                            </Box>
+                        </>
+                    )}
+
                     <Typography variant="h6" color="text.secondary">-</Typography>
 
-                    <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.2)', textAlign: 'center', minWidth: 50 }}>
+                    <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.2)', textAlign: 'center', minWidth: 48 }}>
                         <Typography variant="caption" color="error.light" sx={{ display: 'block', fontWeight: 'bold' }}>{t('games.qwixx.misses', 'Misses')}</Typography>
                         <Typography variant="h6" color="error.light" sx={{ fontWeight: 'bold' }}>{scores.missesPenalty}</Typography>
                     </Box>
