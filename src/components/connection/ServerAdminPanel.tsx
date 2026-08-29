@@ -57,6 +57,8 @@ export const ServerAdminPanel: React.FC = () => {
     const [editAllowSongDeletion, setEditAllowSongDeletion] = useState(false);
     const [savingEdit, setSavingEdit] = useState(false);
 
+    const [isAdmin, setIsAdmin] = useState(false);
+
     // QR dialog state
     const [qrOpen, setQrOpen] = useState(false);
     const [qrDataUrl, setQrDataUrl] = useState('');
@@ -71,11 +73,15 @@ export const ServerAdminPanel: React.FC = () => {
         localStorage.setItem('nexumia_share_webapp_url', webAppUrl);
     }, [webAppUrl]);
 
-    const helperUrl = storage.getHelperUrl();
-    const helperToken = storage.getHelperToken();
-
     const fetchApiKeys = useCallback(async () => {
-        if (!helperUrl || !helperToken) return;
+        const helperUrl = storage.getHelperUrl();
+        const helperToken = storage.getHelperToken();
+
+        if (!storage.isHelperActive() || !helperUrl || !helperToken) {
+            setIsAdmin(false);
+            setLoadStatus('idle');
+            return;
+        }
 
         setLoadStatus('loading');
         setError('');
@@ -86,27 +92,38 @@ export const ServerAdminPanel: React.FC = () => {
                 headers: { Authorization: `Bearer ${helperToken}` },
             });
 
-            if (res.status === 403) {
-                setLoadStatus('error');
-                setError(t('server.admin.not_admin', 'You need the master token to manage API keys.'));
+            if (res.status === 403 || res.status === 401) {
+                setIsAdmin(false);
+                setLoadStatus('idle');
                 return;
             }
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            if (!res.ok) {
+                setIsAdmin(false);
+                setLoadStatus('idle');
+                return;
+            }
 
             const data = await res.json();
             setApiKeys(data);
+            setIsAdmin(true);
             setLoadStatus('loaded');
-        } catch (e: unknown) {
-            setLoadStatus('error');
-            const message = e instanceof Error ? e.message : 'Unknown error';
-            setError(message);
+        } catch {
+            setIsAdmin(false);
+            setLoadStatus('idle');
         }
-    }, [helperUrl, helperToken, t]);
+    }, []);
 
     useEffect(() => {
-        if (storage.isHelperActive()) {
-            fetchApiKeys();
-        }
+        fetchApiKeys();
+
+        const handleUpdate = () => fetchApiKeys();
+        window.addEventListener('server_connection_updated', handleUpdate);
+        window.addEventListener('melodiq_settings_updated', handleUpdate);
+
+        return () => {
+            window.removeEventListener('server_connection_updated', handleUpdate);
+            window.removeEventListener('melodiq_settings_updated', handleUpdate);
+        };
     }, [fetchApiKeys]);
 
     const handleOpenCreate = () => {
@@ -118,6 +135,10 @@ export const ServerAdminPanel: React.FC = () => {
 
     const handleCreateKey = async () => {
         if (!newKeyName.trim()) return;
+        const helperUrl = storage.getHelperUrl();
+        const helperToken = storage.getHelperToken();
+        if (!helperUrl || !helperToken) return;
+
         setCreating(true);
 
         try {
@@ -155,6 +176,10 @@ export const ServerAdminPanel: React.FC = () => {
 
     const handleSaveEdit = async () => {
         if (!editKey) return;
+        const helperUrl = storage.getHelperUrl();
+        const helperToken = storage.getHelperToken();
+        if (!helperUrl || !helperToken) return;
+
         setSavingEdit(true);
 
         try {
@@ -184,6 +209,10 @@ export const ServerAdminPanel: React.FC = () => {
     };
 
     const handleDeleteKey = async (id: string) => {
+        const helperUrl = storage.getHelperUrl();
+        const helperToken = storage.getHelperToken();
+        if (!helperUrl || !helperToken) return;
+
         try {
             const cleanUrl = helperUrl.replace(/\/$/, '');
             await fetch(`${cleanUrl}/api/config/apikeys/${id}`, {
@@ -199,6 +228,7 @@ export const ServerAdminPanel: React.FC = () => {
 
     const generateConnectionLink = (key: ApiKey): string => {
         const cleanWeb = webAppUrl.trim().replace(/\/$/, '');
+        const helperUrl = storage.getHelperUrl();
         const cleanServer = helperUrl.trim().replace(/\/$/, '');
         return `${cleanWeb}/?serverUrl=${encodeURIComponent(cleanServer)}&token=${encodeURIComponent(key.token)}`;
     };
@@ -220,7 +250,7 @@ export const ServerAdminPanel: React.FC = () => {
         }
     };
 
-    if (!storage.isHelperActive()) return null;
+    if (!storage.isHelperActive() || !isAdmin) return null;
 
     return (
         <Paper sx={{ p: 3 }}>
