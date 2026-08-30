@@ -15,6 +15,8 @@ import {
   listLocalGames,
   updateLocalGame,
   upsertRound,
+  upsertGame,
+  createInitialRound,
 } from './repository';
 import type {
   GameSnapshot,
@@ -44,12 +46,19 @@ export const toRoundPayload = (
     round.word,
   );
 
-  const drawer = game.players.find((player) => player.id === round.drawnById);
+  const drawerIndex = game.players.findIndex((player) => player.id === round.drawnById);
+  const effectiveDrawerIdx = drawerIndex >= 0 ? drawerIndex : (Math.max(1, round.roundNumber) - 1) % (game.players.length || 1);
+  const effectiveGuesserIdx = (effectiveDrawerIdx + 1) % (game.players.length || 1);
+  const drawer = game.players[effectiveDrawerIdx];
+  const guesser = game.players[effectiveGuesserIdx];
   const isDrawerCurrentPlayer = game.status !== 'guessing';
 
   return {
     ...round,
-    drawnByName: drawer?.name || '',
+    drawnById: round.drawnById || drawer?.id || '',
+    drawnByName: drawer?.name || round.drawnByName || '',
+    guesserId: round.guesserId || guesser?.id || '',
+    guesserName: round.guesserName || guesser?.name || '',
     drawerIsCurrentPlayer: isDrawerCurrentPlayer,
     canvasData: round.canvasData || DEFAULT_SCENE,
     hintLetters: artifacts?.letters || round.hintLetters || [],
@@ -61,10 +70,59 @@ export const toRoundPayload = (
 const nextPlayerIndex = (game: GuessArtGameRecord): number =>
   (game.currentPlayerIndex + 1) % game.players.length;
 
+const isSnapshotNewer = (
+  snapshot: GameSnapshot,
+  existingGame: GuessArtGameRecord,
+  existingRound: GuessArtRound | null,
+): boolean => {
+  if (snapshot.game.roundNumber > existingGame.roundNumber) return true;
+  if (snapshot.game.roundNumber < existingGame.roundNumber) return false;
+
+  const statusRank: Record<string, number> = {
+    selecting: 0,
+    drawing: 1,
+    guessing: 2,
+    completed: 3,
+  };
+  const snapRank = statusRank[snapshot.round?.status || snapshot.game.status] ?? 0;
+  const existRank = statusRank[existingRound?.status || existingGame.status] ?? 0;
+
+  if (snapRank > existRank) return true;
+  if (snapRank < existRank) return false;
+
+  const snapGuesses = snapshot.round?.guesses?.length || 0;
+  const existGuesses = existingRound?.guesses?.length || 0;
+  if (snapGuesses > existGuesses) return true;
+  if (snapGuesses < existGuesses) return false;
+
+  if (
+    snapRank === 1 &&
+    snapshot.round?.canvasData &&
+    snapshot.round.canvasData !== existingRound?.canvasData
+  ) {
+    return true;
+  }
+
+  // Check if player names or game name were edited
+  if (snapshot.game.name !== existingGame.name) return true;
+  if (
+    snapshot.game.players &&
+    existingGame.players &&
+    JSON.stringify(snapshot.game.players.map((p) => ({ id: p.id, name: p.name }))) !==
+      JSON.stringify(existingGame.players.map((p) => ({ id: p.id, name: p.name })))
+  ) {
+    return true;
+  }
+
+  const snapTime = new Date(snapshot.game.updatedAt || 0).getTime();
+  const existTime = new Date(existingGame.updatedAt || 0).getTime();
+  return snapTime > existTime;
+};
+
 export const LocalGameEngine = {
   async createGame(payload: {
     name?: string;
-    players: string[];
+    players: (string | { name: string; isRemote?: boolean })[];
     language?: string;
     manualWordMode?: boolean;
     ownerId?: string | null;
@@ -118,6 +176,47 @@ export const LocalGameEngine = {
     return {
       game,
       round: toRoundPayload(round, game, language),
+    };
+  },
+
+  async importSnapshot(
+    snapshot: GameSnapshot,
+    language?: string,
+  ): Promise<{ game: GuessArtGameRecord; round: GuessArtRound | null; updated: boolean }> {
+    if (!snapshot || !snapshot.game) {
+      throw new Error('Invalid game snapshot');
+    }
+    const existing = await getLocalGame(snapshot.game.id);
+    if (!existing) {
+      // Game does not exist locally -> save game & round to IndexedDB
+      await upsertGame(snapshot.game);
+      if (snapshot.round) {
+        await upsertRound(snapshot.round);
+      } else {
+        const initialRound = createInitialRound(
+          snapshot.game.id,
+          snapshot.game.players[0]?.id || 'player1',
+        );
+        await upsertRound(initialRound);
+      }
+      const loaded = await this.getGameSnapshot(snapshot.game.id, language);
+      return { game: loaded.game, round: loaded.round, updated: true };
+    }
+
+    const existingRound = await getRoundByNumber(existing.id, existing.roundNumber);
+    if (isSnapshotNewer(snapshot, existing, existingRound)) {
+      await upsertGame(snapshot.game);
+      if (snapshot.round) {
+        await upsertRound(snapshot.round);
+      }
+      const loaded = await this.getGameSnapshot(snapshot.game.id, language);
+      return { game: loaded.game, round: loaded.round, updated: true };
+    }
+
+    return {
+      game: existing,
+      round: toRoundPayload(existingRound, existing, language),
+      updated: false,
     };
   },
 

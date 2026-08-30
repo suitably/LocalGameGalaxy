@@ -1,0 +1,1 @@
+export { GarticPhoneGame } from './GarticPhoneGame';

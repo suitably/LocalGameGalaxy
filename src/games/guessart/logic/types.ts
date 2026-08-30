@@ -3,6 +3,7 @@ export type GameStatus = 'selecting' | 'drawing' | 'guessing' | 'completed';
 export interface PlayerIdentity {
   id: string;
   name: string;
+  isRemote?: boolean;
 }
 
 export interface WordTranslationEntry {
@@ -35,6 +36,8 @@ export interface GuessArtRound {
   roundNumber: number;
   drawnById: string;
   drawnByName?: string;
+  guesserId?: string;
+  guesserName?: string;
   drawerIsCurrentPlayer?: boolean;
   status: GameStatus;
   word: string;

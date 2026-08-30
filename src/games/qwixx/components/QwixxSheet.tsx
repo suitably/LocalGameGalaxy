@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Box, Paper, Typography, Chip } from '@mui/material';
 import ShieldIcon from '@mui/icons-material/Shield';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
-import BoltIcon from '@mui/icons-material/Bolt';
 import { useTranslation } from 'react-i18next';
 import { QwixxRow } from './QwixxRow';
 import { QwixxScoreSummary } from './QwixxScoreSummary';
+import { QwixxChainOverlay } from './QwixxChainOverlay';
 import type { PlayerSheet, RowColor } from '../logic/types';
 import { getSheetDefinition, getSheetRows } from '../logic/sheetDefinitions';
 
@@ -31,102 +31,86 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
     highlightedNumbers = null
 }) => {
     const { t } = useTranslation();
+    const rowsContainerRef = useRef<HTMLDivElement>(null);
     const sheetDef = getSheetDefinition(sheet.sheetType || 'classic');
     const rows = getSheetRows(sheet.sheetType || 'classic', sheet.presetIndex, sheet.customRows);
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1, sm: 1.5 } }}>
-            {/* Standard Rows (Red & Yellow) */}
-            {rows.slice(0, 2).map((rowDef) => (
-                <QwixxRow
-                    key={rowDef.id}
-                    color={rowDef.defaultColor}
-                    rowDef={rowDef}
-                    rowState={sheet[rowDef.defaultColor]}
-                    sheetType={sheet.sheetType}
-                    onCrossNumber={onCrossNumber}
-                    onLockRow={onLockRow}
-                    onUnlockRow={onUnlockRow}
-                    disabled={readOnly}
-                    highlightedNumbers={highlightedNumbers?.[rowDef.defaultColor]}
-                />
-            ))}
+            {/* Rows Container */}
+            <Box ref={rowsContainerRef} sx={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: { xs: 1, sm: 1.5 } }}>
+                {sheet.sheetType === 'connected_chains' && <QwixxChainOverlay containerRef={rowsContainerRef} />}
 
-            {/* Big Points Bonus Row 1 (Red-Yellow) */}
-            {sheetDef.hasBonusRows && sheetDef.bonusRows?.[0] && sheet.bonusRows && (
-                <Box sx={{ my: 0.25 }}>
-                    <Typography variant="caption" sx={{ color: '#ffd54f', fontWeight: 'bold', px: 1 }}>
-                        {t('games.qwixx.bonus_red_yellow', '★ Bonusreihe Rot-Gelb (zählt für beide Reihen)')}
-                    </Typography>
+                {/* Standard Rows (Red & Yellow) */}
+                {rows.slice(0, 2).map((rowDef) => (
                     <QwixxRow
-                        color="red"
-                        rowDef={sheetDef.bonusRows[0]}
-                        rowState={sheet.bonusRows.bonus_red_yellow || { crossed: [], isLocked: false }}
+                        key={rowDef.id}
+                        color={rowDef.defaultColor}
+                        rowDef={rowDef}
+                        rowState={sheet[rowDef.defaultColor]}
                         sheetType={sheet.sheetType}
                         onCrossNumber={onCrossNumber}
                         onLockRow={onLockRow}
                         onUnlockRow={onUnlockRow}
                         disabled={readOnly}
+                        highlightedNumbers={highlightedNumbers?.[rowDef.defaultColor]}
                     />
-                </Box>
-            )}
+                ))}
 
-            {/* Standard Rows (Green & Blue) */}
-            {rows.slice(2, 4).map((rowDef) => (
-                <QwixxRow
-                    key={rowDef.id}
-                    color={rowDef.defaultColor}
-                    rowDef={rowDef}
-                    rowState={sheet[rowDef.defaultColor]}
-                    sheetType={sheet.sheetType}
-                    onCrossNumber={onCrossNumber}
-                    onLockRow={onLockRow}
-                    onUnlockRow={onUnlockRow}
-                    disabled={readOnly}
-                    highlightedNumbers={highlightedNumbers?.[rowDef.defaultColor]}
-                />
-            ))}
+                {/* Big Points Bonus Row 1 (Red-Yellow) */}
+                {sheetDef.hasBonusRows && sheetDef.bonusRows?.[0] && sheet.bonusRows && (
+                    <Box sx={{ my: 0.25 }}>
+                        <Typography variant="caption" sx={{ color: '#ffd54f', fontWeight: 'bold', px: 1 }}>
+                            {t('games.qwixx.bonus_red_yellow', '★ Bonusreihe Rot-Gelb (zählt für beide Reihen)')}
+                        </Typography>
+                        <QwixxRow
+                            color="red"
+                            rowDef={sheetDef.bonusRows[0]}
+                            rowState={sheet.bonusRows.bonus_red_yellow || { crossed: [], isLocked: false }}
+                            sheetType={sheet.sheetType}
+                            onCrossNumber={onCrossNumber}
+                            onLockRow={onLockRow}
+                            onUnlockRow={onUnlockRow}
+                            disabled={readOnly}
+                        />
+                    </Box>
+                )}
 
-            {/* Big Points Bonus Row 2 (Green-Blue) */}
-            {sheetDef.hasBonusRows && sheetDef.bonusRows?.[1] && sheet.bonusRows && (
-                <Box sx={{ my: 0.25 }}>
-                    <Typography variant="caption" sx={{ color: '#81c784', fontWeight: 'bold', px: 1 }}>
-                        {t('games.qwixx.bonus_green_blue', '★ Bonusreihe Grün-Blau (zählt für beide Reihen)')}
-                    </Typography>
+                {/* Standard Rows (Green & Blue) */}
+                {rows.slice(2, 4).map((rowDef) => (
                     <QwixxRow
-                        color="green"
-                        rowDef={sheetDef.bonusRows[1]}
-                        rowState={sheet.bonusRows.bonus_green_blue || { crossed: [], isLocked: false }}
+                        key={rowDef.id}
+                        color={rowDef.defaultColor}
+                        rowDef={rowDef}
+                        rowState={sheet[rowDef.defaultColor]}
                         sheetType={sheet.sheetType}
                         onCrossNumber={onCrossNumber}
                         onLockRow={onLockRow}
                         onUnlockRow={onUnlockRow}
                         disabled={readOnly}
+                        highlightedNumbers={highlightedNumbers?.[rowDef.defaultColor]}
                     />
-                </Box>
-            )}
+                ))}
 
-            {/* Double Numbers Info Banner */}
-            {sheet.sheetType === 'double_numbers' && (
-                <Paper
-                    elevation={2}
-                    sx={{
-                        p: { xs: 1, sm: 1.25 },
-                        borderRadius: 2.5,
-                        bgcolor: 'rgba(25, 28, 40, 0.85)',
-                        border: '1px solid rgba(255, 179, 0, 0.4)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1
-                    }}
-                >
-                    <BoltIcon sx={{ color: '#ffb300', fontSize: '1.4rem' }} />
-                    <Typography variant="caption" sx={{ color: '#ffffff', fontSize: '0.78rem' }}>
-                        <strong>{t('games.qwixx.double_banner_title', 'Doppelzahlen-Modus:')}</strong>{' '}
-                        {t('games.qwixx.double_banner_desc', 'Die golden umrandeten 2×-Felder zählen beim Ankreuzen sofort als 2 Kreuze (XX) für die Reihe!')}
-                    </Typography>
-                </Paper>
-            )}
+                {/* Big Points Bonus Row 2 (Green-Blue) */}
+                {sheetDef.hasBonusRows && sheetDef.bonusRows?.[1] && sheet.bonusRows && (
+                    <Box sx={{ my: 0.25 }}>
+                        <Typography variant="caption" sx={{ color: '#81c784', fontWeight: 'bold', px: 1 }}>
+                            {t('games.qwixx.bonus_green_blue', '★ Bonusreihe Grün-Blau (zählt für beide Reihen)')}
+                        </Typography>
+                        <QwixxRow
+                            color="green"
+                            rowDef={sheetDef.bonusRows[1]}
+                            rowState={sheet.bonusRows.bonus_green_blue || { crossed: [], isLocked: false }}
+                            sheetType={sheet.sheetType}
+                            onCrossNumber={onCrossNumber}
+                            onLockRow={onLockRow}
+                            onUnlockRow={onUnlockRow}
+                            disabled={readOnly}
+                        />
+                    </Box>
+                )}
+            </Box>
 
             {/* Bonus Icons Legend & Active Shield Tracker */}
             {sheet.sheetType === 'bonus' && (

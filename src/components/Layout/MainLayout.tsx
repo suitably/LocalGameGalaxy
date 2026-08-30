@@ -6,7 +6,7 @@ import { FeedbackDialog } from '../feedback/FeedbackDialog';
 
 export const MainLayout: React.FC = () => {
     const location = useLocation();
-    const isGame = location.pathname.includes('/games/');
+    const isGame = location.pathname.includes('/games/') || location.pathname.startsWith('/party');
 
     return (
         <>

@@ -9,7 +9,7 @@ i18n
         backend: {
             loadPath: '/locales/{{lng}}/{{ns}}.json',
         },
-        lng: localStorage.getItem('language') || "en",
+        lng: (typeof localStorage !== 'undefined' ? localStorage.getItem('language') : null) || "en",
         fallbackLng: "en",
         interpolation: {
             escapeValue: false
@@ -17,7 +17,9 @@ i18n
     });
 
 i18n.on('languageChanged', (lng) => {
-    localStorage.setItem('language', lng);
+    if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('language', lng);
+    }
 });
 
 export default i18n;

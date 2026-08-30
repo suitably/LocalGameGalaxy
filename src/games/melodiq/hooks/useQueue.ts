@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, createContext, useContext } from 'rea
 import React from 'react';
 import type { SongMeta } from '../db';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
+import { generateUUID } from '../../../lib/uuid';
 
 function recordSongToHistory(song: SongMeta) {
     try {
@@ -158,7 +159,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
         
         const newItem: QueueItem = {
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             song,
             addedAt: Date.now(),
             requester,
@@ -228,7 +229,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
 
         const next: QueueItem[] = songs.map(song => ({
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             song,
             addedAt: Date.now(),
             requester,
@@ -255,7 +256,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
 
         const newItem: QueueItem = {
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             song,
             addedAt: Date.now(),
             requester,

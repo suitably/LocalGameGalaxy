@@ -214,15 +214,28 @@ export const WordEditorTab: React.FC<WordEditorTabProps> = ({
           }}
         />
 
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddRoundedIcon />}
-          onClick={handleOpenAdd}
-          sx={{ textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap', width: { xs: '100%', sm: 'auto' } }}
-        >
-          {t('guessart.addWord', 'Wort hinzufügen')}
-        </Button>
+        <Tooltip title={t('guessart.addWord', 'Wort hinzufügen')}>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddRoundedIcon />}
+            onClick={handleOpenAdd}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+              width: { xs: '100%', sm: 'auto' },
+              minWidth: { xs: 'auto', sm: 'auto' },
+            }}
+          >
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+              {t('guessart.addWord', 'Wort hinzufügen')}
+            </Box>
+            <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+              {t('guessart.addWordShort', 'Wort +')}
+            </Box>
+          </Button>
+        </Tooltip>
       </Stack>
 
       <Typography variant="caption" color="text.secondary" display="block" mb={1}>

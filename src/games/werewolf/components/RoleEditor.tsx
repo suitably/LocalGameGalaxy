@@ -21,6 +21,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useTranslation } from 'react-i18next';
+import { generateUUID } from '../../../lib/uuid';
 import type { RoleDefinition } from '../logic/types';
 import { RoleEditDialog } from './RoleEditDialog';
 
@@ -51,7 +52,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({ customRoles, defaultRole
 
     const handleAddRole = () => {
         setEditingRole({
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             name: '',
             description: '',
             icon: '👤',

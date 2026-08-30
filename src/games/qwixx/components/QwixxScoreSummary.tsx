@@ -35,7 +35,7 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
                 mt: 2
             }}
         >
-            {/* Sheet Type Badge */}
+            {/* Sheet Type Badge & Lucky Numbers */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Typography variant="body2" color="text.secondary" fontWeight="bold">
@@ -49,6 +49,16 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
                         sx={{ fontWeight: 'bold' }}
                     />
                 </Box>
+
+                {sheet.sheetType === 'longo' && sheet.luckyNumbers && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 'bold' }}>
+                            🍀 {t('games.qwixx.lucky_numbers', 'Glückszahlen')}:
+                        </Typography>
+                        <Chip label={sheet.luckyNumbers[0]} size="small" sx={{ bgcolor: 'rgba(0, 229, 255, 0.2)', color: '#00e5ff', border: '1px solid #00e5ff', fontWeight: 'bold', height: 22 }} />
+                        <Chip label={sheet.luckyNumbers[1]} size="small" sx={{ bgcolor: 'rgba(0, 229, 255, 0.2)', color: '#00e5ff', border: '1px solid #00e5ff', fontWeight: 'bold', height: 22 }} />
+                    </Box>
+                )}
             </Box>
 
             {/* Row Point Breakdown */}

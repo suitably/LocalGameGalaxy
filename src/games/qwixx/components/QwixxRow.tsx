@@ -3,7 +3,6 @@ import { Box, ButtonBase, Paper, Typography } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import CloseIcon from '@mui/icons-material/Close';
-import LinkIcon from '@mui/icons-material/Link';
 import ShieldIcon from '@mui/icons-material/Shield';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -102,12 +101,13 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
 }) => {
     const isBonusRow = !!rowDef.isBonusRow;
     const isMultiColoredRow = new Set(rowDef.cells.map((c) => c.color)).size > 1;
-    const hasModifierInRow = rowDef.cells.some((c) => !!c.bonusEffect || !!c.isDouble);
+    const hasModifierInRow = rowDef.cells.some((c) => !!c.bonusEffect || !!c.isDouble || !!c.chainId);
     const defaultTheme = ROW_COLORS[color] || ROW_COLORS.red;
     const numbers = rowDef.cells.map((c) => c.number);
     const lastNumber = rowDef.lockNumber;
     const currentCrossCount = getRowCrossCount(rowDef, rowState, sheetType);
-    const canLock = !isBonusRow && currentCrossCount >= 5 && rowState.crossed.includes(lastNumber) && !rowState.isLocked;
+    const minCrosses = sheetType === 'longo' ? 6 : 5;
+    const canLock = !isBonusRow && currentCrossCount >= minCrosses && rowState.crossed.includes(lastNumber) && !rowState.isLocked;
 
     const segments = buildRowSegments(rowDef);
 
@@ -128,9 +128,7 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
                 alignItems: 'stretch',
                 opacity: rowState.isLocked ? 0.75 : 1,
                 boxShadow: 4,
-                overflowX: 'auto',
-                overflowY: 'visible',
-                WebkitOverflowScrolling: 'touch',
+                overflow: 'visible',
                 position: 'relative'
             }}
         >
@@ -205,6 +203,11 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
                                     cellBoxShadow = isCrossed
                                         ? 'inset 0 2px 4px rgba(0,0,0,0.5), 0 0 8px rgba(255, 179, 0, 0.6)'
                                         : '0 2px 6px rgba(0,0,0,0.2), 0 0 8px rgba(255, 179, 0, 0.4)';
+                                } else if (cell.chainId) {
+                                    cellBorder = '2.5px dashed #555555';
+                                    cellBoxShadow = isCrossed
+                                        ? 'inset 0 2px 4px rgba(0,0,0,0.5), 0 0 4px rgba(0,0,0,0.4)'
+                                        : '0 2px 6px rgba(0,0,0,0.2), 0 0 6px rgba(0,0,0,0.25)';
                                 }
 
                                 return (
@@ -219,6 +222,7 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
                                         }}
                                     >
                                         <ButtonBase
+                                            data-chain-cell={cell.chainId ? `${rowDef.id}-${num}` : undefined}
                                             onClick={() => {
                                                 if (!disabled && !rowState.isLocked && isClickable) {
                                                     onCrossNumber(color, num, isBonusRow, rowDef.id);
@@ -303,19 +307,6 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
                                                     <Box sx={{ width: 3.5, height: 3.5, borderRadius: '50%', bgcolor: '#ffb300' }} />
                                                     <Box sx={{ width: 3.5, height: 3.5, borderRadius: '50%', bgcolor: '#ffb300' }} />
                                                 </Box>
-                                            )}
-
-                                            {/* Chain Link Icon */}
-                                            {cell.chainId && (
-                                                <LinkIcon
-                                                    sx={{
-                                                        position: 'absolute',
-                                                        bottom: 1,
-                                                        right: 1,
-                                                        fontSize: '0.75rem',
-                                                        color: isCrossed ? '#ffffff' : 'text.secondary'
-                                                    }}
-                                                />
                                             )}
                                         </ButtonBase>
 
@@ -502,6 +493,24 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
                                         <LockOpenIcon sx={{ fontSize: { xs: 18, sm: 24, md: 28 } }} />
                                     )}
                                 </ButtonBase>
+                            )}
+
+                            {/* Bonus Row alignment spacer ensuring exact vertical alignment with rows above */}
+                            {seg.isLastSegment && isBonusRow && (
+                                <Box
+                                    sx={{
+                                        width: { xs: 28, sm: 38, md: 46 },
+                                        height: { xs: 32, sm: 40, md: 48 },
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        opacity: 0.85
+                                    }}
+                                >
+                                    <Typography sx={{ fontSize: { xs: '1.1rem', sm: '1.4rem' }, color: '#ffd54f', fontWeight: 'bold' }}>
+                                        ★
+                                    </Typography>
+                                </Box>
                             )}
                         </Box>
                     );

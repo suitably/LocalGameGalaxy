@@ -317,7 +317,7 @@ const connectedStairsRows: SheetRowDefinition[] = [
     }
 ];
 
-// 6. Qwixx Connected — Kette
+// 6. Qwixx Connected — Kette (Vertikal verbundene Nachbarfelder auf gleicher Höhe)
 const connectedChainsRows: SheetRowDefinition[] = [
     {
         id: 'red',
@@ -325,7 +325,7 @@ const connectedChainsRows: SheetRowDefinition[] = [
         cells: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => ({
             number: num,
             color: 'red',
-            chainId: num === 4 ? 'chain_1' : num === 9 ? 'chain_2' : undefined
+            chainId: num === 6 ? 'chain_3' : num === 11 ? 'chain_6' : undefined
         })),
         lockNumber: 12,
         lockColor: 'red'
@@ -336,7 +336,7 @@ const connectedChainsRows: SheetRowDefinition[] = [
         cells: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => ({
             number: num,
             color: 'yellow',
-            chainId: num === 6 ? 'chain_1' : num === 3 ? 'chain_3' : num === 11 ? 'chain_5' : undefined
+            chainId: num === 3 ? 'chain_1' : num === 6 ? 'chain_3' : num === 8 ? 'chain_4' : num === 11 ? 'chain_6' : undefined
         })),
         lockNumber: 12,
         lockColor: 'yellow'
@@ -347,7 +347,7 @@ const connectedChainsRows: SheetRowDefinition[] = [
         cells: [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2].map((num) => ({
             number: num,
             color: 'green',
-            chainId: num === 10 ? 'chain_3' : num === 6 ? 'chain_4' : num === 3 ? 'chain_5' : undefined
+            chainId: num === 11 ? 'chain_1' : num === 9 ? 'chain_2' : num === 6 ? 'chain_4' : num === 4 ? 'chain_5' : undefined
         })),
         lockNumber: 2,
         lockColor: 'green'
@@ -358,7 +358,7 @@ const connectedChainsRows: SheetRowDefinition[] = [
         cells: [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2].map((num) => ({
             number: num,
             color: 'blue',
-            chainId: num === 7 ? 'chain_2' : num === 4 ? 'chain_4' : undefined
+            chainId: num === 9 ? 'chain_2' : num === 4 ? 'chain_5' : undefined
         })),
         lockNumber: 2,
         lockColor: 'blue'
@@ -538,6 +538,44 @@ export function generateRandomSheetRows(): SheetRowDefinition[] {
         };
     });
 }
+// 10. Qwixx Longo (Offizielle Blöcke mit Zahlen 2..16, 8-seitigen D8-Würfeln und Glückszahlen)
+const longoRows: SheetRowDefinition[] = [
+    {
+        id: 'red',
+        defaultColor: 'red',
+        cells: createSimpleCells([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], 'red'),
+        lockNumber: 16,
+        lockColor: 'red'
+    },
+    {
+        id: 'yellow',
+        defaultColor: 'yellow',
+        cells: createSimpleCells([2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16], 'yellow'),
+        lockNumber: 16,
+        lockColor: 'yellow'
+    },
+    {
+        id: 'green',
+        defaultColor: 'green',
+        cells: createSimpleCells([16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2], 'green'),
+        lockNumber: 2,
+        lockColor: 'green'
+    },
+    {
+        id: 'blue',
+        defaultColor: 'blue',
+        cells: createSimpleCells([16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2], 'blue'),
+        lockNumber: 2,
+        lockColor: 'blue'
+    }
+];
+
+export const LONGO_PRESET_LUCKY_NUMBERS: [number, number][] = [
+    [7, 11],
+    [6, 12],
+    [8, 10],
+    [5, 13]
+];
 
 export const SHEET_DEFINITIONS: Record<QwixxSheetType, SheetDefinition> = {
     classic: {
@@ -610,6 +648,15 @@ export const SHEET_DEFINITIONS: Record<QwixxSheetType, SheetDefinition> = {
         badgeKey: 'games.qwixx.sheets.bonus.badge',
         rows: bonusRowsDef
     },
+    longo: {
+        id: 'longo',
+        nameKey: 'games.qwixx.sheets.longo.name',
+        descriptionKey: 'games.qwixx.sheets.longo.desc',
+        badgeKey: 'games.qwixx.sheets.longo.badge',
+        rows: longoRows,
+        presets: [longoRows, longoRows, longoRows, longoRows],
+        presetNames: ['7 & 11', '6 & 12', '8 & 10', '5 & 13']
+    },
     random_mix: {
         id: 'random_mix',
         nameKey: 'games.qwixx.sheets.random_mix.name',
@@ -629,6 +676,7 @@ export const ALL_SHEET_TYPES: QwixxSheetType[] = [
     'double_sub',
     'double_numbers',
     'bonus',
+    'longo',
     'random_mix'
 ];
 

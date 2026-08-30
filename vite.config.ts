@@ -69,14 +69,14 @@ export default defineConfig({
       }
     }),
     {
-      name: 'sourcemap-404',
+      name: 'sourcemap-fallback',
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
-          if (req.url?.endsWith('.map')) {
-            // If the map file isn't found by previous middlewares, return 404 explicitly
-            // to prevent falling back to index.html (SPA fallback)
-            res.statusCode = 404;
-            res.end();
+          if (req.url && req.url.split('?')[0].endsWith('.map')) {
+            // Return a valid empty sourcemap JSON to prevent browser devtools 404 warnings
+            res.setHeader('Content-Type', 'application/json');
+            res.statusCode = 200;
+            res.end(JSON.stringify({ version: 3, file: '', sources: [], mappings: '' }));
           } else {
             next();
           }

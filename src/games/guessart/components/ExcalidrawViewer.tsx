@@ -356,18 +356,13 @@ export const ExcalidrawViewer: React.FC<ExcalidrawViewerProps> = ({
           gridModeEnabled={false}
           UIOptions={EXCALIDRAW_VIEWER_UI_OPTIONS}
           excalidrawAPI={(api: unknown) => {
-            const typedApi = api as {
-              updateScene: (scene: ExcalidrawScenePayload) => void;
-              scrollToContent?: (elements: unknown[], options?: Record<string, unknown>) => void;
-            };
-            setExcalidrawAPI(typedApi);
-            if (typedApi.scrollToContent && orderedElements.length > 0) {
-              typedApi.scrollToContent(orderedElements, {
-                fitToViewport: true,
-                viewportZoomFactor,
-                animate: false,
-              });
-            }
+            if (!api) return;
+            setExcalidrawAPI(
+              api as {
+                updateScene: (scene: ExcalidrawScenePayload) => void;
+                scrollToContent?: (elements: unknown[], options?: Record<string, unknown>) => void;
+              },
+            );
           }}
         />
       </React.Suspense>

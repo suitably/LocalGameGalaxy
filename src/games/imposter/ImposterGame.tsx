@@ -46,9 +46,7 @@ export const ImposterGame: React.FC = () => {
         initDb();
     }, []);
 
-    const [infoOpen, setInfoOpen] = useState(() => 
-        storage.get(STORAGE_KEYS.IMPOSTER_SEEN_INFO) !== 'true'
-    );
+    const [infoOpen, setInfoOpen] = useState(false);
 
     const handleCloseInfo = useCallback(() => {
         setInfoOpen(false);

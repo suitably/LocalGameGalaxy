@@ -9,7 +9,8 @@ import type {
     QwixxScoreBreakdown,
     SheetRowDefinition
 } from './types';
-import { getSheetDefinition, getSheetRows, generateRandomSheetRows } from './sheetDefinitions';
+import { generateUUID } from '../../../lib/uuid';
+import { getSheetDefinition, getSheetRows, generateRandomSheetRows, LONGO_PRESET_LUCKY_NUMBERS } from './sheetDefinitions';
 
 export const ROW_NUMBERS: Record<RowColor, number[]> = {
     red: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
@@ -164,7 +165,7 @@ export const createInitialSheet = (
     }
 
     const sheet: PlayerSheet = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         name,
         sheetType,
         presetIndex,
@@ -174,7 +175,8 @@ export const createInitialSheet = (
         green: { crossed: [], isLocked: false, subCrossed: [] },
         blue: { crossed: [], isLocked: false, subCrossed: [] },
         misses: 0,
-        shields: 0
+        shields: 0,
+        luckyNumbers: sheetType === 'longo' ? (LONGO_PRESET_LUCKY_NUMBERS[presetIndex || 0] || [7, 11]) : undefined
     };
 
     if (sheetDef.hasBonusRows && sheetDef.bonusRows) {
@@ -198,13 +200,8 @@ export const INITIAL_DICE: DiceValues = {
 
 export const INITIAL_STATE: QwixxGameState = {
     mySheet: createInitialSheet(),
-    opponents: [],
     dice: INITIAL_DICE,
-    isRolling: false,
-    isMultiplayer: false,
-    roomId: '',
-    activePlayerId: '',
-    isGameOver: false
+    isRolling: false
 };
 
 export function canCrossNumber(rowNumbers: number[], crossed: number[], numToCross: number): boolean {
@@ -236,7 +233,8 @@ export function canLockRow(
     const lockCell = rowDef.cells.find((c) => c.number === numToCross);
     const lockBonus = (lockCell?.isDouble && sheetType === 'double_numbers') ? 2 : 1;
     const currentCount = getRowCrossCount(rowDef, rowState, sheetType);
-    return currentCount + lockBonus >= 5;
+    const minCrosses = sheetType === 'longo' ? 6 : 5;
+    return currentCount + lockBonus >= minCrosses;
 }
 
 export function canCrossBigPointsBonus(
@@ -517,8 +515,9 @@ export function qwixxReducer(state: QwixxGameState, action: QwixxAction): QwixxG
 
             const lastNumber = rowDef.lockNumber;
             const currentCount = getRowCrossCount(rowDef, currentRow, currentSheetType);
+            const minCrosses = currentSheetType === 'longo' ? 6 : 5;
 
-            if (currentRow.isLocked || currentCount < 5 || !currentRow.crossed.includes(lastNumber)) {
+            if (currentRow.isLocked || currentCount < minCrosses || !currentRow.crossed.includes(lastNumber)) {
                 return state;
             }
 
@@ -604,47 +603,10 @@ export function qwixxReducer(state: QwixxGameState, action: QwixxAction): QwixxG
                 isRolling: false
             };
 
-        case 'SET_DICE':
-            return {
-                ...state,
-                dice: action.dice
-            };
-
-        case 'UPDATE_OPPONENT': {
-            const existingIndex = state.opponents.findIndex((o) => o.id === action.sheet.id);
-            const newOpponents = [...state.opponents];
-            if (existingIndex >= 0) {
-                newOpponents[existingIndex] = action.sheet;
-            } else {
-                newOpponents.push(action.sheet);
-            }
-            return {
-                ...state,
-                opponents: newOpponents
-            };
-        }
-
-        case 'SET_ROOM_ID':
-            return {
-                ...state,
-                roomId: action.roomId,
-                isMultiplayer: !!action.roomId
-            };
-
-        case 'SET_PLAYER_NAME':
-            return {
-                ...state,
-                mySheet: {
-                    ...state.mySheet,
-                    name: action.name
-                }
-            };
-
         case 'RESET_GAME':
             return {
                 ...INITIAL_STATE,
-                mySheet: createInitialSheet(state.mySheet.name, currentSheetType, state.mySheet.presetIndex, state.mySheet.customRows),
-                opponents: state.opponents.map((o) => createInitialSheet(o.name, o.sheetType || currentSheetType, o.presetIndex, o.customRows))
+                mySheet: createInitialSheet(state.mySheet.name, currentSheetType, state.mySheet.presetIndex, state.mySheet.customRows)
             };
 
         default:

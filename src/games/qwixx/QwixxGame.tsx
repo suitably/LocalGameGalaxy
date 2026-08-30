@@ -8,14 +8,11 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    TextField,
     Chip,
     Tooltip
 } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
 import CasinoIcon from '@mui/icons-material/Casino';
-import GroupIcon from '@mui/icons-material/Group';
-import PersonIcon from '@mui/icons-material/Person';
 import StyleIcon from '@mui/icons-material/Style';
 import { useTranslation } from 'react-i18next';
 import { initQwixxI18n } from './i18n';
@@ -29,12 +26,10 @@ import type { DieKey } from './logic/diceHighlight';
 import type { RowColor, DiceValues, PlayerSheet, QwixxSheetType, SheetRowDefinition } from './logic/types';
 import { QwixxSheet } from './components/QwixxSheet';
 import { QwixxDiceRoller } from './components/QwixxDiceRoller';
-import { QwixxOpponentView } from './components/QwixxOpponentView';
 import { QwixxSheetSelector } from './components/QwixxSheetSelector';
 
 const STORAGE_KEY_SHEET = 'qwixx_my_sheet';
 const STORAGE_KEY_SHOW_DICE = 'qwixx_show_dice';
-const STORAGE_KEY_ROOM_ID = 'qwixx_room_id';
 
 export const QwixxGame: React.FC = () => {
     initQwixxI18n();
@@ -44,18 +39,23 @@ export const QwixxGame: React.FC = () => {
 
     const [state, dispatch] = useReducer(qwixxReducer, INITIAL_STATE, (initial) => {
         const savedSheet = storage.getJson<PlayerSheet | null>(STORAGE_KEY_SHEET, null);
-        const savedRoom = storage.get(STORAGE_KEY_ROOM_ID, '');
-
         let mySheet = initial.mySheet;
-        if (savedSheet) {
-            mySheet = savedSheet;
+        if (savedSheet && savedSheet.red && savedSheet.yellow && savedSheet.green && savedSheet.blue) {
+            mySheet = {
+                ...initial.mySheet,
+                ...savedSheet,
+                red: savedSheet.red?.crossed ? savedSheet.red : { crossed: [], isLocked: false },
+                yellow: savedSheet.yellow?.crossed ? savedSheet.yellow : { crossed: [], isLocked: false },
+                green: savedSheet.green?.crossed ? savedSheet.green : { crossed: [], isLocked: false },
+                blue: savedSheet.blue?.crossed ? savedSheet.blue : { crossed: [], isLocked: false }
+            };
         }
 
         return {
             ...initial,
             mySheet,
-            roomId: savedRoom,
-            isMultiplayer: !!savedRoom
+            roomId: '',
+            isMultiplayer: false
         };
     });
 
@@ -63,10 +63,7 @@ export const QwixxGame: React.FC = () => {
     const [selectedDie, setSelectedDie] = useState<DieKey | null>(null);
     const [highlightedNumbers, setHighlightedNumbers] = useState<Partial<Record<RowColor, number[]>> | null>(null);
     const [resetDialogOpen, setResetDialogOpen] = useState<boolean>(false);
-    const [roomDialogOpen, setRoomDialogOpen] = useState<boolean>(false);
     const [sheetSelectorOpen, setSheetSelectorOpen] = useState<boolean>(false);
-    const [roomInput, setRoomInput] = useState<string>(state.roomId);
-    const [nameInput, setNameInput] = useState<string>(state.mySheet.name);
 
     const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -78,52 +75,6 @@ export const QwixxGame: React.FC = () => {
     useEffect(() => {
         storage.set(STORAGE_KEY_SHOW_DICE, String(showDice));
     }, [showDice]);
-
-    useEffect(() => {
-        storage.set(STORAGE_KEY_ROOM_ID, state.roomId);
-    }, [state.roomId]);
-
-    // Broadcast channel setup
-    useEffect(() => {
-        if (!state.roomId) return;
-
-        let channel: BroadcastChannel | null = null;
-        try {
-            channel = new BroadcastChannel(`qwixx_room_${state.roomId}`);
-
-            channel.onmessage = (event) => {
-                const { type, payload } = event.data || {};
-                if (type === 'SHEET_UPDATE' && payload && payload.id !== state.mySheet.id) {
-                    dispatch({ type: 'UPDATE_OPPONENT', sheet: payload });
-                } else if (type === 'DICE_ROLL' && payload) {
-                    dispatch({ type: 'SET_DICE', dice: payload });
-                } else if (type === 'REQUEST_SHEET' && payload !== state.mySheet.id) {
-                    channel?.postMessage({ type: 'SHEET_UPDATE', payload: state.mySheet });
-                }
-            };
-
-            channel.postMessage({ type: 'SHEET_UPDATE', payload: state.mySheet });
-            channel.postMessage({ type: 'REQUEST_SHEET', payload: state.mySheet.id });
-        } catch (e) {
-            console.warn('[Qwixx] BroadcastChannel error:', e);
-        }
-
-        return () => {
-            if (channel) {
-                channel.close();
-            }
-        };
-    }, [state.roomId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // Broadcast sheet changes
-    useEffect(() => {
-        if (!state.roomId) return;
-        try {
-            const channel = new BroadcastChannel(`qwixx_room_${state.roomId}`);
-            channel.postMessage({ type: 'SHEET_UPDATE', payload: state.mySheet });
-            channel.close();
-        } catch {}
-    }, [state.mySheet, state.roomId]);
 
     const handleCrossNumber = useCallback((color: RowColor, number: number, isBonusRow?: boolean, rowId?: string) => {
         dispatch({ type: 'CROSS_NUMBER', color, number, isBonusRow, rowId });
@@ -169,14 +120,7 @@ export const QwixxGame: React.FC = () => {
             clearTimeout(highlightTimerRef.current);
             highlightTimerRef.current = null;
         }
-        if (state.roomId) {
-            try {
-                const channel = new BroadcastChannel(`qwixx_room_${state.roomId}`);
-                channel.postMessage({ type: 'DICE_ROLL', payload: newDice });
-                channel.close();
-            } catch {}
-        }
-    }, [state.roomId]);
+    }, []);
 
     const handleDieClick = useCallback((dieKey: DieKey) => {
         if (highlightTimerRef.current) {
@@ -216,20 +160,19 @@ export const QwixxGame: React.FC = () => {
         setResetDialogOpen(false);
     };
 
-    const handleSaveRoom = () => {
-        if (roomInput.trim() !== state.roomId) {
-            dispatch({ type: 'SET_ROOM_ID', roomId: roomInput.trim() });
-        }
-        if (nameInput.trim() && nameInput.trim() !== state.mySheet.name) {
-            dispatch({ type: 'SET_PLAYER_NAME', name: nameInput.trim() });
-        }
-        setRoomDialogOpen(false);
-    };
-
     const currentSheetDef = getSheetDefinition(state.mySheet.sheetType || 'classic');
 
     return (
-        <Container maxWidth="md" sx={{ py: { xs: 1.5, sm: 3 }, px: { xs: 1, sm: 2 } }}>
+        <Container
+            maxWidth="md"
+            sx={{
+                py: { xs: 1.5, sm: 3 },
+                px: { xs: 1, sm: 2 },
+                height: '100%',
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch'
+            }}
+        >
             {/* Header Controls */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
@@ -262,20 +205,6 @@ export const QwixxGame: React.FC = () => {
                             sx={{ fontWeight: 'bold' }}
                         />
                     </Tooltip>
-
-                    {/* Solo/Room Chip */}
-                    <Chip
-                        icon={state.isMultiplayer ? <GroupIcon /> : <PersonIcon />}
-                        label={state.isMultiplayer ? `${t('games.qwixx.room_code', 'Room')}: ${state.roomId}` : t('games.qwixx.solo_mode', 'Solo')}
-                        color={state.isMultiplayer ? 'primary' : 'default'}
-                        onClick={() => {
-                            setRoomInput(state.roomId);
-                            setNameInput(state.mySheet.name);
-                            setRoomDialogOpen(true);
-                        }}
-                        size="small"
-                        clickable
-                    />
                 </Box>
 
                 <Box sx={{ display: 'flex', gap: 1 }}>
@@ -286,7 +215,7 @@ export const QwixxGame: React.FC = () => {
                         startIcon={<CasinoIcon />}
                         onClick={() => setShowDice(!showDice)}
                     >
-                        {showDice ? t('games.qwixx.hide_dice', 'Dice') : t('games.qwixx.show_dice', 'Dice')}
+                        {showDice ? t('games.qwixx.hide_dice', 'Würfel') : t('games.qwixx.show_dice', 'Würfel')}
                     </Button>
 
                     <Button
@@ -296,12 +225,12 @@ export const QwixxGame: React.FC = () => {
                         startIcon={<ReplayIcon />}
                         onClick={() => setResetDialogOpen(true)}
                     >
-                        {t('games.qwixx.new_game', 'Reset')}
+                        {t('games.qwixx.new_game', 'Neues Spiel')}
                     </Button>
                 </Box>
             </Box>
 
-            {/* Optional Dice Roller */}
+            {/* Optional Virtual Dice Roller */}
             {showDice && (
                 <QwixxDiceRoller
                     dice={state.dice}
@@ -309,6 +238,7 @@ export const QwixxGame: React.FC = () => {
                     onRoll={handleRoll}
                     onDieClick={handleDieClick}
                     selectedDie={selectedDie}
+                    maxDieValue={state.mySheet.sheetType === 'longo' ? 8 : 6}
                 />
             )}
 
@@ -322,13 +252,6 @@ export const QwixxGame: React.FC = () => {
                 onRemoveMiss={handleRemoveMiss}
                 highlightedNumbers={highlightedNumbers}
             />
-
-            {/* Multiplayer Opponents View */}
-            {state.isMultiplayer && (
-                <QwixxOpponentView
-                    opponents={state.opponents}
-                />
-            )}
 
             {/* Reset Confirmation Dialog */}
             <Dialog open={resetDialogOpen} onClose={() => setResetDialogOpen(false)}>
@@ -344,38 +267,6 @@ export const QwixxGame: React.FC = () => {
                     </Button>
                     <Button onClick={handleResetConfirm} color="error" variant="contained">
                         {t('games.qwixx.new_game', 'Zurücksetzen')}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Room / Name Configuration Dialog */}
-            <Dialog open={roomDialogOpen} onClose={() => setRoomDialogOpen(false)} maxWidth="xs" fullWidth>
-                <DialogTitle>{t('games.qwixx.multiplayer_mode', 'Mehrspieler-Raum')}</DialogTitle>
-                <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-                    <TextField
-                        label={t('games.qwixx.player_name', 'Spielername')}
-                        value={nameInput}
-                        onChange={(e) => setNameInput(e.target.value)}
-                        fullWidth
-                        size="small"
-                        autoFocus
-                    />
-                    <TextField
-                        label={t('games.qwixx.room_code', 'Raum-Code')}
-                        value={roomInput}
-                        onChange={(e) => setRoomInput(e.target.value)}
-                        placeholder="z.B. family-night"
-                        helperText="Gib denselben Code ein wie deine Mitspieler im selben Netzwerk/Browser"
-                        fullWidth
-                        size="small"
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setRoomDialogOpen(false)} color="inherit">
-                        {t('common.cancel', 'Abbrechen')}
-                    </Button>
-                    <Button onClick={handleSaveRoom} color="primary" variant="contained">
-                        {t('common.save', 'Speichern')}
                     </Button>
                 </DialogActions>
             </Dialog>

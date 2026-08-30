@@ -36,28 +36,50 @@ export const STORAGE_KEYS = {
     GITHUB_REPO: 'nexumia_github_repo',
 } as const;
 
+const memoryFallback = new Map<string, string>();
+
 export const storage = {
     get(key: string, fallback = ''): string {
         try {
-            return localStorage.getItem(key) ?? fallback;
+            if (typeof localStorage !== 'undefined') {
+                return localStorage.getItem(key) ?? fallback;
+            }
+            return memoryFallback.get(key) ?? fallback;
         } catch {
-            return fallback;
+            return memoryFallback.get(key) ?? fallback;
         }
     },
     
     set(key: string, value: string): void {
         try {
-            localStorage.setItem(key, value);
+            if (typeof localStorage !== 'undefined') {
+                localStorage.setItem(key, value);
+            }
+            memoryFallback.set(key, value);
         } catch (e) {
-            console.error(`[Storage] Write failed for key "${key}":`, e);
+            memoryFallback.set(key, value);
         }
     },
     
     remove(key: string): void {
         try {
-            localStorage.removeItem(key);
+            if (typeof localStorage !== 'undefined') {
+                localStorage.removeItem(key);
+            }
+            memoryFallback.delete(key);
         } catch (e) {
-            console.error(`[Storage] Delete failed for key "${key}":`, e);
+            memoryFallback.delete(key);
+        }
+    },
+    
+    clear(): void {
+        try {
+            if (typeof localStorage !== 'undefined') {
+                localStorage.clear();
+            }
+            memoryFallback.clear();
+        } catch (e) {
+            memoryFallback.clear();
         }
     },
     

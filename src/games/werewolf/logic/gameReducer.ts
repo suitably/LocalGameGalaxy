@@ -1,6 +1,6 @@
 import { INITIAL_STATE, getNextPhase } from './types';
 import type { GameState, Role, Action, PlayerPowerState } from './types';
-
+import { generateUUID } from '../../../lib/uuid';
 import { getDeathCascade, getWinningFaction, isWerewolfRole } from './utils';
 import { DEFAULT_ROLES } from './defaultRoles';
 
@@ -50,7 +50,7 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
                 players: [
                     ...state.players,
                     {
-                        id: crypto.randomUUID(),
+                        id: generateUUID(),
                         name: action.name,
                         role: null,
                         isAlive: true,

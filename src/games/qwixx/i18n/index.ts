@@ -64,6 +64,12 @@ export const qwixxTranslations = {
                 bonus_partner_desc: "Immediately places the next available cross in the target partner row.",
                 double_banner_title: "Double Numbers Mode:",
                 double_banner_desc: "Golden-bordered 2× boxes count as 2 crosses (XX) immediately when crossed!",
+                longo_title: "Qwixx Longo (D8 Dice 1–8, Numbers 2–16):",
+                longo_desc: "Requires 6 crosses to lock (+1 bonus). White dice sum = Lucky Number ➔ Free cross in row with fewest crosses!",
+                longo_short_desc: "White dice sum = Lucky Number ➔ Free cross in row with fewest crosses",
+                lucky_numbers: "Lucky Numbers",
+                chains_title: "Chains Mode:",
+                chains_desc: "Connected chain links (🔗1 to 🔗5) immediately cross the linked partner field in the other row when marked!",
                 rules: {
                     default: {
                         crossing: "Cross numbers from left to right. White sum can be used in any row, colored dice only in matching color.",
@@ -114,6 +120,11 @@ export const qwixxTranslations = {
                         crossing: "Special bonus icons grant instant perks when crossed (extra crosses, shields against misses, or doubling).",
                         scoring: "Bonus effects enhance your final score or mitigate penalties.",
                         tip: "Align your roll choices with the bonus icons for tactical advantages."
+                    },
+                    longo: {
+                        crossing: "Cross numbers from left to right (2–16 / 16–2). When the white dice roll your Lucky Number, cross the next free number in the row with the fewest crosses!",
+                        scoring: "Standard triangular scoring for up to 16 crosses (up to 136 pts per row). Locking requires 6 crosses and the final number.",
+                        tip: "Watch the white dice rolls for your Lucky Numbers to gain valuable extra crosses in your lagging rows!"
                     },
                     random_mix: {
                         crossing: "Dynamically generated balanced random layout with shuffled numbers per row.",
@@ -166,6 +177,11 @@ export const qwixxTranslations = {
                         name: "Bonus Icons",
                         badge: "Special Powers",
                         desc: "Special icons trigger chain actions, instant free crosses, or shields against penalty misses."
+                    },
+                    longo: {
+                        name: "Qwixx Longo",
+                        badge: "8-Sided D8",
+                        desc: "Official Longo block with 15 numbers (2–16), 8-sided D8 dice, and 2 individual Lucky Numbers."
                     },
                     random_mix: {
                         name: "Randomizer (Custom Mix)",
@@ -239,6 +255,12 @@ export const qwixxTranslations = {
                 bonus_partner_desc: "Setzt sofort das nächste freie Kreuz in der angegebenen Partner-Reihe.",
                 double_banner_title: "Doppelzahlen-Modus:",
                 double_banner_desc: "Die golden umrandeten 2×-Felder zählen beim Ankreuzen sofort als 2 Kreuze (XX) für die Reihe!",
+                longo_title: "Qwixx Longo (D8-Würfel 1–8, Zahlen 2–16):",
+                longo_desc: "Ab 6 Kreuzen sperrbar (+1 Bonus). Weiße Würfelsumme = Glückszahl ➔ Freies Kreuz in der Reihe mit den wenigsten Kreuzen!",
+                longo_short_desc: "Weiße Summe = Glückszahl ➔ Freies Kreuz in Reihe mit wenigsten Kreuzen",
+                lucky_numbers: "Glückszahlen",
+                chains_title: "Ketten-Modus:",
+                chains_desc: "Verbundene Ketten (🔗1 bis 🔗6) kreuzen beim Markieren sofort das Partnerfeld in der anderen Reihe mit an!",
                 rules: {
                     default: {
                         crossing: "Kreuze von links nach rechts setzen. Die Summe der weißen Würfel darf überall genutzt werden, der Farbwürfel nur in der passenden Zeile.",
@@ -289,6 +311,11 @@ export const qwixxTranslations = {
                         crossing: "Spezialsymbole auf den Zahlenfeldern gewähren Sofort-Boni: Sofort-Kreuze in derselben Reihe, Partner-Kreuze in anderen Farben oder Schutzschilde vor Fehlwürfen.",
                         scoring: "Boni verbessern das Endergebnis oder schützen vor Punktabzügen.",
                         tip: "Richte deine Züge strategisch an den Bonussymbolen aus."
+                    },
+                    longo: {
+                        crossing: "Ankreuzen von links nach rechts (2–16 / 16–2). Bei Wurf einer deiner zwei Glückszahlen mit den weißen Würfeln darf das nächste freie Feld in der Reihe mit den wenigsten Kreuzen markiert werden!",
+                        scoring: "Punkte steigen bis zu 16 Kreuzen (bis zu 136 Pkt pro Reihe!). Das Sperren einer Reihe erfordert mindestens 6 Kreuze und die letzte Zahl.",
+                        tip: "Nutze deine Glückszahlen geschickt, um Reihen aufzuholen, in denen du noch wenige Kreuze hast!"
                     },
                     random_mix: {
                         crossing: "Dynamisch generierte, ausgewogene Zufalls-Anordnung mit gemischten Zahlen je Farbreihe.",
@@ -341,6 +368,11 @@ export const qwixxTranslations = {
                         name: "Bonus-Symbole",
                         badge: "Sondereffekte",
                         desc: "Spezialsymbole gewähren Kettenreaktionen, Gratis-Kreuze oder Schutz vor Fehlwürfen."
+                    },
+                    longo: {
+                        name: "Qwixx Longo",
+                        badge: "8-Seitig D8",
+                        desc: "Offizieller Longo-Block mit 15 Zahlen (2–16), 8-seitigen D8-Würfeln und 2 persönlichen Glückszahlen."
                     },
                     random_mix: {
                         name: "Randomizer (Eigene Mischung)",

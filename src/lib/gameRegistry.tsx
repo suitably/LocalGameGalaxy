@@ -4,6 +4,7 @@ import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import CasinoIcon from '@mui/icons-material/Casino';
 import PaletteIcon from '@mui/icons-material/Palette';
+import CelebrationIcon from '@mui/icons-material/Celebration';
 import { SongsProvider } from '../games/melodiq';
 
 export interface GameRouteDefinition {
@@ -33,6 +34,7 @@ const MelodiqQueue = lazy(() => import('../games/melodiq').then(m => ({ default:
 const MelodiqTV = lazy(() => import('../games/melodiq').then(m => ({ default: m.MelodiqTV })));
 const QwixxGame = lazy(() => import('../games/qwixx').then(m => ({ default: m.QwixxGame })));
 const GuessArtGame = lazy(() => import('../games/guessart').then(m => ({ default: m.GuessArtGame })));
+const PartyLobby = lazy(() => import('../features/party/PartyLobby').then(m => ({ default: m.PartyLobby })));
 
 class GameRegistry {
     private games: GameDefinition[] = [
@@ -107,6 +109,17 @@ class GameRegistry {
             colorEnd: '#00838f',
             hoverColor: '#00838f',
             component: <GuessArtGame />
+        },
+        {
+            id: 'party',
+            route: 'party',
+            titleKey: 'games.party.title',
+            descriptionKey: 'games.party.description',
+            icon: <CelebrationIcon sx={{ fontSize: 72, mb: 2 }} />,
+            colorStart: '#ce93d8',
+            colorEnd: '#7b1fa2',
+            hoverColor: '#7b1fa2',
+            component: <PartyLobby />
         }
     ];
 

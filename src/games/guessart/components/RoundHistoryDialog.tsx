@@ -13,18 +13,23 @@ import {
   DialogTitle,
   IconButton,
   Stack,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
 import BrushRoundedIcon from '@mui/icons-material/BrushRounded';
+import PsychologyRoundedIcon from '@mui/icons-material/PsychologyRounded';
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import DoneRoundedIcon from '@mui/icons-material/DoneRounded';
 import { useTranslation } from 'react-i18next';
 import { LocalGameEngine } from '../logic/engine';
 import { ExcalidrawViewer } from './ExcalidrawViewer';
+import { addSynonymToWord } from '../logic/catalogueManager';
 import type { GuessArtRound, PlayerIdentity } from '../logic/types';
 
 interface RoundHistoryDialogProps {
@@ -45,6 +50,18 @@ export const RoundHistoryDialog: React.FC<RoundHistoryDialogProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [expandedRoundId, setExpandedRoundId] = useState<string | false>(false);
   const [replayingRoundId, setReplayingRoundId] = useState<string | null>(null);
+  const [addedSynonyms, setAddedSynonyms] = useState<Set<string>>(new Set());
+
+  const handleAddSynonym = async (targetWord: string, guess: string, lang: string) => {
+    try {
+      const res = await addSynonymToWord(targetWord, guess, lang);
+      if (res.success) {
+        setAddedSynonyms((prev) => new Set([...prev, `${targetWord}:::${guess}`]));
+      }
+    } catch (e) {
+      console.warn('Failed to add synonym from history', e);
+    }
+  };
 
   useEffect(() => {
     if (!open || !gameId) {
@@ -77,7 +94,16 @@ export const RoundHistoryDialog: React.FC<RoundHistoryDialogProps> = ({
   const getDrawerName = (round: GuessArtRound): string => {
     if (round.drawnByName) return round.drawnByName;
     const player = players.find((p) => p.id === round.drawnById);
-    return player?.name || round.drawnById || 'Player';
+    return player?.name || round.drawnById || 'Spieler 1';
+  };
+
+  const getGuesserName = (round: GuessArtRound): string => {
+    if (round.guesserName) return round.guesserName;
+    const drawerIdx = players.findIndex((p) => p.id === round.drawnById);
+    if (drawerIdx >= 0 && players.length > 0) {
+      return players[(drawerIdx + 1) % players.length]?.name || 'Spieler 2';
+    }
+    return round.guesserId || 'Spieler 2';
   };
 
   return (
@@ -127,10 +153,17 @@ export const RoundHistoryDialog: React.FC<RoundHistoryDialogProps> = ({
           <Stack spacing={1.5}>
             {rounds.map((round) => {
               const drawer = getDrawerName(round);
+              const guesser = getGuesserName(round);
               const isCompleted = round.status === 'completed';
               const isCurrentGuessing = round.status === 'guessing';
               const isExpanded = expandedRoundId === round.id;
               const isReplaying = replayingRoundId === round.id;
+
+              const roundTarget = isCompleted
+                ? round.word
+                : isCurrentGuessing
+                ? t('guessart.hiddenWord', 'Wird aktuell geraten...')
+                : round.word || t('guessart.selectingWord', 'Wortauswahl...');
 
               return (
                 <Accordion
@@ -165,11 +198,7 @@ export const RoundHistoryDialog: React.FC<RoundHistoryDialogProps> = ({
                           sx={{ fontWeight: 700 }}
                         />
                         <Typography variant="subtitle1" fontWeight={700}>
-                          {isCompleted
-                            ? round.word
-                            : isCurrentGuessing
-                            ? t('guessart.hiddenWord', 'Wird aktuell geraten...')
-                            : round.word || t('guessart.selectingWord', 'Wortauswahl...')}
+                          {drawer} vs. {guesser}: {roundTarget}
                         </Typography>
                       </Box>
 
@@ -177,6 +206,13 @@ export const RoundHistoryDialog: React.FC<RoundHistoryDialogProps> = ({
                         <Chip
                           icon={<BrushRoundedIcon fontSize="small" />}
                           label={drawer}
+                          size="small"
+                          variant="outlined"
+                          sx={{ fontWeight: 600 }}
+                        />
+                        <Chip
+                          icon={<PsychologyRoundedIcon fontSize="small" />}
+                          label={guesser}
                           size="small"
                           variant="outlined"
                           sx={{ fontWeight: 600 }}
@@ -248,16 +284,46 @@ export const RoundHistoryDialog: React.FC<RoundHistoryDialogProps> = ({
                           {t('guessart.guessesHistoryLabel', 'Geratene Begriffe:')}
                         </Typography>
                         <Stack direction="row" spacing={0.8} flexWrap="wrap" useFlexGap>
-                          {round.guesses.map((g, idx) => (
-                            <Chip
-                              key={`${round.id}-guess-${idx}`}
-                              label={g}
-                              size="small"
-                              variant="outlined"
-                              color={idx === round.guesses.length - 1 && isCompleted ? 'success' : 'default'}
-                              sx={{ fontSize: '0.8rem' }}
-                            />
-                          ))}
+                          {round.guesses.map((g, idx) => {
+                            const isCorrectAnswer = idx === round.guesses.length - 1 && isCompleted;
+                            const isWrong = isCompleted && !isCorrectAnswer && g.trim().toLowerCase() !== round.word.trim().toLowerCase();
+                            const isAdded = addedSynonyms.has(`${round.word}:::${g}`);
+
+                            if (!isWrong) {
+                              return (
+                                <Chip
+                                  key={`${round.id}-guess-${idx}`}
+                                  label={g}
+                                  size="small"
+                                  variant="outlined"
+                                  color={isCorrectAnswer ? 'success' : 'default'}
+                                  sx={{ fontSize: '0.8rem', fontWeight: isCorrectAnswer ? 700 : 400 }}
+                                />
+                              );
+                            }
+
+                            return (
+                              <Tooltip
+                                key={`${round.id}-guess-${idx}`}
+                                title={
+                                  isAdded
+                                    ? t('guessart.synonymAddedTooltip', 'Bereits hinzugefügt')
+                                    : t('guessart.addSynonymTooltip', 'Als Synonym zum Wort speichern')
+                                }
+                              >
+                                <Chip
+                                  label={g}
+                                  size="small"
+                                  color={isAdded ? 'success' : 'default'}
+                                  variant={isAdded ? 'filled' : 'outlined'}
+                                  icon={isAdded ? <DoneRoundedIcon fontSize="small" /> : <AddRoundedIcon fontSize="small" />}
+                                  onClick={() => !isAdded && handleAddSynonym(round.word, g, round.wordLanguageCode || 'de')}
+                                  clickable={!isAdded}
+                                  sx={{ fontSize: '0.8rem', cursor: isAdded ? 'default' : 'pointer' }}
+                                />
+                              </Tooltip>
+                            );
+                          })}
                         </Stack>
                       </Box>
                     )}

@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { UserProfile, ActivePlayer } from '../types';
 import { COLOR_PRESETS } from '../types';
+import { generateUUID } from '../../../lib/uuid';
 
 interface ProfilesState {
     profiles: UserProfile[];
@@ -32,7 +33,7 @@ const loadInitialData = (): ProfilesState => {
         const newActive: ActivePlayer[] = [];
 
         // Migrate P1
-        const p1Id = crypto.randomUUID();
+        const p1Id = generateUUID();
         const p1Hue = parseInt(localStorage.getItem('melodiq_p1_hue') || '190');
         const p1Dev = localStorage.getItem('melodiq_p1_device') || '';
         newProfiles.push({ id: p1Id, name: p1Name || 'Player 1', hue: p1Hue });
@@ -40,7 +41,7 @@ const loadInitialData = (): ProfilesState => {
 
         // Migrate P2
         if (p2Name) {
-            const p2Id = crypto.randomUUID();
+            const p2Id = generateUUID();
             const p2Hue = parseInt(localStorage.getItem('melodiq_p2_hue') || '120');
             const p2Dev = localStorage.getItem('melodiq_p2_device') || '';
             newProfiles.push({ id: p2Id, name: p2Name || 'Player 2', hue: p2Hue });
@@ -51,7 +52,7 @@ const loadInitialData = (): ProfilesState => {
     }
 
     // Fresh Start: Create Default Profile
-    const defaultId = crypto.randomUUID();
+    const defaultId = generateUUID();
     return {
         profiles: [{ id: defaultId, name: 'Player 1', hue: 190 }],
         activePlayers: [{ profileId: defaultId, deviceId: '', volume: 0.8, muted: true, latency: 0 }]
@@ -68,7 +69,7 @@ export const useProfiles = (devices: MediaDeviceInfo[]) => {
     const addProfile = useCallback(() => {
         setProfiles(prev => {
             const newProfile: UserProfile = {
-                id: crypto.randomUUID(),
+                id: generateUUID(),
                 name: `Player ${prev.length + 1}`,
                 hue: COLOR_PRESETS[prev.length % COLOR_PRESETS.length].hue
             };

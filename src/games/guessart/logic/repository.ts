@@ -9,11 +9,10 @@ import {
   withStore,
 } from './db';
 import type { GameOptions, GuessArtGameRecord, GuessArtRound } from './types';
+import { generateUUID } from '../../../lib/uuid';
 
 const generateId = (prefix = 'local'): string => {
-  const random = typeof crypto?.randomUUID === 'function'
-    ? crypto.randomUUID().replace(/-/g, '').slice(0, 12)
-    : Math.random().toString(36).slice(2, 14);
+  const random = generateUUID().replace(/-/g, '').slice(0, 12);
   return `${prefix}-${Date.now().toString(36)}-${random}`;
 };
 
@@ -50,7 +49,7 @@ export const createLocalGame = async ({
   ownerId,
 }: {
   name?: string;
-  players: string[];
+  players: (string | { name: string; isRemote?: boolean })[];
   language?: string;
   manualWordMode?: boolean;
   ownerId?: string | null;
@@ -61,10 +60,15 @@ export const createLocalGame = async ({
 
   const timestamp = nowISO();
   const id = generateId('local');
-  const normalizedPlayers = players.map((playerName, index) => ({
-    id: generateId(`player${index + 1}`),
-    name: playerName.trim(),
-  }));
+  const normalizedPlayers = players.map((p, index) => {
+    const pName = typeof p === 'string' ? p.trim() : p.name.trim();
+    const isRemote = typeof p === 'string' ? false : Boolean(p.isRemote);
+    return {
+      id: generateId(`player${index + 1}`),
+      name: pName,
+      isRemote,
+    };
+  });
 
   const record: GuessArtGameRecord = {
     id,
@@ -146,7 +150,7 @@ export const getRoundByNumber = async (
   roundNumber: number,
 ): Promise<GuessArtRound | null> => {
   const compositeKey = [gameId, roundNumber];
-  return withStore(STORE_ROUNDS, 'readonly', (store) =>
+  const round = await withStore(STORE_ROUNDS, 'readonly', (store) =>
     new Promise<GuessArtRound | null>((resolve, reject) => {
       const index = store.index('byRoundNumber');
       const request = index.get(compositeKey);
@@ -154,6 +158,12 @@ export const getRoundByNumber = async (
       request.onsuccess = () => resolve((request.result as GuessArtRound) ?? null);
     }),
   );
+  if (round) {
+    return round;
+  }
+  // Robust fallback for cross-browser index key handling:
+  const allRounds = await fetchRoundsForGame(gameId);
+  return allRounds.find((r) => r.roundNumber === roundNumber) || allRounds[allRounds.length - 1] || null;
 };
 
 export const upsertRound = async (round: GuessArtRound): Promise<GuessArtRound> => {
@@ -193,6 +203,10 @@ export const appendRound = async (
   };
   await putItem(STORE_ROUNDS, payload);
   return payload;
+};
+
+export const upsertGame = async (game: GuessArtGameRecord): Promise<void> => {
+  await putItem(STORE_GAMES, game);
 };
 
 export const clearAllGames = async (): Promise<void> => {

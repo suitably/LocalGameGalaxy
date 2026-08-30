@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Box, Paper, Typography, Button } from '@mui/material';
 import CasinoIcon from '@mui/icons-material/Casino';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +12,7 @@ interface QwixxDiceRollerProps {
     onDieClick?: (dieKey: DieKey) => void;
     selectedDie?: DieKey | null;
     disabled?: boolean;
+    maxDieValue?: number;
 }
 
 const DIE_COLORS = {
@@ -29,33 +30,41 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
     onRoll,
     onDieClick,
     selectedDie = null,
-    disabled = false
+    disabled = false,
+    maxDieValue = 6
 }) => {
     const { t } = useTranslation();
     const [animating, setAnimating] = useState(false);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
 
     const handleRollClick = () => {
         if (disabled || isRolling || animating) return;
 
         setAnimating(true);
-        // Play quick rolling animation sequence
-        const interval = setInterval(() => {
-            // intermediate random flash
-        }, 60);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-        setTimeout(() => {
-            clearInterval(interval);
+        timeoutRef.current = setTimeout(() => {
+            const limit = maxDieValue || 6;
             const newDice: DiceValues = {
-                white1: Math.floor(Math.random() * 6) + 1,
-                white2: Math.floor(Math.random() * 6) + 1,
-                red: Math.floor(Math.random() * 6) + 1,
-                yellow: Math.floor(Math.random() * 6) + 1,
-                green: Math.floor(Math.random() * 6) + 1,
-                blue: Math.floor(Math.random() * 6) + 1
+                white1: Math.floor(Math.random() * limit) + 1,
+                white2: Math.floor(Math.random() * limit) + 1,
+                red: Math.floor(Math.random() * limit) + 1,
+                yellow: Math.floor(Math.random() * limit) + 1,
+                green: Math.floor(Math.random() * limit) + 1,
+                blue: Math.floor(Math.random() * limit) + 1
             };
             setAnimating(false);
             onRoll(newDice);
-        }, 500);
+            timeoutRef.current = null;
+        }, 350);
     };
 
     const whiteSum = dice.white1 + dice.white2;

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import db, { type Playlist } from '../db';
 import { melodiqFetch } from '../api/melodiqFetch';
+import { generateUUID } from '../../../lib/uuid';
 
 export const usePlaylists = () => {
     const [showGlobalPlaylists, setShowGlobalPlaylists] = useState(false);
@@ -101,7 +102,7 @@ export const usePlaylists = () => {
     const createPlaylist = async (name: string) => {
         const { token } = getHelperConfig();
         const newPlaylist: Playlist = {
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             name,
             songs: [],
             creatorToken: token,

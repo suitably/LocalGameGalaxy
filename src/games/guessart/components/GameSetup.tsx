@@ -7,6 +7,7 @@ import {
   CardContent,
   Chip,
   FormControlLabel,
+  IconButton,
   Stack,
   Switch,
   TextField,
@@ -16,13 +17,16 @@ import PersonAddAltRoundedIcon from '@mui/icons-material/PersonAddAltRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded';
+import PhoneIphoneRoundedIcon from '@mui/icons-material/PhoneIphoneRounded';
 import { useTranslation } from 'react-i18next';
 import { ActiveGamesList } from './ActiveGamesList';
 import type { GuessArtGameRecord } from '../logic/types';
+import type { LobbyPlayerItem } from '../hooks/useGuessArtLobby';
 
 interface GameSetupProps {
-  players: string[];
-  onAddPlayer: (name: string) => boolean;
+  players: LobbyPlayerItem[];
+  onAddPlayer: (name: string, isRemote?: boolean) => boolean;
+  onToggleRemote?: (name: string) => void;
   onRemovePlayer: (name: string) => void;
   onStartGame: (options: { name?: string; language: string; manualWordMode: boolean }) => void;
   activeGames: GuessArtGameRecord[];
@@ -30,8 +34,10 @@ interface GameSetupProps {
   onDeleteGame: (gameId: string) => void;
   onOpenHistory?: (gameId: string) => void;
   onEditGame?: (game: GuessArtGameRecord) => void;
+  onOpenShareLinks?: (game: GuessArtGameRecord) => void;
   onOpenCatalogue?: () => void;
   onOpenInfo: () => void;
+  onOpenGartic?: () => void;
 }
 
 export const GameSetup: React.FC<GameSetupProps> = ({
@@ -44,8 +50,10 @@ export const GameSetup: React.FC<GameSetupProps> = ({
   onDeleteGame,
   onOpenHistory,
   onEditGame,
+  onOpenShareLinks,
   onOpenCatalogue,
   onOpenInfo,
+  onOpenGartic,
 }) => {
   const { t, i18n } = useTranslation();
   const [gameName, setGameName] = useState('');
@@ -55,7 +63,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
 
   const handleAdd = () => {
     if (!newPlayerName.trim()) return;
-    const ok = onAddPlayer(newPlayerName);
+    const ok = onAddPlayer(newPlayerName.trim());
     if (ok) {
       setNewPlayerName('');
       setFeedback(null);
@@ -96,17 +104,58 @@ export const GameSetup: React.FC<GameSetupProps> = ({
               {t('guessart.catalogueButton', 'Wortkatalog')}
             </Button>
           )}
-          <Button
-            size="small"
-            variant="text"
-            startIcon={<InfoOutlinedIcon />}
-            onClick={onOpenInfo}
-            sx={{ textTransform: 'none', fontWeight: 600 }}
-          >
-            {t('guessart.howToPlay', 'Spielregeln')}
-          </Button>
+          <IconButton size="small" onClick={onOpenInfo} aria-label={t('common.info', 'Info')}>
+            <InfoOutlinedIcon />
+          </IconButton>
         </Box>
       </Box>
+
+      {/* Active Games Section */}
+      <ActiveGamesList
+        games={activeGames}
+        onResumeGame={onResumeGame}
+        onDeleteGame={onDeleteGame}
+        onOpenHistory={onOpenHistory}
+        onEditGame={onEditGame}
+        onOpenShareLinks={onOpenShareLinks}
+      />
+
+      {/* Gartic Phone Banner */}
+      {onOpenGartic && (
+        <Card
+          variant="outlined"
+          sx={{
+            borderRadius: 3,
+            background: 'linear-gradient(135deg, rgba(156, 39, 176, 0.12) 0%, rgba(233, 30, 99, 0.12) 100%)',
+            border: '1.5px solid rgba(156, 39, 176, 0.35)',
+            boxShadow: 2,
+          }}
+        >
+          <CardContent sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5 }}>
+            <Box display="flex" alignItems="center" gap={1.5}>
+              <PhoneIphoneRoundedIcon sx={{ fontSize: 36, color: 'secondary.main' }} />
+              <Box>
+                <Typography variant="subtitle1" fontWeight={800}>
+                  Gartic Phone (Flüsterpost)
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {t('guessart.garticShortDesc', 'Live Multiplayer: Satz schreiben ➔ Zeichnen ➔ Raten ➔ Album-Show!')}
+                </Typography>
+              </Box>
+            </Box>
+
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<PlayArrowRoundedIcon />}
+              onClick={onOpenGartic}
+              sx={{ fontWeight: 700, borderRadius: 2 }}
+            >
+              {t('guessart.playGartic', 'Gartic Phone spielen')}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {feedback && (
         <Alert severity="warning" onClose={() => setFeedback(null)}>
@@ -121,10 +170,10 @@ export const GameSetup: React.FC<GameSetupProps> = ({
             {t('guessart.playersTitle', 'Mitspieler')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t('guessart.playersSubtitle', 'Füge mindestens 2 Spieler hinzu.')}
+            {t('guessart.playersSetupDesc', 'Füge mindestens 2 Spieler hinzu. Gespielt werden kann flexibel an einem Gerät oder mit eigenen Einladungslinks.')}
           </Typography>
 
-          <Stack direction="row" spacing={1.5} sx={{ mb: 2 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 2 }}>
             <TextField
               size="small"
               fullWidth
@@ -139,9 +188,11 @@ export const GameSetup: React.FC<GameSetupProps> = ({
               }}
             />
             <Button
-              variant="outlined"
+              variant="contained"
+              color="primary"
               startIcon={<PersonAddAltRoundedIcon />}
               onClick={handleAdd}
+              sx={{ minWidth: 130, fontWeight: 700 }}
             >
               {t('common.add', 'Hinzufügen')}
             </Button>
@@ -150,12 +201,12 @@ export const GameSetup: React.FC<GameSetupProps> = ({
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ minHeight: 40 }}>
             {players.map((player) => (
               <Chip
-                key={player}
-                label={player}
-                onDelete={() => onRemovePlayer(player)}
+                key={player.name}
+                label={player.name}
+                onDelete={() => onRemovePlayer(player.name)}
                 color="primary"
-                variant="outlined"
-                sx={{ fontWeight: 600, fontSize: '0.95rem', py: 2 }}
+                variant="filled"
+                sx={{ fontWeight: 700, fontSize: '0.95rem', py: 2.2, px: 0.5 }}
               />
             ))}
           </Stack>
@@ -189,11 +240,11 @@ export const GameSetup: React.FC<GameSetupProps> = ({
             }
             label={
               <Box>
-                <Typography variant="subtitle2" fontWeight={600}>
-                  {t('guessart.manualWordModeToggle', 'Manuelle Worterstellung')}
+                <Typography variant="body2" fontWeight={600}>
+                  {t('guessart.manualWordMode', 'Manuelle Begriffseingabe')}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {t('guessart.manualWordModeDesc', 'Spieler geben eigene Begriffe ein statt Wörter aus dem Katalog zu wählen.')}
+                  {t('guessart.manualWordModeDesc', 'Begriffe selbst tippen statt aus dem Katalog zu wählen.')}
                 </Typography>
               </Box>
             }
@@ -204,25 +255,20 @@ export const GameSetup: React.FC<GameSetupProps> = ({
       {/* Start Button */}
       <Button
         variant="contained"
-        color="primary"
         size="large"
         fullWidth
         startIcon={<PlayArrowRoundedIcon />}
         onClick={handleStart}
-        disabled={players.length < 2}
-        sx={{ py: 2, fontSize: '1.15rem', fontWeight: 800, borderRadius: 3, boxShadow: 4 }}
+        sx={{
+          py: 1.5,
+          fontSize: '1.1rem',
+          fontWeight: 800,
+          borderRadius: 3,
+          boxShadow: 4,
+        }}
       >
-        {t('guessart.startGame', 'Neues Spiel starten')}
+        {t('guessart.startGame', 'Spiel starten')}
       </Button>
-
-      {/* Active Games */}
-      <ActiveGamesList
-        games={activeGames}
-        onResumeGame={onResumeGame}
-        onDeleteGame={onDeleteGame}
-        onOpenHistory={onOpenHistory}
-        onEditGame={onEditGame}
-      />
     </Stack>
   );
 };

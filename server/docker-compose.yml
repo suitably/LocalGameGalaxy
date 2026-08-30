@@ -1,38 +1,48 @@
 services:
-  nexumia-server:
+  # 1. Galaxy Core Backend (Lightweight Micro-Kernel: Relay, Signaling & Media)
+  galaxy-server:
     build:
       context: .
       dockerfile: Dockerfile
       target: base
-    image: nexumia/nexumia-server:latest
-    container_name: nexumia-server
-    restart: always
+    image: localgamegalaxy/server:latest
+    container_name: galaxy-server
+    restart: unless-stopped
     ports:
       - "3000:3000"
-      - "3001:3001"
     volumes:
-      - ./config.json:/app/config.json:z
-      - ./models:/app/models:z
+      - ./music:/app/music:ro
+      - ./config.json:/app/config.json:ro
     environment:
       - NODE_ENV=production
-      - ALLOWED_ORIGINS=https://nexumia.de,https://www.nexumia.de
+      - PORT=3000
+      - PLUGINS=relay,melodiq
+      - ALLOWED_ORIGINS=*
 
-  nexumia-server-full:
+  # 2. Zero-Config Public HTTPS Tunnel (Share with friends without port-forwarding)
+  galaxy-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: galaxy-tunnel
+    restart: unless-stopped
+    profiles:
+      - tunnel
+    command: tunnel --no-autoupdate --url http://galaxy-server:3000
+    depends_on:
+      - galaxy-server
+
+  # 3. Melodiq Heavy AI Sidecar (Stem separation & Whisper lyrics alignment)
+  galaxy-ai-worker:
     build:
       context: .
       dockerfile: Dockerfile
       target: full
-    image: nexumia/nexumia-server:full
-    container_name: nexumia-server
-    restart: always
+    image: localgamegalaxy/server:ai
+    container_name: galaxy-ai-worker
+    restart: unless-stopped
     profiles:
-      - melodiq
-    ports:
-      - "3000:3000"
-      - "3001:3001"
+      - ai
     volumes:
-      - ./config.json:/app/config.json:z
       - ./models:/app/models:z
+      - ./music:/app/music:z
     environment:
       - NODE_ENV=production
-      - ALLOWED_ORIGINS=https://nexumia.de,https://www.nexumia.de

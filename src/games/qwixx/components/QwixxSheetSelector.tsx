@@ -13,8 +13,7 @@ import {
     IconButton,
     Tooltip,
     ToggleButtonGroup,
-    ToggleButton,
-    Paper
+    ToggleButton
 } from '@mui/material';
 import StyleIcon from '@mui/icons-material/Style';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -52,6 +51,7 @@ const SHEET_ICONS: Record<QwixxSheetType, React.ReactElement> = {
     double_sub: <CheckBoxIcon />,
     double_numbers: <Filter2Icon />,
     bonus: <StarsIcon />,
+    longo: <CasinoIcon />,
     random_mix: <AutoFixHighIcon />
 };
 
@@ -134,45 +134,6 @@ export const QwixxSheetSelector: React.FC<QwixxSheetSelectorProps> = ({
 
                 {/* Catalog Grid */}
                 <DialogContent dividers sx={{ p: { xs: 1.5, sm: 2.5 } }}>
-                    {/* Prominent Hero Banner: Random Block Generator */}
-                    <Paper
-                        elevation={3}
-                        sx={{
-                            p: 2,
-                            mb: 3,
-                            borderRadius: 3,
-                            background: 'linear-gradient(135deg, rgba(156, 39, 176, 0.2), rgba(33, 150, 243, 0.2))',
-                            border: '1px solid rgba(255, 255, 255, 0.15)',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            flexWrap: 'wrap',
-                            gap: 2
-                        }}
-                    >
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <CasinoIcon sx={{ fontSize: 32, color: 'secondary.main' }} />
-                            <Box>
-                                <Typography variant="subtitle1" fontWeight="bold">
-                                    {t('games.qwixx.random_pick_title', 'Zufälligen Block auswählen')}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    {t('games.qwixx.random_pick_subtitle', 'Lass den Zufall entscheiden und starte mit einem zufälligen Spielmodus und Block-Layout!')}
-                                </Typography>
-                            </Box>
-                        </Box>
-                        <Button
-                            variant="contained"
-                            color="secondary"
-                            size="medium"
-                            startIcon={<CasinoIcon />}
-                            onClick={handleGlobalRandom}
-                            sx={{ fontWeight: 'bold', borderRadius: 2, px: 2.5, py: 1 }}
-                        >
-                            {t('games.qwixx.pick_random_block', '🎲 Zufälligen Block spielen')}
-                        </Button>
-                    </Paper>
-
                     <Box
                         sx={{
                             display: 'grid',

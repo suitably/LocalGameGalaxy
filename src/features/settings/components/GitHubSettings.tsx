@@ -8,6 +8,7 @@ import GitHubIcon from '@mui/icons-material/GitHub';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { testGitHubToken } from '../../../lib/github';
 
@@ -89,12 +90,26 @@ export const GitHubSettings: React.FC = () => {
                     {t('github.title', 'GitHub Integration')}
                 </Typography>
             </Box>
-            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 2.5 }}>
+            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 1.5 }}>
                 {t(
                     'github.desc',
-                    'Connect directly to GitHub for feedback and content publishing. Create a Personal Access Token (PAT) with "repo" scope on github.com/settings/tokens.',
+                    'Connect directly to GitHub for feedback and content publishing. Create a Personal Access Token (PAT) with "repo" scope on GitHub.',
                 )}
             </Typography>
+            <Box sx={{ mb: 2.5 }}>
+                <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<OpenInNewIcon fontSize="small" />}
+                    component="a"
+                    href="https://github.com/settings/tokens/new?description=LocalGameGalaxy&scopes=repo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ textTransform: 'none', borderRadius: 2 }}
+                >
+                    {t('github.create_token_button', 'Create PAT on GitHub (github.com/settings/tokens)')}
+                </Button>
+            </Box>
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <TextField

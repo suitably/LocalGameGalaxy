@@ -3,9 +3,11 @@ import { Routes, Route, useNavigate } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
 import { App as CapacitorApp } from '@capacitor/app';
 import { MainLayout } from './components/Layout/MainLayout';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { gameRegistry } from './lib/gameRegistry';
 import { Hub } from './features/hub/Hub';
 import { Settings } from './features/settings/Settings';
+import { PartyLobby } from './features/party/PartyLobby';
 import { useServerUrlAutoConnect } from './hooks/useServerUrlAutoConnect';
 
 // Loading fallback component
@@ -50,6 +52,11 @@ function AppRoutes() {
             <Hub />
           </Suspense>
         } />
+        <Route path="party" element={
+          <Suspense fallback={<LoadingFallback />}>
+            <PartyLobby />
+          </Suspense>
+        } />
         <Route path="settings" element={
           <Suspense fallback={<LoadingFallback />}>
             <Settings />
@@ -62,9 +69,11 @@ function AppRoutes() {
             key={game.id}
             path={game.route}
             element={
-              <Suspense fallback={<LoadingFallback />}>
-                {game.component}
-              </Suspense>
+              <ErrorBoundary componentName={game.id}>
+                <Suspense fallback={<LoadingFallback />}>
+                  {game.component}
+                </Suspense>
+              </ErrorBoundary>
             }
           />
         ))}
@@ -76,9 +85,11 @@ function AppRoutes() {
               key={`${game.id}-${nr.path}`}
               path={nr.path}
               element={
-                <Suspense fallback={<LoadingFallback />}>
-                  {nr.component}
-                </Suspense>
+                <ErrorBoundary componentName={`${game.id} - ${nr.path}`}>
+                  <Suspense fallback={<LoadingFallback />}>
+                    {nr.component}
+                  </Suspense>
+                </ErrorBoundary>
               }
             />
           ))
@@ -92,9 +103,11 @@ function AppRoutes() {
             key={`${game.id}-${sr.path}`}
             path={sr.path}
             element={
-              <Suspense fallback={<LoadingFallback />}>
-                {sr.component}
-              </Suspense>
+              <ErrorBoundary componentName={`${game.id} - Standalone`}>
+                <Suspense fallback={<LoadingFallback />}>
+                  {sr.component}
+                </Suspense>
+              </ErrorBoundary>
             }
           />
         ))
@@ -105,9 +118,11 @@ function AppRoutes() {
 
 function App() {
   return (
-    <Suspense fallback={<LoadingFallback />}>
-      <AppRoutes />
-    </Suspense>
+    <ErrorBoundary componentName="App Root">
+      <Suspense fallback={<LoadingFallback />}>
+        <AppRoutes />
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 

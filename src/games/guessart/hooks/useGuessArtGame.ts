@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { LocalGameEngine } from '../logic/engine';
+import { mailboxService } from '../logic/mailboxService';
 import type {
   GuessArtGameRecord,
   GuessArtRound,
@@ -57,6 +58,49 @@ export const useGuessArtGame = (
     loadSnapshot();
   }, [loadSnapshot]);
 
+  // Subscribe to ephemeral mailbox and track active screen game
+  useEffect(() => {
+    if (!gameId) {
+      mailboxService.setActiveScreenGameId(null);
+      return;
+    }
+
+    mailboxService.syncSubscribedGames([gameId]);
+    mailboxService.setActiveScreenGameId(gameId);
+
+    const unsubListener = mailboxService.onRemoteSnapshot(async (remoteSnapshot, snapshotGameId) => {
+      if (snapshotGameId === gameId) {
+        setGame(remoteSnapshot.game);
+        setRound(remoteSnapshot.round);
+      }
+    });
+
+    // Re-sync from local database when user returns to the tab/app
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        loadSnapshot();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      unsubListener();
+      mailboxService.setActiveScreenGameId(null);
+    };
+  }, [gameId, language, loadSnapshot]);
+
+  const broadcastTurn = useCallback(async () => {
+    if (!gameId) return;
+    try {
+      const snap = await LocalGameEngine.getGameSnapshot(gameId, language);
+      await mailboxService.publishTurn(gameId, snap);
+    } catch (e) {
+      console.warn('[useGuessArtGame] Failed to broadcast turn:', e);
+    }
+  }, [gameId, language]);
+
   const selectWord = useCallback(
     async (payload: SelectWordPayload) => {
       if (!gameId) return;
@@ -66,6 +110,7 @@ export const useGuessArtGame = (
         const result = await LocalGameEngine.selectWord(gameId, payload, language);
         setGame(result.game);
         setRound(result.round);
+        await broadcastTurn();
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to select word'));
         throw err;
@@ -73,7 +118,7 @@ export const useGuessArtGame = (
         setLoading(false);
       }
     },
-    [gameId, language],
+    [gameId, language, broadcastTurn],
   );
 
   const submitDrawing = useCallback(
@@ -85,6 +130,7 @@ export const useGuessArtGame = (
         const result = await LocalGameEngine.submitDrawing(gameId, canvasData, language);
         setGame(result.game);
         setRound(result.round);
+        await broadcastTurn();
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to submit drawing'));
         throw err;
@@ -92,7 +138,7 @@ export const useGuessArtGame = (
         setLoading(false);
       }
     },
-    [gameId, language],
+    [gameId, language, broadcastTurn],
   );
 
   const submitGuess = useCallback(
@@ -105,6 +151,7 @@ export const useGuessArtGame = (
         setGame(result.game);
         setRound(result.round);
         setLoading(false);
+        await broadcastTurn();
         return { correct: result.correct };
       } catch (err) {
         setLoading(false);
@@ -112,7 +159,7 @@ export const useGuessArtGame = (
         throw err;
       }
     },
-    [gameId, language],
+    [gameId, language, broadcastTurn],
   );
 
   const requestHint = useCallback(async () => {
@@ -121,12 +168,13 @@ export const useGuessArtGame = (
       const result = await LocalGameEngine.requestHint(gameId, language);
       setGame(result.game);
       setRound(result.round);
+      await broadcastTurn();
       return { hint: result.hint, exhausted: result.exhausted };
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to request hint'));
       throw err;
     }
-  }, [gameId, language]);
+  }, [gameId, language, broadcastTurn]);
 
   const updateGameDetails = useCallback(
     async (payload: { name?: string; players?: { id: string; name: string }[] }) => {
@@ -138,13 +186,14 @@ export const useGuessArtGame = (
         setGame(result.game);
         setRound(result.round);
         setLoading(false);
+        await broadcastTurn();
       } catch (err) {
         setLoading(false);
         setError(err instanceof Error ? err : new Error('Failed to update game details'));
         throw err;
       }
     },
-    [gameId, language],
+    [gameId, language, broadcastTurn],
   );
 
   return {

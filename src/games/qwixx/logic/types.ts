@@ -10,6 +10,7 @@ export type QwixxSheetType =
     | 'double_sub'
     | 'double_numbers'
     | 'bonus'
+    | 'longo'
     | 'random_mix';
 
 export type QwixxBonusEffect =
@@ -69,6 +70,7 @@ export interface PlayerSheet {
     bonusRows?: Record<string, RowState>; // For Big Points (e.g. bonus_red_yellow, bonus_green_blue)
     misses: number; // 0 to 4
     shields?: number; // Active shields from bonus icons
+    luckyNumbers?: [number, number]; // For Qwixx Longo
 }
 
 export interface DiceValues {
@@ -94,13 +96,10 @@ export interface QwixxScoreBreakdown {
 
 export interface QwixxGameState {
     mySheet: PlayerSheet;
-    opponents: PlayerSheet[];
     dice: DiceValues;
     isRolling: boolean;
-    isMultiplayer: boolean;
-    roomId: string;
-    activePlayerId: string;
-    isGameOver: boolean;
+    roomId?: string;
+    isMultiplayer?: boolean;
 }
 
 export type QwixxAction =
@@ -114,7 +113,4 @@ export type QwixxAction =
     | { type: 'SET_DICE'; dice: DiceValues }
     | { type: 'START_ROLL' }
     | { type: 'FINISH_ROLL'; dice: DiceValues }
-    | { type: 'UPDATE_OPPONENT'; sheet: PlayerSheet }
-    | { type: 'RESET_GAME' }
-    | { type: 'SET_ROOM_ID'; roomId: string }
-    | { type: 'SET_PLAYER_NAME'; name: string };
+    | { type: 'RESET_GAME' };

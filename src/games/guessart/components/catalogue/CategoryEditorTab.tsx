@@ -135,15 +135,22 @@ export const CategoryEditorTab: React.FC<CategoryEditorTabProps> = ({
         <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
           {t('guessart.categoriesListTitle', 'Verfügbare Kategorien')} ({categories.length})
         </Typography>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddRoundedIcon />}
-          onClick={handleOpenAdd}
-          sx={{ textTransform: 'none', fontWeight: 700 }}
-        >
-          {t('guessart.addCategory', 'Kategorie hinzufügen')}
-        </Button>
+        <Tooltip title={t('guessart.addCategory', 'Kategorie hinzufügen')}>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddRoundedIcon />}
+            onClick={handleOpenAdd}
+            sx={{ textTransform: 'none', fontWeight: 700 }}
+          >
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+              {t('guessart.addCategory', 'Kategorie hinzufügen')}
+            </Box>
+            <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+              {t('guessart.addCategoryShort', 'Kategorie +')}
+            </Box>
+          </Button>
+        </Tooltip>
       </Box>
 
       <Stack spacing={1.5}>

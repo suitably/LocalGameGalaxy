@@ -137,6 +137,64 @@ export const getWordDisplay = (word: WordItem, lang: string): string => {
   return word.word || '???';
 };
 
+export const addSynonymToWord = async (
+  targetWordTextOrId: string | number,
+  synonym: string,
+  lang = 'de',
+): Promise<{ success: boolean; message?: string; word?: WordItem }> => {
+  const master = await getMasterCatalogue();
+  const normalizedLang = normalizeLanguageCode(lang);
+  const cleanSynonym = synonym.trim();
+  if (!cleanSynonym) {
+    return { success: false, message: 'Empty synonym' };
+  }
+
+  // Find target word item
+  const targetLower = String(targetWordTextOrId).toLowerCase();
+  const wordItem = master.words.find(
+    (w) =>
+      String(w.id).toLowerCase() === targetLower ||
+      w.word.toLowerCase() === targetLower ||
+      w.translations?.de?.canonical?.toLowerCase() === targetLower ||
+      w.translations?.en?.canonical?.toLowerCase() === targetLower,
+  );
+
+  if (!wordItem) {
+    return { success: false, message: 'Word not found in catalogue' };
+  }
+
+  const translations = wordItem.translations || {};
+  const currentLangTranslation = translations[normalizedLang] || {
+    canonical: wordItem.word,
+    synonyms: [],
+  };
+
+  const existingSynonyms = currentLangTranslation.synonyms || [];
+  if (
+    existingSynonyms.some((s) => s.toLowerCase() === cleanSynonym.toLowerCase()) ||
+    currentLangTranslation.canonical.toLowerCase() === cleanSynonym.toLowerCase()
+  ) {
+    return { success: true, message: 'Synonym already exists', word: wordItem };
+  }
+
+  const updatedSynonyms = [...existingSynonyms, cleanSynonym];
+  const updatedWord: WordItem = {
+    ...wordItem,
+    translations: {
+      ...translations,
+      [normalizedLang]: {
+        ...currentLangTranslation,
+        synonyms: updatedSynonyms,
+      },
+    },
+  };
+
+  const updatedWords = master.words.map((w) => (w.id === wordItem.id ? updatedWord : w));
+  await saveMasterCatalogue(master.categories, updatedWords);
+
+  return { success: true, word: updatedWord };
+};
+
 /**
  * Calculates a structured difference summary between the provided categories/words and the default lexicon.
  */

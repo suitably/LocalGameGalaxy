@@ -8,6 +8,7 @@ import { GeneralSettings } from './components/GeneralSettings';
 import { MelodiqSettingsCategory } from './components/MelodiqSettingsCategory';
 import { ServerConnection } from '../../components/connection/ServerConnection';
 import { ServerAdminPanel } from '../../components/connection/ServerAdminPanel';
+import { ServerSetupWizard } from '../../components/connection/ServerSetupWizard';
 
 interface SettingsProps {
     activeGameId?: string;
@@ -134,6 +135,7 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
                     {activeTab === 'general' && <GeneralSettings />}
                     {activeTab === 'server' && (
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                            <ServerSetupWizard />
                             <ServerConnection />
                             <ServerAdminPanel />
                         </Box>

@@ -1,4 +1,5 @@
 import { storage } from '../../../lib/storage';
+import { generateUUID } from '../../../lib/uuid';
 
 export const melodiqFetchDirect = async (path: string, options: RequestInit = {}): Promise<any> => {
     const baseUrl = storage.getHelperUrl();
@@ -68,7 +69,7 @@ export const melodiqFetch = async (path: string, options: RequestInit = {}): Pro
         await waitForConnection();
 
         return new Promise((resolve, reject) => {
-            const reqId = crypto.randomUUID();
+            const reqId = generateUUID();
             let timer: ReturnType<typeof setTimeout> | undefined;
             
             const handleResponse = (e: Event) => {

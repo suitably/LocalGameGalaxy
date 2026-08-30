@@ -1,6 +1,7 @@
 import React, { useEffect, useState, createContext, useContext, useRef, useCallback } from 'react';
 import { useWebRTCClient } from '../../lib/webrtc';
 import { MicrophoneManager } from './audio/MicrophoneManager';
+import { generateUUID } from '../../lib/uuid';
 
 export interface ClientProfile {
     name: string;
@@ -74,7 +75,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
                 const parsed = JSON.parse(stored);
                 if (!parsed.displayMode) parsed.displayMode = 'lyrics';
                 if (!parsed.deviceId) {
-                    parsed.deviceId = crypto.randomUUID();
+                    parsed.deviceId = generateUUID();
                     localStorage.setItem('melodiq_client_profile', JSON.stringify(parsed));
                 }
                 return parsed;
@@ -84,7 +85,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
             name: 'Phone', 
             hue: Math.floor(Math.random() * 360), 
             displayMode: 'lyrics',
-            deviceId: crypto.randomUUID()
+            deviceId: generateUUID()
         };
         localStorage.setItem('melodiq_client_profile', JSON.stringify(newProfile));
         return newProfile;
