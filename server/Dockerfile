@@ -33,6 +33,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN pip3 install --no-cache-dir --break-system-packages \
     torch torchvision torchaudio \
-    --index-url https://download.pytorch.org/whl/cpu \
+    --extra-index-url https://download.pytorch.org/whl/cpu \
     && pip3 install --no-cache-dir --break-system-packages \
     "audio-separator[cpu]" "whisper-timestamped"
