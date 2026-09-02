@@ -120,8 +120,9 @@ export async function createGitHubIssue(
 }
 
 /**
- * Creates a Pull Request with a file update via the GitHub API.
- * Used by GuessArt catalogue publishing.
+ * Creates or updates a Pull Request with a file update via the GitHub API.
+ * If an open PR already exists for the branchPrefix, it commits to that branch
+ * and updates the PR description instead of creating duplicate PRs. (Fixes #124)
  */
 export async function createGitHubPR(
     config: GitHubConfig,
@@ -133,7 +134,7 @@ export async function createGitHubPR(
         prTitle: string;
         prBody: string;
     },
-): Promise<{ success: boolean; prUrl?: string; prNumber?: number; branch?: string; error?: string }> {
+): Promise<{ success: boolean; prUrl?: string; prNumber?: number; branch?: string; updated?: boolean; error?: string }> {
     const { owner, repo, token } = config;
 
     try {
@@ -145,6 +146,79 @@ export async function createGitHubPR(
         }
         const defaultBranch = repoData.default_branch || 'main';
 
+        // 2. Check if an open PR already exists for this branchPrefix
+        let existingPR: { number: number; html_url: string; head: { ref: string } } | null = null;
+        try {
+            const openPullsRes = await githubApiFetch(`/repos/${owner}/${repo}/pulls?state=open&per_page=30`, token);
+            if (openPullsRes.ok) {
+                const openPulls = await openPullsRes.json();
+                if (Array.isArray(openPulls)) {
+                    existingPR = openPulls.find(
+                        (p: { head?: { ref?: string } }) => p.head?.ref && p.head.ref.startsWith(pr.branchPrefix),
+                    ) || null;
+                }
+            }
+        } catch (err) {
+            console.warn('[GitHub] Could not query open PRs, falling back to new PR creation:', err);
+        }
+
+        // Scenario A: Existing open PR found -> update file on existing branch and update PR body
+        if (existingPR && existingPR.head?.ref) {
+            const targetBranch = existingPR.head.ref;
+
+            // Fetch current file SHA on the target branch
+            let fileSha: string | undefined;
+            const branchFileRes = await githubApiFetch(
+                `/repos/${owner}/${repo}/contents/${pr.filePath}?ref=${targetBranch}`,
+                token,
+            );
+            if (branchFileRes.ok) {
+                const fileData = await branchFileRes.json();
+                fileSha = fileData.sha;
+            }
+
+            // Commit updated file to existing branch
+            const commitRes = await githubApiFetch(
+                `/repos/${owner}/${repo}/contents/${pr.filePath}`,
+                token,
+                {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        message: pr.commitMessage,
+                        content: btoa(unescape(encodeURIComponent(pr.fileContent))),
+                        branch: targetBranch,
+                        ...(fileSha ? { sha: fileSha } : {}),
+                    }),
+                },
+            );
+            if (!commitRes.ok) {
+                const data = await commitRes.json();
+                return { success: false, error: data.message || 'Failed to update file on existing branch' };
+            }
+
+            // Update PR title and body
+            await githubApiFetch(
+                `/repos/${owner}/${repo}/pulls/${existingPR.number}`,
+                token,
+                {
+                    method: 'PATCH',
+                    body: JSON.stringify({
+                        title: pr.prTitle,
+                        body: pr.prBody,
+                    }),
+                },
+            );
+
+            return {
+                success: true,
+                prUrl: existingPR.html_url,
+                prNumber: existingPR.number,
+                branch: targetBranch,
+                updated: true,
+            };
+        }
+
+        // Scenario B: No open PR -> create new branch and PR
         // 2. Get latest commit SHA
         const refRes = await githubApiFetch(
             `/repos/${owner}/${repo}/git/ref/heads/${defaultBranch}`,
@@ -156,7 +230,7 @@ export async function createGitHubPR(
         }
         const baseCommitSha = refData.object.sha;
 
-        // 3. Get current file SHA (if file exists)
+        // 3. Get current file SHA (if file exists in default branch)
         let fileSha: string | undefined;
         const fileRes = await githubApiFetch(
             `/repos/${owner}/${repo}/contents/${pr.filePath}?ref=${defaultBranch}`,
@@ -228,6 +302,7 @@ export async function createGitHubPR(
             prUrl: prData.html_url,
             prNumber: prData.number,
             branch: branchName,
+            updated: false,
         };
     } catch (e: unknown) {
         const message = e instanceof Error ? e.message : 'Unknown error';

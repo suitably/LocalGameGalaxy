@@ -158,7 +158,7 @@ describe('GuessArt Game Model & Player Management', () => {
 describe('GuessArt Catalogue Manager & Diffing', () => {
   it('calculates diff correctly when adding, modifying, and deleting items', async () => {
     const { calculateCatalogueDiff, generateLexiconTsCode } = await import('./catalogueManager');
-    const { DEFAULT_CATEGORIES, DEFAULT_WORDS } = await import('./defaultLexicon');
+    const { DEFAULT_CATEGORIES, DEFAULT_WORDS } = await import('./lexicon');
 
     // Add a new category and a new word
     const newCat = {

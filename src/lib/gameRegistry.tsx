@@ -5,7 +5,11 @@ import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import CasinoIcon from '@mui/icons-material/Casino';
 import PaletteIcon from '@mui/icons-material/Palette';
 import CelebrationIcon from '@mui/icons-material/Celebration';
+import StyleIcon from '@mui/icons-material/Style';
+import GridViewIcon from '@mui/icons-material/GridView';
 import { SongsProvider } from '../games/melodiq';
+
+export type GameCategory = 'all' | 'dice' | 'drawing' | 'music' | 'social_deduction' | 'cards' | 'party';
 
 export interface GameRouteDefinition {
     path: string;
@@ -22,6 +26,7 @@ export interface GameDefinition {
     colorEnd: string;
     hoverColor: string;
     component: React.ReactNode;
+    category: GameCategory;
     hasSettings?: boolean;
     nestedRoutes?: GameRouteDefinition[];
     standaloneRoutes?: GameRouteDefinition[];
@@ -33,32 +38,60 @@ const MelodiqGame = lazy(() => import('../games/melodiq').then(m => ({ default: 
 const MelodiqQueue = lazy(() => import('../games/melodiq').then(m => ({ default: m.MelodiqQueue })));
 const MelodiqTV = lazy(() => import('../games/melodiq').then(m => ({ default: m.MelodiqTV })));
 const QwixxGame = lazy(() => import('../games/qwixx').then(m => ({ default: m.QwixxGame })));
+const KnisterGame = lazy(() => import('../games/knister').then(m => ({ default: m.KnisterGame })));
 const GuessArtGame = lazy(() => import('../games/guessart').then(m => ({ default: m.GuessArtGame })));
+const CardsGame = lazy(() => import('../games/cards').then(m => ({ default: m.CardsGame })));
 const PartyLobby = lazy(() => import('../features/party/PartyLobby').then(m => ({ default: m.PartyLobby })));
 
 class GameRegistry {
     private games: GameDefinition[] = [
         {
-            id: 'werewolf',
-            route: 'games/werewolf',
-            titleKey: 'games.werewolf.title',
-            descriptionKey: 'games.werewolf.description',
-            icon: <SportsEsportsIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#f48fb1',
-            colorEnd: '#c2185b',
-            hoverColor: '#c2185b',
-            component: <WerewolfGame />
+            id: 'qwixx',
+            route: 'games/qwixx',
+            titleKey: 'games.qwixx.title',
+            descriptionKey: 'games.qwixx.description',
+            icon: <CasinoIcon sx={{ fontSize: 72, mb: 2 }} />,
+            colorStart: '#ffb74d',
+            colorEnd: '#f57c00',
+            hoverColor: '#f57c00',
+            category: 'dice',
+            component: <QwixxGame />
         },
         {
-            id: 'imposter',
-            route: 'games/imposter',
-            titleKey: 'games.imposter.title',
-            descriptionKey: 'games.imposter.description',
-            icon: <PersonSearchIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#a5d6a7',
-            colorEnd: '#2e7d32',
-            hoverColor: '#2e7d32',
-            component: <ImposterGame />
+            id: 'knister',
+            route: 'games/knister',
+            titleKey: 'games.knister.title',
+            descriptionKey: 'games.knister.description',
+            icon: <GridViewIcon sx={{ fontSize: 72, mb: 2 }} />,
+            colorStart: '#ffa726',
+            colorEnd: '#e65100',
+            hoverColor: '#e65100',
+            category: 'dice',
+            component: <KnisterGame />
+        },
+        {
+            id: 'guessart',
+            route: 'games/guessart',
+            titleKey: 'games.guessart.title',
+            descriptionKey: 'games.guessart.description',
+            icon: <PaletteIcon sx={{ fontSize: 72, mb: 2 }} />,
+            colorStart: '#80deea',
+            colorEnd: '#00838f',
+            hoverColor: '#00838f',
+            category: 'drawing',
+            component: <GuessArtGame />
+        },
+        {
+            id: 'cards',
+            route: 'games/cards',
+            titleKey: 'games.cards.title',
+            descriptionKey: 'games.cards.description',
+            icon: <StyleIcon sx={{ fontSize: 72, mb: 2 }} />,
+            colorStart: '#4dd0e1',
+            colorEnd: '#00838f',
+            hoverColor: '#00838f',
+            category: 'cards',
+            component: <CardsGame />
         },
         {
             id: 'melodiq',
@@ -69,6 +102,7 @@ class GameRegistry {
             colorStart: '#90caf9',
             colorEnd: '#1e88e5',
             hoverColor: '#1e88e5',
+            category: 'music',
             component: <MelodiqGame />,
             hasSettings: true,
             nestedRoutes: [
@@ -89,26 +123,28 @@ class GameRegistry {
             ]
         },
         {
-            id: 'qwixx',
-            route: 'games/qwixx',
-            titleKey: 'games.qwixx.title',
-            descriptionKey: 'games.qwixx.description',
-            icon: <CasinoIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#ffb74d',
-            colorEnd: '#f57c00',
-            hoverColor: '#f57c00',
-            component: <QwixxGame />
+            id: 'werewolf',
+            route: 'games/werewolf',
+            titleKey: 'games.werewolf.title',
+            descriptionKey: 'games.werewolf.description',
+            icon: <SportsEsportsIcon sx={{ fontSize: 72, mb: 2 }} />,
+            colorStart: '#f48fb1',
+            colorEnd: '#c2185b',
+            hoverColor: '#c2185b',
+            category: 'social_deduction',
+            component: <WerewolfGame />
         },
         {
-            id: 'guessart',
-            route: 'games/guessart',
-            titleKey: 'games.guessart.title',
-            descriptionKey: 'games.guessart.description',
-            icon: <PaletteIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#80deea',
-            colorEnd: '#00838f',
-            hoverColor: '#00838f',
-            component: <GuessArtGame />
+            id: 'imposter',
+            route: 'games/imposter',
+            titleKey: 'games.imposter.title',
+            descriptionKey: 'games.imposter.description',
+            icon: <PersonSearchIcon sx={{ fontSize: 72, mb: 2 }} />,
+            colorStart: '#a5d6a7',
+            colorEnd: '#2e7d32',
+            hoverColor: '#2e7d32',
+            category: 'social_deduction',
+            component: <ImposterGame />
         },
         {
             id: 'party',
@@ -119,12 +155,18 @@ class GameRegistry {
             colorStart: '#ce93d8',
             colorEnd: '#7b1fa2',
             hoverColor: '#7b1fa2',
+            category: 'party',
             component: <PartyLobby />
         }
     ];
 
     getGames(): GameDefinition[] {
         return this.games;
+    }
+
+    getGamesByCategory(category: GameCategory): GameDefinition[] {
+        if (category === 'all') return this.games;
+        return this.games.filter(g => g.category === category);
     }
 
     findGameByPath(pathname: string): GameDefinition | undefined {

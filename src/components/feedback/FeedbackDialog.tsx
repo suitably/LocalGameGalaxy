@@ -1,28 +1,39 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Box, Typography, TextField, Button, CircularProgress, Alert, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import SettingsIcon from '@mui/icons-material/Settings';
+import VpnKeyRoundedIcon from '@mui/icons-material/VpnKeyRounded';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { resolveGitHubConfig, createGitHubIssue } from '../../lib/github';
 import { storage } from '../../lib/storage';
 
 export const FeedbackDialog: React.FC = () => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const dialogRef = useRef<HTMLDialogElement>(null);
 
     const [feedbackTitle, setFeedbackTitle] = useState('');
     const [feedbackBody, setFeedbackBody] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [hasGithubConfig, setHasGithubConfig] = useState(true);
     const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string; url?: string } | null>(null);
+
+    const checkConfig = useCallback(() => {
+        const { source } = resolveGitHubConfig();
+        setHasGithubConfig(source !== 'none');
+    }, []);
 
     // Expose open method via custom event so GlobalHeader can trigger it
     useEffect(() => {
         const handleOpen = () => {
             setStatus(null);
+            checkConfig();
             dialogRef.current?.showModal();
         };
         window.addEventListener('feedback:open', handleOpen);
         return () => window.removeEventListener('feedback:open', handleOpen);
-    }, []);
+    }, [checkConfig]);
 
     const handleClose = () => {
         dialogRef.current?.close();
@@ -146,6 +157,43 @@ export const FeedbackDialog: React.FC = () => {
                     </IconButton>
                 </Box>
 
+                {!hasGithubConfig && (
+                    <Alert
+                        severity="warning"
+                        icon={<VpnKeyRoundedIcon fontSize="inherit" />}
+                        sx={{
+                            mb: 2.5,
+                            bgcolor: 'rgba(237, 108, 2, 0.15)',
+                            color: '#fff',
+                            border: '1px solid rgba(237, 108, 2, 0.4)',
+                            '& .MuiAlert-icon': { color: '#ffb74d' },
+                        }}
+                    >
+                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                            {t('settings.github_missing_title', 'GitHub-Verbindung erforderlich')}
+                        </Typography>
+                        <Typography variant="caption" sx={{ display: 'block', mb: 1.5, color: 'rgba(255,255,255,0.8)' }}>
+                            {t(
+                                'settings.github_missing_desc',
+                                'Um Feedback oder Fehlermeldungen direkt als Issue zu senden, hinterlege bitte zuerst ein Personal Access Token (PAT) in den Einstellungen.',
+                            )}
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            color="warning"
+                            size="small"
+                            startIcon={<SettingsIcon />}
+                            onClick={() => {
+                                handleClose();
+                                navigate('/settings');
+                            }}
+                            sx={{ textTransform: 'none', fontWeight: 600 }}
+                        >
+                            {t('settings.open_settings', 'Zu den Einstellungen')}
+                        </Button>
+                    </Alert>
+                )}
+
                 <form onSubmit={handleSubmit}>
                     <TextField
                         fullWidth
@@ -206,7 +254,7 @@ export const FeedbackDialog: React.FC = () => {
                             type="submit"
                             variant="contained"
                             fullWidth
-                            disabled={submitting || !feedbackTitle.trim() || !feedbackBody.trim()}
+                            disabled={submitting || !feedbackTitle.trim() || !feedbackBody.trim() || !hasGithubConfig}
                             startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : null}
                         >
                             {submitting ? t('settings.submitting', 'Submitting...') : t('settings.submit', 'Submit')}

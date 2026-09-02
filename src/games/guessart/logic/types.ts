@@ -127,4 +127,5 @@ export interface PublishCatalogueResult {
   prUrl: string;
   prNumber: number;
   branch?: string;
+  updated?: boolean;
 }

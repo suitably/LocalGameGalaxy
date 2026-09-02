@@ -1,5 +1,5 @@
 import { STORE_CATALOGUES, STORE_METADATA, clearStore, getByKey, putItem } from './db';
-import { DEFAULT_CATEGORIES, DEFAULT_WORDS } from './defaultLexicon';
+import { DEFAULT_CATEGORIES, DEFAULT_WORDS } from './lexicon';
 import { normalizeLanguageCode } from './hintResolver';
 import { resolveGitHubConfig, createGitHubPR } from '../../../lib/github';
 import type {
@@ -274,7 +274,7 @@ export const calculateCatalogueDiff = (
 };
 
 /**
- * Generates formatted TypeScript source code for defaultLexicon.ts.
+ * Generates formatted TypeScript source code for lexicon.ts.
  */
 export const generateLexiconTsCode = (
   categories: CategoryItem[],
@@ -354,7 +354,7 @@ export const publishCatalogueToGit = async (options: {
 
   if (source === 'local' && ghConfig) {
     const result = await createGitHubPR(ghConfig, {
-      filePath: 'src/games/guessart/logic/defaultLexicon.ts',
+      filePath: 'src/games/guessart/logic/lexicon.ts',
       fileContent: tsContent,
       branchPrefix: 'guessart/catalogue-update',
       commitMessage: 'feat(guessart): update word and category catalogue',
@@ -368,6 +368,7 @@ export const publishCatalogueToGit = async (options: {
         prUrl: result.prUrl,
         prNumber: result.prNumber,
         branch: result.branch,
+        updated: result.updated,
       };
     }
     // If direct fails and no server is available, throw error

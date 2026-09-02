@@ -39,6 +39,7 @@ export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
     prUrl?: string;
     prNumber?: number;
     branch?: string;
+    updated?: boolean;
     error?: string;
   } | null>(null);
 
@@ -68,6 +69,7 @@ export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
         prUrl: res.prUrl,
         prNumber: res.prNumber,
         branch: res.branch,
+        updated: res.updated,
       });
     } catch (err: unknown) {
       console.error('Publishing failed', err);
@@ -152,7 +154,10 @@ export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
             sx={{ borderRadius: 2 }}
           >
             <Typography variant="subtitle2" fontWeight={800}>
-              {t('guessart.prCreatedSuccess', 'Pull Request erfolgreich erstellt!')} #{result.prNumber}
+              {result.updated
+                ? t('guessart.prUpdatedSuccess', 'Bestehender Pull Request erfolgreich aktualisiert!')
+                : t('guessart.prCreatedSuccess', 'Pull Request erfolgreich erstellt!')}{' '}
+              #{result.prNumber}
             </Typography>
             <Typography variant="body2" sx={{ mb: 1 }}>
               {t('guessart.prBranchInfo', 'Branch')}: <code>{result.branch}</code>

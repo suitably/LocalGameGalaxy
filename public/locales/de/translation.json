@@ -14,6 +14,17 @@
     "ios_install_step2": "2. Scrolle im Menü nach unten und wähle 'Zum Home-Bildschirm'.",
     "ios_install_step3": "3. Tippe oben rechts auf 'Hinzufügen'. Die App startet fortan im Vollbildmodus ohne Adress- und Suchleiste!"
   },
+  "hub": {
+    "categories": {
+      "all": "Alle Spiele",
+      "dice": "Würfelspiele",
+      "cards": "Kartenspiele",
+      "drawing": "Zeichnen",
+      "music": "Musik",
+      "social_deduction": "Social Deduction",
+      "party": "Party"
+    }
+  },
   "games": {
     "werewolf": {
       "title": "Werwolf",
@@ -434,6 +445,14 @@
         "show_dev_slider": "Tech-/Dev-Slider anzeigen",
         "show_video_errors": "Video-Fehlermeldungen anzeigen"
       }
+    },
+    "knister": {
+      "title": "Knister",
+      "description": "Das beliebte 5x5 Würfel-Bingo! Bilde Paare, Straßen und Full Houses auf deinem Raster."
+    },
+    "cards": {
+      "title": "Kartenspiele",
+      "description": "Digitale Punkte-, Lebens- (Schwimmen) und Stichverwaltung (Oh Hell) für Kartenspiele am Tisch."
     }
   },
   "common": {
@@ -464,6 +483,9 @@
     "feedback_title": "Feedback & Fehlerberichte",
     "feedback_desc": "Fehler gefunden oder einen Vorschlag? Sende ihn hier ab, um ein GitHub-Issue über deine konfigurierte Verbindung zu erstellen.",
     "feedback_no_config": "Keine GitHub-Verbindung konfiguriert. Bitte richte ein GitHub-Token in den allgemeinen Einstellungen ein oder verbinde einen Nexumia Server.",
+    "github_missing_title": "GitHub-Verbindung erforderlich",
+    "github_missing_desc": "Um Feedback oder Fehlermeldungen direkt als GitHub-Issue einzureichen, hinterlege bitte zuerst ein Personal Access Token (PAT) in den Einstellungen.",
+    "open_settings": "Zu den Einstellungen",
     "issue_title": "Titel",
     "issue_body": "Beschreibung",
     "submit": "Feedback absenden",
@@ -516,6 +538,8 @@
       "step_3_desc": "Sobald das Serverfenster geöffnet ist, verbindet sich die App automatisch mit localhost:3000.",
       "docker": {
         "run_command": "Docker 1-Befehl Schnellstart:",
+        "compose_file_title": "docker-compose.yml Konfiguration",
+        "copy_compose": "YAML kopieren",
         "download_compose": "docker-compose.yml herunterladen",
         "desc": "Starte den Server via Docker Container. Enthält dein vorkonfiguriertes Master-Token und Port 3000.",
         "profiles_title": "Enthaltene Docker-Profile:",
@@ -786,6 +810,7 @@
     "prUserNoteLabel": "Beschreibung der Änderungen (optional)",
     "prUserNotePlaceholder": "z.B. 10 neue Tierarten und Fabelwesen hinzugefügt...",
     "prCreatedSuccess": "Pull Request erfolgreich erstellt!",
+    "prUpdatedSuccess": "Bestehender Pull Request erfolgreich aktualisiert!",
     "prBranchInfo": "Branch",
     "openPrOnGithub": "Pull Request auf GitHub ansehen",
     "prFailedTitle": "Fehler beim Erstellen des Pull Requests",

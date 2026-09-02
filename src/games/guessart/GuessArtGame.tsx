@@ -41,6 +41,10 @@ export const GuessArtGame: React.FC = () => {
   const [successModalOpen, setSuccessModalOpen] = useState<boolean>(false);
   const [completedWord, setCompletedWord] = useState<string>('');
   const [completedGuessesCount, setCompletedGuessesCount] = useState<number>(0);
+  const [completedRoundNumber, setCompletedRoundNumber] = useState<number>(1);
+  const [completedGuesses, setCompletedGuesses] = useState<string[]>([]);
+  const [completedDrawerName, setCompletedDrawerName] = useState<string | undefined>(undefined);
+  const [completedGuesserName, setCompletedGuesserName] = useState<string | undefined>(undefined);
 
   // Share Player Links Modal state
   const [shareDialogOpen, setShareDialogOpen] = useState<boolean>(false);
@@ -176,10 +180,26 @@ export const GuessArtGame: React.FC = () => {
   };
 
   const handleGuessSubmit = async (guess: string) => {
+    const currentRoundNum = round?.roundNumber || 1;
+    const currentWord = round?.word || guess;
+    const currentGuessesCount = (round?.guesses.length || 0) + 1;
+    const currentGuesses = round?.guesses ? [...round.guesses, guess] : [guess];
+    const currentDrawerName =
+      game && round ? game.players.find((p) => p.id === round.drawnById)?.name : undefined;
+    const currentGuesserName =
+      game && round
+        ? round.guesserName ||
+          game.players[(game.players.findIndex((p) => p.id === round.drawnById) + 1) % game.players.length]?.name
+        : undefined;
+
     const result = await submitGuess(guess);
     if (result.correct) {
-      setCompletedWord(round?.word || guess);
-      setCompletedGuessesCount((round?.guesses.length || 0) + 1);
+      setCompletedWord(currentWord);
+      setCompletedGuessesCount(currentGuessesCount);
+      setCompletedRoundNumber(currentRoundNum);
+      setCompletedGuesses(currentGuesses);
+      setCompletedDrawerName(currentDrawerName);
+      setCompletedGuesserName(currentGuesserName);
       setSuccessModalOpen(true);
     }
     return result;
@@ -371,11 +391,11 @@ export const GuessArtGame: React.FC = () => {
       <RoundSuccessModal
         open={successModalOpen}
         word={completedWord}
-        roundNumber={round?.roundNumber || 1}
+        roundNumber={completedRoundNumber}
         guessesCount={completedGuessesCount}
-        guesses={round?.guesses || []}
-        drawerName={game && round ? game.players.find((p) => p.id === round.drawnById)?.name : undefined}
-        guesserName={game && round ? (round.guesserName || game.players[(game.players.findIndex((p) => p.id === round.drawnById) + 1) % game.players.length]?.name) : undefined}
+        guesses={completedGuesses}
+        drawerName={completedDrawerName}
+        guesserName={completedGuesserName}
         language={language}
         onNextRound={handleNextRound}
       />

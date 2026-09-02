@@ -1,8 +1,8 @@
-import React from 'react';
-import { Typography, Box, Card, CardContent, CardActionArea, alpha } from '@mui/material';
+import React, { useState } from 'react';
+import { Typography, Box, Card, CardContent, CardActionArea, Chip, Stack, alpha } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { gameRegistry } from '../../lib/gameRegistry';
+import { gameRegistry, type GameCategory } from '../../lib/gameRegistry';
 import { PWAInstallBanner } from '../../components/pwa';
 
 const cardStyle = (gradientStart: string, gradientEnd: string, hoverColor: string) => ({
@@ -56,10 +56,23 @@ const contentStyle = {
 export const Hub: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const [selectedCategory, setSelectedCategory] = useState<GameCategory>('all');
+
+    const categories: { key: GameCategory; labelKey: string; icon: string }[] = [
+        { key: 'all', labelKey: 'hub.categories.all', icon: '✨' },
+        { key: 'dice', labelKey: 'hub.categories.dice', icon: '🎲' },
+        { key: 'cards', labelKey: 'hub.categories.cards', icon: '🃏' },
+        { key: 'drawing', labelKey: 'hub.categories.drawing', icon: '🎨' },
+        { key: 'music', labelKey: 'hub.categories.music', icon: '🎵' },
+        { key: 'social_deduction', labelKey: 'hub.categories.social_deduction', icon: '🕵️' },
+        { key: 'party', labelKey: 'hub.categories.party', icon: '🎉' },
+    ];
+
+    const displayedGames = gameRegistry.getGamesByCategory(selectedCategory);
 
     return (
         <Box sx={{ width: '100%', animation: 'fadeIn 0.4s ease-out' }}>
-            <Box mb={{ xs: 3, sm: 4, md: 6 }} textAlign="center">
+            <Box mb={{ xs: 2.5, sm: 3, md: 4 }} textAlign="center">
                 <Typography
                     variant="h2"
                     component="h1"
@@ -92,6 +105,49 @@ export const Hub: React.FC = () => {
             {/* PWA Mobile Fullscreen Install Callout */}
             <PWAInstallBanner />
 
+            {/* Category Filter Pills */}
+            <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                    mb: 3.5,
+                    overflowX: 'auto',
+                    pb: 1,
+                    justifyContent: { xs: 'flex-start', sm: 'center' },
+                    px: { xs: 1, sm: 0 },
+                    scrollbarWidth: 'none',
+                    '&::-webkit-scrollbar': { display: 'none' },
+                }}
+            >
+                {categories.map(cat => {
+                    const isSelected = selectedCategory === cat.key;
+                    return (
+                        <Chip
+                            key={cat.key}
+                            label={`${cat.icon} ${t(cat.labelKey)}`}
+                            clickable
+                            onClick={() => setSelectedCategory(cat.key)}
+                            color={isSelected ? 'primary' : 'default'}
+                            variant={isSelected ? 'filled' : 'outlined'}
+                            sx={{
+                                fontWeight: 700,
+                                fontSize: { xs: '0.85rem', sm: '0.95rem' },
+                                px: 1,
+                                py: 2.2,
+                                borderRadius: 50,
+                                bgcolor: isSelected ? undefined : 'rgba(255, 255, 255, 0.04)',
+                                borderColor: isSelected ? undefined : 'rgba(255, 255, 255, 0.12)',
+                                transition: 'all 0.2s ease',
+                                '&:hover': {
+                                    bgcolor: isSelected ? undefined : 'rgba(255, 255, 255, 0.08)',
+                                    transform: 'translateY(-1px)',
+                                }
+                            }}
+                        />
+                    );
+                })}
+            </Stack>
+
             <Box sx={{
                 display: 'grid',
                 gridTemplateColumns: {
@@ -101,7 +157,7 @@ export const Hub: React.FC = () => {
                 },
                 gap: { xs: 2.5, sm: 3, md: 4 }
             }}>
-                {gameRegistry.getGames().map(game => (
+                {displayedGames.map(game => (
                     <Card key={game.id} sx={cardStyle(game.colorStart, game.colorEnd, game.hoverColor)}>
                         <CardActionArea
                             onClick={() => navigate(`/${game.route}`)}
@@ -151,4 +207,3 @@ export const Hub: React.FC = () => {
         </Box>
     );
 };
-

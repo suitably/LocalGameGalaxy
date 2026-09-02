@@ -14,6 +14,17 @@
     "ios_install_step2": "2. Scroll down and tap 'Add to Home Screen'.",
     "ios_install_step3": "3. Tap 'Add' in the top right corner. The app will open in fullscreen mode without the address bar!"
   },
+  "hub": {
+    "categories": {
+      "all": "All Games",
+      "dice": "Dice Games",
+      "cards": "Card Games",
+      "drawing": "Drawing",
+      "music": "Music",
+      "social_deduction": "Social Deduction",
+      "party": "Party"
+    }
+  },
   "games": {
     "werewolf": {
       "title": "Werewolf",
@@ -434,6 +445,14 @@
         "show_dev_slider": "Show Tech/Dev Slider",
         "show_video_errors": "Show Video Error Messages"
       }
+    },
+    "knister": {
+      "title": "Knister",
+      "description": "The popular 5x5 Dice Bingo! Form pairs, straights, and full houses on your grid."
+    },
+    "cards": {
+      "title": "Card Games",
+      "description": "Digital companion for tabletop card games: Life tracking (Schwimmen) and trick predictor (Oh Hell)."
     }
   },
   "common": {
@@ -464,6 +483,9 @@
     "feedback_title": "Feedback & Bug Report",
     "feedback_desc": "Found a bug or have a suggestion? Submit it here to create a GitHub issue via your configured connection.",
     "feedback_no_config": "No GitHub connection configured. Please set up a GitHub Token in General Settings or connect a Nexumia Server.",
+    "github_missing_title": "GitHub Connection Required",
+    "github_missing_desc": "To submit feedback or bug reports as GitHub issues, please configure a Personal Access Token (PAT) in Settings first.",
+    "open_settings": "Open Settings",
     "issue_title": "Title",
     "issue_body": "Description",
     "submit": "Submit Feedback",
@@ -516,6 +538,8 @@
       "step_3_desc": "Once the server console window opens, the app will automatically connect to localhost:3000.",
       "docker": {
         "run_command": "Docker 1-Command Quickstart:",
+        "compose_file_title": "docker-compose.yml Configuration",
+        "copy_compose": "Copy YAML",
         "download_compose": "Download docker-compose.yml",
         "desc": "Run the server via Docker container. Includes your pre-configured Master Token and Port 3000.",
         "profiles_title": "Included Docker Profiles:",
@@ -798,6 +822,7 @@
     "prUserNoteLabel": "Description of Changes (optional)",
     "prUserNotePlaceholder": "e.g. Added 10 new mythical creatures and animals...",
     "prCreatedSuccess": "Pull Request successfully created!",
+    "prUpdatedSuccess": "Existing Pull Request successfully updated!",
     "prBranchInfo": "Branch",
     "openPrOnGithub": "View Pull Request on GitHub",
     "prFailedTitle": "Failed to create Pull Request",

@@ -204,8 +204,14 @@ export const ExcalidrawViewer: React.FC<ExcalidrawViewerProps> = ({
     return buildElementsForProgress(animationPlan, progressSegments);
   }, [animate, hasElements, orderedElements, animationPlan, progressSegments]);
 
+  const hasFittedForSceneRef = useRef<string | null>(null);
+
   const fitToViewport = useCallback(() => {
     if (!excalidrawAPI || typeof excalidrawAPI.scrollToContent !== 'function' || orderedElements.length === 0) return;
+    const el = containerRef.current;
+    if (el && (el.clientWidth === 0 || el.clientHeight === 0)) {
+      return;
+    }
     try {
       excalidrawAPI.scrollToContent(orderedElements, {
         fitToViewport: true,
@@ -224,8 +230,12 @@ export const ExcalidrawViewer: React.FC<ExcalidrawViewerProps> = ({
       appState: cleanViewerAppState(scene.appState),
       files: scene.files || {},
     });
-    fitToViewport();
-  }, [elementsToRender, excalidrawAPI, scene, fitToViewport]);
+
+    if (hasFittedForSceneRef.current !== sceneKey) {
+      hasFittedForSceneRef.current = sceneKey;
+      fitToViewport();
+    }
+  }, [elementsToRender, excalidrawAPI, scene, fitToViewport, sceneKey]);
 
   // Robust observer for viewport centering on mount, dialog/accordion expansion, and resize
   useEffect(() => {
