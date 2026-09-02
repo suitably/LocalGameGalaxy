@@ -5,7 +5,24 @@ compatibility_date = "2024-01-01"
 [vars]
 VAPID_SUBJECT = "mailto:admin@localgamegalaxy.app"
 
-# Optional: Enable KV for persistent multi-region push subscription storage across worker restarts
+# ─── VAPID Keys ───────────────────────────────────────────────────────────────
+# VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY MUST be set as Worker Secrets:
+#   npx wrangler secret put VAPID_PUBLIC_KEY
+#   npx wrangler secret put VAPID_PRIVATE_KEY
+#
+# Generate a VAPID keypair with:
+#   npx web-push generate-vapid-keys
+# The public key is the 65-byte uncompressed EC P-256 key (base64url).
+# The private key is the 32-byte raw key (base64url).
+
+# ─── KV Namespace (Recommended for Production) ───────────────────────────────
+# Enables persistent push subscription storage across worker restarts and regions.
+# Without KV, subscriptions are held in-memory only and lost on redeploy.
+#
+# To create and bind a KV namespace:
+#   npx wrangler kv namespace create PUSH_KV
+# Then paste the generated binding below:
+#
 # [[kv_namespaces]]
 # binding = "PUSH_KV"
-# id = "your-kv-namespace-id"
+# id = "<your-kv-namespace-id>"

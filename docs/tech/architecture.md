@@ -59,16 +59,16 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
     -   See [Qwixx Sheet Rules](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/qwixx-sheet-rules.md) for full variant specifications.
 
 ### Web Push Relay & Game-Scoped Notification Architecture
-- **Web Push Protocol (RFC 8030 / VAPID)**:
+- **Web Push Protocol (RFC 8291 / RFC 8292 VAPID)**:
   - Enables closed-browser background OS push notifications for turn-based games like **GuessArt** (*Montagsmaler*).
   - Background Service Worker ([`public/sw-push.js`](file:///home/deck/Projects/LocalGameGalaxy/public/sw-push.js)) receives incoming OS push packets and deep-links directly into the game on notification click.
 - **Host-Driven, Game-Scoped Relay**:
   - The host's configured backend or Cloudflare Worker is passed in game links via `&gameRelay=...`.
-  - Guests parse `gameRelay` strictly into `sessionStorage` (`galaxy_game_relay_<gameId>`) via [`gameRelayStorage.ts`](file:///home/deck/Projects/LocalGameGalaxy/src/lib/push/gameRelayStorage.ts).
-  - Guests' global settings (`localStorage`) remain completely unpolluted, keeping the host's server isolated exclusively to the shared match.
+  - Guests parse `gameRelay` into `localStorage` (`galaxy_game_relay_<gameId>`) via [`gameRelayStorage.ts`](file:///home/deck/Projects/LocalGameGalaxy/src/lib/push/gameRelayStorage.ts) with a 7-day TTL and automatic stale-entry cleanup. Using `localStorage` (not `sessionStorage`) ensures push registration survives app/tab closures.
+  - Guests' global settings remain unpolluted, keeping the host's server isolated exclusively to the shared match via game-scoped key prefixes.
 - **Relay Implementations**:
-  - **Cloudflare Worker**: Zero-cost, 24/7 serverless push relay ([`server/cloudflare-push-relay/`](file:///home/deck/Projects/LocalGameGalaxy/server/cloudflare-push-relay/)).
-  - **Nexumia Self-Hosted Server**: Built-in `/api/push/*` endpoints backed by [`webPushService.js`](file:///home/deck/Projects/LocalGameGalaxy/server/src/services/webPushService.js).
+  - **Cloudflare Worker**: Zero-cost, 24/7 serverless push relay ([`server/cloudflare-push-relay/`](file:///home/deck/Projects/LocalGameGalaxy/server/cloudflare-push-relay/)). Uses [`webpush.ts`](file:///home/deck/Projects/LocalGameGalaxy/server/cloudflare-push-relay/webpush.ts) for RFC 8291 payload encryption (ECDH + AES-128-GCM) and VAPID JWT signing via Web Crypto API. Subscriptions stored in Cloudflare KV (with in-memory fallback).
+  - **Nexumia Self-Hosted Server**: Built-in `/api/push/*` endpoints backed by [`webPushService.js`](file:///home/deck/Projects/LocalGameGalaxy/server/src/services/webPushService.js) with `web-push` npm library. Subscriptions persisted to `.push_subscriptions.json` with debounced writes, loaded on startup, and saved on process exit.
 
 ### GitHub Integration Architecture
 - **Hybrid Model**: Direct GitHub API client (`src/lib/github.ts`) using a locally stored Personal Access Token (PAT) as priority, with fallback to the Nexumia Server proxy.

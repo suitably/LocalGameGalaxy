@@ -2,8 +2,11 @@
  * worker.ts - Standalone Cloudflare Worker Web Push Relay for LocalGameGalaxy
  *
  * Provides a 24/7 free, zero-config push relay for games like GuessArt.
- * Handles VAPID signing, subscription storage (KV/Memory), and Web Push delivery to Apple APNs & Google FCM.
+ * Handles VAPID signing, subscription storage (KV/Memory), and Web Push delivery
+ * with proper RFC 8291 encryption and RFC 8292 VAPID authentication.
  */
+
+import { sendWebPush, type WebPushOptions } from './webpush';
 
 export interface Env {
   VAPID_PUBLIC_KEY?: string;
@@ -20,7 +23,7 @@ interface StoredPushSubscription {
   };
 }
 
-// In-memory subscription store fallback
+// In-memory subscription store fallback (lost on worker restart without KV)
 const memorySubscriptions = new Map<string, Map<string, StoredPushSubscription>>();
 
 const corsHeaders = {
@@ -29,9 +32,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-// Default fallback VAPID keypair if none provided in Worker environment variables
-const DEFAULT_VAPID_PUBLIC_KEY = 'BCG_8_N-k3y_Galaxy_Push_Relay_Public_Key_V1';
-const DEFAULT_VAPID_SUBJECT = 'mailto:admin@localgamegalaxy.app';
+function jsonResponse(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders },
+  });
+}
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -45,29 +51,29 @@ export default {
 
     // Health
     if (path === '' || path === '/health') {
-      return new Response(JSON.stringify({ status: 'ok', service: 'LocalGameGalaxy Push Relay' }), {
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
+      return jsonResponse({ status: 'ok', service: 'LocalGameGalaxy Push Relay' });
     }
 
     // 1. GET VAPID Public Key
     if (path === '/vapid-public-key' || path === '/api/push/vapid-public-key') {
-      const publicKey = env.VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY;
-      return new Response(JSON.stringify({ publicKey }), {
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
+      const publicKey = env.VAPID_PUBLIC_KEY;
+      if (!publicKey) {
+        return jsonResponse({ error: 'VAPID_PUBLIC_KEY not configured in worker secrets' }, 500);
+      }
+      return jsonResponse({ publicKey });
     }
 
     // 2. POST Subscribe
     if ((path === '/subscribe' || path === '/api/push/subscribe') && request.method === 'POST') {
-      const body = await request.json().catch(() => ({})) as any;
-      const { gameId, playerId, subscription } = body;
+      const body = await request.json().catch(() => ({})) as Record<string, unknown>;
+      const { gameId, playerId, subscription } = body as {
+        gameId?: string;
+        playerId?: string;
+        subscription?: StoredPushSubscription;
+      };
 
       if (!gameId || !playerId || !subscription?.endpoint) {
-        return new Response(JSON.stringify({ error: 'Missing gameId, playerId or subscription' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders },
-        });
+        return jsonResponse({ error: 'Missing gameId, playerId or subscription' }, 400);
       }
 
       if (env.PUSH_KV) {
@@ -81,39 +87,60 @@ export default {
         memorySubscriptions.get(gameId)!.set(playerId, subscription);
       }
 
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
+      return jsonResponse({ success: true });
     }
 
     // 3. POST Unsubscribe
     if ((path === '/unsubscribe' || path === '/api/push/unsubscribe') && request.method === 'POST') {
-      const body = await request.json().catch(() => ({})) as any;
-      const { gameId, playerId } = body;
+      const body = await request.json().catch(() => ({})) as Record<string, unknown>;
+      const { gameId, playerId } = body as { gameId?: string; playerId?: string };
 
       if (env.PUSH_KV && gameId && playerId) {
         await env.PUSH_KV.delete(`sub:${gameId}:${playerId}`);
       } else if (gameId && memorySubscriptions.has(gameId)) {
-        memorySubscriptions.get(gameId)!.delete(playerId);
+        memorySubscriptions.get(gameId)!.delete(playerId || '');
       }
 
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
+      return jsonResponse({ success: true });
     }
 
-    // 4. POST Notify
+    // 4. POST Notify — Dispatch Web Push with VAPID + encryption
     if ((path === '/notify' || path === '/api/push/notify') && request.method === 'POST') {
-      const body = await request.json().catch(() => ({})) as any;
-      const { gameId, senderPlayerId, title, body: textBody, url: targetUrl, action, targetPlayerId } = body;
+      const body = await request.json().catch(() => ({})) as Record<string, unknown>;
+      const {
+        gameId,
+        senderPlayerId,
+        title,
+        body: textBody,
+        url: targetUrl,
+        action,
+        targetPlayerId,
+      } = body as {
+        gameId?: string;
+        senderPlayerId?: string;
+        title?: string;
+        body?: string;
+        url?: string;
+        action?: string;
+        targetPlayerId?: string;
+      };
 
       if (!gameId) {
-        return new Response(JSON.stringify({ error: 'Missing gameId' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json', ...corsHeaders },
-        });
+        return jsonResponse({ error: 'Missing gameId' }, 400);
       }
 
+      // Validate VAPID keys are configured
+      if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) {
+        return jsonResponse({ error: 'VAPID keys not configured in worker secrets' }, 500);
+      }
+
+      const pushOptions: WebPushOptions = {
+        vapidPublicKey: env.VAPID_PUBLIC_KEY,
+        vapidPrivateKey: env.VAPID_PRIVATE_KEY,
+        vapidSubject: env.VAPID_SUBJECT || 'mailto:admin@localgamegalaxy.app',
+      };
+
+      // Collect target subscriptions
       const targets: { playerId: string; sub: StoredPushSubscription }[] = [];
 
       if (env.PUSH_KV) {
@@ -147,31 +174,34 @@ export default {
 
       let sent = 0;
       let failed = 0;
+      const expiredPlayerIds: string[] = [];
 
-      for (const target of targets) {
-        try {
-          const pushRes = await fetch(target.sub.endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/octet-stream',
-              TTL: '86400',
-            },
-            body: payloadString,
-          });
-
-          if (pushRes.ok || pushRes.status === 201) {
+      // Send to all targets in parallel
+      const results = await Promise.allSettled(
+        targets.map(async (target) => {
+          const result = await sendWebPush(target.sub, payloadString, pushOptions);
+          if (result.success) {
             sent++;
           } else {
             failed++;
+            // 404 or 410 means the subscription is expired/unsubscribed
+            if (result.statusCode === 404 || result.statusCode === 410) {
+              expiredPlayerIds.push(target.playerId);
+            }
           }
-        } catch {
-          failed++;
+        }),
+      );
+
+      // Clean up expired subscriptions
+      for (const pId of expiredPlayerIds) {
+        if (env.PUSH_KV) {
+          await env.PUSH_KV.delete(`sub:${gameId}:${pId}`);
+        } else if (memorySubscriptions.has(gameId)) {
+          memorySubscriptions.get(gameId)!.delete(pId);
         }
       }
 
-      return new Response(JSON.stringify({ success: true, sent, failed, totalTargets: targets.length }), {
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
+      return jsonResponse({ success: true, sent, failed, totalTargets: targets.length });
     }
 
     return new Response('Not Found', { status: 404, headers: corsHeaders });

@@ -27,6 +27,7 @@ import type { GuessArtGameRecord, GuessArtRound } from '../logic/types';
 import { playerAssignment } from '../logic/playerAssignment';
 import { gameRelayStorage } from '../../../lib/push/gameRelayStorage';
 import { LocalGameEngine } from '../logic/engine';
+import { PushNotificationBanner } from './PushNotificationBanner';
 
 interface SharePlayerLinksDialogProps {
   open: boolean;
@@ -135,6 +136,8 @@ export const SharePlayerLinksDialog: React.FC<SharePlayerLinksDialogProps> = ({
             'Mitspieler können per QR-Code oder Link auf ihrem eigenen Gerät mitspielen.',
           )}
         </Typography>
+
+        <PushNotificationBanner />
 
         <List disablePadding>
           {game.players.map((p) => {
