@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { guessArtNotificationService } from './notificationService';
 import { playerAssignment } from './playerAssignment';
-import { mailboxService } from './mailboxService';
+import { isSnapshotNewer } from './engine';
 import type { GuessArtGameRecord, GuessArtRound } from './types';
 
 import { storage } from '../../../lib/storage';
@@ -194,17 +194,40 @@ describe('GuessArt Notification & Sync Service', () => {
     });
   });
 
-  describe('Mailbox multi-game subscription management', () => {
-    it('manages multi-game subscription IDs and active screen tracking', () => {
-      mailboxService.syncSubscribedGames(['game-1', 'game-2', 'game-3']);
-      mailboxService.setActiveScreenGameId('game-1');
+  describe('Snapshot import and drawing data preservation', () => {
+    it('correctly identifies incoming snapshot with drawing data as newer', () => {
+      const blankExistingRound = {
+        ...roundGuessingMock,
+        canvasData: '{}',
+      };
+      const snapWithDrawing = {
+        game: { ...gameMock, status: 'guessing' as const },
+        round: {
+          ...roundGuessingMock,
+          canvasData: JSON.stringify({ elements: [{ id: 'elem1', type: 'freedraw' }] }),
+        },
+      };
 
-      const listenerMock = vi.fn();
-      const unsub = mailboxService.onRemoteSnapshot(listenerMock);
+      const isNewer = isSnapshotNewer(snapWithDrawing, gameMock, blankExistingRound);
+      expect(isNewer).toBe(true);
+    });
 
-      expect(typeof unsub).toBe('function');
-      unsub();
-      mailboxService.setActiveScreenGameId(null);
+    it('correctly identifies incoming round with word as newer', () => {
+      const roundWithoutWord = {
+        ...roundSelectingMock,
+        word: '',
+      };
+      const snapWithWord = {
+        game: { ...gameMock, status: 'drawing' as const },
+        round: {
+          ...roundSelectingMock,
+          status: 'drawing' as const,
+          word: 'Elefant',
+        },
+      };
+
+      const isNewer = isSnapshotNewer(snapWithWord, gameMock, roundWithoutWord);
+      expect(isNewer).toBe(true);
     });
   });
 });

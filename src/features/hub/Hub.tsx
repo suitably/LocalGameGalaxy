@@ -60,6 +60,7 @@ export const Hub: React.FC = () => {
 
     const categories: { key: GameCategory; labelKey: string; icon: string }[] = [
         { key: 'all', labelKey: 'hub.categories.all', icon: '✨' },
+        { key: 'puzzle', labelKey: 'hub.categories.puzzle', icon: '🧩' },
         { key: 'dice', labelKey: 'hub.categories.dice', icon: '🎲' },
         { key: 'cards', labelKey: 'hub.categories.cards', icon: '🃏' },
         { key: 'drawing', labelKey: 'hub.categories.drawing', icon: '🎨' },

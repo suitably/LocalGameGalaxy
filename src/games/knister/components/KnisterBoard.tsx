@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Box, Paper, Typography, Tooltip, Chip, alpha } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import { useTranslation } from 'react-i18next';
 import { calculateBoardScores } from '../logic/knisterScoring';
 import type { KnisterGrid } from '../logic/types';
@@ -7,21 +8,40 @@ import type { KnisterGrid } from '../logic/types';
 interface KnisterBoardProps {
   grid: KnisterGrid;
   currentSum: number | null;
+  selectedNumber?: number | null;
+  targetPickerCell?: { row: number; col: number } | null;
   onCellClick: (row: number, col: number) => void;
+  onCellOpenPicker?: (row: number, col: number) => void;
   disabled?: boolean;
 }
 
 export const KnisterBoard: React.FC<KnisterBoardProps> = ({
   grid,
   currentSum,
+  selectedNumber = null,
+  targetPickerCell = null,
   onCellClick,
+  onCellOpenPicker,
   disabled = false,
 }) => {
   const { t } = useTranslation();
   const scores = useMemo(() => calculateBoardScores(grid), [grid]);
 
+  const activeSum = currentSum ?? selectedNumber;
+
   const isMainDiag = (r: number, c: number) => r === c;
   const isAntiDiag = (r: number, c: number) => r + c === 4;
+
+  const handleCellAction = (rIdx: number, cIdx: number) => {
+    if (disabled) return;
+    if (activeSum !== null) {
+      onCellClick(rIdx, cIdx);
+    } else if (onCellOpenPicker) {
+      onCellOpenPicker(rIdx, cIdx);
+    } else {
+      onCellClick(rIdx, cIdx);
+    }
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: { xs: 1, sm: 2 } }}>
@@ -49,13 +69,15 @@ export const KnisterBoard: React.FC<KnisterBoardProps> = ({
               const inAntiDiag = isAntiDiag(rIdx, cIdx);
               const isCenter = inMainDiag && inAntiDiag;
               const isEmpty = cell === null;
-              const canPlace = isEmpty && currentSum !== null && !disabled;
+              const hasActiveSum = activeSum !== null;
+              const isInteractive = isEmpty && !disabled;
+              const isTargetPicker = targetPickerCell?.row === rIdx && targetPickerCell?.col === cIdx;
 
               return (
                 <Paper
                   key={`cell-${rIdx}-${cIdx}`}
                   elevation={isEmpty ? 0 : 3}
-                  onClick={() => canPlace && onCellClick(rIdx, cIdx)}
+                  onClick={() => isInteractive && handleCellAction(rIdx, cIdx)}
                   sx={{
                     aspectRatio: '1',
                     display: 'flex',
@@ -64,15 +86,19 @@ export const KnisterBoard: React.FC<KnisterBoardProps> = ({
                     fontSize: { xs: '1.25rem', sm: '1.6rem', md: '1.85rem' },
                     fontWeight: 800,
                     borderRadius: 2.5,
-                    cursor: canPlace ? 'pointer' : 'default',
+                    cursor: isInteractive ? 'pointer' : 'default',
                     bgcolor: isEmpty
-                      ? canPlace
+                      ? isTargetPicker
+                        ? alpha('#ff9800', 0.25)
+                        : hasActiveSum && isInteractive
                         ? 'rgba(255, 183, 77, 0.12)'
                         : 'rgba(255, 255, 255, 0.05)'
                       : 'background.paper',
                     color: isEmpty ? 'text.secondary' : '#fff',
                     border: '2px solid',
-                    borderColor: canPlace
+                    borderColor: isTargetPicker
+                      ? 'warning.main'
+                      : hasActiveSum && isInteractive
                       ? 'warning.main'
                       : isCenter
                       ? '#ab47bc'
@@ -81,33 +107,51 @@ export const KnisterBoard: React.FC<KnisterBoardProps> = ({
                       : isEmpty
                       ? 'rgba(255, 255, 255, 0.1)'
                       : 'divider',
+                    boxShadow: isTargetPicker ? '0 0 16px rgba(255, 167, 38, 0.6)' : 'none',
                     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                     position: 'relative',
                     userSelect: 'none',
-                    '&:hover': canPlace
+                    WebkitTouchCallout: 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                    '&:hover': isInteractive
                       ? {
                           transform: 'scale(1.06)',
-                          bgcolor: 'rgba(255, 183, 77, 0.25)',
-                          borderColor: '#ffa726',
-                          boxShadow: '0 0 16px rgba(255, 167, 38, 0.4)',
+                          bgcolor: hasActiveSum
+                            ? 'rgba(255, 183, 77, 0.25)'
+                            : 'rgba(255, 255, 255, 0.12)',
+                          borderColor: hasActiveSum ? '#ffa726' : 'primary.main',
+                          boxShadow: hasActiveSum
+                            ? '0 0 16px rgba(255, 167, 38, 0.4)'
+                            : '0 0 12px rgba(100, 181, 246, 0.4)',
                         }
                       : {},
-                    '&:active': canPlace ? { transform: 'scale(0.96)' } : {},
+                    '&:active': isInteractive ? { transform: 'scale(0.96)' } : {},
                   }}
                 >
                   {cell !== null ? (
                     cell
-                  ) : canPlace ? (
+                  ) : hasActiveSum && isInteractive ? (
                     <Typography
                       variant="caption"
                       sx={{
-                        opacity: 0.4,
-                        fontSize: { xs: '0.8rem', sm: '1.1rem' },
+                        opacity: 0.45,
+                        fontSize: { xs: '0.85rem', sm: '1.15rem' },
                         color: 'warning.light',
+                        fontWeight: 800,
                       }}
                     >
-                      {currentSum}
+                      {activeSum}
                     </Typography>
+                  ) : isInteractive ? (
+                    <AddIcon
+                      sx={{
+                        opacity: 0.15,
+                        fontSize: { xs: '1rem', sm: '1.25rem' },
+                        color: 'text.secondary',
+                        transition: 'opacity 0.2s',
+                        '&:hover': { opacity: 0.5 },
+                      }}
+                    />
                   ) : null}
 
                   {/* Corner indicator for Diagonals */}

@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   CardActionArea,
-  Chip,
   IconButton,
   Paper,
   Stack,
@@ -14,11 +13,9 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import { useTranslation } from 'react-i18next';
 import type { CardGameDefinition } from '../logic/types';
 import { getAllCardGames } from '../logic/gamesCatalogue';
-import { CustomGameBuilderDialog } from './CustomGameBuilderDialog';
 
 interface CardsLobbyProps {
   onStartGame: (game: CardGameDefinition, players: string[]) => void;
@@ -27,11 +24,10 @@ interface CardsLobbyProps {
 export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
   const { t } = useTranslation();
 
-  const [games, setGames] = useState<CardGameDefinition[]>(() => getAllCardGames());
+  const games = getAllCardGames();
   const [selectedGameId, setSelectedGameId] = useState<string>('schwimmen');
   const [players, setPlayers] = useState<string[]>(['Spieler 1', 'Spieler 2', 'Spieler 3']);
   const [newPlayerName, setNewPlayerName] = useState('');
-  const [builderOpen, setBuilderOpen] = useState(false);
 
   const selectedGame = games.find((g) => g.id === selectedGameId) || games[0];
 
@@ -45,11 +41,6 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
   const handleRemovePlayer = (index: number) => {
     if (players.length <= 2) return;
     setPlayers((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleGameCreated = (newGame: CardGameDefinition) => {
-    setGames(getAllCardGames());
-    setSelectedGameId(newGame.id);
   };
 
   return (
@@ -86,7 +77,7 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
           gap: 2,
           mb: 3,
         }}
@@ -104,16 +95,13 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
                 transition: 'all 0.2s ease',
               }}
             >
-              <CardActionArea onClick={() => setSelectedGameId(g.id)} sx={{ p: 2 }}>
+              <CardActionArea onClick={() => setSelectedGameId(g.id)} sx={{ p: 2, height: '100%' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
                   <Typography variant="h4">{g.icon || '🃏'}</Typography>
                   <Box>
                     <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
                       {g.nameKey ? t(g.nameKey, g.name) : g.name}
                     </Typography>
-                    {g.isCustom && (
-                      <Chip label="Custom" size="small" color="secondary" sx={{ height: 20, fontSize: '0.65rem' }} />
-                    )}
                   </Box>
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
@@ -123,28 +111,6 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
             </Card>
           );
         })}
-
-        {/* Create Custom Game Card */}
-        <Card
-          sx={{
-            borderRadius: 3,
-            bgcolor: 'rgba(255, 255, 255, 0.02)',
-            border: '2px dashed rgba(255, 255, 255, 0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <CardActionArea
-            onClick={() => setBuilderOpen(true)}
-            sx={{ p: 2, textAlign: 'center', height: '100%' }}
-          >
-            <AddCircleOutlineIcon sx={{ fontSize: 36, color: 'text.secondary', mb: 0.5 }} />
-            <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-              {t('games.cards.create_custom_game', '+ Eigenes Kartenspiel erstellen')}
-            </Typography>
-          </CardActionArea>
-        </Card>
       </Box>
 
       {/* Players Setup */}
@@ -220,12 +186,6 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
       >
         {t('games.cards.start_session', 'Runde starten')} ({selectedGame.name})
       </Button>
-
-      <CustomGameBuilderDialog
-        open={builderOpen}
-        onClose={() => setBuilderOpen(false)}
-        onGameCreated={handleGameCreated}
-      />
     </Box>
   );
 };

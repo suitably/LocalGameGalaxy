@@ -10,8 +10,10 @@ const TitleContext = createContext<TitleContextType | undefined>(undefined);
 export const TitleProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [pageTitle, setPageTitle] = useState<string | null>(null);
 
+    const value = React.useMemo(() => ({ pageTitle, setPageTitle }), [pageTitle]);
+
     return (
-        <TitleContext.Provider value={{ pageTitle, setPageTitle }}>
+        <TitleContext.Provider value={value}>
             {children}
         </TitleContext.Provider>
     );

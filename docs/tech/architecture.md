@@ -51,19 +51,24 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
     -   Integrated Excalidraw drawing canvas & animated stroke replay engine (`ExcalidrawViewer`).
     -   Fuzzy evaluation engine with German umlaut transliteration, diacritic normalization, and inflection generation (`guessEvaluator`, `lingo`).
     -   Deterministic multi-stage hint provider (`HintWordSlots`, `HintLetterChips`).
+    -   **Unified Header Integration (`useGuessArtHeader`)**: Integrates directly with [`LayoutContext`](file:///home/deck/Projects/LocalGameGalaxy/src/context/LayoutContext.tsx) and [`GlobalHeader`](file:///home/deck/Projects/LocalGameGalaxy/src/components/Layout/GlobalHeader.tsx), consolidating navigation, active turn/secret word badges, match info, and game action menus into a single top header, maximizing drawing canvas screen area.
 -   **Qwixx (`src/games/qwixx`)**:
     -   Tactical roll-and-write dice game with real-time peer sync over `BroadcastChannel`.
     -   Modular sheet configuration engine (`sheetDefinitions.ts`) supporting official expansions (Classic, Gemixxt A/B, Big Points, Connected, Double, Bonus).
     -   Dynamic dice highlight engine (`diceHighlight.ts`) and variant-aware scoring reducer (`qwixxReducer.ts`).
     -   See [Qwixx Sheet Rules](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/qwixx-sheet-rules.md) for full variant specifications.
 
-### Nexumia Server & Multi-Game Companion
-The backend helper server (`server/`) is generalized as **Nexumia Server**:
-- Provides local song library management and streaming (`/api/songs`, `/media`)
-- BitTorrent WebRTC signaling tracker (`bittorrent-tracker` on HTTP/HTTPS upgrade)
-- API key generation and friend access delegation with per-key rate limits and permissions
-- GitHub issue & GuessArt catalogue Pull Request publishing proxy (`/api/feedback`, `/api/guessart/publish-catalogue`)
-- **Docker Architecture**: Multi-stage build with `base` (lightweight ~200MB Node.js + yt-dlp/ffmpeg) and `full` (Python, PyTorch, whisper, audio-separator for Melodiq vocal separation), selected via Docker Compose profiles (`melodiq`).
+### Web Push Relay & Game-Scoped Notification Architecture
+- **Web Push Protocol (RFC 8030 / VAPID)**:
+  - Enables closed-browser background OS push notifications for turn-based games like **GuessArt** (*Montagsmaler*).
+  - Background Service Worker ([`public/sw-push.js`](file:///home/deck/Projects/LocalGameGalaxy/public/sw-push.js)) receives incoming OS push packets and deep-links directly into the game on notification click.
+- **Host-Driven, Game-Scoped Relay**:
+  - The host's configured backend or Cloudflare Worker is passed in game links via `&gameRelay=...`.
+  - Guests parse `gameRelay` strictly into `sessionStorage` (`galaxy_game_relay_<gameId>`) via [`gameRelayStorage.ts`](file:///home/deck/Projects/LocalGameGalaxy/src/lib/push/gameRelayStorage.ts).
+  - Guests' global settings (`localStorage`) remain completely unpolluted, keeping the host's server isolated exclusively to the shared match.
+- **Relay Implementations**:
+  - **Cloudflare Worker**: Zero-cost, 24/7 serverless push relay ([`server/cloudflare-push-relay/`](file:///home/deck/Projects/LocalGameGalaxy/server/cloudflare-push-relay/)).
+  - **Nexumia Self-Hosted Server**: Built-in `/api/push/*` endpoints backed by [`webPushService.js`](file:///home/deck/Projects/LocalGameGalaxy/server/src/services/webPushService.js).
 
 ### GitHub Integration Architecture
 - **Hybrid Model**: Direct GitHub API client (`src/lib/github.ts`) using a locally stored Personal Access Token (PAT) as priority, with fallback to the Nexumia Server proxy.

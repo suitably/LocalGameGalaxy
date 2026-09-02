@@ -166,7 +166,7 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
   const buildShareUrl = () => {
     let url = `${window.location.origin}${window.location.pathname}#/party?room=${roomId}`;
     if (isServerActive && serverUrl) {
-      url += `&server=${encodeURIComponent(serverUrl)}`;
+      url += `&gameRelay=${encodeURIComponent(serverUrl)}`;
     }
     return url;
   };

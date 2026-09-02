@@ -39,12 +39,14 @@ class GuessArtMailboxService {
     return null;
   }
 
+  private brokerIndex = 0;
+
   private getClient(): MqttClient {
     if (this.client) {
       return this.client;
     }
 
-    const brokerUrl = BROKER_URLS[0];
+    const brokerUrl = BROKER_URLS[this.brokerIndex];
     const client = mqtt.connect(brokerUrl, {
       clientId: this.clientId,
       clean: true,
@@ -62,7 +64,10 @@ class GuessArtMailboxService {
     });
 
     client.on('error', (err) => {
-      console.warn('[GuessArt Mailbox] MQTT error:', err);
+      console.warn(`[GuessArt Mailbox] MQTT error on broker (${brokerUrl}):`, err);
+      if (BROKER_URLS.length > 1) {
+        this.brokerIndex = (this.brokerIndex + 1) % BROKER_URLS.length;
+      }
     });
 
     client.on('message', async (topic, message) => {

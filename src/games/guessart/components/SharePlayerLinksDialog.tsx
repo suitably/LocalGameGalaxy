@@ -25,6 +25,8 @@ import { useTranslation } from 'react-i18next';
 import LZString from 'lz-string';
 import type { GuessArtGameRecord, GuessArtRound } from '../logic/types';
 import { playerAssignment } from '../logic/playerAssignment';
+import { gameRelayStorage } from '../../../lib/push/gameRelayStorage';
+import { LocalGameEngine } from '../logic/engine';
 
 interface SharePlayerLinksDialogProps {
   open: boolean;
@@ -44,13 +46,34 @@ export const SharePlayerLinksDialog: React.FC<SharePlayerLinksDialogProps> = ({
   const { t } = useTranslation();
   const [copiedPlayerId, setCopiedPlayerId] = useState<string | null>(null);
   const [activeQrPlayerId, setActiveQrPlayerId] = useState<string | null>(null);
+  const [activeRound, setActiveRound] = useState<GuessArtRound | null>(round || null);
+
+  React.useEffect(() => {
+    if (round) {
+      setActiveRound(round);
+    } else if (game) {
+      LocalGameEngine.getGameSnapshot(game.id)
+        .then((snap) => {
+          if (snap.round) {
+            setActiveRound(snap.round);
+          }
+        })
+        .catch((e) => console.warn('[SharePlayerLinksDialog] Failed to fetch round:', e));
+    }
+  }, [game, round]);
 
   if (!game) return null;
 
   const buildPlayerLink = (playerId: string) => {
-    const snapshot = { game, round: round || null };
+    const effRound = activeRound || round || null;
+    const snapshot = { game, round: effRound };
     const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(snapshot));
-    return `${window.location.origin}${window.location.pathname}#/games/guessart?gameId=${game.id}&player=${playerId}&data=${compressed}`;
+    const relay = gameRelayStorage.getGameRelay(game.id);
+    let link = `${window.location.origin}${window.location.pathname}#/games/guessart?gameId=${game.id}&player=${playerId}&data=${compressed}`;
+    if (relay) {
+      link += `&gameRelay=${encodeURIComponent(relay)}`;
+    }
+    return link;
   };
 
   const handleToggleQr = (playerId: string) => {

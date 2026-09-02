@@ -23,5 +23,6 @@ This directory contains walkthroughs and verification logs. These documents prov
 - [Melodiq Lyrics Timing Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/melodiq-lyrics-timing-walkthrough.md)
 - [GuessArt Local-First Integration Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/guessart-walkthrough.md)
 - [Qwixx Sheet Variants & Selector Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/qwixx-sheet-variants-walkthrough.md)
+- [Knister Custom Dice & Manual Input Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/knister-custom-dice-walkthrough.md)
 
 ID: DOCS-VERIFICATION-SUMMARY

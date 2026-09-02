@@ -5,6 +5,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import SettingsIcon from '@mui/icons-material/Settings';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import InstallMobileIcon from '@mui/icons-material/InstallMobile';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useTranslation } from 'react-i18next';
 import { useLayout } from '../../context/LayoutContext';
 import { useTitle } from '../../context/TitleContext';
@@ -15,7 +16,7 @@ import { PWAInstallDialog } from '../pwa/PWAInstallDialog';
 
 export const GlobalHeader: React.FC = () => {
     const { t } = useTranslation();
-    const { title, menuItems, homeAction, customHeaderActions } = useLayout();
+    const { title, customHeaderTitle, menuItems, homeAction, customHeaderActions } = useLayout();
     const { pageTitle } = useTitle();
     const navigate = useNavigate();
     const location = useLocation();
@@ -67,31 +68,44 @@ export const GlobalHeader: React.FC = () => {
                     borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
                 }}
             >
-                <Toolbar sx={{ alignItems: 'center', minHeight: { xs: 56, sm: 64 }, px: { xs: 1, sm: 2 } }}>
-                    <IconButton
-                        size="medium"
-                        edge="start"
-                        color="inherit"
-                        aria-label="home"
-                        sx={{ mr: { xs: 1, sm: 2 }, p: 1.25 }}
-                        onClick={handleHomeClick}
-                    >
-                        <HomeIcon fontSize={isSmallScreen ? "small" : "medium"} />
-                    </IconButton>
-                    <Typography 
-                        variant="h6" 
-                        component="div" 
-                        sx={{ 
-                            flexGrow: 1, 
-                            fontSize: { xs: '1.05rem', sm: '1.25rem' },
-                            fontWeight: 600,
-                            overflow: 'hidden', 
-                            textOverflow: 'ellipsis', 
-                            whiteSpace: 'nowrap' 
-                        }}
-                    >
-                        {title || pageTitle || t('app.title')}
-                    </Typography>
+                <Toolbar sx={{ alignItems: 'center', minHeight: { xs: 48, sm: 56 }, px: { xs: 1, sm: 2 } }}>
+                    <Tooltip title={homeAction ? t('common.back', 'Zurück') : t('common.home', 'Home')}>
+                        <IconButton
+                            size="medium"
+                            edge="start"
+                            color="inherit"
+                            aria-label={homeAction ? t('common.back', 'Zurück') : "home"}
+                            sx={{ mr: { xs: 0.5, sm: 1.5 }, p: { xs: 0.75, sm: 1.25 } }}
+                            onClick={handleHomeClick}
+                        >
+                            {homeAction ? (
+                                <ArrowBackRoundedIcon fontSize={isSmallScreen ? "small" : "medium"} />
+                            ) : (
+                                <HomeIcon fontSize={isSmallScreen ? "small" : "medium"} />
+                            )}
+                        </IconButton>
+                    </Tooltip>
+
+                    {customHeaderTitle ? (
+                        <Box sx={{ flexGrow: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
+                            {customHeaderTitle}
+                        </Box>
+                    ) : (
+                        <Typography 
+                            variant="h6" 
+                            component="div" 
+                            sx={{ 
+                                flexGrow: 1, 
+                                fontSize: { xs: '1.05rem', sm: '1.25rem' },
+                                fontWeight: 600,
+                                overflow: 'hidden', 
+                                textOverflow: 'ellipsis', 
+                                whiteSpace: 'nowrap' 
+                            }}
+                        >
+                            {title || pageTitle || t('app.title')}
+                        </Typography>
+                    )}
 
                     {/* PWA Install Button when not in standalone mode */}
                     {!isStandalone && isInstallable && (

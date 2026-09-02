@@ -5,8 +5,9 @@ import { usePageTitle } from '../../context/TitleContext';
 import { useWakeLock } from '../../hooks/useWakeLock';
 import { useGuessArtLobby } from './hooks/useGuessArtLobby';
 import { useGuessArtGame } from './hooks/useGuessArtGame';
+import { useLayout } from '../../context/LayoutContext';
 import { GameSetup } from './components/GameSetup';
-import { GameHeader } from './components/GameHeader';
+import { GuessArtHeader } from './components/GuessArtHeader';
 import { WordSelector } from './components/WordSelector';
 import { DrawingCanvas } from './components/DrawingCanvas';
 import { GuessPanel } from './components/GuessPanel';
@@ -21,6 +22,7 @@ import { CatalogueEditorDialog } from './components/catalogue/CatalogueEditorDia
 import { storage } from '../../lib/storage';
 import { playerAssignment } from './logic/playerAssignment';
 import { guessArtNotificationService } from './logic/notificationService';
+import { mailboxService } from './logic/mailboxService';
 import LZString from 'lz-string';
 import { LocalGameEngine } from './logic/engine';
 import type { GuessArtGameRecord, GuessArtRound } from './logic/types';
@@ -168,11 +170,35 @@ export const GuessArtGame: React.FC = () => {
     setEditDialogOpen(true);
   };
 
-  const handleOpenShareLinks = (targetGame: GuessArtGameRecord | null, targetRound?: GuessArtRound | null) => {
-    setShareDialogGame(targetGame);
-    setShareDialogRound(targetRound || null);
-    setShareDialogOpen(true);
-  };
+  const handleOpenShareLinks = useCallback(
+    async (targetGame: GuessArtGameRecord | null, targetRound?: GuessArtRound | null) => {
+      if (!targetGame) return;
+      let effRound = targetRound || null;
+      if (!effRound) {
+        try {
+          const snap = await LocalGameEngine.getGameSnapshot(targetGame.id, language);
+          effRound = snap.round;
+        } catch (e) {
+          console.warn('[GuessArt] Failed to load round for share links:', e);
+        }
+      }
+      setShareDialogGame(targetGame);
+      setShareDialogRound(effRound);
+      setShareDialogOpen(true);
+
+      if (effRound) {
+        try {
+          await mailboxService.publishTurn(targetGame.id, {
+            game: targetGame,
+            round: effRound,
+          });
+        } catch (e) {
+          console.warn('[GuessArt] Failed to publish snapshot on opening share dialog:', e);
+        }
+      }
+    },
+    [language],
+  );
 
   const handleCloseInfo = () => {
     setInfoOpen(false);
@@ -259,6 +285,19 @@ export const GuessArtGame: React.FC = () => {
     await refresh();
   }, [game, activeTurnPlayerId, isHost, isCurrentTurnLocal, triggerLocalUpdate, refresh]);
 
+  const { setHeaderHidden } = useLayout();
+
+  useEffect(() => {
+    setHeaderHidden(Boolean(activeGameId));
+    return () => setHeaderHidden(false);
+  }, [activeGameId, setHeaderHidden]);
+
+  const handleExitActiveGame = useCallback(() => {
+    cleanUrl();
+    setActiveGameId(null);
+    loadActiveGames();
+  }, [cleanUrl, loadActiveGames]);
+
   // Lobby Setup View
   if (!activeGameId || !game) {
     return (
@@ -318,21 +357,19 @@ export const GuessArtGame: React.FC = () => {
   // Active Game Session View
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', overflow: 'hidden' }}>
-      <GameHeader
-        game={game}
-        round={round}
-        onExit={() => {
-          cleanUrl();
-          setActiveGameId(null);
-          loadActiveGames();
-        }}
-        onOpenHistory={() => handleOpenHistory(activeGameId)}
-        onEditGame={() => handleOpenEdit(game)}
-        onOpenShareLinks={isHost ? () => handleOpenShareLinks(game, round) : undefined}
-        isCurrentTurnLocal={isCurrentTurnLocal}
-        canToggleLocalRemote={isHost}
-        onToggleLocalRemote={handleToggleLocalRemote}
-      />
+      {round && (
+        <GuessArtHeader
+          game={game}
+          round={round}
+          onExit={handleExitActiveGame}
+          onOpenHistory={() => handleOpenHistory(activeGameId)}
+          onEditGame={() => handleOpenEdit(game)}
+          onOpenShareLinks={isHost ? () => handleOpenShareLinks(game, round) : undefined}
+          isCurrentTurnLocal={isCurrentTurnLocal}
+          canToggleLocalRemote={isHost}
+          onToggleLocalRemote={handleToggleLocalRemote}
+        />
+      )}
 
       <Box sx={{ flexGrow: 1, minHeight: 0, display: 'flex', flexDirection: 'column', p: { xs: 0.5, sm: 1.5 } }}>
         {gameLoading && !round ? (

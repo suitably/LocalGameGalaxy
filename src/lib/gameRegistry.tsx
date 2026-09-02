@@ -5,11 +5,13 @@ import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import CasinoIcon from '@mui/icons-material/Casino';
 import PaletteIcon from '@mui/icons-material/Palette';
 import CelebrationIcon from '@mui/icons-material/Celebration';
-import StyleIcon from '@mui/icons-material/Style';
 import GridViewIcon from '@mui/icons-material/GridView';
+import AbcIcon from '@mui/icons-material/Abc';
+import Grid4x4Icon from '@mui/icons-material/Grid4x4';
+import StyleIcon from '@mui/icons-material/Style';
 import { SongsProvider } from '../games/melodiq';
 
-export type GameCategory = 'all' | 'dice' | 'drawing' | 'music' | 'social_deduction' | 'cards' | 'party';
+export type GameCategory = 'all' | 'dice' | 'drawing' | 'music' | 'social_deduction' | 'cards' | 'party' | 'puzzle';
 
 export interface GameRouteDefinition {
     path: string;
@@ -41,6 +43,8 @@ const QwixxGame = lazy(() => import('../games/qwixx').then(m => ({ default: m.Qw
 const KnisterGame = lazy(() => import('../games/knister').then(m => ({ default: m.KnisterGame })));
 const GuessArtGame = lazy(() => import('../games/guessart').then(m => ({ default: m.GuessArtGame })));
 const CardsGame = lazy(() => import('../games/cards').then(m => ({ default: m.CardsGame })));
+const WordleGame = lazy(() => import('../games/wordle').then(m => ({ default: m.WordleGame })));
+const SudokuGame = lazy(() => import('../games/sudoku').then(m => ({ default: m.SudokuGame })));
 const PartyLobby = lazy(() => import('../features/party/PartyLobby').then(m => ({ default: m.PartyLobby })));
 
 class GameRegistry {
@@ -157,6 +161,30 @@ class GameRegistry {
             hoverColor: '#7b1fa2',
             category: 'party',
             component: <PartyLobby />
+        },
+        {
+            id: 'wordle',
+            route: 'games/wordle',
+            titleKey: 'games.wordle.title',
+            descriptionKey: 'games.wordle.description',
+            icon: <AbcIcon sx={{ fontSize: 72, mb: 2 }} />,
+            colorStart: '#81c784',
+            colorEnd: '#2e7d32',
+            hoverColor: '#2e7d32',
+            category: 'puzzle',
+            component: <WordleGame />
+        },
+        {
+            id: 'sudoku',
+            route: 'games/sudoku',
+            titleKey: 'games.sudoku.title',
+            descriptionKey: 'games.sudoku.description',
+            icon: <Grid4x4Icon sx={{ fontSize: 72, mb: 2 }} />,
+            colorStart: '#90caf9',
+            colorEnd: '#1976d2',
+            hoverColor: '#1976d2',
+            category: 'puzzle',
+            component: <SudokuGame />
         }
     ];
 

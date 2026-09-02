@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Box, Button, Chip, CircularProgress, Paper, Typography } from '@mui/material';
+import { Alert, Box, Button, CircularProgress } from '@mui/material';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
-import BrushRoundedIcon from '@mui/icons-material/BrushRounded';
-import LockRoundedIcon from '@mui/icons-material/LockRounded';
 import { useTranslation } from 'react-i18next';
 import { ensureDrawMetadata, parseSceneData, type ExcalidrawScenePayload } from '../logic/excalidrawScene';
 import { ExcalidrawLazy } from './ExcalidrawLazy';
@@ -117,53 +115,6 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
   return (
     <Box sx={{ flexGrow: 1, minHeight: 0, display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Secret Word Banner for Drawer */}
-      {currentRound?.word && (
-        <Paper
-          elevation={1}
-          sx={{
-            px: { xs: 1.5, sm: 2 },
-            py: 0.8,
-            mb: 1,
-            borderRadius: 2.5,
-            bgcolor: 'primary.main',
-            color: 'primary.contrastText',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 1,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-          }}
-        >
-          <Box display="flex" alignItems="center" gap={1}>
-            <BrushRoundedIcon sx={{ fontSize: 20 }} />
-            <Typography variant="body2" fontWeight={700}>
-              {t('guessart.drawWordPrompt', 'Zeichne:')}
-            </Typography>
-            <Chip
-              label={currentRound.word}
-              size="medium"
-              sx={{
-                fontWeight: 900,
-                fontSize: { xs: '1rem', sm: '1.15rem' },
-                bgcolor: 'background.paper',
-                color: 'text.primary',
-                px: 0.5,
-                boxShadow: 1,
-              }}
-            />
-          </Box>
-
-          <Box display="flex" alignItems="center" gap={0.5} sx={{ opacity: 0.9 }}>
-            <LockRoundedIcon sx={{ fontSize: 15 }} />
-            <Typography variant="caption" fontWeight={600}>
-              {t('guessart.secretWordOnlyYou', 'Nur für dich sichtbar')}
-            </Typography>
-          </Box>
-        </Paper>
-      )}
-
       <Box
         sx={{
           flexGrow: 1,

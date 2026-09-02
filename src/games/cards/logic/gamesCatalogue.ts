@@ -1,12 +1,11 @@
 import type { CardGameDefinition } from './types';
-import { storage } from '../../../lib/storage';
 
 export const BUILT_IN_CARD_GAMES: CardGameDefinition[] = [
   {
     id: 'schwimmen',
     name: 'Schwimmen (31)',
     nameKey: 'games.cards.schwimmen.title',
-    description: '3 Leben + Schwimmring! Der Spieler mit den wenigsten Punkten verliert ein Leben. 31/Feuer beendet die Runde sofort.',
+    description: '3 Leben + Schwimmring! Verlierer der Runde verlieren Leben. ⚡ Blitz (31) zieht allen anderen 1 Leben ab.',
     descriptionKey: 'games.cards.schwimmen.description',
     trackerType: 'lives_elimination',
     defaultLives: 3,
@@ -14,9 +13,6 @@ export const BUILT_IN_CARD_GAMES: CardGameDefinition[] = [
     maxPlayers: 9,
     icon: '🏊',
     color: '#00acc1',
-    scoringRules: {
-      feuerPoints: 33, // 3 Assen / Feuer
-    },
   },
   {
     id: 'ohell',
@@ -51,26 +47,7 @@ export const BUILT_IN_CARD_GAMES: CardGameDefinition[] = [
   },
 ];
 
-const STORAGE_KEY_CUSTOM_CARD_GAMES = 'cards_custom_games';
-
-export const getCustomCardGames = (): CardGameDefinition[] => {
-  return storage.getJson<CardGameDefinition[]>(STORAGE_KEY_CUSTOM_CARD_GAMES, []);
-};
-
-export const saveCustomCardGame = (game: CardGameDefinition): void => {
-  const existing = getCustomCardGames();
-  const filtered = existing.filter((g) => g.id !== game.id);
-  storage.setJson(STORAGE_KEY_CUSTOM_CARD_GAMES, [...filtered, { ...game, isCustom: true }]);
-};
-
-export const deleteCustomCardGame = (gameId: string): void => {
-  const existing = getCustomCardGames();
-  storage.setJson(
-    STORAGE_KEY_CUSTOM_CARD_GAMES,
-    existing.filter((g) => g.id !== gameId),
-  );
-};
-
 export const getAllCardGames = (): CardGameDefinition[] => {
-  return [...BUILT_IN_CARD_GAMES, ...getCustomCardGames()];
+  return BUILT_IN_CARD_GAMES;
 };
+

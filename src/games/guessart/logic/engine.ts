@@ -70,7 +70,7 @@ export const toRoundPayload = (
 const nextPlayerIndex = (game: GuessArtGameRecord): number =>
   (game.currentPlayerIndex + 1) % game.players.length;
 
-const isSnapshotNewer = (
+export const isSnapshotNewer = (
   snapshot: GameSnapshot,
   existingGame: GuessArtGameRecord,
   existingRound: GuessArtRound | null,
@@ -95,11 +95,32 @@ const isSnapshotNewer = (
   if (snapGuesses > existGuesses) return true;
   if (snapGuesses < existGuesses) return false;
 
+  const isCanvasEmpty = (canvas: string | null | undefined): boolean => {
+    if (!canvas) return true;
+    try {
+      const parsed = JSON.parse(canvas);
+      return !parsed.elements || parsed.elements.length === 0;
+    } catch {
+      return canvas === DEFAULT_SCENE;
+    }
+  };
+
+  const snapHasCanvas = !isCanvasEmpty(snapshot.round?.canvasData);
+  const existHasCanvas = !isCanvasEmpty(existingRound?.canvasData);
+
+  if (snapHasCanvas && !existHasCanvas) {
+    return true;
+  }
+
   if (
-    snapRank === 1 &&
     snapshot.round?.canvasData &&
-    snapshot.round.canvasData !== existingRound?.canvasData
+    existingRound?.canvasData &&
+    snapshot.round.canvasData !== existingRound.canvasData
   ) {
+    return true;
+  }
+
+  if (snapshot.round?.word && !existingRound?.word) {
     return true;
   }
 

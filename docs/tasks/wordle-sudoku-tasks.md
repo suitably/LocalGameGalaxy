@@ -1,0 +1,31 @@
+# Wordle & Sudoku Tasks [ID: TASKS-WORDLE-SUDOKU]
+
+- [x] Phase 1: Planning & Architecture Design <!-- id: 0 -->
+  - [x] Create Implementation Plan (`docs/planning/wordle-sudoku-plan.md`) <!-- id: 1 -->
+- [/] Phase 2: Wordle Implementation <!-- id: 2 -->
+  - [ ] Create `src/games/wordle/logic/types.ts` <!-- id: 3 -->
+  - [ ] Create `src/games/wordle/logic/wordleEngine.ts` and `wordleEngine.test.ts` <!-- id: 4 -->
+  - [ ] Create `src/games/wordle/hooks/useWordle.ts` <!-- id: 5 -->
+  - [ ] Create `src/games/wordle/components/WordleBoard.tsx` <!-- id: 6 -->
+  - [ ] Create `src/games/wordle/components/WordleKeyboard.tsx` <!-- id: 7 -->
+  - [ ] Create `src/games/wordle/components/WordleStatsModal.tsx` <!-- id: 8 -->
+  - [ ] Create `src/games/wordle/components/WordleDuelModal.tsx` <!-- id: 9 -->
+  - [ ] Create `src/games/wordle/WordleGame.tsx`, `i18n/index.ts`, and `index.ts` <!-- id: 10 -->
+- [ ] Phase 3: Sudoku Implementation <!-- id: 11 -->
+  - [ ] Create `src/games/sudoku/logic/types.ts` <!-- id: 12 -->
+  - [ ] Create `src/games/sudoku/logic/sudokuGenerator.ts` and `sudoku.test.ts` <!-- id: 13 -->
+  - [ ] Create `src/games/sudoku/hooks/useSudoku.ts` <!-- id: 14 -->
+  - [ ] Create `src/games/sudoku/components/SudokuGrid.tsx` <!-- id: 15 -->
+  - [ ] Create `src/games/sudoku/components/SudokuNumpad.tsx` <!-- id: 16 -->
+  - [ ] Create `src/games/sudoku/components/SudokuHeader.tsx` <!-- id: 17 -->
+  - [ ] Create `src/games/sudoku/components/SudokuVictoryModal.tsx` <!-- id: 18 -->
+  - [ ] Create `src/games/sudoku/SudokuGame.tsx`, `i18n/index.ts`, and `index.ts` <!-- id: 19 -->
+- [ ] Phase 4: Hub & Game Registry Integration <!-- id: 20 -->
+  - [ ] Update `src/lib/gameRegistry.tsx` to register `wordle` and `sudoku` and add `puzzle` category <!-- id: 21 -->
+  - [ ] Update `src/features/hub/Hub.tsx` with `puzzle` category filter chip <!-- id: 22 -->
+  - [ ] Update `public/locales/de/translation.json` and `public/locales/en/translation.json` <!-- id: 23 -->
+- [ ] Phase 5: Verification & Documentation <!-- id: 24 -->
+  - [ ] Run `npm test` <!-- id: 25 -->
+  - [ ] Run `npm run lint` and `npm run build` <!-- id: 26 -->
+  - [ ] Create `docs/verification/wordle-sudoku-walkthrough.md` <!-- id: 27 -->
+  - [ ] Update `docs/tech/architecture.md` <!-- id: 28 -->

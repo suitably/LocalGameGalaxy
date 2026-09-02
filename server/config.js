@@ -24,7 +24,7 @@ const defaultConfig = {
 
 let currentConfig = { ...defaultConfig };
 
-// Load config from disk if exists
+// Load config from disk and environment variables
 function loadConfig() {
     // Try multiple locations for config.json
     const searchPaths = [
@@ -39,11 +39,18 @@ function loadConfig() {
 
     for (const searchDir of uniquePaths) {
         const p = path.join(searchDir, 'config.json');
-        if (fs.existsSync(p)) {
-            console.log(`Found config at: ${p}`);
-            activeConfigFile = p;
-            foundConfig = p;
-            break;
+        try {
+            if (fs.existsSync(p)) {
+                const stat = fs.statSync(p);
+                if (stat.isFile()) {
+                    console.log(`Found config at: ${p}`);
+                    activeConfigFile = p;
+                    foundConfig = p;
+                    break;
+                }
+            }
+        } catch {
+            // Ignore filesystem check errors
         }
     }
 
@@ -63,10 +70,58 @@ function loadConfig() {
             console.error(`Failed to parse config at ${foundConfig}:`, e);
         }
     } else {
-        console.log('No config.json found. Will create new one in current directory: ' + activeConfigFile);
+        console.log('[Config] Using configuration location: ' + activeConfigFile);
     }
 
-    // Generate token if missing
+    // 1. Environment Variable Overrides
+    if (process.env.PORT) {
+        const parsedPort = parseInt(process.env.PORT, 10);
+        if (!isNaN(parsedPort) && parsedPort > 0) {
+            currentConfig.port = parsedPort;
+        }
+    }
+
+    const envToken = process.env.SECURITY_TOKEN || process.env.TOKEN;
+    if (envToken && typeof envToken === 'string' && envToken.trim()) {
+        currentConfig.token = envToken.trim();
+    }
+
+    // 2. Music Directory Discovery & Overrides
+    const candidateDirs = [];
+    if (process.env.MUSIC_DIR) {
+        candidateDirs.push(...process.env.MUSIC_DIR.split(',').map(d => d.trim()).filter(Boolean));
+    }
+    if (process.env.DIRECTORIES) {
+        candidateDirs.push(...process.env.DIRECTORIES.split(',').map(d => d.trim()).filter(Boolean));
+    }
+
+    // Standard container & local music directories
+    const standardMusicLocations = [
+        '/app/music',
+        path.join(process.cwd(), 'music'),
+    ];
+    for (const loc of standardMusicLocations) {
+        try {
+            if (fs.existsSync(loc) && fs.statSync(loc).isDirectory()) {
+                candidateDirs.push(loc);
+            }
+        } catch {
+            // Ignore stat errors
+        }
+    }
+
+    for (const dir of candidateDirs) {
+        const resolved = path.resolve(dir);
+        if (!currentConfig.directories.some(d => path.resolve(d) === resolved)) {
+            currentConfig.directories.push(dir);
+        }
+    }
+
+    if (currentConfig.directories.length > 0 && !currentConfig.downloadDir) {
+        currentConfig.downloadDir = currentConfig.directories[0];
+    }
+
+    // 3. Generate token if still missing
     if (!currentConfig.token) {
         currentConfig.token = crypto.randomBytes(16).toString('hex');
         saveConfig();
@@ -75,10 +130,21 @@ function loadConfig() {
 
 function saveConfig() {
     try {
+        if (fs.existsSync(activeConfigFile)) {
+            const stat = fs.statSync(activeConfigFile);
+            if (stat.isDirectory()) {
+                // If activeConfigFile happens to be an accidental folder mount, don't attempt file write
+                return;
+            }
+        }
         fs.writeFileSync(activeConfigFile, JSON.stringify(currentConfig, null, 2), 'utf-8');
         console.log('Saved config to', activeConfigFile);
     } catch (e) {
-        console.error('Failed to save config:', e);
+        if (e && (e.code === 'EROFS' || e.code === 'EACCES' || e.code === 'EISDIR')) {
+            console.log('[Config] Read-only environment: operating with in-memory configuration.');
+        } else {
+            console.error('Failed to save config:', e);
+        }
     }
 }
 

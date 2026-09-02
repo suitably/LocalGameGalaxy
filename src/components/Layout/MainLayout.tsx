@@ -1,11 +1,13 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import { Outlet, useLocation } from 'react-router-dom';
+import { useLayout } from '../../context/LayoutContext';
 import { GlobalHeader } from './GlobalHeader';
 import { FeedbackDialog } from '../feedback/FeedbackDialog';
 
 export const MainLayout: React.FC = () => {
     const location = useLocation();
+    const { headerHidden } = useLayout();
     const isGame = location.pathname.includes('/games/') || location.pathname.startsWith('/party');
 
     return (
@@ -22,7 +24,7 @@ export const MainLayout: React.FC = () => {
                 pl: 'var(--safe-area-inset-left, env(safe-area-inset-left, 0px))',
                 pr: 'var(--safe-area-inset-right, env(safe-area-inset-right, 0px))'
             }}>
-                <GlobalHeader />
+                {!headerHidden && <GlobalHeader />}
 
                 {isGame ? (
                     <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>

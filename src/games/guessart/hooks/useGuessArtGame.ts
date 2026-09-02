@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { LocalGameEngine } from '../logic/engine';
 import { mailboxService } from '../logic/mailboxService';
+import { gameRelayStorage } from '../../../lib/push/gameRelayStorage';
+import { pushClient } from '../../../lib/push/pushClient';
+import { playerAssignment } from '../logic/playerAssignment';
 import type {
   GuessArtGameRecord,
   GuessArtRound,
@@ -33,6 +36,22 @@ export const useGuessArtGame = (
   const [loading, setLoading] = useState<boolean>(Boolean(gameId));
   const [error, setError] = useState<Error | null>(null);
 
+  // 1. Game-Scoped Relay Parsing (Session only, without polluting global storage)
+  useEffect(() => {
+    if (!gameId || typeof window === 'undefined') return;
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
+      const hashParams = new URLSearchParams(hashQuery);
+      const relay = hashParams.get('gameRelay') || hashParams.get('relay') || searchParams.get('gameRelay') || searchParams.get('relay');
+      if (relay) {
+        gameRelayStorage.setGameRelay(gameId, relay);
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, [gameId]);
+
   const loadSnapshot = useCallback(async () => {
     if (!gameId) {
       setGame(null);
@@ -57,6 +76,22 @@ export const useGuessArtGame = (
   useEffect(() => {
     loadSnapshot();
   }, [loadSnapshot]);
+
+  // 2. Auto-Register Web Push for active local players in this game
+  const localPlayerIdsKey = game
+    ? game.players
+        .filter((p) => playerAssignment.isPlayerLocal(game.id, p.id, false))
+        .map((p) => p.id)
+        .join(',')
+    : '';
+
+  useEffect(() => {
+    if (!localPlayerIdsKey || !gameId) return;
+    const ids = localPlayerIdsKey.split(',').filter(Boolean);
+    for (const id of ids) {
+      pushClient.registerForGamePush(gameId, id);
+    }
+  }, [localPlayerIdsKey, gameId]);
 
   // Subscribe to ephemeral mailbox and track active screen game
   useEffect(() => {
@@ -91,11 +126,28 @@ export const useGuessArtGame = (
     };
   }, [gameId, language, loadSnapshot]);
 
-  const broadcastTurn = useCallback(async () => {
+  const broadcastTurn = useCallback(async (actionType?: 'draw' | 'guess', actorName?: string) => {
     if (!gameId) return;
     try {
       const snap = await LocalGameEngine.getGameSnapshot(gameId, language);
       await mailboxService.publishTurn(gameId, snap);
+
+      // Trigger Web Push to wake up closed background devices
+      const gameName = snap.game?.name || 'GuessArt';
+      const isDrawing = snap.game?.status === 'drawing' || snap.round?.status === 'drawing';
+      const isGuessing = snap.game?.status === 'guessing' || snap.round?.status === 'guessing';
+      const title = isDrawing ? `${gameName}: Du bist am Zeichnen!` : `${gameName}: Du bist am Raten!`;
+      const body = actorName
+        ? `${actorName} hat den Zug beendet. Du bist jetzt dran!`
+        : 'Ein neuer Zug wartet auf dich!';
+
+      await pushClient.sendGamePushNotification({
+        gameId,
+        title,
+        body,
+        url: `${window.location.origin}${window.location.pathname}#/games/guessart?gameId=${gameId}`,
+        action: actionType || (isDrawing ? 'draw' : isGuessing ? 'guess' : 'turn'),
+      });
     } catch (e) {
       console.warn('[useGuessArtGame] Failed to broadcast turn:', e);
     }

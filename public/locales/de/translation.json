@@ -17,6 +17,7 @@
   "hub": {
     "categories": {
       "all": "Alle Spiele",
+      "puzzle": "Rätsel & Denken",
       "dice": "Würfelspiele",
       "cards": "Kartenspiele",
       "drawing": "Zeichnen",
@@ -26,6 +27,14 @@
     }
   },
   "games": {
+    "wordle": {
+      "title": "Wordle",
+      "description": "Errate das 5-Buchstaben-Wort in 6 Versuchen. Spiele das Tagesrätsel oder fordere Freunde heraus."
+    },
+    "sudoku": {
+      "title": "Sudoku",
+      "description": "Klassisches 9x9 Zahlenrätsel mit 4 Schwierigkeitsstufen, Notizmodus und Bestzeiten."
+    },
     "werewolf": {
       "title": "Werwolf",
       "description": "Ein Spiel um Täuschung und Deduktion.",
@@ -470,7 +479,9 @@
     "modified": "Geändert",
     "reset": "Zurücksetzen",
     "delete": "Löschen",
-    "clear_all_players": "Alle Spieler löschen"
+    "clear_all_players": "Alle Spieler löschen",
+    "home": "Startseite",
+    "copied": "Kopiert!"
   },
   "settings": {
     "title": "Einstellungen",
@@ -499,7 +510,7 @@
   },
   "server": {
     "title": "Nexumia Server Verbindung",
-    "desc": "Verbinde dich mit einem Nexumia Server, um auf deine Songbibliothek zuzugreifen, Spielinhalte zu veröffentlichen und erweiterte Funktionen zu nutzen. Gib die Server-URL und das Sicherheitstoken ein.",
+    "desc": "Verbinde dich mit einem Nexumia Server, um deine Melodiq Karaoke-Songbibliothek zu streamen, Songs herunterzuladen und KI-Stimmtrennung zu nutzen. Partyspiele (GuessArt, Gartic Phone, Werwolf, Qwixx) laufen serverlos und benötigen diesen Server nicht.",
     "enable": "Server-Verbindung aktivieren",
     "url": "Server-URL",
     "token": "Sicherheitstoken",
@@ -513,7 +524,7 @@
     "conn_failed": "Verbindung fehlgeschlagen. URL oder Netzwerk prüfen.",
     "setup": {
       "title": "Server automatisch aufsetzen",
-      "subtitle": "Wähle deine bevorzugte Methode, um deinen eigenen Nexumia Server in wenigen Sekunden zu starten und zu verbinden.",
+      "subtitle": "Begleit-Server für Melodiq (Song-Bibliothek & Streaming). Partyspiele laufen serverlos.",
       "collapse_show": "Server Setup-Assistent anzeigen",
       "collapse_hide": "Setup-Assistent ausblenden",
       "copy": "Kopieren",
@@ -880,5 +891,85 @@
     "albumHeader": "Album",
     "hostControlsShow": "🎬 Der Host steuert die Album-Show",
     "inviteHelp": "📱 Freunde verbinden: Scanne den QR-Code mit weiteren Smartphones oder teile den Link."
+  },
+  "wordle": {
+    "mode": {
+      "daily": "Tagesrätsel 📅",
+      "practice": "Üben 🎯"
+    },
+    "not_enough_letters": "Nicht genügend Buchstaben!",
+    "congratulations": "Hervorragend! Wort erraten! 🎉",
+    "game_over": "Leider nicht geschafft!",
+    "new_word": "Neues Wort",
+    "play_again": "Nochmal spielen",
+    "copied_to_clipboard": "In die Zwischenablage kopiert! 📋",
+    "duel": {
+      "title": "Freund herausfordern ⚔️",
+      "desc": "Wähle ein beliebiges 5-Buchstaben-Wort. Dein Freund muss es erraten!",
+      "input_label": "Geheimes Wort (5 Buchstaben)",
+      "active_banner": "Du spielst ein Duell-Wort eines Freundes!",
+      "btn_tooltip": "Freund herausfordern"
+    },
+    "stats": {
+      "btn_tooltip": "Statistiken",
+      "played": "Gespielt",
+      "win_rate": "Gewonnen",
+      "current_streak": "Serie",
+      "max_streak": "Rekord",
+      "distribution": "Verteilung der Versuche"
+    },
+    "modal": {
+      "title_won": "Gewonnen! 🎉",
+      "title_lost": "Schade! 😔",
+      "title_stats": "Statistiken 📊",
+      "target_was": "Das gesuchte Wort war:"
+    },
+    "help": {
+      "title": "Spielregeln 📖",
+      "p1": "Errate das 5-Buchstaben-Wort in 6 Versuchen.",
+      "p2": "Nach jedem Versuch färben sich die Kacheln:",
+      "green": "Grün: Buchstabe ist an der richtigen Stelle.",
+      "yellow": "Gelb: Buchstabe kommt im Wort vor, aber an anderer Stelle.",
+      "gray": "Grau: Buchstabe kommt nicht im Wort vor."
+    }
+  },
+  "sudoku": {
+    "difficulty": {
+      "easy": "Leicht",
+      "medium": "Mittel",
+      "hard": "Schwer",
+      "expert": "Experte"
+    },
+    "mistakes": "Fehler",
+    "hints": "Hinweise",
+    "best_time": "Bestzeit",
+    "new_game": "Neues Spiel",
+    "actions": {
+      "undo": "Rückgängig (Ctrl+Z)",
+      "erase": "Löschen (Entf)",
+      "notes": "Notizen / Bleistift (N)",
+      "hint": "Hinweis (H)"
+    },
+    "notes_on": "Notizen AN",
+    "notes_off": "Notizen",
+    "victory": {
+      "title": "Gelöst! 🎉",
+      "new_record": "Neue persönliche Bestzeit!"
+    },
+    "game_over": {
+      "title": "Game Over 😔"
+    },
+    "stats": {
+      "title": "Sudoku Statistiken 📊",
+      "played": "Gespielt",
+      "completed": "Gelöst",
+      "best_times": "Bestzeiten"
+    },
+    "help": {
+      "title": "Sudoku Regeln 📖",
+      "p1": "Jede Zeile, Spalte und jeder 3x3-Block muss die Zahlen von 1 bis 9 genau einmal enthalten.",
+      "p2": "Nutze den Bleistift-Modus (Notizen), um mögliche Zahlenkandidaten in einer Zelle vorzumerken.",
+      "p3": "Bei 3 Fehlern ist die Runde verloren. Du kannst jederzeit Hinweise oder die Rückgängig-Funktion nutzen."
+    }
   }
 }

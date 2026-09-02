@@ -1,0 +1,11 @@
+name = "galaxy-push-relay"
+main = "worker.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+VAPID_SUBJECT = "mailto:admin@localgamegalaxy.app"
+
+# Optional: Enable KV for persistent multi-region push subscription storage across worker restarts
+# [[kv_namespaces]]
+# binding = "PUSH_KV"
+# id = "your-kv-namespace-id"

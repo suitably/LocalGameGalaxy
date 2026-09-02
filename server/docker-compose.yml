@@ -10,13 +10,14 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+      - "3001:3001"
     volumes:
       - ./music:/app/music:ro
-      - ./config.json:/app/config.json:ro
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - PLUGINS=relay,melodiq
+      - SECURITY_TOKEN=
+      - MUSIC_DIR=/app/music
       - ALLOWED_ORIGINS=*
 
   # 2. Zero-Config Public HTTPS Tunnel (Share with friends without port-forwarding)
@@ -46,3 +47,5 @@ services:
       - ./music:/app/music:z
     environment:
       - NODE_ENV=production
+      - PORT=3000
+      - MUSIC_DIR=/app/music

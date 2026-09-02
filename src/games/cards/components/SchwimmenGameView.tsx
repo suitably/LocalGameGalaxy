@@ -10,7 +10,6 @@ import {
   IconButton,
   Paper,
   Stack,
-  TextField,
   Tooltip,
   Typography,
   alpha,
@@ -18,19 +17,32 @@ import {
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import PoolIcon from '@mui/icons-material/Pool';
 import DangerousIcon from '@mui/icons-material/Dangerous';
-import WhatshotIcon from '@mui/icons-material/Whatshot';
+import FlashOnIcon from '@mui/icons-material/FlashOn';
+import HeartBrokenIcon from '@mui/icons-material/HeartBroken';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ReplayIcon from '@mui/icons-material/Replay';
 import HistoryIcon from '@mui/icons-material/History';
+import UndoIcon from '@mui/icons-material/Undo';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 import { useTranslation } from 'react-i18next';
-import { processSchwimmenRound } from '../logic/schwimmenEngine';
+import { adjustPlayerLives, processSchwimmenRound } from '../logic/schwimmenEngine';
 import type { CardPlayer } from '../logic/types';
 
 interface SchwimmenGameViewProps {
   initialPlayers: string[];
   defaultLives?: number;
   onExit: () => void;
+}
+
+interface RoundHistoryEntry {
+  round: number;
+  description: string;
+  losers: string[];
+  isBlitz: boolean;
+  blitzWinnerName?: string;
+  snapshot: CardPlayer[];
 }
 
 export const SchwimmenGameView: React.FC<SchwimmenGameViewProps> = ({
@@ -55,53 +67,86 @@ export const SchwimmenGameView: React.FC<SchwimmenGameViewProps> = ({
   );
 
   const [roundNumber, setRoundNumber] = useState(1);
-  const [currentInputs, setCurrentInputs] = useState<Record<string, string>>({});
+  const [selectedLoserIds, setSelectedLoserIds] = useState<string[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [roundHistory, setRoundHistory] = useState<
-    Array<{ round: number; entries: Array<{ name: string; score: number; lostLife: boolean; status: string }> }>
-  >([]);
+  const [roundHistory, setRoundHistory] = useState<RoundHistoryEntry[]>([]);
   const [winner, setWinner] = useState<CardPlayer | null>(null);
+  const [blitzConfirmPlayer, setBlitzConfirmPlayer] = useState<CardPlayer | null>(null);
 
-  const handleScoreChange = (playerId: string, val: string) => {
-    setCurrentInputs((prev) => ({ ...prev, [playerId]: val }));
-  };
+  const activePlayers = players.filter((p) => !p.isEliminated);
 
-  const handleSetFeuer = (playerId: string) => {
-    setCurrentInputs((prev) => ({ ...prev, [playerId]: '33' }));
+  const handleToggleLoser = (playerId: string) => {
+    setSelectedLoserIds((prev) =>
+      prev.includes(playerId) ? prev.filter((id) => id !== playerId) : [...prev, playerId],
+    );
   };
 
   const handleEvaluateRound = () => {
-    const scoresMap: Record<string, number> = {};
-    for (const p of players) {
-      if (!p.isEliminated) {
-        const raw = currentInputs[p.id];
-        const num = parseFloat(raw || '0');
-        scoresMap[p.id] = isNaN(num) ? 0 : num;
-      }
-    }
+    if (selectedLoserIds.length === 0) return;
 
-    const result = processSchwimmenRound(players, { playerScores: scoresMap });
+    const result = processSchwimmenRound(players, { losers: selectedLoserIds });
+    const loserNames = players
+      .filter((p) => selectedLoserIds.includes(p.id))
+      .map((p) => p.name)
+      .join(', ');
 
-    const historyEntry = {
+    const newHistoryEntry: RoundHistoryEntry = {
       round: roundNumber,
-      entries: players
-        .filter((p) => !p.isEliminated)
-        .map((p) => ({
-          name: p.name,
-          score: scoresMap[p.id] || 0,
-          lostLife: result.losers.includes(p.id),
-          status: p.isSwimming ? 'swimming' : p.lives <= 1 && result.losers.includes(p.id) ? 'swimming' : 'active',
-        })),
+      description: `${loserNames} ${t('games.cards.schwimmen.lost_life_desc', 'verliert 1 Leben')}`,
+      losers: selectedLoserIds,
+      isBlitz: false,
+      snapshot: players,
     };
 
-    setRoundHistory((prev) => [historyEntry, ...prev]);
+    setRoundHistory((prev) => [newHistoryEntry, ...prev]);
     setPlayers(result.updatedPlayers);
-    setCurrentInputs({});
+    setSelectedLoserIds([]);
     setRoundNumber((r) => r + 1);
 
     if (result.isGameOver && result.winner) {
       setWinner(result.winner);
     }
+  };
+
+  const handleExecuteBlitz = (player: CardPlayer) => {
+    const result = processSchwimmenRound(players, { blitzWinnerId: player.id });
+    const penalizedNames = players
+      .filter((p) => !p.isEliminated && p.id !== player.id)
+      .map((p) => p.name)
+      .join(', ');
+
+    const newHistoryEntry: RoundHistoryEntry = {
+      round: roundNumber,
+      description: `⚡ Blitz von ${player.name}! (${penalizedNames} -1 Leben)`,
+      losers: result.losers,
+      isBlitz: true,
+      blitzWinnerName: player.name,
+      snapshot: players,
+    };
+
+    setRoundHistory((prev) => [newHistoryEntry, ...prev]);
+    setPlayers(result.updatedPlayers);
+    setSelectedLoserIds([]);
+    setBlitzConfirmPlayer(null);
+    setRoundNumber((r) => r + 1);
+
+    if (result.isGameOver && result.winner) {
+      setWinner(result.winner);
+    }
+  };
+
+  const handleUndo = () => {
+    if (roundHistory.length === 0) return;
+    const lastEntry = roundHistory[0];
+    setPlayers(lastEntry.snapshot);
+    setRoundHistory((prev) => prev.slice(1));
+    setRoundNumber((r) => Math.max(1, r - 1));
+    setSelectedLoserIds([]);
+    setWinner(null);
+  };
+
+  const handleAdjustSingleLife = (playerId: string, delta: number) => {
+    setPlayers((prev) => adjustPlayerLives(prev, playerId, delta, defaultLives));
   };
 
   const handleRestart = () => {
@@ -119,12 +164,11 @@ export const SchwimmenGameView: React.FC<SchwimmenGameViewProps> = ({
       })),
     );
     setRoundNumber(1);
-    setCurrentInputs({});
+    setSelectedLoserIds([]);
     setRoundHistory([]);
     setWinner(null);
+    setBlitzConfirmPlayer(null);
   };
-
-  const activePlayersCount = players.filter((p) => !p.isEliminated).length;
 
   return (
     <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto', py: { xs: 1, sm: 2 } }}>
@@ -145,22 +189,55 @@ export const SchwimmenGameView: React.FC<SchwimmenGameViewProps> = ({
 
         <Box sx={{ display: 'flex', gap: 0.5 }}>
           {roundHistory.length > 0 && (
-            <IconButton size="small" onClick={() => setHistoryOpen(true)}>
-              <HistoryIcon fontSize="small" />
-            </IconButton>
+            <Tooltip title={t('games.cards.undo', 'Rückgängig')}>
+              <IconButton size="small" onClick={handleUndo}>
+                <UndoIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           )}
-          <IconButton size="small" onClick={handleRestart}>
-            <ReplayIcon fontSize="small" />
-          </IconButton>
+          {roundHistory.length > 0 && (
+            <Tooltip title={t('games.cards.round_history', 'Rundenhistorie')}>
+              <IconButton size="small" onClick={() => setHistoryOpen(true)}>
+                <HistoryIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+          <Tooltip title={t('common.restart', 'Neu starten')}>
+            <IconButton size="small" onClick={handleRestart}>
+              <ReplayIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Box>
       </Box>
+
+      {/* Instructions Hint */}
+      {!winner && activePlayers.length > 1 && (
+        <Paper
+          sx={{
+            p: 1.5,
+            mb: 2,
+            borderRadius: 3,
+            bgcolor: 'rgba(0, 172, 193, 0.08)',
+            border: '1px solid rgba(0, 172, 193, 0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 1,
+          }}
+        >
+          <Typography variant="body2" sx={{ color: '#80deea', fontWeight: 600 }}>
+            ℹ️ {t('games.cards.schwimmen.hint', 'Markiere den Verlierer mit 💔 oder tippe bei 31 auf ⚡ Blitz.')}
+          </Typography>
+        </Paper>
+      )}
 
       {/* Players Life Cards */}
       <Stack spacing={1.5} sx={{ mb: 3 }}>
         {players.map((player) => {
           const isDead = player.isEliminated;
           const isSwim = player.isSwimming;
-          const currentVal = currentInputs[player.id] || '';
+          const isMarkedLoser = selectedLoserIds.includes(player.id);
 
           return (
             <Paper
@@ -171,12 +248,16 @@ export const SchwimmenGameView: React.FC<SchwimmenGameViewProps> = ({
                 borderRadius: 3,
                 bgcolor: isDead
                   ? 'rgba(255, 255, 255, 0.02)'
+                  : isMarkedLoser
+                  ? alpha('#f44336', 0.15)
                   : isSwim
                   ? 'rgba(0, 172, 193, 0.12)'
                   : 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid',
+                border: '2px solid',
                 borderColor: isDead
                   ? 'transparent'
+                  : isMarkedLoser
+                  ? '#f44336'
                   : isSwim
                   ? '#00acc1'
                   : 'rgba(255, 255, 255, 0.1)',
@@ -186,17 +267,18 @@ export const SchwimmenGameView: React.FC<SchwimmenGameViewProps> = ({
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
                 gap: 1.5,
+                transition: 'all 0.2s ease',
               }}
             >
               {/* Player Name and Lives */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 160 }}>
                 <Box>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
                     {player.name}
                   </Typography>
 
-                  {/* Status & Lives badge */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.2 }}>
+                  {/* Status & Lives Display */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.4 }}>
                     {isDead ? (
                       <Chip
                         icon={<DangerousIcon fontSize="small" />}
@@ -204,7 +286,7 @@ export const SchwimmenGameView: React.FC<SchwimmenGameViewProps> = ({
                         size="small"
                         color="error"
                         variant="outlined"
-                        sx={{ fontSize: '0.75rem' }}
+                        sx={{ fontSize: '0.75rem', fontWeight: 700 }}
                       />
                     ) : isSwim ? (
                       <Chip
@@ -212,49 +294,92 @@ export const SchwimmenGameView: React.FC<SchwimmenGameViewProps> = ({
                         label={t('games.cards.swimming_status', 'Schwimmt (0 Leben)')}
                         size="small"
                         sx={{
-                          bgcolor: alpha('#00acc1', 0.25),
+                          bgcolor: alpha('#00acc1', 0.3),
                           color: '#80deea',
-                          fontWeight: 700,
+                          fontWeight: 800,
                           fontSize: '0.75rem',
+                          border: '1px solid #00acc1',
                         }}
                       />
                     ) : (
-                      Array.from({ length: player.lives }).map((_, i) => (
-                        <FavoriteIcon
-                          key={i}
-                          sx={{ fontSize: 18, color: '#f44336' }}
-                        />
-                      ))
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.3 }}>
+                        {Array.from({ length: player.lives }).map((_, i) => (
+                          <FavoriteIcon
+                            key={i}
+                            sx={{ fontSize: 20, color: '#f44336' }}
+                          />
+                        ))}
+                      </Box>
                     )}
                   </Box>
                 </Box>
               </Box>
 
-              {/* Point Input & Feuer Trigger */}
-              {!isDead && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <TextField
+              {/* Direct Round Actions */}
+              {!isDead && !winner && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  {/* Mark as Loser toggle button */}
+                  <Button
+                    variant={isMarkedLoser ? 'contained' : 'outlined'}
+                    color="error"
                     size="small"
-                    type="number"
-                    placeholder="Punkte (0-31)"
-                    value={currentVal}
-                    onChange={(e) => handleScoreChange(player.id, e.target.value)}
-                    sx={{ width: { xs: 120, sm: 140 } }}
-                    inputProps={{ step: '0.5', min: '0', max: '33' }}
-                  />
+                    startIcon={<HeartBrokenIcon />}
+                    onClick={() => handleToggleLoser(player.id)}
+                    sx={{
+                      borderRadius: 50,
+                      fontWeight: 700,
+                      textTransform: 'none',
+                      px: 1.5,
+                      boxShadow: isMarkedLoser ? '0 0 12px rgba(244, 67, 54, 0.5)' : 'none',
+                    }}
+                  >
+                    {isMarkedLoser
+                      ? t('games.cards.schwimmen.marked_loser', 'Verliert Leben ✓')
+                      : t('games.cards.schwimmen.lose_life_btn', '-1 Leben')}
+                  </Button>
 
-                  <Tooltip title={t('games.cards.feuer_tooltip', 'Feuer / 3 Asse (33 Punkte)')}>
+                  {/* Instant Blitz Button */}
+                  <Tooltip title={t('games.cards.schwimmen.blitz_tooltip', 'Blitz! (31) - Alle anderen verlieren 1 Leben')}>
                     <Button
-                      variant={currentVal === '33' ? 'contained' : 'outlined'}
-                      color="warning"
+                      variant="contained"
                       size="small"
-                      startIcon={<WhatshotIcon />}
-                      onClick={() => handleSetFeuer(player.id)}
-                      sx={{ textTransform: 'none', px: 1, minWidth: 0, borderRadius: 2 }}
+                      startIcon={<FlashOnIcon />}
+                      onClick={() => setBlitzConfirmPlayer(player)}
+                      sx={{
+                        bgcolor: '#ffb300',
+                        color: '#000',
+                        fontWeight: 800,
+                        borderRadius: 50,
+                        textTransform: 'none',
+                        px: 1.5,
+                        '&:hover': { bgcolor: '#ffa000' },
+                      }}
                     >
-                      {t('games.cards.feuer', 'Feuer')}
+                      {t('games.cards.schwimmen.blitz_btn', '⚡ Blitz!')}
                     </Button>
                   </Tooltip>
+
+                  {/* Manual +/- adjustment */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', ml: 0.5 }}>
+                    <Tooltip title={t('games.cards.schwimmen.minus_life', 'Leben abziehen')}>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleAdjustSingleLife(player.id, -1)}
+                        sx={{ p: 0.4, opacity: 0.6, '&:hover': { opacity: 1 } }}
+                      >
+                        <RemoveIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title={t('games.cards.schwimmen.plus_life', 'Leben hinzufügen')}>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleAdjustSingleLife(player.id, 1)}
+                        sx={{ p: 0.4, opacity: 0.6, '&:hover': { opacity: 1 } }}
+                      >
+                        <AddIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
                 </Box>
               )}
             </Paper>
@@ -263,27 +388,36 @@ export const SchwimmenGameView: React.FC<SchwimmenGameViewProps> = ({
       </Stack>
 
       {/* Evaluate round button */}
-      {!winner && activePlayersCount > 1 && (
+      {!winner && activePlayers.length > 1 && (
         <Button
           variant="contained"
-          color="primary"
+          color="error"
           size="large"
           fullWidth
+          disabled={selectedLoserIds.length === 0}
           onClick={handleEvaluateRound}
           sx={{
             py: 1.5,
             fontWeight: 800,
             fontSize: '1.05rem',
             borderRadius: 50,
-            boxShadow: '0 4px 16px rgba(0, 172, 193, 0.4)',
-            background: 'linear-gradient(90deg, #00acc1, #00838f)',
+            boxShadow:
+              selectedLoserIds.length > 0
+                ? '0 4px 20px rgba(244, 67, 54, 0.4)'
+                : 'none',
+            background:
+              selectedLoserIds.length > 0
+                ? 'linear-gradient(90deg, #d32f2f, #c2185b)'
+                : undefined,
           }}
         >
-          {t('games.cards.evaluate_round', 'Runde auswerten')}
+          {selectedLoserIds.length === 0
+            ? t('games.cards.schwimmen.select_loser_btn', 'Verlierer auswählen')
+            : `${t('games.cards.schwimmen.deduct_lives_btn', 'Runde abschließen')} (${selectedLoserIds.length} ${t('games.cards.schwimmen.lives_deducted', 'Leben abziehen')})`}
         </Button>
       )}
 
-      {/* Winner Celebration Modal */}
+      {/* Winner Celebration Screen */}
       {winner && (
         <Paper
           elevation={6}
@@ -315,31 +449,53 @@ export const SchwimmenGameView: React.FC<SchwimmenGameViewProps> = ({
         </Paper>
       )}
 
+      {/* Blitz Confirmation Dialog */}
+      <Dialog
+        open={Boolean(blitzConfirmPlayer)}
+        onClose={() => setBlitzConfirmPlayer(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 800, color: '#ffb300', display: 'flex', alignItems: 'center', gap: 1 }}>
+          <FlashOnIcon /> {t('games.cards.schwimmen.blitz_dialog_title', '⚡ Blitz / Feuer!')}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ mt: 1 }}>
+            <strong>{blitzConfirmPlayer?.name}</strong> {t('games.cards.schwimmen.blitz_dialog_desc', 'hat 31 / Blitz! Alle anderen aktiven Spieler verlieren sofort 1 Leben.')}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setBlitzConfirmPlayer(null)} sx={{ color: 'text.secondary' }}>
+            {t('common.cancel', 'Abbrechen')}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => blitzConfirmPlayer && handleExecuteBlitz(blitzConfirmPlayer)}
+            sx={{
+              bgcolor: '#ffb300',
+              color: '#000',
+              fontWeight: 800,
+              borderRadius: 50,
+              '&:hover': { bgcolor: '#ffa000' },
+            }}
+          >
+            {t('games.cards.schwimmen.confirm_blitz', 'Blitz ausführen')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Round History Dialog */}
       <Dialog open={historyOpen} onClose={() => setHistoryOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ fontWeight: 800 }}>{t('games.cards.round_history', 'Rundenhistorie')}</DialogTitle>
         <DialogContent dividers>
           {roundHistory.map((rh) => (
             <Box key={rh.round} sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#00acc1' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 800, color: rh.isBlitz ? '#ffb300' : '#00acc1' }}>
                 {t('games.cards.round', 'Runde')} {rh.round}
               </Typography>
-              {rh.entries.map((e, idx) => (
-                <Box
-                  key={idx}
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: '0.85rem',
-                    color: e.lostLife ? 'error.light' : 'text.primary',
-                  }}
-                >
-                  <span>
-                    {e.name}: {e.score}P
-                  </span>
-                  <span>{e.lostLife ? '💔 -1 Leben' : '✓ Weiter'}</span>
-                </Box>
-              ))}
+              <Typography variant="body2" sx={{ color: 'text.primary' }}>
+                {rh.description}
+              </Typography>
             </Box>
           ))}
         </DialogContent>
@@ -350,3 +506,4 @@ export const SchwimmenGameView: React.FC<SchwimmenGameViewProps> = ({
     </Box>
   );
 };
+

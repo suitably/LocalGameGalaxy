@@ -17,6 +17,7 @@
   "hub": {
     "categories": {
       "all": "All Games",
+      "puzzle": "Puzzles & Logic",
       "dice": "Dice Games",
       "cards": "Card Games",
       "drawing": "Drawing",
@@ -26,6 +27,14 @@
     }
   },
   "games": {
+    "wordle": {
+      "title": "Wordle",
+      "description": "Guess the hidden 5-letter word in 6 attempts. Play the daily challenge or duel friends."
+    },
+    "sudoku": {
+      "title": "Sudoku",
+      "description": "Classic 9x9 number puzzle with 4 difficulty levels, pencil notes, and best times."
+    },
     "werewolf": {
       "title": "Werewolf",
       "description": "A game of deception and deduction.",
@@ -470,7 +479,9 @@
     "modified": "Modified",
     "reset": "Reset",
     "delete": "Delete",
-    "clear_all_players": "Clear All Players"
+    "clear_all_players": "Clear All Players",
+    "home": "Home",
+    "copied": "Copied!"
   },
   "settings": {
     "title": "Settings",
@@ -499,7 +510,7 @@
   },
   "server": {
     "title": "Nexumia Server Connection",
-    "desc": "Connect to a Nexumia Server to access your song library, publish game content, and enable advanced features. Enter the server URL and security token.",
+    "desc": "Connect to a Nexumia Server to stream your Melodiq karaoke song library, download tracks, and use AI vocal separation. Party games (GuessArt, Gartic Phone, Werewolf, Qwixx) run serverless and do not require this server.",
     "enable": "Enable Server Connection",
     "url": "Server URL",
     "token": "Security Token",
@@ -513,7 +524,7 @@
     "conn_failed": "Connection Failed. Check URL or Network.",
     "setup": {
       "title": "Automatic Server Setup",
-      "subtitle": "Choose your preferred method to launch and connect your own Nexumia Server in seconds.",
+      "subtitle": "Companion server for Melodiq (karaoke song library & streaming). Party games operate serverless.",
       "collapse_show": "Show Server Setup Assistant",
       "collapse_hide": "Hide Setup Assistant",
       "copy": "Copy",
@@ -890,5 +901,85 @@
     "albumHeader": "Album",
     "hostControlsShow": "🎬 The host controls the album show",
     "inviteHelp": "📱 Invite friends: Scan the QR code with other smartphones or share the link."
+  },
+  "wordle": {
+    "mode": {
+      "daily": "Daily Challenge 📅",
+      "practice": "Practice 🎯"
+    },
+    "not_enough_letters": "Not enough letters!",
+    "congratulations": "Splendid! Word guessed! 🎉",
+    "game_over": "Game over! Better luck next time.",
+    "new_word": "New Word",
+    "play_again": "Play Again",
+    "copied_to_clipboard": "Copied to clipboard! 📋",
+    "duel": {
+      "title": "Challenge a Friend ⚔️",
+      "desc": "Choose any 5-letter word for your friend to guess!",
+      "input_label": "Secret Word (5 letters)",
+      "active_banner": "You are solving a challenge from a friend!",
+      "btn_tooltip": "Challenge Friend"
+    },
+    "stats": {
+      "btn_tooltip": "Statistics",
+      "played": "Played",
+      "win_rate": "Win %",
+      "current_streak": "Streak",
+      "max_streak": "Max Streak",
+      "distribution": "Guess Distribution"
+    },
+    "modal": {
+      "title_won": "Victory! 🎉",
+      "title_lost": "Game Over! 😔",
+      "title_stats": "Statistics 📊",
+      "target_was": "The word was:"
+    },
+    "help": {
+      "title": "How to Play 📖",
+      "p1": "Guess the 5-letter word in 6 tries.",
+      "p2": "After each guess, the color of the tiles will change:",
+      "green": "Green: Letter is in the word and in the correct spot.",
+      "yellow": "Yellow: Letter is in the word but in the wrong spot.",
+      "gray": "Gray: Letter is not in the word in any spot."
+    }
+  },
+  "sudoku": {
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard",
+      "expert": "Expert"
+    },
+    "mistakes": "Mistakes",
+    "hints": "Hints",
+    "best_time": "Best Time",
+    "new_game": "New Game",
+    "actions": {
+      "undo": "Undo (Ctrl+Z)",
+      "erase": "Erase (Del)",
+      "notes": "Notes / Pencil (N)",
+      "hint": "Hint (H)"
+    },
+    "notes_on": "Notes ON",
+    "notes_off": "Notes",
+    "victory": {
+      "title": "Solved! 🎉",
+      "new_record": "New personal best time!"
+    },
+    "game_over": {
+      "title": "Game Over 😔"
+    },
+    "stats": {
+      "title": "Sudoku Statistics 📊",
+      "played": "Played",
+      "completed": "Solved",
+      "best_times": "Best Times"
+    },
+    "help": {
+      "title": "Sudoku Rules 📖",
+      "p1": "Every row, column, and 3x3 box must contain the digits 1 through 9 exactly once.",
+      "p2": "Use the pencil mode (Notes) to mark candidate numbers in empty cells.",
+      "p3": "After 3 mistakes, the game is over. You can use hints and undo at any time."
+    }
   }
 }

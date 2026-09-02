@@ -25,5 +25,6 @@ This directory contains task checklists tracking the progress of work. Files are
 - [PWA & Smartphone UI Enhancement Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/pwa-mobile-ui-tasks.md)
 - [GuessArt Local-First Integration Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/guessart-tasks.md)
 - [Qwixx Sheet Variants & Selector Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/qwixx-sheet-variants-tasks.md)
+- [Knister Custom Dice & Manual Input Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/knister-custom-dice-tasks.md)
 
 ID: DOCS-TASKS-SUMMARY

@@ -29,7 +29,7 @@ export const SetupDockerTab: React.FC<SetupDockerTabProps> = ({ token, downloadD
     const [copiedRun, setCopiedRun] = useState(false);
     const [copiedCompose, setCopiedCompose] = useState(false);
 
-    const dockerRunCmd = `docker run -d --name galaxy-server -p 3000:3000 -e SECURITY_TOKEN="${token}" -v $(pwd)/music:/app/music localgamegalaxy/server:latest`;
+    const dockerRunCmd = `docker run -d --name galaxy-server -p 3000:3000 -p 3001:3001 -e SECURITY_TOKEN="${token}" -v $(pwd)/music:/app/music localgamegalaxy/server:latest`;
 
     const dockerComposeYaml = `services:
   galaxy-server:

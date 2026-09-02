@@ -6,8 +6,12 @@ const { resolveSecurePath } = require('../utils/helpers');
 
 const router = express.Router();
 const playlistsRouter = require('./playlists');
+const pushRouter = require('./push');
 
 const { requireMasterToken } = require('../middleware/auth');
+
+// --- PUSH RELAY ROUTER ---
+router.use('/api/push', pushRouter);
 
 // Import controllers
 const viewController = require('../controllers/viewController');

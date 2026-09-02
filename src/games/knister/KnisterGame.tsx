@@ -15,6 +15,8 @@ import {
 } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import CasinoIcon from '@mui/icons-material/Casino';
+import UndoIcon from '@mui/icons-material/Undo';
 import { useTranslation } from 'react-i18next';
 import { initKnisterI18n } from './i18n';
 import { usePageTitle } from '../../context/TitleContext';
@@ -24,10 +26,13 @@ import { knisterReducer, INITIAL_KNISTER_STATE } from './logic/knisterReducer';
 import type { KnisterState } from './logic/types';
 import { KnisterBoard } from './components/KnisterBoard';
 import { KnisterDiceRoller } from './components/KnisterDiceRoller';
+import { KnisterNumberBar } from './components/KnisterNumberBar';
+import { KnisterNumberPickerModal } from './components/KnisterNumberPickerModal';
 import { KnisterCombinationsLegend } from './components/KnisterCombinationsLegend';
 import { KnisterGameOverModal } from './components/KnisterGameOverModal';
 
 const STORAGE_KEY_KNISTER_STATE = 'knister_current_game';
+const STORAGE_KEY_SHOW_DICE = 'knister_show_dice';
 
 export const KnisterGame: React.FC = () => {
   initKnisterI18n();
@@ -41,19 +46,28 @@ export const KnisterGame: React.FC = () => {
       return {
         ...initial,
         ...saved,
+        moveHistory: Array.isArray(saved.moveHistory) ? saved.moveHistory : [],
       };
     }
     return initial;
   });
 
+  const [showDice, setShowDice] = useState<boolean>(() => storage.get(STORAGE_KEY_SHOW_DICE, 'true') === 'true');
+  const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
+  const [pickerTargetCell, setPickerTargetCell] = useState<{ row: number; col: number } | null>(null);
   const [legendOpen, setLegendOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [gameOverModalOpen, setGameOverModalOpen] = useState(false);
 
-  // Sync to storage
+  // Sync state to storage
   useEffect(() => {
     storage.setJson(STORAGE_KEY_KNISTER_STATE, state);
   }, [state]);
+
+  // Sync showDice to storage
+  useEffect(() => {
+    storage.set(STORAGE_KEY_SHOW_DICE, String(showDice));
+  }, [showDice]);
 
   // Open game over modal when game ends
   useEffect(() => {
@@ -65,21 +79,50 @@ export const KnisterGame: React.FC = () => {
   const activePlayer = state.players[state.activePlayerIndex] || state.players[0];
 
   const handleRollDice = useCallback((d1: number, d2: number) => {
+    setSelectedNumber(null);
     dispatch({ type: 'ROLL_DICE', die1: d1, die2: d2 });
   }, []);
 
   const handleCellClick = useCallback(
     (row: number, col: number) => {
-      dispatch({ type: 'PLACE_NUMBER', row, col, playerId: activePlayer.id });
+      if (selectedNumber !== null) {
+        dispatch({ type: 'PLACE_NUMBER', row, col, playerId: activePlayer.id, value: selectedNumber });
+        setSelectedNumber(null);
+      } else if (state.currentRoll !== null) {
+        dispatch({ type: 'PLACE_NUMBER', row, col, playerId: activePlayer.id });
+      }
+    },
+    [activePlayer.id, selectedNumber, state.currentRoll],
+  );
+
+  const handleOpenPicker = useCallback((row: number, col: number) => {
+    setPickerTargetCell({ row, col });
+  }, []);
+
+  const handlePickerSelectNumber = useCallback(
+    (num: number, row: number, col: number) => {
+      dispatch({ type: 'PLACE_NUMBER', row, col, playerId: activePlayer.id, value: num });
+      setSelectedNumber(null);
+      setPickerTargetCell(null);
     },
     [activePlayer.id],
   );
 
+  const handleUndo = useCallback(() => {
+    dispatch({ type: 'UNDO_MOVE' });
+    setSelectedNumber(null);
+    setPickerTargetCell(null);
+  }, []);
+
   const handleNewGame = useCallback(() => {
     dispatch({ type: 'NEW_GAME' });
+    setSelectedNumber(null);
+    setPickerTargetCell(null);
     setResetDialogOpen(false);
     setGameOverModalOpen(false);
   }, []);
+
+  const hasActiveSum = state.currentRoll !== null || selectedNumber !== null;
 
   return (
     <Container maxWidth="md" sx={{ py: { xs: 1.5, sm: 3 }, px: { xs: 1, sm: 2 } }}>
@@ -89,12 +132,12 @@ export const KnisterGame: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          mb: 1,
+          mb: 1.5,
           flexWrap: 'wrap',
           gap: 1,
         }}
       >
-        <Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography
             variant="h4"
             component="h1"
@@ -111,6 +154,39 @@ export const KnisterGame: React.FC = () => {
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {/* Virtual Dice Toggle Button */}
+          <Tooltip title={t('games.knister.show_dice_tooltip', 'Virtuelle Würfel ein-/ausblenden')}>
+            <Button
+              variant={showDice ? 'contained' : 'outlined'}
+              size="small"
+              color="secondary"
+              startIcon={<CasinoIcon />}
+              onClick={() => setShowDice((prev) => !prev)}
+              sx={{ borderRadius: 50, fontWeight: 700, textTransform: 'none' }}
+            >
+              {showDice ? t('games.knister.hide_dice', 'Würfel') : t('games.knister.show_dice', 'Würfel')}
+            </Button>
+          </Tooltip>
+
+          {/* Undo Button */}
+          <Tooltip title={t('games.knister.undo_tooltip', 'Letzten Eintrag rückgängig machen')}>
+            <span>
+              <IconButton
+                onClick={handleUndo}
+                disabled={!state.moveHistory || state.moveHistory.length === 0 || state.isGameOver}
+                color="inherit"
+                size="small"
+                sx={{
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  '&.Mui-disabled': { opacity: 0.35 },
+                }}
+              >
+                <UndoIcon fontSize="small" />
+              </IconButton>
+            </span>
+          </Tooltip>
+
+          {/* Rules / Legend Button */}
           <Tooltip title={t('games.knister.show_legend', 'Punkteübersicht')}>
             <Button
               variant="outlined"
@@ -123,6 +199,7 @@ export const KnisterGame: React.FC = () => {
             </Button>
           </Tooltip>
 
+          {/* Reset Game Button */}
           <Tooltip title={t('games.knister.new_game', 'Neues Spiel')}>
             <IconButton onClick={() => setResetDialogOpen(true)} color="inherit" size="small">
               <ReplayIcon />
@@ -147,13 +224,24 @@ export const KnisterGame: React.FC = () => {
         </Box>
       )}
 
-      {/* Dice Roller Section */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
-        <KnisterDiceRoller
-          currentRoll={state.currentRoll}
-          rollCount={state.rollCount}
-          rollHistory={state.rollHistory}
-          onRoll={handleRollDice}
+      {/* Optional Virtual Dice Roller (im selben Stil wie bei Qwixx) */}
+      {showDice && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+          <KnisterDiceRoller
+            currentRoll={state.currentRoll}
+            rollCount={state.rollCount}
+            rollHistory={state.rollHistory}
+            onRoll={handleRollDice}
+            disabled={state.isGameOver}
+          />
+        </Box>
+      )}
+
+      {/* Number Selection Bar (2 to 12) for custom/physical dice */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
+        <KnisterNumberBar
+          selectedNumber={selectedNumber}
+          onSelectNumber={(num) => setSelectedNumber(num)}
           disabled={state.isGameOver}
         />
       </Box>
@@ -162,8 +250,19 @@ export const KnisterGame: React.FC = () => {
       <KnisterBoard
         grid={activePlayer.grid}
         currentSum={state.currentRoll ? state.currentRoll.sum : null}
+        selectedNumber={selectedNumber}
+        targetPickerCell={pickerTargetCell}
         onCellClick={handleCellClick}
+        onCellOpenPicker={hasActiveSum ? undefined : handleOpenPicker}
         disabled={state.isGameOver}
+      />
+
+      {/* Direct Cell Number Picker Modal (Numpad) */}
+      <KnisterNumberPickerModal
+        open={pickerTargetCell !== null}
+        targetCell={pickerTargetCell}
+        onSelectNumber={handlePickerSelectNumber}
+        onClose={() => setPickerTargetCell(null)}
       />
 
       {/* Combinations Legend Dialog */}

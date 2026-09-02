@@ -10,7 +10,51 @@ describe('Schwimmen (31) Engine', () => {
     { id: 'p3', name: 'Charlie', lives: 1, isSwimming: false, isEliminated: false, score: 0, roundScores: [], bids: [], tricksWon: [] },
   ];
 
-  it('deducts a life from the player with the lowest score', () => {
+  it('deducts a life directly from specified loser(s)', () => {
+    const players = createTestPlayers();
+    const result = processSchwimmenRound(players, {
+      losers: ['p3'],
+    });
+
+    expect(result.losers).toEqual(['p3']);
+    const p3 = result.updatedPlayers.find((p) => p.id === 'p3');
+    expect(p3?.lives).toBe(0);
+    expect(p3?.isSwimming).toBe(true); // Charlie goes to swimming
+    expect(result.isGameOver).toBe(false);
+  });
+
+  it('handles tied losers losing a life simultaneously', () => {
+    const players = createTestPlayers();
+    const result = processSchwimmenRound(players, {
+      losers: ['p1', 'p2'],
+    });
+
+    expect(result.losers).toEqual(['p1', 'p2']);
+    const p1 = result.updatedPlayers.find((p) => p.id === 'p1');
+    const p2 = result.updatedPlayers.find((p) => p.id === 'p2');
+    expect(p1?.lives).toBe(2);
+    expect(p2?.lives).toBe(2);
+  });
+
+  it('causes all other players to lose a life if someone calls Blitz (blitzWinnerId)', () => {
+    const players = createTestPlayers();
+    const result = processSchwimmenRound(players, {
+      blitzWinnerId: 'p1',
+    });
+
+    expect(result.isFeuer).toBe(true);
+    expect(result.blitzWinnerId).toBe('p1');
+    expect(result.losers).toEqual(['p2', 'p3']);
+    const p1 = result.updatedPlayers.find((p) => p.id === 'p1');
+    const p2 = result.updatedPlayers.find((p) => p.id === 'p2');
+    const p3 = result.updatedPlayers.find((p) => p.id === 'p3');
+    expect(p1?.lives).toBe(3);
+    expect(p2?.lives).toBe(2);
+    expect(p3?.lives).toBe(0);
+    expect(p3?.isSwimming).toBe(true);
+  });
+
+  it('deducts a life from the player with the lowest score (legacy score mode)', () => {
     const players = createTestPlayers();
     const result = processSchwimmenRound(players, {
       playerScores: { p1: 30, p2: 25, p3: 20 },
@@ -19,7 +63,7 @@ describe('Schwimmen (31) Engine', () => {
     expect(result.losers).toEqual(['p3']);
     const p3 = result.updatedPlayers.find((p) => p.id === 'p3');
     expect(p3?.lives).toBe(0);
-    expect(p3?.isSwimming).toBe(true); // Charlie goes to swimming
+    expect(p3?.isSwimming).toBe(true);
   });
 
   it('eliminates a swimming player when they lose again', () => {
@@ -29,7 +73,7 @@ describe('Schwimmen (31) Engine', () => {
     ];
 
     const result = processSchwimmenRound(players, {
-      playerScores: { p1: 28, p2: 17 },
+      losers: ['p2'],
     });
 
     expect(result.losers).toEqual(['p2']);
@@ -38,18 +82,6 @@ describe('Schwimmen (31) Engine', () => {
     expect(p2?.isSwimming).toBe(false);
     expect(result.isGameOver).toBe(true);
     expect(result.winner?.id).toBe('p1');
-  });
-
-  it('causes all other players to lose a life if someone hits Feuer (33)', () => {
-    const players = createTestPlayers();
-    const result = processSchwimmenRound(players, {
-      playerScores: { p1: 33, p2: 30, p3: 28 },
-    });
-
-    expect(result.isFeuer).toBe(true);
-    expect(result.losers).toContain('p2');
-    expect(result.losers).toContain('p3');
-    expect(result.losers).not.toContain('p1');
   });
 });
 

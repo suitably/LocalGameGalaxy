@@ -1,43 +1,70 @@
-# Melodiq Server
+# Nexumia Companion Server (Melodiq & Galaxy Helper)
 
-Local server for the Melodiq song library. 
+Lightweight Node.js backend companion server for **Melodiq** (karaoke media streaming, USDB downloader, AI vocal separation, and WebRTC signaling tracker).
 
-## Deployment with Docker Compose
+> 💡 **Note**: Party games (**GuessArt**, **Gartic Phone**, **Werewolf**, **Qwixx**) run completely serverless peer-to-peer via MQTT/WebSockets and do **not** require this server.
 
-This is the recommended way to deploy the server for efficient and isolated usage.
+---
 
-### 1. Prerequistes
-- [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
+## Quickstart with Docker Compose
 
-### 2. Configuration
-The server expects a `config.json` in its directory. If it doesn't exist, it will be generated automatically on the first start inside the container.
+Docker Compose is the recommended way to run the server with zero configuration.
 
-### 3. Usage
+### 1. Prerequisites
+- [Docker](https://docs.docker.com/get-docker/) & Docker Compose
 
-1. **Mount your Music Library**:
-   Edit `docker-compose.yml` and add your local music directories to the `volumes` section.
-   
-   ```yaml
-   volumes:
-     - ./config.json:/app/config.json
-     - /path/to/your/music:/music:ro
-   ```
+### 2. Start the Server
+Create or edit `docker-compose.yml` (or download it directly from the in-app **Settings -> Server** wizard):
 
-2. **Start the server**:
-   ```bash
-   docker-compose up -d
-   ```
+```yaml
+services:
+  galaxy-server:
+    image: localgamegalaxy/server:latest
+    container_name: galaxy-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - ./music:/app/music:ro
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - SECURITY_TOKEN=your_master_token_here
+      - MUSIC_DIR=/app/music
+      - ALLOWED_ORIGINS=*
+```
 
-3. **Access the UI**:
-   - HTTP: `http://localhost:3000`
-   - HTTPS: `https://localhost:3001` (Accept the self-signed certificate warning)
+Run:
+```bash
+docker compose up -d
+```
 
-4. **Add Library Folders**:
-   Once in the UI, use the "Add" button to add the mounted container paths (e.g., `/music`).
+### 3. Access & Pair
+- Open the web app at `http://localhost:5173` (or your PWA)
+- Go to **Settings ➔ Server**
+- The live detector will automatically discover `http://localhost:3000` and pair your token.
 
-### Manual Setup (Node.js)
+---
 
-1. `cd server`
-2. `npm install`
-3. `npm start`
+## Optional Profiles
+
+### Cloudflare Quick Tunnel (Public HTTPS without router port-forwarding)
+```bash
+docker compose --profile tunnel up -d
+```
+
+### AI Worker (PyTorch, ONNX Vocal Separation & Whisper)
+```bash
+docker compose --profile ai up -d
+```
+
+---
+
+## Manual Setup (Node.js)
+
+```bash
+cd server
+npm install
+npm start
+```

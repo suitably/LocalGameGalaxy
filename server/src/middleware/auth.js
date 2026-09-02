@@ -6,7 +6,7 @@ const config = require('../../config');
 const requireAuth = (req, res, next) => {
     if (req.method === 'OPTIONS') return next();
 
-    if (req.path === '/' || req.path === '/favicon.ico') {
+    if (req.path === '/' || req.path === '/favicon.ico' || req.path.startsWith('/api/push')) {
         return next();
     }
     const rawToken = req.headers['authorization'] || req.query.token;
@@ -57,7 +57,7 @@ const helmetMiddleware = (req, res, next) => {
 
 // CORS configuration
 const ENV_ORIGINS = process.env.ALLOWED_ORIGINS;
-const RESTRICT_ORIGINS = !!ENV_ORIGINS;
+const RESTRICT_ORIGINS = !!ENV_ORIGINS && ENV_ORIGINS.trim() !== '' && ENV_ORIGINS.trim() !== '*';
 const ALLOWED_ORIGINS = RESTRICT_ORIGINS
     ? [
         ...ENV_ORIGINS.split(',').map(o => o.trim()).filter(Boolean),
@@ -69,12 +69,13 @@ const ALLOWED_ORIGINS = RESTRICT_ORIGINS
 if (RESTRICT_ORIGINS) {
     console.log(`[CORS] Restricted mode. Allowed origins: ${ALLOWED_ORIGINS.join(', ')}`);
 } else {
-    console.log('[CORS] Open mode (no ALLOWED_ORIGINS set). All origins permitted.');
+    console.log('[CORS] Open mode (all origins permitted).');
 }
 
 const isOriginAllowed = (origin) => {
     if (!origin) return true;  // No origin = direct access (curl, browser nav), handled by token auth
     if (!RESTRICT_ORIGINS) return true; // Open mode: allow everything
+    if (ALLOWED_ORIGINS.includes('*')) return true;
     return ALLOWED_ORIGINS.some(allowed => origin === allowed || origin.startsWith(allowed + ':'));
 };
 
@@ -83,6 +84,9 @@ const corsMiddleware = (req, res, next) => {
 
     if (origin && isOriginAllowed(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+    } else if (!RESTRICT_ORIGINS) {
+        res.setHeader('Access-Control-Allow-Origin', origin || '*');
         res.setHeader('Access-Control-Allow-Credentials', 'true');
     }
 
@@ -95,10 +99,9 @@ const corsMiddleware = (req, res, next) => {
         if (origin && !isOriginAllowed(origin)) {
             return res.sendStatus(403);
         }
-        res.sendStatus(200);
-    } else {
-        next();
+        return res.sendStatus(200);
     }
+    next();
 };
 
 const createLimiter = (windowMs, limitField, defaultLimit) => rateLimit({
@@ -120,7 +123,7 @@ const createLimiter = (windowMs, limitField, defaultLimit) => rateLimit({
         }
         return false;
     },
-    validate: { ip: false },
+    validate: { ip: false, keyGeneratorIpFallback: false },
     standardHeaders: true,
     legacyHeaders: false,
 });

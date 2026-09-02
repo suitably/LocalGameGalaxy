@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import { VitePWA } from 'vite-plugin-pwa';
@@ -62,7 +62,8 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff,woff2}'],
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//]
+        navigateFallbackDenylist: [/^\/api\//],
+        importScripts: ['/sw-push.js']
       },
       devOptions: {
         enabled: true
@@ -113,5 +114,8 @@ export default defineConfig({
     cssCodeSplit: true,
     // Use esbuild for minification (default, faster than terser)
     minify: 'esbuild',
+  },
+  test: {
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
   },
 })

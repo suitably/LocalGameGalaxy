@@ -125,13 +125,14 @@ export function useServerAutoDetect() {
     restart: unless-stopped
     ports:
       - "3000:3000"
+      - "3001:3001"
     volumes:
-      - ./music:/app/music
-      - ./config.json:/app/config.json:ro
+      - ./music:/app/music:ro
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - PLUGINS=relay,melodiq
+      - SECURITY_TOKEN=${token}
+      - MUSIC_DIR=/app/music
       - ALLOWED_ORIGINS=*
 
   galaxy-tunnel:
