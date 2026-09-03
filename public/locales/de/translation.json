@@ -521,7 +521,10 @@
     "relay_failed": "Verbindung fehlgeschlagen. URL prüfen.",
     "relay_use_server": "Verbundenen Server übernehmen (1-Klick)",
     "relay_worker_guide_title": "Eigenen Cloudflare Worker aufsetzen (24/7 kostenlos)",
-    "relay_worker_guide_desc": "Der Worker-Code liegt bereits fertig im Projekt unter server/cloudflare-push-relay. Führe im Terminal folgende Befehle aus:",
+    "relay_worker_guide_desc": "Der Cloudflare Worker läuft rund um die Uhr kostenlos in der Cloud und erzeugt seine kryptografischen Schlüssel beim ersten Start automatisch (Zero-Config).",
+    "relay_1click_deploy": "1-Klick Deploy auf Cloudflare",
+    "relay_1click_deploy_note": "Erfordert nur ein kostenloses Cloudflare-Konto.",
+    "relay_manual_title": "Alternative: Manuelles CLI-Deployment im Terminal:",
     "relay_worker_copy": "Befehle kopieren",
     "relay_worker_copied": "Befehle kopiert!"
   },

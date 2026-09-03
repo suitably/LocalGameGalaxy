@@ -6,7 +6,7 @@
  * with proper RFC 8291 encryption and RFC 8292 VAPID authentication.
  */
 
-import { sendWebPush, type WebPushOptions } from './webpush';
+import { sendWebPush, generateVapidKeys, type WebPushOptions } from './webpush';
 
 export interface Env {
   VAPID_PUBLIC_KEY?: string;
@@ -25,6 +25,39 @@ interface StoredPushSubscription {
 
 // In-memory subscription store fallback (lost on worker restart without KV)
 const memorySubscriptions = new Map<string, Map<string, StoredPushSubscription>>();
+let cachedVapidKeys: { publicKey: string; privateKey: string } | null = null;
+
+async function getOrInitVapidKeys(env: Env): Promise<{ publicKey: string; privateKey: string }> {
+  if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) {
+    return { publicKey: env.VAPID_PUBLIC_KEY.trim(), privateKey: env.VAPID_PRIVATE_KEY.trim() };
+  }
+
+  if (cachedVapidKeys) {
+    return cachedVapidKeys;
+  }
+
+  if (env.PUSH_KV) {
+    const stored = await env.PUSH_KV.get('config:vapid_keys');
+    if (stored) {
+      try {
+        cachedVapidKeys = JSON.parse(stored);
+        return cachedVapidKeys!;
+      } catch {
+        // Corrupt KV, regenerate
+      }
+    }
+  }
+
+  // Zero-config: Automatically generate ECDSA P-256 keys on first run
+  const generated = await generateVapidKeys();
+  cachedVapidKeys = generated;
+
+  if (env.PUSH_KV) {
+    await env.PUSH_KV.put('config:vapid_keys', JSON.stringify(generated));
+  }
+
+  return generated;
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -54,13 +87,10 @@ export default {
       return jsonResponse({ status: 'ok', service: 'LocalGameGalaxy Push Relay' });
     }
 
-    // 1. GET VAPID Public Key
+    // 1. GET VAPID Public Key (auto-generated or configured)
     if (path === '/vapid-public-key' || path === '/api/push/vapid-public-key') {
-      const publicKey = env.VAPID_PUBLIC_KEY;
-      if (!publicKey) {
-        return jsonResponse({ error: 'VAPID_PUBLIC_KEY not configured in worker secrets' }, 500);
-      }
-      return jsonResponse({ publicKey });
+      const keys = await getOrInitVapidKeys(env);
+      return jsonResponse({ publicKey: keys.publicKey });
     }
 
     // 2. POST Subscribe
@@ -129,14 +159,12 @@ export default {
         return jsonResponse({ error: 'Missing gameId' }, 400);
       }
 
-      // Validate VAPID keys are configured
-      if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) {
-        return jsonResponse({ error: 'VAPID keys not configured in worker secrets' }, 500);
-      }
+      // Obtain VAPID keys (configured via secrets or auto-generated)
+      const keys = await getOrInitVapidKeys(env);
 
       const pushOptions: WebPushOptions = {
-        vapidPublicKey: env.VAPID_PUBLIC_KEY,
-        vapidPrivateKey: env.VAPID_PRIVATE_KEY,
+        vapidPublicKey: keys.publicKey,
+        vapidPrivateKey: keys.privateKey,
         vapidSubject: env.VAPID_SUBJECT || 'mailto:admin@localgamegalaxy.app',
       };
 

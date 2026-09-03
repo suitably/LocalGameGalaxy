@@ -48,6 +48,24 @@ function encodeLength(value: number, size: number): Uint8Array {
   return buffer;
 }
 
+/**
+ * Generates an ECDSA P-256 VAPID keypair in base64url format.
+ */
+export async function generateVapidKeys(): Promise<{ publicKey: string; privateKey: string }> {
+  const keyPair = await crypto.subtle.generateKey(
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    true,
+    ['sign'],
+  );
+  const rawPublic = await crypto.subtle.exportKey('raw', keyPair.publicKey);
+  const publicKey = base64UrlEncode(new Uint8Array(rawPublic));
+
+  const jwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
+  const privateKey = jwk.d!;
+
+  return { publicKey, privateKey };
+}
+
 // ─── VAPID JWT Signing (RFC 8292) ────────────────────────────────────────────
 
 /**

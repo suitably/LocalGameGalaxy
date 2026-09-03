@@ -521,7 +521,10 @@
     "relay_failed": "Connection failed. Check URL.",
     "relay_use_server": "Use Connected Server (1-Click)",
     "relay_worker_guide_title": "Set up your own Cloudflare Worker (24/7 free)",
-    "relay_worker_guide_desc": "The worker code is ready in the repository under server/cloudflare-push-relay. Run the following commands in your terminal:",
+    "relay_worker_guide_desc": "The Cloudflare Worker runs 24/7 for free in the cloud and automatically generates cryptographic keys on first run (Zero-Config).",
+    "relay_1click_deploy": "1-Click Deploy to Cloudflare",
+    "relay_1click_deploy_note": "Requires only a free Cloudflare account.",
+    "relay_manual_title": "Alternative: Manual CLI deployment in terminal:",
     "relay_worker_copy": "Copy commands",
     "relay_worker_copied": "Commands copied!"
   },

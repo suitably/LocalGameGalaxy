@@ -9,6 +9,7 @@ import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CloudQueueRoundedIcon from '@mui/icons-material/CloudQueueRounded';
+import LaunchRoundedIcon from '@mui/icons-material/LaunchRounded';
 import { useTranslation } from 'react-i18next';
 import { storage } from '../../lib/storage';
 import { PushNotificationBanner } from './PushNotificationBanner';
@@ -225,11 +226,36 @@ npx wrangler deploy`;
                                 </Typography>
                             </Box>
                         </AccordionSummary>
-                        <AccordionDetails sx={{ pt: 0 }}>
-                            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 1.5 }}>
+                        <AccordionDetails sx={{ pt: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                                 {t(
                                     'settings.relay_worker_guide_desc',
-                                    'Der Worker-Code liegt bereits fertig im Projekt unter server/cloudflare-push-relay. Führe im Terminal folgende Befehle aus:',
+                                    'Der Cloudflare Worker läuft rund um die Uhr kostenlos in der Cloud und erzeugt seine kryptografischen Schlüssel beim ersten Start automatisch (Zero-Config).',
+                                )}
+                            </Typography>
+
+                            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    size="small"
+                                    href="https://deploy.workers.cloudflare.com/?url=https://github.com/suitably/LocalGameGalaxy/tree/main/server/cloudflare-push-relay"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    startIcon={<LaunchRoundedIcon />}
+                                    sx={{ textTransform: 'none', fontWeight: 700 }}
+                                >
+                                    {t('settings.relay_1click_deploy', '1-Klick Deploy auf Cloudflare')}
+                                </Button>
+                                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                                    {t('settings.relay_1click_deploy_note', 'Erfordert nur ein kostenloses Cloudflare-Konto.')}
+                                </Typography>
+                            </Box>
+
+                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', mt: 1 }}>
+                                {t(
+                                    'settings.relay_manual_title',
+                                    'Alternative: Manuelles CLI-Deployment im Terminal:',
                                 )}
                             </Typography>
                             <Box
@@ -240,7 +266,7 @@ npx wrangler deploy`;
                                     bgcolor: 'rgba(0, 0, 0, 0.4)',
                                     fontSize: '0.8rem',
                                     overflowX: 'auto',
-                                    mb: 1.5,
+                                    m: 0,
                                     color: '#81c784',
                                 }}
                             >
@@ -251,7 +277,7 @@ npx wrangler deploy`;
                                 variant="outlined"
                                 startIcon={copiedCommands ? <CheckCircleRoundedIcon /> : <ContentCopyIcon />}
                                 onClick={handleCopyCommands}
-                                sx={{ textTransform: 'none' }}
+                                sx={{ textTransform: 'none', alignSelf: 'flex-start' }}
                             >
                                 {copiedCommands
                                     ? t('settings.relay_worker_copied', 'Befehle kopiert!')
