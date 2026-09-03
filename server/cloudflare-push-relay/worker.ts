@@ -25,7 +25,10 @@ interface StoredPushSubscription {
 
 // In-memory subscription store fallback (lost on worker restart without KV)
 const memorySubscriptions = new Map<string, Map<string, StoredPushSubscription>>();
-let cachedVapidKeys: { publicKey: string; privateKey: string } | null = null;
+const DEFAULT_VAPID_KEYS = {
+  publicKey: 'BHrLPvbicI8okK9MJHcncBp3JYl998H_ubF_3BYtmPuWnn0IVPIiv0ScLHQNjNdsZVT5sOZpjpRF4WMVOm2KhOA',
+  privateKey: 'myZY4l9wcTu2pSg_txF-kQpSa3N_T0nyUqzExPraEFM',
+};
 
 async function getOrInitVapidKeys(env: Env): Promise<{ publicKey: string; privateKey: string }> {
   if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) {
@@ -48,15 +51,14 @@ async function getOrInitVapidKeys(env: Env): Promise<{ publicKey: string; privat
     }
   }
 
-  // Zero-config: Automatically generate ECDSA P-256 keys on first run
-  const generated = await generateVapidKeys();
-  cachedVapidKeys = generated;
+  // Stable default keys guarantee identical VAPID key across all isolates/cold starts
+  cachedVapidKeys = DEFAULT_VAPID_KEYS;
 
   if (env.PUSH_KV) {
-    await env.PUSH_KV.put('config:vapid_keys', JSON.stringify(generated));
+    await env.PUSH_KV.put('config:vapid_keys', JSON.stringify(DEFAULT_VAPID_KEYS));
   }
 
-  return generated;
+  return DEFAULT_VAPID_KEYS;
 }
 
 const corsHeaders = {

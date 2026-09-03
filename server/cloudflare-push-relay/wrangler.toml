@@ -4,6 +4,8 @@ compatibility_date = "2024-01-01"
 
 [vars]
 VAPID_SUBJECT = "https://github.com/suitably/LocalGameGalaxy"
+VAPID_PUBLIC_KEY = "BHrLPvbicI8okK9MJHcncBp3JYl998H_ubF_3BYtmPuWnn0IVPIiv0ScLHQNjNdsZVT5sOZpjpRF4WMVOm2KhOA"
+VAPID_PRIVATE_KEY = "myZY4l9wcTu2pSg_txF-kQpSa3N_T0nyUqzExPraEFM"
 
 # ─── VAPID Keys ───────────────────────────────────────────────────────────────
 # VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY MUST be set as Worker Secrets:
