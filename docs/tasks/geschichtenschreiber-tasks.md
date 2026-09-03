@@ -1,0 +1,36 @@
+# Task Tracking: Geschichtenschreiber (Storyteller) [ID: STORYTELLER-TASKS]
+
+- [x] 1. Core Types and Modifier Definitions <!-- id: 1 -->
+  - [x] 1.1 Create `src/games/storyteller/types.ts` with models for games, story entries, players, snapshots, and modifiers <!-- id: 1.1 -->
+  - [x] 1.2 Implement `src/games/storyteller/logic/modifiers.ts` with modifier definitions, Blind Mode word slicer, and Word Roulette matcher <!-- id: 1.2 -->
+  - [x] 1.3 Create `src/games/storyteller/logic/storyLexicon.ts` with diverse German and English story words <!-- id: 1.3 -->
+- [x] 2. Persistence, Engine & Data Logic <!-- id: 2 -->
+  - [x] 2.1 Implement IndexedDB database provider `src/games/storyteller/logic/db.ts` <!-- id: 2.1 -->
+  - [x] 2.2 Implement repository CRUD operations `src/games/storyteller/logic/repository.ts` <!-- id: 2.2 -->
+  - [x] 2.3 Implement player assignment logic `src/games/storyteller/logic/playerAssignment.ts` <!-- id: 2.3 -->
+  - [x] 2.4 Implement game engine lifecycle and turn progression `src/games/storyteller/logic/engine.ts` <!-- id: 2.4 -->
+  - [x] 2.5 Write comprehensive unit tests in `src/games/storyteller/logic/storyteller.test.ts` <!-- id: 2.5 -->
+- [x] 3. Custom Hooks <!-- id: 3 -->
+  - [x] 3.1 Create `src/games/storyteller/hooks/useStorytellerLobby.ts` <!-- id: 3.1 -->
+  - [x] 3.2 Create `src/games/storyteller/hooks/useStorytellerGame.ts` <!-- id: 3.2 -->
+  - [x] 3.3 Create `src/games/storyteller/hooks/useTurnTimer.ts` <!-- id: 3.3 -->
+- [x] 4. UI Components (SOLID & <250 LOC) <!-- id: 4 -->
+  - [x] 4.1 Implement `StoryHeader.tsx` <!-- id: 4.1 -->
+  - [x] 4.2 Implement `StoryContextCard.tsx` (Blind mode vs Full story view) <!-- id: 4.2 -->
+  - [x] 4.3 Implement `ModifierRouletteBar.tsx` (Live required words status chips) <!-- id: 4.3 -->
+  - [x] 4.4 Implement `ModifierTimerBar.tsx` (Time Attack progress bar) <!-- id: 4.4 -->
+  - [x] 4.5 Implement `StoryWriterView.tsx` (Main writing canvas with modifiers integration) <!-- id: 4.5 -->
+  - [x] 4.6 Implement `WaitingForStoryTurnView.tsx` (Remote turn waiting view) <!-- id: 4.6 -->
+  - [x] 4.7 Implement `StoryReaderModal.tsx` (Full story reader with export/copy) <!-- id: 4.7 -->
+  - [x] 4.8 Implement `EditStoryDialog.tsx` (Rename story & player management) <!-- id: 4.8 -->
+  - [x] 4.9 Implement `StoryLobby.tsx` (Player list, modifiers checklist, active games) <!-- id: 4.9 -->
+  - [x] 4.10 Implement `StorytellerGame.tsx` & `index.ts` <!-- id: 4.10 -->
+- [x] 5. App Integration & Localization <!-- id: 5 -->
+  - [x] 5.1 Register game in `src/lib/gameRegistry.tsx` <!-- id: 5.1 -->
+  - [x] 5.2 Add German translations in `public/locales/de/translation.json` <!-- id: 5.2 -->
+  - [x] 5.3 Add English translations in `public/locales/en/translation.json` <!-- id: 5.3 -->
+- [x] 6. Verification & Architecture Documentation <!-- id: 6 -->
+  - [x] 6.1 Run unit tests `npm test` and ensure all pass <!-- id: 6.1 -->
+  - [x] 6.2 Run `npm run lint` and `npm run build` and ensure 0 errors <!-- id: 6.2 -->
+  - [x] 6.3 Update `docs/tech/architecture.md` <!-- id: 6.3 -->
+  - [x] 6.4 Write walkthrough `docs/verification/geschichtenschreiber-walkthrough.md` <!-- id: 6.4 -->

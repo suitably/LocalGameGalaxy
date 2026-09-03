@@ -26,5 +26,6 @@ This directory contains task checklists tracking the progress of work. Files are
 - [GuessArt Local-First Integration Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/guessart-tasks.md)
 - [Qwixx Sheet Variants & Selector Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/qwixx-sheet-variants-tasks.md)
 - [Knister Custom Dice & Manual Input Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/knister-custom-dice-tasks.md)
+- [Geschichtenschreiber Collaborative Storytelling Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/geschichtenschreiber-tasks.md)
 
 ID: DOCS-TASKS-SUMMARY

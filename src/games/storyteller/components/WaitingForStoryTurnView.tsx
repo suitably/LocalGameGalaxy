@@ -1,0 +1,141 @@
+import React, { useState } from 'react';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CircularProgress,
+  Stack,
+  Typography,
+} from '@mui/material';
+import PhonelinkRingRoundedIcon from '@mui/icons-material/PhonelinkRingRounded';
+import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
+import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded';
+import TransferWithinAStationRoundedIcon from '@mui/icons-material/TransferWithinAStationRounded';
+import { useTranslation } from 'react-i18next';
+import type { StoryGameRecord } from '../types';
+
+interface WaitingForStoryTurnViewProps {
+  game: StoryGameRecord;
+  onClaimPlayer: (playerId: string) => void;
+  onShareTurn: () => void;
+  onOpenReader: () => void;
+}
+
+export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = ({
+  game,
+  onClaimPlayer,
+  onShareTurn,
+  onOpenReader,
+}) => {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+
+  const activePlayer = game.players[game.currentPlayerIndex] || {
+    id: '',
+    name: t('storyteller.defaultPlayer', 'Spieler'),
+  };
+
+  const handleCopyLink = () => {
+    onShareTurn();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+      height="100%"
+      p={2}
+    >
+      <Card
+        variant="outlined"
+        sx={{
+          maxWidth: 440,
+          width: '100%',
+          bgcolor: 'rgba(15, 23, 42, 0.7)',
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          borderRadius: 3,
+          textAlign: 'center',
+          p: { xs: 2, sm: 3 },
+        }}
+      >
+        <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+            <CircularProgress size={64} thickness={3} sx={{ color: '#38bdf8' }} />
+            <Box
+              sx={{
+                top: 0,
+                left: 0,
+                bottom: 0,
+                right: 0,
+                position: 'absolute',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <PhonelinkRingRoundedIcon sx={{ color: '#38bdf8', fontSize: 28 }} />
+            </Box>
+          </Box>
+
+          <Box>
+            <Typography variant="h6" fontWeight={700} sx={{ color: '#f8fafc' }}>
+              {t('storyteller.waitingTitle', 'Warten auf')} {activePlayer.name}...
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#94a3b8', mt: 0.5 }}>
+              {t(
+                'storyteller.waitingSubtitle',
+                'Dieser Spieler ist als Remote markiert. Sobald der Zug eingegangen ist, geht es hier automatisch weiter.',
+              )}
+            </Typography>
+          </Box>
+
+          <Stack spacing={1.5} width="100%" sx={{ mt: 1 }}>
+            <Button
+              variant="contained"
+              fullWidth
+              startIcon={copied ? <CheckRoundedIcon /> : <ShareRoundedIcon />}
+              onClick={handleCopyLink}
+              sx={{
+                bgcolor: copied ? '#22c55e' : '#0284c7',
+                '&:hover': { bgcolor: copied ? '#16a34a' : '#0369a1' },
+                fontWeight: 600,
+              }}
+            >
+              {copied
+                ? t('common.linkCopied', 'Zug-Link kopiert!')
+                : t('storyteller.shareTurnLink', 'Zug-Link an Spieler senden')}
+            </Button>
+
+            <Button
+              variant="outlined"
+              fullWidth
+              color="inherit"
+              startIcon={<TransferWithinAStationRoundedIcon />}
+              onClick={() => onClaimPlayer(activePlayer.id)}
+              sx={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}
+            >
+              {t('storyteller.claimTurnLocal', 'Auf diesem Gerät schreiben')}
+            </Button>
+
+            <Button
+              variant="text"
+              fullWidth
+              color="inherit"
+              startIcon={<MenuBookRoundedIcon />}
+              onClick={onOpenReader}
+              sx={{ color: '#94a3b8' }}
+            >
+              {t('storyteller.readStorySoFar', 'Bisherige Geschichte ansehen')}
+            </Button>
+          </Stack>
+        </CardContent>
+      </Card>
+    </Box>
+  );
+};

@@ -2,105 +2,111 @@
  * useWordle.ts - React Hook Managing Wordle Game State & Persistence
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { wordleEngine } from '../logic/wordleEngine';
+import {
+  getTodayDateKey,
+  loadDailyGameState,
+  saveDailyGameState,
+  loadWordleStats,
+  saveWordleStats,
+} from '../logic/wordleStorage';
 import type { LetterStatus, WordleGameMode, WordleState, WordleStats } from '../logic/types';
 
-const STATS_STORAGE_KEY = 'galaxy_wordle_stats';
-const DAILY_STORAGE_PREFIX = 'galaxy_wordle_daily_';
-
-function getTodayDateKey(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
 export function useWordle(language = 'de', initialMode: WordleGameMode = 'daily', customWord?: string | null) {
-  const dateKey = getTodayDateKey();
+  const [stats, setStats] = useState<WordleStats>(() => loadWordleStats());
+  const [justFinished, setJustFinished] = useState(false);
 
-  const [stats, setStats] = useState<WordleStats>(() => {
-    try {
-      const raw = localStorage.getItem(STATS_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : wordleEngine.getInitialStats();
-    } catch {
-      return wordleEngine.getInitialStats();
-    }
-  });
+  // Cached state for practice mode so switching between modes doesn't lose practice progress
+  const practiceStateRef = useRef<WordleState | null>(null);
 
   const [state, setState] = useState<WordleState>(() => {
     const mode = customWord ? 'duel' : initialMode;
-    let target = '';
+    const dateKey = getTodayDateKey();
 
     if (mode === 'duel' && customWord) {
-      target = customWord.toUpperCase();
-    } else if (mode === 'daily') {
-      target = wordleEngine.getDailyTargetWord(language, dateKey);
+      return {
+        targetWord: customWord.toUpperCase(),
+        guesses: [],
+        evaluations: [],
+        currentInput: '',
+        status: 'playing',
+        mode: 'duel',
+        dateKey,
+        invalidWordShake: false,
+        message: null,
+      };
+    }
 
-      // Check if daily game is already saved in localStorage
-      try {
-        const saved = localStorage.getItem(`${DAILY_STORAGE_PREFIX}${language}_${dateKey}`);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          return {
-            targetWord: target,
-            guesses: parsed.guesses || [],
-            evaluations: parsed.evaluations || [],
-            currentInput: '',
-            status: parsed.status || 'playing',
-            mode: 'daily',
-            dateKey,
-            invalidWordShake: false,
-            message: null,
-          };
-        }
-      } catch {
-        // Fallback to fresh state
-      }
-    } else {
-      target = wordleEngine.getRandomTargetWord(language);
+    if (mode === 'daily') {
+      return loadDailyGameState(language, dateKey);
     }
 
     return {
-      targetWord: target,
+      targetWord: wordleEngine.getRandomTargetWord(language),
       guesses: [],
       evaluations: [],
       currentInput: '',
       status: 'playing',
-      mode,
+      mode: 'practice',
       dateKey,
       invalidWordShake: false,
       message: null,
     };
   });
 
-  // Save daily game state to localStorage
+  // Save daily game state to localStorage whenever it changes
   useEffect(() => {
     if (state.mode === 'daily') {
-      try {
-        localStorage.setItem(
-          `${DAILY_STORAGE_PREFIX}${language}_${state.dateKey}`,
-          JSON.stringify({
-            guesses: state.guesses,
-            evaluations: state.evaluations,
-            status: state.status,
-          })
-        );
-      } catch {
-        // Ignore quota error
-      }
+      saveDailyGameState(language, state.dateKey, {
+        guesses: state.guesses,
+        evaluations: state.evaluations,
+        status: state.status,
+      });
     }
   }, [state.guesses, state.evaluations, state.status, state.mode, state.dateKey, language]);
 
-  // Save stats to localStorage
+  // Save stats to localStorage whenever stats change
   useEffect(() => {
-    try {
-      localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(stats));
-    } catch {
-      // Ignore quota error
-    }
+    saveWordleStats(stats);
   }, [stats]);
+
+  // Handle language change: adjust state if language prop changed
+  const [prevLanguage, setPrevLanguage] = useState(language);
+  if (prevLanguage !== language) {
+    setPrevLanguage(language);
+    if (state.mode === 'daily') {
+      setState(loadDailyGameState(language, getTodayDateKey()));
+    }
+  }
+
+  // Check if date changed (e.g. past midnight) when window regains visibility/focus
+  useEffect(() => {
+    const handleVisibilityOrFocus = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible' && state.mode === 'daily') {
+        const today = getTodayDateKey();
+        if (state.dateKey !== today) {
+          setState(loadDailyGameState(language, today));
+        }
+      }
+    };
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleVisibilityOrFocus);
+    }
+
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      }
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('focus', handleVisibilityOrFocus);
+      }
+    };
+  }, [state.mode, state.dateKey, language]);
 
   const addLetter = useCallback((letter: string) => {
     setState((prev) => {
@@ -152,9 +158,19 @@ export function useWordle(language = 'de', initialMode: WordleGameMode = 'daily'
       const newStatus = won ? 'won' : lost ? 'lost' : 'playing';
 
       if (newStatus !== 'playing') {
-        setStats((prevStats) =>
-          wordleEngine.updateStats(prevStats, won, newGuesses.length, prev.mode === 'daily' ? prev.dateKey : undefined)
-        );
+        setJustFinished(true);
+        setStats((prevStats) => {
+          // Prevent double-counting if daily game on this dateKey was already recorded
+          if (prev.mode === 'daily' && prevStats.lastCompletedDate === prev.dateKey) {
+            return prevStats;
+          }
+          return wordleEngine.updateStats(
+            prevStats,
+            won,
+            newGuesses.length,
+            prev.mode === 'daily' ? prev.dateKey : undefined
+          );
+        });
       }
 
       return {
@@ -169,30 +185,97 @@ export function useWordle(language = 'de', initialMode: WordleGameMode = 'daily'
     });
   }, []);
 
-  const startNewGame = useCallback((mode: WordleGameMode = 'practice', customWord?: string) => {
-    const today = getTodayDateKey();
-    let target = '';
+  const switchMode = useCallback(
+    (newMode: WordleGameMode) => {
+      setJustFinished(false);
+      setState((prev) => {
+        if (prev.mode === newMode) {
+          // If already in daily mode, check if date rolled over past midnight
+          if (newMode === 'daily') {
+            const today = getTodayDateKey();
+            if (prev.dateKey !== today) {
+              return loadDailyGameState(language, today);
+            }
+          }
+          return prev;
+        }
 
-    if (mode === 'duel' && customWord) {
-      target = customWord.toUpperCase();
-    } else if (mode === 'daily') {
-      target = wordleEngine.getDailyTargetWord(language, today);
-    } else {
-      target = wordleEngine.getRandomTargetWord(language);
-    }
+        // Cache practice state if switching away from practice
+        if (prev.mode === 'practice') {
+          practiceStateRef.current = prev;
+        }
 
-    setState({
-      targetWord: target,
-      guesses: [],
-      evaluations: [],
-      currentInput: '',
-      status: 'playing',
-      mode,
-      dateKey: today,
-      invalidWordShake: false,
-      message: null,
-    });
-  }, [language]);
+        if (newMode === 'daily') {
+          const today = getTodayDateKey();
+          return loadDailyGameState(language, today);
+        }
+
+        if (newMode === 'practice') {
+          // Restore cached in-progress practice state if available
+          if (practiceStateRef.current && practiceStateRef.current.status === 'playing') {
+            return practiceStateRef.current;
+          }
+          // Otherwise start a new practice game
+          return {
+            targetWord: wordleEngine.getRandomTargetWord(language),
+            guesses: [],
+            evaluations: [],
+            currentInput: '',
+            status: 'playing',
+            mode: 'practice',
+            dateKey: getTodayDateKey(),
+            invalidWordShake: false,
+            message: null,
+          };
+        }
+
+        return prev;
+      });
+    },
+    [language]
+  );
+
+  const startNewGame = useCallback(
+    (mode: WordleGameMode = 'practice', customWord?: string) => {
+      setJustFinished(false);
+      const today = getTodayDateKey();
+
+      if (mode === 'duel' && customWord) {
+        setState({
+          targetWord: customWord.toUpperCase(),
+          guesses: [],
+          evaluations: [],
+          currentInput: '',
+          status: 'playing',
+          mode: 'duel',
+          dateKey: today,
+          invalidWordShake: false,
+          message: null,
+        });
+      } else if (mode === 'daily') {
+        // NEVER overwrite today's daily puzzle if one exists!
+        // Load current daily state for today
+        setState(loadDailyGameState(language, today));
+      } else {
+        // Practice mode: generate new target word
+        const target = wordleEngine.getRandomTargetWord(language);
+        const newState: WordleState = {
+          targetWord: target,
+          guesses: [],
+          evaluations: [],
+          currentInput: '',
+          status: 'playing',
+          mode: 'practice',
+          dateKey: today,
+          invalidWordShake: false,
+          message: null,
+        };
+        practiceStateRef.current = newState;
+        setState(newState);
+      }
+    },
+    [language]
+  );
 
   const clearShake = useCallback(() => {
     setState((prev) => (prev.invalidWordShake ? { ...prev, invalidWordShake: false } : prev));
@@ -206,9 +289,11 @@ export function useWordle(language = 'de', initialMode: WordleGameMode = 'daily'
     state,
     stats,
     keyStatuses,
+    justFinished,
     addLetter,
     removeLetter,
     submitGuess,
+    switchMode,
     startNewGame,
     clearShake,
   };

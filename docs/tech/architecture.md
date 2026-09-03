@@ -52,6 +52,14 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
     -   Fuzzy evaluation engine with German umlaut transliteration, diacritic normalization, and inflection generation (`guessEvaluator`, `lingo`).
     -   Deterministic multi-stage hint provider (`HintWordSlots`, `HintLetterChips`).
     -   **Unified Header Integration (`useGuessArtHeader`)**: Integrates directly with [`LayoutContext`](file:///home/deck/Projects/LocalGameGalaxy/src/context/LayoutContext.tsx) and [`GlobalHeader`](file:///home/deck/Projects/LocalGameGalaxy/src/components/Layout/GlobalHeader.tsx), consolidating navigation, active turn/secret word badges, match info, and game action menus into a single top header, maximizing drawing canvas screen area.
+-   **Geschichtenschreiber / Storyteller (`src/games/storyteller`)**:
+    -   Collaborative turn-based story writing game built upon the local-first pass-and-play and remote turn-sharing stack.
+    -   IndexedDB storage via `storyteller-local` (`games` and `entries` object stores).
+    -   Modular Modifiers System ("Baukasten"):
+        -   **Blind Mode**: Hides preceding story text, revealing only the last 10 words of the previous player's contribution.
+        -   **Time Attack**: Turn countdown timer (default 45s, configurable 30s–90s) with animated warning states and auto-submission on expiration.
+        -   **Word Roulette**: Generates 3 random mandatory words from bilingual story lexicons that must be integrated into the contribution before submission.
+    -   Interactive formatted Story Reader modal with chapter breaks, author attribution, word statistics, and one-click copy to clipboard.
 -   **Qwixx (`src/games/qwixx`)**:
     -   Tactical roll-and-write dice game with real-time peer sync over `BroadcastChannel`.
     -   Modular sheet configuration engine (`sheetDefinitions.ts`) supporting official expansions (Classic, Gemixxt A/B, Big Points, Connected, Double, Bonus).

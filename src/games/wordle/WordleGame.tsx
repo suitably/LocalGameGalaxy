@@ -53,22 +53,24 @@ export const WordleGame: React.FC = () => {
     state,
     stats,
     keyStatuses,
+    justFinished,
     addLetter,
     removeLetter,
     submitGuess,
+    switchMode,
     startNewGame,
     clearShake,
   } = useWordle(i18n.language || 'de', initialMode, customDuelWord);
 
-  // Automatically open stats modal when game is won or lost
+  // Automatically open stats modal only when the game has just finished in this session
   useEffect(() => {
-    if (state.status !== 'playing') {
+    if (justFinished) {
       const timer = setTimeout(() => {
         setStatsOpen(true);
       }, 1200);
       return () => clearTimeout(timer);
     }
-  }, [state.status]);
+  }, [justFinished]);
 
   // Clear shake animation after 600ms
   useEffect(() => {
@@ -145,14 +147,14 @@ export const WordleGame: React.FC = () => {
         <Button
           variant={state.mode === 'daily' ? 'contained' : 'outlined'}
           color="success"
-          onClick={() => startNewGame('daily')}
+          onClick={() => switchMode('daily')}
         >
           {t('wordle.mode.daily', 'Tagesrätsel 📅')}
         </Button>
         <Button
           variant={state.mode === 'practice' ? 'contained' : 'outlined'}
           color="success"
-          onClick={() => startNewGame('practice')}
+          onClick={() => switchMode('practice')}
         >
           {t('wordle.mode.practice', 'Üben 🎯')}
         </Button>
@@ -203,6 +205,19 @@ export const WordleGame: React.FC = () => {
           sx={{ mb: 1, fontWeight: 700 }}
         >
           {t('wordle.new_word', 'Neues Wort')}
+        </Button>
+      )}
+
+      {/* Action / View Stats Button if finished in Daily mode */}
+      {state.status !== 'playing' && state.mode === 'daily' && (
+        <Button
+          variant="contained"
+          color="success"
+          startIcon={<BarChartRoundedIcon />}
+          onClick={() => setStatsOpen(true)}
+          sx={{ mb: 1, fontWeight: 700 }}
+        >
+          {t('wordle.stats.btn_tooltip', 'Statistiken')}
         </Button>
       )}
 

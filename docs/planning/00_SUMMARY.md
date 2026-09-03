@@ -24,5 +24,6 @@ This directory contains implementation plans for proposed changes. Each plan det
 - [GuessArt Local-First Integration Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/guessart-plan.md)
 - [Qwixx Sheet Variants & Selector Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/qwixx-sheet-variants-plan.md)
 - [Knister Custom Dice & Manual Input Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/knister-custom-dice-plan.md)
+- [Geschichtenschreiber Collaborative Storytelling Plan](file:///home/deck/Projects/LocalGameGalaxy/docs/planning/geschichtenschreiber-plan.md)
 
 ID: DOCS-PLANNING-SUMMARY

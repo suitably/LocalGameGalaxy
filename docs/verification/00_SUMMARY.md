@@ -24,5 +24,6 @@ This directory contains walkthroughs and verification logs. These documents prov
 - [GuessArt Local-First Integration Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/guessart-walkthrough.md)
 - [Qwixx Sheet Variants & Selector Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/qwixx-sheet-variants-walkthrough.md)
 - [Knister Custom Dice & Manual Input Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/knister-custom-dice-walkthrough.md)
+- [Geschichtenschreiber Collaborative Storytelling Walkthrough](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/geschichtenschreiber-walkthrough.md)
 
 ID: DOCS-VERIFICATION-SUMMARY

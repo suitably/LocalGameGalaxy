@@ -9,6 +9,7 @@ import GridViewIcon from '@mui/icons-material/GridView';
 import AbcIcon from '@mui/icons-material/Abc';
 import Grid4x4Icon from '@mui/icons-material/Grid4x4';
 import StyleIcon from '@mui/icons-material/Style';
+import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import { SongsProvider } from '../games/melodiq';
 
 export type GameCategory = 'all' | 'dice' | 'drawing' | 'music' | 'social_deduction' | 'cards' | 'party' | 'puzzle';
@@ -42,6 +43,7 @@ const MelodiqTV = lazy(() => import('../games/melodiq').then(m => ({ default: m.
 const QwixxGame = lazy(() => import('../games/qwixx').then(m => ({ default: m.QwixxGame })));
 const KnisterGame = lazy(() => import('../games/knister').then(m => ({ default: m.KnisterGame })));
 const GuessArtGame = lazy(() => import('../games/guessart').then(m => ({ default: m.GuessArtGame })));
+const StorytellerGame = lazy(() => import('../games/storyteller').then(m => ({ default: m.StorytellerGame })));
 const CardsGame = lazy(() => import('../games/cards').then(m => ({ default: m.CardsGame })));
 const WordleGame = lazy(() => import('../games/wordle').then(m => ({ default: m.WordleGame })));
 const SudokuGame = lazy(() => import('../games/sudoku').then(m => ({ default: m.SudokuGame })));
@@ -84,6 +86,18 @@ class GameRegistry {
             hoverColor: '#00838f',
             category: 'drawing',
             component: <GuessArtGame />
+        },
+        {
+            id: 'storyteller',
+            route: 'games/storyteller',
+            titleKey: 'games.storyteller.title',
+            descriptionKey: 'games.storyteller.description',
+            icon: <AutoStoriesIcon sx={{ fontSize: 72, mb: 2 }} />,
+            colorStart: '#38bdf8',
+            colorEnd: '#0284c7',
+            hoverColor: '#0284c7',
+            category: 'party',
+            component: <StorytellerGame />
         },
         {
             id: 'cards',
