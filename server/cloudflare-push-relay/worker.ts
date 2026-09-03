@@ -165,7 +165,7 @@ export default {
       const pushOptions: WebPushOptions = {
         vapidPublicKey: keys.publicKey,
         vapidPrivateKey: keys.privateKey,
-        vapidSubject: env.VAPID_SUBJECT || 'mailto:admin@localgamegalaxy.app',
+        vapidSubject: env.VAPID_SUBJECT || 'https://github.com/suitably/LocalGameGalaxy',
       };
 
       // Collect target subscriptions

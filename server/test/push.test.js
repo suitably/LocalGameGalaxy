@@ -12,7 +12,7 @@ test('Web Push Relay Service & Endpoints', async (t) => {
     });
 
     await t.test('subscribes and unsubscribes players for a game', () => {
-        const gameId = 'test-game-123';
+        const gameId = 'test-game-' + Date.now();
         const player1 = 'player-1';
         const player2 = 'player-2';
 

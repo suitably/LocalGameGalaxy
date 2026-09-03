@@ -130,7 +130,7 @@ function initVapid() {
         }
     }
 
-    const contactEmail = process.env.VAPID_SUBJECT || 'mailto:admin@localgamegalaxy.app';
+    const contactEmail = process.env.VAPID_SUBJECT || 'https://github.com/suitably/LocalGameGalaxy';
     webpush.setVapidDetails(contactEmail, vapidKeys.publicKey, vapidKeys.privateKey);
     console.log('[WebPush] VAPID push service initialized.');
     return vapidKeys;

@@ -3,7 +3,7 @@ main = "worker.ts"
 compatibility_date = "2024-01-01"
 
 [vars]
-VAPID_SUBJECT = "mailto:admin@localgamegalaxy.app"
+VAPID_SUBJECT = "https://github.com/suitably/LocalGameGalaxy"
 
 # ─── VAPID Keys ───────────────────────────────────────────────────────────────
 # VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY MUST be set as Worker Secrets:
