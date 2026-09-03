@@ -96,6 +96,13 @@ describe('GuessArt Guess Evaluator', () => {
     expect(evaluateGuess(pizzaTrans, 'Pizza', 'Pizaz', { exactOnly: true })).toBe(false);
     expect(evaluateGuess(pizzaTrans, 'Pizza', 'Pizza', { exactOnly: true })).toBe(true);
     expect(evaluateGuess(pizzaTrans, 'Pizza', 'Pizzas', { exactOnly: true })).toBe(true);
+
+    const fussballTrans = {
+      de: { canonical: 'Fußball', synonyms: [] },
+    };
+    expect(evaluateGuess(fussballTrans, 'Fußball', 'FUSSBALL', { exactOnly: true })).toBe(true);
+    expect(evaluateGuess(fussballTrans, 'Fußball', 'Fußball', { exactOnly: true })).toBe(true);
+    expect(evaluateGuess(fussballTrans, 'Fußball', 'fussball', { exactOnly: true })).toBe(true);
   });
 });
 
@@ -126,6 +133,35 @@ describe('GuessArt Hint Resolver', () => {
     expect(deArtifacts?.mask.length).toBe(7);
     expect(deArtifacts?.letters).toContain('E');
     expect(deArtifacts?.letters).toContain('L');
+  });
+
+  it('treats ß and ẞ as two letters (SS) in word mask, length, and hint letter pool', () => {
+    // buildWordMask produces 2 slots for ß
+    const mask = buildWordMask('Fußball');
+    expect(mask).toHaveLength(8);
+    expect(mask).toEqual(['_', '_', '_', '_', '_', '_', '_', '_']);
+
+    const maskCapital = buildWordMask('FUẞBALL');
+    expect(maskCapital).toHaveLength(8);
+
+    // buildHintLetters produces two separate 'S' bubbles instead of one 'SS' bubble
+    const letters = buildHintLetters('Fußball');
+    expect(letters).not.toContain('SS');
+    const sCount = letters.filter((l) => l === 'S').length;
+    expect(sCount).toBeGreaterThanOrEqual(2);
+    // Every entry in hint letter pool must be a single letter
+    expect(letters.every((l) => l.length === 1)).toBe(true);
+
+    // resolveHintArtifacts produces length 8 and mask of length 8
+    const translations = {
+      de: { canonical: 'Fußball', synonyms: ['Kicken'] },
+    };
+    const artifacts = resolveHintArtifacts(translations, 'de', 'de', 'Fußball');
+    expect(artifacts).not.toBeNull();
+    expect(artifacts?.length).toBe(8);
+    expect(artifacts?.mask).toHaveLength(8);
+    expect(artifacts?.letters).not.toContain('SS');
+    expect(artifacts?.letters.filter((l) => l === 'S').length).toBeGreaterThanOrEqual(2);
   });
 });
 

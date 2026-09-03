@@ -63,7 +63,7 @@ export const toRoundPayload = (
     canvasData: round.canvasData || DEFAULT_SCENE,
     hintLetters: artifacts?.letters || round.hintLetters || [],
     wordMask: artifacts?.mask || (round.word ? buildWordMask(round.word) : []),
-    wordLength: artifacts?.length || (round.word ? Array.from(round.word).length : 0),
+    wordLength: artifacts?.length || (round.word ? buildWordMask(round.word).length : 0),
   };
 };
 
@@ -306,7 +306,7 @@ export const LocalGameEngine = {
       hintRequested: false,
       hintLetters: [],
       wordMask: buildWordMask(payload.word),
-      wordLength: payload.word ? Array.from(payload.word).length : 0,
+      wordLength: payload.word ? buildWordMask(payload.word).length : 0,
     });
 
     const updatedGame = await updateLocalGame(gameId, {

@@ -16,10 +16,22 @@ export const HintWordSlots: React.FC<HintWordSlotsProps> = ({
   onSlotClick,
   interactive = true,
 }) => {
+  const guessChars = React.useMemo(() => {
+    const chars: string[] = [];
+    for (const ch of guess) {
+      if (ch === 'ß' || ch === 'ẞ') {
+        chars.push('S', 'S');
+      } else {
+        chars.push(ch.toUpperCase());
+      }
+    }
+    return chars;
+  }, [guess]);
+
   const renderSlot = (index: number) => {
-    const char = guess[index] ?? '';
+    const char = guessChars[index] ?? '';
     if (char && char.trim() !== '') {
-      return char.toUpperCase();
+      return char;
     }
     if (Array.isArray(wordMask) && wordMask[index] != null) {
       return wordMask[index] === ' ' ? '·' : '_';
@@ -68,9 +80,9 @@ export const HintWordSlots: React.FC<HintWordSlotsProps> = ({
               height: 48,
               borderRadius: 1.5,
               border: '2px solid',
-              borderColor: guess[index] ? 'primary.main' : 'divider',
-              bgcolor: guess[index] ? 'primary.main' : 'background.paper',
-              color: guess[index] ? 'primary.contrastText' : 'text.primary',
+              borderColor: guessChars[index] ? 'primary.main' : 'divider',
+              bgcolor: guessChars[index] ? 'primary.main' : 'background.paper',
+              color: guessChars[index] ? 'primary.contrastText' : 'text.primary',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -78,7 +90,7 @@ export const HintWordSlots: React.FC<HintWordSlotsProps> = ({
               fontWeight: 700,
               userSelect: 'none',
               transition: 'all 0.15s ease-in-out',
-              boxShadow: guess[index] ? 2 : 0,
+              boxShadow: guessChars[index] ? 2 : 0,
             }}
           >
             {renderSlot(index)}

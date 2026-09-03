@@ -85,6 +85,9 @@ export default defineConfig({
       }
     }
   ],
+  resolve: {
+    dedupe: ['react', 'react-dom', '@emotion/react', '@emotion/styled', 'react-router-dom'],
+  },
   build: {
     rollupOptions: {
       output: {

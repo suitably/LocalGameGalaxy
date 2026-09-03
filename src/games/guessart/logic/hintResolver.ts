@@ -24,6 +24,9 @@ export const buildWordMask = (word?: string): string[] => {
   Array.from(word).forEach((char) => {
     if (char === ' ') {
       mask.push(' ');
+    } else if (char === 'ß' || char === 'ẞ') {
+      mask.push('_');
+      mask.push('_');
     } else {
       mask.push('_');
     }
@@ -48,12 +51,14 @@ export const buildHintLetters = (word?: string): string[] => {
   const letterCounts = new Map<string, number>();
 
   Array.from(word).forEach((char) => {
-    if (!/[A-Za-zäöüÄÖÜß]/.test(char)) {
+    if (!/[A-Za-zäöüÄÖÜßẞ]/.test(char)) {
       return;
     }
-    const upper = char.toUpperCase();
-    baseLetters.push(upper);
-    letterCounts.set(upper, (letterCounts.get(upper) || 0) + 1);
+    const upper = char === 'ß' || char === 'ẞ' ? 'SS' : char.toUpperCase();
+    Array.from(upper).forEach((letter) => {
+      baseLetters.push(letter);
+      letterCounts.set(letter, (letterCounts.get(letter) || 0) + 1);
+    });
   });
 
   if (baseLetters.length === 0) {
@@ -159,9 +164,10 @@ export const resolveHintArtifacts = (
   if (!trimmed) {
     return null;
   }
+  const mask = buildWordMask(trimmed);
   return {
-    mask: buildWordMask(trimmed),
-    length: Array.from(trimmed).length,
+    mask,
+    length: mask.length,
     letters: buildHintLetters(trimmed),
     language: language || normalizeLanguageCode(requested) || normalizeLanguageCode(fallbackLang),
   };
