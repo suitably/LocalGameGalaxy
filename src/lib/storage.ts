@@ -34,6 +34,9 @@ export const STORAGE_KEYS = {
     GITHUB_TOKEN: 'nexumia_github_token',
     GITHUB_OWNER: 'nexumia_github_owner',
     GITHUB_REPO: 'nexumia_github_repo',
+
+    // Push notification relay for async games (GuessArt, etc.)
+    PUSH_RELAY_URL: 'galaxy_push_relay_url',
 } as const;
 
 const memoryFallback = new Map<string, string>();
@@ -121,5 +124,14 @@ export const storage = {
     
     setHelperActive(active: boolean): void {
         this.set(STORAGE_KEYS.HELPER_ACTIVE, active ? 'true' : 'false');
-    }
+    },
+
+    // Push Relay Config Accessors (for async games like GuessArt)
+    getPushRelayUrl(): string {
+        return this.get(STORAGE_KEYS.PUSH_RELAY_URL, '');
+    },
+
+    setPushRelayUrl(url: string): void {
+        this.set(STORAGE_KEYS.PUSH_RELAY_URL, url.trim().replace(/\/$/, ''));
+    },
 };

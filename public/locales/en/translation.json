@@ -508,7 +508,17 @@
     "pwa_status_standalone": "The app is currently running in full-screen standalone mode (PWA).",
     "pwa_status_browser": "The app is running inside a web browser. Install the PWA to remove browser toolbars and search bars for a native mobile experience.",
     "notifications_title": "Notifications",
-    "notifications_desc": "Push notifications let you know when it's your turn in a game (e.g. GuessArt) – even when the app is closed."
+    "notifications_desc": "Push notifications let you know when it's your turn in a game (e.g. GuessArt) – even when the app is closed.",
+    "relay_title": "Push Relay Server",
+    "relay_desc": "URL of your Cloudflare Worker or Nexumia Server that forwards push notifications to other players. Automatically embedded in shared game links.",
+    "relay_url_label": "Push Relay URL",
+    "relay_test": "Test Connection",
+    "relay_empty": "Please enter a relay URL.",
+    "relay_checking": "Connecting...",
+    "relay_connected": "Connected! Push relay active.",
+    "relay_no_vapid": "Server reachable, but no VAPID key configured.",
+    "relay_http_error": "HTTP error: {{status}}",
+    "relay_failed": "Connection failed. Check URL."
   },
   "server": {
     "title": "Nexumia Server Connection",
