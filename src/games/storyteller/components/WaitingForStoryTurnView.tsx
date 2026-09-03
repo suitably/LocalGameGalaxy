@@ -22,6 +22,7 @@ interface WaitingForStoryTurnViewProps {
   roomId?: string;
   onClaimPlayer: (playerId: string) => void;
   onShareTurn: () => void;
+  onOpenShare?: () => void;
   onOpenReader: () => void;
 }
 
@@ -30,6 +31,7 @@ export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = (
   roomId,
   onClaimPlayer,
   onShareTurn,
+  onOpenShare,
   onOpenReader,
 }) => {
   const { t } = useTranslation();
@@ -40,10 +42,14 @@ export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = (
     name: t('storyteller.defaultPlayer', 'Spieler'),
   };
 
-  const handleCopyLink = () => {
-    onShareTurn();
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopyOrOpenShare = () => {
+    if (onOpenShare) {
+      onOpenShare();
+    } else {
+      onShareTurn();
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
@@ -112,7 +118,7 @@ export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = (
               variant="contained"
               fullWidth
               startIcon={copied ? <CheckRoundedIcon /> : <ShareRoundedIcon />}
-              onClick={handleCopyLink}
+              onClick={handleCopyOrOpenShare}
               sx={{
                 bgcolor: copied ? '#22c55e' : '#0284c7',
                 '&:hover': { bgcolor: copied ? '#16a34a' : '#0369a1' },

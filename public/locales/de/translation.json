@@ -878,10 +878,6 @@
     "guestWaitingPrompt": "Der Host wählt gerade das nächste Spiel aus...",
     "guessArtDesc": "Klassisches Zeichnen & Raten! Ein Spieler zeichnet, alle anderen raten auf ihren Handys.",
     "launchGuessArt": "GuessArt starten",
-    "garticDesc": "Flüsterpost: Satz schreiben ➔ Zeichnen ➔ Raten ➔ Zeichnen ➔ Animierte Album-Show!",
-    "launchGartic": "Gartic Phone starten",
-    "storytellerDesc": "Kollaboratives Geschichtenschreiben! Schreibt gemeinsam einen Text mit Blind Mode, Time Attack & Word Roulette.",
-    "launchStoryteller": "Geschichtenschreiber starten",
     "needMin2": "Mind. 2 Spieler nötig",
     "ready": "Bereit",
     "backToLobby": "Zurück zur Party-Lobby",
@@ -1057,6 +1053,9 @@
     "modRouletteDesc": "Das System zieht pro Zug 3 zufällige Pflichtwörter, die im Text vorkommen müssen, bevor man absenden kann.",
     "startStory": "Geschichte beginnen",
     "savedStories": "Gespeicherte Geschichten",
-    "completed": "Beendet"
+    "completed": "Beendet",
+    "shareLinksTitle": "Mitspieler-Links & Benachrichtigungen",
+    "shareLinksDesc": "Mitspieler können per QR-Code oder Link auf ihrem eigenen Gerät mitspielen und Push-Benachrichtigungen empfangen, sobald sie am Zug sind.",
+    "scanQrToPlayAs": "Scanne diesen Code, um als {{name}} mitzuspielen!"
   }
 }

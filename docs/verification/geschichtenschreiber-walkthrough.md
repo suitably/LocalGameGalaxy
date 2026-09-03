@@ -4,10 +4,11 @@
 Implemented the collaborative storytelling multiplayer game **Geschichtenschreiber** (Storyteller) under `src/games/storyteller` based on the specifications of Issue #127:
 
 1. **Stack & Domain Logic**:
-   - Reused the local-first IndexedDB, pass-and-play turn rotation, and remote networking architecture from **Gartic Phone** and **GuessArt**:
-     - `BroadcastChannel` (`storyteller_channel_${roomId}`) for instantaneous same-machine / cross-tab synchronization.
-     - `mailboxService` (ephemeral MQTT broker on `storyteller_room_${roomId}`) for seamless online cross-device turn passing without requiring a dedicated backend.
-     - Seamless room integration via [`universalPartyManager`](file:///home/deck/Projects/LocalGameGalaxy/src/features/party/logic/universalPartyManager.ts) and [`PartyLobby`](file:///home/deck/Projects/LocalGameGalaxy/src/features/party/PartyLobby.tsx).
+   - Built on the local-first IndexedDB, pass-and-play turn rotation, and remote push relay architecture from **GuessArt**:
+     - `BroadcastChannel` (`storyteller_channel_${gameId}`) for instantaneous same-machine / cross-tab synchronization.
+     - `mailboxService` (ephemeral MQTT broker on `storyteller_room_${gameId}`) for online real-time turn passing without requiring a dedicated server.
+     - Web Push & Notification Settings dialog ([`ShareStoryLinksDialog.tsx`](file:///home/deck/Projects/LocalGameGalaxy/src/games/storyteller/components/ShareStoryLinksDialog.tsx)) with [`PushNotificationBanner`](file:///home/deck/Projects/LocalGameGalaxy/src/components/push/PushNotificationBanner.tsx) and QR-code generation with relay parameter (`&gameRelay=...`).
+     - Automatic Web Push notifications dispatched via [`pushClient`](file:///home/deck/Projects/LocalGameGalaxy/src/lib/push/pushClient.ts) (`storytellerNotificationService.dispatchTurnPush`) on turn submission.
    - Database provider `src/games/storyteller/logic/db.ts` with stores for `games` and `entries`.
    - Data access repository `src/games/storyteller/logic/repository.ts` and player assignment manager `playerAssignment.ts`.
    - Story progression engine `src/games/storyteller/logic/engine.ts` supporting turn submission, auto-word counting, next-player rotation, story conclusion, and conflict-free snapshot import/export.
@@ -29,6 +30,7 @@ Implemented the collaborative storytelling multiplayer game **Geschichtenschreib
    - `WaitingForStoryTurnView.tsx`: Remote turn waiting screen with player claim and URL share options.
    - `StoryReaderModal.tsx`: Book-formatted chapter reader with word statistics and copy-to-clipboard.
    - `EditStoryDialog.tsx`: Rename story and players.
+   - `ShareStoryLinksDialog.tsx`: Multi-device player link sharing, QR codes, and push notification banner settings.
 
 4. **Integration & Localization**:
    - Registered in `src/lib/gameRegistry.tsx` under category `'party'` with `AutoStoriesIcon`.

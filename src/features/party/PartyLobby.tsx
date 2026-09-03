@@ -37,8 +37,6 @@ import {
   type PartyRoomState,
   type PartyGameType,
 } from './logic/universalPartyManager';
-import { GarticPhoneGame } from '../../games/garticphone/GarticPhoneGame';
-import { StorytellerGame } from '../../games/storyteller/StorytellerGame';
 import { storage } from '../../lib/storage';
 
 const STORAGE_PLAYER_NAME = 'guessart_player_name';
@@ -101,11 +99,6 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
   const [editNameOpen, setEditNameOpen] = useState<boolean>(false);
   const [editNameInput, setEditNameInput] = useState<string>(playerName);
 
-  const [isInGameView, setIsInGameView] = useState<boolean>(() => {
-    const state = universalPartyManager.getRoomState();
-    return state?.status === 'in_game';
-  });
-
   const serverUrl = storage.getHelperUrl();
   const isServerActive = storage.isHelperActive();
 
@@ -116,16 +109,7 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
     }
 
     const unsubscribe = universalPartyManager.onPartyUpdate((updated) => {
-      setRoomState((prev) => {
-        if (prev?.status !== 'in_game' && updated.status === 'in_game') {
-          sessionStorage.removeItem(`galaxy_gartic_state_${roomId}`);
-          setIsInGameView(true);
-        } else if (prev?.status === 'in_game' && updated.status === 'lobby') {
-          sessionStorage.removeItem(`galaxy_gartic_state_${roomId}`);
-          setIsInGameView(false);
-        }
-        return updated;
-      });
+      setRoomState(updated);
       const myId = universalPartyManager.getMyPlayerId();
       const myPlayer = updated.players.find((p) => p.id === myId);
       if (myPlayer && myPlayer.name !== playerName) {
@@ -178,31 +162,15 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleLaunchGame = (gameType: PartyGameType) => {
-    if (gameType === 'guessart') {
-      navigate('/games/guessart');
-      return;
-    }
-    const newGameId = `gartic_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    sessionStorage.removeItem(`galaxy_gartic_state_${roomId}`);
-    universalPartyManager.launchGame(roomId, gameType, newGameId);
-    setIsInGameView(true);
+  const handleLaunchGame = (_gameType: PartyGameType) => {
+    navigate('/games/guessart');
   };
 
   const handleReturnToLobby = () => {
     universalPartyManager.returnToLobby(roomId);
-    sessionStorage.removeItem(`galaxy_gartic_state_${roomId}`);
-    setIsInGameView(false);
   };
 
   // In-Game Render
-  if (roomState?.status === 'in_game' && roomState.activeGame === 'garticphone' && isInGameView) {
-    return <GarticPhoneGame onBackToMenu={() => setIsInGameView(false)} initialRoomId={roomId} />;
-  }
-
-  if (roomState?.status === 'in_game' && roomState.activeGame === 'storyteller' && isInGameView) {
-    return <StorytellerGame onBackToMenu={() => setIsInGameView(false)} initialRoomId={roomId} />;
-  }
 
   const shareUrl = buildShareUrl();
   const players = roomState?.players || [];
@@ -289,7 +257,7 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
                 color="primary"
                 size="large"
                 startIcon={<PlayArrowRoundedIcon />}
-                onClick={() => setIsInGameView(true)}
+                onClick={() => navigate('/games/guessart')}
                 sx={{ fontWeight: 800, borderRadius: 2, flexGrow: { xs: 1, sm: 0 }, py: 1.2, px: 3 }}
               >
                 {t('party.rejoinGame', 'Spiel beitreten / fortsetzen')}
@@ -531,68 +499,10 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+              gridTemplateColumns: { xs: '1fr' },
               gap: 2,
             }}
           >
-            {/* Gartic Phone Card */}
-            <Card
-              variant="outlined"
-              sx={{
-                p: 2.5,
-                borderRadius: 3,
-                border: '1.5px solid',
-                borderColor: 'secondary.main',
-                bgcolor: 'background.paper',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                gap: 2,
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 6px 20px rgba(156, 39, 176, 0.15)',
-                },
-              }}
-            >
-              <Box>
-                <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-                  <Typography variant="h6" fontWeight={800} color="secondary.main">
-                    📞 Gartic Phone
-                  </Typography>
-                  <Chip label="Party Hit 🎉" color="secondary" size="small" sx={{ fontWeight: 'bold' }} />
-                </Box>
-                <Typography variant="body2" color="text.secondary">
-                  {t('party.garticDesc', 'Flüsterpost: Satz schreiben ➔ Zeichnen ➔ Raten ➔ Zeichnen ➔ Animierte Album-Show!')}
-                </Typography>
-              </Box>
-
-              {amIHost ? (
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  size="large"
-                  onClick={() => handleLaunchGame('garticphone')}
-                  startIcon={<PlayArrowRoundedIcon />}
-                  sx={{
-                    fontWeight: 800,
-                    borderRadius: 2.5,
-                    py: 1.2,
-                    boxShadow: '0 4px 14px rgba(156, 39, 176, 0.35)',
-                  }}
-                >
-                  {t('party.launchGartic', 'Gartic Phone starten')}
-                </Button>
-              ) : (
-                <Chip
-                  label={t('party.guestWaitingPrompt', 'Der Host wählt gerade das nächste Spiel aus...')}
-                  variant="outlined"
-                  color="secondary"
-                  sx={{ fontWeight: 'bold', py: 1 }}
-                />
-              )}
-            </Card>
-
             {/* GuessArt Card */}
             <Card
               variant="outlined"
@@ -647,64 +557,6 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
                   variant="outlined"
                   color="primary"
                   sx={{ fontWeight: 'bold', py: 1 }}
-                />
-              )}
-            </Card>
-
-            {/* Geschichtenschreiber Card */}
-            <Card
-              variant="outlined"
-              sx={{
-                p: 2.5,
-                borderRadius: 3,
-                border: '1.5px solid',
-                borderColor: '#0284c7',
-                bgcolor: 'background.paper',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                gap: 2,
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 6px 20px rgba(2, 132, 199, 0.15)',
-                },
-              }}
-            >
-              <Box>
-                <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-                  <Typography variant="h6" fontWeight={800} sx={{ color: '#0284c7' }}>
-                    📖 Geschichtenschreiber
-                  </Typography>
-                  <Chip label="Kreativ ✍️" sx={{ bgcolor: 'rgba(2, 132, 199, 0.15)', color: '#0284c7', fontWeight: 'bold' }} size="small" />
-                </Box>
-                <Typography variant="body2" color="text.secondary">
-                  {t('party.storytellerDesc', 'Kollaboratives Geschichtenschreiben! Schreibt gemeinsam einen Text mit Blind Mode, Time Attack & Word Roulette.')}
-                </Typography>
-              </Box>
-
-              {amIHost ? (
-                <Button
-                  variant="contained"
-                  size="large"
-                  onClick={() => handleLaunchGame('storyteller')}
-                  startIcon={<PlayArrowRoundedIcon />}
-                  sx={{
-                    fontWeight: 800,
-                    borderRadius: 2.5,
-                    py: 1.2,
-                    bgcolor: '#0284c7',
-                    '&:hover': { bgcolor: '#0369a1' },
-                    boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)',
-                  }}
-                >
-                  {t('party.launchStoryteller', 'Geschichtenschreiber starten')}
-                </Button>
-              ) : (
-                <Chip
-                  label={t('party.guestWaitingPrompt', 'Der Host wählt gerade das nächste Spiel aus...')}
-                  variant="outlined"
-                  sx={{ color: '#0284c7', borderColor: '#0284c7', fontWeight: 'bold', py: 1 }}
                 />
               )}
             </Card>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import LZString from 'lz-string';
 import { usePageTitle } from '../../context/TitleContext';
 import { useWakeLock } from '../../hooks/useWakeLock';
 import { useLayout } from '../../context/LayoutContext';
@@ -12,60 +13,29 @@ import { StoryWriterView } from './components/StoryWriterView';
 import { WaitingForStoryTurnView } from './components/WaitingForStoryTurnView';
 import { StoryReaderModal } from './components/StoryReaderModal';
 import { EditStoryDialog } from './components/EditStoryDialog';
+import { ShareStoryLinksDialog } from './components/ShareStoryLinksDialog';
 import { playerAssignment } from './logic/playerAssignment';
 import { LocalStoryEngine } from './logic/engine';
+import { storytellerNotificationService } from './logic/notificationService';
 import { mailboxService } from '../guessart/logic/mailboxService';
-import { universalPartyManager } from '../../features/party/logic/universalPartyManager';
-import { storage } from '../../lib/storage';
+import { gameRelayStorage } from '../../lib/push/gameRelayStorage';
+import { pushClient } from '../../lib/push/pushClient';
 import type { GameSnapshot } from '../guessart/logic/types';
-import type { StoryEntry, StoryGameRecord, StoryGameSnapshot, StoryPlayer } from './types';
+import type { StoryEntry, StoryGameRecord, StoryGameSnapshot } from './types';
 
-const STORAGE_PLAYER_NAME = 'guessart_player_name';
-
-interface StorytellerGameProps {
-  onBackToMenu?: () => void;
-  initialRoomId?: string;
-}
-
-export const StorytellerGame: React.FC<StorytellerGameProps> = ({
-  onBackToMenu,
-  initialRoomId,
-}) => {
+export const StorytellerGame: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   usePageTitle(t('games.storyteller.title', 'Geschichtenschreiber'));
 
-  const parsedUrl = useMemo(() => {
-    const hash = window.location.hash;
-    const queryString = window.location.search || (hash.includes('?') ? hash.substring(hash.indexOf('?')) : '');
-    const params = new URLSearchParams(queryString);
-    const room = params.get('room') || params.get('roomId') || initialRoomId || null;
-    const gameId = params.get('gameId') || params.get('game') || null;
-    return {
-      room: room ? room.toUpperCase().trim() : null,
-      gameId,
-    };
-  }, [initialRoomId]);
-
-  const partyState = universalPartyManager.getRoomState();
-  const effectiveRoomId = parsedUrl.room || partyState?.roomId || null;
-
-  const [myPlayerId] = useState<string>(() => universalPartyManager.getMyPlayerId());
-  const [myPlayerName] = useState<string>(() => storage.get(STORAGE_PLAYER_NAME, 'Spieler'));
-
-  const [activeGameId, setActiveGameId] = useState<string | null>(parsedUrl.gameId || null);
+  const [activeGameId, setActiveGameId] = useState<string | null>(null);
   const [game, setGame] = useState<StoryGameRecord | null>(null);
   const [entries, setEntries] = useState<StoryEntry[]>([]);
   const [gameLoading, setGameLoading] = useState<boolean>(false);
   const [readerOpen, setReaderOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [localVersion, setLocalVersion] = useState(0);
-
-  const isHost = Boolean(
-    !effectiveRoomId ||
-    universalPartyManager.isHost(effectiveRoomId) ||
-    game?.players[0]?.id === myPlayerId,
-  );
 
   const {
     lobbyPlayers,
@@ -80,28 +50,90 @@ export const StorytellerGame: React.FC<StorytellerGameProps> = ({
     loadActiveGames,
   } = useStorytellerLobby();
 
-  useWakeLock(Boolean(activeGameId || game));
+  const isGameActive = Boolean(activeGameId || game);
+  useWakeLock(isGameActive);
   const { setHeaderHidden } = useLayout();
 
   useEffect(() => {
-    setHeaderHidden(Boolean(activeGameId || game));
+    setHeaderHidden(isGameActive);
     return () => setHeaderHidden(false);
-  }, [activeGameId, game, setHeaderHidden]);
+  }, [isGameActive, setHeaderHidden]);
+
+  // Request browser notification permission on mount
+  useEffect(() => {
+    storytellerNotificationService.requestPermission().catch(() => {});
+  }, []);
+
+  const cleanUrl = useCallback(() => {
+    if (typeof window === 'undefined' || !window.history?.replaceState) return;
+    const hashWithoutQuery = window.location.hash.split('?')[0] || '#/games/storyteller';
+    const cleanPath = window.location.pathname + hashWithoutQuery;
+    window.history.replaceState({}, document.title, cleanPath);
+  }, []);
+
+  // Process URL parameters: gameId, player, data, gameRelay
+  useEffect(() => {
+    const processUrlParams = async () => {
+      if (typeof window === 'undefined') return;
+      const search = window.location.search;
+      const hash = window.location.hash;
+      const queryString = search || (hash.includes('?') ? hash.substring(hash.indexOf('?')) : '');
+      if (!queryString) return;
+
+      const params = new URLSearchParams(queryString);
+      const dataParam = params.get('data');
+      const targetPlayerId = params.get('player') || params.get('playerId');
+      const urlGameId = params.get('gameId') || params.get('game');
+      const relayParam = params.get('gameRelay');
+
+      let resolvedGameId = urlGameId;
+
+      if (dataParam) {
+        try {
+          const jsonStr = LZString.decompressFromEncodedURIComponent(dataParam);
+          if (jsonStr) {
+            const snapshot = JSON.parse(jsonStr) as StoryGameSnapshot;
+            if (snapshot && snapshot.game) {
+              const imported = await LocalStoryEngine.importSnapshot(snapshot);
+              resolvedGameId = imported.game.id;
+              setGame(imported.game);
+              setEntries(imported.entries);
+            }
+          }
+        } catch (e) {
+          console.warn('[Storyteller] Failed to unpack URL data payload:', e);
+        }
+      }
+
+      if (resolvedGameId) {
+        if (targetPlayerId) {
+          playerAssignment.setLocalPlayerIds(resolvedGameId, [targetPlayerId]);
+        }
+        if (relayParam) {
+          gameRelayStorage.setGameRelay(resolvedGameId, relayParam);
+        }
+        if (targetPlayerId && relayParam) {
+          pushClient.registerForGamePush(resolvedGameId, targetPlayerId).catch(() => {});
+        }
+        setLocalVersion((v) => v + 1);
+        await loadActiveGames();
+        setActiveGameId(resolvedGameId);
+        cleanUrl();
+      }
+    };
+
+    processUrlParams();
+    window.addEventListener('hashchange', processUrlParams);
+    return () => window.removeEventListener('hashchange', processUrlParams);
+  }, [cleanUrl, loadActiveGames]);
 
   const handleBack = useCallback(() => {
-    if (effectiveRoomId) {
-      sessionStorage.removeItem(`galaxy_story_state_${effectiveRoomId}`);
-    }
-    if (onBackToMenu) {
-      onBackToMenu();
-    } else {
-      setActiveGameId(null);
-      setGame(null);
-      setEntries([]);
-      loadActiveGames();
-      navigate('/games/storyteller');
-    }
-  }, [effectiveRoomId, onBackToMenu, loadActiveGames, navigate]);
+    setActiveGameId(null);
+    setGame(null);
+    setEntries([]);
+    loadActiveGames();
+    navigate('/games/storyteller');
+  }, [loadActiveGames, navigate]);
 
   // Broadcast state & events over BroadcastChannel & MQTT Mailbox
   const broadcastSnapshot = useCallback((newGame: StoryGameRecord, newEntries: StoryEntry[]) => {
@@ -110,135 +142,87 @@ export const StorytellerGame: React.FC<StorytellerGameProps> = ({
     setEntries(newEntries);
     setActiveGameId(newGame.id);
 
-    const roomId = effectiveRoomId || newGame.id;
-    sessionStorage.setItem(`galaxy_story_state_${roomId}`, JSON.stringify(snapshot));
-
     try {
-      const channel = new BroadcastChannel(`storyteller_channel_${roomId}`);
-      channel.postMessage({ type: 'STORY_SYNC', snapshot, roomId });
+      const channel = new BroadcastChannel(`storyteller_channel_${newGame.id}`);
+      channel.postMessage({ type: 'STORY_SYNC', snapshot });
       channel.close();
     } catch {
       // ignore
     }
 
     try {
-      const topic = `storyteller_room_${roomId}`;
-      mailboxService.publishTurn(topic, { type: 'STORY_SYNC', snapshot, roomId } as unknown as GameSnapshot);
+      const topic = `storyteller_room_${newGame.id}`;
+      mailboxService.publishTurn(topic, { type: 'STORY_SYNC', snapshot } as unknown as GameSnapshot);
     } catch {
       // ignore
     }
-  }, [effectiveRoomId]);
+  }, []);
 
-  // Handle party mode auto-start
+  // Realtime BroadcastChannel & MQTT sync
   useEffect(() => {
-    if (partyState?.status === 'in_game' && partyState.activeGame === 'storyteller' && !game && isHost) {
-      const partyPlayers: StoryPlayer[] = partyState.players.map((p) => ({
-        id: p.id,
-        name: p.name,
-        isRemote: p.id !== myPlayerId,
-      }));
+    if (!activeGameId) return;
 
-      LocalStoryEngine.createGame({
-        name: `${t('games.storyteller.title', 'Geschichtenschreiber')} (${partyState.roomId})`,
-        players: partyPlayers,
-        language: 'de',
-        modifiers,
-      }).then((rec) => {
-        broadcastSnapshot(rec, []);
-      });
-    }
-  }, [partyState, game, isHost, myPlayerId, modifiers, broadcastSnapshot, t]);
+    const topic = `storyteller_room_${activeGameId}`;
+    const channel = new BroadcastChannel(`storyteller_channel_${activeGameId}`);
 
-  // MQTT Mailbox & BroadcastChannel synchronization effect
-  useEffect(() => {
-    const roomId = effectiveRoomId || activeGameId;
-    if (!roomId) return;
-
-    const topic = `storyteller_room_${roomId}`;
-    const channel = new BroadcastChannel(`storyteller_channel_${roomId}`);
-
-    channel.onmessage = (event) => {
+    channel.onmessage = async (event) => {
       if (event.data?.type === 'STORY_SYNC' && event.data.snapshot) {
-        setGame(event.data.snapshot.game);
-        setEntries(event.data.snapshot.entries);
-        setActiveGameId(event.data.snapshot.game.id);
-        LocalStoryEngine.importSnapshot(event.data.snapshot);
-      } else if (event.data?.type === 'STORY_FORCE_END') {
-        handleBack();
+        const res = await LocalStoryEngine.importSnapshot(event.data.snapshot);
+        if (res.updated) {
+          setGame(res.game);
+          setEntries(res.entries);
+        }
       } else if (event.data?.type === 'STORY_FINISH') {
         if (event.data.snapshot) {
-          setGame(event.data.snapshot.game);
-          setEntries(event.data.snapshot.entries);
+          const res = await LocalStoryEngine.importSnapshot(event.data.snapshot);
+          if (res.updated) {
+            setGame(res.game);
+            setEntries(res.entries);
+          }
         }
         setReaderOpen(true);
       }
     };
 
-    mailboxService.subscribeToGame(topic, async (incoming: unknown) => {
+    const unsub = mailboxService.subscribeToGame(topic, async (incoming: unknown) => {
       if (!incoming || typeof incoming !== 'object' || !('type' in incoming)) return;
-      const msg = incoming as {
-        type: string;
-        snapshot?: StoryGameSnapshot;
-        player?: StoryPlayer;
-      };
+      const msg = incoming as { type: string; snapshot?: StoryGameSnapshot };
 
-      if (msg.type === 'STORY_FORCE_END') {
-        handleBack();
+      if (msg.type === 'STORY_SYNC' && msg.snapshot) {
+        const res = await LocalStoryEngine.importSnapshot(msg.snapshot);
+        if (res.updated) {
+          setGame(res.game);
+          setEntries(res.entries);
+
+          // Notify if it is now this device's turn and window is hidden
+          const nextActive = res.game.players[res.game.currentPlayerIndex];
+          if (nextActive && playerAssignment.isPlayerLocal(res.game.id, nextActive.id, false)) {
+            if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+              storytellerNotificationService.showLocalNotification(
+                `${res.game.name || 'Geschichtenschreiber'}: Du bist dran!`,
+                'Ein neuer Abschnitt wurde verfasst. Jetzt bist du an der Reihe!',
+              );
+            }
+          }
+        }
       } else if (msg.type === 'STORY_FINISH') {
         if (msg.snapshot) {
-          setGame(msg.snapshot.game);
-          setEntries(msg.snapshot.entries);
-          LocalStoryEngine.importSnapshot(msg.snapshot);
+          const res = await LocalStoryEngine.importSnapshot(msg.snapshot);
+          if (res.updated) {
+            setGame(res.game);
+            setEntries(res.entries);
+          }
         }
         setReaderOpen(true);
-      } else if (msg.type === 'STORY_SYNC' && msg.snapshot) {
-        setGame(msg.snapshot.game);
-        setEntries(msg.snapshot.entries);
-        setActiveGameId(msg.snapshot.game.id);
-        LocalStoryEngine.importSnapshot(msg.snapshot);
-      } else if (msg.type === 'STORY_REQUEST_SYNC') {
-        if (isHost && game) {
-          broadcastSnapshot(game, entries);
-        }
-      } else if (msg.type === 'STORY_JOIN' && msg.player) {
-        const newPlayer = msg.player;
-        if (isHost && game && !game.players.some((p) => p.id === newPlayer.id)) {
-          const updated = await LocalStoryEngine.updateGameDetails(game.id, {
-            players: [...game.players, newPlayer],
-          });
-          broadcastSnapshot(updated.game, updated.entries);
-        }
       }
     });
 
-    // Send join announcement
-    try {
-      mailboxService.publishTurn(topic, {
-        type: 'STORY_JOIN',
-        player: { id: myPlayerId, name: myPlayerName, isRemote: !isHost },
-      } as unknown as GameSnapshot);
-    } catch {
-      // ignore
-    }
-
-    if (isHost && game) {
-      broadcastSnapshot(game, entries);
-    } else if (!game) {
-      try {
-        mailboxService.publishTurn(topic, {
-          type: 'STORY_REQUEST_SYNC',
-          playerId: myPlayerId,
-        } as unknown as GameSnapshot);
-      } catch {
-        // ignore
-      }
-    }
-
     return () => {
       channel.close();
+      unsub();
       mailboxService.unsubscribe();
     };
-  }, [effectiveRoomId, activeGameId, isHost, game, entries, myPlayerId, myPlayerName, broadcastSnapshot, handleBack]);
+  }, [activeGameId]);
 
   const handleStartGame = async (options: {
     name?: string;
@@ -270,6 +254,17 @@ export const StorytellerGame: React.FC<StorytellerGameProps> = ({
     try {
       const snap = await LocalStoryEngine.submitTurn(game.id, { text, timeSpentSeconds });
       broadcastSnapshot(snap.game, snap.entries);
+
+      // Web Push to next player if configured
+      const nextPlayer = snap.game.players[snap.game.currentPlayerIndex];
+      const author = snap.entries[snap.entries.length - 1]?.authorName;
+      if (nextPlayer) {
+        storytellerNotificationService.dispatchTurnPush({
+          game: snap.game,
+          nextPlayer,
+          authorName: author,
+        }).catch(() => {});
+      }
     } finally {
       setGameLoading(false);
     }
@@ -282,16 +277,15 @@ export const StorytellerGame: React.FC<StorytellerGameProps> = ({
       const snap = await LocalStoryEngine.finishStory(game.id);
       broadcastSnapshot(snap.game, snap.entries);
 
-      const roomId = effectiveRoomId || game.id;
       try {
-        const channel = new BroadcastChannel(`storyteller_channel_${roomId}`);
+        const channel = new BroadcastChannel(`storyteller_channel_${game.id}`);
         channel.postMessage({ type: 'STORY_FINISH', snapshot: snap });
         channel.close();
       } catch {
         // ignore
       }
       try {
-        const topic = `storyteller_room_${roomId}`;
+        const topic = `storyteller_room_${game.id}`;
         mailboxService.publishTurn(topic, { type: 'STORY_FINISH', snapshot: snap } as unknown as GameSnapshot);
       } catch {
         // ignore
@@ -303,25 +297,14 @@ export const StorytellerGame: React.FC<StorytellerGameProps> = ({
     }
   };
 
-  const handleShareTurn = useCallback(() => {
-    const shareRoom = effectiveRoomId || game?.id;
-    const url = `${window.location.origin}${window.location.pathname}#/games/storyteller?room=${shareRoom || ''}`;
-    navigator.clipboard.writeText(url);
-  }, [effectiveRoomId, game?.id]);
-
   const activePlayer = game?.players[game.currentPlayerIndex];
-  const myPlayer = game?.players.find((p) => p.id === myPlayerId)
-    || game?.players.find((p) => p.name.toLowerCase() === myPlayerName.toLowerCase());
 
   const isCurrentTurnLocal = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     localVersion;
     if (!game || !activePlayer) return true;
-    if (myPlayer) {
-      return myPlayer.id === activePlayer.id;
-    }
     return playerAssignment.isPlayerLocal(game.id, activePlayer.id, true);
-  }, [game, activePlayer, myPlayer, localVersion]);
+  }, [game, activePlayer, localVersion]);
 
   const handleToggleLocalRemote = useCallback(async () => {
     if (!game || !activePlayer) return;
@@ -356,11 +339,10 @@ export const StorytellerGame: React.FC<StorytellerGameProps> = ({
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', overflow: 'hidden' }}>
       <StoryHeader
         game={game}
-        roomId={effectiveRoomId || undefined}
         onExit={handleBack}
         onOpenReader={() => setReaderOpen(true)}
         onOpenEdit={() => setEditOpen(true)}
-        onShareTurn={handleShareTurn}
+        onOpenShare={() => setShareDialogOpen(true)}
         isCurrentTurnLocal={isCurrentTurnLocal}
         onToggleLocalRemote={handleToggleLocalRemote}
       />
@@ -373,12 +355,12 @@ export const StorytellerGame: React.FC<StorytellerGameProps> = ({
         ) : !isCurrentTurnLocal ? (
           <WaitingForStoryTurnView
             game={game}
-            roomId={effectiveRoomId || undefined}
             onClaimPlayer={(playerId) => {
               playerAssignment.addLocalPlayerId(game.id, playerId);
               setLocalVersion((v) => v + 1);
             }}
-            onShareTurn={handleShareTurn}
+            onShareTurn={() => setShareDialogOpen(true)}
+            onOpenShare={() => setShareDialogOpen(true)}
             onOpenReader={() => setReaderOpen(true)}
           />
         ) : (
@@ -407,6 +389,14 @@ export const StorytellerGame: React.FC<StorytellerGameProps> = ({
           const updated = await LocalStoryEngine.updateGameDetails(game.id, payload);
           broadcastSnapshot(updated.game, updated.entries);
         }}
+      />
+
+      <ShareStoryLinksDialog
+        open={shareDialogOpen}
+        onClose={() => setShareDialogOpen(false)}
+        game={game}
+        entries={entries}
+        onPlayerChanged={() => setLocalVersion((v) => v + 1)}
       />
     </Box>
   );

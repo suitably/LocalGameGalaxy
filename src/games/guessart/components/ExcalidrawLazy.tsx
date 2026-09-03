@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { ensureStyles } from './excalidrawLazyStyles';
 
 const STORAGE_KEY = 'guessart_excalidraw_library';
@@ -36,16 +36,15 @@ export const ExcalidrawLazy = React.lazy(async () => {
 
   const ExcalidrawWithLibrary: React.FC<Record<string, unknown>> = (props) => {
     const [api, setApi] = useState<unknown>(null);
+    const excalidrawAPIRef = useRef(props.excalidrawAPI);
+    excalidrawAPIRef.current = props.excalidrawAPI;
 
-    const handleApi = useCallback(
-      (instance: unknown) => {
-        setApi(instance);
-        if (typeof props.excalidrawAPI === 'function') {
-          (props.excalidrawAPI as (api: unknown) => void)(instance);
-        }
-      },
-      [props]
-    );
+    const handleApi = useCallback((instance: unknown) => {
+      setApi((prev: unknown) => (prev === instance ? prev : instance));
+      if (typeof excalidrawAPIRef.current === 'function') {
+        (excalidrawAPIRef.current as (api: unknown) => void)(instance);
+      }
+    }, []);
 
     if (useHandleLibrary) {
       // eslint-disable-next-line react-hooks/rules-of-hooks

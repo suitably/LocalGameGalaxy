@@ -28,6 +28,7 @@ interface StoryHeaderProps {
   onOpenReader: () => void;
   onOpenEdit?: () => void;
   onShareTurn?: () => void;
+  onOpenShare?: () => void;
   isCurrentTurnLocal?: boolean;
   canToggleLocalRemote?: boolean;
   onToggleLocalRemote?: () => void;
@@ -40,6 +41,7 @@ export const StoryHeader: React.FC<StoryHeaderProps> = ({
   onOpenReader,
   onOpenEdit,
   onShareTurn,
+  onOpenShare,
   isCurrentTurnLocal = true,
   canToggleLocalRemote = true,
   onToggleLocalRemote,
@@ -53,11 +55,13 @@ export const StoryHeader: React.FC<StoryHeaderProps> = ({
   };
 
   const handleShare = () => {
-    if (onShareTurn) {
+    if (onOpenShare) {
+      onOpenShare();
+    } else if (onShareTurn) {
       onShareTurn();
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
     setMenuAnchorEl(null);
   };
 

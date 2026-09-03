@@ -890,10 +890,6 @@
     "guestWaitingPrompt": "The host is currently choosing the next game...",
     "guessArtDesc": "Classic drawing & guessing! One player draws, all other players guess on their phones.",
     "launchGuessArt": "Launch GuessArt",
-    "garticDesc": "Pass the message: Write sentence ➔ Draw ➔ Guess ➔ Draw ➔ Animated Album Show!",
-    "launchGartic": "Launch Gartic Phone",
-    "storytellerDesc": "Collaborative story writing! Create stories together with Blind Mode, Time Attack & Word Roulette.",
-    "launchStoryteller": "Launch Storyteller",
     "needMin2": "At least 2 players needed",
     "ready": "Ready",
     "backToLobby": "Back to Party Lobby",
@@ -1067,6 +1063,9 @@
     "modRouletteDesc": "The system picks 3 random required words per turn that must appear in the text before submitting.",
     "startStory": "Start Story",
     "savedStories": "Saved Stories",
-    "completed": "Completed"
+    "completed": "Completed",
+    "shareLinksTitle": "Player Links & Push Notifications",
+    "shareLinksDesc": "Players can join using QR code or link on their own device and receive push notifications when it is their turn.",
+    "scanQrToPlayAs": "Scan this code to play as {{name}}!"
   }
 }
