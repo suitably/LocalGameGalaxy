@@ -10,7 +10,7 @@ export interface PartyPlayer {
   joinedAt: number;
 }
 
-export type PartyGameType = 'garticphone';
+export type PartyGameType = 'guessart' | 'garticphone';
 
 export interface PartyRoomState {
   roomId: string;
