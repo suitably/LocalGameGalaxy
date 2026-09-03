@@ -124,7 +124,7 @@ export const SharePlayerLinksDialog: React.FC<SharePlayerLinksDialogProps> = ({
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <ShareRoundedIcon color="primary" />
-        <Typography variant="h6" fontWeight={800}>
+        <Typography variant="h6" fontWeight={800} component="div">
           {t('guessart.shareLinksTitle', 'Mitspieler-Links')}
         </Typography>
       </DialogTitle>
