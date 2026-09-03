@@ -214,15 +214,21 @@ export default {
       // Send to all targets in parallel
       const results = await Promise.allSettled(
         targets.map(async (target) => {
-          const result = await sendWebPush(target.sub, payloadString, pushOptions);
-          if (result.success) {
-            sent++;
-          } else {
-            failed++;
-            // 404 or 410 means the subscription is expired/unsubscribed
-            if (result.statusCode === 404 || result.statusCode === 410) {
-              expiredPlayerIds.push(target.playerId);
+          try {
+            const result = await sendWebPush(target.sub, payloadString, pushOptions);
+            if (result.success) {
+              sent++;
+            } else {
+              failed++;
+              // 404 or 410 means the subscription is expired/unsubscribed
+              if (result.statusCode === 404 || result.statusCode === 410) {
+                expiredPlayerIds.push(target.playerId);
+              }
             }
+            return { playerId: target.playerId, ...result };
+          } catch (err) {
+            failed++;
+            return { playerId: target.playerId, success: false, error: String(err) };
           }
         }),
       );
@@ -236,7 +242,17 @@ export default {
         }
       }
 
-      return jsonResponse({ success: true, sent, failed, totalTargets: targets.length });
+      const deliveryDetails = results.map((r) =>
+        r.status === 'fulfilled' ? r.value : { success: false, error: String(r.reason) },
+      );
+
+      return jsonResponse({
+        success: true,
+        sent,
+        failed,
+        totalTargets: targets.length,
+        details: deliveryDetails,
+      });
     }
 
     return new Response('Not Found', { status: 404, headers: corsHeaders });
