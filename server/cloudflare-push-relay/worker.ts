@@ -82,9 +82,14 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // Health
+    // Health & diagnostic endpoint
     if (path === '' || path === '/health') {
-      return jsonResponse({ status: 'ok', service: 'LocalGameGalaxy Push Relay' });
+      return jsonResponse({
+        status: 'ok',
+        service: 'LocalGameGalaxy Push Relay',
+        kvBound: Boolean(env.PUSH_KV),
+        storageType: env.PUSH_KV ? 'Cloudflare KV (persistent)' : 'In-Memory (ephemeral, cold starts lose state)',
+      });
     }
 
     // 1. GET VAPID Public Key (auto-generated or configured)

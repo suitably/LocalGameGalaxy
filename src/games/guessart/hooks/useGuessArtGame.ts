@@ -141,8 +141,10 @@ export const useGuessArtGame = (
         ? `${actorName} hat den Zug beendet. Du bist jetzt dran!`
         : 'Ein neuer Zug wartet auf dich!';
 
+      const localPlayerIds = playerAssignment.getLocalPlayerIds(gameId);
       await pushClient.sendGamePushNotification({
         gameId,
+        senderPlayerId: localPlayerIds[0],
         title,
         body,
         url: `${window.location.origin}${window.location.pathname}#/games/guessart?gameId=${gameId}`,

@@ -21,6 +21,7 @@ import { EditGameDialog } from './components/EditGameDialog';
 import { CatalogueEditorDialog } from './components/catalogue/CatalogueEditorDialog';
 import { storage } from '../../lib/storage';
 import { playerAssignment } from './logic/playerAssignment';
+import { gameRelayStorage } from '../../lib/push/gameRelayStorage';
 import { guessArtNotificationService } from './logic/notificationService';
 import { mailboxService } from './logic/mailboxService';
 import LZString from 'lz-string';
@@ -86,6 +87,7 @@ export const GuessArtGame: React.FC = () => {
       const dataParam = params.get('data');
       const targetPlayerId = params.get('player') || params.get('playerId');
       const urlGameId = params.get('gameId') || params.get('game');
+      const relayParam = params.get('gameRelay') || params.get('relay');
 
       if (dataParam) {
         try {
@@ -96,6 +98,9 @@ export const GuessArtGame: React.FC = () => {
               const imported = await LocalGameEngine.importSnapshot(snapshot, language);
               if (targetPlayerId) {
                 playerAssignment.setLocalPlayerIds(imported.game.id, [targetPlayerId]);
+              }
+              if (relayParam) {
+                gameRelayStorage.setGameRelay(imported.game.id, relayParam);
               }
               triggerLocalUpdate();
               await loadActiveGames();
@@ -112,6 +117,9 @@ export const GuessArtGame: React.FC = () => {
       if (urlGameId) {
         if (targetPlayerId) {
           playerAssignment.setLocalPlayerIds(urlGameId, [targetPlayerId]);
+        }
+        if (relayParam) {
+          gameRelayStorage.setGameRelay(urlGameId, relayParam);
         }
         triggerLocalUpdate();
         await loadActiveGames();

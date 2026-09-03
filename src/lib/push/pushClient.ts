@@ -75,6 +75,24 @@ export const pushClient = {
       const registration = await navigator.serviceWorker.ready;
       let subscription = await registration.pushManager.getSubscription();
 
+      if (subscription) {
+        // Verify that the existing subscription matches the relay's current VAPID key
+        const rawKey = subscription.options?.applicationServerKey;
+        const targetBytes = urlBase64ToUint8Array(publicKey);
+        let match = false;
+        if (rawKey) {
+          const rawBytes = new Uint8Array(rawKey);
+          if (rawBytes.length === targetBytes.length) {
+            match = rawBytes.every((val, idx) => val === targetBytes[idx]);
+          }
+        }
+        if (!match) {
+          console.log('[PushClient] VAPID key changed, renewing push subscription for relay...');
+          await subscription.unsubscribe().catch(() => {});
+          subscription = null;
+        }
+      }
+
       if (!subscription) {
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
@@ -110,6 +128,12 @@ export const pushClient = {
         }),
       });
 
+      if (subRes.ok) {
+        console.log(`[PushClient] Player ${playerId} registered for push on game ${gameId} via ${relayUrl}`);
+      } else {
+        console.warn(`[PushClient] Relay rejected subscription (${subRes.status}):`, await subRes.text().catch(() => ''));
+      }
+
       return subRes.ok;
     } catch (err) {
       console.warn('[PushClient] Failed to register push subscription:', err);
@@ -123,6 +147,7 @@ export const pushClient = {
   async sendGamePushNotification(payload: PushNotificationPayload): Promise<boolean> {
     const relayUrl = gameRelayStorage.getGameRelay(payload.gameId);
     if (!relayUrl) {
+      console.warn('[PushClient] Cannot send push notification: no relay configured for game', payload.gameId);
       return false;
     }
 
@@ -137,7 +162,14 @@ export const pushClient = {
         body: JSON.stringify(payload),
       });
 
-      return res.ok;
+      if (res.ok) {
+        const data = await res.json().catch(() => null);
+        console.log('[PushClient] Push notification dispatched via relay:', data);
+        return true;
+      } else {
+        console.warn(`[PushClient] Relay notify returned status ${res.status}:`, await res.text().catch(() => ''));
+        return false;
+      }
     } catch (err) {
       console.warn('[PushClient] Failed to send push notification via relay:', err);
       return false;
