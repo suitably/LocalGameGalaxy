@@ -139,7 +139,11 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
             <ExcalidrawLazy
               excalidrawAPI={handleExcalidrawInit}
               initialData={initialScene as unknown as Record<string, unknown>}
-              onChange={(elements, appState, files) => {
+              onChange={(
+                elements: readonly Record<string, unknown>[],
+                appState: Record<string, unknown> | null,
+                files: Record<string, unknown> | null
+              ) => {
                 const mergedAppState = {
                   ...(latestSceneRef.current?.appState || {}),
                   ...(appState || {}),
