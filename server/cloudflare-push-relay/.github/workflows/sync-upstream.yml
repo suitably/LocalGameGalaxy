@@ -1,0 +1,54 @@
+name: Auto-Sync Upstream (LocalGameGalaxy)
+
+on:
+  schedule:
+    # Check for upstream updates every Monday at 04:00 UTC
+    - cron: '0 4 * * 1'
+  workflow_dispatch: # Allows manual trigger anytime via GitHub Actions "Run workflow" button
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    name: Sync Latest Push Relay Code
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Fetch Latest Upstream Files
+        run: |
+          BASE_URL="https://raw.githubusercontent.com/suitably/LocalGameGalaxy/main/server/cloudflare-push-relay"
+          
+          # Download latest upstream source files
+          curl -sSL "$BASE_URL/worker.ts" -o worker.ts.upstream
+          curl -sSL "$BASE_URL/webpush.ts" -o webpush.ts.upstream
+          curl -sSL "$BASE_URL/README.md" -o README.md.upstream
+
+          UPDATED=false
+
+          for file in worker.ts webpush.ts README.md; do
+            if [ -f "$file.upstream" ] && [ -s "$file.upstream" ]; then
+              if ! cmp -s "$file" "$file.upstream"; then
+                mv "$file.upstream" "$file"
+                UPDATED=true
+                echo "Updated $file from upstream."
+              else
+                rm -f "$file.upstream"
+              fi
+            else
+              rm -f "$file.upstream"
+            fi
+          done
+
+          if [ "$UPDATED" = "true" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add worker.ts webpush.ts README.md
+            git commit -m "chore(relay): auto-sync latest push relay from upstream LocalGameGalaxy"
+            git push origin main
+            echo "::notice::Successfully synced push relay files from upstream. Cloudflare build triggered automatically."
+          else
+            echo "::notice::Push relay files are already up to date with upstream."
+          fi

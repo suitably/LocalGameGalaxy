@@ -33,30 +33,10 @@ npx wrangler deploy
 ```
 This deploys the latest local code directly to your Cloudflare account.
 
-### Method C: Automated Sync via GitHub Action (Fully Automatic)
-In your personal GitHub repository, create `.github/workflows/sync-upstream.yml`:
-```yaml
-name: Sync Upstream
+### Method C: Built-in Auto-Sync Workflow (Included Automatically)
+This repository already includes `.github/workflows/sync-upstream.yml`!
+- **Automatic Check:** Runs on schedule every Monday at 04:00 UTC, pulls any changes to `worker.ts`, `webpush.ts`, and pushes them to your `main` branch.
+- **Manual Trigger:** In your GitHub repository, go to **Actions** ➔ **Auto-Sync Upstream** ➔ **Run workflow** to update immediately on demand.
+- **Configuration Safe:** It never touches or overwrites your custom `wrangler.toml` (your worker name and KV bindings remain safe).
+- **Security Note:** In your GitHub repository settings under **Settings ➔ Actions ➔ General ➔ Workflow permissions**, ensure **"Read and write permissions"** is checked so the bot can push updates. If you prefer manual review, you can disable the schedule and run it manually whenever you want.
 
-on:
-  schedule:
-    - cron: '0 4 * * *' # Daily at 04:00 UTC
-  workflow_dispatch:
-
-jobs:
-  sync:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-      - name: Sync from Upstream
-        run: |
-          git remote add upstream https://github.com/suitably/LocalGameGalaxy.git || true
-          git fetch upstream main
-          git checkout main
-          git merge upstream/main -m "chore: sync with upstream"
-          git push origin main
-```
-Whenever this runs, it pulls the latest code and pushes to `main`, which automatically triggers Cloudflare to redeploy.
