@@ -43,7 +43,6 @@ export const StorytellerGame: React.FC = () => {
     activeGames,
     addPlayer,
     removePlayer,
-    togglePlayerRemote,
     updateModifier,
     createGame,
     deleteGame,
@@ -325,7 +324,6 @@ export const StorytellerGame: React.FC = () => {
           activeGames={activeGames}
           onAddPlayer={addPlayer}
           onRemovePlayer={removePlayer}
-          onToggleRemote={togglePlayerRemote}
           onUpdateModifier={updateModifier}
           onStartGame={handleStartGame}
           onResumeGame={handleResumeGame}
@@ -344,6 +342,7 @@ export const StorytellerGame: React.FC = () => {
         onOpenEdit={() => setEditOpen(true)}
         onOpenShare={() => setShareDialogOpen(true)}
         isCurrentTurnLocal={isCurrentTurnLocal}
+        canToggleLocalRemote={true}
         onToggleLocalRemote={handleToggleLocalRemote}
       />
 

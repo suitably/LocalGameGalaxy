@@ -11,19 +11,15 @@ const STORAGE_KEY_STORY_MODIFIERS = 'storyteller_lobby_modifiers';
 
 export interface StoryLobbyPlayerItem {
   name: string;
-  isRemote?: boolean;
 }
 
 export const useStorytellerLobby = () => {
   const [lobbyPlayers, setLobbyPlayers] = useState<StoryLobbyPlayerItem[]>(() => {
     const raw = storage.getJson<StoryLobbyPlayerItem[]>(STORAGE_KEY_STORY_PLAYERS, []);
     if (Array.isArray(raw) && raw.length > 0) {
-      return raw;
+      return raw.map((p) => ({ name: typeof p === 'string' ? p : p.name }));
     }
-    return [
-      { name: 'Spieler 1', isRemote: false },
-      { name: 'Spieler 2', isRemote: false },
-    ];
+    return [{ name: 'Spieler 1' }, { name: 'Spieler 2' }];
   });
 
   const [modifiers, setModifiers] = useState<StoryModifierSettings>(() => {
@@ -68,17 +64,11 @@ export const useStorytellerLobby = () => {
   const addPlayer = (name: string) => {
     const trimmed = name.trim();
     if (!trimmed) return;
-    setLobbyPlayers((prev) => [...prev, { name: trimmed, isRemote: false }]);
+    setLobbyPlayers((prev) => [...prev, { name: trimmed }]);
   };
 
   const removePlayer = (index: number) => {
     setLobbyPlayers((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const togglePlayerRemote = (index: number) => {
-    setLobbyPlayers((prev) =>
-      prev.map((player, i) => (i === index ? { ...player, isRemote: !player.isRemote } : player)),
-    );
   };
 
   const updateModifier = <K extends keyof StoryModifierSettings>(
@@ -106,9 +96,10 @@ export const useStorytellerLobby = () => {
       modifiers: options.modifiers,
     });
 
-    // Mark non-remote players as local on host device
-    const localIds = record.players.filter((p) => !p.isRemote).map((p) => p.id);
-    playerAssignment.setLocalPlayerIds(record.id, localIds.length > 0 ? localIds : [record.players[0].id]);
+    // In GuessArt architecture: by default on the creating device, ALL players are local (pass & play).
+    // When a player link or QR code is shared during the game, that player is automatically marked as remote.
+    const allPlayerIds = record.players.map((p) => p.id);
+    playerAssignment.setLocalPlayerIds(record.id, allPlayerIds);
 
     await loadActiveGames();
     return record;
@@ -126,7 +117,6 @@ export const useStorytellerLobby = () => {
     loadingGames,
     addPlayer,
     removePlayer,
-    togglePlayerRemote,
     updateModifier,
     createGame,
     deleteGame,

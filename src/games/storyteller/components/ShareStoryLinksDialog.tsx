@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   Box,
   Button,
+  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -20,6 +21,7 @@ import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import QrCodeRoundedIcon from '@mui/icons-material/QrCodeRounded';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
+import TransferWithinAStationRoundedIcon from '@mui/icons-material/TransferWithinAStationRounded';
 import { QRCodeSVG } from 'qrcode.react';
 import { useTranslation } from 'react-i18next';
 import LZString from 'lz-string';
@@ -60,22 +62,28 @@ export const ShareStoryLinksDialog: React.FC<ShareStoryLinksDialogProps> = ({
     return link;
   };
 
+  const markPlayerRemote = (playerId: string) => {
+    playerAssignment.removeLocalPlayerId(game.id, playerId);
+    onPlayerChanged?.();
+  };
+
+  const markPlayerLocal = (playerId: string) => {
+    playerAssignment.addLocalPlayerId(game.id, playerId);
+    onPlayerChanged?.();
+  };
+
   const handleToggleQr = (playerId: string) => {
     const isOpening = activeQrPlayerId !== playerId;
     setActiveQrPlayerId(isOpening ? playerId : null);
-    if (isOpening && game.players[0] && playerId !== game.players[0].id) {
-      playerAssignment.removeLocalPlayerId(game.id, playerId);
-      onPlayerChanged?.();
+    if (isOpening) {
+      markPlayerRemote(playerId);
     }
   };
 
   const handleCopyLink = (playerId: string) => {
     const link = buildPlayerLink(playerId);
     navigator.clipboard.writeText(link);
-    if (game.players[0] && playerId !== game.players[0].id) {
-      playerAssignment.removeLocalPlayerId(game.id, playerId);
-      onPlayerChanged?.();
-    }
+    markPlayerRemote(playerId);
     setCopiedPlayerId(playerId);
     setTimeout(() => setCopiedPlayerId(null), 2500);
   };
@@ -85,10 +93,7 @@ export const ShareStoryLinksDialog: React.FC<ShareStoryLinksDialogProps> = ({
     const title = `${t('games.storyteller.title', 'Geschichtenschreiber')} - "${game.name || 'Geschichte'}"`;
     const text = `📖 Hallo ${playerName}! Schreibe mit an unserer Geschichte: ${link}`;
 
-    if (game.players[0] && playerId !== game.players[0].id) {
-      playerAssignment.removeLocalPlayerId(game.id, playerId);
-      onPlayerChanged?.();
-    }
+    markPlayerRemote(playerId);
 
     if (navigator.share) {
       try {
@@ -116,7 +121,7 @@ export const ShareStoryLinksDialog: React.FC<ShareStoryLinksDialogProps> = ({
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {t(
             'storyteller.shareLinksDesc',
-            'Mitspieler können per QR-Code oder Link auf ihrem eigenen Gerät mitspielen und Push-Benachrichtigungen empfangen, sobald sie am Zug sind.',
+            'Sobald ein Link oder QR-Code geteilt wird, wird der Spieler als Remote markiert. Mitspieler spielen auf ihrem Smartphone mit und empfangen Push-Benachrichtigungen.',
           )}
         </Typography>
 
@@ -127,6 +132,7 @@ export const ShareStoryLinksDialog: React.FC<ShareStoryLinksDialogProps> = ({
             const isCopied = copiedPlayerId === p.id;
             const showQr = activeQrPlayerId === p.id;
             const link = buildPlayerLink(p.id);
+            const isLocal = playerAssignment.isPlayerLocal(game.id, p.id);
 
             return (
               <Paper
@@ -191,9 +197,31 @@ export const ShareStoryLinksDialog: React.FC<ShareStoryLinksDialogProps> = ({
                   </ListItemAvatar>
                   <ListItemText
                     primary={
-                      <Typography variant="subtitle1" fontWeight={700}>
-                        {p.name}
-                      </Typography>
+                      <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
+                        <Typography variant="subtitle1" fontWeight={700}>
+                          {p.name}
+                        </Typography>
+                        <Chip
+                          size="small"
+                          label={isLocal ? t('storyteller.localPlayer', 'Dieses Gerät') : t('storyteller.remotePlayer', 'Remote Gerät')}
+                          color={isLocal ? 'default' : 'primary'}
+                          sx={{ height: 20, fontSize: '0.72rem', fontWeight: 600 }}
+                        />
+                      </Box>
+                    }
+                    secondary={
+                      !isLocal ? (
+                        <Button
+                          size="small"
+                          variant="text"
+                          color="inherit"
+                          startIcon={<TransferWithinAStationRoundedIcon fontSize="small" />}
+                          onClick={() => markPlayerLocal(p.id)}
+                          sx={{ textTransform: 'none', fontSize: '0.75rem', p: 0, mt: 0.5, color: 'text.secondary' }}
+                        >
+                          {t('storyteller.playHereInsteadShort', 'Auf diesem Gerät spielen')}
+                        </Button>
+                      ) : null
                     }
                   />
                 </ListItem>

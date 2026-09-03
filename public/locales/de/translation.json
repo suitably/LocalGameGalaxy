@@ -359,7 +359,7 @@
     },
     "party": {
       "title": "Party-Modus",
-      "description": "Gemeinsame Mehrspieler-Lobby für synchronisierte Spiele: Gartic Phone, GuessArt Party & mehr!"
+      "description": "Gemeinsame Mehrspieler-Lobby für synchronisierte Spiele: Gartic Phone & mehr!"
     },
     "melodiq": {
       "title": "Melodiq",
@@ -862,7 +862,7 @@
   },
   "party": {
     "hubBannerTitle": "Party-Modus (Mehrspieler-Lobby)",
-    "hubBannerSubtitle": "1 Raum für den ganzen Abend: Freunde verbinden & gemeinsam GuessArt oder Gartic Phone spielen!",
+    "hubBannerSubtitle": "1 Raum für den ganzen Abend: Freunde verbinden & gemeinsam Gartic Phone spielen!",
     "openLobby": "Lobby öffnen ➔",
     "lobbyTitle": "Galaxy Party-Lobby",
     "room": "Party-Raum",
@@ -876,8 +876,8 @@
     "categoryDrawing": "Kategorie: Zeichnen & Raten",
     "hostSelectPrompt": "Wähle ein Spiel aus, um es für alle Spieler zu starten:",
     "guestWaitingPrompt": "Der Host wählt gerade das nächste Spiel aus...",
-    "guessArtDesc": "Klassisches Zeichnen & Raten! Ein Spieler zeichnet, alle anderen raten auf ihren Handys.",
-    "launchGuessArt": "GuessArt starten",
+    "garticDesc": "Das Flüsterpost-Zeichenspiel! Satz schreiben ➔ Zeichnen ➔ Raten ➔ Zeichnen ➔ Finale Auflösung!",
+    "launchGartic": "Gartic Phone starten",
     "needMin2": "Mind. 2 Spieler nötig",
     "ready": "Bereit",
     "backToLobby": "Zurück zur Party-Lobby",
@@ -1056,6 +1056,12 @@
     "completed": "Beendet",
     "shareLinksTitle": "Mitspieler-Links & Benachrichtigungen",
     "shareLinksDesc": "Mitspieler können per QR-Code oder Link auf ihrem eigenen Gerät mitspielen und Push-Benachrichtigungen empfangen, sobald sie am Zug sind.",
-    "scanQrToPlayAs": "Scanne diesen Code, um als {{name}} mitzuspielen!"
+    "scanQrToPlayAs": "Scanne diesen Code, um als {{name}} mitzuspielen!",
+    "playHereInstead": "Hier als {{name}} weiterschreiben",
+    "playHereInsteadShort": "Auf diesem Gerät spielen",
+    "localPlayer": "Dieses Gerät",
+    "remotePlayer": "Remote Gerät",
+    "markAsRemote": "Als Remote markieren",
+    "claimLocalTurn": "Auf diesem Gerät schreiben"
   }
 }

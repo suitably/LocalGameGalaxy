@@ -122,8 +122,17 @@ export const StoryHeader: React.FC<StoryHeaderProps> = ({
           </IconButton>
         </Tooltip>
 
-        {/* Share turn */}
-        {onShareTurn && (
+        {/* If remote turn, allow claiming directly from header */}
+        {!isCurrentTurnLocal && onToggleLocalRemote && canToggleLocalRemote && (
+          <Tooltip title={t('storyteller.claimLocalTurn', 'Auf diesem Gerät schreiben')}>
+            <IconButton color="warning" onClick={onToggleLocalRemote} size="small">
+              <TransferWithinAStationRoundedIcon />
+            </IconButton>
+          </Tooltip>
+        )}
+
+        {/* Share turn / Player links */}
+        {(onOpenShare || onShareTurn) && (
           <Tooltip title={copied ? t('common.copied', 'Kopiert!') : t('common.share', 'Teilen')}>
             <IconButton color="inherit" onClick={handleShare} size="small">
               {copied ? <CheckRoundedIcon sx={{ color: '#4ade80' }} /> : <ShareRoundedIcon />}
@@ -145,6 +154,18 @@ export const StoryHeader: React.FC<StoryHeaderProps> = ({
           open={Boolean(menuAnchorEl)}
           onClose={() => setMenuAnchorEl(null)}
         >
+          {onOpenShare && (
+            <MenuItem
+              onClick={() => {
+                setMenuAnchorEl(null);
+                onOpenShare();
+              }}
+            >
+              <ShareRoundedIcon sx={{ mr: 1.5, fontSize: 20 }} />
+              {t('storyteller.shareLinksTitle', 'Mitspieler-Links')}
+            </MenuItem>
+          )}
+
           {onOpenEdit && (
             <MenuItem
               onClick={() => {

@@ -21,7 +21,7 @@ interface WaitingForStoryTurnViewProps {
   game: StoryGameRecord;
   roomId?: string;
   onClaimPlayer: (playerId: string) => void;
-  onShareTurn: () => void;
+  onShareTurn?: () => void;
   onOpenShare?: () => void;
   onOpenReader: () => void;
 }
@@ -45,7 +45,7 @@ export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = (
   const handleCopyOrOpenShare = () => {
     if (onOpenShare) {
       onOpenShare();
-    } else {
+    } else if (onShareTurn) {
       onShareTurn();
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -114,32 +114,40 @@ export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = (
           </Box>
 
           <Stack spacing={1.5} width="100%" sx={{ mt: 1 }}>
-            <Button
-              variant="contained"
-              fullWidth
-              startIcon={copied ? <CheckRoundedIcon /> : <ShareRoundedIcon />}
-              onClick={handleCopyOrOpenShare}
-              sx={{
-                bgcolor: copied ? '#22c55e' : '#0284c7',
-                '&:hover': { bgcolor: copied ? '#16a34a' : '#0369a1' },
-                fontWeight: 600,
-              }}
-            >
-              {copied
-                ? t('common.linkCopied', 'Zug-Link kopiert!')
-                : t('storyteller.shareTurnLink', 'Zug-Link an Spieler senden')}
-            </Button>
+            {onClaimPlayer && (
+              <Button
+                variant="contained"
+                fullWidth
+                color="primary"
+                size="large"
+                startIcon={<TransferWithinAStationRoundedIcon />}
+                onClick={() => onClaimPlayer(activePlayer.id)}
+                sx={{ fontWeight: 800, py: 1.2, borderRadius: 2 }}
+              >
+                {t('storyteller.playHereInstead', {
+                  name: activePlayer.name,
+                  defaultValue: `Hier als ${activePlayer.name} weiterschreiben`,
+                })}
+              </Button>
+            )}
 
-            <Button
-              variant="outlined"
-              fullWidth
-              color="inherit"
-              startIcon={<TransferWithinAStationRoundedIcon />}
-              onClick={() => onClaimPlayer(activePlayer.id)}
-              sx={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}
-            >
-              {t('storyteller.claimTurnLocal', 'Auf diesem Gerät schreiben')}
-            </Button>
+            {(onShareTurn || onOpenShare) && (
+              <Button
+                variant="outlined"
+                fullWidth
+                color="inherit"
+                startIcon={copied ? <CheckRoundedIcon /> : <ShareRoundedIcon />}
+                onClick={handleCopyOrOpenShare}
+                sx={{
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                  fontWeight: 600,
+                }}
+              >
+                {copied
+                  ? t('common.linkCopied', 'Zug-Link kopiert!')
+                  : t('storyteller.shareTurnLink', 'QR-Code / Link für Mitspieler teilen')}
+              </Button>
+            )}
 
             <Button
               variant="text"

@@ -16,14 +16,11 @@ import {
   Select,
   Stack,
   TextField,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import PersonAddRoundedIcon from '@mui/icons-material/PersonAddRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import PhonelinkRingRoundedIcon from '@mui/icons-material/PhonelinkRingRounded';
-import SmartphoneRoundedIcon from '@mui/icons-material/SmartphoneRounded';
 import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 import AutoStoriesRoundedIcon from '@mui/icons-material/AutoStoriesRounded';
 import { useTranslation } from 'react-i18next';
@@ -36,7 +33,6 @@ interface StoryLobbyProps {
   activeGames: StoryGameRecord[];
   onAddPlayer: (name: string) => void;
   onRemovePlayer: (index: number) => void;
-  onToggleRemote: (index: number) => void;
   onUpdateModifier: <K extends keyof StoryModifierSettings>(
     key: K,
     patch: Partial<StoryModifierSettings[K]>,
@@ -52,7 +48,6 @@ export const StoryLobby: React.FC<StoryLobbyProps> = ({
   activeGames,
   onAddPlayer,
   onRemovePlayer,
-  onToggleRemote,
   onUpdateModifier,
   onStartGame,
   onResumeGame,
@@ -64,13 +59,13 @@ export const StoryLobby: React.FC<StoryLobbyProps> = ({
   const language = i18n.language.startsWith('de') ? 'de' : 'en';
 
   const handleAdd = () => {
-    if (!newPlayerName.trim()) return;
-    onAddPlayer(newPlayerName);
-    setNewPlayerName('');
+    if (newPlayerName.trim()) {
+      onAddPlayer(newPlayerName.trim());
+      setNewPlayerName('');
+    }
   };
 
   const handleStart = () => {
-    if (players.length < 2) return;
     onStartGame({
       name: storyName.trim() || undefined,
       language,
@@ -114,26 +109,18 @@ export const StoryLobby: React.FC<StoryLobbyProps> = ({
             </Button>
           </Stack>
 
-          <List dense disablePadding>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ minHeight: 40 }}>
             {players.map((p, idx) => (
-              <ListItem key={idx} sx={{ bgcolor: 'rgba(255, 255, 255, 0.03)', borderRadius: 1.5, mb: 0.75 }}>
-                <ListItemText
-                  primary={p.name}
-                  secondary={p.isRemote ? t('storyteller.remotePlayer', 'Remote Gerät') : t('storyteller.localPlayer', 'Dieses Gerät')}
-                />
-                <ListItemSecondaryAction>
-                  <Tooltip title={t('storyteller.toggleRemoteTooltip', 'Zwischen lokal und remote wechseln')}>
-                    <IconButton size="small" onClick={() => onToggleRemote(idx)} sx={{ mr: 1, color: p.isRemote ? '#38bdf8' : '#94a3b8' }}>
-                      {p.isRemote ? <PhonelinkRingRoundedIcon fontSize="small" /> : <SmartphoneRoundedIcon fontSize="small" />}
-                    </IconButton>
-                  </Tooltip>
-                  <IconButton size="small" edge="end" onClick={() => onRemovePlayer(idx)} disabled={players.length <= 2}>
-                    <DeleteRoundedIcon fontSize="small" />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItem>
+              <Chip
+                key={`${p.name}-${idx}`}
+                label={p.name}
+                onDelete={players.length > 2 ? () => onRemovePlayer(idx) : undefined}
+                color="primary"
+                variant="filled"
+                sx={{ fontWeight: 700, fontSize: '0.95rem', py: 2.2, px: 0.5 }}
+              />
             ))}
-          </List>
+          </Stack>
         </CardContent>
       </Card>
 

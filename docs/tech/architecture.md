@@ -72,6 +72,10 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
     -   Modular sheet configuration engine (`sheetDefinitions.ts`) supporting official expansions (Classic, Gemixxt A/B, Big Points, Connected, Double, Bonus).
     -   Dynamic dice highlight engine (`diceHighlight.ts`) and variant-aware scoring reducer (`qwixxReducer.ts`).
     -   See [Qwixx Sheet Rules](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/qwixx-sheet-rules.md) for full variant specifications.
+-   **Universal Party Lobby & Gartic Phone (`src/features/party` & `src/games/garticphone`)**:
+    -   Centralized "Jackbox-style" room lobby where all players connect once via QR code or link (`#/party?room=XYZ`).
+    -   **Serverless Real-Time Communication**: Operates 100% serverless over public WSS MQTT brokers (`wss://broker.hivemq.com:8884/mqtt` / `wss://broker.emqx.io:8084/mqtt`) and local `BroadcastChannel`. No local helper server or backend connection is required.
+    -   Hosts can launch **Gartic Phone** for all connected devices simultaneously, with isolated drawing/guessing views per device, synchronized round progression, animated album reveals, and seamless return to the lobby.
 
 ### Web Push Relay & Game-Scoped Notification Architecture
 - **Web Push Protocol (RFC 8291 / RFC 8292 VAPID)**:

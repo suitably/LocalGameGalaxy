@@ -413,7 +413,7 @@ export const GuessArtGame: React.FC = () => {
           <WaitingForGuesserView
             game={game}
             round={round}
-            onOpenShareLinks={() => handleOpenShareLinks(game, round)}
+            onOpenShareLinks={isHost ? () => handleOpenShareLinks(game, round) : undefined}
             onClaimPlayer={async (playerId) => {
               playerAssignment.addLocalPlayerId(game.id, playerId);
               triggerLocalUpdate();

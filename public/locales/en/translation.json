@@ -359,7 +359,7 @@
     },
     "party": {
       "title": "Party Mode",
-      "description": "Unified multiplayer lobby for synchronized party games: Gartic Phone, GuessArt & more!"
+      "description": "Unified multiplayer lobby for synchronized party games: Gartic Phone & more!"
     },
     "melodiq": {
       "title": "Melodiq",
@@ -874,7 +874,7 @@
   },
   "party": {
     "hubBannerTitle": "Party Mode (Multiplayer Lobby)",
-    "hubBannerSubtitle": "1 Room for the whole evening: Connect friends & play GuessArt or Gartic Phone together!",
+    "hubBannerSubtitle": "1 Room for the whole evening: Connect friends & play Gartic Phone together!",
     "openLobby": "Open Lobby ➔",
     "lobbyTitle": "Galaxy Party Lobby",
     "room": "Party Room",
@@ -888,8 +888,8 @@
     "categoryDrawing": "Category: Drawing & Guessing",
     "hostSelectPrompt": "Select a game to launch for all players:",
     "guestWaitingPrompt": "The host is currently choosing the next game...",
-    "guessArtDesc": "Classic drawing & guessing! One player draws, all other players guess on their phones.",
-    "launchGuessArt": "Launch GuessArt",
+    "garticDesc": "Telephone drawing game! Write phrase ➔ Draw ➔ Guess ➔ Draw ➔ Hilarious album reveal!",
+    "launchGartic": "Launch Gartic Phone",
     "needMin2": "At least 2 players needed",
     "ready": "Ready",
     "backToLobby": "Back to Party Lobby",
@@ -1066,6 +1066,12 @@
     "completed": "Completed",
     "shareLinksTitle": "Player Links & Push Notifications",
     "shareLinksDesc": "Players can join using QR code or link on their own device and receive push notifications when it is their turn.",
-    "scanQrToPlayAs": "Scan this code to play as {{name}}!"
+    "scanQrToPlayAs": "Scan this code to play as {{name}}!",
+    "playHereInstead": "Write here as {{name}} instead",
+    "playHereInsteadShort": "Play on this device",
+    "localPlayer": "This device",
+    "remotePlayer": "Remote device",
+    "markAsRemote": "Mark as remote",
+    "claimLocalTurn": "Write on this device"
   }
 }

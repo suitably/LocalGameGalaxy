@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
-import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import TransferWithinAStationRoundedIcon from '@mui/icons-material/TransferWithinAStationRounded';
@@ -20,7 +19,6 @@ import PhonelinkRingRoundedIcon from '@mui/icons-material/PhonelinkRingRounded';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import { useTranslation } from 'react-i18next';
-import LZString from 'lz-string';
 import { GuessArtHeaderTitle } from './GuessArtHeaderTitle';
 import { gameNameOverride } from '../logic/gameNameOverride';
 import type { GuessArtGameRecord, GuessArtRound } from '../logic/types';
@@ -51,7 +49,6 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
   const { t } = useTranslation();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
-  const [copied, setCopied] = useState(false);
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -66,15 +63,7 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
     if (onOpenShareLinks) {
       onOpenShareLinks();
       handleMenuClose();
-      return;
     }
-    const snapshot = { game, round };
-    const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(snapshot));
-    const url = `${window.location.origin}${window.location.pathname}#/games/guessart?gameId=${game.id}&data=${compressed}`;
-    navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-    handleMenuClose();
   };
 
   const drawerIdx = game.players.findIndex((p) => p.id === round.drawnById);
@@ -170,28 +159,26 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
             </Tooltip>
           )}
 
-          {/* Quick Share Game Link Button */}
-          <Tooltip
-            title={
-              copied
-                ? t('common.copied', 'Link kopiert!')
-                : t('guessart.shareGameLink', 'Spiel-Link teilen (Async Multiplayer)')
-            }
-          >
-            <IconButton
-              size="small"
-              onClick={handleShareLink}
-              color={copied ? 'success' : 'inherit'}
-              aria-label={t('guessart.shareGameLink', 'Spiel-Link teilen')}
-              sx={{
-                p: { xs: 0.75, sm: 1 },
-                border: '1px solid',
-                borderColor: copied ? 'success.main' : 'rgba(255, 255, 255, 0.15)',
-              }}
+          {/* Quick Share Game Link Button (Only for Host) */}
+          {Boolean(onOpenShareLinks) && (
+            <Tooltip
+              title={t('guessart.shareGameLink', 'Spiel-Link teilen (Async Multiplayer)')}
             >
-              {copied ? <CheckRoundedIcon fontSize="small" color="success" /> : <ShareRoundedIcon fontSize="small" />}
-            </IconButton>
-          </Tooltip>
+              <IconButton
+                size="small"
+                onClick={handleShareLink}
+                color="inherit"
+                aria-label={t('guessart.shareGameLink', 'Spiel-Link teilen')}
+                sx={{
+                  p: { xs: 0.75, sm: 1 },
+                  border: '1px solid',
+                  borderColor: 'rgba(255, 255, 255, 0.15)',
+                }}
+              >
+                <ShareRoundedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
 
           {/* Overflow Menu (More Actions) */}
           <IconButton
@@ -211,12 +198,14 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
           >
-            <MenuItem onClick={handleShareLink} sx={{ minHeight: 44 }}>
-              <Box component="span" sx={{ mr: 1.5, display: 'flex', alignItems: 'center' }}>
-                <ShareRoundedIcon fontSize="small" />
-              </Box>
-              {t('guessart.shareGameLink', 'Spiel-Link teilen')}
-            </MenuItem>
+            {Boolean(onOpenShareLinks) && (
+              <MenuItem onClick={handleShareLink} sx={{ minHeight: 44 }}>
+                <Box component="span" sx={{ mr: 1.5, display: 'flex', alignItems: 'center' }}>
+                  <ShareRoundedIcon fontSize="small" />
+                </Box>
+                {t('guessart.shareGameLink', 'Spiel-Link teilen')}
+              </MenuItem>
+            )}
 
             {onToggleLocalRemote && canToggleLocalRemote && (
               <MenuItem

@@ -25,6 +25,7 @@ class GuessArtMailboxService {
   private listeners: Set<RemoteSnapshotListener> = new Set();
   private activeScreenGameId: string | null = null;
   private readonly clientId = `lgg_ga_${Math.random().toString(36).substring(2, 10)}_${Date.now()}`;
+  private readonly appStartTime = Date.now();
   private lastProcessedJson: Map<string, string> = new Map();
 
   private getTopic(gameId: string): string {
@@ -103,7 +104,7 @@ class GuessArtMailboxService {
         this.lastProcessedJson.set(gameId, decompressed);
 
         if (envelope.snapshot) {
-          await this.handleIncomingRemoteSnapshot(envelope.snapshot, gameId);
+          await this.handleIncomingRemoteSnapshot(envelope.snapshot, gameId, envelope.timestamp);
         }
       } catch (e) {
         console.warn('[GuessArt Mailbox] Failed to parse message:', e);
@@ -114,20 +115,38 @@ class GuessArtMailboxService {
     return client;
   }
 
-  private async handleIncomingRemoteSnapshot(snapshot: GameSnapshot, gameId: string): Promise<void> {
+  private async handleIncomingRemoteSnapshot(
+    snapshot: GameSnapshot,
+    gameId: string,
+    envelopeTimestamp?: number,
+  ): Promise<void> {
     try {
       const language = snapshot.game?.options?.language || 'de';
       const importResult = await LocalGameEngine.importSnapshot(snapshot, language);
 
       if (importResult.updated) {
-        // Evaluate and trigger notification if eligible
-        await guessArtNotificationService.notifyTurnIfEligible({
-          game: importResult.game,
-          round: importResult.round,
-          isRemoteEvent: true,
-          activeGameScreenId: this.activeScreenGameId,
-          isDocumentVisible: typeof document !== 'undefined' ? document.visibilityState === 'visible' : true,
-        });
+        // Do not notify for historical messages (older than 30s or sent before this app session started)
+        const isHistorical = envelopeTimestamp
+          ? envelopeTimestamp < this.appStartTime || Date.now() - envelopeTimestamp > 30000
+          : false;
+
+        const isInitialGameStart =
+          !importResult.round ||
+          (importResult.round.roundNumber === 1 &&
+            (importResult.round.status === 'selecting' ||
+              (importResult.round.status === 'drawing' && !importResult.round.word)));
+
+        if (!isHistorical) {
+          // Evaluate and trigger notification if eligible
+          await guessArtNotificationService.notifyTurnIfEligible({
+            game: importResult.game,
+            round: importResult.round,
+            isRemoteEvent: true,
+            isInitialGameStart,
+            activeGameScreenId: this.activeScreenGameId,
+            isDocumentVisible: typeof document !== 'undefined' ? document.visibilityState === 'visible' : true,
+          });
+        }
       }
 
       // Notify all active in-memory listeners
