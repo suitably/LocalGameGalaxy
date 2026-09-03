@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { usePWAInstall } from '../../../hooks/usePWAInstall';
 import { PWAInstallDialog } from '../../../components/pwa';
 import { GitHubSettings } from './GitHubSettings';
+import { PushNotificationBanner } from '../../../components/push/PushNotificationBanner';
 
 export const GeneralSettings: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -58,6 +59,20 @@ export const GeneralSettings: React.FC = () => {
                         {t('app.install_pwa', 'Install App')}
                     </Button>
                 )}
+            </Paper>
+
+            {/* Notifications */}
+            <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
+                <Typography variant="h6" gutterBottom>
+                    {t('settings.notifications_title', 'Benachrichtigungen')}
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 2.5 }}>
+                    {t(
+                        'settings.notifications_desc',
+                        'Push-Benachrichtigungen informieren dich, wenn du in einem Spiel (z.B. GuessArt) an der Reihe bist – auch wenn die App geschlossen ist.',
+                    )}
+                </Typography>
+                <PushNotificationBanner />
             </Paper>
 
             {/* Language Preferences */}

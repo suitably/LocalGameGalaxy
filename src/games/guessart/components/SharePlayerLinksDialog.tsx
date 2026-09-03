@@ -27,7 +27,7 @@ import type { GuessArtGameRecord, GuessArtRound } from '../logic/types';
 import { playerAssignment } from '../logic/playerAssignment';
 import { gameRelayStorage } from '../../../lib/push/gameRelayStorage';
 import { LocalGameEngine } from '../logic/engine';
-import { PushNotificationBanner } from './PushNotificationBanner';
+import { PushNotificationBanner } from '../../../components/push/PushNotificationBanner';
 
 interface SharePlayerLinksDialogProps {
   open: boolean;

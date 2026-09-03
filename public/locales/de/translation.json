@@ -506,7 +506,9 @@
     "view_issue": "Auf GitHub ansehen",
     "pwa_title": "App-Installation (PWA)",
     "pwa_status_standalone": "Die App läuft aktuell im installierten Vollbild-Modus (PWA).",
-    "pwa_status_browser": "Die App läuft im Webbrowser. Installiere die App als PWA, um die Adress- und Suchleiste für ein natives Smartphone-Erlebnis auszublenden."
+    "pwa_status_browser": "Die App läuft im Webbrowser. Installiere die App als PWA, um die Adress- und Suchleiste für ein natives Smartphone-Erlebnis auszublenden.",
+    "notifications_title": "Benachrichtigungen",
+    "notifications_desc": "Push-Benachrichtigungen informieren dich, wenn du in einem Spiel (z.B. GuessArt) an der Reihe bist – auch wenn die App geschlossen ist."
   },
   "server": {
     "title": "Nexumia Server Verbindung",
