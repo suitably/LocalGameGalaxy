@@ -523,7 +523,8 @@
     "relay_worker_guide_title": "Set up your own Cloudflare Worker (24/7 free)",
     "relay_worker_guide_desc": "The Cloudflare Worker runs 24/7 for free in the cloud and automatically generates cryptographic keys on first run (Zero-Config).",
     "relay_1click_deploy": "1-Click Deploy to Cloudflare",
-    "relay_1click_deploy_note": "Requires only a free Cloudflare account.",
+    "relay_1click_deploy_note": "Requires a free Cloudflare and a GitHub account (Cloudflare forks the repository into your GitHub profile).",
+    "relay_dashboard_note": "Without GitHub: You can simply create a worker on dash.cloudflare.com ('Create Worker' ➔ 'Quick Edit') and paste the code from server/cloudflare-push-relay. No Git needed.",
     "relay_manual_title": "Alternative: Manual CLI deployment in terminal:",
     "relay_worker_copy": "Copy commands",
     "relay_worker_copied": "Commands copied!"

@@ -247,10 +247,14 @@ npx wrangler deploy`;
                                 >
                                     {t('settings.relay_1click_deploy', '1-Klick Deploy auf Cloudflare')}
                                 </Button>
-                                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                                    {t('settings.relay_1click_deploy_note', 'Erfordert nur ein kostenloses Cloudflare-Konto.')}
+                                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                                    {t('settings.relay_1click_deploy_note', 'Erfordert ein Cloudflare- und ein GitHub-Konto (Cloudflare forkt das Repository in dein GitHub-Profil).')}
                                 </Typography>
                             </Box>
+
+                            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: '0.85rem' }}>
+                                {t('settings.relay_dashboard_note', 'Ohne GitHub: Du kannst auf dash.cloudflare.com einfach einen Worker erstellen (\'Create Worker\' ➔ \'Quick Edit\') und den Code aus server/cloudflare-push-relay hineinkopieren. Kein Git nötig.')}
+                            </Typography>
 
                             <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', mt: 1 }}>
                                 {t(

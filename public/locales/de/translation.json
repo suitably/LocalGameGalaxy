@@ -523,7 +523,8 @@
     "relay_worker_guide_title": "Eigenen Cloudflare Worker aufsetzen (24/7 kostenlos)",
     "relay_worker_guide_desc": "Der Cloudflare Worker läuft rund um die Uhr kostenlos in der Cloud und erzeugt seine kryptografischen Schlüssel beim ersten Start automatisch (Zero-Config).",
     "relay_1click_deploy": "1-Klick Deploy auf Cloudflare",
-    "relay_1click_deploy_note": "Erfordert nur ein kostenloses Cloudflare-Konto.",
+    "relay_1click_deploy_note": "Erfordert ein Cloudflare- und ein GitHub-Konto (Cloudflare forkt das Repository in dein GitHub-Profil).",
+    "relay_dashboard_note": "Ohne GitHub: Du kannst auf dash.cloudflare.com einfach einen Worker erstellen ('Create Worker' ➔ 'Quick Edit') und den Code aus server/cloudflare-push-relay hineinkopieren. Kein Git nötig.",
     "relay_manual_title": "Alternative: Manuelles CLI-Deployment im Terminal:",
     "relay_worker_copy": "Befehle kopieren",
     "relay_worker_copied": "Befehle kopiert!"
