@@ -1,10 +1,14 @@
 import React, { useState, useCallback } from 'react';
 import {
+    Accordion, AccordionSummary, AccordionDetails,
     Box, Button, Chip, TextField, Typography,
 } from '@mui/material';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
 import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CloudQueueRoundedIcon from '@mui/icons-material/CloudQueueRounded';
 import { useTranslation } from 'react-i18next';
 import { storage } from '../../lib/storage';
 import { PushNotificationBanner } from './PushNotificationBanner';
@@ -90,6 +94,37 @@ export const NotificationSettings: React.FC = () => {
         }
     }, [relayUrl, t]);
 
+    const helperUrl = storage.getHelperUrl();
+    const canUseServer = storage.isHelperActive() && !!helperUrl;
+    const [copiedCommands, setCopiedCommands] = useState(false);
+
+    const handleUseConnectedServer = useCallback(() => {
+        const sUrl = storage.getHelperUrl().trim().replace(/\/$/, '');
+        const full = sUrl.includes('/api/push') ? sUrl : `${sUrl}/api/push`;
+        setRelayUrl(full);
+        storage.setPushRelayUrl(full);
+        setRelayStatus('idle');
+    }, []);
+
+    const workerDeployCommands = `# 1. In den Worker-Ordner wechseln
+cd server/cloudflare-push-relay
+
+# 2. VAPID-Schlüssel generieren
+npx web-push generate-vapid-keys
+
+# 3. Secrets bei Cloudflare hinterlegen
+npx wrangler secret put VAPID_PUBLIC_KEY
+npx wrangler secret put VAPID_PRIVATE_KEY
+
+# 4. Deployen
+npx wrangler deploy`;
+
+    const handleCopyCommands = useCallback(() => {
+        navigator.clipboard.writeText(workerDeployCommands);
+        setCopiedCommands(true);
+        setTimeout(() => setCopiedCommands(false), 2500);
+    }, [workerDeployCommands]);
+
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
@@ -104,9 +139,21 @@ export const NotificationSettings: React.FC = () => {
 
             {/* Push Relay URL */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
-                <Typography variant="subtitle2" fontWeight={700}>
-                    {t('settings.relay_title', 'Push-Relay Server')}
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                    <Typography variant="subtitle2" fontWeight={700}>
+                        {t('settings.relay_title', 'Push-Relay Server')}
+                    </Typography>
+                    {canUseServer && (
+                        <Button
+                            variant="text"
+                            size="small"
+                            onClick={handleUseConnectedServer}
+                            sx={{ textTransform: 'none', fontWeight: 600, py: 0 }}
+                        >
+                            {t('settings.relay_use_server', 'Verbundenen Server übernehmen (1-Klick)')}
+                        </Button>
+                    )}
+                </Box>
                 <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.55)' }}>
                     {t(
                         'settings.relay_desc',
@@ -155,6 +202,63 @@ export const NotificationSettings: React.FC = () => {
                             {relayStatusMsg}
                         </Typography>
                     )}
+                </Box>
+
+                {/* Cloudflare Worker Setup Accordion */}
+                <Box sx={{ mt: 1 }}>
+                    <Accordion
+                        variant="outlined"
+                        sx={{
+                            bgcolor: 'rgba(255, 255, 255, 0.03)',
+                            borderRadius: 2,
+                            '&:before': { display: 'none' },
+                        }}
+                    >
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <CloudQueueRoundedIcon color="primary" fontSize="small" />
+                                <Typography variant="body2" fontWeight={600}>
+                                    {t(
+                                        'settings.relay_worker_guide_title',
+                                        'Eigenen Cloudflare Worker aufsetzen (24/7 kostenlos)',
+                                    )}
+                                </Typography>
+                            </Box>
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ pt: 0 }}>
+                            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 1.5 }}>
+                                {t(
+                                    'settings.relay_worker_guide_desc',
+                                    'Der Worker-Code liegt bereits fertig im Projekt unter server/cloudflare-push-relay. Führe im Terminal folgende Befehle aus:',
+                                )}
+                            </Typography>
+                            <Box
+                                component="pre"
+                                sx={{
+                                    p: 1.5,
+                                    borderRadius: 1.5,
+                                    bgcolor: 'rgba(0, 0, 0, 0.4)',
+                                    fontSize: '0.8rem',
+                                    overflowX: 'auto',
+                                    mb: 1.5,
+                                    color: '#81c784',
+                                }}
+                            >
+                                {workerDeployCommands}
+                            </Box>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={copiedCommands ? <CheckCircleRoundedIcon /> : <ContentCopyIcon />}
+                                onClick={handleCopyCommands}
+                                sx={{ textTransform: 'none' }}
+                            >
+                                {copiedCommands
+                                    ? t('settings.relay_worker_copied', 'Befehle kopiert!')
+                                    : t('settings.relay_worker_copy', 'Befehle kopieren')}
+                            </Button>
+                        </AccordionDetails>
+                    </Accordion>
                 </Box>
             </Box>
         </Box>

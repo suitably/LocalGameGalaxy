@@ -36,7 +36,43 @@ export const PushNotificationBanner: React.FC = () => {
     }
   }, []);
 
-  if (state === 'unsupported') return null;
+  const handleTestNotification = useCallback(async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    try {
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg) {
+          await reg.showNotification(t('guessart.notificationTitle', 'GuessArt: Du bist dran!'), {
+            body: t('guessart.pushTestBody', '🎉 Test erfolgreich! Push-Benachrichtigungen funktionieren einwandfrei.'),
+            icon: '/pwa/icon_full.png',
+          });
+          return;
+        }
+      }
+      new Notification(t('guessart.notificationTitle', 'GuessArt: Du bist dran!'), {
+        body: t('guessart.pushTestBody', '🎉 Test erfolgreich! Push-Benachrichtigungen funktionieren einwandfrei.'),
+        icon: '/pwa/icon_full.png',
+      });
+    } catch (e) {
+      console.warn('[PushNotificationBanner] Failed to send test notification:', e);
+    }
+  }, [t]);
+
+  if (state === 'unsupported') {
+    return (
+      <Alert
+        icon={<NotificationsOffRoundedIcon />}
+        severity="warning"
+        variant="outlined"
+        sx={{ borderRadius: 2 }}
+      >
+        {t(
+          'guessart.pushUnsupported',
+          'Push-Benachrichtigungen werden in diesem Browser/Kontext nicht unterstützt (erfordert HTTPS oder localhost, bzw. PWA-Installation auf Mobilgeräten).',
+        )}
+      </Alert>
+    );
+  }
 
   if (state === 'granted') {
     return (
@@ -45,6 +81,17 @@ export const PushNotificationBanner: React.FC = () => {
         severity="success"
         variant="outlined"
         sx={{ borderRadius: 2 }}
+        action={
+          <Button
+            size="small"
+            variant="outlined"
+            color="success"
+            onClick={handleTestNotification}
+            sx={{ textTransform: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}
+          >
+            {t('guessart.pushTestButton', 'Test-Push senden')}
+          </Button>
+        }
       >
         {t(
           'guessart.pushEnabled',

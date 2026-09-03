@@ -518,7 +518,12 @@
     "relay_connected": "Connected! Push relay active.",
     "relay_no_vapid": "Server reachable, but no VAPID key configured.",
     "relay_http_error": "HTTP error: {{status}}",
-    "relay_failed": "Connection failed. Check URL."
+    "relay_failed": "Connection failed. Check URL.",
+    "relay_use_server": "Use Connected Server (1-Click)",
+    "relay_worker_guide_title": "Set up your own Cloudflare Worker (24/7 free)",
+    "relay_worker_guide_desc": "The worker code is ready in the repository under server/cloudflare-push-relay. Run the following commands in your terminal:",
+    "relay_worker_copy": "Copy commands",
+    "relay_worker_copied": "Commands copied!"
   },
   "server": {
     "title": "Nexumia Server Connection",
@@ -644,6 +649,9 @@
     "pushDenied": "Notifications are blocked. Enable them in your browser settings to be notified when it's your turn.",
     "pushPrompt": "Enable push notifications so you'll know when it's your turn, even when the app is closed!",
     "pushEnable": "Enable",
+    "pushTestButton": "Send Test Push",
+    "pushTestBody": "🎉 Test successful! Push notifications are working properly.",
+    "pushUnsupported": "Push notifications are not supported in this browser/context (requires HTTPS or localhost, or PWA installation on mobile).",
     "you": "You",
     "playersTitle": "Players",
     "playersSubtitle": "Add at least 2 players for a game of GuessArt.",
