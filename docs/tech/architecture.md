@@ -53,7 +53,11 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
     -   Deterministic multi-stage hint provider (`HintWordSlots`, `HintLetterChips`).
     -   **Unified Header Integration (`useGuessArtHeader`)**: Integrates directly with [`LayoutContext`](file:///home/deck/Projects/LocalGameGalaxy/src/context/LayoutContext.tsx) and [`GlobalHeader`](file:///home/deck/Projects/LocalGameGalaxy/src/components/Layout/GlobalHeader.tsx), consolidating navigation, active turn/secret word badges, match info, and game action menus into a single top header, maximizing drawing canvas screen area.
 -   **Geschichtenschreiber / Storyteller (`src/games/storyteller`)**:
-    -   Collaborative turn-based story writing game built upon the local-first pass-and-play and remote turn-sharing stack.
+    -   Collaborative turn-based story writing game integrated into [`PartyLobby`](file:///home/deck/Projects/LocalGameGalaxy/src/features/party/PartyLobby.tsx) and [`universalPartyManager`](file:///home/deck/Projects/LocalGameGalaxy/src/features/party/logic/universalPartyManager.ts).
+    -   Reuses the real-time peer & online synchronization architecture from **Gartic Phone**:
+        -   `BroadcastChannel` (`storyteller_channel_${roomId}`) for local cross-tab communication.
+        -   `mailboxService` (ephemeral MQTT broker on `storyteller_room_${roomId}`) for seamless online cross-device multiplayer without local server requirements.
+        -   Live state sync messages (`STORY_SYNC`, `STORY_REQUEST_SYNC`, `STORY_JOIN`, `STORY_FINISH`, `STORY_FORCE_END`).
     -   IndexedDB storage via `storyteller-local` (`games` and `entries` object stores).
     -   Modular Modifiers System ("Baukasten"):
         -   **Blind Mode**: Hides preceding story text, revealing only the last 10 words of the previous player's contribution.

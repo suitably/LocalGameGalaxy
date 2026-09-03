@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   CircularProgress,
   Stack,
   Typography,
@@ -18,6 +19,7 @@ import type { StoryGameRecord } from '../types';
 
 interface WaitingForStoryTurnViewProps {
   game: StoryGameRecord;
+  roomId?: string;
   onClaimPlayer: (playerId: string) => void;
   onShareTurn: () => void;
   onOpenReader: () => void;
@@ -25,6 +27,7 @@ interface WaitingForStoryTurnViewProps {
 
 export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = ({
   game,
+  roomId,
   onClaimPlayer,
   onShareTurn,
   onOpenReader,
@@ -84,6 +87,15 @@ export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = (
           </Box>
 
           <Box>
+            {roomId && (
+              <Box mb={1}>
+                <Chip
+                  label={`${t('party.room', 'Raum')}: ${roomId}`}
+                  color="primary"
+                  sx={{ fontWeight: 'bold', fontSize: '0.85rem' }}
+                />
+              </Box>
+            )}
             <Typography variant="h6" fontWeight={700} sx={{ color: '#f8fafc' }}>
               {t('storyteller.waitingTitle', 'Warten auf')} {activePlayer.name}...
             </Typography>

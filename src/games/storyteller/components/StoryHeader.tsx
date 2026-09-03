@@ -23,6 +23,7 @@ import type { StoryGameRecord } from '../types';
 
 interface StoryHeaderProps {
   game: StoryGameRecord;
+  roomId?: string;
   onExit: () => void;
   onOpenReader: () => void;
   onOpenEdit?: () => void;
@@ -34,6 +35,7 @@ interface StoryHeaderProps {
 
 export const StoryHeader: React.FC<StoryHeaderProps> = ({
   game,
+  roomId,
   onExit,
   onOpenReader,
   onOpenEdit,
@@ -82,6 +84,14 @@ export const StoryHeader: React.FC<StoryHeaderProps> = ({
             <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ color: '#fff' }}>
               {game.name || t('games.storyteller.title', 'Geschichtenschreiber')}
             </Typography>
+            {roomId && (
+              <Chip
+                size="small"
+                label={roomId}
+                color="primary"
+                sx={{ height: 22, fontWeight: 700, fontSize: '0.75rem' }}
+              />
+            )}
             <Chip
               size="small"
               label={`${t('storyteller.turnLabel', 'Zug')} ${game.turnNumber}`}

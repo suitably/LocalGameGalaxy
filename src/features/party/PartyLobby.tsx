@@ -38,6 +38,7 @@ import {
   type PartyGameType,
 } from './logic/universalPartyManager';
 import { GarticPhoneGame } from '../../games/garticphone/GarticPhoneGame';
+import { StorytellerGame } from '../../games/storyteller/StorytellerGame';
 import { storage } from '../../lib/storage';
 
 const STORAGE_PLAYER_NAME = 'guessart_player_name';
@@ -197,6 +198,10 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
   // In-Game Render
   if (roomState?.status === 'in_game' && roomState.activeGame === 'garticphone' && isInGameView) {
     return <GarticPhoneGame onBackToMenu={() => setIsInGameView(false)} initialRoomId={roomId} />;
+  }
+
+  if (roomState?.status === 'in_game' && roomState.activeGame === 'storyteller' && isInGameView) {
+    return <StorytellerGame onBackToMenu={() => setIsInGameView(false)} initialRoomId={roomId} />;
   }
 
   const shareUrl = buildShareUrl();
@@ -642,6 +647,64 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
                   variant="outlined"
                   color="primary"
                   sx={{ fontWeight: 'bold', py: 1 }}
+                />
+              )}
+            </Card>
+
+            {/* Geschichtenschreiber Card */}
+            <Card
+              variant="outlined"
+              sx={{
+                p: 2.5,
+                borderRadius: 3,
+                border: '1.5px solid',
+                borderColor: '#0284c7',
+                bgcolor: 'background.paper',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                gap: 2,
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 6px 20px rgba(2, 132, 199, 0.15)',
+                },
+              }}
+            >
+              <Box>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+                  <Typography variant="h6" fontWeight={800} sx={{ color: '#0284c7' }}>
+                    📖 Geschichtenschreiber
+                  </Typography>
+                  <Chip label="Kreativ ✍️" sx={{ bgcolor: 'rgba(2, 132, 199, 0.15)', color: '#0284c7', fontWeight: 'bold' }} size="small" />
+                </Box>
+                <Typography variant="body2" color="text.secondary">
+                  {t('party.storytellerDesc', 'Kollaboratives Geschichtenschreiben! Schreibt gemeinsam einen Text mit Blind Mode, Time Attack & Word Roulette.')}
+                </Typography>
+              </Box>
+
+              {amIHost ? (
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={() => handleLaunchGame('storyteller')}
+                  startIcon={<PlayArrowRoundedIcon />}
+                  sx={{
+                    fontWeight: 800,
+                    borderRadius: 2.5,
+                    py: 1.2,
+                    bgcolor: '#0284c7',
+                    '&:hover': { bgcolor: '#0369a1' },
+                    boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)',
+                  }}
+                >
+                  {t('party.launchStoryteller', 'Geschichtenschreiber starten')}
+                </Button>
+              ) : (
+                <Chip
+                  label={t('party.guestWaitingPrompt', 'Der Host wählt gerade das nächste Spiel aus...')}
+                  variant="outlined"
+                  sx={{ color: '#0284c7', borderColor: '#0284c7', fontWeight: 'bold', py: 1 }}
                 />
               )}
             </Card>

@@ -4,7 +4,10 @@
 Implemented the collaborative storytelling multiplayer game **Geschichtenschreiber** (Storyteller) under `src/games/storyteller` based on the specifications of Issue #127:
 
 1. **Stack & Domain Logic**:
-   - Reused the local-first IndexedDB, pass-and-play turn rotation, and remote URL/LZString snapshot sharing architecture from GuessArt.
+   - Reused the local-first IndexedDB, pass-and-play turn rotation, and remote networking architecture from **Gartic Phone** and **GuessArt**:
+     - `BroadcastChannel` (`storyteller_channel_${roomId}`) for instantaneous same-machine / cross-tab synchronization.
+     - `mailboxService` (ephemeral MQTT broker on `storyteller_room_${roomId}`) for seamless online cross-device turn passing without requiring a dedicated backend.
+     - Seamless room integration via [`universalPartyManager`](file:///home/deck/Projects/LocalGameGalaxy/src/features/party/logic/universalPartyManager.ts) and [`PartyLobby`](file:///home/deck/Projects/LocalGameGalaxy/src/features/party/PartyLobby.tsx).
    - Database provider `src/games/storyteller/logic/db.ts` with stores for `games` and `entries`.
    - Data access repository `src/games/storyteller/logic/repository.ts` and player assignment manager `playerAssignment.ts`.
    - Story progression engine `src/games/storyteller/logic/engine.ts` supporting turn submission, auto-word counting, next-player rotation, story conclusion, and conflict-free snapshot import/export.
