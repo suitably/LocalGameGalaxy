@@ -10,6 +10,7 @@ import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import { useTranslation } from 'react-i18next';
 import { usePlaylists } from '../hooks/usePlaylists';
 import { type Playlist } from '../db';
+import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
 
 interface MelodiqPlaylistsProps {
     onBack: () => void;
@@ -35,6 +36,7 @@ export const MelodiqPlaylists: React.FC<MelodiqPlaylistsProps> = ({ onBack, onSe
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [editPlaylist, setEditPlaylist] = useState<Playlist | null>(null);
     const [editName, setEditName] = useState('');
+    const [playlistToDelete, setPlaylistToDelete] = useState<string | null>(null);
 
     const handleCreate = async () => {
         if (newPlaylistName.trim()) {
@@ -139,9 +141,7 @@ export const MelodiqPlaylists: React.FC<MelodiqPlaylistsProps> = ({ onBack, onSe
                                             </IconButton>
                                             <IconButton size="small" color="error" onClick={(e) => {
                                                 e.stopPropagation();
-                                                if (window.confirm(t('melodiq.confirm_delete_playlist'))) {
-                                                    deletePlaylist(playlist.id);
-                                                }
+                                                setPlaylistToDelete(playlist.id);
                                             }}>
                                                 <DeleteIcon fontSize="small" />
                                             </IconButton>
@@ -201,6 +201,22 @@ export const MelodiqPlaylists: React.FC<MelodiqPlaylistsProps> = ({ onBack, onSe
                     <Button onClick={handleEdit} variant="contained" disabled={!editName.trim()}>{t('save')}</Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={Boolean(playlistToDelete)}
+                title={t('melodiq.delete_playlist', 'Playlist löschen')}
+                message={t('melodiq.confirm_delete_playlist', 'Möchtest du diese Playlist wirklich löschen?')}
+                confirmColor="error"
+                confirmText={t('common.delete', 'Löschen')}
+                onConfirm={() => {
+                    if (playlistToDelete) {
+                        deletePlaylist(playlistToDelete);
+                        setPlaylistToDelete(null);
+                    }
+                }}
+                onCancel={() => setPlaylistToDelete(null)}
+            />
 
         </Box>
     );

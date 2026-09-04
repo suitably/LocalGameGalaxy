@@ -1,6 +1,8 @@
 /**
- * pushTypes.ts - Data interfaces for Web Push & Game-Scoped Relays
+ * pushTypes.ts - Data interfaces for Web Push, ntfy & Game-Scoped Relays
  */
+
+export type NotificationMethod = 'auto' | 'webpush' | 'ntfy' | 'both';
 
 export interface PushNotificationPayload {
   gameId: string;
@@ -12,6 +14,8 @@ export interface PushNotificationPayload {
   icon?: string;
   tag?: string;
   action?: 'draw' | 'guess' | 'turn' | 'game_start';
+  ntfyTopic?: string;
+  targetRelayUrl?: string;
 }
 
 export interface StoredPushSubscription {
@@ -25,7 +29,9 @@ export interface StoredPushSubscription {
 export interface SubscribePushRequest {
   gameId: string;
   playerId: string;
-  subscription: StoredPushSubscription;
+  subscription?: StoredPushSubscription;
+  method?: NotificationMethod;
+  ntfyTopic?: string;
 }
 
 export interface UnsubscribePushRequest {
@@ -37,12 +43,25 @@ export interface NotifyPushRequest {
   gameId: string;
   senderPlayerId?: string;
   targetPlayerId?: string;
+  targetRelayUrl?: string;
   title: string;
   body: string;
   url?: string;
   action?: string;
+  ntfyTopic?: string;
 }
 
 export interface VapidKeyResponse {
   publicKey: string;
+}
+
+export interface RelayNotifyResponse {
+  success: boolean;
+  webPushSent?: number;
+  webPushFailed?: number;
+  ntfySent?: number;
+  ntfyFailed?: number;
+  totalTargets?: number;
+  details?: unknown[];
+  error?: string;
 }

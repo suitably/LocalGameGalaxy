@@ -87,6 +87,18 @@ export const gameRelayStorage = {
   },
 
   /**
+   * Resolves the receiver's effective relay URL:
+   * 1. Receiver's own relay URL if specified on their player record
+   * 2. Fallback to game-level host relay
+   */
+  getEffectiveRelay(gameId: string, playerRelayUrl?: string): string | null {
+    if (playerRelayUrl && playerRelayUrl.trim()) {
+      return playerRelayUrl.trim().replace(/\/$/, '');
+    }
+    return this.getGameRelay(gameId);
+  },
+
+  /**
    * Clears game-specific relay storage.
    */
   clearGameRelay(gameId: string): void {

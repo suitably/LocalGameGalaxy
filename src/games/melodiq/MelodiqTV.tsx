@@ -36,8 +36,10 @@ const MockWebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
 };
 
+// Initialize i18n bundles at module load time to prevent setState side-effects during render
+initMelodiqI18n();
+
 export const MelodiqTV: React.FC = () => {
-    initMelodiqI18n();
     const { t } = useTranslation();
     const { updateSetting } = useMelodiqSettings();
 

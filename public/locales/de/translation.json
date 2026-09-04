@@ -468,6 +468,16 @@
       "description": "Digitale Punkte-, Lebens- (Schwimmen) und Stichverwaltung (Oh Hell) für Kartenspiele am Tisch."
     }
   },
+  "lobby": {
+    "playersTitle": "Mitspieler",
+    "playersSetupDesc": "Füge mindestens {{min}} Spieler hinzu. Gespielt werden kann flexibel an einem Gerät oder mit eigenen Einladungslinks.",
+    "playerNamePlaceholder": "Name eingeben...",
+    "duplicatePlayer": "Spieler existiert bereits!",
+    "minPlayers": "Mindestens {{min}} Spieler werden benötigt!",
+    "maxPlayers": "Maximale Anzahl von {{max}} Spielern erreicht!",
+    "noPlayersYet": "Noch keine Spieler hinzugefügt.",
+    "addPlayer": "Hinzufügen"
+  },
   "common": {
     "start": "Spiel starten",
     "back": "Zurück",
@@ -531,7 +541,25 @@
     "relay_dashboard_note": "Ohne GitHub: Du kannst auf dash.cloudflare.com einfach einen Worker erstellen ('Create Worker' ➔ 'Quick Edit') und den Code aus server/cloudflare-push-relay hineinkopieren. Kein Git nötig.",
     "relay_manual_title": "Alternative: Manuelles CLI-Deployment im Terminal:",
     "relay_worker_copy": "Befehle kopieren",
-    "relay_worker_copied": "Befehle kopiert!"
+    "relay_worker_copied": "Befehle kopiert!",
+    "method_label": "Bevorzugter Benachrichtigungs-Kanal",
+    "method_auto": "🟢 Automatisch (Web-Push mit ntfy Fallback)",
+    "method_ntfy": "🛡️ Google-frei via ntfy (Murena / Fairphone / F-Droid)",
+    "method_webpush": "🌐 Nur Browser-Push (Chrome / Firefox / Safari)",
+    "method_both": "⚡ Beide Kanäle parallel (Maximale Zuverlässigkeit)",
+    "ntfy_title": "Google-freie Benachrichtigungen (ntfy)",
+    "ntfy_desc": "Speziell für Murena /e/OS, Fairphone, GrapheneOS und F-Droid-Nutzer: 100% Open-Source Push ohne Google Play Services oder FCM.",
+    "ntfy_server_label": "ntfy Server URL",
+    "ntfy_test_btn": "Test an ntfy senden",
+    "ntfy_testing": "Sende Test-Push via ntfy...",
+    "ntfy_test_title": "LocalGameGalaxy: ntfy Test!",
+    "ntfy_test_body": "🎉 Test erfolgreich! 100% Google-freie Benachrichtigungen funktionieren.",
+    "ntfy_test_success": "Gesendet! Prüfe deine ntfy-App.",
+    "ntfy_test_error": "Fehler beim Senden an ntfy. Server prüfen.",
+    "ntfy_open_test_topic": "Test-Topic in ntfy öffnen/abonnieren",
+    "ntfy_subscribe_btn": "In ntfy abonnieren",
+    "ntfy_badge_title": "100% Google-frei via ntfy",
+    "ntfy_badge_desc": "Ideal für Fairphone, Murena /e/OS und F-Droid: Erhalte Pushs ohne Google Play Services direkt in deiner ntfy-App."
   },
   "server": {
     "title": "Nexumia Server Verbindung",
@@ -702,6 +730,7 @@
     "wrongGuess": "Leider falsch! Versuch es weiter.",
     "correctCelebration": "Richtig erraten!",
     "searchedWord": "Gesuchtes Wort:",
+    "drawnAsOriginal": "(Gezeichnet als: {{word}})",
     "roundStats": "Runde {{round}} mit {{guesses}} Versuchen gelöst!",
     "nextRound": "Nächste Runde",
     "addAsSynonymPrompt": "Eingaben als Synonym übernehmen:",

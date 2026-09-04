@@ -135,14 +135,14 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack, onNavi
                     <Typography variant="h6" sx={{ mb: 2 }}>{t('settings.language', 'Language')}</Typography>
                     <Box sx={{ display: 'flex', gap: 2 }}>
                         <Button
-                            variant={i18n.language === 'en' ? 'contained' : 'outlined'}
-                            onClick={() => i18n.changeLanguage('en')}
+                            variant={i18n.language.startsWith('en') ? 'contained' : 'outlined'}
+                            onClick={() => void i18n.changeLanguage('en')}
                         >
                             English
                         </Button>
                         <Button
-                            variant={i18n.language === 'de' ? 'contained' : 'outlined'}
-                            onClick={() => i18n.changeLanguage('de')}
+                            variant={i18n.language.startsWith('de') ? 'contained' : 'outlined'}
+                            onClick={() => void i18n.changeLanguage('de')}
                         >
                             Deutsch
                         </Button>

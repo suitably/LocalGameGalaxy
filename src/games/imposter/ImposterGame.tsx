@@ -16,6 +16,7 @@ import { getWordPairsByCategories } from './logic/imposterRepository';
 import { usePageTitle } from '../../context/TitleContext';
 import { useWakeLock } from '../../hooks/useWakeLock';
 
+import { useLobbyPlayers } from '../../modules/player-management';
 import { storage, STORAGE_KEYS } from '../../lib/storage';
 
 export const ImposterGame: React.FC = () => {
@@ -25,15 +26,16 @@ export const ImposterGame: React.FC = () => {
     // Set the game title in the header
     usePageTitle(t('games.imposter.title'));
 
-    // Load lobby setup players from persistent storage on init
-    const [lobbyPlayers, setLobbyPlayers] = useState<Player[]>(() => 
-        storage.getJson<Player[]>(STORAGE_KEYS.IMPOSTER_SETUP_PLAYERS, [])
-    );
-
-    // Save lobby players to storage whenever they change
-    useEffect(() => {
-        storage.setJson(STORAGE_KEYS.IMPOSTER_SETUP_PLAYERS, lobbyPlayers);
-    }, [lobbyPlayers]);
+    const {
+        players: lobbyPlayers,
+        addPlayer,
+        removePlayer,
+    } = useLobbyPlayers({
+        storageKey: STORAGE_KEYS.IMPOSTER_SETUP_PLAYERS,
+        defaultPlayers: ['Spieler 1', 'Spieler 2', 'Spieler 3'],
+        minPlayers: 3,
+        maxPlayers: 20,
+    });
 
     const [isDbReady, setIsDbReady] = useState(false);
 
@@ -69,14 +71,6 @@ export const ImposterGame: React.FC = () => {
 
     useWakeLock(gameState.phase !== 'LOBBY');
 
-    const addPlayer = useCallback((name: string) => {
-        setLobbyPlayers(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), name, isImposter: false, isKicked: false }]);
-    }, []);
-
-    const removePlayer = useCallback((id: string) => {
-        setLobbyPlayers(prev => prev.filter(p => p.id !== id));
-    }, []);
-
     const startGame = async (setup: { categories: DbCategory[]; imposterCount: number; timerLength: number }) => {
         // Fetch word pairs from selected categories
         const categoryIds = setup.categories.map(c => c.id);
@@ -89,13 +83,20 @@ export const ImposterGame: React.FC = () => {
 
         const [word, hint] = randomPair.words[currentLang];
 
-        const shuffled = [...lobbyPlayers].sort(() => 0.5 - Math.random());
+        const playerList: Player[] = lobbyPlayers.map((p, idx) => ({
+            id: `p_${idx}_${Math.random().toString(36).substring(2, 7)}`,
+            name: p.name,
+            isImposter: false,
+            isKicked: false,
+        }));
+
+        const shuffled = [...playerList].sort(() => 0.5 - Math.random());
         const imposterIds = new Set(shuffled.slice(0, setup.imposterCount).map(p => p.id));
 
-        const updatedPlayers = lobbyPlayers.map(p => ({
+        const updatedPlayers = playerList.map(p => ({
             ...p,
             isImposter: imposterIds.has(p.id),
-            isKicked: false
+            isKicked: false,
         }));
 
         setGameState({
@@ -164,7 +165,6 @@ export const ImposterGame: React.FC = () => {
                         players={lobbyPlayers}
                         onAddPlayer={addPlayer}
                         onRemovePlayer={removePlayer}
-                        onClearAllPlayers={() => setLobbyPlayers([])}
                         onStartGame={startGame}
                     />
                 );

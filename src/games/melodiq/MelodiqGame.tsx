@@ -38,9 +38,10 @@ import { DownloadWaitScreen } from './components/DownloadWaitScreen';
 
 type View = 'Home' | 'Settings' | 'Session' | 'Connection' | 'Playlists' | 'PlaylistDetails' | 'DownloadWait';
 
+// Initialize i18n bundles at module load time to prevent setState side-effects during render
+initMelodiqI18n();
+
 export const MelodiqGameContent: React.FC = () => {
-    initMelodiqI18n();
-    
     const params = new URLSearchParams(window.location.search);
     const isClient = params.get('role') === 'client';
 

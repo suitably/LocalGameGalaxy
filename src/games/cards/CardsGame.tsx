@@ -10,8 +10,10 @@ import { SchwimmenGameView } from './components/SchwimmenGameView';
 import { OhHellGameView } from './components/OhHellGameView';
 import { UniversalScoreView } from './components/UniversalScoreView';
 
+// Initialize i18n bundles at module load time to prevent setState side-effects during render
+initCardsI18n();
+
 export const CardsGame: React.FC = () => {
-  initCardsI18n();
   const { t } = useTranslation();
   usePageTitle(t('games.cards.title', 'Kartenspiele'));
   useWakeLock(true);

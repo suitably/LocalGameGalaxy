@@ -26,12 +26,15 @@ Tasks are categorized by complexity. Agents must follow the appropriate path:
 #### Phase 1: Context & Planning
 **Goal**: Understand the goal and design the solution.
 
-1.  **Analyze**: Read existing documentation and code.
+1.  **Analyze & Reuse Audit ("Look Before You Leap")**:
+    -   Read existing documentation and code.
+    -   **MANDATORY**: Search `src/modules/`, `src/components/`, and `src/lib/` before writing any code. Check if an existing component, hook, or service already solves the problem (see Section 4.1 for the shared catalog).
     -   **RepoLens Reports**: If resolving an issue reported by RepoLens, read the corresponding markdown report, examine the referenced source lines, and confirm the suggested fix makes sense in the current context.
 2.  **Plan**: Create a new implementation plan in `docs/planning/`.
     -   File Naming: `[short-feature-name]-plan.md`
     -   Must Include:
         -   **Goal Description**: What are we solving?
+        -   **Reused Components/Modules**: Explicitly list which existing shared modules (`src/modules/*`, `src/components/*`, `src/lib/*`) are utilized.
         -   **Proposed Changes**: List of files to modify/create.
         -   **Verification Plan**: How will we test this?
     -   *Crucial*: If the task is complex, request user review via `notify_user` before proceeding.
@@ -107,20 +110,44 @@ To prevent spaghetti code, bloat, and modern web anti-patterns, agents **MUST** 
     -   **Single Responsibility Principle (SRP)**: Each file, component, or hook should have exactly *one* job. If a component handles UI layout, business logic, and data fetching, it must be split.
     -   **Dependency Inversion**: Use hooks and contexts to inject state and logic into UI components rather than hardcoding complex logic inside views.
 2.  **File Size Limits**: Keep files small. If a React component exceeds ~250 lines, it is likely doing too much. Break it down into sub-components or extract logic into custom hooks (`useFeatureLogic.ts`).
-3.  **DRY (Don't Repeat Yourself)**: Before writing new code, use the search tools to check if a similar component, hook, or utility function already exists in `src/components`, `src/hooks`, or `src/lib`.
-4.  **Planning Phase Enforcement**: When creating an implementation plan (Phase 1), the agent **MUST** explicitly state the component hierarchy and how the feature will be split into multiple small, focused files to satisfy the SRP.
-5.  **Modern Web APIs & CSS**:
-    -   Prefer modern native HTML/CSS/JS features instead of obsolete libraries or custom complex hacks.
-    -   For overlays and modals, use the native HTML `<dialog>` element rather than custom overlay states.
-    -   Use modern CSS features (CSS variables, `:has()`, Grid/Flexbox) for clean, performant styling.
+3.  **DRY & Mandatory Reuse ("Look Before You Leap")**:
+    - Before writing new code, agents **MUST** audit existing shared modules and components in `src/modules`, `src/components`, and `src/lib`.
+    - **Never reinvent wheels**: If a shared component, hook, or utility exists, it MUST be reused (see Section 4.1).
+    - **No Cross-Game Direct Imports**: Game folders (`src/games/<gameA>`) must NEVER import directly from other game folders (`src/games/<gameB>`). If logic or UI is shared across two or more games, it MUST be extracted into `src/modules/*`, `src/components/*`, or `src/lib/*`.
+4.  **Planning Phase Enforcement**: When creating an implementation plan (Phase 1), the agent **MUST** explicitly state:
+    - Which existing shared modules/components will be reused.
+    - The component hierarchy and how the feature will be split into multiple small, focused files to satisfy the SRP.
+5.  **Modern Web APIs & UI Standards**:
+    - For modals and dialogs, **always use MUI `<Dialog>`** (with consistent theme styling, backdrop blur, and focus management) or [`ConfirmDialog`](src/components/common/ConfirmDialog.tsx). **Never use native HTML `<dialog>` or blocking `window.confirm()`**.
+    - For persistent storage, **always use `src/lib/storage.ts`** with registered keys in `STORAGE_KEYS`. Never call raw `localStorage.getItem()` or `localStorage.setItem()` directly.
+    - For headers and navigation, **always integrate with `GlobalHeader` via `LayoutContext` / `usePageTitle`**. Never render duplicate secondary in-game top bars or back buttons.
+    - Use modern CSS features (CSS variables, `:has()`, Grid/Flexbox, `100dvh`) for clean, performant styling.
 6.  **Type Safety (Strict TypeScript)**:
-    -   Avoid the `any` type. Use strongly typed interfaces, generics, and props.
-    -   Use Discriminated Unions for UI/fetch state (e.g., `status: 'idle' | 'loading' | 'success' | 'error'`) rather than separate boolean flags (`isLoading`, `isError`) to prevent impossible states.
+    - Avoid the `any` type. Use strongly typed interfaces, generics, and props.
+    - Use Discriminated Unions for UI/fetch state (e.g., `status: 'idle' | 'loading' | 'success' | 'error'`) rather than separate boolean flags (`isLoading`, `isError`) to prevent impossible states.
 7.  **React Anti-Patterns to Avoid**:
-    -   **No Side Effects in Render**: Never trigger side effects or write state modifications directly in the render cycle. Use event handlers or proper `useEffect` hooks with correct dependency arrays.
-    -   **Stable Keys**: Always use unique, stable IDs as list item `key` props (never use array indices unless the array is strictly static and read-only).
-    -   **Single Source of Truth**: Avoid duplicating state. If a value can be derived or computed from existing state or props, compute it on the fly (optionally memoizing it with `useMemo` if expensive).
-    -   **Immutability**: Never mutate state variables directly. Always use the setter function with pure state updates (e.g., `setState(prev => [...prev, newItem])`).
+    - **No Side Effects in Render**: Never trigger side effects or write state modifications directly in the render cycle. Use event handlers or proper `useEffect` hooks with correct dependency arrays.
+    - **Stable Keys**: Always use unique, stable IDs as list item `key` props (never use array indices unless the array is strictly static and read-only).
+    - **Single Source of Truth**: Avoid duplicating state. If a value can be derived or computed from existing state or props, compute it on the fly (optionally memoizing it with `useMemo` if expensive).
+    - **Immutability**: Never mutate state variables directly. Always use the setter function with pure state updates (e.g., `setState(prev => [...prev, newItem])`).
+
+### 4.1 Mandatory Component & Logic Reuse Catalog
+
+All agents must check this inventory before building feature code:
+
+| Area / Module | Path | What It Provides & When to Use It |
+| :--- | :--- | :--- |
+| **Player Management** | `src/modules/player-management` | `<PlayerManagerCard />`, `useLobbyPlayers`, `playerLogic.ts`. Mandatory for all lobby player lists, add/remove, min/max limits, remote player toggles, and persistence. |
+| **Sync & Mailbox** | `src/modules/sync` | `MqttMailboxService<T>`. Reusable generic MQTT peer-turn/session sync with multi-broker fallback and BroadcastChannel. |
+| **Drawing & Stroke Replay** | `src/modules/drawing` | `<ExcalidrawViewer />`, `<ExcalidrawLazy />`, `excalidrawScene.ts`. Canvas rendering and animated stroke playback. |
+| **Session Sharing & Editing** | `src/modules/sharing` | `<ShareSessionLinksDialog />`, `<EditSessionDialog />`. QR code generation, LZString compressed link sharing, Web Share API, and player renaming. |
+| **Async Game IDB Storage** | `src/modules/async-game` | `createIdbStoreOperations`, `runWithStore`, `cursorCollect`, `requestToPromise`. Standardized IndexedDB CRUD without raw transaction boilerplate. |
+| **Confirmation Dialog** | `src/components/common/ConfirmDialog.tsx` | Accessible MUI confirmation modal for destructive/critical actions (replaces `window.confirm()`). |
+| **3D Dice Component** | `src/components/games/Die3D.tsx` | Standard 3D animated dice with rolling animation, selection glow, and preset colors (`white`, `red`, `yellow`, `green`, `blue`). |
+| **Header & Titles** | `src/context/LayoutContext.tsx` & `usePageTitle` | Single global top bar (`GlobalHeader`). Registers page titles, action menus, and safe hub exit. |
+| **Push Notification Banner** | `src/components/push/PushNotificationBanner.tsx` | 1-click Web Push & ntfy status badge and permission request. |
+| **Empty States** | `src/components/feedback/EmptyState.tsx` | Standard placeholder for empty lists, search misses, or inactive states. |
+| **Centralized Storage** | `src/lib/storage.ts` | Memory-fallback safe storage. All keys MUST be added to `STORAGE_KEYS`. |
 
 ## 5. Localization (i18n)
 
@@ -132,7 +159,11 @@ Agents **MUST** adhere to strict internationalization standards when working on 
 ## 6. Enforcement
 
 -   **Do not skip planning** for non-trivial, significant tasks.
--   **Always break down UI into small components** in your plan.
+-   **Always perform a Reuse Audit** in Phase 1 before proposing new code.
+-   **Never re-invent existing shared modules**: If a component/hook exists in Section 4.1, you MUST use it.
+-   **No cross-game imports**: Games must never import from other games (`src/games/<A>` -> `src/games/<B>` is strictly forbidden).
+-   **No raw `localStorage` or native `confirm()`**: Always use `storage.ts` and `<ConfirmDialog />`.
+-   **Always break down UI into small components** in your plan (< 250 lines per file).
 -   **Do not skip verification** (even for fast-track tasks, always run lint, build, and tests/validation).
 -   **Do not introduce lint or compiler errors** (`npm run lint` and `npm run build` must pass).
 -   **Do not use temporary placeholders or empty TODOs** in production-bound code.

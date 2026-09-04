@@ -18,12 +18,12 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import PersonAddRoundedIcon from '@mui/icons-material/PersonAddRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 import AutoStoriesRoundedIcon from '@mui/icons-material/AutoStoriesRounded';
 import { useTranslation } from 'react-i18next';
+import { PlayerManagerCard } from '../../../modules/player-management';
 import type { StoryLobbyPlayerItem } from '../hooks/useStorytellerLobby';
 import type { StoryGameRecord, StoryModifierSettings } from '../types';
 
@@ -31,8 +31,8 @@ interface StoryLobbyProps {
   players: StoryLobbyPlayerItem[];
   modifiers: StoryModifierSettings;
   activeGames: StoryGameRecord[];
-  onAddPlayer: (name: string) => void;
-  onRemovePlayer: (index: number) => void;
+  onAddPlayer: (name: string, isRemote?: boolean) => boolean | void;
+  onRemovePlayer: (nameOrIndex: string | number) => void;
   onUpdateModifier: <K extends keyof StoryModifierSettings>(
     key: K,
     patch: Partial<StoryModifierSettings[K]>,
@@ -54,16 +54,8 @@ export const StoryLobby: React.FC<StoryLobbyProps> = ({
   onDeleteGame,
 }) => {
   const { t, i18n } = useTranslation();
-  const [newPlayerName, setNewPlayerName] = useState('');
   const [storyName, setStoryName] = useState('');
   const language = i18n.language.startsWith('de') ? 'de' : 'en';
-
-  const handleAdd = () => {
-    if (newPlayerName.trim()) {
-      onAddPlayer(newPlayerName.trim());
-      setNewPlayerName('');
-    }
-  };
 
   const handleStart = () => {
     onStartGame({
@@ -89,40 +81,21 @@ export const StoryLobby: React.FC<StoryLobbyProps> = ({
       </Box>
 
       {/* Players Setup */}
-      <Card variant="outlined" sx={{ bgcolor: 'rgba(15, 23, 42, 0.6)', borderColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2 }}>
-        <CardContent sx={{ p: 2.5 }}>
-          <Typography variant="subtitle1" fontWeight={700} sx={{ color: '#f8fafc', mb: 1.5 }}>
-            {t('storyteller.playersTitle', 'Spieler')} ({players.length})
-          </Typography>
-
-          <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-            <TextField
-              size="small"
-              fullWidth
-              placeholder={t('storyteller.playerNamePlaceholder', 'Name eingeben...')}
-              value={newPlayerName}
-              onChange={(e) => setNewPlayerName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-            />
-            <Button variant="contained" onClick={handleAdd} startIcon={<PersonAddRoundedIcon />} sx={{ bgcolor: '#0284c7' }}>
-              {t('common.add', 'Hinzufügen')}
-            </Button>
-          </Stack>
-
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ minHeight: 40 }}>
-            {players.map((p, idx) => (
-              <Chip
-                key={`${p.name}-${idx}`}
-                label={p.name}
-                onDelete={players.length > 2 ? () => onRemovePlayer(idx) : undefined}
-                color="primary"
-                variant="filled"
-                sx={{ fontWeight: 700, fontSize: '0.95rem', py: 2.2, px: 0.5 }}
-              />
-            ))}
-          </Stack>
-        </CardContent>
-      </Card>
+      <PlayerManagerCard
+        players={players}
+        onAddPlayer={(name, isRemote) => Boolean(onAddPlayer(name, isRemote))}
+        onRemovePlayer={onRemovePlayer}
+        cardVariant="outlined"
+        title={t('storyteller.playersTitle', 'Spieler')}
+        description=""
+        placeholder={t('storyteller.playerNamePlaceholder', 'Name eingeben...')}
+        minPlayers={2}
+        sx={{
+          bgcolor: 'rgba(15, 23, 42, 0.6)',
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          borderRadius: 2,
+        }}
+      />
 
       {/* Modifiers Baukasten */}
       <Card variant="outlined" sx={{ bgcolor: 'rgba(15, 23, 42, 0.6)', borderColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2 }}>

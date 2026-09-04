@@ -30,8 +30,8 @@ export const useMelodiqHeader = ({
     const { setHeader, setCustomHeaderActions } = useLayout();
 
     useEffect(() => {
-        // Always intercept home button to keep user in Melodiq
-        const homeAction = () => setCurrentView('Home');
+        // Return to Hub when on Home, otherwise return to Melodiq Home
+        const homeAction = currentView === 'Home' ? null : () => setCurrentView('Home');
 
         if (currentView === 'Home') {
             const headerActions: any[] = [];

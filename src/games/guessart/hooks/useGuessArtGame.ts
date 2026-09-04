@@ -3,6 +3,7 @@ import { LocalGameEngine } from '../logic/engine';
 import { mailboxService } from '../logic/mailboxService';
 import { gameRelayStorage } from '../../../lib/push/gameRelayStorage';
 import { pushClient } from '../../../lib/push/pushClient';
+import { storage } from '../../../lib/storage';
 import { playerAssignment } from '../logic/playerAssignment';
 import type {
   GuessArtGameRecord,
@@ -88,8 +89,9 @@ export const useGuessArtGame = (
   useEffect(() => {
     if (!localPlayerIdsKey || !gameId) return;
     const ids = localPlayerIdsKey.split(',').filter(Boolean);
+    const ownRelay = storage.getPushRelayUrl();
     for (const id of ids) {
-      pushClient.registerForGamePush(gameId, id);
+      pushClient.registerForGamePush(gameId, id, ownRelay || undefined);
     }
   }, [localPlayerIdsKey, gameId]);
 
@@ -142,9 +144,20 @@ export const useGuessArtGame = (
         : 'Ein neuer Zug wartet auf dich!';
 
       const localPlayerIds = playerAssignment.getLocalPlayerIds(gameId);
+      const targetPlayer = isDrawing
+        ? snap.game?.players.find((p) => p.id === snap.round?.drawnById)
+        : isGuessing
+        ? snap.game?.players.find((p) => p.id === snap.round?.guesserId)
+        : undefined;
+
+      const effectiveRelay = gameRelayStorage.getEffectiveRelay(gameId, targetPlayer?.relayUrl);
+
       await pushClient.sendGamePushNotification({
         gameId,
         senderPlayerId: localPlayerIds[0],
+        targetPlayerId: targetPlayer?.id,
+        targetRelayUrl: effectiveRelay || undefined,
+        ntfyTopic: targetPlayer?.ntfyTopic,
         title,
         body,
         url: `${window.location.origin}${window.location.pathname}#/games/guessart?gameId=${gameId}`,

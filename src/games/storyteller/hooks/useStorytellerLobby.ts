@@ -4,22 +4,26 @@ import { LocalStoryEngine } from '../logic/engine';
 import { deleteStoryGame } from '../logic/repository';
 import { DEFAULT_MODIFIER_SETTINGS } from '../logic/modifiers';
 import { playerAssignment } from '../logic/playerAssignment';
+import { useLobbyPlayers } from '../../../modules/player-management';
+import type { LobbyPlayerItem } from '../../../modules/player-management';
 import type { StoryGameRecord, StoryModifierSettings } from '../types';
+
+export type StoryLobbyPlayerItem = LobbyPlayerItem;
 
 const STORAGE_KEY_STORY_PLAYERS = 'storyteller_lobby_players';
 const STORAGE_KEY_STORY_MODIFIERS = 'storyteller_lobby_modifiers';
 
-export interface StoryLobbyPlayerItem {
-  name: string;
-}
-
 export const useStorytellerLobby = () => {
-  const [lobbyPlayers, setLobbyPlayers] = useState<StoryLobbyPlayerItem[]>(() => {
-    const raw = storage.getJson<StoryLobbyPlayerItem[]>(STORAGE_KEY_STORY_PLAYERS, []);
-    if (Array.isArray(raw) && raw.length > 0) {
-      return raw.map((p) => ({ name: typeof p === 'string' ? p : p.name }));
-    }
-    return [{ name: 'Spieler 1' }, { name: 'Spieler 2' }];
+  const {
+    players: lobbyPlayers,
+    addPlayer,
+    removePlayer,
+    togglePlayerRemote,
+    hasMinPlayers,
+  } = useLobbyPlayers({
+    storageKey: STORAGE_KEY_STORY_PLAYERS,
+    defaultPlayers: [{ name: 'Spieler 1' }, { name: 'Spieler 2' }],
+    minPlayers: 2,
   });
 
   const [modifiers, setModifiers] = useState<StoryModifierSettings>(() => {
@@ -36,10 +40,6 @@ export const useStorytellerLobby = () => {
 
   const [activeGames, setActiveGames] = useState<StoryGameRecord[]>([]);
   const [loadingGames, setLoadingGames] = useState<boolean>(true);
-
-  useEffect(() => {
-    storage.setJson(STORAGE_KEY_STORY_PLAYERS, lobbyPlayers);
-  }, [lobbyPlayers]);
 
   useEffect(() => {
     storage.setJson(STORAGE_KEY_STORY_MODIFIERS, modifiers);
@@ -61,16 +61,6 @@ export const useStorytellerLobby = () => {
     loadActiveGames();
   }, [loadActiveGames]);
 
-  const addPlayer = (name: string) => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    setLobbyPlayers((prev) => [...prev, { name: trimmed }]);
-  };
-
-  const removePlayer = (index: number) => {
-    setLobbyPlayers((prev) => prev.filter((_, i) => i !== index));
-  };
-
   const updateModifier = <K extends keyof StoryModifierSettings>(
     key: K,
     patch: Partial<StoryModifierSettings[K]>,
@@ -89,6 +79,9 @@ export const useStorytellerLobby = () => {
     language: string;
     modifiers: StoryModifierSettings;
   }): Promise<StoryGameRecord> => {
+    if (!hasMinPlayers) {
+      throw new Error('At least 2 players required');
+    }
     const record = await LocalStoryEngine.createGame({
       name: options.name,
       players: lobbyPlayers,
@@ -117,6 +110,8 @@ export const useStorytellerLobby = () => {
     loadingGames,
     addPlayer,
     removePlayer,
+    togglePlayerRemote,
+    hasMinPlayers,
     updateModifier,
     createGame,
     deleteGame,

@@ -31,8 +31,10 @@ import { QwixxSheetSelector } from './components/QwixxSheetSelector';
 const STORAGE_KEY_SHEET = 'qwixx_my_sheet';
 const STORAGE_KEY_SHOW_DICE = 'qwixx_show_dice';
 
+// Initialize i18n bundles at module load time to prevent setState side-effects during render
+initQwixxI18n();
+
 export const QwixxGame: React.FC = () => {
-    initQwixxI18n();
     const { t } = useTranslation();
     usePageTitle(t('games.qwixx.title', 'Qwixx'));
     useWakeLock(true);

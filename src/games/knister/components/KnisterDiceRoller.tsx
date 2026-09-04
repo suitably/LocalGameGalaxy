@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Box, Paper, Typography, Button, Chip } from '@mui/material';
 import CasinoIcon from '@mui/icons-material/Casino';
 import { useTranslation } from 'react-i18next';
+import { Die3D } from '../../../components/games/Die3D';
 
 interface KnisterDiceRollerProps {
   currentRoll: { die1: number; die2: number; sum: number } | null;
@@ -49,34 +50,14 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
     }, 350);
   };
 
-  const renderDie = (key: string, val: number | undefined) => {
-    return (
-      <Paper
-        key={key}
-        elevation={animating ? 8 : 4}
-        sx={{
-          width: { xs: 44, sm: 52 },
-          height: { xs: 44, sm: 52 },
-          borderRadius: 2.5,
-          bgcolor: '#ffffff',
-          color: '#212121',
-          border: '2px solid #e0e0e0',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: { xs: '1.3rem', sm: '1.6rem' },
-          fontWeight: '900',
-          boxShadow: 3,
-          transform: animating ? 'rotate(-6deg) scale(1.08)' : 'none',
-          transition: 'all 0.15s ease',
-          userSelect: 'none',
-          WebkitTouchCallout: 'none',
-        }}
-      >
-        {val || '?'}
-      </Paper>
-    );
-  };
+  const renderDie = (key: string, val: number | undefined) => (
+    <Die3D
+      key={key}
+      value={val || '?'}
+      color="white"
+      isRolling={animating}
+    />
+  );
 
   return (
     <Paper

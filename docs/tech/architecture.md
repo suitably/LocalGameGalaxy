@@ -33,6 +33,7 @@ src/
 │       ├── logic/       # Pure functions, reducers, types
 │       ├── hooks/       # Custom hooks
 │       └── WerewolfGame.tsx # Entry point for the game
+├── modules/         # Shared Cross-Game Feature Modules (e.g. player-management)
 ├── lib/             # Shared utilities/libs
 ├── App.tsx          # Main Router/Layout
 └── main.tsx         # Entry Point
@@ -51,6 +52,7 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
     -   Integrated Excalidraw drawing canvas & animated stroke replay engine (`ExcalidrawViewer`).
     -   Fuzzy evaluation engine with German umlaut transliteration, diacritic normalization, and inflection generation (`guessEvaluator`, `lingo`).
     -   Deterministic multi-stage hint provider (`HintWordSlots`, `HintLetterChips`).
+    -   **Cross-Language Word Resolution**: Supports multilingual sessions (e.g., Player A draws in English, Player B guesses in German). The engine (`toRoundPayload`, `listRounds`) dynamically localizes the round payload (`word`, `wordMask`, `hintLetters`) to match the viewer's active language, enriches missing language translations from `DEFAULT_WORDS`, and accepts guesses in either language.
     -   **Unified Header Integration (`useGuessArtHeader`)**: Integrates directly with [`LayoutContext`](file:///home/deck/Projects/LocalGameGalaxy/src/context/LayoutContext.tsx) and [`GlobalHeader`](file:///home/deck/Projects/LocalGameGalaxy/src/components/Layout/GlobalHeader.tsx), consolidating navigation, active turn/secret word badges, match info, and game action menus into a single top header, maximizing drawing canvas screen area.
 -   **Geschichtenschreiber / Storyteller (`src/games/storyteller`)**:
     -   Collaborative turn-based storytelling game featuring native pass-and-play and async multi-device play with Web Push notifications.
@@ -77,17 +79,31 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
     -   **Serverless Real-Time Communication**: Operates 100% serverless over public WSS MQTT brokers (`wss://broker.hivemq.com:8884/mqtt` / `wss://broker.emqx.io:8084/mqtt`) and local `BroadcastChannel`. No local helper server or backend connection is required.
     -   Hosts can launch **Gartic Phone** for all connected devices simultaneously, with isolated drawing/guessing views per device, synchronized round progression, animated album reveals, and seamless return to the lobby.
 
-### Web Push Relay & Game-Scoped Notification Architecture
-- **Web Push Protocol (RFC 8291 / RFC 8292 VAPID)**:
-  - Enables closed-browser background OS push notifications for turn-based games like **GuessArt** (*Montagsmaler*).
-  - Background Service Worker ([`public/sw-push.js`](file:///home/deck/Projects/LocalGameGalaxy/public/sw-push.js)) receives incoming OS push packets and deep-links directly into the game on notification click.
-- **Host-Driven, Game-Scoped Relay**:
-  - The host's configured backend or Cloudflare Worker is passed in game links via `&gameRelay=...`.
-  - Guests parse `gameRelay` into `localStorage` (`galaxy_game_relay_<gameId>`) via [`gameRelayStorage.ts`](file:///home/deck/Projects/LocalGameGalaxy/src/lib/push/gameRelayStorage.ts) with a 7-day TTL and automatic stale-entry cleanup. Using `localStorage` (not `sessionStorage`) ensures push registration survives app/tab closures.
-  - Guests' global settings remain unpolluted, keeping the host's server isolated exclusively to the shared match via game-scoped key prefixes.
+### Shared Modules (`src/modules/*`)
+- **Player Management (`src/modules/player-management`)**:
+  - Reusable player configuration hook (`useLobbyPlayers`), pure domain functions (`playerLogic.ts`), and UI component (`PlayerManagerCard`) shared across games (GuessArt, Geschichtenschreiber/Storyteller, Imposter, Werewolf, Cards).
+  - Unconstrained player removal: Allows players down to 0, ensuring default placeholders ("Spieler 1", "Spieler 2") can be deleted and replaced with custom names.
+  - Fully configurable `minPlayers` and `maxPlayers` constraints, with duplicate name prevention, trimming, and full i18n support.
+- **Sync & Mailbox (`src/modules/sync`)**:
+  - Reusable generic MQTT mailbox service (`MqttMailboxService`) providing clean, strongly typed asynchronous peer synchronization over MQTT brokers for any turn-based game, completely decoupled from game-specific domains. Used by GuessArt and Storyteller.
+- **Drawing & Stroke Replay (`src/modules/drawing`)**:
+  - Encapsulates Excalidraw lazy-loading (`ExcalidrawLazy`), animated stroke playback (`ExcalidrawViewer`), and scene parsing/ordering (`excalidrawScene`). Shared cleanly by GuessArt and Gartic Phone without inter-game dependencies.
+- **Session Sharing & Editing (`src/modules/sharing`)**:
+  - Reusable dialogs (`ShareSessionLinksDialog`, `EditSessionDialog`) supporting dynamic QR generation, LZString compressed payloads, Web Share API, Clipboard fallbacks, and player renaming. Shared by GuessArt and Storyteller.
+- **Async Game Helpers (`src/modules/async-game`)**:
+  - Reusable IndexedDB transaction and cursor runners (`createIdbStoreOperations`, `runWithStore`, `cursorCollect`, `requestToPromise`) eliminating boilerplate and error handling across offline-first Dexie stores. Used by GuessArt and Storyteller.
+
+### Web Push & ntfy Hybrid Notification Architecture
+- **Hybrid Multi-Channel Architecture**:
+  - Supports standard **Web Push (RFC 8291 / RFC 8292 VAPID)** for mainstream Google/Mozilla/Apple browsers.
+  - Supports **100% De-Googled Push via ntfy** (`ntfy.sh` or self-hosted ntfy server) for privacy-conscious users on Murena /e/OS, Fairphone, GrapheneOS, or F-Droid without Google Play Services or Firebase Cloud Messaging.
+  - Automatic fallback & capability detection: If standard Web Push registration fails (e.g. missing FCM service on deGoogled Android), the client seamlessly suggests and registers ntfy.
+  - User can configure preferred notification channel (`auto`, `webpush`, `ntfy`, `both`) in Settings.
 - **Relay Implementations**:
-  - **Cloudflare Worker**: Zero-cost, 24/7 serverless push relay ([`server/cloudflare-push-relay/`](file:///home/deck/Projects/LocalGameGalaxy/server/cloudflare-push-relay/)). Uses [`webpush.ts`](file:///home/deck/Projects/LocalGameGalaxy/server/cloudflare-push-relay/webpush.ts) for RFC 8291 payload encryption (ECDH + AES-128-GCM) and VAPID JWT signing via Web Crypto API. Subscriptions stored in Cloudflare KV (with in-memory fallback).
-  - **Nexumia Self-Hosted Server**: Built-in `/api/push/*` endpoints backed by [`webPushService.js`](file:///home/deck/Projects/LocalGameGalaxy/server/src/services/webPushService.js) with `web-push` npm library. Subscriptions persisted to `.push_subscriptions.json` with debounced writes, loaded on startup, and saved on process exit.
+  - **Cloudflare Worker**: Zero-cost, 24/7 serverless push relay ([`server/cloudflare-push-relay/`](file:///home/deck/Projects/LocalGameGalaxy/server/cloudflare-push-relay/)). Dispatches both RFC 8291 encrypted Web Push packets and HTTP POST requests to `ntfy.sh` (or custom ntfy server) in parallel. Subscriptions stored in Cloudflare KV (with in-memory fallback).
+  - **Direct Client Fallback**: [`pushClient.ts`](file:///home/deck/Projects/LocalGameGalaxy/src/lib/push/pushClient.ts) can also ping `ntfy.sh` topics directly via CORS if no relay is configured or the relay is unavailable.
+- **Background Service Worker**:
+  - [`public/sw-push.js`](file:///home/deck/Projects/LocalGameGalaxy/public/sw-push.js) handles Web Push wakeups and deep links directly into the active game on notification click.
 
 ### GitHub Integration Architecture
 - **Hybrid Model**: Direct GitHub API client (`src/lib/github.ts`) using a locally stored Personal Access Token (PAT) as priority, with fallback to the Nexumia Server proxy.

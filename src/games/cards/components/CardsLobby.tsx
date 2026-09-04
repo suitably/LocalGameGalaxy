@@ -4,18 +4,13 @@ import {
   Button,
   Card,
   CardActionArea,
-  IconButton,
-  Paper,
-  Stack,
-  TextField,
   Typography,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useTranslation } from 'react-i18next';
 import type { CardGameDefinition } from '../logic/types';
 import { getAllCardGames } from '../logic/gamesCatalogue';
+import { PlayerManagerCard, useLobbyPlayers } from '../../../modules/player-management';
 
 interface CardsLobbyProps {
   onStartGame: (game: CardGameDefinition, players: string[]) => void;
@@ -26,22 +21,20 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
 
   const games = getAllCardGames();
   const [selectedGameId, setSelectedGameId] = useState<string>('schwimmen');
-  const [players, setPlayers] = useState<string[]>(['Spieler 1', 'Spieler 2', 'Spieler 3']);
-  const [newPlayerName, setNewPlayerName] = useState('');
+
+  const {
+    players: lobbyPlayers,
+    addPlayer,
+    removePlayer,
+    hasMinPlayers,
+  } = useLobbyPlayers({
+    storageKey: 'cards_lobby_players',
+    defaultPlayers: ['Spieler 1', 'Spieler 2', 'Spieler 3'],
+    minPlayers: 2,
+    maxPlayers: 10,
+  });
 
   const selectedGame = games.find((g) => g.id === selectedGameId) || games[0];
-
-  const handleAddPlayer = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!newPlayerName.trim()) return;
-    setPlayers((prev) => [...prev, newPlayerName.trim()]);
-    setNewPlayerName('');
-  };
-
-  const handleRemovePlayer = (index: number) => {
-    if (players.length <= 2) return;
-    setPlayers((prev) => prev.filter((_, i) => i !== index));
-  };
 
   return (
     <Box sx={{ width: '100%', maxWidth: 720, mx: 'auto', py: { xs: 1.5, sm: 3 } }}>
@@ -114,57 +107,14 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
       </Box>
 
       {/* Players Setup */}
-      <Paper sx={{ p: { xs: 2, sm: 3 }, borderRadius: 3, bgcolor: 'rgba(255, 255, 255, 0.04)', mb: 3 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 2 }}>
-          2. {t('games.cards.players_title', 'Mitspieler:')}
-        </Typography>
-
-        <Stack spacing={1} sx={{ mb: 2 }}>
-          {players.map((p, idx) => (
-            <Box
-              key={idx}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                px: 2,
-                py: 1,
-                borderRadius: 2,
-                bgcolor: 'rgba(255, 255, 255, 0.05)',
-              }}
-            >
-              <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                {idx + 1}. {p}
-              </Typography>
-              {players.length > 2 && (
-                <IconButton size="small" onClick={() => handleRemovePlayer(idx)} color="default">
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              )}
-            </Box>
-          ))}
-        </Stack>
-
-        {/* Add player form */}
-        <Box component="form" onSubmit={handleAddPlayer} sx={{ display: 'flex', gap: 1 }}>
-          <TextField
-            size="small"
-            fullWidth
-            placeholder={t('games.cards.add_player_placeholder', 'Neuer Spielername...')}
-            value={newPlayerName}
-            onChange={(e) => setNewPlayerName(e.target.value)}
-          />
-          <Button
-            type="submit"
-            variant="outlined"
-            startIcon={<AddIcon />}
-            disabled={!newPlayerName.trim()}
-            sx={{ textTransform: 'none', borderRadius: 2 }}
-          >
-            {t('common.add', 'Hinzufügen')}
-          </Button>
-        </Box>
-      </Paper>
+      <PlayerManagerCard
+        players={lobbyPlayers}
+        onAddPlayer={addPlayer}
+        onRemovePlayer={removePlayer}
+        minPlayers={2}
+        maxPlayers={10}
+        sx={{ mb: 3 }}
+      />
 
       {/* Start Game Action Button */}
       <Button
@@ -173,8 +123,8 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
         size="large"
         fullWidth
         startIcon={<PlayArrowIcon />}
-        onClick={() => onStartGame(selectedGame, players)}
-        disabled={players.length < 2}
+        onClick={() => onStartGame(selectedGame, lobbyPlayers.map((p) => p.name))}
+        disabled={!hasMinPlayers}
         sx={{
           py: 1.5,
           fontWeight: 800,

@@ -45,7 +45,8 @@ export const RoundHistoryDialog: React.FC<RoundHistoryDialogProps> = ({
   gameId,
   players = [],
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const language = i18n.language.startsWith('de') ? 'de' : 'en';
   const [rounds, setRounds] = useState<GuessArtRound[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [expandedRoundId, setExpandedRoundId] = useState<string | false>(false);
@@ -71,7 +72,7 @@ export const RoundHistoryDialog: React.FC<RoundHistoryDialogProps> = ({
       return;
     }
     setLoading(true);
-    LocalGameEngine.listRounds(gameId)
+    LocalGameEngine.listRounds(gameId, language)
       .then((data) => {
         const sorted = [...(data || [])].sort((a, b) => a.roundNumber - b.roundNumber);
         setRounds(sorted);
@@ -159,6 +160,13 @@ export const RoundHistoryDialog: React.FC<RoundHistoryDialogProps> = ({
               const isExpanded = expandedRoundId === round.id;
               const isReplaying = replayingRoundId === round.id;
 
+              const originalWord =
+                (round.translations && round.wordLanguageCode && round.translations[round.wordLanguageCode]?.canonical) ||
+                round.word;
+              const isDifferentOriginal =
+                isCompleted &&
+                Boolean(originalWord && round.word && originalWord.trim().toLowerCase() !== round.word.trim().toLowerCase());
+
               const roundTarget = isCompleted
                 ? round.word
                 : isCurrentGuessing
@@ -199,6 +207,15 @@ export const RoundHistoryDialog: React.FC<RoundHistoryDialogProps> = ({
                         />
                         <Typography variant="subtitle1" fontWeight={700}>
                           {drawer} vs. {guesser}: {roundTarget}
+                          {isDifferentOriginal && (
+                            <Typography
+                              component="span"
+                              variant="caption"
+                              sx={{ ml: 1, color: 'text.secondary', fontStyle: 'italic', fontWeight: 500 }}
+                            >
+                              ({originalWord})
+                            </Typography>
+                          )}
                         </Typography>
                       </Box>
 

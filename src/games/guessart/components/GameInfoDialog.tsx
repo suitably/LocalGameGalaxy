@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { Box, Button, Divider, Stack, Typography } from '@mui/material';
+import React from 'react';
+import { Box, Button, Dialog, DialogContent, Divider, Stack, Typography } from '@mui/material';
 import BrushRoundedIcon from '@mui/icons-material/BrushRounded';
 import PsychologyRoundedIcon from '@mui/icons-material/PsychologyRounded';
 import LightbulbRoundedIcon from '@mui/icons-material/LightbulbRounded';
@@ -12,45 +12,22 @@ interface GameInfoDialogProps {
 
 export const GameInfoDialog: React.FC<GameInfoDialogProps> = ({ open, onClose }) => {
   const { t } = useTranslation();
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-
-    if (open && !dialog.open) {
-      dialog.showModal();
-    } else if (!open && dialog.open) {
-      dialog.close();
-    }
-  }, [open]);
-
-  if (!open) return null;
 
   return (
-    <dialog
-      ref={dialogRef}
-      style={{
-        margin: 'auto',
-        border: 'none',
-        borderRadius: '16px',
-        padding: 0,
-        backgroundColor: 'transparent',
-        boxShadow: '0 12px 32px rgba(0,0,0,0.3)',
-        maxWidth: '500px',
-        width: '90%',
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 4,
+          backgroundImage: 'none',
+          bgcolor: 'background.paper',
+        },
       }}
     >
-      <Box
-        sx={{
-          bgcolor: 'background.paper',
-          color: 'text.primary',
-          p: 3.5,
-          borderRadius: 4,
-          maxHeight: '80vh',
-          overflowY: 'auto',
-        }}
-      >
+      <DialogContent sx={{ p: { xs: 2.5, sm: 3.5 } }}>
         <Typography variant="h5" fontWeight={800} color="primary.main" gutterBottom>
           {t('guessart.rulesTitle', 'Spielregeln: GuessArt')}
         </Typography>
@@ -68,12 +45,12 @@ export const GameInfoDialog: React.FC<GameInfoDialogProps> = ({ open, onClose })
             <BrushRoundedIcon color="primary" sx={{ mt: 0.3 }} />
             <Box>
               <Typography variant="subtitle1" fontWeight={700}>
-                {t('guessart.step1Title', '1. Wort wählen & zeichnen')}
+                {t('guessart.step1Title', '1. Zeichnen')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {t(
                   'guessart.step1Desc',
-                  'Der aktuelle Zeichner wählt ein Wort aus einer Kategorie (oder gibt ein eigenes Wort ein) und zeichnet es auf der Leinwand.',
+                  'Ein Spieler wählt ein Wort aus und zeichnet es auf der Leinwand. Es gibt kein Zeitlimit.',
                 )}
               </Typography>
             </Box>
@@ -83,19 +60,19 @@ export const GameInfoDialog: React.FC<GameInfoDialogProps> = ({ open, onClose })
             <PsychologyRoundedIcon color="secondary" sx={{ mt: 0.3 }} />
             <Box>
               <Typography variant="subtitle1" fontWeight={700}>
-                {t('guessart.step2Title', '2. Raten & Replay')}
+                {t('guessart.step2Title', '2. Raten')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {t(
                   'guessart.step2Desc',
-                  'Das Gerät wird an die anderen Spieler übergeben. Die Zeichnung wird animiert abgespielt und die Mitspieler tippen ihre Vermutungen ein.',
+                  'Die anderen Spieler versuchen, das Wort zu erraten. Die Zeichnung wird als animierter Zeitraffer abgespielt!',
                 )}
               </Typography>
             </Box>
           </Box>
 
           <Box display="flex" gap={1.5} alignItems="flex-start">
-            <LightbulbRoundedIcon color="warning" sx={{ mt: 0.3 }} />
+            <LightbulbRoundedIcon sx={{ color: 'warning.main', mt: 0.3 }} />
             <Box>
               <Typography variant="subtitle1" fontWeight={700}>
                 {t('guessart.step3Title', '3. Tipps nutzen')}
@@ -119,7 +96,7 @@ export const GameInfoDialog: React.FC<GameInfoDialogProps> = ({ open, onClose })
         >
           {t('common.close', 'Verstanden')}
         </Button>
-      </Box>
-    </dialog>
+      </DialogContent>
+    </Dialog>
   );
 };

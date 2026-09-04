@@ -14,6 +14,16 @@ export const STORAGE_KEYS = {
     PROFILES: 'melodiq_profiles',
     ACTIVE_SESSION: 'melodiq_active_session',
     CURRENT_SONG_PARTICIPANTS: 'melodiq_current_song_participants',
+    MELODIQ_TRACKER_URLS: 'melodiq_tracker_urls',
+    MELODIQ_CARD_SIZE: 'melodiq_card_size',
+    MELODIQ_MIC_SLOTS: 'melodiq_mic_slots',
+    MELODIQ_MIC_NAMES: 'melodiq_mic_names',
+    MELODIQ_MIC_ORIGINAL_NAMES: 'melodiq_mic_original_names',
+    MELODIQ_CLIENT_ROLES: 'melodiq_client_roles',
+    MELODIQ_SAVED_TIME: 'melodiq_saved_time',
+    MELODIQ_PARTY_ID: 'melodiq_party_id',
+    MELODIQ_HOST_BASE_URL: 'melodiq_host_base_url',
+    EXCALIDRAW_DRAWING: 'excalidraw',
     
     // Queue & play state
     NOW_PLAYING: 'melodiq_now_playing',
@@ -37,6 +47,24 @@ export const STORAGE_KEYS = {
 
     // Push notification relay for async games (GuessArt, etc.)
     PUSH_RELAY_URL: 'galaxy_push_relay_url',
+    NOTIFICATION_METHOD: 'galaxy_notification_method',
+    NTFY_SERVER_URL: 'galaxy_ntfy_server_url',
+
+    // Sudoku
+    SUDOKU_STATE: 'galaxy_sudoku_state',
+    SUDOKU_STATS: 'galaxy_sudoku_stats',
+
+    // Wordle
+    WORDLE_STATS: 'galaxy_wordle_stats',
+
+    // Cards
+    CARDS_LOBBY_PLAYERS: 'cards_lobby_players',
+
+    // Knister & Qwixx
+    KNISTER_CURRENT_GAME: 'knister_current_game',
+    KNISTER_SHOW_DICE: 'knister_show_dice',
+    QWIXX_MY_SHEET: 'qwixx_my_sheet',
+    QWIXX_SHOW_DICE: 'qwixx_show_dice',
 } as const;
 
 const memoryFallback = new Map<string, string>();
@@ -133,5 +161,26 @@ export const storage = {
 
     setPushRelayUrl(url: string): void {
         this.set(STORAGE_KEYS.PUSH_RELAY_URL, url.trim().replace(/\/$/, ''));
+    },
+
+    getNotificationMethod(): 'auto' | 'webpush' | 'ntfy' | 'both' {
+        const val = this.get(STORAGE_KEYS.NOTIFICATION_METHOD, 'auto');
+        if (val === 'webpush' || val === 'ntfy' || val === 'both') {
+            return val;
+        }
+        return 'auto';
+    },
+
+    setNotificationMethod(method: 'auto' | 'webpush' | 'ntfy' | 'both'): void {
+        this.set(STORAGE_KEYS.NOTIFICATION_METHOD, method);
+    },
+
+    getNtfyServerUrl(): string {
+        return this.get(STORAGE_KEYS.NTFY_SERVER_URL, 'https://ntfy.sh');
+    },
+
+    setNtfyServerUrl(url: string): void {
+        const clean = url.trim().replace(/\/$/, '');
+        this.set(STORAGE_KEYS.NTFY_SERVER_URL, clean || 'https://ntfy.sh');
     },
 };

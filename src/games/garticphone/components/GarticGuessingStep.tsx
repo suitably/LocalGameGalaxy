@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Box, Button, Paper, TextField } from '@mui/material';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import { useTranslation } from 'react-i18next';
-import { ExcalidrawViewer } from '../../guessart/components/ExcalidrawViewer';
+import { ExcalidrawViewer } from '../../../modules/drawing';
 
 interface GarticGuessingStepProps {
   canvasData: string;

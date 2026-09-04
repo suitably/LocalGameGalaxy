@@ -22,6 +22,7 @@ import { CatalogueEditorDialog } from './components/catalogue/CatalogueEditorDia
 import { storage } from '../../lib/storage';
 import { playerAssignment } from './logic/playerAssignment';
 import { gameRelayStorage } from '../../lib/push/gameRelayStorage';
+import { pushClient } from '../../lib/push/pushClient';
 import { guessArtNotificationService } from './logic/notificationService';
 import { mailboxService } from './logic/mailboxService';
 import LZString from 'lz-string';
@@ -43,6 +44,8 @@ export const GuessArtGame: React.FC = () => {
   const [infoOpen, setInfoOpen] = useState<boolean>(false);
   const [successModalOpen, setSuccessModalOpen] = useState<boolean>(false);
   const [completedWord, setCompletedWord] = useState<string>('');
+  const [completedOriginalWord, setCompletedOriginalWord] = useState<string | undefined>(undefined);
+  const [completedOriginalLang, setCompletedOriginalLang] = useState<string | undefined>(undefined);
   const [completedGuessesCount, setCompletedGuessesCount] = useState<number>(0);
   const [completedRoundNumber, setCompletedRoundNumber] = useState<number>(1);
   const [completedGuesses, setCompletedGuesses] = useState<string[]>([]);
@@ -98,6 +101,20 @@ export const GuessArtGame: React.FC = () => {
               const imported = await LocalGameEngine.importSnapshot(snapshot, language);
               if (targetPlayerId) {
                 playerAssignment.setLocalPlayerIds(imported.game.id, [targetPlayerId]);
+                const ownRelay = storage.getPushRelayUrl();
+                const prefMethod = storage.getNotificationMethod();
+                const updatedPlayers = imported.game.players.map((p) =>
+                  p.id === targetPlayerId
+                    ? {
+                        ...p,
+                        relayUrl: ownRelay || p.relayUrl || relayParam || undefined,
+                        notificationMethod: prefMethod,
+                        ntfyTopic: p.ntfyTopic || pushClient.getNtfyTopic(imported.game.id, targetPlayerId),
+                      }
+                    : p,
+                );
+                imported.game.players = updatedPlayers;
+                await LocalGameEngine.updateGameDetails(imported.game.id, { players: updatedPlayers }).catch(() => {});
               }
               if (relayParam) {
                 gameRelayStorage.setGameRelay(imported.game.id, relayParam);
@@ -216,6 +233,10 @@ export const GuessArtGame: React.FC = () => {
   const handleGuessSubmit = async (guess: string) => {
     const currentRoundNum = round?.roundNumber || 1;
     const currentWord = round?.word || guess;
+    const originalWord =
+      (round?.translations && round?.wordLanguageCode && round.translations[round.wordLanguageCode]?.canonical) ||
+      round?.word;
+    const originalLang = round?.wordLanguageCode;
     const currentGuessesCount = (round?.guesses.length || 0) + 1;
     const currentGuesses = round?.guesses ? [...round.guesses, guess] : [guess];
     const currentDrawerName =
@@ -229,6 +250,8 @@ export const GuessArtGame: React.FC = () => {
     const result = await submitGuess(guess);
     if (result.correct) {
       setCompletedWord(currentWord);
+      setCompletedOriginalWord(originalWord);
+      setCompletedOriginalLang(originalLang);
       setCompletedGuessesCount(currentGuessesCount);
       setCompletedRoundNumber(currentRoundNum);
       setCompletedGuesses(currentGuesses);
@@ -436,6 +459,8 @@ export const GuessArtGame: React.FC = () => {
       <RoundSuccessModal
         open={successModalOpen}
         word={completedWord}
+        originalWord={completedOriginalWord}
+        originalLanguage={completedOriginalLang}
         roundNumber={completedRoundNumber}
         guessesCount={completedGuessesCount}
         guesses={completedGuesses}

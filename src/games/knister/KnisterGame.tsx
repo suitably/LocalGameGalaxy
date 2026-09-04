@@ -34,8 +34,10 @@ import { KnisterGameOverModal } from './components/KnisterGameOverModal';
 const STORAGE_KEY_KNISTER_STATE = 'knister_current_game';
 const STORAGE_KEY_SHOW_DICE = 'knister_show_dice';
 
+// Initialize i18n bundles at module load time to prevent setState side-effects during render
+initKnisterI18n();
+
 export const KnisterGame: React.FC = () => {
-  initKnisterI18n();
   const { t } = useTranslation();
   usePageTitle(t('games.knister.title', 'Knister'));
   useWakeLock(true);

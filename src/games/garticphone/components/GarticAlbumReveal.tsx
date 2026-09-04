@@ -16,7 +16,7 @@ import AutoStoriesRoundedIcon from '@mui/icons-material/AutoStoriesRounded';
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
 import { useTranslation } from 'react-i18next';
-import { ExcalidrawViewer } from '../../guessart/components/ExcalidrawViewer';
+import { ExcalidrawViewer } from '../../../modules/drawing';
 import type { GarticGameState } from '../types';
 
 interface GarticAlbumRevealProps {

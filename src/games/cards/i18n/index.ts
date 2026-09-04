@@ -1,6 +1,10 @@
 import i18next from 'i18next';
 
+let cardsI18nInitialized = false;
+
 export const initCardsI18n = () => {
+  if (cardsI18nInitialized) return;
+  cardsI18nInitialized = true;
   i18next.addResourceBundle(
     'de',
     'translation',

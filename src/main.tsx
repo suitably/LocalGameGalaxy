@@ -49,7 +49,9 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
         <SettingsProvider>
           <TitleProvider>
             <LayoutProvider>
-              <App />
+              <React.Suspense fallback={null}>
+                <App />
+              </React.Suspense>
             </LayoutProvider>
           </TitleProvider>
         </SettingsProvider>

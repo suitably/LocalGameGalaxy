@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Box, TextField, Button, List, ListItem, ListItemText, IconButton, Paper, Typography, Checkbox, FormControlLabel, FormGroup, InputAdornment } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import { Box, Button, Paper, Typography, Checkbox, FormControlLabel, FormGroup, InputAdornment, TextField } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import RestoreIcon from '@mui/icons-material/Restore';
-import ClearAllIcon from '@mui/icons-material/ClearAll';
 import { useTranslation } from 'react-i18next';
 import type { DbCategory } from '../logic/types';
 import { getImposterCategories } from '../logic/imposterRepository';
-
+import { PlayerManagerCard } from '../../../modules/player-management';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 
 interface ImposterSetupSettings {
@@ -28,10 +25,9 @@ const DEFAULT_SETTINGS: ImposterSetupSettings = {
 };
 
 interface GameSetupProps {
-    players: { id: string; name: string }[];
+    players: Array<{ name: string; isRemote?: boolean }>;
     onAddPlayer: (name: string) => void;
-    onRemovePlayer: (id: string) => void;
-    onClearAllPlayers: () => void;
+    onRemovePlayer: (name: string, index?: number) => void;
     onStartGame: (setup: {
         categories: DbCategory[];
         imposterCount: number;
@@ -39,9 +35,8 @@ interface GameSetupProps {
     }) => void;
 }
 
-export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRemovePlayer, onClearAllPlayers, onStartGame }) => {
+export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRemovePlayer, onStartGame }) => {
     const { t, i18n } = useTranslation();
-    const [newName, setNewName] = useState('');
     const [allCategories, setAllCategories] = useState<DbCategory[]>([]);
 
     // Consolidated settings initialized from central storage
@@ -79,20 +74,13 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
         });
     }, [settings, resolvedImposterCount]);
 
-    const handleAdd = () => {
-        if (newName.trim()) {
-            onAddPlayer(newName.trim());
-            setNewName('');
-        }
-    };
-
     const handleStart = () => {
         const categories = allCategories.filter(c => selectedCategoryIds.includes(c.id));
         const totalTimerSeconds = (timerMinutes * 60) + (timerSeconds || 0);
 
         onStartGame({
             categories,
-            imposterCount,
+            imposterCount: resolvedImposterCount,
             timerLength: totalTimerSeconds,
         });
     };
@@ -123,52 +111,14 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
 
     return (
         <Box maxWidth="sm" mx="auto">
-            <Paper sx={{ p: 4, mb: 4, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
-                <Typography variant="h5" gutterBottom>{t('common.players')}</Typography>
-                <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                    <TextField
-                        fullWidth
-                        label={t('games.werewolf.ui.player_name')}
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                    />
-                    <Button variant="contained" onClick={handleAdd} startIcon={<PersonAddIcon />}>
-                        {t('games.werewolf.ui.add')}
-                    </Button>
-                </Box>
-                <List dense sx={{ mb: 2 }}>
-                    {players.map(player => (
-                        <ListItem
-                            key={player.id}
-                            secondaryAction={
-                                <IconButton edge="end" aria-label="delete" onClick={() => onRemovePlayer(player.id)}>
-                                    <DeleteIcon />
-                                </IconButton>
-                            }
-                        >
-                            <ListItemText primary={player.name} />
-                        </ListItem>
-                    ))}
-                    {players.length === 0 && (
-                        <Typography variant="body2" color="text.secondary" align="center">
-                            {t('games.werewolf.ui.add_players_hint')}
-                        </Typography>
-                    )}
-                </List>
-                {players.length > 0 && (
-                    <Button
-                        variant="outlined"
-                        color="error"
-                        size="small"
-                        startIcon={<ClearAllIcon />}
-                        onClick={onClearAllPlayers}
-                        sx={{ mt: 1 }}
-                    >
-                        {t('common.clear_all_players')}
-                    </Button>
-                )}
-            </Paper>
+            <PlayerManagerCard
+                players={players}
+                onAddPlayer={onAddPlayer}
+                onRemovePlayer={onRemovePlayer}
+                minPlayers={3}
+                maxPlayers={20}
+                sx={{ mb: 4 }}
+            />
 
             <Paper sx={{ p: 4, mb: 4, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
                 <Typography variant="h6" gutterBottom>{t('games.imposter.setup.title')}</Typography>
@@ -178,15 +128,15 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
                             {t('games.imposter.setup.select_category')}
                         </Typography>
                         <Box sx={{ mb: 1, display: 'flex', gap: 1, alignItems: 'center' }}>
-                            <Button size="small" onClick={() => setSettings(prev => ({ ...prev, selectedCategoryIds: allCategories.map(c => c.id) }))}>
+                            <Button size="small" onClick={() => setSettings((prev: ImposterSetupSettings) => ({ ...prev, selectedCategoryIds: allCategories.map((c: DbCategory) => c.id) }))}>
                                 {t('games.imposter.setup.select_all')}
                             </Button>
-                            <Button size="small" onClick={() => setSettings(prev => ({ ...prev, selectedCategoryIds: [] }))}>
+                            <Button size="small" onClick={() => setSettings((prev: ImposterSetupSettings) => ({ ...prev, selectedCategoryIds: [] }))}>
                                 {t('games.imposter.setup.select_none')}
                             </Button>
                         </Box>
                         <FormGroup sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
-                            {allCategories.map((category) => (
+                            {allCategories.map((category: DbCategory) => (
                                 <FormControlLabel
                                     key={category.id}
                                     control={
@@ -228,7 +178,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
                                 label={t('games.imposter.setup.minutes')}
                                 type="number"
                                 value={timerMinutes}
-                                onChange={(e) => setSettings(prev => ({ ...prev, timerMinutes: Math.max(0, parseInt(e.target.value) || 0) }))}
+                                onChange={(e) => setSettings((prev: ImposterSetupSettings) => ({ ...prev, timerMinutes: Math.max(0, parseInt(e.target.value) || 0) }))}
                                 InputProps={{
                                     endAdornment: <InputAdornment position="end">m</InputAdornment>,
                                 }}
@@ -237,7 +187,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, onAddPlayer, onRe
                                 label={t('games.imposter.setup.seconds')}
                                 type="number"
                                 value={timerSeconds}
-                                onChange={(e) => setSettings(prev => ({ ...prev, timerSeconds: Math.max(0, Math.min(59, parseInt(e.target.value) || 0)) }))}
+                                onChange={(e) => setSettings((prev: ImposterSetupSettings) => ({ ...prev, timerSeconds: Math.max(0, Math.min(59, parseInt(e.target.value) || 0)) }))}
                                 InputProps={{
                                     endAdornment: <InputAdornment position="end">s</InputAdornment>,
                                 }}

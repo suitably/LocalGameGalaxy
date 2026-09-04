@@ -28,7 +28,7 @@ interface SudokuHeaderProps {
   timeElapsed: number;
   isPaused: boolean;
   onTogglePause: () => void;
-  onBack: () => void;
+  onBack?: () => void;
   onOpenHelp: () => void;
   onOpenStats: () => void;
 }
@@ -63,10 +63,12 @@ export const SudokuHeader: React.FC<SudokuHeaderProps> = ({
   return (
     <Box sx={{ width: '100%', maxWidth: { xs: 360, sm: 440, md: 480 }, mx: 'auto', mb: 1.5 }}>
       {/* Navigation & Title Bar */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-        <IconButton onClick={onBack} edge="start">
-          <ArrowBackRoundedIcon />
-        </IconButton>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: onBack ? 'space-between' : 'flex-end', mb: 1 }}>
+        {onBack && (
+          <IconButton onClick={onBack} edge="start" aria-label={t('common.back', 'Zurück')}>
+            <ArrowBackRoundedIcon />
+          </IconButton>
+        )}
 
         <Typography
           variant="h4"

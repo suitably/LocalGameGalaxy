@@ -5,7 +5,6 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
   FormControlLabel,
   IconButton,
   Stack,
@@ -13,13 +12,13 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import PersonAddAltRoundedIcon from '@mui/icons-material/PersonAddAltRounded';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded';
 import PhoneIphoneRoundedIcon from '@mui/icons-material/PhoneIphoneRounded';
 import { useTranslation } from 'react-i18next';
 import { ActiveGamesList } from './ActiveGamesList';
+import { PlayerManagerCard } from '../../../modules/player-management';
 import type { GuessArtGameRecord } from '../logic/types';
 import type { LobbyPlayerItem } from '../hooks/useGuessArtLobby';
 
@@ -44,6 +43,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
   players,
   onAddPlayer,
   onRemovePlayer,
+  onToggleRemote,
   onStartGame,
   activeGames,
   onResumeGame,
@@ -57,20 +57,8 @@ export const GameSetup: React.FC<GameSetupProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const [gameName, setGameName] = useState('');
-  const [newPlayerName, setNewPlayerName] = useState('');
   const [manualWordMode, setManualWordMode] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
-
-  const handleAdd = () => {
-    if (!newPlayerName.trim()) return;
-    const ok = onAddPlayer(newPlayerName.trim());
-    if (ok) {
-      setNewPlayerName('');
-      setFeedback(null);
-    } else {
-      setFeedback(t('guessart.duplicatePlayer', 'Spieler existiert bereits!'));
-    }
-  };
 
   const handleStart = () => {
     if (players.length < 2) {
@@ -164,54 +152,19 @@ export const GameSetup: React.FC<GameSetupProps> = ({
       )}
 
       {/* Players Setup Card */}
-      <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
-        <CardContent sx={{ p: 3 }}>
-          <Typography variant="h6" fontWeight={700} gutterBottom>
-            {t('guessart.playersTitle', 'Mitspieler')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t('guessart.playersSetupDesc', 'Füge mindestens 2 Spieler hinzu. Gespielt werden kann flexibel an einem Gerät oder mit eigenen Einladungslinks.')}
-          </Typography>
-
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 2 }}>
-            <TextField
-              size="small"
-              fullWidth
-              placeholder={t('guessart.playerNamePlaceholder', 'Name eingeben...')}
-              value={newPlayerName}
-              onChange={(e) => setNewPlayerName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAdd();
-                }
-              }}
-            />
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<PersonAddAltRoundedIcon />}
-              onClick={handleAdd}
-              sx={{ minWidth: 130, fontWeight: 700 }}
-            >
-              {t('common.add', 'Hinzufügen')}
-            </Button>
-          </Stack>
-
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ minHeight: 40 }}>
-            {players.map((player) => (
-              <Chip
-                key={player.name}
-                label={player.name}
-                onDelete={() => onRemovePlayer(player.name)}
-                color="primary"
-                variant="filled"
-                sx={{ fontWeight: 700, fontSize: '0.95rem', py: 2.2, px: 0.5 }}
-              />
-            ))}
-          </Stack>
-        </CardContent>
-      </Card>
+      <PlayerManagerCard
+        players={players}
+        onAddPlayer={onAddPlayer}
+        onRemovePlayer={(val) => onRemovePlayer(String(val))}
+        onToggleRemote={onToggleRemote}
+        title={t('guessart.playersTitle', 'Mitspieler')}
+        description={t(
+          'guessart.playersSetupDesc',
+          'Füge mindestens 2 Spieler hinzu. Gespielt werden kann flexibel an einem Gerät oder mit eigenen Einladungslinks.',
+        )}
+        placeholder={t('guessart.playerNamePlaceholder', 'Name eingeben...')}
+        minPlayers={2}
+      />
 
       {/* Game Options Card */}
       <Card sx={{ borderRadius: 3, boxShadow: 2 }}>

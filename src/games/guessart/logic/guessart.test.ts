@@ -7,6 +7,8 @@ import {
 } from './lingo';
 import { evaluateGuess } from './guessEvaluator';
 import { buildHintLetters, buildWordMask, resolveHintArtifacts } from './hintResolver';
+import { toRoundPayload } from './engine';
+import type { GuessArtGameRecord, GuessArtRound } from './types';
 
 describe('GuessArt Lingo & Normalization', () => {
   it('transliterates German umlauts correctly', () => {
@@ -230,6 +232,87 @@ describe('GuessArt Catalogue Manager & Diffing', () => {
     expect(tsCode).toContain('export const DEFAULT_CATEGORIES: CategoryItem[] =');
     expect(tsCode).toContain('cat_mythical');
     expect(tsCode).toContain('w_dragon');
+  });
+});
+
+describe('GuessArt Cross-Language Round Payload Resolution', () => {
+  const dummyGame: GuessArtGameRecord = {
+    id: 'game_1',
+    type: 'local',
+    status: 'guessing',
+    roundNumber: 1,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    players: [
+      { id: 'p1', name: 'Player A' },
+      { id: 'p2', name: 'Player B' },
+    ],
+    currentPlayerIndex: 0,
+    options: { language: 'en', manualWordMode: false },
+  };
+
+  const dummyRoundEnglish: GuessArtRound = {
+    id: 'round_1',
+    gameId: 'game_1',
+    roundNumber: 1,
+    drawnById: 'p1',
+    status: 'guessing',
+    word: 'Dog',
+    wordId: 'w_dog',
+    wordLanguageCode: 'en',
+    wordDifficulty: 1,
+    translations: {
+      en: { canonical: 'Dog', synonyms: ['Puppy'] },
+      de: { canonical: 'Hund', synonyms: ['Welpe'] },
+    },
+    guesses: [],
+    hintLevel: 1,
+    hintRequested: true,
+    hintLetters: [],
+    wordMask: ['_', '_', '_'],
+    wordLength: 3,
+    canvasData: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    completedAt: null,
+  };
+
+  it('resolves English word to German when player language is de', () => {
+    const payload = toRoundPayload(dummyRoundEnglish, dummyGame, 'de');
+    expect(payload).not.toBeNull();
+    expect(payload?.word).toBe('Hund');
+    expect(payload?.wordLength).toBe(4);
+    expect(payload?.wordMask).toEqual(['_', '_', '_', '_']);
+  });
+
+  it('preserves English word when player language is en', () => {
+    const payload = toRoundPayload(dummyRoundEnglish, dummyGame, 'en');
+    expect(payload).not.toBeNull();
+    expect(payload?.word).toBe('Dog');
+    expect(payload?.wordLength).toBe(3);
+    expect(payload?.wordMask).toEqual(['_', '_', '_']);
+  });
+
+  it('enriches missing translations from DEFAULT_WORDS catalogue', () => {
+    const sparseRound: GuessArtRound = {
+      ...dummyRoundEnglish,
+      translations: {
+        en: { canonical: 'Cat', synonyms: [] },
+      },
+      word: 'Cat',
+      wordId: 'w_cat',
+    };
+    const payload = toRoundPayload(sparseRound, dummyGame, 'de');
+    expect(payload?.word).toBe('Katze');
+    expect(payload?.wordLength).toBe(5);
+  });
+
+  it('evaluates guesses in both languages successfully', () => {
+    expect(evaluateGuess(dummyRoundEnglish.translations, dummyRoundEnglish.word, 'Hund')).toBe(true);
+    expect(evaluateGuess(dummyRoundEnglish.translations, dummyRoundEnglish.word, 'Dog')).toBe(true);
+    expect(evaluateGuess(dummyRoundEnglish.translations, dummyRoundEnglish.word, 'Welpe')).toBe(true);
+    expect(evaluateGuess(dummyRoundEnglish.translations, dummyRoundEnglish.word, 'Puppy')).toBe(true);
+    expect(evaluateGuess(dummyRoundEnglish.translations, dummyRoundEnglish.word, 'Katze')).toBe(false);
   });
 });
 

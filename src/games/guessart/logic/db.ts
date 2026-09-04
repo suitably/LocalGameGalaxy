@@ -1,3 +1,5 @@
+import { createIdbStoreOperations } from '../../../modules/async-game';
+
 const DB_NAME = 'guessart-local';
 const DB_VERSION = 1;
 
@@ -56,135 +58,11 @@ export const openDatabase = (): Promise<IDBDatabase> => {
   return openRequestPromise;
 };
 
-export const withStore = async <T>(
-  storeName: string,
-  mode: IDBTransactionMode,
-  callback: (store: IDBObjectStore, transaction: IDBTransaction) => Promise<T> | T,
-): Promise<T> => {
-  const db = await openDatabase();
-  return new Promise<T>((resolve, reject) => {
-    const transaction = db.transaction(storeName, mode);
-    const store = transaction.objectStore(storeName);
-    let settled = false;
-    let resultValue: T | undefined;
+const ops = createIdbStoreOperations(openDatabase);
 
-    const cleanup = () => {
-      transaction.oncomplete = null;
-      transaction.onerror = null;
-      transaction.onabort = null;
-    };
-
-    transaction.oncomplete = () => {
-      cleanup();
-      if (!settled) {
-        settled = true;
-        resolve(resultValue as T);
-      }
-    };
-
-    transaction.onerror = () => {
-      cleanup();
-      if (!settled) {
-        settled = true;
-        reject(transaction.error || new Error('IndexedDB transaction error'));
-      }
-    };
-
-    transaction.onabort = () => {
-      cleanup();
-      if (!settled) {
-        settled = true;
-        reject(transaction.error || new Error('IndexedDB transaction aborted'));
-      }
-    };
-
-    try {
-      const result = callback(store, transaction);
-      if (result instanceof Promise) {
-        result.then(
-          (value) => {
-            resultValue = value;
-          },
-          (err) => {
-            if (!settled) {
-              settled = true;
-              reject(err);
-            }
-          },
-        );
-      } else {
-        resultValue = result;
-      }
-    } catch (error) {
-      if (!settled) {
-        settled = true;
-        reject(error);
-      }
-    }
-  });
-};
-
-export const getAll = <T>(
-  storeName: string,
-  indexName?: string,
-  query?: IDBValidKey | IDBKeyRange | null,
-  direction: IDBCursorDirection = 'next',
-): Promise<T[]> =>
-  withStore(storeName, 'readonly', (store) =>
-    new Promise<T[]>((resolve, reject) => {
-      let source: IDBObjectStore | IDBIndex = store;
-      if (indexName) {
-        source = store.index(indexName);
-      }
-
-      const request = source.openCursor(query ?? undefined, direction);
-      const items: T[] = [];
-
-      request.onerror = () => reject(request.error || new Error('IndexedDB cursor error'));
-      request.onsuccess = () => {
-        const cursor = request.result;
-        if (!cursor) {
-          resolve(items);
-          return;
-        }
-        items.push(cursor.value as T);
-        cursor.continue();
-      };
-    }),
-  );
-
-export const getByKey = <T>(storeName: string, key: IDBValidKey): Promise<T | null> =>
-  withStore(storeName, 'readonly', (store) =>
-    new Promise<T | null>((resolve, reject) => {
-      const request = store.get(key);
-      request.onerror = () => reject(request.error || new Error('IndexedDB get failed'));
-      request.onsuccess = () => resolve((request.result as T) ?? null);
-    }),
-  );
-
-export const putItem = <T>(storeName: string, value: T): Promise<IDBValidKey> =>
-  withStore(storeName, 'readwrite', (store) =>
-    new Promise<IDBValidKey>((resolve, reject) => {
-      const request = store.put(value);
-      request.onerror = () => reject(request.error || new Error('IndexedDB put failed'));
-      request.onsuccess = () => resolve(request.result);
-    }),
-  );
-
-export const deleteByKey = (storeName: string, key: IDBValidKey): Promise<void> =>
-  withStore(storeName, 'readwrite', (store) =>
-    new Promise<void>((resolve, reject) => {
-      const request = store.delete(key);
-      request.onerror = () => reject(request.error || new Error('IndexedDB delete failed'));
-      request.onsuccess = () => resolve();
-    }),
-  );
-
-export const clearStore = (storeName: string): Promise<void> =>
-  withStore(storeName, 'readwrite', (store) =>
-    new Promise<void>((resolve, reject) => {
-      const request = store.clear();
-      request.onerror = () => reject(request.error || new Error('IndexedDB clear failed'));
-      request.onsuccess = () => resolve();
-    }),
-  );
+export const withStore = ops.withStore;
+export const getAll = ops.getAll;
+export const getByKey = ops.getByKey;
+export const putItem = ops.putItem;
+export const deleteByKey = ops.deleteByKey;
+export const clearStore = ops.clearStore;

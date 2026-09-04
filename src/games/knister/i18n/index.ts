@@ -1,6 +1,10 @@
 import i18next from 'i18next';
 
+let knisterI18nInitialized = false;
+
 export const initKnisterI18n = () => {
+  if (knisterI18nInitialized) return;
+  knisterI18nInitialized = true;
   i18next.addResourceBundle(
     'de',
     'translation',

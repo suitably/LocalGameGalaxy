@@ -59,10 +59,7 @@ class StorytellerNotificationService {
     authorName?: string;
   }): Promise<boolean> {
     const { game, nextPlayer, authorName } = params;
-    const relay = gameRelayStorage.getGameRelay(game.id);
-    if (!relay) {
-      return false;
-    }
+    const effectiveRelay = gameRelayStorage.getEffectiveRelay(game.id, nextPlayer.relayUrl);
 
     const gameName = game.name || 'Geschichtenschreiber';
     const title = `${gameName}: Du bist dran!`;
@@ -71,13 +68,15 @@ class StorytellerNotificationService {
       : 'Die Geschichte geht weiter – schreibe deinen Teil!';
 
     let url = `${window.location.origin}${window.location.pathname}#/games/storyteller?gameId=${game.id}&player=${nextPlayer.id}`;
-    if (relay) {
-      url += `&gameRelay=${encodeURIComponent(relay)}`;
+    if (effectiveRelay) {
+      url += `&gameRelay=${encodeURIComponent(effectiveRelay)}`;
     }
 
     return pushClient.sendGamePushNotification({
       gameId: game.id,
       targetPlayerId: nextPlayer.id,
+      targetRelayUrl: effectiveRelay || undefined,
+      ntfyTopic: nextPlayer.ntfyTopic,
       title,
       body,
       url,

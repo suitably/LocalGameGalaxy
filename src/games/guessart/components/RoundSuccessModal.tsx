@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Box,
   Button,
   Chip,
+  Dialog,
+  DialogContent,
   IconButton,
   Stack,
   Tooltip,
@@ -25,6 +27,8 @@ interface RoundSuccessModalProps {
   drawerName?: string;
   guesserName?: string;
   language?: string;
+  originalWord?: string;
+  originalLanguage?: string;
   onNextRound: () => void;
 }
 
@@ -37,10 +41,11 @@ export const RoundSuccessModal: React.FC<RoundSuccessModalProps> = ({
   drawerName,
   guesserName,
   language = 'de',
+  originalWord,
+  originalLanguage: _originalLanguage,
   onNextRound,
 }) => {
   const { t } = useTranslation();
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const [selectedLang, setSelectedLang] = useState<string>(language);
   const [addedSynonyms, setAddedSynonyms] = useState<Set<string>>(new Set());
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -50,17 +55,6 @@ export const RoundSuccessModal: React.FC<RoundSuccessModalProps> = ({
     setAddedSynonyms(new Set());
     setFeedback(null);
   }, [open, language, word]);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-
-    if (open && !dialog.open) {
-      dialog.showModal();
-    } else if (!open && dialog.open) {
-      dialog.close();
-    }
-  }, [open]);
 
   const incorrectGuesses = guesses.filter(
     (g) => g.trim().toLowerCase() !== word.trim().toLowerCase(),
@@ -83,41 +77,36 @@ export const RoundSuccessModal: React.FC<RoundSuccessModalProps> = ({
     }
   };
 
-  if (!open) return null;
-
   return (
-    <dialog
-      ref={dialogRef}
-      style={{
-        margin: 'auto',
-        border: 'none',
-        borderRadius: '16px',
-        padding: 0,
-        backgroundColor: 'transparent',
-        boxShadow: '0 12px 32px rgba(0,0,0,0.3)',
-        maxWidth: '440px',
-        width: '90%',
+    <Dialog
+      open={open}
+      onClose={onNextRound}
+      maxWidth="xs"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: 4,
+          backgroundImage: 'none',
+          bgcolor: 'background.paper',
+        },
       }}
     >
-      <Box
-        sx={{
-          bgcolor: 'background.paper',
-          color: 'text.primary',
-          p: { xs: 2.5, sm: 3.5 },
-          borderRadius: 4,
-          textAlign: 'center',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 1.5,
-          maxHeight: '85vh',
-          overflowY: 'auto',
-        }}
-      >
-        <CheckCircleRoundedIcon color="success" sx={{ fontSize: { xs: 48, sm: 60 } }} />
-        <Typography variant="h5" fontWeight={800}>
-          {t('guessart.correctCelebration', 'Richtig erraten!')}
-        </Typography>
+      <DialogContent sx={{ p: { xs: 2.5, sm: 3.5 } }}>
+        <Box
+          sx={{
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 1.5,
+            maxHeight: '85vh',
+            overflowY: 'auto',
+          }}
+        >
+          <CheckCircleRoundedIcon color="success" sx={{ fontSize: { xs: 48, sm: 60 } }} />
+          <Typography variant="h5" fontWeight={800}>
+            {t('guessart.correctCelebration', 'Richtig erraten!')}
+          </Typography>
 
         {drawerName && guesserName && (
           <Chip
@@ -136,6 +125,14 @@ export const RoundSuccessModal: React.FC<RoundSuccessModalProps> = ({
           <Typography variant="h4" fontWeight={800} color="primary.main" sx={{ mt: 0.5 }}>
             {word}
           </Typography>
+          {originalWord && originalWord.trim().toLowerCase() !== word.trim().toLowerCase() && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, fontStyle: 'italic' }}>
+              {t('guessart.drawnAsOriginal', {
+                word: originalWord,
+                defaultValue: `(Gezeichnet als: ${originalWord})`,
+              })}
+            </Typography>
+          )}
         </Box>
 
         <Typography variant="body2" color="text.secondary">
@@ -237,7 +234,8 @@ export const RoundSuccessModal: React.FC<RoundSuccessModalProps> = ({
         >
           {t('guessart.nextRound', 'Nächste Runde')}
         </Button>
-      </Box>
-    </dialog>
+        </Box>
+      </DialogContent>
+    </Dialog>
   );
 };

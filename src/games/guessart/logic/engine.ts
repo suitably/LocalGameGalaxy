@@ -3,8 +3,10 @@ import {
   buildWordMask,
   normalizeLanguageCode,
   resolveHintArtifacts,
+  resolveWordForLanguage,
   shortLanguageCode,
 } from './hintResolver';
+import { DEFAULT_WORDS } from './lexicon';
 import {
   appendRound,
   createLocalGame,
@@ -38,9 +40,33 @@ export const toRoundPayload = (
     return null;
   }
   const normalizedLanguage = normalizeLanguageCode(language || game.options?.language || 'en');
-  const translations = round.translations || {};
+  const shortLang = shortLanguageCode(normalizedLanguage);
+  let resolvedTranslations = { ...(round.translations || {}) };
+
+  // If translation for requested language is missing, enrich from DEFAULT_WORDS
+  if (round.word && !resolvedTranslations[shortLang] && !resolvedTranslations[normalizedLanguage]) {
+    const wordId = round.wordId ? String(round.wordId) : null;
+    const match = DEFAULT_WORDS.find(
+      (w) =>
+        (wordId && String(w.id) === wordId) ||
+        w.word.toLowerCase() === round.word.toLowerCase() ||
+        Object.values(w.translations || {}).some(
+          (t) => t.canonical.toLowerCase() === round.word.toLowerCase(),
+        ),
+    );
+    if (match?.translations) {
+      resolvedTranslations = { ...match.translations, ...resolvedTranslations };
+    }
+  }
+
+  const resolved = resolveWordForLanguage(
+    resolvedTranslations,
+    normalizedLanguage,
+    round.wordLanguageCode,
+    round.word,
+  );
   const artifacts = resolveHintArtifacts(
-    translations,
+    resolvedTranslations,
     normalizedLanguage,
     round.wordLanguageCode,
     round.word,
@@ -55,6 +81,8 @@ export const toRoundPayload = (
 
   return {
     ...round,
+    word: resolved.word || round.word,
+    translations: resolvedTranslations,
     drawnById: round.drawnById || drawer?.id || '',
     drawnByName: drawer?.name || round.drawnByName || '',
     guesserId: round.guesserId || guesser?.id || '',
@@ -293,6 +321,30 @@ export const LocalGameEngine = {
       };
     }
 
+    // Enrich missing translations from DEFAULT_WORDS (e.g. for manual words or incomplete bundles)
+    const wordId = payload.wordId ? String(payload.wordId) : null;
+    const match = DEFAULT_WORDS.find(
+      (w) =>
+        (wordId && String(w.id) === wordId) ||
+        w.word.toLowerCase() === payload.word.trim().toLowerCase() ||
+        Object.values(w.translations || {}).some(
+          (t) => t.canonical.toLowerCase() === payload.word.trim().toLowerCase(),
+        ),
+    );
+    if (match?.translations) {
+      Object.entries(match.translations).forEach(([code, entry]) => {
+        const key = shortLanguageCode(code) || normalizeLanguageCode(code);
+        if (key && !translations[key] && entry?.canonical) {
+          translations[key] = {
+            canonical: entry.canonical.trim(),
+            synonyms: Array.isArray(entry.synonyms) ? entry.synonyms.filter(Boolean) : [],
+            forms: Array.isArray(entry.forms) ? entry.forms.filter(Boolean) : [],
+            gendered: Array.isArray(entry.gendered) ? entry.gendered.filter(Boolean) : [],
+          };
+        }
+      });
+    }
+
     const updatedRound = await upsertRound({
       ...round,
       status: 'drawing',
@@ -495,7 +547,12 @@ export const LocalGameEngine = {
     return true;
   },
 
-  async listRounds(gameId: string): Promise<GuessArtRound[]> {
-    return fetchRoundsForGame(gameId);
+  async listRounds(gameId: string, language?: string): Promise<GuessArtRound[]> {
+    const game = await getLocalGame(gameId);
+    const rounds = await fetchRoundsForGame(gameId);
+    if (!game) {
+      return rounds;
+    }
+    return rounds.map((r) => toRoundPayload(r, game, language) || r);
   },
 };

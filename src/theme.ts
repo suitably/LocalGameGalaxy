@@ -35,13 +35,42 @@ const theme = createTheme({
       fontSize: '1.75rem',
       fontWeight: 600,
     },
+    h4: {
+      fontSize: '1.5rem',
+      fontWeight: 700,
+    },
+    h5: {
+      fontSize: '1.25rem',
+      fontWeight: 700,
+    },
+    h6: {
+      fontSize: '1.1rem',
+      fontWeight: 700,
+    },
+    subtitle1: {
+      fontSize: '1rem',
+      fontWeight: 600,
+    },
+    subtitle2: {
+      fontSize: '0.875rem',
+      fontWeight: 600,
+    },
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 10,
           textTransform: 'none',
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16,
+          backgroundImage: 'none',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
         },
       },
     },

@@ -1,0 +1,24 @@
+# Tasks: Shared Player Management Module [ID: TASKS-PLAYER-MANAGEMENT]
+
+- [x] 1. Create shared module `src/modules/player-management` <!-- id: 1 -->
+  - [x] 1.1 Create `types.ts` defining `LobbyPlayerItem`, `UseLobbyPlayersOptions`, `UseLobbyPlayersResult`, `PlayerManagerCardProps` <!-- id: 1.1 -->
+  - [x] 1.2 Create `useLobbyPlayers.ts` hook with persistence, duplicate checking, flexible player removal <!-- id: 1.2 -->
+  - [x] 1.3 Create `PlayerManagerCard.tsx` UI component with accessible inputs, chips with onDelete, error alerts <!-- id: 1.3 -->
+  - [x] 1.4 Create `index.ts` re-exporting public API <!-- id: 1.4 -->
+  - [x] 1.5 Create unit tests `useLobbyPlayers.test.ts` <!-- id: 1.5 -->
+- [x] 2. Update i18n localization <!-- id: 2 -->
+  - [x] 2.1 Add `lobby` translation keys to `public/locales/de/translation.json` <!-- id: 2.1 -->
+  - [x] 2.2 Add `lobby` translation keys to `public/locales/en/translation.json` <!-- id: 2.2 -->
+- [x] 3. Refactor GuessArt to use the shared module <!-- id: 3 -->
+  - [x] 3.1 Update `src/games/guessart/hooks/useGuessArtLobby.ts` to use `useLobbyPlayers` <!-- id: 3.1 -->
+  - [x] 3.2 Update `src/games/guessart/components/GameSetup.tsx` to use `PlayerManagerCard` <!-- id: 3.2 -->
+- [x] 4. Refactor Storyteller (Geschichtenschreiber) to use the shared module <!-- id: 4 -->
+  - [x] 4.1 Update `src/games/storyteller/hooks/useStorytellerLobby.ts` to use `useLobbyPlayers` <!-- id: 4.1 -->
+  - [x] 4.2 Update `src/games/storyteller/components/StoryLobby.tsx` to use `PlayerManagerCard` <!-- id: 4.2 -->
+- [x] 5. Verification & Testing <!-- id: 5 -->
+  - [x] 5.1 Run `npm test` <!-- id: 5.1 -->
+  - [x] 5.2 Run `npm run lint` <!-- id: 5.2 -->
+  - [x] 5.3 Run `npm run build` <!-- id: 5.3 -->
+- [x] 6. Documentation & Architecture Update <!-- id: 6 -->
+  - [x] 6.1 Update `docs/tech/architecture.md` with the new shared module <!-- id: 6.1 -->
+  - [x] 6.2 Create walkthrough `docs/verification/shared-player-management-module-walkthrough.md` <!-- id: 6.2 -->

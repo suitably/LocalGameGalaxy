@@ -17,11 +17,12 @@ import { ShareStoryLinksDialog } from './components/ShareStoryLinksDialog';
 import { playerAssignment } from './logic/playerAssignment';
 import { LocalStoryEngine } from './logic/engine';
 import { storytellerNotificationService } from './logic/notificationService';
-import { mailboxService } from '../guessart/logic/mailboxService';
+import { updateStoryGame } from './logic/repository';
+import { storytellerMailboxService } from './logic/mailboxService';
 import { gameRelayStorage } from '../../lib/push/gameRelayStorage';
 import { pushClient } from '../../lib/push/pushClient';
-import type { GameSnapshot } from '../guessart/logic/types';
-import type { StoryEntry, StoryGameRecord, StoryGameSnapshot } from './types';
+import { storage } from '../../lib/storage';
+import type { StoryEntry, StoryGameRecord, StoryGameSnapshot, StoryPlayer } from './types';
 
 export const StorytellerGame: React.FC = () => {
   const { t } = useTranslation();
@@ -95,6 +96,24 @@ export const StorytellerGame: React.FC = () => {
             if (snapshot && snapshot.game) {
               const imported = await LocalStoryEngine.importSnapshot(snapshot);
               resolvedGameId = imported.game.id;
+
+              if (targetPlayerId) {
+                const ownRelay = storage.getPushRelayUrl();
+                const prefMethod = storage.getNotificationMethod();
+                const updatedPlayers: StoryPlayer[] = imported.game.players.map((p) =>
+                  p.id === targetPlayerId
+                    ? {
+                        ...p,
+                        relayUrl: ownRelay || p.relayUrl || relayParam || undefined,
+                        notificationMethod: prefMethod,
+                        ntfyTopic: p.ntfyTopic || pushClient.getNtfyTopic(imported.game.id, targetPlayerId),
+                      }
+                    : p,
+                );
+                imported.game.players = updatedPlayers;
+                await updateStoryGame(imported.game.id, { players: updatedPlayers }).catch(() => {});
+              }
+
               setGame(imported.game);
               setEntries(imported.entries);
             }
@@ -111,8 +130,10 @@ export const StorytellerGame: React.FC = () => {
         if (relayParam) {
           gameRelayStorage.setGameRelay(resolvedGameId, relayParam);
         }
-        if (targetPlayerId && relayParam) {
-          pushClient.registerForGamePush(resolvedGameId, targetPlayerId).catch(() => {});
+        if (targetPlayerId) {
+          const ownRelay = storage.getPushRelayUrl();
+          const preferredRelay = ownRelay || relayParam || undefined;
+          pushClient.registerForGamePush(resolvedGameId, targetPlayerId, preferredRelay).catch(() => {});
         }
         setLocalVersion((v) => v + 1);
         await loadActiveGames();
@@ -150,8 +171,7 @@ export const StorytellerGame: React.FC = () => {
     }
 
     try {
-      const topic = `storyteller_room_${newGame.id}`;
-      mailboxService.publishTurn(topic, { type: 'STORY_SYNC', snapshot } as unknown as GameSnapshot);
+      storytellerMailboxService.publish(newGame.id, { type: 'STORY_SYNC', snapshot });
     } catch {
       // ignore
     }
@@ -161,7 +181,6 @@ export const StorytellerGame: React.FC = () => {
   useEffect(() => {
     if (!activeGameId) return;
 
-    const topic = `storyteller_room_${activeGameId}`;
     const channel = new BroadcastChannel(`storyteller_channel_${activeGameId}`);
 
     channel.onmessage = async (event) => {
@@ -183,9 +202,8 @@ export const StorytellerGame: React.FC = () => {
       }
     };
 
-    const unsub = mailboxService.subscribeToGame(topic, async (incoming: unknown) => {
-      if (!incoming || typeof incoming !== 'object' || !('type' in incoming)) return;
-      const msg = incoming as { type: string; snapshot?: StoryGameSnapshot };
+    const unsub = storytellerMailboxService.subscribe(activeGameId, async (msg) => {
+      if (!msg || typeof msg !== 'object') return;
 
       if (msg.type === 'STORY_SYNC' && msg.snapshot) {
         const res = await LocalStoryEngine.importSnapshot(msg.snapshot);
@@ -219,7 +237,6 @@ export const StorytellerGame: React.FC = () => {
     return () => {
       channel.close();
       unsub();
-      mailboxService.unsubscribe();
     };
   }, [activeGameId]);
 
@@ -284,8 +301,7 @@ export const StorytellerGame: React.FC = () => {
         // ignore
       }
       try {
-        const topic = `storyteller_room_${game.id}`;
-        mailboxService.publishTurn(topic, { type: 'STORY_FINISH', snapshot: snap } as unknown as GameSnapshot);
+        storytellerMailboxService.publish(game.id, { type: 'STORY_FINISH', snapshot: snap });
       } catch {
         // ignore
       }

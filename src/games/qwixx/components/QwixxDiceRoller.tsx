@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Box, Paper, Typography, Button } from '@mui/material';
 import CasinoIcon from '@mui/icons-material/Casino';
 import { useTranslation } from 'react-i18next';
+import { Die3D } from '../../../components/games/Die3D';
 import type { DiceValues } from '../logic/types';
 import type { DieKey } from '../logic/diceHighlight';
 
@@ -74,31 +75,20 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
         const isSelected = selectedDie === key;
         const isClickable = !animating && !isRolling && !!onDieClick;
         return (
-            <Paper
+            <Die3D
                 key={key}
-                elevation={animating ? 8 : (isSelected ? 6 : 4)}
-                onClick={() => isClickable && onDieClick(key)}
+                value={val}
+                color={c}
+                isRolling={animating}
+                isSelected={isSelected}
+                onClick={isClickable ? () => onDieClick(key) : undefined}
                 sx={{
                     width: { xs: 40, sm: 52 },
                     height: { xs: 40, sm: 52 },
                     borderRadius: 2,
-                    bgcolor: c.bg,
-                    color: c.text,
                     border: `2px solid ${isSelected ? '#ffd54f' : c.border}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: { xs: '1.25rem', sm: '1.6rem' },
-                    fontWeight: '900',
-                    boxShadow: isSelected ? '0 0 10px 2px rgba(255, 213, 79, 0.7)' : 3,
-                    transform: animating ? 'rotate(-6deg) scale(1.08)' : (isSelected ? 'scale(1.1)' : 'none'),
-                    transition: 'all 0.15s ease',
-                    cursor: isClickable ? 'pointer' : 'default',
-                    '&:active': isClickable ? { transform: 'scale(0.95)' } : {}
                 }}
-            >
-                {val}
-            </Paper>
+            />
         );
     };
 

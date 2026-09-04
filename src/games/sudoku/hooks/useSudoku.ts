@@ -4,15 +4,13 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { sudokuGenerator } from '../logic/sudokuGenerator';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import type {
   SudokuDifficulty,
   SudokuMove,
   SudokuState,
   SudokuStats,
 } from '../logic/types';
-
-const SUDOKU_STATS_KEY = 'galaxy_sudoku_stats';
-const SUDOKU_STATE_KEY = 'galaxy_sudoku_state';
 
 const defaultStats: SudokuStats = {
   played: 0,
@@ -26,28 +24,16 @@ const defaultStats: SudokuStats = {
 };
 
 export function useSudoku(initialDifficulty: SudokuDifficulty = 'medium') {
-  const [stats, setStats] = useState<SudokuStats>(() => {
-    try {
-      const raw = localStorage.getItem(SUDOKU_STATS_KEY);
-      return raw ? JSON.parse(raw) : defaultStats;
-    } catch {
-      return defaultStats;
-    }
-  });
+  const [stats, setStats] = useState<SudokuStats>(() => 
+    storage.getJson<SudokuStats>(STORAGE_KEYS.SUDOKU_STATS, defaultStats)
+  );
 
   const [history, setHistory] = useState<SudokuMove[]>([]);
 
   const [state, setState] = useState<SudokuState>(() => {
-    try {
-      const saved = localStorage.getItem(SUDOKU_STATE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.grid && !parsed.isCompleted && !parsed.isGameOver) {
-          return parsed;
-        }
-      }
-    } catch {
-      // Fallback
+    const saved = storage.getJson<SudokuState | null>(STORAGE_KEYS.SUDOKU_STATE, null);
+    if (saved && saved.grid && !saved.isCompleted && !saved.isGameOver) {
+      return saved;
     }
 
     const { grid } = sudokuGenerator.generatePuzzle(initialDifficulty);
@@ -80,23 +66,15 @@ export function useSudoku(initialDifficulty: SudokuDifficulty = 'medium') {
   // Persist state
   useEffect(() => {
     if (!state.isCompleted && !state.isGameOver) {
-      try {
-        localStorage.setItem(SUDOKU_STATE_KEY, JSON.stringify(state));
-      } catch {
-        // Ignore
-      }
+      storage.setJson(STORAGE_KEYS.SUDOKU_STATE, state);
     } else {
-      localStorage.removeItem(SUDOKU_STATE_KEY);
+      storage.remove(STORAGE_KEYS.SUDOKU_STATE);
     }
   }, [state]);
 
   // Persist stats
   useEffect(() => {
-    try {
-      localStorage.setItem(SUDOKU_STATS_KEY, JSON.stringify(stats));
-    } catch {
-      // Ignore
-    }
+    storage.setJson(STORAGE_KEYS.SUDOKU_STATS, stats);
   }, [stats]);
 
   const startNewGame = useCallback((difficulty: SudokuDifficulty = state.difficulty) => {

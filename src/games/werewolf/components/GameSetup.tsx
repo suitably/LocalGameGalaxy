@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, TextField, Button, List, ListItem, ListItemText, IconButton, Paper, Typography, FormControlLabel, Checkbox, Grid, Alert, Dialog } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import { Box, Button, Paper, Typography, FormControlLabel, Checkbox, Grid, Alert, Dialog, IconButton } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import ClearAllIcon from '@mui/icons-material/ClearAll';
 import InfoIcon from '@mui/icons-material/Info';
 import type { Player, Role, RoleDefinition } from '../logic/types';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +10,7 @@ import { DEFAULT_ROLES } from '../logic/defaultRoles';
 import { isWerewolfRole } from '../logic/utils';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import { PlayerManagerCard } from '../../../modules/player-management';
 
 const STORAGE_KEY_SETTINGS = 'werewolf-setup-settings';
 
@@ -29,9 +27,8 @@ interface GameSetupProps {
 // Derived from DEFAULT_ROLES to avoid duplication, but exclude base WEREWOLF
 const SPECIAL_ROLES = DEFAULT_ROLES.filter(r => r.id !== 'WEREWOLF').map(r => r.id as Role);
 
-export const GameSetup: React.FC<GameSetupProps> = ({ players, customRoles = [], onAddPlayer, onRemovePlayer, onClearAllPlayers, onStartGame, onSaveCustomRoles }) => {
+export const GameSetup: React.FC<GameSetupProps> = ({ players, customRoles = [], onAddPlayer, onRemovePlayer, onStartGame, onSaveCustomRoles }) => {
     const { t } = useTranslation();
-    const [newName, setNewName] = useState('');
 
     // Load settings from localStorage
     const [enabledRoles, setEnabledRoles] = useState<Role[]>(() => {
@@ -64,13 +61,6 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, customRoles = [],
             numWerewolves
         }));
     }, [enabledRoles, numWerewolves]);
-
-    const handleAdd = () => {
-        if (newName.trim()) {
-            onAddPlayer(newName.trim());
-            setNewName('');
-        }
-    };
 
     const toggleRole = (role: Role) => {
         setEnabledRoles(prev =>
@@ -112,54 +102,17 @@ export const GameSetup: React.FC<GameSetupProps> = ({ players, customRoles = [],
 
     return (
         <Box maxWidth="sm" mx="auto">
-            <Paper sx={{ p: 3, mb: 3 }}>
-                <Typography variant="h5" gutterBottom>{t('common.players')}</Typography>
-
-                <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                    <TextField
-                        fullWidth
-                        label={t('games.werewolf.ui.player_name')}
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                    />
-                    <Button variant="contained" onClick={handleAdd} startIcon={<PersonAddIcon />}>
-                        {t('games.werewolf.ui.add')}
-                    </Button>
-                </Box>
-
-                <List dense sx={{ mb: 2 }}>
-                    {players.map(player => (
-                        <ListItem
-                            key={player.id}
-                            secondaryAction={
-                                <IconButton edge="end" aria-label="delete" onClick={() => onRemovePlayer(player.id)}>
-                                    <DeleteIcon />
-                                </IconButton>
-                            }
-                        >
-                            <ListItemText primary={player.name} />
-                        </ListItem>
-                    ))}
-                    {players.length === 0 && (
-                        <Typography variant="body2" color="text.secondary" align="center">
-                            {t('games.werewolf.ui.add_players_hint')}
-                        </Typography>
-                    )}
-                </List>
-                {players.length > 0 && (
-                    <Button
-                        variant="outlined"
-                        color="error"
-                        size="small"
-                        startIcon={<ClearAllIcon />}
-                        onClick={onClearAllPlayers}
-                        sx={{ mt: 1 }}
-                    >
-                        {t('common.clear_all_players')}
-                    </Button>
-                )}
-            </Paper>
+            <PlayerManagerCard
+                players={players.map(p => ({ name: p.name }))}
+                onAddPlayer={onAddPlayer}
+                onRemovePlayer={(name, index) => {
+                    const target = typeof index === 'number' ? players[index] : players.find(p => p.name === name);
+                    if (target) onRemovePlayer(target.id);
+                }}
+                minPlayers={4}
+                maxPlayers={30}
+                sx={{ mb: 3 }}
+            />
 
             <Paper sx={{ p: 3, mb: 3 }}>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>

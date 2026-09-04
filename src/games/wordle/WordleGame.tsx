@@ -18,13 +18,13 @@ import {
   DialogActions,
   Stack,
 } from '@mui/material';
-import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
 import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
 import PersonAddAlt1RoundedIcon from '@mui/icons-material/PersonAddAlt1Rounded';
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '../../context/TitleContext';
 import { useWordle } from './hooks/useWordle';
 import { wordleEngine } from './logic/wordleEngine';
 import { WordleBoard } from './components/WordleBoard';
@@ -35,8 +35,8 @@ import type { WordleGameMode } from './logic/types';
 
 export const WordleGame: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
   const location = useLocation();
+  usePageTitle(t('games.wordle.title', 'Wordle'));
 
   const [statsOpen, setStatsOpen] = useState(false);
   const [duelOpen, setDuelOpen] = useState(false);
@@ -94,48 +94,31 @@ export const WordleGame: React.FC = () => {
         py: { xs: 1.5, sm: 2.5 },
       }}
     >
-      {/* Header Bar */}
+      {/* Header Action Bar */}
       <Box
         sx={{
           width: '100%',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          justifyContent: 'flex-end',
           borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
           pb: 1.5,
           mb: 1.5,
         }}
       >
-        <IconButton onClick={() => navigate('/')} edge="start">
-          <ArrowBackRoundedIcon />
-        </IconButton>
-
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 800,
-            letterSpacing: 2,
-            background: 'linear-gradient(90deg, #4caf50, #81c784)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}
-        >
-          WORDLE
-        </Typography>
-
         <Box sx={{ display: 'flex', gap: 0.5 }}>
           <Tooltip title={t('wordle.duel.btn_tooltip', 'Freund herausfordern')}>
-            <IconButton onClick={() => setDuelOpen(true)}>
+            <IconButton onClick={() => setDuelOpen(true)} aria-label={t('wordle.duel.btn_tooltip', 'Freund herausfordern')}>
               <PersonAddAlt1RoundedIcon />
             </IconButton>
           </Tooltip>
           <Tooltip title={t('wordle.stats.btn_tooltip', 'Statistiken')}>
-            <IconButton onClick={() => setStatsOpen(true)}>
+            <IconButton onClick={() => setStatsOpen(true)} aria-label={t('wordle.stats.btn_tooltip', 'Statistiken')}>
               <BarChartRoundedIcon />
             </IconButton>
           </Tooltip>
           <Tooltip title={t('common.help', 'Hilfe')}>
-            <IconButton onClick={() => setHelpOpen(true)}>
+            <IconButton onClick={() => setHelpOpen(true)} aria-label={t('common.help', 'Hilfe')}>
               <HelpOutlineRoundedIcon />
             </IconButton>
           </Tooltip>

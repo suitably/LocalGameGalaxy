@@ -13,8 +13,8 @@ import {
   Button,
   Stack,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '../../context/TitleContext';
 import { useSudoku } from './hooks/useSudoku';
 import { SudokuHeader } from './components/SudokuHeader';
 import { SudokuGrid } from './components/SudokuGrid';
@@ -24,7 +24,7 @@ import type { SudokuDifficulty } from './logic/types';
 
 export const SudokuGame: React.FC = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  usePageTitle(t('games.sudoku.title', 'Sudoku'));
 
   const [helpOpen, setHelpOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
@@ -70,7 +70,6 @@ export const SudokuGame: React.FC = () => {
         timeElapsed={state.timeElapsed}
         isPaused={state.isPaused}
         onTogglePause={togglePause}
-        onBack={() => navigate('/')}
         onOpenHelp={() => setHelpOpen(true)}
         onOpenStats={() => setStatsOpen(true)}
       />

@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { type SongMeta } from '../db';
 import { usePlaylists } from '../hooks/usePlaylists';
 import { YouTubeSearchDialog } from './YouTubeSearchDialog';
+import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
 
 interface SongActionDialogsProps {
     selectedSongForQueue: SongMeta | null;
@@ -49,6 +50,7 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
     // MUI Dialog state    // Auto Sync
     const [syncTimeDialogOpen, setSyncTimeDialogOpen] = useState(false);
     const [syncTimeInput, setSyncTimeInput] = useState('');
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
     const handleQueueOption = (action: 'play_now' | 'play_next' | 'add_end') => {
         if (!selectedSongForQueue) return;
@@ -77,10 +79,13 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
         setQueueDialogOpen(false);
     };
 
-    const handleDeleteSong = async () => {
+    const handleDeleteSong = () => {
         if (!selectedSongForQueue) return;
-        const confirm = window.confirm(`Wirklich "${selectedSongForQueue.title}" von ${selectedSongForQueue.artist} löschen?`);
-        if (!confirm) return;
+        setConfirmDeleteOpen(true);
+    };
+
+    const executeDeleteSong = async () => {
+        if (!selectedSongForQueue) return;
         try {
             const data = await melodiqFetch(`/api/songs/${selectedSongForQueue.id}`, {
                 method: 'DELETE'
@@ -94,6 +99,7 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
         } catch (e) {
             console.error('Failed to delete song', e);
         }
+        setConfirmDeleteOpen(false);
         setQueueDialogOpen(false);
     };
 
@@ -276,6 +282,16 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <ConfirmDialog
+                open={confirmDeleteOpen}
+                title="Song löschen"
+                message={`Wirklich "${selectedSongForQueue?.title}" von ${selectedSongForQueue?.artist} löschen?`}
+                confirmColor="error"
+                confirmText="Löschen"
+                onConfirm={executeDeleteSong}
+                onCancel={() => setConfirmDeleteOpen(false)}
+            />
         </>
     );
 };

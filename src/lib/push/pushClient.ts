@@ -1,12 +1,13 @@
 /**
- * pushClient.ts - Browser Web Push Manager & Relay Dispatcher
+ * pushClient.ts - Hybrid Web Push & ntfy Client
  *
- * Handles Web Push subscription registration via ServiceWorker and sends
- * push trigger requests to the game's configured relay (Cloudflare Worker or self-hosted server).
+ * Handles Web Push subscription registration via ServiceWorker as well as
+ * deGoogled ntfy topic subscription and hybrid dispatch via Cloudflare Worker relay.
  */
 
 import { gameRelayStorage } from './gameRelayStorage';
-import type { PushNotificationPayload, StoredPushSubscription } from './pushTypes';
+import { storage } from '../storage';
+import type { NotificationMethod, PushNotificationPayload, StoredPushSubscription } from './pushTypes';
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -19,9 +20,13 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
+function sanitizeTopicPart(str: string): string {
+  return str.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 32);
+}
+
 export const pushClient = {
   /**
-   * Checks if the current browser environment supports the Web Push API.
+   * Checks if the current browser environment supports the standard Web Push API.
    */
   isPushSupported(): boolean {
     return (
@@ -33,28 +38,91 @@ export const pushClient = {
   },
 
   /**
-   * Registers this device's PushSubscription with the game's relay.
+   * Generates a deterministic ntfy topic name for a game and optional target player.
    */
-  async registerForGamePush(gameId: string, playerId: string): Promise<boolean> {
-    if (!this.isPushSupported() || !gameId || !playerId) {
+  getNtfyTopic(gameId: string, playerId?: string): string {
+    const cleanG = sanitizeTopicPart(gameId);
+    const cleanP = playerId ? `-${sanitizeTopicPart(playerId)}` : '';
+    return `lgg-${cleanG}${cleanP}`;
+  },
+
+  /**
+   * Generates the web URL to subscribe/view a game topic on an ntfy instance.
+   */
+  getNtfyUrl(gameId: string, playerId?: string, customServer?: string): string {
+    const server = (customServer || storage.getNtfyServerUrl()).replace(/\/$/, '');
+    return `${server}/${this.getNtfyTopic(gameId, playerId)}`;
+  },
+
+  /**
+   * Generates the app intent URI for opening the ntfy Android app directly.
+   */
+  getNtfyAppScheme(gameId: string, playerId?: string, customServer?: string): string {
+    const server = (customServer || storage.getNtfyServerUrl()).replace(/^https?:\/\//, '').replace(/\/$/, '');
+    return `ntfy://${server}/${this.getNtfyTopic(gameId, playerId)}`;
+  },
+
+  /**
+   * Sends a notification directly to the configured ntfy server via HTTP POST (CORS-friendly).
+   */
+  async sendDirectNtfyNotification(payload: PushNotificationPayload): Promise<boolean> {
+    const server = storage.getNtfyServerUrl().replace(/\/$/, '');
+    const topic = payload.ntfyTopic || this.getNtfyTopic(payload.gameId, payload.targetPlayerId);
+
+    try {
+      const res = await fetch(`${server}/${topic}`, {
+        method: 'POST',
+        headers: {
+          Title: payload.title,
+          Click: payload.url || window.location.href,
+          Priority: 'high',
+          Tags: 'game_die,tada',
+        },
+        body: payload.body,
+      });
+      return res.ok;
+    } catch (err) {
+      console.warn('[PushClient] Direct ntfy dispatch failed:', err);
       return false;
     }
+  },
 
-    const relayUrl = gameRelayStorage.getGameRelay(gameId);
-    if (!relayUrl) {
+  /**
+   * Registers this device's PushSubscription or ntfy topic with the game's relay.
+   */
+  async registerForGamePush(gameId: string, playerId: string, preferredRelayUrl?: string): Promise<boolean> {
+    if (!gameId || !playerId) return false;
+
+    const relayUrl = preferredRelayUrl || gameRelayStorage.getGameRelay(gameId);
+    const prefMethod: NotificationMethod = storage.getNotificationMethod();
+    const ntfyTopic = this.getNtfyTopic(gameId, playerId);
+
+    // If user explicitly chose only ntfy, skip Web Push handshake
+    if (prefMethod === 'ntfy') {
+      if (!relayUrl) return true;
+      return this.sendSubscribeToRelay(relayUrl, gameId, playerId, { method: 'ntfy', ntfyTopic });
+    }
+
+    if (!this.isPushSupported()) {
+      if (relayUrl) {
+        await this.sendSubscribeToRelay(relayUrl, gameId, playerId, { method: 'ntfy', ntfyTopic });
+      }
       return false;
     }
 
     try {
-      // 1. Ensure notification permission
       if (Notification.permission !== 'granted') {
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') {
+          if (relayUrl) {
+            await this.sendSubscribeToRelay(relayUrl, gameId, playerId, { method: 'ntfy', ntfyTopic });
+          }
           return false;
         }
       }
 
-      // 2. Fetch VAPID public key from relay
+      if (!relayUrl) return false;
+
       const vapidKeyUrl = relayUrl.includes('/api/push')
         ? `${relayUrl}/vapid-public-key`
         : `${relayUrl}/api/push/vapid-public-key`;
@@ -64,6 +132,7 @@ export const pushClient = {
       }).catch(() => null);
 
       if (!keyRes || !keyRes.ok) {
+        await this.sendSubscribeToRelay(relayUrl, gameId, playerId, { method: 'ntfy', ntfyTopic });
         return false;
       }
 
@@ -71,12 +140,10 @@ export const pushClient = {
       const publicKey = keyData.publicKey;
       if (!publicKey) return false;
 
-      // 3. Get ServiceWorker registration and subscribe
       const registration = await navigator.serviceWorker.ready;
       let subscription = await registration.pushManager.getSubscription();
 
       if (subscription) {
-        // Verify that the existing subscription matches the relay's current VAPID key
         const rawKey = subscription.options?.applicationServerKey;
         const targetBytes = urlBase64ToUint8Array(publicKey);
         let match = false;
@@ -87,7 +154,6 @@ export const pushClient = {
           }
         }
         if (!match) {
-          console.log('[PushClient] VAPID key changed, renewing push subscription for relay...');
           await subscription.unsubscribe().catch(() => {});
           subscription = null;
         }
@@ -113,7 +179,32 @@ export const pushClient = {
         },
       };
 
-      // 4. Send subscription to relay for this game & player
+      const method: NotificationMethod = prefMethod === 'both' ? 'both' : 'webpush';
+      return await this.sendSubscribeToRelay(relayUrl, gameId, playerId, {
+        method,
+        subscription: storedSubscription,
+        ntfyTopic,
+      });
+    } catch (err) {
+      console.warn('[PushClient] Web Push subscription failed, falling back to ntfy registration:', err);
+      if (relayUrl) {
+        await this.sendSubscribeToRelay(relayUrl, gameId, playerId, { method: 'ntfy', ntfyTopic });
+      }
+      return false;
+    }
+  },
+
+  async sendSubscribeToRelay(
+    relayUrl: string,
+    gameId: string,
+    playerId: string,
+    data: {
+      method?: NotificationMethod;
+      subscription?: StoredPushSubscription;
+      ntfyTopic?: string;
+    },
+  ): Promise<boolean> {
+    try {
       const subscribeUrl = relayUrl.includes('/api/push')
         ? `${relayUrl}/subscribe`
         : `${relayUrl}/api/push/subscribe`;
@@ -121,34 +212,26 @@ export const pushClient = {
       const subRes = await fetch(subscribeUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          gameId,
-          playerId,
-          subscription: storedSubscription,
-        }),
+        body: JSON.stringify({ gameId, playerId, ...data }),
       });
-
-      if (subRes.ok) {
-        console.log(`[PushClient] Player ${playerId} registered for push on game ${gameId} via ${relayUrl}`);
-      } else {
-        console.warn(`[PushClient] Relay rejected subscription (${subRes.status}):`, await subRes.text().catch(() => ''));
-      }
-
       return subRes.ok;
-    } catch (err) {
-      console.warn('[PushClient] Failed to register push subscription:', err);
+    } catch {
       return false;
     }
   },
 
   /**
-   * Dispatches a push notification request to the game's relay to wake up other players.
+   * Dispatches a push notification request to the game's relay and falls back to direct ntfy if needed.
    */
   async sendGamePushNotification(payload: PushNotificationPayload): Promise<boolean> {
-    const relayUrl = gameRelayStorage.getGameRelay(payload.gameId);
+    const relayUrl = payload.targetRelayUrl || gameRelayStorage.getGameRelay(payload.gameId);
+    const ntfyTopic = payload.ntfyTopic || this.getNtfyTopic(payload.gameId, payload.targetPlayerId);
+    const enrichedPayload: PushNotificationPayload = { ...payload, ntfyTopic };
+
     if (!relayUrl) {
-      console.warn('[PushClient] Cannot send push notification: no relay configured for game', payload.gameId);
-      return false;
+      // Fall back directly to ntfy
+      console.log('[PushClient] No relay configured; falling back directly to ntfy dispatch');
+      return this.sendDirectNtfyNotification(enrichedPayload);
     }
 
     try {
@@ -159,20 +242,20 @@ export const pushClient = {
       const res = await fetch(notifyUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(enrichedPayload),
       });
 
       if (res.ok) {
         const data = await res.json().catch(() => null);
-        console.log('[PushClient] Push notification dispatched via relay:', data);
+        console.log('[PushClient] Hybrid push notification dispatched via relay:', data);
         return true;
       } else {
-        console.warn(`[PushClient] Relay notify returned status ${res.status}:`, await res.text().catch(() => ''));
-        return false;
+        console.warn(`[PushClient] Relay notify failed (${res.status}), sending direct ntfy backup...`);
+        return this.sendDirectNtfyNotification(enrichedPayload);
       }
     } catch (err) {
-      console.warn('[PushClient] Failed to send push notification via relay:', err);
-      return false;
+      console.warn('[PushClient] Failed to send push via relay, sending direct ntfy backup:', err);
+      return this.sendDirectNtfyNotification(enrichedPayload);
     }
   },
 };

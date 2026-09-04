@@ -27,5 +27,6 @@ This directory contains task checklists tracking the progress of work. Files are
 - [Qwixx Sheet Variants & Selector Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/qwixx-sheet-variants-tasks.md)
 - [Knister Custom Dice & Manual Input Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/knister-custom-dice-tasks.md)
 - [Geschichtenschreiber Collaborative Storytelling Tasks](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/geschichtenschreiber-tasks.md)
+- [Cross-Game UI & Logic Modularization GitHub Issues](file:///home/deck/Projects/LocalGameGalaxy/docs/tasks/github-issues/)
 
 ID: DOCS-TASKS-SUMMARY

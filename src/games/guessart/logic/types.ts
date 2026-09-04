@@ -4,6 +4,9 @@ export interface PlayerIdentity {
   id: string;
   name: string;
   isRemote?: boolean;
+  relayUrl?: string;
+  ntfyTopic?: string;
+  notificationMethod?: 'auto' | 'webpush' | 'ntfy' | 'both';
 }
 
 export interface WordTranslationEntry {

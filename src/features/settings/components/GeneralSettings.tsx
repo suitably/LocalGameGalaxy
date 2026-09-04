@@ -15,7 +15,7 @@ export const GeneralSettings: React.FC = () => {
     const { isStandalone, isInstallable, installApp, showIOSGuide, setShowIOSGuide } = usePWAInstall();
 
     const handleLanguageChange = (event: SelectChangeEvent) => {
-        i18n.changeLanguage(event.target.value);
+        void i18n.changeLanguage(event.target.value);
     };
 
     return (

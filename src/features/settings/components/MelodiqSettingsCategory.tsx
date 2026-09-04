@@ -22,8 +22,10 @@ interface MelodiqSettingsCategoryProps {
     onNavigateToPlaylists?: () => void;
 }
 
+// Initialize i18n bundles at module load time to prevent setState side-effects during render
+initMelodiqI18n();
+
 export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = ({ onNavigateToPlaylists }) => {
-    initMelodiqI18n();
     const { t } = useTranslation();
 
     // Audio Devices
