@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from 'react';
-import { Box, Snackbar, Alert } from '@mui/material';
+import React, { useState, useCallback, lazy, Suspense } from 'react';
+import { Box, Snackbar, Alert, CircularProgress } from '@mui/material';
 import { type Song, type SongMeta } from './db';
-import { Settings } from '../../features/settings/Settings';
+const Settings = lazy(() => import('../../features/settings/Settings').then(m => ({ default: m.Settings })));
 import { MelodiqPlaylists } from './components/MelodiqPlaylists';
 import { PlaylistDetails } from './components/PlaylistDetails';
 import { ClientSettings } from './components/ClientSettings';
@@ -359,14 +359,16 @@ export const MelodiqGameContent: React.FC = () => {
                     {isClient ? (
                         <ClientSettings onBack={() => setCurrentView('Home')} />
                     ) : (
-                        <Settings 
-                            activeGameId="melodiq"
-                            onBack={() => {
-                                refreshSongs();
-                                setCurrentView('Home');
-                            }} 
-                            onNavigateToPlaylists={() => setCurrentView('Playlists')}
-                        />
+                        <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
+                            <Settings 
+                                activeGameId="melodiq"
+                                onBack={() => {
+                                    refreshSongs();
+                                    setCurrentView('Home');
+                                }} 
+                                onNavigateToPlaylists={() => setCurrentView('Playlists')}
+                            />
+                        </Suspense>
                     )}
                 </Box>
             );

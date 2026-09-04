@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-import { Box, Typography, Tabs, Tab, IconButton, useTheme, useMediaQuery, Paper } from '@mui/material';
+import React, { useState, lazy, Suspense } from 'react';
+import { Box, Typography, Tabs, Tab, IconButton, useTheme, useMediaQuery, Paper, CircularProgress } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePageTitle } from '../../context/TitleContext';
 import { GeneralSettings } from './components/GeneralSettings';
-import { MelodiqSettingsCategory } from './components/MelodiqSettingsCategory';
 import { ServerConnection } from '../../components/connection/ServerConnection';
 import { ServerAdminPanel } from '../../components/connection/ServerAdminPanel';
 import { ServerSetupWizard } from '../../components/connection/ServerSetupWizard';
+
+const MelodiqSettingsCategory = lazy(() => import('./components/MelodiqSettingsCategory').then(m => ({ default: m.MelodiqSettingsCategory })));
 
 interface SettingsProps {
     activeGameId?: string;
@@ -141,7 +142,9 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
                         </Box>
                     )}
                     {activeTab === 'melodiq' && (
-                        <MelodiqSettingsCategory onNavigateToPlaylists={onNavigateToPlaylists} />
+                        <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
+                            <MelodiqSettingsCategory onNavigateToPlaylists={onNavigateToPlaylists} />
+                        </Suspense>
                     )}
                 </Box>
             </Box>

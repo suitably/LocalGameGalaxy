@@ -462,3 +462,6 @@ export const initMelodiqI18n = () => {
 
     melodiqI18nInitialized = true;
 };
+
+// Auto-initialize when the i18n bundle is loaded
+initMelodiqI18n();
