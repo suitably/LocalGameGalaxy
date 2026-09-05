@@ -15,6 +15,7 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import QRCode from 'qrcode';
 import { storage } from '../../lib/storage';
+import { settingsCardSx } from '../../features/settings/settingsStyles';
 
 /**
  * ServerAdminPanel [ID: COMP-SERVER-ADMIN]
@@ -252,7 +253,7 @@ export const ServerAdminPanel: React.FC = () => {
     if (!storage.isHelperActive()) return null;
 
     return (
-        <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
+        <Paper sx={settingsCardSx}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                 <Box>
                     <Typography variant="h6" sx={{ fontWeight: 'bold' }}>

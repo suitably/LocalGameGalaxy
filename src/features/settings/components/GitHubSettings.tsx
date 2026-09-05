@@ -11,6 +11,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { testGitHubToken } from '../../../lib/github';
+import { settingsCardSx } from '../settingsStyles';
 
 /**
  * GitHubSettings [ID: COMP-GITHUB-SETTINGS]
@@ -75,15 +76,7 @@ export const GitHubSettings: React.FC = () => {
     };
 
     return (
-        <Paper
-            sx={{
-                p: { xs: 2.5, sm: 3, md: 4 },
-                borderRadius: 3,
-                bgcolor: 'rgba(30, 30, 40, 0.7)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: 6,
-            }}
-        >
+        <Paper sx={settingsCardSx}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
                 <GitHubIcon />
                 <Typography variant="h6">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Box, Button, Typography, Paper, Tabs, Tab } from '@mui/material';
+import { Box, Button, Typography, Paper, Tabs, Tab, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import UndoIcon from '@mui/icons-material/Undo';
 import RestoreIcon from '@mui/icons-material/Restore';
 import DnsIcon from '@mui/icons-material/Dns';
@@ -26,6 +26,7 @@ import {
     type ActivePlayer,
     initMelodiqI18n,
 } from '../../../games/melodiq';
+import { subTabsBarSx, subTabSx, settingsCardSx, segmentedGroupSx } from '../settingsStyles';
 
 interface MelodiqSettingsCategoryProps {
     initialSubTab?: MelodiqSubTab;
@@ -93,31 +94,18 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {/* Sub-Tabs Navigation for Melodiq */}
-            <Paper sx={{ p: 0.5, borderRadius: 2.5, bgcolor: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            {/* Level 2: Sub-Tabs Navigation for Melodiq */}
+            <Paper sx={subTabsBarSx}>
                 <Tabs
                     value={subTab}
                     onChange={(_, val) => setSubTab(val)}
                     variant="scrollable"
                     scrollButtons="auto"
-                    textColor="primary"
-                    indicatorColor="primary"
+                    TabIndicatorProps={{ style: { display: 'none' } }}
                     sx={{
-                        minHeight: 42,
-                        '& .MuiTab-root': {
-                            minHeight: 42,
-                            py: 1,
-                            px: 2.5,
-                            textTransform: 'none',
-                            fontWeight: 'bold',
-                            fontSize: '0.9rem',
-                            borderRadius: 2,
-                            gap: 1,
-                            color: 'text.secondary',
-                            '&.Mui-selected': {
-                                color: 'primary.main',
-                                bgcolor: 'rgba(100, 180, 255, 0.1)',
-                            },
+                        minHeight: 38,
+                        '& .MuiTabs-flexContainer': {
+                            gap: 0.75,
                         },
                     }}
                 >
@@ -126,24 +114,28 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
                         iconPosition="start" 
                         label={t('melodiq.server.tab', 'Companion Server')} 
                         value="server" 
+                        sx={subTabSx}
                     />
                     <Tab 
                         icon={<MicIcon fontSize="small" />} 
                         iconPosition="start" 
                         label={t('melodiq.settings.microphones', 'Mikrofone')} 
                         value="microphones" 
+                        sx={subTabSx}
                     />
                     <Tab 
                         icon={<PersonIcon fontSize="small" />} 
                         iconPosition="start" 
                         label={t('melodiq.settings.profiles', 'Spieler-Profile')} 
                         value="profiles" 
+                        sx={subTabSx}
                     />
                     <Tab 
                         icon={<SportsEsportsIcon fontSize="small" />} 
                         iconPosition="start" 
                         label={t('melodiq.settings.gameplay', 'Gameplay')} 
                         value="gameplay" 
+                        sx={subTabSx}
                     />
                     {onNavigateToPlaylists && (
                         <Tab 
@@ -151,6 +143,7 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
                             iconPosition="start" 
                             label={t('melodiq.playlists', 'Playlists')} 
                             value="playlists" 
+                            sx={subTabSx}
                         />
                     )}
                 </Tabs>
@@ -159,54 +152,28 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
             {/* Sub-Tab 0: Companion Server (Connection, Setup, API Keys) */}
             {subTab === 'server' && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                    {/* Secondary Navigation for Server */}
-                    <Paper sx={{ p: 0.5, borderRadius: 2, bgcolor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                        <Tabs
+                    {/* Level 3: Segmented Control for Server */}
+                    <Box sx={{ display: 'flex' }}>
+                        <ToggleButtonGroup
                             value={serverSection}
-                            onChange={(_, val) => setServerSection(val)}
-                            variant="scrollable"
-                            scrollButtons="auto"
-                            textColor="primary"
-                            indicatorColor="primary"
-                            sx={{
-                                minHeight: 38,
-                                '& .MuiTab-root': {
-                                    minHeight: 38,
-                                    py: 0.8,
-                                    px: 2,
-                                    textTransform: 'none',
-                                    fontWeight: 600,
-                                    fontSize: '0.85rem',
-                                    borderRadius: 1.5,
-                                    gap: 0.8,
-                                    color: 'text.secondary',
-                                    '&.Mui-selected': {
-                                        color: 'primary.main',
-                                        bgcolor: 'rgba(100, 180, 255, 0.08)',
-                                    },
-                                },
-                            }}
+                            exclusive
+                            onChange={(_, val) => val && setServerSection(val)}
+                            sx={segmentedGroupSx}
                         >
-                            <Tab 
-                                icon={<DnsIcon fontSize="small" />} 
-                                iconPosition="start" 
-                                label={t('melodiq.server.connection_tab', 'Verbindung & Status')} 
-                                value="connection" 
-                            />
-                            <Tab 
-                                icon={<AutoFixHighIcon fontSize="small" />} 
-                                iconPosition="start" 
-                                label={t('melodiq.server.setup_tab', 'Setup-Assistent')} 
-                                value="setup" 
-                            />
-                            <Tab 
-                                icon={<KeyIcon fontSize="small" />} 
-                                iconPosition="start" 
-                                label={t('melodiq.server.apikeys_tab', 'API-Schlüssel für Freunde')} 
-                                value="apikeys" 
-                            />
-                        </Tabs>
-                    </Paper>
+                            <ToggleButton value="connection">
+                                <DnsIcon fontSize="small" />
+                                {t('melodiq.server.connection_tab', 'Verbindung & Status')}
+                            </ToggleButton>
+                            <ToggleButton value="setup">
+                                <AutoFixHighIcon fontSize="small" />
+                                {t('melodiq.server.setup_tab', 'Setup-Assistent')}
+                            </ToggleButton>
+                            <ToggleButton value="apikeys">
+                                <KeyIcon fontSize="small" />
+                                {t('melodiq.server.apikeys_tab', 'API-Schlüssel für Freunde')}
+                            </ToggleButton>
+                        </ToggleButtonGroup>
+                    </Box>
 
                     {/* Server Section Content */}
                     {serverSection === 'connection' && <ServerConnection />}
@@ -217,14 +184,14 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
 
             {/* Sub-Tab 1: Microphones */}
             {subTab === 'microphones' && (
-                <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
+                <Paper sx={settingsCardSx}>
                     <HardwareMicSetup />
                 </Paper>
             )}
 
             {/* Sub-Tab 2: Profiles */}
             {subTab === 'profiles' && (
-                <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
+                <Paper sx={settingsCardSx}>
                     <UserProfilesManager
                         profiles={profilesHook.profiles}
                         onAddProfile={profilesHook.addProfile}
@@ -236,7 +203,7 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
 
             {/* Sub-Tab 3: Gameplay */}
             {subTab === 'gameplay' && (
-                <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Paper sx={{ ...settingsCardSx, display: 'flex', flexDirection: 'column', gap: 3 }}>
                     <GameSettingsPanel
                         settings={settingsHook.settings}
                         onUpdateSetting={settingsHook.updateSetting}
@@ -289,7 +256,7 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
 
             {/* Sub-Tab 4: Playlists */}
             {subTab === 'playlists' && onNavigateToPlaylists && (
-                <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
+                <Paper sx={settingsCardSx}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
                         <QueueMusicIcon color="primary" />
                         <Typography variant="h6">{t('melodiq.playlists', 'Playlists')}</Typography>

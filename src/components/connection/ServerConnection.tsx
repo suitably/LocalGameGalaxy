@@ -11,6 +11,8 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { storage } from '../../lib/storage';
 
+import { settingsCardSx } from '../../features/settings/settingsStyles';
+
 /**
  * ServerConnection [ID: COMP-SERVER-CONN]
  *
@@ -99,21 +101,21 @@ export const ServerConnection: React.FC = () => {
                     }),
                 );
                 window.dispatchEvent(new Event('server_connection_updated'));
-            } else if (res.status === 401) {
-                setStatus('error');
-                setStatusMsg(t('server.unauthorized', 'Unauthorized. Check Token.'));
             } else {
                 setStatus('error');
-                setStatusMsg(
-                    t('server.error_status', {
-                        status: res.statusText,
-                        defaultValue: `Error: ${res.statusText}`,
-                    }),
-                );
+                if (res.status === 401) {
+                    setStatusMsg(t('server.error_unauthorized', 'Unauthorized: Invalid or missing token.'));
+                } else {
+                    setStatusMsg(t('server.error_generic', `Server returned status ${res.status}.`));
+                }
             }
-        } catch {
+        } catch (err: any) {
             setStatus('error');
-            setStatusMsg(t('server.conn_failed', 'Connection Failed. Check URL or Network.'));
+            if (err.name === 'AbortError') {
+                setStatusMsg(t('server.error_timeout', 'Connection timed out (5s).'));
+            } else {
+                setStatusMsg(t('server.error_failed', 'Connection failed. Check URL or CORS.'));
+            }
         }
     };
 
@@ -125,7 +127,7 @@ export const ServerConnection: React.FC = () => {
     };
 
     return (
-        <Paper sx={{ p: 3, mb: 3 }}>
+        <Paper sx={settingsCardSx}>
             <Typography variant="h6" gutterBottom>
                 {t('server.title', 'Melodiq Companion Server Verbindung')}
             </Typography>

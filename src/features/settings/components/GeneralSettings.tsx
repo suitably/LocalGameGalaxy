@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { usePWAInstall } from '../../../hooks/usePWAInstall';
 import { PWAInstallDialog } from '../../../components/pwa';
 import { GitHubSettings } from './GitHubSettings';
+import { settingsCardSx, subTabsBarSx, subTabSx } from '../settingsStyles';
 
 export type GeneralSubTab = 'app' | 'feedback';
 
@@ -43,30 +44,17 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ initialSubTab 
             </Box>
 
             {/* Sub-Tabs Navigation */}
-            <Paper sx={{ p: 0.5, borderRadius: 2.5, bgcolor: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <Paper sx={subTabsBarSx}>
                 <Tabs
                     value={subTab}
                     onChange={(_, val) => setSubTab(val)}
                     variant="scrollable"
                     scrollButtons="auto"
-                    textColor="primary"
-                    indicatorColor="primary"
+                    TabIndicatorProps={{ style: { display: 'none' } }}
                     sx={{
-                        minHeight: 42,
-                        '& .MuiTab-root': {
-                            minHeight: 42,
-                            py: 1,
-                            px: 2.5,
-                            textTransform: 'none',
-                            fontWeight: 'bold',
-                            fontSize: '0.9rem',
-                            borderRadius: 2,
-                            gap: 1,
-                            color: 'text.secondary',
-                            '&.Mui-selected': {
-                                color: 'primary.main',
-                                bgcolor: 'rgba(100, 180, 255, 0.1)',
-                            },
+                        minHeight: 38,
+                        '& .MuiTabs-flexContainer': {
+                            gap: 0.75,
                         },
                     }}
                 >
@@ -75,12 +63,14 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ initialSubTab 
                         iconPosition="start" 
                         label={t('settings.app_and_language', 'App & Sprache')} 
                         value="app" 
+                        sx={subTabSx}
                     />
                     <Tab 
                         icon={<FeedbackIcon fontSize="small" />} 
                         iconPosition="start" 
                         label={t('settings.feedback_title', 'Feedback & Support')} 
                         value="feedback" 
+                        sx={subTabSx}
                     />
                 </Tabs>
             </Paper>
@@ -89,7 +79,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ initialSubTab 
             {subTab === 'app' && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                     {/* Language Preferences */}
-                    <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
+                    <Paper sx={settingsCardSx}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
                             <LanguageIcon color="primary" />
                             <Typography variant="h6">
@@ -113,7 +103,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ initialSubTab 
                     </Paper>
 
                     {/* PWA / App Installation Info */}
-                    <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
+                    <Paper sx={settingsCardSx}>
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5, mb: 1.5 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                                 <InstallMobileIcon color="primary" />
@@ -161,7 +151,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ initialSubTab 
             {/* Sub-Tab 2: Feedback & Support */}
             {subTab === 'feedback' && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
+                    <Paper sx={settingsCardSx}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
                             <FeedbackIcon color="primary" />
                             <Typography variant="h6">

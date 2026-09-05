@@ -3,6 +3,7 @@ import { Box, Typography, Paper } from '@mui/material';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import { useTranslation } from 'react-i18next';
 import { NotificationSettings } from '../../../components/push/NotificationSettings';
+import { settingsCardSx } from '../settingsStyles';
 
 export const NotificationSettingsCategory: React.FC = () => {
     const { t } = useTranslation();
@@ -23,7 +24,7 @@ export const NotificationSettingsCategory: React.FC = () => {
             </Box>
 
             {/* Main Notifications Card */}
-            <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
+            <Paper sx={settingsCardSx}>
                 <NotificationSettings />
             </Paper>
         </Box>

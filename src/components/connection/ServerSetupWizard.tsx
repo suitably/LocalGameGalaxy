@@ -18,6 +18,7 @@ import { SetupBinaryTab } from './setup/SetupBinaryTab';
 import { SetupDockerTab } from './setup/SetupDockerTab';
 import { SetupCloudflareTab } from './setup/SetupCloudflareTab';
 import { SetupOneLinerTab } from './setup/SetupOneLinerTab';
+import { settingsCardSx } from '../../features/settings/settingsStyles';
 
 type WizardTab = 'binary' | 'docker' | 'cloudflare' | 'terminal';
 
@@ -41,11 +42,7 @@ export const ServerSetupWizard: React.FC = () => {
     return (
         <Paper
             sx={{
-                p: { xs: 2, md: 3 },
-                borderRadius: 3,
-                bgcolor: 'rgba(25, 25, 35, 0.85)',
-                border: '1px solid rgba(100, 180, 255, 0.25)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+                ...settingsCardSx,
                 position: 'relative',
                 overflow: 'hidden',
             }}

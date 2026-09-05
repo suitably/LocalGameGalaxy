@@ -9,6 +9,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePageTitle } from '../../context/TitleContext';
 import { GeneralSettings, type GeneralSubTab } from './components/GeneralSettings';
 import type { MelodiqSubTab } from './components/MelodiqSettingsCategory';
+import { mainTabsBarSx, mainTabSx } from './settingsStyles';
 
 const NotificationSettingsCategory = lazy(() => import('./components/NotificationSettingsCategory').then(m => ({ default: m.NotificationSettingsCategory })));
 const MelodiqSettingsCategory = lazy(() => import('./components/MelodiqSettingsCategory').then(m => ({ default: m.MelodiqSettingsCategory })));
@@ -89,38 +90,18 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
                 </Box>
             </Box>
 
-            {/* Top Main Navigation Tabs */}
-            <Paper sx={{ 
-                p: 0.5, 
-                mb: 3.5, 
-                borderRadius: 3, 
-                bgcolor: 'rgba(30, 30, 40, 0.7)', 
-                border: '1px solid rgba(255, 255, 255, 0.1)', 
-                boxShadow: 4 
-            }}>
+            {/* Level 1: Main Category Tabs Bar */}
+            <Paper sx={mainTabsBarSx}>
                 <Tabs
                     value={activeTab}
                     onChange={handleTabChange}
                     variant="scrollable"
                     scrollButtons="auto"
-                    textColor="primary"
-                    indicatorColor="primary"
+                    TabIndicatorProps={{ style: { display: 'none' } }}
                     sx={{
-                        minHeight: 48,
-                        '& .MuiTab-root': {
-                            minHeight: 48,
-                            py: 1.5,
-                            px: { xs: 2, sm: 3 },
-                            textTransform: 'none',
-                            fontWeight: 'bold',
-                            fontSize: { xs: '0.875rem', sm: '0.95rem' },
-                            borderRadius: 2,
-                            gap: 1.2,
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            '&.Mui-selected': {
-                                color: 'primary.main',
-                                bgcolor: 'rgba(100, 180, 255, 0.12)',
-                            },
+                        minHeight: 46,
+                        '& .MuiTabs-flexContainer': {
+                            gap: 1,
                         },
                     }}
                 >
@@ -129,18 +110,21 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
                         iconPosition="start"
                         label={t('settings.general_tab', 'Allgemein')} 
                         value="general" 
+                        sx={mainTabSx}
                     />
                     <Tab 
                         icon={<NotificationsActiveIcon fontSize="small" />}
                         iconPosition="start"
                         label={t('settings.notifications_tab', 'Benachrichtigungen')} 
                         value="notifications" 
+                        sx={mainTabSx}
                     />
                     <Tab 
                         icon={<MicIcon fontSize="small" />}
                         iconPosition="start"
                         label={t('games.melodiq.title', 'Melodiq')} 
                         value="melodiq" 
+                        sx={mainTabSx}
                     />
                 </Tabs>
             </Paper>
