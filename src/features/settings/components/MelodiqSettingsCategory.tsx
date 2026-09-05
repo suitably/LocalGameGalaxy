@@ -1,14 +1,18 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Box, Button, Typography, Paper, Chip, Tabs, Tab } from '@mui/material';
+import { Box, Button, Typography, Paper, Tabs, Tab } from '@mui/material';
 import UndoIcon from '@mui/icons-material/Undo';
 import RestoreIcon from '@mui/icons-material/Restore';
 import DnsIcon from '@mui/icons-material/Dns';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import KeyIcon from '@mui/icons-material/Key';
 import MicIcon from '@mui/icons-material/Mic';
 import PersonIcon from '@mui/icons-material/Person';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import QueueMusicIcon from '@mui/icons-material/QueueMusic';
 import { useTranslation } from 'react-i18next';
-import { storage } from '../../../lib/storage';
+import { ServerConnection } from '../../../components/connection/ServerConnection';
+import { ServerSetupWizard } from '../../../components/connection/ServerSetupWizard';
+import { ServerAdminPanel } from '../../../components/connection/ServerAdminPanel';
 import {
     MicrophoneManager,
     useProfiles,
@@ -24,31 +28,20 @@ import {
 } from '../../../games/melodiq';
 
 interface MelodiqSettingsCategoryProps {
+    initialSubTab?: MelodiqSubTab;
     onNavigateToPlaylists?: () => void;
-    onNavigateToServer?: () => void;
 }
 
-type MelodiqSubTab = 'microphones' | 'profiles' | 'gameplay' | 'playlists';
+export type MelodiqSubTab = 'server' | 'microphones' | 'profiles' | 'gameplay' | 'playlists';
+type ServerSubSection = 'connection' | 'setup' | 'apikeys';
 
-export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = ({ onNavigateToPlaylists, onNavigateToServer }) => {
+export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = ({ initialSubTab = 'server', onNavigateToPlaylists }) => {
     const { t } = useTranslation();
-    const [subTab, setSubTab] = useState<MelodiqSubTab>('microphones');
+    const [subTab, setSubTab] = useState<MelodiqSubTab>(initialSubTab);
+    const [serverSection, setServerSection] = useState<ServerSubSection>('connection');
 
     // Audio Devices
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
-
-    // Server State
-    const [isServerActive, setIsServerActive] = useState(() => storage.isHelperActive());
-    const [serverUrl, setServerUrl] = useState(() => storage.getHelperUrl());
-
-    useEffect(() => {
-        const updateServer = () => {
-            setIsServerActive(storage.isHelperActive());
-            setServerUrl(storage.getHelperUrl());
-        };
-        window.addEventListener('server_connection_updated', updateServer);
-        return () => window.removeEventListener('server_connection_updated', updateServer);
-    }, []);
 
     // Custom Hooks for state management
     const profilesHook = useProfiles(devices);
@@ -100,43 +93,7 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {/* Companion Server Status Banner */}
-            <Paper sx={{ p: 2.5, borderRadius: 2.5, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 4 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <DnsIcon color="primary" />
-                        <Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                                    {t('melodiq.server.title', 'Melodiq Companion Server')}
-                                </Typography>
-                                {isServerActive ? (
-                                    <Chip label={t('common.connected', 'Aktiv')} size="small" color="success" variant="outlined" />
-                                ) : (
-                                    <Chip label={t('common.disconnected', 'Inaktiv')} size="small" color="default" variant="outlined" />
-                                )}
-                            </Box>
-                            <Typography variant="body2" color="text.secondary">
-                                {isServerActive 
-                                    ? t('melodiq.server.active_desc', `Server ist aktiv auf ${serverUrl}`)
-                                    : t('melodiq.server.inactive_desc', 'Streaming, YouTube-Downloads und Gesangstrennung erfordern den Begleit-Server.')}
-                            </Typography>
-                        </Box>
-                    </Box>
-                    {onNavigateToServer && (
-                        <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={onNavigateToServer}
-                            sx={{ borderRadius: 50, textTransform: 'none' }}
-                        >
-                            {isServerActive ? t('melodiq.server.manage', 'Server verwalten') : t('melodiq.server.setup', 'Server einrichten')}
-                        </Button>
-                    )}
-                </Box>
-            </Paper>
-
-            {/* Sub-Tabs Navigation */}
+            {/* Sub-Tabs Navigation for Melodiq */}
             <Paper sx={{ p: 0.5, borderRadius: 2.5, bgcolor: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                 <Tabs
                     value={subTab}
@@ -165,6 +122,12 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
                     }}
                 >
                     <Tab 
+                        icon={<DnsIcon fontSize="small" />} 
+                        iconPosition="start" 
+                        label={t('melodiq.server.tab', 'Companion Server')} 
+                        value="server" 
+                    />
+                    <Tab 
                         icon={<MicIcon fontSize="small" />} 
                         iconPosition="start" 
                         label={t('melodiq.settings.microphones', 'Mikrofone')} 
@@ -192,6 +155,65 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
                     )}
                 </Tabs>
             </Paper>
+
+            {/* Sub-Tab 0: Companion Server (Connection, Setup, API Keys) */}
+            {subTab === 'server' && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                    {/* Secondary Navigation for Server */}
+                    <Paper sx={{ p: 0.5, borderRadius: 2, bgcolor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                        <Tabs
+                            value={serverSection}
+                            onChange={(_, val) => setServerSection(val)}
+                            variant="scrollable"
+                            scrollButtons="auto"
+                            textColor="primary"
+                            indicatorColor="primary"
+                            sx={{
+                                minHeight: 38,
+                                '& .MuiTab-root': {
+                                    minHeight: 38,
+                                    py: 0.8,
+                                    px: 2,
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    fontSize: '0.85rem',
+                                    borderRadius: 1.5,
+                                    gap: 0.8,
+                                    color: 'text.secondary',
+                                    '&.Mui-selected': {
+                                        color: 'primary.main',
+                                        bgcolor: 'rgba(100, 180, 255, 0.08)',
+                                    },
+                                },
+                            }}
+                        >
+                            <Tab 
+                                icon={<DnsIcon fontSize="small" />} 
+                                iconPosition="start" 
+                                label={t('melodiq.server.connection_tab', 'Verbindung & Status')} 
+                                value="connection" 
+                            />
+                            <Tab 
+                                icon={<AutoFixHighIcon fontSize="small" />} 
+                                iconPosition="start" 
+                                label={t('melodiq.server.setup_tab', 'Setup-Assistent')} 
+                                value="setup" 
+                            />
+                            <Tab 
+                                icon={<KeyIcon fontSize="small" />} 
+                                iconPosition="start" 
+                                label={t('melodiq.server.apikeys_tab', 'API-Schlüssel für Freunde')} 
+                                value="apikeys" 
+                            />
+                        </Tabs>
+                    </Paper>
+
+                    {/* Server Section Content */}
+                    {serverSection === 'connection' && <ServerConnection />}
+                    {serverSection === 'setup' && <ServerSetupWizard />}
+                    {serverSection === 'apikeys' && <ServerAdminPanel />}
+                </Box>
+            )}
 
             {/* Sub-Tab 1: Microphones */}
             {subTab === 'microphones' && (

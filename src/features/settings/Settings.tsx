@@ -2,15 +2,16 @@ import React, { useState, lazy, Suspense } from 'react';
 import { Box, Typography, Tabs, Tab, IconButton, Paper, CircularProgress } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
-import DnsIcon from '@mui/icons-material/Dns';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import KeyIcon from '@mui/icons-material/Key';
 import MicIcon from '@mui/icons-material/Mic';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePageTitle } from '../../context/TitleContext';
 import { GeneralSettings } from './components/GeneralSettings';
+import type { MelodiqSubTab } from './components/MelodiqSettingsCategory';
 
-const ServerSettingsCategory = lazy(() => import('./components/ServerSettingsCategory').then(m => ({ default: m.ServerSettingsCategory })));
+const NotificationSettingsCategory = lazy(() => import('./components/NotificationSettingsCategory').then(m => ({ default: m.NotificationSettingsCategory })));
 const ApiKeysSettings = lazy(() => import('./components/ApiKeysSettings').then(m => ({ default: m.ApiKeysSettings })));
 const MelodiqSettingsCategory = lazy(() => import('./components/MelodiqSettingsCategory').then(m => ({ default: m.MelodiqSettingsCategory })));
 
@@ -20,7 +21,7 @@ interface SettingsProps {
     onNavigateToPlaylists?: () => void;
 }
 
-type TabType = 'general' | 'server' | 'keys' | 'melodiq';
+type TabType = 'general' | 'notifications' | 'melodiq' | 'keys';
 
 export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavigateToPlaylists }) => {
     const { t } = useTranslation();
@@ -35,13 +36,14 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
     const tabParam = searchParams.get('tab') || '';
 
     const resolveInitialTab = (): TabType => {
-        if (tabParam === 'server') return 'server';
-        if (tabParam === 'keys' || tabParam === 'apikeys' || tabParam === 'api') return 'keys';
-        if (tabParam === 'melodiq' || gameParam.toLowerCase() === 'melodiq') return 'melodiq';
+        if (tabParam === 'notifications' || tabParam === 'push' || tabParam === 'ntfy') return 'notifications';
+        if (tabParam === 'server' || tabParam === 'melodiq' || gameParam.toLowerCase() === 'melodiq') return 'melodiq';
+        if (tabParam === 'keys' || tabParam === 'apikeys' || tabParam === 'api' || tabParam === 'github') return 'keys';
         return 'general';
     };
 
     const [activeTab, setActiveTab] = useState<TabType>(resolveInitialTab);
+    const melodiqInitialSubTab: MelodiqSubTab = tabParam === 'server' ? 'server' : 'server';
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: TabType) => {
         setActiveTab(newValue);
@@ -63,12 +65,12 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
 
     const getTabSubtitle = () => {
         switch (activeTab) {
-            case 'server':
-                return t('settings.server_tab', 'Server & Netzwerk');
+            case 'notifications':
+                return t('settings.notifications_tab', 'Benachrichtigungen & Push');
             case 'keys':
                 return t('settings.api_keys_tab', 'API-Keys & Integrationen');
             case 'melodiq':
-                return t('games.melodiq.title', 'Melodiq');
+                return t('games.melodiq.title', 'Melodiq & Companion Server');
             default:
                 return t('settings.general_tab', 'Allgemein');
         }
@@ -133,16 +135,10 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
                         value="general" 
                     />
                     <Tab 
-                        icon={<DnsIcon fontSize="small" />}
+                        icon={<NotificationsActiveIcon fontSize="small" />}
                         iconPosition="start"
-                        label={t('settings.server_tab', 'Server & Netzwerk')} 
-                        value="server" 
-                    />
-                    <Tab 
-                        icon={<KeyIcon fontSize="small" />}
-                        iconPosition="start"
-                        label={t('settings.api_keys_tab', 'API-Keys')} 
-                        value="keys" 
+                        label={t('settings.notifications_tab', 'Benachrichtigungen')} 
+                        value="notifications" 
                     />
                     <Tab 
                         icon={<MicIcon fontSize="small" />}
@@ -150,28 +146,34 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
                         label={t('games.melodiq.title', 'Melodiq')} 
                         value="melodiq" 
                     />
+                    <Tab 
+                        icon={<KeyIcon fontSize="small" />}
+                        iconPosition="start"
+                        label={t('settings.api_keys_tab', 'API-Keys')} 
+                        value="keys" 
+                    />
                 </Tabs>
             </Paper>
 
             {/* Content Area with Sub-Tabs in each Category */}
             <Box sx={{ width: '100%' }}>
                 {activeTab === 'general' && <GeneralSettings />}
-                {activeTab === 'server' && (
+                {activeTab === 'notifications' && (
                     <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
-                        <ServerSettingsCategory />
-                    </Suspense>
-                )}
-                {activeTab === 'keys' && (
-                    <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
-                        <ApiKeysSettings />
+                        <NotificationSettingsCategory />
                     </Suspense>
                 )}
                 {activeTab === 'melodiq' && (
                     <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
                         <MelodiqSettingsCategory 
+                            initialSubTab={melodiqInitialSubTab}
                             onNavigateToPlaylists={onNavigateToPlaylists} 
-                            onNavigateToServer={() => setActiveTab('server')}
                         />
+                    </Suspense>
+                )}
+                {activeTab === 'keys' && (
+                    <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
+                        <ApiKeysSettings />
                     </Suspense>
                 )}
             </Box>
