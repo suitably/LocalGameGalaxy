@@ -96,7 +96,7 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
 ### Web Push & ntfy Hybrid Notification Architecture
 - **Hybrid Multi-Channel Architecture**:
   - Supports standard **Web Push (RFC 8291 / RFC 8292 VAPID)** for mainstream Google/Mozilla/Apple browsers.
-  - Supports **100% De-Googled Push via ntfy** (`ntfy.sh` or self-hosted ntfy server) for privacy-conscious users on Murena /e/OS, Fairphone, GrapheneOS, or F-Droid without Google Play Services or Firebase Cloud Messaging.
+  - Supports **100% De-Googled Push via ntfy** (`ntfy.sh` or self-hosted ntfy server) for privacy-conscious users without Google Play Services or Firebase Cloud Messaging.
   - Automatic fallback & capability detection: If standard Web Push registration fails (e.g. missing FCM service on deGoogled Android), the client seamlessly suggests and registers ntfy.
   - User can configure preferred notification channel (`auto`, `webpush`, `ntfy`, `both`) in Settings.
 - **Relay Implementations**:

@@ -544,11 +544,11 @@
     "relay_worker_copied": "Commands copied!",
     "method_label": "Preferred Notification Channel",
     "method_auto": "🟢 Automatic (Web Push with ntfy fallback)",
-    "method_ntfy": "🛡️ Google-free via ntfy (Murena / Fairphone / F-Droid)",
+    "method_ntfy": "🛡️ Google-free via ntfy",
     "method_webpush": "🌐 Web Push Only (Chrome / Firefox / Safari)",
     "method_both": "⚡ Both channels simultaneously (Maximum reliability)",
     "ntfy_title": "Google-free Notifications (ntfy)",
-    "ntfy_desc": "Specifically for Murena /e/OS, Fairphone, GrapheneOS and F-Droid users: 100% open-source push without Google Play Services or FCM.",
+    "ntfy_desc": "100% open-source push without Google Play Services or FCM.",
     "ntfy_server_label": "ntfy Server URL",
     "ntfy_test_btn": "Send Test to ntfy",
     "ntfy_testing": "Sending test push via ntfy...",
@@ -565,7 +565,7 @@
     "ntfy_topic_copied": "Topic copied!",
     "ntfy_subscribe_btn": "Subscribe in ntfy",
     "ntfy_badge_title": "100% Google-free via ntfy",
-    "ntfy_badge_desc": "Ideal for Fairphone, Murena /e/OS, and F-Droid: Receive pushes without Google Play Services directly in your ntfy app.",
+    "ntfy_badge_desc": "Receive pushes without Google Play Services directly in your ntfy app.",
     "hostDeviceBadge": "Your device"
   },
   "server": {

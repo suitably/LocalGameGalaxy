@@ -156,7 +156,7 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
             </Box>
             {t(
               'settings.ntfy_badge_desc',
-              'Ideal für Fairphone, Murena /e/OS und F-Droid: Erhalte Pushs ohne Google Play Services direkt in deiner ntfy-App.',
+              'Erhalte Pushs ohne Google Play Services direkt in deiner ntfy-App.',
             )}
             <Typography
               variant="caption"

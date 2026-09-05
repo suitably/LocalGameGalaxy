@@ -3,7 +3,7 @@
 ## Goal Description
 Provide seamless asynchronous turn notifications for all users:
 1. Standard Web Push (Chrome, Firefox, Safari) using VAPID / PushManager.
-2. 100% De-Googled Push via ntfy (`ntfy.sh` / self-hosted) for users on Fairphone, Murena /e/OS, GrapheneOS, or users who reject Google Play Services / FCM.
+2. 100% De-Googled Push via ntfy (`ntfy.sh` / self-hosted) for users who reject Google Play Services / FCM.
 3. Hybrid fallback & autodetection in frontend and Cloudflare Worker push relay.
 4. User preference storage (`auto`, `webpush`, `ntfy`, `both`) with in-app testing for both notification types.
 

@@ -96,7 +96,7 @@ export const NtfySettingsSection: React.FC = () => {
       <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.65)' }}>
         {t(
           'settings.ntfy_desc',
-          'Speziell für Murena /e/OS, Fairphone, GrapheneOS und F-Droid-Nutzer: 100% Open-Source Push ohne Google Play Services oder FCM.',
+          '100% Open-Source Push ohne Google Play Services oder FCM.',
         )}
       </Typography>
 

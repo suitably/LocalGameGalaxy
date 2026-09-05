@@ -4,7 +4,7 @@
  * Provides a 24/7 free, zero-config hybrid push relay for games like GuessArt & Geschichtenschreiber.
  * Supports:
  * - RFC 8291 Web Push encryption & RFC 8292 VAPID authentication (Google/Mozilla/Apple standard)
- * - 100% De-Googled push via ntfy (ntfy.sh / self-hosted) for Murena /e/OS, Fairphone, F-Droid users
+ * - 100% De-Googled push via ntfy
  * - In-Memory and Cloudflare KV persistent subscription storage
  */
 

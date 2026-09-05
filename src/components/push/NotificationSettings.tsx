@@ -130,7 +130,7 @@ export const NotificationSettings: React.FC = () => {
             {t('settings.method_auto', '🟢 Automatisch (Web-Push mit ntfy Fallback)')}
           </MenuItem>
           <MenuItem value="ntfy">
-            {t('settings.method_ntfy', '🛡️ Google-frei via ntfy (Murena / Fairphone / F-Droid)')}
+            {t('settings.method_ntfy', '🛡️ Google-frei via ntfy')}
           </MenuItem>
           <MenuItem value="webpush">
             {t('settings.method_webpush', '🌐 Nur Browser-Push (Chrome / Firefox / Safari)')}
