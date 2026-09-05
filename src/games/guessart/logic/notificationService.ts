@@ -95,7 +95,8 @@ class GuessArtNotificationService {
     // Determine active drawer and guesser
     const drawerIdx = game.players.findIndex((p) => p.id === round.drawnById);
     const effDrawerIdx = drawerIdx >= 0 ? drawerIdx : (Math.max(1, round.roundNumber) - 1) % (game.players.length || 1);
-    const effGuesserIdx = (effDrawerIdx + 1) % (game.players.length || 1);
+    const guesserIdx = round.guesserId ? game.players.findIndex((p) => p.id === round.guesserId) : -1;
+    const effGuesserIdx = guesserIdx >= 0 ? guesserIdx : (effDrawerIdx + 1) % (game.players.length || 1);
 
     const activeDrawerObj = game.players[effDrawerIdx];
     const activeGuesserObj = game.players[effGuesserIdx];
@@ -130,14 +131,9 @@ class GuessArtNotificationService {
       return { shouldNotify: false, reason: 'all_players_local_pass_and_play' };
     }
 
-    // If the drawing was created on this device, this device must NEVER be notified to guess its own drawing!
-    const isDrawerLocal = round.drawnById
-      ? playerAssignment.isPlayerLocal(game.id, round.drawnById, false)
-      : false;
-    const wasDrawnHere = this.wasRoundDrawnLocally(round.id);
-
-    if (actionType === 'guess' && (isDrawerLocal || wasDrawnHere)) {
-      return { shouldNotify: false, reason: 'drawing_drawn_by_local_device' };
+    // Never notify a player to guess their own drawing!
+    if (actionType === 'guess' && round.drawnById && activePlayer.id === round.drawnById) {
+      return { shouldNotify: false, reason: 'drawing_drawn_by_same_player' };
     }
 
     // If the game is already in active foreground on this screen and the document is visible,

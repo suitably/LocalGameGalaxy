@@ -232,8 +232,35 @@ describe('GuessArt Notification & Sync Service', () => {
       expect(decision.reason).toBe('no_active_player');
     });
 
-    it('suppresses guess notification if the drawing was drawn by a local player on this device', () => {
-      // Alice (player-1) is drawer and local. Bob (player-2) is guesser and also temporarily local. Charlie (player-3) is remote.
+    it('suppresses guess notification if the active guesser is the drawer themselves', () => {
+      // Alice (player-1) is both drawer and somehow active guesser (prevent self-guess)
+      playerAssignment.setLocalPlayerIds('game-123', ['player-1']);
+
+      const decision = guessArtNotificationService.evaluateTurnNotification({
+        game: {
+          ...gameMock,
+          status: 'guessing',
+          players: [
+            { id: 'player-1', name: 'Alice' },
+            { id: 'player-2', name: 'Bob' },
+          ],
+        },
+        round: {
+          ...roundGuessingMock,
+          drawnById: 'player-1',
+          guesserId: 'player-1', // active guesser is drawer
+        },
+        isRemoteEvent: true,
+        activeGameScreenId: null,
+        isDocumentVisible: false,
+      });
+
+      expect(decision.shouldNotify).toBe(false);
+      expect(decision.reason).toBe('drawing_drawn_by_same_player');
+    });
+
+    it('allows turn notification for a second local player when another local player drew the picture', () => {
+      // Alice (player-1) drew. Bob (player-2) is guesser. Both are local on Host. Charlie is remote.
       const game3Mock: GuessArtGameRecord = {
         ...gameMock,
         players: [
@@ -246,39 +273,15 @@ describe('GuessArt Notification & Sync Service', () => {
 
       const decision = guessArtNotificationService.evaluateTurnNotification({
         game: { ...game3Mock, status: 'guessing' },
-        round: roundGuessingMock, // drawnById: 'player-1'
+        round: roundGuessingMock, // drawnById: 'player-1', guesser: 'player-2'
         isRemoteEvent: true,
         activeGameScreenId: null,
         isDocumentVisible: false,
       });
 
-      expect(decision.shouldNotify).toBe(false);
-      expect(decision.reason).toBe('drawing_drawn_by_local_device');
-    });
-
-    it('suppresses guess notification if the round was marked as drawn locally', () => {
-      // Alice drew round-1 locally, and now round is guessing for Bob (who is local), but Charlie is remote.
-      const game3Mock: GuessArtGameRecord = {
-        ...gameMock,
-        players: [
-          { id: 'player-1', name: 'Alice' },
-          { id: 'player-2', name: 'Bob' },
-          { id: 'player-3', name: 'Charlie' },
-        ],
-      };
-      guessArtNotificationService.markRoundDrawnLocally('round-1');
-      playerAssignment.setLocalPlayerIds('game-123', ['player-2']);
-
-      const decision = guessArtNotificationService.evaluateTurnNotification({
-        game: { ...game3Mock, status: 'guessing' },
-        round: roundGuessingMock,
-        isRemoteEvent: true,
-        activeGameScreenId: null,
-        isDocumentVisible: false,
-      });
-
-      expect(decision.shouldNotify).toBe(false);
-      expect(decision.reason).toBe('drawing_drawn_by_local_device');
+      expect(decision.shouldNotify).toBe(true);
+      expect(decision.activePlayerName).toBe('Bob');
+      expect(decision.actionType).toBe('guess');
     });
 
     it('suppresses notification if the round is marked with temporaryClaim', () => {

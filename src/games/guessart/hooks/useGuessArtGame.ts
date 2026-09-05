@@ -6,7 +6,7 @@ import { pushClient } from '../../../lib/push/pushClient';
 import { storage } from '../../../lib/storage';
 import { playerAssignment } from '../logic/playerAssignment';
 import { guessArtNotificationService } from '../logic/notificationService';
-import { buildTurnNotificationMessage } from '../../../lib/notifications';
+import { buildTurnNotificationMessage, localNotificationPresenter } from '../../../lib/notifications';
 import type {
   GameSnapshot,
   GuessArtGameRecord,
@@ -110,9 +110,6 @@ export const useGuessArtGame = (
     const ownRelay = storage.getPushRelayUrl();
     const prefMethod = storage.getNotificationMethod();
 
-    const localPlayerIds = playerAssignment.getLocalPlayerIds(gameId);
-    const primaryLocalPlayerId = localPlayerIds[0] || (game.players[0] ? game.players[0].id : null);
-
     let needsUpdate = false;
     const updatedPlayers = game.players.map((p) => {
       if (playerAssignment.isPlayerLocal(gameId, p.id, false)) {
@@ -125,12 +122,11 @@ export const useGuessArtGame = (
           playerAssignment.removeLocalPlayerId(gameId, p.id);
           return p;
         }
-        // ONLY attach this device's personal ntfyTopic to the PRIMARY local player.
-        // Local pass-and-play guest players sharing this device do NOT inherit host's personal topic.
-        const isPrimary = p.id === primaryLocalPlayerId;
-        const pTopic = p.ntfyTopic || (isPrimary ? userNtfyTopic : undefined);
-        const pRelay = p.relayUrl || (isPrimary ? ownRelay : undefined);
-        const pMethod = p.notificationMethod || (isPrimary ? prefMethod : undefined);
+        // Attach this device's personal ntfyTopic and relay to all local players on this device
+        // so remote peers can notify whichever player on this device has the next turn.
+        const pTopic = userNtfyTopic || p.ntfyTopic;
+        const pRelay = ownRelay || p.relayUrl;
+        const pMethod = prefMethod || p.notificationMethod;
         if (p.ntfyTopic !== pTopic || p.relayUrl !== pRelay || p.notificationMethod !== pMethod) {
           needsUpdate = true;
           return { ...p, ntfyTopic: pTopic, relayUrl: pRelay, notificationMethod: pMethod };
@@ -217,15 +213,40 @@ export const useGuessArtGame = (
       if (!gameId) return;
       const { snap, targetPlayerId, actionType, actorName } = params;
 
-      // Never send push notifications to a local player playing on this device
-      if (playerAssignment.isPlayerLocal(gameId, targetPlayerId, false)) {
-        console.log(`[useGuessArtGame] Suppressing turn push: player ${targetPlayerId} is local on this device`);
-        return;
-      }
-
       const targetPlayer = snap.game?.players.find((p) => p.id === targetPlayerId);
       if (!targetPlayer) {
         console.warn(`[useGuessArtGame] Target player ${targetPlayerId} not found in game snapshot`);
+        return;
+      }
+
+      const effectiveRelay = gameRelayStorage.getEffectiveRelay(gameId, targetPlayer.relayUrl);
+
+      const message = buildTurnNotificationMessage({
+        gameType: 'guessart',
+        gameName: snap.game?.name,
+        gameId,
+        actionType,
+        actorName,
+        targetPlayerName: targetPlayer.name,
+        targetPlayerId: targetPlayer.id,
+        relayUrl: effectiveRelay || undefined,
+      });
+
+      // If the target player is playing locally on this device, do not send a remote push across the internet
+      if (playerAssignment.isPlayerLocal(gameId, targetPlayerId, false)) {
+        console.log(`[useGuessArtGame] Suppressing remote turn push: player ${targetPlayerId} is local on this device`);
+        if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+          localNotificationPresenter
+            .showNotification({
+              title: message.title,
+              body: message.body,
+              tag: message.tag,
+              icon: message.icon,
+              url: message.url,
+              data: { url: message.url },
+            })
+            .catch(() => {});
+        }
         return;
       }
 
@@ -246,19 +267,6 @@ export const useGuessArtGame = (
         console.log(`[useGuessArtGame] Suppressing turn push: sender ${senderPlayerId} is target`);
         return;
       }
-
-      const effectiveRelay = gameRelayStorage.getEffectiveRelay(gameId, targetPlayer.relayUrl);
-
-      const message = buildTurnNotificationMessage({
-        gameType: 'guessart',
-        gameName: snap.game?.name,
-        gameId,
-        actionType,
-        actorName,
-        targetPlayerName: targetPlayer.name,
-        targetPlayerId: targetPlayer.id,
-        relayUrl: effectiveRelay || undefined,
-      });
 
       console.log(
         `[useGuessArtGame] Dispatching ${actionType} push to ${targetPlayer.name} (${targetPlayer.id}) via topic ${targetPlayer.ntfyTopic || 'auto'} and relay ${effectiveRelay || 'none'}`,

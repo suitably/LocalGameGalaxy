@@ -131,7 +131,7 @@ export const StorytellerGame: React.FC = () => {
 
       if (resolvedGameId) {
         if (targetPlayerId) {
-          playerAssignment.setLocalPlayerIds(resolvedGameId, [targetPlayerId]);
+          playerAssignment.addLocalPlayerId(resolvedGameId, targetPlayerId);
         }
         if (relayParam) {
           gameRelayStorage.setGameRelay(resolvedGameId, relayParam);

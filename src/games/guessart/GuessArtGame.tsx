@@ -102,7 +102,7 @@ export const GuessArtGame: React.FC = () => {
             if (snapshot && snapshot.game) {
               const imported = await LocalGameEngine.importSnapshot(snapshot, language);
               if (targetPlayerId) {
-                playerAssignment.setLocalPlayerIds(imported.game.id, [targetPlayerId]);
+                playerAssignment.addLocalPlayerId(imported.game.id, targetPlayerId);
                 const ownRelay = storage.getPushRelayUrl();
                 const prefMethod = storage.getNotificationMethod();
                 const updatedPlayers = imported.game.players.map((p) =>
@@ -140,7 +140,7 @@ export const GuessArtGame: React.FC = () => {
 
       if (urlGameId) {
         if (targetPlayerId) {
-          playerAssignment.setLocalPlayerIds(urlGameId, [targetPlayerId]);
+          playerAssignment.addLocalPlayerId(urlGameId, targetPlayerId);
         }
         if (relayParam) {
           gameRelayStorage.setGameRelay(urlGameId, relayParam);
