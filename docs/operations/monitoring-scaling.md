@@ -30,8 +30,8 @@ To safeguard Express API responsiveness, you must limit resources allocated to t
 Apply CPU and RAM limits in `docker-compose.yml` to prevent host starvation:
 ```yaml
 services:
-  server:
-    image: localgamegalaxy/server:latest
+  melodiq-server:
+    image: nexumia/melodiq-server:latest
     deploy:
       resources:
         limits:

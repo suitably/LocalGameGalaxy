@@ -1,12 +1,14 @@
 services:
-  # 1. Galaxy Core Backend (Lightweight Micro-Kernel: Relay, Signaling & Media)
-  galaxy-server:
+  # Melodiq Companion Server (Karaoke Media Streaming, USDB & AI Vocal Separation)
+  # Standard (~200MB): nexumia/melodiq-server:latest
+  # With AI Vocal Separation & Whisper: nexumia/melodiq-server:ai (or :melodiq)
+  melodiq-server:
     build:
       context: .
       dockerfile: Dockerfile
       target: base
-    image: localgamegalaxy/server:latest
-    container_name: galaxy-server
+    image: nexumia/melodiq-server:latest
+    container_name: melodiq-server
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -20,32 +22,13 @@ services:
       - MUSIC_DIR=/app/music
       - ALLOWED_ORIGINS=*
 
-  # 2. Zero-Config Public HTTPS Tunnel (Share with friends without port-forwarding)
-  galaxy-tunnel:
+  # Optional: Zero-Config Public HTTPS Tunnel (Share with friends without port-forwarding)
+  melodiq-tunnel:
     image: cloudflare/cloudflared:latest
-    container_name: galaxy-tunnel
+    container_name: melodiq-tunnel
     restart: unless-stopped
     profiles:
       - tunnel
-    command: tunnel --no-autoupdate --url http://galaxy-server:3000
+    command: tunnel --no-autoupdate --url http://melodiq-server:3000
     depends_on:
-      - galaxy-server
-
-  # 3. Melodiq Heavy AI Sidecar (Stem separation & Whisper lyrics alignment)
-  galaxy-ai-worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: full
-    image: localgamegalaxy/server:ai
-    container_name: galaxy-ai-worker
-    restart: unless-stopped
-    profiles:
-      - ai
-    volumes:
-      - ./models:/app/models:z
-      - ./music:/app/music:z
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - MUSIC_DIR=/app/music
+      - melodiq-server

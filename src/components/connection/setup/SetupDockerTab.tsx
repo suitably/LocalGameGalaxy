@@ -29,41 +29,34 @@ export const SetupDockerTab: React.FC<SetupDockerTabProps> = ({ token, downloadD
     const [copiedRun, setCopiedRun] = useState(false);
     const [copiedCompose, setCopiedCompose] = useState(false);
 
-    const dockerRunCmd = `docker run -d --name galaxy-server -p 3000:3000 -p 3001:3001 -e SECURITY_TOKEN="${token}" -v $(pwd)/music:/app/music localgamegalaxy/server:latest`;
+    const dockerRunCmd = `docker run -d --name melodiq-server -p 3000:3000 -p 3001:3001 -e SECURITY_TOKEN="${token}" -v $(pwd)/music:/app/music nexumia/melodiq-server:latest`;
 
     const dockerComposeYaml = `services:
-  galaxy-server:
-    image: localgamegalaxy/server:latest
-    container_name: galaxy-server
+  # Melodiq Companion Server (Karaoke Media Streaming, USDB & AI Vocal Separation)
+  # For AI vocal separation & Whisper, use image: nexumia/melodiq-server:ai
+  melodiq-server:
+    image: nexumia/melodiq-server:latest
+    container_name: melodiq-server
     restart: unless-stopped
     ports:
       - "3000:3000"
+      - "3001:3001"
     volumes:
-      - ./music:/app/music
-      - ./config.json:/app/config.json:ro
+      - ./music:/app/music:ro
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - PLUGINS=relay,melodiq
+      - SECURITY_TOKEN="${token}"
+      - MUSIC_DIR=/app/music
       - ALLOWED_ORIGINS=*
 
-  galaxy-tunnel:
+  # Optional: Public HTTPS Tunnel (Share with friends without port-forwarding)
+  melodiq-tunnel:
     image: cloudflare/cloudflared:latest
-    container_name: galaxy-tunnel
+    container_name: melodiq-tunnel
     restart: unless-stopped
     profiles: ["tunnel"]
-    command: tunnel --no-autoupdate run --token \${CLOUDFLARE_TUNNEL_TOKEN:-}
-
-  galaxy-ai:
-    image: localgamegalaxy/melodiq-ai:latest
-    container_name: galaxy-ai
-    restart: unless-stopped
-    profiles: ["ai"]
-    ports:
-      - "5000:5000"
-    environment:
-      - SERVER_URL=http://galaxy-server:3000
-      - SECURITY_TOKEN="${token}"`;
+    command: tunnel --no-autoupdate run --token \${CLOUDFLARE_TUNNEL_TOKEN:-}`;
 
     const handleCopyRun = () => {
         navigator.clipboard.writeText(dockerRunCmd);
@@ -195,21 +188,21 @@ export const SetupDockerTab: React.FC<SetupDockerTabProps> = ({ token, downloadD
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Chip label="Core" size="small" color="primary" variant="outlined" />
+                        <Chip label=":latest" size="small" color="primary" variant="outlined" />
                         <Typography variant="body2">
-                            {t('server.setup.docker.profile_core', 'Core Relay & Media (Lightweight, ~200MB)')}
+                            {t('server.setup.docker.profile_core', 'melodiq-server:latest (Schlanker Server für Relay & Media, ~200MB)')}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Chip label=":ai" size="small" color="secondary" variant="outlined" />
+                        <Typography variant="body2">
+                            {t('server.setup.docker.profile_ai', 'melodiq-server:ai (Inkl. KI-Stem-Separation & Whisper Text-Abgleich)')}
                         </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Chip label="--profile tunnel" size="small" color="info" variant="outlined" />
                         <Typography variant="body2">
-                            {t('server.setup.docker.profile_tunnel', 'Cloudflare Quick Tunnel (Public HTTPS without router port-forwarding)')}
-                        </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Chip label="--profile ai" size="small" color="secondary" variant="outlined" />
-                        <Typography variant="body2">
-                            {t('server.setup.docker.profile_ai', 'Melodiq AI Worker (ONNX Vocal Separation & Whisper AI)')}
+                            {t('server.setup.docker.profile_tunnel', 'Cloudflare Quick Tunnel (Öffentliches HTTPS ohne Router-Portfreigabe)')}
                         </Typography>
                     </Box>
                 </Box>

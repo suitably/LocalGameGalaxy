@@ -53,12 +53,14 @@ jobs:
           target: base
           push: true
           tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:base
             ${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:base
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:buildcache-base
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:buildcache-base,mode=max
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:buildcache-base
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:buildcache-base,mode=max
 
-      # 2. Build & Push Full Image with PyTorch & AI Vocal Separation (~2GB) -> :full, :melodiq
+      # 2. Build & Push Full Image with PyTorch & AI Vocal Separation (~2GB) -> :full, :ai, :melodiq
       - name: Build and Push Full Image (Melodiq AI)
         if: steps.check_docker_creds.outputs.has_creds == 'true'
         uses: docker/build-push-action@v5
@@ -68,7 +70,10 @@ jobs:
           target: full
           push: true
           tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:ai
+            ${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:full
+            ${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:melodiq
             ${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:full
             ${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:melodiq
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:buildcache-full
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:buildcache-full,mode=max
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:buildcache-full
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:buildcache-full,mode=max

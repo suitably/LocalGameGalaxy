@@ -119,9 +119,11 @@ export function useServerAutoDetect() {
 
     const downloadDockerCompose = useCallback(() => {
         const composeYaml = `services:
-  galaxy-server:
-    image: localgamegalaxy/server:latest
-    container_name: galaxy-server
+  # Melodiq Companion Server (Karaoke Media Streaming, USDB & AI Vocal Separation)
+  # For AI vocal separation & Whisper, use image: nexumia/melodiq-server:ai
+  melodiq-server:
+    image: nexumia/melodiq-server:latest
+    container_name: melodiq-server
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -135,15 +137,16 @@ export function useServerAutoDetect() {
       - MUSIC_DIR=/app/music
       - ALLOWED_ORIGINS=*
 
-  galaxy-tunnel:
+  # Optional: Zero-Config Public HTTPS Tunnel
+  melodiq-tunnel:
     image: cloudflare/cloudflared:latest
-    container_name: galaxy-tunnel
+    container_name: melodiq-tunnel
     restart: unless-stopped
     profiles:
       - tunnel
-    command: tunnel --no-autoupdate --url http://galaxy-server:3000
+    command: tunnel --no-autoupdate --url http://melodiq-server:3000
     depends_on:
-      - galaxy-server
+      - melodiq-server
 `;
         const blob = new Blob([composeYaml], { type: 'text/yaml' });
         const downloadUrl = URL.createObjectURL(blob);

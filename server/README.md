@@ -18,9 +18,11 @@ Create or edit `docker-compose.yml` (or download it directly from the in-app **S
 
 ```yaml
 services:
-  galaxy-server:
-    image: localgamegalaxy/server:latest
-    container_name: galaxy-server
+  # Melodiq Companion Server (Karaoke Media Streaming, USDB & AI Vocal Separation)
+  # For AI vocal separation & Whisper, use image: nexumia/melodiq-server:ai
+  melodiq-server:
+    image: nexumia/melodiq-server:latest
+    container_name: melodiq-server
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -47,16 +49,15 @@ docker compose up -d
 
 ---
 
-## Optional Profiles
+## Images & Optional Tunnel
+
+### Server Image Flavors
+- `nexumia/melodiq-server:latest`: Lightweight standard server (~200MB, Node.js + ffmpeg + yt-dlp + WebRTC signaling + relay).
+- `nexumia/melodiq-server:ai`: Full AI image (~2GB, includes PyTorch, ONNX Vocal Separation & Whisper). Also tagged as `:melodiq`.
 
 ### Cloudflare Quick Tunnel (Public HTTPS without router port-forwarding)
 ```bash
 docker compose --profile tunnel up -d
-```
-
-### AI Worker (PyTorch, ONNX Vocal Separation & Whisper)
-```bash
-docker compose --profile ai up -d
 ```
 
 ---
