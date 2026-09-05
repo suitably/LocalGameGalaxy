@@ -4,11 +4,11 @@ import type { SelectChangeEvent } from '@mui/material';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import InstallMobileIcon from '@mui/icons-material/InstallMobile';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import LanguageIcon from '@mui/icons-material/Language';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { useTranslation } from 'react-i18next';
 import { usePWAInstall } from '../../../hooks/usePWAInstall';
 import { PWAInstallDialog } from '../../../components/pwa';
-import { GitHubSettings } from './GitHubSettings';
-import { NotificationSettings } from '../../../components/push/NotificationSettings';
 
 export const GeneralSettings: React.FC = () => {
     const { t, i18n } = useTranslation();
@@ -20,12 +20,52 @@ export const GeneralSettings: React.FC = () => {
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* Header / Intro */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <SettingsIcon color="primary" sx={{ fontSize: 32 }} />
+                <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                        {t('settings.general_title', 'Allgemeine Einstellungen')}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        {t('settings.general_desc', 'Sprache, App-Installation und Feedback.')}
+                    </Typography>
+                </Box>
+            </Box>
+
+            {/* Language Preferences */}
+            <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                    <LanguageIcon color="primary" />
+                    <Typography variant="h6">
+                        {t('settings.language_preferences', 'Language Preferences')}
+                    </Typography>
+                </Box>
+
+                <FormControl fullWidth sx={{ mt: 1 }}>
+                    <InputLabel id="language-select-label">{t('settings.ui_language', 'UI Language')}</InputLabel>
+                    <Select
+                        labelId="language-select-label"
+                        id="language-select"
+                        value={i18n.language.startsWith('de') ? 'de' : 'en'}
+                        label={t('settings.ui_language', 'UI Language')}
+                        onChange={handleLanguageChange}
+                    >
+                        <MenuItem value="en">{t('settings.english', 'English')}</MenuItem>
+                        <MenuItem value="de">{t('settings.german', 'Deutsch')}</MenuItem>
+                    </Select>
+                </FormControl>
+            </Paper>
+
             {/* PWA / App Installation Info */}
             <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5, mb: 1.5 }}>
-                    <Typography variant="h6">
-                        {t('settings.pwa_title', 'App Installation (PWA)')}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <InstallMobileIcon color="primary" />
+                        <Typography variant="h6">
+                            {t('settings.pwa_title', 'App Installation (PWA)')}
+                        </Typography>
+                    </Box>
                     {isStandalone ? (
                         <Chip 
                             icon={<CheckCircleIcon />} 
@@ -61,44 +101,15 @@ export const GeneralSettings: React.FC = () => {
                 )}
             </Paper>
 
-            {/* Notifications (Push Permission + Relay Config) */}
-            <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
-                <Typography variant="h6" gutterBottom>
-                    {t('settings.notifications_title', 'Benachrichtigungen')}
-                </Typography>
-                <NotificationSettings />
-            </Paper>
-
-            {/* Language Preferences */}
-            <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
-                <Typography variant="h6" gutterBottom>
-                    {t('settings.language_preferences', 'Language Preferences')}
-                </Typography>
-
-                <FormControl fullWidth sx={{ mt: 2 }}>
-                    <InputLabel id="language-select-label">{t('settings.ui_language', 'UI Language')}</InputLabel>
-                    <Select
-                        labelId="language-select-label"
-                        id="language-select"
-                        value={i18n.language.startsWith('de') ? 'de' : 'en'}
-                        label={t('settings.ui_language', 'UI Language')}
-                        onChange={handleLanguageChange}
-                    >
-                        <MenuItem value="en">{t('settings.english', 'English')}</MenuItem>
-                        <MenuItem value="de">{t('settings.german', 'Deutsch')}</MenuItem>
-                    </Select>
-                </FormControl>
-            </Paper>
-
-            {/* GitHub Integration */}
-            <GitHubSettings />
-
             {/* Feedback & Bug Report */}
             <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
-                <Typography variant="h6" gutterBottom>
-                    {t('settings.feedback_title', 'Feedback & Bug Report')}
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', mb: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                    <FeedbackIcon color="primary" />
+                    <Typography variant="h6">
+                        {t('settings.feedback_title', 'Feedback & Bug Report')}
+                    </Typography>
+                </Box>
+                <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', mb: 2.5 }}>
                     {t('settings.feedback_desc', 'Found a bug or have a suggestion? Submit it here to create a GitHub issue via your helper server.')}
                 </Typography>
                 <Button

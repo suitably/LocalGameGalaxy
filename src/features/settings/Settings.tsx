@@ -1,11 +1,17 @@
 import React, { useState, lazy, Suspense } from 'react';
 import { Box, Typography, Tabs, Tab, IconButton, useTheme, useMediaQuery, Paper, CircularProgress } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SettingsIcon from '@mui/icons-material/Settings';
+import DnsIcon from '@mui/icons-material/Dns';
+import KeyIcon from '@mui/icons-material/Key';
+import MicIcon from '@mui/icons-material/Mic';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePageTitle } from '../../context/TitleContext';
 import { GeneralSettings } from './components/GeneralSettings';
 
+const ServerSettingsCategory = lazy(() => import('./components/ServerSettingsCategory').then(m => ({ default: m.ServerSettingsCategory })));
+const ApiKeysSettings = lazy(() => import('./components/ApiKeysSettings').then(m => ({ default: m.ApiKeysSettings })));
 const MelodiqSettingsCategory = lazy(() => import('./components/MelodiqSettingsCategory').then(m => ({ default: m.MelodiqSettingsCategory })));
 
 interface SettingsProps {
@@ -14,7 +20,7 @@ interface SettingsProps {
     onNavigateToPlaylists?: () => void;
 }
 
-type TabType = 'general' | 'melodiq';
+type TabType = 'general' | 'server' | 'keys' | 'melodiq';
 
 export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavigateToPlaylists }) => {
     const { t } = useTranslation();
@@ -31,9 +37,9 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
     const tabParam = searchParams.get('tab') || '';
 
     const resolveInitialTab = (): TabType => {
-        if (tabParam === 'server' || tabParam === 'melodiq' || gameParam.toLowerCase() === 'melodiq') {
-            return 'melodiq';
-        }
+        if (tabParam === 'server') return 'server';
+        if (tabParam === 'keys' || tabParam === 'apikeys' || tabParam === 'api') return 'keys';
+        if (tabParam === 'melodiq' || gameParam.toLowerCase() === 'melodiq') return 'melodiq';
         return 'general';
     };
 
@@ -57,6 +63,19 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
         }
     };
 
+    const getTabSubtitle = () => {
+        switch (activeTab) {
+            case 'server':
+                return t('settings.server_tab', 'Server & Netzwerk');
+            case 'keys':
+                return t('settings.api_keys_tab', 'API-Keys & Integrationen');
+            case 'melodiq':
+                return t('games.melodiq.title', 'Melodiq');
+            default:
+                return t('settings.general_tab', 'Allgemein');
+        }
+    };
+
     return (
         <Box sx={{ width: '100%', maxWidth: 'lg', mx: 'auto', mt: { xs: 2, md: 4 }, pb: 6 }}>
             {/* Header */}
@@ -69,9 +88,7 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
                         {t('settings.title', 'Settings')}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                        {activeTab === 'melodiq'
-                            ? t('games.melodiq.title', 'Melodiq')
-                            : t('settings.title', 'Settings')}
+                        {getTabSubtitle()}
                     </Typography>
                 </Box>
             </Box>
@@ -85,14 +102,15 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
                     bgcolor: 'rgba(30, 30, 40, 0.7)', 
                     border: '1px solid rgba(255, 255, 255, 0.1)', 
                     boxShadow: 6,
-                    minWidth: { md: 220 },
+                    minWidth: { md: 240 },
                     alignSelf: 'flex-start'
                 }}>
                     <Tabs
                         value={activeTab}
                         onChange={handleTabChange}
                         orientation={isMediumScreen ? 'vertical' : 'horizontal'}
-                        variant={isMediumScreen ? 'standard' : 'fullWidth'}
+                        variant={isMediumScreen ? 'standard' : 'scrollable'}
+                        scrollButtons="auto"
                         textColor="primary"
                         indicatorColor="primary"
                         sx={{
@@ -104,19 +122,42 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
                                 textTransform: 'none',
                                 fontWeight: 'bold',
                                 py: 1.5,
-                                fontSize: '1rem',
-                                color: 'rgba(255, 255, 255, 0.6)',
+                                px: 2,
+                                fontSize: '0.95rem',
+                                color: 'rgba(255, 255, 255, 0.65)',
+                                minHeight: 48,
+                                gap: 1.5,
+                                borderRadius: 2,
+                                mb: isMediumScreen ? 0.5 : 0,
+                                transition: 'all 0.2s ease',
                                 '&.Mui-selected': {
-                                    color: 'primary.main'
+                                    color: 'primary.main',
+                                    bgcolor: 'rgba(100, 180, 255, 0.08)',
                                 }
                             }
                         }}
                     >
                         <Tab 
-                            label={t('settings.general_tab', 'General')} 
+                            icon={<SettingsIcon fontSize="small" />}
+                            iconPosition="start"
+                            label={t('settings.general_tab', 'Allgemein')} 
                             value="general" 
                         />
                         <Tab 
+                            icon={<DnsIcon fontSize="small" />}
+                            iconPosition="start"
+                            label={t('settings.server_tab', 'Server & Netzwerk')} 
+                            value="server" 
+                        />
+                        <Tab 
+                            icon={<KeyIcon fontSize="small" />}
+                            iconPosition="start"
+                            label={t('settings.api_keys_tab', 'API-Keys')} 
+                            value="keys" 
+                        />
+                        <Tab 
+                            icon={<MicIcon fontSize="small" />}
+                            iconPosition="start"
                             label={t('games.melodiq.title', 'Melodiq')} 
                             value="melodiq" 
                         />
@@ -126,9 +167,22 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
                 {/* Content Panel */}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                     {activeTab === 'general' && <GeneralSettings />}
+                    {activeTab === 'server' && (
+                        <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
+                            <ServerSettingsCategory />
+                        </Suspense>
+                    )}
+                    {activeTab === 'keys' && (
+                        <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
+                            <ApiKeysSettings />
+                        </Suspense>
+                    )}
                     {activeTab === 'melodiq' && (
                         <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
-                            <MelodiqSettingsCategory onNavigateToPlaylists={onNavigateToPlaylists} />
+                            <MelodiqSettingsCategory 
+                                onNavigateToPlaylists={onNavigateToPlaylists} 
+                                onNavigateToServer={() => setActiveTab('server')}
+                            />
                         </Suspense>
                     )}
                 </Box>
