@@ -557,9 +557,16 @@
     "ntfy_test_success": "Sent! Check your ntfy app.",
     "ntfy_test_error": "Failed to send to ntfy. Check server URL.",
     "ntfy_open_test_topic": "Open/subscribe test topic in ntfy",
+    "ntfy_open_topic": "Open / subscribe personal topic in ntfy",
+    "ntfy_topic_label": "Personal ntfy Topic (for this device)",
+    "ntfy_topic_helper": "Unique, unguessable topic for this device. All your games will automatically send turns to this topic.",
+    "ntfy_regenerate_topic": "Generate new topic",
+    "ntfy_copy_topic": "Copy topic",
+    "ntfy_topic_copied": "Topic copied!",
     "ntfy_subscribe_btn": "Subscribe in ntfy",
     "ntfy_badge_title": "100% Google-free via ntfy",
-    "ntfy_badge_desc": "Ideal for Fairphone, Murena /e/OS, and F-Droid: Receive pushes without Google Play Services directly in your ntfy app."
+    "ntfy_badge_desc": "Ideal for Fairphone, Murena /e/OS, and F-Droid: Receive pushes without Google Play Services directly in your ntfy app.",
+    "hostDeviceBadge": "Your device"
   },
   "server": {
     "title": "Nexumia Server Connection",
@@ -751,8 +758,12 @@
     "waitingForDrawerDescSpectator": "{{drawer}} is currently drawing for {{guesser}}. The game will proceed once the drawing is finished.",
     "drawHereInstead": "Draw here as {{name}}",
     "waitingForGuesserTitle": "It is {{name}}'s turn to guess!",
+    "waitingForGuesserDesc": "{{name}} is guessing right now...",
     "drawingBy": "Drawing by {{name}}",
     "guessHereInstead": "Guess here as {{name}}",
+    "temporaryTurnChip": "One-time turn",
+    "temporaryTurnShort": "1x Turn",
+    "temporaryTurnDesc": "Local only for this turn – reverts to remote afterwards",
     "playersSetupDesc": "Add at least 2 players. You can play together on one device or join with individual links.",
     "asyncMultiplayerHint": "Multiple games playable in parallel",
     "statusDrawing": "Drawing",
@@ -1102,5 +1113,19 @@
     "remotePlayer": "Remote device",
     "markAsRemote": "Mark as remote",
     "claimLocalTurn": "Write on this device"
+  },
+  "notifications": {
+    "turnTitleDraw": "{{gameName}}: It's your turn to draw!",
+    "turnTitleGuess": "{{gameName}}: It's your turn to guess!",
+    "turnTitleGeneric": "{{gameName}}: It's your turn!",
+    "turnTitleGameStart": "{{gameName}}: The game has started!",
+    "turnBodyDrawWithActor": "{{actor}} guessed the word! It's your turn to draw.",
+    "turnBodyDrawGeneric": "The word was guessed! It's your turn to draw.",
+    "turnBodyGuessWithActor": "{{actor}} finished drawing. It's your turn to guess!",
+    "turnBodyGuessGeneric": "A new drawing is waiting for you! It's your turn to guess.",
+    "turnBodyStoryWithActor": "{{actor}} completed the section. It's your turn!",
+    "turnBodyStoryGeneric": "The story continues – write your part!",
+    "turnBodyGenericWithActor": "{{actor}} completed their turn. It's your turn!",
+    "turnBodyGeneric": "It's your turn!"
   }
 }

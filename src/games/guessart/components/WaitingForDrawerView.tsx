@@ -13,6 +13,7 @@ import TransferWithinAStationRoundedIcon from '@mui/icons-material/TransferWithi
 import { useTranslation } from 'react-i18next';
 import type { GuessArtGameRecord, GuessArtRound } from '../logic/types';
 import { playerAssignment } from '../logic/playerAssignment';
+import { PushNotificationBanner } from '../../../components/push/PushNotificationBanner';
 
 interface WaitingForDrawerViewProps {
   game: GuessArtGameRecord;
@@ -41,7 +42,7 @@ export const WaitingForDrawerView: React.FC<WaitingForDrawerViewProps> = ({
     : false;
 
   const handleClaim = () => {
-    playerAssignment.addLocalPlayerId(game.id, round.drawnById);
+    playerAssignment.claimTurnTemporary(game.id, round.drawnById);
     if (onClaimPlayer) {
       onClaimPlayer(round.drawnById);
     }
@@ -110,6 +111,10 @@ export const WaitingForDrawerView: React.FC<WaitingForDrawerViewProps> = ({
 
         <Box display="flex" justifyContent="center" my={2}>
           <CircularProgress size={36} color="primary" />
+        </Box>
+
+        <Box sx={{ mt: 2.5, textAlign: 'left', width: '100%' }}>
+          <PushNotificationBanner gameId={game.id} />
         </Box>
 
         {isHost && (

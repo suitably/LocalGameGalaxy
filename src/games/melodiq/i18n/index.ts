@@ -456,12 +456,15 @@ let melodiqI18nInitialized = false;
 export const initMelodiqI18n = () => {
     if (melodiqI18nInitialized) return;
 
-    // Add translations to the global 'translation' namespace
-    i18n.addResourceBundle('en', 'translation', melodiqResources.en, true, true);
-    i18n.addResourceBundle('de', 'translation', melodiqResources.de, true, true);
+    const add = () => {
+        i18n.addResourceBundle('en', 'translation', melodiqResources.en, true, true);
+        i18n.addResourceBundle('de', 'translation', melodiqResources.de, true, true);
+        melodiqI18nInitialized = true;
+    };
 
-    melodiqI18nInitialized = true;
+    if (i18n.isInitialized) {
+        add();
+    } else {
+        i18n.on('initialized', add);
+    }
 };
-
-// Auto-initialize when the i18n bundle is loaded
-initMelodiqI18n();

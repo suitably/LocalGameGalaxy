@@ -4,6 +4,8 @@ import LZString from 'lz-string';
 import type { StoryEntry, StoryGameRecord, StoryGameSnapshot } from '../types';
 import { playerAssignment } from '../logic/playerAssignment';
 import { gameRelayStorage } from '../../../lib/push/gameRelayStorage';
+import { LocalStoryEngine } from '../logic/engine';
+import { storytellerMailboxService } from '../logic/mailboxService';
 import {
   ShareSessionLinksDialog,
   type SessionPlayerItem,
@@ -29,9 +31,15 @@ export const ShareStoryLinksDialog: React.FC<ShareStoryLinksDialogProps> = ({
   const buildPlayerLink = useCallback(
     (playerId: string) => {
       if (!game) return '';
-      const snapshot: StoryGameSnapshot = { game, entries };
+      const updatedPlayers = game.players.map((p) =>
+        p.id === playerId ? { ...p, isRemote: true } : p,
+      );
+      const snapshot: StoryGameSnapshot = {
+        game: { ...game, players: updatedPlayers },
+        entries,
+      };
       const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(snapshot));
-      const playerObj = game.players.find((p) => p.id === playerId);
+      const playerObj = updatedPlayers.find((p) => p.id === playerId);
       const relay = gameRelayStorage.getEffectiveRelay(game.id, playerObj?.relayUrl);
       let link = `${window.location.origin}${window.location.pathname}#/games/storyteller?gameId=${game.id}&player=${playerId}&data=${compressed}`;
       if (relay) {
@@ -43,21 +51,47 @@ export const ShareStoryLinksDialog: React.FC<ShareStoryLinksDialogProps> = ({
   );
 
   const markPlayerRemote = useCallback(
-    (playerId: string) => {
+    async (playerId: string) => {
       if (!game) return;
-      playerAssignment.removeLocalPlayerId(game.id, playerId);
-      onPlayerChanged?.();
+      if (game.players[0] && playerId !== game.players[0].id) {
+        playerAssignment.removeLocalPlayerId(game.id, playerId);
+        const updatedPlayers = game.players.map((p) =>
+          p.id === playerId ? { ...p, isRemote: true } : p,
+        );
+        try {
+          const snap = await LocalStoryEngine.updateGameDetails(game.id, { players: updatedPlayers });
+          storytellerMailboxService.publish(game.id, {
+            type: 'STORY_SYNC',
+            snapshot: { game: snap.game, entries },
+          });
+        } catch (e) {
+          console.warn('[ShareStoryLinksDialog] Failed to mark player remote in db:', e);
+        }
+        onPlayerChanged?.();
+      }
     },
-    [game, onPlayerChanged],
+    [game, entries, onPlayerChanged],
   );
 
   const markPlayerLocal = useCallback(
-    (playerId: string) => {
+    async (playerId: string) => {
       if (!game) return;
       playerAssignment.addLocalPlayerId(game.id, playerId);
+      const updatedPlayers = game.players.map((p) =>
+        p.id === playerId ? { ...p, isRemote: false } : p,
+      );
+      try {
+        const snap = await LocalStoryEngine.updateGameDetails(game.id, { players: updatedPlayers });
+        storytellerMailboxService.publish(game.id, {
+          type: 'STORY_SYNC',
+          snapshot: { game: snap.game, entries },
+        });
+      } catch (e) {
+        console.warn('[ShareStoryLinksDialog] Failed to mark player local in db:', e);
+      }
       onPlayerChanged?.();
     },
-    [game, onPlayerChanged],
+    [game, entries, onPlayerChanged],
   );
 
   const isPlayerLocal = useCallback(

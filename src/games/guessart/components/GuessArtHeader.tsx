@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   AppBar,
   Box,
+  Chip,
   IconButton,
   Menu,
   MenuItem,
@@ -33,6 +34,7 @@ interface GuessArtHeaderProps {
   isCurrentTurnLocal?: boolean;
   canToggleLocalRemote?: boolean;
   onToggleLocalRemote?: () => void;
+  isTemporaryTurn?: boolean;
 }
 
 export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
@@ -45,6 +47,7 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
   isCurrentTurnLocal = true,
   canToggleLocalRemote = true,
   onToggleLocalRemote,
+  isTemporaryTurn = false,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -123,6 +126,34 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
 
         {/* Right Actions */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.25, sm: 0.5 } }}>
+          {isTemporaryTurn && (
+            <Tooltip
+              title={t(
+                'guessart.temporaryTurnDesc',
+                'Nur für diesen Zug lokal – danach wieder Remote'
+              )}
+            >
+              <Chip
+                icon={<TransferWithinAStationRoundedIcon fontSize="small" />}
+                label={
+                  isSmallScreen
+                    ? t('guessart.temporaryTurnShort', '1x')
+                    : t('guessart.temporaryTurnChip', 'Einmaliger Zug')
+                }
+                size="small"
+                color="warning"
+                variant="outlined"
+                sx={{
+                  fontWeight: 700,
+                  fontSize: '0.72rem',
+                  height: { xs: 24, sm: 26 },
+                  borderColor: 'warning.main',
+                  bgcolor: 'rgba(237, 108, 2, 0.08)',
+                }}
+              />
+            </Tooltip>
+          )}
+
           {/* Quick Remote/Local Toggle Button for Host */}
           {onToggleLocalRemote && canToggleLocalRemote && (
             <Tooltip

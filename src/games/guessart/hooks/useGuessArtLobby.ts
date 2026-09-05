@@ -78,10 +78,14 @@ export const useGuessArtLobby = () => {
         manualWordMode: options.manualWordMode,
       });
 
-      // Save local player IDs on this device: All players are local by default until a link is shared
+      // Save local player IDs on this device: Only players who are not remote are stored as local players
+      const localPlayers = record.players.filter((p, index) => {
+        const lobbyMatch = lobbyPlayers[index];
+        return lobbyMatch ? !lobbyMatch.isRemote : !p.isRemote;
+      });
       playerAssignment.setLocalPlayerIds(
         record.id,
-        record.players.map((p) => p.id),
+        localPlayers.length > 0 ? localPlayers.map((p) => p.id) : [record.players[0].id],
       );
 
       await loadActiveGames();

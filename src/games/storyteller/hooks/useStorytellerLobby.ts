@@ -89,10 +89,15 @@ export const useStorytellerLobby = () => {
       modifiers: options.modifiers,
     });
 
-    // In GuessArt architecture: by default on the creating device, ALL players are local (pass & play).
-    // When a player link or QR code is shared during the game, that player is automatically marked as remote.
-    const allPlayerIds = record.players.map((p) => p.id);
-    playerAssignment.setLocalPlayerIds(record.id, allPlayerIds);
+    // Save local player IDs on this device: Only players who are not remote are stored as local players
+    const localPlayers = record.players.filter((p, index) => {
+      const lobbyMatch = lobbyPlayers[index];
+      return lobbyMatch ? !lobbyMatch.isRemote : !p.isRemote;
+    });
+    playerAssignment.setLocalPlayerIds(
+      record.id,
+      localPlayers.length > 0 ? localPlayers.map((p) => p.id) : [record.players[0].id],
+    );
 
     await loadActiveGames();
     return record;

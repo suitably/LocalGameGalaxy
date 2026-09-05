@@ -3,7 +3,6 @@ import { Box, Button, Typography, Paper, Divider } from '@mui/material';
 import UndoIcon from '@mui/icons-material/Undo';
 import RestoreIcon from '@mui/icons-material/Restore';
 import { useTranslation } from 'react-i18next';
-
 import {
     MicrophoneManager,
     useProfiles,
@@ -15,7 +14,7 @@ import {
     GameSettingsPanel,
     type UserProfile,
     type ActivePlayer,
-    initMelodiqI18n
+    initMelodiqI18n,
 } from '../../../games/melodiq';
 
 interface MelodiqSettingsCategoryProps {

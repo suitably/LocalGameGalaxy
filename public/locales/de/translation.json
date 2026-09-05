@@ -557,9 +557,16 @@
     "ntfy_test_success": "Gesendet! Prüfe deine ntfy-App.",
     "ntfy_test_error": "Fehler beim Senden an ntfy. Server prüfen.",
     "ntfy_open_test_topic": "Test-Topic in ntfy öffnen/abonnieren",
+    "ntfy_open_topic": "Persönliches Topic in ntfy öffnen/abonnieren",
+    "ntfy_topic_label": "Persönliches ntfy Topic (für dieses Gerät)",
+    "ntfy_topic_helper": "Einmaliges, unerratbares Topic für dieses Gerät. Alle deine Spiele senden Züge automatisch an dieses Topic.",
+    "ntfy_regenerate_topic": "Neues Topic generieren",
+    "ntfy_copy_topic": "Topic kopieren",
+    "ntfy_topic_copied": "Topic kopiert!",
     "ntfy_subscribe_btn": "In ntfy abonnieren",
     "ntfy_badge_title": "100% Google-frei via ntfy",
-    "ntfy_badge_desc": "Ideal für Fairphone, Murena /e/OS und F-Droid: Erhalte Pushs ohne Google Play Services direkt in deiner ntfy-App."
+    "ntfy_badge_desc": "Ideal für Fairphone, Murena /e/OS und F-Droid: Erhalte Pushs ohne Google Play Services direkt in deiner ntfy-App.",
+    "hostDeviceBadge": "Dein Gerät"
   },
   "server": {
     "title": "Nexumia Server Verbindung",
@@ -751,8 +758,12 @@
     "waitingForDrawerDescSpectator": "{{drawer}} zeichnet gerade für {{guesser}}. Sobald die Zeichnung fertig ist, geht es weiter.",
     "drawHereInstead": "Hier als {{name}} zeichnen",
     "waitingForGuesserTitle": "{{name}} ist an der Reihe zum Raten!",
+    "waitingForGuesserDesc": "{{name}} rät gerade...",
     "drawingBy": "Zeichnung von {{name}}",
     "guessHereInstead": "Hier als {{name}} raten",
+    "temporaryTurnChip": "Einmaliger Zug",
+    "temporaryTurnShort": "1x Zug",
+    "temporaryTurnDesc": "Nur für diesen Zug lokal – danach wieder Remote",
     "playersSetupDesc": "Füge mindestens 2 Spieler hinzu. Gespielt werden kann flexibel an einem Gerät oder mit eigenen Einladungslinks.",
     "asyncMultiplayerHint": "Mehrere Runden parallel spielbar",
     "statusDrawing": "Zeichnen",
@@ -1092,5 +1103,19 @@
     "remotePlayer": "Remote Gerät",
     "markAsRemote": "Als Remote markieren",
     "claimLocalTurn": "Auf diesem Gerät schreiben"
+  },
+  "notifications": {
+    "turnTitleDraw": "{{gameName}}: Du bist am Zeichnen!",
+    "turnTitleGuess": "{{gameName}}: Du bist am Raten!",
+    "turnTitleGeneric": "{{gameName}}: Du bist dran!",
+    "turnTitleGameStart": "{{gameName}}: Das Spiel beginnt!",
+    "turnBodyDrawWithActor": "{{actor}} hat das Wort erraten! Du bist jetzt am Zeichnen.",
+    "turnBodyDrawGeneric": "Das Wort wurde erraten! Du bist jetzt am Zeichnen.",
+    "turnBodyGuessWithActor": "{{actor}} hat das Bild fertig gezeichnet. Du bist jetzt dran mit Raten!",
+    "turnBodyGuessGeneric": "Ein neues Bild wartet auf dich! Du bist am Raten.",
+    "turnBodyStoryWithActor": "{{actor}} hat den Abschnitt beendet. Du bist jetzt am Zug!",
+    "turnBodyStoryGeneric": "Die Geschichte geht weiter – schreibe deinen Teil!",
+    "turnBodyGenericWithActor": "{{actor}} hat den Zug beendet. Du bist dran!",
+    "turnBodyGeneric": "Du bist am Zug!"
   }
 }

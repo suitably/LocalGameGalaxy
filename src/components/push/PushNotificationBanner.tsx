@@ -1,20 +1,19 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, Box, Button, Stack } from '@mui/material';
+import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsActiveRounded';
 import NotificationsOffRoundedIcon from '@mui/icons-material/NotificationsOffRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded';
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
 import { useTranslation } from 'react-i18next';
+import { storage } from '../../lib/storage';
 import { pushClient } from '../../lib/push/pushClient';
+import { localNotificationPresenter } from '../../lib/notifications';
 
 type PushPermissionState = 'unsupported' | 'prompt' | 'granted' | 'denied';
 
 function getPermissionState(): PushPermissionState {
-  if (typeof window === 'undefined' || !('Notification' in window)) {
-    return 'unsupported';
-  }
-  return Notification.permission as PushPermissionState;
+  return localNotificationPresenter.getPermission() as PushPermissionState;
 }
 
 interface PushNotificationBannerProps {
@@ -24,48 +23,26 @@ interface PushNotificationBannerProps {
 }
 
 export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
-  gameId,
-  playerId,
   showNtfyOption = true,
 }) => {
   const { t } = useTranslation();
   const [state, setState] = useState<PushPermissionState>(getPermissionState);
 
   const handleEnable = useCallback(async () => {
-    if (typeof window === 'undefined' || !('Notification' in window)) return;
-    try {
-      const result = await Notification.requestPermission();
-      setState(result as PushPermissionState);
-    } catch {
-      setState(getPermissionState());
-    }
+    const result = await localNotificationPresenter.requestPermission();
+    setState(result as PushPermissionState);
   }, []);
 
   const handleTestNotification = useCallback(async () => {
-    if (typeof window === 'undefined' || !('Notification' in window)) return;
-    try {
-      if ('serviceWorker' in navigator) {
-        const reg = await navigator.serviceWorker.getRegistration();
-        if (reg) {
-          await reg.showNotification(t('guessart.notificationTitle', 'LocalGameGalaxy: Du bist dran!'), {
-            body: t('guessart.pushTestBody', '🎉 Test erfolgreich! Push-Benachrichtigungen funktionieren einwandfrei.'),
-            icon: '/pwa/icon_full.png',
-          });
-          return;
-        }
-      }
-      new Notification(t('guessart.notificationTitle', 'LocalGameGalaxy: Du bist dran!'), {
-        body: t('guessart.pushTestBody', '🎉 Test erfolgreich! Push-Benachrichtigungen funktionieren einwandfrei.'),
-        icon: '/pwa/icon_full.png',
-      });
-    } catch (e) {
-      console.warn('[PushNotificationBanner] Failed to send test notification:', e);
-    }
+    await localNotificationPresenter.showNotification({
+      title: t('guessart.notificationTitle', 'LocalGameGalaxy: Du bist dran!'),
+      body: t('guessart.pushTestBody', '🎉 Test erfolgreich! Push-Benachrichtigungen funktionieren einwandfrei.'),
+      icon: '/pwa/icon_full.png',
+    });
   }, [t]);
 
-  const ntfyUrl = gameId
-    ? pushClient.getNtfyUrl(gameId, playerId)
-    : pushClient.getNtfyUrl('test', 'device');
+  const userNtfyTopic = storage.getUserNtfyTopic();
+  const ntfyUrl = pushClient.getUserNtfyUrl();
 
   return (
     <Stack spacing={1.5} sx={{ width: '100%' }}>
@@ -181,6 +158,12 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
               'settings.ntfy_badge_desc',
               'Ideal für Fairphone, Murena /e/OS und F-Droid: Erhalte Pushs ohne Google Play Services direkt in deiner ntfy-App.',
             )}
+            <Typography
+              variant="caption"
+              sx={{ display: 'block', mt: 0.5, opacity: 0.75, fontFamily: 'monospace' }}
+            >
+              Topic: {userNtfyTopic}
+            </Typography>
           </Box>
         </Alert>
       )}

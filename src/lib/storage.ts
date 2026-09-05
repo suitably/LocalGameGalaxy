@@ -49,6 +49,7 @@ export const STORAGE_KEYS = {
     PUSH_RELAY_URL: 'galaxy_push_relay_url',
     NOTIFICATION_METHOD: 'galaxy_notification_method',
     NTFY_SERVER_URL: 'galaxy_ntfy_server_url',
+    NTFY_TOPIC: 'galaxy_ntfy_topic',
 
     // Sudoku
     SUDOKU_STATE: 'galaxy_sudoku_state',
@@ -183,4 +184,35 @@ export const storage = {
         const clean = url.trim().replace(/\/$/, '');
         this.set(STORAGE_KEYS.NTFY_SERVER_URL, clean || 'https://ntfy.sh');
     },
+
+    getUserNtfyTopic(): string {
+        let topic = this.get(STORAGE_KEYS.NTFY_TOPIC);
+        if (!topic) {
+            topic = generateUserNtfyTopic();
+            this.set(STORAGE_KEYS.NTFY_TOPIC, topic);
+        }
+        return topic;
+    },
+
+    setUserNtfyTopic(topic: string): void {
+        const clean = topic.trim().replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 64);
+        this.set(STORAGE_KEYS.NTFY_TOPIC, clean || generateUserNtfyTopic());
+    },
+
+    regenerateUserNtfyTopic(): string {
+        const topic = generateUserNtfyTopic();
+        this.set(STORAGE_KEYS.NTFY_TOPIC, topic);
+        return topic;
+    },
 };
+
+export function generateUserNtfyTopic(): string {
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        const bytes = new Uint8Array(8);
+        crypto.getRandomValues(bytes);
+        const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+        return `lgg-user-${hex}`;
+    }
+    const rand = Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
+    return `lgg-user-${rand.slice(0, 16)}`;
+}

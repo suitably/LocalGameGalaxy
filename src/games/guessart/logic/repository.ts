@@ -10,6 +10,7 @@ import {
 } from './db';
 import type { GameOptions, GuessArtGameRecord, GuessArtRound } from './types';
 import { generateUUID } from '../../../lib/uuid';
+import { storage } from '../../../lib/storage';
 
 const generateId = (prefix = 'local'): string => {
   const random = generateUUID().replace(/-/g, '').slice(0, 12);
@@ -60,6 +61,9 @@ export const createLocalGame = async ({
 
   const timestamp = nowISO();
   const id = generateId('local');
+  const ownRelay = storage.getPushRelayUrl();
+  const prefMethod = storage.getNotificationMethod();
+  const userNtfyTopic = storage.getUserNtfyTopic();
   const normalizedPlayers = players.map((p, index) => {
     const pName = typeof p === 'string' ? p.trim() : p.name.trim();
     const isRemote = typeof p === 'string' ? false : Boolean(p.isRemote);
@@ -67,6 +71,9 @@ export const createLocalGame = async ({
       id: generateId(`player${index + 1}`),
       name: pName,
       isRemote,
+      relayUrl: !isRemote && index === 0 ? ownRelay || undefined : undefined,
+      notificationMethod: !isRemote && index === 0 ? prefMethod : undefined,
+      ntfyTopic: !isRemote && index === 0 ? userNtfyTopic : undefined,
     };
   });
 

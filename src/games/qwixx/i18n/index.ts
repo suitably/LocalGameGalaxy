@@ -389,8 +389,16 @@ let qwixxI18nInitialized = false;
 
 export const initQwixxI18n = () => {
     if (qwixxI18nInitialized) return;
-    qwixxI18nInitialized = true;
 
-    i18next.addResourceBundle('en', 'translation', qwixxTranslations.en, true, true);
-    i18next.addResourceBundle('de', 'translation', qwixxTranslations.de, true, true);
+    const add = () => {
+        i18next.addResourceBundle('en', 'translation', qwixxTranslations.en, true, true);
+        i18next.addResourceBundle('de', 'translation', qwixxTranslations.de, true, true);
+        qwixxI18nInitialized = true;
+    };
+
+    if (i18next.isInitialized) {
+        add();
+    } else {
+        i18next.on('initialized', add);
+    }
 };

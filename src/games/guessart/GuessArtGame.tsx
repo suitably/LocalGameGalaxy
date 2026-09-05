@@ -22,7 +22,6 @@ import { CatalogueEditorDialog } from './components/catalogue/CatalogueEditorDia
 import { storage } from '../../lib/storage';
 import { playerAssignment } from './logic/playerAssignment';
 import { gameRelayStorage } from '../../lib/push/gameRelayStorage';
-import { pushClient } from '../../lib/push/pushClient';
 import { guessArtNotificationService } from './logic/notificationService';
 import { mailboxService } from './logic/mailboxService';
 import LZString from 'lz-string';
@@ -78,6 +77,9 @@ export const GuessArtGame: React.FC = () => {
     window.history.replaceState({}, document.title, cleanPath);
   }, []);
 
+  const [localPlayersVersion, setLocalPlayersVersion] = useState<number>(0);
+  const triggerLocalUpdate = useCallback(() => setLocalPlayersVersion((v) => v + 1), []);
+
   useEffect(() => {
     const processUrlParams = async () => {
       if (typeof window === 'undefined') return;
@@ -109,12 +111,17 @@ export const GuessArtGame: React.FC = () => {
                         ...p,
                         relayUrl: ownRelay || p.relayUrl || relayParam || undefined,
                         notificationMethod: prefMethod,
-                        ntfyTopic: p.ntfyTopic || pushClient.getNtfyTopic(imported.game.id, targetPlayerId),
+                        ntfyTopic: storage.getUserNtfyTopic() || p.ntfyTopic,
                       }
                     : p,
                 );
                 imported.game.players = updatedPlayers;
                 await LocalGameEngine.updateGameDetails(imported.game.id, { players: updatedPlayers }).catch(() => {});
+                // Broadcast updated player presence (including ntfyTopic & relayUrl) via MQTT mailbox
+                mailboxService.publishTurn(imported.game.id, {
+                  game: { ...imported.game, players: updatedPlayers },
+                  round: imported.round,
+                }).catch(() => {});
               }
               if (relayParam) {
                 gameRelayStorage.setGameRelay(imported.game.id, relayParam);
@@ -150,7 +157,7 @@ export const GuessArtGame: React.FC = () => {
     return () => {
       window.removeEventListener('hashchange', processUrlParams);
     };
-  }, [cleanUrl, language, loadActiveGames]);
+  }, [cleanUrl, language, loadActiveGames, triggerLocalUpdate]);
 
   // Request browser notifications for async turn handoffs
   useEffect(() => {
@@ -269,9 +276,6 @@ export const GuessArtGame: React.FC = () => {
 
   const historyPlayers = game?.players || activeGames.find((g) => g.id === historyGameId)?.players || [];
 
-  const [localPlayersVersion, setLocalPlayersVersion] = useState<number>(0);
-  const triggerLocalUpdate = useCallback(() => setLocalPlayersVersion((v) => v + 1), []);
-
   // Determine if current device draws or guesses in this round
   const drawerIdx = game && round ? game.players.findIndex((p) => p.id === round.drawnById) : -1;
   const effectiveDrawerIdx = drawerIdx >= 0 ? drawerIdx : (Math.max(1, round?.roundNumber || 1) - 1) % (game?.players.length || 1);
@@ -280,17 +284,23 @@ export const GuessArtGame: React.FC = () => {
   const activeDrawer = game ? game.players[effectiveDrawerIdx] : null;
   const activeGuesser = game ? game.players[effectiveGuesserIdx] : null;
 
+  const hasRemotePlayers = useMemo(() => {
+    return game ? game.players.some((p) => p.isRemote) : false;
+  }, [game]);
+
   const isCurrentDrawerLocal = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     localPlayersVersion;
-    return game && activeDrawer ? playerAssignment.isPlayerLocal(game.id, activeDrawer.id, true) : true;
-  }, [game, activeDrawer, localPlayersVersion]);
+    if (!game || !activeDrawer) return false;
+    return playerAssignment.isPlayerLocal(game.id, activeDrawer.id, !hasRemotePlayers);
+  }, [game, activeDrawer, localPlayersVersion, hasRemotePlayers]);
 
   const isCurrentGuesserLocal = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     localPlayersVersion;
-    return game && activeGuesser ? playerAssignment.isPlayerLocal(game.id, activeGuesser.id, true) : true;
-  }, [game, activeGuesser, localPlayersVersion]);
+    if (!game || !activeGuesser) return false;
+    return playerAssignment.isPlayerLocal(game.id, activeGuesser.id, !hasRemotePlayers);
+  }, [game, activeGuesser, localPlayersVersion, hasRemotePlayers]);
 
   const isDrawing = round?.status === 'selecting' || round?.status === 'drawing';
   const isCurrentTurnLocal = isDrawing ? isCurrentDrawerLocal : isCurrentGuesserLocal;
@@ -308,9 +318,10 @@ export const GuessArtGame: React.FC = () => {
   const handleToggleLocalRemote = useCallback(async () => {
     if (!game || !activeTurnPlayerId || !isHost) return;
     if (isCurrentTurnLocal) {
+      playerAssignment.releaseTemporaryClaims(game.id, activeTurnPlayerId);
       playerAssignment.removeLocalPlayerId(game.id, activeTurnPlayerId);
     } else {
-      playerAssignment.addLocalPlayerId(game.id, activeTurnPlayerId);
+      playerAssignment.claimTurnTemporary(game.id, activeTurnPlayerId);
     }
     triggerLocalUpdate();
     await refresh();
@@ -399,6 +410,7 @@ export const GuessArtGame: React.FC = () => {
           isCurrentTurnLocal={isCurrentTurnLocal}
           canToggleLocalRemote={isHost}
           onToggleLocalRemote={handleToggleLocalRemote}
+          isTemporaryTurn={activeTurnPlayerId ? playerAssignment.isTurnClaimedTemporarily(game.id, activeTurnPlayerId) : false}
         />
       )}
 
@@ -414,7 +426,7 @@ export const GuessArtGame: React.FC = () => {
             isHost={isHost}
             onOpenShareLinks={isHost ? () => handleOpenShareLinks(game, round) : undefined}
             onClaimPlayer={async (playerId) => {
-              playerAssignment.addLocalPlayerId(game.id, playerId);
+              playerAssignment.claimTurnTemporary(game.id, playerId);
               triggerLocalUpdate();
               await refresh();
             }}
@@ -436,9 +448,10 @@ export const GuessArtGame: React.FC = () => {
           <WaitingForGuesserView
             game={game}
             round={round}
+            isHost={isHost}
             onOpenShareLinks={isHost ? () => handleOpenShareLinks(game, round) : undefined}
             onClaimPlayer={async (playerId) => {
-              playerAssignment.addLocalPlayerId(game.id, playerId);
+              playerAssignment.claimTurnTemporary(game.id, playerId);
               triggerLocalUpdate();
               await refresh();
             }}

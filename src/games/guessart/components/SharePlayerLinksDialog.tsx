@@ -5,6 +5,7 @@ import type { GuessArtGameRecord, GuessArtRound } from '../logic/types';
 import { playerAssignment } from '../logic/playerAssignment';
 import { gameRelayStorage } from '../../../lib/push/gameRelayStorage';
 import { LocalGameEngine } from '../logic/engine';
+import { mailboxService } from '../logic/mailboxService';
 import {
   ShareSessionLinksDialog,
   type SessionPlayerItem,
@@ -46,9 +47,12 @@ export const SharePlayerLinksDialog: React.FC<SharePlayerLinksDialogProps> = ({
     (playerId: string) => {
       if (!game) return '';
       const effRound = activeRound || round || null;
-      const snapshot = { game, round: effRound };
+      const updatedPlayers = game.players.map((p) =>
+        p.id === playerId ? { ...p, isRemote: true } : p,
+      );
+      const snapshot = { game: { ...game, players: updatedPlayers }, round: effRound };
       const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(snapshot));
-      const playerObj = game.players.find((p) => p.id === playerId);
+      const playerObj = updatedPlayers.find((p) => p.id === playerId);
       const relay = gameRelayStorage.getEffectiveRelay(game.id, playerObj?.relayUrl);
       let link = `${window.location.origin}${window.location.pathname}#/games/guessart?gameId=${game.id}&player=${playerId}&data=${compressed}`;
       if (relay) {
@@ -60,12 +64,39 @@ export const SharePlayerLinksDialog: React.FC<SharePlayerLinksDialogProps> = ({
   );
 
   const markPlayerRemote = useCallback(
-    (playerId: string) => {
+    async (playerId: string) => {
       if (!game) return;
       if (game.players[0] && playerId !== game.players[0].id) {
         playerAssignment.removeLocalPlayerId(game.id, playerId);
+        const updatedPlayers = game.players.map((p) =>
+          p.id === playerId ? { ...p, isRemote: true } : p,
+        );
+        try {
+          const snap = await LocalGameEngine.updateGameDetails(game.id, { players: updatedPlayers });
+          await mailboxService.publishTurn(game.id, snap);
+        } catch (e) {
+          console.warn('[SharePlayerLinksDialog] Failed to mark player remote in db:', e);
+        }
         onPlayerChanged?.();
       }
+    },
+    [game, onPlayerChanged],
+  );
+
+  const markPlayerLocal = useCallback(
+    async (playerId: string) => {
+      if (!game) return;
+      playerAssignment.addLocalPlayerId(game.id, playerId);
+      const updatedPlayers = game.players.map((p) =>
+        p.id === playerId ? { ...p, isRemote: false } : p,
+      );
+      try {
+        const snap = await LocalGameEngine.updateGameDetails(game.id, { players: updatedPlayers });
+        await mailboxService.publishTurn(game.id, snap);
+      } catch (e) {
+        console.warn('[SharePlayerLinksDialog] Failed to mark player local in db:', e);
+      }
+      onPlayerChanged?.();
     },
     [game, onPlayerChanged],
   );
@@ -90,6 +121,7 @@ export const SharePlayerLinksDialog: React.FC<SharePlayerLinksDialogProps> = ({
       buildLink={buildPlayerLink}
       isPlayerLocal={isPlayerLocal}
       onMarkPlayerRemote={markPlayerRemote}
+      onMarkPlayerLocal={markPlayerLocal}
       shareMessageTitle={`GuessArt - "${game.name || 'Spiel'}"`}
       shareMessageText={(player: SessionPlayerItem, link: string) =>
         `🎨 Hallo ${player.name}! Hier ist dein Mitspieler-Link: ${link}`

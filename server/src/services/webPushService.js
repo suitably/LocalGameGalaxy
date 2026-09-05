@@ -200,11 +200,18 @@ const webPushService = {
             action: payload.action || 'turn',
         });
 
+        const senderEntry = senderPlayerId ? gameSubscriptions.get(senderPlayerId) : null;
+        const senderEndpoint = senderEntry?.subscription?.endpoint;
         const promises = [];
 
         for (const [playerId, entry] of gameSubscriptions.entries()) {
             // Do not notify the sender of the turn
             if (senderPlayerId && playerId === senderPlayerId) {
+                continue;
+            }
+
+            // Do not notify if the target subscription endpoint matches the sender's endpoint
+            if (senderEndpoint && entry.subscription?.endpoint === senderEndpoint) {
                 continue;
             }
 
@@ -236,6 +243,32 @@ const webPushService = {
 
         if (needsSave) {
             debouncedSave();
+        }
+
+        // Hybrid ntfy dispatch: forward to ntfy server if topic or targetPlayerId is provided
+        const ntfyServer = (process.env.NTFY_SERVER || 'https://ntfy.sh').replace(/\/$/, '');
+        const ntfyTopics = new Set();
+        if (payload.ntfyTopic) {
+            ntfyTopics.add(payload.ntfyTopic.trim().replace(/[^a-zA-Z0-9_-]/g, '_'));
+        }
+        if (payload.targetPlayerId) {
+            ntfyTopics.add(`lgg-${gameId}-${payload.targetPlayerId}`.replace(/[^a-zA-Z0-9_-]/g, '_'));
+        }
+        for (const topic of ntfyTopics) {
+            try {
+                await fetch(`${ntfyServer}/${topic}`, {
+                    method: 'POST',
+                    headers: {
+                        Title: payload.title || 'GuessArt',
+                        Click: payload.url || '/',
+                        Priority: 'high',
+                        Tags: 'game_die,tada',
+                    },
+                    body: payload.body || 'Du bist an der Reihe!',
+                });
+            } catch (ntfyErr) {
+                console.warn(`[WebPush] Failed to forward to ntfy topic ${topic}:`, ntfyErr.message);
+            }
         }
 
         return { sent, failed };

@@ -12,10 +12,12 @@ import { getRandomWords } from './storyLexicon';
 import { evaluateRouletteWords } from './modifiers';
 import type {
   StoryEntry,
+  StoryPlayer,
   StoryGameRecord,
   StoryGameSnapshot,
   StoryModifierSettings,
 } from '../types';
+import { playerAssignment } from './playerAssignment';
 
 export const isStorySnapshotNewer = (
   snapshot: StoryGameSnapshot,
@@ -29,6 +31,33 @@ export const isStorySnapshotNewer = (
   if (snapshot.entries.length < existingEntries.length) return false;
 
   if (snapshot.game.status === 'completed' && existingGame.status !== 'completed') {
+    return true;
+  }
+
+  // Check if player names, game name, or notification channels were edited
+  if (snapshot.game.name !== existingGame.name) return true;
+  if (
+    snapshot.game.players &&
+    existingGame.players &&
+    JSON.stringify(
+      snapshot.game.players.map((p) => ({
+        id: p.id,
+        name: p.name,
+        ntfyTopic: p.ntfyTopic,
+        relayUrl: p.relayUrl,
+        notificationMethod: p.notificationMethod,
+      })),
+    ) !==
+      JSON.stringify(
+        existingGame.players.map((p) => ({
+          id: p.id,
+          name: p.name,
+          ntfyTopic: p.ntfyTopic,
+          relayUrl: p.relayUrl,
+          notificationMethod: p.notificationMethod,
+        })),
+      )
+  ) {
     return true;
   }
 
@@ -64,7 +93,7 @@ export const LocalStoryEngine = {
     gameId: string,
     payload: {
       name?: string;
-      players?: { id: string; name: string }[];
+      players?: (Partial<StoryPlayer> & { id: string })[];
     },
   ): Promise<StoryGameSnapshot> {
     const game = await getStoryGame(gameId);
@@ -75,9 +104,11 @@ export const LocalStoryEngine = {
     const updatedPlayers = Array.isArray(payload.players)
       ? game.players.map((existingPlayer) => {
           const match = payload.players?.find((p) => p.id === existingPlayer.id);
+          if (!match) return existingPlayer;
           return {
             ...existingPlayer,
-            name: match ? match.name.trim() : existingPlayer.name,
+            ...match,
+            name: match.name !== undefined ? match.name.trim() : existingPlayer.name,
           };
         })
       : game.players;
@@ -203,11 +234,62 @@ export const LocalStoryEngine = {
 
     const existingEntries = await fetchEntriesForGame(existing.id);
     if (isStorySnapshotNewer(snapshot, existing, existingEntries)) {
-      await upsertGame(snapshot.game);
+      const mergedPlayers = snapshot.game.players.map((incomingP) => {
+        const existingP = existing.players.find((p) => p.id === incomingP.id);
+        const isExistingLocal = existingP ? playerAssignment.isPlayerLocal(existing.id, existingP.id, false) : false;
+        return {
+          ...existingP,
+          ...incomingP,
+          ntfyTopic: isExistingLocal
+            ? existingP?.ntfyTopic || incomingP.ntfyTopic
+            : incomingP.ntfyTopic || existingP?.ntfyTopic,
+          relayUrl: isExistingLocal
+            ? existingP?.relayUrl || incomingP.relayUrl
+            : incomingP.relayUrl || existingP?.relayUrl,
+          notificationMethod: isExistingLocal
+            ? existingP?.notificationMethod || incomingP.notificationMethod
+            : incomingP.notificationMethod || existingP?.notificationMethod,
+        };
+      });
+      await upsertGame({ ...snapshot.game, players: mergedPlayers });
       for (const entry of snapshot.entries || []) {
         await upsertEntry(entry);
       }
       return { game: snapshot.game, entries: snapshot.entries || [], updated: true };
+    }
+
+    // Even if story entries are not newer, merge player channel updates
+    const hasPlayerChannelUpdates = snapshot.game.players?.some((incomingP) => {
+      const existingP = existing.players?.find((p) => p.id === incomingP.id);
+      if (!existingP) return false;
+      const isExistingLocal = playerAssignment.isPlayerLocal(existing.id, existingP.id, false);
+      if (isExistingLocal) return false;
+      return (
+        (incomingP.ntfyTopic && incomingP.ntfyTopic !== existingP.ntfyTopic) ||
+        (incomingP.relayUrl && incomingP.relayUrl !== existingP.relayUrl) ||
+        (incomingP.notificationMethod && incomingP.notificationMethod !== existingP.notificationMethod)
+      );
+    });
+
+    if (hasPlayerChannelUpdates) {
+      const mergedPlayers = existing.players.map((existingP) => {
+        const incomingP = snapshot.game.players?.find((p) => p.id === existingP.id);
+        if (!incomingP) return existingP;
+        const isExistingLocal = playerAssignment.isPlayerLocal(existing.id, existingP.id, false);
+        if (isExistingLocal) return existingP;
+        return {
+          ...existingP,
+          ntfyTopic: incomingP.ntfyTopic || existingP.ntfyTopic,
+          relayUrl: incomingP.relayUrl || existingP.relayUrl,
+          notificationMethod: incomingP.notificationMethod || existingP.notificationMethod,
+        };
+      });
+      const updatedGame = await updateStoryGame(existing.id, { players: mergedPlayers });
+      return {
+        game: updatedGame,
+        entries: existingEntries,
+        updated: true,
+      };
     }
 
     return {

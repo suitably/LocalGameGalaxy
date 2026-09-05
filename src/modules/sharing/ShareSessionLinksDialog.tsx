@@ -77,21 +77,20 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
   };
 
   const handleCopyLink = (playerId: string) => {
+    onMarkPlayerRemote(playerId);
     const link = buildLink(playerId);
     navigator.clipboard.writeText(link);
-    onMarkPlayerRemote(playerId);
     setCopiedPlayerId(playerId);
     setTimeout(() => setCopiedPlayerId(null), 2500);
   };
 
   const handleNativeShare = async (player: SessionPlayerItem) => {
+    onMarkPlayerRemote(player.id);
     const link = buildLink(player.id);
     const title = shareMessageTitle || `${sessionTitle}`;
     const text = shareMessageText
       ? shareMessageText(player, link)
       : `🎮 Hallo ${player.name}! Spiele mit uns mit: ${link}`;
-
-    onMarkPlayerRemote(player.id);
 
     if (navigator.share) {
       try {
@@ -127,11 +126,12 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
         {enablePushBanner && sessionId && <PushNotificationBanner gameId={sessionId} />}
 
         <List disablePadding sx={{ mt: 2 }}>
-          {players.map((p) => {
+          {players.map((p, index) => {
             const isCopied = copiedPlayerId === p.id;
             const showQr = activeQrPlayerId === p.id;
             const link = buildLink(p.id);
             const isLocal = isPlayerLocal(p.id);
+            const isHostUser = index === 0 && isLocal;
 
             return (
               <Paper
@@ -148,45 +148,55 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
                 <ListItem
                   disableGutters
                   secondaryAction={
-                    <Box display="flex" alignItems="center" gap={0.5}>
-                      <Tooltip title={t('common.showQrCode', 'QR-Code anzeigen')}>
-                        <IconButton
-                          size="small"
-                          color={showQr ? 'primary' : 'default'}
-                          onClick={() => handleToggleQr(p.id)}
-                          aria-label={t('common.showQrCode', 'QR-Code anzeigen')}
-                          sx={{ bgcolor: 'action.hover' }}
-                        >
-                          <QrCodeRoundedIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-
-                      <Tooltip title={isCopied ? t('common.copied', 'Kopiert!') : t('common.copyLink', 'Link kopieren')}>
-                        <IconButton
-                          size="small"
-                          color={isCopied ? 'success' : 'primary'}
-                          onClick={() => handleCopyLink(p.id)}
-                          aria-label={t('common.copyLink', 'Link kopieren')}
-                          sx={{ bgcolor: 'action.hover' }}
-                        >
-                          {isCopied ? <CheckRoundedIcon fontSize="small" /> : <ContentCopyRoundedIcon fontSize="small" />}
-                        </IconButton>
-                      </Tooltip>
-
-                      {typeof navigator !== 'undefined' && 'share' in navigator && (
-                        <Tooltip title={t('common.share', 'Teilen')}>
+                    isHostUser ? (
+                      <Chip
+                        size="small"
+                        variant="outlined"
+                        color="success"
+                        label={t('common.hostDeviceBadge', 'Dein Gerät')}
+                        sx={{ fontWeight: 700 }}
+                      />
+                    ) : (
+                      <Box display="flex" alignItems="center" gap={0.5}>
+                        <Tooltip title={t('common.showQrCode', 'QR-Code anzeigen')}>
                           <IconButton
                             size="small"
-                            color="primary"
-                            onClick={() => handleNativeShare(p)}
-                            aria-label={t('common.share', 'Teilen')}
+                            color={showQr ? 'primary' : 'default'}
+                            onClick={() => handleToggleQr(p.id)}
+                            aria-label={t('common.showQrCode', 'QR-Code anzeigen')}
                             sx={{ bgcolor: 'action.hover' }}
                           >
-                            <ShareRoundedIcon fontSize="small" />
+                            <QrCodeRoundedIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                      )}
-                    </Box>
+
+                        <Tooltip title={isCopied ? t('common.copied', 'Kopiert!') : t('common.copyLink', 'Link kopieren')}>
+                          <IconButton
+                            size="small"
+                            color={isCopied ? 'success' : 'primary'}
+                            onClick={() => handleCopyLink(p.id)}
+                            aria-label={t('common.copyLink', 'Link kopieren')}
+                            sx={{ bgcolor: 'action.hover' }}
+                          >
+                            {isCopied ? <CheckRoundedIcon fontSize="small" /> : <ContentCopyRoundedIcon fontSize="small" />}
+                          </IconButton>
+                        </Tooltip>
+
+                        {typeof navigator !== 'undefined' && 'share' in navigator && (
+                          <Tooltip title={t('common.share', 'Teilen')}>
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={() => handleNativeShare(p)}
+                              aria-label={t('common.share', 'Teilen')}
+                              sx={{ bgcolor: 'action.hover' }}
+                            >
+                              <ShareRoundedIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Box>
+                    )
                   }
                 >
                   <ListItemAvatar>

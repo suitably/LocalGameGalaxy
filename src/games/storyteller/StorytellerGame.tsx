@@ -22,6 +22,7 @@ import { storytellerMailboxService } from './logic/mailboxService';
 import { gameRelayStorage } from '../../lib/push/gameRelayStorage';
 import { pushClient } from '../../lib/push/pushClient';
 import { storage } from '../../lib/storage';
+import { buildTurnNotificationMessage } from '../../lib/notifications';
 import type { StoryEntry, StoryGameRecord, StoryGameSnapshot, StoryPlayer } from './types';
 
 export const StorytellerGame: React.FC = () => {
@@ -106,12 +107,17 @@ export const StorytellerGame: React.FC = () => {
                         ...p,
                         relayUrl: ownRelay || p.relayUrl || relayParam || undefined,
                         notificationMethod: prefMethod,
-                        ntfyTopic: p.ntfyTopic || pushClient.getNtfyTopic(imported.game.id, targetPlayerId),
+                        ntfyTopic: storage.getUserNtfyTopic() || p.ntfyTopic,
                       }
                     : p,
                 );
                 imported.game.players = updatedPlayers;
                 await updateStoryGame(imported.game.id, { players: updatedPlayers }).catch(() => {});
+                // Broadcast updated player presence (including ntfyTopic & relayUrl) via MQTT mailbox
+                storytellerMailboxService.publish(imported.game.id, {
+                  type: 'STORY_SYNC',
+                  snapshot: { game: { ...imported.game, players: updatedPlayers }, entries: imported.entries },
+                });
               }
 
               setGame(imported.game);
@@ -215,10 +221,17 @@ export const StorytellerGame: React.FC = () => {
           const nextActive = res.game.players[res.game.currentPlayerIndex];
           if (nextActive && playerAssignment.isPlayerLocal(res.game.id, nextActive.id, false)) {
             if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
-              storytellerNotificationService.showLocalNotification(
-                `${res.game.name || 'Geschichtenschreiber'}: Du bist dran!`,
-                'Ein neuer Abschnitt wurde verfasst. Jetzt bist du an der Reihe!',
-              );
+              const lastAuthor = res.entries[res.entries.length - 1]?.authorName;
+              const msg = buildTurnNotificationMessage({
+                gameType: 'storyteller',
+                gameName: res.game.name,
+                gameId: res.game.id,
+                actionType: 'turn',
+                actorName: lastAuthor,
+                targetPlayerName: nextActive.name,
+                targetPlayerId: nextActive.id,
+              });
+              storytellerNotificationService.showLocalNotification(msg.title, msg.body, msg.url);
             }
           }
         }
@@ -239,6 +252,48 @@ export const StorytellerGame: React.FC = () => {
       unsub();
     };
   }, [activeGameId]);
+
+  // Ensure local players have their personal ntfyTopic & relayUrl attached to the story record
+  useEffect(() => {
+    if (!game || !activeGameId) return;
+    const userNtfyTopic = storage.getUserNtfyTopic();
+    const ownRelay = storage.getPushRelayUrl();
+    const prefMethod = storage.getNotificationMethod();
+
+    const localPlayerIds = playerAssignment.getLocalPlayerIds(activeGameId);
+    const primaryLocalPlayerId = localPlayerIds[0] || (game.players[0] ? game.players[0].id : null);
+
+    let needsUpdate = false;
+    const updatedPlayers = game.players.map((p) => {
+      if (playerAssignment.isPlayerLocal(activeGameId, p.id, false)) {
+        if (p.ntfyTopic && p.ntfyTopic !== userNtfyTopic) {
+          playerAssignment.removeLocalPlayerId(activeGameId, p.id);
+          return p;
+        }
+        const isPrimary = p.id === primaryLocalPlayerId;
+        const pTopic = p.ntfyTopic || (isPrimary ? userNtfyTopic : undefined);
+        const pRelay = p.relayUrl || (isPrimary ? ownRelay : undefined);
+        const pMethod = p.notificationMethod || (isPrimary ? prefMethod : undefined);
+        if (p.ntfyTopic !== pTopic || p.relayUrl !== pRelay || p.notificationMethod !== pMethod) {
+          needsUpdate = true;
+          return { ...p, ntfyTopic: pTopic, relayUrl: pRelay, notificationMethod: pMethod };
+        }
+      }
+      return p;
+    });
+
+    if (needsUpdate) {
+      LocalStoryEngine.updateGameDetails(activeGameId, { players: updatedPlayers })
+        .then((snap) => {
+          setGame(snap.game);
+          storytellerMailboxService.publish(activeGameId, {
+            type: 'STORY_SYNC',
+            snapshot: { game: snap.game, entries },
+          });
+        })
+        .catch((e) => console.warn('[StorytellerGame] Failed to sync local player notification channels:', e));
+    }
+  }, [game, activeGameId, entries]);
 
   const handleStartGame = async (options: {
     name?: string;
@@ -271,10 +326,10 @@ export const StorytellerGame: React.FC = () => {
       const snap = await LocalStoryEngine.submitTurn(game.id, { text, timeSpentSeconds });
       broadcastSnapshot(snap.game, snap.entries);
 
-      // Web Push to next player if configured
+      // Web Push to next player if configured and not local
       const nextPlayer = snap.game.players[snap.game.currentPlayerIndex];
       const author = snap.entries[snap.entries.length - 1]?.authorName;
-      if (nextPlayer) {
+      if (nextPlayer && !playerAssignment.isPlayerLocal(snap.game.id, nextPlayer.id, false)) {
         storytellerNotificationService.dispatchTurnPush({
           game: snap.game,
           nextPlayer,

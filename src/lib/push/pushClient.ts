@@ -38,28 +38,67 @@ export const pushClient = {
   },
 
   /**
-   * Generates a deterministic ntfy topic name for a game and optional target player.
+   * Generates a deterministic ntfy topic name for a game and optional target player,
+   * or returns the user's personal ntfy topic if neither is provided.
    */
-  getNtfyTopic(gameId: string, playerId?: string): string {
-    const cleanG = sanitizeTopicPart(gameId);
+  getNtfyTopic(gameId?: string, playerId?: string): string {
+    if (!gameId && !playerId) {
+      return storage.getUserNtfyTopic();
+    }
+    const cleanG = sanitizeTopicPart(gameId || 'game');
     const cleanP = playerId ? `-${sanitizeTopicPart(playerId)}` : '';
     return `lgg-${cleanG}${cleanP}`;
   },
 
   /**
-   * Generates the web URL to subscribe/view a game topic on an ntfy instance.
+   * Returns the user's personal ntfy topic for this device.
    */
-  getNtfyUrl(gameId: string, playerId?: string, customServer?: string): string {
+  getUserNtfyTopic(): string {
+    return storage.getUserNtfyTopic();
+  },
+
+  /**
+   * Generates the web URL to subscribe/view a game or personal topic on an ntfy instance.
+   */
+  getNtfyUrl(topicOrGameId?: string, playerId?: string, customServer?: string): string {
     const server = (customServer || storage.getNtfyServerUrl()).replace(/\/$/, '');
-    return `${server}/${this.getNtfyTopic(gameId, playerId)}`;
+    if (!topicOrGameId) {
+      return `${server}/${storage.getUserNtfyTopic()}`;
+    }
+    if (topicOrGameId.startsWith('lgg-user-')) {
+      return `${server}/${sanitizeTopicPart(topicOrGameId)}`;
+    }
+    return `${server}/${this.getNtfyTopic(topicOrGameId, playerId)}`;
+  },
+
+  /**
+   * Generates the web URL for the user's personal ntfy topic on this device.
+   */
+  getUserNtfyUrl(customServer?: string): string {
+    const server = (customServer || storage.getNtfyServerUrl()).replace(/\/$/, '');
+    return `${server}/${storage.getUserNtfyTopic()}`;
   },
 
   /**
    * Generates the app intent URI for opening the ntfy Android app directly.
    */
-  getNtfyAppScheme(gameId: string, playerId?: string, customServer?: string): string {
+  getNtfyAppScheme(topicOrGameId?: string, playerId?: string, customServer?: string): string {
     const server = (customServer || storage.getNtfyServerUrl()).replace(/^https?:\/\//, '').replace(/\/$/, '');
-    return `ntfy://${server}/${this.getNtfyTopic(gameId, playerId)}`;
+    if (!topicOrGameId) {
+      return `ntfy://${server}/${storage.getUserNtfyTopic()}`;
+    }
+    if (topicOrGameId.startsWith('lgg-user-')) {
+      return `ntfy://${server}/${sanitizeTopicPart(topicOrGameId)}`;
+    }
+    return `ntfy://${server}/${this.getNtfyTopic(topicOrGameId, playerId)}`;
+  },
+
+  /**
+   * Generates the app intent URI for opening the personal topic directly in the ntfy Android app.
+   */
+  getUserNtfyAppScheme(customServer?: string): string {
+    const server = (customServer || storage.getNtfyServerUrl()).replace(/^https?:\/\//, '').replace(/\/$/, '');
+    return `ntfy://${server}/${storage.getUserNtfyTopic()}`;
   },
 
   /**
@@ -67,19 +106,24 @@ export const pushClient = {
    */
   async sendDirectNtfyNotification(payload: PushNotificationPayload): Promise<boolean> {
     const server = storage.getNtfyServerUrl().replace(/\/$/, '');
-    const topic = payload.ntfyTopic || this.getNtfyTopic(payload.gameId, payload.targetPlayerId);
+    const topic =
+      payload.ntfyTopic ||
+      (payload.gameId && payload.targetPlayerId
+        ? this.getNtfyTopic(payload.gameId, payload.targetPlayerId)
+        : storage.getUserNtfyTopic());
 
     try {
       const res = await fetch(`${server}/${topic}`, {
         method: 'POST',
         headers: {
           Title: payload.title,
-          Click: payload.url || window.location.href,
+          Click: payload.url || (typeof window !== 'undefined' ? window.location.href : '/'),
           Priority: 'high',
           Tags: 'game_die,tada',
         },
         body: payload.body,
       });
+      console.log(`[PushClient] Direct ntfy dispatched to ${server}/${topic}: ${res.ok ? 'OK' : res.status}`);
       return res.ok;
     } catch (err) {
       console.warn('[PushClient] Direct ntfy dispatch failed:', err);
@@ -95,34 +139,27 @@ export const pushClient = {
 
     const relayUrl = preferredRelayUrl || gameRelayStorage.getGameRelay(gameId);
     const prefMethod: NotificationMethod = storage.getNotificationMethod();
-    const ntfyTopic = this.getNtfyTopic(gameId, playerId);
+    const ntfyTopic = storage.getUserNtfyTopic();
 
-    // If user explicitly chose only ntfy, skip Web Push handshake
-    if (prefMethod === 'ntfy') {
-      if (!relayUrl) return true;
-      return this.sendSubscribeToRelay(relayUrl, gameId, playerId, { method: 'ntfy', ntfyTopic });
+    if (!relayUrl) {
+      return false;
     }
 
-    if (!this.isPushSupported()) {
-      if (relayUrl) {
-        await this.sendSubscribeToRelay(relayUrl, gameId, playerId, { method: 'ntfy', ntfyTopic });
-      }
+    // If preferred method is ntfy-only, register ntfy directly without prompting VAPID
+    if (prefMethod === 'ntfy') {
+      return await this.sendSubscribeToRelay(relayUrl, gameId, playerId, {
+        method: 'ntfy',
+        ntfyTopic,
+      });
+    }
+
+    // Otherwise register Web Push (with ntfy as fallback/hybrid)
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+      await this.sendSubscribeToRelay(relayUrl, gameId, playerId, { method: 'ntfy', ntfyTopic });
       return false;
     }
 
     try {
-      if (Notification.permission !== 'granted') {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
-          if (relayUrl) {
-            await this.sendSubscribeToRelay(relayUrl, gameId, playerId, { method: 'ntfy', ntfyTopic });
-          }
-          return false;
-        }
-      }
-
-      if (!relayUrl) return false;
-
       const vapidKeyUrl = relayUrl.includes('/api/push')
         ? `${relayUrl}/vapid-public-key`
         : `${relayUrl}/api/push/vapid-public-key`;
@@ -220,42 +257,89 @@ export const pushClient = {
     }
   },
 
+  async unsubscribeFromGamePush(gameId: string, playerId: string, customRelayUrl?: string): Promise<boolean> {
+    if (!gameId || !playerId) return false;
+    const relayUrl = customRelayUrl || gameRelayStorage.getGameRelay(gameId);
+    if (!relayUrl) return false;
+    try {
+      const url = relayUrl.includes('/api/push')
+        ? `${relayUrl}/unsubscribe`
+        : `${relayUrl}/api/push/unsubscribe`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameId, playerId }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  },
+
   /**
    * Dispatches a push notification request to the game's relay and falls back to direct ntfy if needed.
    */
   async sendGamePushNotification(payload: PushNotificationPayload): Promise<boolean> {
+    // Never dispatch a turn notification if sender and target are the same player
+    if (payload.senderPlayerId && payload.targetPlayerId && payload.senderPlayerId === payload.targetPlayerId) {
+      console.log('[PushClient] Suppressing push notification to self (senderPlayerId === targetPlayerId)');
+      return false;
+    }
+
+    // Never dispatch if target ntfyTopic matches this device's own personal topic!
+    const ownUserTopic = storage.getUserNtfyTopic();
+    if (payload.ntfyTopic && ownUserTopic && payload.ntfyTopic === ownUserTopic) {
+      console.log('[PushClient] Suppressing push notification to self (target ntfyTopic === own user topic)');
+      return false;
+    }
+
     const relayUrl = payload.targetRelayUrl || gameRelayStorage.getGameRelay(payload.gameId);
-    const ntfyTopic = payload.ntfyTopic || this.getNtfyTopic(payload.gameId, payload.targetPlayerId);
+    const ntfyTopic =
+      payload.ntfyTopic ||
+      (payload.gameId && payload.targetPlayerId
+        ? this.getNtfyTopic(payload.gameId, payload.targetPlayerId)
+        : undefined);
+
+    if (!relayUrl && !ntfyTopic) {
+      console.warn('[PushClient] No target relay or ntfy topic available for push notification; skipping.');
+      return false;
+    }
+
     const enrichedPayload: PushNotificationPayload = { ...payload, ntfyTopic };
 
-    if (!relayUrl) {
-      // Fall back directly to ntfy
-      console.log('[PushClient] No relay configured; falling back directly to ntfy dispatch');
-      return this.sendDirectNtfyNotification(enrichedPayload);
-    }
+    let relaySuccess = false;
+    if (relayUrl) {
+      try {
+        const notifyUrl = relayUrl.includes('/api/push')
+          ? `${relayUrl}/notify`
+          : `${relayUrl}/api/push/notify`;
 
-    try {
-      const notifyUrl = relayUrl.includes('/api/push')
-        ? `${relayUrl}/notify`
-        : `${relayUrl}/api/push/notify`;
+        const res = await fetch(notifyUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(enrichedPayload),
+        });
 
-      const res = await fetch(notifyUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(enrichedPayload),
-      });
-
-      if (res.ok) {
-        const data = await res.json().catch(() => null);
-        console.log('[PushClient] Hybrid push notification dispatched via relay:', data);
-        return true;
-      } else {
-        console.warn(`[PushClient] Relay notify failed (${res.status}), sending direct ntfy backup...`);
-        return this.sendDirectNtfyNotification(enrichedPayload);
+        if (res.ok) {
+          const data = await res.json().catch(() => null);
+          console.log('[PushClient] Push notification dispatched via relay:', data);
+          relaySuccess = true;
+        } else {
+          console.warn(`[PushClient] Relay notify failed with status ${res.status}`);
+        }
+      } catch (err) {
+        console.warn('[PushClient] Failed to send push via relay:', err);
       }
-    } catch (err) {
-      console.warn('[PushClient] Failed to send push via relay, sending direct ntfy backup:', err);
-      return this.sendDirectNtfyNotification(enrichedPayload);
     }
+
+    // Direct ntfy dispatch:
+    // If ntfyTopic is available (e.g. personal lgg-user-xxx topic), ALWAYS dispatch directly via ntfy POST.
+    // This ensures reliable delivery to the recipient's ntfy app/device even if browser Web Push is inactive or offline.
+    let ntfySuccess = false;
+    if (ntfyTopic) {
+      ntfySuccess = await this.sendDirectNtfyNotification(enrichedPayload);
+    }
+
+    return relaySuccess || ntfySuccess;
   },
 };

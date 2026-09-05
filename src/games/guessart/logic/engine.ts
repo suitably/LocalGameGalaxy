@@ -22,12 +22,14 @@ import {
 } from './repository';
 import type {
   GameSnapshot,
+  PlayerIdentity,
   GuessArtGameRecord,
   GuessArtRound,
   HintResult,
   SelectWordPayload,
   WordTranslationEntry,
 } from './types';
+import { playerAssignment } from './playerAssignment';
 
 const DEFAULT_SCENE = JSON.stringify({ elements: [], appState: {}, files: {} });
 
@@ -152,13 +154,29 @@ export const isSnapshotNewer = (
     return true;
   }
 
-  // Check if player names or game name were edited
+  // Check if player names, game name, or notification channels were edited
   if (snapshot.game.name !== existingGame.name) return true;
   if (
     snapshot.game.players &&
     existingGame.players &&
-    JSON.stringify(snapshot.game.players.map((p) => ({ id: p.id, name: p.name }))) !==
-      JSON.stringify(existingGame.players.map((p) => ({ id: p.id, name: p.name })))
+    JSON.stringify(
+      snapshot.game.players.map((p) => ({
+        id: p.id,
+        name: p.name,
+        ntfyTopic: p.ntfyTopic,
+        relayUrl: p.relayUrl,
+        notificationMethod: p.notificationMethod,
+      })),
+    ) !==
+      JSON.stringify(
+        existingGame.players.map((p) => ({
+          id: p.id,
+          name: p.name,
+          ntfyTopic: p.ntfyTopic,
+          relayUrl: p.relayUrl,
+          notificationMethod: p.notificationMethod,
+        })),
+      )
   ) {
     return true;
   }
@@ -184,7 +202,7 @@ export const LocalGameEngine = {
     gameId: string,
     payload: {
       name?: string;
-      players?: { id: string; name: string }[];
+      players?: (Partial<PlayerIdentity> & { id: string })[];
     },
     language?: string,
   ): Promise<GameSnapshot> {
@@ -196,9 +214,11 @@ export const LocalGameEngine = {
     const updatedPlayers = Array.isArray(payload.players)
       ? game.players.map((existingPlayer) => {
           const match = payload.players?.find((p) => p.id === existingPlayer.id);
+          if (!match) return existingPlayer;
           return {
             ...existingPlayer,
-            name: match ? match.name.trim() : existingPlayer.name,
+            ...match,
+            name: match.name !== undefined ? match.name.trim() : existingPlayer.name,
           };
         })
       : game.players;
@@ -254,12 +274,63 @@ export const LocalGameEngine = {
 
     const existingRound = await getRoundByNumber(existing.id, existing.roundNumber);
     if (isSnapshotNewer(snapshot, existing, existingRound)) {
-      await upsertGame(snapshot.game);
+      const mergedPlayers = snapshot.game.players.map((incomingP) => {
+        const existingP = existing.players.find((p) => p.id === incomingP.id);
+        const isExistingLocal = existingP ? playerAssignment.isPlayerLocal(existing.id, existingP.id, false) : false;
+        return {
+          ...existingP,
+          ...incomingP,
+          ntfyTopic: isExistingLocal
+            ? existingP?.ntfyTopic || incomingP.ntfyTopic
+            : incomingP.ntfyTopic || existingP?.ntfyTopic,
+          relayUrl: isExistingLocal
+            ? existingP?.relayUrl || incomingP.relayUrl
+            : incomingP.relayUrl || existingP?.relayUrl,
+          notificationMethod: isExistingLocal
+            ? existingP?.notificationMethod || incomingP.notificationMethod
+            : incomingP.notificationMethod || existingP?.notificationMethod,
+        };
+      });
+      await upsertGame({ ...snapshot.game, players: mergedPlayers });
       if (snapshot.round) {
         await upsertRound(snapshot.round);
       }
       const loaded = await this.getGameSnapshot(snapshot.game.id, language);
       return { game: loaded.game, round: loaded.round, updated: true };
+    }
+
+    // Even if game round/status is not newer, merge player channel updates (e.g. Remote just joined and announced ntfyTopic)
+    const hasPlayerChannelUpdates = snapshot.game.players?.some((incomingP) => {
+      const existingP = existing.players?.find((p) => p.id === incomingP.id);
+      if (!existingP) return false;
+      const isExistingLocal = playerAssignment.isPlayerLocal(existing.id, existingP.id, false);
+      if (isExistingLocal) return false; // Never overwrite local player channels via snapshot
+      return (
+        (incomingP.ntfyTopic && incomingP.ntfyTopic !== existingP.ntfyTopic) ||
+        (incomingP.relayUrl && incomingP.relayUrl !== existingP.relayUrl) ||
+        (incomingP.notificationMethod && incomingP.notificationMethod !== existingP.notificationMethod)
+      );
+    });
+
+    if (hasPlayerChannelUpdates) {
+      const mergedPlayers = existing.players.map((existingP) => {
+        const incomingP = snapshot.game.players?.find((p) => p.id === existingP.id);
+        if (!incomingP) return existingP;
+        const isExistingLocal = playerAssignment.isPlayerLocal(existing.id, existingP.id, false);
+        if (isExistingLocal) return existingP;
+        return {
+          ...existingP,
+          ntfyTopic: incomingP.ntfyTopic || existingP.ntfyTopic,
+          relayUrl: incomingP.relayUrl || existingP.relayUrl,
+          notificationMethod: incomingP.notificationMethod || existingP.notificationMethod,
+        };
+      });
+      const updatedGame = await updateLocalGame(existing.id, { players: mergedPlayers });
+      return {
+        game: updatedGame,
+        round: toRoundPayload(existingRound, updatedGame, language),
+        updated: true,
+      };
     }
 
     return {
@@ -410,6 +481,7 @@ export const LocalGameEngine = {
     gameId: string,
     guess: string,
     language?: string,
+    isTemporaryClaim?: boolean,
   ): Promise<{ correct: boolean; game: GuessArtGameRecord; round: GuessArtRound | null }> {
     const game = await getLocalGame(gameId);
     if (!game) {
@@ -440,6 +512,7 @@ export const LocalGameEngine = {
     let updatedGame = game;
 
     if (isCorrect) {
+      const isTemp = isTemporaryClaim ?? Boolean(round.temporaryClaim);
       updatedGame = await updateLocalGame(gameId, (current) => ({
         ...current,
         status: 'selecting',
@@ -454,6 +527,7 @@ export const LocalGameEngine = {
         roundNumber: updatedGame.roundNumber,
         drawnById: updatedGame.players[updatedGame.currentPlayerIndex]?.id,
         status: 'selecting',
+        temporaryClaim: isTemp,
         word: '',
         wordId: null,
         wordLanguageCode: updatedGame.options.language,

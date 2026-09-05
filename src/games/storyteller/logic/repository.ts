@@ -15,6 +15,7 @@ import type {
   StoryModifierSettings,
   StoryPlayer,
 } from '../types';
+import { storage } from '../../../lib/storage';
 
 export const createStoryGame = async (payload: {
   name?: string;
@@ -28,18 +29,20 @@ export const createStoryGame = async (payload: {
     ? getRandomWords(language, modifiers.wordRoulette.wordsPerTurn)
     : undefined;
 
+  const ownRelay = storage.getPushRelayUrl();
+  const prefMethod = storage.getNotificationMethod();
+  const userNtfyTopic = storage.getUserNtfyTopic();
   const players: StoryPlayer[] = (payload.players || []).map((p, index) => {
-    if (typeof p === 'string') {
-      return {
-        id: `player_${index + 1}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        name: p.trim() || `Spieler ${index + 1}`,
-        isRemote: false,
-      };
-    }
+    const isString = typeof p === 'string';
+    const isRemote = isString ? false : Boolean(p.isRemote);
+    const pName = isString ? p.trim() || `Spieler ${index + 1}` : p.name.trim() || `Spieler ${index + 1}`;
     return {
       id: `player_${index + 1}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      name: p.name.trim() || `Spieler ${index + 1}`,
-      isRemote: Boolean(p.isRemote),
+      name: pName,
+      isRemote,
+      relayUrl: !isRemote && index === 0 ? ownRelay || undefined : undefined,
+      notificationMethod: !isRemote && index === 0 ? prefMethod : undefined,
+      ntfyTopic: !isRemote && index === 0 ? userNtfyTopic : undefined,
     };
   });
 

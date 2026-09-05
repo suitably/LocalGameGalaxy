@@ -4,7 +4,8 @@ let cardsI18nInitialized = false;
 
 export const initCardsI18n = () => {
   if (cardsI18nInitialized) return;
-  cardsI18nInitialized = true;
+  const add = () => {
+    cardsI18nInitialized = true;
   i18next.addResourceBundle(
     'de',
     'translation',
@@ -144,5 +145,12 @@ export const initCardsI18n = () => {
     true,
     false,
   );
+  };
+
+  if (i18next.isInitialized) {
+    add();
+  } else {
+    i18next.on('initialized', add);
+  }
 };
 

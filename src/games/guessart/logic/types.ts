@@ -60,6 +60,7 @@ export interface GuessArtRound {
   createdAt: string;
   updatedAt: string;
   completedAt: string | null;
+  temporaryClaim?: boolean;
 }
 
 export interface GameOptions {

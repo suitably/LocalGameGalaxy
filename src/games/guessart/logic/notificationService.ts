@@ -1,5 +1,5 @@
-import i18n from '../../../i18n';
 import { playerAssignment } from './playerAssignment';
+import { buildTurnNotificationMessage, localNotificationPresenter } from '../../../lib/notifications';
 import type { GuessArtGameRecord, GuessArtRound } from './types';
 
 export interface ShouldNotifyParams {
@@ -15,36 +15,42 @@ export interface TurnNotificationDecision {
   shouldNotify: boolean;
   reason: string;
   activePlayerName?: string;
+  activePlayerId?: string;
+  actorName?: string;
   actionType?: 'draw' | 'guess';
 }
 
 class GuessArtNotificationService {
-  private lastNotifiedKey: string | null = null;
-  private lastNotifiedTimestamp = 0;
+  private notifiedTurnKeys: Set<string> = new Set();
+  private locallyDrawnRoundIds: Set<string> = new Set();
+
+  public markRoundDrawnLocally(roundId?: string | null): void {
+    if (roundId) {
+      this.locallyDrawnRoundIds.add(roundId);
+      if (this.locallyDrawnRoundIds.size > 100) {
+        const first = this.locallyDrawnRoundIds.values().next().value;
+        if (first) this.locallyDrawnRoundIds.delete(first);
+      }
+    }
+  }
+
+  public wasRoundDrawnLocally(roundId?: string | null): boolean {
+    if (!roundId) return false;
+    return this.locallyDrawnRoundIds.has(roundId);
+  }
+
+  public clearHistory(): void {
+    this.notifiedTurnKeys.clear();
+    this.locallyDrawnRoundIds.clear();
+  }
 
   public isPermissionGranted(): boolean {
-    if (typeof window === 'undefined' || !('Notification' in window)) {
-      return false;
-    }
-    return Notification.permission === 'granted';
+    return localNotificationPresenter.hasPermission();
   }
 
   public async requestPermission(): Promise<boolean> {
-    if (typeof window === 'undefined' || !('Notification' in window)) {
-      return false;
-    }
-    if (Notification.permission === 'granted') {
-      return true;
-    }
-    if (Notification.permission === 'denied') {
-      return false;
-    }
-    try {
-      const result = await Notification.requestPermission();
-      return result === 'granted';
-    } catch {
-      return false;
-    }
+    const res = await localNotificationPresenter.requestPermission();
+    return res === 'granted';
   }
 
   /**
@@ -77,6 +83,15 @@ class GuessArtNotificationService {
       return { shouldNotify: false, reason: 'game_completed' };
     }
 
+    // In round 1, the drawer (Host) is already on the screen setting up the game.
+    // Never send a drawer turn notification for round 1.
+    const isSelecting = game.status === 'selecting' || round.status === 'selecting';
+    const isGuessing = game.status === 'guessing' || round.status === 'guessing';
+
+    if (round.roundNumber === 1 && isSelecting) {
+      return { shouldNotify: false, reason: 'round_1_drawer_setup' };
+    }
+
     // Determine active drawer and guesser
     const drawerIdx = game.players.findIndex((p) => p.id === round.drawnById);
     const effDrawerIdx = drawerIdx >= 0 ? drawerIdx : (Math.max(1, round.roundNumber) - 1) % (game.players.length || 1);
@@ -85,14 +100,22 @@ class GuessArtNotificationService {
     const activeDrawerObj = game.players[effDrawerIdx];
     const activeGuesserObj = game.players[effGuesserIdx];
 
-    const isDrawingOrSelecting = game.status === 'drawing' || game.status === 'selecting' || round.status === 'drawing' || round.status === 'selecting';
-    const isGuessing = game.status === 'guessing' || round.status === 'guessing';
-
-    let activePlayer = isDrawingOrSelecting ? activeDrawerObj : isGuessing ? activeGuesserObj : null;
-    let actionType: 'draw' | 'guess' | undefined = isDrawingOrSelecting ? 'draw' : isGuessing ? 'guess' : undefined;
+    const activePlayer = isSelecting ? activeDrawerObj : isGuessing ? activeGuesserObj : null;
+    const actionType: 'draw' | 'guess' | undefined = isSelecting ? 'draw' : isGuessing ? 'guess' : undefined;
 
     if (!activePlayer || !actionType) {
       return { shouldNotify: false, reason: 'no_active_player' };
+    }
+
+    // For guessing, require that the round is actively in guessing status
+    if (actionType === 'guess' && round.status !== 'guessing') {
+      return { shouldNotify: false, reason: 'drawing_not_submitted_yet' };
+    }
+
+    // If the turn or round was played under a temporary claim ("lass mich hier spielen"),
+    // no notifications should be sent to anyone:
+    if (round.temporaryClaim || playerAssignment.isTurnClaimedTemporarily(game.id, activePlayer.id)) {
+      return { shouldNotify: false, reason: 'turn_claimed_temporarily' };
     }
 
     // Check if the active player is local to this device
@@ -107,16 +130,33 @@ class GuessArtNotificationService {
       return { shouldNotify: false, reason: 'all_players_local_pass_and_play' };
     }
 
+    // If the drawing was created on this device, this device must NEVER be notified to guess its own drawing!
+    const isDrawerLocal = round.drawnById
+      ? playerAssignment.isPlayerLocal(game.id, round.drawnById, false)
+      : false;
+    const wasDrawnHere = this.wasRoundDrawnLocally(round.id);
+
+    if (actionType === 'guess' && (isDrawerLocal || wasDrawnHere)) {
+      return { shouldNotify: false, reason: 'drawing_drawn_by_local_device' };
+    }
+
     // If the game is already in active foreground on this screen and the document is visible,
     // the UI updates live in real-time, so suppress redundant OS popup.
     if (activeGameScreenId === game.id && isDocumentVisible) {
       return { shouldNotify: false, reason: 'already_visible_in_foreground' };
     }
 
+    const actorName =
+      actionType === 'guess'
+        ? (round.drawnById ? game.players.find((p) => p.id === round.drawnById)?.name : activeDrawerObj?.name)
+        : (round.guesserId ? game.players.find((p) => p.id === round.guesserId)?.name : undefined);
+
     return {
       shouldNotify: true,
       reason: 'remote_turn_received',
       activePlayerName: activePlayer.name,
+      activePlayerId: activePlayer.id,
+      actorName,
       actionType,
     };
   }
@@ -138,65 +178,37 @@ class GuessArtNotificationService {
     const roundId = params.round?.id || `${params.game.roundNumber}`;
     const status = params.round?.status || params.game.status;
     const notificationKey = `${gameId}_${roundId}_${status}_${decision.actionType}`;
-    const now = Date.now();
 
-    // Prevent duplicate notification within 10 seconds for same turn
-    if (this.lastNotifiedKey === notificationKey && now - this.lastNotifiedTimestamp < 10000) {
+    // Prevent duplicate notification for the exact same turn transition
+    if (this.notifiedTurnKeys.has(notificationKey)) {
       return false;
     }
 
-    this.lastNotifiedKey = notificationKey;
-    this.lastNotifiedTimestamp = now;
-
-    const playerName = decision.activePlayerName || (i18n.t('guessart.you', 'Du') as string);
-    const title = i18n.t('guessart.notificationTitle', 'GuessArt: Du bist dran!') as string;
-    const body =
-      decision.actionType === 'draw'
-        ? (i18n.t('guessart.notificationDrawBody', {
-            name: playerName,
-            defaultValue: `${playerName}, du bist jetzt an der Reihe zum Zeichnen!`,
-          }) as string)
-        : (i18n.t('guessart.notificationGuessBody', {
-            name: playerName,
-            defaultValue: `${playerName}, du bist jetzt an der Reihe zum Raten!`,
-          }) as string);
-
-    const tag = `guessart-${gameId}`;
-    const icon = '/pwa/icon_full.png';
-
-    // Prefer ServiceWorker showNotification for Android PWA / mobile Chrome reliability
-    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      try {
-        const registration = await navigator.serviceWorker.ready;
-        await registration.showNotification(title, {
-          body,
-          icon,
-          tag,
-          data: {
-            url: `${window.location.origin}${window.location.pathname}#/games/guessart?gameId=${gameId}`,
-          },
-        });
-        return true;
-      } catch (err) {
-        console.warn('[GuessArtNotificationService] SW notification failed, falling back to Notification constructor:', err);
-      }
+    this.notifiedTurnKeys.add(notificationKey);
+    if (this.notifiedTurnKeys.size > 100) {
+      // Keep set bounded
+      const first = this.notifiedTurnKeys.values().next().value;
+      if (first) this.notifiedTurnKeys.delete(first);
     }
 
-    // Fallback to standard Notification constructor
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      try {
-        new Notification(title, {
-          body,
-          icon,
-          tag,
-        });
-        return true;
-      } catch (err) {
-        console.warn('[GuessArtNotificationService] Notification constructor failed:', err);
-      }
-    }
+    const message = buildTurnNotificationMessage({
+      gameType: 'guessart',
+      gameName: params.game.name,
+      gameId,
+      actionType: decision.actionType,
+      actorName: decision.actorName,
+      targetPlayerName: decision.activePlayerName,
+      targetPlayerId: decision.activePlayerId,
+    });
 
-    return false;
+    return localNotificationPresenter.showNotification({
+      title: message.title,
+      body: message.body,
+      tag: message.tag,
+      icon: message.icon,
+      url: message.url,
+      data: { url: message.url },
+    });
   }
 }
 

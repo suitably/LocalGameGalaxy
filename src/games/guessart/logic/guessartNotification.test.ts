@@ -160,13 +160,37 @@ describe('GuessArt Notification & Sync Service', () => {
       expect(decision.activePlayerName).toBe('Bob');
     });
 
-    it('NOTIFIES the remote player when it is their turn to draw (app in background or different screen)', () => {
-      // Alice is on Device A (local to Device A), Bob is on Device B (remote)
+    it('does NOT notify round 1 drawer to draw on initial setup even if remote presence arrives', () => {
+      // Alice is on Device A (Host), Bob is on Device B (remote)
       playerAssignment.setLocalPlayerIds('game-123', ['player-1']);
 
       const decision = guessArtNotificationService.evaluateTurnNotification({
         game: { ...gameMock, status: 'selecting' },
-        round: roundSelectingMock,
+        round: roundSelectingMock, // roundNumber === 1
+        isRemoteEvent: true,
+        activeGameScreenId: null,
+        isDocumentVisible: true,
+      });
+
+      expect(decision.shouldNotify).toBe(false);
+      expect(decision.reason).toBe('round_1_drawer_setup');
+    });
+
+    it('NOTIFIES the player when it is their turn to draw in subsequent rounds (app in background or different screen)', () => {
+      // Alice is on Device A (local to Device A), Bob is on Device B (remote)
+      playerAssignment.setLocalPlayerIds('game-123', ['player-1']);
+
+      const round2SelectingMock: GuessArtRound = {
+        ...roundSelectingMock,
+        id: 'round-2',
+        roundNumber: 2,
+        drawnById: 'player-1',
+        drawnByName: 'Alice',
+      };
+
+      const decision = guessArtNotificationService.evaluateTurnNotification({
+        game: { ...gameMock, status: 'selecting', roundNumber: 2 },
+        round: round2SelectingMock,
         isRemoteEvent: true,
         activeGameScreenId: null,
         isDocumentVisible: true,
@@ -191,6 +215,112 @@ describe('GuessArt Notification & Sync Service', () => {
 
       expect(decision.shouldNotify).toBe(false);
       expect(decision.reason).toBe('already_visible_in_foreground');
+    });
+
+    it('does NOT notify while drawing is actively in progress', () => {
+      playerAssignment.setLocalPlayerIds('game-123', ['player-1']);
+
+      const decision = guessArtNotificationService.evaluateTurnNotification({
+        game: { ...gameMock, status: 'drawing' },
+        round: { ...roundSelectingMock, status: 'drawing', word: 'Katze' },
+        isRemoteEvent: true,
+        activeGameScreenId: null,
+        isDocumentVisible: true,
+      });
+
+      expect(decision.shouldNotify).toBe(false);
+      expect(decision.reason).toBe('no_active_player');
+    });
+
+    it('suppresses guess notification if the drawing was drawn by a local player on this device', () => {
+      // Alice (player-1) is drawer and local. Bob (player-2) is guesser and also temporarily local. Charlie (player-3) is remote.
+      const game3Mock: GuessArtGameRecord = {
+        ...gameMock,
+        players: [
+          { id: 'player-1', name: 'Alice' },
+          { id: 'player-2', name: 'Bob' },
+          { id: 'player-3', name: 'Charlie' },
+        ],
+      };
+      playerAssignment.setLocalPlayerIds('game-123', ['player-1', 'player-2']);
+
+      const decision = guessArtNotificationService.evaluateTurnNotification({
+        game: { ...game3Mock, status: 'guessing' },
+        round: roundGuessingMock, // drawnById: 'player-1'
+        isRemoteEvent: true,
+        activeGameScreenId: null,
+        isDocumentVisible: false,
+      });
+
+      expect(decision.shouldNotify).toBe(false);
+      expect(decision.reason).toBe('drawing_drawn_by_local_device');
+    });
+
+    it('suppresses guess notification if the round was marked as drawn locally', () => {
+      // Alice drew round-1 locally, and now round is guessing for Bob (who is local), but Charlie is remote.
+      const game3Mock: GuessArtGameRecord = {
+        ...gameMock,
+        players: [
+          { id: 'player-1', name: 'Alice' },
+          { id: 'player-2', name: 'Bob' },
+          { id: 'player-3', name: 'Charlie' },
+        ],
+      };
+      guessArtNotificationService.markRoundDrawnLocally('round-1');
+      playerAssignment.setLocalPlayerIds('game-123', ['player-2']);
+
+      const decision = guessArtNotificationService.evaluateTurnNotification({
+        game: { ...game3Mock, status: 'guessing' },
+        round: roundGuessingMock,
+        isRemoteEvent: true,
+        activeGameScreenId: null,
+        isDocumentVisible: false,
+      });
+
+      expect(decision.shouldNotify).toBe(false);
+      expect(decision.reason).toBe('drawing_drawn_by_local_device');
+    });
+
+    it('suppresses notification if the round is marked with temporaryClaim', () => {
+      // Remote player Bob receives round marked as temporaryClaim (played on Host device)
+      playerAssignment.setLocalPlayerIds('game-123', ['player-2']);
+
+      const decision = guessArtNotificationService.evaluateTurnNotification({
+        game: { ...gameMock, status: 'selecting', roundNumber: 2 },
+        round: {
+          ...roundSelectingMock,
+          id: 'round-2',
+          roundNumber: 2,
+          drawnById: 'player-2',
+          temporaryClaim: true,
+        },
+        isRemoteEvent: true,
+        activeGameScreenId: null,
+        isDocumentVisible: false,
+      });
+
+      expect(decision.shouldNotify).toBe(false);
+      expect(decision.reason).toBe('turn_claimed_temporarily');
+    });
+
+    it('suppresses notification if the active player is claimed temporarily on this device', () => {
+      playerAssignment.claimTurnTemporary('game-123', 'player-2');
+
+      const decision = guessArtNotificationService.evaluateTurnNotification({
+        game: { ...gameMock, status: 'selecting', roundNumber: 2 },
+        round: {
+          ...roundSelectingMock,
+          id: 'round-2',
+          roundNumber: 2,
+          drawnById: 'player-2',
+        },
+        isRemoteEvent: true,
+        activeGameScreenId: null,
+        isDocumentVisible: false,
+      });
+
+      expect(decision.shouldNotify).toBe(false);
+      expect(decision.reason).toBe('turn_claimed_temporarily');
     });
   });
 
