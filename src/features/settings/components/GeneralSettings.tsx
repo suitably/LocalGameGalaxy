@@ -10,12 +10,17 @@ import AppShortcutIcon from '@mui/icons-material/AppShortcut';
 import { useTranslation } from 'react-i18next';
 import { usePWAInstall } from '../../../hooks/usePWAInstall';
 import { PWAInstallDialog } from '../../../components/pwa';
+import { GitHubSettings } from './GitHubSettings';
 
-type GeneralSubTab = 'app' | 'feedback';
+export type GeneralSubTab = 'app' | 'feedback';
 
-export const GeneralSettings: React.FC = () => {
+interface GeneralSettingsProps {
+    initialSubTab?: GeneralSubTab;
+}
+
+export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ initialSubTab = 'app' }) => {
     const { t, i18n } = useTranslation();
-    const [subTab, setSubTab] = useState<GeneralSubTab>('app');
+    const [subTab, setSubTab] = useState<GeneralSubTab>(initialSubTab);
     const { isStandalone, isInstallable, installApp, showIOSGuide, setShowIOSGuide } = usePWAInstall();
 
     const handleLanguageChange = (event: SelectChangeEvent) => {
@@ -32,7 +37,7 @@ export const GeneralSettings: React.FC = () => {
                         {t('settings.general_title', 'Allgemeine Einstellungen')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        {t('settings.general_desc', 'Sprache, App-Installation und Feedback.')}
+                        {t('settings.general_desc', 'Sprache, App-Installation, Feedback und GitHub-Integration.')}
                     </Typography>
                 </Box>
             </Box>
@@ -155,24 +160,29 @@ export const GeneralSettings: React.FC = () => {
 
             {/* Sub-Tab 2: Feedback & Support */}
             {subTab === 'feedback' && (
-                <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                        <FeedbackIcon color="primary" />
-                        <Typography variant="h6">
-                            {t('settings.feedback_title', 'Feedback & Bug Report')}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <Paper sx={{ p: { xs: 2.5, sm: 3, md: 4 }, borderRadius: 3, bgcolor: 'rgba(30, 30, 40, 0.7)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: 6 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                            <FeedbackIcon color="primary" />
+                            <Typography variant="h6">
+                                {t('settings.feedback_title', 'Feedback & Bug Report')}
+                            </Typography>
+                        </Box>
+                        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', mb: 2.5 }}>
+                            {t('settings.feedback_desc', 'Fehler gefunden oder einen Verbesserungsvorschlag? Reiche hier direkt Feedback ein oder erstelle ein Issue auf GitHub.')}
                         </Typography>
-                    </Box>
-                    <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.6)', mb: 2.5 }}>
-                        {t('settings.feedback_desc', 'Found a bug or have a suggestion? Submit it here to create a GitHub issue via your helper server.')}
-                    </Typography>
-                    <Button
-                        variant="outlined"
-                        startIcon={<FeedbackIcon />}
-                        onClick={() => window.dispatchEvent(new Event('feedback:open'))}
-                    >
-                        {t('settings.submit', 'Submit Feedback')}
-                    </Button>
-                </Paper>
+                        <Button
+                            variant="outlined"
+                            startIcon={<FeedbackIcon />}
+                            onClick={() => window.dispatchEvent(new Event('feedback:open'))}
+                        >
+                            {t('settings.submit', 'Submit Feedback')}
+                        </Button>
+                    </Paper>
+
+                    {/* GitHub Integration Token */}
+                    <GitHubSettings />
+                </Box>
             )}
 
             <PWAInstallDialog open={showIOSGuide} onClose={() => setShowIOSGuide(false)} />

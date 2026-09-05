@@ -3,16 +3,14 @@ import { Box, Typography, Tabs, Tab, IconButton, Paper, CircularProgress } from 
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-import KeyIcon from '@mui/icons-material/Key';
 import MicIcon from '@mui/icons-material/Mic';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePageTitle } from '../../context/TitleContext';
-import { GeneralSettings } from './components/GeneralSettings';
+import { GeneralSettings, type GeneralSubTab } from './components/GeneralSettings';
 import type { MelodiqSubTab } from './components/MelodiqSettingsCategory';
 
 const NotificationSettingsCategory = lazy(() => import('./components/NotificationSettingsCategory').then(m => ({ default: m.NotificationSettingsCategory })));
-const ApiKeysSettings = lazy(() => import('./components/ApiKeysSettings').then(m => ({ default: m.ApiKeysSettings })));
 const MelodiqSettingsCategory = lazy(() => import('./components/MelodiqSettingsCategory').then(m => ({ default: m.MelodiqSettingsCategory })));
 
 interface SettingsProps {
@@ -21,7 +19,7 @@ interface SettingsProps {
     onNavigateToPlaylists?: () => void;
 }
 
-type TabType = 'general' | 'notifications' | 'melodiq' | 'keys';
+type TabType = 'general' | 'notifications' | 'melodiq';
 
 export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavigateToPlaylists }) => {
     const { t } = useTranslation();
@@ -38,12 +36,12 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
     const resolveInitialTab = (): TabType => {
         if (tabParam === 'notifications' || tabParam === 'push' || tabParam === 'ntfy') return 'notifications';
         if (tabParam === 'server' || tabParam === 'melodiq' || gameParam.toLowerCase() === 'melodiq') return 'melodiq';
-        if (tabParam === 'keys' || tabParam === 'apikeys' || tabParam === 'api' || tabParam === 'github') return 'keys';
         return 'general';
     };
 
     const [activeTab, setActiveTab] = useState<TabType>(resolveInitialTab);
     const melodiqInitialSubTab: MelodiqSubTab = tabParam === 'server' ? 'server' : 'server';
+    const generalInitialSubTab: GeneralSubTab = (tabParam === 'keys' || tabParam === 'github' || tabParam === 'feedback') ? 'feedback' : 'app';
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: TabType) => {
         setActiveTab(newValue);
@@ -67,8 +65,6 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
         switch (activeTab) {
             case 'notifications':
                 return t('settings.notifications_tab', 'Benachrichtigungen & Push');
-            case 'keys':
-                return t('settings.api_keys_tab', 'API-Keys & Integrationen');
             case 'melodiq':
                 return t('games.melodiq.title', 'Melodiq & Companion Server');
             default:
@@ -146,18 +142,12 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
                         label={t('games.melodiq.title', 'Melodiq')} 
                         value="melodiq" 
                     />
-                    <Tab 
-                        icon={<KeyIcon fontSize="small" />}
-                        iconPosition="start"
-                        label={t('settings.api_keys_tab', 'API-Keys')} 
-                        value="keys" 
-                    />
                 </Tabs>
             </Paper>
 
             {/* Content Area with Sub-Tabs in each Category */}
             <Box sx={{ width: '100%' }}>
-                {activeTab === 'general' && <GeneralSettings />}
+                {activeTab === 'general' && <GeneralSettings initialSubTab={generalInitialSubTab} />}
                 {activeTab === 'notifications' && (
                     <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
                         <NotificationSettingsCategory />
@@ -169,11 +159,6 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
                             initialSubTab={melodiqInitialSubTab}
                             onNavigateToPlaylists={onNavigateToPlaylists} 
                         />
-                    </Suspense>
-                )}
-                {activeTab === 'keys' && (
-                    <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
-                        <ApiKeysSettings />
                     </Suspense>
                 )}
             </Box>
