@@ -127,12 +127,12 @@ export const ServerConnection: React.FC = () => {
     return (
         <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
-                {t('server.title', 'Nexumia Server Connection')}
+                {t('server.title', 'Melodiq Companion Server Verbindung')}
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
                 {t(
                     'server.desc',
-                    'Connect to a Nexumia Server to access your song library, publish game content, and enable advanced features. Enter the server URL and security token.',
+                    'Verbinde dich mit dem Melodiq Companion Server, um auf deine Song-Bibliothek zuzugreifen, Audio zu streamen, Songs herunterzuladen und KI-Gesangstrennung zu nutzen.',
                 )}
             </Typography>
 
@@ -140,7 +140,7 @@ export const ServerConnection: React.FC = () => {
                 control={
                     <Switch checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
                 }
-                label={t('server.enable', 'Enable Server Connection')}
+                label={t('server.enable', 'Server-Verbindung aktivieren')}
             />
 
             {enabled && (

@@ -59,7 +59,7 @@ export const ServerSetupWizard: React.FC = () => {
                             {t('server.setup.title', 'Automatic Server Setup')}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            {t('server.setup.subtitle', 'Choose your preferred method to launch and connect your own Nexumia Server in seconds.')}
+                            {t('server.setup.subtitle', 'Wähle deine bevorzugte Methode, um deinen Melodiq Companion Server in Sekundenschnelle zu starten und zu verbinden.')}
                         </Typography>
                     </Box>
                 </Box>

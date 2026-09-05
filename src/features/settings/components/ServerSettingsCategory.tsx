@@ -24,7 +24,7 @@ export const ServerSettingsCategory: React.FC = () => {
                         {t('settings.server_category_title', 'Server & Netzwerk')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        {t('settings.server_category_desc', 'Verbindung zum Melodiq- / Nexumia-Begleit-Server für Audio-Streaming, YouTube-Downloads, P2P-Relay und Push-Benachrichtigungen.')}
+                        {t('settings.server_category_desc', 'Verbindung zum Melodiq Companion Server für Audio-Streaming, YouTube-Downloads, KI-Gesangstrennung, P2P-Relay und Push-Benachrichtigungen.')}
                     </Typography>
                 </Box>
             </Box>
