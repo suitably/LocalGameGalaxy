@@ -22,7 +22,11 @@ import { settingsCardSx } from '../../features/settings/settingsStyles';
 
 type WizardTab = 'binary' | 'docker' | 'cloudflare' | 'terminal';
 
-export const ServerSetupWizard: React.FC = () => {
+export interface ServerSetupWizardProps {
+    isDialog?: boolean;
+}
+
+export const ServerSetupWizard: React.FC<ServerSetupWizardProps> = ({ isDialog = false }) => {
     const { t } = useTranslation();
     const [expanded, setExpanded] = useState(true);
     const [activeTab, setActiveTab] = useState<WizardTab>('binary');
@@ -41,8 +45,11 @@ export const ServerSetupWizard: React.FC = () => {
 
     return (
         <Paper
+            elevation={isDialog ? 0 : 1}
             sx={{
-                ...settingsCardSx,
+                ...(isDialog
+                    ? { bgcolor: 'transparent', boxShadow: 'none', border: 'none', p: 0 }
+                    : settingsCardSx),
                 position: 'relative',
                 overflow: 'hidden',
             }}

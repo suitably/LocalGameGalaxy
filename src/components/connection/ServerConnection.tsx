@@ -2,15 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Box, Button, TextField, Typography, Paper, Switch, FormControlLabel,
-    IconButton, InputAdornment,
+    IconButton, InputAdornment, Dialog, DialogTitle, DialogContent,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import CloseIcon from '@mui/icons-material/Close';
 import { storage } from '../../lib/storage';
-
+import { ServerSetupWizard } from './ServerSetupWizard';
 import { settingsCardSx } from '../../features/settings/settingsStyles';
 
 /**
@@ -30,6 +32,7 @@ export const ServerConnection: React.FC = () => {
     const [token, setToken] = useState(() => storage.getHelperToken());
     const [enabled, setEnabled] = useState(() => storage.isHelperActive());
     const [showToken, setShowToken] = useState(false);
+    const [setupDialogOpen, setSetupDialogOpen] = useState(false);
 
     const [status, setStatus] = useState<ConnectionStatus>('idle');
     const [statusMsg, setStatusMsg] = useState('');
@@ -219,6 +222,16 @@ export const ServerConnection: React.FC = () => {
                             {t('server.test', 'Test Connection')}
                         </Button>
 
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            startIcon={<AutoFixHighIcon />}
+                            onClick={() => setSetupDialogOpen(true)}
+                            sx={{ borderRadius: 50, px: 2.5 }}
+                        >
+                            {t('server.setup_button', 'Server einrichten oder anpassen')}
+                        </Button>
+
                         {token && (
                             <Button
                                 variant="outlined"
@@ -251,6 +264,39 @@ export const ServerConnection: React.FC = () => {
                     </Box>
                 </Box>
             )}
+
+            {/* Setup Wizard Modal Dialog */}
+            <Dialog
+                open={setupDialogOpen}
+                onClose={() => setSetupDialogOpen(false)}
+                maxWidth="md"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        bgcolor: '#141724',
+                        backgroundImage: 'none',
+                        borderRadius: 3,
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        backdropFilter: 'blur(20px)',
+                        boxShadow: '0 16px 48px rgba(0, 0, 0, 0.6)',
+                    }
+                }}
+            >
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <AutoFixHighIcon color="primary" />
+                        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                            {t('server.setup.dialog_title', 'Server einrichten & anpassen')}
+                        </Typography>
+                    </Box>
+                    <IconButton onClick={() => setSetupDialogOpen(false)} size="small" aria-label="close">
+                        <CloseIcon fontSize="small" />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent dividers sx={{ p: { xs: 2, sm: 3 }, borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+                    <ServerSetupWizard isDialog />
+                </DialogContent>
+            </Dialog>
         </Paper>
     );
 };

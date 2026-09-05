@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
     Box,
     Button,
-    IconButton,
     Menu,
     MenuItem,
     ListItemIcon,
@@ -11,7 +10,6 @@ import {
     Divider,
     useTheme,
     useMediaQuery,
-    Tooltip
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
@@ -19,14 +17,10 @@ import MicIcon from '@mui/icons-material/Mic';
 import AppShortcutIcon from '@mui/icons-material/AppShortcut';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import DnsIcon from '@mui/icons-material/Dns';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import KeyIcon from '@mui/icons-material/Key';
 import PersonIcon from '@mui/icons-material/Person';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import QueueMusicIcon from '@mui/icons-material/QueueMusic';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -99,25 +93,6 @@ const subPillSx = (isActive: boolean) => ({
     },
 });
 
-const subSubPillSx = (isActive: boolean) => ({
-    textTransform: 'none',
-    fontWeight: isActive ? 700 : 500,
-    fontSize: '0.75rem',
-    color: isActive ? '#81c784' : 'rgba(255, 255, 255, 0.6)',
-    bgcolor: isActive ? 'rgba(129, 199, 132, 0.16)' : 'rgba(255, 255, 255, 0.03)',
-    border: isActive ? '1px solid rgba(129, 199, 132, 0.35)' : '1px solid rgba(255, 255, 255, 0.05)',
-    borderRadius: 4,
-    px: 1.25,
-    py: 0.2,
-    minHeight: 26,
-    whiteSpace: 'nowrap',
-    transition: 'all 0.15s ease',
-    '&:hover': {
-        bgcolor: isActive ? 'rgba(129, 199, 132, 0.22)' : 'rgba(255, 255, 255, 0.08)',
-        color: 'rgba(255, 255, 255, 0.95)',
-    },
-});
-
 export const SettingsHeaderToolbar: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -127,7 +102,6 @@ export const SettingsHeaderToolbar: React.FC = () => {
 
     const tabParam = searchParams.get('tab') || 'general';
     const subParam = searchParams.get('sub') || '';
-    const sectionParam = searchParams.get('section') || '';
 
     const activeTab = (tabParam === 'notifications' || tabParam === 'push' || tabParam === 'ntfy')
         ? 'notifications'
@@ -141,15 +115,12 @@ export const SettingsHeaderToolbar: React.FC = () => {
             ? (subParam || 'server')
             : '';
 
-    const activeSection = sectionParam || 'connection';
-
     // Menu states
     const [generalAnchor, setGeneralAnchor] = useState<null | HTMLElement>(null);
     const [melodiqAnchor, setMelodiqAnchor] = useState<null | HTMLElement>(null);
-    const [serverSubAnchor, setServerSubAnchor] = useState<null | HTMLElement>(null);
     const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
 
-    const updateNav = (tab: string, sub?: string, section?: string) => {
+    const updateNav = (tab: string, sub?: string) => {
         const nextParams = new URLSearchParams(searchParams);
         nextParams.set('tab', tab);
         if (sub) {
@@ -157,11 +128,7 @@ export const SettingsHeaderToolbar: React.FC = () => {
         } else {
             nextParams.delete('sub');
         }
-        if (section) {
-            nextParams.set('section', section);
-        } else {
-            nextParams.delete('section');
-        }
+        nextParams.delete('section');
         navigate(`/settings?${nextParams.toString()}`);
         handleCloseAll();
     };
@@ -169,18 +136,13 @@ export const SettingsHeaderToolbar: React.FC = () => {
     const handleCloseAll = () => {
         setGeneralAnchor(null);
         setMelodiqAnchor(null);
-        setServerSubAnchor(null);
         setMobileMenuAnchor(null);
     };
 
     const getActiveLabel = () => {
         if (activeTab === 'notifications') return t('settings.notifications_tab', 'Benachrichtigungen');
         if (activeTab === 'melodiq') {
-            if (activeSub === 'server') {
-                if (activeSection === 'setup') return `Melodiq › ${t('melodiq.server.setup_tab', 'Setup')}`;
-                if (activeSection === 'apikeys') return `Melodiq › ${t('melodiq.server.apikeys_tab', 'API-Keys')}`;
-                return `Melodiq › ${t('melodiq.server.connection_tab', 'Server')}`;
-            }
+            if (activeSub === 'server') return `Melodiq › ${t('melodiq.server.tab', 'Companion Server')}`;
             if (activeSub === 'microphones') return `Melodiq › ${t('melodiq.settings.microphones', 'Mikrofone')}`;
             if (activeSub === 'profiles') return `Melodiq › ${t('melodiq.settings.profiles', 'Profile')}`;
             if (activeSub === 'gameplay') return `Melodiq › ${t('melodiq.settings.gameplay', 'Gameplay')}`;
@@ -217,7 +179,7 @@ export const SettingsHeaderToolbar: React.FC = () => {
                 }}
             />
 
-            {/* Mobile View: Compact Hierarchical Dropdown */}
+            {/* Mobile View: Compact Dropdown */}
             {isMobile ? (
                 <>
                     <Button
@@ -270,17 +232,9 @@ export const SettingsHeaderToolbar: React.FC = () => {
                         <MenuItem disabled sx={{ opacity: '0.6 !important', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', py: 0.5 }}>
                             {t('games.melodiq.title', 'Melodiq')}
                         </MenuItem>
-                        <MenuItem onClick={() => updateNav('melodiq', 'server', 'connection')} selected={activeTab === 'melodiq' && activeSub === 'server' && activeSection === 'connection'}>
+                        <MenuItem onClick={() => updateNav('melodiq', 'server')} selected={activeTab === 'melodiq' && activeSub === 'server'}>
                             <ListItemIcon><DnsIcon fontSize="small" /></ListItemIcon>
-                            <ListItemText primary={`Companion Server: ${t('melodiq.server.connection_tab', 'Verbindung')}`} />
-                        </MenuItem>
-                        <MenuItem onClick={() => updateNav('melodiq', 'server', 'setup')} selected={activeTab === 'melodiq' && activeSub === 'server' && activeSection === 'setup'}>
-                            <ListItemIcon><AutoFixHighIcon fontSize="small" /></ListItemIcon>
-                            <ListItemText primary={`Companion Server: ${t('melodiq.server.setup_tab', 'Setup')}`} />
-                        </MenuItem>
-                        <MenuItem onClick={() => updateNav('melodiq', 'server', 'apikeys')} selected={activeTab === 'melodiq' && activeSub === 'server' && activeSection === 'apikeys'}>
-                            <ListItemIcon><KeyIcon fontSize="small" /></ListItemIcon>
-                            <ListItemText primary={`Companion Server: ${t('melodiq.server.apikeys_tab', 'API-Keys')}`} />
+                            <ListItemText primary={t('melodiq.server.tab', 'Companion Server')} />
                         </MenuItem>
                         <MenuItem onClick={() => updateNav('melodiq', 'microphones')} selected={activeTab === 'melodiq' && activeSub === 'microphones'}>
                             <ListItemIcon><MicIcon fontSize="small" /></ListItemIcon>
@@ -301,7 +255,7 @@ export const SettingsHeaderToolbar: React.FC = () => {
                     </Menu>
                 </>
             ) : (
-                /* Desktop / Tablet View: Classic Header Menu Bar with Dropdowns */
+                /* Desktop / Tablet View: Classic Header Menu Bar */
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     {/* 1. Allgemein ▾ */}
                     <Button
@@ -352,17 +306,9 @@ export const SettingsHeaderToolbar: React.FC = () => {
                         onClose={handleCloseAll}
                         sx={menuPaperSx}
                     >
-                        {/* Sub-Item: Companion Server with Sub-Sub Cascading Trigger */}
-                        <MenuItem
-                            onClick={(e) => setServerSubAnchor(e.currentTarget)}
-                            selected={activeTab === 'melodiq' && activeSub === 'server'}
-                            sx={{ display: 'flex', justifyContent: 'space-between' }}
-                        >
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                                <DnsIcon fontSize="small" />
-                                <ListItemText primary={t('melodiq.server.tab', 'Companion Server')} />
-                            </Box>
-                            <ChevronRightIcon fontSize="small" sx={{ color: 'text.secondary', ml: 1 }} />
+                        <MenuItem onClick={() => updateNav('melodiq', 'server')} selected={activeTab === 'melodiq' && activeSub === 'server'}>
+                            <ListItemIcon><DnsIcon fontSize="small" /></ListItemIcon>
+                            <ListItemText primary={t('melodiq.server.tab', 'Companion Server')} />
                         </MenuItem>
 
                         <Divider sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
@@ -384,29 +330,6 @@ export const SettingsHeaderToolbar: React.FC = () => {
                             <ListItemText primary={t('melodiq.playlists', 'Playlists')} />
                         </MenuItem>
                     </Menu>
-
-                    {/* Sub-Sub Menu: Companion Server */}
-                    <Menu
-                        anchorEl={serverSubAnchor}
-                        open={Boolean(serverSubAnchor)}
-                        onClose={() => setServerSubAnchor(null)}
-                        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-                        sx={menuPaperSx}
-                    >
-                        <MenuItem onClick={() => updateNav('melodiq', 'server', 'connection')} selected={activeTab === 'melodiq' && activeSub === 'server' && activeSection === 'connection'}>
-                            <ListItemIcon><DnsIcon fontSize="small" /></ListItemIcon>
-                            <ListItemText primary={t('melodiq.server.connection_tab', 'Verbindung & Status')} />
-                        </MenuItem>
-                        <MenuItem onClick={() => updateNav('melodiq', 'server', 'setup')} selected={activeTab === 'melodiq' && activeSub === 'server' && activeSection === 'setup'}>
-                            <ListItemIcon><AutoFixHighIcon fontSize="small" /></ListItemIcon>
-                            <ListItemText primary={t('melodiq.server.setup_tab', 'Setup-Assistent')} />
-                        </MenuItem>
-                        <MenuItem onClick={() => updateNav('melodiq', 'server', 'apikeys')} selected={activeTab === 'melodiq' && activeSub === 'server' && activeSection === 'apikeys'}>
-                            <ListItemIcon><KeyIcon fontSize="small" /></ListItemIcon>
-                            <ListItemText primary={t('melodiq.server.apikeys_tab', 'API-Schlüssel für Freunde')} />
-                        </MenuItem>
-                    </Menu>
                 </Box>
             )}
         </Box>
@@ -420,7 +343,6 @@ export const SettingsHeaderSubNav: React.FC = () => {
 
     const tabParam = searchParams.get('tab') || 'general';
     const subParam = searchParams.get('sub') || '';
-    const sectionParam = searchParams.get('section') || '';
 
     const activeTab = (tabParam === 'notifications' || tabParam === 'push' || tabParam === 'ntfy')
         ? 'notifications'
@@ -434,9 +356,7 @@ export const SettingsHeaderSubNav: React.FC = () => {
             ? (subParam || 'server')
             : '';
 
-    const activeSection = sectionParam || 'connection';
-
-    const updateNav = (tab: string, sub?: string, section?: string) => {
+    const updateNav = (tab: string, sub?: string) => {
         const nextParams = new URLSearchParams(searchParams);
         nextParams.set('tab', tab);
         if (sub) {
@@ -444,11 +364,7 @@ export const SettingsHeaderSubNav: React.FC = () => {
         } else {
             nextParams.delete('sub');
         }
-        if (section) {
-            nextParams.set('section', section);
-        } else {
-            nextParams.delete('section');
-        }
+        nextParams.delete('section');
         navigate(`/settings?${nextParams.toString()}`);
     };
 
@@ -496,7 +412,7 @@ export const SettingsHeaderSubNav: React.FC = () => {
                     <Button
                         size="small"
                         startIcon={<DnsIcon fontSize="small" />}
-                        onClick={() => updateNav('melodiq', 'server', activeSection)}
+                        onClick={() => updateNav('melodiq', 'server')}
                         sx={subPillSx(activeSub === 'server')}
                     >
                         {t('melodiq.server.tab', 'Companion Server')}
@@ -533,39 +449,6 @@ export const SettingsHeaderSubNav: React.FC = () => {
                     >
                         {t('melodiq.playlists', 'Playlists')}
                     </Button>
-
-                    {/* Level 3 Sub-Sub-Nav: If Companion Server is active */}
-                    {activeSub === 'server' && (
-                        <>
-                            <Divider orientation="vertical" flexItem sx={{ mx: 0.5, borderColor: 'rgba(255,255,255,0.12)' }} />
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                                <Button
-                                    size="small"
-                                    startIcon={<DnsIcon fontSize="inherit" />}
-                                    onClick={() => updateNav('melodiq', 'server', 'connection')}
-                                    sx={subSubPillSx(activeSection === 'connection')}
-                                >
-                                    {t('melodiq.server.connection_tab', 'Verbindung & Status')}
-                                </Button>
-                                <Button
-                                    size="small"
-                                    startIcon={<AutoFixHighIcon fontSize="inherit" />}
-                                    onClick={() => updateNav('melodiq', 'server', 'setup')}
-                                    sx={subSubPillSx(activeSection === 'setup')}
-                                >
-                                    {t('melodiq.server.setup_tab', 'Setup-Assistent')}
-                                </Button>
-                                <Button
-                                    size="small"
-                                    startIcon={<KeyIcon fontSize="inherit" />}
-                                    onClick={() => updateNav('melodiq', 'server', 'apikeys')}
-                                    sx={subSubPillSx(activeSection === 'apikeys')}
-                                >
-                                    {t('melodiq.server.apikeys_tab', 'API-Schlüssel für Freunde')}
-                                </Button>
-                            </Box>
-                        </>
-                    )}
                 </Box>
             )}
 

@@ -28,7 +28,6 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onNavigateToPl
     const gameParam = activeGameId || searchParams.get('game') || '';
     const tabParam = searchParams.get('tab') || '';
     const subParam = searchParams.get('sub') || '';
-    const sectionParam = searchParams.get('section') || '';
 
     const activeTab: TabType = (tabParam === 'notifications' || tabParam === 'push' || tabParam === 'ntfy')
         ? 'notifications'
@@ -38,7 +37,6 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onNavigateToPl
 
     const generalSubTab: GeneralSubTab = (subParam === 'feedback' || tabParam === 'keys' || tabParam === 'github') ? 'feedback' : 'app';
     const melodiqSubTab: MelodiqSubTab = (subParam as MelodiqSubTab) || 'server';
-    const serverSection = (sectionParam as 'connection' | 'setup' | 'apikeys') || 'connection';
 
     return (
         <Box sx={{ width: '100%', maxWidth: 'lg', mx: 'auto', mt: { xs: 1, sm: 2 }, pb: 6 }}>
@@ -53,7 +51,6 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onNavigateToPl
                 <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
                     <MelodiqSettingsCategory 
                         activeSubTab={melodiqSubTab}
-                        activeServerSection={serverSection}
                         onNavigateToPlaylists={onNavigateToPlaylists} 
                     />
                 </Suspense>

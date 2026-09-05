@@ -5,7 +5,6 @@ import RestoreIcon from '@mui/icons-material/Restore';
 import QueueMusicIcon from '@mui/icons-material/QueueMusic';
 import { useTranslation } from 'react-i18next';
 import { ServerConnection } from '../../../components/connection/ServerConnection';
-import { ServerSetupWizard } from '../../../components/connection/ServerSetupWizard';
 import { ServerAdminPanel } from '../../../components/connection/ServerAdminPanel';
 import {
     MicrophoneManager,
@@ -25,22 +24,18 @@ import { settingsCardSx } from '../settingsStyles';
 interface MelodiqSettingsCategoryProps {
     activeSubTab?: MelodiqSubTab;
     initialSubTab?: MelodiqSubTab;
-    activeServerSection?: ServerSubSection;
     onNavigateToPlaylists?: () => void;
 }
 
 export type MelodiqSubTab = 'server' | 'microphones' | 'profiles' | 'gameplay' | 'playlists';
-export type ServerSubSection = 'connection' | 'setup' | 'apikeys';
 
 export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = ({
     activeSubTab,
     initialSubTab = 'server',
-    activeServerSection,
     onNavigateToPlaylists
 }) => {
     const { t } = useTranslation();
     const subTab = activeSubTab || initialSubTab;
-    const serverSection = activeServerSection || 'connection';
 
     // Audio Devices
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
@@ -95,13 +90,11 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {/* Sub-Tab 0: Companion Server (Connection, Setup, API Keys) */}
+            {/* Sub-Tab 0: Companion Server (Connection, Setup Dialog, API Keys) */}
             {subTab === 'server' && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                    {/* Server Section Content - navigation controlled via GlobalHeader */}
-                    {serverSection === 'connection' && <ServerConnection />}
-                    {serverSection === 'setup' && <ServerSetupWizard />}
-                    {serverSection === 'apikeys' && <ServerAdminPanel />}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <ServerConnection />
+                    <ServerAdminPanel />
                 </Box>
             )}
 
