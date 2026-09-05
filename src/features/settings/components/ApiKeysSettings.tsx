@@ -1,12 +1,16 @@
-import React from 'react';
-import { Box, Typography } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Typography, Tabs, Tab, Paper } from '@mui/material';
 import KeyIcon from '@mui/icons-material/Key';
+import GitHubIcon from '@mui/icons-material/GitHub';
 import { useTranslation } from 'react-i18next';
 import { ServerAdminPanel } from '../../../components/connection/ServerAdminPanel';
 import { GitHubSettings } from './GitHubSettings';
 
+type KeysSubTab = 'server_keys' | 'github';
+
 export const ApiKeysSettings: React.FC = () => {
     const { t } = useTranslation();
+    const [subTab, setSubTab] = useState<KeysSubTab>('server_keys');
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -23,11 +27,52 @@ export const ApiKeysSettings: React.FC = () => {
                 </Box>
             </Box>
 
-            {/* 1. Server API Keys Management (Friends, Clients, QR Code Share Links) */}
-            <ServerAdminPanel />
+            {/* Sub-Tabs Navigation */}
+            <Paper sx={{ p: 0.5, borderRadius: 2.5, bgcolor: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                <Tabs
+                    value={subTab}
+                    onChange={(_, val) => setSubTab(val)}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    textColor="primary"
+                    indicatorColor="primary"
+                    sx={{
+                        minHeight: 42,
+                        '& .MuiTab-root': {
+                            minHeight: 42,
+                            py: 1,
+                            px: 2.5,
+                            textTransform: 'none',
+                            fontWeight: 'bold',
+                            fontSize: '0.9rem',
+                            borderRadius: 2,
+                            gap: 1,
+                            color: 'text.secondary',
+                            '&.Mui-selected': {
+                                color: 'primary.main',
+                                bgcolor: 'rgba(100, 180, 255, 0.1)',
+                            },
+                        },
+                    }}
+                >
+                    <Tab 
+                        icon={<KeyIcon fontSize="small" />} 
+                        iconPosition="start" 
+                        label="Server API-Schlüssel für Freunde" 
+                        value="server_keys" 
+                    />
+                    <Tab 
+                        icon={<GitHubIcon fontSize="small" />} 
+                        iconPosition="start" 
+                        label="GitHub Integration Token" 
+                        value="github" 
+                    />
+                </Tabs>
+            </Paper>
 
-            {/* 2. GitHub Personal Access Token */}
-            <GitHubSettings />
+            {/* Sub-Tab Content */}
+            {subTab === 'server_keys' && <ServerAdminPanel />}
+            {subTab === 'github' && <GitHubSettings />}
         </Box>
     );
 };

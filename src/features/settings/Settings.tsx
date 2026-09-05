@@ -1,5 +1,5 @@
 import React, { useState, lazy, Suspense } from 'react';
-import { Box, Typography, Tabs, Tab, IconButton, useTheme, useMediaQuery, Paper, CircularProgress } from '@mui/material';
+import { Box, Typography, Tabs, Tab, IconButton, Paper, CircularProgress } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
 import DnsIcon from '@mui/icons-material/Dns';
@@ -26,8 +26,6 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const theme = useTheme();
-    const isMediumScreen = useMediaQuery(theme.breakpoints.up('md'));
 
     // Set page title
     usePageTitle(t('settings.title', 'Settings'));
@@ -79,7 +77,7 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
     return (
         <Box sx={{ width: '100%', maxWidth: 'lg', mx: 'auto', mt: { xs: 2, md: 4 }, pb: 6 }}>
             {/* Header */}
-            <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
                 <IconButton onClick={handleBackClick} color="primary" aria-label="back">
                     <ArrowBackIcon />
                 </IconButton>
@@ -93,99 +91,89 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, onBack, onNavi
                 </Box>
             </Box>
 
-            {/* Layout Grid */}
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-                {/* Sidebar Navigation */}
-                <Paper sx={{ 
-                    p: 1.5, 
-                    borderRadius: 3, 
-                    bgcolor: 'rgba(30, 30, 40, 0.7)', 
-                    border: '1px solid rgba(255, 255, 255, 0.1)', 
-                    boxShadow: 6,
-                    minWidth: { md: 240 },
-                    alignSelf: 'flex-start'
-                }}>
-                    <Tabs
-                        value={activeTab}
-                        onChange={handleTabChange}
-                        orientation={isMediumScreen ? 'vertical' : 'horizontal'}
-                        variant={isMediumScreen ? 'standard' : 'scrollable'}
-                        scrollButtons="auto"
-                        textColor="primary"
-                        indicatorColor="primary"
-                        sx={{
-                            borderRight: isMediumScreen ? 1 : 0,
-                            borderBottom: !isMediumScreen ? 1 : 0,
-                            borderColor: 'divider',
-                            '.MuiTab-root': {
-                                alignItems: isMediumScreen ? 'flex-start' : 'center',
-                                textTransform: 'none',
-                                fontWeight: 'bold',
-                                py: 1.5,
-                                px: 2,
-                                fontSize: '0.95rem',
-                                color: 'rgba(255, 255, 255, 0.65)',
-                                minHeight: 48,
-                                gap: 1.5,
-                                borderRadius: 2,
-                                mb: isMediumScreen ? 0.5 : 0,
-                                transition: 'all 0.2s ease',
-                                '&.Mui-selected': {
-                                    color: 'primary.main',
-                                    bgcolor: 'rgba(100, 180, 255, 0.08)',
-                                }
-                            }
-                        }}
-                    >
-                        <Tab 
-                            icon={<SettingsIcon fontSize="small" />}
-                            iconPosition="start"
-                            label={t('settings.general_tab', 'Allgemein')} 
-                            value="general" 
-                        />
-                        <Tab 
-                            icon={<DnsIcon fontSize="small" />}
-                            iconPosition="start"
-                            label={t('settings.server_tab', 'Server & Netzwerk')} 
-                            value="server" 
-                        />
-                        <Tab 
-                            icon={<KeyIcon fontSize="small" />}
-                            iconPosition="start"
-                            label={t('settings.api_keys_tab', 'API-Keys')} 
-                            value="keys" 
-                        />
-                        <Tab 
-                            icon={<MicIcon fontSize="small" />}
-                            iconPosition="start"
-                            label={t('games.melodiq.title', 'Melodiq')} 
-                            value="melodiq" 
-                        />
-                    </Tabs>
-                </Paper>
+            {/* Top Main Navigation Tabs */}
+            <Paper sx={{ 
+                p: 0.5, 
+                mb: 3.5, 
+                borderRadius: 3, 
+                bgcolor: 'rgba(30, 30, 40, 0.7)', 
+                border: '1px solid rgba(255, 255, 255, 0.1)', 
+                boxShadow: 4 
+            }}>
+                <Tabs
+                    value={activeTab}
+                    onChange={handleTabChange}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    textColor="primary"
+                    indicatorColor="primary"
+                    sx={{
+                        minHeight: 48,
+                        '& .MuiTab-root': {
+                            minHeight: 48,
+                            py: 1.5,
+                            px: { xs: 2, sm: 3 },
+                            textTransform: 'none',
+                            fontWeight: 'bold',
+                            fontSize: { xs: '0.875rem', sm: '0.95rem' },
+                            borderRadius: 2,
+                            gap: 1.2,
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            '&.Mui-selected': {
+                                color: 'primary.main',
+                                bgcolor: 'rgba(100, 180, 255, 0.12)',
+                            },
+                        },
+                    }}
+                >
+                    <Tab 
+                        icon={<SettingsIcon fontSize="small" />}
+                        iconPosition="start"
+                        label={t('settings.general_tab', 'Allgemein')} 
+                        value="general" 
+                    />
+                    <Tab 
+                        icon={<DnsIcon fontSize="small" />}
+                        iconPosition="start"
+                        label={t('settings.server_tab', 'Server & Netzwerk')} 
+                        value="server" 
+                    />
+                    <Tab 
+                        icon={<KeyIcon fontSize="small" />}
+                        iconPosition="start"
+                        label={t('settings.api_keys_tab', 'API-Keys')} 
+                        value="keys" 
+                    />
+                    <Tab 
+                        icon={<MicIcon fontSize="small" />}
+                        iconPosition="start"
+                        label={t('games.melodiq.title', 'Melodiq')} 
+                        value="melodiq" 
+                    />
+                </Tabs>
+            </Paper>
 
-                {/* Content Panel */}
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                    {activeTab === 'general' && <GeneralSettings />}
-                    {activeTab === 'server' && (
-                        <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
-                            <ServerSettingsCategory />
-                        </Suspense>
-                    )}
-                    {activeTab === 'keys' && (
-                        <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
-                            <ApiKeysSettings />
-                        </Suspense>
-                    )}
-                    {activeTab === 'melodiq' && (
-                        <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
-                            <MelodiqSettingsCategory 
-                                onNavigateToPlaylists={onNavigateToPlaylists} 
-                                onNavigateToServer={() => setActiveTab('server')}
-                            />
-                        </Suspense>
-                    )}
-                </Box>
+            {/* Content Area with Sub-Tabs in each Category */}
+            <Box sx={{ width: '100%' }}>
+                {activeTab === 'general' && <GeneralSettings />}
+                {activeTab === 'server' && (
+                    <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
+                        <ServerSettingsCategory />
+                    </Suspense>
+                )}
+                {activeTab === 'keys' && (
+                    <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
+                        <ApiKeysSettings />
+                    </Suspense>
+                )}
+                {activeTab === 'melodiq' && (
+                    <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
+                        <MelodiqSettingsCategory 
+                            onNavigateToPlaylists={onNavigateToPlaylists} 
+                            onNavigateToServer={() => setActiveTab('server')}
+                        />
+                    </Suspense>
+                )}
             </Box>
         </Box>
     );
