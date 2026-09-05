@@ -1,27 +1,27 @@
-import React, { useState } from 'react';
-import { Typography, Paper, FormControl, InputLabel, Select, MenuItem, Box, Button, Chip, Tabs, Tab } from '@mui/material';
+import React from 'react';
+import { Typography, Paper, FormControl, InputLabel, Select, MenuItem, Box, Button, Chip } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import InstallMobileIcon from '@mui/icons-material/InstallMobile';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LanguageIcon from '@mui/icons-material/Language';
-import SettingsIcon from '@mui/icons-material/Settings';
 import AppShortcutIcon from '@mui/icons-material/AppShortcut';
 import { useTranslation } from 'react-i18next';
 import { usePWAInstall } from '../../../hooks/usePWAInstall';
 import { PWAInstallDialog } from '../../../components/pwa';
 import { GitHubSettings } from './GitHubSettings';
-import { settingsCardSx, subTabsBarSx, subTabSx } from '../settingsStyles';
+import { settingsCardSx } from '../settingsStyles';
 
 export type GeneralSubTab = 'app' | 'feedback';
 
 interface GeneralSettingsProps {
+    activeSubTab?: GeneralSubTab;
     initialSubTab?: GeneralSubTab;
 }
 
-export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ initialSubTab = 'app' }) => {
+export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ activeSubTab, initialSubTab = 'app' }) => {
     const { t, i18n } = useTranslation();
-    const [subTab, setSubTab] = useState<GeneralSubTab>(initialSubTab);
+    const subTab = activeSubTab || initialSubTab;
     const { isStandalone, isInstallable, installApp, showIOSGuide, setShowIOSGuide } = usePWAInstall();
 
     const handleLanguageChange = (event: SelectChangeEvent) => {
@@ -32,48 +32,18 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({ initialSubTab 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {/* Header / Intro */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <SettingsIcon color="primary" sx={{ fontSize: 32 }} />
+                {subTab === 'app' ? <AppShortcutIcon color="primary" sx={{ fontSize: 30 }} /> : <FeedbackIcon color="primary" sx={{ fontSize: 30 }} />}
                 <Box>
                     <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                        {t('settings.general_title', 'Allgemeine Einstellungen')}
+                        {subTab === 'app' ? t('settings.app_and_language', 'App & Sprache') : t('settings.feedback_title', 'Feedback & Support')}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        {t('settings.general_desc', 'Sprache, App-Installation, Feedback und GitHub-Integration.')}
+                        {subTab === 'app'
+                            ? t('settings.app_lang_desc', 'Spracheinstellungen, PWA-Installation und Anzeigeoptionen.')
+                            : t('settings.feedback_desc', 'Feedback senden, Bug-Reports verwalten und GitHub-Integration einrichten.')}
                     </Typography>
                 </Box>
             </Box>
-
-            {/* Sub-Tabs Navigation */}
-            <Paper sx={subTabsBarSx}>
-                <Tabs
-                    value={subTab}
-                    onChange={(_, val) => setSubTab(val)}
-                    variant="scrollable"
-                    scrollButtons="auto"
-                    TabIndicatorProps={{ style: { display: 'none' } }}
-                    sx={{
-                        minHeight: 38,
-                        '& .MuiTabs-flexContainer': {
-                            gap: 0.75,
-                        },
-                    }}
-                >
-                    <Tab 
-                        icon={<AppShortcutIcon fontSize="small" />} 
-                        iconPosition="start" 
-                        label={t('settings.app_and_language', 'App & Sprache')} 
-                        value="app" 
-                        sx={subTabSx}
-                    />
-                    <Tab 
-                        icon={<FeedbackIcon fontSize="small" />} 
-                        iconPosition="start" 
-                        label={t('settings.feedback_title', 'Feedback & Support')} 
-                        value="feedback" 
-                        sx={subTabSx}
-                    />
-                </Tabs>
-            </Paper>
 
             {/* Sub-Tab 1: App & Sprache */}
             {subTab === 'app' && (

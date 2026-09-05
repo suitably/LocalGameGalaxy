@@ -14,6 +14,8 @@ import { gameRegistry } from '../../lib/gameRegistry';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
 import { PWAInstallDialog } from '../pwa/PWAInstallDialog';
 
+import { SettingsHeaderToolbar, SettingsHeaderSubNav } from '../../features/settings/components/SettingsHeaderNav';
+
 export const GlobalHeader: React.FC = () => {
     const { t } = useTranslation();
     const { title, customHeaderTitle, menuItems, homeAction, customHeaderActions } = useLayout();
@@ -25,6 +27,7 @@ export const GlobalHeader: React.FC = () => {
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const activeGame = gameRegistry.findGameByPath(location.pathname);
     const hasSettings = activeGame?.hasSettings ?? false;
+    const isSettingsPage = location.pathname === '/settings';
     const { isStandalone, isInstallable, installApp, showIOSGuide, setShowIOSGuide } = usePWAInstall();
 
     // State for Burger Menu
@@ -46,6 +49,13 @@ export const GlobalHeader: React.FC = () => {
     const handleHomeClick = () => {
         if (homeAction) {
             homeAction();
+        } else if (isSettingsPage) {
+            const game = new URLSearchParams(location.search).get('game');
+            if (game) {
+                navigate(`/games/${game}`);
+            } else {
+                navigate('/');
+            }
         } else {
             navigate('/');
         }
@@ -69,16 +79,16 @@ export const GlobalHeader: React.FC = () => {
                 }}
             >
                 <Toolbar sx={{ alignItems: 'center', minHeight: { xs: 48, sm: 56 }, px: { xs: 1, sm: 2 } }}>
-                    <Tooltip title={homeAction ? t('common.back', 'Zurück') : t('common.home', 'Home')}>
+                    <Tooltip title={(homeAction || isSettingsPage) ? t('common.back', 'Zurück') : t('common.home', 'Home')}>
                         <IconButton
                             size="medium"
                             edge="start"
                             color="inherit"
-                            aria-label={homeAction ? t('common.back', 'Zurück') : "home"}
+                            aria-label={(homeAction || isSettingsPage) ? t('common.back', 'Zurück') : "home"}
                             sx={{ mr: { xs: 0.5, sm: 1.5 }, p: { xs: 0.75, sm: 1.25 } }}
                             onClick={handleHomeClick}
                         >
-                            {homeAction ? (
+                            {(homeAction || isSettingsPage) ? (
                                 <ArrowBackRoundedIcon fontSize={isSmallScreen ? "small" : "medium"} />
                             ) : (
                                 <HomeIcon fontSize={isSmallScreen ? "small" : "medium"} />
@@ -86,7 +96,9 @@ export const GlobalHeader: React.FC = () => {
                         </IconButton>
                     </Tooltip>
 
-                    {customHeaderTitle ? (
+                    {isSettingsPage ? (
+                        <SettingsHeaderToolbar />
+                    ) : customHeaderTitle ? (
                         <Box sx={{ flexGrow: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
                             {customHeaderTitle}
                         </Box>
@@ -121,8 +133,8 @@ export const GlobalHeader: React.FC = () => {
                         </Tooltip>
                     )}
 
-                    {/* Settings Icon (Global) - Hide on game routes because they have their own settings */}
-                    {!hasSettings && (
+                    {/* Settings Icon (Global) - Hide on game routes and when on settings page */}
+                    {!hasSettings && !isSettingsPage && (
                         <Tooltip title={t('settings.title', 'Settings')}>
                             <IconButton
                                 color="inherit"
@@ -210,6 +222,7 @@ export const GlobalHeader: React.FC = () => {
                         </div>
                     )}
                 </Toolbar>
+                {isSettingsPage && <SettingsHeaderSubNav />}
             </AppBar>
             <PWAInstallDialog open={showIOSGuide} onClose={() => setShowIOSGuide(false)} />
         </>
