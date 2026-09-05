@@ -2,7 +2,11 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Box, Button, Typography, Paper, Divider } from '@mui/material';
 import UndoIcon from '@mui/icons-material/Undo';
 import RestoreIcon from '@mui/icons-material/Restore';
+import StorageIcon from '@mui/icons-material/Storage';
 import { useTranslation } from 'react-i18next';
+import { ServerSetupWizard } from '../../../components/connection/ServerSetupWizard';
+import { ServerConnection } from '../../../components/connection/ServerConnection';
+import { ServerAdminPanel } from '../../../components/connection/ServerAdminPanel';
 import {
     MicrophoneManager,
     useProfiles,
@@ -106,6 +110,26 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
                 settings={settingsHook.settings}
                 onUpdateSetting={settingsHook.updateSetting}
             />
+
+            <Divider />
+
+            {/* 6. Melodiq Companion Server (Music, USDB & AI) */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <StorageIcon color="primary" sx={{ fontSize: 28 }} />
+                    <Box>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                            {t('melodiq.server.title', 'Melodiq Companion Server')}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {t('melodiq.server.desc', 'Optionaler lokaler Musik-Server für eigene MP3-Dateien, YouTube-Streaming, USDB-Downloads und KI-Gesangstrennung.')}
+                        </Typography>
+                    </Box>
+                </Box>
+                <ServerSetupWizard />
+                <ServerConnection />
+                <ServerAdminPanel />
+            </Box>
 
             <Box sx={{
                 mt: 4,

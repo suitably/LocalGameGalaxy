@@ -1,0 +1,26 @@
+services:
+  # Melodiq Companion Server (Core Service)
+  melodiq-server:
+    image: nexumia/melodiq-server:latest
+    container_name: melodiq-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - ./music:/app/music:ro
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - SECURITY_TOKEN=
+      - MUSIC_DIR=/app/music
+      - ALLOWED_ORIGINS=*
+
+  # Cloudflare Quick Tunnel (Public HTTPS without router port-forwarding)
+  melodiq-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: melodiq-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --url http://melodiq-server:3000
+    depends_on:
+      - melodiq-server

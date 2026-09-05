@@ -1,0 +1,19 @@
+services:
+  # Melodiq Companion Server (AI Edition)
+  # Includes PyTorch, ONNX Vocal Separation (Demucs/audio-separator) & Whisper AI
+  melodiq-server:
+    image: nexumia/melodiq-server:ai
+    container_name: melodiq-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - ./music:/app/music:ro
+      - ./models:/app/models:z
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - SECURITY_TOKEN=
+      - MUSIC_DIR=/app/music
+      - ALLOWED_ORIGINS=*

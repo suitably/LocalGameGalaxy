@@ -117,10 +117,35 @@ export function useServerAutoDetect() {
         window.dispatchEvent(new Event('server_connection_updated'));
     }, [token]);
 
-    const downloadDockerCompose = useCallback(() => {
-        const composeYaml = `services:
-  # Melodiq Companion Server (Karaoke Media Streaming, USDB & AI Vocal Separation)
-  # For AI vocal separation & Whisper, use image: nexumia/melodiq-server:ai
+    const downloadDockerCompose = useCallback((preset: 'standard' | 'ai' | 'tunnel' = 'standard') => {
+        let filename = 'docker-compose.yml';
+        let composeYaml = '';
+
+        if (preset === 'ai') {
+            filename = 'docker-compose.ai.yml';
+            composeYaml = `services:
+  # Melodiq Companion Server (AI Edition: Vocal Separation & Whisper)
+  melodiq-server:
+    image: nexumia/melodiq-server:ai
+    container_name: melodiq-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - ./music:/app/music:ro
+      - ./models:/app/models:z
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - SECURITY_TOKEN=${token}
+      - MUSIC_DIR=/app/music
+      - ALLOWED_ORIGINS=*
+`;
+        } else if (preset === 'tunnel') {
+            filename = 'docker-compose.tunnel.yml';
+            composeYaml = `services:
+  # Melodiq Companion Server
   melodiq-server:
     image: nexumia/melodiq-server:latest
     container_name: melodiq-server
@@ -137,27 +162,47 @@ export function useServerAutoDetect() {
       - MUSIC_DIR=/app/music
       - ALLOWED_ORIGINS=*
 
-  # Optional: Zero-Config Public HTTPS Tunnel
+  # Cloudflare Quick Tunnel (Public HTTPS without router port-forwarding)
   melodiq-tunnel:
     image: cloudflare/cloudflared:latest
     container_name: melodiq-tunnel
     restart: unless-stopped
-    profiles:
-      - tunnel
     command: tunnel --no-autoupdate --url http://melodiq-server:3000
     depends_on:
       - melodiq-server
 `;
+        } else {
+            filename = 'docker-compose.yml';
+            composeYaml = `services:
+  # Melodiq Companion Server (Standard Lightweight)
+  melodiq-server:
+    image: nexumia/melodiq-server:latest
+    container_name: melodiq-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - ./music:/app/music:ro
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - SECURITY_TOKEN=${token}
+      - MUSIC_DIR=/app/music
+      - ALLOWED_ORIGINS=*
+`;
+        }
+
         const blob = new Blob([composeYaml], { type: 'text/yaml' });
         const downloadUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = downloadUrl;
-        a.download = 'docker-compose.yml';
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(downloadUrl);
-    }, []);
+    }, [token]);
 
     useEffect(() => {
         // Run initial check
