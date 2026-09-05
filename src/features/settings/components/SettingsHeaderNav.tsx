@@ -14,15 +14,14 @@ import {
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import MicIcon from '@mui/icons-material/Mic';
-import AppShortcutIcon from '@mui/icons-material/AppShortcut';
-import FeedbackIcon from '@mui/icons-material/Feedback';
 import DnsIcon from '@mui/icons-material/Dns';
 import PersonIcon from '@mui/icons-material/Person';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import QueueMusicIcon from '@mui/icons-material/QueueMusic';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { subPillSx } from '../settingsStyles';
 
 const menuPaperSx = {
     '& .MuiPaper-root': {
@@ -74,49 +73,26 @@ const mainMenuBtnSx = (isActive: boolean) => ({
     },
 });
 
-const subPillSx = (isActive: boolean) => ({
-    textTransform: 'none',
-    fontWeight: isActive ? 700 : 500,
-    fontSize: '0.8rem',
-    color: isActive ? '#90caf9' : 'rgba(255, 255, 255, 0.65)',
-    bgcolor: isActive ? 'rgba(144, 202, 249, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-    border: isActive ? '1px solid rgba(144, 202, 249, 0.35)' : '1px solid rgba(255, 255, 255, 0.06)',
-    borderRadius: 5,
-    px: 1.5,
-    py: 0.3,
-    minHeight: 28,
-    whiteSpace: 'nowrap',
-    transition: 'all 0.15s ease',
-    '&:hover': {
-        bgcolor: isActive ? 'rgba(144, 202, 249, 0.2)' : 'rgba(255, 255, 255, 0.08)',
-        color: 'rgba(255, 255, 255, 0.95)',
-    },
-});
-
 export const SettingsHeaderToolbar: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams] = useSearchParams();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-    const tabParam = searchParams.get('tab') || 'general';
+    const tabParam = searchParams.get('tab') || '';
     const subParam = searchParams.get('sub') || '';
 
-    const activeTab = (tabParam === 'notifications' || tabParam === 'push' || tabParam === 'ntfy')
-        ? 'notifications'
-        : (tabParam === 'server' || tabParam === 'melodiq')
-            ? 'melodiq'
-            : 'general';
+    const activeTab = (tabParam === 'general')
+        ? 'general'
+        : (tabParam === 'notifications' || tabParam === 'push' || tabParam === 'ntfy')
+            ? 'notifications'
+            : 'melodiq';
 
-    const activeSub = activeTab === 'general'
-        ? (subParam === 'feedback' || tabParam === 'keys' || tabParam === 'github' ? 'feedback' : 'app')
-        : activeTab === 'melodiq'
-            ? (subParam || 'server')
-            : '';
+    const activeSub = activeTab === 'melodiq' ? (subParam || 'all') : '';
 
     // Menu states
-    const [generalAnchor, setGeneralAnchor] = useState<null | HTMLElement>(null);
     const [melodiqAnchor, setMelodiqAnchor] = useState<null | HTMLElement>(null);
     const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
 
@@ -129,12 +105,11 @@ export const SettingsHeaderToolbar: React.FC = () => {
             nextParams.delete('sub');
         }
         nextParams.delete('section');
-        navigate(`/settings?${nextParams.toString()}`);
+        navigate(`/settings?${nextParams.toString()}`, { replace: true, state: location.state });
         handleCloseAll();
     };
 
     const handleCloseAll = () => {
-        setGeneralAnchor(null);
         setMelodiqAnchor(null);
         setMobileMenuAnchor(null);
     };
@@ -149,8 +124,7 @@ export const SettingsHeaderToolbar: React.FC = () => {
             if (activeSub === 'playlists') return `Melodiq › ${t('melodiq.playlists', 'Playlists')}`;
             return 'Melodiq';
         }
-        if (activeSub === 'feedback') return `Allgemein › ${t('settings.feedback_title', 'Feedback')}`;
-        return `Allgemein › ${t('settings.app_and_language', 'App')}`;
+        return t('settings.general_tab', 'Allgemein');
     };
 
     return (
@@ -202,35 +176,13 @@ export const SettingsHeaderToolbar: React.FC = () => {
                         onClose={handleCloseAll}
                         sx={menuPaperSx}
                     >
-                        {/* 1. Allgemein */}
-                        <MenuItem disabled sx={{ opacity: '0.6 !important', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', py: 0.5 }}>
-                            {t('settings.general_tab', 'Allgemein')}
-                        </MenuItem>
-                        <MenuItem onClick={() => updateNav('general', 'app')} selected={activeTab === 'general' && activeSub === 'app'}>
-                            <ListItemIcon><AppShortcutIcon fontSize="small" /></ListItemIcon>
-                            <ListItemText primary={t('settings.app_and_language', 'App & Sprache')} />
-                        </MenuItem>
-                        <MenuItem onClick={() => updateNav('general', 'feedback')} selected={activeTab === 'general' && activeSub === 'feedback'}>
-                            <ListItemIcon><FeedbackIcon fontSize="small" /></ListItemIcon>
-                            <ListItemText primary={t('settings.feedback_title', 'Feedback & Support')} />
-                        </MenuItem>
-
-                        <Divider sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
-
-                        {/* 2. Benachrichtigungen */}
-                        <MenuItem disabled sx={{ opacity: '0.6 !important', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', py: 0.5 }}>
-                            {t('settings.notifications_tab', 'Benachrichtigungen')}
-                        </MenuItem>
-                        <MenuItem onClick={() => updateNav('notifications')} selected={activeTab === 'notifications'}>
-                            <ListItemIcon><NotificationsActiveIcon fontSize="small" /></ListItemIcon>
-                            <ListItemText primary={t('settings.notifications_tab', 'Push & ntfy')} />
-                        </MenuItem>
-
-                        <Divider sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
-
-                        {/* 3. Melodiq */}
+                        {/* 1. Melodiq (Default) */}
                         <MenuItem disabled sx={{ opacity: '0.6 !important', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', py: 0.5 }}>
                             {t('games.melodiq.title', 'Melodiq')}
+                        </MenuItem>
+                        <MenuItem onClick={() => updateNav('melodiq', 'all')} selected={activeTab === 'melodiq' && (activeSub === 'all' || !activeSub)}>
+                            <ListItemIcon><MicIcon fontSize="small" /></ListItemIcon>
+                            <ListItemText primary={t('common.all', 'Alle Einstellungen')} />
                         </MenuItem>
                         <MenuItem onClick={() => updateNav('melodiq', 'server')} selected={activeTab === 'melodiq' && activeSub === 'server'}>
                             <ListItemIcon><DnsIcon fontSize="small" /></ListItemIcon>
@@ -252,46 +204,31 @@ export const SettingsHeaderToolbar: React.FC = () => {
                             <ListItemIcon><QueueMusicIcon fontSize="small" /></ListItemIcon>
                             <ListItemText primary={t('melodiq.playlists', 'Playlists')} />
                         </MenuItem>
+
+                        <Divider sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
+
+                        {/* 2. Allgemein */}
+                        <MenuItem onClick={() => updateNav('general')} selected={activeTab === 'general'}>
+                            <ListItemIcon><SettingsIcon fontSize="small" /></ListItemIcon>
+                            <ListItemText primary={t('settings.general_tab', 'Allgemein')} />
+                        </MenuItem>
+
+                        <Divider sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
+
+                        {/* 3. Benachrichtigungen */}
+                        <MenuItem disabled sx={{ opacity: '0.6 !important', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', py: 0.5 }}>
+                            {t('settings.notifications_tab', 'Benachrichtigungen')}
+                        </MenuItem>
+                        <MenuItem onClick={() => updateNav('notifications')} selected={activeTab === 'notifications'}>
+                            <ListItemIcon><NotificationsActiveIcon fontSize="small" /></ListItemIcon>
+                            <ListItemText primary={t('settings.notifications_tab', 'Push & ntfy')} />
+                        </MenuItem>
                     </Menu>
                 </>
             ) : (
                 /* Desktop / Tablet View: Classic Header Menu Bar */
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {/* 1. Allgemein ▾ */}
-                    <Button
-                        onClick={(e) => setGeneralAnchor(e.currentTarget)}
-                        endIcon={<KeyboardArrowDownIcon />}
-                        startIcon={<SettingsIcon fontSize="small" />}
-                        sx={mainMenuBtnSx(activeTab === 'general')}
-                    >
-                        {t('settings.general_tab', 'Allgemein')}
-                    </Button>
-                    <Menu
-                        anchorEl={generalAnchor}
-                        open={Boolean(generalAnchor)}
-                        onClose={handleCloseAll}
-                        sx={menuPaperSx}
-                    >
-                        <MenuItem onClick={() => updateNav('general', 'app')} selected={activeTab === 'general' && activeSub === 'app'}>
-                            <ListItemIcon><AppShortcutIcon fontSize="small" /></ListItemIcon>
-                            <ListItemText primary={t('settings.app_and_language', 'App & Sprache')} />
-                        </MenuItem>
-                        <MenuItem onClick={() => updateNav('general', 'feedback')} selected={activeTab === 'general' && activeSub === 'feedback'}>
-                            <ListItemIcon><FeedbackIcon fontSize="small" /></ListItemIcon>
-                            <ListItemText primary={t('settings.feedback_title', 'Feedback & Support')} />
-                        </MenuItem>
-                    </Menu>
-
-                    {/* 2. Benachrichtigungen (Direct Tab) */}
-                    <Button
-                        onClick={() => updateNav('notifications')}
-                        startIcon={<NotificationsActiveIcon fontSize="small" />}
-                        sx={mainMenuBtnSx(activeTab === 'notifications')}
-                    >
-                        {t('settings.notifications_tab', 'Benachrichtigungen')}
-                    </Button>
-
-                    {/* 3. Melodiq ▾ */}
+                    {/* 1. Melodiq ▾ (Default) */}
                     <Button
                         onClick={(e) => setMelodiqAnchor(e.currentTarget)}
                         endIcon={<KeyboardArrowDownIcon />}
@@ -306,12 +243,17 @@ export const SettingsHeaderToolbar: React.FC = () => {
                         onClose={handleCloseAll}
                         sx={menuPaperSx}
                     >
+                        <MenuItem onClick={() => updateNav('melodiq', 'all')} selected={activeTab === 'melodiq' && (activeSub === 'all' || !activeSub)}>
+                            <ListItemIcon><MicIcon fontSize="small" /></ListItemIcon>
+                            <ListItemText primary={t('common.all', 'Alle Einstellungen')} />
+                        </MenuItem>
+
+                        <Divider sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
+
                         <MenuItem onClick={() => updateNav('melodiq', 'server')} selected={activeTab === 'melodiq' && activeSub === 'server'}>
                             <ListItemIcon><DnsIcon fontSize="small" /></ListItemIcon>
                             <ListItemText primary={t('melodiq.server.tab', 'Companion Server')} />
                         </MenuItem>
-
-                        <Divider sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
 
                         <MenuItem onClick={() => updateNav('melodiq', 'microphones')} selected={activeTab === 'melodiq' && activeSub === 'microphones'}>
                             <ListItemIcon><MicIcon fontSize="small" /></ListItemIcon>
@@ -330,6 +272,24 @@ export const SettingsHeaderToolbar: React.FC = () => {
                             <ListItemText primary={t('melodiq.playlists', 'Playlists')} />
                         </MenuItem>
                     </Menu>
+
+                    {/* 2. Allgemein (Direct Tab) */}
+                    <Button
+                        onClick={() => updateNav('general')}
+                        startIcon={<SettingsIcon fontSize="small" />}
+                        sx={mainMenuBtnSx(activeTab === 'general')}
+                    >
+                        {t('settings.general_tab', 'Allgemein')}
+                    </Button>
+
+                    {/* 3. Benachrichtigungen (Direct Tab) */}
+                    <Button
+                        onClick={() => updateNav('notifications')}
+                        startIcon={<NotificationsActiveIcon fontSize="small" />}
+                        sx={mainMenuBtnSx(activeTab === 'notifications')}
+                    >
+                        {t('settings.notifications_tab', 'Benachrichtigungen')}
+                    </Button>
                 </Box>
             )}
         </Box>
@@ -339,22 +299,19 @@ export const SettingsHeaderToolbar: React.FC = () => {
 export const SettingsHeaderSubNav: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams] = useSearchParams();
 
-    const tabParam = searchParams.get('tab') || 'general';
+    const tabParam = searchParams.get('tab') || '';
     const subParam = searchParams.get('sub') || '';
 
-    const activeTab = (tabParam === 'notifications' || tabParam === 'push' || tabParam === 'ntfy')
-        ? 'notifications'
-        : (tabParam === 'server' || tabParam === 'melodiq')
-            ? 'melodiq'
-            : 'general';
+    const activeTab = (tabParam === 'general')
+        ? 'general'
+        : (tabParam === 'notifications' || tabParam === 'push' || tabParam === 'ntfy')
+            ? 'notifications'
+            : 'melodiq';
 
-    const activeSub = activeTab === 'general'
-        ? (subParam === 'feedback' || tabParam === 'keys' || tabParam === 'github' ? 'feedback' : 'app')
-        : activeTab === 'melodiq'
-            ? (subParam || 'server')
-            : '';
+    const activeSub = activeTab === 'melodiq' ? (subParam || 'all') : '';
 
     const updateNav = (tab: string, sub?: string) => {
         const nextParams = new URLSearchParams(searchParams);
@@ -365,7 +322,7 @@ export const SettingsHeaderSubNav: React.FC = () => {
             nextParams.delete('sub');
         }
         nextParams.delete('section');
-        navigate(`/settings?${nextParams.toString()}`);
+        navigate(`/settings?${nextParams.toString()}`, { replace: true, state: location.state });
     };
 
     return (
@@ -387,28 +344,22 @@ export const SettingsHeaderSubNav: React.FC = () => {
             {/* Level 2 Sub-Nav: Allgemein */}
             {activeTab === 'general' && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Button
-                        size="small"
-                        startIcon={<AppShortcutIcon fontSize="small" />}
-                        onClick={() => updateNav('general', 'app')}
-                        sx={subPillSx(activeSub === 'app')}
-                    >
-                        {t('settings.app_and_language', 'App & Sprache')}
-                    </Button>
-                    <Button
-                        size="small"
-                        startIcon={<FeedbackIcon fontSize="small" />}
-                        onClick={() => updateNav('general', 'feedback')}
-                        sx={subPillSx(activeSub === 'feedback')}
-                    >
-                        {t('settings.feedback_title', 'Feedback & Support')}
-                    </Button>
+                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.65)', fontWeight: 500 }}>
+                        {t('settings.general_desc', 'Spracheinstellungen, Feedback und GitHub-Integration.')}
+                    </Typography>
                 </Box>
             )}
 
             {/* Level 2 Sub-Nav: Melodiq */}
             {activeTab === 'melodiq' && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 'max-content' }}>
+                    <Button
+                        size="small"
+                        onClick={() => updateNav('melodiq', 'all')}
+                        sx={subPillSx(activeSub === 'all' || !activeSub)}
+                    >
+                        {t('common.all', 'Alle')}
+                    </Button>
                     <Button
                         size="small"
                         startIcon={<DnsIcon fontSize="small" />}

@@ -11,9 +11,12 @@ const requireAuth = (req, res, next) => {
     }
     const rawToken = req.headers['authorization'] || req.query.token;
     if (!rawToken) {
+        if (typeof res.setHeader === 'function') {
+            res.setHeader('WWW-Authenticate', 'Bearer realm="melodiq"');
+        }
         return res.status(401).json({ error: 'Unauthorized. No Token provided.' });
     }
-    const cleanToken = String(rawToken).replace(/^Bearer\s+/i, '').trim();
+    const cleanToken = String(rawToken).replace(/^Bearer\s+/i, '').trim().replace(/^["']|["']$/g, '');
 
     req.isMasterToken = false;
 
@@ -31,6 +34,9 @@ const requireAuth = (req, res, next) => {
         return next();
     }
     
+    if (typeof res.setHeader === 'function') {
+        res.setHeader('WWW-Authenticate', 'Bearer realm="melodiq"');
+    }
     res.status(401).json({ error: 'Unauthorized. Invalid Token.' });
 };
 
@@ -86,8 +92,12 @@ const corsMiddleware = (req, res, next) => {
         res.setHeader('Access-Control-Allow-Origin', origin);
         res.setHeader('Access-Control-Allow-Credentials', 'true');
     } else if (!RESTRICT_ORIGINS) {
-        res.setHeader('Access-Control-Allow-Origin', origin || '*');
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        if (origin) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+        } else {
+            res.setHeader('Access-Control-Allow-Origin', '*');
+        }
     }
 
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');

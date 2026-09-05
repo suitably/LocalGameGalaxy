@@ -1,17 +1,17 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Box, Typography, TextField, Button, CircularProgress, Alert, IconButton } from '@mui/material';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Box, Typography, TextField, Button, CircularProgress, Alert, IconButton, Dialog } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SettingsIcon from '@mui/icons-material/Settings';
 import VpnKeyRoundedIcon from '@mui/icons-material/VpnKeyRounded';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { resolveGitHubConfig, createGitHubIssue } from '../../lib/github';
+import { resolveGitHubConfig, createGitHubIssue, hasGitHubPAT } from '../../lib/github';
 import { storage } from '../../lib/storage';
 
 export const FeedbackDialog: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const dialogRef = useRef<HTMLDialogElement>(null);
+    const [open, setOpen] = useState(false);
 
     const [feedbackTitle, setFeedbackTitle] = useState('');
     const [feedbackBody, setFeedbackBody] = useState('');
@@ -20,28 +20,26 @@ export const FeedbackDialog: React.FC = () => {
     const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string; url?: string } | null>(null);
 
     const checkConfig = useCallback(() => {
-        const { source } = resolveGitHubConfig();
-        setHasGithubConfig(source !== 'none');
+        setHasGithubConfig(hasGitHubPAT());
     }, []);
 
     // Expose open method via custom event so GlobalHeader can trigger it
     useEffect(() => {
         const handleOpen = () => {
+            if (!hasGitHubPAT()) {
+                navigate('/settings?tab=general&sub=feedback&missing_pat=1');
+                return;
+            }
             setStatus(null);
             checkConfig();
-            dialogRef.current?.showModal();
+            setOpen(true);
         };
         window.addEventListener('feedback:open', handleOpen);
         return () => window.removeEventListener('feedback:open', handleOpen);
-    }, [checkConfig]);
+    }, [checkConfig, navigate]);
 
     const handleClose = () => {
-        dialogRef.current?.close();
-    };
-
-    // Close on backdrop click
-    const handleDialogClick = (e: React.MouseEvent<HTMLDialogElement>) => {
-        if (e.target === dialogRef.current) handleClose();
+        setOpen(false);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -120,28 +118,29 @@ export const FeedbackDialog: React.FC = () => {
         }
     };
 
+    if (!open || !hasGitHubPAT()) {
+        return null;
+    }
+
     return (
-        <dialog
-            ref={dialogRef}
-            onClick={handleDialogClick}
-            style={{
-                border: 'none',
-                borderRadius: '16px',
-                padding: 0,
-                background: 'transparent',
-                maxWidth: '480px',
-                width: '90vw',
-                backdropFilter: 'blur(8px)',
+        <Dialog
+            open={open}
+            onClose={handleClose}
+            maxWidth="xs"
+            fullWidth
+            PaperProps={{
+                sx: {
+                    bgcolor: 'rgba(22, 22, 35, 0.97)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 4,
+                    p: 3,
+                    color: 'white',
+                    boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+                    backdropFilter: 'blur(12px)',
+                }
             }}
         >
-            <Box sx={{
-                bgcolor: 'rgba(22, 22, 35, 0.97)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 4,
-                p: 4,
-                color: 'white',
-                boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
-            }}>
+            <Box>
                 {/* Header */}
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
                     <Box>
@@ -262,6 +261,6 @@ export const FeedbackDialog: React.FC = () => {
                     </Box>
                 </form>
             </Box>
-        </dialog>
+        </Dialog>
     );
 };

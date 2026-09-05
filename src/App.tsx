@@ -9,6 +9,7 @@ import { Hub } from './features/hub/Hub';
 import { Settings } from './features/settings/Settings';
 import { PartyLobby } from './features/party/PartyLobby';
 import { useServerUrlAutoConnect } from './hooks/useServerUrlAutoConnect';
+import { hasGitHubPAT } from './lib/github';
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -16,6 +17,21 @@ const LoadingFallback = () => (
     <CircularProgress />
   </Box>
 );
+
+function FeedbackRedirect() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!hasGitHubPAT()) {
+      navigate('/settings?tab=general&sub=feedback&missing_pat=1', { replace: true });
+    } else {
+      navigate('/', { replace: true });
+      setTimeout(() => {
+        window.dispatchEvent(new Event('feedback:open'));
+      }, 50);
+    }
+  }, [navigate]);
+  return null;
+}
 
 // Inner component to use navigation hook
 function AppRoutes() {
@@ -62,6 +78,7 @@ function AppRoutes() {
             <Settings />
           </Suspense>
         } />
+        <Route path="feedback" element={<FeedbackRedirect />} />
         
         {/* Dynamic Game Routes registered via GameRegistry (OCP) */}
         {gameRegistry.getGames().map(game => (

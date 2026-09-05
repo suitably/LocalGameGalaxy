@@ -70,7 +70,7 @@ export const SetupDockerTab: React.FC<SetupDockerTabProps> = ({ token, downloadD
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - SECURITY_TOKEN="${token}"
+      - SECURITY_TOKEN=${token}
       - MUSIC_DIR=/app/music
       - ALLOWED_ORIGINS=*`;
 

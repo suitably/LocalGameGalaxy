@@ -12,6 +12,7 @@ interface UseSessionPlayersProps {
     setResults: React.Dispatch<React.SetStateAction<any[]>>;
     onExit: () => void;
     audioRef: React.RefObject<HTMLAudioElement | null>;
+    vocalsRef?: React.RefObject<HTMLAudioElement | null>;
     videoRef: React.RefObject<HTMLVideoElement | null>;
     activeSessionOverride?: any[] | null;
     isPassive?: boolean;
@@ -26,6 +27,7 @@ export function useSessionPlayers({
     setResults,
     onExit,
     audioRef,
+    vocalsRef,
     videoRef,
     activeSessionOverride,
     isPassive = false
@@ -346,12 +348,15 @@ export function useSessionPlayers({
                     case 'restart':
                         if (audioRef.current) {
                             audioRef.current.currentTime = 0;
+                            if (vocalsRef?.current) vocalsRef.current.currentTime = 0;
                             if (videoRef.current) videoRef.current.currentTime = 0;
                         }
                         break;
                     case 'next':
                         if (audioRef.current && audioRef.current.duration) {
-                            audioRef.current.currentTime = audioRef.current.duration - 0.1;
+                            const endTime = audioRef.current.duration - 0.1;
+                            audioRef.current.currentTime = endTime;
+                            if (vocalsRef?.current) vocalsRef.current.currentTime = endTime;
                         }
                         break;
                     case 'exit':

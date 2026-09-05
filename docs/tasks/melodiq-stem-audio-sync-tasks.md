@@ -1,0 +1,22 @@
+# Tasks: Melodiq Audio Stem & Melody Synchronization [ID: TASKS-MELODIQ-AUDIO-SYNC]
+
+- [x] 1. High-Precision Audio Stem Synchronization Engine (`useLocalMediaSync.ts`) <!-- id: 1 -->
+  - [x] Eliminate frame-by-frame micro-seeks and playbackRate jitter ("immer wieder gemappt") <!-- id: 1.1 -->
+  - [x] Set `preservesPitch = true` on vocals element <!-- id: 1.2 -->
+  - [x] Synchronize stems on start/resume/seek without continuous buffer flushes <!-- id: 1.3 -->
+  - [x] Remove mutual `waiting` event listeners to prevent play/pause abort loops <!-- id: 1.4 -->
+- [x] 2. Synchronized Playback Controls & Autostart (`usePlaybackControls.ts` & `MelodiqSession.tsx`) <!-- id: 2 -->
+  - [x] Align `vocalsRef.current.currentTime = currentPos` before play in `safePlay` <!-- id: 2.1 -->
+  - [x] Launch `play()` promises concurrently via `Promise.all` <!-- id: 2.2 -->
+  - [x] Prevent `hasStartedRef` autostart restart loop in `MelodiqSession.tsx` <!-- id: 2.3 -->
+  - [x] Sync `vocalsRef.current.currentTime` on keyboard seek (`ArrowRight`, `ArrowLeft`) <!-- id: 2.4 -->
+- [x] 3. Passive Sync (`usePassiveSync.ts` & `useSessionPlayers.ts`) <!-- id: 3 -->
+  - [x] Update `usePassiveSync.ts` to sync `vocalsRef` alongside `audioRef` and `videoRef` <!-- id: 3.1 -->
+  - [x] Update `useSessionPlayers.ts` restart and next handlers to include `vocalsRef` <!-- id: 3.2 -->
+- [x] 4. Visual Melody Note Synchronization (`PitchVisualizer.tsx`) <!-- id: 4 -->
+  - [x] Align `currentBeat` in `PitchVisualizer.tsx` with song playback time and `LyricsDisplay.tsx` <!-- id: 4.1 -->
+- [x] 5. Verification & Documentation <!-- id: 5 -->
+  - [x] Run `npm test` <!-- id: 5.1 -->
+  - [x] Run `npm run lint` <!-- id: 5.2 -->
+  - [x] Complete `npm run build` <!-- id: 5.3 -->
+  - [x] Create walkthrough documentation in `docs/verification/melodiq-stem-audio-sync-walkthrough.md` <!-- id: 5.4 -->

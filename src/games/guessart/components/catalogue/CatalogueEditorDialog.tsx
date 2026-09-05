@@ -248,6 +248,7 @@ export const CatalogueEditorDialog: React.FC<CatalogueEditorDialogProps> = ({
           <PublishCatalogueTab
             categories={categories}
             words={words}
+            onClose={onClose}
           />
         )}
       </DialogContent>

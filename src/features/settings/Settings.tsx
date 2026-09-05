@@ -3,7 +3,7 @@ import { Box, CircularProgress } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { usePageTitle } from '../../context/TitleContext';
-import { GeneralSettings, type GeneralSubTab } from './components/GeneralSettings';
+import { GeneralSettings } from './components/GeneralSettings';
 import type { MelodiqSubTab } from './components/MelodiqSettingsCategory';
 
 const NotificationSettingsCategory = lazy(() => import('./components/NotificationSettingsCategory').then(m => ({ default: m.NotificationSettingsCategory })));
@@ -15,33 +15,31 @@ interface SettingsProps {
     onNavigateToPlaylists?: () => void;
 }
 
-type TabType = 'general' | 'notifications' | 'melodiq';
+type TabType = 'melodiq' | 'general' | 'notifications';
 
-export const Settings: React.FC<SettingsProps> = ({ activeGameId, onNavigateToPlaylists }) => {
+export const Settings: React.FC<SettingsProps> = ({ onNavigateToPlaylists }) => {
     const { t } = useTranslation();
     const [searchParams] = useSearchParams();
 
     // Set page title for GlobalHeader / Layout
     usePageTitle(t('settings.title', 'Settings'));
 
-    // Determine active tab from URL or activeGameId
-    const gameParam = activeGameId || searchParams.get('game') || '';
+    // Determine active tab from URL (melodiq is ALWAYS default!)
     const tabParam = searchParams.get('tab') || '';
     const subParam = searchParams.get('sub') || '';
 
-    const activeTab: TabType = (tabParam === 'notifications' || tabParam === 'push' || tabParam === 'ntfy')
-        ? 'notifications'
-        : (tabParam === 'server' || tabParam === 'melodiq' || gameParam.toLowerCase() === 'melodiq')
-            ? 'melodiq'
-            : 'general';
+    const activeTab: TabType = (tabParam === 'general')
+        ? 'general'
+        : (tabParam === 'notifications' || tabParam === 'push' || tabParam === 'ntfy')
+            ? 'notifications'
+            : 'melodiq'; // Default is melodiq!
 
-    const generalSubTab: GeneralSubTab = (subParam === 'feedback' || tabParam === 'keys' || tabParam === 'github') ? 'feedback' : 'app';
-    const melodiqSubTab: MelodiqSubTab = (subParam as MelodiqSubTab) || 'server';
+    const melodiqSubTab: MelodiqSubTab = (subParam as MelodiqSubTab) || 'all';
 
     return (
         <Box sx={{ width: '100%', maxWidth: 'lg', mx: 'auto', mt: { xs: 1, sm: 2 }, pb: 6 }}>
-            {/* Content Area - Navigation is handled directly in GlobalHeader */}
-            {activeTab === 'general' && <GeneralSettings activeSubTab={generalSubTab} />}
+            {/* Content Area - Navigation is handled directly in GlobalHeader (SettingsHeaderToolbar & SettingsHeaderSubNav) */}
+            {activeTab === 'general' && <GeneralSettings />}
             {activeTab === 'notifications' && (
                 <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
                     <NotificationSettingsCategory />

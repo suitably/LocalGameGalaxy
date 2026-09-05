@@ -16,22 +16,28 @@ import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import {
   calculateCatalogueDiff,
   publishCatalogueToGit,
 } from '../../logic/catalogueManager';
 import type { CategoryItem, WordItem } from '../../logic/types';
+import { hasGitHubPAT } from '../../../../lib/github';
+import { storage, STORAGE_KEYS } from '../../../../lib/storage';
 
 interface PublishCatalogueTabProps {
   categories: CategoryItem[];
   words: WordItem[];
+  onClose?: () => void;
 }
 
 export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
   categories,
   words,
+  onClose,
 }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [userNote, setUserNote] = useState<string>('');
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [result, setResult] = useState<{
@@ -46,11 +52,17 @@ export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
   const diff = useMemo(() => calculateCatalogueDiff(categories, words), [categories, words]);
 
   const handlePublish = async () => {
+    if (!hasGitHubPAT()) {
+      onClose?.();
+      navigate('/settings?tab=general&missing_pat=1');
+      return;
+    }
+
     setSubmitting(true);
     setResult(null);
 
-    const baseUrl = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
-    const token = localStorage.getItem('melodiq_helper_token') || '';
+    const baseUrl = storage.get(STORAGE_KEYS.HELPER_URL, 'http://localhost:3000');
+    const token = storage.get(STORAGE_KEYS.HELPER_TOKEN, '');
 
     try {
       const res = await publishCatalogueToGit({
@@ -187,8 +199,8 @@ export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
             <Typography variant="body2">{result.error}</Typography>
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
               {t(
-                'guessart.helperServerHint',
-                'Stelle sicher, dass der Helper-Server läuft und ein GitHub-Token in den Server-Einstellungen hinterlegt ist.',
+                'guessart.githubErrorHint',
+                'Stelle sicher, dass dein GitHub Personal Access Token (PAT) in den Einstellungen hinterlegt ist und Schreibrechte besitzt.',
               )}
             </Typography>
           </Alert>

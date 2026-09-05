@@ -13,6 +13,7 @@ interface UsePassiveSyncProps {
     playersRef: React.RefObject<PlayerRuntime[]>;
     scoreDisplayRef: React.RefObject<ScoreDisplayHandle | null>;
     audioRef: React.RefObject<HTMLAudioElement | null>;
+    vocalsRef?: React.RefObject<HTMLAudioElement | null>;
     videoRef: React.RefObject<HTMLVideoElement | null>;
     isPlayingRef: React.RefObject<boolean>;
     setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
@@ -31,6 +32,7 @@ export function usePassiveSync({
     playersRef,
     scoreDisplayRef,
     audioRef,
+    vocalsRef,
     videoRef,
     isPlayingRef,
     setIsPlaying,
@@ -94,12 +96,14 @@ export function usePassiveSync({
                 if (passiveState.isPlaying) {
                     if (audioRef.current && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 1.0) {
                         audioRef.current.currentTime = passiveState.currentTime;
+                        if (vocalsRef?.current) vocalsRef.current.currentTime = passiveState.currentTime;
                         if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
                     }
                     const tryPlay = async () => {
                         setIsPlaying(true);
                         try {
                             if (audioRef.current) await audioRef.current.play();
+                            if (vocalsRef?.current) vocalsRef.current.play().catch(() => { });
                             if (videoRef.current) videoRef.current.play().catch(() => { });
                             setPassivePlayBlocked(false);
                         } catch (e: any) {
@@ -109,6 +113,7 @@ export function usePassiveSync({
                     tryPlay();
                 } else {
                     audioRef.current?.pause();
+                    vocalsRef?.current?.pause();
                     videoRef.current?.pause();
                     setIsPlaying(false);
                 }
@@ -121,6 +126,7 @@ export function usePassiveSync({
             // (fixes race condition where TV starts behind host due to load delay)
             if (!isClient && audioRef.current && passiveState.isPlaying && isPlayingRef.current && !audioRef.current.paused && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 0.5) {
                 audioRef.current.currentTime = passiveState.currentTime;
+                if (vocalsRef?.current) vocalsRef.current.currentTime = passiveState.currentTime;
                 if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
             }
 

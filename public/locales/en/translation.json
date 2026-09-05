@@ -500,6 +500,9 @@
   "settings": {
     "title": "Settings",
     "general_tab": "General",
+    "general_desc": "Language preferences, feedback, and GitHub integration.",
+    "app_and_language": "App & Language",
+    "app_lang_desc": "Language preferences and display options.",
     "server_tab": "Server",
     "language_preferences": "Language Preferences",
     "ui_language": "UI Language",
@@ -510,6 +513,8 @@
     "feedback_no_config": "No GitHub connection configured. Please set up a GitHub Token in General Settings or connect a Nexumia Server.",
     "github_missing_title": "GitHub Connection Required",
     "github_missing_desc": "To submit feedback or bug reports as GitHub issues, please configure a Personal Access Token (PAT) in Settings first.",
+    "pat_hint_feedback": "Please configure a GitHub Personal Access Token (PAT) below to submit feedback or bug reports as issues.",
+    "pat_focus_button": "Configure PAT Token",
     "open_settings": "Open Settings",
     "issue_title": "Title",
     "issue_body": "Description",
@@ -910,6 +915,7 @@
     "openPrOnGithub": "View Pull Request on GitHub",
     "prFailedTitle": "Failed to create Pull Request",
     "helperServerHint": "Ensure the Helper Server is running and a GitHub Token is configured in server settings.",
+    "githubErrorHint": "Ensure your GitHub Personal Access Token (PAT) in Settings is valid and has write permissions.",
     "submitPrButton": "Create Pull Request on GitHub"
   },
   "party": {

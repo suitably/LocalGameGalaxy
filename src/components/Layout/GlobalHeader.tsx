@@ -15,6 +15,7 @@ import { usePWAInstall } from '../../hooks/usePWAInstall';
 import { PWAInstallDialog } from '../pwa/PWAInstallDialog';
 
 import { SettingsHeaderToolbar, SettingsHeaderSubNav } from '../../features/settings/components/SettingsHeaderNav';
+import { hasGitHubPAT } from '../../lib/github';
 
 export const GlobalHeader: React.FC = () => {
     const { t } = useTranslation();
@@ -50,8 +51,13 @@ export const GlobalHeader: React.FC = () => {
         if (homeAction) {
             homeAction();
         } else if (isSettingsPage) {
-            const game = new URLSearchParams(location.search).get('game');
-            if (game) {
+            const searchParams = new URLSearchParams(location.search);
+            const game = searchParams.get('game');
+            const from = (location.state as any)?.from;
+
+            if (from && typeof from === 'string' && from !== '/settings') {
+                navigate(from);
+            } else if (game) {
                 navigate(`/games/${game}`);
             } else {
                 navigate('/');
@@ -138,7 +144,7 @@ export const GlobalHeader: React.FC = () => {
                         <Tooltip title={t('settings.title', 'Settings')}>
                             <IconButton
                                 color="inherit"
-                                onClick={() => navigate('/settings')}
+                                onClick={() => navigate('/settings', { state: { from: location.pathname + location.search } })}
                                 sx={{ ml: 0.5, p: 1.25 }}
                             >
                                 <SettingsIcon fontSize={isSmallScreen ? "small" : "medium"} />
@@ -151,7 +157,13 @@ export const GlobalHeader: React.FC = () => {
                         <IconButton
                             id="feedback-button"
                             color="inherit"
-                            onClick={() => window.dispatchEvent(new Event('feedback:open'))}
+                            onClick={() => {
+                                if (!hasGitHubPAT()) {
+                                    navigate('/settings?tab=general&sub=feedback&missing_pat=1');
+                                } else {
+                                    window.dispatchEvent(new Event('feedback:open'));
+                                }
+                            }}
                             sx={{ ml: 0.5, p: 1.25 }}
                         >
                             <FeedbackIcon fontSize={isSmallScreen ? "small" : "medium"} />

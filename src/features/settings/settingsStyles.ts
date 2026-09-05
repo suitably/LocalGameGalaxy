@@ -120,3 +120,24 @@ export const segmentedGroupSx: SxProps<Theme> = {
         },
     },
 };
+
+// 5. Sub-Navigation Pill Button Style
+export const subPillSx = (isActive: boolean): SxProps<Theme> => ({
+    textTransform: 'none',
+    fontWeight: isActive ? 700 : 500,
+    fontSize: '0.8rem',
+    color: isActive ? '#90caf9' : 'rgba(255, 255, 255, 0.65)',
+    bgcolor: isActive ? 'rgba(144, 202, 249, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+    border: isActive ? '1px solid rgba(144, 202, 249, 0.35)' : '1px solid rgba(255, 255, 255, 0.06)',
+    borderRadius: 5,
+    px: 1.5,
+    py: 0.3,
+    minHeight: 28,
+    whiteSpace: 'nowrap',
+    transition: 'all 0.15s ease',
+    '&:hover': {
+        bgcolor: isActive ? 'rgba(144, 202, 249, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+        color: 'rgba(255, 255, 255, 0.95)',
+    },
+});
+

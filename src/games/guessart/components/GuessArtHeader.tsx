@@ -20,8 +20,10 @@ import PhonelinkRingRoundedIcon from '@mui/icons-material/PhonelinkRingRounded';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { GuessArtHeaderTitle } from './GuessArtHeaderTitle';
 import { gameNameOverride } from '../logic/gameNameOverride';
+import { hasGitHubPAT } from '../../../lib/github';
 import type { GuessArtGameRecord, GuessArtRound } from '../logic/types';
 
 interface GuessArtHeaderProps {
@@ -50,6 +52,7 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
   isTemporaryTurn = false,
 }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
@@ -297,8 +300,12 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
 
             <MenuItem
               onClick={() => {
-                window.dispatchEvent(new Event('feedback:open'));
                 handleMenuClose();
+                if (!hasGitHubPAT()) {
+                  navigate('/settings?tab=general&sub=feedback&missing_pat=1');
+                } else {
+                  window.dispatchEvent(new Event('feedback:open'));
+                }
               }}
               sx={{ minHeight: 44 }}
             >

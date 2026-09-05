@@ -26,6 +26,7 @@ export interface SettingsState {
     audioPlaybackMode: 'separated' | 'original';
     showScoreboardQrCode: boolean;
     micLatency: number;
+    vocalsOffset: number;
 }
 
 /** Default/Factory settings */
@@ -54,7 +55,8 @@ export const DEFAULT_SETTINGS: SettingsState = {
     lyricsPosition: 'bottom',
     audioPlaybackMode: 'separated',
     showScoreboardQrCode: true,
-    micLatency: 0
+    micLatency: 0,
+    vocalsOffset: 0
 };
 
 export const loadSettings = (): SettingsState => ({
@@ -121,6 +123,10 @@ export const loadSettings = (): SettingsState => ({
     micLatency: (() => {
         const stored = localStorage.getItem('melodiq_mic_latency');
         return stored ? parseInt(stored) : 0;
+    })(),
+    vocalsOffset: (() => {
+        const stored = localStorage.getItem('melodiq_vocals_offset');
+        return stored ? parseInt(stored, 10) : 0;
     })()
 });
 
@@ -150,6 +156,7 @@ const persistSettings = (s: SettingsState) => {
     localStorage.setItem('melodiq_audio_playback_mode', s.audioPlaybackMode);
     localStorage.setItem('melodiq_show_scoreboard_qr_code', String(s.showScoreboardQrCode));
     localStorage.setItem('melodiq_mic_latency', String(s.micLatency));
+    localStorage.setItem('melodiq_vocals_offset', String(s.vocalsOffset ?? 0));
 };
 
 interface SettingsContextValue {

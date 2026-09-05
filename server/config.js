@@ -83,7 +83,7 @@ function loadConfig() {
 
     const envToken = process.env.SECURITY_TOKEN || process.env.TOKEN;
     if (envToken && typeof envToken === 'string' && envToken.trim()) {
-        currentConfig.token = envToken.trim();
+        currentConfig.token = envToken.trim().replace(/^["']|["']$/g, '');
     }
 
     // 2. Music Directory Discovery & Overrides

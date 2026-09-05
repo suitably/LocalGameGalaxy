@@ -27,11 +27,11 @@ interface MelodiqSettingsCategoryProps {
     onNavigateToPlaylists?: () => void;
 }
 
-export type MelodiqSubTab = 'server' | 'microphones' | 'profiles' | 'gameplay' | 'playlists';
+export type MelodiqSubTab = 'all' | 'server' | 'microphones' | 'profiles' | 'gameplay' | 'playlists';
 
 export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = ({
     activeSubTab,
-    initialSubTab = 'server',
+    initialSubTab = 'all',
     onNavigateToPlaylists
 }) => {
     const { t } = useTranslation();
@@ -91,7 +91,7 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {/* Sub-Tab 0: Companion Server (Connection, Setup Dialog, API Keys) */}
-            {subTab === 'server' && (
+            {(subTab === 'all' || subTab === 'server') && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                     <ServerConnection />
                     <ServerAdminPanel />
@@ -99,14 +99,14 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
             )}
 
             {/* Sub-Tab 1: Microphones */}
-            {subTab === 'microphones' && (
+            {(subTab === 'all' || subTab === 'microphones') && (
                 <Paper sx={settingsCardSx}>
                     <HardwareMicSetup />
                 </Paper>
             )}
 
             {/* Sub-Tab 2: Profiles */}
-            {subTab === 'profiles' && (
+            {(subTab === 'all' || subTab === 'profiles') && (
                 <Paper sx={settingsCardSx}>
                     <UserProfilesManager
                         profiles={profilesHook.profiles}
@@ -118,7 +118,7 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
             )}
 
             {/* Sub-Tab 3: Gameplay */}
-            {subTab === 'gameplay' && (
+            {(subTab === 'all' || subTab === 'gameplay') && (
                 <Paper sx={{ ...settingsCardSx, display: 'flex', flexDirection: 'column', gap: 3 }}>
                     <GameSettingsPanel
                         settings={settingsHook.settings}
@@ -171,7 +171,7 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
             )}
 
             {/* Sub-Tab 4: Playlists */}
-            {subTab === 'playlists' && onNavigateToPlaylists && (
+            {(subTab === 'all' || subTab === 'playlists') && onNavigateToPlaylists && (
                 <Paper sx={settingsCardSx}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
                         <QueueMusicIcon color="primary" />

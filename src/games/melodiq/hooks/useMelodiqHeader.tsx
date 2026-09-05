@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useLayout } from '../../../context/LayoutContext';
 
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -27,6 +28,7 @@ export const useMelodiqHeader = ({
     isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV, clientRole
 }: UseMelodiqHeaderProps) => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const { setHeader, setCustomHeaderActions } = useLayout();
 
     useEffect(() => {
@@ -39,7 +41,7 @@ export const useMelodiqHeader = ({
             headerActions.push({
                 label: 'Settings',
                 icon: <SettingsIcon />,
-                action: () => setCurrentView('Settings'),
+                action: () => navigate('/settings?game=melodiq'),
                 showAlways: true
             });
 
@@ -64,6 +66,9 @@ export const useMelodiqHeader = ({
                     />
                 ) : null
             );
+        } else if (currentView === 'Settings') {
+            // Settings manages its own header title and back navigation
+            return;
         } else {
             // Clear menu items for other views to avoid irrelevant actions
             setHeader(t('melodiq.title'), [], homeAction);

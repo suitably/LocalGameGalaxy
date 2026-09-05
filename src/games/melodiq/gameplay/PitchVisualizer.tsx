@@ -234,7 +234,9 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
             const gap = song.gap || 0;
             const noteDivisor = 4; // bpmMultiplier
             const beatDuration = 60000 / (bpm * noteDivisor);
-            const currentBeat = ((currentTime * 1000) - (latency || 0) - gap) / beatDuration;
+            // Master song beat: aligns visual melody notes precisely with the song audio and LyricsDisplay.
+            // Microphone input latency is handled in the scoring engine when evaluating singer pitch.
+            const currentBeat = ((currentTime * 1000) - gap) / beatDuration;
 
             // Reset Transform to Identity then Scale
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);

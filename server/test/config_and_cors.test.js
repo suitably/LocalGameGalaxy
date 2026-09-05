@@ -106,7 +106,9 @@ test('Auth & CORS Middleware', async (t) => {
 
         let statusCode = null;
         let responseJson = null;
+        let responseHeaders = {};
         const mockRes = {
+            setHeader: (k, v) => { responseHeaders[k] = v; },
             status: (code) => {
                 statusCode = code;
                 return {

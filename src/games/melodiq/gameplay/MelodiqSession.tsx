@@ -217,6 +217,7 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
         setResults,
         onExit,
         audioRef,
+        vocalsRef,
         videoRef,
         activeSessionOverride,
         isPassive
@@ -247,7 +248,7 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
     });
 
     usePassiveSync({
-        isPassive, passiveState: passiveState || null, isClient, isTVMode, players, setPlayers, playersRef, scoreDisplayRef, audioRef, videoRef,
+        isPassive, passiveState: passiveState || null, isClient, isTVMode, players, setPlayers, playersRef, scoreDisplayRef, audioRef, vocalsRef, videoRef,
         isPlayingRef, setIsPlaying, setIsFinished, setIsPausedForScore, setPassivePlayBlocked, virtualTimeRef
     });
 
@@ -297,7 +298,10 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
                     if (audioRef.current) {
                         e.preventDefault();
                         e.stopPropagation();
-                        audioRef.current.currentTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 10);
+                        const newTime = Math.min(audioRef.current.duration || Infinity, audioRef.current.currentTime + 10);
+                        audioRef.current.currentTime = newTime;
+                        if (vocalsRef.current) vocalsRef.current.currentTime = newTime;
+                        if (videoRef.current) videoRef.current.currentTime = newTime;
                         resetUITimer();
                     }
                     break;
@@ -306,7 +310,10 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
                     if (audioRef.current) {
                         e.preventDefault();
                         e.stopPropagation();
-                        audioRef.current.currentTime = Math.max(0, audioRef.current.currentTime - 10);
+                        const newTime = Math.max(0, audioRef.current.currentTime - 10);
+                        audioRef.current.currentTime = newTime;
+                        if (vocalsRef.current) vocalsRef.current.currentTime = newTime;
+                        if (videoRef.current) videoRef.current.currentTime = newTime;
                         resetUITimer();
                     }
                     break;
@@ -325,31 +332,36 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
     // Auto-start logic
     const hasStartedRef = useRef(false);
     useEffect(() => {
+        hasStartedRef.current = false;
+    }, [song.id]);
+
+    useEffect(() => {
         if (!hasStartedRef.current && ready && !contentLoading && parsedSong && audioSrc && audioRef.current && !isFinished) {
             hasStartedRef.current = true;
             const startPlayback = async () => {
                 const targetAudio = audioRef.current;
                 if (!targetAudio) return;
 
-                if (initialTime && initialTime > 0) {
-                    if (targetAudio.readyState < 1) {
-                        await new Promise<void>(resolve => {
-                            const onLoaded = () => {
-                                targetAudio.removeEventListener('loadedmetadata', onLoaded);
-                                resolve();
-                            };
-                            targetAudio.addEventListener('loadedmetadata', onLoaded, { once: true });
-                        });
-                    }
-                    targetAudio.currentTime = initialTime;
-                    if (videoRef.current) videoRef.current.currentTime = initialTime;
-                    if (vocalsRef.current) vocalsRef.current.currentTime = initialTime;
+                if (targetAudio.readyState < 2) {
+                    await new Promise<void>(resolve => {
+                        const handler = () => {
+                            targetAudio.removeEventListener('canplay', handler);
+                            resolve();
+                        };
+                        targetAudio.addEventListener('canplay', handler, { once: true });
+                        setTimeout(resolve, 1500);
+                    });
                 }
+
+                const startTime = (initialTime && initialTime > 0) ? initialTime : 0;
+                targetAudio.currentTime = startTime;
+                if (videoRef.current) videoRef.current.currentTime = startTime;
+                if (vocalsRef.current) vocalsRef.current.currentTime = startTime;
 
                 try { 
                     await safePlay(); 
                 } catch (e) { 
-                    hasStartedRef.current = false; 
+                    console.warn('[Session] Autostart playback deferred:', e);
                 }
             };
             startPlayback();
@@ -539,10 +551,14 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
                     try {
                         if (audioRef.current && passiveState?.currentTime) {
                             audioRef.current.currentTime = passiveState.currentTime;
+                            if (vocalsRef.current) vocalsRef.current.currentTime = passiveState.currentTime;
                             if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
                         }
-                        await audioRef.current?.play();
-                        videoRef.current?.play().catch(() => {});
+                        const playPromises: Promise<any>[] = [];
+                        if (audioRef.current) playPromises.push(audioRef.current.play());
+                        if (vocalsRef.current) playPromises.push(vocalsRef.current.play().catch(() => {}));
+                        if (videoRef.current) playPromises.push(videoRef.current.play().catch(() => {}));
+                        await Promise.all(playPromises);
                         setIsPlaying(true);
                         setPassivePlayBlocked(false);
                     } catch (e) { }

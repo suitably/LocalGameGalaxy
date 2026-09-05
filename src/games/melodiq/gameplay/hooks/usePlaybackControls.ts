@@ -43,12 +43,12 @@ export function usePlaybackControls({
 
     const safePlay = useCallback(async () => {
         if (!audioRef.current) return;
-        // Synchronize stems before playing to prevent desync
+        // Synchronize stems unconditionally before playing to guarantee zero initial desync
         const currentPos = audioRef.current.currentTime;
-        if (vocalsRef.current && Math.abs(vocalsRef.current.currentTime - currentPos) > 0.05) {
+        if (vocalsRef.current) {
             vocalsRef.current.currentTime = currentPos;
         }
-        if (videoRef.current && Math.abs(videoRef.current.currentTime - currentPos) > 0.1) {
+        if (videoRef.current && Math.abs(videoRef.current.currentTime - currentPos) > 0.05) {
             videoRef.current.currentTime = currentPos;
         }
 
@@ -60,9 +60,14 @@ export function usePlaybackControls({
             vocalsRef.current.volume = muteAudio ? 0 : vocalsVolume * masterVolume;
         }
         try {
-            playPromiseRef.current = audioRef.current.play();
-            if (vocalsRef.current) vocalsRef.current.play().catch(e => console.warn("Vocals play failed", e));
-            if (videoRef.current) videoRef.current.play().catch(e => console.warn("Video play failed", e));
+            const playPromises: Promise<any>[] = [audioRef.current.play()];
+            if (vocalsRef.current) {
+                playPromises.push(vocalsRef.current.play().catch(e => console.warn("Vocals play failed", e)));
+            }
+            if (videoRef.current) {
+                playPromises.push(videoRef.current.play().catch(e => console.warn("Video play failed", e)));
+            }
+            playPromiseRef.current = Promise.all(playPromises).then(() => {});
             await playPromiseRef.current;
             setIsPlaying(true);
         } catch (error: any) {

@@ -500,6 +500,9 @@
   "settings": {
     "title": "Einstellungen",
     "general_tab": "Allgemein",
+    "general_desc": "Spracheinstellungen, Feedback und GitHub-Integration.",
+    "app_and_language": "App & Sprache",
+    "app_lang_desc": "Spracheinstellungen und Anzeigeoptionen.",
     "server_tab": "Server",
     "language_preferences": "Spracheinstellungen",
     "ui_language": "Sprache der Benutzeroberfläche",
@@ -510,6 +513,8 @@
     "feedback_no_config": "Keine GitHub-Verbindung konfiguriert. Bitte richte ein GitHub-Token in den allgemeinen Einstellungen ein oder verbinde einen Nexumia Server.",
     "github_missing_title": "GitHub-Verbindung erforderlich",
     "github_missing_desc": "Um Feedback oder Fehlermeldungen direkt als GitHub-Issue einzureichen, hinterlege bitte zuerst ein Personal Access Token (PAT) in den Einstellungen.",
+    "pat_hint_feedback": "Bitte hinterlege zuerst ein GitHub Personal Access Token (PAT) unten, um Feedback oder Bug-Reports als Issue zu erstellen.",
+    "pat_focus_button": "PAT-Token hinterlegen",
     "open_settings": "Zu den Einstellungen",
     "issue_title": "Titel",
     "issue_body": "Beschreibung",
@@ -898,6 +903,7 @@
     "openPrOnGithub": "Pull Request auf GitHub ansehen",
     "prFailedTitle": "Fehler beim Erstellen des Pull Requests",
     "helperServerHint": "Stelle sicher, dass der Helper-Server läuft und ein GitHub-Token in den Server-Einstellungen hinterlegt ist.",
+    "githubErrorHint": "Stelle sicher, dass dein GitHub Personal Access Token (PAT) in den Einstellungen hinterlegt ist und Schreibrechte besitzt.",
     "submitPrButton": "Pull Request auf GitHub erstellen"
   },
   "party": {

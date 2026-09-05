@@ -21,9 +21,14 @@ import { settingsCardSx } from '../settingsStyles';
  * the Nexumia Server as a proxy.
  */
 
+interface GitHubSettingsProps {
+    autoFocusPat?: boolean;
+    onConfigChange?: () => void;
+}
+
 type TestStatus = 'idle' | 'testing' | 'success' | 'error';
 
-export const GitHubSettings: React.FC = () => {
+export const GitHubSettings: React.FC<GitHubSettingsProps> = ({ autoFocusPat, onConfigChange }) => {
     const { t } = useTranslation();
     const [token, setToken] = useState(() => storage.get(STORAGE_KEYS.GITHUB_TOKEN));
     const [owner, setOwner] = useState(() => storage.get(STORAGE_KEYS.GITHUB_OWNER, 'suitably'));
@@ -31,11 +36,20 @@ export const GitHubSettings: React.FC = () => {
     const [showToken, setShowToken] = useState(false);
     const [testStatus, setTestStatus] = useState<TestStatus>('idle');
     const [testMsg, setTestMsg] = useState('');
+    const inputRef = React.useRef<HTMLInputElement>(null);
+
+    React.useEffect(() => {
+        if (autoFocusPat && inputRef.current) {
+            inputRef.current.focus();
+            inputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, [autoFocusPat]);
 
     const handleSave = () => {
         storage.set(STORAGE_KEYS.GITHUB_TOKEN, token);
         storage.set(STORAGE_KEYS.GITHUB_OWNER, owner);
         storage.set(STORAGE_KEYS.GITHUB_REPO, repo);
+        onConfigChange?.();
     };
 
     const handleTest = async () => {
@@ -73,6 +87,7 @@ export const GitHubSettings: React.FC = () => {
         storage.remove(STORAGE_KEYS.GITHUB_REPO);
         setTestStatus('idle');
         setTestMsg('');
+        onConfigChange?.();
     };
 
     return (
@@ -106,11 +121,14 @@ export const GitHubSettings: React.FC = () => {
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <TextField
+                    id="github-pat-input"
+                    inputRef={inputRef}
                     label={t('github.token_label', 'Personal Access Token (PAT)')}
                     variant="outlined"
                     fullWidth
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
+                    onBlur={handleSave}
                     placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
                     size="small"
                     type={showToken ? 'text' : 'password'}

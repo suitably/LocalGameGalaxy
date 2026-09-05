@@ -21,6 +21,13 @@ export interface GitHubConfig {
 export type GitHubSource = 'local' | 'server' | 'none';
 
 /**
+ * Checks if a GitHub Personal Access Token (PAT) is stored.
+ */
+export function hasGitHubPAT(): boolean {
+    return Boolean(storage.get(STORAGE_KEYS.GITHUB_TOKEN)?.trim());
+}
+
+/**
  * Resolves the best available GitHub configuration.
  * Priority: 1) Local PAT → 2) Server proxy → 3) None
  */

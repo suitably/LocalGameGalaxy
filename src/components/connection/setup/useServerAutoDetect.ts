@@ -51,7 +51,7 @@ export function useServerAutoDetect() {
         for (const candidate of candidateUrls) {
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
 
                 const res = await fetch(`${candidate}/api/status`, {
                     headers: token ? { Authorization: `Bearer ${token}` } : {},

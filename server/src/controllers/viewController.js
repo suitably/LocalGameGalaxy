@@ -20,7 +20,7 @@ function renderMainView(req, res) {
     // SECURITY CHECK
     const remoteIp = req.socket.remoteAddress || req.connection.remoteAddress;
     const isLocal = remoteIp === '::1' || remoteIp === '127.0.0.1' || remoteIp === '::ffff:127.0.0.1';
-    const clientToken = req.query.token;
+    const clientToken = req.query.token ? String(req.query.token).trim().replace(/^["']|["']$/g, '') : null;
 
     let isAuthorized = false;
     let isAdmin = false;
@@ -31,7 +31,7 @@ function renderMainView(req, res) {
         isAdmin = true;
     }
 
-    if (clientToken === config.token) {
+    if (clientToken && clientToken === config.token) {
         isAuthorized = true;
         isAdmin = true;
         injectedToken = config.token;
@@ -47,7 +47,11 @@ function renderMainView(req, res) {
     if (!isAuthorized) {
         try {
             const loginHtmlPath = path.join(__dirname, '..', '..', 'public', 'login.html');
-            const loginHtml = fs.readFileSync(loginHtmlPath, 'utf-8');
+            let loginHtml = fs.readFileSync(loginHtmlPath, 'utf-8');
+            if (clientToken) {
+                const errorBanner = '<div style="background:#f8d7da;color:#721c24;padding:8px 12px;border-radius:6px;font-size:0.85rem;margin-bottom:12px;text-align:center;">❌ Ungültiger Token. Prüfe die Startup-Logs deines Pods.</div>';
+                loginHtml = loginHtml.replace('<form method="GET"', errorBanner + '<form method="GET"');
+            }
             return res.send(loginHtml);
         } catch (e) {
             return res.status(500).send('Login template not found.');
