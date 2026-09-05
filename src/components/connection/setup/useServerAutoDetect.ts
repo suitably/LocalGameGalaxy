@@ -117,24 +117,27 @@ export function useServerAutoDetect() {
         window.dispatchEvent(new Event('server_connection_updated'));
     }, [token]);
 
-    const downloadDockerCompose = useCallback((preset: 'standard' | 'ai' | 'tunnel' = 'standard') => {
-        let filename = 'docker-compose.yml';
-        let composeYaml = '';
+    const downloadDockerCompose = useCallback((edition: 'standard' | 'ai' = 'standard', includeTunnel = false) => {
+        const filename = edition === 'ai'
+            ? (includeTunnel ? 'docker-compose.ai-tunnel.yml' : 'docker-compose.ai.yml')
+            : (includeTunnel ? 'docker-compose.tunnel.yml' : 'docker-compose.yml');
 
-        if (preset === 'ai') {
-            filename = 'docker-compose.ai.yml';
-            composeYaml = `services:
-  # Melodiq Companion Server (AI Edition: Vocal Separation & Whisper)
+        const image = edition === 'ai' ? 'nexumia/melodiq-server:ai' : 'nexumia/melodiq-server:latest';
+        const volumes = edition === 'ai'
+            ? '      - ./music:/app/music:ro\n      - ./models:/app/models:z'
+            : '      - ./music:/app/music:ro';
+
+        let composeYaml = `services:
+  # Melodiq Companion Server (${edition === 'ai' ? 'AI Edition: Stems & Whisper' : 'Standard Lightweight ~200MB'})
   melodiq-server:
-    image: nexumia/melodiq-server:ai
+    image: ${image}
     container_name: melodiq-server
     restart: unless-stopped
     ports:
       - "3000:3000"
       - "3001:3001"
     volumes:
-      - ./music:/app/music:ro
-      - ./models:/app/models:z
+${volumes}
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -142,26 +145,9 @@ export function useServerAutoDetect() {
       - MUSIC_DIR=/app/music
       - ALLOWED_ORIGINS=*
 `;
-        } else if (preset === 'tunnel') {
-            filename = 'docker-compose.tunnel.yml';
-            composeYaml = `services:
-  # Melodiq Companion Server
-  melodiq-server:
-    image: nexumia/melodiq-server:latest
-    container_name: melodiq-server
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-      - "3001:3001"
-    volumes:
-      - ./music:/app/music:ro
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - SECURITY_TOKEN=${token}
-      - MUSIC_DIR=/app/music
-      - ALLOWED_ORIGINS=*
 
+        if (includeTunnel) {
+            composeYaml += `
   # Cloudflare Quick Tunnel (Public HTTPS without router port-forwarding)
   melodiq-tunnel:
     image: cloudflare/cloudflared:latest
@@ -170,26 +156,6 @@ export function useServerAutoDetect() {
     command: tunnel --no-autoupdate --url http://melodiq-server:3000
     depends_on:
       - melodiq-server
-`;
-        } else {
-            filename = 'docker-compose.yml';
-            composeYaml = `services:
-  # Melodiq Companion Server (Standard Lightweight)
-  melodiq-server:
-    image: nexumia/melodiq-server:latest
-    container_name: melodiq-server
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-      - "3001:3001"
-    volumes:
-      - ./music:/app/music:ro
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - SECURITY_TOKEN=${token}
-      - MUSIC_DIR=/app/music
-      - ALLOWED_ORIGINS=*
 `;
         }
 
