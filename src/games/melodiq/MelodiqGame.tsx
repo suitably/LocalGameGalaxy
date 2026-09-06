@@ -1,4 +1,4 @@
-import React, { useState, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Box, Snackbar, Alert, CircularProgress } from '@mui/material';
 import { type Song, type SongMeta } from './db';
 const Settings = lazy(() => import('../../features/settings/Settings').then(m => ({ default: m.Settings })));
@@ -139,10 +139,42 @@ export const MelodiqGameContent: React.FC = () => {
         isClient, jobs, queue, refreshSongs, replaceItem, selectedSong, onCurrentSongDownloaded: handleCurrentSongDownloaded
     });
 
+    const handleCloseSubView = useCallback(() => {
+        const nextParams = new URLSearchParams(window.location.search);
+        nextParams.delete('tab');
+        nextParams.delete('sub');
+        nextParams.delete('section');
+        const cleanSearch = nextParams.toString();
+        const targetUrl = window.location.pathname + (cleanSearch ? `?${cleanSearch}` : '');
+        window.history.replaceState(null, '', targetUrl);
+
+        if (window.history.state?.melodiqSubView) {
+            window.history.back();
+        } else {
+            setCurrentView('Home');
+        }
+    }, []);
+
+    // Handle sub-view history so back button in Android or browser returns to Home view
+    useEffect(() => {
+        const isSubView = currentView === 'Settings' || currentView === 'Connection' || currentView === 'Playlists' || currentView === 'PlaylistDetails';
+        if (isSubView) {
+            window.history.pushState({ melodiqSubView: true }, '', window.location.href);
+            const handlePopState = () => {
+                setCurrentView('Home');
+            };
+            window.addEventListener('popstate', handlePopState);
+            return () => {
+                window.removeEventListener('popstate', handlePopState);
+            };
+        }
+    }, [currentView]);
+
     useMelodiqHeader({
         currentView, setCurrentView,
         loadingProgress: loadingProgress as any, refreshSongs,
-        isClient, isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV, clientRole
+        isClient, isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV, clientRole,
+        onBackToHome: handleCloseSubView
     });
 
     const handleSelectSong = async (songMeta: SongMeta, forcePlay: boolean = false, participants?: any[], requester?: string, requesterId?: string) => {
@@ -357,14 +389,14 @@ export const MelodiqGameContent: React.FC = () => {
             return (
                 <Box sx={{ height: '100%', overflow: 'auto' }}>
                     {isClient ? (
-                        <ClientSettings onBack={() => setCurrentView('Home')} />
+                        <ClientSettings onBack={handleCloseSubView} />
                     ) : (
                         <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
                             <Settings 
                                 activeGameId="melodiq"
                                 onBack={() => {
                                     refreshSongs();
-                                    setCurrentView('Home');
+                                    handleCloseSubView();
                                 }} 
                                 onNavigateToPlaylists={() => setCurrentView('Playlists')}
                             />
@@ -377,7 +409,7 @@ export const MelodiqGameContent: React.FC = () => {
         if (currentView === 'Connection') {
             return (
                 <Box sx={{ height: '100%', overflow: 'auto' }}>
-                    <MelodiqConnection onBack={() => setCurrentView('Home')} />
+                    <MelodiqConnection onBack={handleCloseSubView} />
                 </Box>
             );
         }
@@ -385,7 +417,7 @@ export const MelodiqGameContent: React.FC = () => {
         if (currentView === 'Playlists') {
             return (
                 <MelodiqPlaylists 
-                    onBack={() => setCurrentView('Home')} 
+                    onBack={handleCloseSubView} 
                     onSelectPlaylist={(p) => {
                         setActivePlaylist(p);
                         setCurrentView('PlaylistDetails');

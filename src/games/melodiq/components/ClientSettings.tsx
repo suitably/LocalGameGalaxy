@@ -122,8 +122,8 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack }) => {
     };
 
     return (
-        <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 3, flex: 1, bgcolor: '#1a1a1a', color: 'white' }}>
+        <Box sx={{ p: { xs: 1.5, sm: 2 }, minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Paper sx={{ p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', gap: 2.5, flex: 1, bgcolor: '#1a1a1a', color: 'white', borderRadius: 2.5 }}>
                 <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
                     {t('melodiq.client_settings', 'Player Profile')}
                 </Typography>
@@ -214,10 +214,10 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack }) => {
 
                 <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
                     <Button variant="outlined" onClick={onBack} fullWidth sx={{ color: 'white', borderColor: '#555' }}>
-                        {t('cancel', 'Cancel')}
+                        {t('common.cancel', 'Cancel')}
                     </Button>
                     <Button variant="contained" onClick={handleSave} fullWidth sx={{ bgcolor: `hsl(${hue}, 100%, 40%)`, color: 'white' }}>
-                        {t('save', 'Save')}
+                        {t('common.save', 'Save')}
                     </Button>
                 </Box>
             </Paper>

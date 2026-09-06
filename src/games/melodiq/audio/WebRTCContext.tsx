@@ -34,6 +34,9 @@ export const WebRTCMockProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             regeneratePartyId: () => {},
             trackerUrls: [],
             activeTrackerUrls: [],
+            disabledTrackerUrls: [],
+            allTrackers: [],
+            toggleTrackerActive: () => {},
             addTrackerUrl: () => {},
             removeTrackerUrl: () => {},
             restoreDefaultTrackers: () => {}

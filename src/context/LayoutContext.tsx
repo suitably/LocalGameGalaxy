@@ -19,9 +19,11 @@ interface LayoutContextType {
     setMenuItems: (items: MenuItem[]) => void;
     homeAction: (() => void) | null;
     setHomeAction: (action: (() => void) | null) => void;
-    setHeader: (title: string | null, items?: MenuItem[], homeAction?: (() => void) | null, customHeaderTitle?: ReactNode) => void;
+    setHeader: (title: string | null, items?: MenuItem[], homeAction?: (() => void) | null, customHeaderTitle?: ReactNode, isSettingsMode?: boolean) => void;
     customHeaderActions: ReactNode;
     setCustomHeaderActions: (node: ReactNode) => void;
+    isSettingsMode: boolean;
+    setIsSettingsMode: (active: boolean) => void;
 }
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
@@ -33,8 +35,9 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [menuItems, setMenuItemsState] = useState<MenuItem[]>([]);
     const [homeAction, setHomeActionState] = useState<(() => void) | null>(null);
     const [customHeaderActions, setCustomHeaderActionsState] = useState<ReactNode>(null);
+    const [isSettingsMode, setIsSettingsModeState] = useState<boolean>(false);
 
-    const setHeader = useCallback((newTitle: string | null, newItems: MenuItem[] = [], newHomeAction: (() => void) | null = null, newCustomHeaderTitle: ReactNode = null) => {
+    const setHeader = useCallback((newTitle: string | null, newItems: MenuItem[] = [], newHomeAction: (() => void) | null = null, newCustomHeaderTitle: ReactNode = null, newIsSettingsMode: boolean = false) => {
         setTitleState(prev => prev === newTitle ? prev : newTitle);
         setMenuItemsState(prev => {
             if (prev.length === newItems.length && prev.every((item, i) => item.label === newItems[i]?.label && item.disabled === newItems[i]?.disabled)) {
@@ -44,6 +47,7 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         });
         setHomeActionState(() => newHomeAction);
         setCustomHeaderTitleState(prev => prev === newCustomHeaderTitle ? prev : newCustomHeaderTitle);
+        setIsSettingsModeState(prev => prev === newIsSettingsMode ? prev : newIsSettingsMode);
     }, []);
 
     const setTitle = useCallback((newTitle: string | null) => {
@@ -75,10 +79,14 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setCustomHeaderActionsState(prev => prev === node ? prev : node);
     }, []);
 
+    const setIsSettingsMode = useCallback((active: boolean) => {
+        setIsSettingsModeState(prev => prev === active ? prev : active);
+    }, []);
+
     const value = useMemo(() => ({
         title, setTitle, customHeaderTitle, setCustomHeaderTitle, headerHidden, setHeaderHidden, menuItems, setMenuItems, homeAction, setHomeAction, setHeader,
-        customHeaderActions, setCustomHeaderActions
-    }), [title, setTitle, customHeaderTitle, setCustomHeaderTitle, headerHidden, setHeaderHidden, menuItems, setMenuItems, homeAction, setHomeAction, setHeader, customHeaderActions, setCustomHeaderActions]);
+        customHeaderActions, setCustomHeaderActions, isSettingsMode, setIsSettingsMode
+    }), [title, setTitle, customHeaderTitle, setCustomHeaderTitle, headerHidden, setHeaderHidden, menuItems, setMenuItems, homeAction, setHomeAction, setHeader, customHeaderActions, setCustomHeaderActions, isSettingsMode, setIsSettingsMode]);
 
     return (
         <LayoutContext.Provider value={value}>

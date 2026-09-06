@@ -15,6 +15,8 @@ export const STORAGE_KEYS = {
     ACTIVE_SESSION: 'melodiq_active_session',
     CURRENT_SONG_PARTICIPANTS: 'melodiq_current_song_participants',
     MELODIQ_TRACKER_URLS: 'melodiq_tracker_urls',
+    MELODIQ_DISABLED_TRACKER_URLS: 'melodiq_disabled_tracker_urls',
+    MELODIQ_TRACKER_PREFERENCES: 'melodiq_tracker_preferences',
     MELODIQ_CARD_SIZE: 'melodiq_card_size',
     MELODIQ_MIC_SLOTS: 'melodiq_mic_slots',
     MELODIQ_MIC_NAMES: 'melodiq_mic_names',
@@ -153,6 +155,22 @@ export const storage = {
     
     setHelperActive(active: boolean): void {
         this.set(STORAGE_KEYS.HELPER_ACTIVE, active ? 'true' : 'false');
+    },
+
+    getDisabledTrackerUrls(gameId = 'melodiq'): string[] {
+        const key = `${gameId}_disabled_tracker_urls`;
+        const val = this.get(key);
+        if (!val) return [];
+        try {
+            return JSON.parse(val);
+        } catch {
+            return [];
+        }
+    },
+
+    setDisabledTrackerUrls(urls: string[], gameId = 'melodiq'): void {
+        const key = `${gameId}_disabled_tracker_urls`;
+        this.set(key, JSON.stringify(urls));
     },
 
     // Push Relay Config Accessors (for async games like GuessArt)

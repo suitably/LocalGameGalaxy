@@ -369,6 +369,7 @@
       "playlists": "Wiedergabelisten",
       "history": "Verlauf",
       "settings": "Einstellungen",
+      "client_settings": "Spielerprofil",
       "join": "Beitreten",
       "host": "Hosten",
       "play": "Abspielen",
@@ -678,6 +679,21 @@
       "qr_title": "Verbindungs-QR-Code",
       "qr_desc": "Scanne diesen QR-Code, um dich als \"{{name}}\" mit dem Server zu verbinden"
     }
+  },
+  "signaling": {
+    "title": "Signaling Server (Trackers)",
+    "restore_defaults": "Standard wiederherstellen",
+    "type_backend": "Eigenes Backend",
+    "type_public": "Kostenlos (Öffentlich)",
+    "type_custom": "Benutzerdefiniert",
+    "status_active": "Aktiv",
+    "status_disabled": "Deaktiviert",
+    "toggle_enable": "Server aktivieren",
+    "toggle_disable": "Server deaktivieren",
+    "no_trackers_warning": "⚠️ Keine Signaling-Server aktiv. Verbindung zu Mobilgeräten wird nicht möglich sein. Bitte mindestens einen Server aktivieren.",
+    "placeholder": "wss://tracker.example.com",
+    "add_button": "Hinzufügen",
+    "remove_tooltip": "Tracker entfernen"
   },
   "github": {
     "title": "GitHub-Integration",

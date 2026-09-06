@@ -1,6 +1,19 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { WebRTCHostManager } from './WebRTCHostManager';
 import type { RemotePeerBase } from './WebRTCHostManager';
+import { buildAllTrackers, filterActiveTrackers, setTrackerPreference } from './trackerLogic';
+
+export interface TrackerItem {
+    url: string;
+    type: 'backend' | 'public' | 'custom';
+    enabled: boolean;
+}
+
+export const DEFAULT_PUBLIC_TRACKERS: readonly string[] = [
+    'wss://tracker.openwebtorrent.com',
+    'wss://tracker.btorrent.xyz',
+    'wss://tracker.webtorrent.dev'
+];
 
 export interface WebRTCHostContextType<T extends RemotePeerBase = RemotePeerBase, M extends WebRTCHostManager<T> = WebRTCHostManager<T>> {
     manager: M | null;
@@ -12,6 +25,9 @@ export interface WebRTCHostContextType<T extends RemotePeerBase = RemotePeerBase
     regeneratePartyId: () => void;
     trackerUrls: string[];
     activeTrackerUrls: string[];
+    disabledTrackerUrls: string[];
+    allTrackers: TrackerItem[];
+    toggleTrackerActive: (url: string, enabled?: boolean) => void;
     addTrackerUrl: (url: string) => void;
     removeTrackerUrl: (url: string) => void;
     restoreDefaultTrackers: () => void;
@@ -56,6 +72,15 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
         return stored ? JSON.parse(stored) : [];
     });
 
+    // Explicit user preferences per tracker URL (overriding default state)
+    const [trackerPreferences, setTrackerPreferences] = useState<Record<string, boolean>>(() => {
+        const stored = localStorage.getItem(`${gameId}_tracker_preferences`);
+        if (stored) {
+            try { return JSON.parse(stored); } catch { return {}; }
+        }
+        return {};
+    });
+
     const [helperSettingsHash, setHelperSettingsHash] = useState(0);
 
     useEffect(() => {
@@ -64,43 +89,43 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
         return () => window.removeEventListener('melodiq_settings_updated', handleSettingsUpdate);
     }, []);
 
-    // Computed active tracker URLs including helper server tracker if enabled
-    const activeTrackerUrls = useMemo(() => {
-        const urls = [...trackerUrls];
+    // Self-hosted backend tracker URL if helper is enabled
+    const backendTrackerUrl = useMemo(() => {
         const isHelperEnabled = localStorage.getItem('melodiq_enable_helper') !== 'false';
-        if (isHelperEnabled) {
-            let helperUrlRaw = localStorage.getItem('melodiq_helper_url');
-            if (!helperUrlRaw) {
-                helperUrlRaw = `${window.location.protocol}//${window.location.hostname}:3000`;
-            }
-            try {
-                const parsed = new URL(helperUrlRaw);
-                const wsProto = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
-                const localWsTracker = `${wsProto}//${parsed.hostname}${parsed.port ? `:${parsed.port}` : ''}`;
-                
-                // Only add if not already in the list
-                if (!urls.includes(localWsTracker)) {
-                    urls.push(localWsTracker);
-                }
-            } catch (e) {
-                console.warn('[WebRTCHostProvider] Failed to parse helper URL for local tracker:', e);
-            }
+        if (!isHelperEnabled) return null;
+        let helperUrlRaw = localStorage.getItem('melodiq_helper_url');
+        if (!helperUrlRaw) {
+            helperUrlRaw = `${window.location.protocol}//${window.location.hostname}:3000`;
         }
-        
-        // Always ensure reliable public fallback trackers are included
-        const defaultFallbacks = [
-            'wss://tracker.openwebtorrent.com',
-            'wss://tracker.btorrent.xyz',
-            'wss://tracker.webtorrent.dev'
-        ];
-        defaultFallbacks.forEach(fallback => {
-            if (!urls.includes(fallback)) {
-                urls.push(fallback);
-            }
+        try {
+            const parsed = new URL(helperUrlRaw);
+            const wsProto = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
+            return `${wsProto}//${parsed.hostname}${parsed.port ? `:${parsed.port}` : ''}`;
+        } catch (e) {
+            console.warn('[WebRTCHostProvider] Failed to parse helper URL for local tracker:', e);
+            return null;
+        }
+    }, [helperSettingsHash]);
+
+    // All available trackers with their classification and enabled/disabled status
+    // When a custom backend is configured, free public trackers are deactivated by default per user request.
+    const allTrackers = useMemo<TrackerItem[]>(() => {
+        return buildAllTrackers({
+            backendTrackerUrl,
+            publicTrackers: DEFAULT_PUBLIC_TRACKERS,
+            customTrackerUrls: trackerUrls,
+            trackerPreferences
         });
-        
-        return Array.from(new Set(urls));
-    }, [trackerUrls, helperSettingsHash]);
+    }, [backendTrackerUrl, trackerPreferences, trackerUrls]);
+
+    // Computed active tracker URLs: only those that are enabled
+    const activeTrackerUrls = useMemo(() => {
+        return filterActiveTrackers(allTrackers);
+    }, [allTrackers]);
+
+    const disabledTrackerUrls = useMemo(() => {
+        return allTrackers.filter(t => !t.enabled).map(t => t.url);
+    }, [allTrackers]);
 
     // 2. Runtime State
     const [manager, setManager] = useState<M | null>(null);
@@ -118,9 +143,12 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
     }, [partyId, gameId]);
 
     useEffect(() => {
-        // Only save if not empty or if we want to allow empty? Let's always save.
         localStorage.setItem(`${gameId}_tracker_urls`, JSON.stringify(trackerUrls));
     }, [trackerUrls, gameId]);
+
+    useEffect(() => {
+        localStorage.setItem(`${gameId}_tracker_preferences`, JSON.stringify(trackerPreferences));
+    }, [trackerPreferences, gameId]);
 
     // Persist active peer IDs
     useEffect(() => {
@@ -218,19 +246,52 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
         setPartyId(Math.random().toString(36).substring(2, 8).toUpperCase());
     }, []);
 
+    const toggleTrackerActive = useCallback((url: string, enabled?: boolean) => {
+        setTrackerPreferences(prev => {
+            const currentItem = allTrackers.find(t => t.url === url);
+            const currentEffective = currentItem ? currentItem.enabled : true;
+            const newEnabled = enabled !== undefined ? enabled : !currentEffective;
+            return setTrackerPreference(prev, url, newEnabled);
+        });
+    }, [allTrackers]);
+
     const addTrackerUrl = useCallback((url: string) => {
-        if (url && !trackerUrls.includes(url)) {
-            setTrackerUrls(prev => [...prev, url]);
-        }
-    }, [trackerUrls]);
+        const trimmed = url?.trim();
+        if (!trimmed) return;
+        setTrackerUrls(prev => {
+            if (
+                !prev.includes(trimmed) &&
+                !DEFAULT_PUBLIC_TRACKERS.includes(trimmed) &&
+                trimmed !== backendTrackerUrl
+            ) {
+                return [...prev, trimmed];
+            }
+            return prev;
+        });
+        // Ensure added tracker is explicitly enabled
+        setTrackerPreferences(prev => setTrackerPreference(prev, trimmed, true));
+    }, [backendTrackerUrl]);
 
     const removeTrackerUrl = useCallback((url: string) => {
-        setTrackerUrls(prev => prev.filter(t => t !== url));
-    }, []);
+        if (DEFAULT_PUBLIC_TRACKERS.includes(url) || url === backendTrackerUrl) {
+            // Default public or backend tracker: deactivate instead of deleting
+            toggleTrackerActive(url, false);
+        } else {
+            setTrackerUrls(prev => prev.filter(t => t !== url));
+            setTrackerPreferences(prev => {
+                const next = { ...prev };
+                delete next[url];
+                return next;
+            });
+        }
+    }, [backendTrackerUrl, toggleTrackerActive]);
 
     const restoreDefaultTrackers = useCallback(() => {
         setTrackerUrls([]);
-    }, []);
+        setTrackerPreferences({});
+        localStorage.removeItem(`${gameId}_tracker_preferences`);
+        localStorage.removeItem(`${gameId}_disabled_tracker_urls`);
+    }, [gameId]);
 
     const togglePeerActive = useCallback((peerId: string) => {
         setActivePeerIds(prev =>
@@ -289,6 +350,9 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
             regeneratePartyId,
             trackerUrls,
             activeTrackerUrls,
+            disabledTrackerUrls,
+            allTrackers,
+            toggleTrackerActive,
             addTrackerUrl,
             removeTrackerUrl,
             restoreDefaultTrackers

@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Button, Typography, TextField, IconButton, Avatar, Paper, Container, Chip, Divider, Tooltip } from '@mui/material';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Box, Button, Typography, TextField, IconButton, Avatar, Paper, Container, Chip, Divider, Tooltip, Switch } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
 import QRCode from 'qrcode';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { QRScannerDialog } from './QRScannerDialog';
 import { buildDeviceConnectionUrl } from './connectionUrl';
+import type { TrackerItem } from '../../lib/webrtc';
 
 export interface WebRTCConnectionData {
     peers: any[];
@@ -14,6 +16,9 @@ export interface WebRTCConnectionData {
     regeneratePartyId: () => void;
     trackerUrls: string[];
     activeTrackerUrls: string[];
+    disabledTrackerUrls?: string[];
+    allTrackers?: TrackerItem[];
+    toggleTrackerActive?: (url: string, enabled?: boolean) => void;
     addTrackerUrl: (url: string) => void;
     removeTrackerUrl: (url: string) => void;
     restoreDefaultTrackers: () => void;
@@ -50,16 +55,31 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
     helperTokenKey,
 }) => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const {
         peers: connectedPreviewPeers,
         partyId,
         regeneratePartyId,
         trackerUrls,
         activeTrackerUrls = [], // fallback if not loaded
+        allTrackers: contextAllTrackers,
+        toggleTrackerActive: contextToggleTrackerActive,
         addTrackerUrl: contextAddTrackerUrl,
         removeTrackerUrl: contextRemoveTrackerUrl,
         restoreDefaultTrackers
     } = webrtcData;
+
+    const trackersToDisplay: TrackerItem[] = useMemo(() => {
+        if (contextAllTrackers && contextAllTrackers.length > 0) {
+            return contextAllTrackers;
+        }
+        const allUrls = Array.from(new Set([...activeTrackerUrls, ...trackerUrls]));
+        return allUrls.map(url => ({
+            url,
+            type: trackerUrls.includes(url) ? ('custom' as const) : ('public' as const),
+            enabled: activeTrackerUrls.includes(url)
+        }));
+    }, [contextAllTrackers, activeTrackerUrls, trackerUrls]);
 
     // UI State for adding new tracker
     const [newTrackerUrl, setNewTrackerUrl] = useState('');
@@ -289,79 +309,151 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
                         </Box>
 
                         <Box>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Typography variant="subtitle2" gutterBottom>Signaling Servers (Trackers)</Typography>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                                <Typography variant="subtitle2">{t('signaling.title', 'Signaling Servers (Trackers)')}</Typography>
                                 <Button
                                     size="small"
                                     onClick={restoreDefaultTrackers}
                                     variant="outlined"
                                     sx={{ borderRadius: 50 }}
                                 >
-                                    Restore Defaults
+                                    {t('signaling.restore_defaults', 'Restore Defaults')}
                                 </Button>
                             </Box>
 
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                {activeTrackerUrls.map((url: string, index: number) => {
-                                    const isSelfHosted = !trackerUrls.includes(url);
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                {trackersToDisplay.map((item, index: number) => {
+                                    const isCustom = item.type === 'custom';
+                                    const isBackend = item.type === 'backend';
+                                    const isPublic = item.type === 'public';
+
                                     return (
-                                        <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Paper
+                                            key={item.url || index}
+                                            elevation={0}
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 1.5,
+                                                p: 1,
+                                                px: 1.5,
+                                                borderRadius: 2,
+                                                bgcolor: item.enabled ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.2)',
+                                                border: '1px solid',
+                                                borderColor: item.enabled ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.04)',
+                                                opacity: item.enabled ? 1 : 0.6,
+                                                transition: 'all 0.2s ease',
+                                            }}
+                                        >
+                                            <Tooltip title={item.enabled ? t('signaling.toggle_disable', 'Server deaktivieren') : t('signaling.toggle_enable', 'Server aktivieren')}>
+                                                <Switch
+                                                    size="small"
+                                                    checked={item.enabled}
+                                                    onChange={() => {
+                                                        if (contextToggleTrackerActive) {
+                                                            contextToggleTrackerActive(item.url, !item.enabled);
+                                                        } else if (item.enabled) {
+                                                            contextRemoveTrackerUrl(item.url);
+                                                        } else {
+                                                            contextAddTrackerUrl(item.url);
+                                                        }
+                                                    }}
+                                                    color={isBackend ? 'success' : isPublic ? 'primary' : 'secondary'}
+                                                />
+                                            </Tooltip>
+
                                             <TextField
-                                                value={url}
+                                                value={item.url}
                                                 size="small"
                                                 fullWidth
-                                                variant="outlined"
-                                                InputProps={{ readOnly: true }}
+                                                variant="standard"
+                                                InputProps={{
+                                                    readOnly: true,
+                                                    disableUnderline: true,
+                                                    sx: {
+                                                        fontFamily: 'monospace',
+                                                        fontSize: '0.85rem',
+                                                        color: item.enabled ? 'text.primary' : 'text.disabled'
+                                                    }
+                                                }}
                                             />
-                                            {isSelfHosted ? (
+
+                                            {isBackend && (
                                                 <Chip
-                                                    label="Self-Hosted"
+                                                    label={t('signaling.type_backend', 'Self-Hosted')}
                                                     color="success"
                                                     variant="outlined"
                                                     size="small"
-                                                    sx={{ height: 32, px: 1, borderRadius: 2 }}
+                                                    sx={{ height: 26, px: 0.5, borderRadius: 1.5, fontSize: '0.75rem', whiteSpace: 'nowrap' }}
                                                 />
-                                            ) : (
-                                                <IconButton
-                                                    color="error"
-                                                    size="small"
-                                                    onClick={() => contextRemoveTrackerUrl(url)}
-                                                >
-                                                    <DeleteIcon />
-                                                </IconButton>
                                             )}
-                                        </Box>
+                                            {isPublic && (
+                                                <Chip
+                                                    label={t('signaling.type_public', 'Free / Public')}
+                                                    color="info"
+                                                    variant="outlined"
+                                                    size="small"
+                                                    sx={{ height: 26, px: 0.5, borderRadius: 1.5, fontSize: '0.75rem', whiteSpace: 'nowrap' }}
+                                                />
+                                            )}
+                                            {isCustom && (
+                                                <Chip
+                                                    label={t('signaling.type_custom', 'Custom')}
+                                                    color="secondary"
+                                                    variant="outlined"
+                                                    size="small"
+                                                    sx={{ height: 26, px: 0.5, borderRadius: 1.5, fontSize: '0.75rem', whiteSpace: 'nowrap' }}
+                                                />
+                                            )}
+
+                                            {isCustom && (
+                                                <Tooltip title={t('signaling.remove_tooltip', 'Tracker entfernen')}>
+                                                    <IconButton
+                                                        color="error"
+                                                        size="small"
+                                                        onClick={() => contextRemoveTrackerUrl(item.url)}
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            )}
+                                        </Paper>
                                     );
                                 })}
+
                                 {activeTrackerUrls.length === 0 && (
-                                    <Box sx={{ p: 2, bgcolor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 1 }}>
+                                    <Box sx={{ p: 2, bgcolor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 2 }}>
                                         <Typography variant="body2" color="error">
-                                            ⚠️ No signaling servers configured. Connection will not be possible.
-                                            Please add a WSS tracker URL below.
+                                            {t('signaling.no_trackers_warning', '⚠️ Keine Signaling-Server aktiv. Verbindung zu Mobilgeräten wird nicht möglich sein. Bitte mindestens einen Server aktivieren.')}
                                         </Typography>
                                     </Box>
                                 )}
+
                                 <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
                                     <TextField
                                         value={newTrackerUrl}
                                         onChange={(e) => setNewTrackerUrl(e.target.value)}
-                                        placeholder="wss://tracker.example.com"
+                                        placeholder={t('signaling.placeholder', 'wss://tracker.example.com')}
                                         size="small"
                                         fullWidth
                                         variant="outlined"
                                         onKeyPress={(e) => {
                                             if (e.key === 'Enter') {
                                                 e.preventDefault();
-                                                contextAddTrackerUrl(newTrackerUrl);
-                                                setNewTrackerUrl('');
+                                                if (newTrackerUrl.trim()) {
+                                                    contextAddTrackerUrl(newTrackerUrl.trim());
+                                                    setNewTrackerUrl('');
+                                                }
                                             }
                                         }}
                                     />
                                     <Button
                                         variant="contained"
                                         onClick={() => {
-                                            contextAddTrackerUrl(newTrackerUrl);
-                                            setNewTrackerUrl('');
+                                            if (newTrackerUrl.trim()) {
+                                                contextAddTrackerUrl(newTrackerUrl.trim());
+                                                setNewTrackerUrl('');
+                                            }
                                         }}
                                         sx={{
                                             borderRadius: 50,
@@ -372,7 +464,7 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
                                             color: 'white'
                                         }}
                                     >
-                                        Add
+                                        {t('signaling.add_button', 'Add')}
                                     </Button>
                                 </Box>
                             </Box>

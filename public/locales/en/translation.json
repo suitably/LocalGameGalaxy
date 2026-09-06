@@ -369,6 +369,7 @@
       "playlists": "Playlists",
       "history": "History",
       "settings": "Settings",
+      "client_settings": "Player Profile",
       "join": "Join",
       "host": "Host",
       "play": "Play",
@@ -678,6 +679,21 @@
       "qr_title": "Connection QR Code",
       "qr_desc": "Scan this QR code to connect to the server as \"{{name}}\""
     }
+  },
+  "signaling": {
+    "title": "Signaling Servers (Trackers)",
+    "restore_defaults": "Restore Defaults",
+    "type_backend": "Self-Hosted",
+    "type_public": "Free / Public",
+    "type_custom": "Custom",
+    "status_active": "Active",
+    "status_disabled": "Disabled",
+    "toggle_enable": "Enable server",
+    "toggle_disable": "Disable server",
+    "no_trackers_warning": "⚠️ No active signaling servers configured. Connection to mobile devices will not be possible. Please enable at least one server.",
+    "placeholder": "wss://tracker.example.com",
+    "add_button": "Add",
+    "remove_tooltip": "Remove tracker"
   },
   "github": {
     "title": "GitHub Integration",

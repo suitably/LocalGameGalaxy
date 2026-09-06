@@ -79,3 +79,19 @@ Local WebRTC connections can drop due to phone sleep states, network switches, o
 - **Signaling Timeout**: If a connection attempt takes longer than `CONNECTION_TIMEOUT_MS` (15 seconds), the candidate peer is automatically destroyed, triggering `processNextPendingPeer` to try another tracker peer.
 - **Auto-Reconnect**: On connection loss (`close` or `error` events), if `autoConnect` is active, the client schedules a connection retry after 2 seconds.
 - **Stale State Recovery**: If a client reconnects using an identical `deviceId`, the host matches it to the existing player record and updates the session references rather than instantiating a new player slot.
+
+---
+
+## 5. Signaling Tracker Orchestration & Companion Server Coexistence
+
+The signaling infrastructure manages multiple trackers with distinct classifications and precedence rules:
+
+1. **Self-Hosted Backend Tracker**: Automatically derived from the configured Nexumia Companion Server URL (`storage.getHelperUrl()` / `melodiq_helper_url`).
+2. **Default Free Public Fallback Trackers**: Reliable public BitTorrent WebTorrent trackers (`wss://tracker.openwebtorrent.com`, `wss://tracker.btorrent.xyz`, `wss://tracker.webtorrent.dev`).
+3. **Custom User Trackers**: Manually added by users in the Device Connection settings.
+
+### Coexistence and Default Activation Rules
+- **No Backend Configured**: Free public trackers are **enabled by default** to ensure out-of-the-box phone connectivity without setup hurdles.
+- **Backend Configured**: When a self-hosted companion server is present, the self-hosted tracker is enabled by default, while free public trackers remain listed in the UI but are **deactivated by default**. This ensures local/private signaling takes precedence without leaking data to public trackers, while avoiding accidental tracker removal. Users can explicitly reactivate individual public fallback trackers at any time via the UI toggle switch.
+- **Preferences Persistence**: Explicit user overrides per tracker URL are persisted in `${gameId}_tracker_preferences` via `storage.ts`.
+

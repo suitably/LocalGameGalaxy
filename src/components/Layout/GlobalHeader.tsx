@@ -19,7 +19,7 @@ import { hasGitHubPAT } from '../../lib/github';
 
 export const GlobalHeader: React.FC = () => {
     const { t } = useTranslation();
-    const { title, customHeaderTitle, menuItems, homeAction, customHeaderActions } = useLayout();
+    const { title, customHeaderTitle, menuItems, homeAction, customHeaderActions, isSettingsMode } = useLayout();
     const { pageTitle } = useTitle();
     const navigate = useNavigate();
     const location = useLocation();
@@ -28,7 +28,7 @@ export const GlobalHeader: React.FC = () => {
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const activeGame = gameRegistry.findGameByPath(location.pathname);
     const hasSettings = activeGame?.hasSettings ?? false;
-    const isSettingsPage = location.pathname === '/settings';
+    const isSettingsPage = location.pathname === '/settings' || isSettingsMode;
     const { isStandalone, isInstallable, installApp, showIOSGuide, setShowIOSGuide } = usePWAInstall();
 
     // State for Burger Menu

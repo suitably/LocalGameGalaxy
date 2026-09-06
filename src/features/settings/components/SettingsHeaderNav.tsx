@@ -107,7 +107,8 @@ export const SettingsHeaderToolbar: React.FC = () => {
         } else {
             nextParams.delete('section');
         }
-        navigate(`/settings?${nextParams.toString()}`, { replace: true, state: location.state });
+        const targetPath = location.pathname === '/settings' ? '/settings' : location.pathname;
+        navigate(`${targetPath}?${nextParams.toString()}`, { replace: true, state: location.state });
         handleCloseAll();
     };
 
@@ -387,7 +388,8 @@ export const SettingsHeaderSubNav: React.FC = () => {
         } else {
             nextParams.delete('section');
         }
-        navigate(`/settings?${nextParams.toString()}`, { replace: true, state: location.state });
+        const targetPath = location.pathname === '/settings' ? '/settings' : location.pathname;
+        navigate(`${targetPath}?${nextParams.toString()}`, { replace: true, state: location.state });
     };
 
     return (

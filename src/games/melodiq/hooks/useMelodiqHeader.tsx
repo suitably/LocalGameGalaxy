@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useLayout } from '../../../context/LayoutContext';
 
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -20,28 +20,33 @@ interface UseMelodiqHeaderProps {
     startPresentation: () => void;
     disconnectTV: () => void;
     clientRole: string;
+    onBackToHome?: () => void;
 }
 
 export const useMelodiqHeader = ({
     currentView, setCurrentView, loadingProgress,
     refreshSongs, isClient,
-    isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV, clientRole
+    isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV, clientRole,
+    onBackToHome
 }: UseMelodiqHeaderProps) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const location = useLocation();
     const { setHeader, setCustomHeaderActions } = useLayout();
 
     useEffect(() => {
         // Return to Hub when on Home, otherwise return to Melodiq Home
-        const homeAction = currentView === 'Home' ? null : () => setCurrentView('Home');
+        const homeAction = currentView === 'Home'
+            ? null
+            : (onBackToHome || (() => setCurrentView('Home')));
 
         if (currentView === 'Home') {
             const headerActions: any[] = [];
 
             headerActions.push({
-                label: 'Settings',
+                label: isClient ? t('melodiq.client_settings', 'Spieler-Profil') : t('settings.title', 'Einstellungen'),
                 icon: <SettingsIcon />,
-                action: () => navigate('/settings?game=melodiq', { state: { from: '/games/melodiq', game: 'melodiq' } }),
+                action: () => setCurrentView('Settings'),
                 showAlways: true
             });
 
@@ -67,8 +72,15 @@ export const useMelodiqHeader = ({
                 ) : null
             );
         } else if (currentView === 'Settings') {
-            // Settings manages its own header title and back navigation
-            return;
+            if (isClient) {
+                setHeader(t('melodiq.client_settings', 'Spieler-Profil'), [], homeAction);
+                setCustomHeaderActions(null);
+            } else {
+                // Host in Melodiq settings:
+                // Keep WebRTCProvider alive! Enable settings mode on GlobalHeader.
+                setHeader(t('settings.title', 'Einstellungen'), [], homeAction, null, true);
+                setCustomHeaderActions(null);
+            }
         } else {
             // Clear menu items for other views to avoid irrelevant actions
             setHeader(t('melodiq.title'), [], homeAction);
@@ -83,6 +95,6 @@ export const useMelodiqHeader = ({
         currentView, loadingProgress, refreshSongs, setCurrentView, t, 
         setHeader, setCustomHeaderActions, isTVConnected, openTVWindow, 
         isPresentationAvailable, startPresentation, disconnectTV, isClient,
-        clientRole
+        clientRole, location.pathname, location.search, navigate, onBackToHome
     ]);
 };

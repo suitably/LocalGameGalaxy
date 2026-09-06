@@ -29,7 +29,7 @@ export function resolveSettingsNav(
     const state = (locationState as Record<string, unknown>) || {};
     const gameParam = (activeGameId || searchParams.get('game') || (typeof state.game === 'string' ? state.game : '')).toLowerCase();
     const fromPath = (typeof state.from === 'string' ? state.from : '').toLowerCase();
-    const isFromMelodiq = gameParam === 'melodiq' || fromPath.includes('/games/melodiq') || fromPath.includes('melodiq');
+    const isFromMelodiq = gameParam === 'melodiq' || fromPath.includes('/games/melodiq') || fromPath.includes('melodiq') || window.location.pathname.includes('/games/melodiq');
 
     const tabParam = (searchParams.get('tab') || (typeof state.tab === 'string' ? state.tab : '')).toLowerCase();
     const subParam = (searchParams.get('sub') || (typeof state.sub === 'string' ? state.sub : '')).toLowerCase();
