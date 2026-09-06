@@ -207,7 +207,8 @@ export const melodiqResources = {
                 dev_options: "Developer Options",
                 show_debug: "Show Debug Overlay",
                 show_dev_slider: "Show Dev Audio Slider",
-                show_video_errors: "Show Video Errors"
+                show_video_errors: "Show Video Errors",
+                reset_confirm: "Reset all game settings to factory defaults? Profiles will not be affected."
             },
             join_session: "Join Session",
             scan_to_join_desc: "Scan the QR code to connect your phone as a microphone or controller",
@@ -433,7 +434,8 @@ export const melodiqResources = {
                 dev_options: "Entwickleroptionen",
                 show_debug: "Debug-Overlay anzeigen",
                 show_dev_slider: "Entwickler-Audio-Regler anzeigen",
-                show_video_errors: "Video-Fehler anzeigen"
+                show_video_errors: "Video-Fehler anzeigen",
+                reset_confirm: "Alle Spieleinstellungen auf Standardwerte zurücksetzen? Profile bleiben unberührt."
             },
             join_session: "Sitzung beitreten",
             scan_to_join_desc: "Scanne den QR-Code, um dein Smartphone als Mikrofon oder Controller zu verbinden",

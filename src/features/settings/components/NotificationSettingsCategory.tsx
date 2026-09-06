@@ -24,7 +24,7 @@ export const NotificationSettingsCategory: React.FC = () => {
             </Box>
 
             {/* Main Notifications Card */}
-            <Paper sx={settingsCardSx}>
+            <Paper id="settings-section-notifications" sx={settingsCardSx}>
                 <NotificationSettings />
             </Paper>
         </Box>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import {
     Box, Button, TextField, Typography, Paper, Switch, FormControlLabel,
     IconButton, InputAdornment, Dialog, DialogTitle, DialogContent,
@@ -28,11 +29,23 @@ type ConnectionStatus = 'idle' | 'checking' | 'success' | 'error';
 
 export const ServerConnection: React.FC = () => {
     const { t } = useTranslation();
+    const [searchParams] = useSearchParams();
+    const location = useLocation();
+    const state = (location.state as Record<string, unknown>) || {};
+    const sectionParam = searchParams.get('section') || (typeof state.section === 'string' ? state.section : '');
+    const setupParam = searchParams.get('setup') || (typeof state.setup === 'string' ? state.setup : '');
+
     const [url, setUrl] = useState(() => storage.getHelperUrl());
     const [token, setToken] = useState(() => storage.getHelperToken());
     const [enabled, setEnabled] = useState(() => storage.isHelperActive());
     const [showToken, setShowToken] = useState(false);
-    const [setupDialogOpen, setSetupDialogOpen] = useState(false);
+    const [setupDialogOpen, setSetupDialogOpen] = useState(() => sectionParam === 'setup' || setupParam === '1');
+
+    useEffect(() => {
+        if (sectionParam === 'setup' || setupParam === '1') {
+            setSetupDialogOpen(true);
+        }
+    }, [sectionParam, setupParam]);
 
     const [status, setStatus] = useState<ConnectionStatus>('idle');
     const [statusMsg, setStatusMsg] = useState('');

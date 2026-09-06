@@ -495,7 +495,10 @@
     "delete": "Löschen",
     "clear_all_players": "Alle Spieler löschen",
     "home": "Startseite",
-    "copied": "Kopiert!"
+    "copied": "Kopiert!",
+    "confirm": "Bestätigen",
+    "cancel": "Abbrechen",
+    "all": "Alle"
   },
   "settings": {
     "title": "Einstellungen",

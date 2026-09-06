@@ -495,7 +495,10 @@
     "delete": "Delete",
     "clear_all_players": "Clear All Players",
     "home": "Home",
-    "copied": "Copied!"
+    "copied": "Copied!",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "all": "All"
   },
   "settings": {
     "title": "Settings",

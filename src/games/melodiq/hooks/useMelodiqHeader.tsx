@@ -41,7 +41,7 @@ export const useMelodiqHeader = ({
             headerActions.push({
                 label: 'Settings',
                 icon: <SettingsIcon />,
-                action: () => navigate('/settings?game=melodiq'),
+                action: () => navigate('/settings?game=melodiq', { state: { from: '/games/melodiq', game: 'melodiq' } }),
                 showAlways: true
             });
 

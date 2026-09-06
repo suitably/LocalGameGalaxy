@@ -34,8 +34,15 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = () => {
     }, [refreshGithubConfig]);
 
     useEffect(() => {
-        if (searchParams.get('sub') === 'feedback') {
-            const el = document.getElementById('feedback-section');
+        const sub = searchParams.get('sub');
+        if (sub === 'feedback') {
+            const el = document.getElementById('settings-section-feedback') || document.getElementById('feedback-section');
+            el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (sub === 'language') {
+            const el = document.getElementById('settings-section-language');
+            el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (sub === 'github' || sub === 'pat') {
+            const el = document.getElementById('settings-section-github');
             el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }, [searchParams]);
@@ -60,7 +67,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = () => {
             </Box>
 
             {/* Language Preferences */}
-            <Paper sx={settingsCardSx}>
+            <Paper id="settings-section-language" sx={settingsCardSx}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
                     <LanguageIcon color="primary" />
                     <Typography variant="h6">
@@ -108,7 +115,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = () => {
                 </Alert>
             )}
 
-            <Paper sx={settingsCardSx} id="feedback-section">
+            <Paper sx={settingsCardSx} id="settings-section-feedback">
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
                     <FeedbackIcon color="primary" />
                     <Typography variant="h6">

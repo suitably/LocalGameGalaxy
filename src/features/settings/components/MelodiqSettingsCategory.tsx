@@ -6,6 +6,7 @@ import QueueMusicIcon from '@mui/icons-material/QueueMusic';
 import { useTranslation } from 'react-i18next';
 import { ServerConnection } from '../../../components/connection/ServerConnection';
 import { ServerAdminPanel } from '../../../components/connection/ServerAdminPanel';
+import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
 import {
     MicrophoneManager,
     useProfiles,
@@ -39,6 +40,7 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
 
     // Audio Devices
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+    const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
     // Custom Hooks for state management
     const profilesHook = useProfiles(devices);
@@ -81,33 +83,40 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
         }
     };
 
-    // Reset to Factory Defaults
+    // Reset to Factory Defaults with accessible ConfirmDialog
     const handleResetDefaults = () => {
-        if (confirm('Reset all game settings to factory defaults? Profiles will not be affected.')) {
-            settingsHook.resetSettings(DEFAULT_SETTINGS);
-        }
+        setResetDialogOpen(true);
+    };
+
+    const executeResetDefaults = () => {
+        settingsHook.resetSettings(DEFAULT_SETTINGS);
+        setResetDialogOpen(false);
     };
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {/* Sub-Tab 0: Companion Server (Connection, Setup Dialog, API Keys) */}
             {(subTab === 'all' || subTab === 'server') && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <ServerConnection />
-                    <ServerAdminPanel />
+                <Box id="settings-section-server" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <Box id="settings-section-server-connection">
+                        <ServerConnection />
+                    </Box>
+                    <Box id="settings-section-admin">
+                        <ServerAdminPanel />
+                    </Box>
                 </Box>
             )}
 
             {/* Sub-Tab 1: Microphones */}
             {(subTab === 'all' || subTab === 'microphones') && (
-                <Paper sx={settingsCardSx}>
+                <Paper id="settings-section-microphones" sx={settingsCardSx}>
                     <HardwareMicSetup />
                 </Paper>
             )}
 
             {/* Sub-Tab 2: Profiles */}
             {(subTab === 'all' || subTab === 'profiles') && (
-                <Paper sx={settingsCardSx}>
+                <Paper id="settings-section-profiles" sx={settingsCardSx}>
                     <UserProfilesManager
                         profiles={profilesHook.profiles}
                         onAddProfile={profilesHook.addProfile}
@@ -119,7 +128,7 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
 
             {/* Sub-Tab 3: Gameplay */}
             {(subTab === 'all' || subTab === 'gameplay') && (
-                <Paper sx={{ ...settingsCardSx, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Paper id="settings-section-gameplay" sx={{ ...settingsCardSx, display: 'flex', flexDirection: 'column', gap: 3 }}>
                     <GameSettingsPanel
                         settings={settingsHook.settings}
                         onUpdateSetting={settingsHook.updateSetting}
@@ -172,7 +181,7 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
 
             {/* Sub-Tab 4: Playlists */}
             {(subTab === 'all' || subTab === 'playlists') && onNavigateToPlaylists && (
-                <Paper sx={settingsCardSx}>
+                <Paper id="settings-section-playlists" sx={settingsCardSx}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
                         <QueueMusicIcon color="primary" />
                         <Typography variant="h6">{t('melodiq.playlists', 'Playlists')}</Typography>
@@ -185,6 +194,17 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
                     </Button>
                 </Paper>
             )}
+
+            <ConfirmDialog
+                open={resetDialogOpen}
+                title={t('common.confirm', 'Bestätigen')}
+                message={t('melodiq.settings.reset_confirm', 'Alle Spieleinstellungen auf Standardwerte zurücksetzen? Profile bleiben unberührt.')}
+                confirmText={t('common.reset', 'Zurücksetzen')}
+                cancelText={t('common.cancel', 'Abbrechen')}
+                confirmColor="warning"
+                onConfirm={executeResetDefaults}
+                onCancel={() => setResetDialogOpen(false)}
+            />
         </Box>
     );
 };

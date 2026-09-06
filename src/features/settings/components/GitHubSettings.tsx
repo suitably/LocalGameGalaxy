@@ -91,7 +91,7 @@ export const GitHubSettings: React.FC<GitHubSettingsProps> = ({ autoFocusPat, on
     };
 
     return (
-        <Paper sx={settingsCardSx}>
+        <Paper id="settings-section-github" sx={settingsCardSx}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
                 <GitHubIcon />
                 <Typography variant="h6">
