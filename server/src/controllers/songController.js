@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const config = require('../../config');
-const { getSongCache, isScanning, scanSongs } = require('../services/scanner');
+const { getSongCache, setSongCache, isScanning, scanSongs, addOrUpdateSongInCache } = require('../services/scanner');
 const { resolveSecurePath } = require('../utils/helpers');
 const { searchUsdb } = require('../services/usdb');
 const { spawnYtDlp, ensureYtDlp } = require('../services/download');
@@ -17,6 +17,9 @@ function getSongs(req, res) {
     const toClientSong = (s) => {
         const secureUrl = (absPath) => {
             if (!absPath) return null;
+            if (absPath.startsWith('http://') || absPath.startsWith('https://')) {
+                return absPath;
+            }
             return '/media?path=' + encodeURIComponent(absPath) + '&token=' + config.token;
         };
 
@@ -59,6 +62,9 @@ function getSongById(req, res) {
 
     const secureUrl = (absPath) => {
         if (!absPath) return null;
+        if (absPath.startsWith('http://') || absPath.startsWith('https://')) {
+            return absPath;
+        }
         return '/media?path=' + encodeURIComponent(absPath) + '&token=' + config.token;
     };
 
@@ -109,7 +115,9 @@ async function deleteSong(req, res) {
             await fs.promises.rm(safeFolder, { recursive: true, force: true });
         }
 
-        scanSongs();
+        // Immediately remove deleted song from in-memory cache
+        setSongCache(getSongCache().filter(s => s.id !== songId));
+
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: 'Failed to delete song: ' + e.message });
@@ -135,7 +143,7 @@ async function updateSongTxt(req, res) {
 
     try {
         await fs.promises.writeFile(safePath, txtContent, 'utf-8');
-        scanSongs();
+        await addOrUpdateSongInCache(safePath);
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: 'Failed to save song file: ' + e.message });

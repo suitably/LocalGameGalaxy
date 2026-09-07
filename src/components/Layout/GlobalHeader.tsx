@@ -19,7 +19,7 @@ import { hasGitHubPAT } from '../../lib/github';
 
 export const GlobalHeader: React.FC = () => {
     const { t } = useTranslation();
-    const { title, customHeaderTitle, menuItems, homeAction, customHeaderActions, isSettingsMode } = useLayout();
+    const { title, customHeaderTitle, menuItems, homeAction, customHeaderActions, isSettingsMode, hideHome } = useLayout();
     const { pageTitle } = useTitle();
     const navigate = useNavigate();
     const location = useLocation();
@@ -69,9 +69,13 @@ export const GlobalHeader: React.FC = () => {
 
     // Responsive Logic:
     // Large Screen: Show ALL items in toolbar.
-    // Small Screen: ALL items go into burger menu for a clean header.
-    const visibleInToolbar = isLargeScreen ? menuItems : [];
-    const overflowItems = isLargeScreen ? [] : menuItems;
+    // Small Screen: Items with showAlways go into toolbar; the rest go into overflow burger menu.
+    const visibleInToolbar = isLargeScreen 
+        ? menuItems 
+        : menuItems.filter(item => item.showAlways);
+    const overflowItems = isLargeScreen 
+        ? [] 
+        : menuItems.filter(item => !item.showAlways);
 
     return (
         <>
@@ -85,22 +89,24 @@ export const GlobalHeader: React.FC = () => {
                 }}
             >
                 <Toolbar sx={{ alignItems: 'center', minHeight: { xs: 48, sm: 56 }, px: { xs: 1, sm: 2 } }}>
-                    <Tooltip title={(homeAction || isSettingsPage) ? t('common.back', 'Zurück') : t('common.home', 'Home')}>
-                        <IconButton
-                            size="medium"
-                            edge="start"
-                            color="inherit"
-                            aria-label={(homeAction || isSettingsPage) ? t('common.back', 'Zurück') : "home"}
-                            sx={{ mr: { xs: 0.5, sm: 1.5 }, p: { xs: 0.75, sm: 1.25 } }}
-                            onClick={handleHomeClick}
-                        >
-                            {(homeAction || isSettingsPage) ? (
-                                <ArrowBackRoundedIcon fontSize={isSmallScreen ? "small" : "medium"} />
-                            ) : (
-                                <HomeIcon fontSize={isSmallScreen ? "small" : "medium"} />
-                            )}
-                        </IconButton>
-                    </Tooltip>
+                    {(!hideHome || homeAction || isSettingsPage) && (
+                        <Tooltip title={(homeAction || isSettingsPage) ? t('common.back', 'Zurück') : t('common.home', 'Home')}>
+                            <IconButton
+                                size="medium"
+                                edge="start"
+                                color="inherit"
+                                aria-label={(homeAction || isSettingsPage) ? t('common.back', 'Zurück') : "home"}
+                                sx={{ mr: { xs: 0.5, sm: 1.5 }, p: { xs: 0.75, sm: 1.25 } }}
+                                onClick={handleHomeClick}
+                            >
+                                {(homeAction || isSettingsPage) ? (
+                                    <ArrowBackRoundedIcon fontSize={isSmallScreen ? "small" : "medium"} />
+                                ) : (
+                                    <HomeIcon fontSize={isSmallScreen ? "small" : "medium"} />
+                                )}
+                            </IconButton>
+                        </Tooltip>
+                    )}
 
                     {isSettingsPage ? (
                         <SettingsHeaderToolbar />
@@ -118,7 +124,8 @@ export const GlobalHeader: React.FC = () => {
                                 fontWeight: 600,
                                 overflow: 'hidden', 
                                 textOverflow: 'ellipsis', 
-                                whiteSpace: 'nowrap' 
+                                whiteSpace: 'nowrap',
+                                ml: (hideHome && !homeAction && !isSettingsPage) ? { xs: 1, sm: 1.5 } : 0
                             }}
                         >
                             {title || pageTitle || t('app.title')}

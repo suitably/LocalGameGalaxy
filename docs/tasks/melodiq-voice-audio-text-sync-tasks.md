@@ -1,0 +1,31 @@
+# Tasks: Melodiq Server Voice Audio & Lyrics Text Sync [ID: TASK-MELODIQ-VOICE-TEXT-SYNC]
+
+- [x] 1. Container & Compose Refactoring <!-- id: 1 -->
+  - [x] 1.1 Update `server/Dockerfile` to include `auditok` and configure model cache env vars <!-- id: 1.1 -->
+  - [x] 1.2 Update `server/docker-compose.dev.yml` to target `full`, mount writable music directories (`:z`), and mount live `./src` <!-- id: 1.2 -->
+- [x] 2. Alignment Script Modernization (`server/src/scripts/align_lyrics.py`) <!-- id: 2 -->
+  - [x] 2.1 Fix quarter-beat calculation formulas (`bpm * 4.0`) <!-- id: 2.1 -->
+  - [x] 2.2 Preserve duet markers (`P1`, `P2`), note types (`R`, `G`), and line breaks (`-`) <!-- id: 2.2 -->
+  - [x] 2.3 Implement multi-encoding decoding (UTF-8, CP1252, Latin-1) and unicode clean word matching <!-- id: 2.3 -->
+  - [x] 2.4 Use persistent `/app/models` Whisper cache directory <!-- id: 2.4 -->
+- [x] 3. Server Sync Job Refactoring (`separator.js` & `queueManager.js`) <!-- id: 3 -->
+  - [x] 3.1 Pass `vocalsFile` from `song.vocalsAudio` in `queueManager.js` <!-- id: 3.1 -->
+  - [x] 3.2 Implement robust vocals stem discovery (`#VOCALS:`, case-insensitive scan) <!-- id: 3.2 -->
+  - [x] 3.3 Refactor `runAutoSyncJob` to prefer vocals, support manual time sync without separation, and avoid crashing when unseparated <!-- id: 3.3 -->
+  - [x] 3.4 Refactor `runFullSyncJob` to use separated vocals if present, or separate if tool available, or fallback gracefully to master audio <!-- id: 3.4 -->
+- [x] 4. Client UI Integration & Localization <!-- id: 4 -->
+  - [x] 4.1 Expose "Full KI-Sync" in `SongActionDialogs.tsx` using `ConfirmDialog` <!-- id: 4.1 -->
+  - [x] 4.2 Update i18n keys for English and German <!-- id: 4.2 -->
+- [x] 5. Build, Startup & Verification <!-- id: 5 -->
+  - [x] 5.1 Run `npm run lint` and `npm run build` in root workspace <!-- id: 5.1 -->
+  - [x] 5.2 Build & start `nexumia-server-dev` container via Podman Compose <!-- id: 5.2 -->
+  - [x] 5.3 Verify server health and test voice/audio text sync execution <!-- id: 5.3 -->
+  - [x] 5.4 Create walkthrough documentation `docs/verification/melodiq-voice-audio-text-sync-walkthrough.md` <!-- id: 5.4 -->
+- [x] 6. Bugfixes: Online Songs Stuck Progress, USDB Lyrics Validation, & Separation Guard <!-- id: 6 -->
+  - [x] 6.1 Fix 100% stuck progress bar for deleted songs in `OnlineSongsView.tsx` (`status !== 'done'`) <!-- id: 6.1 -->
+  - [x] 6.2 Evict deleted songs immediately from server in-memory cache in `songController.js` <!-- id: 6.2 -->
+  - [x] 6.3 Add queue clear endpoints (`DELETE /api/usdb/jobs/:jobId?` & `DELETE /api/separator/jobs/:jobId?`) <!-- id: 6.3 -->
+  - [x] 6.4 Ensure `download.js` validates UltraStar note content and forces USDB download if local `.txt` has no notes <!-- id: 6.4 -->
+  - [x] 6.5 Implement Whisper-based UltraStar note generation in `align_lyrics.py` for empty `.txt` songs <!-- id: 6.5 -->
+  - [x] 6.6 In `SongActionDialogs.tsx`, disable sync buttons if vocals are not separated and provide a direct "Gesangsspur trennen (UVR AI)" button <!-- id: 6.6 -->
+

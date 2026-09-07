@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { type Song, getCachedFiles } from '../../db';
+import { getYouTubeVideoId } from '../YouTubeBackgroundPlayer';
 
 export function useMediaLoaders(
     song: Song, 
@@ -166,6 +167,16 @@ export function useMediaLoaders(
         const loadVideo = async () => {
             const targetVideo = song.video || parsedSong?.headers?.VIDEO;
             if (!targetVideo || isClient) return;
+
+            // Immediately check for YouTube ID / URL / USDB tag
+            if (typeof targetVideo === 'string') {
+                const ytId = getYouTubeVideoId(targetVideo);
+                if (ytId) {
+                    if (mounted) setVideoSrc(`https://www.youtube.com/watch?v=${ytId}`);
+                    return;
+                }
+            }
+
             try {
                 let fileOrBlob: Blob | File | null = null;
                 let fileName: string = '';
@@ -176,10 +187,20 @@ export function useMediaLoaders(
                         fileName = targetVideo.name;
                     }
                 } else if (typeof targetVideo === 'string') {
-                    if (targetVideo.startsWith('http') || targetVideo.startsWith('/') || targetVideo.startsWith('blob:')) {
-                        if (targetVideo.startsWith('/') && !window.location.origin.includes('3000')) {
+                    let cleanVideo = targetVideo;
+                    if (cleanVideo.includes('/media') && cleanVideo.includes('path=http')) {
+                        try {
+                            const parsed = new URL(cleanVideo, window.location.origin);
+                            const rawPath = parsed.searchParams.get('path');
+                            if (rawPath && (rawPath.startsWith('http://') || rawPath.startsWith('https://'))) {
+                                cleanVideo = rawPath;
+                            }
+                        } catch (_) {}
+                    }
+                    if (cleanVideo.startsWith('http') || cleanVideo.startsWith('/') || cleanVideo.startsWith('blob:')) {
+                        if (cleanVideo.startsWith('/') && !window.location.origin.includes('3000')) {
                             const helperUrl = localStorage.getItem('melodiq_helper_url')?.replace(/\/$/, "") || 'http://localhost:3000';
-                            let finalUrl = `${helperUrl}${targetVideo}`;
+                            let finalUrl = `${helperUrl}${cleanVideo}`;
                             if (finalUrl.includes('/media') && !finalUrl.includes('token=')) {
                                 const token = localStorage.getItem('melodiq_helper_token');
                                 if (token) {
@@ -188,7 +209,7 @@ export function useMediaLoaders(
                             }
                             activeUrl = finalUrl;
                         } else {
-                            activeUrl = targetVideo;
+                            activeUrl = cleanVideo;
                         }
                     } else if (typeof song.audio === 'string' && (song.audio.startsWith('http') || song.audio.startsWith('/'))) {
                         // Resolve relative video filename against song.audio URL (same as vocals loader)

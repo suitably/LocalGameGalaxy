@@ -5,7 +5,7 @@ const { spawn, execFileSync } = require('child_process');
 const config = require('../../config');
 const { sanitizeFilename } = require('../utils/helpers');
 const { getUsdbCookie, fetchUsdbTxt } = require('./usdb');
-const { scanSongs } = require('./scanner');
+const { scanSongs, addOrUpdateSongInCache } = require('./scanner');
 const { SEPARATOR_JOBS, separatorQueue, processSeparatorQueue } = require('./separator');
 
 /**
@@ -235,28 +235,45 @@ async function runDownloadJob(job) {
         // 3. Fetch .txt from USDB or recover existing local one
         let txtContent = null;
         const txtPath = path.join(songDir, `${safeName}.txt`);
+        const hasNotes = (str) => Boolean(str && str.split('\n').some(l => /^[:*FRG]\s/.test(l.trim())));
+
         if (fs.existsSync(txtPath)) {
-            job.log.push('📄 Using existing local .txt file...');
             try {
-                txtContent = fs.readFileSync(txtPath, 'utf-8');
+                const existing = fs.readFileSync(txtPath, 'utf-8');
+                if (hasNotes(existing)) {
+                    job.log.push('📄 Using existing local .txt file with lyrics...');
+                    txtContent = existing;
+                } else {
+                    job.log.push('⚠️ Existing local .txt has no lyrics notes. Fetching from USDB...');
+                }
             } catch (err) {
                 job.log.push(`⚠️ Failed to read existing .txt: ${err.message}`);
             }
         }
 
-        if (!txtContent && usdbId && config.usdbUsername && config.usdbPassword) {
+        if ((!txtContent || !hasNotes(txtContent)) && usdbId && config.usdbUsername && config.usdbPassword) {
             job.log.push('🔐 Logging in to USDB...');
             try {
                 const cookie = await getUsdbCookie();
                 job.log.push('📄 Downloading lyrics (.txt)...');
-                txtContent = await fetchUsdbTxt(usdbId, cookie);
+                const fetched = await fetchUsdbTxt(usdbId, cookie);
+                if (fetched && hasNotes(fetched)) {
+                    txtContent = fetched;
+                    job.log.push('✅ Lyrics successfully downloaded from USDB.');
+                } else if (fetched) {
+                    txtContent = fetched;
+                }
             } catch (e) {
                 job.log.push('Session expired or error – re-logging in...');
                 try {
                     const cookie = await getUsdbCookie(true);
-                    txtContent = await fetchUsdbTxt(usdbId, cookie);
+                    const fetched = await fetchUsdbTxt(usdbId, cookie);
+                    if (fetched) {
+                        txtContent = fetched;
+                        job.log.push('✅ Lyrics successfully downloaded from USDB.');
+                    }
                 } catch (err) {
-                    throw new Error(`Failed to fetch lyrics: ${err.message}`);
+                    job.log.push(`⚠️ Failed to fetch lyrics from USDB: ${err.message}`);
                 }
             }
         } else if (!txtContent) {
@@ -390,13 +407,24 @@ async function runDownloadJob(job) {
         job.status = 'done';
         job.log.push(`🎉 Saved to: ${songDir}`);
 
+        // Instantly index the downloaded song into cache so UI has it immediately
+        let indexedSong = null;
+        try {
+            indexedSong = await addOrUpdateSongInCache(txtPath);
+            if (indexedSong) {
+                job.log.push('⚡ Immediately added to song cache.');
+            }
+        } catch (e) {
+            console.warn('[Download] Failed to instantly index song:', e);
+        }
+
         if (config.autoVocalSeparation) {
             job.log.push(`🎤 Auto Vocal Separation is enabled. Queuing separator job...`);
             const sepJobId = crypto.randomBytes(8).toString('hex');
             const sepJob = {
                 jobId: sepJobId,
                 type: 'separate',
-                songId: safeName,
+                songId: indexedSong ? indexedSong.id : safeName,
                 songDir: songDir,
                 audioFile: `${safeName}.mp3`,
                 txtFile: `${safeName}.txt`,

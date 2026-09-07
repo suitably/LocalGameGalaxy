@@ -59,7 +59,7 @@ export const useMelodiqHeader = ({
                 });
             }
 
-            setHeader(t('melodiq.title'), headerActions, homeAction);
+            setHeader(t('melodiq.title'), headerActions, homeAction, null, false, isClient);
             setCustomHeaderActions(
                 !isClient ? (
                     <TVModeButton
@@ -73,17 +73,17 @@ export const useMelodiqHeader = ({
             );
         } else if (currentView === 'Settings') {
             if (isClient) {
-                setHeader(t('melodiq.client_settings', 'Spieler-Profil'), [], homeAction);
+                setHeader(t('melodiq.client_settings', 'Spieler-Profil'), [], homeAction, null, false, isClient);
                 setCustomHeaderActions(null);
             } else {
                 // Host in Melodiq settings:
                 // Keep WebRTCProvider alive! Enable settings mode on GlobalHeader.
-                setHeader(t('settings.title', 'Einstellungen'), [], homeAction, null, true);
+                setHeader(t('settings.title', 'Einstellungen'), [], homeAction, null, true, false);
                 setCustomHeaderActions(null);
             }
         } else {
             // Clear menu items for other views to avoid irrelevant actions
-            setHeader(t('melodiq.title'), [], homeAction);
+            setHeader(t('melodiq.title'), [], homeAction, null, false, isClient);
             setCustomHeaderActions(null);
         }
 

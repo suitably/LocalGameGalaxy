@@ -19,6 +19,7 @@ import { usePassiveSync } from './hooks/usePassiveSync';
 import { useSessionEnd } from './hooks/useSessionEnd';
 import { usePlaybackControls } from './hooks/usePlaybackControls';
 import { useLocalMediaSync } from './hooks/useLocalMediaSync';
+import { YouTubeBackgroundPlayer, getYouTubeVideoId } from './YouTubeBackgroundPlayer';
 import { useWakeLock } from '../../../hooks/useWakeLock';
 import { useScreenOrientation } from '../../../hooks/useScreenOrientation';
 
@@ -152,46 +153,58 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
         handleFolderInputChange
     } = useMediaLoaders(song, parsedSong, isClient, settings.audioPlaybackMode ?? 'separated');
 
-    // Preserve playback timestamp when audio source changes dynamically (e.g. changing settings)
-    const prevAudioSrcRef = useRef(audioSrc);
+    const youTubeVideoId = useMemo(() => getYouTubeVideoId(videoSrc), [videoSrc]);
+    const [youTubeFailed, setYouTubeFailed] = useState(false);
     useEffect(() => {
-        if (prevAudioSrcRef.current && prevAudioSrcRef.current !== audioSrc && audioRef.current) {
-            const currentPosition = audioRef.current.currentTime || 0;
-            const wasPlaying = isPlaying;
-            const targetAudio = audioRef.current;
+        setYouTubeFailed(false);
+    }, [videoSrc]);
 
-            const handleLoaded = async () => {
-                if (targetAudio) {
-                    targetAudio.currentTime = currentPosition;
-                    if (vocalsRef.current) vocalsRef.current.currentTime = currentPosition;
-                    if (wasPlaying) {
-                        try {
-                            await targetAudio.play();
-                            if (vocalsRef.current) vocalsRef.current.play().catch(() => {});
-                        } catch (e) {
-                            console.warn("Playback resume failed on source change", e);
-                        }
-                    }
-                }
-            };
-
-            targetAudio.addEventListener('loadedmetadata', handleLoaded, { once: true });
+    const handleYouTubeError = useCallback((err: any) => {
+        console.warn("YouTube video player reported:", err);
+        // YouTube API error codes:
+        // 2: Invalid parameter
+        // 5: HTML5 error
+        // 100: Video not found / removed / private
+        // 101, 150: Video owner does not allow embedding
+        if (err === 101 || err === 150 || err === 100 || err === 2) {
+            setYouTubeFailed(true);
+            setVideoError(err === 101 || err === 150 
+                ? "Video embedding disabled by YouTube owner" 
+                : "YouTube video not available");
         }
-        prevAudioSrcRef.current = audioSrc;
-    }, [audioSrc, isPlaying]);
+    }, [setVideoError]);
 
-    const switchTrack = useCallback((playerIndex: number, trackIndex: number) => {
-        setPlayers(prev => {
-            const newPlayers = [...prev];
-            const p = newPlayers[playerIndex];
-            if (p) {
-                const safeIndex = (parsedSong?.tracks && trackIndex < parsedSong.tracks.length) ? trackIndex : 0;
-                p.trackIndex = safeIndex;
-                p.activeSegments = {};
+    // Continuously track playback position and play status to guarantee seamless resumes on source/mode changes
+    const lastPlaybackPosRef = useRef<number>(0);
+    const wasPlayingBeforeSwitchRef = useRef<boolean>(false);
+    const pendingModeSwitchResumeRef = useRef<{ time: number, shouldPlay: boolean } | null>(null);
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+        const updatePos = () => {
+            if (audio.currentTime > 0) {
+                lastPlaybackPosRef.current = audio.currentTime;
+                wasPlayingBeforeSwitchRef.current = isPlaying || (!audio.paused && !audio.ended);
             }
-            return newPlayers;
-        });
-    }, [parsedSong]);
+        };
+        audio.addEventListener('timeupdate', updatePos);
+        return () => audio.removeEventListener('timeupdate', updatePos);
+    }, [audioRef, isPlaying]);
+
+    // Detect changes in playback mode (e.g. separated <-> original) and snapshot exact state before DOM updates
+    const prevModeRef = useRef(settings.audioPlaybackMode);
+    useEffect(() => {
+        if (prevModeRef.current !== settings.audioPlaybackMode) {
+            prevModeRef.current = settings.audioPlaybackMode;
+            if (lastPlaybackPosRef.current > 0) {
+                pendingModeSwitchResumeRef.current = {
+                    time: lastPlaybackPosRef.current,
+                    shouldPlay: wasPlayingBeforeSwitchRef.current || isPlaying
+                };
+            }
+        }
+    }, [settings.audioPlaybackMode, isPlaying]);
 
     const {
         togglePlay,
@@ -207,6 +220,88 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
         muteAudio, songVolume, masterVolume,
         vocalsVolume: settings.vocalsVolume ?? 1.0
     });
+
+    // Handle seamless track/mode changes
+    const prevAudioSrcRef = useRef(audioSrc);
+    const prevVocalsSrcRef = useRef(vocalsSrc);
+    useEffect(() => {
+        const srcChanged = prevAudioSrcRef.current !== audioSrc;
+        const vocalsChanged = prevVocalsSrcRef.current !== vocalsSrc;
+        prevAudioSrcRef.current = audioSrc;
+        prevVocalsSrcRef.current = vocalsSrc;
+
+        if (!srcChanged && !vocalsChanged) return;
+
+        const resumeInfo = pendingModeSwitchResumeRef.current;
+        const resumeTime = resumeInfo ? resumeInfo.time : (lastPlaybackPosRef.current > 0 ? lastPlaybackPosRef.current : null);
+        const shouldPlay = resumeInfo ? resumeInfo.shouldPlay : isPlaying;
+
+        if (resumeTime !== null && resumeTime > 0) {
+            const resumePlayback = async () => {
+                const audio = audioRef.current;
+                const vocals = vocalsRef.current;
+
+                // Wait for canplay on audio if source changed
+                if (srcChanged && audio) {
+                    if (audio.readyState < 2) {
+                        await new Promise<void>(res => {
+                            const onCanPlay = () => {
+                                audio.removeEventListener('canplay', onCanPlay);
+                                res();
+                            };
+                            audio.addEventListener('canplay', onCanPlay, { once: true });
+                            setTimeout(res, 800);
+                        });
+                    }
+                    audio.currentTime = resumeTime;
+                    if (videoRef.current) {
+                        videoRef.current.currentTime = resumeTime;
+                    }
+                }
+
+                // If vocals mounted/changed, wait for canplay on vocals
+                if (vocals) {
+                    if (vocals.readyState < 2) {
+                        await new Promise<void>(res => {
+                            const onCanPlay = () => {
+                                vocals.removeEventListener('canplay', onCanPlay);
+                                res();
+                            };
+                            vocals.addEventListener('canplay', onCanPlay, { once: true });
+                            setTimeout(res, 800);
+                        });
+                    }
+                    const targetVocalsTime = Math.max(0, audio ? audio.currentTime : resumeTime);
+                    vocals.currentTime = targetVocalsTime;
+                }
+
+                pendingModeSwitchResumeRef.current = null;
+
+                if (shouldPlay) {
+                    try {
+                        await safePlay();
+                    } catch (e) {
+                        console.warn('[Session] Resume after audio mode switch failed:', e);
+                    }
+                }
+            };
+
+            resumePlayback();
+        }
+    }, [audioSrc, vocalsSrc, safePlay, isPlaying]);
+
+    const switchTrack = useCallback((playerIndex: number, trackIndex: number) => {
+        setPlayers(prev => {
+            const newPlayers = [...prev];
+            const p = newPlayers[playerIndex];
+            if (p) {
+                const safeIndex = (parsedSong?.tracks && trackIndex < parsedSong.tracks.length) ? trackIndex : 0;
+                p.trackIndex = safeIndex;
+                p.activeSegments = {};
+            }
+            return newPlayers;
+        });
+    }, [parsedSong]);
 
     const { players, setPlayers, playersRef, ready } = useSessionPlayers({
         manager,
@@ -300,7 +395,9 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
                         e.stopPropagation();
                         const newTime = Math.min(audioRef.current.duration || Infinity, audioRef.current.currentTime + 10);
                         audioRef.current.currentTime = newTime;
-                        if (vocalsRef.current) vocalsRef.current.currentTime = newTime;
+                        if (vocalsRef.current) {
+                            vocalsRef.current.currentTime = newTime;
+                        }
                         if (videoRef.current) videoRef.current.currentTime = newTime;
                         resetUITimer();
                     }
@@ -312,7 +409,9 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
                         e.stopPropagation();
                         const newTime = Math.max(0, audioRef.current.currentTime - 10);
                         audioRef.current.currentTime = newTime;
-                        if (vocalsRef.current) vocalsRef.current.currentTime = newTime;
+                        if (vocalsRef.current) {
+                            vocalsRef.current.currentTime = newTime;
+                        }
                         if (videoRef.current) videoRef.current.currentTime = newTime;
                         resetUITimer();
                     }
@@ -342,21 +441,29 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
                 const targetAudio = audioRef.current;
                 if (!targetAudio) return;
 
-                if (targetAudio.readyState < 2) {
-                    await new Promise<void>(resolve => {
+                const waitForCanPlay = (el: HTMLMediaElement) => {
+                    if (el.readyState >= 2) return Promise.resolve();
+                    return new Promise<void>(resolve => {
                         const handler = () => {
-                            targetAudio.removeEventListener('canplay', handler);
+                            el.removeEventListener('canplay', handler);
                             resolve();
                         };
-                        targetAudio.addEventListener('canplay', handler, { once: true });
+                        el.addEventListener('canplay', handler, { once: true });
                         setTimeout(resolve, 1500);
                     });
+                };
+
+                await waitForCanPlay(targetAudio);
+                if (vocalsRef.current) {
+                    await waitForCanPlay(vocalsRef.current);
                 }
 
                 const startTime = (initialTime && initialTime > 0) ? initialTime : 0;
                 targetAudio.currentTime = startTime;
                 if (videoRef.current) videoRef.current.currentTime = startTime;
-                if (vocalsRef.current) vocalsRef.current.currentTime = startTime;
+                if (vocalsRef.current) {
+                    vocalsRef.current.currentTime = startTime;
+                }
 
                 try { 
                     await safePlay(); 
@@ -368,7 +475,7 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
         }
     }, [ready, contentLoading, parsedSong, audioSrc, song.id, isFinished, safePlay, initialTime]);
 
-    // Dynamic Volume Sync
+    // Dynamic Volume Sync & Direct Instant Volume Event Handler
     useEffect(() => {
         if (audioRef.current) {
             audioRef.current.volume = muteAudio ? 0 : (songVolume * masterVolume);
@@ -376,6 +483,24 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
         if (vocalsRef.current) {
             vocalsRef.current.volume = muteAudio ? 0 : ((settings.vocalsVolume ?? 1.0) * masterVolume);
         }
+
+        const handleDirectVolume = (e: Event) => {
+            const detail = (e as CustomEvent).detail;
+            if (!detail) return;
+            const effectiveMaster = detail.masterVolume !== undefined ? detail.masterVolume : masterVolume;
+            const effectiveSong = detail.songVolume !== undefined ? detail.songVolume : songVolume;
+            const effectiveVocals = detail.vocalsVolume !== undefined ? detail.vocalsVolume : (settings.vocalsVolume ?? 1.0);
+
+            if (audioRef.current && (detail.songVolume !== undefined || detail.masterVolume !== undefined)) {
+                audioRef.current.volume = muteAudio ? 0 : Math.max(0, Math.min(1, effectiveSong * effectiveMaster));
+            }
+            if (vocalsRef.current && (detail.vocalsVolume !== undefined || detail.masterVolume !== undefined)) {
+                vocalsRef.current.volume = muteAudio ? 0 : Math.max(0, Math.min(1, effectiveVocals * effectiveMaster));
+            }
+        };
+
+        window.addEventListener('melodiq_direct_volume', handleDirectVolume);
+        return () => window.removeEventListener('melodiq_direct_volume', handleDirectVolume);
     }, [muteAudio, songVolume, masterVolume, settings.vocalsVolume]);
 
     // Immediate playback update trigger
@@ -531,12 +656,22 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
     return (
         <Box sx={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, bgcolor: 'black', color: 'white', zIndex: 1300, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {videoSrc && !hideBackgroundVideo && (
-                <video ref={videoRef} src={videoSrc} muted style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, opacity: 1.0 }} onError={(e) => {
-                    console.warn("Video playback failed.", e);
-                    setVideoError("Video format not supported");
-                }} />
+                youTubeVideoId && !youTubeFailed ? (
+                    <YouTubeBackgroundPlayer
+                        key={youTubeVideoId}
+                        videoId={youTubeVideoId}
+                        videoRef={videoRef}
+                        initialTime={initialTime}
+                        onError={handleYouTubeError}
+                    />
+                ) : (
+                    <video ref={videoRef} src={videoSrc} muted style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, opacity: 1.0 }} onError={(e) => {
+                        console.warn("Video playback failed.", e);
+                        setVideoError("Video format not supported");
+                    }} />
+                )
             )}
-            {!videoSrc && !hideBackgroundVideo && fallbackBackgroundUrl && (
+            {(!videoSrc || (youTubeVideoId && youTubeFailed)) && !hideBackgroundVideo && fallbackBackgroundUrl && (
                 fallbackBackgroundUrl.match(/\.(mp4|webm|mov|ogg)$/i) ? (
                     <video src={fallbackBackgroundUrl} autoPlay loop muted style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, opacity: 1.0 }} />
                 ) : (
@@ -710,8 +845,8 @@ const MelodiqSessionContent = forwardRef(({ song, initialTime, onExit, onMinimiz
                 )}
             </Box>
 
-            {audioSrc && <audio ref={audioRef} src={audioSrc} onEnded={handleSongEndBound} muted={muteAudio} style={{ display: 'none' }} />}
-            {vocalsSrc && <audio ref={vocalsRef} src={vocalsSrc} muted={muteAudio} style={{ display: 'none' }} />}
+            {audioSrc && <audio ref={audioRef} src={audioSrc} preload="auto" onEnded={handleSongEndBound} muted={muteAudio} style={{ display: 'none' }} />}
+            {vocalsSrc && <audio ref={vocalsRef} src={vocalsSrc} preload="auto" muted={muteAudio} style={{ display: 'none' }} />}
             {!audioSrc && !isClient && <Typography color="error" sx={{ textAlign: 'center', position: 'relative', zIndex: 5 }}>No Audio Source Found</Typography>}
 
             <Box sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 6, bgcolor: 'rgba(255,255,255,0.2)', zIndex: 100, pointerEvents: 'none', opacity: isUIVisible ? 1 : 0, transition: 'opacity 0.5s ease-in-out' }}>

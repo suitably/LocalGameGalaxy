@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: base
+      target: full
     container_name: nexumia-server-dev
     restart: "no"
     ports:
@@ -12,12 +12,13 @@ services:
     volumes:
       - ./config.json:/app/config.json:z
       - ./models:/app/models:z
-      # Mount your local music directories here (read-only).
-      # Add as many as needed.
-      - /home/deck/Music/Ultrastar/Songs:/music/songs:ro
-      - /home/deck/Music/Ultrastar/Test:/music/test:ro
+      - ./src:/app/src:z
+      - ./public:/app/public:z
+      - ./index.js:/app/index.js:z
+      # Mount your local music directories here (writable with :z for stem saving and sync)
+      - /home/deck/Music/Ultrastar/Songs:/music/songs:z
+      - /home/deck/Music/Ultrastar/Test:/music/test:z
     environment:
       - NODE_ENV=development
-      # Empty = allow ALL origins (open CORS for local dev)
       - ALLOWED_ORIGINS=
 

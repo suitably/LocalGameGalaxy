@@ -89,13 +89,33 @@ function createSeparatorJob(req, res) {
     }
 }
 
+function clearUsdbJobs(req, res) {
+    try {
+        queueManager.clearDownloadJobs(req.params.jobId);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+}
+
+function clearSeparatorJobs(req, res) {
+    try {
+        queueManager.clearSeparatorJobs(req.params.jobId);
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+}
+
 module.exports = {
     downloadUsdb,
     getUsdbJobs,
     getUsdbJobStatus,
+    clearUsdbJobs,
     getSeparatorInstalledStatus,
     installSeparator,
     getSeparatorJobs,
     getSeparatorJobStatus,
+    clearSeparatorJobs,
     createSeparatorJob
 };

@@ -19,7 +19,9 @@ interface LayoutContextType {
     setMenuItems: (items: MenuItem[]) => void;
     homeAction: (() => void) | null;
     setHomeAction: (action: (() => void) | null) => void;
-    setHeader: (title: string | null, items?: MenuItem[], homeAction?: (() => void) | null, customHeaderTitle?: ReactNode, isSettingsMode?: boolean) => void;
+    hideHome: boolean;
+    setHideHome: (hide: boolean) => void;
+    setHeader: (title: string | null, items?: MenuItem[], homeAction?: (() => void) | null, customHeaderTitle?: ReactNode, isSettingsMode?: boolean, hideHome?: boolean) => void;
     customHeaderActions: ReactNode;
     setCustomHeaderActions: (node: ReactNode) => void;
     isSettingsMode: boolean;
@@ -34,13 +36,14 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const [headerHidden, setHeaderHiddenState] = useState<boolean>(false);
     const [menuItems, setMenuItemsState] = useState<MenuItem[]>([]);
     const [homeAction, setHomeActionState] = useState<(() => void) | null>(null);
+    const [hideHome, setHideHomeState] = useState<boolean>(false);
     const [customHeaderActions, setCustomHeaderActionsState] = useState<ReactNode>(null);
     const [isSettingsMode, setIsSettingsModeState] = useState<boolean>(false);
 
-    const setHeader = useCallback((newTitle: string | null, newItems: MenuItem[] = [], newHomeAction: (() => void) | null = null, newCustomHeaderTitle: ReactNode = null, newIsSettingsMode: boolean = false) => {
+    const setHeader = useCallback((newTitle: string | null, newItems: MenuItem[] = [], newHomeAction: (() => void) | null = null, newCustomHeaderTitle: ReactNode = null, newIsSettingsMode: boolean = false, newHideHome: boolean = false) => {
         setTitleState(prev => prev === newTitle ? prev : newTitle);
         setMenuItemsState(prev => {
-            if (prev.length === newItems.length && prev.every((item, i) => item.label === newItems[i]?.label && item.disabled === newItems[i]?.disabled)) {
+            if (prev.length === newItems.length && prev.every((item, i) => item.label === newItems[i]?.label && item.disabled === newItems[i]?.disabled && item.showAlways === newItems[i]?.showAlways)) {
                 return prev;
             }
             return newItems;
@@ -48,6 +51,7 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setHomeActionState(() => newHomeAction);
         setCustomHeaderTitleState(prev => prev === newCustomHeaderTitle ? prev : newCustomHeaderTitle);
         setIsSettingsModeState(prev => prev === newIsSettingsMode ? prev : newIsSettingsMode);
+        setHideHomeState(prev => prev === newHideHome ? prev : newHideHome);
     }, []);
 
     const setTitle = useCallback((newTitle: string | null) => {
@@ -64,7 +68,7 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     const setMenuItems = useCallback((newItems: MenuItem[]) => {
         setMenuItemsState(prev => {
-            if (prev.length === newItems.length && prev.every((item, i) => item.label === newItems[i]?.label && item.disabled === newItems[i]?.disabled)) {
+            if (prev.length === newItems.length && prev.every((item, i) => item.label === newItems[i]?.label && item.disabled === newItems[i]?.disabled && item.showAlways === newItems[i]?.showAlways)) {
                 return prev;
             }
             return newItems;
@@ -73,6 +77,10 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
     const setHomeAction = useCallback((action: (() => void) | null) => {
         setHomeActionState(() => action);
+    }, []);
+
+    const setHideHome = useCallback((hide: boolean) => {
+        setHideHomeState(prev => prev === hide ? prev : hide);
     }, []);
 
     const setCustomHeaderActions = useCallback((node: ReactNode) => {
@@ -84,9 +92,9 @@ export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }, []);
 
     const value = useMemo(() => ({
-        title, setTitle, customHeaderTitle, setCustomHeaderTitle, headerHidden, setHeaderHidden, menuItems, setMenuItems, homeAction, setHomeAction, setHeader,
+        title, setTitle, customHeaderTitle, setCustomHeaderTitle, headerHidden, setHeaderHidden, menuItems, setMenuItems, homeAction, setHomeAction, hideHome, setHideHome, setHeader,
         customHeaderActions, setCustomHeaderActions, isSettingsMode, setIsSettingsMode
-    }), [title, setTitle, customHeaderTitle, setCustomHeaderTitle, headerHidden, setHeaderHidden, menuItems, setMenuItems, homeAction, setHomeAction, setHeader, customHeaderActions, setCustomHeaderActions, isSettingsMode, setIsSettingsMode]);
+    }), [title, setTitle, customHeaderTitle, setCustomHeaderTitle, headerHidden, setHeaderHidden, menuItems, setMenuItems, homeAction, setHomeAction, hideHome, setHideHome, setHeader, customHeaderActions, setCustomHeaderActions, isSettingsMode, setIsSettingsMode]);
 
     return (
         <LayoutContext.Provider value={value}>

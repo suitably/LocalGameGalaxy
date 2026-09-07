@@ -224,8 +224,25 @@ export const melodiqResources = {
             sync_error: "Error starting Auto-Sync",
             sync_completed: "Auto-Sync complete! New lyrics loaded.",
             sync_failed: "Error during Auto-Sync: {{error}}",
-            sync_here: "Set start time here (Sync)",
-            playing_on_tv: "Playing on TV"
+            playing_on_tv: "Playing on TV",
+            auto_sync_start: "Auto-Sync (Song Start)",
+            auto_sync_start_desc: "Analyze audio and adjust start timing (GAP)",
+            full_sync_title: "AI Full-Sync (Entire Lyrics)",
+            full_sync_desc: "Align all words and notes to vocal/audio stem using Whisper AI",
+            full_sync_confirm_title: "Start AI Full-Sync?",
+            full_sync_confirm_desc: "The complete lyrics will be aligned word-by-word with the audio/vocal track using Whisper AI. This takes 1–3 minutes.",
+            full_sync_started: "AI Full-Sync (Whisper) started in the background...",
+            start_sync: "Start Sync",
+            separate_vocals_title: "Separate Vocals (UVR AI)",
+            separate_vocals_desc: "Separate audio into vocals and instrumental tracks with AI",
+            separate_vocals_started: "Vocal separation started in background...",
+            separate_vocals_error: "Error starting vocal separation",
+            vocals_required_desc: "Requires separated vocal track (separate vocals first)",
+            vocal_separation_running: "Vocal separation is running in background...",
+            vocals_already_separated: "Vocal track exists (can be run again)",
+            re_separate_confirm_title: "Separate vocals again?",
+            re_separate_confirm_desc: "A separated vocal track already exists for this song. Do you really want to restart the vocal separation?",
+            re_separate_confirm_btn: "Separate again"
         }
     },
     de: {
@@ -451,8 +468,25 @@ export const melodiqResources = {
             sync_error: "Fehler beim Starten des Auto-Syncs",
             sync_completed: "Auto-Sync abgeschlossen! Neue Lyrics geladen.",
             sync_failed: "Fehler beim Auto-Sync: {{error}}",
-            sync_here: "Startzeit hier setzen (Sync)",
-            playing_on_tv: "Wird auf dem Fernseher abgespielt"
+            playing_on_tv: "Wird auf dem Fernseher abgespielt",
+            auto_sync_start: "Auto-Sync (Nur Start)",
+            auto_sync_start_desc: "Song-Start analysieren und GAP anpassen",
+            full_sync_title: "KI Full-Sync (Komplette Lyrics)",
+            full_sync_desc: "Alle Wörter mit Whisper AI auf das Audio synchronisieren",
+            full_sync_confirm_title: "KI Full-Sync starten?",
+            full_sync_confirm_desc: "Der komplette Liedtext wird mithilfe von Whisper AI Wort für Wort auf die Vokal-/Audiospur synchronisiert. Dies dauert je nach Songlänge 1–3 Minuten.",
+            full_sync_started: "KI Full-Sync (Whisper) im Hintergrund gestartet...",
+            start_sync: "Sync starten",
+            separate_vocals_title: "Gesangsspur trennen (UVR AI)",
+            separate_vocals_desc: "Audio mit KI in Gesang und Instrumental aufteilen",
+            separate_vocals_started: "Vokaltrennung im Hintergrund gestartet...",
+            separate_vocals_error: "Fehler beim Starten der Vokaltrennung",
+            vocals_required_desc: "Erfordert getrennte Gesangsspur (zuerst Gesang trennen)",
+            vocal_separation_running: "Vokaltrennung läuft im Hintergrund...",
+            vocals_already_separated: "Gesangsspur vorhanden (kann erneut ausgeführt werden)",
+            re_separate_confirm_title: "Gesangsspur erneut trennen?",
+            re_separate_confirm_desc: "Für diesen Song existiert bereits eine getrennte Gesangsspur. Möchtest du die Vokaltrennung wirklich erneut starten?",
+            re_separate_confirm_btn: "Erneut trennen"
         }
     }
 };

@@ -15,8 +15,17 @@
   - [x] Update `useSessionPlayers.ts` restart and next handlers to include `vocalsRef` <!-- id: 3.2 -->
 - [x] 4. Visual Melody Note Synchronization (`PitchVisualizer.tsx`) <!-- id: 4 -->
   - [x] Align `currentBeat` in `PitchVisualizer.tsx` with song playback time and `LyricsDisplay.tsx` <!-- id: 4.1 -->
-- [x] 5. Verification & Documentation <!-- id: 5 -->
-  - [x] Run `npm test` <!-- id: 5.1 -->
-  - [x] Run `npm run lint` <!-- id: 5.2 -->
-  - [x] Complete `npm run build` <!-- id: 5.3 -->
-  - [x] Create walkthrough documentation in `docs/verification/melodiq-stem-audio-sync-walkthrough.md` <!-- id: 5.4 -->
+- [x] 6. Automated 1:1 Stem Sync & Zero-Latency Volume Controls <!-- id: 6 -->
+  - [x] Remove redundant manual `vocalsOffset` setting in favor of automated 1:1 engine sync <!-- id: 6.1 -->
+  - [x] Implement non-blocking local slider state in `GameSettingsPanel.tsx` with direct `melodiq_direct_volume` DOM dispatch <!-- id: 6.2 -->
+  - [x] Decouple high-frequency slider dragging from root `SettingsProvider` re-renders and synchronous `localStorage` writes <!-- id: 6.3 -->
+  - [x] Tighten stem pre-play alignment check to 1ms in `safePlay` (`usePlaybackControls.ts`) <!-- id: 6.4 -->
+  - [x] Implement exponential moving average drift smoothing and micro-rate trimming in `useLocalMediaSync.ts` to eliminate IPC jitter and WSOLA resampler distortion <!-- id: 6.5 -->
+- [x] 7. Seamless Audio Playback Mode Switch (Separated Stems <-> Original Audio) <!-- id: 7 -->
+  - [x] Continuously track song playback timestamp and playing state prior to DOM source changes <!-- id: 7.1 -->
+  - [x] Snapshot state on mode toggle and smoothly seek new tracks upon `canplay` without resetting to 0:00 <!-- id: 7.2 -->
+  - [x] Handle cases where `audioSrc` changes or only `vocalsSrc` mounts/unmounts seamlessly <!-- id: 7.3 -->
+- [x] 8. Verification & Validation <!-- id: 8 -->
+  - [x] Run `npm test` (all 163 tests passed) <!-- id: 8.1 -->
+  - [x] Run `npx eslint src/games/melodiq/ --quiet` (0 errors) <!-- id: 8.2 -->
+  - [x] Run `npm run build` (tsc & vite passed successfully) <!-- id: 8.3 -->

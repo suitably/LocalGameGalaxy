@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 
 export interface SettingsState {
     showDebugOverlay: boolean;
@@ -26,7 +26,6 @@ export interface SettingsState {
     audioPlaybackMode: 'separated' | 'original';
     showScoreboardQrCode: boolean;
     micLatency: number;
-    vocalsOffset: number;
 }
 
 /** Default/Factory settings */
@@ -55,8 +54,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
     lyricsPosition: 'bottom',
     audioPlaybackMode: 'separated',
     showScoreboardQrCode: true,
-    micLatency: 0,
-    vocalsOffset: 0
+    micLatency: 0
 };
 
 export const loadSettings = (): SettingsState => ({
@@ -123,10 +121,6 @@ export const loadSettings = (): SettingsState => ({
     micLatency: (() => {
         const stored = localStorage.getItem('melodiq_mic_latency');
         return stored ? parseInt(stored) : 0;
-    })(),
-    vocalsOffset: (() => {
-        const stored = localStorage.getItem('melodiq_vocals_offset');
-        return stored ? parseInt(stored, 10) : 0;
     })()
 });
 
@@ -156,7 +150,36 @@ const persistSettings = (s: SettingsState) => {
     localStorage.setItem('melodiq_audio_playback_mode', s.audioPlaybackMode);
     localStorage.setItem('melodiq_show_scoreboard_qr_code', String(s.showScoreboardQrCode));
     localStorage.setItem('melodiq_mic_latency', String(s.micLatency));
-    localStorage.setItem('melodiq_vocals_offset', String(s.vocalsOffset ?? 0));
+};
+
+const persistSingleSetting = <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
+    switch (key) {
+        case 'showDebugOverlay': localStorage.setItem('melodiq_show_overlay', String(value)); break;
+        case 'showDevSlider': localStorage.setItem('melodiq_show_slider', String(value)); break;
+        case 'showNoteLabels': localStorage.setItem('melodiq_show_note_labels', String(value)); break;
+        case 'showVideoErrors': localStorage.setItem('melodiq_show_video_errors', String(value)); break;
+        case 'customLayouts': localStorage.setItem('melodiq_custom_layouts', JSON.stringify(value)); break;
+        case 'cardSize': localStorage.setItem('melodiq_card_size', String(value)); break;
+        case 'customTarget': localStorage.setItem('melodiq_custom_target_columns', String(value)); break;
+        case 'songVolume': localStorage.setItem('melodiq_song_volume', String(value)); break;
+        case 'masterVolume': localStorage.setItem('melodiq_master_volume', String(value)); break;
+        case 'vocalsVolume': localStorage.setItem('melodiq_vocals_volume', String(value)); break;
+        case 'helperUrl': localStorage.setItem('melodiq_helper_url', String(value)); break;
+        case 'enableHelper': localStorage.setItem('melodiq_enable_helper', String(value)); break;
+        case 'goldenNoteMultiplier': localStorage.setItem('melodiq_golden_note_multiplier', String(value)); break;
+        case 'defaultSongClickAction': localStorage.setItem('melodiq_default_song_click_action', String(value)); break;
+        case 'defaultViewMode': localStorage.setItem('melodiq_default_view_mode', String(value)); break;
+        case 'autoplayNoPlayersDelay': localStorage.setItem('melodiq_autoplay_no_players', String(value)); break;
+        case 'autoplayWithPlayersDelay': localStorage.setItem('melodiq_autoplay_with_players', String(value)); break;
+        case 'hideBackgroundVideo': localStorage.setItem('melodiq_hide_background_video', String(value)); break;
+        case 'fallbackBackgroundUrl': localStorage.setItem('melodiq_fallback_background_url', String(value)); break;
+        case 'lyricsScale': localStorage.setItem('melodiq_lyrics_scale', String(value)); break;
+        case 'enableLyricsZoom': localStorage.setItem('melodiq_enable_lyrics_zoom', String(value)); break;
+        case 'lyricsPosition': localStorage.setItem('melodiq_lyrics_position', String(value)); break;
+        case 'audioPlaybackMode': localStorage.setItem('melodiq_audio_playback_mode', String(value)); break;
+        case 'showScoreboardQrCode': localStorage.setItem('melodiq_show_scoreboard_qr_code', String(value)); break;
+        case 'micLatency': localStorage.setItem('melodiq_mic_latency', String(value)); break;
+    }
 };
 
 interface SettingsContextValue {
@@ -170,20 +193,19 @@ const SettingsContext = createContext<SettingsContextValue | null>(null);
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [settings, setSettings] = useState<SettingsState>(loadSettings);
+    const channelRef = useRef<BroadcastChannel | null>(null);
 
     const updateSetting = useCallback(<K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
         setSettings(prev => {
             if (prev[key] === value) return prev;
             const next = { ...prev, [key]: value };
-            persistSettings(next);
+            persistSingleSetting(key, value);
             return next;
         });
 
-        if (typeof BroadcastChannel !== 'undefined') {
+        if (channelRef.current) {
             try {
-                const channel = new BroadcastChannel('melodiq_tv_control');
-                channel.postMessage({ type: 'SETTINGS_UPDATE', payload: { [key]: value } });
-                channel.close();
+                channelRef.current.postMessage({ type: 'SETTINGS_UPDATE', payload: { [key]: value } });
             } catch (e) { }
         }
         window.dispatchEvent(new CustomEvent('melodiq_settings_updated', { detail: { [key]: value } }));
@@ -196,11 +218,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             return newState;
         });
 
-        if (typeof BroadcastChannel !== 'undefined') {
+        if (channelRef.current) {
             try {
-                const channel = new BroadcastChannel('melodiq_tv_control');
-                channel.postMessage({ type: 'SETTINGS_UPDATE', payload: newState });
-                channel.close();
+                channelRef.current.postMessage({ type: 'SETTINGS_UPDATE', payload: newState });
             } catch (e) { }
         }
         window.dispatchEvent(new CustomEvent('melodiq_settings_updated', { detail: newState }));
@@ -219,21 +239,22 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         };
         window.addEventListener('storage', handleStorage);
 
-        let channel: BroadcastChannel | null = null;
         if (typeof BroadcastChannel !== 'undefined') {
             try {
-                channel = new BroadcastChannel('melodiq_tv_control');
+                const channel = new BroadcastChannel('melodiq_tv_control');
                 channel.onmessage = (event) => {
                     if (event.data?.type === 'SETTINGS_UPDATE') {
                         setSettings(loadSettings());
                     }
                 };
+                channelRef.current = channel;
             } catch (e) { }
         }
 
         return () => {
             window.removeEventListener('storage', handleStorage);
-            channel?.close();
+            channelRef.current?.close();
+            channelRef.current = null;
         };
     }, []);
 

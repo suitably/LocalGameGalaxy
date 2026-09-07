@@ -15,6 +15,7 @@ export const useDownloadSync = ({
     isClient, jobs, queue, refreshSongs, replaceItem, selectedSong, onCurrentSongDownloaded
 }: UseDownloadSyncProps) => {
     const lastProcessedJobs = useRef<Set<string>>(new Set());
+    const retryCounts = useRef<Map<string, number>>(new Map());
 
     useEffect(() => {
         const checkDownloads = async () => {
@@ -47,9 +48,15 @@ export const useDownloadSync = ({
                                    sArtist.toLowerCase() === jArtist.toLowerCase();
                         });
 
-                        // If song isn't in library yet, don't mark as processed. 
-                        // It will retry on next poll.
-                        if (!realSong) return;
+                        // If song isn't in library yet, allow up to 3 retries, then mark as processed
+                        if (!realSong) {
+                            const count = (retryCounts.current.get(jobId) || 0) + 1;
+                            retryCounts.current.set(jobId, count);
+                            if (count > 3) {
+                                lastProcessedJobs.current.add(jobId);
+                            }
+                            return;
+                        }
 
                         lastProcessedJobs.current.add(jobId);
 

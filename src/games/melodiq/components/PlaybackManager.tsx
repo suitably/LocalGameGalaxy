@@ -1,11 +1,9 @@
 import { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo, useCallback } from 'react';
-import { melodiqFetch } from '../api/melodiqFetch';
-import { Box, Snackbar, Alert, Menu, MenuItem } from '@mui/material';
+import { Box, Snackbar, Alert } from '@mui/material';
 import { type Song, type SongMeta } from '../db';
 import { MelodiqSession, type MelodiqSessionHandle } from '../gameplay/MelodiqSession';
 import { MiniPlayer } from './MiniPlayer';
 import { useQueue } from '../hooks/useQueue';
-import { useSongs } from '../hooks/useSongs';
 import { useClientEngine } from '../PhoneClientEngine';
 import { useTranslation } from 'react-i18next';
 
@@ -62,7 +60,6 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
 
     const { t } = useTranslation();
     const { queue, popNext, setNowPlaying } = useQueue();
-    const { refreshSongs, getSongById } = useSongs();
 
     const [prevSong, setPrevSong] = useState<Song | null>(null);
     const [prevSessionId, setPrevSessionId] = useState<number>(sessionInstanceId);
@@ -93,93 +90,12 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         return 0;
     }, [selectedSong, restoredSong]);
 
-    const [contextMenu, setContextMenu] = useState<HTMLElement | null>(null);
-    const [syncJobId, setSyncJobId] = useState<string | null>(null);
-    const [syncTargetTime, setSyncTargetTime] = useState<number | null>(null);
-
-    const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-        if (!selectedSong) return;
-        event.preventDefault();
-        event.stopPropagation();
-        setSyncTargetTime(playbackState.currentTime);
-        setContextMenu(event.currentTarget);
-    };
-
-    const handleCloseContextMenu = () => {
-        setContextMenu(null);
-    };
-
-    const handleSyncHere = async () => {
-        handleCloseContextMenu();
-        if (!selectedSong) {
-             setFeedbackMessage(t('melodiq.error_no_local_song'));
-             return;
-        }
-        
-        const currentTime = syncTargetTime !== null ? syncTargetTime : playbackState.currentTime; // seconds
-        
-        try {
-            setFeedbackMessage(t('melodiq.sync_started'));
-            
-            const data = await melodiqFetch('/api/separator/job', {
-                method: 'POST',
-                body: JSON.stringify([{
-                    songId: selectedSong.id,
-                    type: 'auto-sync',
-                    approximateStartSec: currentTime,
-                    isPaused: !playbackState.isPlaying
-                }])
-            });
-            
-            if (data) {
-                if (data.jobIds && data.jobIds.length > 0) {
-                    setSyncJobId(data.jobIds[0]);
-                }
-                setFeedbackMessage(t('melodiq.sync_background'));
-            } else {
-                setFeedbackMessage(t('melodiq.sync_error'));
-            }
-        } catch (err: any) {
-            console.error(err);
-            setFeedbackMessage(err.message);
-        }
-    };
-
     // sendClientCommand is used to control the remote session.
     const clientEngine = useClientEngine();
     const { sendClientCommand, isSessionPlaying } = isClient ? clientEngine : { sendClientCommand: undefined, isSessionPlaying: false };
 
     const canControlPlayback = true; // All users can control playback by default now
     const actualIsPlaying = isClient ? isSessionPlaying : playbackState.isPlaying;
-
-    // Sync Job Polling
-    useEffect(() => {
-        if (!syncJobId) return;
-        const interval = setInterval(async () => {
-            try {
-                const data = await melodiqFetch(`/api/separator/status/${syncJobId}`);
-                if (data) {
-                    if (data.status === 'done' || data.status === 'error') {
-                        clearInterval(interval);
-                        setSyncJobId(null);
-                        if (data.status === 'done') {
-                            setFeedbackMessage(t('melodiq.sync_completed'));
-                            await refreshSongs();
-                            if (selectedSong) {
-                                const newSong = await getSongById(selectedSong.id);
-                                if (newSong) onSelectSong(newSong, false, activeParticipants || undefined);
-                            }
-                        } else {
-                            setFeedbackMessage(t('melodiq.sync_failed', { error: data.error || 'Unknown' }));
-                        }
-                    }
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }, 1500);
-        return () => clearInterval(interval);
-    }, [syncJobId, refreshSongs, getSongById, selectedSong, onSelectSong, activeParticipants, t]);
 
     // Broadcast Game State: piggyback on handlePlaybackUpdate instead of a separate interval
     // This ref allows the playback callback to access broadcast without being a dependency
@@ -427,7 +343,6 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                         queueLength={queue.length}
                         isRestored={isInRestoredMode}
                         isClient={isClient}
-                        onMenuClick={handleMenuClick}
                         canControlPlayback={canControlPlayback}
                     />
                     </Box>
@@ -445,22 +360,6 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                     {feedbackMessage}
                 </Alert>
             </Snackbar>
-
-            <Menu
-                open={Boolean(contextMenu)}
-                onClose={handleCloseContextMenu}
-                anchorEl={contextMenu}
-                anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                }}
-                transformOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'right',
-                }}
-            >
-                <MenuItem onClick={handleSyncHere}>{t('melodiq.sync_here')}</MenuItem>
-            </Menu>
         </>
     );
 });

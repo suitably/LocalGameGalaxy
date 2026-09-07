@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     Box, Typography, TextField, Switch, FormControlLabel, Slider, ToggleButton, ToggleButtonGroup, IconButton, Button,
@@ -22,6 +22,26 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
     const [newPlayerCount, setNewPlayerCount] = useState('');
     const [newLayoutStr, setNewLayoutStr] = useState('');
     const [calibratorOpen, setCalibratorOpen] = useState(false);
+
+    // Local slider states for 60fps non-blocking dragging without triggering full app tree re-renders
+    const [localSongVolume, setLocalSongVolume] = useState<number>(Math.round(settings.songVolume * 100));
+    const [localVocalsVolume, setLocalVocalsVolume] = useState<number>(Math.round((settings.vocalsVolume ?? 1.0) * 100));
+    const [localMasterVolume, setLocalMasterVolume] = useState<number>(Math.round(settings.masterVolume * 100));
+
+    // Synchronize local slider values if settings change externally
+    const prevSettingsRef = useRef(settings);
+    useEffect(() => {
+        if (prevSettingsRef.current.songVolume !== settings.songVolume) {
+            setLocalSongVolume(Math.round(settings.songVolume * 100));
+        }
+        if (prevSettingsRef.current.vocalsVolume !== settings.vocalsVolume) {
+            setLocalVocalsVolume(Math.round((settings.vocalsVolume ?? 1.0) * 100));
+        }
+        if (prevSettingsRef.current.masterVolume !== settings.masterVolume) {
+            setLocalMasterVolume(Math.round(settings.masterVolume * 100));
+        }
+        prevSettingsRef.current = settings;
+    }, [settings.songVolume, settings.vocalsVolume, settings.masterVolume]);
 
     const handleUpdateLayout = (playerCount: number, layout: string) => {
         const updated = { ...settings.customLayouts, [playerCount]: layout };
@@ -347,10 +367,17 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                 </Box>
 
                 <Box sx={{ mt: 2 }}>
-                    <Typography gutterBottom>{t('melodiq.settings_panel.song_volume')}: {Math.round(settings.songVolume * 100)}%</Typography>
+                    <Typography gutterBottom>{t('melodiq.settings_panel.song_volume')}: {localSongVolume}%</Typography>
                     <Slider
-                        value={settings.songVolume * 100}
-                        onChange={(_, val) => onUpdateSetting('songVolume', (val as number) / 100)}
+                        value={localSongVolume}
+                        onChange={(_, val) => {
+                            const v = val as number;
+                            setLocalSongVolume(v);
+                            window.dispatchEvent(new CustomEvent('melodiq_direct_volume', { detail: { songVolume: v / 100 } }));
+                        }}
+                        onChangeCommitted={(_, val) => {
+                            onUpdateSetting('songVolume', (val as number) / 100);
+                        }}
                         min={0}
                         max={100}
                         sx={{ width: '100%' }}
@@ -359,13 +386,20 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
 
                 <Box sx={{ mt: 1, opacity: settings.audioPlaybackMode === 'original' ? 0.5 : 1 }}>
                     <Typography gutterBottom>
-                        {t('melodiq.settings_panel.vocals_volume')}: {Math.round((settings.vocalsVolume ?? 1.0) * 100)}%
+                        {t('melodiq.settings_panel.vocals_volume')}: {localVocalsVolume}%
                         {settings.audioPlaybackMode === 'original' && ` (${t('melodiq.settings_panel.disabled_in_original_mode', 'Separated stems only')})`}
                     </Typography>
                     <Slider
                         disabled={settings.audioPlaybackMode === 'original'}
-                        value={(settings.vocalsVolume ?? 1.0) * 100}
-                        onChange={(_, val) => onUpdateSetting('vocalsVolume', (val as number) / 100)}
+                        value={localVocalsVolume}
+                        onChange={(_, val) => {
+                            const v = val as number;
+                            setLocalVocalsVolume(v);
+                            window.dispatchEvent(new CustomEvent('melodiq_direct_volume', { detail: { vocalsVolume: v / 100 } }));
+                        }}
+                        onChangeCommitted={(_, val) => {
+                            onUpdateSetting('vocalsVolume', (val as number) / 100);
+                        }}
                         min={0}
                         max={100}
                         sx={{ width: '100%' }}
@@ -373,10 +407,17 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                 </Box>
 
                 <Box sx={{ mt: 1 }}>
-                    <Typography gutterBottom>{t('melodiq.settings_panel.master_volume')}: {Math.round(settings.masterVolume * 100)}%</Typography>
+                    <Typography gutterBottom>{t('melodiq.settings_panel.master_volume')}: {localMasterVolume}%</Typography>
                     <Slider
-                        value={settings.masterVolume * 100}
-                        onChange={(_, val) => onUpdateSetting('masterVolume', (val as number) / 100)}
+                        value={localMasterVolume}
+                        onChange={(_, val) => {
+                            const v = val as number;
+                            setLocalMasterVolume(v);
+                            window.dispatchEvent(new CustomEvent('melodiq_direct_volume', { detail: { masterVolume: v / 100 } }));
+                        }}
+                        onChangeCommitted={(_, val) => {
+                            onUpdateSetting('masterVolume', (val as number) / 100);
+                        }}
                         min={0}
                         max={100}
                         sx={{ width: '100%' }}

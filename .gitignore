@@ -37,3 +37,6 @@ server/config.json
 config.json
 .push_subscriptions.json
 .vapid_keys.json
+server/models/
+__pycache__/
+*.pyc

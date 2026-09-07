@@ -7,11 +7,10 @@ interface UseLocalMediaSyncProps {
     isPlaying: boolean;
 }
 
-
-
 export function useLocalMediaSync({ audioRef, videoRef, vocalsRef, isPlaying }: UseLocalMediaSyncProps) {
     const rAFRef = useRef<number | null>(null);
     const lastSnapTimeRef = useRef<number>(0);
+    const smoothedDriftRef = useRef<number>(0);
 
     // Transport event synchronization
     useEffect(() => {
@@ -26,22 +25,41 @@ export function useLocalMediaSync({ audioRef, videoRef, vocalsRef, isPlaying }: 
 
         const handleAudioSeeking = () => {
             if (vocals) {
-                vocals.currentTime = audio.currentTime;
+                if (Math.abs(vocals.currentTime - audio.currentTime) > 0.002) {
+                    vocals.currentTime = audio.currentTime;
+                }
             }
         };
 
         const handleRateChange = () => {
-            if (vocals && vocals.playbackRate !== audio.playbackRate) {
+            if (vocals && !vocals.seeking) {
                 vocals.playbackRate = audio.playbackRate;
+            }
+        };
+
+        const handleAudioPause = () => {
+            if (vocals && !vocals.paused) {
+                vocals.pause();
+            }
+        };
+
+        const handleAudioPlay = () => {
+            if (vocals && vocals.paused && vocals.readyState >= 2) {
+                vocals.currentTime = audio.currentTime;
+                vocals.play().catch(() => {});
             }
         };
 
         audio.addEventListener('seeking', handleAudioSeeking);
         audio.addEventListener('ratechange', handleRateChange);
+        audio.addEventListener('pause', handleAudioPause);
+        audio.addEventListener('play', handleAudioPlay);
 
         return () => {
             audio.removeEventListener('seeking', handleAudioSeeking);
             audio.removeEventListener('ratechange', handleRateChange);
+            audio.removeEventListener('pause', handleAudioPause);
+            audio.removeEventListener('play', handleAudioPlay);
         };
     }, [audioRef, vocalsRef]);
 
@@ -57,6 +75,7 @@ export function useLocalMediaSync({ audioRef, videoRef, vocalsRef, isPlaying }: 
             if (videoRef.current && !videoRef.current.paused) {
                 videoRef.current.pause();
             }
+            smoothedDriftRef.current = 0;
             return;
         }
 
@@ -97,31 +116,44 @@ export function useLocalMediaSync({ audioRef, videoRef, vocalsRef, isPlaying }: 
                     }
                 }
 
-                // Sync Vocals Play/Pause & Precision Audio Timing
+                // Sync Vocals Play/Pause & Precision Fluid Audio Timing
                 if (vocals) {
+                    const targetVocalsTime = masterTime;
+
                     if (isAudioPlaying && vocals.paused && vocals.readyState >= 2) {
-                        // Align currentTime before starting to guarantee zero initial desync
-                        vocals.currentTime = masterTime;
+                        vocals.currentTime = targetVocalsTime;
                         vocals.play().catch(() => {});
                     } else if (!isAudioPlaying && !vocals.paused) {
                         vocals.pause();
                     }
 
-                    if (vocals.readyState >= 2 && isAudioPlaying) {
-                        const drift = masterTime - vocals.currentTime;
-                        const absDrift = Math.abs(drift);
+                    if (vocals.readyState >= 2 && isAudioPlaying && !vocals.seeking) {
+                        const rawDrift = targetVocalsTime - vocals.currentTime;
+                        const absRawDrift = Math.abs(rawDrift);
 
-                        // Only re-sync if there is a massive desync (e.g. background tab freeze > 500ms).
-                        // Under normal playback, native audio clocks stay in lockstep at 1.0x rate.
-                        // Constantly seeking or adjusting playbackRate causes audio buffer flushes and stuttering.
-                        if (absDrift > 0.5 && (now - lastSnapTimeRef.current > 1000)) {
-                            vocals.currentTime = masterTime;
+                        // Hard Snap: ONLY for severe desync (> 150ms, e.g. tab backgrounded or stalled)
+                        if (absRawDrift > 0.15 && (now - lastSnapTimeRef.current > 1200)) {
+                            vocals.currentTime = targetVocalsTime;
                             lastSnapTimeRef.current = now;
-                        }
+                            smoothedDriftRef.current = 0;
+                            if (vocals.playbackRate !== baseRate) {
+                                vocals.playbackRate = baseRate;
+                            }
+                        } else if (absRawDrift < 0.15) {
+                            // Exponential moving average filters out Chromium main-thread currentTime IPC jitter
+                            smoothedDriftRef.current = smoothedDriftRef.current * 0.85 + rawDrift * 0.15;
+                            const absSmoothed = Math.abs(smoothedDriftRef.current);
 
-                        // Maintain identical playback rate with master audio
-                        if (vocals.playbackRate !== baseRate) {
-                            vocals.playbackRate = baseRate;
+                            // Only nudge rate if smoothed drift persistently exceeds 20ms.
+                            // Uses a very gentle ±0.5% rate shift (inaudible, no time-stretcher smearing).
+                            if (absSmoothed > 0.020) {
+                                const targetRate = smoothedDriftRef.current > 0 ? baseRate + 0.005 : baseRate - 0.005;
+                                if (vocals.playbackRate !== targetRate) {
+                                    vocals.playbackRate = targetRate;
+                                }
+                            } else if (absSmoothed < 0.004 && vocals.playbackRate !== baseRate) {
+                                vocals.playbackRate = baseRate;
+                            }
                         }
                     }
                 }

@@ -135,7 +135,7 @@ function addSeparatorJobs(requests) {
     const jobIds = [];
     
     for (const reqItem of list) {
-        let { songId, songDir, audioFile, txtFile, safeName, type, approximateStartSec, isPaused } = reqItem;
+        let { songId, songDir, audioFile, vocalsFile, txtFile, safeName, type, approximateStartSec, isPaused } = reqItem;
         
         if (songId) {
             const song = getSongCache().find(s => s.id === songId);
@@ -143,8 +143,15 @@ function addSeparatorJobs(requests) {
                 songDir = songDir || path.dirname(song.txtPath);
                 txtFile = txtFile || path.basename(song.txtPath);
                 safeName = safeName || song.title;
-                if (song.audio) {
+                if (song.originalAudio) {
+                    audioFile = audioFile || path.basename(song.originalAudio.split('?')[0]);
+                } else if (song.audio) {
                     audioFile = audioFile || path.basename(song.audio.split('?')[0]);
+                } else if (song.video) {
+                    audioFile = audioFile || path.basename(song.video.split('?')[0]);
+                }
+                if (song.vocalsAudio) {
+                    vocalsFile = vocalsFile || path.basename(song.vocalsAudio.split('?')[0]);
                 }
             }
         }
@@ -158,6 +165,7 @@ function addSeparatorJobs(requests) {
             songId,
             songDir,
             audioFile,
+            vocalsFile: vocalsFile || null,
             txtFile,
             safeName,
             approximateStartSec,
@@ -178,13 +186,39 @@ function addSeparatorJobs(requests) {
     return jobIds;
 }
 
+function clearDownloadJobs(jobId) {
+    if (jobId) {
+        DOWNLOAD_JOBS.delete(jobId);
+    } else {
+        for (const [id, j] of DOWNLOAD_JOBS.entries()) {
+            if (j.status === 'done' || j.status === 'error') {
+                DOWNLOAD_JOBS.delete(id);
+            }
+        }
+    }
+}
+
+function clearSeparatorJobs(jobId) {
+    if (jobId) {
+        SEPARATOR_JOBS.delete(jobId);
+    } else {
+        for (const [id, j] of SEPARATOR_JOBS.entries()) {
+            if (j.status === 'done' || j.status === 'error') {
+                SEPARATOR_JOBS.delete(id);
+            }
+        }
+    }
+}
+
 module.exports = {
     addDownloadJobs,
     getDownloadJobsList,
     getDownloadJob,
+    clearDownloadJobs,
     checkSeparatorInstalled,
     addSeparatorInstallJob,
     getSeparatorJobsList,
     getSeparatorJob,
+    clearSeparatorJobs,
     addSeparatorJobs
 };

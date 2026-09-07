@@ -163,15 +163,19 @@ export const ExcalidrawViewer: React.FC<ExcalidrawViewerProps> = ({
   useEffect(() => {
     if (!animate) {
       skipAnimationRef.current = true;
-      setProgressSegments(animationPlan.totalSegments);
-      return undefined;
+      const frameId = requestAnimationFrame(() => {
+        setProgressSegments(animationPlan.totalSegments);
+      });
+      return () => cancelAnimationFrame(frameId);
     }
 
     skipAnimationRef.current = false;
-    setProgressSegments(0);
+    const initFrameId = requestAnimationFrame(() => {
+      setProgressSegments(0);
+    });
 
     if (!hasElements || animationPlan.totalSegments <= 0) {
-      return undefined;
+      return () => cancelAnimationFrame(initFrameId);
     }
 
     let frameId: number | null = null;
@@ -194,6 +198,7 @@ export const ExcalidrawViewer: React.FC<ExcalidrawViewerProps> = ({
 
     frameId = window.requestAnimationFrame(step);
     return () => {
+      cancelAnimationFrame(initFrameId);
       if (frameId) window.cancelAnimationFrame(frameId);
     };
   }, [animate, hasElements, animationPlan.totalSegments, segmentsPerMs, sceneKey]);

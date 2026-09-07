@@ -103,12 +103,14 @@ router.post('/api/guessart/publish-catalogue', configController.publishGuessArtC
 router.post('/api/usdb/download', jobController.downloadUsdb);
 router.get('/api/usdb/jobs', jobController.getUsdbJobs);
 router.get('/api/usdb/status/:jobId', jobController.getUsdbJobStatus);
+router.delete('/api/usdb/jobs/:jobId?', jobController.clearUsdbJobs);
 
 // --- SEPARATOR JOBS ---
 router.get('/api/separator/status', jobController.getSeparatorInstalledStatus);
 router.post('/api/separator/install', jobController.installSeparator);
 router.get('/api/separator/jobs', jobController.getSeparatorJobs);
 router.get('/api/separator/status/:jobId', jobController.getSeparatorJobStatus);
+router.delete('/api/separator/jobs/:jobId?', jobController.clearSeparatorJobs);
 router.post('/api/separator/job', jobController.createSeparatorJob);
 
 module.exports = router;

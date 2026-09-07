@@ -12,13 +12,7 @@ async function streamMedia(req, res) {
 
     // Check if targetPath is a remote web URL
     if (targetPath.startsWith('http://') || targetPath.startsWith('https://')) {
-        try {
-            const resolvedUrl = await resolveStreamUrl(targetPath);
-            return res.redirect(resolvedUrl);
-        } catch (e) {
-            console.error('[Media] Failed to resolve stream URL:', e.message);
-            return res.status(500).send('Failed to resolve stream URL: ' + e.message);
-        }
+        return res.redirect(targetPath);
     }
 
     const safePath = resolveSecurePath(targetPath);

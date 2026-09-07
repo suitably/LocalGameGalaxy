@@ -44,10 +44,10 @@ export const OnlineSongsView: React.FC<OnlineSongsViewProps> = ({
                     itemContent={(index) => {
                         const song = filteredOnlineSongs[index];
                         const localSong = songs.find(s => s.title.toLowerCase() === song.title.toLowerCase() && s.artist.toLowerCase() === song.artist.toLowerCase());
-                        const activeJob = jobs.find(j => j.usdbId === song.usdbId);
+                        const activeJob = jobs.find(j => j.usdbId === song.usdbId && (j.status === 'pending' || j.status === 'running'));
                         
                         const isDownloaded = !!localSong;
-                        const isDl = !!(activeJob && activeJob.status !== 'error' && !isDownloaded);
+                        const isDl = !!(activeJob && !isDownloaded);
                         const progress = activeJob ? activeJob.progress : 0;
                         return (
                             <SongCard
@@ -85,10 +85,10 @@ export const OnlineSongsView: React.FC<OnlineSongsViewProps> = ({
                 itemContent={(index) => {
                     const song = filteredOnlineSongs[index];
                     const localSong = songs.find(s => s.title.toLowerCase() === song.title.toLowerCase() && s.artist.toLowerCase() === song.artist.toLowerCase());
-                    const activeJob = jobs.find(j => j.usdbId === song.usdbId);
+                    const activeJob = jobs.find(j => j.usdbId === song.usdbId && (j.status === 'pending' || j.status === 'running'));
                     
                     const isDownloaded = !!localSong;
-                    const isDl = !!(activeJob && activeJob.status !== 'error' && !isDownloaded);
+                    const isDl = !!(activeJob && !isDownloaded);
                     const progress = activeJob ? activeJob.progress : 0;
                     return (
                         <Box sx={{ px: 2, py: 0.5 }}>

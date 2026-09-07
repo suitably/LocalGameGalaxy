@@ -45,6 +45,7 @@ export interface SongMeta {
     edition?: string;
     album?: string;
     cover?: string | Blob | FileSystemFileHandle; 
+    video?: string | Blob | FileSystemFileHandle;
     audio?: string | Blob | FileSystemFileHandle;
     originalAudio?: string | Blob | FileSystemFileHandle;
     instrumentalAudio?: string | Blob | FileSystemFileHandle;

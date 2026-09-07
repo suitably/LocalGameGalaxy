@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawn, exec } = require('child_process');
-const { scanSongs } = require('./scanner');
+const { scanSongs, addOrUpdateSongInCache } = require('./scanner');
 
 /**
  * AI Audio Vocal Separation & Installation Service
@@ -271,6 +271,12 @@ async function runSeparatorJob(job) {
         job.progress = 100;
         job.status = 'done';
         
+        try {
+            if (txtPath && fs.existsSync(txtPath)) {
+                await addOrUpdateSongInCache(txtPath);
+            }
+        } catch (e) { /* ignore */ }
+
         setTimeout(scanSongs, 1000);
     } catch (err) {
         job.status = 'error';
@@ -293,104 +299,81 @@ async function processSeparatorQueue() {
     isSeparatorRunning = false;
 }
 
+function findVocalsFile(songDir, txtPath, explicitVocals) {
+    if (!songDir || !fs.existsSync(songDir)) return null;
+
+    if (explicitVocals) {
+        const explicitPath = path.isAbsolute(explicitVocals) ? explicitVocals : path.join(songDir, explicitVocals);
+        if (fs.existsSync(explicitPath)) return path.basename(explicitPath);
+    }
+
+    if (txtPath && fs.existsSync(txtPath)) {
+        try {
+            const content = fs.readFileSync(txtPath, 'utf-8');
+            const lines = content.split('\n');
+            for (const line of lines) {
+                if (line.trim().toUpperCase().startsWith('#VOCALS:')) {
+                    const vocName = line.split(':')[1]?.trim();
+                    if (vocName && fs.existsSync(path.join(songDir, vocName))) {
+                        return vocName;
+                    }
+                }
+            }
+        } catch (e) { /* ignore */ }
+    }
+
+    try {
+        const files = fs.readdirSync(songDir);
+        const supportedExts = ['.mp3', '.m4a', '.wav', '.ogg', '.flac', '.aac', '.opus'];
+        const vFile = files.find(f => {
+            const lower = f.toLowerCase();
+            return lower.includes('vocals') && supportedExts.some(ext => lower.endsWith(ext));
+        });
+        if (vFile) return vFile;
+    } catch (e) { /* ignore */ }
+
+    return null;
+}
+
 async function runAutoSyncJob(job) {
     try {
         job.status = 'running';
         const { songId, songDir, audioFile, txtFile, safeName, approximateStartSec, isPaused } = job;
         
         job.log.push(`Auto-Syncing ${safeName}...${approximateStartSec ? ` (Near ${approximateStartSec.toFixed(1)}s)` : ''}`);
-        job.progress = 5;
+        job.progress = 10;
 
         const txtPath = txtFile ? path.join(songDir, txtFile) : null;
         if (!txtPath || !fs.existsSync(txtPath)) {
             throw new Error(`Text file not found: ${txtPath}`);
         }
 
-        // 1. Find Vocals file
-        const files = fs.readdirSync(songDir);
-        let vocalsFile = null;
-        for (const f of files) {
-            if (f.endsWith('.mp3') && f.includes('Vocals')) {
-                vocalsFile = f;
-                break;
-            }
-        }
-
-        // If no vocals file, we need to run audio-separator
-        if (!vocalsFile) {
-            job.log.push(`Vocals file not found. Running audio-separator first...`);
-            
-            const isInstalled = await checkIsInstalled();
-            if (!isInstalled) throw new Error('audio-separator is not installed. Please install it first.');
-            
-            const audioPath = path.join(songDir, audioFile);
-            if (!fs.existsSync(audioPath)) throw new Error(`Audio file not found: ${audioPath}`);
-            
-            const model = 'UVR-MDX-NET-Inst_HQ_3.onnx';
-            const modelsDir = path.join(process.cwd(), 'models');
-            if (!fs.existsSync(modelsDir)) fs.mkdirSync(modelsDir, { recursive: true });
-            
-            await new Promise((resolve, reject) => {
-                const cmd = spawn('audio-separator', [
-                    audioPath, '--model_filename', model, '--model_file_dir', modelsDir,
-                    '--output_dir', songDir, '--output_format', 'mp3'
-                ]);
-
-                cmd.stdout.on('data', (data) => {
-                    const lines = data.toString().split('\n');
-                    for (const line of lines) {
-                        if (line.trim()) {
-                            job.log.push(line.trim());
-                            if (line.includes('%')) job.progress = Math.min(50, job.progress + 1);
-                        }
-                    }
-                });
-
-                cmd.stderr.on('data', (data) => {
-                    const lines = data.toString().split('\n');
-                    for (const line of lines) {
-                        if (line.trim()) {
-                            job.log.push(line.trim());
-                            if (line.includes('%')) job.progress = Math.min(50, job.progress + 1);
-                        }
-                    }
-                });
-
-                cmd.on('close', (code) => {
-                    if (code !== 0) reject(new Error(`audio-separator failed with code ${code}`));
-                    else resolve();
-                });
-            });
-
-            // Find vocals file again
-            const newFiles = fs.readdirSync(songDir);
-            for (const f of newFiles) {
-                if (f.endsWith('.mp3') && f.includes('Vocals') && f !== path.basename(audioPath)) {
-                    vocalsFile = f;
-                    break;
-                }
-            }
-
-            if (!vocalsFile) throw new Error("Could not generate Vocals file.");
-        }
-
-        job.log.push(`Using vocals file: ${vocalsFile}`);
-        job.progress = 60;
-
-        // 2. Run ffmpeg silencedetect (or bypass if paused for exact manual sync)
         let vocalsStartMs = 0;
         
         if (isPaused && approximateStartSec && approximateStartSec > 0) {
-            job.log.push(`User manually paused and synced. Bypassing AI silence detection.`);
+            job.log.push(`Manual sync requested at ${approximateStartSec.toFixed(2)}s. Bypassing audio analysis.`);
             vocalsStartMs = Math.round(approximateStartSec * 1000);
         } else {
-            job.log.push(`Running silence detection...`);
-            const vocalsPath = path.join(songDir, vocalsFile);
-            
-            const firstSoundStartSec = await new Promise((resolve, reject) => {
-                // ffmpeg -i file -af silencedetect=noise=-30dB:d=0.2 -f null -
+            const vocalsFile = findVocalsFile(songDir, txtPath, job.vocalsFile);
+            let syncAudioFile = vocalsFile;
+            if (syncAudioFile) {
+                job.log.push(`Using separated vocals track for start detection: ${syncAudioFile}`);
+            } else {
+                job.log.push(`No separated vocals track found. Using main audio track: ${audioFile}`);
+                syncAudioFile = audioFile;
+            }
+
+            const syncAudioPath = path.join(songDir, syncAudioFile);
+            if (!fs.existsSync(syncAudioPath)) {
+                throw new Error(`Audio file not found: ${syncAudioPath}`);
+            }
+
+            job.log.push(`Running silence detection on ${syncAudioFile}...`);
+            job.progress = 30;
+
+            const firstSoundStartSec = await new Promise((resolve) => {
                 const cmd = spawn('ffmpeg', [
-                    '-i', vocalsPath,
+                    '-i', syncAudioPath,
                     '-af', 'silencedetect=noise=-30dB:d=0.2',
                     '-f', 'null', '-'
                 ]);
@@ -402,8 +385,7 @@ async function runAutoSyncJob(job) {
                     output += data.toString();
                 });
 
-                cmd.on('close', (code) => {
-                    // Parse output
+                cmd.on('close', () => {
                     const lines = output.split('\n');
                     let foundSilenceEnd = false;
                     let minDiff = Infinity;
@@ -415,19 +397,14 @@ async function runAutoSyncJob(job) {
                                 const time = parseFloat(match[1]);
                                 
                                 if (approximateStartSec && approximateStartSec > 0) {
-                                    // User tapped: find the silence_end closest to the tap.
-                                    // We subtract 0.3s from tap time assuming human reaction delay.
                                     const targetTime = approximateStartSec - 0.3;
                                     const diff = Math.abs(time - targetTime);
-                                    
-                                    // Only consider it if it's within a reasonable window (e.g., +/- 4 seconds)
                                     if (diff < minDiff && diff < 4.0) {
                                         minDiff = diff;
                                         startSec = time;
                                         foundSilenceEnd = true;
                                     }
                                 } else {
-                                    // No user tap: take the very first silence end
                                     startSec = time;
                                     foundSilenceEnd = true;
                                     break;
@@ -438,10 +415,8 @@ async function runAutoSyncJob(job) {
                     
                     if (!foundSilenceEnd) {
                         if (approximateStartSec && approximateStartSec > 0) {
-                            // If we didn't find any silence near the tap, fallback to the tap itself
-                            startSec = approximateStartSec - 0.3;
+                            startSec = Math.max(0, approximateStartSec - 0.3);
                         } else {
-                            // If no silence found at the beginning, vocals start at 0
                             startSec = 0;
                         }
                     }
@@ -453,9 +428,9 @@ async function runAutoSyncJob(job) {
         }
 
         job.log.push(`Detected vocals start at: ${vocalsStartMs} ms`);
-        job.progress = 80;
+        job.progress = 75;
 
-        // 3. Parse txt file
+        // Parse txt file
         const txtContent = fs.readFileSync(txtPath, 'utf-8');
         const lines = txtContent.split('\n');
         
@@ -483,15 +458,13 @@ async function runAutoSyncJob(job) {
 
         const msPerBeat = 60000 / (bpm * 4);
         const theoreticalStartMs = firstNoteStartBeat * msPerBeat;
-
         const newGap = Math.round(vocalsStartMs - theoreticalStartMs);
         
         job.log.push(`BPM: ${bpm}, First Note Beat: ${firstNoteStartBeat}`);
-        job.log.push(`Theoretical First Note (no GAP): ${Math.round(theoreticalStartMs)} ms`);
+        job.log.push(`Theoretical First Note (at GAP=0): ${Math.round(theoreticalStartMs)} ms`);
         job.log.push(`Old GAP: ${oldGap} ms -> New GAP: ${newGap} ms`);
-        job.progress = 95;
+        job.progress = 90;
 
-        // 4. Update txt file
         let newLines = [];
         let gapUpdated = false;
         for (const line of lines) {
@@ -510,11 +483,17 @@ async function runAutoSyncJob(job) {
         }
 
         fs.writeFileSync(txtPath, newLines.join('\n'), 'utf-8');
-        job.log.push(`Successfully synced song start!`);
+        job.log.push(`Successfully updated song GAP to ${newGap} ms!`);
 
         job.progress = 100;
         job.status = 'done';
         
+        try {
+            if (txtPath && fs.existsSync(txtPath)) {
+                await addOrUpdateSongInCache(txtPath);
+            }
+        } catch (e) { /* ignore */ }
+
         setTimeout(scanSongs, 1000);
     } catch (err) {
         job.status = 'error';
@@ -522,14 +501,6 @@ async function runAutoSyncJob(job) {
         job.log.push(`❌ ${err.message}`);
     }
 }
-
-module.exports = {
-    SEPARATOR_JOBS,
-    separatorQueue,
-    runSeparatorJob,
-    processSeparatorQueue,
-    checkIsInstalled
-};
 
 async function runFullSyncJob(job) {
     try {
@@ -544,93 +515,43 @@ async function runFullSyncJob(job) {
             throw new Error(`Text file not found: ${txtPath}`);
         }
 
-        // 1. Find Vocals file
-        const files = fs.readdirSync(songDir);
-        let vocalsFile = null;
-        for (const f of files) {
-            if (f.endsWith('.mp3') && f.includes('Vocals')) {
-                vocalsFile = f;
-                break;
-            }
-        }
-
         const audioPath = path.join(songDir, audioFile);
-
-        // 2. Separate if needed
-        if (!vocalsFile) {
-            job.log.push("Vocals not found. Separating vocals first...");
-            const isInstalled = await checkIsInstalled();
-            if (!isInstalled) {
-                throw new Error('audio-separator is not installed.');
-            }
-
-            const model = 'UVR-MDX-NET-Inst_HQ_3.onnx';
-            const modelsDir = path.join(process.cwd(), 'models');
-
-            await new Promise((resolve, reject) => {
-                const cmd = spawn('audio-separator', [
-                    audioPath,
-                    '--model_filename', model,
-                    '--model_file_dir', modelsDir,
-                    '--output_dir', songDir,
-                    '--output_format', 'mp3'
-                ]);
-
-                cmd.stdout.on('data', (data) => {
-                    const lines = data.toString().split('\n');
-                    for (const line of lines) {
-                        if (line.trim()) {
-                            job.log.push(line.trim());
-                            if (line.includes('%')) job.progress = 30; // Scale progress
-                        }
-                    }
-                });
-
-                cmd.stderr.on('data', (data) => {
-                    const lines = data.toString().split('\n');
-                    for (const line of lines) {
-                        if (line.trim()) {
-                            job.log.push(line.trim());
-                            if (line.includes('%')) job.progress = 30;
-                        }
-                    }
-                });
-
-                cmd.on('close', (code) => {
-                    if (code !== 0) reject(new Error(`audio-separator failed with code ${code}`));
-                    else resolve();
-                });
-            });
-
-            // Re-find vocals
-            const newFiles = fs.readdirSync(songDir);
-            for (const f of newFiles) {
-                if (f.endsWith('.mp3') && f.includes('Vocals')) {
-                    vocalsFile = f;
-                    break;
-                }
-            }
+        if (!fs.existsSync(audioPath)) {
+            throw new Error(`Audio file not found: ${audioPath}`);
         }
 
-        if (!vocalsFile) {
-            throw new Error("Could not extract or find Vocals MP3.");
+        // 1. Check for existing separated vocals file
+        let vocalsFile = findVocalsFile(songDir, txtPath, job.vocalsFile);
+        let targetAudioPath = null;
+
+        if (vocalsFile) {
+            job.log.push(`Found separated vocals track: ${vocalsFile}. Using for AI alignment.`);
+            targetAudioPath = path.join(songDir, vocalsFile);
+            job.progress = 30;
+        } else {
+            job.log.push(`No separated vocals stem found. Using master audio track for AI lyrics alignment: ${audioFile}`);
+            targetAudioPath = audioPath;
+            job.progress = 30;
         }
 
-        const vocalsPath = path.join(songDir, vocalsFile);
-        job.progress = 50;
+        if (!targetAudioPath || !fs.existsSync(targetAudioPath)) {
+            throw new Error(`Target audio file for alignment not found: ${targetAudioPath}`);
+        }
 
-        // 3. Run align_lyrics.py
-        job.log.push("Running AI Forced Alignment (this will take a few minutes)...");
+        job.progress = 40;
+        job.log.push(`Running AI Forced Alignment with Whisper on: ${path.basename(targetAudioPath)}...`);
         
         await new Promise((resolve, reject) => {
             const scriptPath = path.join(__dirname, '..', 'scripts', 'align_lyrics.py');
-            const cmd = spawn('python3', [scriptPath, txtPath, vocalsPath]);
+            const cmd = spawn('python3', [scriptPath, txtPath, targetAudioPath]);
 
             cmd.stdout.on('data', (data) => {
                 const lines = data.toString().split('\n');
                 for (const line of lines) {
                     if (line.trim()) {
                         job.log.push(line.trim());
+                        if (line.includes('Whisper transcribed')) job.progress = 70;
+                        if (line.includes('matched')) job.progress = 85;
                     }
                 }
             });
@@ -639,11 +560,10 @@ async function runFullSyncJob(job) {
                 const lines = data.toString().split('\n');
                 for (const line of lines) {
                     if (line.trim()) {
-                        // Avoid prefixing progress bars with 'Script Error'
                         if (line.includes('%|') || line.includes('it/s') || line.includes('MiB/s')) {
                             job.log.push(line.trim());
                         } else {
-                            job.log.push(`[Script Warning/Error] ${line.trim()}`);
+                            job.log.push(`[Script Info] ${line.trim()}`);
                         }
                     }
                 }
@@ -659,6 +579,12 @@ async function runFullSyncJob(job) {
         job.progress = 100;
         job.status = 'done';
         
+        try {
+            if (txtPath && fs.existsSync(txtPath)) {
+                await addOrUpdateSongInCache(txtPath);
+            }
+        } catch (e) { /* ignore */ }
+
         setTimeout(scanSongs, 1000);
     } catch (err) {
         job.status = 'error';
@@ -666,3 +592,14 @@ async function runFullSyncJob(job) {
         job.log.push(`❌ ${err.message}`);
     }
 }
+
+module.exports = {
+    SEPARATOR_JOBS,
+    separatorQueue,
+    runSeparatorJob,
+    processSeparatorQueue,
+    checkIsInstalled,
+    findVocalsFile,
+    runAutoSyncJob,
+    runFullSyncJob
+};

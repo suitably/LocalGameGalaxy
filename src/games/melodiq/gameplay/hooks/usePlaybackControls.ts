@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 
 interface UsePlaybackControlsProps {
     audioRef: React.RefObject<HTMLAudioElement | null>;
@@ -30,6 +30,10 @@ export function usePlaybackControls({
     vocalsVolume
 }: UsePlaybackControlsProps) {
     const playPromiseRef = useRef<Promise<void> | null>(null);
+    const paramsRef = useRef({ songVolume, masterVolume, vocalsVolume, muteAudio });
+    useEffect(() => {
+        paramsRef.current = { songVolume, masterVolume, vocalsVolume, muteAudio };
+    }, [songVolume, masterVolume, vocalsVolume, muteAudio]);
 
     const pauseForScore = useCallback(() => {
         if (audioRef.current) {
@@ -43,22 +47,43 @@ export function usePlaybackControls({
 
     const safePlay = useCallback(async () => {
         if (!audioRef.current) return;
-        // Synchronize stems unconditionally before playing to guarantee zero initial desync
         const currentPos = audioRef.current.currentTime;
+        const { songVolume: sVol, masterVolume: mVol, vocalsVolume: vVol, muteAudio: isMuted } = paramsRef.current;
+        const targetVocalsTime = Math.max(0, currentPos);
+
+        // Synchronize stems unconditionally before playing to guarantee zero initial desync.
+        // If vocal stem currentTime is not aligned, seek and await seeked before calling play().
         if (vocalsRef.current) {
-            vocalsRef.current.currentTime = currentPos;
+            if (Math.abs(vocalsRef.current.currentTime - targetVocalsTime) > 0.001) {
+                await new Promise<void>((resolve) => {
+                    const vocal = vocalsRef.current;
+                    if (!vocal) return resolve();
+                    let timeoutId: any = null;
+                    const onSeeked = () => {
+                        clearTimeout(timeoutId);
+                        vocal.removeEventListener('seeked', onSeeked);
+                        resolve();
+                    };
+                    timeoutId = setTimeout(() => {
+                        vocal.removeEventListener('seeked', onSeeked);
+                        resolve();
+                    }, 200);
+                    vocal.addEventListener('seeked', onSeeked, { once: true });
+                    vocal.currentTime = targetVocalsTime;
+                });
+            }
         }
+
         if (videoRef.current && Math.abs(videoRef.current.currentTime - currentPos) > 0.05) {
             videoRef.current.currentTime = currentPos;
         }
 
-        // Apply volume settings before every play() call to ensure they are correct
-        // even on the very first autostart (when the volume useEffect may have run
-        // before audioRef was attached to the DOM element).
-        audioRef.current.volume = muteAudio ? 0 : songVolume * masterVolume;
+        // Apply volume settings before every play() call
+        audioRef.current.volume = isMuted ? 0 : sVol * mVol;
         if (vocalsRef.current) {
-            vocalsRef.current.volume = muteAudio ? 0 : vocalsVolume * masterVolume;
+            vocalsRef.current.volume = isMuted ? 0 : vVol * mVol;
         }
+
         try {
             const playPromises: Promise<any>[] = [audioRef.current.play()];
             if (vocalsRef.current) {
@@ -80,7 +105,7 @@ export function usePlaybackControls({
         } finally {
             playPromiseRef.current = null;
         }
-    }, [audioRef, vocalsRef, videoRef, setIsPlaying, muteAudio, songVolume, masterVolume, vocalsVolume]);
+    }, [audioRef, vocalsRef, videoRef, setIsPlaying]);
 
     const resumeFromScore = useCallback(() => {
         setIsPausedForScore(false);

@@ -6,7 +6,6 @@ import SkipNextIcon from '@mui/icons-material/SkipNext';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import QueueMusicIcon from '@mui/icons-material/QueueMusic';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { SongMeta, Song } from '../db';
 
 interface MiniPlayerProps {
@@ -17,7 +16,6 @@ interface MiniPlayerProps {
     onNext: () => void;
     onMaximize: () => void;
     onShowQueue?: () => void;
-    onMenuClick?: (e: React.MouseEvent<HTMLElement>) => void;
     queueLength: number;
     isRestored?: boolean;
     isClient?: boolean;
@@ -32,7 +30,6 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
     onNext,
     onMaximize,
     onShowQueue,
-    onMenuClick,
     queueLength,
     isRestored = false,
 
@@ -138,12 +135,6 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                 <IconButton onClick={(e) => { e.stopPropagation(); onMaximize(); }} size="medium" sx={{ color: 'white', ml: 1 }} disabled={!song}>
                     <OpenInFullIcon fontSize="small" />
                 </IconButton>
-
-                {onMenuClick && (
-                    <IconButton onClick={(e) => { e.stopPropagation(); onMenuClick(e); }} size="medium" sx={{ color: 'white' }}>
-                        <MoreVertIcon fontSize="small" />
-                    </IconButton>
-                )}
             </Box>
         </Card>
     );

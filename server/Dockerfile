@@ -31,8 +31,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
+ENV TORCH_HOME=/app/models \
+    WHISPER_CACHE_DIR=/app/models
+
 RUN pip3 install --no-cache-dir --break-system-packages \
     torch torchvision torchaudio \
     --extra-index-url https://download.pytorch.org/whl/cpu \
     && pip3 install --no-cache-dir --break-system-packages \
-    "audio-separator[cpu]" "whisper-timestamped"
+    "audio-separator[cpu]" "whisper-timestamped" "auditok"

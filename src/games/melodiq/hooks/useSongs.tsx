@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
 import { type Song, type SongMeta } from '../db';
 import { melodiqFetch } from '../api/melodiqFetch';
+import { getYouTubeVideoId } from '../gameplay/YouTubeBackgroundPlayer';
 
 interface LoadingProgress {
     loaded: number;
@@ -59,6 +60,16 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const metas: SongMeta[] = serverSongs.map((s: any) => {
                 const processUrl = (url?: string | Blob | FileSystemFileHandle) => {
                     if (typeof url === 'string') {
+                        // If url contains an encoded remote url in path param from previous cache, unwrap it
+                        if (url.includes('/media') && url.includes('path=http')) {
+                            try {
+                                const parsed = new URL(url, window.location.origin);
+                                const rawPath = parsed.searchParams.get('path');
+                                if (rawPath && (rawPath.startsWith('http://') || rawPath.startsWith('https://'))) {
+                                    return rawPath;
+                                }
+                            } catch (_) {}
+                        }
                         if (url.startsWith('/media')) {
                             let final = `${helperUrl}${url}`;
                             if (token && !final.includes('token=')) {
@@ -82,7 +93,9 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     language: s.language,
                     genre: s.genre,
                     cover: processUrl(s.cover),
-                    video: processUrl(s.video),
+                    video: (typeof s.video === 'string' && getYouTubeVideoId(s.video))
+                        ? `https://www.youtube.com/watch?v=${getYouTubeVideoId(s.video)}`
+                        : processUrl(s.video),
                     audio: processUrl(s.audio),
                     originalAudio: processUrl(s.originalAudio),
                     instrumentalAudio: processUrl(s.instrumentalAudio),
@@ -93,7 +106,7 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                     duration: s.duration,
                     edition: s.edition,
                     hasCover: s.hasCover ?? !!s.cover,
-                    hasVideo: s.hasVideo ?? !!s.video,
+                    hasVideo: s.hasVideo ?? !!(s.video || (typeof s.video === 'string' && getYouTubeVideoId(s.video))),
                     usdbId: s.usdbId,
                     txtPath: s.txtPath
                 };
@@ -192,9 +205,13 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             loadSongs();
         }
 
-        const handleSettingsUpdate = () => {
-            console.log('[SongsProvider] Settings updated, reloading songs...');
-            loadSongs();
+        const handleSettingsUpdate = (e: Event) => {
+            const detail = (e as CustomEvent)?.detail;
+            // Only reload song library if helper connection parameters or forceReload is specified
+            if (!detail || detail.helperUrl !== undefined || detail.enableHelper !== undefined || detail.helperToken !== undefined || detail.forceReload) {
+                console.log('[SongsProvider] Helper connection updated, reloading songs...');
+                loadSongs();
+            }
         };
 
         window.addEventListener('melodiq_settings_updated', handleSettingsUpdate);
@@ -222,7 +239,10 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 if (res.txtContent) {
                     serverContentCache.current.set(id, res.txtContent);
                 }
-                return { ...(found || res), txtContent: res.txtContent || content } as unknown as Song;
+                const ytId = (typeof res.video === 'string' ? getYouTubeVideoId(res.video) : null) ||
+                             (typeof found?.video === 'string' ? getYouTubeVideoId(found.video as string) : null);
+                const finalVideo = ytId ? `https://www.youtube.com/watch?v=${ytId}` : (res.video || found?.video);
+                return { ...(found || res), video: finalVideo, txtContent: res.txtContent || content } as unknown as Song;
             }
         } catch (e) {
             console.warn("[SongsProvider] Failed to fetch full song data for", id, e);

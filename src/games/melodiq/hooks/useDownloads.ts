@@ -3,6 +3,8 @@ import { melodiqFetch } from '../api/melodiqFetch';
 
 export interface DownloadJob {
     jobId: string;
+    songId?: string;
+    type?: string;
     usdbId: string | null;
     artist: string;
     title: string;
