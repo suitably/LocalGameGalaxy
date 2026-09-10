@@ -23,7 +23,7 @@ interface TVMessagePayload {
 }
 
 const MockWebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const mockContext: WebRTCHostContextType<unknown, unknown> = {
+    const mockContext: WebRTCHostContextType<any, any> = {
         manager: null,
         peers: [],
         activePeers: [],
@@ -72,12 +72,12 @@ export const MelodiqTV: React.FC = () => {
             if (type === 'PLAY_SONG' && payload) {
                 if (payload.songData) {
                     setDownloadingSong(null);
-                    setActiveSong((prev: (Song & { initialTime?: number }) | null) => {
+                    setActiveSong((prev) => {
                         if (prev && prev.id === payload.songData?.id && payload.currentTime === undefined) {
                             return prev;
                         }
                         return {
-                            ...payload.songData,
+                            ...(payload.songData as Song),
                             initialTime: payload.currentTime || 0
                         };
                     });

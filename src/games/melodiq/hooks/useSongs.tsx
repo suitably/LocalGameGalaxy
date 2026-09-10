@@ -3,7 +3,7 @@ import { type Song, type SongMeta } from '../db';
 import { melodiqFetch } from '../api/melodiqFetch';
 import { getYouTubeVideoId } from '../gameplay/YouTubeBackgroundPlayer';
 
-interface LoadingProgress {
+export interface LoadingProgress {
     loaded: number;
     total: number;
 }

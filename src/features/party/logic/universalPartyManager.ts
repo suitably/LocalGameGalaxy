@@ -300,8 +300,8 @@ class UniversalPartyManager {
         return;
       }
 
-      const incomingState = incoming;
-      if (!Array.isArray(incomingState.players)) return;
+      const incomingState = incoming as PartyRoomState;
+      if (!incomingState.players || !Array.isArray(incomingState.players)) return;
       this.handleIncomingState(incomingState, roomId);
     });
   }

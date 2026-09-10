@@ -144,13 +144,13 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
             const activeSong = data.state.activeSong || (activeId ? { id: activeId } : null);
             
             // Auto-sync session view if phone joined late, reloaded, or a new song started
-            const participants = data.state.players?.map((p) => p.config || {
+            const participants = data.state.players?.map((p: any) => p.config || {
                 profileId: p.id,
                 deviceId: p.deviceId || p.id,
                 name: p.name,
                 hue: p.hue,
                 isRemote: true
-            });
+            }); 
 
             if (activeId && activeId !== lastSyncedSongIdRef.current) {
                 lastSyncedSongIdRef.current = activeId;
@@ -189,12 +189,15 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
 
         } else if (data.type === 'api_response_chunk') {
             // Reassemble chunked API response
+            } else if (data.type === 'api_response_chunk') {
             const { reqId, chunk, index, total } = data;
-            if (!chunkBufferRef.current.has(reqId)) {
-                chunkBufferRef.current.set(reqId, { chunks: new Array(total), total });
+            if (!reqId || index === undefined || total === undefined) return;
+            
+            if (!chunkBufferRef.current.has(reqId as string)) {
+                chunkBufferRef.current.set(reqId as string, { chunks: new Array(total as number), total: total as number });
             }
-            const buf = chunkBufferRef.current.get(reqId)!;
-            buf.chunks[index] = chunk;
+            const buf = chunkBufferRef.current.get(reqId as string)!;
+            buf.chunks[index as number] = chunk as string;
 
             // Check if all chunks arrived
             const receivedCount = buf.chunks.filter(c => c !== undefined).length;
@@ -217,9 +220,8 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
             window.dispatchEvent(new CustomEvent(`melodiq_api_response_${data.reqId}`, { detail: data }));
 
         } else if (data.type === 'helper_config') {
-            // Host sent us the helper URL (without token!) so we can load images
             if (data.url) {
-                localStorage.setItem('melodiq_helper_url', data.url);
+                localStorage.setItem('melodiq_helper_url', data.url as string);
                 localStorage.setItem('melodiq_enable_helper', 'true');
                 window.dispatchEvent(new Event('melodiq_settings_updated'));
             }

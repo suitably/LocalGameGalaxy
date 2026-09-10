@@ -6,7 +6,6 @@ import { useLayout } from '../../../context/LayoutContext';
 import SettingsIcon from '@mui/icons-material/Settings';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 
-import { type MenuItem } from '../../../components/Layout/GlobalHeader';
 import { type LoadingProgress } from './useSongs';
 import { TVModeButton } from '../components/TVModeButton';
 

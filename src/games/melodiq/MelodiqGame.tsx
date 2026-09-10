@@ -190,8 +190,9 @@ export const MelodiqGameContent: React.FC = () => {
     }, [currentView]);
 
     useMelodiqHeader({
-        currentView, setCurrentView,
-        loadingProgress: loadingProgress, refreshSongs,
+        currentView, 
+        setCurrentView: (v: string) => setCurrentView(v as View),
+        loadingProgress, refreshSongs,
         isClient, isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV, clientRole,
         onBackToHome: handleCloseSubView
     });

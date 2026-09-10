@@ -140,7 +140,7 @@ export function useSearchFilters(songs: SongMeta[], jobs?: DownloadJob[]) {
         let result = onlineSongs;
 
         if (activeFilters.year.length > 0) {
-            result = result.filter(song => song.year && activeFilters.year.includes(song.year));
+            result = result.filter(song => song.year && activeFilters.year.includes(String(song.year)));
         }
 
         if (activeFilters.genre.length > 0) {
@@ -166,12 +166,12 @@ export function useSearchFilters(songs: SongMeta[], jobs?: DownloadJob[]) {
             } else if (sortOption === 'artist-desc') {
                 return (b.artist || '').localeCompare(a.artist || '');
             } else if (sortOption === 'year-desc') {
-                const ya = parseInt(a.year || '0') || 0;
-                const yb = parseInt(b.year || '0') || 0;
+                const ya = parseInt(String(a.year || '0')) || 0;
+                const yb = parseInt(String(b.year || '0')) || 0;
                 return yb - ya;
             } else if (sortOption === 'year-asc') {
-                const ya = parseInt(a.year || '9999') || 9999;
-                const yb = parseInt(b.year || '9999') || 9999;
+                const ya = parseInt(String(a.year || '9999')) || 9999;
+                const yb = parseInt(String(b.year || '9999')) || 9999;
                 return ya - yb;
             }
             return 0;
