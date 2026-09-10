@@ -215,9 +215,9 @@ export const useMelodiqGlobalEvents = ({
             const handleConfig = (peerId: string, data: any) => {
                 if (data.type === 'configure' && data.config) {
                     console.log(`[Host] Received Remote Config from ${peerId}:`, data.config);
-                    if (data.config.url) localStorage.setItem('melodiq_helper_url', data.config.url);
-                    if (data.config.token) localStorage.setItem('melodiq_helper_token', data.config.token);
-                    localStorage.setItem('melodiq_enable_helper', 'true');
+                    if (data.config.url) storage.setHelperUrl(data.config.url);
+                    if (data.config.token) storage.setHelperToken(data.config.token);
+                    storage.setHelperActive(true);
                     setFeedbackMessage(`Configuration Updated by Remote Phone!\nURL: ${data.config.url}\nReloading...`);
                     setTimeout(() => {
                         window.location.reload();
@@ -291,8 +291,8 @@ export const useMelodiqGlobalEvents = ({
                 participants: activeParticipants
             });
             // Also broadcast public helper URL so clients can load images
-            const helperUrl = localStorage.getItem('melodiq_helper_url');
-            const helperToken = localStorage.getItem('melodiq_helper_token');
+            const helperUrl = storage.getHelperUrl();
+            const helperToken = storage.getHelperToken();
             if (helperUrl) {
                 manager.broadcast({
                     type: 'helper_config',

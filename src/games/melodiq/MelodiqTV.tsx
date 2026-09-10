@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Box, Typography, CircularProgress } from '@mui/material';
 import GamepadIcon from '@mui/icons-material/Gamepad';
 import { MelodiqSession } from './gameplay/MelodiqSession';
-import { type PassiveGameState } from './types';
+import { type Song } from './db';
+import { type PassiveGameState, type PresentationConnection, type NavigatorWithPresentation } from './types';
 import { WebRTCHostContext, type WebRTCHostContextType } from '../../lib/webrtc';
 import { QueueProvider } from './hooks/useQueue';
-import { useMelodiqSettings } from './hooks/SettingsContext';
+import { useMelodiqSettings, type SettingsState } from './hooks/SettingsContext';
 import { ScoreBoardQrCode } from './gameplay/ScoreBoardQrCode';
 
 import { useTranslation } from 'react-i18next';
@@ -13,8 +14,16 @@ import { initMelodiqI18n } from './i18n';
 import { useWakeLock } from '../../hooks/useWakeLock';
 import { useScreenOrientation } from '../../hooks/useScreenOrientation';
 
+interface TVMessagePayload {
+    songData?: Song;
+    currentTime?: number;
+    command?: string;
+    value?: { title: string; artist: string };
+    [key: string]: unknown;
+}
+
 const MockWebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const mockContext: WebRTCHostContextType<any, any> = {
+    const mockContext: WebRTCHostContextType<unknown, unknown> = {
         manager: null,
         peers: [],
         activePeers: [],
@@ -49,7 +58,7 @@ export const MelodiqTV: React.FC = () => {
     useWakeLock(true);
     useScreenOrientation('landscape');
 
-    const [activeSong, setActiveSong] = useState<any | null>(null);
+    const [activeSong, setActiveSong] = useState<(Song & { initialTime?: number }) | null>(null);
     const [passiveState, setPassiveState] = useState<PassiveGameState | null>(null);
     const [isConnected, setIsConnected] = useState(false);
     const [downloadingSong, setDownloadingSong] = useState<{title: string, artist: string} | null>(null);
@@ -57,12 +66,14 @@ export const MelodiqTV: React.FC = () => {
     useEffect(() => {
         const channel = new BroadcastChannel('melodiq_tv_control');
 
-        const handleMessage = (type: string, payload: any) => {
-            if (type === 'PLAY_SONG') {
+        const handleMessage = (type: string, payload?: TVMessagePayload) => {
+            if (!payload && type !== 'PING' && type !== 'STOP_SONG') return;
+
+            if (type === 'PLAY_SONG' && payload) {
                 if (payload.songData) {
                     setDownloadingSong(null);
-                    setActiveSong((prev: any) => {
-                        if (prev && prev.id === payload.songData.id && payload.currentTime === undefined) {
+                    setActiveSong((prev: (Song & { initialTime?: number }) | null) => {
+                        if (prev && prev.id === payload.songData?.id && payload.currentTime === undefined) {
                             return prev;
                         }
                         return {
@@ -77,17 +88,16 @@ export const MelodiqTV: React.FC = () => {
                 setDownloadingSong(null);
                 setActiveSong(null);
                 setPassiveState(null);
-            } else if (type === 'REMOTE_COMMAND' && payload.command === 'WAIT_FOR_DOWNLOAD') {
+            } else if (type === 'REMOTE_COMMAND' && payload?.command === 'WAIT_FOR_DOWNLOAD' && payload.value) {
                 setActiveSong(null);
                 setDownloadingSong({ title: payload.value.title, artist: payload.value.artist });
-            } else if (type === 'SETTINGS_UPDATE') {
-                if (payload) {
-                    Object.entries(payload).forEach(([k, v]) => {
-                        updateSetting(k as any, v as any);
-                    });
-                }
-            } else if (type === 'GAME_STATE') {
-                setPassiveState(payload);
+            } else if (type === 'SETTINGS_UPDATE' && payload) {
+                Object.entries(payload).forEach(([k, v]) => {
+                    updateSetting(k as keyof SettingsState, v as SettingsState[keyof SettingsState]);
+                });
+            } else if (type === 'GAME_STATE' && payload) {
+                const state = payload as unknown as PassiveGameState;
+                setPassiveState(state);
                 window.dispatchEvent(new CustomEvent('melodiq_tv_game_state', { detail: payload }));
             } else if (type === 'PING') {
                 channel.postMessage({ type: 'PONG' });
@@ -98,18 +108,17 @@ export const MelodiqTV: React.FC = () => {
         channel.postMessage({ type: 'TV_READY' });
 
         // Presentation API
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const nav = navigator as any;
+        const nav = navigator as NavigatorWithPresentation;
         if (nav.presentation?.receiver) {
-            nav.presentation.receiver.connectionList.then((list: any) => {
-                list.connections.forEach((conn: any) => setupConnection(conn));
-                list.onconnectionavailable = (evt: any) => setupConnection(evt.connection);
+            nav.presentation.receiver.connectionList.then((list) => {
+                list.connections.forEach((conn: PresentationConnection) => setupConnection(conn));
+                list.onconnectionavailable = (evt: { connection: PresentationConnection }) => setupConnection(evt.connection);
             });
         }
 
-        function setupConnection(connection: any) {
+        function setupConnection(connection: PresentationConnection) {
             setIsConnected(true);
-            connection.onmessage = (event: any) => {
+            connection.onmessage = (event: MessageEvent) => {
                 try {
                     const data = JSON.parse(event.data);
                     handleMessage(data.type, data.payload);

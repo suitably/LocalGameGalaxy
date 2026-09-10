@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import type { UserProfile, ActivePlayer } from '../types';
 import { COLOR_PRESETS } from '../types';
 import { generateUUID } from '../../../lib/uuid';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 
 interface ProfilesState {
     profiles: UserProfile[];
@@ -9,13 +10,13 @@ interface ProfilesState {
 }
 
 const persistProfiles = (profiles: UserProfile[], activePlayers: ActivePlayer[]) => {
-    localStorage.setItem('melodiq_profiles', JSON.stringify(profiles));
-    localStorage.setItem('melodiq_active_session', JSON.stringify(activePlayers));
+    storage.setJson(STORAGE_KEYS.PROFILES, profiles);
+    storage.setJson(STORAGE_KEYS.ACTIVE_SESSION, activePlayers);
 };
 
 const loadInitialData = (): ProfilesState => {
-    const storedProfiles = localStorage.getItem('melodiq_profiles');
-    const storedActive = localStorage.getItem('melodiq_active_session');
+    const storedProfiles = storage.get(STORAGE_KEYS.PROFILES);
+    const storedActive = storage.get(STORAGE_KEYS.ACTIVE_SESSION);
 
     if (storedProfiles) {
         return {
@@ -25,8 +26,8 @@ const loadInitialData = (): ProfilesState => {
     }
 
     // Data Migration: Check for legacy P1/P2
-    const p1Name = localStorage.getItem('melodiq_p1_name');
-    const p2Name = localStorage.getItem('melodiq_p2_name');
+    const p1Name = storage.get(STORAGE_KEYS.MELODIQ_P1_NAME);
+    const p2Name = storage.get(STORAGE_KEYS.MELODIQ_P2_NAME);
 
     if (p1Name || p2Name) {
         const newProfiles: UserProfile[] = [];
@@ -34,16 +35,16 @@ const loadInitialData = (): ProfilesState => {
 
         // Migrate P1
         const p1Id = generateUUID();
-        const p1Hue = parseInt(localStorage.getItem('melodiq_p1_hue') || '190');
-        const p1Dev = localStorage.getItem('melodiq_p1_device') || '';
+        const p1Hue = parseInt(storage.get(STORAGE_KEYS.MELODIQ_P1_HUE, '190'));
+        const p1Dev = storage.get(STORAGE_KEYS.MELODIQ_P1_DEVICE);
         newProfiles.push({ id: p1Id, name: p1Name || 'Player 1', hue: p1Hue });
         newActive.push({ profileId: p1Id, deviceId: p1Dev, volume: 0.8, muted: true, latency: 0 });
 
         // Migrate P2
         if (p2Name) {
             const p2Id = generateUUID();
-            const p2Hue = parseInt(localStorage.getItem('melodiq_p2_hue') || '120');
-            const p2Dev = localStorage.getItem('melodiq_p2_device') || '';
+            const p2Hue = parseInt(storage.get(STORAGE_KEYS.MELODIQ_P2_HUE, '120'));
+            const p2Dev = storage.get(STORAGE_KEYS.MELODIQ_P2_DEVICE);
             newProfiles.push({ id: p2Id, name: p2Name || 'Player 2', hue: p2Hue });
             newActive.push({ profileId: p2Id, deviceId: p2Dev, volume: 0.8, muted: true, latency: 0 });
         }

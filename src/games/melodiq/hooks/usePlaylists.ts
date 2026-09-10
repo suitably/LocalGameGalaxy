@@ -3,19 +3,20 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import db, { type Playlist } from '../db';
 import { melodiqFetch } from '../api/melodiqFetch';
 import { generateUUID } from '../../../lib/uuid';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 
 export const usePlaylists = () => {
     const [showGlobalPlaylists, setShowGlobalPlaylists] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
     const [syncEnabled, setSyncEnabled] = useState(() => {
-        return localStorage.getItem('melodiq_enable_playlist_sync') !== 'false';
+        return storage.get(STORAGE_KEYS.MELODIQ_ENABLE_PLAYLIST_SYNC) !== 'false';
     });
 
     // Read config from storage
     const getHelperConfig = () => ({
-        url: localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000',
-        token: localStorage.getItem('melodiq_helper_token') || '',
-        enabled: localStorage.getItem('melodiq_enable_helper') !== 'false' && syncEnabled
+        url: storage.getHelperUrl(),
+        token: storage.getHelperToken(),
+        enabled: storage.isHelperActive() && syncEnabled
     });
 
     // Local playlists from Dexie
@@ -190,7 +191,7 @@ export const usePlaylists = () => {
     // Handle toggling sync
     const toggleSync = (enabled: boolean) => {
         setSyncEnabled(enabled);
-        localStorage.setItem('melodiq_enable_playlist_sync', enabled ? 'true' : 'false');
+        storage.set(STORAGE_KEYS.MELODIQ_ENABLE_PLAYLIST_SYNC, enabled ? 'true' : 'false');
         if (enabled) {
             syncWithServer(); // Immediately sync when turned on
         }

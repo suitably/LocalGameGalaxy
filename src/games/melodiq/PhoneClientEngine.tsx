@@ -2,6 +2,7 @@ import React, { useEffect, useState, createContext, useContext, useRef, useCallb
 import { useWebRTCClient } from '../../lib/webrtc';
 import { MicrophoneManager } from './audio/MicrophoneManager';
 import { generateUUID } from '../../lib/uuid';
+import { type MelodiqNetworkMessage, type MelodiqParticipant, type MelodiqRosterMember } from './types';
 
 export interface ClientProfile {
     name: string;
@@ -17,7 +18,7 @@ interface ClientEngineContextType {
     statusMessage: string;
     isSessionPlaying: boolean;
     activeSongId: string | null;
-    sendClientCommand: (command: string, data?: any) => void;
+    sendClientCommand: (command: string, data?: Record<string, unknown>) => void;
     clientProfile: ClientProfile;
     clientRole: string;
     setClientRole: (role: string) => void;
@@ -121,10 +122,10 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
 
     const lastSyncedSongIdRef = useRef<string | null>(null);
 
-    const handleMessage = useCallback((data: any) => {
+    const handleMessage = useCallback((data: MelodiqNetworkMessage) => {
         if (!data || !data.type) return;
 
-        if (data.type === 'game_state_update') {
+        if (data.type === 'game_state_update' && data.state) {
             // Only trigger React re-render if isPlaying or activeSongId actually changed
             if (data.state.isPlaying !== isSessionPlayingRef.current) {
                 setIsSessionPlaying(data.state.isPlaying);
@@ -143,7 +144,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
             const activeSong = data.state.activeSong || (activeId ? { id: activeId } : null);
             
             // Auto-sync session view if phone joined late, reloaded, or a new song started
-            const participants = data.state.players?.map((p: any) => p.config || {
+            const participants = data.state.players?.map((p) => p.config || {
                 profileId: p.id,
                 deviceId: p.deviceId || p.id,
                 name: p.name,
@@ -165,7 +166,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
         } else if (data.type === 'session_sync') {
             window.dispatchEvent(new CustomEvent('melodiq_client_session_sync', { detail: data }));
             if (data.activeSong && data.participants) {
-                const isSinger = data.participants.some((p: any) => p.deviceId === clientProfileRef.current.deviceId);
+                const isSinger = data.participants.some((p: MelodiqParticipant) => p.deviceId === clientProfileRef.current.deviceId);
                 if (isSinger) {
                     setClientRole('singer');
                     updateClientProfile({ displayMode: 'self' });
@@ -180,7 +181,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
 
         } else if (data.type === 'roster.update') {
             if (data.roster && Array.isArray(data.roster)) {
-                const me = data.roster.find((r: any) => r.deviceId === clientProfileRef.current.deviceId);
+                const me = data.roster.find((r: MelodiqRosterMember) => r.deviceId === clientProfileRef.current.deviceId);
                 if (me && me.role) {
                     setClientRole(me.role);
                 }
@@ -243,11 +244,11 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     useEffect(() => {
         if (isConnected) {
             sessionStorage.setItem('melodiq_rtc_connected', 'true');
-            (window as any).__melodiq_rtc_connected = true;
+            (window as unknown as { __melodiq_rtc_connected?: boolean }).__melodiq_rtc_connected = true;
             window.dispatchEvent(new Event('melodiq_rtc_connected'));
         } else {
             sessionStorage.removeItem('melodiq_rtc_connected');
-            (window as any).__melodiq_rtc_connected = false;
+            (window as unknown as { __melodiq_rtc_connected?: boolean }).__melodiq_rtc_connected = false;
         }
     }, [isConnected]);
 
@@ -262,9 +263,9 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
 
     // Listen for events from UI components (like useQueue) to forward to Host
     useEffect(() => {
-        const handler = (e: any) => {
+        const handler = (e: Event) => {
             if (isConnected) {
-                sendData(e.detail);
+                sendData((e as CustomEvent).detail);
             }
         };
         window.addEventListener('melodiq_client_send_data', handler);
@@ -350,7 +351,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
         };
     }, [isSessionPlaying, sendData, clientProfile.micDeviceId, clientRole]);
 
-    const sendClientCommand = (command: string, data: any = {}) => {
+    const sendClientCommand = (command: string, data: Record<string, unknown> = {}) => {
         sendData({ type: 'remote.command', command, ...data });
     };
 

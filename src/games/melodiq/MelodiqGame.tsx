@@ -124,11 +124,11 @@ export const MelodiqGameContent: React.FC = () => {
     const [restoredSong, setRestoredSong] = useState<SongMeta | null>(() => nowPlaying ?? null);
     
     const [currentView, setCurrentView] = useState<View>('Home');
-    const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+    const [selectedSong, setSelectedSong] = useState<Song | SongMeta | null>(null);
 
     const [, setIsPlaybackPlaying] = useState<boolean>(false);
     const isPlaybackPlayingRef = useRef<boolean>(false);
-    const selectedSongRef = useRef<Song | null>(selectedSong);
+    const selectedSongRef = useRef<Song | SongMeta | null>(selectedSong);
     const remoteSongRef = useRef<SongMeta | null>(remoteSong);
 
     useEffect(() => {
@@ -144,7 +144,7 @@ export const MelodiqGameContent: React.FC = () => {
         isPlaybackPlayingRef.current = playing;
     }, []);
 
-    const handleCurrentSongDownloaded = useCallback((realSong: any) => {
+    const handleCurrentSongDownloaded = useCallback((realSong: Song) => {
         setSelectedSong(realSong);
         setNowPlaying(realSong);
         if (isTVConnected) {
@@ -191,12 +191,12 @@ export const MelodiqGameContent: React.FC = () => {
 
     useMelodiqHeader({
         currentView, setCurrentView,
-        loadingProgress: loadingProgress as any, refreshSongs,
+        loadingProgress: loadingProgress, refreshSongs,
         isClient, isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV, clientRole,
         onBackToHome: handleCloseSubView
     });
 
-    const handleSelectSong = async (songMeta: SongMeta, forcePlay: boolean = false, participants?: any[], requester?: string, requesterId?: string) => {
+    const handleSelectSong = async (songMeta: SongMeta, forcePlay: boolean = false, participants?: MelodiqParticipant[], requester?: string, requesterId?: string) => {
         try {
 
 
@@ -263,12 +263,12 @@ export const MelodiqGameContent: React.FC = () => {
                 } else if (songMeta.isDownloading) {
                     sendRemoteCommand('WAIT_FOR_DOWNLOAD', { title: songMeta.title, artist: songMeta.artist });
                     setRemoteSong(songMeta);
-                    setSelectedSong(songMeta as any);
+                    setSelectedSong(songMeta);
                     setNowPlaying(songMeta);
                     setActiveParticipants(participants || null);
                     setCurrentView('DownloadWait');
                 } else {
-                    playSongOnTV(songMeta.id, songMeta as any);
+                    playSongOnTV(songMeta.id, songMeta);
                     setRemoteSong(songMeta);
                 }
             } else {
@@ -281,7 +281,7 @@ export const MelodiqGameContent: React.FC = () => {
                     setNowPlaying(songMeta);
                     setActiveParticipants(participants || null);
                 } else if (songMeta.isDownloading) {
-                    setSelectedSong(songMeta as any);
+                    setSelectedSong(songMeta);
                     setNowPlaying(songMeta);
                     setActiveParticipants(participants || null);
                     setCurrentView('DownloadWait');
@@ -305,9 +305,9 @@ export const MelodiqGameContent: React.FC = () => {
     // --- Actions ---
 
     const handleSkipAndRequeue = useCallback(() => {
-        if (selectedSong && (selectedSong as any).isDownloading) {
+        if (selectedSong && (selectedSong as SongMeta).isDownloading) {
             // Re-queue the current downloading song at the end
-            addToQueue(selectedSong as any, 'System');
+            addToQueue(selectedSong, 'System');
             setFeedbackMessage(`${selectedSong.title} wurde hinten angestellt.`);
             
             // Pop the next one and play it
@@ -332,7 +332,7 @@ export const MelodiqGameContent: React.FC = () => {
         setQueueDialogOpen(true);
     };
 
-    const handleDownloadOnly = async (usdbSong: any) => {
+    const handleDownloadOnly = async (usdbSong: UsdbSongItem) => {
         // Only queue managers and admins can trigger downloads
         if (isClient && clientRole !== 'admin' && clientRole !== 'queue_manager') {
             setFeedbackMessage('Nur Queue Manager können Songs herunterladen.');
@@ -357,7 +357,7 @@ export const MelodiqGameContent: React.FC = () => {
         }
     };
 
-    const handleDownloadAndQueue = async (usdbSong: any) => {
+    const handleDownloadAndQueue = async (usdbSong: UsdbSongItem) => {
         // Only queue managers and admins can trigger downloads
         if (isClient && clientRole !== 'admin' && clientRole !== 'queue_manager') {
             setFeedbackMessage('Nur Queue Manager können Songs herunterladen.');
@@ -375,13 +375,13 @@ export const MelodiqGameContent: React.FC = () => {
             });
             if (data.jobIds && data.jobIds.length > 0) {
                 const jobId = data.jobIds[0];
-                const dummySong = {
+                const dummySong: SongMeta = {
                     id: `dl-${jobId}`,
                     title: usdbSong.title,
                     artist: usdbSong.artist,
                     isDownloading: true,
                     jobId: jobId
-                } as any;
+                };
                 addToQueue(dummySong, 'User');
                 setFeedbackMessage(`Downloading and Queuing: ${usdbSong.title}`);
             }
@@ -392,7 +392,7 @@ export const MelodiqGameContent: React.FC = () => {
     };
 
     const lastGameUpdateRef = React.useRef<number>(0);
-    const handleGameUpdate = useCallback((state: any) => {
+    const handleGameUpdate = useCallback((state: PassiveGameState) => {
         sendGameUpdate(state);
         if (manager && !isClient) {
             const now = Date.now();
@@ -511,7 +511,7 @@ export const MelodiqGameContent: React.FC = () => {
                 {!isOnlineSearch && (
                     <LocalSongsView 
                         viewMode={settings.defaultViewMode}
-                        filteredSongs={filteredSongs as any}
+                        filteredSongs={filteredSongs}
                         handleSelectSong={handleSelectSong}
                         handleSongLongPress={handleSongLongPress}
                         isSinger={isClient && clientRole === 'singer'}

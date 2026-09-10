@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Paper, Typography, TextField, Button, CircularProgress, Alert, Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { storage } from '../../../lib/storage';
 
 export const SettingsFeedbackForm: React.FC = () => {
     const { t } = useTranslation();
@@ -16,8 +17,8 @@ export const SettingsFeedbackForm: React.FC = () => {
         setSubmitting(true);
         setStatus(null);
 
-        const baseUrl = localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000';
-        const token = localStorage.getItem('melodiq_helper_token') || '';
+        const baseUrl = storage.getHelperUrl();
+        const token = storage.getHelperToken();
         const cleanBaseUrl = baseUrl.replace(/\/$/, '');
 
         try {
