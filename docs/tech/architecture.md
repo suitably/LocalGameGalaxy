@@ -87,7 +87,7 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
 - **Sync & Mailbox (`src/modules/sync`)**:
   - Reusable generic MQTT mailbox service (`MqttMailboxService`) providing clean, strongly typed asynchronous peer synchronization over MQTT brokers for any turn-based game, completely decoupled from game-specific domains. Used by GuessArt and Storyteller.
 - **Drawing & Stroke Replay (`src/modules/drawing`)**:
-  - Encapsulates Excalidraw lazy-loading (`ExcalidrawLazy`), animated stroke playback (`ExcalidrawViewer`), and scene parsing/ordering (`excalidrawScene`). Shared cleanly by GuessArt and Gartic Phone without inter-game dependencies.
+  - Encapsulates interactive drawing canvas (`DrawingCanvas`), Excalidraw lazy-loading (`ExcalidrawLazy`), animated stroke playback (`ExcalidrawViewer`), and scene parsing/ordering (`excalidrawScene`). Shared cleanly by GuessArt and Gartic Phone without inter-game dependencies.
 - **Session Sharing & Editing (`src/modules/sharing`)**:
   - Reusable dialogs (`ShareSessionLinksDialog`, `EditSessionDialog`) supporting dynamic QR generation, LZString compressed payloads, Web Share API, Clipboard fallbacks, and player renaming. Shared by GuessArt and Storyteller.
 - **Async Game Helpers (`src/modules/async-game`)**:

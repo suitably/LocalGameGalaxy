@@ -2,24 +2,25 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Box, Button, CircularProgress } from '@mui/material';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import { useTranslation } from 'react-i18next';
-import { ensureDrawMetadata, parseSceneData, type ExcalidrawScenePayload } from '../logic/excalidrawScene';
+import { ensureDrawMetadata, parseSceneData, type ExcalidrawScenePayload } from './excalidrawScene';
 import { ExcalidrawLazy } from './ExcalidrawLazy';
-import type { GuessArtRound } from '../logic/types';
 
-interface DrawingCanvasProps {
-  currentRound: GuessArtRound | null;
+export interface DrawingCanvasProps {
+  initialCanvasData?: string | null;
   onSubmit: (canvasData: string) => Promise<void>;
   loading?: boolean;
+  submitButtonLabel?: string;
 }
 
 export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
-  currentRound,
+  initialCanvasData,
   onSubmit,
   loading = false,
+  submitButtonLabel,
 }) => {
   const { t } = useTranslation();
   const [feedback, setFeedback] = useState<{ type: 'error' | 'warning' | 'success'; text: string } | null>(null);
-  const initialScene = useMemo(() => parseSceneData(currentRound?.canvasData), [currentRound?.canvasData]);
+  const initialScene = useMemo(() => parseSceneData(initialCanvasData), [initialCanvasData]);
   const latestSceneRef = useRef<ExcalidrawScenePayload>(initialScene);
   const serializedSceneRef = useRef<string>('');
   const hasInitializedScene = useRef<boolean>(false);
@@ -54,7 +55,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       return;
     }
 
-    const incomingScene = parseSceneData(currentRound?.canvasData);
+    const incomingScene = parseSceneData(initialCanvasData);
     const serializedIncoming = serializeScene(incomingScene);
     if (serializedIncoming == null) {
       return;
@@ -73,7 +74,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       serializedSceneRef.current = serializedIncoming;
       excalidrawAPI.updateScene(incomingScene);
     }
-  }, [currentRound?.canvasData, excalidrawAPI, serializeScene]);
+  }, [initialCanvasData, excalidrawAPI, serializeScene]);
 
   const handleSubmit = async () => {
     const scene = latestSceneRef.current;
@@ -183,7 +184,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           endIcon={loading ? null : <SendRoundedIcon />}
           sx={{ py: { xs: 1, sm: 1.5 }, fontWeight: 700, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}
         >
-          {loading ? <CircularProgress size={20} color="inherit" /> : t('guessart.submitDrawing', 'Fertig gezeichnet')}
+          {loading ? <CircularProgress size={20} color="inherit" /> : (submitButtonLabel ?? t('guessart.submitDrawing', 'Fertig gezeichnet'))}
         </Button>
       </Box>
     </Box>

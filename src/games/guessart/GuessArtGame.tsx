@@ -9,7 +9,7 @@ import { useLayout } from '../../context/LayoutContext';
 import { GameSetup } from './components/GameSetup';
 import { GuessArtHeader } from './components/GuessArtHeader';
 import { WordSelector } from './components/WordSelector';
-import { DrawingCanvas } from './components/DrawingCanvas';
+import { DrawingCanvas } from '../../modules/drawing';
 import { GuessPanel } from './components/GuessPanel';
 import { WaitingForDrawerView } from './components/WaitingForDrawerView';
 import { WaitingForGuesserView } from './components/WaitingForGuesserView';
@@ -440,7 +440,7 @@ export const GuessArtGame: React.FC = () => {
           />
         ) : round?.status === 'drawing' ? (
           <DrawingCanvas
-            currentRound={round}
+            initialCanvasData={round?.canvasData}
             onSubmit={submitDrawing}
             loading={gameLoading}
           />
