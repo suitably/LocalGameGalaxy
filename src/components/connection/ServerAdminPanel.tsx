@@ -14,7 +14,7 @@ import QrCode2Icon from '@mui/icons-material/QrCode2';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import QRCode from 'qrcode';
-import { storage } from '../../lib/storage';
+import { storage, STORAGE_KEYS } from '../../lib/storage';
 import { settingsCardSx } from '../../features/settings/settingsStyles';
 
 /**
@@ -65,11 +65,11 @@ export const ServerAdminPanel: React.FC = () => {
     const [qrFullLink, setQrFullLink] = useState('');
 
     const [webAppUrl, setWebAppUrl] = useState(() => {
-        return localStorage.getItem('nexumia_share_webapp_url') || window.location.origin;
+        return storage.get(STORAGE_KEYS.SHARE_WEBAPP_URL, window.location.origin);
     });
 
     useEffect(() => {
-        localStorage.setItem('nexumia_share_webapp_url', webAppUrl);
+        storage.set(STORAGE_KEYS.SHARE_WEBAPP_URL, webAppUrl);
     }, [webAppUrl]);
 
     const lastCheckedRef = React.useRef<{ url: string; token: string } | null>(null);

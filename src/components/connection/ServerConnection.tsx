@@ -125,9 +125,10 @@ export const ServerConnection: React.FC = () => {
                     setStatusMsg(t('server.error_generic', `Server returned status ${res.status}.`));
                 }
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             setStatus('error');
-            if (err.name === 'AbortError') {
+            const isAbortError = err instanceof Error && err.name === 'AbortError';
+            if (isAbortError) {
                 setStatusMsg(t('server.error_timeout', 'Connection timed out (5s).'));
             } else {
                 setStatusMsg(t('server.error_failed', 'Connection failed. Check URL or CORS.'));

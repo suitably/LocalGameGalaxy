@@ -61,3 +61,103 @@ export interface PassiveGameState {
     enableLyricsZoom?: boolean;
     lyricsPosition?: 'bottom' | 'center';
 }
+
+export interface MelodiqProfile {
+    id?: string;
+    deviceId: string;
+    name: string;
+    hue: number;
+    customName?: string;
+    peerId?: string;
+    isRemote?: boolean;
+    micDeviceId?: string;
+    displayMode?: 'lyrics' | 'self' | 'all';
+    latency?: number;
+}
+
+export interface MelodiqParticipant {
+    deviceId: string;
+    name?: string;
+    profileId?: string;
+    hue?: number;
+    volume?: number;
+    muted?: boolean;
+    latency?: number;
+    isRemote?: boolean;
+    role?: 'singer' | 'spectator' | ClientRole;
+}
+
+export interface UsdbSongItem {
+    id?: number | string;
+    usdbId?: string | number;
+    artist: string;
+    title: string;
+    year?: string | number;
+    language?: string;
+    genre?: string;
+    edition?: string;
+    coverUrl?: string;
+    isDownloaded?: boolean;
+    jobId?: string;
+}
+
+export interface MelodiqHostStateUpdate {
+    songId?: string;
+    status?: 'idle' | 'playing' | 'paused' | 'ended';
+    currentTime?: number;
+    players?: Array<{ config?: MelodiqProfile; id?: string; deviceId?: string; name?: string; hue?: number }>;
+    activeSongId?: string | null;
+    activeSong?: { id: string; title?: string; artist?: string } | null;
+    isPlaying?: boolean;
+    isFinished?: boolean;
+    isPausedForScore?: boolean;
+    hostTimestamp?: number;
+}
+
+export interface PresentationConnection extends EventTarget {
+    state?: string;
+    send: (data: string) => void;
+    close?: () => void;
+    terminate?: () => void;
+    onmessage: ((ev: MessageEvent) => void) | null;
+}
+
+export interface PresentationConnectionList extends EventTarget {
+    connections: PresentationConnection[];
+    onconnectionavailable: ((ev: { connection: PresentationConnection }) => void) | null;
+}
+
+export interface PresentationReceiver {
+    connectionList: Promise<PresentationConnectionList>;
+}
+
+export interface NavigatorWithPresentation extends Navigator {
+    presentation?: {
+        receiver?: PresentationReceiver;
+    };
+}
+
+export interface MelodiqRosterMember {
+    deviceId: string;
+    peerId?: string;
+    name: string;
+    hue: number;
+    role?: string;
+}
+
+export interface MelodiqNetworkMessage {
+    type: string;
+    state?: PassiveGameState & {
+        activeSong?: { id: string; title?: string; artist?: string } | null;
+        players?: Array<{ id?: string; deviceId?: string; name?: string; hue?: number; config?: MelodiqProfile }>;
+    };
+    participants?: MelodiqParticipant[];
+    activeSong?: { id: string; title?: string; artist?: string } | null;
+    roster?: MelodiqRosterMember[];
+    reqId?: string;
+    chunk?: string;
+    index?: number;
+    total?: number;
+    command?: string;
+    [key: string]: unknown;
+}

@@ -11,8 +11,12 @@ import { isWerewolfRole } from '../logic/utils';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { PlayerManagerCard } from '../../../modules/player-management';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 
-const STORAGE_KEY_SETTINGS = 'werewolf-setup-settings';
+interface WerewolfSetupSettings {
+    enabledRoles?: Role[];
+    numWerewolves?: number;
+}
 
 interface GameSetupProps {
     players: Player[];
@@ -30,36 +34,25 @@ const SPECIAL_ROLES = DEFAULT_ROLES.filter(r => r.id !== 'WEREWOLF').map(r => r.
 export const GameSetup: React.FC<GameSetupProps> = ({ players, customRoles = [], onAddPlayer, onRemovePlayer, onStartGame, onSaveCustomRoles }) => {
     const { t } = useTranslation();
 
-    // Load settings from localStorage
+    // Load settings from storage
     const [enabledRoles, setEnabledRoles] = useState<Role[]>(() => {
-        try {
-            const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                if (parsed.enabledRoles) return parsed.enabledRoles;
-            }
-        } catch { }
+        const parsed = storage.getJson<WerewolfSetupSettings | null>(STORAGE_KEYS.WEREWOLF_SETTINGS, null);
+        if (parsed?.enabledRoles) return parsed.enabledRoles;
         return ['WITCH', 'SEER'];
     });
     const [numWerewolves, setNumWerewolves] = useState(() => {
-        try {
-            const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                return parsed.numWerewolves ?? 1;
-            }
-        } catch { }
-        return 1;
+        const parsed = storage.getJson<WerewolfSetupSettings | null>(STORAGE_KEYS.WEREWOLF_SETTINGS, null);
+        return parsed?.numWerewolves ?? 1;
     });
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [selectedRoleForDesc, setSelectedRoleForDesc] = useState<RoleDefinition | null>(null);
 
-    // Save settings to localStorage whenever they change
+    // Save settings to storage whenever they change
     useEffect(() => {
-        localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify({
+        storage.setJson(STORAGE_KEYS.WEREWOLF_SETTINGS, {
             enabledRoles,
             numWerewolves
-        }));
+        });
     }, [enabledRoles, numWerewolves]);
 
     const toggleRole = (role: Role) => {

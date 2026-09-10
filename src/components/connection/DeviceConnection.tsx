@@ -8,10 +8,14 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { QRScannerDialog } from './QRScannerDialog';
 import { buildDeviceConnectionUrl } from './connectionUrl';
-import type { TrackerItem } from '../../lib/webrtc';
+import type { TrackerItem, RemotePeerBase } from '../../lib/webrtc';
+import { storage, STORAGE_PREFIXES } from '../../lib/storage';
 
-export interface WebRTCConnectionData {
-    peers: any[];
+export type ConnectedPeer = RemotePeerBase;
+export type WebRTCPeerInfo = RemotePeerBase;
+
+export interface WebRTCConnectionData<T extends RemotePeerBase = RemotePeerBase> {
+    peers: T[];
     partyId: string;
     regeneratePartyId: () => void;
     trackerUrls: string[];
@@ -24,25 +28,25 @@ export interface WebRTCConnectionData {
     restoreDefaultTrackers: () => void;
 }
 
-export interface DeviceConnectionProps {
+export interface DeviceConnectionProps<T extends RemotePeerBase = RemotePeerBase> {
     onBack: () => void;
     title?: string;
     description?: string;
     gameId: string; // Identifier used for setting UI properties locally
     clientPath: string; // the path for the phone app, e.g. '/games/melodiq?role=client'
-    webrtcData: WebRTCConnectionData;
-    renderPeerExtra?: (peer: any) => React.ReactNode;
+    webrtcData: WebRTCConnectionData<T>;
+    renderPeerExtra?: (peer: T) => React.ReactNode;
     /** Extra settings / toggles to render on the connection screen */
     extraOptions?: React.ReactNode;
-    /** localStorage key for the helper server URL (e.g. 'melodiq_helper_url').
+    /** Storage key for the helper server URL (e.g. 'melodiq_helper_url').
      *  If provided, this URL (with localhost swapped for the target IP) is embedded
      *  in the QR code so the phone can reach the song library automatically. */
     helperStorageKey?: string;
-    /** localStorage key for the helper auth token (e.g. 'melodiq_helper_token'). */
+    /** Storage key for the helper auth token (e.g. 'melodiq_helper_token'). */
     helperTokenKey?: string;
 }
 
-export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
+export const DeviceConnection = <T extends RemotePeerBase = RemotePeerBase>({
     onBack,
     title = "Connect Devices",
     description = "Connect your phone to use as a controller. Scan the QR code below.",
@@ -53,7 +57,7 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
     extraOptions,
     helperStorageKey,
     helperTokenKey,
-}) => {
+}: DeviceConnectionProps<T>): React.ReactElement => {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const {
@@ -86,7 +90,7 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
     const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
     const [scannerOpen, setScannerOpen] = useState(false);
     const [customBaseUrl, setCustomBaseUrl] = useState<string>(() => {
-        return localStorage.getItem(`${gameId}_host_base_url`) || window.location.origin;
+        return storage.get(`${gameId}${STORAGE_PREFIXES.HOST_BASE_URL}`, window.location.origin);
     });
 
     /**
@@ -95,7 +99,7 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
      * IMPORTANT: SettingsProvider stays mounted when navigating within the same
      * route (host → client), so its [] useEffect does NOT re-run and cannot
      * parse helperUrl/token from the new URL. We therefore write the values
-     * directly to localStorage here, then navigate.
+     * directly to storage here, then navigate.
      */
     const handleScanSuccess = (rawText: string) => {
         setScannerOpen(false);
@@ -103,16 +107,16 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
             const scannedUrl = new URL(rawText);
             const scannedParams = scannedUrl.searchParams;
 
-            // Apply helper config from scanned URL directly to localStorage
+            // Apply helper config from scanned URL directly to storage
             const urlHelper = scannedParams.get('helperUrl');
             const urlToken = scannedParams.get('token') || scannedParams.get('apiKey');
 
             if (urlHelper && helperStorageKey) {
-                localStorage.setItem(helperStorageKey, urlHelper);
-                localStorage.setItem(`${gameId}_enable_helper`, 'true');
+                storage.set(helperStorageKey, urlHelper);
+                storage.set(`${gameId}${STORAGE_PREFIXES.ENABLE_HELPER}`, 'true');
             }
             if (urlToken && helperTokenKey) {
-                localStorage.setItem(helperTokenKey, urlToken);
+                storage.set(helperTokenKey, urlToken);
             }
 
             // Tell listeners to reload with the new config
@@ -130,7 +134,7 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
 
     // Persist custom base URL
     useEffect(() => {
-        localStorage.setItem(`${gameId}_host_base_url`, customBaseUrl);
+        storage.set(`${gameId}${STORAGE_PREFIXES.HOST_BASE_URL}`, customBaseUrl);
     }, [customBaseUrl, gameId]);
 
     // Generate QR Code when Party ID or Trackers change
@@ -218,7 +222,7 @@ export const DeviceConnection: React.FC<DeviceConnectionProps> = ({
                                 ✅ {connectedPreviewPeers.length} Device(s) Connected
                             </Typography>
                             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', flexDirection: 'column' }}>
-                                {connectedPreviewPeers.map((peer: any) => (
+                                {connectedPreviewPeers.map((peer) => (
                                     <Box key={peer.peerId} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                         <Chip
                                             avatar={<Avatar sx={{ bgcolor: peer.hue ? `hsl(${peer.hue}, 100%, 50%)` : undefined }}>{peer.name[0]}</Avatar>}

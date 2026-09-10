@@ -23,10 +23,10 @@ export interface SettingsNavParams {
  */
 export function resolveSettingsNav(
     searchParams: URLSearchParams,
-    locationState: any,
+    locationState: Record<string, unknown> | null | undefined,
     activeGameId?: string
 ): SettingsNavParams {
-    const state = (locationState as Record<string, unknown>) || {};
+    const state = (locationState && typeof locationState === 'object') ? locationState : {};
     const gameParam = (activeGameId || searchParams.get('game') || (typeof state.game === 'string' ? state.game : '')).toLowerCase();
     const fromPath = (typeof state.from === 'string' ? state.from : '').toLowerCase();
     const isFromMelodiq = gameParam === 'melodiq' || fromPath.includes('/games/melodiq') || fromPath.includes('melodiq') || window.location.pathname.includes('/games/melodiq');

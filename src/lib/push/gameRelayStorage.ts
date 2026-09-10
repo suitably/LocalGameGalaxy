@@ -1,17 +1,17 @@
 /**
  * gameRelayStorage.ts - Game-Scoped Relay URL Storage
  *
- * Stores relay and push server URLs in localStorage per game session.
- * Using localStorage (instead of sessionStorage) ensures the relay URL survives
+ * Stores relay and push server URLs in persistent storage per game session.
+ * Using persistent storage ensures the relay URL survives
  * tab/app closures, which is critical for Web Push registration to persist
  * when the browser is closed and reopened.
  *
  * Each entry is stored with a timestamp and automatically cleaned up after 7 days.
  */
 
-import { storage } from '../storage';
+import { storage, STORAGE_PREFIXES } from '../storage';
 
-const STORAGE_PREFIX = 'galaxy_game_relay_';
+const STORAGE_PREFIX = STORAGE_PREFIXES.GAME_RELAY;
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 interface RelayEntry {
@@ -28,9 +28,9 @@ export const gameRelayStorage = {
     const cleanUrl = relayUrl ? relayUrl.trim().replace(/\/$/, '') : '';
     if (cleanUrl) {
       const entry: RelayEntry = { url: cleanUrl, updatedAt: Date.now() };
-      localStorage.setItem(`${STORAGE_PREFIX}${gameId}`, JSON.stringify(entry));
+      storage.setJson(`${STORAGE_PREFIX}${gameId}`, entry);
     } else {
-      localStorage.removeItem(`${STORAGE_PREFIX}${gameId}`);
+      storage.remove(`${STORAGE_PREFIX}${gameId}`);
     }
 
     // Opportunistically clean up stale entries
@@ -40,14 +40,14 @@ export const gameRelayStorage = {
   /**
    * Gets the relay URL for a specific game room.
    * Priority:
-   * 1. Persistent localStorage for this specific game (with TTL check)
-   * 2. Host's active helper server URL (if enabled in localStorage)
+   * 1. Persistent storage for this specific game (with TTL check)
+   * 2. Host's active helper server URL (if enabled in storage)
    */
   getGameRelay(gameId: string): string | null {
     if (typeof window === 'undefined' || !gameId) return null;
 
-    // 1. Check localStorage for this game
-    const raw = localStorage.getItem(`${STORAGE_PREFIX}${gameId}`);
+    // 1. Check storage for this game
+    const raw = storage.get(`${STORAGE_PREFIX}${gameId}`);
     if (raw) {
       try {
         const entry: RelayEntry = JSON.parse(raw);
@@ -56,16 +56,16 @@ export const gameRelayStorage = {
           return entry.url;
         }
         // Expired — remove silently
-        localStorage.removeItem(`${STORAGE_PREFIX}${gameId}`);
+        storage.remove(`${STORAGE_PREFIX}${gameId}`);
       } catch {
         // Legacy format (plain string from old sessionStorage version) — migrate
         const legacyUrl = raw.trim();
         if (legacyUrl && !legacyUrl.startsWith('{')) {
           const entry: RelayEntry = { url: legacyUrl, updatedAt: Date.now() };
-          localStorage.setItem(`${STORAGE_PREFIX}${gameId}`, JSON.stringify(entry));
+          storage.setJson(`${STORAGE_PREFIX}${gameId}`, entry);
           return legacyUrl;
         }
-        localStorage.removeItem(`${STORAGE_PREFIX}${gameId}`);
+        storage.remove(`${STORAGE_PREFIX}${gameId}`);
       }
     }
 
@@ -103,7 +103,7 @@ export const gameRelayStorage = {
    */
   clearGameRelay(gameId: string): void {
     if (typeof window === 'undefined' || !gameId) return;
-    localStorage.removeItem(`${STORAGE_PREFIX}${gameId}`);
+    storage.remove(`${STORAGE_PREFIX}${gameId}`);
   },
 
   /**
@@ -113,27 +113,20 @@ export const gameRelayStorage = {
   cleanupStaleEntries(): void {
     if (typeof window === 'undefined') return;
     const now = Date.now();
-    const keysToRemove: string[] = [];
+    const keys = storage.findKeysWithPrefix(STORAGE_PREFIX);
 
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key || !key.startsWith(STORAGE_PREFIX)) continue;
-
+    for (const key of keys) {
       try {
-        const raw = localStorage.getItem(key);
+        const raw = storage.get(key);
         if (!raw) continue;
         const entry: RelayEntry = JSON.parse(raw);
         if (now - entry.updatedAt >= MAX_AGE_MS) {
-          keysToRemove.push(key);
+          storage.remove(key);
         }
       } catch {
         // Invalid entry — remove
-        keysToRemove.push(key);
+        storage.remove(key);
       }
-    }
-
-    for (const key of keysToRemove) {
-      localStorage.removeItem(key);
     }
   },
 };

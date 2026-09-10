@@ -6,12 +6,14 @@ import { useLayout } from '../../../context/LayoutContext';
 import SettingsIcon from '@mui/icons-material/Settings';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 
+import { type MenuItem } from '../../../components/Layout/GlobalHeader';
+import { type LoadingProgress } from './useSongs';
 import { TVModeButton } from '../components/TVModeButton';
 
 interface UseMelodiqHeaderProps {
     currentView: string;
-    setCurrentView: (view: any) => void;
-    loadingProgress: number | null;
+    setCurrentView: (view: string) => void;
+    loadingProgress: LoadingProgress | null;
     refreshSongs: () => Promise<void>;
     isClient: boolean;
     isTVConnected: boolean;
@@ -41,7 +43,7 @@ export const useMelodiqHeader = ({
             : (onBackToHome || (() => setCurrentView('Home')));
 
         if (currentView === 'Home') {
-            const headerActions: any[] = [];
+            const headerActions: MenuItem[] = [];
 
             headerActions.push({
                 label: isClient ? t('melodiq.client_settings', 'Spieler-Profil') : t('settings.title', 'Einstellungen'),

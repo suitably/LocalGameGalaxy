@@ -14,6 +14,7 @@ export interface DbCategory {
         de: string;
     };
 }
+export type Category = DbCategory;
 
 export interface DbWordPair {
     id?: number;
@@ -23,6 +24,7 @@ export interface DbWordPair {
     };
     categoryIds: string[];
 }
+export type WordPair = DbWordPair;
 
 export interface GameState {
     phase: GamePhase;

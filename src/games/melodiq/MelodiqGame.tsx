@@ -35,6 +35,7 @@ import { useMelodiqHeader } from './hooks/useMelodiqHeader';
 import { useMelodiqGlobalEvents } from './hooks/useMelodiqGlobalEvents';
 import { useDownloadSync } from './hooks/useDownloadSync';
 import { DownloadWaitScreen } from './components/DownloadWaitScreen';
+import { type MelodiqParticipant, type MelodiqProfile, type UsdbSongItem, type PassiveGameState } from './types';
 
 type View = 'Home' | 'Settings' | 'Session' | 'Connection' | 'Playlists' | 'PlaylistDetails' | 'DownloadWait';
 
@@ -66,21 +67,21 @@ export const MelodiqGameContent: React.FC = () => {
     const [queueDialogOpen, setQueueDialogOpen] = useState(false);
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
     const [showQueueDrawer, setShowQueueDrawer] = useState(false);
-    const [activeParticipants, setActiveParticipants] = useState<any[] | null>(() => 
-        storage.getJson<any[] | null>(STORAGE_KEYS.CURRENT_SONG_PARTICIPANTS, null)
+    const [activeParticipants, setActiveParticipants] = useState<MelodiqParticipant[] | null>(() => 
+        storage.getJson<MelodiqParticipant[] | null>(STORAGE_KEYS.CURRENT_SONG_PARTICIPANTS, null)
     );
     const [sessionInstanceId, setSessionInstanceId] = useState<number>(0);
 
-    const handleToggleCurrentParticipant = useCallback((deviceId: string, profile: any) => {
+    const handleToggleCurrentParticipant = useCallback((deviceId: string, profile: MelodiqProfile) => {
         setActiveParticipants(prev => {
             // Fall back to current lobby session when no override is set yet
-            const participants = prev ?? storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
-            const exists = participants.find((p: any) =>
+            const participants = prev ?? storage.getJson<MelodiqParticipant[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
+            const exists = participants.find((p: MelodiqParticipant) =>
                 p.deviceId === deviceId || p.profileId === deviceId || (profile?.peerId && p.deviceId === profile.peerId)
             );
-            let next: any[];
+            let next: MelodiqParticipant[];
             if (exists) {
-                next = participants.filter((p: any) =>
+                next = participants.filter((p: MelodiqParticipant) =>
                     p.deviceId !== deviceId && p.profileId !== deviceId && !(profile?.peerId && p.deviceId === profile.peerId)
                 );
             } else {
@@ -103,7 +104,7 @@ export const MelodiqGameContent: React.FC = () => {
     const handleReorderCurrentParticipant = useCallback((startIndex: number, endIndex: number) => {
         setActiveParticipants(prev => {
             // Fall back to current lobby session when no override is set yet
-            const base = prev ?? storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
+            const base = prev ?? storage.getJson<MelodiqParticipant[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
             const next = Array.from(base);
             const [removed] = next.splice(startIndex, 1);
             next.splice(endIndex, 0, removed);
@@ -116,7 +117,7 @@ export const MelodiqGameContent: React.FC = () => {
     // when activeParticipants hasn't been set yet (e.g. song started directly, not from queue).
     const currentDisplayParticipants = React.useMemo(() => {
         if (activeParticipants !== null) return activeParticipants;
-        return storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
+        return storage.getJson<MelodiqParticipant[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
     }, [activeParticipants]);
     
     const [activePlaylist, setActivePlaylist] = useState<Playlist | null>(null);

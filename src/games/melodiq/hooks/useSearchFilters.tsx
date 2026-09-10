@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
-import { type Song } from '../db';
+import { type SongMeta } from '../db';
+import { type DownloadJob } from './useDownloads';
+import { type UsdbSongItem } from '../types';
 import { melodiqFetch } from '../api/melodiqFetch';
 
 export type SortOption = 'title-asc' | 'title-desc' | 'artist-asc' | 'artist-desc' | 'year-desc' | 'year-asc';
@@ -11,10 +13,10 @@ export interface ActiveFilters {
     edition: string[];
 }
 
-export function useSearchFilters(songs: Song[], jobs?: any[]) {
+export function useSearchFilters(songs: SongMeta[], jobs?: DownloadJob[]) {
     const [searchQuery, setSearchQuery] = useState('');
     const [isOnlineSearch, setIsOnlineSearch] = useState(false);
-    const [onlineSongs, setOnlineSongs] = useState<any[]>([]);
+    const [onlineSongs, setOnlineSongs] = useState<UsdbSongItem[]>([]);
     const [isSearchingOnline, setIsSearchingOnline] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
     const [sortOption, setSortOption] = useState<SortOption>('title-asc');
@@ -59,13 +61,13 @@ export function useSearchFilters(songs: Song[], jobs?: any[]) {
 
         if (jobs) {
             const activeJobs = jobs.filter(j => (j.status === 'pending' || j.status === 'running') && j.title);
-            const dummySongs = activeJobs.map(j => ({
+            const dummySongs: SongMeta[] = activeJobs.map(j => ({
                 id: `job-${j.jobId}`,
                 title: j.title || "Unknown",
                 artist: j.artist || "Unknown",
                 isDownloading: true,
                 jobId: j.jobId,
-                usdbId: j.usdbId,
+                usdbId: j.usdbId ? Number(j.usdbId) : undefined,
                 hasCover: false,
                 hasVideo: false,
                 bpm: 0,
@@ -76,7 +78,7 @@ export function useSearchFilters(songs: Song[], jobs?: any[]) {
                 end: 0,
                 duration: 0,
                 edition: ""
-            })) as unknown as Song[];
+            }));
             
             const uniqueDummies = dummySongs.filter(d => 
                 !result.some(s => s.title?.toLowerCase() === d.title.toLowerCase() && s.artist?.toLowerCase() === d.artist.toLowerCase())

@@ -5,12 +5,13 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useTranslation } from 'react-i18next';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
 import { PWAInstallDialog } from './PWAInstallDialog';
+import { sessionStorageSafe, STORAGE_KEYS } from '../../lib/storage';
 
 export const PWAInstallBanner: React.FC = () => {
   const { t } = useTranslation();
   const { isStandalone, isInstallable, installApp, showIOSGuide, setShowIOSGuide } = usePWAInstall();
   const [dismissed, setDismissed] = useState<boolean>(() => {
-    return sessionStorage.getItem('pwa-banner-dismissed') === 'true';
+    return sessionStorageSafe.get(STORAGE_KEYS.PWA_BANNER_DISMISSED) === 'true';
   });
 
   if (isStandalone || !isInstallable || dismissed) {
@@ -23,7 +24,7 @@ export const PWAInstallBanner: React.FC = () => {
 
   const handleDismiss = () => {
     setDismissed(true);
-    sessionStorage.setItem('pwa-banner-dismissed', 'true');
+    sessionStorageSafe.set(STORAGE_KEYS.PWA_BANNER_DISMISSED, 'true');
   };
 
   return (

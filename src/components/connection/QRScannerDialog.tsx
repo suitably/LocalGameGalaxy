@@ -67,13 +67,14 @@ export const QRScannerDialog: React.FC<QRScannerDialogProps> = ({ open, onClose,
                     }
                 );
                 setIsStarting(false);
-            } catch (err: any) {
+            } catch (err: unknown) {
                 if (!cancelled) {
                     setIsStarting(false);
+                    const errorMessage = err instanceof Error ? err.message : String(err);
                     setError(
-                        err?.message?.includes('Permission')
+                        errorMessage.includes('Permission')
                             ? 'Camera permission denied. Please allow camera access and try again.'
-                            : `Could not start camera: ${err?.message ?? String(err)}`
+                            : `Could not start camera: ${errorMessage}`
                     );
                 }
             }

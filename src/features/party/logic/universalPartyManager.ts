@@ -14,6 +14,7 @@ export interface PartyPlayer {
 export type PartyGameType = 'guessart' | 'garticphone';
 
 export interface PartyRoomState {
+  type?: undefined;
   roomId: string;
   hostId: string;
   status: 'lobby' | 'in_game';
@@ -22,6 +23,14 @@ export interface PartyRoomState {
   players: PartyPlayer[];
   updatedAt: number;
 }
+
+export interface PartyPresenceMessage {
+  type: 'PARTY_PRESENCE';
+  roomId: string;
+  player: PartyPlayer;
+}
+
+export type PartySyncEnvelope = PartyPresenceMessage | PartyRoomState;
 
 const PLAYER_COLORS = [
   '#f44336',
@@ -262,13 +271,12 @@ class UniversalPartyManager {
     }
 
     // MQTT subscription
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    partyMailbox.subscribe(topic, async (incoming: any) => {
+    partyMailbox.subscribe(topic, async (incoming: PartySyncEnvelope) => {
       if (!incoming || incoming.roomId !== roomId) return;
 
       // Handle presence pings
       if (incoming.type === 'PARTY_PRESENCE' && incoming.player) {
-        const p = incoming.player as PartyPlayer;
+        const p = incoming.player;
         if (this.currentRoomState && this.currentRoomState.roomId === roomId) {
           const exists = this.currentRoomState.players.some((pl) => pl.id === p.id);
           if (!exists) {
@@ -292,7 +300,7 @@ class UniversalPartyManager {
         return;
       }
 
-      const incomingState = incoming as PartyRoomState;
+      const incomingState = incoming;
       if (!Array.isArray(incomingState.players)) return;
       this.handleIncomingState(incomingState, roomId);
     });
@@ -362,8 +370,7 @@ class UniversalPartyManager {
       // ignore
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    partyMailbox.publish(topic, state as any);
+    partyMailbox.publish(topic, state);
     this.notifyListeners();
   }
 
@@ -375,8 +382,7 @@ class UniversalPartyManager {
     const sendPing = () => {
       try {
         const topic = `party_${roomId}`;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        partyMailbox.publish(topic, { type: 'PARTY_PRESENCE', roomId, player } as any);
+        partyMailbox.publish(topic, { type: 'PARTY_PRESENCE', roomId, player });
       } catch {
         // ignore
       }

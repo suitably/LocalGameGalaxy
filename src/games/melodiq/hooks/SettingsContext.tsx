@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 
 export interface SettingsState {
     showDebugOverlay: boolean;
@@ -58,127 +59,121 @@ export const DEFAULT_SETTINGS: SettingsState = {
 };
 
 export const loadSettings = (): SettingsState => ({
-    showDebugOverlay: localStorage.getItem('melodiq_show_overlay') === 'true',
-    showDevSlider: localStorage.getItem('melodiq_show_slider') === 'true',
+    showDebugOverlay: storage.get(STORAGE_KEYS.MELODIQ_SHOW_OVERLAY) === 'true',
+    showDevSlider: storage.get(STORAGE_KEYS.MELODIQ_SHOW_SLIDER) === 'true',
     showNoteLabels: (() => {
-        const stored = localStorage.getItem('melodiq_show_note_labels');
-        return stored === null ? true : stored === 'true';
+        const stored = storage.get(STORAGE_KEYS.MELODIQ_SHOW_NOTE_LABELS);
+        return stored === '' ? true : stored === 'true';
     })(),
-    showVideoErrors: localStorage.getItem('melodiq_show_video_errors') === 'true',
-    customLayouts: (() => {
-        const stored = localStorage.getItem('melodiq_custom_layouts');
-        if (stored) {
-            try { return JSON.parse(stored); } catch (e) { console.error('Failed to parse custom layouts', e); }
-        }
-        return { 1: '1', 2: '1.1', 3: '1.2', 4: '2.2' };
-    })(),
-    cardSize: localStorage.getItem('melodiq_card_size') || 'small',
+    showVideoErrors: storage.get(STORAGE_KEYS.MELODIQ_SHOW_VIDEO_ERRORS) === 'true',
+    customLayouts: storage.getJson<Record<number, string>>(STORAGE_KEYS.MELODIQ_CUSTOM_LAYOUTS, { 1: '1', 2: '1.1', 3: '1.2', 4: '2.2' }),
+    cardSize: storage.get(STORAGE_KEYS.MELODIQ_CARD_SIZE) || 'small',
     customTarget: (() => {
-        const stored = localStorage.getItem('melodiq_custom_target_columns');
+        const stored = storage.get(STORAGE_KEYS.MELODIQ_CUSTOM_TARGET_COLUMNS);
         return stored ? parseInt(stored) : 6;
     })(),
     songVolume: (() => {
-        const stored = localStorage.getItem('melodiq_song_volume');
+        const stored = storage.get(STORAGE_KEYS.MELODIQ_SONG_VOLUME);
         return stored ? parseFloat(stored) : 0.7;
     })(),
     masterVolume: (() => {
-        const stored = localStorage.getItem('melodiq_master_volume');
+        const stored = storage.get(STORAGE_KEYS.MELODIQ_MASTER_VOLUME);
         return stored ? parseFloat(stored) : 1.0;
     })(),
     vocalsVolume: (() => {
-        const stored = localStorage.getItem('melodiq_vocals_volume');
+        const stored = storage.get(STORAGE_KEYS.MELODIQ_VOCALS_VOLUME);
         return stored ? parseFloat(stored) : 1.0;
     })(),
-    helperUrl: localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000',
-    enableHelper: localStorage.getItem('melodiq_enable_helper') === 'true',
+    helperUrl: storage.get(STORAGE_KEYS.HELPER_URL) || 'http://localhost:3000',
+    enableHelper: storage.get(STORAGE_KEYS.HELPER_ACTIVE) === 'true',
     goldenNoteMultiplier: (() => {
-        const stored = localStorage.getItem('melodiq_golden_note_multiplier');
+        const stored = storage.get(STORAGE_KEYS.MELODIQ_GOLDEN_NOTE_MULTIPLIER);
         return stored ? parseFloat(stored) : 2.0;
     })(),
-    defaultSongClickAction: (localStorage.getItem('melodiq_default_song_click_action') as any) || 'add_end',
-    defaultViewMode: (localStorage.getItem('melodiq_default_view_mode') as any) || 'list',
+    defaultSongClickAction: (storage.get(STORAGE_KEYS.MELODIQ_DEFAULT_SONG_CLICK_ACTION) as any) || 'add_end',
+    defaultViewMode: (storage.get(STORAGE_KEYS.MELODIQ_DEFAULT_VIEW_MODE) as any) || 'list',
     autoplayNoPlayersDelay: (() => {
-        const stored = localStorage.getItem('melodiq_autoplay_no_players');
+        const stored = storage.get(STORAGE_KEYS.MELODIQ_AUTOPLAY_NO_PLAYERS);
         return stored ? parseInt(stored) : 10;
     })(),
     autoplayWithPlayersDelay: (() => {
-        const stored = localStorage.getItem('melodiq_autoplay_with_players');
+        const stored = storage.get(STORAGE_KEYS.MELODIQ_AUTOPLAY_WITH_PLAYERS);
         return stored ? parseInt(stored) : 0;
     })(),
-    hideBackgroundVideo: localStorage.getItem('melodiq_hide_background_video') === 'true',
-    fallbackBackgroundUrl: localStorage.getItem('melodiq_fallback_background_url') || '',
+    hideBackgroundVideo: storage.get(STORAGE_KEYS.MELODIQ_HIDE_BACKGROUND_VIDEO) === 'true',
+    fallbackBackgroundUrl: storage.get(STORAGE_KEYS.MELODIQ_FALLBACK_BACKGROUND_URL) || '',
     lyricsScale: (() => {
-        const stored = localStorage.getItem('melodiq_lyrics_scale');
+        const stored = storage.get(STORAGE_KEYS.MELODIQ_LYRICS_SCALE);
         return stored ? parseFloat(stored) : 1.0;
     })(),
-    enableLyricsZoom: localStorage.getItem('melodiq_enable_lyrics_zoom') === 'true',
-    lyricsPosition: (localStorage.getItem('melodiq_lyrics_position') as any) || 'bottom',
-    audioPlaybackMode: (localStorage.getItem('melodiq_audio_playback_mode') as any) || 'separated',
+    enableLyricsZoom: storage.get(STORAGE_KEYS.MELODIQ_ENABLE_LYRICS_ZOOM) === 'true',
+    lyricsPosition: (storage.get(STORAGE_KEYS.MELODIQ_LYRICS_POSITION) as any) || 'bottom',
+    audioPlaybackMode: (storage.get(STORAGE_KEYS.MELODIQ_AUDIO_PLAYBACK_MODE) as any) || 'separated',
     showScoreboardQrCode: (() => {
-        const stored = localStorage.getItem('melodiq_show_scoreboard_qr_code');
-        return stored === null ? true : stored === 'true';
+        const stored = storage.get(STORAGE_KEYS.MELODIQ_SHOW_SCOREBOARD_QR_CODE);
+        return stored === '' ? true : stored === 'true';
     })(),
     micLatency: (() => {
-        const stored = localStorage.getItem('melodiq_mic_latency');
+        const stored = storage.get(STORAGE_KEYS.MELODIQ_MIC_LATENCY);
         return stored ? parseInt(stored) : 0;
     })()
 });
 
 const persistSettings = (s: SettingsState) => {
-    localStorage.setItem('melodiq_show_overlay', String(s.showDebugOverlay));
-    localStorage.setItem('melodiq_show_slider', String(s.showDevSlider));
-    localStorage.setItem('melodiq_show_note_labels', String(s.showNoteLabels));
-    localStorage.setItem('melodiq_show_video_errors', String(s.showVideoErrors));
-    localStorage.setItem('melodiq_custom_layouts', JSON.stringify(s.customLayouts));
-    localStorage.setItem('melodiq_card_size', s.cardSize);
-    localStorage.setItem('melodiq_custom_target_columns', String(s.customTarget));
-    localStorage.setItem('melodiq_song_volume', String(s.songVolume));
-    localStorage.setItem('melodiq_master_volume', String(s.masterVolume));
-    localStorage.setItem('melodiq_vocals_volume', String(s.vocalsVolume));
-    localStorage.setItem('melodiq_helper_url', s.helperUrl);
-    localStorage.setItem('melodiq_enable_helper', String(s.enableHelper));
-    localStorage.setItem('melodiq_golden_note_multiplier', String(s.goldenNoteMultiplier));
-    localStorage.setItem('melodiq_default_song_click_action', s.defaultSongClickAction);
-    localStorage.setItem('melodiq_default_view_mode', s.defaultViewMode);
-    localStorage.setItem('melodiq_autoplay_no_players', String(s.autoplayNoPlayersDelay));
-    localStorage.setItem('melodiq_autoplay_with_players', String(s.autoplayWithPlayersDelay));
-    localStorage.setItem('melodiq_hide_background_video', String(s.hideBackgroundVideo));
-    localStorage.setItem('melodiq_fallback_background_url', s.fallbackBackgroundUrl);
-    localStorage.setItem('melodiq_lyrics_scale', String(s.lyricsScale));
-    localStorage.setItem('melodiq_enable_lyrics_zoom', String(s.enableLyricsZoom));
-    localStorage.setItem('melodiq_lyrics_position', s.lyricsPosition);
-    localStorage.setItem('melodiq_audio_playback_mode', s.audioPlaybackMode);
-    localStorage.setItem('melodiq_show_scoreboard_qr_code', String(s.showScoreboardQrCode));
-    localStorage.setItem('melodiq_mic_latency', String(s.micLatency));
+    storage.set(STORAGE_KEYS.MELODIQ_SHOW_OVERLAY, String(s.showDebugOverlay));
+    storage.set(STORAGE_KEYS.MELODIQ_SHOW_SLIDER, String(s.showDevSlider));
+    storage.set(STORAGE_KEYS.MELODIQ_SHOW_NOTE_LABELS, String(s.showNoteLabels));
+    storage.set(STORAGE_KEYS.MELODIQ_SHOW_VIDEO_ERRORS, String(s.showVideoErrors));
+    storage.setJson(STORAGE_KEYS.MELODIQ_CUSTOM_LAYOUTS, s.customLayouts);
+    storage.set(STORAGE_KEYS.MELODIQ_CARD_SIZE, s.cardSize);
+    storage.set(STORAGE_KEYS.MELODIQ_CUSTOM_TARGET_COLUMNS, String(s.customTarget));
+    storage.set(STORAGE_KEYS.MELODIQ_SONG_VOLUME, String(s.songVolume));
+    storage.set(STORAGE_KEYS.MELODIQ_MASTER_VOLUME, String(s.masterVolume));
+    storage.set(STORAGE_KEYS.MELODIQ_VOCALS_VOLUME, String(s.vocalsVolume));
+    storage.set(STORAGE_KEYS.HELPER_URL, s.helperUrl);
+    storage.set(STORAGE_KEYS.HELPER_ACTIVE, String(s.enableHelper));
+    storage.set(STORAGE_KEYS.MELODIQ_GOLDEN_NOTE_MULTIPLIER, String(s.goldenNoteMultiplier));
+    storage.set(STORAGE_KEYS.MELODIQ_DEFAULT_SONG_CLICK_ACTION, s.defaultSongClickAction);
+    storage.set(STORAGE_KEYS.MELODIQ_DEFAULT_VIEW_MODE, s.defaultViewMode);
+    storage.set(STORAGE_KEYS.MELODIQ_AUTOPLAY_NO_PLAYERS, String(s.autoplayNoPlayersDelay));
+    storage.set(STORAGE_KEYS.MELODIQ_AUTOPLAY_WITH_PLAYERS, String(s.autoplayWithPlayersDelay));
+    storage.set(STORAGE_KEYS.MELODIQ_HIDE_BACKGROUND_VIDEO, String(s.hideBackgroundVideo));
+    storage.set(STORAGE_KEYS.MELODIQ_FALLBACK_BACKGROUND_URL, s.fallbackBackgroundUrl);
+    storage.set(STORAGE_KEYS.MELODIQ_LYRICS_SCALE, String(s.lyricsScale));
+    storage.set(STORAGE_KEYS.MELODIQ_ENABLE_LYRICS_ZOOM, String(s.enableLyricsZoom));
+    storage.set(STORAGE_KEYS.MELODIQ_LYRICS_POSITION, s.lyricsPosition);
+    storage.set(STORAGE_KEYS.MELODIQ_AUDIO_PLAYBACK_MODE, s.audioPlaybackMode);
+    storage.set(STORAGE_KEYS.MELODIQ_SHOW_SCOREBOARD_QR_CODE, String(s.showScoreboardQrCode));
+    storage.set(STORAGE_KEYS.MELODIQ_MIC_LATENCY, String(s.micLatency));
 };
 
 const persistSingleSetting = <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
     switch (key) {
-        case 'showDebugOverlay': localStorage.setItem('melodiq_show_overlay', String(value)); break;
-        case 'showDevSlider': localStorage.setItem('melodiq_show_slider', String(value)); break;
-        case 'showNoteLabels': localStorage.setItem('melodiq_show_note_labels', String(value)); break;
-        case 'showVideoErrors': localStorage.setItem('melodiq_show_video_errors', String(value)); break;
-        case 'customLayouts': localStorage.setItem('melodiq_custom_layouts', JSON.stringify(value)); break;
-        case 'cardSize': localStorage.setItem('melodiq_card_size', String(value)); break;
-        case 'customTarget': localStorage.setItem('melodiq_custom_target_columns', String(value)); break;
-        case 'songVolume': localStorage.setItem('melodiq_song_volume', String(value)); break;
-        case 'masterVolume': localStorage.setItem('melodiq_master_volume', String(value)); break;
-        case 'vocalsVolume': localStorage.setItem('melodiq_vocals_volume', String(value)); break;
-        case 'helperUrl': localStorage.setItem('melodiq_helper_url', String(value)); break;
-        case 'enableHelper': localStorage.setItem('melodiq_enable_helper', String(value)); break;
-        case 'goldenNoteMultiplier': localStorage.setItem('melodiq_golden_note_multiplier', String(value)); break;
-        case 'defaultSongClickAction': localStorage.setItem('melodiq_default_song_click_action', String(value)); break;
-        case 'defaultViewMode': localStorage.setItem('melodiq_default_view_mode', String(value)); break;
-        case 'autoplayNoPlayersDelay': localStorage.setItem('melodiq_autoplay_no_players', String(value)); break;
-        case 'autoplayWithPlayersDelay': localStorage.setItem('melodiq_autoplay_with_players', String(value)); break;
-        case 'hideBackgroundVideo': localStorage.setItem('melodiq_hide_background_video', String(value)); break;
-        case 'fallbackBackgroundUrl': localStorage.setItem('melodiq_fallback_background_url', String(value)); break;
-        case 'lyricsScale': localStorage.setItem('melodiq_lyrics_scale', String(value)); break;
-        case 'enableLyricsZoom': localStorage.setItem('melodiq_enable_lyrics_zoom', String(value)); break;
-        case 'lyricsPosition': localStorage.setItem('melodiq_lyrics_position', String(value)); break;
-        case 'audioPlaybackMode': localStorage.setItem('melodiq_audio_playback_mode', String(value)); break;
-        case 'showScoreboardQrCode': localStorage.setItem('melodiq_show_scoreboard_qr_code', String(value)); break;
-        case 'micLatency': localStorage.setItem('melodiq_mic_latency', String(value)); break;
+        case 'showDebugOverlay': storage.set(STORAGE_KEYS.MELODIQ_SHOW_OVERLAY, String(value)); break;
+        case 'showDevSlider': storage.set(STORAGE_KEYS.MELODIQ_SHOW_SLIDER, String(value)); break;
+        case 'showNoteLabels': storage.set(STORAGE_KEYS.MELODIQ_SHOW_NOTE_LABELS, String(value)); break;
+        case 'showVideoErrors': storage.set(STORAGE_KEYS.MELODIQ_SHOW_VIDEO_ERRORS, String(value)); break;
+        case 'customLayouts': storage.setJson(STORAGE_KEYS.MELODIQ_CUSTOM_LAYOUTS, value); break;
+        case 'cardSize': storage.set(STORAGE_KEYS.MELODIQ_CARD_SIZE, String(value)); break;
+        case 'customTarget': storage.set(STORAGE_KEYS.MELODIQ_CUSTOM_TARGET_COLUMNS, String(value)); break;
+        case 'songVolume': storage.set(STORAGE_KEYS.MELODIQ_SONG_VOLUME, String(value)); break;
+        case 'masterVolume': storage.set(STORAGE_KEYS.MELODIQ_MASTER_VOLUME, String(value)); break;
+        case 'vocalsVolume': storage.set(STORAGE_KEYS.MELODIQ_VOCALS_VOLUME, String(value)); break;
+        case 'helperUrl': storage.set(STORAGE_KEYS.HELPER_URL, String(value)); break;
+        case 'enableHelper': storage.set(STORAGE_KEYS.HELPER_ACTIVE, String(value)); break;
+        case 'goldenNoteMultiplier': storage.set(STORAGE_KEYS.MELODIQ_GOLDEN_NOTE_MULTIPLIER, String(value)); break;
+        case 'defaultSongClickAction': storage.set(STORAGE_KEYS.MELODIQ_DEFAULT_SONG_CLICK_ACTION, String(value)); break;
+        case 'defaultViewMode': storage.set(STORAGE_KEYS.MELODIQ_DEFAULT_VIEW_MODE, String(value)); break;
+        case 'autoplayNoPlayersDelay': storage.set(STORAGE_KEYS.MELODIQ_AUTOPLAY_NO_PLAYERS, String(value)); break;
+        case 'autoplayWithPlayersDelay': storage.set(STORAGE_KEYS.MELODIQ_AUTOPLAY_WITH_PLAYERS, String(value)); break;
+        case 'hideBackgroundVideo': storage.set(STORAGE_KEYS.MELODIQ_HIDE_BACKGROUND_VIDEO, String(value)); break;
+        case 'fallbackBackgroundUrl': storage.set(STORAGE_KEYS.MELODIQ_FALLBACK_BACKGROUND_URL, String(value)); break;
+        case 'lyricsScale': storage.set(STORAGE_KEYS.MELODIQ_LYRICS_SCALE, String(value)); break;
+        case 'enableLyricsZoom': storage.set(STORAGE_KEYS.MELODIQ_ENABLE_LYRICS_ZOOM, String(value)); break;
+        case 'lyricsPosition': storage.set(STORAGE_KEYS.MELODIQ_LYRICS_POSITION, String(value)); break;
+        case 'audioPlaybackMode': storage.set(STORAGE_KEYS.MELODIQ_AUDIO_PLAYBACK_MODE, String(value)); break;
+        case 'showScoreboardQrCode': storage.set(STORAGE_KEYS.MELODIQ_SHOW_SCOREBOARD_QR_CODE, String(value)); break;
+        case 'micLatency': storage.set(STORAGE_KEYS.MELODIQ_MIC_LATENCY, String(value)); break;
     }
 };
 
@@ -267,14 +262,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const urlToken = params.get('token') || params.get('apiKey');
 
         if (urlHelper) {
-            localStorage.setItem('melodiq_helper_url', urlHelper);
-            localStorage.setItem('melodiq_enable_helper', 'true');
+            storage.set(STORAGE_KEYS.HELPER_URL, urlHelper);
+            storage.set(STORAGE_KEYS.HELPER_ACTIVE, 'true');
             params.delete('helperUrl');
             updated = true;
         }
 
         if (urlToken) {
-            localStorage.setItem('melodiq_helper_token', urlToken);
+            storage.set(STORAGE_KEYS.HELPER_TOKEN, urlToken);
             params.delete('token');
             params.delete('apiKey');
             updated = true;

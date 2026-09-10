@@ -31,6 +31,43 @@ export const STORAGE_KEYS = {
     NOW_PLAYING: 'melodiq_now_playing',
     QUEUE: 'melodiq_queue',
     SONG_HISTORY: 'melodiq_song_history',
+
+    // Melodiq Legacy Profile Migration
+    MELODIQ_P1_NAME: 'melodiq_p1_name',
+    MELODIQ_P2_NAME: 'melodiq_p2_name',
+    MELODIQ_P1_HUE: 'melodiq_p1_hue',
+    MELODIQ_P2_HUE: 'melodiq_p2_hue',
+    MELODIQ_P1_DEVICE: 'melodiq_p1_device',
+    MELODIQ_P2_DEVICE: 'melodiq_p2_device',
+
+    // Melodiq Playlists & Session
+    MELODIQ_ENABLE_PLAYLIST_SYNC: 'melodiq_enable_playlist_sync',
+    MELODIQ_META_CACHE: 'melodiq_meta_cache',
+    MELODIQ_RTC_CONNECTED: 'melodiq_rtc_connected',
+
+    // Melodiq Settings
+    MELODIQ_SHOW_OVERLAY: 'melodiq_show_overlay',
+    MELODIQ_SHOW_SLIDER: 'melodiq_show_slider',
+    MELODIQ_SHOW_NOTE_LABELS: 'melodiq_show_note_labels',
+    MELODIQ_SHOW_VIDEO_ERRORS: 'melodiq_show_video_errors',
+    MELODIQ_CUSTOM_LAYOUTS: 'melodiq_custom_layouts',
+    MELODIQ_CUSTOM_TARGET_COLUMNS: 'melodiq_custom_target_columns',
+    MELODIQ_SONG_VOLUME: 'melodiq_song_volume',
+    MELODIQ_MASTER_VOLUME: 'melodiq_master_volume',
+    MELODIQ_VOCALS_VOLUME: 'melodiq_vocals_volume',
+    MELODIQ_GOLDEN_NOTE_MULTIPLIER: 'melodiq_golden_note_multiplier',
+    MELODIQ_DEFAULT_SONG_CLICK_ACTION: 'melodiq_default_song_click_action',
+    MELODIQ_DEFAULT_VIEW_MODE: 'melodiq_default_view_mode',
+    MELODIQ_AUTOPLAY_NO_PLAYERS: 'melodiq_autoplay_no_players',
+    MELODIQ_AUTOPLAY_WITH_PLAYERS: 'melodiq_autoplay_with_players',
+    MELODIQ_HIDE_BACKGROUND_VIDEO: 'melodiq_hide_background_video',
+    MELODIQ_FALLBACK_BACKGROUND_URL: 'melodiq_fallback_background_url',
+    MELODIQ_LYRICS_SCALE: 'melodiq_lyrics_scale',
+    MELODIQ_ENABLE_LYRICS_ZOOM: 'melodiq_enable_lyrics_zoom',
+    MELODIQ_LYRICS_POSITION: 'melodiq_lyrics_position',
+    MELODIQ_AUDIO_PLAYBACK_MODE: 'melodiq_audio_playback_mode',
+    MELODIQ_SHOW_SCOREBOARD_QR_CODE: 'melodiq_show_scoreboard_qr_code',
+    MELODIQ_MIC_LATENCY: 'melodiq_mic_latency',
     
     // Werewolf game state
     WEREWOLF_STATE: 'werewolf-game-state',
@@ -157,6 +194,10 @@ export const storage = {
     
     setJson<T>(key: string, value: T): void {
         this.set(key, JSON.stringify(value));
+    },
+
+    get session() {
+        return sessionStorageSafe;
     },
 
     findKeysWithPrefix(prefix: string): string[] {

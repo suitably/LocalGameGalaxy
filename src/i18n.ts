@@ -1,12 +1,11 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import HttpBackend from 'i18next-http-backend';
+import { storage, STORAGE_KEYS } from './lib/storage';
 
 const getInitialLanguage = (): string => {
-    if (typeof localStorage !== 'undefined') {
-        const saved = localStorage.getItem('lgg_language') || localStorage.getItem('language');
-        if (saved) return saved;
-    }
+    const saved = storage.get(STORAGE_KEYS.LANGUAGE) || storage.get(STORAGE_KEYS.LANGUAGE_LEGACY);
+    if (saved) return saved;
     if (typeof navigator !== 'undefined' && navigator.language) {
         return navigator.language.startsWith('de') ? 'de' : 'en';
     }
@@ -34,10 +33,8 @@ i18n
     });
 
 i18n.on('languageChanged', (lng) => {
-    if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('lgg_language', lng);
-        localStorage.setItem('language', lng);
-    }
+    storage.set(STORAGE_KEYS.LANGUAGE, lng);
+    storage.set(STORAGE_KEYS.LANGUAGE_LEGACY, lng);
 });
 
 export default i18n;

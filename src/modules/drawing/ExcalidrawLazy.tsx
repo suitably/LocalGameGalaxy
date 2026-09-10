@@ -1,7 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { ensureStyles } from './excalidrawLazyStyles';
-
-const STORAGE_KEY = 'guessart_excalidraw_library';
+import { storage, STORAGE_KEYS } from '../../lib/storage';
 
 export const ExcalidrawLazy = React.lazy(async () => {
   await ensureStyles();
@@ -16,20 +15,17 @@ export const ExcalidrawLazy = React.lazy(async () => {
   const adapter = {
     load: async () => {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          return JSON.parse(raw);
-        }
+        return storage.getJson<unknown>(STORAGE_KEYS.EXCALIDRAW_LIBRARY, null);
       } catch (err) {
-        console.warn('Failed to load Excalidraw library from localStorage', err);
+        console.warn('Failed to load Excalidraw library from storage', err);
       }
       return null;
     },
     save: async (libraryData: unknown) => {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(libraryData));
+        storage.setJson(STORAGE_KEYS.EXCALIDRAW_LIBRARY, libraryData);
       } catch (err) {
-        console.warn('Failed to save Excalidraw library to localStorage', err);
+        console.warn('Failed to save Excalidraw library to storage', err);
       }
     },
   };
