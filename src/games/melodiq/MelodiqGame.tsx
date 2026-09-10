@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { Box, Snackbar, Alert, CircularProgress } from '@mui/material';
 import { type Song, type SongMeta } from './db';
 const Settings = lazy(() => import('../../features/settings/Settings').then(m => ({ default: m.Settings })));
@@ -125,6 +125,24 @@ export const MelodiqGameContent: React.FC = () => {
     const [currentView, setCurrentView] = useState<View>('Home');
     const [selectedSong, setSelectedSong] = useState<Song | null>(null);
 
+    const [isPlaybackPlaying, setIsPlaybackPlaying] = useState<boolean>(false);
+    const isPlaybackPlayingRef = useRef<boolean>(false);
+    const selectedSongRef = useRef<Song | null>(selectedSong);
+    const remoteSongRef = useRef<SongMeta | null>(remoteSong);
+
+    useEffect(() => {
+        selectedSongRef.current = selectedSong;
+    }, [selectedSong]);
+
+    useEffect(() => {
+        remoteSongRef.current = remoteSong;
+    }, [remoteSong]);
+
+    const handlePlayingChange = useCallback((playing: boolean) => {
+        setIsPlaybackPlaying(playing);
+        isPlaybackPlayingRef.current = playing;
+    }, []);
+
     const handleCurrentSongDownloaded = useCallback((realSong: any) => {
         setSelectedSong(realSong);
         setNowPlaying(realSong);
@@ -187,13 +205,15 @@ export const MelodiqGameContent: React.FC = () => {
                     return;
                 }
                 
-                const willForcePlay = (clientRole === 'admin' || clientRole === 'queue_manager') && forcePlay;
+                const isHostPlaying = isPlaybackPlayingRef.current;
+                const canForce = (clientRole === 'admin' || clientRole === 'queue_manager');
+                const willForcePlay = canForce && (forcePlay || !isHostPlaying);
                 
                 window.dispatchEvent(new CustomEvent('melodiq_client_send_data', { 
                     detail: { type: 'remote.select_song', songId: songMeta.id, forcePlay: willForcePlay } 
                 }));
                 
-                if (selectedSong && !willForcePlay) {
+                if (isHostPlaying && !willForcePlay) {
                     setFeedbackMessage(`Zur Warteschlange hinzugefügt: ${songMeta.title}`);
                 } else {
                     setFeedbackMessage(`Wird abgespielt: ${songMeta.title}`);
@@ -201,8 +221,13 @@ export const MelodiqGameContent: React.FC = () => {
                 return;
             }
 
+            // Determine if a song is actively playing right now
+            const isPlayingActive = (Boolean(selectedSongRef.current) || Boolean(remoteSongRef.current)) && isPlaybackPlayingRef.current;
+
             let actualForcePlay = forcePlay;
-            if (!forcePlay && !selectedSong && !remoteSong && !nowPlaying) {
+            // If the song is paused, or if nothing is actively playing (including after reload),
+            // play the selected song directly instead of adding it to the queue.
+            if (!forcePlay && !isPlayingActive) {
                 actualForcePlay = true;
             }
 
@@ -210,6 +235,13 @@ export const MelodiqGameContent: React.FC = () => {
                 addToQueue(songMeta, requester, requesterId);
                 setFeedbackMessage(`Zur Warteschlange hinzugefügt: ${songMeta.title}`);
                 return;
+            }
+
+            if (restoredSong) {
+                setRestoredSong(null);
+            }
+            if (!selectedSongRef.current || selectedSongRef.current.id !== songMeta.id) {
+                localStorage.removeItem('melodiq_saved_time');
             }
 
             setSessionInstanceId(prev => prev + 1);
@@ -517,6 +549,7 @@ export const MelodiqGameContent: React.FC = () => {
                 isClient={isClient}
                 activeParticipants={activeParticipants}
                 clientDeviceId={clientProfile?.deviceId}
+                onPlayingChange={handlePlayingChange}
             />
 
             <HostQueueDrawer

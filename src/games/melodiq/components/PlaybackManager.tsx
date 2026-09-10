@@ -30,6 +30,8 @@ interface PlaybackManagerProps {
     activeParticipants?: any[] | null;
     clientDeviceId?: string;
     sessionInstanceId?: number;
+    /** Notifies parent when playback play/pause state changes */
+    onPlayingChange?: (isPlaying: boolean) => void;
 }
 
 export interface PlaybackManagerHandle {
@@ -55,7 +57,8 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         isClient = false,
         activeParticipants = null,
         clientDeviceId,
-        sessionInstanceId = 0
+        sessionInstanceId = 0,
+        onPlayingChange
     } = props;
 
     const { t } = useTranslation();
@@ -95,7 +98,14 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     const { sendClientCommand, isSessionPlaying } = isClient ? clientEngine : { sendClientCommand: undefined, isSessionPlaying: false };
 
     const canControlPlayback = true; // All users can control playback by default now
-    const actualIsPlaying = isClient ? isSessionPlaying : playbackState.isPlaying;
+    const actualIsPlaying = isClient ? isSessionPlaying : (Boolean(selectedSong || remoteSong) && playbackState.isPlaying);
+
+    useEffect(() => {
+        onPlayingChange?.(actualIsPlaying);
+        return () => {
+            onPlayingChange?.(false);
+        };
+    }, [actualIsPlaying, onPlayingChange]);
 
     // Broadcast Game State: piggyback on handlePlaybackUpdate instead of a separate interval
     // This ref allows the playback callback to access broadcast without being a dependency
