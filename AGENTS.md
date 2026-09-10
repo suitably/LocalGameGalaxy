@@ -44,7 +44,7 @@ Search this inventory before building new feature code:
 |:---|:---|:---|
 | **Player Management** | `src/modules/player-management` | `<PlayerManagerCard>`, `useLobbyPlayers`, `playerLogic.ts` — lobby player lists, add/remove, min/max, persistence |
 | **Sync & Mailbox** | `src/modules/sync` | `MqttMailboxService<T>` — MQTT peer-sync with multi-broker fallback & BroadcastChannel |
-| **Drawing** | `src/modules/drawing` | `<ExcalidrawViewer>`, `<ExcalidrawLazy>`, `excalidrawScene.ts` — canvas rendering + stroke replay |
+| **Drawing** | `src/modules/drawing` | `<DrawingCanvas>`, `<ExcalidrawViewer>`, `<ExcalidrawLazy>`, `excalidrawScene.ts` — canvas rendering, interactive drawing + stroke replay |
 | **Sharing** | `src/modules/sharing` | `<ShareSessionLinksDialog>`, `<EditSessionDialog>` — QR codes, LZString links, Web Share API |
 | **Async Game IDB** | `src/modules/async-game` | `createIdbStoreOperations`, `runWithStore` — IndexedDB CRUD helpers |
 | **Confirm Dialog** | `src/components/common/ConfirmDialog.tsx` | MUI confirmation modal (replaces `window.confirm()`) |

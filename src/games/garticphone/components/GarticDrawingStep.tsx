@@ -3,7 +3,7 @@ import { Box, Paper, Typography } from '@mui/material';
 import BrushRoundedIcon from '@mui/icons-material/BrushRounded';
 import LockRoundedIcon from '@mui/icons-material/LockRounded';
 import { useTranslation } from 'react-i18next';
-import { DrawingCanvas } from '../../guessart/components/DrawingCanvas';
+import { DrawingCanvas } from '../../../modules/drawing';
 
 interface GarticDrawingStepProps {
   promptText: string;
@@ -100,7 +100,7 @@ export const GarticDrawingStep: React.FC<GarticDrawingStepProps> = ({
           overflow: 'hidden',
         }}
       >
-        <DrawingCanvas currentRound={null} onSubmit={async (data) => onSubmitDrawing(data)} />
+        <DrawingCanvas onSubmit={async (data) => onSubmitDrawing(data)} />
       </Box>
     </Box>
   );
