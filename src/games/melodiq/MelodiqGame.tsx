@@ -125,7 +125,7 @@ export const MelodiqGameContent: React.FC = () => {
     const [currentView, setCurrentView] = useState<View>('Home');
     const [selectedSong, setSelectedSong] = useState<Song | null>(null);
 
-    const [isPlaybackPlaying, setIsPlaybackPlaying] = useState<boolean>(false);
+    const [, setIsPlaybackPlaying] = useState<boolean>(false);
     const isPlaybackPlayingRef = useRef<boolean>(false);
     const selectedSongRef = useRef<Song | null>(selectedSong);
     const remoteSongRef = useRef<SongMeta | null>(remoteSong);

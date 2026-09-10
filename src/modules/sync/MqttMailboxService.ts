@@ -182,7 +182,38 @@ export class MqttMailboxService<T> {
     };
   }
 
-  public publish(channelId: string, payload: T): void {
+  public subscribeGlobal(listener: MessageListener<T>): () => void {
+    this.globalListeners.add(listener);
+    return () => {
+      this.globalListeners.delete(listener);
+    };
+  }
+
+  public syncSubscribedChannels(channelIds: string[]): void {
+    const newSet = new Set(channelIds.filter(Boolean));
+    const client = this.getClient();
+
+    for (const id of newSet) {
+      if (!this.subscribedChannels.has(id)) {
+        this.subscribedChannels.add(id);
+        if (client.connected) {
+          client.subscribe(this.getTopic(id), { qos: 1 });
+        }
+      }
+    }
+
+    for (const id of this.subscribedChannels) {
+      if (!newSet.has(id)) {
+        this.subscribedChannels.delete(id);
+        this.lastProcessedRaw.delete(id);
+        if (client.connected) {
+          client.unsubscribe(this.getTopic(id));
+        }
+      }
+    }
+  }
+
+  public publish(channelId: string, payload: T): Promise<boolean> {
     const envelope: MqttEnvelope<T> = {
       version: 1,
       channelId,
@@ -205,17 +236,29 @@ export class MqttMailboxService<T> {
     const topic = this.getTopic(channelId);
     const client = this.getClient();
 
-    if (client.connected) {
-      client.publish(topic, messageToSend, { qos: 1, retain: true }, (err) => {
-        if (err) {
-          console.warn(`[MqttMailbox:${this.topicPrefix}] Failed to publish to ${topic}:`, err);
-        }
-      });
-    } else {
-      client.once('connect', () => {
-        client.publish(topic, messageToSend, { qos: 1, retain: true });
-      });
-    }
+    return new Promise((resolve) => {
+      if (client.connected) {
+        client.publish(topic, messageToSend, { qos: 1, retain: true }, (err) => {
+          if (err) {
+            console.warn(`[MqttMailbox:${this.topicPrefix}] Failed to publish to ${topic}:`, err);
+            resolve(false);
+          } else {
+            resolve(true);
+          }
+        });
+      } else {
+        client.once('connect', () => {
+          client.publish(topic, messageToSend, { qos: 1, retain: true }, (err) => {
+            if (err) {
+              console.warn(`[MqttMailbox:${this.topicPrefix}] Failed to publish to ${topic}:`, err);
+              resolve(false);
+            } else {
+              resolve(true);
+            }
+          });
+        });
+      }
+    });
   }
 
   public disconnect(): void {

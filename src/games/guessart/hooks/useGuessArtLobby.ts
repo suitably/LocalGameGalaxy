@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { LocalGameEngine } from '../logic/engine';
 import { playerAssignment } from '../logic/playerAssignment';
-import { mailboxService } from '../logic/mailboxService';
+import { guessArtMailbox } from '../logic/guessArtMailbox';
+import { guessArtNotificationService } from '../logic/notificationService';
 import { useLobbyPlayers } from '../../../modules/player-management';
 import type { LobbyPlayerItem } from '../../../modules/player-management';
 import type { GuessArtGameRecord } from '../logic/types';
@@ -35,7 +36,7 @@ export const useGuessArtLobby = () => {
     try {
       const games = await LocalGameEngine.listGames();
       setActiveGames(games);
-      mailboxService.syncSubscribedGames(games.map((g) => g.id));
+      guessArtMailbox.syncSubscribedChannels(games.map((g) => g.id));
     } catch (err) {
       console.error('Failed to list GuessArt games', err);
     } finally {
@@ -49,8 +50,30 @@ export const useGuessArtLobby = () => {
 
   // Listen for background remote snapshots to keep active games list up to date
   useEffect(() => {
-    const unsub = mailboxService.onRemoteSnapshot(async () => {
+    const unsub = guessArtMailbox.subscribeGlobal(async (remoteSnapshot, _snapshotGameId, timestamp) => {
       try {
+        const language = remoteSnapshot.game?.options?.language || 'de';
+        const importResult = await LocalGameEngine.importSnapshot(remoteSnapshot, language);
+        if (importResult.updated) {
+          const isHistorical = timestamp ? Date.now() - timestamp > 30000 : false;
+          const isInitialGameStart =
+            !importResult.round ||
+            (importResult.round.roundNumber === 1 &&
+              (importResult.round.status === 'selecting' ||
+                (importResult.round.status === 'drawing' && !importResult.round.word)));
+
+          if (!isHistorical) {
+            await guessArtNotificationService.notifyTurnIfEligible({
+              game: importResult.game,
+              round: importResult.round,
+              isRemoteEvent: true,
+              isInitialGameStart,
+              activeGameScreenId: guessArtNotificationService.getActiveScreenGameId(),
+              isDocumentVisible: typeof document !== 'undefined' ? document.visibilityState === 'visible' : true,
+            });
+          }
+        }
+
         const games = await LocalGameEngine.listGames();
         setActiveGames(games);
       } catch (err) {

@@ -23,6 +23,15 @@ export interface TurnNotificationDecision {
 class GuessArtNotificationService {
   private notifiedTurnKeys: Set<string> = new Set();
   private locallyDrawnRoundIds: Set<string> = new Set();
+  private activeGameScreenId: string | null = null;
+
+  public setActiveScreenGameId(gameId: string | null): void {
+    this.activeGameScreenId = gameId;
+  }
+
+  public getActiveScreenGameId(): string | null {
+    return this.activeGameScreenId;
+  }
 
   public markRoundDrawnLocally(roundId?: string | null): void {
     if (roundId) {

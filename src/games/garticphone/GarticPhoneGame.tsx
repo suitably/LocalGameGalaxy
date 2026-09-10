@@ -14,7 +14,6 @@ import { GarticGuessingStep } from './components/GarticGuessingStep';
 import { GarticAlbumReveal } from './components/GarticAlbumReveal';
 import { GarticWaitingStatus } from './components/GarticWaitingStatus';
 import { GarticHeader } from './components/GarticHeader';
-import { mailboxService } from '../guessart/logic/mailboxService';
 import { universalPartyManager } from '../../features/party/logic/universalPartyManager';
 import { storage } from '../../lib/storage';
 import type { GarticGameState, GarticPlayer } from './types';
@@ -110,7 +109,7 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
 
   const isHost = gameState.hostId === myPlayerId || gameState.players[0]?.id === myPlayerId || universalPartyManager.isHost(gameState.roomId);
 
-  // Broadcast state & events over BroadcastChannel & MQTT Mailbox
+  // Broadcast state & events over BroadcastChannel
   const broadcastState = useCallback((newState: GarticGameState) => {
     setGameState(newState);
     try {
@@ -120,20 +119,13 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
     } catch {
       // ignore
     }
-    try {
-      const topic = `gartic_room_${newState.roomId}`;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mailboxService.publishTurn(topic, { type: 'GARTIC_SYNC', state: newState } as any);
-    } catch {
-      // ignore
-    }
   }, []);
 
   const sendJoinAnnouncement = useCallback((roomId: string, player: GarticPlayer) => {
     try {
-      const topic = `gartic_room_${roomId}`;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mailboxService.publishTurn(topic, { type: 'GARTIC_JOIN', player } as any);
+      const channel = new BroadcastChannel(`gartic_phone_${roomId}`);
+      channel.postMessage({ type: 'GARTIC_JOIN', player });
+      channel.close();
     } catch {
       // ignore
     }
@@ -141,9 +133,8 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
 
   useEffect(() => {
     if (!gameState.roomId) return;
-    const topic = `gartic_room_${gameState.roomId}`;
 
-    // 1. Local BroadcastChannel
+    // Local BroadcastChannel
     const channel = new BroadcastChannel(`gartic_phone_${gameState.roomId}`);
     channel.onmessage = (event) => {
       if (event.data?.type === 'STATE_SYNC' && event.data.state) {
@@ -154,34 +145,8 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
       } else if (event.data?.type === 'GARTIC_FORCE_END') {
         sessionStorage.removeItem(`galaxy_gartic_state_${gameState.roomId}`);
         handleBack();
-      }
-    };
-
-    // 2. MQTT Mailbox Service for Remote Online Devices
-    mailboxService.subscribeToGame(topic, async (incoming: unknown) => {
-      if (!incoming || typeof incoming !== 'object' || !('type' in incoming)) return;
-      const msg = incoming as {
-        type: string;
-        state?: GarticGameState;
-        player?: GarticPlayer;
-        playerId?: string;
-        content?: string;
-      };
-
-      if (msg.type === 'GARTIC_FORCE_END') {
-        sessionStorage.removeItem(`galaxy_gartic_state_${gameState.roomId}`);
-        handleBack();
-      } else if (msg.type === 'GARTIC_STEP_SUBMIT' && msg.playerId && msg.content !== undefined) {
-        setGameState((prev) => submitPlayerGarticStep(prev, msg.playerId!, msg.content!));
-      } else if (msg.type === 'GARTIC_SYNC' && msg.state && msg.state.roomId === gameState.roomId) {
-        setGameState(msg.state);
-        sessionStorage.setItem(`galaxy_gartic_state_${msg.state.roomId}`, JSON.stringify(msg.state));
-      } else if (msg.type === 'GARTIC_REQUEST_SYNC') {
-        if (isHost) {
-          broadcastState(gameState);
-        }
-      } else if (msg.type === 'GARTIC_JOIN' && msg.player) {
-        const newP = msg.player;
+      } else if (event.data?.type === 'GARTIC_JOIN' && event.data.player) {
+        const newP = event.data.player as GarticPlayer;
         setGameState((prev) => {
           if (prev.players.some((p) => p.id === newP.id)) return prev;
           const updated = addPlayerToGarticGame(prev, newP);
@@ -191,7 +156,7 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
           return updated;
         });
       }
-    });
+    };
 
     // Send join ping & initial sync
     sendJoinAnnouncement(gameState.roomId, {
@@ -203,18 +168,10 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
 
     if (isHost) {
       broadcastState(gameState);
-    } else {
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        mailboxService.publishTurn(topic, { type: 'GARTIC_REQUEST_SYNC', playerId: myPlayerId } as any);
-      } catch {
-        // ignore
-      }
     }
 
     return () => {
       channel.close();
-      mailboxService.unsubscribe();
     };
   }, [gameState.roomId, myPlayerId, myPlayerName, isHost, broadcastState, sendJoinAnnouncement, handleBack]);
 
@@ -249,14 +206,6 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
       // ignore
     }
 
-    try {
-      const topic = `gartic_room_${gameState.roomId}`;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mailboxService.publishTurn(topic, { type: 'GARTIC_FORCE_END' } as any);
-    } catch {
-      // ignore
-    }
-
     handleBack();
   };
 
@@ -286,14 +235,6 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
       const channel = new BroadcastChannel(`gartic_phone_${gameState.roomId}`);
       channel.postMessage(stepPayload);
       channel.close();
-    } catch {
-      // ignore
-    }
-
-    try {
-      const topic = `gartic_room_${gameState.roomId}`;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      mailboxService.publishTurn(topic, stepPayload as any);
     } catch {
       // ignore
     }
