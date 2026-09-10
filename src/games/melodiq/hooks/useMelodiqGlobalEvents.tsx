@@ -217,8 +217,10 @@ export const useMelodiqGlobalEvents = ({
                     if (data.config.url) localStorage.setItem('melodiq_helper_url', data.config.url);
                     if (data.config.token) localStorage.setItem('melodiq_helper_token', data.config.token);
                     localStorage.setItem('melodiq_enable_helper', 'true');
-                    alert(`Configuration Updated by Remote Phone!\nURL: ${data.config.url}\nReloading...`);
-                    window.location.reload();
+                    setFeedbackMessage(`Configuration Updated by Remote Phone!\nURL: ${data.config.url}\nReloading...`);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
                 }
             };
             manager.on('message', handleConfig);

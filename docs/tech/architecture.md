@@ -92,7 +92,7 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
 - **Drawing & Stroke Replay (`src/modules/drawing`)**:
   - Encapsulates interactive drawing canvas (`DrawingCanvas`), Excalidraw lazy-loading (`ExcalidrawLazy`), animated stroke playback (`ExcalidrawViewer`), and scene parsing/ordering (`excalidrawScene`). Shared cleanly by GuessArt and Gartic Phone without inter-game dependencies.
 - **Session Sharing & Editing (`src/modules/sharing`)**:
-  - Reusable dialogs (`ShareSessionLinksDialog`, `EditSessionDialog`) and URL parsing utilities (`parseGameUrlParams`, `cleanWindowUrlQuery`) providing unified deep-link extraction across hash and search routing. Shared by GuessArt, Storyteller, Wordle, and Gartic Phone.
+  - Reusable dialogs (`ShareSessionLinksDialog`, `EditSessionDialog`), URL parsing utilities (`parseGameUrlParams`, `cleanWindowUrlQuery`), and snapshot join hook (`useGameJoinUrl`) providing unified deep-link extraction across hash and search routing. Shared by GuessArt, Storyteller, Wordle, and Gartic Phone.
 - **Async Game Helpers (`src/modules/async-game`)**:
   - Reusable IndexedDB transaction and cursor runners (`createIdbStoreOperations`, `runWithStore`, `cursorCollect`, `requestToPromise`) eliminating boilerplate and error handling across offline-first Dexie stores. Used by GuessArt and Storyteller.
 

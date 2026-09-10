@@ -1,5 +1,6 @@
 import { partyMailbox } from './partyMailbox';
 import { ensureUniquePlayerName } from '../../../lib/disambiguateName';
+import { storage, sessionStorageSafe, STORAGE_KEYS, STORAGE_PREFIXES } from '../../../lib/storage';
 
 export interface PartyPlayer {
   id: string;
@@ -49,8 +50,8 @@ class UniversalPartyManager {
 
   public getMyPlayerId(): string {
     if (!this.myPlayerId) {
-      this.myPlayerId = sessionStorage.getItem('party_my_player_id') || `p_${Math.random().toString(36).substring(2, 9)}`;
-      sessionStorage.setItem('party_my_player_id', this.myPlayerId);
+      this.myPlayerId = sessionStorageSafe.get(STORAGE_KEYS.PARTY_MY_PLAYER_ID) || `p_${Math.random().toString(36).substring(2, 9)}`;
+      sessionStorageSafe.set(STORAGE_KEYS.PARTY_MY_PLAYER_ID, this.myPlayerId);
     }
     return this.myPlayerId;
   }
@@ -60,7 +61,7 @@ class UniversalPartyManager {
   }
 
   public isHost(roomId: string): boolean {
-    const savedHostId = sessionStorage.getItem(`party_host_id_${roomId}`);
+    const savedHostId = sessionStorageSafe.get(`${STORAGE_PREFIXES.PARTY_HOST_ID}${roomId}`);
     if (savedHostId) return true;
     if (this.currentRoomState && this.currentRoomState.roomId === roomId) {
       return this.currentRoomState.hostId === this.getMyPlayerId();
@@ -69,10 +70,10 @@ class UniversalPartyManager {
   }
 
   public getSavedHostRoomCode(): string {
-    let saved = localStorage.getItem('galaxy_host_room_code');
+    let saved = storage.get(STORAGE_KEYS.HOST_ROOM_CODE);
     if (!saved) {
       saved = Math.random().toString(36).substring(2, 8).toUpperCase();
-      localStorage.setItem('galaxy_host_room_code', saved);
+      storage.set(STORAGE_KEYS.HOST_ROOM_CODE, saved);
     }
     return saved;
   }
@@ -80,7 +81,7 @@ class UniversalPartyManager {
   public setHostRoomCode(code: string): string {
     const cleaned = code.toUpperCase().trim().replace(/[^A-Z0-9_-]/g, '');
     if (cleaned) {
-      localStorage.setItem('galaxy_host_room_code', cleaned);
+      storage.set(STORAGE_KEYS.HOST_ROOM_CODE, cleaned);
       return cleaned;
     }
     return this.getSavedHostRoomCode();
@@ -90,22 +91,15 @@ class UniversalPartyManager {
     const roomId = preferredRoomId ? this.setHostRoomCode(preferredRoomId) : this.getSavedHostRoomCode();
     const hostId = this.getMyPlayerId();
 
-    sessionStorage.setItem(`party_host_id_${roomId}`, hostId);
+    sessionStorageSafe.set(`${STORAGE_PREFIXES.PARTY_HOST_ID}${roomId}`, hostId);
 
     let existingPlayers: PartyPlayer[] = [];
     if (this.currentRoomState && this.currentRoomState.roomId === roomId) {
       existingPlayers = this.currentRoomState.players;
     } else {
-      const savedRaw = localStorage.getItem(`galaxy_party_state_${roomId}`);
-      if (savedRaw) {
-        try {
-          const parsed = JSON.parse(savedRaw) as PartyRoomState;
-          if (parsed && Array.isArray(parsed.players)) {
-            existingPlayers = parsed.players;
-          }
-        } catch {
-          // ignore
-        }
+      const parsed = storage.getJson<PartyRoomState | null>(`${STORAGE_PREFIXES.PARTY_STATE}${roomId}`, null);
+      if (parsed && Array.isArray(parsed.players)) {
+        existingPlayers = parsed.players;
       }
     }
 
@@ -148,17 +142,13 @@ class UniversalPartyManager {
   public joinParty(roomId: string, playerName: string): PartyRoomState {
     const pId = this.getMyPlayerId();
     const normalizedRoomId = roomId.toUpperCase().trim();
-    const isRoomCreator = Boolean(sessionStorage.getItem(`party_host_id_${normalizedRoomId}`));
+    const isRoomCreator = Boolean(sessionStorageSafe.get(`${STORAGE_PREFIXES.PARTY_HOST_ID}${normalizedRoomId}`));
 
     let state = this.currentRoomState;
     if (!state || state.roomId !== normalizedRoomId) {
-      const savedRaw = localStorage.getItem(`galaxy_party_state_${normalizedRoomId}`);
-      if (savedRaw) {
-        try {
-          state = JSON.parse(savedRaw);
-        } catch {
-          // ignore
-        }
+      const saved = storage.getJson<PartyRoomState | null>(`${STORAGE_PREFIXES.PARTY_STATE}${normalizedRoomId}`, null);
+      if (saved) {
+        state = saved;
       }
     }
 
@@ -310,7 +300,7 @@ class UniversalPartyManager {
 
   private handleIncomingState(incomingState: PartyRoomState, roomId: string): void {
     const myId = this.getMyPlayerId();
-    const isRoomCreator = Boolean(sessionStorage.getItem(`party_host_id_${roomId}`));
+    const isRoomCreator = Boolean(sessionStorageSafe.get(`${STORAGE_PREFIXES.PARTY_HOST_ID}${roomId}`));
 
     if (this.currentRoomState && this.currentRoomState.roomId === roomId) {
       const mergedPlayersMap = new Map<string, PartyPlayer>();
@@ -356,13 +346,13 @@ class UniversalPartyManager {
       };
     }
 
-    localStorage.setItem(`galaxy_party_state_${roomId}`, JSON.stringify(this.currentRoomState));
+    storage.setJson(`${STORAGE_PREFIXES.PARTY_STATE}${roomId}`, this.currentRoomState);
     this.notifyListeners();
   }
 
   public publishPartyState(state: PartyRoomState): void {
     const topic = `party_${state.roomId}`;
-    localStorage.setItem(`galaxy_party_state_${state.roomId}`, JSON.stringify(state));
+    storage.setJson(`${STORAGE_PREFIXES.PARTY_STATE}${state.roomId}`, state);
 
     try {
       if (this.localChannel) {

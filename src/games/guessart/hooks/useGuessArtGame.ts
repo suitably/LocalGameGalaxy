@@ -6,6 +6,7 @@ import { gameRelayStorage } from '../../../lib/push/gameRelayStorage';
 import { pushClient } from '../../../lib/push/pushClient';
 import { storage } from '../../../lib/storage';
 import { playerAssignment } from '../logic/playerAssignment';
+import { getTurnPlayers } from '../logic/turnUtils';
 import { guessArtNotificationService } from '../logic/notificationService';
 import { buildTurnNotificationMessage, localNotificationPresenter } from '../../../lib/notifications';
 import type {
@@ -365,9 +366,7 @@ export const useGuessArtGame = (
         if (!wasTemporaryClaim) {
           let guesserId = result.round?.guesserId;
           if (!guesserId && result.game && result.round) {
-            const dIdx = result.game.players.findIndex((p) => p.id === result.round?.drawnById);
-            const effDIdx = dIdx >= 0 ? dIdx : (Math.max(1, result.round.roundNumber) - 1) % (result.game.players.length || 1);
-            guesserId = result.game.players[(effDIdx + 1) % (result.game.players.length || 1)]?.id;
+            guesserId = getTurnPlayers(result.game, result.round).guesser?.id;
           }
           const drawerName = result.round?.drawnByName;
           if (guesserId) {
@@ -395,9 +394,8 @@ export const useGuessArtGame = (
       setLoading(true);
       setError(null);
       try {
-        const dIdx = game?.players.findIndex((p) => p.id === round?.drawnById) ?? -1;
-        const effDIdx = dIdx >= 0 ? dIdx : (Math.max(1, round?.roundNumber || 1) - 1) % (game?.players.length || 1);
-        const activeGuesserId = round?.guesserId || game?.players[(effDIdx + 1) % (game?.players.length || 1)]?.id;
+        const activeGuesserId =
+          round?.guesserId || (game && round ? getTurnPlayers(game, round).guesser?.id : undefined);
         const isGuesserClaimedTemporarily = activeGuesserId
           ? playerAssignment.isTurnClaimedTemporarily(gameId, activeGuesserId) || Boolean(round?.temporaryClaim)
           : Boolean(round?.temporaryClaim);

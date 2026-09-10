@@ -13,6 +13,7 @@ import { UserProfilesManager } from './components/UserProfilesManager';
 import { GameSettingsPanel } from './components/GameSettingsPanel';
 import { HelperConnection } from './components/HelperConnection';
 import { SettingsFeedbackForm } from './components/SettingsFeedbackForm';
+import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 
 import type { UserProfile, ActivePlayer } from './types';
 
@@ -30,6 +31,7 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack, onNavi
     // Audio Devices
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
     const [, setLoadingDevices] = useState(true);
+    const [confirmResetDefaultsOpen, setConfirmResetDefaultsOpen] = useState(false);
 
     // Custom Hooks for state management
     const profilesHook = useProfiles(devices);
@@ -74,9 +76,12 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack, onNavi
 
     // Reset to Factory Defaults
     const handleResetDefaults = () => {
-        if (confirm('Reset all game settings to factory defaults? Profiles will not be affected.')) {
-            settingsHook.resetSettings(DEFAULT_SETTINGS);
-        }
+        setConfirmResetDefaultsOpen(true);
+    };
+
+    const handleConfirmResetDefaults = () => {
+        settingsHook.resetSettings(DEFAULT_SETTINGS);
+        setConfirmResetDefaultsOpen(false);
     };
 
     return (
@@ -223,6 +228,15 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack, onNavi
                     </Button>
                 </Box>
             </Paper>
+
+            <ConfirmDialog
+                open={confirmResetDefaultsOpen}
+                title={t('settings.resetDefaults', 'Reset Defaults')}
+                message={t('settings.confirmResetDefaults', 'Reset all game settings to factory defaults? Profiles will not be affected.')}
+                confirmColor="error"
+                onConfirm={handleConfirmResetDefaults}
+                onCancel={() => setConfirmResetDefaultsOpen(false)}
+            />
         </Box>
     );
 };

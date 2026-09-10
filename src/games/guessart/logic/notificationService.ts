@@ -1,4 +1,5 @@
 import { playerAssignment } from './playerAssignment';
+import { getTurnPlayers } from './turnUtils';
 import { buildTurnNotificationMessage, localNotificationPresenter } from '../../../lib/notifications';
 import type { GuessArtGameRecord, GuessArtRound } from './types';
 
@@ -102,13 +103,7 @@ class GuessArtNotificationService {
     }
 
     // Determine active drawer and guesser
-    const drawerIdx = game.players.findIndex((p) => p.id === round.drawnById);
-    const effDrawerIdx = drawerIdx >= 0 ? drawerIdx : (Math.max(1, round.roundNumber) - 1) % (game.players.length || 1);
-    const guesserIdx = round.guesserId ? game.players.findIndex((p) => p.id === round.guesserId) : -1;
-    const effGuesserIdx = guesserIdx >= 0 ? guesserIdx : (effDrawerIdx + 1) % (game.players.length || 1);
-
-    const activeDrawerObj = game.players[effDrawerIdx];
-    const activeGuesserObj = game.players[effGuesserIdx];
+    const { drawer: activeDrawerObj, guesser: activeGuesserObj } = getTurnPlayers(game, round);
 
     const activePlayer = isSelecting ? activeDrawerObj : isGuessing ? activeGuesserObj : null;
     const actionType: 'draw' | 'guess' | undefined = isSelecting ? 'draw' : isGuessing ? 'guess' : undefined;

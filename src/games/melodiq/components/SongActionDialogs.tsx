@@ -66,6 +66,17 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [confirmReSeparateOpen, setConfirmReSeparateOpen] = useState(false);
     const [fullSyncConfirmOpen, setFullSyncConfirmOpen] = useState(false);
+    const [createPlaylistDialogOpen, setCreatePlaylistDialogOpen] = useState(false);
+    const [newPlaylistName, setNewPlaylistName] = useState('');
+
+    const handleCreatePlaylistSubmit = async () => {
+        const trimmed = newPlaylistName.trim();
+        if (!trimmed) return;
+        await createPlaylist(trimmed);
+        setFeedbackMessage(t('melodiq.playlist_created', 'Playlist created!'));
+        setCreatePlaylistDialogOpen(false);
+        setNewPlaylistName('');
+    };
 
     const handleQueueOption = (action: 'play_now' | 'play_next' | 'add_end') => {
         if (!selectedSongForQueue) return;
@@ -366,18 +377,55 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                     )}
                     <Divider />
                     <List>
-                        <ListItemButton onClick={async () => {
-                            const name = window.prompt(t('melodiq.playlist_name'));
-                            if (name && name.trim()) {
-                                await createPlaylist(name.trim());
-                                setFeedbackMessage(t('melodiq.playlist_created', 'Playlist created!'));
-                            }
+                        <ListItemButton onClick={() => {
+                            setNewPlaylistName('');
+                            setCreatePlaylistDialogOpen(true);
                         }}>
                             <ListItemIcon><AddIcon /></ListItemIcon>
                             <ListItemText primary={t('melodiq.create_playlist')} />
                         </ListItemButton>
                     </List>
                 </DialogContent>
+            </Dialog>
+
+            {/* MUI Dialog for Create Playlist */}
+            <Dialog
+                open={createPlaylistDialogOpen}
+                onClose={() => setCreatePlaylistDialogOpen(false)}
+                maxWidth="xs"
+                fullWidth
+            >
+                <DialogTitle>{t('melodiq.create_playlist', 'Create Playlist')}</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        fullWidth
+                        margin="dense"
+                        label={t('melodiq.playlist_name', 'Playlist Name')}
+                        value={newPlaylistName}
+                        onChange={(e) => setNewPlaylistName(e.target.value)}
+                        onKeyDown={async (e) => {
+                            if (e.key === 'Enter' && newPlaylistName.trim()) {
+                                e.preventDefault();
+                                await handleCreatePlaylistSubmit();
+                            }
+                        }}
+                    />
+                </DialogContent>
+                <DialogActions sx={{ p: 2 }}>
+                    <Button onClick={() => setCreatePlaylistDialogOpen(false)} color="inherit">
+                        {t('common.cancel', 'Abbrechen')}
+                    </Button>
+                    <Button
+                        onClick={handleCreatePlaylistSubmit}
+                        variant="contained"
+                        color="primary"
+                        disabled={!newPlaylistName.trim()}
+                        sx={{ fontWeight: 700 }}
+                    >
+                        {t('common.save', 'Speichern')}
+                    </Button>
+                </DialogActions>
             </Dialog>
 
             {/* MUI Dialog for Auto-Sync Time */}

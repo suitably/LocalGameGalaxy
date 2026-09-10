@@ -54,13 +54,9 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({ open, onClose }) =
 
         if (selectedPlaylistId === 'new') {
             if (newPlaylistName.trim()) {
-                await createPlaylist(newPlaylistName.trim());
-                // After creating, we need to find its ID.
-                // Since createPlaylist doesn't return the ID, we might have to wait for the live query to update
-                // Or just show a message. This is a bit tricky.
-                // For simplicity, let's just close the dialog. The user might have to select it manually next time.
-                // Or we can modify usePlaylists to return the created ID, but let's just do our best here.
-                alert(t('melodiq.playlist_created_add_later') || 'Playlist created! Please open this dialog again to add the songs to it.');
+                const newId = await createPlaylist(newPlaylistName.trim());
+                await addSongsToPlaylist(newId, selectedSongIds);
+                setSelectedSessions(new Set());
                 setPlaylistDialogOpen(false);
                 return;
             }

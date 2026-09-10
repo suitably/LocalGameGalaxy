@@ -1,4 +1,5 @@
 import { evaluateGuess } from './guessEvaluator';
+import { getTurnPlayers } from './turnUtils';
 import {
   buildWordMask,
   normalizeLanguageCode,
@@ -74,11 +75,7 @@ export const toRoundPayload = (
     round.word,
   );
 
-  const drawerIndex = game.players.findIndex((player) => player.id === round.drawnById);
-  const effectiveDrawerIdx = drawerIndex >= 0 ? drawerIndex : (Math.max(1, round.roundNumber) - 1) % (game.players.length || 1);
-  const effectiveGuesserIdx = (effectiveDrawerIdx + 1) % (game.players.length || 1);
-  const drawer = game.players[effectiveDrawerIdx];
-  const guesser = game.players[effectiveGuesserIdx];
+  const { drawer, guesser } = getTurnPlayers(game, round);
   const isDrawerCurrentPlayer = game.status !== 'guessing';
 
   return {

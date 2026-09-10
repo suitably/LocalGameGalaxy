@@ -19,15 +19,15 @@ import { GameInfoDialog } from './components/GameInfoDialog';
 import { RoundHistoryDialog } from './components/RoundHistoryDialog';
 import { EditGameDialog } from './components/EditGameDialog';
 import { CatalogueEditorDialog } from './components/catalogue/CatalogueEditorDialog';
-import { parseGameUrlParams, cleanWindowUrlQuery } from '../../modules/sharing';
+import { useGameJoinUrl, cleanWindowUrlQuery } from '../../modules/sharing';
 import { storage } from '../../lib/storage';
 import { playerAssignment } from './logic/playerAssignment';
 import { gameRelayStorage } from '../../lib/push/gameRelayStorage';
 import { guessArtNotificationService } from './logic/notificationService';
 import { guessArtMailbox } from './logic/guessArtMailbox';
-import LZString from 'lz-string';
 import { LocalGameEngine } from './logic/engine';
-import type { GuessArtGameRecord, GuessArtRound } from './logic/types';
+import { getTurnPlayers } from './logic/turnUtils';
+import type { GameSnapshot, GuessArtGameRecord, GuessArtRound } from './logic/types';
 
 const STORAGE_KEY_SEEN_INFO = 'guessart_seen_info';
 
@@ -71,88 +71,61 @@ export const GuessArtGame: React.FC = () => {
     loadActiveGames,
   } = useGuessArtLobby();
 
-  const cleanUrl = useCallback(() => {
-    cleanWindowUrlQuery('#/games/guessart');
-  }, []);
-
   const [localPlayersVersion, setLocalPlayersVersion] = useState<number>(0);
   const triggerLocalUpdate = useCallback(() => setLocalPlayersVersion((v) => v + 1), []);
 
-  useEffect(() => {
-    const processUrlParams = async () => {
-      if (typeof window === 'undefined') return;
-      const params = parseGameUrlParams();
-      if (!params.toString()) return;
-
-      const dataParam = params.get('data');
+  useGameJoinUrl<GameSnapshot>({
+    defaultHashPath: '#/games/guessart',
+    onSnapshotLoaded: async (snapshot, params) => {
+      if (!snapshot || !snapshot.game) return;
       const targetPlayerId = params.get('player') || params.get('playerId');
-      const urlGameId = params.get('gameId') || params.get('game');
       const relayParam = params.get('gameRelay') || params.get('relay');
 
-      if (dataParam) {
-        try {
-          const jsonStr = LZString.decompressFromEncodedURIComponent(dataParam);
-          if (jsonStr) {
-            const snapshot = JSON.parse(jsonStr);
-            if (snapshot && snapshot.game) {
-              const imported = await LocalGameEngine.importSnapshot(snapshot, language);
-              if (targetPlayerId) {
-                playerAssignment.addLocalPlayerId(imported.game.id, targetPlayerId);
-                const ownRelay = storage.getPushRelayUrl();
-                const prefMethod = storage.getNotificationMethod();
-                const updatedPlayers = imported.game.players.map((p) =>
-                  p.id === targetPlayerId
-                    ? {
-                        ...p,
-                        relayUrl: ownRelay || p.relayUrl || relayParam || undefined,
-                        notificationMethod: prefMethod,
-                        ntfyTopic: storage.getUserNtfyTopic() || p.ntfyTopic,
-                      }
-                    : p,
-                );
-                imported.game.players = updatedPlayers;
-                await LocalGameEngine.updateGameDetails(imported.game.id, { players: updatedPlayers }).catch(() => {});
-                // Broadcast updated player presence (including ntfyTopic & relayUrl) via MQTT mailbox
-                guessArtMailbox.publish(imported.game.id, {
-                  game: { ...imported.game, players: updatedPlayers },
-                  round: imported.round,
-                }).catch(() => {});
+      const imported = await LocalGameEngine.importSnapshot(snapshot, language);
+      if (targetPlayerId) {
+        playerAssignment.addLocalPlayerId(imported.game.id, targetPlayerId);
+        const ownRelay = storage.getPushRelayUrl();
+        const prefMethod = storage.getNotificationMethod();
+        const updatedPlayers = imported.game.players.map((p) =>
+          p.id === targetPlayerId
+            ? {
+                ...p,
+                relayUrl: ownRelay || p.relayUrl || relayParam || undefined,
+                notificationMethod: prefMethod,
+                ntfyTopic: storage.getUserNtfyTopic() || p.ntfyTopic,
               }
-              if (relayParam) {
-                gameRelayStorage.setGameRelay(imported.game.id, relayParam);
-              }
-              triggerLocalUpdate();
-              await loadActiveGames();
-              setActiveGameId(imported.game.id);
-              cleanUrl();
-              return;
-            }
-          }
-        } catch (e) {
-          console.warn('[GuessArt] Failed to unpack URL data payload:', e);
-        }
+            : p,
+        );
+        imported.game.players = updatedPlayers;
+        await LocalGameEngine.updateGameDetails(imported.game.id, { players: updatedPlayers }).catch(() => {});
+        // Broadcast updated player presence (including ntfyTopic & relayUrl) via MQTT mailbox
+        guessArtMailbox.publish(imported.game.id, {
+          game: { ...imported.game, players: updatedPlayers },
+          round: imported.round,
+        }).catch(() => {});
       }
-
-      if (urlGameId) {
-        if (targetPlayerId) {
-          playerAssignment.addLocalPlayerId(urlGameId, targetPlayerId);
-        }
-        if (relayParam) {
-          gameRelayStorage.setGameRelay(urlGameId, relayParam);
-        }
-        triggerLocalUpdate();
-        await loadActiveGames();
-        setActiveGameId(urlGameId);
-        cleanUrl();
+      if (relayParam) {
+        gameRelayStorage.setGameRelay(imported.game.id, relayParam);
       }
-    };
+      triggerLocalUpdate();
+      await loadActiveGames();
+      setActiveGameId(imported.game.id);
+    },
+    onDirectGameId: async (urlGameId, params) => {
+      const targetPlayerId = params.get('player') || params.get('playerId');
+      const relayParam = params.get('gameRelay') || params.get('relay');
 
-    processUrlParams();
-    window.addEventListener('hashchange', processUrlParams);
-    return () => {
-      window.removeEventListener('hashchange', processUrlParams);
-    };
-  }, [cleanUrl, language, loadActiveGames, triggerLocalUpdate]);
+      if (targetPlayerId) {
+        playerAssignment.addLocalPlayerId(urlGameId, targetPlayerId);
+      }
+      if (relayParam) {
+        gameRelayStorage.setGameRelay(urlGameId, relayParam);
+      }
+      triggerLocalUpdate();
+      await loadActiveGames();
+      setActiveGameId(urlGameId);
+    },
+  });
 
   // Request browser notifications for async turn handoffs
   useEffect(() => {
@@ -272,12 +245,7 @@ export const GuessArtGame: React.FC = () => {
   const historyPlayers = game?.players || activeGames.find((g) => g.id === historyGameId)?.players || [];
 
   // Determine if current device draws or guesses in this round
-  const drawerIdx = game && round ? game.players.findIndex((p) => p.id === round.drawnById) : -1;
-  const effectiveDrawerIdx = drawerIdx >= 0 ? drawerIdx : (Math.max(1, round?.roundNumber || 1) - 1) % (game?.players.length || 1);
-  const effectiveGuesserIdx = (effectiveDrawerIdx + 1) % (game?.players.length || 1);
-
-  const activeDrawer = game ? game.players[effectiveDrawerIdx] : null;
-  const activeGuesser = game ? game.players[effectiveGuesserIdx] : null;
+  const { drawer: activeDrawer, guesser: activeGuesser } = getTurnPlayers(game, round);
 
   const hasRemotePlayers = useMemo(() => {
     return game ? game.players.some((p) => p.isRemote) : false;
@@ -330,10 +298,10 @@ export const GuessArtGame: React.FC = () => {
   }, [activeGameId, setHeaderHidden]);
 
   const handleExitActiveGame = useCallback(() => {
-    cleanUrl();
+    cleanWindowUrlQuery('#/guessart');
     setActiveGameId(null);
     loadActiveGames();
-  }, [cleanUrl, loadActiveGames]);
+  }, [loadActiveGames]);
 
   // Lobby Setup View
   if (!activeGameId || !game) {

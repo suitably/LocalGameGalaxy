@@ -99,10 +99,11 @@ export const usePlaylists = () => {
         syncWithServer();
     }, [syncWithServer]);
 
-    const createPlaylist = async (name: string) => {
+    const createPlaylist = async (name: string): Promise<string> => {
         const { token } = getHelperConfig();
+        const id = generateUUID();
         const newPlaylist: Playlist = {
-            id: generateUUID(),
+            id,
             name,
             songs: [],
             creatorToken: token,
@@ -111,6 +112,7 @@ export const usePlaylists = () => {
         };
         await db.playlists.put(newPlaylist);
         await pushToServer(newPlaylist);
+        return id;
     };
 
     const deletePlaylist = async (id: string) => {

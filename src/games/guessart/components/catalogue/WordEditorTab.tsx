@@ -26,6 +26,7 @@ import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import { useTranslation } from 'react-i18next';
+import { ConfirmDialog } from '../../../../components/common/ConfirmDialog';
 import type { CategoryItem, WordItem } from '../../logic/types';
 
 interface WordEditorTabProps {
@@ -45,6 +46,7 @@ export const WordEditorTab: React.FC<WordEditorTabProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
+  const [wordToDelete, setWordToDelete] = useState<string | number | null>(null);
 
   // Edit/Add modal states
   const [modalOpen, setModalOpen] = useState<boolean>(false);
@@ -164,8 +166,13 @@ export const WordEditorTab: React.FC<WordEditorTabProps> = ({
   };
 
   const handleDeleteWord = (wordId: string | number) => {
-    if (!window.confirm(t('guessart.confirmDeleteWord', 'Wort wirklich löschen?'))) return;
-    onChange(words.filter((w) => w.id !== wordId));
+    setWordToDelete(wordId);
+  };
+
+  const handleConfirmDeleteWord = () => {
+    if (wordToDelete === null) return;
+    onChange(words.filter((w) => w.id !== wordToDelete));
+    setWordToDelete(null);
   };
 
   const getDifficultyColor = (diff: number) => {
@@ -434,6 +441,14 @@ export const WordEditorTab: React.FC<WordEditorTabProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ConfirmDialog
+        open={wordToDelete !== null}
+        message={t('guessart.confirmDeleteWord', 'Wort wirklich löschen?')}
+        confirmColor="error"
+        onConfirm={handleConfirmDeleteWord}
+        onCancel={() => setWordToDelete(null)}
+      />
     </Box>
   );
 };

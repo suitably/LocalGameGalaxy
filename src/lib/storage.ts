@@ -36,6 +36,7 @@ export const STORAGE_KEYS = {
     WEREWOLF_STATE: 'werewolf-game-state',
     WEREWOLF_SETUP_PLAYERS: 'werewolf-setup-players',
     WEREWOLF_CUSTOM_ROLES: 'werewolf-custom-roles',
+    WEREWOLF_SETTINGS: 'werewolf-setup-settings',
     
     // Imposter game settings
     IMPOSTER_SETTINGS: 'imposter-setup-settings',
@@ -69,9 +70,32 @@ export const STORAGE_KEYS = {
     QWIXX_MY_SHEET: 'qwixx_my_sheet',
     QWIXX_SHOW_DICE: 'qwixx_show_dice',
 
-    // Gartic Phone
+    // Gartic Phone & Universal Party
     GARTIC_STATE_PREFIX: 'galaxy_gartic_state_',
     GARTIC_HOST_PREFIX: 'gartic_host_',
+    PARTY_MY_PLAYER_ID: 'party_my_player_id',
+    HOST_ROOM_CODE: 'galaxy_host_room_code',
+
+    // Connection & WebApp
+    SHARE_WEBAPP_URL: 'nexumia_share_webapp_url',
+
+    // App & Environment
+    PWA_BANNER_DISMISSED: 'pwa-banner-dismissed',
+    LANGUAGE: 'lgg_language',
+    LANGUAGE_LEGACY: 'language',
+    EXCALIDRAW_LIBRARY: 'guessart_excalidraw_library',
+} as const;
+
+export const STORAGE_PREFIXES = {
+    PARTY_STATE: 'galaxy_party_state_',
+    PARTY_HOST_ID: 'party_host_id_',
+    GAME_RELAY: 'galaxy_game_relay_',
+    WEBRTC_PARTY_ID: '_party_id',
+    WEBRTC_TRACKER_URLS: '_tracker_urls',
+    WEBRTC_TRACKER_PREF: '_tracker_preferences',
+    WEBRTC_ACTIVE_PEERS: '_active_peer_ids',
+    HOST_BASE_URL: '_host_base_url',
+    ENABLE_HELPER: '_enable_helper',
 } as const;
 
 const memoryFallback = new Map<string, string>();
@@ -133,6 +157,29 @@ export const storage = {
     
     setJson<T>(key: string, value: T): void {
         this.set(key, JSON.stringify(value));
+    },
+
+    findKeysWithPrefix(prefix: string): string[] {
+        const matching: string[] = [];
+        try {
+            if (typeof localStorage !== 'undefined') {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith(prefix)) {
+                        matching.push(key);
+                    }
+                }
+                return matching;
+            }
+        } catch {
+            // fallback below
+        }
+        for (const key of memoryFallback.keys()) {
+            if (key.startsWith(prefix)) {
+                matching.push(key);
+            }
+        }
+        return matching;
     },
 
     // Companion Helper Config Accessors

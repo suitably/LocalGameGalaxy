@@ -13,6 +13,7 @@ import TransferWithinAStationRoundedIcon from '@mui/icons-material/TransferWithi
 import { useTranslation } from 'react-i18next';
 import type { GuessArtGameRecord, GuessArtRound } from '../logic/types';
 import { playerAssignment } from '../logic/playerAssignment';
+import { getTurnPlayers } from '../logic/turnUtils';
 import { PushNotificationBanner } from '../../../components/push/PushNotificationBanner';
 
 interface WaitingForDrawerViewProps {
@@ -31,14 +32,12 @@ export const WaitingForDrawerView: React.FC<WaitingForDrawerViewProps> = ({
   onClaimPlayer,
 }) => {
   const { t } = useTranslation();
-  const drawerIdx = game.players.findIndex((p) => p.id === round.drawnById);
-  const effectiveDrawerIdx = drawerIdx >= 0 ? drawerIdx : (Math.max(1, round.roundNumber) - 1) % (game.players.length || 1);
-  const drawerName = game.players[effectiveDrawerIdx]?.name || round.drawnByName || 'Spieler 1';
-  const guesserIdx = (effectiveDrawerIdx + 1) % (game.players.length || 1);
-  const guesserName = game.players[guesserIdx]?.name || round.guesserName || 'Spieler 2';
+  const { drawer, guesser } = getTurnPlayers(game, round);
+  const drawerName = drawer?.name || round.drawnByName || 'Spieler 1';
+  const guesserName = guesser?.name || round.guesserName || 'Spieler 2';
 
-  const isLocalGuesser = game.players[guesserIdx]
-    ? playerAssignment.isPlayerLocal(game.id, game.players[guesserIdx].id)
+  const isLocalGuesser = guesser
+    ? playerAssignment.isPlayerLocal(game.id, guesser.id)
     : false;
 
   const handleClaim = () => {

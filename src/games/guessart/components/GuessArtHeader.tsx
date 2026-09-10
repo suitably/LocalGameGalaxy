@@ -25,6 +25,7 @@ import { GuessArtHeaderTitle } from './GuessArtHeaderTitle';
 import { gameNameOverride } from '../logic/gameNameOverride';
 import { hasGitHubPAT } from '../../../lib/github';
 import type { GuessArtGameRecord, GuessArtRound } from '../logic/types';
+import { getTurnPlayers } from '../logic/turnUtils';
 
 interface GuessArtHeaderProps {
   game: GuessArtGameRecord;
@@ -72,12 +73,9 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
     }
   };
 
-  const drawerIdx = game.players.findIndex((p) => p.id === round.drawnById);
-  const effectiveDrawerIdx =
-    drawerIdx >= 0 ? drawerIdx : (Math.max(1, round.roundNumber) - 1) % (game.players.length || 1);
-  const effectiveGuesserIdx = (effectiveDrawerIdx + 1) % (game.players.length || 1);
-  const currentDrawer = game.players[effectiveDrawerIdx]?.name || round.drawnByName || 'Spieler 1';
-  const currentGuesser = game.players[effectiveGuesserIdx]?.name || round.guesserName || 'Spieler 2';
+  const { drawer, guesser } = getTurnPlayers(game, round);
+  const currentDrawer = drawer?.name || round.drawnByName || 'Spieler 1';
+  const currentGuesser = guesser?.name || round.guesserName || 'Spieler 2';
   const isDrawing = round.status === 'drawing' || round.status === 'selecting';
   const effectiveGameName = gameNameOverride.getEffectiveGameName(game.id, game.name);
 

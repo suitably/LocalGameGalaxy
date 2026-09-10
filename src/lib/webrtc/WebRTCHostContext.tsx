@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { WebRTCHostManager } from './WebRTCHostManager';
 import type { RemotePeerBase } from './WebRTCHostManager';
 import { buildAllTrackers, filterActiveTrackers, setTrackerPreference } from './trackerLogic';
+import { storage, STORAGE_KEYS, STORAGE_PREFIXES } from '../storage';
 
 export interface TrackerItem {
     url: string;
@@ -47,7 +48,7 @@ export function useWebRTCHost<T extends RemotePeerBase = RemotePeerBase, M exten
 
 export interface WebRTCHostProviderProps<T extends RemotePeerBase, M extends WebRTCHostManager<T>> {
     children: React.ReactNode;
-    gameId?: string; // Used for localStorage key isolation (e.g. 'melodiq')
+    gameId?: string; // Used for storage key isolation (e.g. 'melodiq')
     createManager: (partyId: string, trackerUrls: string[], callbacks: any) => M;
 }
 
@@ -63,22 +64,17 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
 
     // 1. Configuration State (Persisted)
     const [partyId, setPartyId] = useState(() => {
-        const stored = localStorage.getItem(`${gameId}_party_id`);
+        const stored = storage.get(`${gameId}${STORAGE_PREFIXES.WEBRTC_PARTY_ID}`);
         return stored || Math.random().toString(36).substring(2, 8).toUpperCase();
     });
 
     const [trackerUrls, setTrackerUrls] = useState<string[]>(() => {
-        const stored = localStorage.getItem(`${gameId}_tracker_urls`);
-        return stored ? JSON.parse(stored) : [];
+        return storage.getJson<string[]>(`${gameId}${STORAGE_PREFIXES.WEBRTC_TRACKER_URLS}`, []);
     });
 
     // Explicit user preferences per tracker URL (overriding default state)
     const [trackerPreferences, setTrackerPreferences] = useState<Record<string, boolean>>(() => {
-        const stored = localStorage.getItem(`${gameId}_tracker_preferences`);
-        if (stored) {
-            try { return JSON.parse(stored); } catch { return {}; }
-        }
-        return {};
+        return storage.getJson<Record<string, boolean>>(`${gameId}${STORAGE_PREFIXES.WEBRTC_TRACKER_PREF}`, {});
     });
 
     const [helperSettingsHash, setHelperSettingsHash] = useState(0);
@@ -91,9 +87,9 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
 
     // Self-hosted backend tracker URL if helper is enabled
     const backendTrackerUrl = useMemo(() => {
-        const isHelperEnabled = localStorage.getItem('melodiq_enable_helper') !== 'false';
+        const isHelperEnabled = storage.isHelperActive();
         if (!isHelperEnabled) return null;
-        let helperUrlRaw = localStorage.getItem('melodiq_helper_url');
+        let helperUrlRaw = storage.getHelperUrl();
         if (!helperUrlRaw) {
             helperUrlRaw = `${window.location.protocol}//${window.location.hostname}:3000`;
         }
@@ -133,26 +129,25 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
 
     // Active/Inactive peer tracking (persisted)
     const [activePeerIds, setActivePeerIds] = useState<string[]>(() => {
-        const stored = localStorage.getItem(`${gameId}_active_peer_ids`);
-        return stored ? JSON.parse(stored) : [];
+        return storage.getJson<string[]>(`${gameId}${STORAGE_PREFIXES.WEBRTC_ACTIVE_PEERS}`, []);
     });
 
     // Persist Config Changes
     useEffect(() => {
-        localStorage.setItem(`${gameId}_party_id`, partyId);
+        storage.set(`${gameId}${STORAGE_PREFIXES.WEBRTC_PARTY_ID}`, partyId);
     }, [partyId, gameId]);
 
     useEffect(() => {
-        localStorage.setItem(`${gameId}_tracker_urls`, JSON.stringify(trackerUrls));
+        storage.setJson(`${gameId}${STORAGE_PREFIXES.WEBRTC_TRACKER_URLS}`, trackerUrls);
     }, [trackerUrls, gameId]);
 
     useEffect(() => {
-        localStorage.setItem(`${gameId}_tracker_preferences`, JSON.stringify(trackerPreferences));
+        storage.setJson(`${gameId}${STORAGE_PREFIXES.WEBRTC_TRACKER_PREF}`, trackerPreferences);
     }, [trackerPreferences, gameId]);
 
     // Persist active peer IDs
     useEffect(() => {
-        localStorage.setItem(`${gameId}_active_peer_ids`, JSON.stringify(activePeerIds));
+        storage.setJson(`${gameId}${STORAGE_PREFIXES.WEBRTC_ACTIVE_PEERS}`, activePeerIds);
     }, [activePeerIds, gameId]);
 
     // 3. Manager Lifecycle
@@ -289,8 +284,8 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
     const restoreDefaultTrackers = useCallback(() => {
         setTrackerUrls([]);
         setTrackerPreferences({});
-        localStorage.removeItem(`${gameId}_tracker_preferences`);
-        localStorage.removeItem(`${gameId}_disabled_tracker_urls`);
+        storage.remove(`${gameId}${STORAGE_PREFIXES.WEBRTC_TRACKER_PREF}`);
+        storage.remove(`${gameId}_disabled_tracker_urls`);
     }, [gameId]);
 
     const togglePeerActive = useCallback((peerId: string) => {
@@ -308,11 +303,7 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
     // Broadcast roster updates
     const broadcastRoster = useCallback(() => {
         if (manager) {
-            const storedRoles = localStorage.getItem('melodiq_client_roles');
-            let parsedRoles: Record<string, string> = {};
-            if (storedRoles) {
-                try { parsedRoles = JSON.parse(storedRoles); } catch (e) {}
-            }
+            const parsedRoles = storage.getJson<Record<string, string>>(STORAGE_KEYS.MELODIQ_CLIENT_ROLES, {});
 
             const roster = activePeers.map(p => ({
                 id: p.peerId, // Legacy format expectation maybe?

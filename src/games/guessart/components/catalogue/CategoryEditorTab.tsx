@@ -20,6 +20,7 @@ import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import CategoryRoundedIcon from '@mui/icons-material/CategoryRounded';
 import { useTranslation } from 'react-i18next';
+import { ConfirmDialog } from '../../../../components/common/ConfirmDialog';
 import type { CategoryItem, WordItem } from '../../logic/types';
 
 interface CategoryEditorTabProps {
@@ -37,6 +38,7 @@ export const CategoryEditorTab: React.FC<CategoryEditorTabProps> = ({
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
   const [isNew, setIsNew] = useState<boolean>(false);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<string | number | null>(null);
 
   const [formId, setFormId] = useState('');
   const [formNameEn, setFormNameEn] = useState('');
@@ -113,21 +115,27 @@ export const CategoryEditorTab: React.FC<CategoryEditorTabProps> = ({
   };
 
   const handleDeleteCategory = (catId: string | number) => {
-    const stringId = String(catId);
-    const wordsInCat = words.filter((w) => String(w.categoryId) === stringId);
-    const confirmMsg = wordsInCat.length > 0
-      ? t('guessart.confirmDeleteCategoryWithWords', {
-          count: wordsInCat.length,
-          defaultValue: `Kategorie löschen? ${wordsInCat.length} enthaltene Wörter werden ebenfalls gelöscht.`,
-        })
-      : t('guessart.confirmDeleteCategory', 'Kategorie wirklich löschen?');
+    setCategoryToDelete(catId);
+  };
 
-    if (!window.confirm(confirmMsg)) return;
-
+  const handleConfirmDelete = () => {
+    if (categoryToDelete === null) return;
+    const stringId = String(categoryToDelete);
     const newCategories = categories.filter((c) => String(c.id) !== stringId);
     const newWords = words.filter((w) => String(w.categoryId) !== stringId);
     onChange(newCategories, newWords);
+    setCategoryToDelete(null);
   };
+
+  const wordsInPendingCat = categoryToDelete !== null
+    ? words.filter((w) => String(w.categoryId) === String(categoryToDelete))
+    : [];
+  const deleteConfirmMsg = wordsInPendingCat.length > 0
+    ? t('guessart.confirmDeleteCategoryWithWords', {
+        count: wordsInPendingCat.length,
+        defaultValue: `Kategorie löschen? ${wordsInPendingCat.length} enthaltene Wörter werden ebenfalls gelöscht.`,
+      })
+    : t('guessart.confirmDeleteCategory', 'Kategorie wirklich löschen?');
 
   return (
     <Box sx={{ py: 1 }}>
@@ -259,6 +267,14 @@ export const CategoryEditorTab: React.FC<CategoryEditorTabProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ConfirmDialog
+        open={categoryToDelete !== null}
+        message={deleteConfirmMsg}
+        confirmColor="error"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setCategoryToDelete(null)}
+      />
     </Box>
   );
 };

@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { CategoryEditorTab } from './CategoryEditorTab';
 import { WordEditorTab } from './WordEditorTab';
 import { PublishCatalogueTab } from './PublishCatalogueTab';
+import { ConfirmDialog } from '../../../../components/common/ConfirmDialog';
 import {
   getMasterCatalogue,
   resetMasterCatalogue,
@@ -45,6 +46,7 @@ export const CatalogueEditorDialog: React.FC<CatalogueEditorDialogProps> = ({
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [words, setWords] = useState<WordItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [confirmResetOpen, setConfirmResetOpen] = useState<boolean>(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -78,18 +80,12 @@ export const CatalogueEditorDialog: React.FC<CatalogueEditorDialogProps> = ({
     onCatalogueUpdated?.();
   };
 
-  const handleReset = async () => {
-    if (
-      !window.confirm(
-        t(
-          'guessart.confirmResetCatalogue',
-          'Wirklich auf den Standard-Katalog zurücksetzen? Eigene Änderungen gehen verloren.',
-        ),
-      )
-    ) {
-      return;
-    }
+  const handleReset = () => {
+    setConfirmResetOpen(true);
+  };
 
+  const handleConfirmReset = async () => {
+    setConfirmResetOpen(false);
     setLoading(true);
     try {
       const restored = await resetMasterCatalogue();
@@ -104,7 +100,8 @@ export const CatalogueEditorDialog: React.FC<CatalogueEditorDialogProps> = ({
   };
 
   return (
-    <Dialog
+    <>
+      <Dialog
       open={open}
       onClose={onClose}
       maxWidth="md"
@@ -253,5 +250,18 @@ export const CatalogueEditorDialog: React.FC<CatalogueEditorDialogProps> = ({
         )}
       </DialogContent>
     </Dialog>
-  );
+
+    <ConfirmDialog
+      open={confirmResetOpen}
+      title={t('guessart.resetToDefaults', 'Auf Standard zurücksetzen')}
+      message={t(
+        'guessart.confirmResetCatalogue',
+        'Wirklich auf den Standard-Katalog zurücksetzen? Eigene Änderungen gehen verloren.',
+      )}
+      confirmColor="error"
+      onConfirm={handleConfirmReset}
+      onCancel={() => setConfirmResetOpen(false)}
+    />
+  </>
+);
 };

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import LZString from 'lz-string';
 import { usePageTitle } from '../../context/TitleContext';
 import { useWakeLock } from '../../hooks/useWakeLock';
 import { useLayout } from '../../context/LayoutContext';
@@ -14,7 +13,7 @@ import { WaitingForStoryTurnView } from './components/WaitingForStoryTurnView';
 import { StoryReaderModal } from './components/StoryReaderModal';
 import { EditStoryDialog } from './components/EditStoryDialog';
 import { ShareStoryLinksDialog } from './components/ShareStoryLinksDialog';
-import { parseGameUrlParams, cleanWindowUrlQuery } from '../../modules/sharing';
+import { useGameJoinUrl } from '../../modules/sharing';
 import { playerAssignment } from './logic/playerAssignment';
 import { LocalStoryEngine } from './logic/engine';
 import { storytellerNotificationService } from './logic/notificationService';
@@ -67,87 +66,72 @@ export const StorytellerGame: React.FC = () => {
     storytellerNotificationService.requestPermission().catch(() => {});
   }, []);
 
-  const cleanUrl = useCallback(() => {
-    cleanWindowUrlQuery('#/games/storyteller');
-  }, []);
-
   // Process URL parameters: gameId, player, data, gameRelay
-  useEffect(() => {
-    const processUrlParams = async () => {
-      if (typeof window === 'undefined') return;
-      const params = parseGameUrlParams();
-      if (!params.toString()) return;
-
-      const dataParam = params.get('data');
+  useGameJoinUrl<StoryGameSnapshot>({
+    defaultHashPath: '#/games/storyteller',
+    onSnapshotLoaded: async (snapshot, params) => {
+      if (!snapshot || !snapshot.game) return;
       const targetPlayerId = params.get('player') || params.get('playerId');
-      const urlGameId = params.get('gameId') || params.get('game');
       const relayParam = params.get('gameRelay');
 
-      let resolvedGameId = urlGameId;
+      const imported = await LocalStoryEngine.importSnapshot(snapshot);
+      const resolvedGameId = imported.game.id;
 
-      if (dataParam) {
-        try {
-          const jsonStr = LZString.decompressFromEncodedURIComponent(dataParam);
-          if (jsonStr) {
-            const snapshot = JSON.parse(jsonStr) as StoryGameSnapshot;
-            if (snapshot && snapshot.game) {
-              const imported = await LocalStoryEngine.importSnapshot(snapshot);
-              resolvedGameId = imported.game.id;
-
-              if (targetPlayerId) {
-                const ownRelay = storage.getPushRelayUrl();
-                const prefMethod = storage.getNotificationMethod();
-                const updatedPlayers: StoryPlayer[] = imported.game.players.map((p) =>
-                  p.id === targetPlayerId
-                    ? {
-                        ...p,
-                        relayUrl: ownRelay || p.relayUrl || relayParam || undefined,
-                        notificationMethod: prefMethod,
-                        ntfyTopic: storage.getUserNtfyTopic() || p.ntfyTopic,
-                      }
-                    : p,
-                );
-                imported.game.players = updatedPlayers;
-                await updateStoryGame(imported.game.id, { players: updatedPlayers }).catch(() => {});
-                // Broadcast updated player presence (including ntfyTopic & relayUrl) via MQTT mailbox
-                storytellerMailboxService.publish(imported.game.id, {
-                  type: 'STORY_SYNC',
-                  snapshot: { game: { ...imported.game, players: updatedPlayers }, entries: imported.entries },
-                });
+      if (targetPlayerId) {
+        const ownRelay = storage.getPushRelayUrl();
+        const prefMethod = storage.getNotificationMethod();
+        const updatedPlayers: StoryPlayer[] = imported.game.players.map((p) =>
+          p.id === targetPlayerId
+            ? {
+                ...p,
+                relayUrl: ownRelay || p.relayUrl || relayParam || undefined,
+                notificationMethod: prefMethod,
+                ntfyTopic: storage.getUserNtfyTopic() || p.ntfyTopic,
               }
-
-              setGame(imported.game);
-              setEntries(imported.entries);
-            }
-          }
-        } catch (e) {
-          console.warn('[Storyteller] Failed to unpack URL data payload:', e);
-        }
+            : p,
+        );
+        imported.game.players = updatedPlayers;
+        await updateStoryGame(imported.game.id, { players: updatedPlayers }).catch(() => {});
+        storytellerMailboxService.publish(imported.game.id, {
+          type: 'STORY_SYNC',
+          snapshot: { game: { ...imported.game, players: updatedPlayers }, entries: imported.entries },
+        });
       }
 
-      if (resolvedGameId) {
-        if (targetPlayerId) {
-          playerAssignment.addLocalPlayerId(resolvedGameId, targetPlayerId);
-        }
-        if (relayParam) {
-          gameRelayStorage.setGameRelay(resolvedGameId, relayParam);
-        }
-        if (targetPlayerId) {
-          const ownRelay = storage.getPushRelayUrl();
-          const preferredRelay = ownRelay || relayParam || undefined;
-          pushClient.registerForGamePush(resolvedGameId, targetPlayerId, preferredRelay).catch(() => {});
-        }
-        setLocalVersion((v) => v + 1);
-        await loadActiveGames();
-        setActiveGameId(resolvedGameId);
-        cleanUrl();
-      }
-    };
+      setGame(imported.game);
+      setEntries(imported.entries);
 
-    processUrlParams();
-    window.addEventListener('hashchange', processUrlParams);
-    return () => window.removeEventListener('hashchange', processUrlParams);
-  }, [cleanUrl, loadActiveGames]);
+      if (targetPlayerId) {
+        playerAssignment.addLocalPlayerId(resolvedGameId, targetPlayerId);
+        const ownRelay = storage.getPushRelayUrl();
+        const preferredRelay = ownRelay || relayParam || undefined;
+        pushClient.registerForGamePush(resolvedGameId, targetPlayerId, preferredRelay).catch(() => {});
+      }
+      if (relayParam) {
+        gameRelayStorage.setGameRelay(resolvedGameId, relayParam);
+      }
+      setLocalVersion((v) => v + 1);
+      await loadActiveGames();
+      setActiveGameId(resolvedGameId);
+    },
+    onDirectGameId: async (urlGameId, params) => {
+      const targetPlayerId = params.get('player') || params.get('playerId');
+      const relayParam = params.get('gameRelay');
+
+      if (targetPlayerId) {
+        playerAssignment.addLocalPlayerId(urlGameId, targetPlayerId);
+        const ownRelay = storage.getPushRelayUrl();
+        const preferredRelay = ownRelay || relayParam || undefined;
+        pushClient.registerForGamePush(urlGameId, targetPlayerId, preferredRelay).catch(() => {});
+      }
+      if (relayParam) {
+        gameRelayStorage.setGameRelay(urlGameId, relayParam);
+      }
+      setLocalVersion((v) => v + 1);
+      await loadActiveGames();
+      setActiveGameId(urlGameId);
+    },
+  });
 
   const handleBack = useCallback(() => {
     setActiveGameId(null);

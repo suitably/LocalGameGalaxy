@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { ExcalidrawViewer } from './ExcalidrawViewer';
 import type { GuessArtGameRecord, GuessArtRound } from '../logic/types';
 import { playerAssignment } from '../logic/playerAssignment';
+import { getTurnPlayers } from '../logic/turnUtils';
 
 interface WaitingForGuesserViewProps {
   game: GuessArtGameRecord;
@@ -33,9 +34,7 @@ export const WaitingForGuesserView: React.FC<WaitingForGuesserViewProps> = ({
   onClaimPlayer,
 }) => {
   const { t } = useTranslation();
-  const dIdx = game.players.findIndex((p) => p.id === round.drawnById);
-  const effDIdx = dIdx >= 0 ? dIdx : (Math.max(1, round.roundNumber) - 1) % (game.players.length || 1);
-  const guesserPlayer = game.players[(effDIdx + 1) % (game.players.length || 1)];
+  const { guesser: guesserPlayer } = getTurnPlayers(game, round);
   const guesserName = guesserPlayer?.name || round.guesserName || 'Spieler 2';
 
   const handleClaim = () => {
