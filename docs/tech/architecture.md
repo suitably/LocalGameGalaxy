@@ -79,6 +79,7 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
     -   Centralized "Jackbox-style" room lobby where all players connect once via QR code or link (`#/party?room=XYZ`).
     -   **Serverless Real-Time Communication**: Operates 100% serverless over public WSS MQTT brokers (`wss://broker.hivemq.com:8884/mqtt` / `wss://broker.emqx.io:8084/mqtt`) and local `BroadcastChannel`. No local helper server or backend connection is required.
     -   Hosts can launch **Gartic Phone** for all connected devices simultaneously, with isolated drawing/guessing views per device, synchronized round progression, animated album reveals, and seamless return to the lobby.
+    -   **SRP Architecture**: Decomposed into focused custom hooks (`useGarticGameState` for pure game rules and `sessionStorageSafe` persistence, `useGarticSync` for `useMultiChannelSync` coordination) and a slim view coordinator component (`GarticPhoneGame.tsx`, < 180 lines).
 
 ### Shared Modules (`src/modules/*`)
 - **Player Management (`src/modules/player-management`)**:
@@ -91,7 +92,7 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
 - **Drawing & Stroke Replay (`src/modules/drawing`)**:
   - Encapsulates interactive drawing canvas (`DrawingCanvas`), Excalidraw lazy-loading (`ExcalidrawLazy`), animated stroke playback (`ExcalidrawViewer`), and scene parsing/ordering (`excalidrawScene`). Shared cleanly by GuessArt and Gartic Phone without inter-game dependencies.
 - **Session Sharing & Editing (`src/modules/sharing`)**:
-  - Reusable dialogs (`ShareSessionLinksDialog`, `EditSessionDialog`) supporting dynamic QR generation, LZString compressed payloads, Web Share API, Clipboard fallbacks, and player renaming. Shared by GuessArt and Storyteller.
+  - Reusable dialogs (`ShareSessionLinksDialog`, `EditSessionDialog`) and URL parsing utilities (`parseGameUrlParams`, `cleanWindowUrlQuery`) providing unified deep-link extraction across hash and search routing. Shared by GuessArt, Storyteller, Wordle, and Gartic Phone.
 - **Async Game Helpers (`src/modules/async-game`)**:
   - Reusable IndexedDB transaction and cursor runners (`createIdbStoreOperations`, `runWithStore`, `cursorCollect`, `requestToPromise`) eliminating boilerplate and error handling across offline-first Dexie stores. Used by GuessArt and Storyteller.
 

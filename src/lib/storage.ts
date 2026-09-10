@@ -68,6 +68,10 @@ export const STORAGE_KEYS = {
     KNISTER_SHOW_DICE: 'knister_show_dice',
     QWIXX_MY_SHEET: 'qwixx_my_sheet',
     QWIXX_SHOW_DICE: 'qwixx_show_dice',
+
+    // Gartic Phone
+    GARTIC_STATE_PREFIX: 'galaxy_gartic_state_',
+    GARTIC_HOST_PREFIX: 'gartic_host_',
 } as const;
 
 const memoryFallback = new Map<string, string>();
@@ -234,3 +238,51 @@ export function generateUserNtfyTopic(): string {
     const rand = Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
     return `lgg-user-${rand.slice(0, 16)}`;
 }
+
+const sessionMemoryFallback = new Map<string, string>();
+
+export const sessionStorageSafe = {
+    get(key: string, fallback = ''): string {
+        try {
+            if (typeof sessionStorage !== 'undefined') {
+                return sessionStorage.getItem(key) ?? fallback;
+            }
+            return sessionMemoryFallback.get(key) ?? fallback;
+        } catch {
+            return sessionMemoryFallback.get(key) ?? fallback;
+        }
+    },
+    set(key: string, value: string): void {
+        try {
+            if (typeof sessionStorage !== 'undefined') {
+                sessionStorage.setItem(key, value);
+            }
+            sessionMemoryFallback.set(key, value);
+        } catch {
+            sessionMemoryFallback.set(key, value);
+        }
+    },
+    remove(key: string): void {
+        try {
+            if (typeof sessionStorage !== 'undefined') {
+                sessionStorage.removeItem(key);
+            }
+            sessionMemoryFallback.delete(key);
+        } catch {
+            sessionMemoryFallback.delete(key);
+        }
+    },
+    getJson<T>(key: string, fallback: T): T {
+        const val = this.get(key);
+        if (!val) return fallback;
+        try {
+            return JSON.parse(val) as T;
+        } catch {
+            return fallback;
+        }
+    },
+    setJson<T>(key: string, value: T): void {
+        this.set(key, JSON.stringify(value));
+    },
+};
+

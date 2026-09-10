@@ -25,6 +25,7 @@ import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
+import { parseGameUrlParams } from '../../modules/sharing';
 import { useWordle } from './hooks/useWordle';
 import { wordleEngine } from './logic/wordleEngine';
 import { WordleBoard } from './components/WordleBoard';
@@ -43,8 +44,7 @@ export const WordleGame: React.FC = () => {
   const [helpOpen, setHelpOpen] = useState(false);
 
   // Check URL parameters for duel challenge
-  const duelParam = new URLSearchParams(location.search).get('duel') ||
-    (location.hash.includes('?') ? new URLSearchParams(location.hash.split('?')[1]).get('duel') : null);
+  const duelParam = parseGameUrlParams(location.search, location.hash).get('duel');
 
   const customDuelWord = duelParam ? wordleEngine.decodeDuelWord(duelParam) : null;
   const initialMode: WordleGameMode = customDuelWord ? 'duel' : 'daily';

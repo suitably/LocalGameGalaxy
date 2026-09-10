@@ -14,6 +14,7 @@ import { WaitingForStoryTurnView } from './components/WaitingForStoryTurnView';
 import { StoryReaderModal } from './components/StoryReaderModal';
 import { EditStoryDialog } from './components/EditStoryDialog';
 import { ShareStoryLinksDialog } from './components/ShareStoryLinksDialog';
+import { parseGameUrlParams, cleanWindowUrlQuery } from '../../modules/sharing';
 import { playerAssignment } from './logic/playerAssignment';
 import { LocalStoryEngine } from './logic/engine';
 import { storytellerNotificationService } from './logic/notificationService';
@@ -67,22 +68,16 @@ export const StorytellerGame: React.FC = () => {
   }, []);
 
   const cleanUrl = useCallback(() => {
-    if (typeof window === 'undefined' || !window.history?.replaceState) return;
-    const hashWithoutQuery = window.location.hash.split('?')[0] || '#/games/storyteller';
-    const cleanPath = window.location.pathname + hashWithoutQuery;
-    window.history.replaceState({}, document.title, cleanPath);
+    cleanWindowUrlQuery('#/games/storyteller');
   }, []);
 
   // Process URL parameters: gameId, player, data, gameRelay
   useEffect(() => {
     const processUrlParams = async () => {
       if (typeof window === 'undefined') return;
-      const search = window.location.search;
-      const hash = window.location.hash;
-      const queryString = search || (hash.includes('?') ? hash.substring(hash.indexOf('?')) : '');
-      if (!queryString) return;
+      const params = parseGameUrlParams();
+      if (!params.toString()) return;
 
-      const params = new URLSearchParams(queryString);
       const dataParam = params.get('data');
       const targetPlayerId = params.get('player') || params.get('playerId');
       const urlGameId = params.get('gameId') || params.get('game');

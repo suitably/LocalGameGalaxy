@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { LocalGameEngine } from '../logic/engine';
 import { guessArtMailbox } from '../logic/guessArtMailbox';
+import { parseGameUrlParams } from '../../../modules/sharing';
 import { gameRelayStorage } from '../../../lib/push/gameRelayStorage';
 import { pushClient } from '../../../lib/push/pushClient';
 import { storage } from '../../../lib/storage';
@@ -45,10 +46,8 @@ export const useGuessArtGame = (
   useEffect(() => {
     if (!gameId || typeof window === 'undefined') return;
     try {
-      const searchParams = new URLSearchParams(window.location.search);
-      const hashQuery = window.location.hash.includes('?') ? window.location.hash.split('?')[1] : '';
-      const hashParams = new URLSearchParams(hashQuery);
-      const relay = hashParams.get('gameRelay') || hashParams.get('relay') || searchParams.get('gameRelay') || searchParams.get('relay');
+      const params = parseGameUrlParams();
+      const relay = params.get('gameRelay') || params.get('relay');
       if (relay) {
         gameRelayStorage.setGameRelay(gameId, relay);
       }
