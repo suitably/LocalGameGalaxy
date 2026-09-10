@@ -86,7 +86,8 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
   - Unconstrained player removal: Allows players down to 0, ensuring default placeholders ("Spieler 1", "Spieler 2") can be deleted and replaced with custom names.
   - Fully configurable `minPlayers` and `maxPlayers` constraints, with duplicate name prevention, trimming, and full i18n support.
 - **Sync & Mailbox (`src/modules/sync`)**:
-  - Reusable generic MQTT mailbox service (`MqttMailboxService`) providing clean, strongly typed asynchronous peer synchronization over MQTT brokers for any turn-based game, completely decoupled from game-specific domains. Used by GuessArt and Storyteller.
+  - Reusable generic MQTT mailbox service (`MqttMailboxService`) providing clean, strongly typed asynchronous peer synchronization over MQTT brokers for any turn-based game, completely decoupled from game-specific domains. Used by GuessArt, Storyteller, and Universal Party.
+  - Multi-channel synchronization hook (`useMultiChannelSync`) and coordinator (`MultiChannelSyncCoordinator`) unifying local `BroadcastChannel` and remote MQTT communication into a lifecycle-safe, resource-leak-free abstraction used by Storyteller and Gartic Phone.
 - **Drawing & Stroke Replay (`src/modules/drawing`)**:
   - Encapsulates interactive drawing canvas (`DrawingCanvas`), Excalidraw lazy-loading (`ExcalidrawLazy`), animated stroke playback (`ExcalidrawViewer`), and scene parsing/ordering (`excalidrawScene`). Shared cleanly by GuessArt and Gartic Phone without inter-game dependencies.
 - **Session Sharing & Editing (`src/modules/sharing`)**:

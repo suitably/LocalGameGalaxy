@@ -14,6 +14,7 @@ import { GarticGuessingStep } from './components/GarticGuessingStep';
 import { GarticAlbumReveal } from './components/GarticAlbumReveal';
 import { GarticWaitingStatus } from './components/GarticWaitingStatus';
 import { GarticHeader } from './components/GarticHeader';
+import { useMultiChannelSync } from '../../modules/sync';
 import { universalPartyManager } from '../../features/party/logic/universalPartyManager';
 import { storage } from '../../lib/storage';
 import type { GarticGameState, GarticPlayer } from './types';
@@ -109,44 +110,27 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
 
   const isHost = gameState.hostId === myPlayerId || gameState.players[0]?.id === myPlayerId || universalPartyManager.isHost(gameState.roomId);
 
-  // Broadcast state & events over BroadcastChannel
-  const broadcastState = useCallback((newState: GarticGameState) => {
-    setGameState(newState);
-    try {
-      const channel = new BroadcastChannel(`gartic_phone_${newState.roomId}`);
-      channel.postMessage({ type: 'STATE_SYNC', state: newState });
-      channel.close();
-    } catch {
-      // ignore
-    }
-  }, []);
+  type GarticBroadcastMessage =
+    | { type: 'STATE_SYNC'; state: GarticGameState }
+    | { type: 'GARTIC_STEP_SUBMIT'; roomId: string; playerId: string; content: string }
+    | { type: 'GARTIC_JOIN'; player: GarticPlayer }
+    | { type: 'GARTIC_FORCE_END' };
 
-  const sendJoinAnnouncement = useCallback((roomId: string, player: GarticPlayer) => {
-    try {
-      const channel = new BroadcastChannel(`gartic_phone_${roomId}`);
-      channel.postMessage({ type: 'GARTIC_JOIN', player });
-      channel.close();
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!gameState.roomId) return;
-
-    // Local BroadcastChannel
-    const channel = new BroadcastChannel(`gartic_phone_${gameState.roomId}`);
-    channel.onmessage = (event) => {
-      if (event.data?.type === 'STATE_SYNC' && event.data.state) {
-        setGameState(event.data.state);
-        sessionStorage.setItem(`galaxy_gartic_state_${event.data.state.roomId}`, JSON.stringify(event.data.state));
-      } else if (event.data?.type === 'GARTIC_STEP_SUBMIT' && event.data.playerId && event.data.content !== undefined) {
-        setGameState((prev) => submitPlayerGarticStep(prev, event.data.playerId, event.data.content));
-      } else if (event.data?.type === 'GARTIC_FORCE_END') {
+  // Realtime BroadcastChannel sync
+  const { publish } = useMultiChannelSync<GarticBroadcastMessage>({
+    channelId: gameState.roomId,
+    broadcastPrefix: 'gartic_phone',
+    onMessage: (msg) => {
+      if (msg.type === 'STATE_SYNC' && msg.state) {
+        setGameState(msg.state);
+        sessionStorage.setItem(`galaxy_gartic_state_${msg.state.roomId}`, JSON.stringify(msg.state));
+      } else if (msg.type === 'GARTIC_STEP_SUBMIT' && msg.playerId && msg.content !== undefined) {
+        setGameState((prev) => submitPlayerGarticStep(prev, msg.playerId, msg.content));
+      } else if (msg.type === 'GARTIC_FORCE_END') {
         sessionStorage.removeItem(`galaxy_gartic_state_${gameState.roomId}`);
         handleBack();
-      } else if (event.data?.type === 'GARTIC_JOIN' && event.data.player) {
-        const newP = event.data.player as GarticPlayer;
+      } else if (msg.type === 'GARTIC_JOIN' && msg.player) {
+        const newP = msg.player;
         setGameState((prev) => {
           if (prev.players.some((p) => p.id === newP.id)) return prev;
           const updated = addPlayerToGarticGame(prev, newP);
@@ -156,7 +140,21 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
           return updated;
         });
       }
-    };
+    },
+  });
+
+  // Broadcast state & events over BroadcastChannel
+  const broadcastState = useCallback((newState: GarticGameState) => {
+    setGameState(newState);
+    publish({ type: 'STATE_SYNC', state: newState });
+  }, [publish]);
+
+  const sendJoinAnnouncement = useCallback((roomId: string, player: GarticPlayer) => {
+    publish({ type: 'GARTIC_JOIN', player }, roomId);
+  }, [publish]);
+
+  useEffect(() => {
+    if (!gameState.roomId) return;
 
     // Send join ping & initial sync
     sendJoinAnnouncement(gameState.roomId, {
@@ -169,11 +167,7 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
     if (isHost) {
       broadcastState(gameState);
     }
-
-    return () => {
-      channel.close();
-    };
-  }, [gameState.roomId, myPlayerId, myPlayerName, isHost, broadcastState, sendJoinAnnouncement, handleBack]);
+  }, [gameState.roomId, myPlayerId, myPlayerName, isHost, broadcastState, sendJoinAnnouncement]);
 
   const handleRevealStateChange = (bookIndex: number, stepIndex: number) => {
     broadcastState({
@@ -197,15 +191,7 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
   const handleEndGame = () => {
     sessionStorage.removeItem(`galaxy_gartic_state_${gameState.roomId}`);
     universalPartyManager.returnToLobby(gameState.roomId);
-
-    try {
-      const channel = new BroadcastChannel(`gartic_phone_${gameState.roomId}`);
-      channel.postMessage({ type: 'GARTIC_FORCE_END' });
-      channel.close();
-    } catch {
-      // ignore
-    }
-
+    publish({ type: 'GARTIC_FORCE_END' });
     handleBack();
   };
 
@@ -224,20 +210,14 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
     const updated = submitPlayerGarticStep(gameState, myPlayer.id, content);
     setGameState(updated);
 
-    const stepPayload = {
+    const stepPayload: GarticBroadcastMessage = {
       type: 'GARTIC_STEP_SUBMIT',
       roomId: gameState.roomId,
       playerId: myPlayer.id,
       content,
     };
 
-    try {
-      const channel = new BroadcastChannel(`gartic_phone_${gameState.roomId}`);
-      channel.postMessage(stepPayload);
-      channel.close();
-    } catch {
-      // ignore
-    }
+    publish(stepPayload);
 
     // If this step completed the round and advanced to next round, broadcast full sync
     if (updated.roundIndex !== gameState.roundIndex || updated.phase !== gameState.phase) {

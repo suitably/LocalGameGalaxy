@@ -18,7 +18,8 @@ import { playerAssignment } from './logic/playerAssignment';
 import { LocalStoryEngine } from './logic/engine';
 import { storytellerNotificationService } from './logic/notificationService';
 import { updateStoryGame } from './logic/repository';
-import { storytellerMailboxService } from './logic/mailboxService';
+import { storytellerMailboxService, type StorytellerSyncMessage } from './logic/mailboxService';
+import { useMultiChannelSync } from '../../modules/sync';
 import { gameRelayStorage } from '../../lib/push/gameRelayStorage';
 import { pushClient } from '../../lib/push/pushClient';
 import { storage } from '../../lib/storage';
@@ -161,54 +162,12 @@ export const StorytellerGame: React.FC = () => {
     navigate('/games/storyteller');
   }, [loadActiveGames, navigate]);
 
-  // Broadcast state & events over BroadcastChannel & MQTT Mailbox
-  const broadcastSnapshot = useCallback((newGame: StoryGameRecord, newEntries: StoryEntry[]) => {
-    const snapshot: StoryGameSnapshot = { game: newGame, entries: newEntries };
-    setGame(newGame);
-    setEntries(newEntries);
-    setActiveGameId(newGame.id);
-
-    try {
-      const channel = new BroadcastChannel(`storyteller_channel_${newGame.id}`);
-      channel.postMessage({ type: 'STORY_SYNC', snapshot });
-      channel.close();
-    } catch {
-      // ignore
-    }
-
-    try {
-      storytellerMailboxService.publish(newGame.id, { type: 'STORY_SYNC', snapshot });
-    } catch {
-      // ignore
-    }
-  }, []);
-
   // Realtime BroadcastChannel & MQTT sync
-  useEffect(() => {
-    if (!activeGameId) return;
-
-    const channel = new BroadcastChannel(`storyteller_channel_${activeGameId}`);
-
-    channel.onmessage = async (event) => {
-      if (event.data?.type === 'STORY_SYNC' && event.data.snapshot) {
-        const res = await LocalStoryEngine.importSnapshot(event.data.snapshot);
-        if (res.updated) {
-          setGame(res.game);
-          setEntries(res.entries);
-        }
-      } else if (event.data?.type === 'STORY_FINISH') {
-        if (event.data.snapshot) {
-          const res = await LocalStoryEngine.importSnapshot(event.data.snapshot);
-          if (res.updated) {
-            setGame(res.game);
-            setEntries(res.entries);
-          }
-        }
-        setReaderOpen(true);
-      }
-    };
-
-    const unsub = storytellerMailboxService.subscribe(activeGameId, async (msg) => {
+  const { publish } = useMultiChannelSync<StorytellerSyncMessage>({
+    channelId: activeGameId,
+    broadcastPrefix: 'storyteller_channel',
+    mailbox: storytellerMailboxService,
+    onMessage: async (msg, source) => {
       if (!msg || typeof msg !== 'object') return;
 
       if (msg.type === 'STORY_SYNC' && msg.snapshot) {
@@ -218,20 +177,22 @@ export const StorytellerGame: React.FC = () => {
           setEntries(res.entries);
 
           // Notify if it is now this device's turn and window is hidden
-          const nextActive = res.game.players[res.game.currentPlayerIndex];
-          if (nextActive && playerAssignment.isPlayerLocal(res.game.id, nextActive.id, false)) {
-            if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
-              const lastAuthor = res.entries[res.entries.length - 1]?.authorName;
-              const msg = buildTurnNotificationMessage({
-                gameType: 'storyteller',
-                gameName: res.game.name,
-                gameId: res.game.id,
-                actionType: 'turn',
-                actorName: lastAuthor,
-                targetPlayerName: nextActive.name,
-                targetPlayerId: nextActive.id,
-              });
-              storytellerNotificationService.showLocalNotification(msg.title, msg.body, msg.url);
+          if (source === 'mqtt') {
+            const nextActive = res.game.players[res.game.currentPlayerIndex];
+            if (nextActive && playerAssignment.isPlayerLocal(res.game.id, nextActive.id, false)) {
+              if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+                const lastAuthor = res.entries[res.entries.length - 1]?.authorName;
+                const turnMsg = buildTurnNotificationMessage({
+                  gameType: 'storyteller',
+                  gameName: res.game.name,
+                  gameId: res.game.id,
+                  actionType: 'turn',
+                  actorName: lastAuthor,
+                  targetPlayerName: nextActive.name,
+                  targetPlayerId: nextActive.id,
+                });
+                storytellerNotificationService.showLocalNotification(turnMsg.title, turnMsg.body, turnMsg.url);
+              }
             }
           }
         }
@@ -245,13 +206,18 @@ export const StorytellerGame: React.FC = () => {
         }
         setReaderOpen(true);
       }
-    });
+    },
+  });
 
-    return () => {
-      channel.close();
-      unsub();
-    };
-  }, [activeGameId]);
+  // Broadcast state & events over BroadcastChannel & MQTT Mailbox
+  const broadcastSnapshot = useCallback((newGame: StoryGameRecord, newEntries: StoryEntry[]) => {
+    const snapshot: StoryGameSnapshot = { game: newGame, entries: newEntries };
+    setGame(newGame);
+    setEntries(newEntries);
+    setActiveGameId(newGame.id);
+
+    publish({ type: 'STORY_SYNC', snapshot }, newGame.id);
+  }, [publish]);
 
   // Ensure local players have their personal ntfyTopic & relayUrl attached to the story record
   useEffect(() => {
@@ -348,18 +314,7 @@ export const StorytellerGame: React.FC = () => {
       const snap = await LocalStoryEngine.finishStory(game.id);
       broadcastSnapshot(snap.game, snap.entries);
 
-      try {
-        const channel = new BroadcastChannel(`storyteller_channel_${game.id}`);
-        channel.postMessage({ type: 'STORY_FINISH', snapshot: snap });
-        channel.close();
-      } catch {
-        // ignore
-      }
-      try {
-        storytellerMailboxService.publish(game.id, { type: 'STORY_FINISH', snapshot: snap });
-      } catch {
-        // ignore
-      }
+      publish({ type: 'STORY_FINISH', snapshot: snap }, game.id);
 
       setReaderOpen(true);
     } finally {
