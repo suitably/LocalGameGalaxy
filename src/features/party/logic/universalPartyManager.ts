@@ -1,4 +1,4 @@
-import { mailboxService } from '../../../games/guessart/logic/mailboxService';
+import { partyMailbox } from './partyMailbox';
 import { ensureUniquePlayerName } from '../../../lib/disambiguateName';
 
 export interface PartyPlayer {
@@ -273,7 +273,7 @@ class UniversalPartyManager {
 
     // MQTT subscription
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mailboxService.subscribeToGame(topic, async (incoming: any) => {
+    partyMailbox.subscribe(topic, async (incoming: any) => {
       if (!incoming || incoming.roomId !== roomId) return;
 
       // Handle presence pings
@@ -373,7 +373,7 @@ class UniversalPartyManager {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mailboxService.publishTurn(topic, state as any);
+    partyMailbox.publish(topic, state as any);
     this.notifyListeners();
   }
 
@@ -386,7 +386,7 @@ class UniversalPartyManager {
       try {
         const topic = `party_${roomId}`;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        mailboxService.publishTurn(topic, { type: 'PARTY_PRESENCE', roomId, player } as any);
+        partyMailbox.publish(topic, { type: 'PARTY_PRESENCE', roomId, player } as any);
       } catch {
         // ignore
       }

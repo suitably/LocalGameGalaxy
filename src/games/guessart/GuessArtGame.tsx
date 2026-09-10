@@ -23,7 +23,7 @@ import { storage } from '../../lib/storage';
 import { playerAssignment } from './logic/playerAssignment';
 import { gameRelayStorage } from '../../lib/push/gameRelayStorage';
 import { guessArtNotificationService } from './logic/notificationService';
-import { mailboxService } from './logic/mailboxService';
+import { guessArtMailbox } from './logic/guessArtMailbox';
 import LZString from 'lz-string';
 import { LocalGameEngine } from './logic/engine';
 import type { GuessArtGameRecord, GuessArtRound } from './logic/types';
@@ -118,7 +118,7 @@ export const GuessArtGame: React.FC = () => {
                 imported.game.players = updatedPlayers;
                 await LocalGameEngine.updateGameDetails(imported.game.id, { players: updatedPlayers }).catch(() => {});
                 // Broadcast updated player presence (including ntfyTopic & relayUrl) via MQTT mailbox
-                mailboxService.publishTurn(imported.game.id, {
+                guessArtMailbox.publish(imported.game.id, {
                   game: { ...imported.game, players: updatedPlayers },
                   round: imported.round,
                 }).catch(() => {});
@@ -220,7 +220,7 @@ export const GuessArtGame: React.FC = () => {
 
       if (effRound) {
         try {
-          await mailboxService.publishTurn(targetGame.id, {
+          await guessArtMailbox.publish(targetGame.id, {
             game: targetGame,
             round: effRound,
           });

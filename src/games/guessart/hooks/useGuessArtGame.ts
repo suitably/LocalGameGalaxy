@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { LocalGameEngine } from '../logic/engine';
-import { mailboxService } from '../logic/mailboxService';
+import { guessArtMailbox } from '../logic/guessArtMailbox';
 import { gameRelayStorage } from '../../../lib/push/gameRelayStorage';
 import { pushClient } from '../../../lib/push/pushClient';
 import { storage } from '../../../lib/storage';
@@ -139,7 +139,7 @@ export const useGuessArtGame = (
       LocalGameEngine.updateGameDetails(gameId, { players: updatedPlayers })
         .then((snap) => {
           setGame(snap.game);
-          mailboxService.publishTurn(gameId, snap).catch(() => {});
+          guessArtMailbox.publish(gameId, snap).catch(() => {});
         })
         .catch((e) => console.warn('[useGuessArtGame] Failed to sync local player notification channels:', e));
     }
@@ -148,29 +148,53 @@ export const useGuessArtGame = (
   // Subscribe to ephemeral mailbox and track active screen game
   useEffect(() => {
     if (!gameId) {
-      mailboxService.setActiveScreenGameId(null);
+      guessArtNotificationService.setActiveScreenGameId(null);
       return;
     }
 
-    mailboxService.syncSubscribedGames([gameId]);
-    mailboxService.setActiveScreenGameId(gameId);
+    guessArtNotificationService.setActiveScreenGameId(gameId);
 
-    const unsubListener = mailboxService.onRemoteSnapshot(async (remoteSnapshot, snapshotGameId) => {
+    const unsubListener = guessArtMailbox.subscribe(gameId, async (remoteSnapshot, snapshotGameId, timestamp) => {
       if (snapshotGameId === gameId) {
-        // Automatically purge any player that has been explicitly claimed by another device (different ntfyTopic),
-        // UNLESS the player is currently claimed temporarily on this device!
-        const ownTopic = storage.getUserNtfyTopic();
-        for (const p of remoteSnapshot.game.players) {
-          if (
-            p.ntfyTopic &&
-            p.ntfyTopic !== ownTopic &&
-            !playerAssignment.isTurnClaimedTemporarily(gameId, p.id)
-          ) {
-            playerAssignment.removeLocalPlayerId(gameId, p.id);
+        try {
+          const importResult = await LocalGameEngine.importSnapshot(remoteSnapshot, language);
+          if (importResult.updated) {
+            const isHistorical = timestamp ? Date.now() - timestamp > 30000 : false;
+            const isInitialGameStart =
+              !importResult.round ||
+              (importResult.round.roundNumber === 1 &&
+                (importResult.round.status === 'selecting' ||
+                  (importResult.round.status === 'drawing' && !importResult.round.word)));
+
+            if (!isHistorical) {
+              await guessArtNotificationService.notifyTurnIfEligible({
+                game: importResult.game,
+                round: importResult.round,
+                isRemoteEvent: true,
+                isInitialGameStart,
+                activeGameScreenId: gameId,
+                isDocumentVisible: typeof document !== 'undefined' ? document.visibilityState === 'visible' : true,
+              });
+            }
           }
+
+          // Automatically purge any player that has been explicitly claimed by another device (different ntfyTopic),
+          // UNLESS the player is currently claimed temporarily on this device!
+          const ownTopic = storage.getUserNtfyTopic();
+          for (const p of remoteSnapshot.game.players) {
+            if (
+              p.ntfyTopic &&
+              p.ntfyTopic !== ownTopic &&
+              !playerAssignment.isTurnClaimedTemporarily(gameId, p.id)
+            ) {
+              playerAssignment.removeLocalPlayerId(gameId, p.id);
+            }
+          }
+          setGame(remoteSnapshot.game);
+          setRound(remoteSnapshot.round);
+        } catch (err) {
+          console.warn('[useGuessArtGame] Error processing incoming snapshot:', err);
         }
-        setGame(remoteSnapshot.game);
-        setRound(remoteSnapshot.round);
       }
     });
 
@@ -186,7 +210,7 @@ export const useGuessArtGame = (
     return () => {
       document.removeEventListener('visibilitychange', handleVisibility);
       unsubListener();
-      mailboxService.setActiveScreenGameId(null);
+      guessArtNotificationService.setActiveScreenGameId(null);
     };
   }, [gameId, language, loadSnapshot]);
 
@@ -195,7 +219,7 @@ export const useGuessArtGame = (
       if (!gameId) return;
       try {
         const snapshotToPublish = snap || (await LocalGameEngine.getGameSnapshot(gameId, language));
-        await mailboxService.publishTurn(gameId, snapshotToPublish);
+        await guessArtMailbox.publish(gameId, snapshotToPublish);
       } catch (e) {
         console.warn('[useGuessArtGame] Failed to publish snapshot:', e);
       }

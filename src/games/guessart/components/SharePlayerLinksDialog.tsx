@@ -5,7 +5,7 @@ import type { GuessArtGameRecord, GuessArtRound } from '../logic/types';
 import { playerAssignment } from '../logic/playerAssignment';
 import { gameRelayStorage } from '../../../lib/push/gameRelayStorage';
 import { LocalGameEngine } from '../logic/engine';
-import { mailboxService } from '../logic/mailboxService';
+import { guessArtMailbox } from '../logic/guessArtMailbox';
 import {
   ShareSessionLinksDialog,
   type SessionPlayerItem,
@@ -73,7 +73,7 @@ export const SharePlayerLinksDialog: React.FC<SharePlayerLinksDialogProps> = ({
         );
         try {
           const snap = await LocalGameEngine.updateGameDetails(game.id, { players: updatedPlayers });
-          await mailboxService.publishTurn(game.id, snap);
+          await guessArtMailbox.publish(game.id, snap);
         } catch (e) {
           console.warn('[SharePlayerLinksDialog] Failed to mark player remote in db:', e);
         }
@@ -92,7 +92,7 @@ export const SharePlayerLinksDialog: React.FC<SharePlayerLinksDialogProps> = ({
       );
       try {
         const snap = await LocalGameEngine.updateGameDetails(game.id, { players: updatedPlayers });
-        await mailboxService.publishTurn(game.id, snap);
+        await guessArtMailbox.publish(game.id, snap);
       } catch (e) {
         console.warn('[SharePlayerLinksDialog] Failed to mark player local in db:', e);
       }
