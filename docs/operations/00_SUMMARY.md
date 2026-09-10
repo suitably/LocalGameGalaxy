@@ -1,4 +1,4 @@
-# Operational & DevOps Documentation Index [ID: DOCS-OPERATIONS-SUMMARY]
+# Operational & DevOps Documentation Index
 
 This directory contains production operations runbooks, troubleshooting guides, incident response procedures, backup configurations, scaling guidelines, Capacitor Android deployment instructions, and standalone WebRTC tracker deployment runbooks.
 

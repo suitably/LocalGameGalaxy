@@ -1,4 +1,4 @@
-# Testing Guide [ID: TECH-TESTING]
+# Testing Guide
 
 This document outlines the testing strategy, frameworks, execution commands, and patterns for writing and maintaining tests in LocalGameGalaxy.
 
@@ -99,4 +99,4 @@ beforeAll(() => {
 
 - **Unit Tests**: Focus on pure functions (e.g., UltraStar lyrics parser, Werewolf game state reducers, scoring algorithms).
 - **Integration Tests**: Focus on component rendering, state changes across multiple views, and synchronization messages.
-- **Manual Verification**: Since WebRTC relies on local network devices, manual testing using multiple browsers/phones remains a critical verification step. See [Verification Guide](file:///home/deck/Projects/LocalGameGalaxy/docs/verification/00_SUMMARY.md) for walkthroughs.
+- **Manual Verification**: Since WebRTC relies on local network devices, manual testing using multiple browsers/phones remains a critical verification step. Manual verification walkthroughs should be created as agent walkthrough artifacts.

@@ -1,4 +1,4 @@
-# Coding Conventions & Styling Guidelines [ID: TECH-CODING-CONVENTIONS]
+# Coding Conventions & Styling Guidelines
 
 This document establishes the styling, naming, and structural guidelines for TypeScript and React code in LocalGameGalaxy.
 

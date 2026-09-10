@@ -1,4 +1,4 @@
-# Server Security Model & Authentication [ID: TECH-SERVER-SECURITY]
+# Server Security Model & Authentication
 
 > [!CAUTION]
 > This document contains descriptions of security-sensitive flows. Never commit real tokens, private keys, or certificates to the repository. See [secrets-management.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/secrets-management.md) for configuration setup.

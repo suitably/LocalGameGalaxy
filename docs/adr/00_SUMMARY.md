@@ -1,4 +1,4 @@
-# ADR Index [ID: DOCS-ADR-INDEX]
+# ADR Index
 
 This directory contains Architecture Decision Records (ADRs) for LocalGameGalaxy. ADRs document significant technical choices, the context they were made in, the alternatives considered, and their consequences.
 

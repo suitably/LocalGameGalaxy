@@ -1,4 +1,4 @@
-# Werewolf Game Module Architecture [ID: TECH-WEREWOLF]
+# Werewolf Game Module Architecture
 
 > [!NOTE]
 > This document covers the Werewolf game module architecture. For Melodiq, see [melodiq-architecture.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/melodiq-architecture.md).

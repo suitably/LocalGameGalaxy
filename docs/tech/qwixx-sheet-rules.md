@@ -1,4 +1,4 @@
-# Qwixx Spielvarianten & Sheet-Regelwerk [ID: TECH-QWIXX-RULES]
+# Qwixx Spielvarianten & Sheet-Regelwerk
 
 Dieses Dokument ist das verbindliche **Regelwerk und die Spezifikation aller Qwixx-Spielvarianten und Wertungsbögen** für die Implementierung in **LocalGameGalaxy**.
 

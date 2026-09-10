@@ -1,4 +1,4 @@
-# System Context & Container Diagrams [ID: TECH-C4-DIAGRAMS]
+# System Context & Container Diagrams
 
 > [!IMPORTANT]
 > This document provides C4 Model context and container diagrams for the LocalGameGalaxy multi-device runtime. Update this document whenever new deployment targets or inter-service communication paths are introduced.

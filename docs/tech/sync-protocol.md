@@ -1,4 +1,4 @@
-# Cross-Device Synchronization Protocol [ID: TECH-SYNC-PROTOCOL]
+# Cross-Device Synchronization Protocol
 
 > [!IMPORTANT]
 > This document is the Single Source of Truth for all message schemas and synchronization protocols used between the Host, TV Mode, and Phone Clients. Update this document whenever message payloads change.
@@ -121,7 +121,6 @@ interface PeerMessage {
 |-----|------|---------|
 | `melodiq_active_session` | `ActiveSession \| null` | Persists active game session across refreshes |
 | `melodiq_settings` | `MelodiqSettings` | User-level settings (latency, theme, mic) |
-| `lgg_theme` | `'dark' \| 'light'` | Global app theme preference |
 
 > [!WARNING]
 > The `melodiq_active_session` key is written by both the Host and the Phone Client recovery path. A versioned schema (`{ version: number, data: ... }`) should be enforced to prevent deserialization conflicts (see issue #20).

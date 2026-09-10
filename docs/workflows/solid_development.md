@@ -1,4 +1,4 @@
-# SOLID Development Workflow [ID: SOLID-WORKFLOW]
+# SOLID Development Workflow
 
 This workflow guides developers and AI agents in writing maintainable, reusable, and small-footprint code, strictly adhering to SOLID principles.
 

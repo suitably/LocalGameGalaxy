@@ -1,4 +1,4 @@
-# System Architecture [ID: TECH-ARCH]
+# System Architecture
 
 > [!IMPORTANT]
 > This document is the **Single Source of Truth** for the project's technical architecture.
@@ -9,7 +9,7 @@
 **LocalGameGalaxy** (suitably/LocalGameGalaxy) is a purely client-side, offline-first web application designed to act as a hub for local group games (like Werewolf).
 
 It is built with:
--   **Runtime**: React 18+ (SPA)
+-   **Runtime**: React 19 (SPA)
 -   **Build Tool**: Vite
 -   **Language**: TypeScript
 -   **UI Framework**: Material UI (MUI)
@@ -106,7 +106,7 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
   - [`public/sw-push.js`](file:///home/deck/Projects/LocalGameGalaxy/public/sw-push.js) handles Web Push wakeups and deep links directly into the active game on notification click.
 
 ### GitHub Integration Architecture
-- **Hybrid Model**: Direct GitHub API client (`src/lib/github.ts`) using a locally stored Personal Access Token (PAT) as priority, with fallback to the Nexumia Server proxy.
+- **Hybrid Model**: Direct GitHub API client (`src/lib/github.ts`) using a locally stored Personal Access Token (PAT) as priority, with fallback to the companion server proxy.
 - Enables submitting feedback, reporting bugs, and publishing GuessArt word catalogues directly from the browser/PWA without requiring a local helper server.
 
 ### State Management
@@ -119,16 +119,6 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
 
 ## 4. Component Design & SOLID Guidelines
 
-To ensure the codebase remains maintainable and free of spaghetti code, all future development MUST adhere to the following React-specific SOLID patterns:
+See [ui-modularization-solid-analysis.md](docs/tech/ui-modularization-solid-analysis.md) and [solid_development.md](docs/workflows/solid_development.md) for detailed SOLID patterns.
 
-1.  **Single Responsibility Principle (SRP)**:
-    -   **Container vs. Presentational**: Separate components that fetch data or manage state (Containers) from components that purely render UI based on props (Presentational).
-    -   **Custom Hooks**: Extract complex `useEffect`, `useState`, or business logic into custom hooks (e.g., `useScoreCalculation.ts`, `useGuessArtGame.ts`) rather than bloating the React component body.
-2.  **Open/Closed Principle**:
-    -   Components should be open for extension but closed for modification. Use `children` props or render props to allow parents to customize internal content without modifying the core component.
-3.  **Interface Segregation**:
-    -   Don't pass massive objects as props if a component only needs one or two fields. Destructure or pass primitive values when possible, making components easier to reuse.
-4.  **Dependency Inversion**:
-    -   Avoid hardcoding deep imports to specific implementations if a Context or a passed prop can invert the dependency.
-
-**File Size Policy**: Any React component exceeding 250 lines is a strong candidate for refactoring into smaller sub-components. Agents must proactively plan the structural breakdown of a feature *before* writing code.
+**File Size Policy**: Any React component exceeding 250 lines is a strong candidate for refactoring.

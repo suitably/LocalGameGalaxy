@@ -1,4 +1,4 @@
-# Song Ingestion & Vocal Separation Pipeline [ID: TECH-SONG-PIPELINE]
+# Song Ingestion & Vocal Separation Pipeline
 
 > [!NOTE]
 > This pipeline runs entirely on the companion server (`/server`) as a series of sequential subprocesses. It is CPU-intensive; see the operational guide for hardware recommendations.

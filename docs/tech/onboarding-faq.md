@@ -1,4 +1,4 @@
-# Developer Onboarding FAQ & Troubleshooting Guide [ID: TECH-ONBOARDING-FAQ]
+# Developer Onboarding FAQ & Troubleshooting Guide
 
 This document contains solutions to common issues encountered when setting up the LocalGameGalaxy local development environment.
 
@@ -39,7 +39,7 @@ To resolve this:
 1. Open your browser Developer Tools (F12).
 2. Go to the **Application** (Chrome/Edge) or **Storage** (Firefox) tab.
 3. Select **IndexedDB** in the sidebar.
-4. Locate the LocalGameGalaxy database (e.g., `LocalGameGalaxyDB` or `MelodiqDB`).
+4. Locate the relevant database (e.g., `MelodiqDB`, `guessart-local`, or `storyteller-local`).
 5. Click **Delete Database**.
 6. Refresh the page to trigger the new seeder scripts and initialize the database with the updated schema.
 

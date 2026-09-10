@@ -1,4 +1,4 @@
-# i18n Strategy & Translation Namespace Architecture [ID: TECH-I18N]
+# i18n Strategy & Translation Namespace Architecture
 
 > [!IMPORTANT]
 > All user-facing strings MUST be localized. Never hardcode text in components. Always add keys to **both** `en/translation.json` and `de/translation.json` simultaneously.

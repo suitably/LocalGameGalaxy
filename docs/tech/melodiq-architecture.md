@@ -1,4 +1,4 @@
-# Melodiq Architecture [ID: TECH-MELODIQ]
+# Melodiq Architecture
 
 > [!IMPORTANT]
 > This document details the specific architecture of the **Melodiq** game module. It outlines the core components, state synchronization mechanisms, and architectural guidelines.

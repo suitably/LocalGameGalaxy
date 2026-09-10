@@ -1,4 +1,4 @@
-# Secrets & Local Configuration Management [ID: TECH-SECRETS]
+# Secrets & Local Configuration Management
 
 To run the LocalGameGalaxy companion server and frontend locally with secure contexts (HTTPS/WSS required for WebRTC and Web Audio APIs), developers must manage local configurations and self-signed certificates.
 

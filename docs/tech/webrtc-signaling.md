@@ -1,4 +1,4 @@
-# WebRTC Signaling & Connection Architecture [ID: TECH-WEBRTC-SIGNALING]
+# WebRTC Signaling & Connection Architecture
 
 This document details the WebRTC peer-to-peer communication stack, signaling flow, peer discovery, connection establishment, and retry/recovery mechanics utilized in LocalGameGalaxy.
 

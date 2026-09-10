@@ -21,5 +21,3 @@ This directory contains technical documentation and architectural decisions.
 - [ui-modularization-solid-analysis.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/ui-modularization-solid-analysis.md): Comprehensive cross-game audit of duplicated UI patterns, state logic, and SOLID modularization guidelines.
 
 For production setup, runbooks, backups, scaling, troubleshooting, and incident management procedures, see the [Operational & DevOps Documentation Index](file:///home/deck/Projects/LocalGameGalaxy/docs/operations/00_SUMMARY.md).
-
-ID: DOCS-TECH-SUMMARY

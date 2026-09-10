@@ -1,4 +1,4 @@
-# Data Models [ID: TECH-MODELS]
+# Data Models
 
 This document outlines the core data structures used in the application.
 

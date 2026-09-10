@@ -1,4 +1,4 @@
-# Data Persistence Layer Architecture [ID: TECH-PERSISTENCE]
+# Data Persistence Layer Architecture
 
 > [!IMPORTANT]
 > This document is the Single Source of Truth for all browser-side and server-side data storage in LocalGameGalaxy. Update this document whenever a new database table, localStorage key, or storage mechanism is added.
@@ -11,7 +11,7 @@ LocalGameGalaxy fragments its storage across several browser mechanisms dependin
 
 | Mechanism | Library | Scope | Persistence |
 |-----------|---------|-------|-------------|
-| IndexedDB (`LocalGameGalaxyDB`) | Dexie 4 | App-wide game data | Permanent |
+| IndexedDB (`guessart-local`, `storyteller-local`) | Dexie 4 | Game session data (GuessArt, Storyteller) | Permanent |
 | IndexedDB (`MelodiqDB`) | Dexie 4 | Melodiq song library | Permanent |
 | `localStorage` | Native | Settings & session state | Permanent |
 | `sessionStorage` | Native | Temporary UI cache | Tab lifetime |
@@ -19,27 +19,13 @@ LocalGameGalaxy fragments its storage across several browser mechanisms dependin
 
 ---
 
-## 2. IndexedDB: `LocalGameGalaxyDB`
+## 2. IndexedDB: Game-Specific Databases
 
-Managed by Dexie. Contains general game-hub data shared across all games.
+### `guessart-local`
+Managed via native IndexedDB (with `src/modules/async-game` helpers). Stores GuessArt game sessions, rounds, catalogues, and metadata.
 
-### Tables
-
-| Table | Primary Key | Indexed Fields | Purpose |
-|-------|-------------|----------------|---------|
-| `wordCategories` | `id` (auto) | `name`, `language` | Stores Imposter word category definitions |
-| `wordPairs` | `id` (auto) | `categoryId` | Word pairs belonging to a category |
-| `werewolfSessions` | `id` (auto) | `createdAt` | Archived Werewolf game session history |
-
-### Schema Version Policy
-Dexie uses integer version numbers. When adding or modifying a table, increment the version and provide a migration upgrade function:
-```typescript
-db.version(2).stores({
-  wordCategories: '++id, name, language',
-  wordPairs: '++id, categoryId',
-  werewolfSessions: '++id, createdAt',
-}).upgrade(tx => { /* migration logic */ });
-```
+### `storyteller-local`
+Managed via native IndexedDB (with `src/modules/async-game` helpers). Stores Storyteller game sessions and story entries.
 
 ---
 
@@ -76,9 +62,8 @@ type SongStatus =
 |-----|------|------------|---------|
 | `melodiq_active_session` | `ActiveSession \| null` | Host, Phone recovery | Persists active game state across tab refreshes |
 | `melodiq_settings` | `MelodiqSettings` | Settings UI | User preferences (mic latency offset, default video mode) |
-| `lgg_theme` | `'dark' \| 'light'` | Theme toggle | Global app theme selection |
 | `lgg_language` | `'en' \| 'de'` | Language selector | i18n language preference |
-| `werewolf_custom_roles` | `RoleDefinition[]` | Werewolf role editor | Persisted custom role definitions |
+| `werewolf-custom-roles` | `RoleDefinition[]` | Werewolf role editor | Persisted custom role definitions |
 
 > [!WARNING]
 > The `melodiq_active_session` key is read and written by multiple code paths (Host session restore and Phone Client reconnection). A strict versioned schema with a `version` field must be enforced to prevent deserialization conflicts. See issue #20.

@@ -1,4 +1,4 @@
-# Deployment Architecture & Multi-Platform Packaging [ID: TECH-DEPLOYMENT]
+# Deployment Architecture & Multi-Platform Packaging
 
 ---
 

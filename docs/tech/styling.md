@@ -1,4 +1,4 @@
-# Styling, Theme & Multi-Device Layout Architecture [ID: TECH-STYLING]
+# Styling, Theme & Multi-Device Layout Architecture
 
 ---
 
@@ -6,8 +6,8 @@
 
 LocalGameGalaxy uses **Material UI (MUI) v7** for all UI components and theming.
 
-- The global theme is defined in `src/context/ThemeContext.tsx` (or equivalent).
-- The app supports **dark mode** and **light mode**, toggled via the `lgg_theme` localStorage key.
+- The global theme is defined in `src/theme.ts`.
+- The app uses **dark mode** (hardcoded in `src/theme.ts`).
 - Theme tokens (colors, typography, spacing) are accessed via `theme.palette.*` — **never hardcode hex color values**.
 
 ---
@@ -80,4 +80,4 @@ body { overscroll-behavior-y: contain; }
 
 ## 6. Typography
 
-Use the **Inter** font (loaded via Google Fonts or bundled) as the primary typeface. MUI's default Roboto font can be retained for smaller elements but Inter is preferred for headings and game UI text.
+The primary font is **Roboto** (configured in `src/theme.ts` as `"Roboto", "Helvetica", "Arial", sans-serif`).
