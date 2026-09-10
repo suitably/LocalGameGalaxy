@@ -62,6 +62,11 @@ export const MelodiqGameContent: React.FC = () => {
     const searchFilterState = useSearchFilters(songs, jobs);
     const { isOnlineSearch, isSearchingOnline, filteredSongs, filteredOnlineSongs } = searchFilterState;
 
+    // --- STABILISIERUNG GEGEN RENDER-LOOPS ---
+    const memoizedFilteredSongs = React.useMemo(() => filteredSongs, [filteredSongs]);
+    const memoizedJobs = React.useMemo(() => jobs, [jobs]);
+    // ----------------------------------------
+
     const [remoteSong, setRemoteSong] = useState<SongMeta | null>(null);
     const [selectedSongForQueue, setSelectedSongForQueue] = useState<SongMeta | null>(null);
     const [queueDialogOpen, setQueueDialogOpen] = useState(false);
@@ -74,7 +79,6 @@ export const MelodiqGameContent: React.FC = () => {
 
     const handleToggleCurrentParticipant = useCallback((deviceId: string, profile: MelodiqProfile) => {
         setActiveParticipants(prev => {
-            // Fall back to current lobby session when no override is set yet
             const participants = prev ?? storage.getJson<MelodiqParticipant[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
             const exists = participants.find((p: MelodiqParticipant) =>
                 p.deviceId === deviceId || p.profileId === deviceId || (profile?.peerId && p.deviceId === profile.peerId)
@@ -103,7 +107,6 @@ export const MelodiqGameContent: React.FC = () => {
 
     const handleReorderCurrentParticipant = useCallback((startIndex: number, endIndex: number) => {
         setActiveParticipants(prev => {
-            // Fall back to current lobby session when no override is set yet
             const base = prev ?? storage.getJson<MelodiqParticipant[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
             const next = Array.from(base);
             const [removed] = next.splice(startIndex, 1);
@@ -113,8 +116,6 @@ export const MelodiqGameContent: React.FC = () => {
         });
     }, []);
 
-    // Participants to display in the drawer dialog — fall back to ACTIVE_SESSION
-    // when activeParticipants hasn't been set yet (e.g. song started directly, not from queue).
     const currentDisplayParticipants = React.useMemo(() => {
         if (activeParticipants !== null) return activeParticipants;
         return storage.getJson<MelodiqParticipant[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
@@ -155,7 +156,7 @@ export const MelodiqGameContent: React.FC = () => {
     }, [isTVConnected, playSongOnTV, setRemoteSong, setSelectedSong, setNowPlaying, setCurrentView]);
 
     useDownloadSync({
-        isClient, jobs, queue, refreshSongs, replaceItem, selectedSong, onCurrentSongDownloaded: handleCurrentSongDownloaded
+        isClient, jobs: memoizedJobs, queue, refreshSongs, replaceItem, selectedSong, onCurrentSongDownloaded: handleCurrentSongDownloaded
     });
 
     const handleCloseSubView = useCallback(() => {
@@ -174,7 +175,6 @@ export const MelodiqGameContent: React.FC = () => {
         }
     }, []);
 
-    // Handle sub-view history so back button in Android or browser returns to Home view
     useEffect(() => {
         const isSubView = currentView === 'Settings' || currentView === 'Connection' || currentView === 'Playlists' || currentView === 'PlaylistDetails';
         if (isSubView) {
@@ -199,8 +199,6 @@ export const MelodiqGameContent: React.FC = () => {
 
     const handleSelectSong = async (songMeta: SongMeta, forcePlay: boolean = false, participants?: MelodiqParticipant[], requester?: string, requesterId?: string) => {
         try {
-
-
             if (isClient) {
                 if (clientRole === 'singer') {
                     setFeedbackMessage('Als Sänger kannst du keine Lieder auswählen.');
@@ -223,12 +221,9 @@ export const MelodiqGameContent: React.FC = () => {
                 return;
             }
 
-            // Determine if a song is actively playing right now
             const isPlayingActive = (Boolean(selectedSongRef.current) || Boolean(remoteSongRef.current)) && isPlaybackPlayingRef.current;
 
             let actualForcePlay = forcePlay;
-            // If the song is paused, or if nothing is actively playing (including after reload),
-            // play the selected song directly instead of adding it to the queue.
             if (!forcePlay && !isPlayingActive) {
                 actualForcePlay = true;
             }
@@ -303,15 +298,11 @@ export const MelodiqGameContent: React.FC = () => {
         setActiveParticipants
     });
 
-    // --- Actions ---
-
     const handleSkipAndRequeue = useCallback(() => {
         if (selectedSong && (selectedSong as SongMeta).isDownloading) {
-            // Re-queue the current downloading song at the end
             addToQueue(selectedSong, 'System');
             setFeedbackMessage(`${selectedSong.title} wurde hinten angestellt.`);
             
-            // Pop the next one and play it
             const nextItem = popNext();
             if (nextItem) {
                 handleSelectSong(nextItem.song, true, nextItem.participants);
@@ -334,7 +325,6 @@ export const MelodiqGameContent: React.FC = () => {
     };
 
     const handleDownloadOnly = async (usdbSong: UsdbSongItem) => {
-        // Only queue managers and admins can trigger downloads
         if (isClient && clientRole !== 'admin' && clientRole !== 'queue_manager') {
             setFeedbackMessage('Nur Queue Manager können Songs herunterladen.');
             return;
@@ -359,7 +349,6 @@ export const MelodiqGameContent: React.FC = () => {
     };
 
     const handleDownloadAndQueue = async (usdbSong: UsdbSongItem) => {
-        // Only queue managers and admins can trigger downloads
         if (isClient && clientRole !== 'admin' && clientRole !== 'queue_manager') {
             setFeedbackMessage('Nur Queue Manager können Songs herunterladen.');
             return;
@@ -397,7 +386,7 @@ export const MelodiqGameContent: React.FC = () => {
         sendGameUpdate(state);
         if (manager && !isClient) {
             const now = Date.now();
-            if (now - lastGameUpdateRef.current > 50) { // ~20fps for WebRTC sync
+            if (now - lastGameUpdateRef.current > 50) {
                 manager.broadcast({ type: 'game_state_update', state: { ...state, hostTimestamp: now } });
                 lastGameUpdateRef.current = now;
             }
@@ -480,7 +469,7 @@ export const MelodiqGameContent: React.FC = () => {
                 {!hasConnectionError && (
                     <MelodiqSearchBar 
                         {...searchFilterState} 
-                        filteredSongsLength={filteredSongs.length} 
+                        filteredSongsLength={memoizedFilteredSongs.length} 
                         totalSongsLength={songs.length} 
                     />
                 )}
@@ -488,7 +477,7 @@ export const MelodiqGameContent: React.FC = () => {
                 <LibraryEmptyState 
                     hasConnectionError={!!hasConnectionError}
                     isLoading={isLoading}
-                    songsLength={isOnlineSearch ? (songs?.length || 0) : (filteredSongs?.length || 0)}
+                    songsLength={isOnlineSearch ? (songs?.length || 0) : (memoizedFilteredSongs?.length || 0)}
                     isOnlineSearch={isOnlineSearch}
                     refreshSongs={refreshSongs}
                 />
@@ -499,7 +488,7 @@ export const MelodiqGameContent: React.FC = () => {
                         viewMode={settings.defaultViewMode}
                         filteredOnlineSongs={filteredOnlineSongs}
                         songs={songs}
-                        jobs={jobs}
+                        jobs={memoizedJobs}
                         handleSelectSong={handleSelectSong}
                         handleDownloadAndQueue={handleDownloadAndQueue}
                         handleSongLongPress={handleSongLongPress}
@@ -512,11 +501,11 @@ export const MelodiqGameContent: React.FC = () => {
                 {!isOnlineSearch && (
                     <LocalSongsView 
                         viewMode={settings.defaultViewMode}
-                        filteredSongs={filteredSongs}
+                        filteredSongs={memoizedFilteredSongs}
                         handleSelectSong={handleSelectSong}
                         handleSongLongPress={handleSongLongPress}
                         isSinger={isClient && clientRole === 'singer'}
-                        jobs={jobs}
+                        jobs={memoizedJobs}
                     />
                 )}
             </Box >
@@ -576,8 +565,6 @@ export const MelodiqGameContent: React.FC = () => {
                 isClient={isClient}
                 clientRole={clientRole}
             />
-
-
 
             <Snackbar
                 open={!!feedbackMessage}

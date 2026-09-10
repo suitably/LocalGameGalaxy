@@ -56,7 +56,7 @@ const virtuosoComponents = {
     Item: GridItem
 };
 
-export const LocalSongsView: React.FC<LocalSongsViewProps> = ({
+const LocalSongsViewComponent: React.FC<LocalSongsViewProps> = ({
     viewMode, filteredSongs, handleSelectSong, handleSongLongPress, isSinger, jobs
 }) => {
     if (filteredSongs.length === 0) return null;
@@ -67,7 +67,7 @@ export const LocalSongsView: React.FC<LocalSongsViewProps> = ({
                 <VirtuosoGrid
                     style={{ height: '100%', width: '100%' }}
                     totalCount={filteredSongs.length}
-                    components={virtuosoComponents} // <--- Stabile Referenz verwenden
+                    components={virtuosoComponents}
                     itemContent={(index) => {
                         const song = filteredSongs[index];
                         const safeName = song.txtPath ? song.txtPath.split('/').pop()?.replace('.txt', '') : undefined;
@@ -135,3 +135,15 @@ export const LocalSongsView: React.FC<LocalSongsViewProps> = ({
         </Box>
     );
 };
+
+export const LocalSongsView = React.memo(
+    LocalSongsViewComponent,
+    (prevProps, nextProps) => {
+        return (
+            prevProps.viewMode === nextProps.viewMode &&
+            prevProps.isSinger === nextProps.isSinger &&
+            prevProps.filteredSongs === nextProps.filteredSongs &&
+            prevProps.jobs === nextProps.jobs
+        );
+    }
+);
