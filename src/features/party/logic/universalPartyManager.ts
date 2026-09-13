@@ -11,7 +11,7 @@ export interface PartyPlayer {
   joinedAt: number;
 }
 
-export type PartyGameType = 'guessart' | 'garticphone';
+export type PartyGameType = 'guessart' | 'garticphone' | 'tabletop';
 
 export interface PartyRoomState {
   type?: undefined;
@@ -20,6 +20,7 @@ export interface PartyRoomState {
   status: 'lobby' | 'in_game';
   activeGame: PartyGameType | null;
   gameId?: string | null;
+  tabletopGameId?: string | null;
   players: PartyPlayer[];
   updatedAt: number;
 }
@@ -224,6 +225,7 @@ class UniversalPartyManager {
       status: 'in_game',
       activeGame: gameType,
       gameId: gameId || null,
+      tabletopGameId: gameType === 'tabletop' ? (gameId || null) : null,
       updatedAt: Date.now(),
     };
 

@@ -33,6 +33,7 @@
     "capacitor-plugin-safe-area": "^5.0.0",
     "dexie": "^4.2.1",
     "dexie-react-hooks": "^4.4.0",
+    "fflate": "^0.8.3",
     "html5-qrcode": "^2.3.8",
     "i18next": "^25.7.3",
     "i18next-http-backend": "^4.0.0",

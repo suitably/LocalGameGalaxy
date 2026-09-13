@@ -1,0 +1,35 @@
+[
+  {
+    "id": "standard-cards",
+    "name": "Standard Kartendeck (52)",
+    "description": "Klassisches 52-Karten-Deck für Mau-Mau, Skat, Poker, Rommé oder eigene Regeln mit geteiltem Spieltisch und privaten Handkarten.",
+    "author": "LocalGameGalaxy",
+    "version": "1.0.0",
+    "minPlayers": 1,
+    "maxPlayers": 6,
+    "supportedModes": ["party_multi_device", "local_pass_and_play", "solo"],
+    "file": "standard-cards.json"
+  },
+  {
+    "id": "liars-dice",
+    "name": "Liar's Dice / Perudo",
+    "description": "Das beliebte Bluff-Würfelspiel! Jeder würfelt verdeckt unter seinem Becher und sagt Gesamtzahlen an.",
+    "author": "LocalGameGalaxy",
+    "version": "1.0.0",
+    "minPlayers": 2,
+    "maxPlayers": 6,
+    "supportedModes": ["party_multi_device"],
+    "file": "liars-dice.json"
+  },
+  {
+    "id": "checkers",
+    "name": "Dame / Checkers",
+    "description": "Strategisches Traditionsspiel für zwei Spieler auf einem 8x8 Schachbrett.",
+    "author": "LocalGameGalaxy",
+    "version": "1.0.0",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "supportedModes": ["local_pass_and_play", "party_multi_device"],
+    "file": "checkers.json"
+  }
+]

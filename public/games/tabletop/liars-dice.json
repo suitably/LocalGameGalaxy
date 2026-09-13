@@ -1,0 +1,70 @@
+{
+  "id": "liars-dice",
+  "name": "Liar's Dice / Perudo",
+  "description": "Das beliebte Bluff-Würfelspiel! Jeder würfelt verdeckt unter seinem Becher und sagt Gesamtzahlen an.",
+  "author": "LocalGameGalaxy",
+  "version": "1.0.0",
+  "minPlayers": 2,
+  "maxPlayers": 6,
+  "supportedModes": ["party_multi_device"],
+  "table": {
+    "width": 1400,
+    "height": 900,
+    "backgroundColor": "#2e1c14",
+    "gridSnap": 20
+  },
+  "widgets": {
+    "cup_p0": {
+      "id": "cup_p0",
+      "type": "holder",
+      "x": 550,
+      "y": 700,
+      "width": 300,
+      "height": 160,
+      "zIndex": 2,
+      "label": "Becher Spieler 1",
+      "isHand": true,
+      "ownerSeat": 0,
+      "childIds": ["d0_1", "d0_2", "d0_3", "d0_4", "d0_5"],
+      "layout": "grid"
+    },
+    "cup_p1": {
+      "id": "cup_p1",
+      "type": "holder",
+      "x": 550,
+      "y": 40,
+      "width": 300,
+      "height": 160,
+      "zIndex": 2,
+      "label": "Becher Spieler 2",
+      "isHand": true,
+      "ownerSeat": 1,
+      "childIds": ["d1_1", "d1_2", "d1_3", "d1_4", "d1_5"],
+      "layout": "grid"
+    },
+    "bid_counter": {
+      "id": "bid_counter",
+      "type": "counter",
+      "x": 620,
+      "y": 400,
+      "width": 160,
+      "height": 70,
+      "zIndex": 5,
+      "label": "Aktuelles Gebot (Anzahl)",
+      "value": 2,
+      "step": 1,
+      "min": 1,
+      "max": 30
+    },
+    "d0_1": { "id": "d0_1", "type": "die", "x": 560, "y": 740, "width": 50, "height": 50, "zIndex": 10, "currentValue": 3, "sides": 6 },
+    "d0_2": { "id": "d0_2", "type": "die", "x": 620, "y": 740, "width": 50, "height": 50, "zIndex": 10, "currentValue": 5, "sides": 6 },
+    "d0_3": { "id": "d0_3", "type": "die", "x": 680, "y": 740, "width": 50, "height": 50, "zIndex": 10, "currentValue": 1, "sides": 6 },
+    "d0_4": { "id": "d0_4", "type": "die", "x": 740, "y": 740, "width": 50, "height": 50, "zIndex": 10, "currentValue": 6, "sides": 6 },
+    "d0_5": { "id": "d0_5", "type": "die", "x": 800, "y": 740, "width": 50, "height": 50, "zIndex": 10, "currentValue": 4, "sides": 6 },
+    "d1_1": { "id": "d1_1", "type": "die", "x": 560, "y": 80, "width": 50, "height": 50, "zIndex": 10, "currentValue": 2, "sides": 6 },
+    "d1_2": { "id": "d1_2", "type": "die", "x": 620, "y": 80, "width": 50, "height": 50, "zIndex": 10, "currentValue": 6, "sides": 6 },
+    "d1_3": { "id": "d1_3", "type": "die", "x": 680, "y": 80, "width": 50, "height": 50, "zIndex": 10, "currentValue": 3, "sides": 6 },
+    "d1_4": { "id": "d1_4", "type": "die", "x": 740, "y": 80, "width": 50, "height": 50, "zIndex": 10, "currentValue": 5, "sides": 6 },
+    "d1_5": { "id": "d1_5", "type": "die", "x": 800, "y": 80, "width": 50, "height": 50, "zIndex": 10, "currentValue": 1, "sides": 6 }
+  }
+}

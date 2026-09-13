@@ -1,0 +1,39 @@
+{
+  "id": "checkers",
+  "name": "Dame / Checkers",
+  "description": "Strategisches Traditionsspiel für zwei Spieler auf einem 8x8 Schachbrett.",
+  "author": "LocalGameGalaxy",
+  "version": "1.0.0",
+  "minPlayers": 2,
+  "maxPlayers": 2,
+  "supportedModes": ["local_pass_and_play", "party_multi_device"],
+  "table": {
+    "width": 900,
+    "height": 900,
+    "backgroundColor": "#3e2723",
+    "gridSnap": 100
+  },
+  "widgets": {
+    "board": {
+      "id": "board",
+      "type": "holder",
+      "x": 50,
+      "y": 50,
+      "width": 800,
+      "height": 800,
+      "zIndex": 1,
+      "label": "Schachbrett 8x8",
+      "dropTarget": true,
+      "dropTargetTypes": ["token"],
+      "childIds": []
+    },
+    "r1": { "id": "r1", "type": "token", "x": 160, "y": 70, "width": 70, "height": 70, "zIndex": 10, "color": "#d32f2f", "shape": "circle", "label": "🔴" },
+    "r2": { "id": "r2", "type": "token", "x": 360, "y": 70, "width": 70, "height": 70, "zIndex": 10, "color": "#d32f2f", "shape": "circle", "label": "🔴" },
+    "r3": { "id": "r3", "type": "token", "x": 560, "y": 70, "width": 70, "height": 70, "zIndex": 10, "color": "#d32f2f", "shape": "circle", "label": "🔴" },
+    "r4": { "id": "r4", "type": "token", "x": 760, "y": 70, "width": 70, "height": 70, "zIndex": 10, "color": "#d32f2f", "shape": "circle", "label": "🔴" },
+    "b1": { "id": "b1", "type": "token", "x": 60, "y": 770, "width": 70, "height": 70, "zIndex": 10, "color": "#212121", "shape": "circle", "label": "⚫" },
+    "b2": { "id": "b2", "type": "token", "x": 260, "y": 770, "width": 70, "height": 70, "zIndex": 10, "color": "#212121", "shape": "circle", "label": "⚫" },
+    "b3": { "id": "b3", "type": "token", "x": 460, "y": 770, "width": 70, "height": 70, "zIndex": 10, "color": "#212121", "shape": "circle", "label": "⚫" },
+    "b4": { "id": "b4", "type": "token", "x": 660, "y": 770, "width": 70, "height": 70, "zIndex": 10, "color": "#212121", "shape": "circle", "label": "⚫" }
+  }
+}

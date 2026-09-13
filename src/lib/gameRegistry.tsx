@@ -9,6 +9,7 @@ import GridViewIcon from '@mui/icons-material/GridView';
 import AbcIcon from '@mui/icons-material/Abc';
 import Grid4x4Icon from '@mui/icons-material/Grid4x4';
 import StyleIcon from '@mui/icons-material/Style';
+import TableBarIcon from '@mui/icons-material/TableBar';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import { SongsProvider } from '../games/melodiq';
 
@@ -48,6 +49,7 @@ const CardsGame = lazy(() => import('../games/cards').then(m => ({ default: m.Ca
 const WordleGame = lazy(() => import('../games/wordle').then(m => ({ default: m.WordleGame })));
 const SudokuGame = lazy(() => import('../games/sudoku').then(m => ({ default: m.SudokuGame })));
 const PartyLobby = lazy(() => import('../features/party/PartyLobby').then(m => ({ default: m.PartyLobby })));
+const TabletopGame = lazy(() => import('../games/tabletop').then(m => ({ default: m.TabletopGame })));
 
 class GameRegistry {
     private games: GameDefinition[] = [
@@ -199,6 +201,18 @@ class GameRegistry {
             hoverColor: '#1976d2',
             category: 'puzzle',
             component: <SudokuGame />
+        },
+        {
+            id: 'tabletop',
+            route: 'games/tabletop',
+            titleKey: 'games.tabletop.title',
+            descriptionKey: 'games.tabletop.description',
+            icon: <TableBarIcon sx={{ fontSize: 72, mb: 2 }} />,
+            colorStart: '#f59e0b',
+            colorEnd: '#b45309',
+            hoverColor: '#b45309',
+            category: 'cards',
+            component: <TabletopGame />
         }
     ];
 

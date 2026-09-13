@@ -5,14 +5,9 @@ import {
   Card,
   Chip,
   Container,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Divider,
   IconButton,
   Paper,
-  TextField,
   Tooltip,
   Typography,
   Avatar,
@@ -37,6 +32,8 @@ import {
   type PartyRoomState,
   type PartyGameType,
 } from './logic/universalPartyManager';
+import { PartyGamePickerModal } from './components/PartyGamePickerModal';
+import { EditPlayerNameDialog, EditRoomCodeDialog } from './components/PartySettingsDialogs';
 import { storage } from '../../lib/storage';
 
 const STORAGE_PLAYER_NAME = 'guessart_player_name';
@@ -102,6 +99,23 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
   const serverUrl = storage.getHelperUrl();
   const isServerActive = storage.isHelperActive();
 
+  const [pickerOpen, setPickerOpen] = useState<boolean>(false);
+
+  const getGameRoute = (gameType: PartyGameType | null, tabletopGameId?: string | null) => {
+    if (gameType === 'tabletop') {
+      const isHost = universalPartyManager.isHost(roomId);
+      const myId = universalPartyManager.getMyPlayerId();
+      const myPlayerIndex = roomState?.players.findIndex((p) => p.id === myId) ?? 0;
+      const seat = Math.max(0, myPlayerIndex);
+      const targetGame = tabletopGameId || 'standard-cards';
+      return isHost
+        ? `/games/tabletop?room=${roomId}&gameId=${targetGame}&role=tv`
+        : `/games/tabletop?room=${roomId}&gameId=${targetGame}&seat=${seat}`;
+    }
+    if (gameType === 'garticphone') return `/games/garticphone?room=${roomId}`;
+    return '/games/guessart';
+  };
+
   useEffect(() => {
     universalPartyManager.subscribeToParty(roomId);
     if (!universalPartyManager.isHost(roomId)) {
@@ -116,12 +130,16 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
         setPlayerName(myPlayer.name);
         storage.set(STORAGE_PLAYER_NAME, myPlayer.name);
       }
+
+      if (updated.status === 'in_game' && !universalPartyManager.isHost(roomId) && updated.activeGame) {
+        navigate(getGameRoute(updated.activeGame, updated.tabletopGameId));
+      }
     });
 
     return () => {
       unsubscribe();
     };
-  }, [roomId, playerName]);
+  }, [roomId, playerName, navigate]);
 
   const handleSaveName = () => {
     if (!editNameInput.trim()) return;
@@ -162,8 +180,9 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleLaunchGame = (_gameType: PartyGameType) => {
-    navigate('/games/guessart');
+  const handleLaunchGame = (gameType: PartyGameType, tabletopGameId?: string) => {
+    universalPartyManager.launchGame(roomId, gameType, tabletopGameId);
+    navigate(getGameRoute(gameType, tabletopGameId));
   };
 
   const handleReturnToLobby = () => {
@@ -232,7 +251,11 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
                     sx={{ fontWeight: 800, height: 22 }}
                   />
                   <Typography variant="h6" fontWeight={800}>
-                    Gartic Phone
+                    {roomState?.activeGame === 'tabletop'
+                      ? 'Tabletop Spiel'
+                      : roomState?.activeGame === 'garticphone'
+                      ? 'Gartic Phone'
+                      : 'GuessArt'}
                   </Typography>
                 </Box>
                 <Typography variant="body2" color="text.secondary">
@@ -257,7 +280,7 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
                 color="primary"
                 size="large"
                 startIcon={<PlayArrowRoundedIcon />}
-                onClick={() => navigate('/games/guessart')}
+                onClick={() => navigate(getGameRoute(roomState?.activeGame || 'guessart', roomState?.tabletopGameId))}
                 sx={{ fontWeight: 800, borderRadius: 2, flexGrow: { xs: 1, sm: 0 }, py: 1.2, px: 3 }}
               >
                 {t('party.rejoinGame', 'Spiel beitreten / fortsetzen')}
@@ -526,12 +549,12 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
               <Box>
                 <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
                   <Typography variant="h6" fontWeight={800} color="primary.main">
-                    🎨 GuessArt
+                    🎮 Spielauswahl
                   </Typography>
-                  <Chip label="Klassiker ✏️" color="primary" size="small" sx={{ fontWeight: 'bold' }} />
+                  <Chip label="Party-Modus 🚀" color="primary" size="small" sx={{ fontWeight: 'bold' }} />
                 </Box>
                 <Typography variant="body2" color="text.secondary">
-                  {t('party.guessArtDesc', 'Klassisches Zeichnen & Raten! Ein Spieler zeichnet, alle anderen raten auf ihren Handys.')}
+                  Wähle zwischen Party-Klassikern (Gartic Phone, GuessArt) und synchronisierten Tabletop-Karten- & Brettspielen.
                 </Typography>
               </Box>
 
@@ -540,7 +563,7 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
                   variant="contained"
                   color="primary"
                   size="large"
-                  onClick={() => handleLaunchGame('guessart')}
+                  onClick={() => setPickerOpen(true)}
                   startIcon={<PlayArrowRoundedIcon />}
                   sx={{
                     fontWeight: 800,
@@ -549,7 +572,7 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
                     boxShadow: '0 4px 14px rgba(25, 118, 210, 0.35)',
                   }}
                 >
-                  {t('party.launchGuessArt', 'GuessArt starten')}
+                  Spiel wählen & starten
                 </Button>
               ) : (
                 <Chip
@@ -564,59 +587,27 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
         </Box>
       </Paper>
 
-      {/* Edit Name Dialog */}
-      <Dialog open={editNameOpen} onClose={() => setEditNameOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: 800 }}>
-          {t('party.editNameTitle', 'Deinen Namen ändern')}
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t('party.editNameDesc', 'Passe deinen Spielernamen für die Party-Lobby und alle Minispiele an.')}
-          </Typography>
-          <TextField
-            autoFocus
-            label={t('party.nameInputLabel', 'Dein Name')}
-            value={editNameInput}
-            onChange={(e) => setEditNameInput(e.target.value)}
-            fullWidth
-            inputProps={{ maxLength: 20 }}
-            onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditNameOpen(false)}>{t('common.cancel', 'Abbrechen')}</Button>
-          <Button onClick={handleSaveName} variant="contained" disabled={!editNameInput.trim()}>
-            {t('common.save', 'Speichern')}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <EditPlayerNameDialog
+        open={editNameOpen}
+        onClose={() => setEditNameOpen(false)}
+        value={editNameInput}
+        onChange={setEditNameInput}
+        onSave={handleSaveName}
+      />
 
-      {/* Custom Room Code Dialog */}
-      <Dialog open={editRoomOpen} onClose={() => setEditRoomOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: 800 }}>
-          {t('party.customRoomTitle', 'Raum-Code anpassen')}
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {t('party.customRoomDesc', 'Verwende einen leicht merkbaren Code (z.B. SPIELABEND oder ALEX), damit deine Freunde immer denselben Link nutzen können.')}
-          </Typography>
-          <TextField
-            autoFocus
-            label={t('party.roomCodeLabel', 'Raum-Code')}
-            value={customRoomInput}
-            onChange={(e) => setCustomRoomInput(e.target.value.toUpperCase())}
-            fullWidth
-            inputProps={{ maxLength: 16 }}
-            onKeyDown={(e) => e.key === 'Enter' && handleSaveCustomRoom()}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditRoomOpen(false)}>{t('common.cancel', 'Abbrechen')}</Button>
-          <Button onClick={handleSaveCustomRoom} variant="contained" disabled={!customRoomInput.trim()}>
-            {t('common.save', 'Speichern')}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <EditRoomCodeDialog
+        open={editRoomOpen}
+        onClose={() => setEditRoomOpen(false)}
+        value={customRoomInput}
+        onChange={setCustomRoomInput}
+        onSave={handleSaveCustomRoom}
+      />
+
+      <PartyGamePickerModal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelectGame={handleLaunchGame}
+      />
     </Container>
   </Box>
   );
