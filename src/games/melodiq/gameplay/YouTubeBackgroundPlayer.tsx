@@ -1,10 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useId } from 'react';
 import { Box } from '@mui/material';
 import {
     getYouTubeVideoId,
     ensureYouTubeIframeApi,
     type YTPlayerInstance,
 } from './youtubeApi';
+import { createYouTubeVideoAdapter } from './createYouTubeVideoAdapter';
 
 export { getYouTubeVideoId };
 
@@ -26,9 +27,10 @@ export const YouTubeBackgroundPlayer: React.FC<YouTubeBackgroundPlayerProps> = (
     initialTime = 0,
     onError,
 }) => {
-    const containerIdRef = useRef(`yt-bg-player-${Math.random().toString(36).slice(2, 9)}`);
-    const containerId = containerIdRef.current;
+    const id = useId();
+    const containerId = `yt-bg-player-${id.replace(/[^a-zA-Z0-9]/g, '')}`;
     const playerRef = useRef<YTPlayerInstance | null>(null);
+    const [isPlayerVisible, setIsPlayerVisible] = useState(false);
 
     const onErrorRef = useRef(onError);
     onErrorRef.current = onError;
@@ -39,123 +41,15 @@ export const YouTubeBackgroundPlayer: React.FC<YouTubeBackgroundPlayerProps> = (
     useEffect(() => {
         let isMounted = true;
         let isReady = false;
-        let lastKnownTime = initialTimeRef.current;
-        let lastSeekTimestamp = 0;
-        let pendingPlay = false;
-        let pendingSeek: number | null = initialTimeRef.current > 0 ? initialTimeRef.current : null;
-        let isPlayingInternal = false;
 
-        const adapter = {
-            src: `https://www.youtube.com/watch?v=${videoId}`,
-            error: null,
-            get currentTime() {
-                if (isReady && playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
-                    try {
-                        const t = playerRef.current.getCurrentTime();
-                        if (typeof t === 'number' && !isNaN(t)) {
-                            lastKnownTime = t;
-                        }
-                    } catch {
-                        // ignore API read errors
-                    }
-                }
-                return lastKnownTime;
-            },
-            set currentTime(t: number) {
-                lastKnownTime = t;
-                const now = performance.now();
-                if (isReady && playerRef.current && typeof playerRef.current.seekTo === 'function') {
-                    if (now - lastSeekTimestamp > 1000) {
-                        try {
-                            const cur = playerRef.current.getCurrentTime() || 0;
-                            if (Math.abs(cur - t) > 0.5) {
-                                lastSeekTimestamp = now;
-                                playerRef.current.seekTo(t, true);
-                            }
-                        } catch {
-                            // ignore API seek errors
-                        }
-                    }
-                } else {
-                    pendingSeek = t;
-                }
-            },
-            get playbackRate() {
-                if (isReady && playerRef.current && typeof playerRef.current.getPlaybackRate === 'function') {
-                    try {
-                        return playerRef.current.getPlaybackRate() || 1.0;
-                    } catch {
-                        // ignore API read errors
-                    }
-                }
-                return 1.0;
-            },
-            set playbackRate(r: number) {
-                if (isReady && playerRef.current && typeof playerRef.current.setPlaybackRate === 'function') {
-                    try {
-                        const supportedRates = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
-                        let closest = 1;
-                        let minDiff = 999;
-                        for (const rate of supportedRates) {
-                            const diff = Math.abs(rate - r);
-                            if (diff < minDiff) {
-                                minDiff = diff;
-                                closest = rate;
-                            }
-                        }
-                        playerRef.current.setPlaybackRate(closest);
-                    } catch {
-                        // ignore API errors
-                    }
-                }
-            },
-            get paused() {
-                if (isReady && playerRef.current && typeof playerRef.current.getPlayerState === 'function') {
-                    try {
-                        const state = playerRef.current.getPlayerState();
-                        // 2: PAUSED, 0: ENDED
-                        if (state === 2 || state === 0) return true;
-                        // 1: PLAYING, 3: BUFFERING
-                        if (state === 1 || state === 3) return false;
-                    } catch {
-                        // ignore API read errors
-                    }
-                }
-                return !isPlayingInternal;
-            },
-            get readyState() {
-                return isReady ? 4 : 0;
-            },
-            play() {
-                isPlayingInternal = true;
-                if (isReady && playerRef.current && typeof playerRef.current.playVideo === 'function') {
-                    try {
-                        playerRef.current.playVideo();
-                    } catch {
-                        // ignore API errors
-                    }
-                } else {
-                    pendingPlay = true;
-                }
-                return Promise.resolve();
-            },
-            pause() {
-                isPlayingInternal = false;
-                pendingPlay = false;
-                if (isReady && playerRef.current && typeof playerRef.current.pauseVideo === 'function') {
-                    try {
-                        playerRef.current.pauseVideo();
-                    } catch {
-                        // ignore API errors
-                    }
-                }
-            },
-            muted: true,
-            seeking: false,
-            ended: false,
-            addEventListener: () => {},
-            removeEventListener: () => {},
-        };
+        const adapter = createYouTubeVideoAdapter({
+            videoId,
+            getPlayer: () => playerRef.current,
+            isPlayerReady: () => isReady,
+            initialTime: initialTimeRef.current,
+            driftToleranceSec: 1.8,
+            seekCooldownMs: 3000,
+        });
 
         (videoRef as React.MutableRefObject<HTMLVideoElement | null>).current = adapter as unknown as HTMLVideoElement;
 
@@ -177,6 +71,7 @@ export const YouTubeBackgroundPlayer: React.FC<YouTubeBackgroundPlayerProps> = (
                                 events: {
                                     onReady: (event: YTPlayerEvent) => void;
                                     onError: (event: YTPlayerEvent) => void;
+                                    onStateChange?: (event: YTPlayerEvent) => void;
                                 };
                             }
                         ) => YTPlayerInstance;
@@ -207,17 +102,24 @@ export const YouTubeBackgroundPlayer: React.FC<YouTubeBackgroundPlayerProps> = (
                                 if (typeof event.target.setVolume === 'function') {
                                     event.target.setVolume(0);
                                 }
+                                const pendingSeek = adapter.getPendingSeek();
                                 if (pendingSeek !== null) {
                                     event.target.seekTo(pendingSeek, true);
-                                    pendingSeek = null;
+                                    adapter.clearPendingSeek();
                                 }
-                                if (pendingPlay) {
+                                if (adapter.getPendingPlay()) {
                                     event.target.playVideo();
                                 } else {
                                     event.target.pauseVideo();
                                 }
                             } catch {
                                 // ignore initialization errors
+                            }
+                        },
+                        onStateChange: (event: YTPlayerEvent) => {
+                            // Fade in player only once actively playing to prevent paused thumbnail / play icon flash
+                            if (event.data === 1 && isMounted) {
+                                setIsPlayerVisible(true);
                             }
                         },
                         onError: (event: YTPlayerEvent) => {
@@ -242,7 +144,7 @@ export const YouTubeBackgroundPlayer: React.FC<YouTubeBackgroundPlayerProps> = (
                 // ignore destroy error
             }
             playerRef.current = null;
-            if ((videoRef as React.MutableRefObject<unknown>).current === adapter) {
+            if ((videoRef as React.MutableRefObject<unknown>).current === (adapter as unknown as HTMLVideoElement)) {
                 (videoRef as React.MutableRefObject<HTMLVideoElement | null>).current = null;
             }
         };
@@ -259,6 +161,8 @@ export const YouTubeBackgroundPlayer: React.FC<YouTubeBackgroundPlayerProps> = (
                 zIndex: 0,
                 overflow: 'hidden',
                 pointerEvents: 'none',
+                opacity: isPlayerVisible ? 1 : 0,
+                transition: 'opacity 0.4s ease-in-out',
             }}
         >
             <div

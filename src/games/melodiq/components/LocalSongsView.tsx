@@ -4,6 +4,7 @@ import { VirtuosoGrid, Virtuoso } from 'react-virtuoso';
 import { SongCard } from './SongCard';
 import { SongListItem } from './SongListItem';
 import { type SongMeta } from '../db';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 
 interface LocalSongsViewProps {
     viewMode: 'list' | 'grid';
@@ -21,7 +22,7 @@ const GridList = React.forwardRef((props, ref) => (
 GridList.displayName = 'GridList';
 
 const GridItem = React.forwardRef((props, ref) => {
-    const cardSize = localStorage.getItem('melodiq_card_size') || 'small';
+    const cardSize = storage.get(STORAGE_KEYS.MELODIQ_CARD_SIZE) || 'small';
     let gridProps: any = { xs: 6, sm: 4, md: 3, lg: 2 };
 
     if (cardSize === 'medium') {
@@ -30,7 +31,7 @@ const GridItem = React.forwardRef((props, ref) => {
         gridProps = { xs: 12, sm: 6, md: 4, lg: 3 };
     } else if (cardSize === 'custom') {
         try {
-            const stored = localStorage.getItem('melodiq_custom_target_columns');
+            const stored = storage.get(STORAGE_KEYS.MELODIQ_CUSTOM_TARGET_COLUMNS);
             const target = stored ? parseInt(stored) : 6;
             const lgItems = Math.max(1, target);
             const mdItems = Math.max(1, Math.round(target * 0.75));
@@ -70,10 +71,11 @@ const LocalSongsViewComponent: React.FC<LocalSongsViewProps> = ({
                     components={virtuosoComponents}
                     itemContent={(index) => {
                         const song = filteredSongs[index];
-                        const safeName = song.txtPath ? song.txtPath.split('/').pop()?.replace('.txt', '') : undefined;
+                        const safeName = song.txtPath ? song.txtPath.split(/[/\\]/).pop()?.replace('.txt', '') : undefined;
                         const activeJob = jobs?.find(j => 
                             j.status !== 'error' && 
                             j.status !== 'done' && (
+                                (song.id && j.songId === song.id) ||
                                 (song.jobId && j.jobId === song.jobId) || 
                                 (safeName && j.safeName === safeName) || 
                                 (song.usdbId && j.usdbId === song.usdbId)
@@ -87,6 +89,7 @@ const LocalSongsViewComponent: React.FC<LocalSongsViewProps> = ({
                                 song={song}
                                 isDownloading={isDl}
                                 hasActiveJob={!!activeJob}
+                                activeJobType={activeJob?.type}
                                 downloadProgress={progress}
                                 onClick={isSinger ? () => {} : () => handleSelectSong(song)}
                                 onLongPress={isSinger ? undefined : () => handleSongLongPress(song)}
@@ -105,10 +108,11 @@ const LocalSongsViewComponent: React.FC<LocalSongsViewProps> = ({
                 totalCount={filteredSongs.length}
                 itemContent={(index) => {
                     const song = filteredSongs[index];
-                    const safeName = song.txtPath ? song.txtPath.split('/').pop()?.replace('.txt', '') : undefined;
+                    const safeName = song.txtPath ? song.txtPath.split(/[/\\]/).pop()?.replace('.txt', '') : undefined;
                     const activeJob = jobs?.find(j => 
                         j.status !== 'error' && 
                         j.status !== 'done' && (
+                            (song.id && j.songId === song.id) ||
                             (song.jobId && j.jobId === song.jobId) || 
                             (safeName && j.safeName === safeName) || 
                             (song.usdbId && j.usdbId === song.usdbId)
@@ -123,6 +127,7 @@ const LocalSongsViewComponent: React.FC<LocalSongsViewProps> = ({
                                 song={song}
                                 isDownloading={isDl}
                                 hasActiveJob={!!activeJob}
+                                activeJobType={activeJob?.type}
                                 downloadProgress={progress}
                                 onClick={isSinger ? () => {} : () => handleSelectSong(song)}
                                 onLongPress={isSinger ? undefined : () => handleSongLongPress(song)}

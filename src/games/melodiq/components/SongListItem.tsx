@@ -1,10 +1,11 @@
 import React from 'react';
-import { Box, Typography, IconButton } from '@mui/material';
+import { Box, Typography, IconButton, Chip } from '@mui/material';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CircularProgress from '@mui/material/CircularProgress';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { type SongMeta } from '../db';
 import { formatDuration } from '../utils';
 import { useTranslation } from 'react-i18next';
@@ -19,9 +20,10 @@ interface SongListItemProps {
     isDownloaded?: boolean;
     downloadProgress?: number;
     hasActiveJob?: boolean;
+    activeJobType?: string;
 }
 
-export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLongPress, onMenuClick, onActionClick, isDownloading, isDownloaded, downloadProgress, hasActiveJob }) => {
+export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLongPress, onMenuClick, onActionClick, isDownloading, isDownloaded, downloadProgress, hasActiveJob, activeJobType }) => {
     const { t } = useTranslation();
     const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPressRef = React.useRef(false);
@@ -134,10 +136,28 @@ export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLon
                 )}
             </Box>
 
-            {/* Download Status */}
+            {/* Download / AI Status */}
             {(isDownloading || hasActiveJob) && (
                 <Box sx={{ display: 'flex', alignItems: 'center', ml: 2, mr: 1 }}>
-                    <CircularProgress variant={downloadProgress && downloadProgress > 0 ? "determinate" : "indeterminate"} value={downloadProgress || 0} size={24} />
+                    {hasActiveJob && (activeJobType === 'full-sync' || activeJobType === 'separate') ? (
+                        <Chip
+                            icon={<AutoAwesomeIcon sx={{ fontSize: 16, color: '#ffeb3b !important' }} />}
+                            label={`${downloadProgress !== undefined && downloadProgress > 0 ? `${downloadProgress}% ` : ''}${
+                                activeJobType === 'full-sync'
+                                    ? t('melodiq.ai_sync_active', 'KI-Sync')
+                                    : t('melodiq.vocal_separation_active', 'Vokaltrennung')
+                            }`}
+                            size="small"
+                            color="secondary"
+                            sx={{
+                                fontWeight: 'bold',
+                                fontSize: '0.75rem',
+                                height: 24,
+                            }}
+                        />
+                    ) : (
+                        <CircularProgress variant={downloadProgress && downloadProgress > 0 ? "determinate" : "indeterminate"} value={downloadProgress || 0} size={24} />
+                    )}
                 </Box>
             )}
 

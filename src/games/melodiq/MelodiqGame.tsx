@@ -1,23 +1,21 @@
 import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Box, Snackbar, Alert, CircularProgress } from '@mui/material';
-import { type Song, type SongMeta } from './db';
+import { type Song, type SongMeta, type Playlist } from './db';
 const Settings = lazy(() => import('../../features/settings/Settings').then(m => ({ default: m.Settings })));
 import { MelodiqPlaylists } from './components/MelodiqPlaylists';
 import { PlaylistDetails } from './components/PlaylistDetails';
 import { ClientSettings } from './components/ClientSettings';
-
 import { initMelodiqI18n } from './i18n';
 import { WebRTCProvider, WebRTCMockProvider, useWebRTC } from './audio/WebRTCContext';
 import { useMelodiqSettings } from './hooks/SettingsContext';
 import { MelodiqConnection } from './MelodiqConnection';
-import { type Playlist } from './db';
 import { useSongs, SongsProvider } from './hooks/useSongs';
 import { useQueue, QueueProvider } from './hooks/useQueue';
 import { useDownloads } from './hooks/useDownloads';
 import { melodiqFetch } from './api/melodiqFetch';
 import { PhoneQueueBridge } from './components/PhoneQueueBridge';
 import { PhoneClientEngine, useClientEngine } from './PhoneClientEngine';
-
 import { useTVMode } from './hooks/useTVMode';
 import { useSearchFilters } from './hooks/useSearchFilters';
 import { storage, STORAGE_KEYS } from '../../lib/storage';
@@ -27,7 +25,6 @@ import { OnlineSongsView } from './components/OnlineSongsView';
 import { LocalSongsView } from './components/LocalSongsView';
 import { PlaybackManager } from './components/PlaybackManager';
 import { HostQueueDrawer } from './components/HostQueueDrawer';
-// New extracted hooks & components
 import { SongActionDialogs } from './components/SongActionDialogs';
 import { useMelodiqHeader } from './hooks/useMelodiqHeader';
 import { useMelodiqGlobalEvents } from './hooks/useMelodiqGlobalEvents';
@@ -41,8 +38,8 @@ type View = 'Home' | 'Settings' | 'Session' | 'Connection' | 'Playlists' | 'Play
 initMelodiqI18n();
 
 export const MelodiqGameContent: React.FC = () => {
-    const params = new URLSearchParams(window.location.search);
-    const isClient = params.get('role') === 'client';
+    const [searchParams, setSearchParams] = useSearchParams();
+    const isClient = searchParams.get('role') === 'client';
 
     const { songs, refreshSongs, getSongById, isLoading, hasConnectionError, localLibrary } = useSongs();
     const { queue, popNext, setNowPlaying, addToQueue, addNext, nowPlaying, replaceItem } = useQueue();
@@ -60,10 +57,8 @@ export const MelodiqGameContent: React.FC = () => {
     const searchFilterState = useSearchFilters(songs, jobs);
     const { isOnlineSearch, isSearchingOnline, filteredSongs, filteredOnlineSongs } = searchFilterState;
 
-    // --- STABILISIERUNG GEGEN RENDER-LOOPS ---
     const memoizedFilteredSongs = React.useMemo(() => filteredSongs, [filteredSongs]);
     const memoizedJobs = React.useMemo(() => jobs, [jobs]);
-    // ----------------------------------------
 
     const [remoteSong, setRemoteSong] = useState<SongMeta | null>(null);
     const [selectedSongForQueue, setSelectedSongForQueue] = useState<SongMeta | null>(null);
@@ -122,8 +117,16 @@ export const MelodiqGameContent: React.FC = () => {
     const [activePlaylist, setActivePlaylist] = useState<Playlist | null>(null);
     const [restoredSong, setRestoredSong] = useState<SongMeta | null>(() => nowPlaying ?? null);
     
-    const [currentView, setCurrentView] = useState<View>('Home');
-    const handleSetCurrentView = useCallback((v: string) => setCurrentView(v as View), []);
+    const isSettingsFromUrl = Boolean(searchParams.get('tab') || searchParams.get('sub'));
+    const [currentView, setCurrentView] = useState<View>(() => isSettingsFromUrl ? 'Settings' : 'Home');
+    const handleSetCurrentView = useCallback((v: string) => {
+        if (v === 'Settings') {
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.set('tab', 'melodiq');
+            setSearchParams(nextParams);
+        }
+        setCurrentView(v as View);
+    }, [searchParams, setSearchParams]);
     const [selectedSong, setSelectedSong] = useState<Song | SongMeta | null>(null);
 
     const [, setIsPlaybackPlaying] = useState<boolean>(false);
@@ -158,33 +161,35 @@ export const MelodiqGameContent: React.FC = () => {
         isClient, jobs: memoizedJobs, queue, refreshSongs, replaceItem, selectedSong, onCurrentSongDownloaded: handleCurrentSongDownloaded
     });
 
+    useEffect(() => {
+        const hasSettingsParam = Boolean(searchParams.get('tab') || searchParams.get('sub'));
+        if (hasSettingsParam && currentView !== 'Settings') {
+            setCurrentView('Settings');
+        } else if (!hasSettingsParam && currentView === 'Settings') {
+            setCurrentView('Home');
+        }
+    }, [searchParams, currentView]);
+
     const handleCloseSubView = useCallback(() => {
-        const nextParams = new URLSearchParams(window.location.search);
+        const nextParams = new URLSearchParams(searchParams);
         nextParams.delete('tab');
         nextParams.delete('sub');
         nextParams.delete('section');
-        const cleanSearch = nextParams.toString();
-        const targetUrl = window.location.pathname + (cleanSearch ? `?${cleanSearch}` : '');
-        const hadSubView = Boolean(window.history.state?.melodiqSubView);
-        window.history.replaceState(null, '', targetUrl);
-        if (hadSubView) {
+        setSearchParams(nextParams, { replace: true });
+        if (window.history.state?.melodiqSubView) {
             window.history.back();
         } else {
             setCurrentView('Home');
         }
-    }, []);
+    }, [searchParams, setSearchParams]);
 
     useEffect(() => {
-        const isSubView = currentView === 'Settings' || currentView === 'Connection' || currentView === 'Playlists' || currentView === 'PlaylistDetails';
+        const isSubView = currentView === 'Connection' || currentView === 'Playlists' || currentView === 'PlaylistDetails';
         if (isSubView) {
             window.history.pushState({ melodiqSubView: true }, '', window.location.href);
-            const handlePopState = () => {
-                setCurrentView('Home');
-            };
+            const handlePopState = () => setCurrentView('Home');
             window.addEventListener('popstate', handlePopState);
-            return () => {
-                window.removeEventListener('popstate', handlePopState);
-            };
+            return () => window.removeEventListener('popstate', handlePopState);
         }
     }, [currentView]);
 
@@ -580,31 +585,27 @@ export const MelodiqGameContent: React.FC = () => {
 };
 
 export const MelodiqGame: React.FC = () => {
-    const params = new URLSearchParams(window.location.search);
-    const isClient = params.get('role') === 'client';
+    const [searchParams] = useSearchParams();
+    const isClient = searchParams.get('role') === 'client';
 
-    return (
-        <>
-            {!isClient ? (
-                <WebRTCProvider>
-                    <SongsProvider>
-                        <QueueProvider>
-                            <MelodiqGameContent />
-                            <PhoneQueueBridge />
-                        </QueueProvider>
-                    </SongsProvider>
-                </WebRTCProvider>
-            ) : (
-                <PhoneClientEngine>
-                    <WebRTCMockProvider>
-                        <SongsProvider>
-                            <QueueProvider>
-                                <MelodiqGameContent />
-                            </QueueProvider>
-                        </SongsProvider>
-                    </WebRTCMockProvider>
-                </PhoneClientEngine>
-            )}
-        </>
+    return !isClient ? (
+        <WebRTCProvider>
+            <SongsProvider>
+                <QueueProvider>
+                    <MelodiqGameContent />
+                    <PhoneQueueBridge />
+                </QueueProvider>
+            </SongsProvider>
+        </WebRTCProvider>
+    ) : (
+        <PhoneClientEngine>
+            <WebRTCMockProvider>
+                <SongsProvider>
+                    <QueueProvider>
+                        <MelodiqGameContent />
+                    </QueueProvider>
+                </SongsProvider>
+            </WebRTCMockProvider>
+        </PhoneClientEngine>
     );
 };

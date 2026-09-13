@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { Box, IconButton, Paper, Tooltip } from '@mui/material';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
@@ -38,7 +38,6 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     handleStartPan,
     zoomIn,
     zoomOut,
-    resetZoom,
   } = useTabletopEngine({
     tableWidth: game.table.width,
     tableHeight: game.table.height,
@@ -47,18 +46,25 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     onSnapToHolder: (widgetId, holderId) => dispatch({ type: 'SNAP_TO_HOLDER', payload: { widgetId, holderId } }),
   });
 
-  // Auto-fit to screen in TV mode
-  useEffect(() => {
-    if (isTvMode && containerRef.current) {
+  // Center and auto-fit to screen in both Local and TV mode
+  const fitToScreen = useCallback(() => {
+    if (containerRef.current) {
       const { clientWidth, clientHeight } = containerRef.current;
+      if (clientWidth <= 0 || clientHeight <= 0) return;
       const scaleX = clientWidth / game.table.width;
       const scaleY = clientHeight / game.table.height;
       const fitScale = Math.min(scaleX, scaleY) * 0.95;
       const offsetX = (clientWidth - game.table.width * fitScale) / 2;
       const offsetY = (clientHeight - game.table.height * fitScale) / 2;
-      setTransform({ x: offsetX, y: offsetY, scale: fitScale });
+      setTransform({ x: Math.round(offsetX), y: Math.round(offsetY), scale: fitScale });
     }
-  }, [isTvMode, game.table.width, game.table.height, setTransform]);
+  }, [game.table.width, game.table.height, setTransform]);
+
+  useEffect(() => {
+    fitToScreen();
+    window.addEventListener('resize', fitToScreen);
+    return () => window.removeEventListener('resize', fitToScreen);
+  }, [fitToScreen]);
 
   return (
     <Box
@@ -226,7 +232,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
             <IconButton size="small" onClick={zoomOut}><ZoomOutIcon /></IconButton>
           </Tooltip>
           <Tooltip title="Ansicht zurücksetzen">
-            <IconButton size="small" onClick={resetZoom}><RestartAltIcon /></IconButton>
+            <IconButton size="small" onClick={fitToScreen}><RestartAltIcon /></IconButton>
           </Tooltip>
         </Paper>
       )}

@@ -80,17 +80,20 @@ export function useTabletopEngine(options: {
       const newY = Math.round(dragStartRef.current.widgetY + deltaY);
       options.onMoveWidget(activeDragId, newX, newY);
     } else if (panStartRef.current) {
-      const deltaX = e.clientX - panStartRef.current.pointerX;
-      const deltaY = e.clientY - panStartRef.current.pointerY;
+      const start = panStartRef.current;
+      const deltaX = e.clientX - start.pointerX;
+      const deltaY = e.clientY - start.pointerY;
+      const nextX = start.startX + deltaX;
+      const nextY = start.startY + deltaY;
       setTransform((prev) => ({
         ...prev,
-        x: panStartRef.current!.startX + deltaX,
-        y: panStartRef.current!.startY + deltaY,
+        x: nextX,
+        y: nextY,
       }));
     }
   };
 
-  const handlePointerUp = (_e: React.PointerEvent) => {
+  const handlePointerUp = (e: React.PointerEvent) => {
     if (activeDragId) {
       const widget = options.widgets[activeDragId];
       if (widget) {
@@ -103,15 +106,26 @@ export function useTabletopEngine(options: {
       dragStartRef.current = null;
     }
     panStartRef.current = null;
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+    } catch {
+      // Ignore if pointer was not captured
+    }
   };
 
   const handleStartPan = (e: React.PointerEvent) => {
+    if (e.button !== 0) return;
     panStartRef.current = {
       pointerX: e.clientX,
       pointerY: e.clientY,
       startX: transform.x,
       startY: transform.y,
     };
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    } catch {
+      // Ignore if pointer capture fails
+    }
   };
 
   const zoomIn = () => setTransform((t) => ({ ...t, scale: Math.min(2.5, t.scale + 0.15) }));

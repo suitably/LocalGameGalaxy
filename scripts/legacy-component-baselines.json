@@ -29,7 +29,6 @@
   "src/games/melodiq/components/SessionSetup.tsx": 315,
   "src/games/knister/KnisterGame.tsx": 306,
   "src/games/melodiq/hooks/SettingsContext.tsx": 306,
-  "src/games/melodiq/gameplay/YouTubeBackgroundPlayer.tsx": 299,
   "src/games/werewolf/components/GameSetup.tsx": 298,
   "src/games/knister/components/KnisterBoard.tsx": 295,
   "src/components/connection/setup/SetupDockerTab.tsx": 286,

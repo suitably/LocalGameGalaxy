@@ -107,15 +107,22 @@ export function addSeparatorInstallJob(): string {
 }
 
 export function getSeparatorJobsList() {
-  return Array.from(SEPARATOR_JOBS.values()).map((j) => ({
-    jobId: j.jobId,
-    type: j.type,
-    status: j.status,
-    progress: j.progress,
-    error: j.error,
-    log: j.log,
-    safeName: j.safeName,
-  }));
+  const songCache = getSongCache();
+  return Array.from(SEPARATOR_JOBS.values()).map((j) => {
+    const song = j.songId ? songCache.find((s) => s.id === j.songId) : undefined;
+    return {
+      jobId: j.jobId,
+      songId: j.songId,
+      artist: song?.artist,
+      title: song?.title || j.safeName,
+      type: j.type,
+      status: j.status,
+      progress: j.progress,
+      error: j.error,
+      log: j.log,
+      safeName: j.safeName,
+    };
+  });
 }
 
 export function getSeparatorJob(jobId: string): SeparatorJob | null {

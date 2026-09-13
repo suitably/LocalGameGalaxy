@@ -19,8 +19,10 @@ export function useScreenOrientation(orientation?: ScreenOrientationType) {
                     await (window.screen.orientation as any).lock(type);
                 }
             } catch (err: any) {
-                // Screen orientation lock requires fullscreen or user engagement on standard web
-                console.debug('[useScreenOrientation] Orientation lock skipped/unsupported:', err.message);
+                // Screen orientation lock requires fullscreen or mobile environment on standard web
+                if (err?.name !== 'SecurityError' && err?.name !== 'NotSupportedError') {
+                    console.debug('[useScreenOrientation] Orientation lock skipped/unsupported:', err?.message);
+                }
             }
         };
 

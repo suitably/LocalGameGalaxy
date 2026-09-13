@@ -4,11 +4,12 @@ import { melodiqFetch } from '../api/melodiqFetch';
 export interface DownloadJob {
     jobId: string;
     songId?: string;
-    type?: string;
-    usdbId: string | null;
-    artist: string;
-    title: string;
-    videoMode: string;
+    type?: 'separate' | 'full-sync' | 'install' | string;
+    safeName?: string;
+    usdbId?: string | null;
+    artist?: string;
+    title?: string;
+    videoMode?: string;
     status: 'pending' | 'running' | 'done' | 'error';
     progress: number;
     error: string | null;

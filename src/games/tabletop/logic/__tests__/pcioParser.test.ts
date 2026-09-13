@@ -96,6 +96,40 @@ describe('Tabletop pcioParser', () => {
     expect(ace.backContent?.value).toContain('data:image/png;base64,');
   });
 
+  it('parses flat PlayingCards.io room states with deck cardTypes', async () => {
+    const flatRoomState = JSON.stringify({
+      deck1: {
+        id: 'deck1',
+        type: 'deck',
+        cardTypes: {
+          Ore: { image: '/assets/ore.png' },
+        },
+      },
+      c1: {
+        id: 'c1',
+        type: 'card',
+        deck: 'deck1',
+        cardType: 'Ore',
+      },
+    });
+
+    const result = await parsePcioFile(flatRoomState, {
+      assetFiles: {
+        'ore.png': 'data:image/png;base64,mockore',
+      },
+      defaultName: 'Frontiers Test',
+    });
+
+    expect(result.name).toBe('Frontiers Test');
+    expect(result.widgets.deck1).toBeDefined();
+    const c1 = result.widgets.c1 as CardWidget;
+    expect(c1).toBeDefined();
+    expect(c1.frontContent?.type).toBe('image');
+    expect(c1.frontContent?.value).toBe('data:image/png;base64,mockore');
+    const deck1 = result.widgets.deck1 as any;
+    expect(deck1.cardIds).toContain('c1');
+  });
+
   it('sanitizes missing IDs, invalid bounds and sets sensible defaults', () => {
     const sanitized = validateAndSanitizeGame({
       name: '',
