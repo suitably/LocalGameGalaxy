@@ -48,7 +48,7 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
 -   **GuessArt (`src/games/guessart`)**:
     -   Offline-first drawing & guessing game with native pass-and-play mechanics.
     -   IndexedDB storage via `guessart-local` database (`games`, `rounds`, `catalogues`, `metadata` stores).
-    -   In-game Category & Word Catalogue Editor (`CatalogueEditorDialog`) with local IndexedDB persistence and automated Git Pull Request publishing pipeline via helper server (`POST /api/guessart/publish-catalogue`).
+    -   In-game Category & Word Catalogue Editor (`CatalogueEditorDialog`) with local IndexedDB persistence and automated Git Pull Request publishing pipeline directly via GitHub REST API.
     -   Integrated Excalidraw drawing canvas & animated stroke replay engine (`ExcalidrawViewer`).
     -   Fuzzy evaluation engine with German umlaut transliteration, diacritic normalization, and inflection generation (`guessEvaluator`, `lingo`).
     -   Deterministic multi-stage hint provider (`HintWordSlots`, `HintLetterChips`).
@@ -80,8 +80,16 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
     -   **Serverless Real-Time Communication**: Operates 100% serverless over public WSS MQTT brokers (`wss://broker.hivemq.com:8884/mqtt` / `wss://broker.emqx.io:8084/mqtt`) and local `BroadcastChannel`. No local helper server or backend connection is required.
     -   Hosts can launch **Gartic Phone** for all connected devices simultaneously, with isolated drawing/guessing views per device, synchronized round progression, animated album reveals, and seamless return to the lobby.
     -   **SRP Architecture**: Decomposed into focused custom hooks (`useGarticGameState` for pure game rules and `sessionStorageSafe` persistence, `useGarticSync` for `useMultiChannelSync` coordination) and a slim view coordinator component (`GarticPhoneGame.tsx`, < 180 lines).
+-   **Virtual Tabletop Engine (`src/games/tabletop`)**:
+    -   Declarative PlayingCards.io (`.pcio` / `.json`) and universal tabletop game engine.
+    -   **Multi-View Architecture**: Dual-view setup supporting a shared tabletop board on TV/tablet (`TabletopSurface.tsx` with auto-fit, fog-of-war for opponent hands, and flying card animations) and private smartphone controllers (`TabletopControllerView.tsx` with hand dock, swipe-up "Flick to TV" card gesture, and `[Hand | Tisch]` view switcher).
+    -   **Storage & Ingest**: Client-side ZIP unpacking via `fflate`, IndexedDB persistence (`galaxy_tabletop_db`), in-app metadata editor, and `.pcio`/`.json` exporter.
+    -   **Peer Synchronization**: Real-time multi-channel sync via `useMultiChannelSync` and `MqttMailboxService` over public MQTT relays with state snapshot reconciliation.
+    -   **Party Mode Integration**: Direct integration into `UniversalPartyManager` and `PartyGamePickerModal`, allowing the party host to launch any built-in or custom imported tabletop game for connected guests.
+    -   **Community Publishing**: Integrated GitHub PR creation via Octokit/REST API (`createGitHubPR`) to submit new game definitions upstream.
 -   **Melodiq (`src/games/melodiq`)**:
     -   Offline-capable karaoke and pitch-matching game supporting UltraStar TXT parsing, multi-track vocals, WebRTC remote microphones, and TV/presentation broadcast mode.
+    -   **Dual-Path Video Architecture**: Supports synchronized background videos via local media files (HTTP 206 streaming for MP4, WebM, AVI, MKV) and embedded YouTube URLs (via client-side YouTube IFrame Player API adapter, muted with programmatic seeking synchronized to `audioRef.currentTime`).
     -   **SRP Architecture**: Gameplay session decomposed into focused custom hooks (`useSessionAudioController` for playback, sync, and media lifecycle; `useSessionScoringController` for pitch evaluation, player visibility, and responsive grid layouts; `useParsedSong` for UltraStar parsing) and focused subcomponents (`SessionTopControls`, `SessionLyricsVisualizer`, `SessionBackgroundMedia`, `SessionPauseOverlay`, `SessionScoreOverlay`, `SessionFolderPrompt`) orchestrated by a slim view coordinator (`MelodiqSession.tsx`, < 200 lines).
 
 ### Shared Modules (`src/modules/*`)
@@ -114,6 +122,13 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
 ### GitHub Integration Architecture
 - **Hybrid Model**: Direct GitHub API client (`src/lib/github.ts`) using a locally stored Personal Access Token (PAT) as priority, with fallback to the companion server proxy.
 - Enables submitting feedback, reporting bugs, and publishing GuessArt word catalogues directly from the browser/PWA without requiring a local helper server.
+
+### Companion Backend (Hono TypeScript Micro-Kernel)
+- **Modular Micro-Kernel**: The optional companion backend (`server/src/index.ts`) is built on **Hono** running on `@hono/node-server`. It replaces legacy monolithic Express code with pluggable modules (`server/src/plugins/`).
+- **Plugins**:
+  - `melodiq`: Song scanning, media streaming with HTTP 206 Range requests, USDB search/downloads, AI stem separation, and playlist persistence.
+  - `relay`: WebRTC tracker signaling on HTTP WebSocket upgrade.
+- **Security & Networking**: Bearer token authentication, granular API key capabilities, CORS allowlisting, and Private Network Access (PNA) preflight support for cross-origin local IP communication.
 
 ### State Management & Context Architecture
 -   **Reducers / Engine**: Complex game logic is handled by standard Redux-pattern reducers or explicit state machines (`LocalGameEngine`).
