@@ -59,16 +59,28 @@ Tasks are categorized by complexity. Agents must follow the appropriate path:
 4.  **Document**: Update `AGENTS.md` or other workflows if you change how the system works.
 
 #### Phase 4: Verification
-**Goal**: Prove correctness.
+**Goal**: Prove correctness and architectural compliance.
 
-1.  **Verify**: Run tests, check UI, or verify logic as defined in the plan.
-2.  **Lint & Compile**: Run `npm run lint` to check for ESLint violations, and `npm run build` (which executes `tsc -b` and `vite build`) to ensure there are no TypeScript or bundling compiler errors. Any new warnings or errors must be fixed.
+1.  **Mandatory Pre-Flight Architecture Audit**:
+    Execute the automated architecture checker before finalizing any task:
+    ```bash
+    npm run check:architecture:diff   # Verifies changed files against boundaries
+    ```
+    If any violation (cross-game import, storage bypass, native confirm/prompt) is flagged, fix it immediately.
+2.  **Lint & Compile**:
+    Run ESLint and the TypeScript/Vite compiler:
+    ```bash
+    npm run lint                      # Must pass with zero errors
+    npm run build                     # Executes tsc -b && vite build
+    npm run test                      # Executes vitest test suite
+    ```
+    Any new warnings or errors must be resolved before proceeding.
 3.  **RepoLens Validation**: If resolving a RepoLens audit report, execute the recommended validation commands listed in the `## Validation` section of the report to prove the issue is closed.
 4.  **Walkthrough**: Create a verification log in `docs/verification/`.
     -   File Naming: `[short-feature-name]-walkthrough.md`
     -   Must Include:
         -   **Changes Implemented**: Summary of what was done.
-        -   **Verification Results**: Screenshots, command outputs, or logs proving success.
+        -   **Verification Results**: Screenshots, command outputs of `npm run check:architecture:diff`, `npm run lint`, and `npm run build` proving success.
         -   **Outstanding Issues**: detailed list of anything not fully resolved.
 
 #### Phase 5: Documentation Maintenance
@@ -105,6 +117,20 @@ If you encounter a repeatable process (e.g., "How to add a new game role"), docu
 ## 4. Code Quality, SOLID Principles & Modern Web Best Practices
 
 To prevent spaghetti code, bloat, and modern web anti-patterns, agents **MUST** strictly adhere to the following when planning and executing:
+
+### 4.0 Zero-Tolerance Anti-Pattern Matrix
+
+The following patterns are **strictly forbidden**. Any pull request, task, or commit containing them will be rejected by CI and automated architecture linting:
+
+| 🚫 Forbidden Anti-Pattern | Why It Is Blocked | ✅ Mandatory Solution |
+| :--- | :--- | :--- |
+| **Cross-Game Import** (`from '../<other>/...'`) | Couples games, breaks modular independence | Move to `src/modules/*` or `src/components/*` |
+| **Raw Storage** (`localStorage.` / `sessionStorage.`) | Bypasses memory fallback and key registry | Use `storage.get/set/remove()` from `src/lib/storage.ts` |
+| **Native Dialogs** (`window.confirm()`, `window.prompt()`, `alert()`) | Blocks main thread, breaks on Capacitor, unstyled | Use `<ConfirmDialog />` or MUI `<Dialog>` |
+| **Untyped Code** (`: any`, `<any>`, `as any`) | Disables TypeScript compiler safety | Use generics, interfaces, or `unknown` with type guards |
+| **God Component** (> 250 lines in `.tsx`) | Violates SRP, unmaintainable, test barrier | Split into sub-components + custom hook (`useFeatureLogic`) |
+| **Inline BroadcastChannel Sync** in Games | Duplicates network logic, leaks channels | Use `useMultiChannelSync()` from `src/modules/sync` |
+| **Hardcoded UI Strings** (`"Save"`, `"Delete"`) | Breaks internationalization (i18n) | Use `t('key')` and add to both `de` and `en` |
 
 1.  **SOLID Principles**: 
     -   **Single Responsibility Principle (SRP)**: Each file, component, or hook should have exactly *one* job. If a component handles UI layout, business logic, and data fetching, it must be split.
@@ -156,19 +182,20 @@ Agents **MUST** adhere to strict internationalization standards when working on 
 2. **Always Update Translation Files**: When adding a new translation key in a component, the agent **MUST** simultaneously update the corresponding translation files (like `i18n/index.ts` or JSONs) for **both** English and German (or all supported languages).
 3. **No Silent Failures**: Leaving translation files incomplete leads to raw keys showing in the UI. Double-check that every new key is mapped.
 
-## 6. Enforcement
+## 6. Enforcement & Automated Quality Gates
 
+Every pull request and commit must pass automated checks. Violations will cause immediate failure in the CI pipeline (`.github/workflows/ci.yml`).
+
+-   **Pre-Flight Architecture Check**: Always execute `npm run check:architecture:diff` (or `npm run check:architecture`) before submitting work. Zero violations permitted.
+-   **No Cross-Game Imports**: Games must never import from other games (`src/games/<A>` -> `src/games/<B>` is strictly forbidden and blocked by ESLint).
+-   **No Raw Storage**: Always use `src/lib/storage.ts` with `STORAGE_KEYS`. Never call `localStorage` or `sessionStorage` directly.
+-   **No Native Dialogs**: Always use MUI `<Dialog>` or `<ConfirmDialog>`. `window.confirm` and `window.prompt` will fail the build.
+-   **Strict TypeScript**: Avoid `any`. Interfaces and discriminated unions are mandatory.
+-   **File Size Limits**: Keep UI files under 250-300 lines. Break large components down into sub-components and custom hooks.
 -   **Do not skip planning** for non-trivial, significant tasks.
--   **Always perform a Reuse Audit** in Phase 1 before proposing new code.
--   **Never re-invent existing shared modules**: If a component/hook exists in Section 4.1, you MUST use it.
--   **No cross-game imports**: Games must never import from other games (`src/games/<A>` -> `src/games/<B>` is strictly forbidden).
--   **No raw `localStorage` or native `confirm()`**: Always use `storage.ts` and `<ConfirmDialog />`.
--   **Always break down UI into small components** in your plan (< 250 lines per file).
--   **Do not skip verification** (even for fast-track tasks, always run lint, build, and tests/validation).
--   **Do not introduce lint or compiler errors** (`npm run lint` and `npm run build` must pass).
--   **Do not use temporary placeholders or empty TODOs** in production-bound code.
--   **Always update the relevant docs** (or include validation logs in commit/PR comments for fast-track tasks) before marking the overall request as done.
--   **Always implement i18n correctly** - never leave translations missing.
+-   **Always perform a Reuse Audit** in Phase 1 before proposing new code (consult Section 4.1).
+-   **Do not introduce lint or compiler errors**: `npm run lint` and `npm run build` (`tsc -b && vite build`) must pass without errors or unhandled warnings.
+-   **Never leave translations missing**: Always supply both German (`de`) and English (`en`) keys.
 
 ## 7. Web-to-Android (Capacitor) UI Guidelines
 

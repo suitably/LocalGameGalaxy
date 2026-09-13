@@ -31,8 +31,54 @@ export default defineConfig([
       'prefer-const': 'warn',
       'react-hooks/preserve-manual-memoization': 'warn',
       'react-hooks/immutability': 'warn',
+      'no-alert': 'error',
+      'no-restricted-globals': [
+        'error',
+        {
+          name: 'confirm',
+          message: 'Use ConfirmDialog (src/components/common/ConfirmDialog) or MUI Dialog instead of native window.confirm.'
+        },
+        {
+          name: 'prompt',
+          message: 'Use custom MUI Dialog instead of native window.prompt.'
+        },
+        {
+          name: 'alert',
+          message: 'Use MUI Snackbar or Dialog instead of native window.alert.'
+        }
+      ],
+      'no-restricted-properties': [
+        'error',
+        {
+          object: 'window',
+          property: 'confirm',
+          message: 'Use ConfirmDialog (src/components/common/ConfirmDialog) or MUI Dialog instead of native window.confirm.'
+        },
+        {
+          object: 'window',
+          property: 'prompt',
+          message: 'Use custom MUI Dialog instead of native window.prompt.'
+        },
+        {
+          object: 'window',
+          property: 'alert',
+          message: 'Use MUI Snackbar or Dialog instead of native window.alert.'
+        }
+      ],
+      'max-lines': ['warn', { max: 300, skipBlankLines: true, skipComments: true }],
       'no-restricted-imports': ['error', {
         patterns: [
+          {
+            group: [
+              '../guessart/**', '../garticphone/**', '../melodiq/**', '../werewolf/**',
+              '../imposter/**', '../cards/**', '../sudoku/**', '../wordle/**',
+              '../knister/**', '../qwixx/**', '../storyteller/**',
+              '../../guessart/**', '../../garticphone/**', '../../melodiq/**', '../../werewolf/**',
+              '../../imposter/**', '../../cards/**', '../../sudoku/**', '../../wordle/**',
+              '../../knister/**', '../../qwixx/**', '../../storyteller/**'
+            ],
+            message: 'Cross-game imports are forbidden! Shared code must reside in src/modules/*, src/components/*, or src/lib/*.'
+          },
           {
             group: ['**/games/melodiq/components/**', '**/games/melodiq/hooks/**'],
             message: 'Import from the public entry point "src/games/melodiq" instead of internal directories.'

@@ -10,7 +10,10 @@
     "tracker": "node scripts/start-tracker.js",
     "preview": "vite preview",
     "host": "cd server && npm start",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check:architecture": "node scripts/check-architecture.mjs",
+    "check:architecture:diff": "node scripts/check-architecture.mjs --diff",
+    "check:architecture:strict": "node scripts/check-architecture.mjs --strict"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
