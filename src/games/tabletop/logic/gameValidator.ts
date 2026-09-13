@@ -81,7 +81,7 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
       width: raw.table?.width && raw.table.width > 200 ? raw.table.width : 1600,
       height: raw.table?.height && raw.table.height > 200 ? raw.table.height : 1000,
       backgroundColor: raw.table?.backgroundColor || '#1e3d2f', // Classic green felt
-      backgroundImageUrl: raw.table?.backgroundImageUrl || undefined,
+      backgroundImageUrl: raw.table?.backgroundImageUrl || ((raw.table as Record<string, unknown> | undefined)?.background as string | undefined) || undefined,
       gridSnap: raw.table?.gridSnap && raw.table.gridSnap > 0 ? raw.table.gridSnap : 20,
     },
     widgets: cleanWidgets,

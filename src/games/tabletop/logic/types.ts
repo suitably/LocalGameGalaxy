@@ -76,6 +76,8 @@ export interface DieWidget extends BaseWidget {
   currentValue: number;
   sides: number;
   rolling?: boolean;
+  color?: string;
+  pipColor?: string;
 }
 
 export type TabletopWidget =

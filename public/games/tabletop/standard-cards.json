@@ -6,7 +6,11 @@
   "version": "1.0.0",
   "minPlayers": 1,
   "maxPlayers": 6,
-  "supportedModes": ["party_multi_device", "local_pass_and_play", "solo"],
+  "supportedModes": [
+    "party_multi_device",
+    "local_pass_and_play",
+    "solo"
+  ],
   "table": {
     "width": 1600,
     "height": 1000,
@@ -24,12 +28,64 @@
       "zIndex": 10,
       "label": "Ziehstapel",
       "cardIds": [
-        "c_s2", "c_s3", "c_s4", "c_s5", "c_s6", "c_s7", "c_s8", "c_s9", "c_s10", "c_sJ", "c_sQ", "c_sK", "c_sA",
-        "c_h2", "c_h3", "c_h4", "c_h5", "c_h6", "c_h7", "c_h8", "c_h9", "c_h10", "c_hJ", "c_hQ", "c_hK", "c_hA",
-        "c_d2", "c_d3", "c_d4", "c_d5", "c_d6", "c_d7", "c_d8", "c_d9", "c_d10", "c_dJ", "c_dQ", "c_dK", "c_dA",
-        "c_c2", "c_c3", "c_c4", "c_c5", "c_c6", "c_c7", "c_c8", "c_c9", "c_c10", "c_cJ", "c_cQ", "c_cK", "c_cA"
+        "c_s2",
+        "c_s3",
+        "c_s4",
+        "c_s5",
+        "c_s6",
+        "c_s7",
+        "c_s8",
+        "c_s9",
+        "c_s10",
+        "c_sJ",
+        "c_sQ",
+        "c_sK",
+        "c_sA",
+        "c_h2",
+        "c_h3",
+        "c_h4",
+        "c_h5",
+        "c_h6",
+        "c_h7",
+        "c_h8",
+        "c_h9",
+        "c_h10",
+        "c_hJ",
+        "c_hQ",
+        "c_hK",
+        "c_hA",
+        "c_d2",
+        "c_d3",
+        "c_d4",
+        "c_d5",
+        "c_d6",
+        "c_d7",
+        "c_d8",
+        "c_d9",
+        "c_d10",
+        "c_dJ",
+        "c_dQ",
+        "c_dK",
+        "c_dA",
+        "c_c2",
+        "c_c3",
+        "c_c4",
+        "c_c5",
+        "c_c6",
+        "c_c7",
+        "c_c8",
+        "c_c9",
+        "c_c10",
+        "c_cJ",
+        "c_cQ",
+        "c_cK",
+        "c_cA"
       ],
-      "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      }
     },
     "discard": {
       "id": "discard",
@@ -41,7 +97,9 @@
       "zIndex": 5,
       "label": "Ablagestapel",
       "dropTarget": true,
-      "dropTargetTypes": ["card"],
+      "dropTargetTypes": [
+        "card"
+      ],
       "childIds": [],
       "layout": "stack"
     },
@@ -58,7 +116,9 @@
       "ownerSeat": 0,
       "childIds": [],
       "layout": "fan",
-      "dropTargetTypes": ["card"]
+      "dropTargetTypes": [
+        "card"
+      ]
     },
     "hand_p1": {
       "id": "hand_p1",
@@ -73,7 +133,9 @@
       "ownerSeat": 1,
       "childIds": [],
       "layout": "fan",
-      "dropTargetTypes": ["card"]
+      "dropTargetTypes": [
+        "card"
+      ]
     },
     "hand_p2": {
       "id": "hand_p2",
@@ -88,7 +150,9 @@
       "ownerSeat": 2,
       "childIds": [],
       "layout": "fan",
-      "dropTargetTypes": ["card"]
+      "dropTargetTypes": [
+        "card"
+      ]
     },
     "hand_p3": {
       "id": "hand_p3",
@@ -103,25 +167,1153 @@
       "ownerSeat": 3,
       "childIds": [],
       "layout": "fan",
-      "dropTargetTypes": ["card"]
+      "dropTargetTypes": [
+        "card"
+      ]
     },
-    "c_s2": { "id": "c_s2", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♠️ 2", "color": "#111" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_s3": { "id": "c_s3", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♠️ 3", "color": "#111" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_s4": { "id": "c_s4", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♠️ 4", "color": "#111" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_s5": { "id": "c_s5", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♠️ 5", "color": "#111" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_s6": { "id": "c_s6", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♠️ 6", "color": "#111" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_s7": { "id": "c_s7", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♠️ 7", "color": "#111" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_s8": { "id": "c_s8", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♠️ 8", "color": "#111" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_s9": { "id": "c_s9", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♠️ 9", "color": "#111" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_s10": { "id": "c_s10", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♠️ 10", "color": "#111" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_sJ": { "id": "c_sJ", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♠️ Bube", "color": "#111" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_sQ": { "id": "c_sQ", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♠️ Dame", "color": "#111" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_sK": { "id": "c_sK", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♠️ König", "color": "#111" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_sA": { "id": "c_sA", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♠️ Ass", "color": "#111" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_h7": { "id": "c_h7", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♥️ 7", "color": "#d32f2f" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_h8": { "id": "c_h8", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♥️ 8", "color": "#d32f2f" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_hA": { "id": "c_hA", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♥️ Ass", "color": "#d32f2f" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_dA": { "id": "c_dA", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♦️ Ass", "color": "#d32f2f" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 },
-    "c_cA": { "id": "c_cA", "type": "card", "x": 0, "y": 0, "width": 80, "height": 120, "zIndex": 1, "frontContent": { "type": "text", "value": "♣️ Ass", "color": "#111" }, "backContent": { "type": "text", "value": "🂠", "color": "#0d47a1" }, "faceUp": true, "rotation": 0 }
+    "c_s2": {
+      "id": "c_s2",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Pik 2",
+      "frontContent": {
+        "type": "text",
+        "value": "♠ 2",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_s3": {
+      "id": "c_s3",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Pik 3",
+      "frontContent": {
+        "type": "text",
+        "value": "♠ 3",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_s4": {
+      "id": "c_s4",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Pik 4",
+      "frontContent": {
+        "type": "text",
+        "value": "♠ 4",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_s5": {
+      "id": "c_s5",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Pik 5",
+      "frontContent": {
+        "type": "text",
+        "value": "♠ 5",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_s6": {
+      "id": "c_s6",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Pik 6",
+      "frontContent": {
+        "type": "text",
+        "value": "♠ 6",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_s7": {
+      "id": "c_s7",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Pik 7",
+      "frontContent": {
+        "type": "text",
+        "value": "♠ 7",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_s8": {
+      "id": "c_s8",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Pik 8",
+      "frontContent": {
+        "type": "text",
+        "value": "♠ 8",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_s9": {
+      "id": "c_s9",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Pik 9",
+      "frontContent": {
+        "type": "text",
+        "value": "♠ 9",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_s10": {
+      "id": "c_s10",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Pik 10",
+      "frontContent": {
+        "type": "text",
+        "value": "♠ 10",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_sJ": {
+      "id": "c_sJ",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Pik Bube",
+      "frontContent": {
+        "type": "text",
+        "value": "♠ J",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_sQ": {
+      "id": "c_sQ",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Pik Dame",
+      "frontContent": {
+        "type": "text",
+        "value": "♠ Q",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_sK": {
+      "id": "c_sK",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Pik König",
+      "frontContent": {
+        "type": "text",
+        "value": "♠ K",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_sA": {
+      "id": "c_sA",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Pik Ass",
+      "frontContent": {
+        "type": "text",
+        "value": "♠ A",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_h2": {
+      "id": "c_h2",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Herz 2",
+      "frontContent": {
+        "type": "text",
+        "value": "♥ 2",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_h3": {
+      "id": "c_h3",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Herz 3",
+      "frontContent": {
+        "type": "text",
+        "value": "♥ 3",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_h4": {
+      "id": "c_h4",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Herz 4",
+      "frontContent": {
+        "type": "text",
+        "value": "♥ 4",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_h5": {
+      "id": "c_h5",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Herz 5",
+      "frontContent": {
+        "type": "text",
+        "value": "♥ 5",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_h6": {
+      "id": "c_h6",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Herz 6",
+      "frontContent": {
+        "type": "text",
+        "value": "♥ 6",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_h7": {
+      "id": "c_h7",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Herz 7",
+      "frontContent": {
+        "type": "text",
+        "value": "♥ 7",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_h8": {
+      "id": "c_h8",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Herz 8",
+      "frontContent": {
+        "type": "text",
+        "value": "♥ 8",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_h9": {
+      "id": "c_h9",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Herz 9",
+      "frontContent": {
+        "type": "text",
+        "value": "♥ 9",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_h10": {
+      "id": "c_h10",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Herz 10",
+      "frontContent": {
+        "type": "text",
+        "value": "♥ 10",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_hJ": {
+      "id": "c_hJ",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Herz Bube",
+      "frontContent": {
+        "type": "text",
+        "value": "♥ J",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_hQ": {
+      "id": "c_hQ",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Herz Dame",
+      "frontContent": {
+        "type": "text",
+        "value": "♥ Q",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_hK": {
+      "id": "c_hK",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Herz König",
+      "frontContent": {
+        "type": "text",
+        "value": "♥ K",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_hA": {
+      "id": "c_hA",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Herz Ass",
+      "frontContent": {
+        "type": "text",
+        "value": "♥ A",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_d2": {
+      "id": "c_d2",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Karo 2",
+      "frontContent": {
+        "type": "text",
+        "value": "♦ 2",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_d3": {
+      "id": "c_d3",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Karo 3",
+      "frontContent": {
+        "type": "text",
+        "value": "♦ 3",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_d4": {
+      "id": "c_d4",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Karo 4",
+      "frontContent": {
+        "type": "text",
+        "value": "♦ 4",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_d5": {
+      "id": "c_d5",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Karo 5",
+      "frontContent": {
+        "type": "text",
+        "value": "♦ 5",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_d6": {
+      "id": "c_d6",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Karo 6",
+      "frontContent": {
+        "type": "text",
+        "value": "♦ 6",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_d7": {
+      "id": "c_d7",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Karo 7",
+      "frontContent": {
+        "type": "text",
+        "value": "♦ 7",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_d8": {
+      "id": "c_d8",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Karo 8",
+      "frontContent": {
+        "type": "text",
+        "value": "♦ 8",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_d9": {
+      "id": "c_d9",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Karo 9",
+      "frontContent": {
+        "type": "text",
+        "value": "♦ 9",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_d10": {
+      "id": "c_d10",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Karo 10",
+      "frontContent": {
+        "type": "text",
+        "value": "♦ 10",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_dJ": {
+      "id": "c_dJ",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Karo Bube",
+      "frontContent": {
+        "type": "text",
+        "value": "♦ J",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_dQ": {
+      "id": "c_dQ",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Karo Dame",
+      "frontContent": {
+        "type": "text",
+        "value": "♦ Q",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_dK": {
+      "id": "c_dK",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Karo König",
+      "frontContent": {
+        "type": "text",
+        "value": "♦ K",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_dA": {
+      "id": "c_dA",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Karo Ass",
+      "frontContent": {
+        "type": "text",
+        "value": "♦ A",
+        "color": "#d32f2f"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_c2": {
+      "id": "c_c2",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Kreuz 2",
+      "frontContent": {
+        "type": "text",
+        "value": "♣ 2",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_c3": {
+      "id": "c_c3",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Kreuz 3",
+      "frontContent": {
+        "type": "text",
+        "value": "♣ 3",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_c4": {
+      "id": "c_c4",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Kreuz 4",
+      "frontContent": {
+        "type": "text",
+        "value": "♣ 4",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_c5": {
+      "id": "c_c5",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Kreuz 5",
+      "frontContent": {
+        "type": "text",
+        "value": "♣ 5",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_c6": {
+      "id": "c_c6",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Kreuz 6",
+      "frontContent": {
+        "type": "text",
+        "value": "♣ 6",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_c7": {
+      "id": "c_c7",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Kreuz 7",
+      "frontContent": {
+        "type": "text",
+        "value": "♣ 7",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_c8": {
+      "id": "c_c8",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Kreuz 8",
+      "frontContent": {
+        "type": "text",
+        "value": "♣ 8",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_c9": {
+      "id": "c_c9",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Kreuz 9",
+      "frontContent": {
+        "type": "text",
+        "value": "♣ 9",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_c10": {
+      "id": "c_c10",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Kreuz 10",
+      "frontContent": {
+        "type": "text",
+        "value": "♣ 10",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_cJ": {
+      "id": "c_cJ",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Kreuz Bube",
+      "frontContent": {
+        "type": "text",
+        "value": "♣ J",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_cQ": {
+      "id": "c_cQ",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Kreuz Dame",
+      "frontContent": {
+        "type": "text",
+        "value": "♣ Q",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_cK": {
+      "id": "c_cK",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Kreuz König",
+      "frontContent": {
+        "type": "text",
+        "value": "♣ K",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    },
+    "c_cA": {
+      "id": "c_cA",
+      "type": "card",
+      "x": 0,
+      "y": 0,
+      "width": 80,
+      "height": 120,
+      "zIndex": 1,
+      "label": "Kreuz Ass",
+      "frontContent": {
+        "type": "text",
+        "value": "♣ A",
+        "color": "#1a1a1a"
+      },
+      "backContent": {
+        "type": "text",
+        "value": "🂠",
+        "color": "#0d47a1"
+      },
+      "faceUp": true,
+      "rotation": 0
+    }
   }
 }

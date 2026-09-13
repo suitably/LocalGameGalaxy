@@ -4,13 +4,15 @@ import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import type { TabletopGameState, TabletopAction } from '../../logic/tabletopReducer';
-import type { CardWidget, DeckWidget, HolderWidget, TokenWidget, CounterWidget, TabletopWidget } from '../../logic/types';
+import type { CardWidget, DeckWidget, HolderWidget, TokenWidget, CounterWidget, DieWidget, TabletopWidget } from '../../logic/types';
 import { useTabletopEngine } from '../../hooks/useTabletopEngine';
 import { CardWidgetView } from '../widgets/CardWidgetView';
 import { DeckWidgetView } from '../widgets/DeckWidgetView';
 import { HolderWidgetView } from '../widgets/HolderWidgetView';
 import { TokenWidgetView } from '../widgets/TokenWidgetView';
 import { CounterWidgetView } from '../widgets/CounterWidgetView';
+import { DieWidgetView } from '../widgets/DieWidgetView';
+import { PlayingCardFace } from '../widgets/PlayingCardFace';
 
 interface TabletopSurfaceProps {
   state: TabletopGameState;
@@ -142,6 +144,16 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
                     onDecrement={() => dispatch({ type: 'UPDATE_COUNTER', payload: { counterId: w.id, delta: -(w.step || 1) } })}
                   />
                 );
+              case 'die':
+                return (
+                  <DieWidgetView
+                    key={w.id}
+                    widget={w as DieWidget}
+                    isDragging={isDragging}
+                    onPointerDown={(e) => handlePointerDownWidget(e, w)}
+                    onRoll={() => dispatch({ type: 'ROLL_DIE', payload: { dieId: w.id } })}
+                  />
+                );
               default:
                 return null;
             }
@@ -165,7 +177,6 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
                 width: 80,
                 height: 120,
                 borderRadius: 2,
-                bgcolor: '#fff',
                 boxShadow: 10,
                 zIndex: 999,
                 animation: 'flickFlyIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
@@ -173,13 +184,21 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
                   '0%': { transform: 'translateY(800px) scale(0.5) rotate(15deg)', opacity: 0 },
                   '100%': { transform: 'translateY(0) scale(1) rotate(0deg)', opacity: 1 },
                 },
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
                 border: '1.5px solid rgba(0,0,0,0.2)',
+                overflow: 'hidden',
+                bgcolor: '#fff',
               }}
             >
-              {card?.frontContent.value || '🂠'}
+              {card && (
+                <PlayingCardFace
+                  frontContent={card.frontContent}
+                  backContent={card.backContent}
+                  isFaceUp={true}
+                  label={card.label}
+                  width={80}
+                  height={120}
+                />
+              )}
             </Box>
           );
         })}

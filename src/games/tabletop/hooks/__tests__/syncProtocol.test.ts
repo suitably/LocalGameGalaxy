@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { tabletopReducer } from '../../logic/tabletopReducer';
 import type { TabletopGameState } from '../../logic/tabletopReducer';
 import { validateAndSanitizeGame } from '../../logic/gameValidator';
+import type { DeckWidget, HolderWidget, DieWidget } from '../../logic/types';
 
 describe('Tabletop sync action reductions', () => {
   const baseGame = validateAndSanitizeGame({
@@ -25,8 +26,8 @@ describe('Tabletop sync action reductions', () => {
       payload: { deckId: 'deck1', targetHolderId: 'hand1' },
     });
 
-    const deck = nextState.game.widgets.deck1 as any;
-    const hand = nextState.game.widgets.hand1 as any;
+    const deck = nextState.game.widgets.deck1 as DeckWidget;
+    const hand = nextState.game.widgets.hand1 as HolderWidget;
 
     expect(deck.cardIds).toEqual(['c2']);
     expect(hand.childIds).toEqual(['c1']);
@@ -41,7 +42,7 @@ describe('Tabletop sync action reductions', () => {
     expect(nextState.flyingCards.length).toBe(1);
     expect(nextState.flyingCards[0].cardId).toBe('c1');
 
-    const discard = nextState.game.widgets.discard as any;
+    const discard = nextState.game.widgets.discard as HolderWidget;
     expect(discard.childIds).toContain('c1');
   });
 
@@ -51,7 +52,7 @@ describe('Tabletop sync action reductions', () => {
       payload: { dieId: 'die1', value: 5 },
     });
 
-    const die = nextState.game.widgets.die1 as any;
+    const die = nextState.game.widgets.die1 as DieWidget;
     expect(die.currentValue).toBe(5);
   });
 });

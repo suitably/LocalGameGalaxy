@@ -11,6 +11,7 @@ import {
 } from '../logic/tabletopStorage';
 import { parsePcioFile } from '../logic/pcioParser';
 import { exportGameAsJson, exportGameAsPcio } from '../logic/tabletopExporter';
+import { fetchAndParseGameUrl, fetchCatalogGame, fetchManifest } from '../logic/gameInstaller';
 
 export function useTabletopGames() {
   const [games, setGames] = useState<TabletopGameSummary[]>([]);
@@ -78,11 +79,71 @@ export function useTabletopGames() {
     return getTabletopGame(id);
   }, []);
 
+  const importFromUrl = useCallback(
+    async (url: string): Promise<TabletopGameDefinition> => {
+      setImportError(null);
+      try {
+        const gameDef = await fetchAndParseGameUrl(url);
+        await saveTabletopGame(gameDef);
+        await refresh();
+        return gameDef;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setImportError(msg);
+        throw err;
+      }
+    },
+    [refresh],
+  );
+
+  const installCatalogGame = useCallback(
+    async (filePath: string): Promise<TabletopGameDefinition> => {
+      setImportError(null);
+      try {
+        const gameDef = await fetchCatalogGame(filePath);
+        await saveTabletopGame(gameDef);
+        await refresh();
+        return gameDef;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setImportError(msg);
+        throw err;
+      }
+    },
+    [refresh],
+  );
+
+  const installStarterPack = useCallback(async (): Promise<number> => {
+    setImportError(null);
+    try {
+      const manifestList = await fetchManifest();
+      let count = 0;
+      for (const item of manifestList) {
+        try {
+          const def = await fetchCatalogGame(item.file);
+          await saveTabletopGame(def);
+          count++;
+        } catch (e) {
+          console.warn(`[useTabletopGames] Starter game ${item.id} install error:`, e);
+        }
+      }
+      await refresh();
+      return count;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setImportError(msg);
+      throw err;
+    }
+  }, [refresh]);
+
   return {
     games,
     loading,
     importError,
     importFile,
+    importFromUrl,
+    installStarterPack,
+    installCatalogGame,
     saveGame,
     removeGame,
     loadGame,

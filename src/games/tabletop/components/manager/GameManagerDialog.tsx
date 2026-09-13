@@ -6,14 +6,17 @@ import {
   DialogActions,
   Button,
   Box,
-  Typography,
-  Stack,
-  CircularProgress,
-  Alert,
+  Tabs,
+  Tab,
+  Badge,
 } from '@mui/material';
+import StorageIcon from '@mui/icons-material/Storage';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import { useTranslation } from 'react-i18next';
-import { GameDropZone } from './GameDropZone';
-import { GameCardItem } from './GameCardItem';
+import { InstalledGamesTab } from './InstalledGamesTab';
+import { TemplatesCatalogTab } from './TemplatesCatalogTab';
+import { UrlImportTab } from './UrlImportTab';
 import { EditGameDialog } from './EditGameDialog';
 import { useTabletopGames } from '../../hooks/useTabletopGames';
 import type { TabletopGameDefinition } from '../../logic/types';
@@ -39,6 +42,9 @@ export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
     loading,
     importError,
     importFile,
+    importFromUrl,
+    installStarterPack,
+    installCatalogGame,
     saveGame,
     removeGame,
     loadGame,
@@ -46,17 +52,8 @@ export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
     exportGameAsPcio,
   } = useTabletopGames();
 
+  const [activeTab, setActiveTab] = useState(0);
   const [editingGame, setEditingGame] = useState<TabletopGameDefinition | null>(null);
-  const [isImporting, setIsImporting] = useState(false);
-
-  const handleFileSelect = async (file: File) => {
-    setIsImporting(true);
-    try {
-      await importFile(file);
-    } finally {
-      setIsImporting(false);
-    }
-  };
 
   const handleEdit = async (id: string) => {
     const full = await loadGame(id);
@@ -78,55 +75,75 @@ export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
     if (full) onPublish(full);
   };
 
+  const handleInstallTemplate = async (filePath: string) => {
+    await installCatalogGame(filePath);
+  };
+
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-        <DialogTitle>{t('games.tabletop.manager_title', 'Tabletop Spiele verwalten')}</DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={3}>
-            <GameDropZone onFileSelect={handleFileSelect} isImporting={isImporting} />
+        <DialogTitle sx={{ pb: 0 }}>
+          {t('games.tabletop.manager_title', 'Tabletop Spiele verwalten')}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 1.5 }}>
+            <Tabs
+              value={activeTab}
+              onChange={(_, val) => setActiveTab(val)}
+              variant="scrollable"
+              scrollButtons="auto"
+            >
+              <Tab
+                icon={<Badge badgeContent={games.length} color="primary"><StorageIcon /></Badge>}
+                iconPosition="start"
+                label={t('games.tabletop.tab_my_games', 'Meine Spiele')}
+              />
+              <Tab
+                icon={<AutoAwesomeIcon />}
+                iconPosition="start"
+                label={t('games.tabletop.tab_catalog', 'Katalog & Vorlagen')}
+              />
+              <Tab
+                icon={<CloudDownloadIcon />}
+                iconPosition="start"
+                label={t('games.tabletop.tab_url_import', 'Aus dem Web / URL')}
+              />
+            </Tabs>
+          </Box>
+        </DialogTitle>
 
-            {importError && (
-              <Alert severity="error" onClose={() => {}}>
-                {importError}
-              </Alert>
-            )}
+        <DialogContent dividers sx={{ pt: 2.5 }}>
+          {activeTab === 0 && (
+            <InstalledGamesTab
+              games={games}
+              loading={loading}
+              importError={importError}
+              onFileSelect={importFile}
+              onInstallStarterPack={installStarterPack}
+              onPlayParty={onPlayParty}
+              onPlayLocal={onPlayLocal}
+              onEdit={handleEdit}
+              onExportJson={handleExportJson}
+              onExportPcio={handleExportPcio}
+              onPublish={handlePublish}
+              onDelete={removeGame}
+            />
+          )}
 
-            <Box>
-              <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
-                {t('games.tabletop.my_games', 'Installierte Spiele')} ({games.length})
-              </Typography>
+          {activeTab === 1 && (
+            <TemplatesCatalogTab
+              installedGames={games}
+              onInstallTemplate={handleInstallTemplate}
+            />
+          )}
 
-              {loading ? (
-                <Box display="flex" justifyContent="center" py={4}>
-                  <CircularProgress size={32} />
-                </Box>
-              ) : games.length === 0 ? (
-                <Typography variant="body2" color="text.secondary" textAlign="center" py={3}>
-                  {t('games.tabletop.no_games', 'Noch keine eigenen Spiele importiert. Ziehe eine .pcio- oder .json-Datei in das Feld oben!')}
-                </Typography>
-              ) : (
-                <Stack spacing={1.5}>
-                  {games.map((g) => (
-                    <GameCardItem
-                      key={g.id}
-                      game={g}
-                      onPlayParty={onPlayParty}
-                      onPlayLocal={onPlayLocal}
-                      onEdit={handleEdit}
-                      onExportJson={handleExportJson}
-                      onExportPcio={handleExportPcio}
-                      onPublish={handlePublish}
-                      onDelete={removeGame}
-                    />
-                  ))}
-                </Stack>
-              )}
-            </Box>
-          </Stack>
+          {activeTab === 2 && (
+            <UrlImportTab onImportFromUrl={importFromUrl} />
+          )}
         </DialogContent>
+
         <DialogActions>
-          <Button onClick={onClose} variant="outlined">{t('common.close', 'Schließen')}</Button>
+          <Button onClick={onClose} variant="outlined">
+            {t('common.close', 'Schließen')}
+          </Button>
         </DialogActions>
       </Dialog>
 

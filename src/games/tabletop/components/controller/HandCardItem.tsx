@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import type { CardWidget } from '../../logic/types';
+import { PlayingCardFace } from '../widgets/PlayingCardFace';
 
 interface HandCardItemProps {
   card: CardWidget;
@@ -82,21 +83,18 @@ export const HandCardItem: React.FC<HandCardItemProps> = ({
         p: 1,
         transition: isDragging ? 'none' : 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
         transform: `translateY(${dragOffsetY}px) ${isSelected ? 'translateY(-16px) scale(1.05)' : ''}`,
-        position: 'relative',
+        overflow: 'hidden',
+        boxSizing: 'border-box',
       }}
     >
-      {content.type === 'image' ? (
-        <Box
-          component="img"
-          src={content.value}
-          alt={card.label || 'Card'}
-          sx={{ width: '100%', height: '100%', objectFit: 'contain' }}
-        />
-      ) : (
-        <Typography variant="h6" fontWeight={800} textAlign="center" sx={{ fontSize: '1.2rem', wordBreak: 'break-word' }}>
-          {content.value}
-        </Typography>
-      )}
+      <PlayingCardFace
+        frontContent={card.frontContent}
+        backContent={card.backContent}
+        isFaceUp={true}
+        label={card.label}
+        width={80}
+        height={125}
+      />
 
       {/* Swipe up indicator hint */}
       {isDragging && dragOffsetY < -30 && (

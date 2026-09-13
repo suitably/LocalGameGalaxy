@@ -36,10 +36,30 @@ function getMimeType(fileName: string): string {
   }
 }
 
+function resolveAssetUrl(nameOrPath: unknown, assetFiles?: Record<string, string>): string | null {
+  if (typeof nameOrPath !== 'string' || !nameOrPath.trim()) return null;
+  const str = nameOrPath.trim();
+  if (str.startsWith('data:') || str.startsWith('http://') || str.startsWith('https://')) {
+    return str;
+  }
+  if (!assetFiles) return null;
+  if (assetFiles[str]) return assetFiles[str];
+
+  const base = str.split('/').pop()?.toLowerCase();
+  for (const [key, dataUri] of Object.entries(assetFiles)) {
+    if (key.toLowerCase() === str.toLowerCase()) return dataUri;
+    if (base && key.toLowerCase().split('/').pop() === base) return dataUri;
+  }
+  return null;
+}
+
 /**
  * Normalizes PlayingCards.io widget structures into Galaxy Tabletop Widgets.
  */
-function normalizePcioWidgets(rawWidgets: Record<string, Record<string, unknown>>): Record<string, TabletopWidget> {
+function normalizePcioWidgets(
+  rawWidgets: Record<string, Record<string, unknown>>,
+  assetFiles?: Record<string, string>,
+): Record<string, TabletopWidget> {
   const normalized: Record<string, TabletopWidget> = {};
 
   for (const [id, raw] of Object.entries(rawWidgets)) {
@@ -53,6 +73,7 @@ function normalizePcioWidgets(rawWidgets: Record<string, Record<string, unknown>
 
     if (rawType.includes('deck') || rawType === 'carddeck') {
       const cardIds = Array.isArray(raw.cardIds) ? (raw.cardIds as string[]) : [];
+      const deckBackImg = resolveAssetUrl(raw.backImage || raw.image || raw.back, assetFiles);
       const deck: DeckWidget = {
         id,
         type: 'deck',
@@ -63,7 +84,9 @@ function normalizePcioWidgets(rawWidgets: Record<string, Record<string, unknown>
         zIndex,
         label: label || 'Ziehstapel',
         cardIds,
-        backContent: { type: 'text', value: '🂠', color: '#1565c0' },
+        backContent: deckBackImg
+          ? { type: 'image', value: deckBackImg }
+          : { type: 'text', value: '🂠', color: '#1565c0' },
       };
       normalized[id] = deck;
     } else if (rawType.includes('hand') || rawType === 'cardhand') {
@@ -101,6 +124,11 @@ function normalizePcioWidgets(rawWidgets: Record<string, Record<string, unknown>
       };
       normalized[id] = holder;
     } else if (rawType.includes('card')) {
+      const frontRaw = raw.frontImage || raw.image || raw.faceImage || raw.front || raw.face;
+      const frontImg = resolveAssetUrl(frontRaw, assetFiles);
+      const backRaw = raw.backImage || raw.back;
+      const backImg = resolveAssetUrl(backRaw, assetFiles);
+
       const card: CardWidget = {
         id,
         type: 'card',
@@ -111,15 +139,19 @@ function normalizePcioWidgets(rawWidgets: Record<string, Record<string, unknown>
         zIndex,
         label,
         deckId: typeof raw.deckId === 'string' ? raw.deckId : undefined,
-        frontContent: {
-          type: typeof raw.frontImage === 'string' ? 'image' : 'text',
-          value: String(raw.frontImage || raw.value || raw.label || 'Karte'),
-        },
-        backContent: {
-          type: typeof raw.backImage === 'string' ? 'image' : 'text',
-          value: String(raw.backImage || '🂠'),
-          color: '#1565c0',
-        },
+        frontContent: frontImg
+          ? { type: 'image', value: frontImg }
+          : {
+              type: typeof raw.frontImage === 'string' ? 'image' : 'text',
+              value: String(raw.frontImage || raw.value || raw.label || 'Karte'),
+            },
+        backContent: backImg
+          ? { type: 'image', value: backImg }
+          : {
+              type: typeof raw.backImage === 'string' ? 'image' : 'text',
+              value: String(raw.backImage || '🂠'),
+              color: '#1565c0',
+            },
         faceUp: raw.faceUp !== false,
         rotation: typeof raw.rotation === 'number' ? raw.rotation : 0,
       };
@@ -185,10 +217,22 @@ export async function parsePcioFile(source: ArrayBuffer | string): Promise<Table
     }
 
     const parsedState = JSON.parse(stateJsonContent) as PcioRawState;
-    const normalizedWidgets = parsedState.widgets ? normalizePcioWidgets(parsedState.widgets) : {};
+    const normalizedWidgets = parsedState.widgets ? normalizePcioWidgets(parsedState.widgets, assetFiles) : {};
+
+    const table = parsedState.table ? { ...parsedState.table } : undefined;
+    if (table) {
+      const bgVal = table.background || (table as Record<string, unknown>).backgroundImageUrl;
+      if (bgVal) {
+        const bgAsset = resolveAssetUrl(bgVal, assetFiles);
+        const resolved = bgAsset || (typeof bgVal === 'string' ? bgVal : undefined);
+        table.background = resolved;
+        (table as Record<string, unknown>).backgroundImageUrl = resolved;
+      }
+    }
 
     return validateAndSanitizeGame({
       ...parsedState,
+      table,
       widgets: Object.keys(normalizedWidgets).length > 0 ? normalizedWidgets : undefined,
       assetFiles,
     });
