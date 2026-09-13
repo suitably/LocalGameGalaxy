@@ -5,7 +5,7 @@ import { usePageTitle } from '../../context/TitleContext';
 import { useWakeLock } from '../../hooks/useWakeLock';
 import { useGuessArtLobby } from './hooks/useGuessArtLobby';
 import { useGuessArtGame } from './hooks/useGuessArtGame';
-import { useLayout } from '../../context/LayoutContext';
+import { useHeaderLayout } from '../../context/HeaderLayoutContext';
 import { GameSetup } from './components/GameSetup';
 import { GuessArtHeader } from './components/GuessArtHeader';
 import { WordSelector } from './components/WordSelector';
@@ -290,7 +290,7 @@ export const GuessArtGame: React.FC = () => {
     await refresh();
   }, [game, activeTurnPlayerId, isHost, isCurrentTurnLocal, triggerLocalUpdate, refresh]);
 
-  const { setHeaderHidden } = useLayout();
+  const { setHeaderHidden } = useHeaderLayout();
 
   useEffect(() => {
     setHeaderHidden(Boolean(activeGameId));

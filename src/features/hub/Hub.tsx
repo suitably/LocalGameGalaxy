@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { gameRegistry, type GameCategory } from '../../lib/gameRegistry';
 import { PWAInstallBanner } from '../../components/pwa';
+import nexumiaBanner from '../../assets/nexumia-banner.svg';
 
 const cardStyle = (gradientStart: string, gradientEnd: string, hoverColor: string) => ({
     height: '100%',
@@ -74,21 +75,20 @@ export const Hub: React.FC = () => {
     return (
         <Box sx={{ width: '100%', animation: 'fadeIn 0.4s ease-out' }}>
             <Box mb={{ xs: 2.5, sm: 3, md: 4 }} textAlign="center">
-                <Typography
-                    variant="h2"
-                    component="h1"
-                    gutterBottom
+                <Box
+                    component="img"
+                    src={nexumiaBanner}
+                    alt="Nexumia"
                     sx={{
-                        fontWeight: 800,
-                        fontSize: { xs: '1.85rem', sm: '2.5rem', md: '3.25rem' },
-                        background: 'linear-gradient(90deg, #90caf9, #f48fb1)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        textShadow: '0 4px 12px rgba(144, 202, 249, 0.2)'
+                        width: '100%',
+                        maxWidth: { xs: 320, sm: 420, md: 520 },
+                        height: 'auto',
+                        mx: 'auto',
+                        display: 'block',
+                        mb: { xs: 1.5, sm: 2 },
+                        filter: 'drop-shadow(0 4px 12px rgba(79, 70, 229, 0.2))',
                     }}
-                >
-                    {t('app.welcome')}
-                </Typography>
+                />
                 <Typography 
                     variant="body1" 
                     color="text.secondary" 

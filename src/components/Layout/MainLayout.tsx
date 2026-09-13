@@ -1,13 +1,13 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import { Outlet, useLocation } from 'react-router-dom';
-import { useLayout } from '../../context/LayoutContext';
+import { useHeaderLayout } from '../../context/HeaderLayoutContext';
 import { GlobalHeader } from './GlobalHeader';
 import { FeedbackDialog } from '../feedback/FeedbackDialog';
 
 export const MainLayout: React.FC = () => {
     const location = useLocation();
-    const { headerHidden } = useLayout();
+    const { headerHidden } = useHeaderLayout();
     const isGame = location.pathname.includes('/games/') || location.pathname.startsWith('/party');
 
     return (

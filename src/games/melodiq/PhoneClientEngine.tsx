@@ -189,7 +189,6 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
 
         } else if (data.type === 'api_response_chunk') {
             // Reassemble chunked API response
-            } else if (data.type === 'api_response_chunk') {
             const { reqId, chunk, index, total } = data;
             if (!reqId || index === undefined || total === undefined) return;
             

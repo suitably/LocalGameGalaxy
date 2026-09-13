@@ -46,7 +46,7 @@ export const MelodiqGameContent: React.FC = () => {
     const params = new URLSearchParams(window.location.search);
     const isClient = params.get('role') === 'client';
 
-    const { songs, loadingProgress, refreshSongs, getSongById, isLoading, hasConnectionError } = useSongs();
+    const { songs, refreshSongs, getSongById, isLoading, hasConnectionError } = useSongs();
     const { queue, popNext, setNowPlaying, addToQueue, addNext, nowPlaying, replaceItem } = useQueue();
     const { jobs } = useDownloads(isClient ? 0 : 2000);
     
@@ -125,6 +125,7 @@ export const MelodiqGameContent: React.FC = () => {
     const [restoredSong, setRestoredSong] = useState<SongMeta | null>(() => nowPlaying ?? null);
     
     const [currentView, setCurrentView] = useState<View>('Home');
+    const handleSetCurrentView = useCallback((v: string) => setCurrentView(v as View), []);
     const [selectedSong, setSelectedSong] = useState<Song | SongMeta | null>(null);
 
     const [, setIsPlaybackPlaying] = useState<boolean>(false);
@@ -190,9 +191,7 @@ export const MelodiqGameContent: React.FC = () => {
     }, [currentView]);
 
     useMelodiqHeader({
-        currentView, 
-        setCurrentView: (v: string) => setCurrentView(v as View),
-        loadingProgress, refreshSongs,
+        currentView, setCurrentView: handleSetCurrentView,
         isClient, isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV, clientRole,
         onBackToHome: handleCloseSubView
     });

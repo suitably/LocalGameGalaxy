@@ -20,20 +20,42 @@
 ## 3. Project-Specific Code Rules
 
 - **No cross-game imports**: `src/games/<A>` must never import from `src/games/<B>`. Extract shared code to `src/modules/`, `src/components/`, or `src/lib/`.
-- **File size**: Max ~250 lines per component. Extract logic into custom hooks.
 - **Dialogs**: Use MUI `<Dialog>` or [`ConfirmDialog`](src/components/common/ConfirmDialog.tsx). Never `window.confirm()` or native `<dialog>`.
 - **Storage**: Use [`src/lib/storage.ts`](src/lib/storage.ts) with `STORAGE_KEYS`. Never raw `localStorage`.
 - **Header**: Integrate with `GlobalHeader` via [`LayoutContext`](src/context/LayoutContext.tsx) / `usePageTitle`. No duplicate top bars.
 - **TypeScript**: No `any`. Use discriminated unions for state (`status: 'idle' | 'loading' | 'success' | 'error'`).
 - **CSS**: CSS variables, Grid/Flexbox, `100dvh`.
 
-## 4. Verification
+### 3.1 Anti-God-Component Architecture & Decomposition Pattern
 
-Always run before marking done:
+To prevent monolithic "God Components" that bundle multiple responsibilities:
+
+- **Single Responsibility Principle (SRP)**: A component must either orchestrate (Container) or present (Presenter/Leaf), never mix storage/network sync + complex calculation + multi-section layout in one file.
+- **Size Budget**:
+  - **Hard Limit**: Max **250 lines** per `.tsx` component.
+  - **Warning Zone**: **200–250 lines** — extract hooks or sub-components before adding more code.
+  - **Orchestrator Components**: Target **< 160 lines** by composing sub-components with clean props.
+- **Standard 3-Tier Decomposition Pattern**:
+  1. **Custom Hook**: Extract state, side-effects (`useEffect`), storage persistence, and network/event handlers into `use<Feature>State.ts` or `use<Component>Settings.ts`.
+  2. **Focused Sub-Components**: Break distinct UI blocks (dialogs, cards, lists, toolbars) into dedicated sub-components with typed props. Co-locate in the same directory or a `components/` subfolder.
+  3. **Types Extraction**: Place shared interfaces in a co-located `types.ts` and re-export from the entry point for backward compatibility.
+- **Ratchet Rule for Legacy Components**:
+  - Existing components exceeding 250 lines are tracked in `scripts/legacy-component-baselines.json`.
+  - **Never expand a God Component**: Any modification to a legacy file must maintain or decrease its line count. New logic must be placed in extracted hooks or sub-components.
+  - When a legacy component is refactored below 250 lines, remove it from `scripts/legacy-component-baselines.json` to lock in the improvement.
+
+## 4. Verification & CI Pipeline
+
+The project enforces quality gates via GitHub Actions (`.github/workflows/ci.yml`).
+
+**When to run**: Only **after making code changes**, before marking a task as done.
+**Do NOT run** lint, test, build, or any verification commands during the **planning or research phase** — no code has changed, so verification adds no value and wastes resources.
 
 ```bash
-npm run lint    # ESLint
-npm run build   # tsc -b && vite build
+npm run lint          # ESLint (0 errors)
+npm test              # Vitest unit tests
+npm run check:budget  # Component budget & anti-God-component ratchet
+npm run build         # tsc -b && vite build
 ```
 
 ## 5. Reuse Catalog

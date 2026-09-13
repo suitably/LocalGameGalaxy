@@ -64,15 +64,6 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     const { t } = useTranslation();
     const { queue, popNext, setNowPlaying } = useQueue();
 
-    const [prevSong, setPrevSong] = useState<Song | null>(null);
-    const [prevSessionId, setPrevSessionId] = useState<number>(sessionInstanceId);
-    const [playbackId, setPlaybackId] = useState<number>(0);
-
-    if (selectedSong !== prevSong || sessionInstanceId !== prevSessionId) {
-        setPrevSong(selectedSong);
-        setPrevSessionId(sessionInstanceId);
-        setPlaybackId(id => id + 1);
-    }
     const sessionRef = useRef<MelodiqSessionHandle>(null);
     const [playbackState, setPlaybackState] = useState({
         isPlaying: false,
@@ -251,17 +242,20 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         }
         
         // Update isPlaying immediately (state change), but throttle progress updates to ~1/s
-        const isPlayingChanged = state.isPlaying !== playbackState.isPlaying;
-        if (isPlayingChanged || now - lastUpdateRef.current > 1000) {
-            setPlaybackState(state);
-            lastUpdateRef.current = now;
-        }
+        setPlaybackState(prev => {
+            const isPlayingChanged = state.isPlaying !== prev.isPlaying;
+            if (isPlayingChanged || now - lastUpdateRef.current > 1000) {
+                lastUpdateRef.current = now;
+                return state;
+            }
+            return prev;
+        });
             
         if (selectedSong && state.currentTime > 0 && (now - lastStorageRef.current > 1000)) {
             localStorage.setItem('melodiq_saved_time', JSON.stringify({ id: selectedSong.id, time: state.currentTime }));
             lastStorageRef.current = now;
         }
-    }, [selectedSong, playbackState.isPlaying]);
+    }, [selectedSong]);
 
     return (
         <>
@@ -280,7 +274,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                     display: 'flex', flexDirection: 'column'
                 }}>
                     <MelodiqSession
-                        key={`${selectedSong.id}-${playbackId}-${sessionInstanceId}`}
+                        key={`${selectedSong.id}-${sessionInstanceId}`}
                         ref={sessionRef}
                         song={selectedSong}
                         initialTime={initialTime}

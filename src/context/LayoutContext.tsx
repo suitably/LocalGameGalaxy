@@ -1,14 +1,23 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
+import React, { useContext, useCallback, useMemo, useEffect, type ReactNode } from 'react';
+import { TitleContext, TitleProvider, useTitle, usePageTitle, type TitleContextType } from './TitleContext';
+import {
+    HeaderLayoutContext,
+    HeaderLayoutProvider,
+    useHeaderLayout,
+    type HeaderLayoutContextType,
+    type MenuItem,
+} from './HeaderLayoutContext';
+import {
+    SettingsModeContext,
+    SettingsModeProvider,
+    useSettingsMode,
+    type SettingsModeContextType,
+} from './SettingsModeContext';
 
-export interface MenuItem {
-    label: string;
-    icon?: ReactNode;
-    action: () => void;
-    disabled?: boolean;
-    showAlways?: boolean;
-}
+export type { MenuItem, HeaderLayoutContextType, SettingsModeContextType, TitleContextType };
+export { useHeaderLayout, HeaderLayoutProvider, useSettingsMode, SettingsModeProvider, useTitle, usePageTitle, TitleProvider };
 
-interface LayoutContextType {
+export interface LayoutContextType {
     title: string | null;
     setTitle: (title: string | null) => void;
     customHeaderTitle: ReactNode;
@@ -21,108 +30,154 @@ interface LayoutContextType {
     setHomeAction: (action: (() => void) | null) => void;
     hideHome: boolean;
     setHideHome: (hide: boolean) => void;
-    setHeader: (title: string | null, items?: MenuItem[], homeAction?: (() => void) | null, customHeaderTitle?: ReactNode, isSettingsMode?: boolean, hideHome?: boolean) => void;
+    setHeader: (
+        title: string | null,
+        items?: MenuItem[],
+        homeAction?: (() => void) | null,
+        customHeaderTitle?: ReactNode,
+        isSettingsMode?: boolean,
+        hideHome?: boolean
+    ) => void;
     customHeaderActions: ReactNode;
     setCustomHeaderActions: (node: ReactNode) => void;
     isSettingsMode: boolean;
     setIsSettingsMode: (active: boolean) => void;
 }
 
-const LayoutContext = createContext<LayoutContextType | undefined>(undefined);
+const OptionalSettingsModeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const existing = useContext(SettingsModeContext);
+    if (existing) {
+        return <>{children}</>;
+    }
+    return <SettingsModeProvider>{children}</SettingsModeProvider>;
+};
 
+const OptionalTitleProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const existing = useContext(TitleContext);
+    if (existing) {
+        return <>{children}</>;
+    }
+    return <TitleProvider>{children}</TitleProvider>;
+};
+
+const OptionalHeaderLayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const existing = useContext(HeaderLayoutContext);
+    if (existing) {
+        return <>{children}</>;
+    }
+    return <HeaderLayoutProvider>{children}</HeaderLayoutProvider>;
+};
+
+/**
+ * Composite provider wrapping SettingsModeProvider, TitleProvider, and HeaderLayoutProvider.
+ */
 export const LayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [title, setTitleState] = useState<string | null>(null);
-    const [customHeaderTitle, setCustomHeaderTitleState] = useState<ReactNode>(null);
-    const [headerHidden, setHeaderHiddenState] = useState<boolean>(false);
-    const [menuItems, setMenuItemsState] = useState<MenuItem[]>([]);
-    const [homeAction, setHomeActionState] = useState<(() => void) | null>(null);
-    const [hideHome, setHideHomeState] = useState<boolean>(false);
-    const [customHeaderActions, setCustomHeaderActionsState] = useState<ReactNode>(null);
-    const [isSettingsMode, setIsSettingsModeState] = useState<boolean>(false);
-
-    const setHeader = useCallback((newTitle: string | null, newItems: MenuItem[] = [], newHomeAction: (() => void) | null = null, newCustomHeaderTitle: ReactNode = null, newIsSettingsMode: boolean = false, newHideHome: boolean = false) => {
-        setTitleState(prev => prev === newTitle ? prev : newTitle);
-        setMenuItemsState(prev => {
-            if (prev.length === newItems.length && prev.every((item, i) => item.label === newItems[i]?.label && item.disabled === newItems[i]?.disabled && item.showAlways === newItems[i]?.showAlways)) {
-                return prev;
-            }
-            return newItems;
-        });
-        setHomeActionState(() => newHomeAction);
-        setCustomHeaderTitleState(prev => prev === newCustomHeaderTitle ? prev : newCustomHeaderTitle);
-        setIsSettingsModeState(prev => prev === newIsSettingsMode ? prev : newIsSettingsMode);
-        setHideHomeState(prev => prev === newHideHome ? prev : newHideHome);
-    }, []);
-
-    const setTitle = useCallback((newTitle: string | null) => {
-        setTitleState(prev => prev === newTitle ? prev : newTitle);
-    }, []);
-
-    const setCustomHeaderTitle = useCallback((node: ReactNode) => {
-        setCustomHeaderTitleState(prev => prev === node ? prev : node);
-    }, []);
-
-    const setHeaderHidden = useCallback((hidden: boolean) => {
-        setHeaderHiddenState(prev => prev === hidden ? prev : hidden);
-    }, []);
-
-    const setMenuItems = useCallback((newItems: MenuItem[]) => {
-        setMenuItemsState(prev => {
-            if (prev.length === newItems.length && prev.every((item, i) => item.label === newItems[i]?.label && item.disabled === newItems[i]?.disabled && item.showAlways === newItems[i]?.showAlways)) {
-                return prev;
-            }
-            return newItems;
-        });
-    }, []);
-
-    const setHomeAction = useCallback((action: (() => void) | null) => {
-        setHomeActionState(() => action);
-    }, []);
-
-    const setHideHome = useCallback((hide: boolean) => {
-        setHideHomeState(prev => prev === hide ? prev : hide);
-    }, []);
-
-    const setCustomHeaderActions = useCallback((node: ReactNode) => {
-        setCustomHeaderActionsState(prev => prev === node ? prev : node);
-    }, []);
-
-    const setIsSettingsMode = useCallback((active: boolean) => {
-        setIsSettingsModeState(prev => prev === active ? prev : active);
-    }, []);
-
-    const value = useMemo(() => ({
-        title, setTitle, customHeaderTitle, setCustomHeaderTitle, headerHidden, setHeaderHidden, menuItems, setMenuItems, homeAction, setHomeAction, hideHome, setHideHome, setHeader,
-        customHeaderActions, setCustomHeaderActions, isSettingsMode, setIsSettingsMode
-    }), [title, setTitle, customHeaderTitle, setCustomHeaderTitle, headerHidden, setHeaderHidden, menuItems, setMenuItems, homeAction, setHomeAction, hideHome, setHideHome, setHeader, customHeaderActions, setCustomHeaderActions, isSettingsMode, setIsSettingsMode]);
-
     return (
-        <LayoutContext.Provider value={value}>
-            {children}
-        </LayoutContext.Provider>
+        <OptionalSettingsModeProvider>
+            <OptionalTitleProvider>
+                <OptionalHeaderLayoutProvider>
+                    {children}
+                </OptionalHeaderLayoutProvider>
+            </OptionalTitleProvider>
+        </OptionalSettingsModeProvider>
     );
 };
 
-export const useLayout = () => {
-    const context = useContext(LayoutContext);
-    if (!context) {
-        throw new Error('useLayout must be used within a LayoutProvider');
-    }
-    return context;
+/**
+ * Backward-compatible facade hook combining Title, HeaderLayout, and SettingsMode contexts.
+ * @deprecated Prefer focused hooks: `useTitle()` for title, `useHeaderLayout()` for header layout/actions, `useSettingsMode()` for settings mode.
+ */
+export const useLayout = (): LayoutContextType => {
+    const { title, setTitle } = useTitle();
+    const {
+        headerHidden,
+        setHeaderHidden,
+        customHeaderTitle,
+        setCustomHeaderTitle,
+        customHeaderActions,
+        setCustomHeaderActions,
+        menuItems,
+        setMenuItems,
+        homeAction,
+        setHomeAction,
+        hideHome,
+        setHideHome,
+    } = useHeaderLayout();
+    const { isSettingsMode, setIsSettingsMode } = useSettingsMode();
+
+    const setHeader = useCallback(
+        (
+            newTitle: string | null,
+            newItems: MenuItem[] = [],
+            newHomeAction: (() => void) | null = null,
+            newCustomHeaderTitle: ReactNode = null,
+            newIsSettingsMode: boolean = false,
+            newHideHome: boolean = false
+        ) => {
+            setTitle(newTitle);
+            setMenuItems(newItems);
+            setHomeAction(newHomeAction);
+            setCustomHeaderTitle(newCustomHeaderTitle);
+            setIsSettingsMode(newIsSettingsMode);
+            setHideHome(newHideHome);
+        },
+        [setTitle, setMenuItems, setHomeAction, setCustomHeaderTitle, setIsSettingsMode, setHideHome]
+    );
+
+    return useMemo<LayoutContextType>(
+        () => ({
+            title,
+            setTitle,
+            customHeaderTitle,
+            setCustomHeaderTitle,
+            headerHidden,
+            setHeaderHidden,
+            menuItems,
+            setMenuItems,
+            homeAction,
+            setHomeAction,
+            hideHome,
+            setHideHome,
+            setHeader,
+            customHeaderActions,
+            setCustomHeaderActions,
+            isSettingsMode,
+            setIsSettingsMode,
+        }),
+        [
+            title,
+            setTitle,
+            customHeaderTitle,
+            setCustomHeaderTitle,
+            headerHidden,
+            setHeaderHidden,
+            menuItems,
+            setMenuItems,
+            homeAction,
+            setHomeAction,
+            hideHome,
+            setHideHome,
+            setHeader,
+            customHeaderActions,
+            setCustomHeaderActions,
+            isSettingsMode,
+            setIsSettingsMode,
+        ]
+    );
 };
+
+export const useLayoutContext = useLayout;
 
 // Hook for components to register their header configuration
 export const useHeader = (title: string, items: MenuItem[] = []) => {
     const { setHeader } = useLayout();
-    // Stable dependency: serialize item labels to avoid spreading dynamic arrays
     const itemLabels = JSON.stringify(items.map(i => i.label));
 
     useEffect(() => {
         setHeader(title, items);
         return () => {
-            // Reset header on unmount to prevent stale state
             setHeader(null, []);
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [title, setHeader, itemLabels]);
 };

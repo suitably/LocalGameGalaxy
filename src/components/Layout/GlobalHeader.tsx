@@ -7,20 +7,21 @@ import FeedbackIcon from '@mui/icons-material/Feedback';
 import InstallMobileIcon from '@mui/icons-material/InstallMobile';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useTranslation } from 'react-i18next';
-import { useLayout } from '../../context/LayoutContext';
+import { useHeaderLayout } from '../../context/HeaderLayoutContext';
 import { useTitle } from '../../context/TitleContext';
+import { useSettingsMode } from '../../context/SettingsModeContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { gameRegistry } from '../../lib/gameRegistry';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
 import { PWAInstallDialog } from '../pwa/PWAInstallDialog';
-
 import { SettingsHeaderToolbar, SettingsHeaderSubNav } from '../../features/settings/components/SettingsHeaderNav';
 import { hasGitHubPAT } from '../../lib/github';
 
 export const GlobalHeader: React.FC = () => {
     const { t } = useTranslation();
-    const { title, customHeaderTitle, menuItems, homeAction, customHeaderActions, isSettingsMode, hideHome } = useLayout();
-    const { pageTitle } = useTitle();
+    const { customHeaderTitle, menuItems, homeAction, customHeaderActions, hideHome } = useHeaderLayout();
+    const { title } = useTitle();
+    const { isSettingsMode } = useSettingsMode();
     const navigate = useNavigate();
     const location = useLocation();
     const theme = useTheme();
@@ -128,7 +129,7 @@ export const GlobalHeader: React.FC = () => {
                                 ml: (hideHome && !homeAction && !isSettingsPage) ? { xs: 1, sm: 1.5 } : 0
                             }}
                         >
-                            {title || pageTitle || t('app.title')}
+                            {title || t('app.title')}
                         </Typography>
                     )}
 
@@ -214,15 +215,9 @@ export const GlobalHeader: React.FC = () => {
                             <Menu
                                 id="menu-appbar"
                                 anchorEl={menuAnchorEl}
-                                anchorOrigin={{
-                                    vertical: 'top',
-                                    horizontal: 'right',
-                                }}
+                                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
                                 keepMounted
-                                transformOrigin={{
-                                    vertical: 'top',
-                                    horizontal: 'right',
-                                }}
+                                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                                 open={Boolean(menuAnchorEl)}
                                 onClose={handleMenuClose}
                             >
@@ -247,4 +242,3 @@ export const GlobalHeader: React.FC = () => {
         </>
     );
 };
-

@@ -85,11 +85,14 @@ export function usePlaybackControls({
         }
 
         try {
-            const playPromises: Promise<any>[] = [audioRef.current.play()];
-            if (vocalsRef.current) {
+            const playPromises: Promise<any>[] = [];
+            if (audioRef.current) {
+                playPromises.push(audioRef.current.play());
+            }
+            if (vocalsRef.current && vocalsRef.current.src && !vocalsRef.current.error) {
                 playPromises.push(vocalsRef.current.play().catch(e => console.warn("Vocals play failed", e)));
             }
-            if (videoRef.current) {
+            if (videoRef.current && videoRef.current.src && !videoRef.current.error) {
                 playPromises.push(videoRef.current.play().catch(e => console.warn("Video play failed", e)));
             }
             playPromiseRef.current = Promise.all(playPromises).then(() => {});

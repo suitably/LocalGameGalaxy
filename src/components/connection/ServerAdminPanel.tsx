@@ -110,7 +110,7 @@ export const ServerAdminPanel: React.FC = () => {
             setLoadStatus('loaded');
         } catch (e: unknown) {
             setLoadStatus('error');
-            const message = e instanceof Error ? e.message : 'Unknown connection error';
+            const message = e instanceof Error ? e.message : t('server.admin.error_unknown_connection', 'Unknown connection error');
             setError(message);
         }
     }, []);
@@ -156,12 +156,12 @@ export const ServerAdminPanel: React.FC = () => {
                 }),
             });
 
-            if (!res.ok) throw new Error('Failed to create API key');
+            if (!res.ok) throw new Error(t('server.admin.error_create_failed', 'Failed to create API key'));
 
             setCreateOpen(false);
             await fetchApiKeys(true);
         } catch (e: unknown) {
-            const message = e instanceof Error ? e.message : 'Unknown error';
+            const message = e instanceof Error ? e.message : t('server.admin.error_unknown', 'Unknown error');
             setError(message);
         } finally {
             setCreating(false);
@@ -196,12 +196,12 @@ export const ServerAdminPanel: React.FC = () => {
                 }),
             });
 
-            if (!res.ok) throw new Error('Failed to update API key permissions');
+            if (!res.ok) throw new Error(t('server.admin.error_update_failed', 'Failed to update API key permissions'));
 
             setEditKey(null);
             await fetchApiKeys(true);
         } catch (e: unknown) {
-            const message = e instanceof Error ? e.message : 'Unknown error';
+            const message = e instanceof Error ? e.message : t('server.admin.error_unknown', 'Unknown error');
             setError(message);
         } finally {
             setSavingEdit(false);
@@ -221,7 +221,7 @@ export const ServerAdminPanel: React.FC = () => {
             });
             await fetchApiKeys(true);
         } catch (e: unknown) {
-            const message = e instanceof Error ? e.message : 'Unknown error';
+            const message = e instanceof Error ? e.message : t('server.admin.error_unknown', 'Unknown error');
             setError(message);
         }
     };
@@ -583,7 +583,7 @@ export const ServerAdminPanel: React.FC = () => {
                     </Typography>
                     {qrDataUrl && (
                         <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, boxShadow: 3 }}>
-                            <img src={qrDataUrl} alt="QR Code" style={{ display: 'block', width: 250, height: 250 }} />
+                            <img src={qrDataUrl} alt={t('server.admin.qr_alt', 'QR Code')} style={{ display: 'block', width: 250, height: 250 }} />
                         </Box>
                     )}
                     {qrFullLink && (

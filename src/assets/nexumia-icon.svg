@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+  <defs>
+    <linearGradient id="nx-ga" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#EC4899"/>
+    </linearGradient>
+    <linearGradient id="nx-gb" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06B6D4"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <radialGradient id="nx-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Outer glow -->
+  <circle cx="200" cy="200" r="60" fill="url(#nx-glow)" opacity="0.3"/>
+
+  <!-- Orbit circles (subtle) -->
+  <circle cx="200" cy="200" r="155" fill="none" stroke="#4F46E5" stroke-width="1" opacity="0.15"/>
+  <circle cx="200" cy="200" r="115" fill="none" stroke="#7C3AED" stroke-width="1" opacity="0.2"/>
+
+  <!-- Tilted orbit rings -->
+  <ellipse cx="200" cy="200" rx="160" ry="55" fill="none" stroke="url(#nx-ga)" stroke-width="1.5" opacity="0.35" transform="rotate(-30, 200, 200)"/>
+  <ellipse cx="200" cy="200" rx="160" ry="55" fill="none" stroke="url(#nx-gb)" stroke-width="1.5" opacity="0.35" transform="rotate(30, 200, 200)"/>
+
+  <!-- Central N -->
+  <circle cx="200" cy="200" r="44" fill="#1E1B4B"/>
+  <circle cx="200" cy="200" r="44" fill="none" stroke="url(#nx-ga)" stroke-width="2.5"/>
+  <text x="200" y="218" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-weight="800" font-size="48" fill="url(#nx-ga)">N</text>
+
+  <!-- Decorative stars -->
+  <g fill="white" opacity="0.25">
+    <circle cx="95" cy="85" r="1.5"/><circle cx="310" cy="95" r="1"/>
+    <circle cx="330" cy="300" r="1.5"/><circle cx="75" cy="310" r="1"/>
+    <circle cx="150" cy="55" r="1"/><circle cx="280" cy="345" r="1.2"/>
+    <circle cx="50" cy="200" r="1"/><circle cx="350" cy="190" r="1"/>
+  </g>
+
+  <!-- Icon: Dice (top) -->
+  <g transform="translate(180, 36)">
+    <circle cx="20" cy="20" r="22" fill="#4F46E5"/>
+    <rect x="7" y="7" width="26" height="26" rx="4" fill="none" stroke="white" stroke-width="1.5"/>
+    <circle cx="14" cy="14" r="2" fill="white"/>
+    <circle cx="26" cy="14" r="2" fill="white"/>
+    <circle cx="14" cy="26" r="2" fill="white"/>
+    <circle cx="26" cy="26" r="2" fill="white"/>
+  </g>
+
+  <!-- Icon: Microphone (right) -->
+  <g transform="translate(322, 163)">
+    <circle cx="20" cy="20" r="22" fill="#EC4899"/>
+    <rect x="14" y="7" width="12" height="16" rx="6" fill="none" stroke="white" stroke-width="1.5"/>
+    <path d="M10,19 C10,27 15,29 20,29 C25,29 30,27 30,19" stroke="white" stroke-width="1.5" fill="none"/>
+    <line x1="20" y1="29" x2="20" y2="34" stroke="white" stroke-width="1.5"/>
+    <line x1="15" y1="34" x2="25" y2="34" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Icon: Paintbrush (bottom-right) -->
+  <g transform="translate(288, 300)">
+    <circle cx="20" cy="20" r="22" fill="#06B6D4"/>
+    <ellipse cx="14" cy="26" rx="5" ry="7" fill="none" stroke="white" stroke-width="1.5"/>
+    <line x1="14" y1="19" x2="28" y2="6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="29" cy="5" r="2.5" fill="white" opacity="0.8"/>
+  </g>
+
+  <!-- Icon: Cards (bottom-left) -->
+  <g transform="translate(70, 300)">
+    <circle cx="20" cy="20" r="22" fill="#F59E0B"/>
+    <rect x="6" y="10" width="16" height="22" rx="2" fill="none" stroke="white" stroke-width="1.5" transform="rotate(-8, 14, 21)"/>
+    <rect x="16" y="8" width="16" height="22" rx="2" fill="none" stroke="white" stroke-width="1.5" transform="rotate(8, 24, 19)"/>
+  </g>
+
+  <!-- Icon: Mask (left) -->
+  <g transform="translate(18, 163)">
+    <circle cx="20" cy="20" r="22" fill="#8B5CF6"/>
+    <path d="M6,18 C6,10 12,7 20,7 C28,7 34,10 34,18 C34,24 28,28 20,28 C12,28 6,24 6,18Z" fill="none" stroke="white" stroke-width="1.5"/>
+    <circle cx="14" cy="17" r="3.5" fill="white"/>
+    <circle cx="26" cy="17" r="3.5" fill="white"/>
+    <path d="M6,12 L3,6" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M34,12 L37,6" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -677,8 +677,30 @@
       "create_title": "Create API Key",
       "key_name_label": "Key Name (e.g. friend's name)",
       "qr_title": "Connection QR Code",
-      "qr_desc": "Scan this QR code to connect to the server as \"{{name}}\""
+      "qr_desc": "Scan this QR code to connect to the server as \"{{name}}\"",
+      "qr_alt": "QR Code",
+      "error_unknown": "Unknown error",
+      "error_unknown_connection": "Unknown connection error",
+      "error_create_failed": "Failed to create API key",
+      "error_update_failed": "Failed to update API key permissions"
     }
+  },
+  "connection": {
+    "default_title": "Connect Devices",
+    "default_description": "Connect your phone to use as a controller. Scan the QR code below.",
+    "scan_to_join": "Scan QR to Join another Host",
+    "scan_tooltip": "Open camera to scan another host's QR code and join as a client",
+    "devices_connected": "✅ {{count}} Device(s) Connected",
+    "waiting_for_connections": "Waiting for connections...",
+    "details_title": "Connection Details",
+    "host_base_url": "Host Base URL",
+    "host_base_url_desc": "Change this if your phone cannot reach the default address (e.g. use your LAN IP).",
+    "party_id": "Party ID",
+    "regenerate": "Regenerate",
+    "manual_url": "Manual URL",
+    "click_to_copy": "Click to copy URL to send manually",
+    "copy_link": "Copy Link",
+    "copied": "Copied!"
   },
   "signaling": {
     "title": "Signaling Servers (Trackers)",

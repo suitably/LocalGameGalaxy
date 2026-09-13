@@ -10,7 +10,8 @@
     "tracker": "node scripts/start-tracker.js",
     "preview": "vite preview",
     "host": "cd server && npm start",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check:budget": "node scripts/check-component-budget.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",

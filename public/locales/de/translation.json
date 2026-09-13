@@ -677,8 +677,30 @@
       "create_title": "API-Key erstellen",
       "key_name_label": "Key-Name (z.B. Name des Freundes)",
       "qr_title": "Verbindungs-QR-Code",
-      "qr_desc": "Scanne diesen QR-Code, um dich als \"{{name}}\" mit dem Server zu verbinden"
+      "qr_desc": "Scanne diesen QR-Code, um dich als \"{{name}}\" mit dem Server zu verbinden",
+      "qr_alt": "QR-Code",
+      "error_unknown": "Unbekannter Fehler",
+      "error_unknown_connection": "Unbekannter Verbindungsfehler",
+      "error_create_failed": "API-Key konnte nicht erstellt werden",
+      "error_update_failed": "Berechtigungen des API-Keys konnten nicht aktualisiert werden"
     }
+  },
+  "connection": {
+    "default_title": "Geräte verbinden",
+    "default_description": "Verbinde dein Telefon, um es als Controller zu nutzen. Scanne den QR-Code unten.",
+    "scan_to_join": "QR scannen, um anderem Host beizutreten",
+    "scan_tooltip": "Kamera öffnen, um den QR-Code eines anderen Hosts zu scannen und als Client beizutreten",
+    "devices_connected": "✅ {{count}} Gerät(e) verbunden",
+    "waiting_for_connections": "Warte auf Verbindungen...",
+    "details_title": "Verbindungsdetails",
+    "host_base_url": "Host Basis-URL",
+    "host_base_url_desc": "Ändere dies, falls dein Telefon die Standardadresse nicht erreichen kann (z. B. LAN-IP nutzen).",
+    "party_id": "Party-ID",
+    "regenerate": "Neu generieren",
+    "manual_url": "Manuelle URL",
+    "click_to_copy": "Klicken, um die URL zum manuellen Senden zu kopieren",
+    "copy_link": "Link kopieren",
+    "copied": "Kopiert!"
   },
   "signaling": {
     "title": "Signaling Server (Trackers)",

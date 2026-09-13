@@ -80,6 +80,9 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
     -   **Serverless Real-Time Communication**: Operates 100% serverless over public WSS MQTT brokers (`wss://broker.hivemq.com:8884/mqtt` / `wss://broker.emqx.io:8084/mqtt`) and local `BroadcastChannel`. No local helper server or backend connection is required.
     -   Hosts can launch **Gartic Phone** for all connected devices simultaneously, with isolated drawing/guessing views per device, synchronized round progression, animated album reveals, and seamless return to the lobby.
     -   **SRP Architecture**: Decomposed into focused custom hooks (`useGarticGameState` for pure game rules and `sessionStorageSafe` persistence, `useGarticSync` for `useMultiChannelSync` coordination) and a slim view coordinator component (`GarticPhoneGame.tsx`, < 180 lines).
+-   **Melodiq (`src/games/melodiq`)**:
+    -   Offline-capable karaoke and pitch-matching game supporting UltraStar TXT parsing, multi-track vocals, WebRTC remote microphones, and TV/presentation broadcast mode.
+    -   **SRP Architecture**: Gameplay session decomposed into focused custom hooks (`useSessionAudioController` for playback, sync, and media lifecycle; `useSessionScoringController` for pitch evaluation, player visibility, and responsive grid layouts; `useParsedSong` for UltraStar parsing) and focused subcomponents (`SessionTopControls`, `SessionLyricsVisualizer`, `SessionBackgroundMedia`, `SessionPauseOverlay`, `SessionScoreOverlay`, `SessionFolderPrompt`) orchestrated by a slim view coordinator (`MelodiqSession.tsx`, < 200 lines).
 
 ### Shared Modules (`src/modules/*`)
 - **Player Management (`src/modules/player-management`)**:
@@ -112,9 +115,14 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
 - **Hybrid Model**: Direct GitHub API client (`src/lib/github.ts`) using a locally stored Personal Access Token (PAT) as priority, with fallback to the companion server proxy.
 - Enables submitting feedback, reporting bugs, and publishing GuessArt word catalogues directly from the browser/PWA without requiring a local helper server.
 
-### State Management
+### State Management & Context Architecture
 -   **Reducers / Engine**: Complex game logic is handled by standard Redux-pattern reducers or explicit state machines (`LocalGameEngine`).
 -   **Context / Hooks**: Pass dispatch/state down the tree with custom hooks (`useGuessArtGame`, `useGuessArtLobby`).
+-   **Segregated Layout Contexts (`src/context/`)**: To prevent unnecessary re-renders (Interface Segregation Principle), UI layout state is split across orthogonal contexts:
+    -   [`TitleContext`](file:///home/deck/Projects/LocalGameGalaxy/src/context/TitleContext.tsx): Page title state (`title`, `setTitle`, `usePageTitle`, `useTitle`).
+    -   [`HeaderLayoutContext`](file:///home/deck/Projects/LocalGameGalaxy/src/context/HeaderLayoutContext.tsx): Header visibility, actions, items, and home handlers (`headerHidden`, `customHeaderTitle`, `customHeaderActions`, `menuItems`, `homeAction`, `hideHome`, `useHeaderLayout`).
+    -   [`SettingsModeContext`](file:///home/deck/Projects/LocalGameGalaxy/src/context/SettingsModeContext.tsx): Settings mode display flag (`isSettingsMode`, `setIsSettingsMode`, `useSettingsMode`).
+    -   [`LayoutContext`](file:///home/deck/Projects/LocalGameGalaxy/src/context/LayoutContext.tsx): Composite provider and backward-compatible adapter (`useLayout`, `useLayoutContext`, `useHeader`).
 
 ### Internationalization
 -   `src/i18n.ts` and `public/locales/{de,en}/translation.json` handle translations.

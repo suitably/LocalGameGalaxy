@@ -18,11 +18,11 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg', 'pwa/*.png'],
+      includeAssets: ['nexumia-icon.svg', 'pwa/*.png'],
       manifest: {
-        name: 'LocalGameGalaxy',
-        short_name: 'GameGalaxy',
-        description: 'Local multiplayer party game hub.',
+        name: 'Nexumia',
+        short_name: 'Nexumia',
+        description: 'Local multiplayer party game collection.',
         theme_color: '#121212',
         background_color: '#121212',
         display: 'standalone',

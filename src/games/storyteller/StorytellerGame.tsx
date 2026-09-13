@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../../context/TitleContext';
 import { useWakeLock } from '../../hooks/useWakeLock';
-import { useLayout } from '../../context/LayoutContext';
+import { useHeaderLayout } from '../../context/HeaderLayoutContext';
 import { useStorytellerLobby } from './hooks/useStorytellerLobby';
 import { StoryLobby } from './components/StoryLobby';
 import { StoryHeader } from './components/StoryHeader';
@@ -54,7 +54,7 @@ export const StorytellerGame: React.FC = () => {
 
   const isGameActive = Boolean(activeGameId || game);
   useWakeLock(isGameActive);
-  const { setHeaderHidden } = useLayout();
+  const { setHeaderHidden } = useHeaderLayout();
 
   useEffect(() => {
     setHeaderHidden(isGameActive);

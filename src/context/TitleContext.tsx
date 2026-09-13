@@ -1,16 +1,30 @@
-import React, { createContext, useContext, useState, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, type ReactNode } from 'react';
 
-interface TitleContextType {
+export interface TitleContextType {
+    title: string | null;
+    setTitle: (title: string | null) => void;
     pageTitle: string | null;
     setPageTitle: (title: string | null) => void;
 }
 
-const TitleContext = createContext<TitleContextType | undefined>(undefined);
+export const TitleContext = createContext<TitleContextType | undefined>(undefined);
 
 export const TitleProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [pageTitle, setPageTitle] = useState<string | null>(null);
+    const [title, setTitleState] = useState<string | null>(null);
 
-    const value = React.useMemo(() => ({ pageTitle, setPageTitle }), [pageTitle]);
+    const setTitle = useCallback((newTitle: string | null) => {
+        setTitleState(prev => (prev === newTitle ? prev : newTitle));
+    }, []);
+
+    const value = useMemo<TitleContextType>(
+        () => ({
+            title,
+            setTitle,
+            pageTitle: title,
+            setPageTitle: setTitle,
+        }),
+        [title, setTitle]
+    );
 
     return (
         <TitleContext.Provider value={value}>
@@ -19,7 +33,7 @@ export const TitleProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     );
 };
 
-export const useTitle = () => {
+export const useTitle = (): TitleContextType => {
     const context = useContext(TitleContext);
     if (!context) {
         throw new Error('useTitle must be used within a TitleProvider');
@@ -29,10 +43,10 @@ export const useTitle = () => {
 
 // Hook to set page title on mount and clear on unmount
 export const usePageTitle = (title: string) => {
-    const { setPageTitle } = useTitle();
+    const { setTitle } = useTitle();
 
-    React.useEffect(() => {
-        setPageTitle(title);
-        return () => setPageTitle(null);
-    }, [title, setPageTitle]);
+    useEffect(() => {
+        setTitle(title);
+        return () => setTitle(null);
+    }, [title, setTitle]);
 };
