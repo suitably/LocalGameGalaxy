@@ -789,7 +789,10 @@
       "save_and_test": "Save & Test Connection",
       "testing": "Verifying credentials with USDB...",
       "success": "USDB credentials successfully verified and saved!",
-      "error": "Failed to authenticate with USDB: {{error}}"
+      "error": "Failed to authenticate with USDB: {{error}}",
+      "missing_title": "USDB Credentials Required",
+      "missing_desc": "To search online and download songs from UltraStar DB, please configure your USDB username and password.",
+      "back_to_game": "Back to Game"
     },
     "preferences": {
       "title": "Server Preferences",

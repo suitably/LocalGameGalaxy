@@ -3,6 +3,5 @@
         "/path/to/music/folder"
     ],
     "port": 3000,
-    "token": "YOUR_SECURE_TOKEN_HERE",
-    "disableRateLimit": false
+    "token": "YOUR_SECURE_TOKEN_HERE"
 }

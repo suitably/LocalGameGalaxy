@@ -1,7 +1,7 @@
 import { storage } from '../../../lib/storage';
 import { generateUUID } from '../../../lib/uuid';
 
-export const melodiqFetchDirect = async (path: string, options: RequestInit = {}): Promise<any> => {
+export const melodiqFetchDirect = async <T = any>(path: string, options: RequestInit = {}): Promise<T> => {
     const baseUrl = storage.getHelperUrl();
     const token = storage.getHelperToken();
     const cleanBaseUrl = baseUrl.replace(/\/$/, "");
@@ -61,7 +61,7 @@ const waitForConnection = (timeoutMs = 15000): Promise<void> => {
     });
 };
 
-export const melodiqFetch = async (path: string, options: RequestInit = {}): Promise<any> => {
+export const melodiqFetch = async <T = any>(path: string, options: RequestInit = {}): Promise<T> => {
     const isClient = new URLSearchParams(window.location.search).get('role') === 'client';
 
     if (isClient) {

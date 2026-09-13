@@ -56,7 +56,7 @@ export const GlobalHeader: React.FC = () => {
             const game = searchParams.get('game');
             const from = (location.state as any)?.from;
 
-            if (from && typeof from === 'string' && from !== '/settings') {
+            if (from && typeof from === 'string' && !from.startsWith('/settings')) {
                 navigate(from);
             } else if (game) {
                 navigate(`/games/${game}`);

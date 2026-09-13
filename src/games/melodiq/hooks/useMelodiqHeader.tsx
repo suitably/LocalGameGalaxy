@@ -4,6 +4,7 @@ import { useLayout, type MenuItem } from '../../../context/LayoutContext';
 
 import SettingsIcon from '@mui/icons-material/Settings';
 import QrCodeIcon from '@mui/icons-material/QrCode';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 
 import { type LoadingProgress } from './useSongs';
 import { TVModeButton } from '../components/TVModeButton';
@@ -21,20 +22,21 @@ interface UseMelodiqHeaderProps {
     disconnectTV: () => void;
     clientRole: string;
     onBackToHome?: () => void;
+    onOpenLocalFolder?: () => void;
 }
 
 export const useMelodiqHeader = ({
     currentView, setCurrentView,
     isClient, isTVConnected, isPresentationAvailable,
     openTVWindow, startPresentation, disconnectTV,
-    onBackToHome
+    onBackToHome, onOpenLocalFolder
 }: UseMelodiqHeaderProps) => {
     const { t } = useTranslation();
     const { setHeader, setCustomHeaderActions } = useLayout();
 
-    const callbacksRef = useRef({ setCurrentView, onBackToHome, openTVWindow, startPresentation, disconnectTV });
+    const callbacksRef = useRef({ setCurrentView, onBackToHome, openTVWindow, startPresentation, disconnectTV, onOpenLocalFolder });
     useEffect(() => {
-        callbacksRef.current = { setCurrentView, onBackToHome, openTVWindow, startPresentation, disconnectTV };
+        callbacksRef.current = { setCurrentView, onBackToHome, openTVWindow, startPresentation, disconnectTV, onOpenLocalFolder };
     });
 
     const handleHomeAction = useCallback(() => {
@@ -86,6 +88,15 @@ export const useMelodiqHeader = ({
                     action: () => callbacksRef.current.setCurrentView('Connection'),
                     showAlways: true
                 });
+
+                if (callbacksRef.current.onOpenLocalFolder) {
+                    headerActions.push({
+                        label: t('melodiq.local_folder', 'Lokaler Song-Ordner'),
+                        icon: <FolderOpenIcon />,
+                        action: () => callbacksRef.current.onOpenLocalFolder?.(),
+                        showAlways: false
+                    });
+                }
             }
 
             setHeader(t('melodiq.title'), headerActions, homeAction, null, false, isClient);

@@ -12,8 +12,13 @@ export interface Playlist {
 export interface Song {
     id: string; // hash or unique identifier
     libraryId?: string; // ID of the library this song belongs to
+    source?: 'server' | 'local';
     title: string;
     artist: string;
+    bpm?: number;
+    gap?: number;
+    hasCover?: boolean;
+    hasVideo?: boolean;
     cover?: string | Blob | FileSystemFileHandle; 
     background?: string | Blob | FileSystemFileHandle; 
     audio?: string | Blob | FileSystemFileHandle; 
@@ -36,6 +41,7 @@ export interface Song {
 export interface SongMeta {
     id: string;
     libraryId?: string;
+    source?: 'server' | 'local';
     title: string;
     artist: string;
     duration?: number;
@@ -70,9 +76,17 @@ export interface Score {
     difficulty?: string;
 }
 
+export interface StoredDirectoryHandle {
+    id: string;
+    handle: FileSystemDirectoryHandle;
+    name: string;
+    updatedAt: number;
+}
+
 const db = new Dexie('MelodiqDB') as Dexie & {
     scores: EntityTable<Score, 'id'>,
-    playlists: EntityTable<Playlist, 'id'>
+    playlists: EntityTable<Playlist, 'id'>,
+    folderHandles: EntityTable<StoredDirectoryHandle, 'id'>
 };
 
 // Version 10: Added playlists table
@@ -83,11 +97,16 @@ db.version(10).stores({
     // Initialization for upgrade if needed
 });
 
+// Version 11: Added folderHandles table for File System Access API Lite mode
+db.version(11).stores({
+    folderHandles: 'id, name, updatedAt'
+});
+
 export default db;
 
 // Dummy cache function to avoid breaking MelodiqSession which used it for legacy browser imports
-export const getCachedFiles = (_songId: string): any | undefined => {
+export const getCachedFiles = (_songId: string): Record<string, File | Blob> | undefined => {
     return undefined;
 };
-export const setCachedFiles = (_songId: string, _files: any): void => {};
+export const setCachedFiles = (_songId: string, _files: Record<string, unknown>): void => {};
 export const clearFileCache = (): void => {};

@@ -1,62 +1,60 @@
 import type { Hono } from 'hono';
-import type { GalaxyPlugin, ServerConfig } from '../../core/types';
-import fs from 'fs';
-import path from 'path';
+import type { GalaxyPlugin, HonoEnv, ServerConfig } from '../../core/types';
+import { requireAuth } from './middleware/auth';
+import { songsRouter } from './routes/songs';
+import { mediaRouter } from './routes/media';
+import { usdbRouter } from './routes/usdb';
+import { separatorRouter } from './routes/separator';
+import { configRouter } from './routes/config';
+import { playlistsRouter } from './routes/playlists';
+import { scanSongs } from './services/scanner';
 
 export const melodiqPlugin: GalaxyPlugin = {
   id: 'melodiq',
   name: 'Melodiq Karaoke Media Server',
-  version: '1.0.0',
-  description: 'Song library scanner, metadata reader, and audio streaming for Melodiq',
+  version: '2.0.0',
+  description: 'Song library scanner, metadata reader, USDB downloads, stem separation, and audio streaming for Melodiq',
 
-  init(app: Hono, config: ServerConfig) {
-    const musicDir = config.musicDir || path.join(process.cwd(), 'music');
+  init(app: Hono<HonoEnv>, _config: ServerConfig) {
+    // Root info endpoint (matches Express GET /)
+    app.get('/', (c) =>
+      c.json({
+        name: 'MelodiQ Server',
+        version: '2.0.0',
+        status: 'running',
+      })
+    );
 
-    // List songs
-    app.get('/api/melodiq/songs', (c) => {
-      if (!fs.existsSync(musicDir)) {
-        return c.json({ songs: [], total: 0 });
-      }
+    // Mount Melodiq Auth Middleware
+    const melodiqAuthPaths = [
+      '/api/songs',
+      '/api/songs/*',
+      '/api/status',
+      '/api/auth/me',
+      '/media',
+      '/api/usdb/*',
+      '/api/youtube/*',
+      '/api/separator/*',
+      '/api/config/*',
+      '/api/playlists',
+      '/api/playlists/*',
+      '/api/browse',
+      '/api/feedback',
+    ];
 
-      try {
-        const files = fs.readdirSync(musicDir);
-        const songs = files
-          .filter((f) => /\.(mp3|flac|ogg|m4a|wav)$/i.test(f))
-          .map((filename) => ({
-            id: Buffer.from(filename).toString('hex'),
-            filename,
-            title: path.parse(filename).name,
-            format: path.extname(filename).slice(1),
-          }));
+    for (const p of melodiqAuthPaths) {
+      app.use(p, requireAuth);
+    }
 
-        return c.json({ songs, total: songs.length });
-      } catch (e) {
-        return c.json({ error: 'Failed to scan music directory' }, 500);
-      }
-    });
+    // Mount sub-routers
+    app.route('/', songsRouter);
+    app.route('/', mediaRouter);
+    app.route('/', usdbRouter);
+    app.route('/', separatorRouter);
+    app.route('/', configRouter);
+    app.route('/', playlistsRouter);
 
-    // Stream song audio
-    app.get('/api/melodiq/stream/:id', (c) => {
-      const id = c.req.param('id');
-      try {
-        const filename = Buffer.from(id, 'hex').toString('utf8');
-        const safePath = path.join(musicDir, path.basename(filename));
-
-        if (!fs.existsSync(safePath)) {
-          return c.text('Not found', 404);
-        }
-
-        const stat = fs.statSync(safePath);
-        const stream = fs.createReadStream(safePath);
-
-        return c.body(stream as any, 200, {
-          'Content-Type': 'audio/mpeg',
-          'Content-Length': String(stat.size),
-          'Accept-Ranges': 'bytes',
-        });
-      } catch {
-        return c.text('Invalid song ID', 400);
-      }
-    });
+    // Initial song library scan
+    scanSongs();
   },
 };

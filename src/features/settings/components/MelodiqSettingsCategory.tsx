@@ -6,6 +6,9 @@ import QueueMusicIcon from '@mui/icons-material/QueueMusic';
 import { useTranslation } from 'react-i18next';
 import { ServerConnection } from '../../../components/connection/ServerConnection';
 import { ServerAdminPanel } from '../../../components/connection/ServerAdminPanel';
+import { ServerDirectoryManager } from '../../../components/connection/ServerDirectoryManager';
+import { ServerPreferences } from '../../../components/connection/ServerPreferences';
+import { ServerUsdbConfig } from '../../../components/connection/ServerUsdbConfig';
 import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
 import {
     MicrophoneManager,
@@ -26,6 +29,8 @@ interface MelodiqSettingsCategoryProps {
     activeSubTab?: MelodiqSubTab;
     initialSubTab?: MelodiqSubTab;
     onNavigateToPlaylists?: () => void;
+    autoFocusUsdb?: boolean;
+    onBackToGame?: () => void;
 }
 
 export type MelodiqSubTab = 'all' | 'server' | 'microphones' | 'profiles' | 'gameplay' | 'playlists';
@@ -33,7 +38,9 @@ export type MelodiqSubTab = 'all' | 'server' | 'microphones' | 'profiles' | 'gam
 export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = ({
     activeSubTab,
     initialSubTab = 'all',
-    onNavigateToPlaylists
+    onNavigateToPlaylists,
+    autoFocusUsdb,
+    onBackToGame
 }) => {
     const { t } = useTranslation();
     const subTab = activeSubTab || initialSubTab;
@@ -95,11 +102,20 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {/* Sub-Tab 0: Companion Server (Connection, Setup Dialog, API Keys) */}
+            {/* Sub-Tab 0: Companion Server (Connection, Setup Dialog, Directories, Prefs, USDB, API Keys) */}
             {(subTab === 'all' || subTab === 'server') && (
                 <Box id="settings-section-server" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                     <Box id="settings-section-server-connection">
                         <ServerConnection />
+                    </Box>
+                    <Box id="settings-section-directories">
+                        <ServerDirectoryManager />
+                    </Box>
+                    <Box id="settings-section-preferences">
+                        <ServerPreferences />
+                    </Box>
+                    <Box id="settings-section-usdb">
+                        <ServerUsdbConfig autoFocusUsdb={autoFocusUsdb} onBackToGame={onBackToGame} />
                     </Box>
                     <Box id="settings-section-admin">
                         <ServerAdminPanel />
@@ -175,6 +191,21 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
                         >
                             Reset Defaults
                         </Button>
+                        {onBackToGame && (
+                            <Button
+                                variant="contained"
+                                onClick={onBackToGame}
+                                sx={{
+                                    width: { xs: '100%', sm: 'auto' },
+                                    borderRadius: 50,
+                                    px: 4,
+                                    py: 1.5,
+                                    ml: { sm: 'auto' },
+                                }}
+                            >
+                                {t('common.back', 'Zurück')}
+                            </Button>
+                        )}
                     </Box>
                 </Paper>
             )}

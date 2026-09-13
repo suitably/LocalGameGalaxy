@@ -1,5 +1,5 @@
 import type { Hono } from 'hono';
-import type { GalaxyPlugin, ServerConfig } from '../../core/types';
+import type { GalaxyPlugin, ServerConfig, HonoEnv } from '../../core/types';
 
 interface RoomSession {
   roomId: string;
@@ -14,7 +14,7 @@ interface RoomSession {
 const activeRooms = new Map<string, RoomSession>();
 
 // Cleanup stale rooms (inactive > 4 hours)
-setInterval(() => {
+const cleanupInterval = setInterval(() => {
   const now = Date.now();
   for (const [roomId, room] of activeRooms.entries()) {
     if (now - room.updatedAt > 4 * 60 * 60 * 1000) {
@@ -22,6 +22,7 @@ setInterval(() => {
     }
   }
 }, 30 * 60 * 1000);
+cleanupInterval.unref();
 
 export const relayPlugin: GalaxyPlugin = {
   id: 'relay',
@@ -29,7 +30,7 @@ export const relayPlugin: GalaxyPlugin = {
   version: '1.0.0',
   description: 'Lightweight room coordinator and WebRTC signaling relay for all Galaxy games',
 
-  init(app: Hono, _config: ServerConfig) {
+  init(app: Hono<HonoEnv>, _config: ServerConfig) {
     // Create or get room
     app.post('/api/relay/rooms', async (c) => {
       const body = await c.req.json().catch(() => ({}));

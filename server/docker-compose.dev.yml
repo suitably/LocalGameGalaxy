@@ -1,24 +1,21 @@
 services:
-  nexumia-server:
+  melodiq-dev:
     build:
       context: .
       dockerfile: Dockerfile
-      target: full
-    container_name: nexumia-server-dev
+    container_name: melodiq-server-dev
     restart: "no"
     ports:
       - "3000:3000"
-      - "3001:3001"
     volumes:
-      - ./config.json:/app/config.json:z
+      - ./config:/app/config:z
       - ./models:/app/models:z
       - ./src:/app/src:z
-      - ./public:/app/public:z
-      - ./index.js:/app/index.js:z
-      # Mount your local music directories here (writable with :z for stem saving and sync)
-      - /home/deck/Music/Ultrastar/Songs:/music/songs:z
-      - /home/deck/Music/Ultrastar/Test:/music/test:z
+      - ./music:/app/music:z
     environment:
       - NODE_ENV=development
-      - ALLOWED_ORIGINS=
+      - PORT=3000
+      - MUSIC_DIR=/app/music
+      - CONFIG_PATH=/app/config/config.json
+      - ALLOWED_ORIGINS=*
 

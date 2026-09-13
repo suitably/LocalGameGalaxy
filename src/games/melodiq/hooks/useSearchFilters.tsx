@@ -1,8 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { type SongMeta } from '../db';
 import { type DownloadJob } from './useDownloads';
 import { type UsdbSongItem } from '../types';
 import { melodiqFetch } from '../api/melodiqFetch';
+import { isUsdbLoginRequiredError, navigateToUsdbSettings } from '../utils/usdbNavigation';
 
 export type SortOption = 'title-asc' | 'title-desc' | 'artist-asc' | 'artist-desc' | 'year-desc' | 'year-asc';
 
@@ -14,6 +16,8 @@ export interface ActiveFilters {
 }
 
 export function useSearchFilters(songs: SongMeta[], jobs?: DownloadJob[]) {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [searchQuery, setSearchQuery] = useState('');
     const [isOnlineSearch, setIsOnlineSearch] = useState(false);
     const [onlineSongs, setOnlineSongs] = useState<UsdbSongItem[]>([]);
@@ -46,15 +50,18 @@ export function useSearchFilters(songs: SongMeta[], jobs?: DownloadJob[]) {
                 } else {
                     setOnlineSongs([]);
                 }
-            } catch (err) {
+            } catch (err: unknown) {
                 console.error(err);
+                if (isUsdbLoginRequiredError(err)) {
+                    navigateToUsdbSettings(navigate, location);
+                }
             } finally {
                 setIsSearchingOnline(false);
             }
         }, 800);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [searchQuery, isOnlineSearch]);
+    }, [searchQuery, isOnlineSearch, navigate, location]);
 
     const filteredSongs = useMemo(() => {
         let result = songs;

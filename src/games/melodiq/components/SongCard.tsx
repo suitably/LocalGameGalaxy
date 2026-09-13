@@ -5,6 +5,7 @@ import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { type SongMeta } from '../db';
 import { formatDuration } from '../utils';
+import { useTranslation } from 'react-i18next';
 
 interface SongCardProps {
     song: SongMeta | any; // Allow USDB songs too
@@ -22,6 +23,7 @@ interface SongCardProps {
  * Cover is loaded on-demand from the full Song table when visible.
  */
 export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, onActionClick, isDownloading, isDownloaded, downloadProgress, hasActiveJob }) => {
+    const { t } = useTranslation();
     const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPressRef = React.useRef(false);
 
@@ -118,6 +120,11 @@ export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, 
                         </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        {song.source === 'local' && (
+                            <Typography variant="caption" sx={{ bgcolor: 'primary.dark', color: 'white', px: 0.5, borderRadius: 0.5, fontSize: '0.65rem' }}>
+                                {t('melodiq.local_song_badge', 'Lokal')}
+                            </Typography>
+                        )}
                         {song.year && (
                             <Typography variant="caption" sx={{ bgcolor: 'action.selected', px: 0.5, borderRadius: 0.5, fontSize: '0.65rem' }}>
                                 {song.year}

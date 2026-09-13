@@ -65,25 +65,11 @@ export const gameRelayStorage = {
           storage.setJson(`${STORAGE_PREFIX}${gameId}`, entry);
           return legacyUrl;
         }
-        storage.remove(`${STORAGE_PREFIX}${gameId}`);
       }
     }
 
     // 2. Fallback to global push relay URL (configured in Settings → Notifications)
-    const pushRelayUrl = storage.getPushRelayUrl();
-    if (pushRelayUrl) {
-      return pushRelayUrl;
-    }
-
-    // 3. Fallback to host's own Nexumia server if active
-    if (storage.isHelperActive()) {
-      const helperUrl = storage.getHelperUrl();
-      if (helperUrl) {
-        return helperUrl.trim().replace(/\/$/, '');
-      }
-    }
-
-    return null;
+    return storage.getPushRelayUrl();
   },
 
   /**

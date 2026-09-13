@@ -23,7 +23,6 @@ import {
 } from '../../logic/catalogueManager';
 import type { CategoryItem, WordItem } from '../../logic/types';
 import { hasGitHubPAT } from '../../../../lib/github';
-import { storage, STORAGE_KEYS } from '../../../../lib/storage';
 
 interface PublishCatalogueTabProps {
   categories: CategoryItem[];
@@ -61,13 +60,8 @@ export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
     setSubmitting(true);
     setResult(null);
 
-    const baseUrl = storage.get(STORAGE_KEYS.HELPER_URL, 'http://localhost:3000');
-    const token = storage.get(STORAGE_KEYS.HELPER_TOKEN, '');
-
     try {
       const res = await publishCatalogueToGit({
-        baseUrl,
-        token: token || undefined,
         categories,
         words,
         userNote,

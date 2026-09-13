@@ -14,4 +14,5 @@ export { initMelodiqI18n } from './i18n';
 export type { UserProfile, ActivePlayer } from './types';
 export { default as db } from './db';
 export { PhoneClientEngine } from './PhoneClientEngine';
-
+export { melodiqFetch, melodiqFetchDirect } from './api/melodiqFetch';
+export { isUsdbLoginRequiredError, navigateToUsdbSettings } from './utils/usdbNavigation';

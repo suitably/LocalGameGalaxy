@@ -2,6 +2,12 @@ node_modules
 dist
 npm-debug.log
 config.json
+config
+music
+models
 .git
 .DS_Store
+*.log
+__pycache__
 cloudflare-push-relay
+

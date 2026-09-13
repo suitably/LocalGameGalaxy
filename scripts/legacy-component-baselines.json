@@ -1,6 +1,6 @@
 {
   "src/features/party/PartyLobby.tsx": 624,
-  "src/components/connection/ServerAdminPanel.tsx": 621,
+  "src/components/connection/ServerAdminPanel.tsx": 618,
   "src/games/melodiq/MelodiqGame.tsx": 611,
   "src/games/melodiq/gameplay/PitchVisualizer.tsx": 569,
   "src/games/melodiq/components/GameSettingsPanel.tsx": 535,
@@ -36,7 +36,6 @@
   "src/games/qwixx/QwixxGame.tsx": 286,
   "src/games/guessart/components/catalogue/CategoryEditorTab.tsx": 281,
   "src/games/guessart/components/EditGameDialog.tsx": 279,
-  "src/games/melodiq/hooks/useSongs.tsx": 275,
   "src/games/guessart/components/WordSelector.tsx": 269,
   "src/games/guessart/components/catalogue/CatalogueEditorDialog.tsx": 268,
   "src/components/feedback/FeedbackDialog.tsx": 267,

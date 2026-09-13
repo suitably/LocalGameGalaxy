@@ -1,34 +1,36 @@
 services:
-  # Melodiq Companion Server (Karaoke Media Streaming, USDB & AI Vocal Separation)
-  # Standard (~200MB): nexumia/melodiq-server:latest
-  # With AI Vocal Separation & Whisper: nexumia/melodiq-server:ai (or :melodiq)
-  melodiq-server:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: base
+  melodiq:
     image: nexumia/melodiq-server:latest
     container_name: melodiq-server
     restart: unless-stopped
     ports:
       - "3000:3000"
-      - "3001:3001"
     volumes:
-      - ./music:/app/music:ro
+      - ./music:/app/music
+      - ./config:/app/config
+      - ./models:/app/models
     environment:
-      - NODE_ENV=production
       - PORT=3000
-      - SECURITY_TOKEN=
+      - NODE_ENV=production
       - MUSIC_DIR=/app/music
+      - CONFIG_PATH=/app/config/config.json
+      - SECURITY_TOKEN=             # Auto-generated and persisted if empty
+      - ENABLE_TUNNEL=false         # Set to 'true' for Cloudflare Quick Tunnel
       - ALLOWED_ORIGINS=*
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
 
-  # Optional: Zero-Config Public HTTPS Tunnel (Share with friends without port-forwarding)
+  # Optional Cloudflare Quick Tunnel (Use via: docker compose --profile tunnel up -d)
   melodiq-tunnel:
     image: cloudflare/cloudflared:latest
     container_name: melodiq-tunnel
     restart: unless-stopped
     profiles:
       - tunnel
-    command: tunnel --no-autoupdate --url http://melodiq-server:3000
+    command: tunnel --no-autoupdate --url http://melodiq:3000
     depends_on:
-      - melodiq-server
+      - melodiq

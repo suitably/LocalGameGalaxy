@@ -292,16 +292,15 @@ export const DEFAULT_WORDS: WordItem[] = ${wordsJson};
 };
 
 /**
- * Publishes the catalogue changes to GitHub.
- * Strategy: Try direct GitHub API (local PAT) first, fall back to server proxy.
+ * Publishes the catalogue changes to GitHub via direct GitHub API (PAT required).
  */
 export const publishCatalogueToGit = async (options: {
-  baseUrl: string;
-  token?: string;
   categories: CategoryItem[];
   words: WordItem[];
   userNote?: string;
   prTitle?: string;
+  baseUrl?: string;
+  token?: string;
 }): Promise<PublishCatalogueResult> => {
   const diff = calculateCatalogueDiff(options.categories, options.words);
   const tsContent = generateLexiconTsCode(options.categories, options.words);
@@ -349,59 +348,31 @@ export const publishCatalogueToGit = async (options: {
   const prTitle = options.prTitle || '[GuessArt] Update Word & Category Catalogue';
   const prBody = summaryMarkdown + '\n---\n*Created automatically via LocalGameGalaxy In-Game Catalogue Editor.*';
 
-  // Strategy 1: Try direct GitHub API with local PAT
+  // Direct GitHub API with local PAT
   const { config: ghConfig, source } = resolveGitHubConfig();
 
-  if (source === 'local' && ghConfig) {
-    const result = await createGitHubPR(ghConfig, {
-      filePath: 'src/games/guessart/logic/lexicon.ts',
-      fileContent: tsContent,
-      branchPrefix: 'guessart/catalogue-update',
-      commitMessage: 'feat(guessart): update word and category catalogue',
-      prTitle,
-      prBody,
-    });
-
-    if (result.success && result.prUrl && result.prNumber !== undefined && result.branch) {
-      return {
-        success: true,
-        prUrl: result.prUrl,
-        prNumber: result.prNumber,
-        branch: result.branch,
-        updated: result.updated,
-      };
-    }
-    // If direct fails and no server is available, throw error
-    if (!options.baseUrl) {
-      throw new Error(result.error || 'Failed to publish catalogue via GitHub API');
-    }
+  if (source !== 'local' || !ghConfig) {
+    throw new Error('GitHub Personal Access Token (PAT) is required to publish catalogue.');
   }
 
-  // Strategy 2: Fall back to server proxy
-  const cleanBaseUrl = options.baseUrl.replace(/\/$/, '');
-  const response = await fetch(`${cleanBaseUrl}/api/guessart/publish-catalogue`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
-    },
-    body: JSON.stringify({
-      content: tsContent,
-      summary: summaryMarkdown,
-      prTitle,
-    }),
+  const result = await createGitHubPR(ghConfig, {
+    filePath: 'src/games/guessart/logic/lexicon.ts',
+    fileContent: tsContent,
+    branchPrefix: 'guessart/catalogue-update',
+    commitMessage: 'feat(guessart): update word and category catalogue',
+    prTitle,
+    prBody,
   });
 
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error || 'Failed to publish catalogue to Git repository');
+  if (result.success && result.prUrl && result.prNumber !== undefined && result.branch) {
+    return {
+      success: true,
+      prUrl: result.prUrl,
+      prNumber: result.prNumber,
+      branch: result.branch,
+      updated: result.updated,
+    };
   }
 
-  return {
-    success: true,
-    prUrl: data.prUrl,
-    prNumber: data.prNumber,
-    branch: data.branch,
-  };
+  throw new Error(result.error || 'Failed to publish catalogue via GitHub API');
 };
-

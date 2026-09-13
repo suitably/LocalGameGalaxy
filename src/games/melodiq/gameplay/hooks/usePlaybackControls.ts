@@ -85,21 +85,21 @@ export function usePlaybackControls({
         }
 
         try {
-            const playPromises: Promise<any>[] = [];
+            const playPromises: Promise<void>[] = [];
             if (audioRef.current) {
-                playPromises.push(audioRef.current.play());
+                playPromises.push(audioRef.current.play().catch(e => console.warn("Audio play failed", e)));
             }
             if (vocalsRef.current && vocalsRef.current.src && !vocalsRef.current.error) {
                 playPromises.push(vocalsRef.current.play().catch(e => console.warn("Vocals play failed", e)));
             }
-            if (videoRef.current && videoRef.current.src && !videoRef.current.error) {
+            if (videoRef.current && (videoRef.current.src || typeof (videoRef.current as HTMLVideoElement).play === 'function') && !videoRef.current.error) {
                 playPromises.push(videoRef.current.play().catch(e => console.warn("Video play failed", e)));
             }
             playPromiseRef.current = Promise.all(playPromises).then(() => {});
             await playPromiseRef.current;
             setIsPlaying(true);
-        } catch (error: any) {
-            if (error.name === 'AbortError') {
+        } catch (error: unknown) {
+            if (error instanceof Error && error.name === 'AbortError') {
                 console.log('[Session] Playback aborted (likely fast skip)');
             } else {
                 console.error('[Session] Playback failed', error);

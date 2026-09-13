@@ -95,17 +95,6 @@ export const NotificationSettings: React.FC = () => {
     }
   }, [relayUrl, t]);
 
-  const helperUrl = storage.getHelperUrl();
-  const canUseServer = storage.isHelperActive() && Boolean(helperUrl);
-
-  const handleUseConnectedServer = useCallback(() => {
-    const sUrl = storage.getHelperUrl().trim().replace(/\/$/, '');
-    const full = sUrl.includes('/api/push') ? sUrl : `${sUrl}/api/push`;
-    setRelayUrl(full);
-    storage.setPushRelayUrl(full);
-    setRelayStatus('idle');
-  }, []);
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
       <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
@@ -153,16 +142,6 @@ export const NotificationSettings: React.FC = () => {
           <Typography variant="subtitle2" fontWeight={700}>
             {t('settings.relay_title', 'Push-Relay Server (Cloudflare Worker)')}
           </Typography>
-          {canUseServer && (
-            <Button
-              variant="text"
-              size="small"
-              onClick={handleUseConnectedServer}
-              sx={{ textTransform: 'none', fontWeight: 600, py: 0 }}
-            >
-              {t('settings.relay_use_server', 'Verbundenen Server übernehmen (1-Klick)')}
-            </Button>
-          )}
         </Box>
         <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.55)' }}>
           {t(

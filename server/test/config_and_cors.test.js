@@ -1,160 +1,163 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
-const fs = require('fs');
 
 test('Server Config - Environment Variables & Directory Discovery', async (t) => {
-    await t.test('reads PORT and SECURITY_TOKEN from environment', () => {
-        // Set test env variables
-        const testToken = 'my_custom_secure_test_token_123';
-        process.env.SECURITY_TOKEN = testToken;
-        process.env.PORT = '3500';
-        process.env.MUSIC_DIR = '/tmp/test_music_dir_1,/tmp/test_music_dir_2';
+  await t.test('reads PORT and SECURITY_TOKEN from environment', () => {
+    const testToken = 'my_custom_secure_test_token_123';
+    process.env.SECURITY_TOKEN = testToken;
+    process.env.PORT = '3500';
+    process.env.MUSIC_DIR = '/tmp/test_music_dir_1,/tmp/test_music_dir_2';
 
-        // Clear module cache to re-run loadConfig()
-        const configPath = path.resolve(__dirname, '../config.js');
-        delete require.cache[configPath];
-        const config = require('../config.js');
+    const configPath = path.resolve(__dirname, '../dist/config.js');
+    delete require.cache[configPath];
+    const { ConfigManager } = require('../dist/config.js');
+    const config = new ConfigManager();
 
-        assert.strictEqual(config.port, 3500, 'Port should match PORT env variable');
-        assert.strictEqual(config.token, testToken, 'Token should match SECURITY_TOKEN env variable');
-        assert.ok(
-            config.directories.includes('/tmp/test_music_dir_1'),
-            'MUSIC_DIR directories should be included in config.directories'
-        );
-        assert.ok(
-            config.directories.includes('/tmp/test_music_dir_2'),
-            'MUSIC_DIR directories should be included in config.directories'
-        );
+    assert.strictEqual(config.port, 3500, 'Port should match PORT env variable');
+    assert.strictEqual(config.token, testToken, 'Token should match SECURITY_TOKEN env variable');
+    assert.ok(
+      config.directories.includes('/tmp/test_music_dir_1'),
+      'MUSIC_DIR directories should be included in config.directories'
+    );
+    assert.ok(
+      config.directories.includes('/tmp/test_music_dir_2'),
+      'MUSIC_DIR directories should be included in config.directories'
+    );
 
-        // Clean up
-        delete process.env.SECURITY_TOKEN;
-        delete process.env.PORT;
-        delete process.env.MUSIC_DIR;
-    });
+    delete process.env.SECURITY_TOKEN;
+    delete process.env.PORT;
+    delete process.env.MUSIC_DIR;
+  });
 
-    await t.test('generates random token if none provided', () => {
-        delete process.env.SECURITY_TOKEN;
-        delete process.env.TOKEN;
+  await t.test('generates random token if none provided', () => {
+    delete process.env.SECURITY_TOKEN;
+    delete process.env.TOKEN;
 
-        const configPath = path.resolve(__dirname, '../config.js');
-        delete require.cache[configPath];
-        const config = require('../config.js');
+    const configPath = path.resolve(__dirname, '../dist/config.js');
+    delete require.cache[configPath];
+    const { ConfigManager } = require('../dist/config.js');
+    const config = new ConfigManager();
 
-        assert.ok(config.token, 'A token should be present');
-        assert.ok(config.token.length >= 16, 'Generated token should be at least 16 chars');
-    });
+    assert.ok(config.token, 'A token should be present');
+    assert.ok(config.token.length >= 16, 'Generated token should be at least 16 chars');
+  });
+
+  await t.test('createApiKey and updateApiKey operate without rate limit fields', () => {
+    const configPath = path.resolve(__dirname, '../dist/config.js');
+    delete require.cache[configPath];
+    const { ConfigManager } = require('../dist/config.js');
+    const config = new ConfigManager();
+
+    assert.strictEqual(config.disableRateLimit, undefined, 'disableRateLimit should not exist on config');
+
+    const newKey = config.createApiKey('Test Key', true, false);
+    assert.strictEqual(newKey.name, 'Test Key');
+    assert.strictEqual(newKey.allowManagement, true);
+    assert.strictEqual(newKey.allowSongDeletion, false);
+    assert.strictEqual(newKey.rateLimitSecond, undefined, 'rateLimitSecond must not exist');
+    assert.strictEqual(newKey.rateLimitMinute, undefined, 'rateLimitMinute must not exist');
+    assert.strictEqual(newKey.rateLimitHour, undefined, 'rateLimitHour must not exist');
+
+    const updated = config.updateApiKey(newKey.id, { allowSongDeletion: true });
+    assert.strictEqual(updated.allowSongDeletion, true);
+    assert.strictEqual(updated.rateLimitSecond, undefined);
+
+    config.deleteApiKey(newKey.id);
+  });
 });
 
-test('Auth & CORS Middleware', async (t) => {
-    await t.test('CORS in open mode (ALLOWED_ORIGINS=*) allows cross-origin requests and OPTIONS preflight', () => {
-        process.env.ALLOWED_ORIGINS = '*';
-
-        const authPath = path.resolve(__dirname, '../src/middleware/auth.js');
-        delete require.cache[authPath];
-        const { corsMiddleware } = require('../src/middleware/auth.js');
-
-        let headers = {};
-        let statusSet = null;
-        const mockRes = {
-            setHeader: (k, v) => { headers[k] = v; },
-            sendStatus: (code) => { statusSet = code; },
-        };
-
-        const mockReqOptions = {
-            method: 'OPTIONS',
-            headers: { origin: 'http://localhost:5173' },
-        };
-
-        let nextCalled = false;
-        corsMiddleware(mockReqOptions, mockRes, () => { nextCalled = true; });
-
-        assert.strictEqual(statusSet, 200, 'OPTIONS preflight should return 200 OK');
-        assert.strictEqual(
-            headers['Access-Control-Allow-Origin'],
-            'http://localhost:5173',
-            'Access-Control-Allow-Origin should allow the requesting origin'
-        );
-
-        // Test normal GET request
-        headers = {};
-        statusSet = null;
-        nextCalled = false;
-        const mockReqGet = {
-            method: 'GET',
-            headers: { origin: 'http://192.168.1.50:3000' },
-        };
-        corsMiddleware(mockReqGet, mockRes, () => { nextCalled = true; });
-
-        assert.strictEqual(nextCalled, true, 'GET request should call next()');
-        assert.strictEqual(
-            headers['Access-Control-Allow-Origin'],
-            'http://192.168.1.50:3000',
-            'Access-Control-Allow-Origin should match origin'
-        );
-
-        delete process.env.ALLOWED_ORIGINS;
+test('Hono Server Endpoints, Auth & CORS', async (t) => {
+  await t.test('GET /health and GET /api/info are accessible without token', async () => {
+    const { createGalaxyServer } = require('../dist/core/app.js');
+    const app = await createGalaxyServer({
+      port: 3000,
+      activePlugins: ['melodiq'],
     });
 
-    await t.test('requireAuth correctly validates Bearer token and rejects invalid tokens', () => {
-        process.env.SECURITY_TOKEN = 'secret_test_token';
-        const configPath = path.resolve(__dirname, '../config.js');
-        delete require.cache[configPath];
-        const authPath = path.resolve(__dirname, '../src/middleware/auth.js');
-        delete require.cache[authPath];
-        const { requireAuth } = require('../src/middleware/auth.js');
+    const healthRes = await app.request('/health');
+    assert.strictEqual(healthRes.status, 200);
+    const healthJson = await healthRes.json();
+    assert.strictEqual(healthJson.status, 'ok');
 
-        let statusCode = null;
-        let responseJson = null;
-        let responseHeaders = {};
-        const mockRes = {
-            setHeader: (k, v) => { responseHeaders[k] = v; },
-            status: (code) => {
-                statusCode = code;
-                return {
-                    json: (data) => { responseJson = data; }
-                };
-            }
-        };
+    const infoRes = await app.request('/api/info');
+    assert.strictEqual(infoRes.status, 200);
+    const infoJson = await infoRes.json();
+    assert.strictEqual(infoJson.name, 'LocalGameGalaxy Backend Kernel');
+  });
 
-        // 1. Valid token
-        let nextCalled = false;
-        const reqValid = {
-            method: 'GET',
-            path: '/api/status',
-            headers: { authorization: 'Bearer secret_test_token' },
-            query: {}
-        };
-        requireAuth(reqValid, mockRes, () => { nextCalled = true; });
-        assert.strictEqual(nextCalled, true, 'Valid token should pass requireAuth');
-        assert.strictEqual(reqValid.isMasterToken, true, 'isMasterToken should be true');
-
-        // 2. Invalid token
-        nextCalled = false;
-        statusCode = null;
-        const reqInvalid = {
-            method: 'GET',
-            path: '/api/status',
-            headers: { authorization: 'Bearer wrong_token' },
-            query: {}
-        };
-        requireAuth(reqInvalid, mockRes, () => { nextCalled = true; });
-        assert.strictEqual(nextCalled, false, 'Invalid token should not call next()');
-        assert.strictEqual(statusCode, 401, 'Invalid token should return 401');
-
-        // 3. Missing token
-        nextCalled = false;
-        statusCode = null;
-        const reqMissing = {
-            method: 'GET',
-            path: '/api/status',
-            headers: {},
-            query: {}
-        };
-        requireAuth(reqMissing, mockRes, () => { nextCalled = true; });
-        assert.strictEqual(nextCalled, false, 'Missing token should not call next()');
-        assert.strictEqual(statusCode, 401, 'Missing token should return 401');
-
-        delete process.env.SECURITY_TOKEN;
+  await t.test('OPTIONS preflight returns CORS headers', async () => {
+    const { createGalaxyServer } = require('../dist/core/app.js');
+    const app = await createGalaxyServer({
+      port: 3000,
+      activePlugins: ['melodiq'],
     });
+
+    const res = await app.request('/api/songs', {
+      method: 'OPTIONS',
+      headers: {
+        Origin: 'http://localhost:5173',
+        'Access-Control-Request-Method': 'GET',
+      },
+    });
+
+    assert.strictEqual(res.status, 204);
+    assert.strictEqual(res.headers.get('access-control-allow-origin'), '*');
+  });
+
+  await t.test('GET /api/status requires valid token', async () => {
+    const { serverConfig } = require('../dist/config.js');
+    const { createGalaxyServer } = require('../dist/core/app.js');
+    const app = await createGalaxyServer({
+      port: 3000,
+      activePlugins: ['melodiq'],
+    });
+
+    // 1. Missing token -> 401
+    const resNoToken = await app.request('/api/status');
+    assert.strictEqual(resNoToken.status, 401);
+
+    // 2. Wrong token -> 401
+    const resWrongToken = await app.request('/api/status', {
+      headers: { Authorization: 'Bearer invalid_token_123' },
+    });
+    assert.strictEqual(resWrongToken.status, 401);
+
+    // 3. Valid master token -> 200
+    const resValid = await app.request('/api/status', {
+      headers: { Authorization: `Bearer ${serverConfig.token}` },
+    });
+    assert.strictEqual(resValid.status, 200);
+    const validJson = await resValid.json();
+    assert.strictEqual(validJson.authenticated, true);
+    assert.strictEqual(validJson.isAdmin, true);
+  });
+
+  await t.test('API key permissions: management vs guest', async () => {
+    const { serverConfig } = require('../dist/config.js');
+    const { createGalaxyServer } = require('../dist/core/app.js');
+    const app = await createGalaxyServer({
+      port: 3000,
+      activePlugins: ['melodiq'],
+    });
+
+    const mgmtKey = serverConfig.createApiKey('Mgmt Key', true, true);
+    const guestKey = serverConfig.createApiKey('Guest Key', false, false);
+
+    // Management key can access /api/config/apikeys
+    const resMgmt = await app.request('/api/config/apikeys', {
+      headers: { Authorization: `Bearer ${mgmtKey.token}` },
+    });
+    assert.strictEqual(resMgmt.status, 200);
+
+    // Guest key is rejected on /api/config/apikeys with 403
+    const resGuest = await app.request('/api/config/apikeys', {
+      headers: { Authorization: `Bearer ${guestKey.token}` },
+    });
+    assert.strictEqual(resGuest.status, 403);
+
+    // Clean up
+    serverConfig.deleteApiKey(mgmtKey.id);
+    serverConfig.deleteApiKey(guestKey.id);
+  });
 });

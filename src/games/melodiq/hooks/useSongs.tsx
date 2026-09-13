@@ -1,216 +1,113 @@
-import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react';
+import React, { useState, useEffect, useCallback, useRef, createContext, useContext, useMemo } from 'react';
 import { type Song, type SongMeta } from '../db';
-import { melodiqFetch } from '../api/melodiqFetch';
-import { getYouTubeVideoId } from '../gameplay/YouTubeBackgroundPlayer';
+import { useLocalLibrary, type UseLocalLibraryResult } from './useLocalLibrary';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
+import {
+    getHelperConfig,
+    processServerSongs,
+    loadCachedServerSongs,
+    saveServerSongsToCache,
+    fetchServerSongs,
+    fetchServerSongDetails
+} from '../logic/serverSongsProvider';
 
 export interface LoadingProgress {
     loaded: number;
     total: number;
 }
 
-interface UseSongsResult {
+export interface UseSongsResult {
     songs: SongMeta[];
     isLoading: boolean;
     hasConnectionError: boolean;
     loadingProgress: LoadingProgress | null;
     refreshSongs: () => Promise<void>;
     getSongById: (id: string) => Promise<Song | undefined>;
+    localLibrary: UseLocalLibraryResult;
 }
 
 const SongsContext = createContext<UseSongsResult | null>(null);
 
 /**
- * Provider component that manages the song library state.
+ * Provider component managing both server-based and local song libraries.
  */
 export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [songs, setSongs] = useState<SongMeta[]>(() => {
-        try {
-            const cached = sessionStorage.getItem('melodiq_meta_cache');
-            return cached ? JSON.parse(cached) : [];
-        } catch { return []; }
+    const localLibrary = useLocalLibrary();
+
+    const [serverSongs, setServerSongs] = useState<SongMeta[]>(() => {
+        return storage.getJson<SongMeta[]>(STORAGE_KEYS.MELODIQ_META_CACHE, []);
     });
-    const [isLoading, setIsLoading] = useState(() => {
-        try {
-            return !sessionStorage.getItem('melodiq_meta_cache');
-        } catch { return true; }
+    const [isServerLoading, setIsServerLoading] = useState(() => {
+        return storage.getJson<SongMeta[]>(STORAGE_KEYS.MELODIQ_META_CACHE, []).length === 0;
     });
     const [hasConnectionError, setHasConnectionError] = useState(false);
     const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null);
 
-    // Read config from storage
-    const getHelperConfig = () => ({
-        url: localStorage.getItem('melodiq_helper_url') || 'http://localhost:3000',
-        token: localStorage.getItem('melodiq_helper_token') || '',
-        enabled: localStorage.getItem('melodiq_enable_helper') !== 'false'
-    });
-
-    // Cache for server song content
     const serverContentCache = useRef(new Map<string, string>());
 
-    const loadSongs = useCallback(async (forceRefresh = false) => {
+    const loadServerSongs = useCallback(async (forceRefresh = false) => {
         let mounted = true;
         const { url, token, enabled } = getHelperConfig();
-        const helperUrl = url.replace(/\/$/, "");
 
-        const processAndApply = (serverSongs: any[]) => {
-            serverSongs.forEach((s: any) => {
-                if (s.id && s.txtContent) serverContentCache.current.set(s.id, s.txtContent);
-            });
+        if (!enabled) {
+            setIsServerLoading(false);
+            return () => { mounted = false; };
+        }
 
-            const metas: SongMeta[] = serverSongs.map((s: any) => {
-                const processUrl = (url?: string | Blob | FileSystemFileHandle) => {
-                    if (typeof url === 'string') {
-                        // If url contains an encoded remote url in path param from previous cache, unwrap it
-                        if (url.includes('/media') && url.includes('path=http')) {
-                            try {
-                                const parsed = new URL(url, window.location.origin);
-                                const rawPath = parsed.searchParams.get('path');
-                                if (rawPath && (rawPath.startsWith('http://') || rawPath.startsWith('https://'))) {
-                                    return rawPath;
-                                }
-                            } catch (_) {}
-                        }
-                        if (url.startsWith('/media')) {
-                            let final = `${helperUrl}${url}`;
-                            if (token && !final.includes('token=')) {
-                                final += (final.includes('?') ? '&' : '?') + `token=${token}`;
-                            }
-                            return final;
-                        }
-                        if (url.startsWith(helperUrl) && url.includes('/media') && token && !url.includes('token=')) {
-                            return url + (url.includes('?') ? '&' : '?') + `token=${token}`;
-                        }
-                    }
-                    return url;
-                };
-
-                return {
-                    id: s.id,
-                    title: s.title,
-                    artist: s.artist,
-                    bpm: s.bpm,
-                    year: s.year,
-                    language: s.language,
-                    genre: s.genre,
-                    cover: processUrl(s.cover),
-                    video: (typeof s.video === 'string' && getYouTubeVideoId(s.video))
-                        ? `https://www.youtube.com/watch?v=${getYouTubeVideoId(s.video)}`
-                        : processUrl(s.video),
-                    audio: processUrl(s.audio),
-                    originalAudio: processUrl(s.originalAudio),
-                    instrumentalAudio: processUrl(s.instrumentalAudio),
-                    vocalsAudio: processUrl(s.vocalsAudio),
-                    hasSeparation: s.hasSeparation ?? !!(s.vocalsAudio || (s.txtContent && s.txtContent.includes('#VOCALS:'))),
-                    start: s.start,
-                    end: s.end,
-                    duration: s.duration,
-                    edition: s.edition,
-                    hasCover: s.hasCover ?? !!s.cover,
-                    hasVideo: s.hasVideo ?? !!(s.video || (typeof s.video === 'string' && getYouTubeVideoId(s.video))),
-                    usdbId: s.usdbId,
-                    txtPath: s.txtPath
-                };
-            });
-
+        const applyServerData = (rawData: Record<string, unknown>[]) => {
+            const metas = processServerSongs(rawData, url, token, serverContentCache.current);
             const unique = Array.from(new Map(metas.map(item => [item.id, item])).values());
             if (mounted) {
-                setSongs(unique);
-                try {
-                    // Save lightweight meta state synchronously to prevent UI flash on reload
-                    sessionStorage.setItem('melodiq_meta_cache', JSON.stringify(unique.map(s => ({...s, txtContent: undefined}))));
-                } catch(e) {}
+                setServerSongs(unique);
+                storage.setJson(STORAGE_KEYS.MELODIQ_META_CACHE, unique.map(s => ({ ...s, txtContent: undefined })));
                 setLoadingProgress({ loaded: unique.length, total: unique.length });
-                setIsLoading(false);
+                setIsServerLoading(false);
             }
         };
 
-        try {
-            const cacheName = 'melodiq-api-cache';
-            const requestUrl = `${helperUrl}/api/songs`;
+        const hasExisting = serverSongs.length > 0 || storage.getJson<SongMeta[]>(STORAGE_KEYS.MELODIQ_META_CACHE, []).length > 0;
+        if (forceRefresh || !hasExisting) {
+            setIsServerLoading(true);
+            setLoadingProgress({ loaded: 0, total: 0 });
+        }
 
-            const hasExistingSongs = songs.length > 0 || !!sessionStorage.getItem('melodiq_meta_cache');
-
-            // Only show scanning state if we are forcing a refresh AND we have no songs
-            if (forceRefresh || !hasExistingSongs) {
-                setIsLoading(true);
-                setLoadingProgress({ loaded: 0, total: 0 });
-            }
-
-            let loadedFromCache = false;
-
-            // 1. Try to load instantly from Cache API (unless forcing refresh)
-            if (enabled && !forceRefresh) {
-                try {
-                    const cache = await caches.open(cacheName);
-                    const cachedRes = await cache.match(requestUrl);
-                    if (cachedRes) {
-                        const cachedData = await cachedRes.json();
-                        if (cachedData && cachedData.length > 0) {
-                            console.log(`[SongsProvider] Instant load: ${cachedData.length} songs from Cache API`);
-                            processAndApply(cachedData);
-                            loadedFromCache = true;
-                        }
-                    }
-                } catch (e) {
-                    console.warn('Cache API read failed', e);
-                }
-            }
-
-            // 2. Fetch fresh data from server in background (or immediately if no cache)
-            if (enabled) {
-                try {
-                    const freshData = await melodiqFetch('/api/songs');
-                    console.log(`[SongsProvider] Fetched ${freshData.length} fresh server songs`);
-                    if (mounted) setHasConnectionError(false);
-                    
-                    // Store clone in Cache API for next reload (using a synthetic Response)
-                    try {
-                        const cache = await caches.open(cacheName);
-                        cache.put(requestUrl, new Response(JSON.stringify(freshData)));
-                    } catch(e) {}
-                    
-                    processAndApply(freshData);
-                } catch (e) {
-                    console.warn('Helper connection failed:', e);
-                    if (mounted && !loadedFromCache) {
-                        setIsLoading(false);
-                        setHasConnectionError(true);
-                        setLoadingProgress(null);
-                        setSongs([]);
-                    }
-                }
-            } else if (mounted) {
-                setIsLoading(false);
-            }
-
-
-        } catch (e) {
-            console.error('Failed to load songs:', e);
-            if (mounted) {
-                setIsLoading(false);
-                setHasConnectionError(true);
-                setLoadingProgress(null);
+        let loadedFromCache = false;
+        if (!forceRefresh) {
+            const cachedData = await loadCachedServerSongs(url);
+            if (cachedData && cachedData.length > 0) {
+                applyServerData(cachedData);
+                loadedFromCache = true;
             }
         }
+
+        try {
+            const freshData = await fetchServerSongs();
+            if (mounted) setHasConnectionError(false);
+            await saveServerSongsToCache(url, freshData);
+            applyServerData(freshData);
+        } catch (e) {
+            console.warn('[SongsProvider] Helper connection failed:', e);
+            if (mounted && !loadedFromCache) {
+                setIsServerLoading(false);
+                setHasConnectionError(true);
+                setLoadingProgress(null);
+                setServerSongs([]);
+            }
+        }
+
         return () => { mounted = false; };
-    }, []);
+    }, [serverSongs.length]);
 
     useEffect(() => {
         const isClient = new URLSearchParams(window.location.search).get('role') === 'client';
-        
-        // On client mode: don't load songs at mount — wait for helper_config which fires
-        // melodiq_settings_updated once the WebRTC connection is established.
-        // On host/standalone: load immediately.
         if (!isClient) {
-            loadSongs();
+            loadServerSongs();
         }
 
         const handleSettingsUpdate = (e: Event) => {
             const detail = (e as CustomEvent)?.detail;
-            // Only reload song library if helper connection parameters or forceReload is specified
             if (!detail || detail.helperUrl !== undefined || detail.enableHelper !== undefined || detail.helperToken !== undefined || detail.forceReload) {
-                console.log('[SongsProvider] Helper connection updated, reloading songs...');
-                loadSongs();
+                loadServerSongs();
             }
         };
 
@@ -218,45 +115,83 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return () => {
             window.removeEventListener('melodiq_settings_updated', handleSettingsUpdate);
         };
-    }, [loadSongs]);
+    }, [loadServerSongs]);
+
+    // Merge local and server songs into unified library
+    const songs = useMemo<SongMeta[]>(() => {
+        const localMetas: SongMeta[] = localLibrary.localSongs.map(s => ({
+            id: s.id,
+            source: 'local',
+            title: s.title,
+            artist: s.artist,
+            bpm: (s as unknown as { bpm?: number }).bpm,
+            year: s.year,
+            language: s.language,
+            genre: s.genre,
+            cover: s.cover,
+            video: s.video,
+            audio: s.audio,
+            originalAudio: s.originalAudio,
+            instrumentalAudio: s.instrumentalAudio,
+            vocalsAudio: s.vocalsAudio,
+            hasSeparation: s.hasSeparation,
+            duration: s.duration,
+            edition: s.edition,
+            hasCover: s.hasCover,
+            hasVideo: s.hasVideo,
+            txtPath: s.dirPath
+        }));
+
+        if (serverSongs.length === 0) return localMetas;
+        if (localMetas.length === 0) return serverSongs;
+
+        const seen = new Set<string>();
+        const merged: SongMeta[] = [];
+        for (const s of [...localMetas, ...serverSongs]) {
+            if (!seen.has(s.id)) {
+                seen.add(s.id);
+                merged.push(s);
+            }
+        }
+        return merged;
+    }, [localLibrary.localSongs, serverSongs]);
 
     const refreshSongs = useCallback(async () => {
-        await loadSongs(true); // force fresh fetch
-    }, [loadSongs]);
+        await Promise.all([
+            loadServerSongs(true),
+            localLibrary.rescanFolder()
+        ]);
+    }, [loadServerSongs, localLibrary]);
 
     const getSongById = useCallback(async (id: string): Promise<Song | undefined> => {
-        let found = songs.find(s => s.id === id);
-        let content = serverContentCache.current.get(id);
-
-        if (found && content) {
-            return { ...found, txtContent: content } as unknown as Song;
+        // 1. Check local songs first
+        const localFound = localLibrary.localSongs.find(s => s.id === id);
+        if (localFound) {
+            return localFound;
         }
 
-        // Dynamically fetch missing data from Host (which includes txtContent)
-        try {
-            const res = await melodiqFetch(`/api/songs/${id}`);
-            if (res) {
-                if (res.txtContent) {
-                    serverContentCache.current.set(id, res.txtContent);
-                }
-                const ytId = (typeof res.video === 'string' ? getYouTubeVideoId(res.video) : null) ||
-                             (typeof found?.video === 'string' ? getYouTubeVideoId(found.video as string) : null);
-                const finalVideo = ytId ? `https://www.youtube.com/watch?v=${ytId}` : (res.video || found?.video);
-                return { ...(found || res), video: finalVideo, txtContent: res.txtContent || content } as unknown as Song;
-            }
-        } catch (e) {
-            console.warn("[SongsProvider] Failed to fetch full song data for", id, e);
+        // 2. Check cached server content
+        const serverFound = serverSongs.find(s => s.id === id);
+        const cachedTxt = serverContentCache.current.get(id);
+        if (serverFound && cachedTxt) {
+            return { ...serverFound, txtContent: cachedTxt } as Song;
         }
 
-        if (found) {
-            return found as unknown as Song;
-        }
-        return undefined;
-    }, [songs]);
+        // 3. Fetch from server API
+        return fetchServerSongDetails(id);
+    }, [localLibrary.localSongs, serverSongs]);
 
-    const value = React.useMemo(() => ({
-        songs, isLoading, hasConnectionError, loadingProgress, refreshSongs, getSongById
-    }), [songs, isLoading, hasConnectionError, loadingProgress, refreshSongs, getSongById]);
+    const isLoading = isServerLoading || localLibrary.isScanning;
+
+    const value = useMemo<UseSongsResult>(() => ({
+        songs,
+        isLoading,
+        hasConnectionError,
+        loadingProgress,
+        refreshSongs,
+        getSongById,
+        localLibrary
+    }), [songs, isLoading, hasConnectionError, loadingProgress, refreshSongs, getSongById, localLibrary]);
 
     return (
         <SongsContext.Provider value={value}>
@@ -265,7 +200,7 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 };
 
-export const useSongs = () => {
+export const useSongs = (): UseSongsResult => {
     const context = useContext(SongsContext);
     if (!context) {
         throw new Error('useSongs must be used within a SongsProvider');

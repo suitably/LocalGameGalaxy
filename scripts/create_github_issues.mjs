@@ -38,7 +38,11 @@ if (!token) {
     process.exit(1);
 }
 
-const issuesDir = path.resolve(__dirname, '../docs/tasks/github-issues');
+const dirArg = process.argv.find((arg) => arg.startsWith('--dir='));
+const targetDirRel = dirArg ? dirArg.split('=')[1] : '../docs/tasks/github-issues';
+const issuesDir = path.isAbsolute(targetDirRel)
+    ? targetDirRel
+    : path.resolve(__dirname, targetDirRel);
 
 if (!fs.existsSync(issuesDir)) {
     console.error(`Issues directory not found: ${issuesDir}`);

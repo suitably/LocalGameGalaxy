@@ -29,9 +29,6 @@ interface ApiKey {
     id: string;
     name: string;
     token: string;
-    rateLimitSecond: number | null;
-    rateLimitMinute: number | null;
-    rateLimitHour: number | null;
     allowManagement: boolean;
     allowSongDeletion: boolean;
     createdAt: string;

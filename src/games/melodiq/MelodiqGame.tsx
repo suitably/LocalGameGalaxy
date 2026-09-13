@@ -27,8 +27,6 @@ import { OnlineSongsView } from './components/OnlineSongsView';
 import { LocalSongsView } from './components/LocalSongsView';
 import { PlaybackManager } from './components/PlaybackManager';
 import { HostQueueDrawer } from './components/HostQueueDrawer';
-
-
 // New extracted hooks & components
 import { SongActionDialogs } from './components/SongActionDialogs';
 import { useMelodiqHeader } from './hooks/useMelodiqHeader';
@@ -46,7 +44,7 @@ export const MelodiqGameContent: React.FC = () => {
     const params = new URLSearchParams(window.location.search);
     const isClient = params.get('role') === 'client';
 
-    const { songs, refreshSongs, getSongById, isLoading, hasConnectionError } = useSongs();
+    const { songs, refreshSongs, getSongById, isLoading, hasConnectionError, localLibrary } = useSongs();
     const { queue, popNext, setNowPlaying, addToQueue, addNext, nowPlaying, replaceItem } = useQueue();
     const { jobs } = useDownloads(isClient ? 0 : 2000);
     
@@ -167,9 +165,9 @@ export const MelodiqGameContent: React.FC = () => {
         nextParams.delete('section');
         const cleanSearch = nextParams.toString();
         const targetUrl = window.location.pathname + (cleanSearch ? `?${cleanSearch}` : '');
+        const hadSubView = Boolean(window.history.state?.melodiqSubView);
         window.history.replaceState(null, '', targetUrl);
-
-        if (window.history.state?.melodiqSubView) {
+        if (hadSubView) {
             window.history.back();
         } else {
             setCurrentView('Home');
@@ -193,7 +191,8 @@ export const MelodiqGameContent: React.FC = () => {
     useMelodiqHeader({
         currentView, setCurrentView: handleSetCurrentView,
         isClient, isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV, clientRole,
-        onBackToHome: handleCloseSubView
+        onBackToHome: handleCloseSubView,
+        onOpenLocalFolder: localLibrary.selectFolder
     });
 
     const handleSelectSong = async (songMeta: SongMeta, forcePlay: boolean = false, participants?: MelodiqParticipant[], requester?: string, requesterId?: string) => {
@@ -237,7 +236,7 @@ export const MelodiqGameContent: React.FC = () => {
                 setRestoredSong(null);
             }
             if (!selectedSongRef.current || selectedSongRef.current.id !== songMeta.id) {
-                localStorage.removeItem('melodiq_saved_time');
+                storage.remove(STORAGE_KEYS.MELODIQ_SAVED_TIME);
             }
 
             setSessionInstanceId(prev => prev + 1);
@@ -465,16 +464,17 @@ export const MelodiqGameContent: React.FC = () => {
                 overflow: 'hidden',
                 pb: '64px'
             }}>
-                {!hasConnectionError && (
+                {(!hasConnectionError || songs.length > 0) && (
                     <MelodiqSearchBar 
                         {...searchFilterState} 
                         filteredSongsLength={memoizedFilteredSongs.length} 
                         totalSongsLength={songs.length} 
+                        canSearchOnline={!hasConnectionError}
                     />
                 )}
 
                 <LibraryEmptyState 
-                    hasConnectionError={!!hasConnectionError}
+                    hasConnectionError={hasConnectionError && songs.length === 0}
                     isLoading={isLoading}
                     songsLength={isOnlineSearch ? (songs?.length || 0) : (memoizedFilteredSongs?.length || 0)}
                     isOnlineSearch={isOnlineSearch}

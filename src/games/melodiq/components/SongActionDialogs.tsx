@@ -8,7 +8,6 @@ import QueueMusicIcon from '@mui/icons-material/QueueMusic';
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import SyncIcon from '@mui/icons-material/Sync';
 import MicIcon from '@mui/icons-material/Mic';
 import DialogActions from '@mui/material/DialogActions';
@@ -21,6 +20,7 @@ import { usePlaylists } from '../hooks/usePlaylists';
 import { useDownloads } from '../hooks/useDownloads';
 import { YouTubeSearchDialog } from './YouTubeSearchDialog';
 import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 
 interface SongActionDialogsProps {
     selectedSongForQueue: SongMeta | null;
@@ -45,24 +45,22 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
     setFeedbackMessage, isClient, clientRole
 }) => {
     const { t } = useTranslation();
-    const { playlists, addSongToPlaylist, createPlaylist } = usePlaylists();
-    const { jobs } = useDownloads(queueDialogOpen ? 2000 : 0);
+    const { playlists, createPlaylist, addSongToPlaylist } = usePlaylists();
+    const { jobs } = useDownloads();
 
     const activeSepJob = jobs.find(j =>
         j.songId === selectedSongForQueue?.id &&
         (j.status === 'pending' || j.status === 'running')
     );
     const isSeparating = activeSepJob?.type === 'separate';
-    const isSyncing = activeSepJob?.type === 'auto-sync' || activeSepJob?.type === 'full-sync';
+    const isSyncing = activeSepJob?.type === 'full-sync';
     const hasVocals = !!(selectedSongForQueue?.vocalsAudio || selectedSongForQueue?.hasSeparation);
     const canSync = hasVocals && !isSeparating && !isSyncing;
     
     const [playlistDialogOpen, setPlaylistDialogOpen] = useState(false);
     const [youTubeSearchDialogOpen, setYouTubeSearchDialogOpen] = useState(false);
     
-    // MUI Dialog state    // Auto Sync
-    const [syncTimeDialogOpen, setSyncTimeDialogOpen] = useState(false);
-    const [syncTimeInput, setSyncTimeInput] = useState('');
+    // MUI Dialog state
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [confirmReSeparateOpen, setConfirmReSeparateOpen] = useState(false);
     const [fullSyncConfirmOpen, setFullSyncConfirmOpen] = useState(false);
@@ -120,7 +118,7 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
             if (data) {
                 setFeedbackMessage('Song gelöscht');
                 try {
-                    sessionStorage.removeItem('melodiq_meta_cache');
+                    storage.remove(STORAGE_KEYS.MELODIQ_META_CACHE);
                     if (window.caches) {
                         await window.caches.delete('melodiq-api-cache');
                     }
@@ -166,38 +164,6 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
         }
     };
 
-    const handleAutoSync = async () => {
-        if (!selectedSongForQueue) return;
-        setQueueDialogOpen(false);
-        setSyncTimeInput('');
-        setSyncTimeDialogOpen(true);
-    };
-    
-    const confirmAutoSync = async () => {
-        if (!selectedSongForQueue) return;
-        setSyncTimeDialogOpen(false);
-        
-        let approxTime = parseFloat(syncTimeInput.replace(',', '.'));
-        if (isNaN(approxTime)) approxTime = 0;
-
-        try {
-            const data = await melodiqFetch('/api/separator/job', {
-                method: 'POST',
-                body: JSON.stringify([{
-                    songId: selectedSongForQueue.id,
-                    type: 'auto-sync',
-                    approximateStartSec: approxTime
-                }])
-            });
-            if (data) {
-                setFeedbackMessage('Auto-Sync (KI) Hintergrund-Job gestartet...');
-            } else {
-                setFeedbackMessage('Fehler beim Starten des Auto-Syncs');
-            }
-        } catch (e) {
-            console.error('Failed to start auto-sync', e);
-        }
-    };
 
     const handleFullSync = () => {
         if (!selectedSongForQueue) return;
@@ -284,7 +250,7 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                                 <ListItemText primary={t('melodiq.add_to_playlist')} secondary={t('melodiq.add_to_playlist_desc')} />
                             </ListItemButton>
                         )}
-                        {(!isClient || clientRole === 'admin') && (
+                        {(!isClient || clientRole === 'admin') && selectedSongForQueue?.source !== 'local' && (
                             <>
                                 <Divider />
                                 <ListItemButton onClick={() => { setQueueDialogOpen(false); setYouTubeSearchDialogOpen(true); }}>
@@ -307,24 +273,7 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                                         }
                                     />
                                 </ListItemButton>
-                                <ListItemButton
-                                    onClick={handleAutoSync}
-                                    disabled={!canSync}
-                                >
-                                    <ListItemIcon><AutoFixHighIcon color={canSync ? "inherit" : "disabled"} /></ListItemIcon>
-                                    <ListItemText
-                                        primary={t('melodiq.auto_sync_start', 'Auto-Sync (Nur Start)')}
-                                        secondary={
-                                            isSeparating
-                                                ? t('melodiq.vocal_separation_running', 'Vokaltrennung läuft im Hintergrund...')
-                                                : isSyncing
-                                                    ? 'Sync-Prozess läuft bereits...'
-                                                    : !hasVocals
-                                                        ? t('melodiq.vocals_required_desc', 'Erfordert getrennte Gesangsspur (zuerst Gesang trennen)')
-                                                        : t('melodiq.auto_sync_start_desc', 'Song-Start automatisch analysieren und anpassen')
-                                        }
-                                    />
-                                </ListItemButton>
+
                                 <ListItemButton
                                     onClick={handleFullSync}
                                     disabled={!canSync}
@@ -428,32 +377,7 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
                 </DialogActions>
             </Dialog>
 
-            {/* MUI Dialog for Auto-Sync Time */}
-            <Dialog open={syncTimeDialogOpen} onClose={() => setSyncTimeDialogOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>KI Auto-Sync</DialogTitle>
-                <DialogContent>
-                    <Typography variant="body2" sx={{ mb: 3 }}>
-                        Die KI kann den Song automatisch analysieren. Wenn der Song ein langes gesprochenes Intro hat, kannst du hier die ungefähre Startzeit vorgeben (z. B. <code>25.5</code>).
-                    </Typography>
-                    
-                    <TextField
-                        fullWidth
-                        label="Ungefähre Startzeit in Sekunden (optional)"
-                        placeholder="z.B. 25.5"
-                        value={syncTimeInput}
-                        onChange={(e) => setSyncTimeInput(e.target.value)}
-                        type="number"
-                        inputProps={{ step: "0.1" }}
-                        sx={{ mb: 2 }}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setSyncTimeDialogOpen(false)} color="inherit">Abbrechen</Button>
-                    <Button onClick={confirmAutoSync} variant="contained" color="primary">
-                        KI Sync Starten
-                    </Button>
-                </DialogActions>
-            </Dialog>
+
 
             <ConfirmDialog
                 open={confirmDeleteOpen}

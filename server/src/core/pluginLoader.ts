@@ -1,5 +1,5 @@
 import type { Hono } from 'hono';
-import type { GalaxyPlugin, ServerConfig } from './types';
+import type { GalaxyPlugin, ServerConfig, HonoEnv } from './types';
 import { relayPlugin } from '../plugins/relay';
 import { melodiqPlugin } from '../plugins/melodiq';
 
@@ -8,7 +8,7 @@ const ALL_PLUGINS: Record<string, GalaxyPlugin> = {
   melodiq: melodiqPlugin,
 };
 
-export async function loadPlugins(app: Hono, config: ServerConfig): Promise<GalaxyPlugin[]> {
+export async function loadPlugins(app: Hono<HonoEnv>, config: ServerConfig): Promise<GalaxyPlugin[]> {
   const loaded: GalaxyPlugin[] = [];
 
   for (const pluginId of config.activePlugins) {

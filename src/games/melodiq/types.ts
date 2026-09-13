@@ -161,3 +161,6 @@ export interface MelodiqNetworkMessage {
     command?: string;
     [key: string]: unknown;
 }
+
+export type { Song, SongMeta } from './db';
+export type { LocalSong } from './logic/localLibraryProvider';

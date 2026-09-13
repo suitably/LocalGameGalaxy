@@ -789,7 +789,10 @@
       "save_and_test": "Speichern & Testen",
       "testing": "Zugangsdaten werden bei USDB geprüft...",
       "success": "USDB-Zugang erfolgreich verifiziert und gespeichert!",
-      "error": "USDB-Anmeldung fehlgeschlagen: {{error}}"
+      "error": "USDB-Anmeldung fehlgeschlagen: {{error}}",
+      "missing_title": "USDB-Zugangsdaten erforderlich",
+      "missing_desc": "Für die Online-Suche und das Herunterladen von Songs aus der UltraStar DB müssen Benutzername und Passwort hinterlegt werden.",
+      "back_to_game": "Zurück zum Spiel"
     },
     "preferences": {
       "title": "Server-Einstellungen",

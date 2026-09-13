@@ -12,6 +12,7 @@ import { HardwareMicSetup } from './components/HardwareMicSetup';
 import { UserProfilesManager } from './components/UserProfilesManager';
 import { GameSettingsPanel } from './components/GameSettingsPanel';
 import { HelperConnection } from './components/HelperConnection';
+import { LocalLibrarySettings } from './components/LocalLibrarySettings';
 import { SettingsFeedbackForm } from './components/SettingsFeedbackForm';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 
@@ -103,12 +104,17 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack, onNavi
             <SettingsFeedbackForm />
 
             <Paper sx={{ p: { xs: 2, md: 4 }, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {/* 0. P2P Helper Connection (Priority for TV) */}
+                {/* 0. Local Song Library (Lite Mode) */}
+                <LocalLibrarySettings />
+
+                <Divider />
+
+                {/* 1. P2P Helper Connection (Priority for TV) */}
                 <HelperConnection />
 
                 <Divider />
 
-                {/* 1. Playlists Management Link */}
+                {/* 2. Playlists Management Link */}
                 {onNavigateToPlaylists && (
                     <Box>
                         <Typography variant="h6" sx={{ mb: 2 }}>{t('melodiq.playlists', 'Playlists')}</Typography>
@@ -117,10 +123,9 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack, onNavi
                         </Button>
                     </Box>
                 )}
-                {/* 2. Hardware Microphones */}
+                {/* 3. Hardware Microphones */}
                 <HardwareMicSetup />
 
-                <Divider />
                 <Divider />
 
 

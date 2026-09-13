@@ -7,6 +7,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CircularProgress from '@mui/material/CircularProgress';
 import { type SongMeta } from '../db';
 import { formatDuration } from '../utils';
+import { useTranslation } from 'react-i18next';
 
 interface SongListItemProps {
     song: SongMeta;
@@ -21,6 +22,7 @@ interface SongListItemProps {
 }
 
 export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLongPress, onMenuClick, onActionClick, isDownloading, isDownloaded, downloadProgress, hasActiveJob }) => {
+    const { t } = useTranslation();
     const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPressRef = React.useRef(false);
 
@@ -115,6 +117,11 @@ export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLon
 
             {/* Metadata (Hidden on very small screens) */}
             <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1.5, color: 'text.secondary' }}>
+                {song.source === 'local' && (
+                    <Typography variant="body2" sx={{ bgcolor: 'primary.dark', color: 'white', px: 1, borderRadius: 4, fontSize: '0.75rem' }}>
+                        {t('melodiq.local_song_badge', 'Lokal')}
+                    </Typography>
+                )}
                 {song.duration && (
                     <Typography variant="body2" sx={{ minWidth: 40, textAlign: 'right' }}>
                         {formatDuration(song.duration)}

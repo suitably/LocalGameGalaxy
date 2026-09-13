@@ -36,7 +36,7 @@ export const SessionBackgroundMedia: React.FC<SessionBackgroundMediaProps> = ({
         setYouTubeFailed(false);
     }, [videoSrc]);
 
-    const handleYouTubeError = useCallback((err: any) => {
+    const handleYouTubeError = useCallback((err: unknown) => {
         console.warn("YouTube video player reported:", err);
         if (err === 101 || err === 150 || err === 100 || err === 2) {
             setYouTubeFailed(true);
@@ -62,6 +62,7 @@ export const SessionBackgroundMedia: React.FC<SessionBackgroundMediaProps> = ({
                         ref={videoRef}
                         src={videoSrc}
                         muted
+                        playsInline
                         style={{
                             position: 'absolute',
                             top: 0,
@@ -88,6 +89,7 @@ export const SessionBackgroundMedia: React.FC<SessionBackgroundMediaProps> = ({
                         autoPlay
                         loop
                         muted
+                        playsInline
                         style={{
                             position: 'absolute',
                             top: 0,

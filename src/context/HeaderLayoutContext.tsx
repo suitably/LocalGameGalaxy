@@ -63,7 +63,7 @@ export const HeaderLayoutProvider: React.FC<{ children: ReactNode }> = ({ childr
     }, []);
 
     const setHomeAction = useCallback((action: (() => void) | null) => {
-        setHomeActionState(prev => (prev === action ? prev : () => action));
+        setHomeActionState(() => action);
     }, []);
 
     const setHideHome = useCallback((hide: boolean) => {

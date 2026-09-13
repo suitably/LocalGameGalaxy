@@ -26,6 +26,7 @@ interface MelodiqSearchBarProps {
     clearFilters: () => void;
     filteredSongsLength: number;
     totalSongsLength: number;
+    canSearchOnline?: boolean;
 }
 
 export const MelodiqSearchBar: React.FC<MelodiqSearchBarProps> = ({
@@ -35,8 +36,8 @@ export const MelodiqSearchBar: React.FC<MelodiqSearchBarProps> = ({
     sortOption, setSortOption,
     activeFilters, setActiveFilters,
     availableGenres, availableEditions,
-    
-    clearFilters, filteredSongsLength, totalSongsLength
+    clearFilters, filteredSongsLength, totalSongsLength,
+    canSearchOnline = true
 }) => {
     const { t } = useTranslation();
     const [sortAnchor, setSortAnchor] = useState<null | HTMLElement>(null);
@@ -85,14 +86,16 @@ export const MelodiqSearchBar: React.FC<MelodiqSearchBarProps> = ({
                                         <CloseIcon fontSize="small" />
                                     </IconButton>
                                 )}
-                                <IconButton 
-                                    onClick={() => setIsOnlineSearch(!isOnlineSearch)} 
-                                    color={isOnlineSearch ? "primary" : "default"}
-                                    title="Search Online"
-                                    size="small"
-                                >
-                                    <PublicIcon fontSize="small" />
-                                </IconButton>
+                                {canSearchOnline && (
+                                    <IconButton 
+                                        onClick={() => setIsOnlineSearch(!isOnlineSearch)} 
+                                        color={isOnlineSearch ? "primary" : "default"}
+                                        title={t('melodiq.search_online', 'Online suchen')}
+                                        size="small"
+                                    >
+                                        <PublicIcon fontSize="small" />
+                                    </IconButton>
+                                )}
                             </InputAdornment>
                         )
                     }}

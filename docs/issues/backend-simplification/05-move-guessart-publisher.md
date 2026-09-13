@@ -46,11 +46,11 @@ Strategy 1 wird zum einzigen Weg. Strategy 2 (Server Proxy) wird entfernt.
 
 ## Akzeptanzkriterien
 
-- [ ] Kein `/api/guessart/*` Endpoint mehr im Server
-- [ ] GuessArt Katalog-Publishing funktioniert weiterhin via Direct GitHub API im Frontend
-- [ ] Kein Server-Fallback mehr in `catalogueManager.ts`
-- [ ] Wenn GitHub Config Endpoints noch für Feedback gebraucht werden: diese bleiben. Sonst entfernen.
-- [ ] `npm run lint` und `npm run build` fehlerfrei
+- [x] Kein `/api/guessart/*` Endpoint mehr im Server
+- [x] GuessArt Katalog-Publishing funktioniert weiterhin via Direct GitHub API im Frontend
+- [x] Kein Server-Fallback mehr in `catalogueManager.ts`
+- [x] Wenn GitHub Config Endpoints noch für Feedback gebraucht werden: diese bleiben. Sonst entfernen. (Evaluierung: Feedback nutzt `server/config.js` direkt; `getGithubConfig`/`setGithubConfig` unbenutzt und entfernt; Server-Feedback & GitHub-Config-Felder beibehalten)
+- [x] `npm run lint` und `npm run build` fehlerfrei
 
 ## Labels
 

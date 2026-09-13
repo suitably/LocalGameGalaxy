@@ -1,41 +1,71 @@
-FROM node:20-bookworm-slim AS base
-
-# Only install essential tools: ffmpeg, yt-dlp, deno
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg \
-    curl \
-    ca-certificates \
-    && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
-    && chmod a+rx /usr/local/bin/yt-dlp \
-    && apt-get purge -y --auto-remove curl \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY --from=docker.io/denoland/deno:bin /deno /usr/local/bin/deno
+# ===== Stage 1: Build TypeScript =====
+FROM node:20-slim AS builder
 
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm install --production
-COPY . .
 
-EXPOSE 3000
-EXPOSE 3001
+# Copy dependency definitions and TypeScript config
+COPY package*.json tsconfig.json ./
+RUN npm ci
 
-CMD ["node", "index.js"]
+# Copy source code and build
+COPY src/ ./src/
+RUN npm run build
 
-FROM base AS full
+# ===== Stage 2: Runtime =====
+FROM node:20-slim
 
+# System dependencies (including compiler for C extensions like diffq)
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
     python3 \
     python3-pip \
+    python3-venv \
     python3-dev \
     build-essential \
+    curl \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-ENV TORCH_HOME=/app/models \
-    WHISPER_CACHE_DIR=/app/models
-
-RUN pip3 install --no-cache-dir --break-system-packages \
-    torch torchvision torchaudio \
-    --extra-index-url https://download.pytorch.org/whl/cpu \
+# Python AI dependencies (PyTorch CPU, audio-separator, whisper-timestamped, yt-dlp)
+RUN pip3 install --no-cache-dir --break-system-packages --upgrade pip setuptools wheel \
     && pip3 install --no-cache-dir --break-system-packages \
-    "audio-separator[cpu]" "whisper-timestamped" "auditok"
+    torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu \
+    && pip3 install --no-cache-dir --break-system-packages \
+    yt-dlp \
+    "audio-separator[cpu]" \
+    whisper-timestamped \
+    auditok
+
+WORKDIR /app
+
+# Node production dependencies
+COPY package*.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Copy built server from builder stage
+COPY --from=builder /app/dist ./dist
+
+# Copy Python helper scripts (e.g. lyrics alignment)
+COPY src/scripts ./src/scripts
+COPY src/scripts ./dist/scripts
+
+# Persistent volumes
+VOLUME /app/music
+VOLUME /app/config
+VOLUME /app/models
+
+# Runtime environment configuration
+ENV PORT=3000 \
+    NODE_ENV=production \
+    MUSIC_DIR=/app/music \
+    CONFIG_PATH=/app/config/config.json \
+    MODELS_DIR=/app/models \
+    TORCH_HOME=/app/models \
+    WHISPER_MODELS_DIR=/app/models
+
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+CMD ["node", "dist/index.js"]
