@@ -44,6 +44,20 @@ To prevent monolithic "God Components" that bundle multiple responsibilities:
   - **Never expand a God Component**: Any modification to a legacy file must maintain or decrease its line count. New logic must be placed in extracted hooks or sub-components.
   - When a legacy component is refactored below 250 lines, remove it from `scripts/legacy-component-baselines.json` to lock in the improvement.
 
+### 3.2 Zero-Tolerance Anti-Pattern Matrix
+
+The following patterns are **strictly forbidden**. Any pull request, task, or commit containing them will be rejected by CI and automated architecture linting:
+
+| 🚫 Forbidden Anti-Pattern | Why It Is Blocked | ✅ Mandatory Solution |
+| :--- | :--- | :--- |
+| **Cross-Game Import** (`from '../<other>/...'`) | Couples games, breaks modular independence | Move to `src/modules/*` or `src/components/*` |
+| **Raw Storage** (`localStorage.` / `sessionStorage.`) | Bypasses memory fallback and key registry | Use `storage.get/set/remove()` from `src/lib/storage.ts` |
+| **Native Dialogs** (`window.confirm()`, `window.prompt()`, `alert()`) | Blocks main thread, breaks on Capacitor, unstyled | Use `<ConfirmDialog />` or MUI `<Dialog>` |
+| **Untyped Code** (`: any`, `<any>`, `as any`) | Disables TypeScript compiler safety | Use generics, interfaces, or `unknown` with type guards |
+| **God Component** (> 250 lines in `.tsx`) | Violates SRP, unmaintainable, test barrier | Split into sub-components + custom hook (`useFeatureLogic`) |
+| **Inline BroadcastChannel Sync** in Games | Duplicates network logic, leaks channels | Use `useMultiChannelSync()` from `src/modules/sync` |
+| **Hardcoded UI Strings** (`"Save"`, `"Delete"`) | Breaks internationalization (i18n) | Use `t('key')` and add to both `de` and `en` |
+
 ## 4. Verification & CI Pipeline
 
 The project enforces quality gates via GitHub Actions (`.github/workflows/ci.yml`).
@@ -52,10 +66,11 @@ The project enforces quality gates via GitHub Actions (`.github/workflows/ci.yml
 **Do NOT run** lint, test, build, or any verification commands during the **planning or research phase** — no code has changed, so verification adds no value and wastes resources.
 
 ```bash
-npm run lint          # ESLint (0 errors)
-npm test              # Vitest unit tests
-npm run check:budget  # Component budget & anti-God-component ratchet
-npm run build         # tsc -b && vite build
+npm run check:architecture:diff # Verifies changed files against boundaries
+npm run check:budget            # Component budget & anti-God-component ratchet
+npm run lint                    # ESLint (0 errors)
+npm test                        # Vitest unit tests
+npm run build                   # tsc -b && vite build
 ```
 
 ## 5. Reuse Catalog
@@ -86,3 +101,15 @@ Search this inventory before building new feature code:
 - **Touch**: `user-select: none`, `-webkit-touch-callout: none` (except inputs), `-webkit-tap-highlight-color: transparent`, `overscroll-behavior-y: contain`.
 - **Back Button**: Handle via `App.addListener('backButton', ...)` — close modals/navigate before exiting.
 - **Build**: Run `npx cap sync` after updating web assets.
+
+## 8. Enforcement & Quality Gates
+
+Every pull request and commit must pass automated checks. Violations will cause immediate failure in the CI pipeline (`.github/workflows/ci.yml`).
+
+- **Pre-Flight Architecture Check**: Always execute `npm run check:architecture:diff` before submitting work. Zero violations permitted.
+- **Component Size Ratchet**: `npm run check:budget` ensures no component grows beyond its budget.
+- **No Cross-Game Imports**: Games must never import from other games (`src/games/<A>` -> `src/games/<B>` is strictly forbidden and blocked by ESLint and `check-architecture.mjs`).
+- **No Raw Storage**: Always use `src/lib/storage.ts` with `STORAGE_KEYS`. Never call `localStorage` or `sessionStorage` directly.
+- **No Native Dialogs**: Always use MUI `<Dialog>` or `<ConfirmDialog>`. `window.confirm` and `window.prompt` will fail the build.
+- **Strict TypeScript**: Avoid `any`. Interfaces and discriminated unions are mandatory.
+- **Do not introduce lint or compiler errors**: `npm run lint` and `npm run build` must pass without errors.

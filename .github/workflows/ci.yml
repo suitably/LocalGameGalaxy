@@ -1,4 +1,4 @@
-name: CI & Quality Gate
+name: CI Quality Gate
 
 on:
   push:
@@ -10,30 +10,40 @@ on:
 
 jobs:
   validate:
-    name: Lint, Test, Component Budget & Build
+    name: Lint, Architecture, Budget, Test & Build
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Architecture & Boundary Check (Changed Files)
+        if: github.event_name == 'pull_request'
+        run: npm run check:architecture:diff
+
+      - name: Architecture & Boundary Audit (Full Report)
+        if: github.event_name == 'push'
+        run: npm run check:architecture
+
+      - name: Check Component Size Budget (Anti-God-Component Gate)
+        run: npm run check:budget
 
       - name: Run ESLint
         run: npm run lint
 
       - name: Run Unit Tests
         run: npm test
-
-      - name: Check Component Size Budget (Anti-God-Component Gate)
-        run: npm run check:budget
 
       - name: Run Production Build
         run: npm run build
