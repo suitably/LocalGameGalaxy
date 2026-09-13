@@ -46,7 +46,7 @@ jobs:
       # 1. Build & Push Lightweight Base Image (~200MB) -> :latest, :base
       - name: Build and Push Base Image
         if: steps.check_docker_creds.outputs.has_creds == 'true'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./server
           file: ./server/Dockerfile
@@ -63,7 +63,7 @@ jobs:
       # 2. Build & Push Full Image with PyTorch & AI Vocal Separation (~2GB) -> :full, :ai, :melodiq
       - name: Build and Push Full Image (Melodiq AI)
         if: steps.check_docker_creds.outputs.has_creds == 'true'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./server
           file: ./server/Dockerfile

@@ -94,6 +94,7 @@ const violations = {
   rawStorage: [],
   nativeDialogs: [],
   largeComponents: [],
+  trackedServerMedia: [],
 };
 
 // 1. Scan files
@@ -191,6 +192,15 @@ for (const filePath of allFiles) {
   }
 }
 
+// Check 5: Tracked Server Media (server/music/ or music/ must never contain git-tracked files)
+try {
+  const tracked = execSync('git ls-files "server/music" "music"', { cwd: ROOT_DIR, encoding: 'utf-8' });
+  const files = tracked.split('\n').map(f => f.trim()).filter(Boolean);
+  violations.trackedServerMedia.push(...files);
+} catch {
+  // git not available or command failed
+}
+
 // 2. Output Report
 console.log(`\n${BOLD}${CYAN}=== LocalGameGalaxy Architecture & Boundary Audit ===${RESET}\n`);
 if (isDiff) {
@@ -244,6 +254,19 @@ if (violations.nativeDialogs.length > 0) {
   console.log(`${GREEN}✔ No blocking window.confirm/prompt/alert${RESET}`);
 }
 
+// Report Tracked Server Media
+if (violations.trackedServerMedia.length > 0) {
+  hasErrors = true;
+  console.log(`${RED}${BOLD}✖ Tracked Server Music / Media Files Found (${violations.trackedServerMedia.length})${RESET}`);
+  console.log(`  Rule: Server songs and audio stems must NEVER be tracked in Git (AGENTS.md Section 3.2).`);
+  for (const f of violations.trackedServerMedia) {
+    console.log(`  ${RED}•${RESET} ${f}`);
+  }
+  console.log('');
+} else {
+  console.log(`${GREEN}✔ No tracked server music/media files${RESET}`);
+}
+
 // Report Large Components
 if (violations.largeComponents.length > 0) {
   console.log(`${YELLOW}${BOLD}⚠ Components Exceeding 300 Lines (${violations.largeComponents.length})${RESET}`);
@@ -261,7 +284,7 @@ if (violations.largeComponents.length > 0) {
 }
 
 // Summary and Exit Code
-const totalViolations = violations.crossGameImports.length + violations.rawStorage.length + violations.nativeDialogs.length;
+const totalViolations = violations.crossGameImports.length + violations.rawStorage.length + violations.nativeDialogs.length + violations.trackedServerMedia.length;
 
 if (totalViolations === 0) {
   console.log(`${GREEN}${BOLD}🎉 Architecture Audit Passed! All boundaries respected.${RESET}\n`);
@@ -271,7 +294,7 @@ if (totalViolations === 0) {
   if (isStrict) {
     console.error(`\n${RED}${BOLD}✖ Strict mode enabled: Audit failed.${RESET}\n`);
     process.exit(1);
-  } else if (isDiff && (violations.crossGameImports.length > 0 || violations.nativeDialogs.length > 0)) {
+  } else if (isDiff && (violations.crossGameImports.length > 0 || violations.nativeDialogs.length > 0 || violations.trackedServerMedia.length > 0)) {
     console.error(`\n${RED}${BOLD}✖ Diff check failed: Newly modified files contain critical architectural violations.${RESET}\n`);
     process.exit(1);
   } else {

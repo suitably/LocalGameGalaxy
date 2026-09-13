@@ -57,6 +57,7 @@ The following patterns are **strictly forbidden**. Any pull request, task, or co
 | **God Component** (> 250 lines in `.tsx`) | Violates SRP, unmaintainable, test barrier | Split into sub-components + custom hook (`useFeatureLogic`) |
 | **Inline BroadcastChannel Sync** in Games | Duplicates network logic, leaks channels | Use `useMultiChannelSync()` from `src/modules/sync` |
 | **Hardcoded UI Strings** (`"Save"`, `"Delete"`) | Breaks internationalization (i18n) | Use `t('key')` and add to both `de` and `en` |
+| **Tracked Server Media** (`server/music/`, audio stems) | Bloats git history with copyrighted binaries | Keep in `.gitignore`, never track songs or stems in git |
 
 ## 4. Verification & CI Pipeline
 

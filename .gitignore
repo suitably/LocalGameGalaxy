@@ -40,5 +40,5 @@ config.json
 server/models/
 __pycache__/
 *.pyc
-server/music/*
-!server/music/Das Lumpenpack - Pädagogen/
+server/music/
+music/
