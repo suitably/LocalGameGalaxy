@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { gameNameOverride } from './gameNameOverride';
 import { storage } from '../../../lib/storage';
 
@@ -7,6 +7,34 @@ describe('gameNameOverride', () => {
 
   beforeEach(() => {
     storage.remove(`guessart_game_alias_${gameId}`);
+    vi.restoreAllMocks();
+  });
+
+  describe('getAlias', () => {
+    it('returns null when gameId is an empty string', () => {
+      const getSpy = vi.spyOn(storage, 'get');
+      expect(gameNameOverride.getAlias('')).toBeNull();
+      expect(getSpy).not.toHaveBeenCalled();
+    });
+
+    it('queries storage with the correct prefix key', () => {
+      const getSpy = vi.spyOn(storage, 'get');
+      gameNameOverride.getAlias(gameId);
+      expect(getSpy).toHaveBeenCalledWith(`guessart_game_alias_${gameId}`);
+    });
+
+    it('returns null when storage value is empty or whitespace only', () => {
+      storage.set(`guessart_game_alias_${gameId}`, '');
+      expect(gameNameOverride.getAlias(gameId)).toBeNull();
+
+      storage.set(`guessart_game_alias_${gameId}`, '   ');
+      expect(gameNameOverride.getAlias(gameId)).toBeNull();
+    });
+
+    it('trims leading and trailing whitespace from retrieved alias', () => {
+      storage.set(`guessart_game_alias_${gameId}`, '  Spaced Alias  ');
+      expect(gameNameOverride.getAlias(gameId)).toBe('Spaced Alias');
+    });
   });
 
   it('returns global name when no local alias is set', () => {
