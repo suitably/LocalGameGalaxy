@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 
 // Minimal Presentation API Type Definitions
 interface PresentationConnectionCloseEvent extends Event {
@@ -48,15 +49,52 @@ export interface TVEvent {
     timestamp: number;
 }
 
-export const useTVMode = () => {
+export interface TVSessionInfo {
+    partyId?: string;
+    activeTrackerUrls?: string[];
+    baseUrl?: string;
+}
+
+export const useTVMode = (sessionInfo?: TVSessionInfo) => {
     const [isTVConnected, setIsTVConnected] = useState(false);
     const [lastEvent, setLastEvent] = useState<TVEvent | null>(null);
     const [isPresentationAvailable, setIsPresentationAvailable] = useState(false);
+
+    const sessionInfoRef = useRef(sessionInfo);
+    useEffect(() => {
+        sessionInfoRef.current = sessionInfo;
+    }, [sessionInfo]);
+
+    const getLatestSessionInfo = useCallback(() => {
+        const currentPartyId = sessionInfoRef.current?.partyId || storage.get(STORAGE_KEYS.MELODIQ_PARTY_ID);
+        const currentTrackers = sessionInfoRef.current?.activeTrackerUrls?.length
+            ? sessionInfoRef.current.activeTrackerUrls
+            : storage.getJson<string[]>(STORAGE_KEYS.MELODIQ_TRACKER_URLS, []);
+        const currentBaseUrl = sessionInfoRef.current?.baseUrl
+            || storage.get(STORAGE_KEYS.MELODIQ_HOST_BASE_URL)
+            || (typeof window !== 'undefined' ? window.location.origin : '');
+
+        return {
+            partyId: currentPartyId && currentPartyId !== 'TV-MODE' ? currentPartyId : '',
+            trackerUrls: currentTrackers,
+            baseUrl: currentBaseUrl
+        };
+    }, []);
 
     // Transports
     const channelRef = useRef<BroadcastChannel | null>(null);
     const presentationConnectionRef = useRef<PresentationConnection | null>(null);
     const tvWindowRef = useRef<Window | null>(null);
+
+    // Forward ref to sendMessage so handlers defined prior can use it
+    const sendMessageRef = useRef<(type: string, payload?: any) => void>(() => {});
+
+    const sendSessionInfo = useCallback(() => {
+        const info = getLatestSessionInfo();
+        if (info.partyId) {
+            sendMessageRef.current('HOST_SESSION_INFO', info);
+        }
+    }, [getLatestSessionInfo]);
 
     // Unified Message Handler
     const handleMessage = useCallback((type: string, payload?: any) => {
@@ -64,10 +102,11 @@ export const useTVMode = () => {
 
         if (type === 'TV_READY' || type === 'PONG') {
             setIsTVConnected(true);
+            sendSessionInfo();
         } else if (type === 'SONG_ENDED') {
             console.log('TV finished song');
         }
-    }, []);
+    }, [sendSessionInfo]);
 
     // Setup Broadcast Channel (Local Window)
     useEffect(() => {
@@ -137,12 +176,24 @@ export const useTVMode = () => {
         }
     }, []);
 
+    useEffect(() => {
+        sendMessageRef.current = sendMessage;
+    }, [sendMessage]);
+
+    // Re-sync session info whenever TV connects or host session info changes
+    useEffect(() => {
+        if (isTVConnected) {
+            sendSessionInfo();
+        }
+    }, [isTVConnected, sendSessionInfo, sessionInfo?.partyId, sessionInfo?.activeTrackerUrls]);
+
     const setupPresentationConnection = useCallback((connection: PresentationConnection) => {
         presentationConnectionRef.current = connection;
 
         connection.onconnect = () => {
             console.log('Presentation connected');
             setIsTVConnected(true);
+            sendSessionInfo();
         };
 
         connection.onclose = () => {
@@ -165,19 +216,25 @@ export const useTVMode = () => {
                 console.error('Failed to parse presentation message:', e);
             }
         };
-    }, [handleMessage]);
+    }, [handleMessage, sendSessionInfo]);
 
     const startPresentation = useCallback(async () => {
         if (!window.PresentationRequest) return;
 
         try {
-            const request = new window.PresentationRequest(['/games/melodiq/tv']);
+            const info = getLatestSessionInfo();
+            const params = new URLSearchParams();
+            if (info.partyId) params.set('party', info.partyId);
+            if (info.baseUrl) params.set('baseUrl', info.baseUrl);
+            const qs = params.toString() ? `?${params.toString()}` : '';
+
+            const request = new window.PresentationRequest([`/games/melodiq/tv${qs}`]);
             const connection = await request.start();
             setupPresentationConnection(connection);
         } catch (error) {
             console.error('Presentation request failed:', error);
         }
-    }, [setupPresentationConnection]);
+    }, [setupPresentationConnection, getLatestSessionInfo]);
 
     const openTVWindow = useCallback(() => {
         if (tvWindowRef.current && !tvWindowRef.current.closed) {
@@ -187,8 +244,14 @@ export const useTVMode = () => {
 
         const width = 1280;
         const height = 720;
+        const info = getLatestSessionInfo();
+        const params = new URLSearchParams();
+        if (info.partyId) params.set('party', info.partyId);
+        if (info.baseUrl) params.set('baseUrl', info.baseUrl);
+        const qs = params.toString() ? `?${params.toString()}` : '';
+
         const win = window.open(
-            '/games/melodiq/tv',
+            `/games/melodiq/tv${qs}`,
             'MelodiqTV',
             `width=${width},height=${height},menubar=no,toolbar=no,location=no,status=no`
         );
@@ -204,11 +267,17 @@ export const useTVMode = () => {
                 tvWindowRef.current = null;
             }
         }, 1000);
-    }, []);
+    }, [getLatestSessionInfo]);
 
     const playSongOnTV = useCallback((songId: string, songData?: any, currentTime?: number) => {
-        sendMessage('PLAY_SONG', { songId, songData, currentTime: currentTime || 0 });
-    }, [sendMessage]);
+        const info = getLatestSessionInfo();
+        sendMessage('PLAY_SONG', {
+            songId,
+            songData,
+            currentTime: currentTime || 0,
+            sessionInfo: info
+        });
+    }, [sendMessage, getLatestSessionInfo]);
 
     const stopSongOnTV = useCallback(() => {
         sendMessage('STOP_SONG');
@@ -255,6 +324,7 @@ export const useTVMode = () => {
         stopSongOnTV,
         sendRemoteCommand,
         sendGameUpdate,
-        disconnectTV
+        disconnectTV,
+        sendSessionInfo
     };
 };

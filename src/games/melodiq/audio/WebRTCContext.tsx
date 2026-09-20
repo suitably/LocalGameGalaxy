@@ -22,7 +22,11 @@ export const WebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 };
 
 
-export const WebRTCMockProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const WebRTCMockProvider: React.FC<{
+    children: React.ReactNode;
+    partyId?: string;
+    activeTrackerUrls?: string[];
+}> = ({ children, partyId = '', activeTrackerUrls = [] }) => {
     return (
         <WebRTCHostContext.Provider value={{
             manager: null,
@@ -30,10 +34,10 @@ export const WebRTCMockProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             activePeers: [],
             inactivePeers: [],
             togglePeerActive: () => {},
-            partyId: '',
+            partyId,
             regeneratePartyId: () => {},
-            trackerUrls: [],
-            activeTrackerUrls: [],
+            trackerUrls: activeTrackerUrls,
+            activeTrackerUrls,
             disabledTrackerUrls: [],
             allTrackers: [],
             toggleTrackerActive: () => {},

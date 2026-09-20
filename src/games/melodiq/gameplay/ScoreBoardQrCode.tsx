@@ -6,34 +6,33 @@ import { useMelodiqSettings } from '../hooks/SettingsContext';
 import { useWebRTC } from '../audio/WebRTCContext';
 import { buildDeviceConnectionUrl } from '../../../components/connection/connectionUrl';
 
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
+
 interface ScoreBoardQrCodeProps {
     sx?: SxProps<Theme>;
     compact?: boolean;
+    partyId?: string;
 }
 
-export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({ sx, compact = false }) => {
+export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({ sx, compact = false, partyId: propPartyId }) => {
     const { t } = useTranslation();
     const { settings } = useMelodiqSettings();
     const { partyId: webrtcPartyId, activeTrackerUrls = [] } = useWebRTC();
     const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
-    const partyId = (webrtcPartyId && webrtcPartyId !== 'TV-MODE')
-        ? webrtcPartyId
-        : (localStorage.getItem('melodiq_party_id') || webrtcPartyId || '');
+    const resolvedPartyId = propPartyId
+        || (webrtcPartyId && webrtcPartyId !== 'TV-MODE' ? webrtcPartyId : '')
+        || storage.get(STORAGE_KEYS.MELODIQ_PARTY_ID);
+
+    const partyId = (resolvedPartyId && resolvedPartyId !== 'TV-MODE') ? resolvedPartyId : '';
 
     useEffect(() => {
         if (!settings.showScoreboardQrCode || !partyId) return;
 
-        const baseUrl = localStorage.getItem('melodiq_host_base_url') || window.location.origin;
+        const baseUrl = storage.get(STORAGE_KEYS.MELODIQ_HOST_BASE_URL) || (typeof window !== 'undefined' ? window.location.origin : '');
         const trackers = activeTrackerUrls.length > 0
             ? activeTrackerUrls
-            : (() => {
-                try {
-                    return JSON.parse(localStorage.getItem('melodiq_tracker_urls') || '[]');
-                } catch {
-                    return [];
-                }
-            })();
+            : storage.getJson<string[]>(STORAGE_KEYS.MELODIQ_TRACKER_URLS, []);
 
         const url = buildDeviceConnectionUrl({
             baseUrl,

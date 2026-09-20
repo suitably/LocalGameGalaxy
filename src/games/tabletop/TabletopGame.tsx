@@ -8,6 +8,8 @@ import { usePageTitle } from '../../context/TitleContext';
 import { tabletopReducer } from './logic/tabletopReducer';
 import { validateAndSanitizeGame } from './logic/gameValidator';
 import { getTabletopGame } from './logic/tabletopStorage';
+import { parsePcioFile } from './logic/pcioParser';
+import { storage } from '../../lib/storage';
 import { TabletopSurface } from './components/surface/TabletopSurface';
 import { TabletopControllerView } from './components/controller/TabletopControllerView';
 import { TabletopLobbyView } from './components/views/TabletopLobbyView';
@@ -63,6 +65,21 @@ export function TabletopGame() {
           const json = await res.json();
           dispatch({ type: 'LOAD_GAME', payload: validateAndSanitizeGame(json) });
           return;
+        }
+
+        // 3. Try BYOG server if active
+        if (storage.isHelperActive()) {
+          const baseUrl = storage.getHelperUrl().replace(/\/$/, '');
+          const token = storage.getHelperToken();
+          const headers: Record<string, string> = {};
+          if (token) headers['Authorization'] = `Bearer ${token}`;
+          const sRes = await fetch(`${baseUrl}/api/tabletop/games/${encodeURIComponent(gameId)}/raw`, { headers });
+          if (sRes.ok) {
+            const data = (await sRes.json()) as { rawJson: string; assetMap: Record<string, string> };
+            const parsed = await parsePcioFile(data.rawJson, { assetFiles: data.assetMap });
+            dispatch({ type: 'LOAD_GAME', payload: parsed });
+            return;
+          }
         }
 
         throw new Error(`Spiel "${gameId}" konnte nicht geladen werden.`);

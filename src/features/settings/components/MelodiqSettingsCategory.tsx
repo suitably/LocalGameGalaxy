@@ -4,11 +4,6 @@ import UndoIcon from '@mui/icons-material/Undo';
 import RestoreIcon from '@mui/icons-material/Restore';
 import QueueMusicIcon from '@mui/icons-material/QueueMusic';
 import { useTranslation } from 'react-i18next';
-import { ServerConnection } from '../../../components/connection/ServerConnection';
-import { ServerAdminPanel } from '../../../components/connection/ServerAdminPanel';
-import { ServerDirectoryManager } from '../../../components/connection/ServerDirectoryManager';
-import { ServerPreferences } from '../../../components/connection/ServerPreferences';
-import { ServerUsdbConfig } from '../../../components/connection/ServerUsdbConfig';
 import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
 import {
     MicrophoneManager,
@@ -39,7 +34,7 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
     activeSubTab,
     initialSubTab = 'all',
     onNavigateToPlaylists,
-    autoFocusUsdb,
+    autoFocusUsdb: _autoFocusUsdb,
     onBackToGame
 }) => {
     const { t } = useTranslation();
@@ -102,25 +97,30 @@ export const MelodiqSettingsCategory: React.FC<MelodiqSettingsCategoryProps> = (
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {/* Sub-Tab 0: Companion Server (Connection, Setup Dialog, Directories, Prefs, USDB, API Keys) */}
-            {(subTab === 'all' || subTab === 'server') && (
-                <Box id="settings-section-server" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <Box id="settings-section-server-connection">
-                        <ServerConnection />
+            {/* Server Settings Redirection Notice if sub=server was visited */}
+            {subTab === 'server' && (
+                <Paper sx={{ ...settingsCardSx, p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+                    <Box>
+                        <Typography variant="subtitle1" fontWeight={700}>
+                            {t('melodiq.server.moved_title', 'Server- & KI-Einstellungen wurden verschoben')}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {t('melodiq.server.moved_desc', 'Der MelodiQ Companion Server befindet sich jetzt zentral im neuen Server-Tab.')}
+                        </Typography>
                     </Box>
-                    <Box id="settings-section-directories">
-                        <ServerDirectoryManager />
-                    </Box>
-                    <Box id="settings-section-preferences">
-                        <ServerPreferences />
-                    </Box>
-                    <Box id="settings-section-usdb">
-                        <ServerUsdbConfig autoFocusUsdb={autoFocusUsdb} onBackToGame={onBackToGame} />
-                    </Box>
-                    <Box id="settings-section-admin">
-                        <ServerAdminPanel />
-                    </Box>
-                </Box>
+                    <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => {
+                            const params = new URLSearchParams(window.location.search);
+                            params.set('tab', 'server');
+                            params.delete('sub');
+                            window.location.search = params.toString();
+                        }}
+                    >
+                        {t('settings.server_tab', 'Zum Server-Tab')}
+                    </Button>
+                </Paper>
             )}
 
             {/* Sub-Tab 1: Microphones */}

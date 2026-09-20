@@ -5,6 +5,7 @@ import type { ApiKey, ServerConfigData } from './core/types';
 
 const defaultConfig: ServerConfigData = {
   directories: [],
+  tabletopDirectories: [],
   port: 3000,
   token: null,
   downloadDir: null,
@@ -82,6 +83,9 @@ export class ConfigManager {
         if (!Array.isArray(this.currentConfig.directories)) {
           this.currentConfig.directories = [...defaultConfig.directories];
         }
+        if (!Array.isArray(this.currentConfig.tabletopDirectories)) {
+          this.currentConfig.tabletopDirectories = [...defaultConfig.tabletopDirectories];
+        }
         if (!Array.isArray(this.currentConfig.apiKeys)) {
           this.currentConfig.apiKeys = [...defaultConfig.apiKeys];
         }
@@ -153,6 +157,18 @@ export class ConfigManager {
       this.currentConfig.downloadDir = this.currentConfig.directories[0];
     }
 
+    // 2b. Tabletop Directory Discovery & Overrides
+    if (process.env.TABLETOP_DIR) {
+      process.env.TABLETOP_DIR.split(',')
+        .map((d) => d.trim())
+        .filter(Boolean)
+        .forEach((dir) => {
+          if (!this.currentConfig.tabletopDirectories.includes(dir)) {
+            this.currentConfig.tabletopDirectories.push(dir);
+          }
+        });
+    }
+
     // 3. Generate token if still missing
     if (!this.currentConfig.token) {
       this.currentConfig.token = crypto.randomBytes(16).toString('hex');
@@ -220,6 +236,29 @@ export class ConfigManager {
       this.currentConfig.downloadDir = this.currentConfig.directories[0] || null;
       console.log(`[Config] downloadDir was removed. Falling back to: ${this.currentConfig.downloadDir}`);
     }
+    this.saveConfig();
+  }
+
+  get tabletopDirectories(): string[] {
+    return this.currentConfig.tabletopDirectories || [];
+  }
+
+  set tabletopDirectories(value: string[]) {
+    this.currentConfig.tabletopDirectories = value;
+    this.saveConfig();
+  }
+
+  public addTabletopDirectory(dirPath: string): void {
+    if (!this.currentConfig.tabletopDirectories.includes(dirPath)) {
+      this.currentConfig.tabletopDirectories.push(dirPath);
+      this.saveConfig();
+    }
+  }
+
+  public removeTabletopDirectory(dirPath: string): void {
+    this.currentConfig.tabletopDirectories = this.currentConfig.tabletopDirectories.filter(
+      (d) => d !== dirPath
+    );
     this.saveConfig();
   }
 

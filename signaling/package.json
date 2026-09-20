@@ -1,0 +1,22 @@
+{
+  "name": "galaxy-signaling",
+  "version": "1.0.0",
+  "description": "Standalone WebRTC BitTorrent tracker signaling microservice for LocalGameGalaxy and peer-to-peer web applications",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "webrtc",
+    "signaling",
+    "bittorrent-tracker",
+    "p2p",
+    "local-game-galaxy"
+  ],
+  "dependencies": {
+    "bittorrent-tracker": "^11.2.2"
+  }
+}

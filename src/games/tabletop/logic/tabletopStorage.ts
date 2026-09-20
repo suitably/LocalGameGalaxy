@@ -39,8 +39,10 @@ export async function openTabletopDb(): Promise<IDBDatabase> {
 }
 
 export async function saveTabletopGame(game: TabletopGameDefinition): Promise<void> {
+  // Strip assetFiles so IDB only stores layout/widget snapshot state
+  const { assetFiles: _unused, ...gameSnapshot } = game;
   const updated: TabletopGameDefinition = {
-    ...game,
+    ...gameSnapshot,
     updatedAt: Date.now(),
   };
 
@@ -52,7 +54,9 @@ export async function saveTabletopGame(game: TabletopGameDefinition): Promise<vo
 export async function getTabletopGame(id: string): Promise<TabletopGameDefinition | null> {
   return runWithStore(openTabletopDb, STORE_GAMES, 'readonly', async (store) => {
     const res = await requestToPromise<TabletopGameDefinition | undefined>(store.get(id));
-    return res || null;
+    if (!res) return null;
+    const { assetFiles: _unused, ...clean } = res;
+    return clean;
   });
 }
 
@@ -75,10 +79,10 @@ export async function listTabletopGames(): Promise<TabletopGameSummary[]> {
         name: g.name,
         description: g.description,
         author: g.author,
-        version: g.version,
-        minPlayers: g.minPlayers,
-        maxPlayers: g.maxPlayers,
-        supportedModes: g.supportedModes,
+        version: g.version || '1.0.0',
+        minPlayers: g.minPlayers ?? 1,
+        maxPlayers: g.maxPlayers ?? 8,
+        supportedModes: g.supportedModes || ['party_multi_device', 'local_pass_and_play', 'solo'],
         cardCount,
         widgetCount,
         updatedAt: g.updatedAt || 0,

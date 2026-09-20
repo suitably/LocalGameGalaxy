@@ -1,28 +1,32 @@
 # MelodiQ Server (One-Click Docker & Companion Backend)
 
-High-performance Hono companion server for **MelodiQ** (karaoke streaming, USDB downloads, automated stem separation with UVR MDX-Net, AI lyrics alignment with Whisper, and WebRTC signaling).
+High-performance Hono companion server for **MelodiQ** (karaoke streaming, USDB downloads, automated stem separation with UVR MDX-Net, AI lyrics alignment with Whisper).
 
-> 💡 **Note**: Party games (**GuessArt**, **Gartic Phone**, **Werewolf**, **Qwixx**) run completely serverless peer-to-peer via MQTT/WebSockets and do **not** require this server.
+WebRTC signaling is handled by the companion **galaxy-signaling** microservice on port `8000`, orchestrated together via Docker Compose.
+
+> 💡 **Note**: Party games (**GuessArt**, **Gartic Phone**, **Werewolf**, **Qwixx**) run completely serverless peer-to-peer via MQTT/WebSockets and do **not** require the MelodiQ media server. For WebRTC microphone audio and screen mirroring in offline or private networks, only the lightweight `signaling` service (port 8000) is required.
 
 ---
 
 ## 1. Quick Start
 
-Run the entire stack with a single command:
+Run the entire companion stack (MelodiQ Media Server + WebRTC Signaling) with a single command:
 
 ```bash
 # 1. Create your local folders
 mkdir -p music config models
 
-# 2. Start container
+# 2. Start stack
 docker compose up -d
 
 # 3. Check health and logs
 curl http://localhost:3000/health
+curl http://localhost:8000/health
 docker compose logs -f
 ```
 
-The server is now live at `http://localhost:3000`.
+- **MelodiQ Media Server**: `http://localhost:3000`
+- **WebRTC Signaling Server**: `ws://localhost:8000` (Health: `http://localhost:8000/health`)
 
 ---
 

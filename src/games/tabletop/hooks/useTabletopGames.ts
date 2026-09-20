@@ -1,154 +1,163 @@
 /**
- * Hook for managing installed and custom Tabletop games [ID: HOOK-TABLETOP-GAMES]
+ * Hook for managing Tabletop games via BYOG server or local File System API [ID: HOOK-TABLETOP-GAMES]
  */
 import { useState, useEffect, useCallback } from 'react';
-import type { TabletopGameDefinition, TabletopGameSummary } from '../logic/types';
-import {
-  saveTabletopGame,
-  getTabletopGame,
-  listTabletopGames,
-  deleteTabletopGame,
-} from '../logic/tabletopStorage';
+import { storage } from '../../../lib/storage';
 import { parsePcioFile } from '../logic/pcioParser';
-import { exportGameAsJson, exportGameAsPcio } from '../logic/tabletopExporter';
-import { fetchAndParseGameUrl, fetchCatalogGame, fetchManifest } from '../logic/gameInstaller';
+import { pickAndLoadGameFolder, supportsLocalFolderImport } from '../logic/localFolderImport';
+import type { TabletopGameDefinition, TabletopGameSummary } from '../logic/types';
+
+interface ServerGameEntry {
+  id: string;
+  name: string;
+  author?: string;
+  description?: string;
+  widgetCount: number;
+  cardCount: number;
+  format?: 'flat-json' | 'pcio-folder' | 'unknown';
+  updatedAt: number;
+}
+
+interface TabletopRawResponse {
+  id: string;
+  rawJson: string;
+  assetMap: Record<string, string>;
+}
 
 export function useTabletopGames() {
   const [games, setGames] = useState<TabletopGameSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [importError, setImportError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [serverConnected, setServerConnected] = useState<boolean>(false);
+  const [supportsLocalFolder] = useState<boolean>(() => supportsLocalFolderImport());
 
-  const refresh = useCallback(async () => {
+  const fetchGames = useCallback(async () => {
+    if (!storage.isHelperActive()) {
+      setServerConnected(false);
+      setGames([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
+    setError(null);
+
     try {
-      const list = await listTabletopGames();
-      setGames(list);
-    } catch (err) {
-      console.error('[useTabletopGames] Failed to list games:', err);
+      const baseUrl = storage.getHelperUrl().replace(/\/$/, '');
+      const token = storage.getHelperToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`${baseUrl}/api/tabletop/games`, { headers });
+      if (!res.ok) {
+        setServerConnected(false);
+        if (res.status === 401) {
+          setError('Ungültiger oder fehlender Server-Token');
+        } else {
+          setError(`Serverfehler: HTTP ${res.status}`);
+        }
+        return;
+      }
+
+      const rawList = (await res.json()) as ServerGameEntry[];
+      const summaries: TabletopGameSummary[] = rawList.map((entry) => ({
+        id: entry.id,
+        name: entry.name,
+        description: entry.description,
+        author: entry.author,
+        version: '1.0.0',
+        minPlayers: 1,
+        maxPlayers: 8,
+        supportedModes: ['party_multi_device', 'local_pass_and_play', 'solo'],
+        cardCount: entry.cardCount ?? 0,
+        widgetCount: entry.widgetCount ?? 0,
+        format: entry.format,
+        updatedAt: entry.updatedAt ?? Date.now(),
+      }));
+
+      setGames(summaries);
+      setServerConnected(true);
+      setError(null);
+    } catch (err: unknown) {
+      setServerConnected(false);
+      setError(err instanceof Error ? err.message : 'Server nicht erreichbar');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    fetchGames();
 
-  const importFile = useCallback(
-    async (file: File): Promise<TabletopGameDefinition> => {
-      setImportError(null);
-      try {
-        let gameDef: TabletopGameDefinition;
-        if (file.name.toLowerCase().endsWith('.json')) {
-          const text = await file.text();
-          gameDef = await parsePcioFile(text);
-        } else {
-          const buffer = await file.arrayBuffer();
-          gameDef = await parsePcioFile(buffer);
-        }
+    const handleUpdate = () => {
+      fetchGames();
+    };
 
-        await saveTabletopGame(gameDef);
-        await refresh();
-        return gameDef;
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        setImportError(msg);
-        throw err;
+    window.addEventListener('server_connection_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('server_connection_updated', handleUpdate);
+    };
+  }, [fetchGames]);
+
+  const loadGameFromServer = useCallback(
+    async (id: string): Promise<TabletopGameDefinition> => {
+      const baseUrl = storage.getHelperUrl().replace(/\/$/, '');
+      const token = storage.getHelperToken();
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
+
+      const res = await fetch(`${baseUrl}/api/tabletop/games/${encodeURIComponent(id)}/raw`, {
+        headers,
+      });
+
+      if (!res.ok) {
+        throw new Error(`Konnte Spiel nicht vom Server laden (HTTP ${res.status})`);
+      }
+
+      const data = (await res.json()) as TabletopRawResponse;
+      return parsePcioFile(data.rawJson, { assetFiles: data.assetMap });
     },
-    [refresh],
+    [],
   );
 
-  const saveGame = useCallback(
-    async (game: TabletopGameDefinition) => {
-      await saveTabletopGame(game);
-      await refresh();
-    },
-    [refresh],
-  );
-
-  const removeGame = useCallback(
-    async (id: string) => {
-      await deleteTabletopGame(id);
-      await refresh();
-    },
-    [refresh],
-  );
-
-  const loadGame = useCallback(async (id: string): Promise<TabletopGameDefinition | null> => {
-    return getTabletopGame(id);
+  const pickLocalFolder = useCallback(async (): Promise<TabletopGameDefinition> => {
+    return pickAndLoadGameFolder();
   }, []);
 
-  const importFromUrl = useCallback(
-    async (url: string): Promise<TabletopGameDefinition> => {
-      setImportError(null);
+  const refresh = useCallback(async () => {
+    if (storage.isHelperActive()) {
       try {
-        const gameDef = await fetchAndParseGameUrl(url);
-        await saveTabletopGame(gameDef);
-        await refresh();
-        return gameDef;
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        setImportError(msg);
-        throw err;
-      }
-    },
-    [refresh],
-  );
-
-  const installCatalogGame = useCallback(
-    async (filePath: string): Promise<TabletopGameDefinition> => {
-      setImportError(null);
-      try {
-        const gameDef = await fetchCatalogGame(filePath);
-        await saveTabletopGame(gameDef);
-        await refresh();
-        return gameDef;
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        setImportError(msg);
-        throw err;
-      }
-    },
-    [refresh],
-  );
-
-  const installStarterPack = useCallback(async (): Promise<number> => {
-    setImportError(null);
-    try {
-      const manifestList = await fetchManifest();
-      let count = 0;
-      for (const item of manifestList) {
-        try {
-          const def = await fetchCatalogGame(item.file);
-          await saveTabletopGame(def);
-          count++;
-        } catch (e) {
-          console.warn(`[useTabletopGames] Starter game ${item.id} install error:`, e);
+        const baseUrl = storage.getHelperUrl().replace(/\/$/, '');
+        const token = storage.getHelperToken();
+        const headers: Record<string, string> = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
         }
+        await fetch(`${baseUrl}/api/tabletop/games/refresh`, {
+          method: 'POST',
+          headers,
+        });
+      } catch (err) {
+        console.warn('[useTabletopGames] Rescan trigger failed:', err);
       }
-      await refresh();
-      return count;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setImportError(msg);
-      throw err;
     }
-  }, [refresh]);
+    await fetchGames();
+  }, [fetchGames]);
 
   return {
     games,
     loading,
-    importError,
-    importFile,
-    importFromUrl,
-    installStarterPack,
-    installCatalogGame,
-    saveGame,
-    removeGame,
-    loadGame,
+    error,
+    serverConnected,
+    supportsLocalFolder,
+    loadGameFromServer,
+    pickLocalFolder,
     refresh,
-    exportGameAsJson,
-    exportGameAsPcio,
   };
 }

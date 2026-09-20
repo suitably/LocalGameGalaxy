@@ -1,4 +1,27 @@
 services:
+  # ══════════════════════════════════════════════════════════════════
+  # 1. Platform Infrastructure (WebRTC Signaling for all games)
+  # ══════════════════════════════════════════════════════════════════
+  signaling:
+    image: nexumia/galaxy-signaling:latest
+    container_name: galaxy-signaling
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ══════════════════════════════════════════════════════════════════
+  # 2. Game Companion Services (Modular Plugins)
+  # ══════════════════════════════════════════════════════════════════
+
+  # MelodiQ Karaoke Companion (AI stem separation, Whisper alignment, streaming)
   melodiq:
     image: nexumia/melodiq-server:latest
     container_name: melodiq-server
@@ -24,7 +47,7 @@ services:
       start_period: 60s
       retries: 3
 
-  # Optional Cloudflare Quick Tunnel (Use via: docker compose --profile tunnel up -d)
+  # Optional Cloudflare Quick Tunnel for MelodiQ (docker compose --profile tunnel up -d)
   melodiq-tunnel:
     image: cloudflare/cloudflared:latest
     container_name: melodiq-tunnel
@@ -34,3 +57,13 @@ services:
     command: tunnel --no-autoupdate --url http://melodiq:3000
     depends_on:
       - melodiq
+
+  # Example future companion plugin: Tabletop asset & deck server
+  # tabletop-companion:
+  #   image: nexumia/tabletop-companion:latest
+  #   container_name: tabletop-companion
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3002:3002"
+  #   profiles:
+  #     - tabletop

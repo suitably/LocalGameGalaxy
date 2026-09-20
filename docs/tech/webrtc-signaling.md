@@ -86,12 +86,12 @@ Local WebRTC connections can drop due to phone sleep states, network switches, o
 
 The signaling infrastructure manages multiple trackers with distinct classifications and precedence rules:
 
-1. **Self-Hosted Backend Tracker**: Automatically derived from the configured Nexumia Companion Server URL (`storage.getHelperUrl()` / `melodiq_helper_url`).
+1. **Self-Hosted Backend Tracker**: Resolved via `storage.getSignalingUrl()`. Automatically points to the dedicated signaling microservice (port `8000`) derived from the configured Companion Server URL (`storage.getHelperUrl()`), or an explicit custom signaling URL.
 2. **Default Free Public Fallback Trackers**: Reliable public BitTorrent WebTorrent trackers (`wss://tracker.openwebtorrent.com`, `wss://tracker.btorrent.xyz`, `wss://tracker.webtorrent.dev`).
 3. **Custom User Trackers**: Manually added by users in the Device Connection settings.
 
 ### Coexistence and Default Activation Rules
 - **No Backend Configured**: Free public trackers are **enabled by default** to ensure out-of-the-box phone connectivity without setup hurdles.
-- **Backend Configured**: When a self-hosted companion server is present, the self-hosted tracker is enabled by default, while free public trackers remain listed in the UI but are **deactivated by default**. This ensures local/private signaling takes precedence without leaking data to public trackers, while avoiding accidental tracker removal. Users can explicitly reactivate individual public fallback trackers at any time via the UI toggle switch.
+- **Backend Configured**: When a self-hosted signaling microservice or companion server is present, the self-hosted tracker is enabled by default, while free public trackers remain listed in the UI but are **deactivated by default**. This ensures local/private signaling takes precedence without leaking data to public trackers, while avoiding accidental tracker removal. Users can explicitly reactivate individual public fallback trackers at any time via the UI toggle switch.
 - **Preferences Persistence**: Explicit user overrides per tracker URL are persisted in `${gameId}_tracker_preferences` via `storage.ts`.
 

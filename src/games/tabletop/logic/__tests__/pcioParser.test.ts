@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parsePcioFile } from '../pcioParser';
 import { validateAndSanitizeGame } from '../gameValidator';
-import type { HolderWidget, CardWidget } from '../types';
+import type { HolderWidget, CardWidget, DeckWidget } from '../types';
 import { zipSync, strToU8 } from 'fflate';
 
 describe('Tabletop pcioParser', () => {
@@ -126,7 +126,7 @@ describe('Tabletop pcioParser', () => {
     expect(c1).toBeDefined();
     expect(c1.frontContent?.type).toBe('image');
     expect(c1.frontContent?.value).toBe('data:image/png;base64,mockore');
-    const deck1 = result.widgets.deck1 as any;
+    const deck1 = result.widgets.deck1 as DeckWidget;
     expect(deck1.cardIds).toContain('c1');
   });
 

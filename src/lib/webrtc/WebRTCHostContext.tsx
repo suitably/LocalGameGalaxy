@@ -82,25 +82,17 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
     useEffect(() => {
         const handleSettingsUpdate = () => setHelperSettingsHash(h => h + 1);
         window.addEventListener('melodiq_settings_updated', handleSettingsUpdate);
-        return () => window.removeEventListener('melodiq_settings_updated', handleSettingsUpdate);
+        window.addEventListener('server_connection_updated', handleSettingsUpdate);
+        return () => {
+            window.removeEventListener('melodiq_settings_updated', handleSettingsUpdate);
+            window.removeEventListener('server_connection_updated', handleSettingsUpdate);
+        };
     }, []);
 
-    // Self-hosted backend tracker URL if helper is enabled
+    // Self-hosted backend tracker URL if helper is enabled or custom signaling is configured
     const backendTrackerUrl = useMemo(() => {
-        const isHelperEnabled = storage.isHelperActive();
-        if (!isHelperEnabled) return null;
-        let helperUrlRaw = storage.getHelperUrl();
-        if (!helperUrlRaw) {
-            helperUrlRaw = `${window.location.protocol}//${window.location.hostname}:3000`;
-        }
-        try {
-            const parsed = new URL(helperUrlRaw);
-            const wsProto = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
-            return `${wsProto}//${parsed.hostname}${parsed.port ? `:${parsed.port}` : ''}`;
-        } catch (e) {
-            console.warn('[WebRTCHostProvider] Failed to parse helper URL for local tracker:', e);
-            return null;
-        }
+        const signalingUrl = storage.getSignalingUrl();
+        return signalingUrl || null;
     }, [helperSettingsHash]);
 
     // All available trackers with their classification and enabled/disabled status

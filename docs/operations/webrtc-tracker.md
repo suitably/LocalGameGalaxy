@@ -6,9 +6,10 @@ This runbook covers deployment, configuration, process management, and security 
 
 ## 1. Overview & Infrastructure Role
 
-The WebRTC signaling tracker (`scripts/start-tracker.js`) runs a local BitTorrent tracker using the WebSocket interface.
+The WebRTC signaling microservice (`signaling/` or `scripts/start-tracker.js`) runs a local BitTorrent tracker using the WebSocket interface.
 - **Role**: Coordinates the exchange of connection offers, answers, and ICE candidate metadata between the host and client phones on a local network.
 - **Necessity**: Vital in offline environments or firewalled local area networks where public signaling servers (e.g., `wss://tracker.openwebtorrent.com`) are blocked or unreachable.
+- **Microservice Architecture**: Fully decoupled from MelodiQ, packaged as a ~45 MB Alpine container (`nexumia/galaxy-signaling:latest`).
 
 ---
 
@@ -19,45 +20,40 @@ By default, the tracker binds to port `8000` on all network interfaces (`0.0.0.0
 ### Setting a Custom Port via CLI
 ```bash
 # Using PORT environment variable
-PORT=8500 node scripts/start-tracker.js
+PORT=8500 node signaling/src/index.js
 
 # Or using TRACKER_PORT environment variable
-TRACKER_PORT=8500 node scripts/start-tracker.js
+TRACKER_PORT=8500 node signaling/src/index.js
 ```
 
 ---
 
 ## 3. Deployment Modes
 
-### Mode A: Running via PM2 (Background Daemon)
-To keep the tracker running continuously in the background on your host:
+### Mode A: Running via PM2 or Direct Node
 ```bash
-# Install PM2 globally
-npm install -g pm2
-
-# Start the tracker daemon
-PORT=8000 pm2 start scripts/start-tracker.js --name "webrtc-tracker"
-
-# Save PM2 process list to load on reboot
-pm2 save
-pm2 startup
+cd signaling
+npm install
+PORT=8000 node src/index.js
 ```
 
 ### Mode B: Containerized Deployment (Docker Compose)
-Add the tracker as a separate service in your `docker-compose.yml` to orchestrate it alongside the main server:
+The tracker is available as a standalone service or orchestrated in `server/docker-compose.yml`:
 ```yaml
 services:
-  tracker:
-    image: node:18-alpine
-    working_dir: /app
-    volumes:
-      - .:/app
-    command: node scripts/start-tracker.js
+  signaling:
+    image: nexumia/galaxy-signaling:latest
+    container_name: galaxy-signaling
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
       - PORT=8000
-    restart: always
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 ```
 
 ---

@@ -28,6 +28,7 @@ export interface ServerConfig {
 
 export interface ServerConfigData {
   directories: string[];
+  tabletopDirectories: string[];
   port: number;
   token: string | null;
   downloadDir: string | null;
@@ -39,6 +40,27 @@ export interface ServerConfigData {
   githubOwner: string;
   githubRepo: string;
   githubToken: string | null;
+}
+
+export interface TabletopGameEntry {
+  id: string; // crypto hash von jsonPath
+  name: string;
+  author?: string;
+  description?: string;
+  widgetCount: number;
+  cardCount: number;
+  format: 'flat-json' | 'pcio-folder' | 'unknown';
+  jsonPath: string; // absoluter Pfad zur JSON-Datei
+  assetsDir: string | null; // absoluter Pfad zu assets/-Ordner oder null
+  updatedAt: number;
+}
+
+export type ClientTabletopGameEntry = Omit<TabletopGameEntry, 'jsonPath' | 'assetsDir'>;
+
+export interface TabletopRawResponse {
+  id: string;
+  rawJson: string;
+  assetMap: Record<string, string>;
 }
 
 export interface GalaxyPlugin {
