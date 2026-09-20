@@ -123,7 +123,6 @@ export const pushClient = {
         },
         body: payload.body,
       });
-      console.log(`[PushClient] Direct ntfy dispatched to ${server}/${topic}: ${res.ok ? 'OK' : res.status}`);
       return res.ok;
     } catch (err) {
       console.warn('[PushClient] Direct ntfy dispatch failed:', err);

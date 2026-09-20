@@ -75,6 +75,7 @@ export const STORAGE_KEYS = {
     WEREWOLF_SETUP_PLAYERS: 'werewolf-setup-players',
     WEREWOLF_CUSTOM_ROLES: 'werewolf-custom-roles',
     WEREWOLF_SETTINGS: 'werewolf-setup-settings',
+    WEREWOLF_TTS_ENABLED: 'werewolf_narrator_tts_enabled',
     
     // Imposter game settings
     IMPOSTER_SETTINGS: 'imposter-setup-settings',

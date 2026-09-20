@@ -1,5 +1,5 @@
 import { type Song } from '../db';
-import { type PassiveGameState } from '../types';
+import { type PassiveGameState, type ActivePlayer } from '../types';
 
 export interface MelodiqSessionHandle {
     togglePlay: () => void;
@@ -28,7 +28,7 @@ export interface MelodiqSessionProps {
     muteAudio?: boolean;
     isPassive?: boolean;
     passiveState?: PassiveGameState | null;
-    activeSessionOverride?: any[] | null;
+    activeSessionOverride?: ActivePlayer[] | null;
     suppressResults?: boolean;
     uiScale?: number;
     isClient?: boolean;
