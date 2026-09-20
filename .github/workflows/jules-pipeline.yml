@@ -37,6 +37,7 @@ jobs:
       action: ${{ steps.decide.outputs.action }}
       issue_number: ${{ steps.decide.outputs.issue_number }}
       is_authorized: ${{ steps.decide.outputs.is_authorized }}
+      lens_name: ${{ steps.decide.outputs.lens_name }}
     steps:
       - name: Evaluate command and permissions
         id: decide
@@ -47,6 +48,7 @@ jobs:
             let action = 'skip';
             let issueNumber = null;
             let isAuthorized = false;
+            let lensName = '';
 
             // Security check: Only allow repo owner, members, or collaborators
             const trustedRoles = ['OWNER', 'MEMBER', 'COLLABORATOR'];
@@ -66,7 +68,13 @@ jobs:
                 isAuthorized = trustedRoles.includes(authorAssoc);
 
                 const body = (comment.body || '').trim().toLowerCase();
-                if (body.startsWith('/jules plan')) {
+                if (body.startsWith('/jules lens')) {
+                  action = 'fix';
+                  const parts = body.split(/\s+/);
+                  if (parts.length > 2) {
+                    lensName = parts[2].trim();
+                  }
+                } else if (body.startsWith('/jules plan')) {
                   action = 'plan';
                 } else if (body.startsWith('/jules approve') || body.startsWith('/jules fix')) {
                   action = 'fix';
@@ -83,7 +91,10 @@ jobs:
                 const authorAssoc = issue.author_association;
                 isAuthorized = trustedRoles.includes(authorAssoc) || sender === context.repo.owner;
 
-                if (labelName === 'jules' || labelName === 'jules:plan') {
+                if (labelName.startsWith('lens:')) {
+                  action = 'fix';
+                  lensName = labelName.replace('lens:', '').trim();
+                } else if (labelName === 'jules' || labelName === 'jules:plan') {
                   action = 'plan';
                 } else if (labelName === 'jules:approved' || labelName === 'jules:fix') {
                   action = 'fix';
@@ -91,10 +102,11 @@ jobs:
               }
             }
 
-            console.log({ action, issueNumber, isAuthorized });
+            console.log({ action, issueNumber, isAuthorized, lensName });
             core.setOutput('action', action);
             core.setOutput('issue_number', issueNumber);
             core.setOutput('is_authorized', isAuthorized ? 'true' : 'false');
+            core.setOutput('lens_name', lensName);
 
   generate-plan:
     name: Generate Implementation Plan
@@ -144,9 +156,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Resolve RepoLens Lens (if specified)
+        id: lens_resolver
+        if: needs.triage.outputs.lens_name != ''
+        run: |
+          node scripts/jules-lens-resolver.mjs --lens "${{ needs.triage.outputs.lens_name }}"
+
       - name: Fetch Issue Context & Prepare Prompt
         id: prep
         uses: actions/github-script@v7
+        env:
+          LENS_PROMPT: ${{ steps.lens_resolver.outputs.prompt }}
+          LENS_NAME: ${{ steps.lens_resolver.outputs.lens_name }}
         with:
           script: |
             const issueNumber = Number("${{ needs.triage.outputs.issue_number }}");
@@ -156,12 +177,19 @@ jobs:
               issue_number: issueNumber
             });
 
+            const lensPrompt = process.env.LENS_PROMPT || '';
+            const lensName = process.env.LENS_NAME || '';
+
             // Post dispatch confirmation comment
+            const dispatchMsg = lensName 
+              ? `🤖 **Google Jules Dispatched with RepoLens (${lensName})**\n\nJules has been tasked with resolving this issue using the **${lensName}** lens on a branch based on \`dev\`.\nYou can monitor task progress on [jules.google.com](https://jules.google.com).\nA Pull Request targeting the \`dev\` branch will be opened once implementation and verification complete.`
+              : `🤖 **Google Jules Dispatched**\n\nJules has been tasked with resolving this issue on a branch based on \`dev\`.\nYou can monitor task progress on [jules.google.com](https://jules.google.com).\nA Pull Request targeting the \`dev\` branch will be opened once implementation and verification complete.`;
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issueNumber,
-              body: `🤖 **Google Jules Dispatched**\\n\\nJules has been tasked with resolving this issue on a branch based on \`dev\`.\\nYou can monitor task progress on [jules.google.com](https://jules.google.com).\\nA Pull Request targeting the \`dev\` branch will be opened once implementation and verification complete.`
+              body: dispatchMsg
             });
 
             // Update labels
@@ -188,6 +216,8 @@ jobs:
 
             Issue Description:
             ${issue.data.body || 'No description provided'}
+
+            ${lensPrompt ? `\nSPECIALIZED REPOLENS AUDIT FOCUS:\n${lensPrompt}\n` : ''}
 
             Target & Branch Instructions:
             - Your base branch is 'dev'.

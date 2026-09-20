@@ -1,0 +1,135 @@
+name: Jules RepoLens Audit Suite
+
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: 'RepoLens Domain'
+        required: true
+        default: 'architecture'
+        type: choice
+        options:
+          - architecture
+          - performance
+          - testing
+          - security
+          - frontend
+          - android
+          - code-quality
+          - error-handling
+          - concurrency
+          - maintainability
+      lens:
+        description: 'Specific Lens ID (e.g. single-responsibility, module-boundaries, algorithm, memory, unit-test-gaps, secrets). Leave blank for domain default.'
+        required: false
+        default: ''
+        type: string
+      mode:
+        description: 'Audit Action Mode'
+        required: true
+        default: 'fix'
+        type: choice
+        options:
+          - fix
+          - plan
+      repolens_repo:
+        description: 'RepoLens Repository (change to your fork if desired)'
+        required: false
+        default: 'TheMorpheus407/RepoLens'
+        type: string
+      repolens_branch:
+        description: 'RepoLens Branch'
+        required: false
+        default: 'master'
+        type: string
+
+  schedule:
+    - cron: '0 3 * * 1' # Runs a weekly architecture lens audit every Monday at 3 AM
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  audit:
+    name: Execute RepoLens Audit with Jules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout LocalGameGalaxy
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Ensure dev branch exists on origin
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if ! git ls-remote --heads origin dev | grep -q 'refs/heads/dev'; then
+            echo "Branch 'dev' does not exist on origin. Creating 'dev' from 'main'..."
+            git fetch origin main
+            git push origin origin/main:refs/heads/dev
+          else
+            echo "Branch 'dev' already exists on origin."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve RepoLens Lens & Assemble Prompt
+        id: resolver
+        run: |
+          DOMAIN="${{ inputs.domain || 'architecture' }}"
+          LENS="${{ inputs.lens }}"
+          REPO="${{ inputs.repolens_repo || 'TheMorpheus407/RepoLens' }}"
+          BRANCH="${{ inputs.repolens_branch || 'master' }}"
+          MODE="${{ inputs.mode || 'fix' }}"
+
+          ARGS="--domain $DOMAIN --repo $REPO --branch $BRANCH --mode $MODE"
+          if [ -n "$LENS" ]; then
+            ARGS="$ARGS --lens $LENS"
+          fi
+
+          node scripts/jules-lens-resolver.mjs $ARGS
+
+      - name: Create Issue for Plan Mode
+        if: inputs.mode == 'plan'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const lensId = "${{ steps.resolver.outputs.lens_id }}";
+            const lensName = "${{ steps.resolver.outputs.lens_name }}";
+            const domain = "${{ steps.resolver.outputs.domain }}";
+
+            const body = `## 🔍 RepoLens Audit Request: ${lensName} (${domain}/${lensId})
+
+A RepoLens audit has been triggered for domain **${domain}** using lens **${lensId}**.
+
+### 🚦 Next Steps:
+- To instruct Jules to plan and fix this audit finding on \`dev\`:
+  Reply with comment: **\`/jules approve\`** or assign label **\`jules:approved\`**.
+- To run another lens:
+  Trigger the **Jules RepoLens Audit Suite** workflow or comment **\`/jules lens <lens-id>\`**.
+`;
+
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[RepoLens Audit] ${lensName} (${domain}/${lensId})`,
+              body: body,
+              labels: ['repolens', 'jules:waiting-approval']
+            });
+
+            console.log(`Created audit issue #${issue.data.number}`);
+
+      - name: Invoke Google Jules Agent (Fix Mode)
+        if: inputs.mode != 'plan'
+        uses: google-labs-code/jules-invoke@v1
+        with:
+          prompt: ${{ steps.resolver.outputs.prompt }}
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
+          starting_branch: 'dev'
