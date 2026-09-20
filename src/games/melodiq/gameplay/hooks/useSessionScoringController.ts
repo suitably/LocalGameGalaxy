@@ -2,7 +2,7 @@ import { useRef, useState, useMemo } from 'react';
 import { type PlayerRuntime } from './PlayerRuntime';
 import { type ScoreDisplayHandle } from '../ScoreDisplay';
 import { type SongWithNotes } from '../PitchVisualizer';
-import { type PassiveGameState } from '../../types';
+import { type PassiveGameState, type ActivePlayer } from '../../types';
 import { useScoringEngine } from './useScoringEngine';
 
 export interface UseSessionScoringControllerOptions {
@@ -23,7 +23,7 @@ export interface UseSessionScoringControllerOptions {
     duration: number;
     micLatency?: number;
     onPlaybackUpdate?: (state: { isPlaying: boolean; currentTime: number; duration: number; progress: number }) => void;
-    activeSessionOverride?: any[] | null;
+    activeSessionOverride?: ActivePlayer[] | null;
     clientDeviceId?: string;
     customLayouts?: Record<number, string>;
 }
@@ -131,7 +131,7 @@ export function useSessionScoringController({
         const session = activeSessionOverride || JSON.parse(localStorage.getItem('melodiq_active_session') || '[]');
         const keys = new Set<string>();
         if (Array.isArray(session)) {
-            session.forEach((p: any) => {
+            session.forEach((p: ActivePlayer) => {
                 if (p.profileId) keys.add(p.profileId);
                 if (p.deviceId) keys.add(p.deviceId);
             });

@@ -30,6 +30,8 @@ export interface ActivePlayer {
     latency?: number;
     isRemote?: boolean;
     hidePitch?: boolean;
+    name?: string;
+    hue?: number;
 }
 
 import { type SungSegment } from './gameplay/PitchVisualizer';

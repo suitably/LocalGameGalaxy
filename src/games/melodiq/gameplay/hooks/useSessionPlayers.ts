@@ -14,7 +14,7 @@ interface UseSessionPlayersProps {
     audioRef: React.RefObject<HTMLAudioElement | null>;
     vocalsRef?: React.RefObject<HTMLAudioElement | null>;
     videoRef: React.RefObject<HTMLVideoElement | null>;
-    activeSessionOverride?: any[] | null;
+    activeSessionOverride?: ActivePlayer[] | null;
     isPassive?: boolean;
 }
 
@@ -154,7 +154,7 @@ export function useSessionPlayers({
             }
         });
 
-        const isRemoteParticipant = (p: any) => {
+        const isRemoteParticipant = (p: ActivePlayer) => {
             if (p.isRemote) return true;
             const id = p.profileId || p.deviceId;
             return activePeerDeviceIds.has(id) ||
@@ -168,7 +168,7 @@ export function useSessionPlayers({
         // Build sets of desired profileIds/keys for quick lookup
         const desiredLocalProfileIds = new Set<string>();
         const desiredRemoteKeys = new Set<string>();
-        activeSessionOverride.forEach((p: any) => {
+        activeSessionOverride.forEach((p: ActivePlayer) => {
             if (isRemoteParticipant(p)) {
                 if (p.deviceId) desiredRemoteKeys.add(p.deviceId);
                 if (p.profileId) desiredRemoteKeys.add(p.profileId);
@@ -183,7 +183,7 @@ export function useSessionPlayers({
 
             // 1. Add participants (local or remote) present in activeSessionOverride but not yet in players list
             let localMicIndex = 0;
-            activeSessionOverride.forEach((p: any) => {
+            activeSessionOverride.forEach((p: ActivePlayer) => {
                 const profileId = p.profileId || p.deviceId;
                 const isRemote = isRemoteParticipant(p);
                 const alreadyExists = updated.find(existing => 
@@ -270,7 +270,7 @@ export function useSessionPlayers({
                     existing.config.hidePitch = false;
                     changed = true;
                 }
-                const match = activeSessionOverride.find((p: any) => 
+                const match = activeSessionOverride.find((p: ActivePlayer) =>
                     p.profileId === existing.config.id || 
                     p.deviceId === existing.config.deviceId || 
                     (existing.remotePeerId && p.deviceId === existing.remotePeerId)
@@ -373,7 +373,7 @@ export function useSessionPlayers({
                                 const profId = targetPlayer.config.id;
                                 const desiredKeys = new Set<string>();
                                 if (activeSessionOverride) {
-                                    activeSessionOverride.forEach((p: any) => {
+                                    activeSessionOverride.forEach((p: ActivePlayer) => {
                                         if (p.deviceId) desiredKeys.add(p.deviceId);
                                         if (p.profileId) desiredKeys.add(p.profileId);
                                     });
@@ -406,7 +406,7 @@ export function useSessionPlayers({
             // Check desired remote keys from activeSessionOverride if available
             const desiredRemoteKeys = new Set<string>();
             if (activeSessionOverride) {
-                activeSessionOverride.forEach((p: any) => {
+                activeSessionOverride.forEach((p: ActivePlayer) => {
                     if (p.deviceId) desiredRemoteKeys.add(p.deviceId);
                     if (p.profileId) desiredRemoteKeys.add(p.profileId);
                 });
