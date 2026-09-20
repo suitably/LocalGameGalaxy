@@ -1,7 +1,7 @@
 /**
- * Tabletop State Reducer [ID: GAME-TABLETOP-REDUCER]
+ * Reducer for state transitions in Tabletop games [ID: GAME-TABLETOP-REDUCER]
  */
-import type { TabletopGameDefinition, CardWidget, DeckWidget, HolderWidget, CounterWidget, DieWidget } from './types';
+import type { TabletopGameDefinition, TabletopWidget, CardWidget, DeckWidget, HolderWidget, CounterWidget, DieWidget } from './types';
 
 export interface FlyingCardAnimation {
   id: string;
@@ -77,6 +77,28 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       };
     }
 
+    case 'ROTATE_CARD': {
+      const widget = state.game.widgets[action.payload.cardId];
+      if (!widget || (widget.type !== 'card' && widget.type !== 'token' && widget.type !== 'holder')) return state;
+      const currentRot = typeof (widget as CardWidget).rotation === 'number' ? (widget as CardWidget).rotation : 0;
+      const delta = action.payload.deltaDegrees ?? 90;
+      const nextRot = (currentRot + delta) % 360;
+
+      return {
+        ...state,
+        game: {
+          ...state.game,
+          widgets: {
+            ...state.game.widgets,
+            [widget.id]: {
+              ...widget,
+              rotation: nextRot,
+            },
+          },
+        },
+      };
+    }
+
     case 'SHUFFLE_DECK': {
       const widget = state.game.widgets[action.payload.deckId];
       if (!widget || widget.type !== 'deck') return state;
@@ -107,14 +129,34 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       const deck = deckWidget as DeckWidget;
       if (deck.cardIds.length === 0) return state;
 
-      const drawnCardId = deck.cardIds[0];
-      const remainingDeckIds = deck.cardIds.slice(1);
+      const drawnCardId = deck.cardIds[deck.cardIds.length - 1];
+      const remainingDeckIds = deck.cardIds.slice(0, -1);
 
-      const widgets = { ...state.game.widgets };
+      const widgets: Record<string, TabletopWidget> = { ...state.game.widgets };
+
+      // Update remaining deck / pile state
+      let updatedTopFront = deck.frontContent;
+      let updatedTopBack = deck.backContent;
+
+      if (deck.isPile) {
+        if (remainingDeckIds.length > 0) {
+          const nextTopId = remainingDeckIds[remainingDeckIds.length - 1];
+          const nextTopCard = widgets[nextTopId] as CardWidget | undefined;
+          if (nextTopCard) {
+            updatedTopFront = nextTopCard.frontContent;
+            updatedTopBack = nextTopCard.backContent;
+          }
+        } else {
+          updatedTopFront = undefined;
+        }
+      }
+
       widgets[deck.id] = {
         ...deck,
         cardIds: remainingDeckIds,
         cardCount: remainingDeckIds.length,
+        frontContent: updatedTopFront,
+        backContent: updatedTopBack,
       };
 
       let nextX = deck.x + deck.width + 16;
@@ -171,7 +213,7 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       if (!holderWidget || holderWidget.type !== 'holder') return state;
       const holder = holderWidget as HolderWidget;
 
-      const widgets = { ...state.game.widgets };
+      const widgets: Record<string, TabletopWidget> = { ...state.game.widgets };
 
       // Remove from any prior holder
       for (const [wId, w] of Object.entries(widgets)) {
