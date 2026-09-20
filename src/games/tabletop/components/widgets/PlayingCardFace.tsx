@@ -45,6 +45,16 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
   label,
 }) => {
   if (!isFaceUp) {
+    if (backContent?.type === 'image' && backContent.value) {
+      return (
+        <Box
+          component="img"
+          src={backContent.value}
+          alt="Card back"
+          sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+        />
+      );
+    }
     const backColor = backContent?.color || '#1e3a8a';
     return (
       <Box

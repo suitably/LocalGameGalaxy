@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { Box, IconButton, Paper, Tooltip } from '@mui/material';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
@@ -6,6 +6,7 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import type { TabletopGameState, TabletopAction } from '../../logic/tabletopReducer';
 import type { CardWidget, DeckWidget, HolderWidget, TokenWidget, CounterWidget, DieWidget, TabletopWidget } from '../../logic/types';
 import { useTabletopEngine } from '../../hooks/useTabletopEngine';
+import { useViewportCulling } from '../../hooks/useViewportCulling';
 import { CardWidgetView } from '../widgets/CardWidgetView';
 import { DeckWidgetView } from '../widgets/DeckWidgetView';
 import { HolderWidgetView } from '../widgets/HolderWidgetView';
@@ -26,18 +27,13 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
   isTvMode = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const { game, flyingCards } = state;
 
   const {
-    transform,
-    setTransform,
-    activeDragId,
-    handlePointerDownWidget,
-    handlePointerMove,
-    handlePointerUp,
-    handleStartPan,
-    zoomIn,
-    zoomOut,
+    transform, setTransform, activeDragId,
+    handlePointerDownWidget, handlePointerMove, handlePointerUp, handleStartPan,
+    zoomIn, zoomOut,
   } = useTabletopEngine({
     tableWidth: game.table.width,
     tableHeight: game.table.height,
@@ -46,11 +42,14 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     onSnapToHolder: (widgetId, holderId) => dispatch({ type: 'SNAP_TO_HOLDER', payload: { widgetId, holderId } }),
   });
 
+  const visibleIds = useViewportCulling(game.widgets, transform, containerSize.width, containerSize.height);
+
   // Center and auto-fit to screen in both Local and TV mode
   const fitToScreen = useCallback(() => {
     if (containerRef.current) {
       const { clientWidth, clientHeight } = containerRef.current;
       if (clientWidth <= 0 || clientHeight <= 0) return;
+      setContainerSize({ width: clientWidth, height: clientHeight });
       const scaleX = clientWidth / game.table.width;
       const scaleY = clientHeight / game.table.height;
       const fitScale = Math.min(scaleX, scaleY) * 0.95;
@@ -102,14 +101,14 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
       >
         {/* Render Holders first (background layer) */}
         {Object.values(game.widgets)
-          .filter((w) => w.type === 'holder')
+          .filter((w) => w.type === 'holder' && visibleIds.has(w.id))
           .map((w) => (
             <HolderWidgetView key={w.id} widget={w as HolderWidget} />
           ))}
 
         {/* Render other widgets */}
         {Object.values(game.widgets)
-          .filter((w) => w.type !== 'holder')
+          .filter((w) => w.type !== 'holder' && visibleIds.has(w.id))
           .map((w: TabletopWidget) => {
             const isDragging = activeDragId === w.id;
             switch (w.type) {
