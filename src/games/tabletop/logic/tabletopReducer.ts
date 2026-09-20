@@ -24,6 +24,7 @@ export type TabletopAction =
   | { type: 'SNAP_TO_HOLDER'; payload: { widgetId: string; holderId: string } }
   | { type: 'UPDATE_COUNTER'; payload: { counterId: string; delta: number } }
   | { type: 'ROLL_DIE'; payload: { dieId: string; value?: number } }
+  | { type: 'ROTATE_CARD'; payload: { cardId: string; deltaDegrees?: number } }
   | { type: 'ANIMATE_CARD_TO_TABLE'; payload: { cardId: string; targetHolderId: string } }
   | { type: 'FINISH_ANIMATION'; payload: { animationId: string } };
 
@@ -110,13 +111,48 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       const remainingDeckIds = deck.cardIds.slice(1);
 
       const widgets = { ...state.game.widgets };
-      widgets[deck.id] = { ...deck, cardIds: remainingDeckIds };
+      widgets[deck.id] = {
+        ...deck,
+        cardIds: remainingDeckIds,
+        cardCount: remainingDeckIds.length,
+      };
+
+      let nextX = deck.x + deck.width + 16;
+      let nextY = deck.y;
 
       if (action.payload.targetHolderId && widgets[action.payload.targetHolderId]) {
         const holder = widgets[action.payload.targetHolderId] as HolderWidget;
         widgets[holder.id] = {
           ...holder,
           childIds: [...holder.childIds, drawnCardId],
+        };
+        nextX = holder.x + 10;
+        nextY = holder.y + 10;
+      } else {
+        // Check for first available hand holder
+        const handHolder = Object.values(widgets).find(
+          (w) => w.type === 'holder' && (w as HolderWidget).isHand
+        ) as HolderWidget | undefined;
+        if (handHolder) {
+          widgets[handHolder.id] = {
+            ...handHolder,
+            childIds: [...handHolder.childIds, drawnCardId],
+          };
+          nextX = handHolder.x + 10;
+          nextY = handHolder.y + 10;
+        }
+      }
+
+      if (widgets[drawnCardId] && widgets[drawnCardId].type === 'card') {
+        const card = widgets[drawnCardId] as CardWidget;
+        widgets[drawnCardId] = {
+          ...card,
+          x: nextX,
+          y: nextY,
+          inPile: false,
+          pileId: undefined,
+          faceUp: true,
+          zIndex: 2000000,
         };
       }
 
@@ -155,6 +191,16 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
         widgets[holderId] = {
           ...holder,
           childIds: [...holder.childIds, widgetId],
+        };
+      }
+
+      // Move widget coordinates to holder
+      if (widgets[widgetId]) {
+        widgets[widgetId] = {
+          ...widgets[widgetId],
+          x: holder.x + 4,
+          y: holder.y + 4,
+          zIndex: Math.max(widgets[widgetId].zIndex, holder.zIndex + 10),
         };
       }
 

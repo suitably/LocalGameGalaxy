@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Badge } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import type { DeckWidget } from '../../logic/types';
 import { PlayingCardFace } from './PlayingCardFace';
 
@@ -16,6 +16,9 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
 }) => {
   const count = widget.cardIds?.length || 0;
   const isEmpty = count === 0;
+
+  const hasFront = Boolean(widget.frontContent);
+  const rot = widget.rotation || 0;
 
   return (
     <Box
@@ -44,34 +47,42 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         transition: 'transform 0.1s ease',
+        transform: rot ? `rotate(${rot}deg)` : undefined,
         overflow: 'hidden',
         '&:active': {
-          transform: isEmpty ? 'none' : 'scale(0.97)',
+          transform: isEmpty ? (rot ? `rotate(${rot}deg)` : 'none') : `rotate(${rot}deg) scale(0.97)`,
         },
       }}
     >
       {!isEmpty ? (
         <Box position="relative" width="100%" height="100%">
           <PlayingCardFace
-            frontContent={{ type: 'text', value: '' }}
+            frontContent={widget.frontContent || { type: 'text', value: '' }}
             backContent={widget.backContent}
-            isFaceUp={false}
+            isFaceUp={hasFront}
           />
           <Box
             sx={{
               position: 'absolute',
-              bottom: 6,
-              left: 0,
-              right: 0,
+              top: 6,
+              right: 6,
               display: 'flex',
+              alignItems: 'center',
               justifyContent: 'center',
+              minWidth: 24,
+              height: 24,
+              px: 0.5,
+              borderRadius: '50%',
+              bgcolor: 'rgba(0, 0, 0, 0.8)',
+              color: '#fff',
+              border: '1.5px solid rgba(255, 255, 255, 0.6)',
+              fontSize: '0.8rem',
+              fontWeight: 800,
+              boxShadow: 2,
+              pointerEvents: 'none',
             }}
           >
-            <Badge
-              badgeContent={count}
-              color="primary"
-              sx={{ '& .MuiBadge-badge': { fontSize: '0.8rem', height: 20, minWidth: 20, fontWeight: 700 } }}
-            />
+            {count}
           </Box>
         </Box>
       ) : (

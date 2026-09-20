@@ -17,6 +17,41 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({
     widget.id === 'board' ||
     widget.label?.toLowerCase().includes('schachbrett') ||
     widget.label?.toLowerCase().includes('checker');
+  const rot = widget.rotation || 0;
+
+  if (widget.image) {
+    return (
+      <Box
+        sx={{
+          position: 'absolute',
+          left: widget.x,
+          top: widget.y,
+          width: widget.width,
+          height: widget.height,
+          zIndex: widget.zIndex,
+          transform: rot ? `rotate(${rot}deg)` : undefined,
+          userSelect: 'none',
+          pointerEvents: 'none',
+        }}
+      >
+        <Box
+          component="img"
+          src={widget.image}
+          alt={widget.label || 'Holder'}
+          sx={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            display: 'block',
+          }}
+        />
+      </Box>
+    );
+  }
+
+  const isTransparent = widget.customCss?.includes('transparent') || false;
+  const showText = !widget.hasPileChild && !isTransparent;
+  const showDropPrompt = !isHand && childCount === 0 && !widget.hasPileChild && (!widget.label || widget.label === 'Ablage');
 
   return (
     <Box
@@ -27,12 +62,19 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({
         width: widget.width,
         height: widget.height,
         zIndex: widget.zIndex,
+        transform: rot ? `rotate(${rot}deg)` : undefined,
         borderRadius: 2.5,
-        border: isCheckerboard ? '8px solid #3e2723' : '2px dashed',
+        border: isCheckerboard
+          ? '8px solid #3e2723'
+          : widget.hasPileChild || isTransparent
+          ? '1px solid rgba(0,0,0,0.3)'
+          : '2px dashed',
         borderColor: isHovered
           ? 'primary.main'
           : isCheckerboard
           ? '#3e2723'
+          : widget.hasPileChild || isTransparent
+          ? 'rgba(0,0,0,0.25)'
           : isHand
           ? 'rgba(255, 255, 255, 0.25)'
           : 'rgba(255, 255, 255, 0.4)',
@@ -40,6 +82,10 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({
           ? 'rgba(25, 118, 210, 0.15)'
           : isCheckerboard
           ? '#5d4037'
+          : widget.hasPileChild
+          ? 'rgba(0, 0, 0, 0.2)'
+          : isTransparent
+          ? 'transparent'
           : isHand
           ? 'rgba(0, 0, 0, 0.25)'
           : 'rgba(0, 0, 0, 0.15)',
@@ -84,28 +130,30 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({
         })
       ) : (
         <>
-          <Box display="flex" justifyContent="space-between" width="100%" alignItems="center">
-            <Typography
-              variant="caption"
-              fontWeight={600}
-              sx={{ color: 'rgba(255, 255, 255, 0.85)', letterSpacing: 0.5 }}
-            >
-              {widget.label || (isHand ? 'Hand' : 'Ablage')}
-            </Typography>
+          {showText && (
+            <Box display="flex" justifyContent="space-between" width="100%" alignItems="center">
+              <Typography
+                variant="caption"
+                fontWeight={600}
+                sx={{ color: 'rgba(255, 255, 255, 0.85)', letterSpacing: 0.5 }}
+              >
+                {widget.label || (isHand ? 'Hand' : 'Ablage')}
+              </Typography>
 
-            {isHand && (
-              <Chip
-                size="small"
-                label={`${childCount} Karten`}
-                sx={{
-                  height: 20,
-                  fontSize: '0.75rem',
-                  bgcolor: 'rgba(255, 255, 255, 0.15)',
-                  color: '#fff',
-                }}
-              />
-            )}
-          </Box>
+              {isHand && (
+                <Chip
+                  size="small"
+                  label={`${childCount} Karten`}
+                  sx={{
+                    height: 20,
+                    fontSize: '0.75rem',
+                    bgcolor: 'rgba(255, 255, 255, 0.15)',
+                    color: '#fff',
+                  }}
+                />
+              )}
+            </Box>
+          )}
 
           {/* If it is a hand on the shared TV board, display concealed card backs */}
           {isHand && childCount > 0 && (
@@ -128,7 +176,7 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({
             </Box>
           )}
 
-          {!isHand && childCount === 0 && (
+          {showDropPrompt && (
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>
               Hier ablegen
             </Typography>
