@@ -2,3 +2,4 @@ This directory contains specific workflow definitions and guides. These are step
 
 - [dev-compose-workflow.md](dev-compose-workflow.md): Local development server setup with Docker Compose.
 - [solid_development.md](solid_development.md): SOLID development and refactoring guidelines.
+- [jules-pipeline-workflow.md](jules-pipeline-workflow.md): Google Jules Issue Auto-Fix Pipeline with Plan-Approval & Dev-Branch staging.

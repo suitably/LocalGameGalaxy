@@ -1,0 +1,238 @@
+name: Jules Issue Auto-Fix Pipeline
+
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'GitHub Issue Number to resolve'
+        required: true
+        type: number
+      mode:
+        description: 'Action to perform'
+        required: true
+        default: 'plan'
+        type: choice
+        options:
+          - plan
+          - fix
+
+concurrency:
+  group: jules-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  triage:
+    name: Determine Trigger & Security Gate
+    runs-on: ubuntu-latest
+    outputs:
+      action: ${{ steps.decide.outputs.action }}
+      issue_number: ${{ steps.decide.outputs.issue_number }}
+      is_authorized: ${{ steps.decide.outputs.is_authorized }}
+    steps:
+      - name: Evaluate command and permissions
+        id: decide
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const eventName = context.eventName;
+            let action = 'skip';
+            let issueNumber = null;
+            let isAuthorized = false;
+
+            // Security check: Only allow repo owner, members, or collaborators
+            const trustedRoles = ['OWNER', 'MEMBER', 'COLLABORATOR'];
+
+            if (eventName === 'workflow_dispatch') {
+              action = context.payload.inputs.mode;
+              issueNumber = context.payload.inputs.issue_number;
+              isAuthorized = true; // workflow_dispatch already requires repository write access
+            } else if (eventName === 'issue_comment') {
+              const comment = context.payload.comment;
+              const issue = context.payload.issue;
+
+              // Do not run on Pull Requests, only standalone Issues
+              if (!issue.pull_request) {
+                issueNumber = issue.number;
+                const authorAssoc = comment.author_association;
+                isAuthorized = trustedRoles.includes(authorAssoc);
+
+                const body = (comment.body || '').trim().toLowerCase();
+                if (body.startsWith('/jules plan')) {
+                  action = 'plan';
+                } else if (body.startsWith('/jules approve') || body.startsWith('/jules fix')) {
+                  action = 'fix';
+                }
+              }
+            } else if (eventName === 'issues' && context.payload.action === 'labeled') {
+              const labelName = context.payload.label.name.toLowerCase();
+              const issue = context.payload.issue;
+              const sender = context.payload.sender.login;
+
+              if (!issue.pull_request) {
+                issueNumber = issue.number;
+                // Sender authorization check
+                const authorAssoc = issue.author_association;
+                isAuthorized = trustedRoles.includes(authorAssoc) || sender === context.repo.owner;
+
+                if (labelName === 'jules' || labelName === 'jules:plan') {
+                  action = 'plan';
+                } else if (labelName === 'jules:approved' || labelName === 'jules:fix') {
+                  action = 'fix';
+                }
+              }
+            }
+
+            console.log({ action, issueNumber, isAuthorized });
+            core.setOutput('action', action);
+            core.setOutput('issue_number', issueNumber);
+            core.setOutput('is_authorized', isAuthorized ? 'true' : 'false');
+
+  generate-plan:
+    name: Generate Implementation Plan
+    needs: triage
+    if: needs.triage.outputs.action == 'plan' && needs.triage.outputs.is_authorized == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run Plan Generator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          node scripts/jules-plan-generator.mjs --issue ${{ needs.triage.outputs.issue_number }}
+
+  execute-jules:
+    name: Execute Task with Google Jules
+    needs: triage
+    if: needs.triage.outputs.action == 'fix' && needs.triage.outputs.is_authorized == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure dev branch exists on origin
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if ! git ls-remote --heads origin dev | grep -q 'refs/heads/dev'; then
+            echo "Branch 'dev' does not exist on origin. Creating 'dev' from 'main'..."
+            git fetch origin main
+            git push origin origin/main:refs/heads/dev
+          else
+            echo "Branch 'dev' already exists on origin."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch Issue Context & Prepare Prompt
+        id: prep
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNumber = Number("${{ needs.triage.outputs.issue_number }}");
+            const issue = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber
+            });
+
+            // Post dispatch confirmation comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: `🤖 **Google Jules Dispatched**\\n\\nJules has been tasked with resolving this issue on a branch based on \`dev\`.\\nYou can monitor task progress on [jules.google.com](https://jules.google.com).\\nA Pull Request targeting the \`dev\` branch will be opened once implementation and verification complete.`
+            });
+
+            // Update labels
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                name: 'jules:waiting-approval'
+              });
+            } catch (e) {}
+
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                labels: ['jules:in-progress']
+              });
+            } catch (e) {}
+
+            const prompt = `
+            Task: Fix GitHub Issue #${issueNumber}: ${issue.data.title}
+
+            Issue Description:
+            ${issue.data.body || 'No description provided'}
+
+            Target & Branch Instructions:
+            - Your base branch is 'dev'.
+            - When creating a pull request, TARGET THE 'dev' BRANCH (not 'main').
+            - Reference 'Fixes #${issueNumber}' in the PR description.
+
+            Mandatory Project Rules (from AGENTS.md):
+            - Maximum 250 lines per .tsx component. Decompose larger components into hooks and sub-components.
+            - No cross-game imports: src/games/<A> must never import from src/games/<B>.
+            - Use src/lib/storage.ts for storage with STORAGE_KEYS. Never raw localStorage or sessionStorage.
+            - Use MUI <Dialog> or <ConfirmDialog>. Never native window.confirm() or alert().
+            - Strict TypeScript: no 'any'. Use discriminated unions.
+            - Add/update i18n keys in BOTH public/locales/en/translation.json and public/locales/de/translation.json.
+            - Verify your work before concluding: run 'npm run check:architecture:diff', 'npm run check:budget', 'npm run lint', 'npm test', and 'npm run build'.
+            `;
+
+            core.setOutput('prompt', prompt);
+
+      - name: Invoke Google Jules Agent
+        uses: google-labs-code/jules-invoke@v1
+        with:
+          prompt: ${{ steps.prep.outputs.prompt }}
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
+          starting_branch: 'dev'
+
+      - name: Update Issue Status on Completion
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNumber = Number("${{ needs.triage.outputs.issue_number }}");
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                name: 'jules:in-progress'
+              });
+            } catch (e) {}
+
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                labels: ['jules:in-review']
+              });
+            } catch (e) {}
