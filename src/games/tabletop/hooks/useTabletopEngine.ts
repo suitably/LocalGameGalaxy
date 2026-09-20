@@ -22,6 +22,9 @@ export function useTabletopEngine(options: {
 
   const dragStartRef = useRef<{ pointerX: number; pointerY: number; widgetX: number; widgetY: number } | null>(null);
   const panStartRef = useRef<{ pointerX: number; pointerY: number; startX: number; startY: number } | null>(null);
+  const secondPointerRef = useRef<{ id: number; x: number; y: number } | null>(null);
+  const pinchStartDistRef = useRef<number | null>(null);
+  const pinchStartScaleRef = useRef<number>(1);
 
   // Screen -> Board coordinate transform
   const screenToBoard = useCallback(
@@ -62,6 +65,17 @@ export function useTabletopEngine(options: {
 
   const handlePointerDownWidget = (e: React.PointerEvent, widget: TabletopWidget) => {
     e.stopPropagation();
+    if (!e.isPrimary && panStartRef.current) {
+      secondPointerRef.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
+      const primary = panStartRef.current;
+      pinchStartDistRef.current = Math.hypot(
+        e.clientX - primary.pointerX,
+        e.clientY - primary.pointerY
+      );
+      pinchStartScaleRef.current = transform.scale;
+      return;
+    }
+    if (!e.isPrimary) return;
     setActiveDragId(widget.id);
     dragStartRef.current = {
       pointerX: e.clientX,
@@ -73,6 +87,22 @@ export function useTabletopEngine(options: {
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
+    if (secondPointerRef.current && pinchStartDistRef.current !== null) {
+      const primary = panStartRef.current;
+      if (!primary) return;
+      const other = secondPointerRef.current;
+      const p1x = e.isPrimary ? e.clientX : primary.pointerX;
+      const p1y = e.isPrimary ? e.clientY : primary.pointerY;
+      const p2x = e.isPrimary ? other.x : e.clientX;
+      const p2y = e.isPrimary ? other.y : e.clientY;
+      const currentDist = Math.hypot(p2x - p1x, p2y - p1y);
+      const newScale = Math.min(3.0, Math.max(0.2,
+        pinchStartScaleRef.current * (currentDist / pinchStartDistRef.current)
+      ));
+      setTransform((prev) => ({ ...prev, scale: newScale }));
+      return;
+    }
+
     if (activeDragId && dragStartRef.current) {
       const deltaX = (e.clientX - dragStartRef.current.pointerX) / transform.scale;
       const deltaY = (e.clientY - dragStartRef.current.pointerY) / transform.scale;
@@ -94,6 +124,13 @@ export function useTabletopEngine(options: {
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
+    if (!e.isPrimary) {
+      secondPointerRef.current = null;
+      pinchStartDistRef.current = null;
+      return;
+    }
+    secondPointerRef.current = null;
+    pinchStartDistRef.current = null;
     if (activeDragId) {
       const widget = options.widgets[activeDragId];
       if (widget) {
@@ -114,6 +151,16 @@ export function useTabletopEngine(options: {
   };
 
   const handleStartPan = (e: React.PointerEvent) => {
+    if (!e.isPrimary && panStartRef.current) {
+      secondPointerRef.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
+      const primary = panStartRef.current;
+      pinchStartDistRef.current = Math.hypot(
+        e.clientX - primary.pointerX,
+        e.clientY - primary.pointerY
+      );
+      pinchStartScaleRef.current = transform.scale;
+      return;
+    }
     if (e.button !== 0) return;
     panStartRef.current = {
       pointerX: e.clientX,

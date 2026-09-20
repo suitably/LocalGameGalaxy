@@ -1,20 +1,14 @@
 import React, { useState } from 'react';
 import {
-    Box,
-    Button,
-    Menu,
-    MenuItem,
-    ListItemIcon,
-    ListItemText,
-    Typography,
-    Divider,
-    useTheme,
-    useMediaQuery,
+    Box, Button, Menu, MenuItem, ListItemIcon, ListItemText,
+    Typography, Divider, useTheme, useMediaQuery
 } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import MicIcon from '@mui/icons-material/Mic';
 import DnsIcon from '@mui/icons-material/Dns';
+import HubIcon from '@mui/icons-material/Hub';
+import ExtensionIcon from '@mui/icons-material/Extension';
 import PersonIcon from '@mui/icons-material/Person';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import QueueMusicIcon from '@mui/icons-material/QueueMusic';
@@ -22,8 +16,9 @@ import LanguageIcon from '@mui/icons-material/Language';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import VpnKeyRoundedIcon from '@mui/icons-material/VpnKeyRounded';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { subPillSx } from '../settingsStyles';
 import { resolveSettingsNav } from '../settingsNav';
 
@@ -79,9 +74,8 @@ const mainMenuBtnSx = (isActive: boolean) => ({
 
 export const SettingsHeaderToolbar: React.FC = () => {
     const { t } = useTranslation();
-    const navigate = useNavigate();
     const location = useLocation();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -107,8 +101,8 @@ export const SettingsHeaderToolbar: React.FC = () => {
         } else {
             nextParams.delete('section');
         }
-        const targetPath = location.pathname === '/settings' ? '/settings' : location.pathname;
-        navigate(`${targetPath}?${nextParams.toString()}`, { replace: true, state: location.state });
+        setSearchParams(nextParams, { replace: true });
+        window.dispatchEvent(new CustomEvent('melodiq_subtab_change', { detail: sub || 'all' }));
         handleCloseAll();
     };
 
@@ -118,9 +112,13 @@ export const SettingsHeaderToolbar: React.FC = () => {
     };
 
     const getActiveLabel = () => {
+        if (activeTab === 'server') {
+            if (activeSub === 'signaling') return `Server › WebRTC Signaling`;
+            if (activeSub === 'companion') return `Server › Companion Plugins`;
+            return t('settings.server_tab', 'Server');
+        }
         if (activeTab === 'notifications') return t('settings.notifications_tab', 'Benachrichtigungen');
         if (activeTab === 'melodiq') {
-            if (activeSub === 'server') return `Melodiq › ${t('melodiq.server.tab', 'Companion Server')}`;
             if (activeSub === 'microphones') return `Melodiq › ${t('melodiq.settings.microphones', 'Mikrofone')}`;
             if (activeSub === 'profiles') return `Melodiq › ${t('melodiq.settings.profiles', 'Profile')}`;
             if (activeSub === 'gameplay') return `Melodiq › ${t('melodiq.settings.gameplay', 'Gameplay')}`;
@@ -153,14 +151,7 @@ export const SettingsHeaderToolbar: React.FC = () => {
                     <ListItemIcon><MicIcon fontSize="small" /></ListItemIcon>
                     <ListItemText primary={t('common.all', 'Alle Einstellungen')} />
                 </MenuItem>
-
                 <Divider sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />
-
-                <MenuItem onClick={() => updateNav('melodiq', 'server')} selected={activeTab === 'melodiq' && activeSub === 'server'}>
-                    <ListItemIcon><DnsIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary={t('melodiq.server.tab', 'Companion Server')} />
-                </MenuItem>
-
                 <MenuItem onClick={() => updateNav('melodiq', 'microphones')} selected={activeTab === 'melodiq' && activeSub === 'microphones'}>
                     <ListItemIcon><MicIcon fontSize="small" /></ListItemIcon>
                     <ListItemText primary={t('melodiq.settings.microphones', 'Mikrofone')} />
@@ -191,6 +182,16 @@ export const SettingsHeaderToolbar: React.FC = () => {
         </Button>
     );
 
+    const renderServerButton = () => (
+        <Button
+            onClick={() => updateNav('server', 'all')}
+            startIcon={<DnsIcon fontSize="small" />}
+            sx={mainMenuBtnSx(activeTab === 'server')}
+        >
+            {t('settings.server_tab', 'Server')}
+        </Button>
+    );
+
     const renderNotificationsButton = () => (
         <Button
             onClick={() => updateNav('notifications')}
@@ -208,20 +209,16 @@ export const SettingsHeaderToolbar: React.FC = () => {
                     {t('settings.general_tab', 'Allgemein')}
                 </MenuItem>
                 <MenuItem onClick={() => updateNav('general', 'all')} selected={activeTab === 'general' && (activeSub === 'all' || !activeSub)}>
-                    <ListItemIcon><SettingsIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary={t('common.all', 'Alle')} />
+                    <ListItemIcon><SettingsIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('common.all', 'Alle')} />
                 </MenuItem>
                 <MenuItem onClick={() => updateNav('general', 'language')} selected={activeTab === 'general' && activeSub === 'language'}>
-                    <ListItemIcon><LanguageIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary={t('settings.language_preferences', 'Sprache')} />
+                    <ListItemIcon><LanguageIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('settings.language_preferences', 'Sprache')} />
                 </MenuItem>
                 <MenuItem onClick={() => updateNav('general', 'feedback')} selected={activeTab === 'general' && activeSub === 'feedback'}>
-                    <ListItemIcon><FeedbackIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary={t('settings.feedback_title', 'Feedback')} />
+                    <ListItemIcon><FeedbackIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('settings.feedback_title', 'Feedback')} />
                 </MenuItem>
                 <MenuItem onClick={() => updateNav('general', 'github')} selected={activeTab === 'general' && (activeSub === 'github' || activeSub === 'pat')}>
-                    <ListItemIcon><VpnKeyRoundedIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary="GitHub (PAT)" />
+                    <ListItemIcon><VpnKeyRoundedIcon fontSize="small" /></ListItemIcon><ListItemText primary="GitHub (PAT)" />
                 </MenuItem>
             </React.Fragment>
         );
@@ -232,8 +229,24 @@ export const SettingsHeaderToolbar: React.FC = () => {
                     {t('settings.notifications_tab', 'Benachrichtigungen')}
                 </MenuItem>
                 <MenuItem onClick={() => updateNav('notifications')} selected={activeTab === 'notifications'}>
-                    <ListItemIcon><NotificationsActiveIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary={t('settings.notifications_tab', 'Push & ntfy')} />
+                    <ListItemIcon><NotificationsActiveIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('settings.notifications_tab', 'Push & ntfy')} />
+                </MenuItem>
+            </React.Fragment>
+        );
+
+        const serverMenuItems = (
+            <React.Fragment key="server-group">
+                <MenuItem disabled sx={{ opacity: '0.6 !important', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', py: 0.5 }}>
+                    {t('settings.server_tab', 'Server')}
+                </MenuItem>
+                <MenuItem onClick={() => updateNav('server', 'all')} selected={activeTab === 'server' && (activeSub === 'all' || !activeSub)}>
+                    <ListItemIcon><DnsIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('common.all', 'Alle')} />
+                </MenuItem>
+                <MenuItem onClick={() => updateNav('server', 'signaling', 'signaling')} selected={activeTab === 'server' && activeSub === 'signaling'}>
+                    <ListItemIcon><HubIcon fontSize="small" /></ListItemIcon><ListItemText primary="WebRTC Signaling" />
+                </MenuItem>
+                <MenuItem onClick={() => updateNav('server', 'companion', 'companion')} selected={activeTab === 'server' && activeSub === 'companion'}>
+                    <ListItemIcon><ExtensionIcon fontSize="small" /></ListItemIcon><ListItemText primary="Companion Plugins" />
                 </MenuItem>
             </React.Fragment>
         );
@@ -244,28 +257,19 @@ export const SettingsHeaderToolbar: React.FC = () => {
                     {t('games.melodiq.title', 'Melodiq')}
                 </MenuItem>
                 <MenuItem onClick={() => updateNav('melodiq', 'all')} selected={activeTab === 'melodiq' && (activeSub === 'all' || !activeSub)}>
-                    <ListItemIcon><MicIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary={t('common.all', 'Alle Einstellungen')} />
-                </MenuItem>
-                <MenuItem onClick={() => updateNav('melodiq', 'server')} selected={activeTab === 'melodiq' && activeSub === 'server'}>
-                    <ListItemIcon><DnsIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary={t('melodiq.server.tab', 'Companion Server')} />
+                    <ListItemIcon><MicIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('common.all', 'Alle Einstellungen')} />
                 </MenuItem>
                 <MenuItem onClick={() => updateNav('melodiq', 'microphones')} selected={activeTab === 'melodiq' && activeSub === 'microphones'}>
-                    <ListItemIcon><MicIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary={t('melodiq.settings.microphones', 'Mikrofone')} />
+                    <ListItemIcon><MicIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('melodiq.settings.microphones', 'Mikrofone')} />
                 </MenuItem>
                 <MenuItem onClick={() => updateNav('melodiq', 'profiles')} selected={activeTab === 'melodiq' && activeSub === 'profiles'}>
-                    <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary={t('melodiq.settings.profiles', 'Spieler-Profile')} />
+                    <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('melodiq.settings.profiles', 'Spieler-Profile')} />
                 </MenuItem>
                 <MenuItem onClick={() => updateNav('melodiq', 'gameplay')} selected={activeTab === 'melodiq' && activeSub === 'gameplay'}>
-                    <ListItemIcon><SportsEsportsIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary={t('melodiq.settings.gameplay', 'Gameplay')} />
+                    <ListItemIcon><SportsEsportsIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('melodiq.settings.gameplay', 'Gameplay')} />
                 </MenuItem>
                 <MenuItem onClick={() => updateNav('melodiq', 'playlists')} selected={activeTab === 'melodiq' && activeSub === 'playlists'}>
-                    <ListItemIcon><QueueMusicIcon fontSize="small" /></ListItemIcon>
-                    <ListItemText primary={t('melodiq.playlists', 'Playlists')} />
+                    <ListItemIcon><QueueMusicIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('melodiq.playlists', 'Playlists')} />
                 </MenuItem>
             </React.Fragment>
         );
@@ -277,6 +281,8 @@ export const SettingsHeaderToolbar: React.FC = () => {
                 <Divider key="d1" sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />,
                 generalMenuItems,
                 <Divider key="d2" sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />,
+                serverMenuItems,
+                <Divider key="d3" sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />,
                 notificationsMenuItems,
             ];
         }
@@ -284,8 +290,10 @@ export const SettingsHeaderToolbar: React.FC = () => {
         return [
             generalMenuItems,
             <Divider key="d1" sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />,
-            notificationsMenuItems,
+            serverMenuItems,
             <Divider key="d2" sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />,
+            notificationsMenuItems,
+            <Divider key="d3" sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />,
             melodiqMenuItems,
         ];
     };
@@ -349,11 +357,13 @@ export const SettingsHeaderToolbar: React.FC = () => {
                         <>
                             {renderMelodiqDropdown()}
                             {renderGeneralButton()}
+                            {renderServerButton()}
                             {renderNotificationsButton()}
                         </>
                     ) : (
                         <>
                             {renderGeneralButton()}
+                            {renderServerButton()}
                             {renderNotificationsButton()}
                             {renderMelodiqDropdown()}
                         </>
@@ -366,9 +376,8 @@ export const SettingsHeaderToolbar: React.FC = () => {
 
 export const SettingsHeaderSubNav: React.FC = () => {
     const { t } = useTranslation();
-    const navigate = useNavigate();
     const location = useLocation();
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     const { activeTab, activeSub } = resolveSettingsNav(
         searchParams,
@@ -388,8 +397,8 @@ export const SettingsHeaderSubNav: React.FC = () => {
         } else {
             nextParams.delete('section');
         }
-        const targetPath = location.pathname === '/settings' ? '/settings' : location.pathname;
-        navigate(`${targetPath}?${nextParams.toString()}`, { replace: true, state: location.state });
+        setSearchParams(nextParams, { replace: true });
+        window.dispatchEvent(new CustomEvent('melodiq_subtab_change', { detail: sub || 'all' }));
     };
 
     return (
@@ -445,54 +454,40 @@ export const SettingsHeaderSubNav: React.FC = () => {
                 </Box>
             )}
 
+            {/* Level 2 Sub-Nav: Server */}
+            {activeTab === 'server' && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 'max-content' }}>
+                    <Button size="small" onClick={() => updateNav('server', 'all')} sx={subPillSx(activeSub === 'all' || !activeSub)}>
+                        {t('common.all', 'Alle')}
+                    </Button>
+                    <Button size="small" startIcon={<HubIcon fontSize="small" />} onClick={() => updateNav('server', 'signaling', 'signaling')} sx={subPillSx(activeSub === 'signaling')}>
+                        WebRTC Signaling
+                    </Button>
+                    <Button size="small" startIcon={<ExtensionIcon fontSize="small" />} onClick={() => updateNav('server', 'companion', 'companion')} sx={subPillSx(activeSub === 'companion')}>
+                        Companion Plugins
+                    </Button>
+                    <Button size="small" startIcon={<ContentCopyIcon fontSize="small" />} onClick={() => updateNav('server', 'compose', 'compose')} sx={subPillSx(activeSub === 'compose')}>
+                        {t('settings.compose_generator', 'Compose')}
+                    </Button>
+                </Box>
+            )}
+
             {/* Level 2 Sub-Nav: Melodiq */}
             {activeTab === 'melodiq' && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 'max-content' }}>
-                    <Button
-                        size="small"
-                        onClick={() => updateNav('melodiq', 'all')}
-                        sx={subPillSx(activeSub === 'all' || !activeSub)}
-                    >
+                    <Button size="small" onClick={() => updateNav('melodiq', 'all')} sx={subPillSx(activeSub === 'all' || !activeSub)}>
                         {t('common.all', 'Alle')}
                     </Button>
-                    <Button
-                        size="small"
-                        startIcon={<DnsIcon fontSize="small" />}
-                        onClick={() => updateNav('melodiq', 'server')}
-                        sx={subPillSx(activeSub === 'server')}
-                    >
-                        {t('melodiq.server.tab', 'Companion Server')}
-                    </Button>
-                    <Button
-                        size="small"
-                        startIcon={<MicIcon fontSize="small" />}
-                        onClick={() => updateNav('melodiq', 'microphones')}
-                        sx={subPillSx(activeSub === 'microphones')}
-                    >
+                    <Button size="small" startIcon={<MicIcon fontSize="small" />} onClick={() => updateNav('melodiq', 'microphones')} sx={subPillSx(activeSub === 'microphones')}>
                         {t('melodiq.settings.microphones', 'Mikrofone')}
                     </Button>
-                    <Button
-                        size="small"
-                        startIcon={<PersonIcon fontSize="small" />}
-                        onClick={() => updateNav('melodiq', 'profiles')}
-                        sx={subPillSx(activeSub === 'profiles')}
-                    >
+                    <Button size="small" startIcon={<PersonIcon fontSize="small" />} onClick={() => updateNav('melodiq', 'profiles')} sx={subPillSx(activeSub === 'profiles')}>
                         {t('melodiq.settings.profiles', 'Spieler-Profile')}
                     </Button>
-                    <Button
-                        size="small"
-                        startIcon={<SportsEsportsIcon fontSize="small" />}
-                        onClick={() => updateNav('melodiq', 'gameplay')}
-                        sx={subPillSx(activeSub === 'gameplay')}
-                    >
+                    <Button size="small" startIcon={<SportsEsportsIcon fontSize="small" />} onClick={() => updateNav('melodiq', 'gameplay')} sx={subPillSx(activeSub === 'gameplay')}>
                         {t('melodiq.settings.gameplay', 'Gameplay')}
                     </Button>
-                    <Button
-                        size="small"
-                        startIcon={<QueueMusicIcon fontSize="small" />}
-                        onClick={() => updateNav('melodiq', 'playlists')}
-                        sx={subPillSx(activeSub === 'playlists')}
-                    >
+                    <Button size="small" startIcon={<QueueMusicIcon fontSize="small" />} onClick={() => updateNav('melodiq', 'playlists')} sx={subPillSx(activeSub === 'playlists')}>
                         {t('melodiq.playlists', 'Playlists')}
                     </Button>
                 </Box>

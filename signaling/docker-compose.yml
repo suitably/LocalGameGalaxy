@@ -1,0 +1,15 @@
+services:
+  signaling:
+    image: nexumia/galaxy-signaling:latest
+    container_name: galaxy-signaling
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

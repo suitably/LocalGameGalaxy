@@ -8,6 +8,7 @@ export const STORAGE_KEYS = {
     HELPER_URL: 'melodiq_helper_url',
     HELPER_TOKEN: 'melodiq_helper_token',
     HELPER_ACTIVE: 'melodiq_enable_helper',
+    SIGNALING_URL: 'galaxy_signaling_url',
     
     // Client connection states
     CLIENT_PROFILE: 'melodiq_client_profile',
@@ -247,6 +248,27 @@ export const storage = {
     
     setHelperActive(active: boolean): void {
         this.set(STORAGE_KEYS.HELPER_ACTIVE, active ? 'true' : 'false');
+    },
+
+    // WebRTC Signaling Tracker Accessors
+    getSignalingUrl(): string {
+        const custom = this.get(STORAGE_KEYS.SIGNALING_URL);
+        if (custom) return custom;
+        if (this.isHelperActive()) {
+            try {
+                const helper = this.getHelperUrl();
+                const parsed = new URL(helper || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'));
+                const wsProto = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
+                return `${wsProto}//${parsed.hostname}:8000`;
+            } catch {
+                return 'ws://localhost:8000';
+            }
+        }
+        return '';
+    },
+
+    setSignalingUrl(url: string): void {
+        this.set(STORAGE_KEYS.SIGNALING_URL, url);
     },
 
     getDisabledTrackerUrls(gameId = 'melodiq'): string[] {

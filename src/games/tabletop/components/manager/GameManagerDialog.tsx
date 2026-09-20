@@ -5,20 +5,13 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  Box,
-  Tabs,
-  Tab,
-  Badge,
 } from '@mui/material';
-import StorageIcon from '@mui/icons-material/Storage';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import { useTranslation } from 'react-i18next';
 import { InstalledGamesTab } from './InstalledGamesTab';
-import { TemplatesCatalogTab } from './TemplatesCatalogTab';
-import { UrlImportTab } from './UrlImportTab';
 import { EditGameDialog } from './EditGameDialog';
 import { useTabletopGames } from '../../hooks/useTabletopGames';
+import { saveTabletopGame, getTabletopGame, deleteTabletopGame } from '../../logic/tabletopStorage';
+import { exportGameAsJson, exportGameAsPcio } from '../../logic/tabletopExporter';
 import type { TabletopGameDefinition } from '../../logic/types';
 
 interface GameManagerDialogProps {
@@ -40,104 +33,115 @@ export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
   const {
     games,
     loading,
-    importError,
-    importFile,
-    importFromUrl,
-    installStarterPack,
-    installCatalogGame,
-    saveGame,
-    removeGame,
-    loadGame,
-    exportGameAsJson,
-    exportGameAsPcio,
+    error,
+    serverConnected,
+    supportsLocalFolder,
+    loadGameFromServer,
+    pickLocalFolder,
+    refresh,
   } = useTabletopGames();
 
-  const [activeTab, setActiveTab] = useState(0);
   const [editingGame, setEditingGame] = useState<TabletopGameDefinition | null>(null);
 
+  const fetchFullGame = async (id: string): Promise<TabletopGameDefinition | null> => {
+    try {
+      if (serverConnected) {
+        return await loadGameFromServer(id);
+      }
+    } catch {
+      // fallback to local IDB
+    }
+    return getTabletopGame(id);
+  };
+
+  const handlePlayParty = async (id: string) => {
+    try {
+      const full = await fetchFullGame(id);
+      if (full) await saveTabletopGame(full);
+    } catch {
+      // ignore
+    }
+    onPlayParty(id);
+    onClose();
+  };
+
+  const handlePlayLocal = async (id: string) => {
+    try {
+      const full = await fetchFullGame(id);
+      if (full) await saveTabletopGame(full);
+    } catch {
+      // ignore
+    }
+    onPlayLocal(id);
+    onClose();
+  };
+
+  const handleOpenLocalFolder = async () => {
+    try {
+      const def = await pickLocalFolder();
+      await saveTabletopGame(def);
+      onPlayLocal(def.id);
+      onClose();
+    } catch (err) {
+      console.warn('[GameManagerDialog] Local folder pick cancelled or failed:', err);
+    }
+  };
+
   const handleEdit = async (id: string) => {
-    const full = await loadGame(id);
+    const full = await fetchFullGame(id);
     if (full) setEditingGame(full);
   };
 
   const handleExportJson = async (id: string) => {
-    const full = await loadGame(id);
+    const full = await fetchFullGame(id);
     if (full) exportGameAsJson(full);
   };
 
   const handleExportPcio = async (id: string) => {
-    const full = await loadGame(id);
+    const full = await fetchFullGame(id);
     if (full) exportGameAsPcio(full);
   };
 
-  const handlePublish = async (id: string) => {
-    const full = await loadGame(id);
+  const handlePublishGame = async (id: string) => {
+    const full = await fetchFullGame(id);
     if (full) onPublish(full);
   };
 
-  const handleInstallTemplate = async (filePath: string) => {
-    await installCatalogGame(filePath);
+  const handleDelete = async (id: string) => {
+    await deleteTabletopGame(id);
+    await refresh();
+  };
+
+  const handleSaveGame = async (saved: TabletopGameDefinition) => {
+    await saveTabletopGame(saved);
+    setEditingGame(null);
+    await refresh();
   };
 
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ pb: 0 }}>
+        <DialogTitle sx={{ pb: 1 }}>
           {t('games.tabletop.manager_title', 'Tabletop Spiele verwalten')}
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 1.5 }}>
-            <Tabs
-              value={activeTab}
-              onChange={(_, val) => setActiveTab(val)}
-              variant="scrollable"
-              scrollButtons="auto"
-            >
-              <Tab
-                icon={<Badge badgeContent={games.length} color="primary"><StorageIcon /></Badge>}
-                iconPosition="start"
-                label={t('games.tabletop.tab_my_games', 'Meine Spiele')}
-              />
-              <Tab
-                icon={<AutoAwesomeIcon />}
-                iconPosition="start"
-                label={t('games.tabletop.tab_catalog', 'Katalog & Vorlagen')}
-              />
-              <Tab
-                icon={<CloudDownloadIcon />}
-                iconPosition="start"
-                label={t('games.tabletop.tab_url_import', 'Aus dem Web / URL')}
-              />
-            </Tabs>
-          </Box>
         </DialogTitle>
 
         <DialogContent dividers sx={{ pt: 2.5 }}>
-          {activeTab === 0 && (
-            <InstalledGamesTab
-              games={games}
-              loading={loading}
-              importError={importError}
-              onFileSelect={importFile}
-              onInstallStarterPack={installStarterPack}
-              onPlayParty={onPlayParty}
-              onPlayLocal={onPlayLocal}
-              onEdit={handleEdit}
-              onExportJson={handleExportJson}
-              onExportPcio={handleExportPcio}
-              onPublish={handlePublish}
-              onDelete={removeGame}
-            />
-          )}
-
-          {activeTab === 1 && (
-            <TemplatesCatalogTab
-              installedGames={games}
-              onInstallTemplate={handleInstallTemplate}
-            />
-          )}
-
-          {activeTab === 2 && (
-            <UrlImportTab onImportFromUrl={importFromUrl} />
-          )}
+          <InstalledGamesTab
+            games={games}
+            loading={loading}
+            error={error}
+            serverConnected={serverConnected}
+            supportsLocalFolder={supportsLocalFolder}
+            onRefresh={refresh}
+            onOpenLocalFolder={handleOpenLocalFolder}
+            onPlayParty={handlePlayParty}
+            onPlayLocal={handlePlayLocal}
+            onEdit={handleEdit}
+            onExportJson={handleExportJson}
+            onExportPcio={handleExportPcio}
+            onPublish={handlePublishGame}
+            onDelete={handleDelete}
+          />
         </DialogContent>
 
         <DialogActions>
@@ -151,7 +155,7 @@ export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
         open={Boolean(editingGame)}
         game={editingGame}
         onClose={() => setEditingGame(null)}
-        onSave={saveGame}
+        onSave={handleSaveGame}
       />
     </>
   );

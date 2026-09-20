@@ -101,13 +101,17 @@ export interface TabletopGameMetadata {
   name: string;
   description?: string;
   author?: string;
+  version?: string;
+  minPlayers?: number;
+  maxPlayers?: number;
+  supportedModes?: TabletopPlayMode[];
+}
+
+export interface TabletopGameDefinition extends TabletopGameMetadata {
   version: string;
   minPlayers: number;
   maxPlayers: number;
   supportedModes: TabletopPlayMode[];
-}
-
-export interface TabletopGameDefinition extends TabletopGameMetadata {
   table: TabletopTableConfig;
   widgets: Record<string, TabletopWidget>;
   assetFiles?: Record<string, string>; // Base64 or Blob URLs
@@ -115,7 +119,12 @@ export interface TabletopGameDefinition extends TabletopGameMetadata {
 }
 
 export interface TabletopGameSummary extends TabletopGameMetadata {
+  version: string;
+  minPlayers: number;
+  maxPlayers: number;
+  supportedModes: TabletopPlayMode[];
   cardCount: number;
   widgetCount: number;
   updatedAt: number;
+  format?: 'flat-json' | 'pcio-folder' | 'unknown';
 }

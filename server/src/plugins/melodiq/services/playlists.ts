@@ -6,7 +6,13 @@ let playlistsFile = path.join(process.cwd(), 'playlists.json');
 let currentPlaylists: Playlist[] = [];
 
 function loadPlaylists(): void {
+  const explicitConfigDir = process.env.CONFIG_PATH
+    ? path.dirname(path.resolve(process.env.CONFIG_PATH))
+    : null;
+
   const searchPaths = [
+    ...(explicitConfigDir ? [explicitConfigDir] : []),
+    '/app/config',
     process.cwd(),
     path.dirname(process.execPath),
     path.resolve(path.dirname(process.execPath), '..'),
@@ -35,12 +41,23 @@ function loadPlaylists(): void {
       currentPlaylists = [];
     }
   } else {
+    if (explicitConfigDir && fs.existsSync(explicitConfigDir)) {
+      playlistsFile = path.join(explicitConfigDir, 'playlists.json');
+    } else if (fs.existsSync('/app/config') && fs.statSync('/app/config').isDirectory()) {
+      playlistsFile = '/app/config/playlists.json';
+    } else {
+      playlistsFile = path.join(process.cwd(), 'playlists.json');
+    }
     console.log(`[Playlists] Using playlists location: ${playlistsFile}`);
   }
 }
 
 function savePlaylists(): void {
   try {
+    const parentDir = path.dirname(playlistsFile);
+    if (!fs.existsSync(parentDir)) {
+      fs.mkdirSync(parentDir, { recursive: true });
+    }
     fs.writeFileSync(playlistsFile, JSON.stringify(currentPlaylists, null, 2), 'utf-8');
   } catch (e) {
     console.error('[Playlists] Failed to save playlists:', e);

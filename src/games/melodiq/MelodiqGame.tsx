@@ -45,12 +45,11 @@ export const MelodiqGameContent: React.FC = () => {
     const { queue, popNext, setNowPlaying, addToQueue, addNext, nowPlaying, replaceItem } = useQueue();
     const { jobs } = useDownloads(isClient ? 0 : 2000);
     
+    const { manager, partyId, activeTrackerUrls } = useWebRTC();
     const {
         isTVConnected, isPresentationAvailable, openTVWindow, startPresentation,
         playSongOnTV, lastEvent, sendRemoteCommand, sendGameUpdate, disconnectTV
-    } = useTVMode();
-    
-    const { manager } = useWebRTC();
+    } = useTVMode({ partyId, activeTrackerUrls });
     const { settings } = useMelodiqSettings();
     const { clientRole, clientProfile } = useClientEngine();
 
@@ -419,11 +418,10 @@ export const MelodiqGameContent: React.FC = () => {
                     ) : (
                         <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
                             <Settings 
+                                key={searchParams.get('sub') || 'all'}
                                 activeGameId="melodiq"
-                                onBack={() => {
-                                    refreshSongs();
-                                    handleCloseSubView();
-                                }} 
+                                activeSub={searchParams.get('sub') || 'all'}
+                                onBack={() => { refreshSongs(); handleCloseSubView(); }} 
                                 onNavigateToPlaylists={() => setCurrentView('Playlists')}
                             />
                         </Suspense>

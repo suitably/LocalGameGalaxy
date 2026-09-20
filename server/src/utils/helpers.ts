@@ -33,11 +33,14 @@ export const generateId = (title: string, artist: string, relPath: string): stri
     .substring(0, 32);
 };
 
-export const resolveSecurePath = (userPath?: string | null): string | null => {
+export const resolveSecurePath = (
+  userPath?: string | null,
+  allowedDirs: string[] = serverConfig.directories
+): string | null => {
   if (!userPath) return null;
-  const safePath = path.normalize(userPath);
-  const isAllowed = serverConfig.directories.some((dir) => {
-    const normalizedDir = path.normalize(dir);
+  const safePath = path.resolve(userPath);
+  const isAllowed = allowedDirs.some((dir) => {
+    const normalizedDir = path.resolve(dir);
     return safePath === normalizedDir || safePath.startsWith(normalizedDir + path.sep);
   });
   return isAllowed && fs.existsSync(safePath) ? safePath : null;

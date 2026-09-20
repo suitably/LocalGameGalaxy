@@ -126,4 +126,28 @@ describe('WebRTC Tracker Logic', () => {
             expect(activeUrls).not.toContain(url);
         });
     });
+
+    it('storage.getSignalingUrl derives port 8000 from helper URL and supports overrides', async () => {
+        const { storage, STORAGE_KEYS } = await import('../storage');
+
+        // Case 1: Helper active, default derived to port 8000
+        storage.setHelperActive(true);
+        storage.setHelperUrl('http://192.168.1.50:3000');
+        storage.remove(STORAGE_KEYS.SIGNALING_URL);
+        expect(storage.getSignalingUrl()).toBe('ws://192.168.1.50:8000');
+
+        // Case 2: Custom signaling URL override takes precedence
+        storage.setSignalingUrl('wss://custom-tracker.galaxy.org:8443');
+        expect(storage.getSignalingUrl()).toBe('wss://custom-tracker.galaxy.org:8443');
+
+        // Case 3: Helper disabled and no custom URL
+        storage.remove(STORAGE_KEYS.SIGNALING_URL);
+        storage.setHelperActive(false);
+        expect(storage.getSignalingUrl()).toBe('');
+
+        // Cleanup
+        storage.remove(STORAGE_KEYS.SIGNALING_URL);
+        storage.setHelperActive(true);
+        storage.setHelperUrl('http://localhost:3000');
+    });
 });
