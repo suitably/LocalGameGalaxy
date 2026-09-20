@@ -128,3 +128,37 @@ Once tested on `dev`, you can promote changes to `main`:
 | **Human Approval Loop** | Allows the maintainer to steer the AI's architectural intent before code is written | 2-step `/jules plan` → `/jules approve` loop |
 | **Grounding via `AGENTS.md`** | Prevents God-components (>250 lines) and cross-game imports | Prompt explicitly injects repository constraints from `AGENTS.md` |
 | **CI Quality Gate** | Ensures AI code passes lint, tests, budgets, and production build | CI triggers on all PRs and pushes to `dev` |
+
+---
+
+## 7. RepoLens Integration Suite (350+ Lenses)
+
+LocalGameGalaxy integrates the full audit lens catalog from **TheMorpheus407/RepoLens** (or your custom fork) into Google Jules, allowing Jules to assume specialized auditor personas without third-party LLM costs.
+
+### A. How to Run a RepoLens Audit
+
+#### 1. Via GitHub Actions Tab:
+- Go to **Actions** $\rightarrow$ **Jules RepoLens Audit Suite**.
+- Select a **Domain** (e.g., `architecture`, `performance`, `testing`, `security`, `frontend`, `android`).
+- (Optional) Enter a specific **Lens ID** (e.g., `single-responsibility`, `module-boundaries`, `algorithm`, `memory`, `unit-test-gaps`, `secrets-in-apk`).
+- Choose Mode:
+  - **`fix`**: Jules audits the codebase, implements the solution adhering to `AGENTS.md`, and opens a PR against `dev`.
+  - **`plan`**: Jules creates a structured GitHub Issue detailing findings and awaits approval.
+
+#### 2. Via Issue Slash Command:
+In any issue, comment:
+```text
+/jules lens <lens-id>
+```
+*(e.g., `/jules lens single-responsibility` or `/jules lens algorithm`)*
+
+Jules fetches the exact expert focus and search patterns from RepoLens, applies them to the issue, and opens a Pull Request against `dev`.
+
+### B. Popular Lenses for LocalGameGalaxy:
+
+- **Architecture:** `single-responsibility`, `module-boundaries`, `circular-deps`, `coupling`
+- **Performance:** `algorithm`, `memory`, `frontend-perf`, `startup-perf`
+- **Testing:** `unit-test-gaps`, `edge-cases`, `error-path-tests`, `test-anti-patterns`
+- **Android / Mobile:** `apk-dependencies`, `manifest-audit`, `secrets-in-apk`, `webview-security`
+- **Security:** `secrets`, `injection`, `xss-csrf`, `auth-session`
+
