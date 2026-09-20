@@ -127,9 +127,58 @@ A RepoLens audit has been triggered for domain **${domain}** using lens **${lens
             console.log(`Created audit issue #${issue.data.number}`);
 
       - name: Invoke Google Jules Agent (Fix Mode)
+        id: jules_call
         if: inputs.mode != 'plan'
-        uses: google-labs-code/jules-invoke@v1
-        with:
-          prompt: ${{ steps.resolver.outputs.prompt }}
-          jules_api_key: ${{ secrets.JULES_API_KEY }}
-          starting_branch: 'dev'
+        env:
+          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+          STARTING_BRANCH: 'dev'
+          REPO: ${{ github.repository }}
+          USER_PROMPT: ${{ steps.resolver.outputs.prompt }}
+        shell: bash
+        run: |
+          if [ -z "$JULES_API_KEY" ]; then
+            echo "::error::JULES_API_KEY secret is not set in GitHub repository secrets!"
+            exit 1
+          fi
+
+          echo "$USER_PROMPT" > prompt.txt
+
+          jq -n \
+            --rawfile jules_prompt prompt.txt \
+            --arg starting_branch "$STARTING_BRANCH" \
+            --arg repo_full_name "$REPO" \
+            '{
+              "prompt": $jules_prompt,
+              "sourceContext": {
+                "source": "sources/github/\($repo_full_name)",
+                "githubRepoContext": {
+                  "startingBranch": $starting_branch
+                }
+              },
+              "requirePlanApproval": false,
+              "automationMode": "AUTO_CREATE_PR"
+            }' > jules_payload.json
+
+          echo "Calling Jules API at https://jules.googleapis.com/v1alpha/sessions..."
+          HTTP_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            'https://jules.googleapis.com/v1alpha/sessions' \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "X-Goog-Api-Key: $JULES_API_KEY" \
+            -d @jules_payload.json)
+
+          BODY=$(echo "$HTTP_RESPONSE" | sed -e '$d')
+          STATUS=$(echo "$HTTP_RESPONSE" | tail -n1 | cut -d':' -f2)
+
+          echo "Jules API response status: $STATUS"
+          echo "Response body: $BODY"
+
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
+            SESSION_ID=$(echo "$BODY" | jq -r '.id // .name // empty' | awk -F'/' '{print $NF}')
+            echo "Session started: https://jules.google.com/task/$SESSION_ID"
+            echo "session_id=$SESSION_ID" >> $GITHUB_OUTPUT
+            echo "session_url=https://jules.google.com/task/$SESSION_ID" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Jules API invocation failed with status $STATUS: $BODY"
+            exit 1
+          fi
