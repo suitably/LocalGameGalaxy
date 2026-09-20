@@ -1,0 +1,69 @@
+name: Promote Dev to Main
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Promotion mode'
+        required: true
+        default: 'create_pr'
+        type: choice
+        options:
+          - create_pr
+          - direct_merge
+      title:
+        description: 'PR Title (for create_pr mode)'
+        required: false
+        default: 'chore(release): promote dev to main'
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  promote:
+    name: Promote Dev Branch to Main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Verify dev and main status
+        id: check_diff
+        run: |
+          git fetch origin main dev
+          AHEAD=$(git rev-list --count origin/main..origin/dev)
+          echo "dev is ahead of main by $AHEAD commits."
+          if [ "$AHEAD" -eq 0 ]; then
+            echo "No changes in dev to promote to main."
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+          echo "ahead_count=$AHEAD" >> $GITHUB_OUTPUT
+
+      - name: Create Promotion Pull Request
+        if: steps.check_diff.outputs.has_changes == 'true' && inputs.mode == 'create_pr'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base main \
+            --head dev \
+            --title "${{ inputs.title }}" \
+            --body "Automated promotion PR from \`dev\` into \`main\` containing ${{ steps.check_diff.outputs.ahead_count }} verified commits.\\n\\nTriggered via \`promote-dev-to-main\` workflow." || echo "PR may already exist."
+
+      - name: Direct Fast-Forward / Merge to Main
+        if: steps.check_diff.outputs.has_changes == 'true' && inputs.mode == 'direct_merge'
+        run: |
+          git checkout main
+          git merge --ff-only origin/dev || git merge --no-ff origin/dev -m "chore: merge dev into main"
+          git push origin main
