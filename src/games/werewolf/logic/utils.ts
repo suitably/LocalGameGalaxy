@@ -110,18 +110,24 @@ export const isWerewolfRole = (roleId: Role, allRoles: RoleDefinition[]): boolea
  * @returns A deduplicated array of all player IDs who should die, including cascade deaths.
  */
 export const getDeathCascade = (initialVictims: string[], players: Player[]): string[] => {
+    const playerMap = new Map<string, Player>();
+    for (let i = 0; i < players.length; i++) {
+        playerMap.set(players[i].id, players[i]);
+    }
+
     const toDie = new Set<string>(initialVictims);
     const queue = [...initialVictims];
+    let head = 0;
 
-    while (queue.length > 0) {
-        const victimId = queue.shift()!;
-        const victim = players.find(p => p.id === victimId);
+    while (head < queue.length) {
+        const victimId = queue[head++];
+        const victim = playerMap.get(victimId);
 
         if (victim?.powerState?.loverIds) {
             for (const loverId of victim.powerState.loverIds) {
                 // If lover is not already marked for death and is currently alive (or in the game)
                 if (!toDie.has(loverId)) {
-                    const lover = players.find(p => p.id === loverId);
+                    const lover = playerMap.get(loverId);
                     if (lover && lover.isAlive) {
                         toDie.add(loverId);
                         queue.push(loverId);
