@@ -87,5 +87,6 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
     widgets: cleanWidgets,
     assetFiles: raw.assetFiles || {},
     updatedAt: raw.updatedAt || Date.now(),
+    ruleText: typeof raw.ruleText === 'string' ? raw.ruleText : undefined,
   };
 }

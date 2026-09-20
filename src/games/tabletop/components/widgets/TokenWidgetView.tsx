@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import type { TokenWidget } from '../../logic/types';
+import { recolorSvgDataUri, fetchAndRecolorSvg } from '../../logic/svgColorUtils';
 
 interface TokenWidgetViewProps {
   widget: TokenWidget;
@@ -16,6 +17,25 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
   const isCircle = widget.shape === 'circle' || !widget.shape;
   const isChip = Boolean(widget.subText !== undefined && widget.label);
   const rot = widget.rotation || 0;
+
+  const [recoloredSrc, setRecoloredSrc] = useState<string | undefined>(() => {
+    if (!widget.image || !widget.color) return widget.image;
+    if (widget.image.startsWith('data:image/svg+xml')) {
+      return recolorSvgDataUri(widget.image, widget.color) || widget.image;
+    }
+    return widget.image;
+  });
+
+  useEffect(() => {
+    if (!widget.image || !widget.color) return;
+    let cancelled = false;
+    fetchAndRecolorSvg(widget.image, widget.color).then((src) => {
+      if (!cancelled) setRecoloredSrc(src);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [widget.image, widget.color]);
 
   // Render Image Token (e.g. Robber, custom meeples, pieces)
   if (widget.image) {
@@ -42,7 +62,7 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
       >
         <Box
           component="img"
-          src={widget.image}
+          src={recoloredSrc || widget.image}
           alt={widget.label || 'Token'}
           sx={{
             width: '100%',

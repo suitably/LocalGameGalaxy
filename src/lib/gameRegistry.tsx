@@ -11,6 +11,7 @@ import Grid4x4Icon from '@mui/icons-material/Grid4x4';
 import StyleIcon from '@mui/icons-material/Style';
 import TableBarIcon from '@mui/icons-material/TableBar';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import PianoIcon from '@mui/icons-material/Piano';
 import { SongsProvider } from '../games/melodiq';
 
 export type GameCategory = 'all' | 'dice' | 'drawing' | 'music' | 'social_deduction' | 'cards' | 'party' | 'puzzle';
@@ -39,6 +40,7 @@ export interface GameDefinition {
 const WerewolfGame = lazy(() => import('../games/werewolf').then(m => ({ default: m.WerewolfGame })));
 const ImposterGame = lazy(() => import('../games/imposter').then(m => ({ default: m.ImposterGame })));
 const MelodiqGame = lazy(() => import('../games/melodiq').then(m => ({ default: m.MelodiqGame })));
+const MelodiqNotesGame = lazy(() => import('../games/melodiq-notes').then(m => ({ default: m.MelodiqNotesGame })));
 const MelodiqQueue = lazy(() => import('../games/melodiq').then(m => ({ default: m.MelodiqQueue })));
 const MelodiqTV = lazy(() => import('../games/melodiq').then(m => ({ default: m.MelodiqTV })));
 const QwixxGame = lazy(() => import('../games/qwixx').then(m => ({ default: m.QwixxGame })));
@@ -143,6 +145,18 @@ class GameRegistry {
             ]
         },
         {
+            id: 'melodiq-notes',
+            route: 'games/melodiq-notes',
+            titleKey: 'games.melodiq_notes.title',
+            descriptionKey: 'games.melodiq_notes.description',
+            icon: <PianoIcon sx={{ fontSize: 72, mb: 2 }} />,
+            colorStart: '#a855f7',
+            colorEnd: '#6b21a8',
+            hoverColor: '#6b21a8',
+            category: 'music',
+            component: <MelodiqNotesGame />
+        },
+        {
             id: 'werewolf',
             route: 'games/werewolf',
             titleKey: 'games.werewolf.title',
@@ -216,21 +230,17 @@ class GameRegistry {
         }
     ];
 
-    getGames(): GameDefinition[] {
-        return this.games;
-    }
-
+    getGames(): GameDefinition[] { return this.games; }
     getGamesByCategory(category: GameCategory): GameDefinition[] {
-        if (category === 'all') return this.games;
-        return this.games.filter(g => g.category === category);
+        return category === 'all' ? this.games : this.games.filter(g => g.category === category);
     }
 
     findGameByPath(pathname: string): GameDefinition | undefined {
-        const cleanPath = pathname.replace(/^\//, '');
-        return this.games.find(g => 
-            cleanPath.startsWith(g.route) || 
-            (g.nestedRoutes || []).some(nr => cleanPath.startsWith(nr.path.replace(/^\//, ''))) ||
-            (g.standaloneRoutes || []).some(sr => cleanPath.startsWith(sr.path.replace(/^\//, '')))
+        const clean = pathname.replace(/^\//, '');
+        return this.games.find(g =>
+            clean.startsWith(g.route) ||
+            (g.nestedRoutes || []).some(nr => clean.startsWith(nr.path.replace(/^\//, ''))) ||
+            (g.standaloneRoutes || []).some(sr => clean.startsWith(sr.path.replace(/^\//, '')))
         );
     }
 }

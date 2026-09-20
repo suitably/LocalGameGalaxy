@@ -90,6 +90,7 @@ Search this inventory before building new feature code:
 | **Header & Titles** | `src/context/LayoutContext.tsx` | `GlobalHeader`, `usePageTitle`, action menus, safe hub exit |
 | **Push Banner** | `src/components/push/PushNotificationBanner.tsx` | Web Push & ntfy permission banner |
 | **Storage** | `src/lib/storage.ts` | Centralized storage with memory fallback. All keys in `STORAGE_KEYS` |
+| **Audio Processing** | `src/modules/audio` | `MicrophoneManager`, `AudioUtils` — pitch detection, autocorrelation, RMS volume, MIDI pitch mapping |
 
 ## 6. i18n
 

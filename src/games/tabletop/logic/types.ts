@@ -10,9 +10,40 @@ export type WidgetType =
   | 'holder'
   | 'token'
   | 'die'
-  | 'spinner'
   | 'counter'
-  | 'label';
+  | 'seat';
+
+/** A single renderable object within a card face template */
+export interface FaceObject {
+  type: 'image' | 'text';
+  value: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation?: number;
+  clipPath?: string;
+  css?: string;
+  borderRadius?: string;
+  fontSize?: number;
+  textAlign?: string;
+  color?: string;
+}
+
+/** Grid snap definition for widget positioning */
+export interface GridSnapDef {
+  type?: string;
+  x: number;
+  y: number;
+  offsetX?: number;
+  offsetY?: number;
+  alignX?: number;
+  alignY?: number;
+  minX?: number;
+  maxX?: number;
+  minY?: number;
+  maxY?: number;
+}
 
 export interface BaseWidget {
   id: string;
@@ -32,7 +63,7 @@ export interface BaseWidget {
   parent?: string;
   display?: boolean;
   movable?: boolean;
-  grid?: unknown;
+  grid?: GridSnapDef[];
   hasPileChild?: boolean;
 }
 
@@ -45,6 +76,7 @@ export interface CardContent {
 export interface CardWidget extends BaseWidget {
   type: 'card';
   deckId?: string;
+  cardType?: string;
   frontContent: CardContent;
   backContent: CardContent;
   faceUp: boolean;
@@ -52,6 +84,13 @@ export interface CardWidget extends BaseWidget {
   inPile?: boolean;
   pileId?: string;
   isTransparent?: boolean;
+  stackCount?: number;
+  /** Multi-layer face objects from face template (when present, replaces frontContent for rendering) */
+  faceObjects?: FaceObject[];
+  /** Multi-layer back face objects from face template (for custom card backs) */
+  backFaceObjects?: FaceObject[];
+  /** VTT activeFace index (0 = back, 1+ = front faces) */
+  activeFace?: number;
 }
 
 export interface DeckWidget extends BaseWidget {
@@ -100,13 +139,23 @@ export interface DieWidget extends BaseWidget {
   pipColor?: string;
 }
 
+export interface SeatWidget extends BaseWidget {
+  type: 'seat';
+  index: number;
+  color: string;
+  player?: string;
+  hand?: string;
+  turn?: boolean;
+}
+
 export type TabletopWidget =
   | CardWidget
   | DeckWidget
   | HolderWidget
   | TokenWidget
   | CounterWidget
-  | DieWidget;
+  | DieWidget
+  | SeatWidget;
 
 export interface TabletopTableConfig {
   width: number;
@@ -136,6 +185,7 @@ export interface TabletopGameDefinition extends TabletopGameMetadata {
   widgets: Record<string, TabletopWidget>;
   assetFiles?: Record<string, string>; // Base64 or Blob URLs
   updatedAt?: number;
+  ruleText?: string;
 }
 
 export interface TabletopGameSummary extends TabletopGameMetadata {

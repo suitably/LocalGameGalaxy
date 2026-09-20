@@ -242,6 +242,9 @@ describe('VirtualTabletop / Frontiers Normalization', () => {
           layer: -5,
           movable: false,
         },
+        cardTypes: {
+          '3:1': { image: '/assets/ship.png' }
+        },
         faceTemplates: [
           {},
           {
@@ -265,6 +268,8 @@ describe('VirtualTabletop / Frontiers Normalization', () => {
         id: 'harbor1',
         type: 'card',
         deck: 'Harbors',
+        cardType: '3:1',
+        activeFace: 1,
         x: 100,
         y: 100,
       },
@@ -291,6 +296,10 @@ describe('VirtualTabletop / Frontiers Normalization', () => {
     expect(harbor.clipPath).toBeUndefined();
     expect(harbor.pinned).toBe(true);
     expect(harbor.zIndex).toBeLessThan(1000000); // Layer -5 -> 500001
+    expect(harbor.faceObjects?.length).toBe(2);
+    expect(harbor.faceObjects?.[0].clipPath).toBe('polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)');
+    expect(harbor.faceObjects?.[1].rotation).toBe(90);
+    expect(harbor.faceObjects?.[1].value).toBe('/assets/ship.png');
 
     const die = normalized['Die 1'];
     expect(die.type).toBe('die');
@@ -301,5 +310,204 @@ describe('VirtualTabletop / Frontiers Normalization', () => {
     expect(robber.pinned).toBe(false);
     expect(robber.grid).toBeDefined();
     expect(Array.isArray(robber.grid)).toBe(true);
+  });
+
+  it('parses faceObjects on Resource cards', () => {
+    const rawWidgets = {
+      ResourcesDeck: {
+        id: 'ResourcesDeck',
+        type: 'deck',
+        cardTypes: {
+          Wood: { background: '/bg.png', resource: '/wood.png' }
+        },
+        faceTemplates: [
+          {},
+          {
+            objects: [
+              { type: 'image', dynamicProperties: { value: 'background' } },
+              { type: 'image', dynamicProperties: { value: 'resource' }, x: 10, y: 30 }
+            ]
+          }
+        ]
+      },
+      woodCard: {
+        id: 'woodCard',
+        type: 'card',
+        deck: 'ResourcesDeck',
+        cardType: 'Wood',
+        activeFace: 1
+      }
+    };
+    const norm = normalizePcioWidgets(rawWidgets);
+    const card = norm.woodCard as CardWidget;
+    expect(card.faceObjects).toBeDefined();
+    expect(card.faceObjects?.length).toBe(2);
+    expect(card.faceObjects?.[0].value).toBe('/bg.png');
+    expect(card.faceObjects?.[1].value).toBe('/wood.png');
+    expect(card.faceObjects?.[1].x).toBe(10);
+  });
+
+  it('maps activeFace to faceUp', () => {
+    const rawWidgets = {
+      pile1: { type: 'pile' },
+      card1: { type: 'card', activeFace: 1 },
+      card0: { type: 'card', activeFace: 0 },
+      cardUndef: { type: 'card' },
+      cardInPile: { type: 'card', parent: 'pile1' }
+    };
+    const norm = normalizePcioWidgets(rawWidgets);
+    expect((norm.card1 as CardWidget).faceUp).toBe(true);
+    expect((norm.card0 as CardWidget).faceUp).toBe(false);
+    expect((norm.cardUndef as CardWidget).faceUp).toBe(true);
+    expect((norm.cardInPile as CardWidget).faceUp).toBe(false);
+  });
+
+  it('resolves cardType text and styling on multi-object templates', () => {
+    const rawWidgets = {
+      DevDeck: {
+        id: 'DevDeck',
+        type: 'deck',
+        cardTypes: {
+          Knight: {
+            image: '/assets/knight.png',
+            text: 'Move the robber.'
+          }
+        },
+        faceTemplates: [
+          {},
+          {
+            objects: [
+              {
+                type: 'image',
+                dynamicProperties: { value: 'image' }
+              },
+              {
+                type: 'text',
+                fontSize: 16,
+                color: 'white',
+                textAlign: 'center',
+                dynamicProperties: { value: 'cardType' }
+              },
+              {
+                type: 'text',
+                fontSize: 10,
+                color: 'white',
+                dynamicProperties: { value: 'text' }
+              }
+            ]
+          }
+        ]
+      },
+      knightCard: {
+        id: 'knightCard',
+        type: 'card',
+        deck: 'DevDeck',
+        cardType: 'Knight',
+        activeFace: 1
+      }
+    };
+    const norm = normalizePcioWidgets(rawWidgets);
+    const card = norm.knightCard as CardWidget;
+    expect(card.cardType).toBe('Knight');
+    expect(card.faceObjects?.length).toBe(3);
+    expect(card.faceObjects?.[0].value).toBe('/assets/knight.png');
+    expect(card.faceObjects?.[1].value).toBe('Knight');
+    expect(card.faceObjects?.[1].color).toBe('white');
+    expect(card.faceObjects?.[1].fontSize).toBe(16);
+    expect(card.faceObjects?.[2].value).toBe('Move the robber.');
+  });
+
+  it('does not accumulate rotation or rotate positions', () => {
+    const rawWidgets = {
+      parent1: { id: 'parent1', type: 'holder', x: 10, y: 20, rotation: 45 },
+      child1: { id: 'child1', type: 'card', x: 5, y: 5, rotation: 30, parent: 'parent1' }
+    };
+    const norm = normalizePcioWidgets(rawWidgets);
+    const child = norm.child1 as CardWidget;
+    expect(child.rotation).toBe(30);
+    expect(child.x).toBe(15);
+    expect(child.y).toBe(25);
+  });
+
+  it('does not normalize background element decks (Tiles Real, Chips, Harbors) into DeckWidgets', () => {
+    const rawWidgets: Record<string, Record<string, unknown>> = {
+      'Tiles Real': {
+        id: 'Tiles Real',
+        type: 'deck',
+        x: 689,
+        y: 3,
+        cardDefaults: {
+          onPileCreation: { 'no tile': 'piles' },
+          movable: false,
+          layer: -5,
+        },
+      },
+      Chips: {
+        id: 'Chips',
+        type: 'deck',
+        x: 757,
+        y: 3,
+        cardDefaults: {
+          onPileCreation: { 'no chip': 'piles' },
+          movable: false,
+        },
+        faceTemplates: [
+          {},
+          {
+            objects: [
+              { type: 'text', dynamicProperties: { value: 'number' } },
+            ],
+          },
+        ],
+      },
+      Harbors: {
+        id: 'Harbors',
+        type: 'deck',
+        x: 824,
+        y: 3,
+        cardDefaults: {
+          onPileCreation: { 'no harbor': 'piles' },
+          movable: false,
+          layer: -5,
+        },
+      },
+      tile1: {
+        id: 'tile1',
+        type: 'card',
+        deck: 'Tiles Real',
+        x: 100,
+        y: 100,
+      },
+      chip1: {
+        id: 'chip1',
+        type: 'card',
+        deck: 'Chips',
+        cardType: '5',
+        x: 200,
+        y: 200,
+      },
+      harbor1: {
+        id: 'harbor1',
+        type: 'card',
+        deck: 'Harbors',
+        x: 300,
+        y: 300,
+      },
+    };
+
+    const normalized = normalizePcioWidgets(rawWidgets);
+
+    // Background decks must NOT exist as DeckWidgets
+    expect(normalized['Tiles Real']).toBeUndefined();
+    expect(normalized['Chips']).toBeUndefined();
+    expect(normalized['Harbors']).toBeUndefined();
+
+    // The individual pieces on the board must exist as cards or tokens
+    expect(normalized.tile1).toBeDefined();
+    expect(normalized.tile1.type).toBe('card');
+    expect(normalized.chip1).toBeDefined();
+    expect(normalized.chip1.type).toBe('token');
+    expect(normalized.harbor1).toBeDefined();
+    expect(normalized.harbor1.type).toBe('card');
   });
 });

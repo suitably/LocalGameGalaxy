@@ -5,7 +5,7 @@ import { requestToPromise, runWithStore, cursorCollect } from '../../../modules/
 import type { TabletopGameDefinition, TabletopGameSummary } from './types';
 
 const DB_NAME = 'galaxy_tabletop_db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_GAMES = 'custom_games';
 
 let dbInstance: IDBDatabase | null = null;

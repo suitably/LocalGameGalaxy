@@ -52,6 +52,23 @@ export async function parsePcioFile(
         backgroundImageUrl: resolveAssetUrl(parsed.table?.backgroundImageUrl || parsed.table?.background, assetFiles) || undefined,
       };
 
+      const infoObj = parsed.info as Record<string, unknown> | undefined;
+      let ruleText: string | undefined =
+        typeof parsed.ruleText === 'string'
+          ? parsed.ruleText
+          : typeof infoObj?.ruleText === 'string'
+          ? (infoObj.ruleText as string)
+          : undefined;
+
+      if (!ruleText) {
+        for (const raw of Object.values(rawWidgets)) {
+          if (raw && typeof raw.ruleText === 'string' && raw.ruleText.trim()) {
+            ruleText = raw.ruleText.trim();
+            break;
+          }
+        }
+      }
+
       return validateAndSanitizeGame({
         name: parsed.name || options?.defaultName || 'Importiertes Spiel',
         author: parsed.author,
@@ -60,6 +77,7 @@ export async function parsePcioFile(
         table: tableConfig,
         widgets: normalizedWidgets,
         assetFiles,
+        ruleText,
       });
     } catch (err) {
       throw new Error(`Ungültige Tabletop-JSON: ${err instanceof Error ? err.message : String(err)}`);
