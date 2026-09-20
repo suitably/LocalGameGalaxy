@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { parsePcioFile } from '../pcioParser';
 import { validateAndSanitizeGame } from '../gameValidator';
-import type { HolderWidget, CardWidget, DeckWidget } from '../types';
+import { resolveAssetUrl } from '../pcioAssetUtils';
+import type { HolderWidget, CardWidget, DeckWidget, TokenWidget } from '../types';
 import { zipSync, strToU8 } from 'fflate';
 
 describe('Tabletop pcioParser', () => {
@@ -144,4 +145,51 @@ describe('Tabletop pcioParser', () => {
     expect(sanitized.table.width).toBeGreaterThanOrEqual(1600);
     expect(sanitized.widgets.w1.id).toBe('w1');
   });
+
+  it('extracts ruleText from info object or root properties', async () => {
+    const rawJson = JSON.stringify({
+      name: 'Rules Test',
+      info: {
+        ruleText: '<h1>Rules of the Game</h1><p>Roll dice to win.</p>',
+      },
+      widgets: {
+        w1: { id: 'w1', type: 'card', x: 0, y: 0 },
+      },
+    });
+
+    const result = await parsePcioFile(rawJson);
+    expect(result.ruleText).toBe('<h1>Rules of the Game</h1><p>Roll dice to win.</p>');
+  });
+
+  it('resolves bare filenames to /assets/ path and handles root-relative URLs', () => {
+    expect(resolveAssetUrl('wood.png')).toBe('/assets/wood.png');
+    expect(resolveAssetUrl('/assets/brick.png')).toBe('/assets/brick.png');
+    expect(resolveAssetUrl('assets/sheep.png')).toBe('/assets/sheep.png');
+    expect(resolveAssetUrl('https://example.com/ore.png')).toBe('https://example.com/ore.png');
+  });
+
+  it('resolves inherited rotation for tokens', async () => {
+    const rawJson = JSON.stringify({
+      name: 'Rotation Test',
+      widgets: {
+        roadProto: {
+          id: 'roadProto',
+          rotation: 60,
+        },
+        road1: {
+          id: 'road1',
+          type: 'token',
+          inheritFrom: 'roadProto',
+          x: 10,
+          y: 20,
+        },
+      },
+    });
+
+    const result = await parsePcioFile(rawJson);
+    const road = result.widgets.road1 as TokenWidget;
+    expect(road).toBeDefined();
+    expect(road.rotation).toBe(60);
+  });
 });
+

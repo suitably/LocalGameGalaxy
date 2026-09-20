@@ -6,8 +6,12 @@ import type {
   HolderWidget,
   DieWidget,
   TokenWidget,
+  FaceObject,
+  SeatWidget,
+  GridSnapDef,
 } from './types';
 import { resolveAssetUrl } from './pcioAssetUtils';
+import { DEFAULT_SEAT_COLORS } from './seatLogic';
 
 function isWidgetHidden(
   id: string,
@@ -66,18 +70,12 @@ function resolveInheritedProperty(
 function resolveRotation(
   id: string,
   rawWidgets: Record<string, Record<string, unknown>>,
-  visited = new Set<string>(),
 ): number {
-  if (visited.has(id)) return 0;
-  visited.add(id);
   const w = rawWidgets[id];
   if (!w || typeof w !== 'object') return 0;
-  const selfRot = typeof w.rotation === 'number' ? w.rotation : 0;
-  const parent = typeof w.parent === 'string' ? w.parent : undefined;
-  if (parent && rawWidgets[parent]) {
-    return selfRot + resolveRotation(parent, rawWidgets, visited);
-  }
-  return selfRot;
+  if (typeof w.rotation === 'number') return w.rotation;
+  const inherited = resolveInheritedProperty(w, 'rotation', rawWidgets);
+  return typeof inherited === 'number' ? inherited : 0;
 }
 
 function resolveGlobalPosition(
@@ -89,20 +87,11 @@ function resolveGlobalPosition(
   visited.add(id);
   const w = rawWidgets[id];
   if (!w || typeof w !== 'object') return { x: 0, y: 0 };
-
   const rawX = typeof w.x === 'number' ? w.x : 0;
   const rawY = typeof w.y === 'number' ? w.y : 0;
   const parent = typeof w.parent === 'string' ? w.parent : undefined;
-
   if (parent && rawWidgets[parent]) {
     const parentPos = resolveGlobalPosition(parent, rawWidgets, visited);
-    const parentRot = resolveRotation(parent, rawWidgets, new Set());
-    if (parentRot !== 0) {
-      const rad = (parentRot * Math.PI) / 180;
-      const rotX = rawX * Math.cos(rad) - rawY * Math.sin(rad);
-      const rotY = rawX * Math.sin(rad) + rawY * Math.cos(rad);
-      return { x: parentPos.x + rotX, y: parentPos.y + rotY };
-    }
     return { x: parentPos.x + rawX, y: parentPos.y + rawY };
   }
   return { x: rawX, y: rawY };
@@ -119,8 +108,7 @@ function resolveZIndex(
   return (layer + 10) * 100000 + rawZ;
 }
 
-function extractClipPath(faceTemplates: unknown, deckId?: string): string | undefined {
-  if (deckId === 'Harbors') return undefined;
+function extractClipPath(faceTemplates: unknown): string | undefined {
   if (!Array.isArray(faceTemplates)) return undefined;
   for (const face of faceTemplates) {
     if (!face || typeof face !== 'object') continue;
@@ -142,6 +130,94 @@ function extractClipPath(faceTemplates: unknown, deckId?: string): string | unde
     }
   }
   return undefined;
+}
+
+function parseFaceTemplateObjects(
+  activeFace: number,
+  faceTemplates: unknown,
+  cardTypeObj?: Record<string, unknown>,
+  cardWidth?: number,
+  cardHeight?: number,
+  assetFiles?: Record<string, string>,
+  cardTypeKey?: string,
+): FaceObject[] | undefined {
+  if (!Array.isArray(faceTemplates)) return undefined;
+  const face = faceTemplates[activeFace];
+  if (!face || typeof face !== 'object') return undefined;
+  const objects = (face as { objects?: unknown[] }).objects;
+  if (!Array.isArray(objects)) return undefined;
+
+  const result: FaceObject[] = [];
+  for (const obj of objects) {
+    if (!obj || typeof obj !== 'object') continue;
+    const o = obj as {
+      type?: 'image' | 'text';
+      dynamicProperties?: Record<string, string>;
+      value?: unknown;
+      x?: number;
+      y?: number;
+      width?: number;
+      height?: number;
+      rotation?: number;
+      css?: string;
+      borderRadius?: string;
+      fontSize?: number;
+      textAlign?: string;
+      color?: string;
+    };
+    let valStr: string | undefined;
+    
+    if (o.dynamicProperties?.value) {
+      const propKey = o.dynamicProperties.value;
+      let propVal = cardTypeObj ? cardTypeObj[propKey] : undefined;
+      if (propVal === undefined && (propKey === 'cardType' || propKey === 'type' || propKey === 'label')) {
+        propVal = cardTypeKey;
+      }
+      if (propVal !== undefined) {
+        valStr = String(propVal);
+      }
+    } else if (o.value !== undefined) {
+      valStr = String(o.value);
+    }
+
+    let resolvedValue = valStr;
+    if (o.type === 'image' && valStr) {
+      resolvedValue = resolveAssetUrl(valStr, assetFiles) || valStr;
+    }
+
+    let clipPath: string | undefined;
+    const css = String(o.css || '');
+    const match = css.match(/clip-path:\s*([^;]+)/i);
+    if (match) {
+      clipPath = match[1].trim();
+    }
+    
+    let w = o.width;
+    if (o.dynamicProperties?.width === 'width' && cardWidth !== undefined) {
+      w = cardWidth;
+    }
+    let h = o.height;
+    if (o.dynamicProperties?.height === 'height' && cardHeight !== undefined) {
+      h = cardHeight;
+    }
+
+    result.push({
+      type: o.type === 'text' ? 'text' : 'image',
+      value: resolvedValue || '',
+      x: typeof o.x === 'number' ? o.x : 0,
+      y: typeof o.y === 'number' ? o.y : 0,
+      width: Number(w ?? cardWidth) || 0,
+      height: Number(h ?? cardHeight) || 0,
+      rotation: typeof o.rotation === 'number' ? o.rotation : undefined,
+      clipPath,
+      css: o.css ? String(o.css) : undefined,
+      borderRadius: o.borderRadius ? String(o.borderRadius) : undefined,
+      fontSize: typeof o.fontSize === 'number' ? o.fontSize : undefined,
+      textAlign: typeof o.textAlign === 'string' ? o.textAlign : undefined,
+      color: typeof o.color === 'string' ? o.color : undefined,
+    });
+  }
+  return result;
 }
 
 /**
@@ -175,6 +251,28 @@ export function normalizePcioWidgets(
       }
       if (String(raw.type || '').toLowerCase() === 'pile') {
         holderHasPileChild.add(parent);
+      }
+    }
+  }
+
+  // Pre-seed seat colors so that child pieces and holders inherit proper vibrant player colors
+  for (const [id, raw] of Object.entries(rawWidgets)) {
+    if (!raw || typeof raw !== 'object') continue;
+    if (String(raw.type || '').toLowerCase() === 'seat') {
+      let seatIndex = 1;
+      if (typeof raw.index === 'number') seatIndex = raw.index;
+      else if (typeof raw.player === 'number') seatIndex = raw.player;
+      else if (typeof id === 'string' && /\d+/.test(id)) {
+        seatIndex = parseInt(id.replace(/\D/g, ''), 10) || 1;
+      }
+      const rawColor = raw.color;
+      const effectiveColor =
+        typeof rawColor === 'string' && rawColor !== '#999999' && rawColor !== '#999'
+          ? rawColor
+          : DEFAULT_SEAT_COLORS[seatIndex] || '#dc2626';
+      raw.color = effectiveColor;
+      if (rawWidgets[`Player ${seatIndex}`]) {
+        rawWidgets[`Player ${seatIndex}`].color = effectiveColor;
       }
     }
   }
@@ -257,6 +355,18 @@ export function normalizePcioWidgets(
 
     // 2. Deck Widget
     if (rawType.includes('deck') || rawType === 'carddeck') {
+      const cardDefaults = raw.cardDefaults as Record<string, unknown> | undefined;
+      const isMovable = resolveInheritedProperty(raw, 'movable', rawWidgets) ?? raw.movable ?? cardDefaults?.movable;
+      const layerVal = cardDefaults?.layer ?? raw.layer;
+      const isBackgroundLayer = typeof layerVal === 'number' && layerVal < 0;
+      const onPileCreation = cardDefaults?.onPileCreation as Record<string, unknown> | undefined;
+      const preventsPile = Boolean(onPileCreation && Object.keys(onPileCreation).some((k) => k.toLowerCase().startsWith('no ')));
+
+      // Skip background, immovable, or template decks (e.g. Frontiers tiles, chips, harbors)
+      if (isMovable === false || isBackgroundLayer || preventsPile || (pileCardMap.size > 0 && !Array.isArray(raw.cardIds))) {
+        continue;
+      }
+
       const cardIds = Array.isArray(raw.cardIds) ? (raw.cardIds as string[]) : [];
       const deckBackImg = resolveAssetUrl(raw.backImage || raw.image || raw.back, assetFiles);
       const width = typeof raw.width === 'number' && raw.width > 0 ? raw.width : 80;
@@ -284,11 +394,29 @@ export function normalizePcioWidgets(
       continue;
     }
 
-    // 3. Hand Widget
-    if (rawType.includes('hand') || rawType === 'cardhand') {
-      const seat = typeof raw.seat === 'number' ? raw.seat : (typeof raw.player === 'number' ? raw.player : 0);
-      const width = typeof raw.width === 'number' && raw.width > 0 ? raw.width : 240;
-      const height = typeof raw.height === 'number' && raw.height > 0 ? raw.height : 140;
+    // 3. Hand Widget (e.g. "Hand", "my_hand", or childrenPerOwner)
+    const isHandHolder =
+      rawType.includes('hand') ||
+      rawType === 'cardhand' ||
+      Boolean(raw.childrenPerOwner) ||
+      (typeof id === 'string' &&
+        (id.toLowerCase() === 'hand' ||
+          id.toLowerCase().includes('_hand') ||
+          id.toLowerCase().includes('hand_') ||
+          id.toLowerCase().includes('- hand')));
+
+    if (isHandHolder) {
+      let seat = 0;
+      if (typeof raw.seat === 'number') seat = raw.seat;
+      else if (typeof raw.player === 'number') seat = raw.player > 0 ? raw.player - 1 : 0;
+      else if (typeof id === 'string' && /\d+/.test(id)) {
+        const num = parseInt(id.replace(/\D/g, ''), 10);
+        seat = num > 0 ? num - 1 : 0;
+      }
+      const rawWidth = Number(resolveInheritedProperty(raw, 'width', rawWidgets)) || raw.width;
+      const rawHeight = Number(resolveInheritedProperty(raw, 'height', rawWidgets)) || raw.height;
+      const width = typeof rawWidth === 'number' && rawWidth > 0 ? rawWidth : 240;
+      const height = typeof rawHeight === 'number' && rawHeight > 0 ? rawHeight : 140;
       const handZ = resolveZIndex(raw, rawWidgets, 10);
 
       normalized[id] = {
@@ -299,7 +427,7 @@ export function normalizePcioWidgets(
         width,
         height,
         zIndex: handZ,
-        label: label || `Hand Spieler ${seat + 1}`,
+        label: label || 'Hand',
         dropTargetTypes: ['card'],
         childIds: Array.isArray(raw.childIds) ? (raw.childIds as string[]) : [],
         layout: 'fan',
@@ -311,8 +439,42 @@ export function normalizePcioWidgets(
       continue;
     }
 
+    // 3b. Seat Widget
+    if (rawType === 'seat') {
+      const width = Number(resolveInheritedProperty(raw, 'width', rawWidgets)) || 150;
+      const height = Number(resolveInheritedProperty(raw, 'height', rawWidgets)) || 40;
+      const seatZ = resolveZIndex(raw, rawWidgets, -1);
+      let seatIndex = 1;
+      if (typeof raw.index === 'number') seatIndex = raw.index;
+      else if (typeof raw.player === 'number') seatIndex = raw.player;
+      else if (typeof id === 'string' && /\d+/.test(id)) {
+        seatIndex = parseInt(id.replace(/\D/g, ''), 10) || 1;
+      }
+
+      const color = String(raw.color || DEFAULT_SEAT_COLORS[seatIndex] || '#dc2626');
+
+      normalized[id] = {
+        id,
+        type: 'seat',
+        index: seatIndex,
+        x: globalPos.x,
+        y: globalPos.y,
+        width,
+        height,
+        zIndex: seatZ,
+        label: label || id,
+        color,
+        player: typeof raw.player === 'string' && raw.player ? raw.player : undefined,
+        hand: typeof raw.hand === 'string' ? raw.hand : undefined,
+        turn: Boolean(raw.turn),
+        movable: false,
+        pinned: true,
+      } as SeatWidget;
+      continue;
+    }
+
     // 4. Holder Widget
-    if (rawType.includes('holder') || rawType === 'zone' || rawType === 'seat') {
+    if (rawType.includes('holder') || rawType === 'zone') {
       const width = Number(resolveInheritedProperty(raw, 'width', rawWidgets)) || 80;
       const height = Number(resolveInheritedProperty(raw, 'height', rawWidgets)) || 120;
       const holderZ = resolveZIndex(raw, rawWidgets, 0);
@@ -378,8 +540,30 @@ export function normalizePcioWidgets(
       const cardMovable = raw.movable ?? cardTypeObj?.movable ?? deckDefaults?.movable ?? true;
       const isMovable = Boolean(cardMovable);
 
+      // Check for Generic Chips
+      let isChip = false;
+      if (Array.isArray(deckObj?.faceTemplates)) {
+        for (const face of deckObj.faceTemplates) {
+          if (face && typeof face === 'object' && 'objects' in face) {
+            const objs = (face as { objects?: unknown[] }).objects;
+            if (Array.isArray(objs)) {
+              if (
+                objs.some((o) => {
+                  if (!o || typeof o !== 'object') return false;
+                  const item = o as { type?: string; dynamicProperties?: { value?: string } };
+                  return item.type === 'text' && item.dynamicProperties?.value === 'number';
+                })
+              ) {
+                isChip = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+
       // Special Case: Number Chips (e.g. Catan "Chips" deck with number & probability dots)
-      if (deckId === 'Chips' || (cardTypeObj && (cardTypeObj.number !== undefined || cardTypeObj.dots !== undefined))) {
+      if (isChip || (cardTypeObj && (cardTypeObj.number !== undefined || cardTypeObj.dots !== undefined))) {
         const numberVal = cardTypeObj?.number !== undefined ? String(cardTypeObj.number) : String(cardTypeKey || '');
         const dotsVal = cardTypeObj?.dots !== undefined ? String(cardTypeObj.dots) : '';
         const chipWidth = Number(raw.width ?? deckDefaults?.width) || 60;
@@ -413,7 +597,7 @@ export function normalizePcioWidgets(
 
       const width = Number(raw.width ?? cardTypeObj?.width ?? deckDefaults?.width) || 80;
       const height = Number(raw.height ?? cardTypeObj?.height ?? deckDefaults?.height) || 120;
-      const clipPath = extractClipPath(deckObj?.faceTemplates, deckId);
+      const clipPath = extractClipPath(deckObj?.faceTemplates);
       const defaultCardLayer = typeof deckDefaults?.layer === 'number' ? deckDefaults.layer : 0;
       const cardZ = resolveZIndex(raw, rawWidgets, defaultCardLayer);
 
@@ -427,6 +611,45 @@ export function normalizePcioWidgets(
       const backImg = resolveAssetUrl(backRaw, assetFiles);
 
       const cardLabel = label || (cardTypeObj?.text as string) || cardTypeKey || 'Karte';
+      
+      const templates = deckObj?.faceTemplates as unknown[] | undefined;
+      const numTemplates = Array.isArray(templates) ? templates.length : 0;
+      const frontFaceIdx = numTemplates > 1 ? 1 : 0;
+      const backFaceIdx = numTemplates > 1 ? 0 : -1;
+
+      const faceObjects = parseFaceTemplateObjects(
+        frontFaceIdx,
+        deckObj?.faceTemplates,
+        cardTypeObj as Record<string, unknown> | undefined,
+        width,
+        height,
+        assetFiles,
+        cardTypeKey
+      );
+
+      const backFaceObjects = backFaceIdx >= 0
+        ? parseFaceTemplateObjects(
+            backFaceIdx,
+            deckObj?.faceTemplates,
+            cardTypeObj as Record<string, unknown> | undefined,
+            width,
+            height,
+            assetFiles,
+            cardTypeKey
+          )
+        : undefined;
+
+      const effectiveBackImg =
+        backImg || (backFaceObjects?.[0]?.value && backFaceObjects[0].type === 'image' ? backFaceObjects[0].value : undefined);
+
+      let isFaceUp = true;
+      if (raw.faceUp !== undefined) {
+        isFaceUp = Boolean(raw.faceUp);
+      } else if (raw.activeFace !== undefined) {
+        isFaceUp = Number(raw.activeFace) > 0;
+      } else if (inPile) {
+        isFaceUp = false;
+      }
 
       normalized[id] = {
         id,
@@ -438,6 +661,7 @@ export function normalizePcioWidgets(
         zIndex: cardZ,
         label: cardLabel,
         deckId,
+        cardType: cardTypeKey || (raw.cardType as string) || undefined,
         clipPath,
         inPile,
         pileId: inPile ? parentId : undefined,
@@ -447,14 +671,17 @@ export function normalizePcioWidgets(
               type: typeof raw.frontImage === 'string' ? 'image' : 'text',
               value: String(frontRaw || cardLabel),
             },
-        backContent: backImg
-          ? { type: 'image', value: backImg }
+        backContent: effectiveBackImg
+          ? { type: 'image', value: effectiveBackImg }
           : {
               type: typeof raw.backImage === 'string' ? 'image' : 'text',
               value: String(raw.backImage || '🂠'),
               color: '#1565c0',
             },
-        faceUp: raw.faceUp !== false,
+        faceUp: isFaceUp,
+        activeFace: typeof raw.activeFace === 'number' ? raw.activeFace : (isFaceUp ? frontFaceIdx : 0),
+        faceObjects,
+        backFaceObjects,
         rotation,
         movable: isMovable,
         pinned: !isMovable,
@@ -465,7 +692,19 @@ export function normalizePcioWidgets(
     // 7. Generic Token or Piece (Roads, Settlements, Cities, Robber, etc.)
     const width = Number(resolveInheritedProperty(raw, 'width', rawWidgets)) || 40;
     const height = Number(resolveInheritedProperty(raw, 'height', rawWidgets)) || 40;
-    const tokenColor = String(resolveInheritedProperty(raw, 'color', rawWidgets) || '#ffb300');
+    let tokenColor = String(resolveInheritedProperty(raw, 'color', rawWidgets) || '');
+    let ownerSeat: number | undefined;
+
+    const pidMatch = String(raw.parent || id).match(/Player\s*(\d+)/i);
+    if (pidMatch) {
+      ownerSeat = parseInt(pidMatch[1], 10);
+      if (!tokenColor || tokenColor === '#ffb300' || tokenColor === 'undefined') {
+        tokenColor = DEFAULT_SEAT_COLORS[ownerSeat] || '#ffb300';
+      }
+    } else if (!tokenColor || tokenColor === 'undefined') {
+      tokenColor = '#ffb300';
+    }
+
     const tokenImage = resolveAssetUrl(
       (resolveInheritedProperty(raw, 'image', rawWidgets) || rawImage) as string | undefined,
       assetFiles,
@@ -485,18 +724,24 @@ export function normalizePcioWidgets(
       zIndex: tokenZ,
       label: label || id,
       color: tokenColor,
-      shape: 'circle',
       image: tokenImage,
+      shape: 'square',
       rotation,
       movable: isMovable,
       pinned: !isMovable,
-      grid,
+      ownerSeat,
+      parent: typeof raw.parent === 'string' ? raw.parent : undefined,
+      grid: Array.isArray(grid) ? (grid as GridSnapDef[]) : undefined,
     } as TokenWidget;
   }
 
-  // Associate cardIds with decks
+  // Associate cardIds with decks (only for cards not inside piles and not placed directly on the board)
   for (const [id, raw] of Object.entries(rawWidgets)) {
     if (!raw || typeof raw !== 'object' || hiddenIds.has(id)) continue;
+    if (typeof raw.parent === 'string' && pileCardMap.has(raw.parent)) continue;
+    if (typeof raw.x === 'number' && typeof raw.y === 'number' && !raw.parent) continue;
+    if (raw.movable === false) continue;
+
     const deckId = typeof raw.deck === 'string' ? raw.deck : (typeof raw.deckId === 'string' ? raw.deckId : undefined);
     if (deckId && normalized[deckId] && normalized[deckId].type === 'deck') {
       const d = normalized[deckId] as DeckWidget;
