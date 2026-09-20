@@ -2,14 +2,14 @@ import React from 'react';
 import PestControlRodentIcon from '@mui/icons-material/PestControlRodent';
 import { useTranslation } from 'react-i18next';
 import { Box, Typography, Button, Paper } from '@mui/material';
-import type { Player, NightAction } from '../../logic/types';
+import type { Player, NightAction, PlayerPowerState } from '../../logic/types';
 
 interface RoleViewProps {
     players: Player[];
     victim: Player;
     onAction: (action: NightAction) => void;
     onSkip: () => void;
-    powerState?: any;
+    powerState?: PlayerPowerState;
     instruction?: string;
 }
 

@@ -79,7 +79,7 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
             // Assign roles to ALL players and initialize power states
             const newPlayers = state.players.map((p, idx) => {
                 const role = (shuffledRoles[idx] || 'VILLAGER') as Role;
-                const powerState: PlayerPowerState = {}; // Using any for initialization convenience
+                const powerState: PlayerPowerState = {};
 
                 if (role === 'WITCH') {
                     powerState.hasHealPotion = true;
