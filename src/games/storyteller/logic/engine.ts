@@ -101,17 +101,19 @@ export const LocalStoryEngine = {
       throw new Error(`Story game ${gameId} not found`);
     }
 
-    const updatedPlayers = Array.isArray(payload.players)
-      ? game.players.map((existingPlayer) => {
-          const match = payload.players?.find((p) => p.id === existingPlayer.id);
-          if (!match) return existingPlayer;
-          return {
-            ...existingPlayer,
-            ...match,
-            name: match.name !== undefined ? match.name.trim() : existingPlayer.name,
-          };
-        })
-      : game.players;
+    let updatedPlayers = game.players;
+    if (Array.isArray(payload.players)) {
+      const payloadPlayersMap = new Map(payload.players.map((p) => [p.id, p]));
+      updatedPlayers = game.players.map((existingPlayer) => {
+        const match = payloadPlayersMap.get(existingPlayer.id);
+        if (!match) return existingPlayer;
+        return {
+          ...existingPlayer,
+          ...match,
+          name: match.name !== undefined ? match.name.trim() : existingPlayer.name,
+        };
+      });
+    }
 
     const updatedGame = await updateStoryGame(gameId, (current) => ({
       ...current,
@@ -233,9 +235,11 @@ export const LocalStoryEngine = {
     }
 
     const existingEntries = await fetchEntriesForGame(existing.id);
+    const existingPlayersMap = new Map((existing.players || []).map((p) => [p.id, p]));
+
     if (isStorySnapshotNewer(snapshot, existing, existingEntries)) {
       const mergedPlayers = snapshot.game.players.map((incomingP) => {
-        const existingP = existing.players.find((p) => p.id === incomingP.id);
+        const existingP = existingPlayersMap.get(incomingP.id);
         const isExistingLocal = existingP ? playerAssignment.isPlayerLocal(existing.id, existingP.id, false) : false;
         return {
           ...existingP,
@@ -260,7 +264,7 @@ export const LocalStoryEngine = {
 
     // Even if story entries are not newer, merge player channel updates
     const hasPlayerChannelUpdates = snapshot.game.players?.some((incomingP) => {
-      const existingP = existing.players?.find((p) => p.id === incomingP.id);
+      const existingP = existingPlayersMap.get(incomingP.id);
       if (!existingP) return false;
       const isExistingLocal = playerAssignment.isPlayerLocal(existing.id, existingP.id, false);
       if (isExistingLocal) return false;
@@ -272,8 +276,9 @@ export const LocalStoryEngine = {
     });
 
     if (hasPlayerChannelUpdates) {
+      const snapshotPlayersMap = new Map((snapshot.game.players || []).map((p) => [p.id, p]));
       const mergedPlayers = existing.players.map((existingP) => {
-        const incomingP = snapshot.game.players?.find((p) => p.id === existingP.id);
+        const incomingP = snapshotPlayersMap.get(existingP.id);
         if (!incomingP) return existingP;
         const isExistingLocal = playerAssignment.isPlayerLocal(existing.id, existingP.id, false);
         if (isExistingLocal) return existingP;
