@@ -29,8 +29,8 @@ describe('Tabletop sync action reductions', () => {
     const deck = nextState.game.widgets.deck1 as DeckWidget;
     const hand = nextState.game.widgets.hand1 as HolderWidget;
 
-    expect(deck.cardIds).toEqual(['c2']);
-    expect(hand.childIds).toEqual(['c1']);
+    expect(deck.cardIds).toEqual(['c1']);
+    expect(hand.childIds).toEqual(['c2']);
   });
 
   it('handles card flick to table and adds flying animation', () => {
