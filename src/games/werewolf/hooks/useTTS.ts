@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { storage } from '../../../lib/storage';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 
-const WEREWOLF_TTS_STORAGE_KEY = 'werewolf_narrator_tts_enabled';
+const WEREWOLF_TTS_STORAGE_KEY = STORAGE_KEYS.WEREWOLF_TTS_ENABLED;
 
 /**
  * `useTTS` — Werewolf Narrator Text-to-Speech Hook
@@ -15,13 +15,13 @@ export const useTTS = () => {
     const { i18n } = useTranslation();
     const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
     const [enabled, setEnabledState] = useState<boolean>(() => {
-        const stored = storage.get(WEREWOLF_TTS_STORAGE_KEY as any);
+        const stored = storage.get(WEREWOLF_TTS_STORAGE_KEY);
         return stored !== 'false';
     });
 
     const setEnabled = useCallback((value: boolean) => {
         setEnabledState(value);
-        storage.set(WEREWOLF_TTS_STORAGE_KEY as any, value ? 'true' : 'false');
+        storage.set(WEREWOLF_TTS_STORAGE_KEY, value ? 'true' : 'false');
         if (!value && typeof window !== 'undefined' && window.speechSynthesis) {
             window.speechSynthesis.cancel();
         }
