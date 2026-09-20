@@ -25,6 +25,15 @@ export interface BaseWidget {
   ownerSeat?: number; // 0-indexed player seat if private
   pinned?: boolean;
   label?: string;
+  clipPath?: string;
+  borderRadius?: string | number;
+  customCss?: string;
+  image?: string;
+  parent?: string;
+  display?: boolean;
+  movable?: boolean;
+  grid?: unknown;
+  hasPileChild?: boolean;
 }
 
 export interface CardContent {
@@ -40,12 +49,19 @@ export interface CardWidget extends BaseWidget {
   backContent: CardContent;
   faceUp: boolean;
   rotation: number;
+  inPile?: boolean;
+  pileId?: string;
+  isTransparent?: boolean;
 }
 
 export interface DeckWidget extends BaseWidget {
   type: 'deck';
   cardIds: string[];
   backContent: CardContent;
+  frontContent?: CardContent;
+  isPile?: boolean;
+  cardCount?: number;
+  rotation?: number;
 }
 
 export interface HolderWidget extends BaseWidget {
@@ -55,12 +71,16 @@ export interface HolderWidget extends BaseWidget {
   layout: 'stack' | 'fan' | 'grid';
   isHand?: boolean; // True for player hands
   dropTarget?: boolean; // True if public discard/play target
+  rotation?: number;
 }
 
 export interface TokenWidget extends BaseWidget {
   type: 'token';
   color: string;
   shape: 'circle' | 'square' | 'meeple';
+  subText?: string;
+  textColor?: string;
+  rotation?: number;
 }
 
 export interface CounterWidget extends BaseWidget {

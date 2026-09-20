@@ -113,6 +113,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
             const isDragging = activeDragId === w.id;
             switch (w.type) {
               case 'card':
+                if ((w as CardWidget).inPile) return null;
                 return (
                   <CardWidgetView
                     key={w.id}
