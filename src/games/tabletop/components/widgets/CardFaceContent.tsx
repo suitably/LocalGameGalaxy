@@ -99,6 +99,18 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
 
   const hasClipPath = Boolean(card.clipPath);
   if (hasClipPath && isFaceUp && card.frontContent.type === 'image') {
+    if (card.frontContent.spriteSheet) {
+      return (
+        <PlayingCardFace
+          frontContent={card.frontContent}
+          backContent={card.backContent}
+          isFaceUp={isFaceUp}
+          label={card.label}
+          width={width || card.width}
+          height={height || card.height}
+        />
+      );
+    }
     return (
       <Box
         component="img"
@@ -116,6 +128,18 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
   }
 
   if (hasClipPath && !isFaceUp) {
+    if (card.backContent?.spriteSheet) {
+      return (
+        <PlayingCardFace
+          frontContent={card.frontContent}
+          backContent={card.backContent}
+          isFaceUp={false}
+          label={card.label}
+          width={width || card.width}
+          height={height || card.height}
+        />
+      );
+    }
     if (card.backContent?.type === 'image' && card.backContent.value) {
       return (
         <Box

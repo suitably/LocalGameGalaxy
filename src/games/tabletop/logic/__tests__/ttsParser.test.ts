@@ -3,7 +3,7 @@ import sampleJson from '../../tabletopsimulator/2500271578.json';
 import { isTtsSaveFile, parseTtsSaveFile } from '../ttsParser';
 import { validateAndSanitizeGame } from '../gameValidator';
 import type { TTSSaveFile } from '../ttsTypes';
-import type { CardWidget, DeckWidget, DieWidget, TokenWidget } from '../types';
+import { HEX_CLIP_PATH, type CardWidget, type DeckWidget, type DieWidget, type TokenWidget, type HolderWidget } from '../types';
 
 describe('ttsParser', () => {
   const ttsData = sampleJson as unknown as TTSSaveFile;
@@ -126,5 +126,112 @@ describe('ttsParser', () => {
     expect(board.width).toBe(1275);
     expect(board.height).toBe(1225);
     expect(board.image).toContain('steamusercontent-a.akamaihd.net');
+  });
+
+  it('converts hex cards (TTS Type 3) to 210x182 px with hexagonal clipPath', () => {
+    const game = parseTtsSaveFile(ttsData);
+    const hexCards = Object.values(game.widgets).filter(
+      (w) => w.type === 'card' && w.clipPath,
+    ) as CardWidget[];
+
+    expect(hexCards.length).toBeGreaterThan(0);
+    expect(hexCards[0].width).toBe(210);
+    expect(hexCards[0].height).toBe(182);
+    expect(hexCards[0].clipPath).toBe(HEX_CLIP_PATH);
+
+    // Verify hex deck is also shaped
+    const hexDeck = Object.values(game.widgets).find(
+      (w) => w.type === 'deck' && w.clipPath,
+    ) as DeckWidget;
+    expect(hexDeck).toBeDefined();
+    expect(hexDeck.width).toBe(210);
+    expect(hexDeck.height).toBe(182);
+  });
+
+  it('converts AttachedSnapPoints into drop target holders with hex shape and transparent style', () => {
+    const game = parseTtsSaveFile(ttsData);
+    const snapHolders = Object.values(game.widgets).filter(
+      (w) => w.type === 'holder' && w.id.startsWith('snap_'),
+    );
+
+    expect(snapHolders.length).toBe(6);
+    for (const sh of snapHolders) {
+      expect(sh.width).toBe(210);
+      expect(sh.height).toBe(182);
+      expect(sh.clipPath).toBe(HEX_CLIP_PATH);
+      expect(sh.label).toBe('Feldkarten');
+      expect((sh as HolderWidget).dropTarget).toBe(true);
+      expect((sh as HolderWidget).layout).toBe('stack');
+      expect((sh as HolderWidget).pinned).toBe(true);
+    }
+  });
+
+  it('cleans internal generic names like backgammon_piece from token labels', () => {
+    const game = parseTtsSaveFile(ttsData);
+    const tokens = Object.values(game.widgets).filter((w) => w.type === 'token');
+
+    for (const t of tokens) {
+      if (t.label) {
+        expect(t.label.startsWith('backgammon_piece')).toBe(false);
+        expect(t.label.startsWith('PiecePack')).toBe(false);
+      }
+    }
+  });
+
+  it('migrates existing saves in validateAndSanitizeGame to add hex shape, clean token labels, and add snap holders', () => {
+    const unmigratedGame = {
+      name: 'Rick and Morty 100 Tage',
+      table: { width: 2000, height: 1600 },
+      widgets: {
+        migrated_board: {
+          id: 'migrated_board',
+          type: 'token' as const,
+          shape: 'rectangle' as const,
+          x: 400,
+          y: 200,
+          width: 1275,
+          height: 1225,
+          image: 'https://steamusercontent-a.akamaihd.net/ugc/1752432457657315071/4CA2BC0FD0D8483D003FC39203118B9C5B3A5A88/',
+        },
+        hex_card_1: {
+          id: 'hex_card_1',
+          type: 'card' as const,
+          width: 80,
+          height: 120,
+          frontContent: {
+            type: 'image' as const,
+            value: 'https://steamusercontent-a.akamaihd.net/ugc/1752432457657352341/B8E2540B64D0AA1B8ED447707E09019A07CFDA6A/',
+          },
+          backContent: {
+            type: 'image' as const,
+            value: 'https://steamusercontent-a.akamaihd.net/ugc/1752432457657319703/B3D051B76921548648B589CF8A62585AE37116D0/',
+          },
+        },
+        generic_token_1: {
+          id: 'generic_token_1',
+          type: 'token' as const,
+          label: 'backgammon_piece_white',
+        },
+      },
+    };
+
+    const sanitized = validateAndSanitizeGame(unmigratedGame);
+
+    // Card should now be hex
+    const card = sanitized.widgets.hex_card_1 as CardWidget;
+    expect(card.width).toBe(210);
+    expect(card.height).toBe(182);
+    expect(card.clipPath).toBe(HEX_CLIP_PATH);
+
+    // Token label should be cleared
+    const token = sanitized.widgets.generic_token_1 as TokenWidget;
+    expect(token.label).toBeUndefined();
+
+    // Snap holders should be generated for the board
+    const snaps = Object.values(sanitized.widgets).filter((w) => w.id.startsWith('snap_'));
+    expect(snaps.length).toBe(6);
+    expect(snaps[0].width).toBe(210);
+    expect(snaps[0].height).toBe(182);
+    expect(snaps[0].clipPath).toBe(HEX_CLIP_PATH);
   });
 });

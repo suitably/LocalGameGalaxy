@@ -42,7 +42,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
   const {
     transform, setTransform, activeDragId, isDraggingActive, dragPointer, grabOffset,
     handlePointerDownWidget, handleStartPan,
-    zoomIn, zoomOut,
+    zoomIn, zoomOut, hoveredTargetId,
   } = useTabletopEngine({
     tableWidth: game.table.width,
     tableHeight: game.table.height,
@@ -119,7 +119,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
         }}
       >
         {boardHolders.map((w) => (
-          <HolderWidgetView key={w.id} widget={w} />
+          <HolderWidgetView key={w.id} widget={w} isHovered={w.id === hoveredTargetId} />
         ))}
 
         {boardWidgets.map((w: TabletopWidget) => {

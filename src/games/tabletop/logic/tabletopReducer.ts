@@ -530,8 +530,10 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
           }
         } else {
           const childIndex = updatedHolder.childIds.indexOf(widgetId);
-          let childX = updatedHolder.x + 4;
-          let childY = updatedHolder.y + 4;
+          const childW = widgets[widgetId]?.width || 80;
+          const childH = widgets[widgetId]?.height || 120;
+          let childX = updatedHolder.x + Math.max(0, Math.round((updatedHolder.width - childW) / 2));
+          let childY = updatedHolder.y + Math.max(0, Math.round((updatedHolder.height - childH) / 2));
           switch (updatedHolder.layout) {
             case 'stack':
               childX += childIndex * 2;

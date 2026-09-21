@@ -88,6 +88,8 @@ export interface TTSObjectState {
   /** Custom visuals */
   CustomImage?: TTSCustomImage;
   CustomMesh?: TTSCustomMesh;
+  /** Attached snap points relative to object origin */
+  AttachedSnapPoints?: TTSSnapPoint[];
 
   /** Lua scripting (ignored for import) */
   LuaScript?: string;
@@ -124,10 +126,24 @@ export interface TTSSaveFile {
   Note?: string;
   TabStates?: Record<string, TTSTabState>;
   ObjectStates: TTSObjectState[];
+  SnapPoints?: TTSSnapPoint[];
   DecalPallet?: unknown[];
   LuaScript?: string;
   LuaScriptState?: string;
   XmlUI?: string;
+}
+
+export interface TTSVector3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
+/** Snap point defined in 3D TTS space */
+export interface TTSSnapPoint {
+  Position: TTSVector3;
+  Rotation?: TTSVector3;
+  Tags?: string[];
 }
 
 /** Parsed spritesheet reference for a single card */

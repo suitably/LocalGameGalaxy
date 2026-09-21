@@ -211,3 +211,6 @@ export interface TabletopGameSummary extends TabletopGameMetadata {
   updatedAt: number;
   format?: 'flat-json' | 'pcio-folder' | 'tts-workshop' | 'unknown';
 }
+
+export const HEX_CLIP_PATH = 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)';
+export const CIRCLE_CLIP_PATH = 'circle(50% at 50% 50%)';

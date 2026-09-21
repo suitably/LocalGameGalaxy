@@ -1,7 +1,15 @@
 /**
  * Tabletop Game Validator & Sanitizer [ID: GAME-TABLETOP-VALIDATOR]
  */
-import type { TabletopGameDefinition, TabletopWidget, TabletopPlayMode, TabletopTableConfig, HolderWidget, TokenWidget } from './types';
+import {
+  HEX_CLIP_PATH,
+  type TabletopGameDefinition,
+  type TabletopWidget,
+  type TabletopPlayMode,
+  type TabletopTableConfig,
+  type HolderWidget,
+  type TokenWidget,
+} from './types';
 import { isHandHolder, isSupplyReserveHolder } from './boardFilter';
 
 export type RawTabletopGameInput = TabletopGameDefinition | (Partial<Omit<TabletopGameDefinition, 'widgets' | 'table' | 'version'>> & {
@@ -102,6 +110,34 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
       if (typeof bc.value === 'string') bc.value = sanitizeLegacyUrl(bc.value);
     }
 
+    // Suppress raw generic names from tokens
+    if (widgetCopy.type === 'token' && typeof widgetCopy.label === 'string') {
+      if (widgetCopy.label.startsWith('backgammon_piece') || widgetCopy.label.startsWith('PiecePack')) {
+        widgetCopy.label = undefined;
+      }
+    }
+
+    // Normalization for hex cards/decks
+    const fcVal = typeof (widgetCopy.frontContent as Record<string, unknown> | undefined)?.value === 'string'
+      ? ((widgetCopy.frontContent as Record<string, unknown>).value as string)
+      : '';
+    const bcVal = typeof (widgetCopy.backContent as Record<string, unknown> | undefined)?.value === 'string'
+      ? ((widgetCopy.backContent as Record<string, unknown>).value as string)
+      : '';
+
+    const isHexCardOrDeck =
+      (widgetCopy.type === 'card' || widgetCopy.type === 'deck') &&
+      (fcVal.includes('B8E2540B64D0AA1B8ED447707E09019A07CFDA6A') ||
+       bcVal.includes('B3D051B76921548648B589CF8A62585AE37116D0') ||
+       widgetCopy.clipPath === HEX_CLIP_PATH ||
+       (widgetCopy.width === 210 && widgetCopy.height === 182));
+
+    if (isHexCardOrDeck) {
+      widgetCopy.width = 210;
+      widgetCopy.height = 182;
+      widgetCopy.clipPath = HEX_CLIP_PATH;
+    }
+
     cleanWidgets[widgetId] = widgetCopy as unknown as TabletopWidget;
   }
 
@@ -156,6 +192,57 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
     };
     cleanWidgets[boardId] = boardWidget;
     rawBg = undefined;
+  }
+
+  // Generate snap holders for Rick and Morty board if not already present
+  const boardWidget = Object.values(cleanWidgets).find(
+    (w) => w.type === 'token' && (w as TokenWidget).shape === 'rectangle' && (w.width >= 500 || w.height >= 500)
+  ) as TokenWidget | undefined;
+
+  const hasSnapHolders = Object.keys(cleanWidgets).some((wId) => wId.startsWith('snap_'));
+
+  const isRickAndMorty = Boolean(
+    boardWidget?.image &&
+    (boardWidget.image.includes('4CA2BC0FD0D8483D003FC39203118B9C5B3A5A88') ||
+     name.toLowerCase().includes('rick and morty') ||
+     name.toLowerCase().includes('rick & morty'))
+  );
+
+  if (boardWidget && !hasSnapHolders && isRickAndMorty) {
+    const boardCenterX = boardWidget.x + Math.round(boardWidget.width / 2);
+    const boardCenterY = boardWidget.y + Math.round(boardWidget.height / 2);
+    const snapOffsets = [
+      { dx: 224, dy: -114 },
+      { dx: 1, dy: -244 },
+      { dx: -225, dy: -120 },
+      { dx: -225, dy: 121 },
+      { dx: -3, dy: 246 },
+      { dx: 227, dy: 125 },
+    ];
+    const snapW = 210;
+    const snapH = 182;
+
+    snapOffsets.forEach((offset, idx) => {
+      const hId = `snap_${boardWidget.id}_${idx}`;
+      cleanWidgets[hId] = {
+        id: hId,
+        type: 'holder',
+        x: Math.round(boardCenterX + offset.dx - snapW / 2),
+        y: Math.round(boardCenterY + offset.dy - snapH / 2),
+        width: snapW,
+        height: snapH,
+        zIndex: (boardWidget.zIndex || 0) + 1,
+        label: 'Feldkarten',
+        dropTargetTypes: ['card', 'token'],
+        childIds: [],
+        layout: 'stack',
+        dropTarget: true,
+        pinned: true,
+        movable: false,
+        clipPath: HEX_CLIP_PATH,
+        customCss: 'transparent',
+      } as HolderWidget;
+    });
   }
 
   return {

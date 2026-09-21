@@ -4,16 +4,18 @@
  * Converts TTS save file JSON (3D ObjectStates) into the Galaxy
  * TabletopGameDefinition (2D widget-based) format.
  */
-import type { TTSSaveFile, TTSObjectState, TTSCustomDeckEntry } from './ttsTypes';
-import type {
-  TabletopGameDefinition,
-  TabletopWidget,
-  CardWidget,
-  DeckWidget,
-  DieWidget,
-  TokenWidget,
-  HolderWidget,
-  CardContent,
+import type { TTSSaveFile, TTSObjectState, TTSCustomDeckEntry, TTSSnapPoint, TTSVector3 } from './ttsTypes';
+import {
+  HEX_CLIP_PATH,
+  CIRCLE_CLIP_PATH,
+  type TabletopGameDefinition,
+  type TabletopWidget,
+  type CardWidget,
+  type DeckWidget,
+  type DieWidget,
+  type TokenWidget,
+  type HolderWidget,
+  type CardContent,
 } from './types';
 import { validateAndSanitizeGame } from './gameValidator';
 import { resolveCardSprite, resolveBackSprite } from './ttsSpritesheet';
@@ -27,6 +29,20 @@ const CARD_H = 120;
 const TOKEN_SIZE = 40;
 /** Die default size */
 const DIE_SIZE = 54;
+
+export { HEX_CLIP_PATH, CIRCLE_CLIP_PATH };
+
+export function getCardShapeAndSize(deck?: TTSCustomDeckEntry): { width: number; height: number; clipPath?: string } {
+  if (deck?.Type === 2 || deck?.Type === 3) {
+    // Hex cards: TTS hex base is ~1.15 aspect ratio
+    return { width: 210, height: 182, clipPath: HEX_CLIP_PATH };
+  }
+  if (deck?.Type === 4) {
+    // Circle cards
+    return { width: 100, height: 100, clipPath: CIRCLE_CLIP_PATH };
+  }
+  return { width: CARD_W, height: CARD_H };
+}
 
 // ─── Detection ───────────────────────────────────────────────────────
 
@@ -112,6 +128,72 @@ function projectPosition(
   return { x: Math.round(x), y: Math.round(y), zIndex: Math.max(1, zIndex) };
 }
 
+function calculateWorldPosOfSnapPoint(
+  parentObj: TTSObjectState,
+  spPos: TTSVector3,
+): { x: number; z: number } {
+  const rotYDeg = parentObj.Transform.rotY || 0;
+  const rotYRad = (rotYDeg * Math.PI) / 180;
+  const cos = Math.cos(rotYRad);
+  const sin = Math.sin(rotYRad);
+  const scaleX = parentObj.Transform.scaleX || 1;
+  const scaleZ = parentObj.Transform.scaleZ || 1;
+
+  const localX = spPos.x;
+  const localZ = spPos.z;
+
+  const rotX = localX * cos + localZ * sin;
+  const rotZ = -localX * sin + localZ * cos;
+
+  return {
+    x: parentObj.Transform.posX + rotX * scaleX,
+    z: parentObj.Transform.posZ + rotZ * scaleZ,
+  };
+}
+
+function projectWorldPos(
+  worldPos: { x: number; z: number },
+  bounds: BoundingBox,
+  margin: number,
+): { x: number; y: number } {
+  const x = (worldPos.x - bounds.minX) * TTS_SCALE + margin;
+  const y = (worldPos.z - bounds.minZ) * TTS_SCALE + margin;
+  return { x: Math.round(x), y: Math.round(y) };
+}
+
+function createSnapHolderWidget(
+  id: string,
+  screenX: number,
+  screenY: number,
+  zIndex: number,
+  sp: TTSSnapPoint,
+  hasHexDeck: boolean,
+): HolderWidget {
+  const isHex = sp.Tags?.some((t) => /feld|hex/i.test(t)) || hasHexDeck;
+  const snapW = isHex ? 210 : 80;
+  const snapH = isHex ? 182 : 120;
+  const label = sp.Tags?.[0] || 'Ablage';
+
+  return {
+    id,
+    type: 'holder',
+    x: Math.round(screenX - snapW / 2),
+    y: Math.round(screenY - snapH / 2),
+    width: snapW,
+    height: snapH,
+    zIndex,
+    label,
+    dropTargetTypes: ['card', 'token'],
+    childIds: [],
+    layout: 'stack',
+    dropTarget: true,
+    pinned: true,
+    movable: false,
+    clipPath: isHex ? HEX_CLIP_PATH : undefined,
+    customCss: 'transparent',
+  };
+}
+
 // ─── Card sprite content builder ─────────────────────────────────────
 
 function buildCardFrontContent(
@@ -186,12 +268,17 @@ function convertCard(
 ): CardWidget {
   const cardId = obj.CardID ?? 0;
   const decks = { ...allCustomDecks, ...sanitizeCustomDecks(obj.CustomDeck) };
+  const deckIndex = Math.floor(cardId / 100);
+  const deckEntry = decks[String(deckIndex)];
+  const shapeInfo = getCardShapeAndSize(deckEntry);
 
   return {
     id: obj.GUID,
     type: 'card',
     x: pos.x, y: pos.y,
-    width: CARD_W, height: CARD_H,
+    width: shapeInfo.width,
+    height: shapeInfo.height,
+    clipPath: shapeInfo.clipPath,
     zIndex: pos.zIndex,
     label: obj.Nickname || `Karte ${cardId}`,
     deckId: deckWidgetId,
@@ -211,7 +298,17 @@ function convertDeck(
   widgets: Record<string, TabletopWidget>,
 ): DeckWidget {
   const deckId = nextId('deck');
-  const mergedDecks = { ...allCustomDecks, ...sanitizeCustomDecks(obj.CustomDeck) };
+  const objDecks = sanitizeCustomDecks(obj.CustomDeck);
+  const mergedDecks = { ...allCustomDecks, ...objDecks };
+
+  let deckIndex: string | undefined = Object.keys(objDecks)[0];
+  if (!deckIndex && obj.DeckIDs && obj.DeckIDs.length > 0) {
+    deckIndex = String(Math.floor(obj.DeckIDs[0] / 100));
+  } else if (!deckIndex && obj.ContainedObjects && obj.ContainedObjects.length > 0 && obj.ContainedObjects[0].CardID) {
+    deckIndex = String(Math.floor(obj.ContainedObjects[0].CardID / 100));
+  }
+  const thisDeck = (deckIndex ? mergedDecks[deckIndex] : undefined) || Object.values(mergedDecks)[0];
+  const shapeInfo = getCardShapeAndSize(thisDeck);
   const cardIds: string[] = [];
 
   // Create cards from ContainedObjects
@@ -228,11 +325,16 @@ function convertDeck(
     // Create cards from DeckIDs (no ContainedObjects)
     for (const dId of obj.DeckIDs) {
       const cId = nextId('card');
+      const dIndex = Math.floor(dId / 100);
+      const cardDeck = mergedDecks[String(dIndex)] || thisDeck;
+      const cardShape = getCardShapeAndSize(cardDeck);
       const card: CardWidget = {
         id: cId,
         type: 'card',
         x: pos.x, y: pos.y,
-        width: CARD_W, height: CARD_H,
+        width: cardShape.width,
+        height: cardShape.height,
+        clipPath: cardShape.clipPath,
         zIndex: pos.zIndex + 1,
         label: `Karte ${dId}`,
         deckId,
@@ -250,18 +352,18 @@ function convertDeck(
     }
   }
 
-  // Get back image from first CustomDeck entry
-  const firstDeckKey = Object.keys(mergedDecks)[0];
-  const firstDeck = firstDeckKey ? mergedDecks[firstDeckKey] : undefined;
-  const backContent: CardContent = firstDeck?.BackURL
-    ? { type: 'image', value: firstDeck.BackURL }
+  // Get back image from CustomDeck entry
+  const backContent: CardContent = thisDeck?.BackURL
+    ? { type: 'image', value: thisDeck.BackURL }
     : { type: 'text', value: '🂠', color: '#1565c0' };
 
   return {
     id: deckId,
     type: 'deck',
     x: pos.x, y: pos.y,
-    width: CARD_W, height: CARD_H,
+    width: shapeInfo.width,
+    height: shapeInfo.height,
+    clipPath: shapeInfo.clipPath,
     zIndex: pos.zIndex,
     label: obj.Nickname || 'Kartenstapel',
     cardIds,
@@ -332,13 +434,17 @@ function convertToken(
   const scale = Math.max(obj.Transform.scaleX || 1, obj.Transform.scaleZ || 1);
   const size = Math.round(TOKEN_SIZE * Math.min(scale, 3));
 
+  const rawName = obj.Name || '';
+  const isGeneric = rawName.startsWith('backgammon') || rawName.startsWith('PiecePack');
+  const label = obj.Nickname || (isGeneric ? undefined : rawName);
+
   return {
     id: obj.GUID,
     type: 'token',
     x: pos.x, y: pos.y,
     width: size, height: size,
     zIndex: pos.zIndex,
-    label: obj.Nickname || obj.Name,
+    label,
     color: ttsColorToHex(obj.ColorDiffuse),
     image: imageUrl,
     shape: 'circle',
@@ -392,6 +498,7 @@ export function parseTtsSaveFile(
   // Collect all CustomDeck entries globally
   const globalDecks: Record<string, TTSCustomDeckEntry> = {};
   collectCustomDecks(save.ObjectStates, globalDecks);
+  const hasAnyHexDeck = Object.values(globalDecks).some((d) => d.Type === 2 || d.Type === 3);
 
   // Track HandTrigger seat assignment
   let handSeatCounter = 0;
@@ -400,6 +507,25 @@ export function parseTtsSaveFile(
   for (const obj of save.ObjectStates) {
     const pos = projectPosition(obj, bounds, margin);
     const name = obj.Name;
+
+    // AttachedSnapPoints on objects
+    if (obj.AttachedSnapPoints && obj.AttachedSnapPoints.length > 0) {
+      for (let i = 0; i < obj.AttachedSnapPoints.length; i++) {
+        const sp = obj.AttachedSnapPoints[i];
+        const worldPos = calculateWorldPosOfSnapPoint(obj, sp.Position);
+        const screenPos = projectWorldPos(worldPos, bounds, margin);
+        const holderId = `snap_${obj.GUID}_${i}`;
+        const holder = createSnapHolderWidget(
+          holderId,
+          screenPos.x,
+          screenPos.y,
+          (pos.zIndex || 0) + 1,
+          sp,
+          hasAnyHexDeck,
+        );
+        widgets[holder.id] = holder;
+      }
+    }
 
     // Skip meta-only objects
     if (name === 'Custom_Assetbundle' || name === 'Custom_PDF') continue;
@@ -486,6 +612,24 @@ export function parseTtsSaveFile(
     // Default fallback: generic token for any unrecognized object
     if (!name.startsWith('Notecard') && !name.startsWith('Tablet')) {
       widgets[obj.GUID] = convertToken(obj, pos);
+    }
+  }
+
+  // Global snap points
+  if (save.SnapPoints && save.SnapPoints.length > 0) {
+    for (let i = 0; i < save.SnapPoints.length; i++) {
+      const sp = save.SnapPoints[i];
+      const screenPos = projectWorldPos({ x: sp.Position.x, z: sp.Position.z }, bounds, margin);
+      const holderId = `snap_global_${i}`;
+      const holder = createSnapHolderWidget(
+        holderId,
+        screenPos.x,
+        screenPos.y,
+        1,
+        sp,
+        hasAnyHexDeck,
+      );
+      widgets[holder.id] = holder;
     }
   }
 
