@@ -37,11 +37,13 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
 
     // Keep callback refs current without adding them to the OSMD load effect deps.
     const onNotesChangedRef = useRef(onNotesChanged);
-    onNotesChangedRef.current = onNotesChanged;
     const onSongEndRef = useRef(onSongEnd);
-    onSongEndRef.current = onSongEnd;
     const onBpmDetectedRef = useRef(onBpmDetected);
-    onBpmDetectedRef.current = onBpmDetected;
+    useEffect(() => {
+        onNotesChangedRef.current = onNotesChanged;
+        onSongEndRef.current = onSongEnd;
+        onBpmDetectedRef.current = onBpmDetected;
+    });
 
     const extractCurrentCursorNotes = useCallback((): TargetNote[] => {
         if (!osmdRef.current?.cursor) return [];

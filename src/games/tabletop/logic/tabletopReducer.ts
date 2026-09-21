@@ -28,7 +28,7 @@ export type TabletopAction =
   | { type: 'RETURN_CARD_TO_DECK'; payload: { cardId: string; deckId: string } }
   | { type: 'UPDATE_COUNTER'; payload: { counterId: string; delta: number } }
   | { type: 'ROLL_DIE'; payload: { dieId: string; value?: number } }
-  | { type: 'ROTATE_CARD'; payload: { cardId: string; angle?: number } }
+  | { type: 'ROTATE_CARD'; payload: { cardId: string; angle?: number; deltaDegrees?: number } }
   | { type: 'ANIMATE_CARD_TO_TABLE'; payload: { cardId: string; targetHolderId: string } }
   | { type: 'FINISH_ANIMATION'; payload: { animationId: string } }
   | { type: 'SELECT_SEAT'; payload: { seatId: string; playerName?: string } }
@@ -90,26 +90,6 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       };
     }
 
-    case 'ROTATE_CARD': {
-      const { cardId, angle = 60 } = action.payload;
-      const card = state.game.widgets[cardId];
-      if (!card || card.type !== 'card') return state;
-      const cardWidget = card as CardWidget;
-      return {
-        ...state,
-        game: {
-          ...state.game,
-          widgets: {
-            ...state.game.widgets,
-            [cardId]: {
-              ...cardWidget,
-              rotation: (cardWidget.rotation + angle) % 360,
-            },
-          },
-        },
-      };
-    }
-
     case 'FLIP_CARD': {
       const widget = state.game.widgets[action.payload.cardId];
       if (!widget || widget.type !== 'card') return state;
@@ -136,7 +116,7 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       const widget = state.game.widgets[action.payload.cardId];
       if (!widget || (widget.type !== 'card' && widget.type !== 'token' && widget.type !== 'holder')) return state;
       const currentRot = typeof (widget as CardWidget).rotation === 'number' ? (widget as CardWidget).rotation : 0;
-      const delta = action.payload.deltaDegrees ?? 90;
+      const delta = action.payload.deltaDegrees ?? action.payload.angle ?? 60;
       const nextRot = (currentRot + delta) % 360;
 
       return {

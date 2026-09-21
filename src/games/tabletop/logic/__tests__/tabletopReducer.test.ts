@@ -21,12 +21,12 @@ describe('tabletopReducer card handling', () => {
           width: 80,
           height: 120,
           zIndex: 10,
-          cardIds: ['c1', 'c2', 'c3'],
+          cardIds: ['c3', 'c2', 'c1'],
           cardCount: 3,
           backContent: { type: 'text', value: '🂠' },
         } as DeckWidget,
-        c1: {
-          id: 'c1',
+        c3: {
+          id: 'c3',
           type: 'card',
           deckId: 'deck1',
           x: 100,
@@ -37,7 +37,7 @@ describe('tabletopReducer card handling', () => {
           inPile: true,
           faceUp: false,
           rotation: 0,
-          frontContent: { type: 'text', value: 'Ace' },
+          frontContent: { type: 'text', value: 'Queen' },
           backContent: { type: 'text', value: '🂠' },
         } as CardWidget,
         c2: {
@@ -53,6 +53,21 @@ describe('tabletopReducer card handling', () => {
           faceUp: false,
           rotation: 0,
           frontContent: { type: 'text', value: 'King' },
+          backContent: { type: 'text', value: '🂠' },
+        } as CardWidget,
+        c1: {
+          id: 'c1',
+          type: 'card',
+          deckId: 'deck1',
+          x: 100,
+          y: 100,
+          width: 80,
+          height: 120,
+          zIndex: 10,
+          inPile: true,
+          faceUp: false,
+          rotation: 0,
+          frontContent: { type: 'text', value: 'Ace' },
           backContent: { type: 'text', value: '🂠' },
         } as CardWidget,
         playerHand: {
@@ -81,7 +96,7 @@ describe('tabletopReducer card handling', () => {
     });
 
     const deck = nextState.game.widgets.deck1 as DeckWidget;
-    expect(deck.cardIds).toEqual(['c2', 'c3']);
+    expect(deck.cardIds).toEqual(['c3', 'c2']);
     expect(deck.cardCount).toBe(2);
 
     const drawnCard = nextState.game.widgets.c1 as CardWidget;
