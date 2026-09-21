@@ -61,6 +61,7 @@ export interface BaseWidget {
   customCss?: string;
   image?: string;
   parent?: string;
+  supplyHolderId?: string;
   display?: boolean;
   movable?: boolean;
   grid?: GridSnapDef[];
@@ -71,6 +72,14 @@ export interface CardContent {
   type: 'text' | 'image';
   value: string;
   color?: string;
+  /** TTS spritesheet metadata for CSS-based card rendering */
+  spriteSheet?: {
+    url: string;
+    col: number;
+    row: number;
+    numWidth: number;
+    numHeight: number;
+  };
 }
 
 export interface CardWidget extends BaseWidget {
@@ -101,6 +110,10 @@ export interface DeckWidget extends BaseWidget {
   isPile?: boolean;
   cardCount?: number;
   rotation?: number;
+  faceUp?: boolean;
+  activeFace?: number;
+  faceObjects?: FaceObject[];
+  backFaceObjects?: FaceObject[];
 }
 
 export interface HolderWidget extends BaseWidget {
@@ -196,5 +209,5 @@ export interface TabletopGameSummary extends TabletopGameMetadata {
   cardCount: number;
   widgetCount: number;
   updatedAt: number;
-  format?: 'flat-json' | 'pcio-folder' | 'unknown';
+  format?: 'flat-json' | 'pcio-folder' | 'tts-workshop' | 'unknown';
 }

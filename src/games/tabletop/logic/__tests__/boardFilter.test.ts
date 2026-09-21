@@ -3,10 +3,12 @@ import {
   isHandHolder,
   isSupplyReserveHolder,
   isPieceInSupplyReserve,
+  isCardInDeck,
   filterBoardHolders,
   filterBoardWidgets,
+  isBoardSnapTarget,
 } from '../boardFilter';
-import type { HolderWidget, TokenWidget, CardWidget, TabletopWidget } from '../types';
+import type { HolderWidget, TokenWidget, CardWidget, TabletopWidget, DeckWidget } from '../types';
 
 describe('boardFilter', () => {
   it('identifies hand holders correctly', () => {
@@ -73,5 +75,42 @@ describe('boardFilter', () => {
     expect(ids).toContain('roadOnTable');
     expect(ids).not.toContain('cardInHand');
     expect(ids).not.toContain('roadInReserve');
+  });
+
+  it('filters out cards that are inside a deck or pile from board widgets in all modes', () => {
+    const widgets: Record<string, TabletopWidget> = {
+      'deck1': { id: 'deck1', type: 'deck', cardIds: ['cardInDeck'] } as DeckWidget,
+      'cardInDeck': { id: 'cardInDeck', type: 'card' } as CardWidget,
+      'cardInPile': { id: 'cardInPile', type: 'card', inPile: true } as CardWidget,
+      'cardFree': { id: 'cardFree', type: 'card', inPile: false } as CardWidget,
+    };
+    const visibleIds = new Set(['cardInDeck', 'cardInPile', 'cardFree']);
+
+    expect(isCardInDeck('cardInDeck', widgets)).toBe(true);
+    expect(isCardInDeck('cardFree', widgets)).toBe(false);
+
+    const localWidgets = filterBoardWidgets(widgets, visibleIds, false);
+    expect(localWidgets.map((w) => w.id)).toEqual(['cardFree']);
+
+    const tvWidgets = filterBoardWidgets(widgets, visibleIds, true);
+    expect(tvWidgets.map((w) => w.id)).toEqual(['cardFree']);
+  });
+
+  it('identifies valid board snap targets correctly', () => {
+    const deck = { id: 'deck1', type: 'deck' } as TabletopWidget;
+    const boardHolder = { id: 'discardPile', type: 'holder' } as TabletopWidget;
+    const handHolder = { id: 'player1Hand', type: 'holder', isHand: true } as TabletopWidget;
+    const supplyHolder = { id: 'Player 1 - Roads', type: 'holder' } as TabletopWidget;
+    const playerAreaHolder = { id: 'area1', type: 'holder', ownerSeat: 0 } as TabletopWidget;
+    const spielerbereichHolder = { id: 'sb', label: 'Spielerbereich', type: 'holder' } as TabletopWidget;
+    const card = { id: 'c1', type: 'card' } as TabletopWidget;
+
+    expect(isBoardSnapTarget(deck)).toBe(true);
+    expect(isBoardSnapTarget(boardHolder)).toBe(true);
+    expect(isBoardSnapTarget(handHolder)).toBe(false);
+    expect(isBoardSnapTarget(supplyHolder)).toBe(false);
+    expect(isBoardSnapTarget(playerAreaHolder)).toBe(false);
+    expect(isBoardSnapTarget(spielerbereichHolder)).toBe(false);
+    expect(isBoardSnapTarget(card)).toBe(false);
   });
 });

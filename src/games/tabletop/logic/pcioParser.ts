@@ -1,9 +1,11 @@
-/** PlayingCards.io (.pcio) and Tabletop JSON Parser [ID: GAME-TABLETOP-PARSER] */
+/** PlayingCards.io (.pcio), Tabletop JSON, and TTS Save File Parser [ID: GAME-TABLETOP-PARSER] */
 import { unzipSync } from 'fflate';
 import type { TabletopGameDefinition } from './types';
 import { validateAndSanitizeGame } from './gameValidator';
 import { detectMimeType, uint8ArrayToBase64, resolveAssetUrl } from './pcioAssetUtils';
 import { normalizePcioWidgets } from './pcioNormalizer';
+import { isTtsSaveFile, parseTtsSaveFile } from './ttsParser';
+import type { TTSSaveFile } from './ttsTypes';
 
 export interface ParsePcioOptions {
   assetFiles?: Record<string, string>;
@@ -33,6 +35,14 @@ export async function parsePcioFile(
   if (typeof source === 'string') {
     try {
       const parsed = JSON.parse(source) as PcioRawState;
+
+      // Auto-detect TTS save file format (SaveName + ObjectStates)
+      if (isTtsSaveFile(parsed)) {
+        return parseTtsSaveFile(parsed as unknown as TTSSaveFile, {
+          defaultName: options?.defaultName,
+        });
+      }
+
       const isFlatWidgets = !parsed.widgets && Object.values(parsed).some(
         (v) => v && typeof v === 'object' && ('type' in v || 'cardTypes' in v || 'deck' in v),
       );

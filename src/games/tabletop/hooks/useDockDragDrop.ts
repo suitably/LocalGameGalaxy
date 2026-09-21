@@ -15,11 +15,15 @@ interface UseDockDragDropOptions {
 export function useDockDragDrop({ tableWidth, tableHeight, dispatch }: UseDockDragDropOptions) {
   const [draggingItem, setDraggingItem] = useState<DockDragItem | null>(null);
   const [pointerPos, setPointerPos] = useState<{ x: number; y: number } | null>(null);
+  const [grabOffset, setGrabOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [boardScale, setBoardScale] = useState<number>(1);
   const [isDragging, setIsDragging] = useState(false);
 
   const startRef = useRef<{
     startX: number;
     startY: number;
+    grabOffset: { x: number; y: number };
+    boardScale: number;
     item: DockDragItem;
     onClick?: () => void;
     hasMoved: boolean;
@@ -40,7 +44,7 @@ export function useDockDragDrop({ tableWidth, tableHeight, dispatch }: UseDockDr
 
   const handlePointerUp = useCallback((e: PointerEvent) => {
     if (!startRef.current) return;
-    const { hasMoved, item, onClick } = startRef.current;
+    const { hasMoved, item, grabOffset, onClick } = startRef.current;
 
     if (!hasMoved) {
       onClick?.();
@@ -51,14 +55,17 @@ export function useDockDragDrop({ tableWidth, tableHeight, dispatch }: UseDockDr
         if (boardEl) {
           const rect = boardEl.getBoundingClientRect();
           if (rect.width > 0 && rect.height > 0) {
-            const rawBoardX = (e.clientX - rect.left) * (tableWidth / rect.width);
-            const rawBoardY = (e.clientY - rect.top) * (tableHeight / rect.height);
+            const currentScale = rect.width / tableWidth;
+            const rawBoardX = (e.clientX - rect.left) / currentScale;
+            const rawBoardY = (e.clientY - rect.top) / currentScale;
+            const itemOffsetX = grabOffset.x / currentScale;
+            const itemOffsetY = grabOffset.y / currentScale;
 
             if (item.type === 'card') {
               const cardW = item.card.width || 80;
               const cardH = item.card.height || 120;
-              const posX = Math.round(Math.max(10, Math.min(tableWidth - cardW - 10, rawBoardX - cardW / 2)));
-              const posY = Math.round(Math.max(10, Math.min(tableHeight - cardH - 10, rawBoardY - cardH / 2)));
+              const posX = Math.round(Math.max(10, Math.min(tableWidth - cardW - 10, rawBoardX - itemOffsetX)));
+              const posY = Math.round(Math.max(10, Math.min(tableHeight - cardH - 10, rawBoardY - itemOffsetY)));
               dispatch({
                 type: 'PLAY_CARD_FROM_HAND',
                 payload: {
@@ -69,8 +76,8 @@ export function useDockDragDrop({ tableWidth, tableHeight, dispatch }: UseDockDr
             } else if (item.type === 'piece') {
               const pieceW = item.piece.width || 56;
               const pieceH = item.piece.height || 56;
-              const posX = Math.round(Math.max(10, Math.min(tableWidth - pieceW - 10, rawBoardX - pieceW / 2)));
-              const posY = Math.round(Math.max(10, Math.min(tableHeight - pieceH - 10, rawBoardY - pieceH / 2)));
+              const posX = Math.round(Math.max(10, Math.min(tableWidth - pieceW - 10, rawBoardX - itemOffsetX)));
+              const posY = Math.round(Math.max(10, Math.min(tableHeight - pieceH - 10, rawBoardY - itemOffsetY)));
               dispatch({
                 type: 'TAKE_PIECE_FROM_SUPPLY',
                 payload: {
@@ -87,6 +94,8 @@ export function useDockDragDrop({ tableWidth, tableHeight, dispatch }: UseDockDr
     startRef.current = null;
     setDraggingItem(null);
     setPointerPos(null);
+    setGrabOffset({ x: 0, y: 0 });
+    setBoardScale(1);
     setIsDragging(false);
   }, [tableWidth, tableHeight, dispatch]);
 
@@ -104,32 +113,54 @@ export function useDockDragDrop({ tableWidth, tableHeight, dispatch }: UseDockDr
   const startCardDrag = useCallback((e: React.PointerEvent, card: CardWidget, onClick?: () => void) => {
     if (e.button !== 0) return;
     const item: DockDragItem = { type: 'card', card };
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const grabOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    const boardEl = document.getElementById('tabletop-board-canvas');
+    const boardRect = boardEl?.getBoundingClientRect();
+    const boardScale = boardRect && boardRect.width > 0 ? boardRect.width / tableWidth : 1;
+
     startRef.current = {
       startX: e.clientX,
       startY: e.clientY,
+      grabOffset,
+      boardScale,
       item,
       onClick,
       hasMoved: false,
     };
+    setGrabOffset(grabOffset);
+    setBoardScale(boardScale);
     setDraggingItem(item);
-  }, []);
+  }, [tableWidth]);
 
   const startPieceDrag = useCallback((e: React.PointerEvent, piece: TokenWidget, groupName: string, onClick?: () => void) => {
     if (e.button !== 0) return;
     const item: DockDragItem = { type: 'piece', piece, groupName };
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const grabOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    const boardEl = document.getElementById('tabletop-board-canvas');
+    const boardRect = boardEl?.getBoundingClientRect();
+    const boardScale = boardRect && boardRect.width > 0 ? boardRect.width / tableWidth : 1;
+
     startRef.current = {
       startX: e.clientX,
       startY: e.clientY,
+      grabOffset,
+      boardScale,
       item,
       onClick,
       hasMoved: false,
     };
+    setGrabOffset(grabOffset);
+    setBoardScale(boardScale);
     setDraggingItem(item);
-  }, []);
+  }, [tableWidth]);
 
   return {
     draggingItem,
     pointerPos: isDragging ? pointerPos : null,
+    grabOffset,
+    boardScale,
     isDragging,
     startCardDrag,
     startPieceDrag,

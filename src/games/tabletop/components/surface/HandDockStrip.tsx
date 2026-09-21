@@ -22,7 +22,7 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
   const { t } = useTranslation();
   const [dockTab, setDockTab] = useState<'cards' | 'supplies'>('cards');
 
-  const { draggingItem, pointerPos, startCardDrag, startPieceDrag } = useDockDragDrop({
+  const { draggingItem, pointerPos, grabOffset, boardScale, startCardDrag, startPieceDrag } = useDockDragDrop({
     tableWidth: state.game.table.width,
     tableHeight: state.game.table.height,
     dispatch,
@@ -96,7 +96,7 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
         userSelect: 'none',
       }}
     >
-      <DockDragOverlay item={draggingItem} pointerPos={pointerPos} />
+      <DockDragOverlay item={draggingItem} pointerPos={pointerPos} grabOffset={grabOffset} scale={boardScale} />
 
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
         {hasSupplyPieces ? (
@@ -145,12 +145,7 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
               groupName={groupName}
               count={pieces.length}
               samplePiece={pieces[0]}
-              onTake={(pieceId) => dispatch({ type: 'TAKE_PIECE_FROM_SUPPLY', payload: { pieceId } })}
-              onPointerDown={(e) =>
-                startPieceDrag(e, pieces[0], groupName, () =>
-                  dispatch({ type: 'TAKE_PIECE_FROM_SUPPLY', payload: { pieceId: pieces[0].id } })
-                )
-              }
+              onPointerDown={(e) => startPieceDrag(e, pieces[0], groupName)}
             />
           ))}
         </Box>

@@ -624,6 +624,7 @@
       "cards": "Karten",
       "reserve": "Vorrat",
       "placeOnBoard": "Aufs Spielbrett legen",
+      "dragToPlace": "Ziehen, um aufs Spielbrett zu legen",
       "take": "Nehmen"
     }
   },

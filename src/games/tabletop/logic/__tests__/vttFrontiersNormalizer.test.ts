@@ -510,4 +510,26 @@ describe('VirtualTabletop / Frontiers Normalization', () => {
     expect(normalized.harbor1).toBeDefined();
     expect(normalized.harbor1.type).toBe('card');
   });
+
+  it('normalizes Frontiers Development pile as face-down with back image and Resource piles as face-up', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('fs');
+    const frontiersPath = '/home/deck/Projects/virtualtabletop/library/games/Frontiers/0.json';
+    if (fs.existsSync(frontiersPath)) {
+      const data = JSON.parse(fs.readFileSync(frontiersPath, 'utf8'));
+      const norm = normalizePcioWidgets(data.widgets || data);
+      const devPile = norm.yjto as DeckWidget;
+      const woodPile = norm.f1uy as DeckWidget;
+
+      expect(devPile).toBeDefined();
+      expect(devPile.faceUp).toBe(false);
+      expect(devPile.activeFace).toBe(0);
+      expect(devPile.backContent.value).toBe('/assets/-376157308_4525');
+
+      expect(woodPile).toBeDefined();
+      expect(woodPile.faceUp).toBe(true);
+      expect(woodPile.activeFace).toBe(1);
+    }
+  });
 });
+

@@ -4,6 +4,7 @@
 import type { TabletopGameDefinition, TabletopWidget, CardWidget, DeckWidget, HolderWidget, CounterWidget, DieWidget, SeatWidget, GridSnapDef } from './types';
 import { calculateHandLayout } from './handLayout';
 import { snapToGridCoords } from './gridLogic';
+import { isBoardSnapTarget } from './boardFilter';
 
 export interface FlyingCardAnimation {
   id: string;
@@ -23,7 +24,7 @@ export type TabletopAction =
   | { type: 'MOVE_WIDGET'; payload: { id: string; x: number; y: number; zIndex?: number } }
   | { type: 'FLIP_CARD'; payload: { cardId: string } }
   | { type: 'SHUFFLE_DECK'; payload: { deckId: string; newCardIds?: string[] } }
-  | { type: 'DRAW_CARD'; payload: { deckId: string; targetHolderId?: string; position?: { x: number; y: number } } }
+  | { type: 'DRAW_CARD'; payload: { deckId: string; cardId?: string; targetHolderId?: string; position?: { x: number; y: number } } }
   | { type: 'SNAP_TO_HOLDER'; payload: { widgetId: string; holderId: string } }
   | { type: 'RETURN_CARD_TO_DECK'; payload: { cardId: string; deckId: string } }
   | { type: 'UPDATE_COUNTER'; payload: { counterId: string; delta: number } }
@@ -49,6 +50,15 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
 
       const widgets = { ...state.game.widgets };
 
+      // Remove from any parent holder that references it via parent property
+      if (widget.parent && widgets[widget.parent] && widgets[widget.parent].type === 'holder') {
+        const parentHolder = widgets[widget.parent] as HolderWidget;
+        widgets[widget.parent] = {
+          ...parentHolder,
+          childIds: (parentHolder.childIds || []).filter((id) => id !== action.payload.id),
+        };
+      }
+
       // Remove from any holder that contains it
       for (const [wId, w] of Object.entries(widgets)) {
         if (w.type === 'holder') {
@@ -73,11 +83,15 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
         }
       }
 
+      const previousParent = widget.parent || widget.supplyHolderId;
       widgets[action.payload.id] = {
         ...widget,
+        parent: undefined,
+        supplyHolderId: previousParent,
         x: action.payload.x,
         y: action.payload.y,
         zIndex: action.payload.zIndex ?? widget.zIndex,
+        movable: true,
         ...(widget.type === 'card' ? { inPile: false, pileId: undefined } : {}),
       };
 
@@ -169,14 +183,16 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       const deck = deckWidget as DeckWidget;
       if (deck.cardIds.length === 0) return state;
 
-      const drawnCardId = deck.cardIds[deck.cardIds.length - 1];
-      const remainingDeckIds = deck.cardIds.slice(0, -1);
+      const drawnCardId = action.payload.cardId || deck.cardIds[deck.cardIds.length - 1];
+      const remainingDeckIds = deck.cardIds.filter((id) => id !== drawnCardId);
 
       const widgets: Record<string, TabletopWidget> = { ...state.game.widgets };
 
       // Update remaining deck / pile state
       let updatedTopFront = deck.frontContent;
       let updatedTopBack = deck.backContent;
+      let updatedFaceObjects = deck.faceObjects;
+      let updatedBackFaceObjects = deck.backFaceObjects;
 
       if (deck.isPile) {
         if (remainingDeckIds.length > 0) {
@@ -185,9 +201,12 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
           if (nextTopCard) {
             updatedTopFront = nextTopCard.frontContent;
             updatedTopBack = nextTopCard.backContent;
+            updatedFaceObjects = nextTopCard.faceObjects;
+            updatedBackFaceObjects = nextTopCard.backFaceObjects;
           }
         } else {
           updatedTopFront = undefined;
+          updatedFaceObjects = undefined;
         }
       }
 
@@ -197,6 +216,8 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
         cardCount: remainingDeckIds.length,
         frontContent: updatedTopFront,
         backContent: updatedTopBack,
+        faceObjects: updatedFaceObjects,
+        backFaceObjects: updatedBackFaceObjects,
       };
 
       const card = widgets[drawnCardId] as CardWidget | undefined;
@@ -339,18 +360,28 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
 
       const newCardIds = deck.cardIds.includes(cardId)
         ? deck.cardIds
-        : [cardId, ...deck.cardIds];
+        : [...deck.cardIds, cardId];
 
       widgets[deck.id] = {
         ...deck,
         cardIds: newCardIds,
         cardCount: newCardIds.length,
+        ...(deck.isPile && card
+          ? {
+              frontContent: card.frontContent,
+              backContent: card.backContent,
+              faceObjects: card.faceObjects,
+              backFaceObjects: card.backFaceObjects,
+            }
+          : {}),
       };
 
       widgets[cardId] = {
         ...card,
         inPile: true,
         pileId: deck.id,
+        faceUp: deck.faceUp ?? false,
+        activeFace: deck.activeFace ?? 0,
         x: deck.x,
         y: deck.y,
         zIndex: deck.zIndex,
@@ -398,16 +429,26 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
         }
         const newCardIds = deck.cardIds.includes(widgetId)
           ? deck.cardIds
-          : [widgetId, ...deck.cardIds];
+          : [...deck.cardIds, widgetId];
         widgets[deck.id] = {
           ...deck,
           cardIds: newCardIds,
           cardCount: newCardIds.length,
+          ...(deck.isPile
+            ? {
+                frontContent: card.frontContent,
+                backContent: card.backContent,
+                faceObjects: card.faceObjects,
+                backFaceObjects: card.backFaceObjects,
+              }
+            : {}),
         };
         widgets[widgetId] = {
           ...card,
           inPile: true,
           pileId: deck.id,
+          faceUp: deck.faceUp ?? false,
+          activeFace: deck.activeFace ?? 0,
           x: deck.x,
           y: deck.y,
           zIndex: deck.zIndex,
@@ -479,6 +520,7 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
             if (w && w.type === 'card') {
               widgets[cId] = {
                 ...w,
+                parent: holderId,
                 x: pos.x,
                 y: pos.y,
                 zIndex: pos.zIndex,
@@ -508,6 +550,7 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
                 if (widgets[cId]) {
                   widgets[cId] = {
                     ...widgets[cId],
+                    parent: holderId,
                     x: updatedHolder.x + 16 + idx * spread,
                     y: updatedHolder.y + Math.max(4, (updatedHolder.height - 120) / 2),
                     zIndex: updatedHolder.zIndex + 10 + idx,
@@ -527,6 +570,7 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
           }
           widgets[widgetId] = {
             ...widgets[widgetId],
+            parent: holderId,
             x: childX,
             y: childY,
             zIndex: Math.max(widgets[widgetId].zIndex, holder.zIndex + 10),
@@ -663,12 +707,38 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
         };
       }
 
+      // Check if dropped on a board HOLDER widget (excluding personal supply organizers)
+      const pieceW = piece.width || 56;
+      const pieceH = piece.height || 56;
+      const cx = posX + pieceW / 2;
+      const cy = posY + pieceH / 2;
+      let targetHolderId: string | undefined;
+      for (const [id, w] of Object.entries(updatedWidgets)) {
+        if (id !== pieceId && isBoardSnapTarget(w, 'token')) {
+          if (cx >= w.x && cx <= w.x + w.width && cy >= w.y && cy <= w.y + w.height) {
+            targetHolderId = id;
+            break;
+          }
+        }
+      }
+
+      if (targetHolderId) {
+        return tabletopReducer(
+          { ...state, game: { ...state.game, widgets: updatedWidgets } },
+          { type: 'SNAP_TO_HOLDER', payload: { widgetId: pieceId, holderId: targetHolderId } }
+        );
+      }
+
+      const maxZ = Math.max(10, ...Object.values(updatedWidgets).map((w) => (typeof w.zIndex === 'number' ? w.zIndex : 0)));
+      const previousParent = piece.parent || piece.supplyHolderId;
+
       updatedWidgets[pieceId] = {
         ...piece,
         parent: undefined,
+        supplyHolderId: previousParent,
         x: posX,
         y: posY,
-        zIndex: 5000,
+        zIndex: Math.max(5000, maxZ + 1),
         movable: true,
       };
 
@@ -722,25 +792,24 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
         }
       }
 
-      // Only snap if dropped directly on a DECK widget
+      // Check if dropped directly on a DECK or board HOLDER widget (excluding personal hands)
       const cx = posX + (card.width || 80) / 2;
       const cy = posY + (card.height || 120) / 2;
-      let targetDeckId: string | undefined;
+      let targetId: string | undefined;
       for (const [id, w] of Object.entries(widgets)) {
-        if (id !== cardId && w.type === 'deck') {
+        if (id !== cardId && isBoardSnapTarget(w, 'card')) {
           if (cx >= w.x && cx <= w.x + w.width && cy >= w.y && cy <= w.y + w.height) {
-            targetDeckId = id;
+            targetId = id;
             break;
           }
         }
       }
 
-      if (targetDeckId) {
-        const deck = widgets[targetDeckId] as DeckWidget;
-        const newCardIds = deck.cardIds.includes(cardId) ? deck.cardIds : [cardId, ...deck.cardIds];
-        widgets[deck.id] = { ...deck, cardIds: newCardIds, cardCount: newCardIds.length };
-        widgets[cardId] = { ...card, parent: undefined, inPile: true, pileId: deck.id, x: deck.x, y: deck.y, zIndex: deck.zIndex };
-        return { ...state, game: { ...state.game, widgets } };
+      if (targetId) {
+        return tabletopReducer(
+          { ...state, game: { ...state.game, widgets } },
+          { type: 'SNAP_TO_HOLDER', payload: { widgetId: cardId, holderId: targetId } }
+        );
       }
 
       const maxZ = Math.max(10, ...Object.values(widgets).map((w) => (typeof w.zIndex === 'number' ? w.zIndex : 0)));
