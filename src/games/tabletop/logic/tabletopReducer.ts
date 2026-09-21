@@ -1,7 +1,7 @@
 /**
  * Reducer for state transitions in Tabletop games [ID: GAME-TABLETOP-REDUCER]
  */
-import type { TabletopGameDefinition, TabletopWidget, CardWidget, DeckWidget, HolderWidget, CounterWidget, DieWidget, SeatWidget, GridSnapDef } from './types';
+import type { TabletopGameDefinition, TabletopWidget, CardWidget, DeckWidget, HolderWidget, CounterWidget, DieWidget, SeatWidget, GridSnapDef, HiddenZone } from './types';
 import { calculateHandLayout } from './handLayout';
 import { snapToGridCoords } from './gridLogic';
 import { isBoardSnapTarget } from './boardFilter';
@@ -34,7 +34,14 @@ export type TabletopAction =
   | { type: 'FINISH_ANIMATION'; payload: { animationId: string } }
   | { type: 'SELECT_SEAT'; payload: { seatId: string; playerName?: string } }
   | { type: 'TAKE_PIECE_FROM_SUPPLY'; payload: { pieceId: string; targetPosition?: { x: number; y: number } } }
-  | { type: 'PLAY_CARD_FROM_HAND'; payload: { cardId: string; position: { x: number; y: number } } };
+  | { type: 'PLAY_CARD_FROM_HAND'; payload: { cardId: string; position: { x: number; y: number } } }
+  | { type: 'SCALE_WIDGETS'; payload: { widgetIds: string[]; factor: number } }
+  | { type: 'RESET_WIDGET_SCALE'; payload: { widgetIds: string[] } }
+  | { type: 'SET_WIDGET_SHOW_ALWAYS'; payload: { widgetId: string; showAlways: boolean } }
+  | { type: 'ADD_HIDDEN_ZONE'; payload: { zone: HiddenZone } }
+  | { type: 'UPDATE_HIDDEN_ZONE'; payload: { id: string; changes: Partial<HiddenZone> } }
+  | { type: 'REMOVE_HIDDEN_ZONE'; payload: { id: string } }
+  | { type: 'TOGGLE_ZONE_REVEAL'; payload: { id: string } };
 
 export function tabletopReducer(state: TabletopGameState, action: TabletopAction): TabletopGameState {
   switch (action.type) {
@@ -834,6 +841,130 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
         game: {
           ...state.game,
           widgets,
+        },
+      };
+    }
+
+    case 'SCALE_WIDGETS': {
+      const { widgetIds, factor } = action.payload;
+      if (!widgetIds || widgetIds.length === 0 || factor <= 0) return state;
+      const widgets = { ...state.game.widgets };
+      for (const id of widgetIds) {
+        const w = widgets[id];
+        if (!w || w.pinned) continue;
+        const defaultW = w.defaultWidth ?? w.width;
+        const defaultH = w.defaultHeight ?? w.height;
+        const newW = Math.max(24, Math.min(1200, Math.round(w.width * factor)));
+        const newH = Math.max(24, Math.min(1200, Math.round(w.height * factor)));
+        const dx = Math.round((newW - w.width) / 2);
+        const dy = Math.round((newH - w.height) / 2);
+        widgets[id] = {
+          ...w,
+          width: newW,
+          height: newH,
+          x: w.x - dx,
+          y: w.y - dy,
+          defaultWidth: defaultW,
+          defaultHeight: defaultH,
+        };
+      }
+      return { ...state, game: { ...state.game, widgets } };
+    }
+
+    case 'RESET_WIDGET_SCALE': {
+      const { widgetIds } = action.payload;
+      if (!widgetIds || widgetIds.length === 0) return state;
+      const widgets = { ...state.game.widgets };
+      for (const id of widgetIds) {
+        const w = widgets[id];
+        if (!w || w.pinned) continue;
+        if (w.defaultWidth && w.defaultHeight) {
+          const dx = Math.round((w.defaultWidth - w.width) / 2);
+          const dy = Math.round((w.defaultHeight - w.height) / 2);
+          widgets[id] = {
+            ...w,
+            width: w.defaultWidth,
+            height: w.defaultHeight,
+            x: w.x - dx,
+            y: w.y - dy,
+          };
+        }
+      }
+      return { ...state, game: { ...state.game, widgets } };
+    }
+
+    case 'SET_WIDGET_SHOW_ALWAYS': {
+      const { widgetId, showAlways } = action.payload;
+      const w = state.game.widgets[widgetId];
+      if (!w) return state;
+      return {
+        ...state,
+        game: {
+          ...state.game,
+          widgets: {
+            ...state.game.widgets,
+            [widgetId]: { ...w, showAlways },
+          },
+        },
+      };
+    }
+
+    case 'ADD_HIDDEN_ZONE': {
+      const { zone } = action.payload;
+      const hiddenZones = { ...(state.game.hiddenZones || {}), [zone.id]: zone };
+      return {
+        ...state,
+        game: {
+          ...state.game,
+          hiddenZones,
+        },
+      };
+    }
+
+    case 'UPDATE_HIDDEN_ZONE': {
+      const { id, changes } = action.payload;
+      const existing = state.game.hiddenZones?.[id];
+      if (!existing) return state;
+      const hiddenZones = {
+        ...(state.game.hiddenZones || {}),
+        [id]: { ...existing, ...changes },
+      };
+      return {
+        ...state,
+        game: {
+          ...state.game,
+          hiddenZones,
+        },
+      };
+    }
+
+    case 'REMOVE_HIDDEN_ZONE': {
+      const { id } = action.payload;
+      if (!state.game.hiddenZones || !state.game.hiddenZones[id]) return state;
+      const hiddenZones = { ...state.game.hiddenZones };
+      delete hiddenZones[id];
+      return {
+        ...state,
+        game: {
+          ...state.game,
+          hiddenZones,
+        },
+      };
+    }
+
+    case 'TOGGLE_ZONE_REVEAL': {
+      const { id } = action.payload;
+      const existing = state.game.hiddenZones?.[id];
+      if (!existing) return state;
+      const hiddenZones = {
+        ...(state.game.hiddenZones || {}),
+        [id]: { ...existing, revealed: !existing.revealed },
+      };
+      return {
+        ...state,
+        game: {
+          ...state.game,
+          hiddenZones,
         },
       };
     }

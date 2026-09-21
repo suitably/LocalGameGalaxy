@@ -23,12 +23,12 @@ import { resolveCardSprite, resolveBackSprite } from './ttsSpritesheet';
 /** Scale factor: 1 TTS unit ≈ this many pixels */
 const TTS_SCALE = 50;
 /** Default card dimensions in pixels */
-const CARD_W = 125;
-const CARD_H = 175;
+const CARD_W = 135;
+const CARD_H = 190;
 /** Token/figurine default size */
-const TOKEN_SIZE = 60;
+const TOKEN_SIZE = 76;
 /** Die default size */
-const DIE_SIZE = 72;
+const DIE_SIZE = 80;
 
 export { HEX_CLIP_PATH, CIRCLE_CLIP_PATH };
 
@@ -437,7 +437,8 @@ function convertToken(
 ): TokenWidget {
   const imageUrl = obj.CustomImage?.ImageURL ? sanitizeTtsUrl(obj.CustomImage.ImageURL) : undefined;
   const scale = Math.max(obj.Transform.scaleX || 1, obj.Transform.scaleZ || 1);
-  const size = Math.round(TOKEN_SIZE * Math.min(scale, 3));
+  const rawSize = Math.round(TOKEN_SIZE * Math.min(Math.max(scale, 0.85), 3));
+  const size = Math.max(68, rawSize);
 
   const rawName = obj.Name || '';
   const isGeneric = rawName.startsWith('backgammon') || rawName.startsWith('PiecePack');

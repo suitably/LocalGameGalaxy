@@ -4,15 +4,17 @@ import { TabletopToolbar } from './TabletopToolbar';
 import { RulesDialog } from './RulesDialog';
 import { FlyingCardsLayer } from './FlyingCardsLayer';
 import type { TabletopGameState, TabletopAction } from '../../logic/tabletopReducer';
-import type { CardWidget, DeckWidget, TokenWidget, CounterWidget, DieWidget, TabletopWidget, SeatWidget } from '../../logic/types';
+import type { TabletopWidget, SeatWidget } from '../../logic/types';
 import { useTabletopEngine } from '../../hooks/useTabletopEngine';
 import { useViewportCulling } from '../../hooks/useViewportCulling';
-import { CardWidgetView } from '../widgets/CardWidgetView';
-import { DeckWidgetView } from '../widgets/DeckWidgetView';
+import { useTabletopSelection } from '../../hooks/useTabletopSelection';
 import { HolderWidgetView } from '../widgets/HolderWidgetView';
-import { TokenWidgetView } from '../widgets/TokenWidgetView';
-import { CounterWidgetView } from '../widgets/CounterWidgetView';
-import { DieWidgetView } from '../widgets/DieWidgetView';
+import { BoardWidgetRenderer } from './BoardWidgetRenderer';
+import { SelectionHighlightLayer } from './SelectionHighlightLayer';
+import { SelectionFloatingBar } from './SelectionFloatingBar';
+import { HiddenZoneLayer } from './HiddenZoneLayer';
+import { WidgetContextMenu, type WidgetContextMenuPosition } from './WidgetContextMenu';
+import { createDefaultHiddenZone } from '../../logic/hiddenZoneLogic';
 import { getSeatWidgets } from '../../logic/seatLogic';
 import { filterBoardHolders, filterBoardWidgets } from '../../logic/boardFilter';
 import { PlayerSeatSelector } from './PlayerSeatSelector';
@@ -30,6 +32,9 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [rulesOpen, setRulesOpen] = useState(false);
   const [hudOpen, setHudOpen] = useState(false);
+  const [contextMenuPos, setContextMenuPos] = useState<WidgetContextMenuPosition | null>(null);
+
+  const selection = useTabletopSelection({ dispatch });
   const { game, flyingCards } = state;
   const seats = useMemo(() => getSeatWidgets(game.widgets), [game.widgets]);
   const activeSeat = useMemo(() => {
@@ -86,6 +91,22 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
     return () => window.removeEventListener('resize', fitToScreen);
   }, [fitToScreen]);
 
+  const onPointerDownBoardWidget = (e: React.PointerEvent, w: TabletopWidget) => {
+    if (selection.handleWidgetClick(w.id, e.shiftKey)) {
+      return;
+    }
+    handlePointerDownWidget(e, w);
+  };
+
+  const handleAddHiddenZone = () => {
+    const zoneId = `hz_${Date.now()}`;
+    const zone = createDefaultHiddenZone(zoneId, game.table.width, game.table.height, {
+      ownerSeat: activeSeat?.index,
+      color: activeSeat?.color,
+    });
+    dispatch({ type: 'ADD_HIDDEN_ZONE', payload: { zone } });
+  };
+
   return (
     <Box
       ref={containerRef}
@@ -122,62 +143,29 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
           <HolderWidgetView key={w.id} widget={w} isHovered={w.id === hoveredTargetId} />
         ))}
 
-        {boardWidgets.map((w: TabletopWidget) => {
-          const isDragging = isDraggingActive && activeDragId === w.id;
-          switch (w.type) {
-            case 'card':
-              return (
-                <CardWidgetView
-                  key={w.id}
-                  widget={w as CardWidget}
-                  isDragging={isDragging}
-                  onPointerDown={(e) => handlePointerDownWidget(e, w)}
-                  onDoubleClick={() => dispatch({ type: 'FLIP_CARD', payload: { cardId: w.id } })}
-                />
-              );
-            case 'deck':
-              return (
-                <DeckWidgetView
-                  key={w.id}
-                  widget={w as DeckWidget}
-                  isDragging={isDragging}
-                  onPointerDown={(e) => handlePointerDownWidget(e, w)}
-                  onDraw={() => dispatch({ type: 'DRAW_CARD', payload: { deckId: w.id } })}
-                  onShuffle={() => dispatch({ type: 'SHUFFLE_DECK', payload: { deckId: w.id } })}
-                />
-              );
-            case 'token':
-              return (
-                <TokenWidgetView
-                  key={w.id}
-                  widget={w as TokenWidget}
-                  isDragging={isDragging}
-                  onPointerDown={(e) => handlePointerDownWidget(e, w)}
-                />
-              );
-            case 'counter':
-              return (
-                <CounterWidgetView
-                  key={w.id}
-                  widget={w as CounterWidget}
-                  onIncrement={() => dispatch({ type: 'UPDATE_COUNTER', payload: { counterId: w.id, delta: w.step || 1 } })}
-                  onDecrement={() => dispatch({ type: 'UPDATE_COUNTER', payload: { counterId: w.id, delta: -(w.step || 1) } })}
-                />
-              );
-            case 'die':
-              return (
-                <DieWidgetView
-                  key={w.id}
-                  widget={w as DieWidget}
-                  isDragging={isDragging}
-                  onPointerDown={(e) => handlePointerDownWidget(e, w)}
-                  onRoll={() => dispatch({ type: 'ROLL_DIE', payload: { dieId: w.id } })}
-                />
-              );
-            default:
-              return null;
-          }
-        })}
+        {boardWidgets.map((w: TabletopWidget) => (
+          <BoardWidgetRenderer
+            key={w.id}
+            widget={w}
+            isDragging={isDraggingActive && activeDragId === w.id}
+            onPointerDown={(e) => onPointerDownBoardWidget(e, w)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setContextMenuPos({ mouseX: e.clientX, mouseY: e.clientY, widgetId: w.id });
+            }}
+            dispatch={dispatch}
+          />
+        ))}
+
+        <SelectionHighlightLayer selectedWidgetIds={selection.selectedWidgetIds} widgets={game.widgets} />
+
+        <HiddenZoneLayer
+          hiddenZones={game.hiddenZones}
+          currentSeatIndex={activeSeat?.index}
+          onToggleReveal={(id) => dispatch({ type: 'TOGGLE_ZONE_REVEAL', payload: { id } })}
+          onRemoveZone={(id) => dispatch({ type: 'REMOVE_HIDDEN_ZONE', payload: { id } })}
+        />
 
         <FlyingCardsLayer
           flyingCards={flyingCards}
@@ -187,6 +175,14 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
           onFinishAnimation={(id) => dispatch({ type: 'FINISH_ANIMATION', payload: { animationId: id } })}
         />
       </Box>
+
+      <SelectionFloatingBar
+        selectedCount={selection.selectedWidgetIds.length}
+        onScaleUp={() => selection.scaleSelected(1.25)}
+        onScaleDown={() => selection.scaleSelected(0.8)}
+        onResetScale={selection.resetScaleSelected}
+        onClearSelection={selection.clearSelection}
+      />
 
       {!isTvMode && seats.length > 0 && (
         <PlayerSeatSelector
@@ -204,14 +200,13 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
           onResetView={fitToScreen}
           onOpenRules={() => setRulesOpen(true)}
           hasRules={Boolean(game.ruleText)}
+          isSelectionMode={selection.isSelectionMode}
+          onToggleSelectionMode={selection.toggleSelectionMode}
+          onAddHiddenZone={handleAddHiddenZone}
         />
       )}
 
-      <RulesDialog
-        open={rulesOpen}
-        onClose={() => setRulesOpen(false)}
-        ruleText={game.ruleText}
-      />
+      <RulesDialog open={rulesOpen} onClose={() => setRulesOpen(false)} ruleText={game.ruleText} />
 
       {seats.length > 0 && (
         <PlayerOverviewHud
@@ -228,6 +223,17 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
         pointerPos={dragPointer}
         grabOffset={grabOffset}
         scale={transform.scale}
+      />
+
+      <WidgetContextMenu
+        position={contextMenuPos}
+        widget={contextMenuPos ? game.widgets[contextMenuPos.widgetId] : undefined}
+        isSelected={contextMenuPos ? selection.selectedWidgetIds.includes(contextMenuPos.widgetId) : false}
+        onClose={() => setContextMenuPos(null)}
+        onToggleSelect={(id) => selection.handleWidgetClick(id, true)}
+        onToggleShowAlways={(id, cur) => dispatch({ type: 'SET_WIDGET_SHOW_ALWAYS', payload: { widgetId: id, showAlways: !cur } })}
+        onScaleWidget={(id, factor) => dispatch({ type: 'SCALE_WIDGETS', payload: { widgetIds: [id], factor } })}
+        onResetWidgetScale={(id) => dispatch({ type: 'RESET_WIDGET_SCALE', payload: { widgetIds: [id] } })}
       />
     </Box>
   );

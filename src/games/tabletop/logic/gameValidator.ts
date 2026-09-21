@@ -11,6 +11,7 @@ import {
   type TokenWidget,
   type CardWidget,
   type DeckWidget,
+  type HiddenZone,
 } from './types';
 import { isHandHolder, isSupplyReserveHolder } from './boardFilter';
 
@@ -310,14 +311,14 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
   // Scale up undersized elements for Rick & Morty so they match the large 1275x1225 board
   if (isRickAndMorty) {
     for (const [wId, w] of Object.entries(cleanWidgets)) {
-      if (w.type === 'card' && (w as CardWidget).clipPath !== HEX_CLIP_PATH && (w as CardWidget).width <= 85) {
-        cleanWidgets[wId] = { ...w, width: 125, height: 175 };
-      } else if (w.type === 'deck' && (w as DeckWidget).clipPath !== HEX_CLIP_PATH && (w as DeckWidget).width <= 85) {
-        cleanWidgets[wId] = { ...w, width: 125, height: 175 };
-      } else if (w.type === 'die' && (w.width <= 56 || w.height <= 56)) {
-        cleanWidgets[wId] = { ...w, width: 72, height: 72 };
-      } else if (w.type === 'token' && w.id !== boardWidget?.id && (w.width <= 55 && w.height <= 55)) {
-        cleanWidgets[wId] = { ...w, width: Math.round(w.width * 1.5), height: Math.round(w.height * 1.5) };
+      if (w.type === 'card' && (w as CardWidget).clipPath !== HEX_CLIP_PATH && (w as CardWidget).width < 130) {
+        cleanWidgets[wId] = { ...w, width: 135, height: 190, defaultWidth: 135, defaultHeight: 190 };
+      } else if (w.type === 'deck' && (w as DeckWidget).clipPath !== HEX_CLIP_PATH && (w as DeckWidget).width < 130) {
+        cleanWidgets[wId] = { ...w, width: 135, height: 190, defaultWidth: 135, defaultHeight: 190 };
+      } else if (w.type === 'die' && (w.width < 80 || w.height < 80)) {
+        cleanWidgets[wId] = { ...w, width: 80, height: 80, defaultWidth: 80, defaultHeight: 80 };
+      } else if (w.type === 'token' && w.id !== boardWidget?.id && (w.width < 70 || w.height < 70)) {
+        cleanWidgets[wId] = { ...w, width: 76, height: 76, defaultWidth: 76, defaultHeight: 76 };
       }
     }
   }
@@ -352,6 +353,24 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
     });
   }
 
+  const rawHiddenZones = raw.hiddenZones && typeof raw.hiddenZones === 'object' ? raw.hiddenZones : {};
+  const cleanHiddenZones: Record<string, HiddenZone> = {};
+  for (const [zId, z] of Object.entries(rawHiddenZones)) {
+    if (!z || typeof z !== 'object') continue;
+    const zoneObj = z as Partial<HiddenZone>;
+    cleanHiddenZones[zId] = {
+      id: zoneObj.id || zId,
+      x: typeof zoneObj.x === 'number' ? zoneObj.x : 0,
+      y: typeof zoneObj.y === 'number' ? zoneObj.y : 0,
+      width: typeof zoneObj.width === 'number' ? zoneObj.width : 300,
+      height: typeof zoneObj.height === 'number' ? zoneObj.height : 200,
+      color: typeof zoneObj.color === 'string' ? zoneObj.color : undefined,
+      ownerSeat: typeof zoneObj.ownerSeat === 'number' ? zoneObj.ownerSeat : undefined,
+      revealed: Boolean(zoneObj.revealed),
+      label: typeof zoneObj.label === 'string' ? zoneObj.label : undefined,
+    };
+  }
+
   return {
     id,
     name,
@@ -372,5 +391,6 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
     assetFiles: raw.assetFiles || {},
     updatedAt: raw.updatedAt || Date.now(),
     ruleText: typeof raw.ruleText === 'string' ? raw.ruleText : undefined,
+    hiddenZones: Object.keys(cleanHiddenZones).length > 0 ? cleanHiddenZones : undefined,
   };
 }
