@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import sampleJson from '../../tabletopsimulator/2500271578.json';
 import { isTtsSaveFile, parseTtsSaveFile } from '../ttsParser';
+import { validateAndSanitizeGame } from '../gameValidator';
 import type { TTSSaveFile } from '../ttsTypes';
 import type { CardWidget, DeckWidget, DieWidget, TokenWidget } from '../types';
 
@@ -84,5 +85,46 @@ describe('ttsParser', () => {
       (w) => w.type === 'holder' && w.isHand,
     );
     expect(hands.length).toBeGreaterThan(0);
+  });
+
+  it('converts Custom_Board to a pinned rectangular TokenWidget and leaves table felt clean', () => {
+    const game = parseTtsSaveFile(ttsData);
+    expect(game.table.backgroundImageUrl).toBeUndefined();
+
+    const board = Object.values(game.widgets).find(
+      (w) => w.type === 'token' && (w as TokenWidget).shape === 'rectangle' && w.width >= 1000,
+    ) as TokenWidget;
+
+    expect(board).toBeDefined();
+    expect(board.pinned).toBe(true);
+    expect(board.movable).toBe(false);
+    expect(board.zIndex).toBe(0);
+    expect(board.width).toBe(1275);
+    expect(board.height).toBe(1225);
+    expect(board.image).toContain('steamusercontent-a.akamaihd.net');
+  });
+
+  it('migrates legacy games with backgroundImageUrl to a board TokenWidget in validateAndSanitizeGame', () => {
+    const legacyGame = {
+      name: 'Legacy Rick and Morty',
+      author: 'Steam Workshop',
+      table: {
+        width: 3000,
+        height: 2000,
+        backgroundImageUrl: 'http://cloud-3.steamusercontent.com/ugc/1752432457657315071/4CA2BC0FD0D8483D003FC39203118B9C5B3A5A88/',
+      },
+      widgets: {},
+    };
+
+    const validated = validateAndSanitizeGame(legacyGame);
+    // Even when passing through validateAndSanitizeGame directly:
+    expect(validated.table.backgroundImageUrl).toBeUndefined();
+    const board = Object.values(validated.widgets).find(
+      (w) => w.type === 'token' && (w as TokenWidget).shape === 'rectangle',
+    ) as TokenWidget;
+    expect(board).toBeDefined();
+    expect(board.width).toBe(1275);
+    expect(board.height).toBe(1225);
+    expect(board.image).toContain('steamusercontent-a.akamaihd.net');
   });
 });

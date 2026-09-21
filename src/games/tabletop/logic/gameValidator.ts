@@ -1,7 +1,7 @@
 /**
  * Tabletop Game Validator & Sanitizer [ID: GAME-TABLETOP-VALIDATOR]
  */
-import type { TabletopGameDefinition, TabletopWidget, TabletopPlayMode, TabletopTableConfig, HolderWidget } from './types';
+import type { TabletopGameDefinition, TabletopWidget, TabletopPlayMode, TabletopTableConfig, HolderWidget, TokenWidget } from './types';
 import { isHandHolder, isSupplyReserveHolder } from './boardFilter';
 
 export type RawTabletopGameInput = TabletopGameDefinition | (Partial<Omit<TabletopGameDefinition, 'widgets' | 'table' | 'version'>> & {
@@ -117,7 +117,46 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
     supportedModes.push('local_pass_and_play');
   }
 
-  const rawBg = raw.table?.backgroundImageUrl || ((raw.table as Record<string, unknown> | undefined)?.background as string | undefined);
+  let rawBg = raw.table?.backgroundImageUrl || ((raw.table as Record<string, unknown> | undefined)?.background as string | undefined);
+
+  // If a TTS game previously had its board mapped to table.backgroundImageUrl,
+  // migrate it to a proper centered board TokenWidget.
+  const hasBoardWidget = Object.values(cleanWidgets).some(
+    (w) => w.type === 'token' && (w as TokenWidget).shape === 'rectangle' && (w.width >= 500 || w.height >= 500)
+  );
+
+  const isTtsBoardBg = Boolean(
+    rawBg &&
+    !hasBoardWidget &&
+    (raw.author === 'Steam Workshop' ||
+     rawBg.includes('steamusercontent') ||
+     rawBg.includes('steamuserimages') ||
+     rawBg.includes('akamaihd.net'))
+  );
+
+  if (isTtsBoardBg && rawBg) {
+    const tableW = raw.table?.width && raw.table.width > 200 ? raw.table.width : 1600;
+    const tableH = raw.table?.height && raw.table.height > 200 ? raw.table.height : 1000;
+    const boardW = 1275;
+    const boardH = 1225;
+    const boardId = 'migrated_board';
+    const boardWidget: TokenWidget = {
+      id: boardId,
+      type: 'token',
+      shape: 'rectangle',
+      x: Math.round((tableW - boardW) / 2),
+      y: Math.round((tableH - boardH) / 2),
+      width: boardW,
+      height: boardH,
+      zIndex: 0,
+      label: 'Spielbrett',
+      image: sanitizeLegacyUrl(rawBg),
+      movable: false,
+      pinned: true,
+    };
+    cleanWidgets[boardId] = boardWidget;
+    rawBg = undefined;
+  }
 
   return {
     id,

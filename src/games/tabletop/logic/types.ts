@@ -128,8 +128,8 @@ export interface HolderWidget extends BaseWidget {
 
 export interface TokenWidget extends BaseWidget {
   type: 'token';
-  color: string;
-  shape: 'circle' | 'square' | 'meeple';
+  color?: string;
+  shape?: 'circle' | 'square' | 'meeple' | 'rectangle';
   subText?: string;
   textColor?: string;
   rotation?: number;

@@ -77,10 +77,20 @@ function computeBounds(objects: TTSObjectState[]): BoundingBox {
 
   for (const obj of objects) {
     const { posX, posZ } = obj.Transform;
-    if (posX < minX) minX = posX;
-    if (posX > maxX) maxX = posX;
-    if (posZ < minZ) minZ = posZ;
-    if (posZ > maxZ) maxZ = posZ;
+    let halfW = 0;
+    let halfZ = 0;
+    if (obj.Name === 'Custom_Board') {
+      const scaleX = obj.Transform.scaleX || 1;
+      const scaleZ = obj.Transform.scaleZ || 1;
+      const widthScale = obj.CustomImage?.WidthScale || 1;
+      const imageScalar = obj.CustomImage?.ImageScalar || 1;
+      halfW = (24.5 * scaleX * widthScale) / 2;
+      halfZ = (24.5 * scaleZ * imageScalar) / 2;
+    }
+    if (posX - halfW < minX) minX = posX - halfW;
+    if (posX + halfW > maxX) maxX = posX + halfW;
+    if (posZ - halfZ < minZ) minZ = posZ - halfZ;
+    if (posZ + halfZ > maxZ) maxZ = posZ + halfZ;
   }
 
   // Fallback for single-object or empty scenes
@@ -284,6 +294,36 @@ function convertDie(
   };
 }
 
+function convertBoard(
+  obj: TTSObjectState,
+  pos: { x: number; y: number; zIndex: number },
+): TokenWidget {
+  const imageUrl = obj.CustomImage?.ImageURL ? sanitizeTtsUrl(obj.CustomImage.ImageURL) : undefined;
+  const scaleX = obj.Transform.scaleX || 1;
+  const scaleZ = obj.Transform.scaleZ || 1;
+  const widthScale = obj.CustomImage?.WidthScale || 1;
+  const imageScalar = obj.CustomImage?.ImageScalar || 1;
+  const unitW = 24.5 * scaleX * widthScale;
+  const unitH = 24.5 * scaleZ * imageScalar;
+  const width = Math.round(unitW * TTS_SCALE);
+  const height = Math.round(unitH * TTS_SCALE);
+
+  return {
+    id: obj.GUID,
+    type: 'token',
+    shape: 'rectangle',
+    x: Math.round(pos.x - width / 2),
+    y: Math.round(pos.y - height / 2),
+    width,
+    height,
+    zIndex: 0,
+    label: obj.Nickname || 'Spielbrett',
+    image: imageUrl,
+    movable: false,
+    pinned: true,
+  };
+}
+
 function convertToken(
   obj: TTSObjectState,
   pos: { x: number; y: number; zIndex: number },
@@ -356,15 +396,6 @@ export function parseTtsSaveFile(
   // Track HandTrigger seat assignment
   let handSeatCounter = 0;
 
-  // Find the board image (Custom_Board or large Custom_Model)
-  let boardImageUrl: string | undefined;
-  for (const obj of save.ObjectStates) {
-    if (obj.Name === 'Custom_Board' && obj.CustomImage?.ImageURL) {
-      boardImageUrl = sanitizeTtsUrl(obj.CustomImage.ImageURL);
-      break;
-    }
-  }
-
   // Process all top-level objects
   for (const obj of save.ObjectStates) {
     const pos = projectPosition(obj, bounds, margin);
@@ -432,10 +463,9 @@ export function parseTtsSaveFile(
       continue;
     }
 
-    // Custom_Board → skip if used as background, otherwise token
+    // Custom_Board → convert to pinned board token widget
     if (name === 'Custom_Board') {
-      if (obj.CustomImage?.ImageURL === boardImageUrl) continue;
-      widgets[obj.GUID] = convertToken(obj, pos);
+      widgets[obj.GUID] = convertBoard(obj, pos);
       continue;
     }
 
@@ -480,7 +510,6 @@ export function parseTtsSaveFile(
     table: {
       width: Math.max(1600, tableWidth),
       height: Math.max(1000, tableHeight),
-      backgroundImageUrl: boardImageUrl,
       backgroundColor: '#1a472a',
     },
     widgets,
