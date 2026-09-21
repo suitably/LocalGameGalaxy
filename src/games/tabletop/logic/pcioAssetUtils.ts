@@ -42,20 +42,33 @@ export function resolveAssetUrl(nameOrPath: unknown, assetFiles?: Record<string,
   if (str.startsWith('data:') || str.startsWith('http://') || str.startsWith('https://')) {
     return str;
   }
-  if (!assetFiles) return null;
-  if (assetFiles[str]) return assetFiles[str];
 
-  const clean = str.replace(/^\/+/, '');
-  if (assetFiles[clean]) return assetFiles[clean];
-  if (assetFiles['/' + clean]) return assetFiles['/' + clean];
-  if (assetFiles['assets/' + clean]) return assetFiles['assets/' + clean];
+  if (assetFiles) {
+    if (assetFiles[str]) return assetFiles[str];
 
-  const base = str.split('/').pop()?.toLowerCase();
-  for (const [key, dataUri] of Object.entries(assetFiles)) {
-    if (key.toLowerCase() === str.toLowerCase()) return dataUri;
-    const keyClean = key.replace(/^\/+/, '').toLowerCase();
-    if (keyClean === clean.toLowerCase()) return dataUri;
-    if (base && key.split('/').pop()?.toLowerCase() === base) return dataUri;
+    const clean = str.replace(/^\/+/, '');
+    if (assetFiles[clean]) return assetFiles[clean];
+    if (assetFiles['/' + clean]) return assetFiles['/' + clean];
+    if (assetFiles['assets/' + clean]) return assetFiles['assets/' + clean];
+
+    const base = str.split('/').pop()?.toLowerCase();
+    for (const [key, dataUri] of Object.entries(assetFiles)) {
+      if (key.toLowerCase() === str.toLowerCase()) return dataUri;
+      const keyClean = key.replace(/^\/+/, '').toLowerCase();
+      if (keyClean === clean.toLowerCase()) return dataUri;
+      if (base && key.split('/').pop()?.toLowerCase() === base) return dataUri;
+    }
   }
+
+  // Fallback: If path is /assets/* or assets/*, return root-relative URL for public/assets serving
+  if (str.startsWith('/assets/') || str.startsWith('assets/')) {
+    return str.startsWith('/') ? str : '/' + str;
+  }
+
+  // Fallback for bare filenames (no path prefix) -> try /assets/<name>
+  if (!str.includes('/') && !str.includes('\\')) {
+    return '/assets/' + str;
+  }
+
   return null;
 }

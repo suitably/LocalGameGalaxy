@@ -1,10 +1,10 @@
-import React, { useRef, useEffect, useCallback, useState } from 'react';
-import { Box, IconButton, Paper, Tooltip } from '@mui/material';
-import ZoomInIcon from '@mui/icons-material/ZoomIn';
-import ZoomOutIcon from '@mui/icons-material/ZoomOut';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import React, { useRef, useEffect, useCallback, useState, useMemo } from 'react';
+import { Box } from '@mui/material';
+import { TabletopToolbar } from './TabletopToolbar';
+import { RulesDialog } from './RulesDialog';
+import { FlyingCardsLayer } from './FlyingCardsLayer';
 import type { TabletopGameState, TabletopAction } from '../../logic/tabletopReducer';
-import type { CardWidget, DeckWidget, HolderWidget, TokenWidget, CounterWidget, DieWidget, TabletopWidget } from '../../logic/types';
+import type { CardWidget, DeckWidget, TokenWidget, CounterWidget, DieWidget, TabletopWidget, SeatWidget } from '../../logic/types';
 import { useTabletopEngine } from '../../hooks/useTabletopEngine';
 import { useViewportCulling } from '../../hooks/useViewportCulling';
 import { CardWidgetView } from '../widgets/CardWidgetView';
@@ -13,7 +13,11 @@ import { HolderWidgetView } from '../widgets/HolderWidgetView';
 import { TokenWidgetView } from '../widgets/TokenWidgetView';
 import { CounterWidgetView } from '../widgets/CounterWidgetView';
 import { DieWidgetView } from '../widgets/DieWidgetView';
-import { PlayingCardFace } from '../widgets/PlayingCardFace';
+import { getSeatWidgets } from '../../logic/seatLogic';
+import { filterBoardHolders, filterBoardWidgets } from '../../logic/boardFilter';
+import { PlayerSeatSelector } from './PlayerSeatSelector';
+import { PlayerOverviewHud } from './PlayerOverviewHud';
+import { BoardDragOverlay } from './BoardDragOverlay';
 
 interface TabletopSurfaceProps {
   state: TabletopGameState;
@@ -21,30 +25,47 @@ interface TabletopSurfaceProps {
   isTvMode?: boolean;
 }
 
-export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
-  state,
-  dispatch,
-  isTvMode = false,
-}) => {
+export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatch, isTvMode = false }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [hudOpen, setHudOpen] = useState(false);
   const { game, flyingCards } = state;
+  const seats = useMemo(() => getSeatWidgets(game.widgets), [game.widgets]);
+  const activeSeat = useMemo(() => {
+    if (state.currentSeatId && state.game.widgets[state.currentSeatId]) {
+      return state.game.widgets[state.currentSeatId] as SeatWidget;
+    }
+    return seats[0];
+  }, [seats, state.currentSeatId, state.game.widgets]);
 
   const {
-    transform, setTransform, activeDragId,
+    transform, setTransform, activeDragId, isDraggingActive, dragPointer, grabOffset,
     handlePointerDownWidget, handlePointerMove, handlePointerUp, handleStartPan,
     zoomIn, zoomOut,
   } = useTabletopEngine({
     tableWidth: game.table.width,
     tableHeight: game.table.height,
     widgets: game.widgets,
+    currentSeatIndex: activeSeat?.index,
     onMoveWidget: (id, x, y) => dispatch({ type: 'MOVE_WIDGET', payload: { id, x, y } }),
     onSnapToHolder: (widgetId, holderId) => dispatch({ type: 'SNAP_TO_HOLDER', payload: { widgetId, holderId } }),
+    onDoubleClickWidget: (cardId) => dispatch({ type: 'FLIP_CARD', payload: { cardId } }),
+    onDrawCardAt: (deckId, x, y) => dispatch({ type: 'DRAW_CARD', payload: { deckId, position: { x, y } } }),
   });
 
   const visibleIds = useViewportCulling(game.widgets, transform, containerSize.width, containerSize.height);
 
-  // Center and auto-fit to screen in both Local and TV mode
+  const boardHolders = useMemo(
+    () => filterBoardHolders(game.widgets, visibleIds, isTvMode),
+    [game.widgets, visibleIds, isTvMode]
+  );
+
+  const boardWidgets = useMemo(
+    () => filterBoardWidgets(game.widgets, visibleIds, isTvMode),
+    [game.widgets, visibleIds, isTvMode]
+  );
+
   const fitToScreen = useCallback(() => {
     if (containerRef.current) {
       const { clientWidth, clientHeight } = containerRef.current;
@@ -81,8 +102,8 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
         touchAction: 'none',
       }}
     >
-      {/* Pan/Zoom Table Canvas */}
       <Box
+        id="tabletop-board-canvas"
         sx={{
           position: 'absolute',
           left: 0,
@@ -99,143 +120,117 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
           transition: isTvMode ? 'transform 0.3s ease' : 'none',
         }}
       >
-        {/* Render Holders first (background layer) */}
-        {Object.values(game.widgets)
-          .filter((w) => w.type === 'holder' && visibleIds.has(w.id))
-          .map((w) => (
-            <HolderWidgetView key={w.id} widget={w as HolderWidget} />
-          ))}
+        {boardHolders.map((w) => (
+          <HolderWidgetView key={w.id} widget={w} />
+        ))}
 
-        {/* Render other widgets */}
-        {Object.values(game.widgets)
-          .filter((w) => w.type !== 'holder' && visibleIds.has(w.id))
-          .map((w: TabletopWidget) => {
-            const isDragging = activeDragId === w.id;
-            switch (w.type) {
-              case 'card':
-                if ((w as CardWidget).inPile) return null;
-                return (
-                  <CardWidgetView
-                    key={w.id}
-                    widget={w as CardWidget}
-                    isDragging={isDragging}
-                    onPointerDown={(e) => handlePointerDownWidget(e, w)}
-                    onDoubleClick={() => dispatch({ type: 'FLIP_CARD', payload: { cardId: w.id } })}
-                  />
-                );
-              case 'deck':
-                return (
-                  <DeckWidgetView
-                    key={w.id}
-                    widget={w as DeckWidget}
-                    onDraw={() => dispatch({ type: 'DRAW_CARD', payload: { deckId: w.id } })}
-                    onShuffle={() => dispatch({ type: 'SHUFFLE_DECK', payload: { deckId: w.id } })}
-                  />
-                );
-              case 'token':
-                return (
-                  <TokenWidgetView
-                    key={w.id}
-                    widget={w as TokenWidget}
-                    isDragging={isDragging}
-                    onPointerDown={(e) => handlePointerDownWidget(e, w)}
-                  />
-                );
-              case 'counter':
-                return (
-                  <CounterWidgetView
-                    key={w.id}
-                    widget={w as CounterWidget}
-                    onIncrement={() => dispatch({ type: 'UPDATE_COUNTER', payload: { counterId: w.id, delta: w.step || 1 } })}
-                    onDecrement={() => dispatch({ type: 'UPDATE_COUNTER', payload: { counterId: w.id, delta: -(w.step || 1) } })}
-                  />
-                );
-              case 'die':
-                return (
-                  <DieWidgetView
-                    key={w.id}
-                    widget={w as DieWidget}
-                    isDragging={isDragging}
-                    onPointerDown={(e) => handlePointerDownWidget(e, w)}
-                    onRoll={() => dispatch({ type: 'ROLL_DIE', payload: { dieId: w.id } })}
-                  />
-                );
-              default:
-                return null;
-            }
-          })}
-
-        {/* Flying cards animation layer (Flick to TV) */}
-        {flyingCards.map((f) => {
-          const card = game.widgets[f.cardId] as CardWidget | undefined;
-          const holder = game.widgets[f.targetHolderId];
-          const targetX = holder ? holder.x + holder.width / 2 - 40 : game.table.width / 2;
-          const targetY = holder ? holder.y + holder.height / 2 - 60 : game.table.height / 2;
-
-          return (
-            <Box
-              key={f.id}
-              onAnimationEnd={() => dispatch({ type: 'FINISH_ANIMATION', payload: { animationId: f.id } })}
-              sx={{
-                position: 'absolute',
-                left: targetX,
-                top: targetY,
-                width: 80,
-                height: 120,
-                borderRadius: 2,
-                boxShadow: 10,
-                zIndex: 999,
-                animation: 'flickFlyIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
-                '@keyframes flickFlyIn': {
-                  '0%': { transform: 'translateY(800px) scale(0.5) rotate(15deg)', opacity: 0 },
-                  '100%': { transform: 'translateY(0) scale(1) rotate(0deg)', opacity: 1 },
-                },
-                border: '1.5px solid rgba(0,0,0,0.2)',
-                overflow: 'hidden',
-                bgcolor: '#fff',
-              }}
-            >
-              {card && (
-                <PlayingCardFace
-                  frontContent={card.frontContent}
-                  backContent={card.backContent}
-                  isFaceUp={true}
-                  label={card.label}
-                  width={80}
-                  height={120}
+        {boardWidgets.map((w: TabletopWidget) => {
+          const isDragging = isDraggingActive && activeDragId === w.id;
+          switch (w.type) {
+            case 'card':
+              return (
+                <CardWidgetView
+                  key={w.id}
+                  widget={w as CardWidget}
+                  isDragging={isDragging}
+                  onPointerDown={(e) => handlePointerDownWidget(e, w)}
+                  onDoubleClick={() => dispatch({ type: 'FLIP_CARD', payload: { cardId: w.id } })}
                 />
-              )}
-            </Box>
-          );
+              );
+            case 'deck':
+              return (
+                <DeckWidgetView
+                  key={w.id}
+                  widget={w as DeckWidget}
+                  isDragging={isDragging}
+                  onPointerDown={(e) => handlePointerDownWidget(e, w)}
+                  onDraw={() => dispatch({ type: 'DRAW_CARD', payload: { deckId: w.id } })}
+                  onShuffle={() => dispatch({ type: 'SHUFFLE_DECK', payload: { deckId: w.id } })}
+                />
+              );
+            case 'token':
+              return (
+                <TokenWidgetView
+                  key={w.id}
+                  widget={w as TokenWidget}
+                  isDragging={isDragging}
+                  onPointerDown={(e) => handlePointerDownWidget(e, w)}
+                />
+              );
+            case 'counter':
+              return (
+                <CounterWidgetView
+                  key={w.id}
+                  widget={w as CounterWidget}
+                  onIncrement={() => dispatch({ type: 'UPDATE_COUNTER', payload: { counterId: w.id, delta: w.step || 1 } })}
+                  onDecrement={() => dispatch({ type: 'UPDATE_COUNTER', payload: { counterId: w.id, delta: -(w.step || 1) } })}
+                />
+              );
+            case 'die':
+              return (
+                <DieWidgetView
+                  key={w.id}
+                  widget={w as DieWidget}
+                  isDragging={isDragging}
+                  onPointerDown={(e) => handlePointerDownWidget(e, w)}
+                  onRoll={() => dispatch({ type: 'ROLL_DIE', payload: { dieId: w.id } })}
+                />
+              );
+            default:
+              return null;
+          }
         })}
+
+        <FlyingCardsLayer
+          flyingCards={flyingCards}
+          widgets={game.widgets}
+          tableWidth={game.table.width}
+          tableHeight={game.table.height}
+          onFinishAnimation={(id) => dispatch({ type: 'FINISH_ANIMATION', payload: { animationId: id } })}
+        />
       </Box>
 
-      {/* Floating Zoom & TV Controls Toolbar */}
-      {!isTvMode && (
-        <Paper
-          elevation={4}
-          sx={{
-            position: 'absolute',
-            bottom: 20,
-            right: 20,
-            borderRadius: 3,
-            bgcolor: 'background.paper',
-            p: 0.5,
-            display: 'flex',
-            gap: 0.5,
-          }}
-        >
-          <Tooltip title="Vergrößern">
-            <IconButton size="small" onClick={zoomIn}><ZoomInIcon /></IconButton>
-          </Tooltip>
-          <Tooltip title="Verkleinern">
-            <IconButton size="small" onClick={zoomOut}><ZoomOutIcon /></IconButton>
-          </Tooltip>
-          <Tooltip title="Ansicht zurücksetzen">
-            <IconButton size="small" onClick={fitToScreen}><RestartAltIcon /></IconButton>
-          </Tooltip>
-        </Paper>
+      {!isTvMode && seats.length > 0 && (
+        <PlayerSeatSelector
+          seats={seats}
+          currentSeatId={state.currentSeatId}
+          onSelectSeat={(seatId) => dispatch({ type: 'SELECT_SEAT', payload: { seatId } })}
+          onToggleHud={() => setHudOpen(true)}
+        />
       )}
+
+      {!isTvMode && (
+        <TabletopToolbar
+          onZoomIn={zoomIn}
+          onZoomOut={zoomOut}
+          onResetView={fitToScreen}
+          onOpenRules={() => setRulesOpen(true)}
+          hasRules={Boolean(game.ruleText)}
+        />
+      )}
+
+      <RulesDialog
+        open={rulesOpen}
+        onClose={() => setRulesOpen(false)}
+        ruleText={game.ruleText}
+      />
+
+      {seats.length > 0 && (
+        <PlayerOverviewHud
+          open={hudOpen}
+          onClose={() => setHudOpen(false)}
+          seats={seats}
+          widgets={game.widgets}
+          currentSeatId={state.currentSeatId}
+        />
+      )}
+
+      <BoardDragOverlay
+        widget={activeDragId && isDraggingActive ? game.widgets[activeDragId] : null}
+        pointerPos={dragPointer}
+        grabOffset={grabOffset}
+        scale={transform.scale}
+      />
     </Box>
   );
 };

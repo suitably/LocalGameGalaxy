@@ -2,13 +2,13 @@ import React from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import SecurityIcon from '@mui/icons-material/Security';
 import { useTranslation } from 'react-i18next';
-import type { Player, NightAction } from '../../logic/types';
+import type { Player, NightAction, PlayerPowerState } from '../../logic/types';
 
 interface RoleViewProps {
     players: Player[];
     onAction: (action: NightAction) => void;
     onSkip: () => void;
-    powerState?: any;
+    powerState?: PlayerPowerState;
     instruction?: string;
 }
 

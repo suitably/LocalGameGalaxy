@@ -2,6 +2,17 @@ import { useEffect, useRef, useCallback } from 'react';
 import { type PlayerRuntime } from './PlayerRuntime';
 import { type PitchResult } from '../../audio/MicrophoneManager';
 import { type RatingType, type ScoreDisplayHandle } from '../ScoreDisplay';
+import { type ParsedSong, type Note } from '../../parser';
+import { type SongWithNotes } from '../PitchVisualizer';
+import { type PassiveGameState, type PassivePlayerState } from '../../types';
+
+export interface PlaybackUpdateState {
+    isPlaying: boolean;
+    currentTime: number;
+    duration: number;
+    progress: number;
+    players?: Array<Partial<PassivePlayerState> & { config?: unknown }>;
+}
 
 /**
  * Props for `useScoringEngine`. Separate from the component signature to allow
@@ -22,7 +33,7 @@ interface UseScoringEngineProps {
     /** Ref flag indicating whether audio is actively playing (used to skip scoring when paused). */
     isPlayingRef: React.RefObject<boolean>;
     /** The fully parsed UltraStar song data (tracks, notes, BPM, GAP). */
-    parsedSong: any;
+    parsedSong: ParsedSong | SongWithNotes | null;
     /** Multiplier applied to BPM for slower/faster lyric scroll (default 1.0). */
     bpmMultiplier: number;
     /** Per-track score weights: `[1.0]` for single singer, `[0.5, 0.5]` for duets. */
@@ -34,12 +45,12 @@ interface UseScoringEngineProps {
     /** If `true`, this instance is in TV/passive mode — reads pitch from `passiveState` rather than mic. */
     isPassive: boolean;
     /** State object received from the host via `GAME_STATE` BroadcastChannel message (TV mode). */
-    passiveState: any;
+    passiveState?: PassiveGameState | null;
     /** If `true`, this instance is a remote phone client — runs a reduced local loop. */
     isClient: boolean;
     _duration: number;
     micLatency?: number;
-    onPlaybackUpdate?: (state: any) => void;
+    onPlaybackUpdate?: (state: PlaybackUpdateState) => void;
     setScores?: React.Dispatch<React.SetStateAction<Record<string, number>>>;
     /** Ref to the current virtual audio time in seconds (used for lyric sync when audioRef is unavailable). */
     virtualTimeRef: React.RefObject<number>;
@@ -125,12 +136,12 @@ export function useScoringEngine({
                 const currentBeat = ((audioRef.current.currentTime * 1000) - latency - (parsedSong.gap || 0)) / beatDuration;
 
                 const tIdx = player.trackIndex;
-                const notesSource = (parsedSong.tracks && parsedSong.tracks.length > 0 && parsedSong.tracks[tIdx])
-                    ? ((parsedSong.tracks[tIdx].notes ?? []) as any[])
+                const notesSource: Note[] = (parsedSong.tracks && parsedSong.tracks.length > 0 && parsedSong.tracks[tIdx])
+                    ? (parsedSong.tracks[tIdx].notes ?? [])
                     : (tIdx === 0 ? (parsedSong.notes || []) : []);
 
                 if (notesSource) {
-                    const activeNote = notesSource.find((n: any) =>
+                    const activeNote = notesSource.find((n: Note) =>
                         n.type !== '-' && n.type !== 'R' && n.type !== 'G' &&
                         currentBeat >= n.start &&
                         currentBeat <= n.start + n.duration
@@ -160,8 +171,8 @@ export function useScoringEngine({
             const currentBeat = ((audioRef.current.currentTime * 1000) - latency - (parsedSong.gap || 0)) / beatDuration;
 
             const tIdx = player.trackIndex;
-            const notesSource: any[] = (parsedSong.tracks && parsedSong.tracks.length > 0 && parsedSong.tracks[tIdx])
-                ? parsedSong.tracks[tIdx].notes
+            const notesSource: Note[] = (parsedSong.tracks && parsedSong.tracks.length > 0 && parsedSong.tracks[tIdx])
+                ? (parsedSong.tracks[tIdx].notes ?? [])
                 : (tIdx === 0 ? (parsedSong.notes || []) : []);
 
             if (!notesSource || notesSource.length === 0) return;
@@ -280,7 +291,7 @@ export function useScoringEngine({
                 }
             }
         }
-    }, [audioRef, isPlayingRef, parsedSong, bpmMultiplier, trackScoreWeights, goldenNoteMultiplier, scoreDisplayRef]);
+    }, [audioRef, isPlayingRef, parsedSong, bpmMultiplier, trackScoreWeights, goldenNoteMultiplier, scoreDisplayRef, micLatency]);
 
     const updateLoop = useCallback(() => {
         const now = performance.now();
@@ -297,12 +308,12 @@ export function useScoringEngine({
         // Interpolate time for fully passive clients
         if (isPassive && isClient && isPlayingRef.current) {
             currentTime += (deltaTime / 1000);
-            (virtualTimeRef as any).current = currentTime;
+            (virtualTimeRef as React.MutableRefObject<number>).current = currentTime;
         }
 
         if (onPlaybackUpdate) {
             onPlaybackUpdate({
-                isPlaying: isPassive ? isPlayingRef.current : !audioRef.current?.paused,
+                isPlaying: isPassive ? (isPlayingRef.current ?? false) : !(audioRef.current?.paused ?? true),
                 currentTime,
                 duration,
                 progress: duration > 0 ? (currentTime / duration) * 100 : 0,
@@ -354,7 +365,7 @@ export function useScoringEngine({
         audioRef,
         isPassive, isClient, isPlayingRef,
         _duration, onPlaybackUpdate,
-        progressLineRef, players, devPitchOverride, processPlayer, setScores
+        progressLineRef, players, devPitchOverride, processPlayer, setScores, virtualTimeRef
     ]);
 
     useEffect(() => {

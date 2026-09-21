@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Typography, Chip } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type { HolderWidget } from '../../logic/types';
 
 interface HolderWidgetViewProps {
@@ -11,6 +12,7 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({
   widget,
   isHovered,
 }) => {
+  const { t } = useTranslation();
   const isHand = Boolean(widget.isHand);
   const childCount = widget.childIds?.length || 0;
   const isCheckerboard =
@@ -137,13 +139,13 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({
                 fontWeight={600}
                 sx={{ color: 'rgba(255, 255, 255, 0.85)', letterSpacing: 0.5 }}
               >
-                {widget.label || (isHand ? 'Hand' : 'Ablage')}
+                {widget.label || (isHand ? t('games.tabletop.hand') : t('games.tabletop.discard'))}
               </Typography>
 
               {isHand && (
                 <Chip
                   size="small"
-                  label={`${childCount} Karten`}
+                  label={t('games.tabletop.cardCount', { count: childCount })}
                   sx={{
                     height: 20,
                     fontSize: '0.75rem',
@@ -178,7 +180,7 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({
 
           {showDropPrompt && (
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>
-              Hier ablegen
+              {t('games.tabletop.dropHere')}
             </Typography>
           )}
         </>

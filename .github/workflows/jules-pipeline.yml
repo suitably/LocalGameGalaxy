@@ -237,11 +237,64 @@ jobs:
             core.setOutput('prompt', prompt);
 
       - name: Invoke Google Jules Agent
-        uses: google-labs-code/jules-invoke@v1
-        with:
-          prompt: ${{ steps.prep.outputs.prompt }}
-          jules_api_key: ${{ secrets.JULES_API_KEY }}
-          starting_branch: 'dev'
+        id: jules_call
+        env:
+          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+          STARTING_BRANCH: 'dev'
+          REPO: ${{ github.repository }}
+          USER_PROMPT: ${{ steps.prep.outputs.prompt }}
+        shell: bash
+        run: |
+          if [ -z "$JULES_API_KEY" ]; then
+            echo "error_msg=Das Secret JULES_API_KEY ist in den GitHub Repository Secrets nicht hinterlegt." >> $GITHUB_OUTPUT
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "::error::JULES_API_KEY secret is not set!"
+            exit 1
+          fi
+
+          echo "$USER_PROMPT" > prompt.txt
+
+          jq -n \
+            --rawfile jules_prompt prompt.txt \
+            --arg starting_branch "$STARTING_BRANCH" \
+            --arg repo_full_name "$REPO" \
+            '{
+              "prompt": $jules_prompt,
+              "sourceContext": {
+                "source": "sources/github/\($repo_full_name)",
+                "githubRepoContext": {
+                  "startingBranch": $starting_branch
+                }
+              },
+              "requirePlanApproval": false,
+              "automationMode": "AUTO_CREATE_PR"
+            }' > jules_payload.json
+
+          echo "Calling Jules API at https://jules.googleapis.com/v1alpha/sessions..."
+          HTTP_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+            'https://jules.googleapis.com/v1alpha/sessions' \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -H "X-Goog-Api-Key: $JULES_API_KEY" \
+            -d @jules_payload.json)
+
+          BODY=$(echo "$HTTP_RESPONSE" | sed -e '$d')
+          STATUS=$(echo "$HTTP_RESPONSE" | tail -n1 | cut -d':' -f2)
+
+          echo "Jules API response status: $STATUS"
+          echo "Response body: $BODY"
+
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
+            SESSION_ID=$(echo "$BODY" | jq -r '.id // .name // empty' | awk -F'/' '{print $NF}')
+            echo "session_id=$SESSION_ID" >> $GITHUB_OUTPUT
+            echo "session_url=https://jules.google.com/task/$SESSION_ID" >> $GITHUB_OUTPUT
+            echo "success=true" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Jules API invocation failed with status $STATUS: $BODY"
+            echo "error_msg=Jules API returned status $STATUS: $BODY" >> $GITHUB_OUTPUT
+            echo "success=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
 
       - name: Update Issue Status on Completion
         if: always()
@@ -249,6 +302,10 @@ jobs:
         with:
           script: |
             const issueNumber = Number("${{ needs.triage.outputs.issue_number }}");
+            const isSuccess = "${{ steps.jules_call.outputs.success }}" === "true";
+            const sessionUrl = "${{ steps.jules_call.outputs.session_url }}";
+            const errorMsg = "${{ steps.jules_call.outputs.error_msg }}";
+
             try {
               await github.rest.issues.removeLabel({
                 owner: context.repo.owner,
@@ -258,11 +315,36 @@ jobs:
               });
             } catch (e) {}
 
-            try {
-              await github.rest.issues.addLabels({
+            if (isSuccess && sessionUrl) {
+              try {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  labels: ['jules:in-review']
+                });
+              } catch (e) {}
+
+              await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issueNumber,
-                labels: ['jules:in-review']
+                body: `🚀 **Google Jules Task gestartet!**\n\nDu kannst den Fortschritt und das VM-Log in Echtzeit hier verfolgen:\n👉 [${sessionUrl}](${sessionUrl})\n\nSobald Jules fertig ist, wird der Pull Request automatisch gegen \`dev\` geöffnet.`
               });
-            } catch (e) {}
+            } else {
+              try {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  labels: ['jules:failed']
+                });
+              } catch (e) {}
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: `❌ **Google Jules konnte nicht gestartet werden:**\n\`\`\`\n${errorMsg || 'Unbekannter Fehler bei der API-Anfrage.'}\n\`\`\`\nBitte überprüfe dein \`JULES_API_KEY\` Secret unter **Settings → Secrets and variables → Actions**.`
+              });
+            }
