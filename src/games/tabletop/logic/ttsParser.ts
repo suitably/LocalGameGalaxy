@@ -23,12 +23,12 @@ import { resolveCardSprite, resolveBackSprite } from './ttsSpritesheet';
 /** Scale factor: 1 TTS unit ≈ this many pixels */
 const TTS_SCALE = 50;
 /** Default card dimensions in pixels */
-const CARD_W = 80;
-const CARD_H = 120;
+const CARD_W = 125;
+const CARD_H = 175;
 /** Token/figurine default size */
-const TOKEN_SIZE = 40;
+const TOKEN_SIZE = 60;
 /** Die default size */
-const DIE_SIZE = 54;
+const DIE_SIZE = 72;
 
 export { HEX_CLIP_PATH, CIRCLE_CLIP_PATH };
 
@@ -138,9 +138,14 @@ function calculateWorldPosOfSnapPoint(
   const sin = Math.sin(rotYRad);
   const scaleX = parentObj.Transform.scaleX || 1;
   const scaleZ = parentObj.Transform.scaleZ || 1;
+  // Custom_Board snap points are stored in visual-space local coords, which include
+  // the WidthScale and ImageScalar stretch. We must apply these before rotating so
+  // the resulting world position aligns with the stretched board image in 2D.
+  const widthScale = parentObj.CustomImage?.WidthScale || 1;
+  const imageScalar = parentObj.CustomImage?.ImageScalar || 1;
 
-  const localX = spPos.x;
-  const localZ = spPos.z;
+  const localX = spPos.x * widthScale;
+  const localZ = spPos.z * imageScalar;
 
   const rotX = localX * cos + localZ * sin;
   const rotZ = -localX * sin + localZ * cos;
@@ -462,7 +467,7 @@ function convertHandTrigger(
     id: obj.GUID,
     type: 'holder',
     x: pos.x, y: pos.y,
-    width: 240, height: 140,
+    width: 340, height: 200,
     zIndex: pos.zIndex + 1000,
     label: `Hand ${seatIndex + 1}`,
     dropTargetTypes: ['card'],

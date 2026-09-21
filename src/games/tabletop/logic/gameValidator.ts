@@ -255,6 +255,21 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
     (w) => w.type === 'token' && (w as TokenWidget).shape === 'rectangle' && (w.width >= 500 || w.height >= 500)
   ) as TokenWidget | undefined;
 
+  // Corrected snap offsets derived from pixel analysis of the board image (4CA2BC0...).
+  // Each entry is the (dx,dy) offset from board center to the visual hex-field center.
+  // Order matches the 6 TTS AttachedSnapPoints after their 180° rotY correction:
+  //   [0]=bottom-left  [1]=bottom  [2]=bottom-right  [3]=top-right  [4]=top  [5]=top-left
+  const RM_SNAP_OFFSETS = [
+    { dx: -341, dy:  179 },  // 0: bottom-left
+    { dx:    0, dy:  390 },  // 1: bottom
+    { dx:  341, dy:  179 },  // 2: bottom-right
+    { dx:  341, dy: -179 },  // 3: top-right
+    { dx:    0, dy: -390 },  // 4: top
+    { dx: -341, dy: -179 },  // 5: top-left
+  ] as const;
+  const RM_SNAP_W = 210;
+  const RM_SNAP_H = 182;
+
   const hasSnapHolders = Object.keys(cleanWidgets).some((wId) => wId.startsWith('snap_'));
 
   const isRickAndMorty = Boolean(
@@ -264,19 +279,55 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
      name.toLowerCase().includes('rick & morty'))
   );
 
+  // Migrate existing saves that have snap holders at the OLD (wrong) positions,
+  // and update any cards that are already snapped inside them.
+  if (boardWidget && hasSnapHolders && isRickAndMorty) {
+    const boardCenterX = boardWidget.x + Math.round(boardWidget.width / 2);
+    const boardCenterY = boardWidget.y + Math.round(boardWidget.height / 2);
+    RM_SNAP_OFFSETS.forEach((offset, idx) => {
+      const hId = `snap_${boardWidget.id}_${idx}`;
+      const holder = cleanWidgets[hId] as HolderWidget | undefined;
+      if (holder) {
+        const correctX = Math.round(boardCenterX + offset.dx - RM_SNAP_W / 2);
+        const correctY = Math.round(boardCenterY + offset.dy - RM_SNAP_H / 2);
+        cleanWidgets[hId] = { ...holder, x: correctX, y: correctY, width: RM_SNAP_W, height: RM_SNAP_H };
+        if (holder.childIds && holder.childIds.length > 0) {
+          holder.childIds.forEach((cId) => {
+            const child = cleanWidgets[cId];
+            if (child) {
+              cleanWidgets[cId] = {
+                ...child,
+                x: Math.round(correctX + (RM_SNAP_W - (child.width || RM_SNAP_W)) / 2),
+                y: Math.round(correctY + (RM_SNAP_H - (child.height || RM_SNAP_H)) / 2),
+              };
+            }
+          });
+        }
+      }
+    });
+  }
+
+  // Scale up undersized elements for Rick & Morty so they match the large 1275x1225 board
+  if (isRickAndMorty) {
+    for (const [wId, w] of Object.entries(cleanWidgets)) {
+      if (w.type === 'card' && (w as CardWidget).clipPath !== HEX_CLIP_PATH && (w as CardWidget).width <= 85) {
+        cleanWidgets[wId] = { ...w, width: 125, height: 175 };
+      } else if (w.type === 'deck' && (w as DeckWidget).clipPath !== HEX_CLIP_PATH && (w as DeckWidget).width <= 85) {
+        cleanWidgets[wId] = { ...w, width: 125, height: 175 };
+      } else if (w.type === 'die' && (w.width <= 56 || w.height <= 56)) {
+        cleanWidgets[wId] = { ...w, width: 72, height: 72 };
+      } else if (w.type === 'token' && w.id !== boardWidget?.id && (w.width <= 55 && w.height <= 55)) {
+        cleanWidgets[wId] = { ...w, width: Math.round(w.width * 1.5), height: Math.round(w.height * 1.5) };
+      }
+    }
+  }
+
   if (boardWidget && !hasSnapHolders && isRickAndMorty) {
     const boardCenterX = boardWidget.x + Math.round(boardWidget.width / 2);
     const boardCenterY = boardWidget.y + Math.round(boardWidget.height / 2);
-    const snapOffsets = [
-      { dx: 224, dy: -114 },
-      { dx: 1, dy: -244 },
-      { dx: -225, dy: -120 },
-      { dx: -225, dy: 121 },
-      { dx: -3, dy: 246 },
-      { dx: 227, dy: 125 },
-    ];
-    const snapW = 210;
-    const snapH = 182;
+    const snapOffsets = RM_SNAP_OFFSETS;
+    const snapW = RM_SNAP_W;
+    const snapH = RM_SNAP_H;
 
     snapOffsets.forEach((offset, idx) => {
       const hId = `snap_${boardWidget.id}_${idx}`;
