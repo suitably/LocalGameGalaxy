@@ -42,4 +42,4 @@ __pycache__/
 *.pyc
 server/music/
 music/
-public/assets/
+public/assets
