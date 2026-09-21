@@ -20,13 +20,14 @@ describe('verifyNotesMatch', () => {
         expect(verifyNotesMatch(targetNotes, [])).toBe(false);
     });
 
-    it('returns true automatically when all target notes are tied continuations', () => {
+    it('returns false when all target notes are tied continuations (no new strike required, no free points)', () => {
         const targetNotes: TargetNote[] = [
             { pitch: 69, duration: 0.25, isTiedContinuation: true }
         ];
 
-        // Player struck note previously, so no new keypress needed
-        expect(verifyNotesMatch(targetNotes, [])).toBe(true);
+        // Player already struck note at tie start; tied continuations do not require strikes and do not score
+        expect(verifyNotesMatch(targetNotes, [])).toBe(false);
+        expect(verifyNotesMatch(targetNotes, [69])).toBe(false);
     });
 
     it('requires striking only the non-tied note in a mixed chord with ties', () => {
@@ -37,6 +38,9 @@ describe('verifyNotesMatch', () => {
 
         // Neither note played -> false
         expect(verifyNotesMatch(targetNotes, [])).toBe(false);
+
+        // Playing only the tied note -> false (does not score for tied continuation)
+        expect(verifyNotesMatch(targetNotes, [69])).toBe(false);
 
         // Wrong pitch played -> false
         expect(verifyNotesMatch(targetNotes, [50])).toBe(false);
