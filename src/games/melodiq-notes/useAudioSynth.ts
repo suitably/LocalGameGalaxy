@@ -13,6 +13,7 @@ const midiToFreq = (midi: number): number => {
 
 export const useAudioSynth = () => {
     const audioCtxRef = useRef<AudioContext | null>(null);
+    const activeVoicesRef = useRef<Set<{ osc: OscillatorNode; osc2: OscillatorNode; gain: GainNode }>>(new Set());
 
     const initAudioContext = useCallback(() => {
         if (!audioCtxRef.current) {
@@ -66,6 +67,9 @@ export const useAudioSynth = () => {
         osc2.connect(gain);
         gain.connect(ctx.destination);
 
+        const voice = { osc, osc2, gain };
+        activeVoicesRef.current.add(voice);
+
         osc.start(now);
         osc2.start(now);
 
@@ -75,6 +79,7 @@ export const useAudioSynth = () => {
 
         // Disconnect nodes after stop to prevent leak
         const handleEnded = () => {
+            activeVoicesRef.current.delete(voice);
             try {
                 osc.disconnect();
                 osc2.disconnect();
@@ -86,16 +91,36 @@ export const useAudioSynth = () => {
         osc.addEventListener('ended', handleEnded, { once: true });
     }, [initAudioContext]);
 
+    const stopAllNotes = useCallback(() => {
+        const ctx = audioCtxRef.current;
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        activeVoicesRef.current.forEach(({ osc, osc2, gain }) => {
+            try {
+                gain.gain.cancelScheduledValues(now);
+                gain.gain.setValueAtTime(gain.gain.value, now);
+                gain.gain.linearRampToValueAtTime(0.0001, now + 0.03);
+                osc.stop(now + 0.04);
+                osc2.stop(now + 0.04);
+            } catch {
+                // Ignore if already stopped
+            }
+        });
+        activeVoicesRef.current.clear();
+    }, []);
+
     useEffect(() => {
         return () => {
+            stopAllNotes();
             if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
                 audioCtxRef.current.close().catch(() => {});
             }
         };
-    }, []);
+    }, [stopAllNotes]);
 
     return {
         playNote,
+        stopAllNotes,
         initAudioContext
     };
 };

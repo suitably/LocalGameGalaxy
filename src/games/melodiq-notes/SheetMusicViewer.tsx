@@ -3,13 +3,14 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 import type { TargetNote } from './useNoteVerifier';
-import { midiNoteFromPitchObject } from './logic/musicXmlParser';
+import { extractCursorData } from './logic/cursorNotes';
 
 export interface SheetMusicViewerRef {
     nextNote: () => TargetNote[];
     previousNote: () => TargetNote[];
     resetCursor: () => TargetNote[];
     getCurrentNotes: () => TargetNote[];
+    getStepDuration: () => number;
 }
 
 interface SheetMusicViewerProps {
@@ -46,43 +47,7 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
     });
 
     const extractCurrentCursorNotes = useCallback((): TargetNote[] => {
-        if (!osmdRef.current?.cursor) return [];
-        const cursor = osmdRef.current.cursor;
-        if (cursor.iterator?.EndReached) return [];
-
-        const voiceEntries = cursor.VoicesUnderCursor();
-        const targets: TargetNote[] = [];
-        let maxRestDur = 0;
-
-        voiceEntries.forEach(ve => {
-            ve.Notes.forEach(note => {
-                if (note.Pitch) {
-                    const midi = midiNoteFromPitchObject(note.Pitch);
-                    if (midi !== null) {
-                        targets.push({
-                            pitch: midi,
-                            step: note.Pitch.FundamentalNote !== undefined ? String(note.Pitch.FundamentalNote) : undefined,
-                            octave: note.Pitch.Octave,
-                            duration: note.Length?.RealValue ?? note.TypeLength?.RealValue ?? 0.25,
-                            isRest: false,
-                        });
-                    }
-                } else {
-                    const dur = note.Length?.RealValue ?? note.TypeLength?.RealValue ?? 0;
-                    if (dur > maxRestDur) maxRestDur = dur;
-                }
-            });
-        });
-
-        if (targets.length > 0) return targets;
-
-        // On whole/half/quarter rests or empty measures before end of piece
-        const measureDur = cursor.iterator?.CurrentMeasure?.Duration?.RealValue ?? 1.0;
-        return [{
-            pitch: 0,
-            duration: maxRestDur > 0 ? maxRestDur : measureDur,
-            isRest: true,
-        }];
+        return extractCursorData(osmdRef.current?.cursor).targetNotes;
     }, []);
 
     const updateCursorHighlight = useCallback((isHit: boolean) => {
@@ -140,6 +105,9 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
         },
         getCurrentNotes: () => {
             return extractCurrentCursorNotes();
+        },
+        getStepDuration: () => {
+            return extractCursorData(osmdRef.current?.cursor).stepDuration;
         }
     }), [extractCurrentCursorNotes]);
 
