@@ -57,7 +57,7 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
           : undefined,
         cursor: widget.movable !== false ? 'grab' : isEmpty ? 'default' : 'pointer',
         userSelect: 'none',
-        bgcolor: isEmpty ? 'rgba(0,0,0,0.1)' : '#fff',
+        bgcolor: isEmpty ? 'rgba(0,0,0,0.1)' : widget.clipPath ? 'transparent' : '#fff',
         border: widget.clipPath ? 'none' : '1.5px solid rgba(0,0,0,0.2)',
         display: 'flex',
         flexDirection: 'column',
@@ -72,12 +72,13 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
       }}
     >
       {!isEmpty ? (
-        <Box position="relative" width="100%" height="100%">
+        <Box position="relative" width="100%" height="100%" sx={{ clipPath: widget.clipPath }}>
           <CardFaceContent
             card={{
               ...widget,
               type: 'card',
               faceUp: hasFront,
+              clipPath: widget.clipPath,
               frontContent: widget.frontContent || { type: 'text', value: '' },
               backContent: widget.backContent || { type: 'text', value: '🂠', color: '#0d47a1' },
               faceObjects: widget.faceObjects,

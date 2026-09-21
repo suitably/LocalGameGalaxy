@@ -10,9 +10,10 @@ interface PlayingCardFaceProps {
   label?: string;
   width?: number;
   height?: number;
+  clipPath?: string;
 }
 
-const renderSpriteSheetBox = (sheet: NonNullable<CardContent['spriteSheet']>) => {
+const renderSpriteSheetBox = (sheet: NonNullable<CardContent['spriteSheet']>, clipPath?: string) => {
   const { url, col, row, numWidth, numHeight } = sheet;
   const posX = numWidth > 1 ? (col / (numWidth - 1)) * 100 : 0;
   const posY = numHeight > 1 ? (row / (numHeight - 1)) * 100 : 0;
@@ -25,6 +26,7 @@ const renderSpriteSheetBox = (sheet: NonNullable<CardContent['spriteSheet']>) =>
         backgroundSize: `${numWidth * 100}% ${numHeight * 100}%`,
         backgroundPosition: `${posX}% ${posY}%`,
         backgroundRepeat: 'no-repeat',
+        clipPath,
       }}
     />
   );
@@ -35,18 +37,25 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
   backContent,
   isFaceUp,
   label,
+  clipPath,
 }) => {
   if (!isFaceUp) {
     if (backContent?.type === 'image' && backContent.value) {
       if (backContent.spriteSheet) {
-        return renderSpriteSheetBox(backContent.spriteSheet);
+        return renderSpriteSheetBox(backContent.spriteSheet, clipPath);
       }
       return (
         <Box
           component="img"
           src={backContent.value}
           alt="Card back"
-          sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          sx={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            display: 'block',
+            clipPath,
+          }}
         />
       );
     }
@@ -56,8 +65,9 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
         sx={{
           width: '100%',
           height: '100%',
-          bgcolor: '#fff',
-          p: 0.6,
+          bgcolor: clipPath ? 'transparent' : '#fff',
+          clipPath,
+          p: clipPath ? 0 : 0.6,
           display: 'flex',
           flexDirection: 'column',
           boxSizing: 'border-box',
@@ -66,9 +76,10 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
         <Box
           sx={{
             flex: 1,
-            borderRadius: 1,
+            borderRadius: clipPath ? 0 : 1,
+            clipPath,
             bgcolor: backColor,
-            border: '2px solid rgba(255,255,255,0.85)',
+            border: clipPath ? 'none' : '2px solid rgba(255,255,255,0.85)',
             boxShadow: 'inset 0 0 10px rgba(0,0,0,0.5)',
             display: 'flex',
             alignItems: 'center',
@@ -104,7 +115,7 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
   }
 
   if (frontContent.type === 'image' && frontContent.spriteSheet) {
-    return renderSpriteSheetBox(frontContent.spriteSheet);
+    return renderSpriteSheetBox(frontContent.spriteSheet, clipPath);
   }
 
   if (frontContent.type === 'image') {
@@ -118,6 +129,7 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
           height: '100%',
           objectFit: 'contain',
           display: 'block',
+          clipPath,
         }}
       />
     );

@@ -108,6 +108,7 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
           label={card.label}
           width={width || card.width}
           height={height || card.height}
+          clipPath={card.clipPath}
         />
       );
     }
@@ -122,6 +123,7 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
           objectFit: 'cover',
           display: 'block',
           pointerEvents: 'none',
+          clipPath: card.clipPath,
         }}
       />
     );
@@ -137,6 +139,7 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
           label={card.label}
           width={width || card.width}
           height={height || card.height}
+          clipPath={card.clipPath}
         />
       );
     }
@@ -152,11 +155,21 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
             objectFit: 'cover',
             display: 'block',
             pointerEvents: 'none',
+            clipPath: card.clipPath,
           }}
         />
       );
     }
-    return <Box sx={{ width: '100%', height: '100%', bgcolor: card.backContent?.color || card.backContent?.value || '#1e3a8a' }} />;
+    return (
+      <Box
+        sx={{
+          width: '100%',
+          height: '100%',
+          bgcolor: card.backContent?.color || card.backContent?.value || '#1e3a8a',
+          clipPath: card.clipPath,
+        }}
+      />
+    );
   }
 
   return (
@@ -167,6 +180,7 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
       label={card.label}
       width={width || card.width}
       height={height || card.height}
+      clipPath={card.clipPath}
     />
   );
 };

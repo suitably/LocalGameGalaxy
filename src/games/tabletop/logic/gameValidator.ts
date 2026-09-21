@@ -9,6 +9,8 @@ import {
   type TabletopTableConfig,
   type HolderWidget,
   type TokenWidget,
+  type CardWidget,
+  type DeckWidget,
 } from './types';
 import { isHandHolder, isSupplyReserveHolder } from './boardFilter';
 
@@ -139,6 +141,60 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
     }
 
     cleanWidgets[widgetId] = widgetCopy as unknown as TabletopWidget;
+  }
+
+  const HEX_BACK_URL = 'https://steamusercontent-a.akamaihd.net/ugc/1752432457657319703/B3D051B76921548648B589CF8A62585AE37116D0/';
+
+  // Pass 2: Ensure any deck that contains hex cards is also hex-shaped, has 210x182, and has the hex back image
+  for (const w of Object.values(cleanWidgets)) {
+    if (w.type === 'deck') {
+      const deck = w as DeckWidget;
+      const containsHexCards = deck.cardIds?.some((cId) => {
+        const c = cleanWidgets[cId] as CardWidget | undefined;
+        return c && (c.clipPath === HEX_CLIP_PATH || c.width === 210);
+      });
+      const isRickAndMortyHexDeck = containsHexCards || (
+        typeof deck.backContent?.value === 'string' && deck.backContent.value.includes('B3D051B76921548648B589CF8A62585AE37116D0')
+      );
+
+      if (isRickAndMortyHexDeck) {
+        deck.width = 210;
+        deck.height = 182;
+        deck.clipPath = HEX_CLIP_PATH;
+        deck.backContent = { type: 'image', value: HEX_BACK_URL };
+        if (deck.cardIds) {
+          for (const cId of deck.cardIds) {
+            const childCard = cleanWidgets[cId] as CardWidget | undefined;
+            if (childCard) {
+              childCard.width = 210;
+              childCard.height = 182;
+              childCard.clipPath = HEX_CLIP_PATH;
+              childCard.backContent = { type: 'image', value: HEX_BACK_URL };
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Pass 3: Ensure any standalone hex card (or card referencing a hex deck) is also 210x182 and has the hex back
+  for (const w of Object.values(cleanWidgets)) {
+    if (w.type === 'card') {
+      const card = w as CardWidget;
+      const isHexCard =
+        card.clipPath === HEX_CLIP_PATH ||
+        card.width === 210 ||
+        (typeof card.frontContent?.value === 'string' && card.frontContent.value.includes('B8E2540B64D0AA1B8ED447707E09019A07CFDA6A')) ||
+        (typeof card.backContent?.value === 'string' && card.backContent.value.includes('B3D051B76921548648B589CF8A62585AE37116D0')) ||
+        (card.deckId && cleanWidgets[card.deckId]?.clipPath === HEX_CLIP_PATH);
+
+      if (isHexCard) {
+        card.width = 210;
+        card.height = 182;
+        card.clipPath = HEX_CLIP_PATH;
+        card.backContent = { type: 'image', value: HEX_BACK_URL };
+      }
+    }
   }
 
   // Determine default supportedModes if not supplied

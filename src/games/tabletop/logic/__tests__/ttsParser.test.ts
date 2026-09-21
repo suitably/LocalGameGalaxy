@@ -212,16 +212,35 @@ describe('ttsParser', () => {
           type: 'token' as const,
           label: 'backgammon_piece_white',
         },
+        old_deck: {
+          id: 'old_deck',
+          type: 'deck' as const,
+          width: 80,
+          height: 120,
+          cardIds: ['hex_card_1'],
+          backContent: {
+            type: 'image' as const,
+            value: 'https://steamusercontent-a.akamaihd.net/ugc/legacy_wrong_back/',
+          },
+        },
       },
     };
 
     const sanitized = validateAndSanitizeGame(unmigratedGame);
 
-    // Card should now be hex
+    // Card should now be hex and have hex back
     const card = sanitized.widgets.hex_card_1 as CardWidget;
     expect(card.width).toBe(210);
     expect(card.height).toBe(182);
     expect(card.clipPath).toBe(HEX_CLIP_PATH);
+    expect(card.backContent.value).toContain('B3D051B76921548648B589CF8A62585AE37116D0');
+
+    // Deck containing hex card should now be hex and have hex back
+    const deck = sanitized.widgets.old_deck as DeckWidget;
+    expect(deck.width).toBe(210);
+    expect(deck.height).toBe(182);
+    expect(deck.clipPath).toBe(HEX_CLIP_PATH);
+    expect(deck.backContent?.value).toContain('B3D051B76921548648B589CF8A62585AE37116D0');
 
     // Token label should be cleared
     const token = sanitized.widgets.generic_token_1 as TokenWidget;
