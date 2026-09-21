@@ -39,7 +39,6 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
     meta,
     game,
     error,
-    serverAvailable,
     loadMeta,
     importViaServer,
     importFromFile,
@@ -93,7 +92,7 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
               <Button
                 variant="contained"
                 onClick={handleLoadMeta}
-                disabled={!isValidWorkshopInput(url) || !serverAvailable}
+                disabled={!isValidWorkshopInput(url)}
                 startIcon={<CloudDownloadIcon />}
               >
                 {t('games.tabletop.workshop_load_info', 'Mod-Info laden')}
@@ -114,15 +113,6 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
               />
             </Box>
           ) : null}
-
-          {!serverAvailable && status !== 'success' && (
-            <Alert severity="info">
-              {t(
-                'games.tabletop.workshop_no_server',
-                'Kein Server verbunden — du kannst TTS-JSON-Dateien manuell hochladen.',
-              )}
-            </Alert>
-          )}
 
           {/* Loading States */}
           {status === 'loading_meta' && (

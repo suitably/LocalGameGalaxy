@@ -159,6 +159,15 @@ function nextId(prefix: string): string {
   return `${prefix}_${++widgetIdCounter}`;
 }
 
+function sanitizeCustomDecks(decks?: Record<string, TTSCustomDeckEntry>): Record<string, TTSCustomDeckEntry> {
+  if (!decks) return {};
+  const res: Record<string, TTSCustomDeckEntry> = {};
+  for (const [k, d] of Object.entries(decks)) {
+    res[k] = { ...d, FaceURL: sanitizeTtsUrl(d.FaceURL), BackURL: sanitizeTtsUrl(d.BackURL) };
+  }
+  return res;
+}
+
 function convertCard(
   obj: TTSObjectState,
   pos: { x: number; y: number; zIndex: number },
@@ -166,7 +175,7 @@ function convertCard(
   deckWidgetId?: string,
 ): CardWidget {
   const cardId = obj.CardID ?? 0;
-  const decks = { ...allCustomDecks, ...(obj.CustomDeck || {}) };
+  const decks = { ...allCustomDecks, ...sanitizeCustomDecks(obj.CustomDeck) };
 
   return {
     id: obj.GUID,
@@ -192,7 +201,7 @@ function convertDeck(
   widgets: Record<string, TabletopWidget>,
 ): DeckWidget {
   const deckId = nextId('deck');
-  const mergedDecks = { ...allCustomDecks, ...(obj.CustomDeck || {}) };
+  const mergedDecks = { ...allCustomDecks, ...sanitizeCustomDecks(obj.CustomDeck) };
   const cardIds: string[] = [];
 
   // Create cards from ContainedObjects
@@ -279,7 +288,7 @@ function convertToken(
   obj: TTSObjectState,
   pos: { x: number; y: number; zIndex: number },
 ): TokenWidget {
-  const imageUrl = obj.CustomImage?.ImageURL || undefined;
+  const imageUrl = obj.CustomImage?.ImageURL ? sanitizeTtsUrl(obj.CustomImage.ImageURL) : undefined;
   const scale = Math.max(obj.Transform.scaleX || 1, obj.Transform.scaleZ || 1);
   const size = Math.round(TOKEN_SIZE * Math.min(scale, 3));
 
@@ -351,7 +360,7 @@ export function parseTtsSaveFile(
   let boardImageUrl: string | undefined;
   for (const obj of save.ObjectStates) {
     if (obj.Name === 'Custom_Board' && obj.CustomImage?.ImageURL) {
-      boardImageUrl = obj.CustomImage.ImageURL;
+      boardImageUrl = sanitizeTtsUrl(obj.CustomImage.ImageURL);
       break;
     }
   }
@@ -481,6 +490,19 @@ export function parseTtsSaveFile(
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
+/**
+ * Rewrites legacy or blocked Steam UGC URLs to modern working CDN endpoints with CORS support.
+ * Legacy: http://cloud-3.steamusercontent.com/ugc/... (returns 403 Forbidden)
+ * Modern: https://steamusercontent-a.akamaihd.net/ugc/... (returns 200 OK + Access-Control-Allow-Origin: *)
+ */
+export function sanitizeTtsUrl(url?: string): string {
+  if (!url) return '';
+  return url
+    .replace(/^https?:\/\/cloud-\d+\.steamusercontent\.com\//i, 'https://steamusercontent-a.akamaihd.net/')
+    .replace(/^http:\/\/steamusercontent-a\.akamaihd\.net\//i, 'https://steamusercontent-a.akamaihd.net/')
+    .replace(/^http:\/\/steamuserimages-a\.akamaihd\.net\//i, 'https://steamuserimages-a.akamaihd.net/');
+}
+
 /** Recursively collects all CustomDeck entries from the object tree */
 function collectCustomDecks(
   objects: TTSObjectState[],
@@ -489,7 +511,13 @@ function collectCustomDecks(
   for (const obj of objects) {
     if (obj.CustomDeck) {
       for (const [key, deck] of Object.entries(obj.CustomDeck)) {
-        if (!out[key]) out[key] = deck;
+        if (!out[key]) {
+          out[key] = {
+            ...deck,
+            FaceURL: sanitizeTtsUrl(deck.FaceURL),
+            BackURL: sanitizeTtsUrl(deck.BackURL),
+          };
+        }
       }
     }
     if (obj.ContainedObjects) {

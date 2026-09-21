@@ -16,6 +16,14 @@ export function sanitizeGameSlug(name: string): string {
   return base || `game-${Date.now()}`;
 }
 
+export function sanitizeLegacyUrl(url?: string): string | undefined {
+  if (!url) return undefined;
+  return url
+    .replace(/^https?:\/\/cloud-\d+\.steamusercontent\.com\//i, 'https://steamusercontent-a.akamaihd.net/')
+    .replace(/^http:\/\/steamusercontent-a\.akamaihd\.net\//i, 'https://steamusercontent-a.akamaihd.net/')
+    .replace(/^http:\/\/steamuserimages-a\.akamaihd\.net\//i, 'https://steamuserimages-a.akamaihd.net/');
+}
+
 export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGameDefinition {
   const name = (raw.name || 'Unbenanntes Spiel').trim();
   const id = (raw.id || sanitizeGameSlug(name)).trim();
@@ -69,10 +77,32 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
       (base as Record<string, unknown>).activeFace = deckFaceUp ? 1 : 0;
     }
 
-    cleanWidgets[widgetId] = {
-      ...w,
-      ...base,
-    } as TabletopWidget;
+    const widgetCopy = { ...w, ...base } as Record<string, unknown>;
+    if (typeof widgetCopy.image === 'string') {
+      widgetCopy.image = sanitizeLegacyUrl(widgetCopy.image);
+    }
+    if (widgetCopy.type === 'card' && widgetCopy.frontContent && typeof widgetCopy.frontContent === 'object') {
+      const fc = widgetCopy.frontContent as Record<string, unknown>;
+      if (typeof fc.value === 'string') fc.value = sanitizeLegacyUrl(fc.value);
+      if (fc.spriteSheet && typeof fc.spriteSheet === 'object') {
+        const ss = fc.spriteSheet as Record<string, unknown>;
+        if (typeof ss.url === 'string') ss.url = sanitizeLegacyUrl(ss.url);
+      }
+    }
+    if (widgetCopy.type === 'card' && widgetCopy.backContent && typeof widgetCopy.backContent === 'object') {
+      const bc = widgetCopy.backContent as Record<string, unknown>;
+      if (typeof bc.value === 'string') bc.value = sanitizeLegacyUrl(bc.value);
+      if (bc.spriteSheet && typeof bc.spriteSheet === 'object') {
+        const ss = bc.spriteSheet as Record<string, unknown>;
+        if (typeof ss.url === 'string') ss.url = sanitizeLegacyUrl(ss.url);
+      }
+    }
+    if (widgetCopy.type === 'deck' && widgetCopy.backContent && typeof widgetCopy.backContent === 'object') {
+      const bc = widgetCopy.backContent as Record<string, unknown>;
+      if (typeof bc.value === 'string') bc.value = sanitizeLegacyUrl(bc.value);
+    }
+
+    cleanWidgets[widgetId] = widgetCopy as unknown as TabletopWidget;
   }
 
   // Determine default supportedModes if not supplied
@@ -87,6 +117,8 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
     supportedModes.push('local_pass_and_play');
   }
 
+  const rawBg = raw.table?.backgroundImageUrl || ((raw.table as Record<string, unknown> | undefined)?.background as string | undefined);
+
   return {
     id,
     name,
@@ -100,7 +132,7 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
       width: raw.table?.width && raw.table.width > 200 ? raw.table.width : 1600,
       height: raw.table?.height && raw.table.height > 200 ? raw.table.height : 1000,
       backgroundColor: raw.table?.backgroundColor || '#1e3d2f', // Classic green felt
-      backgroundImageUrl: raw.table?.backgroundImageUrl || ((raw.table as Record<string, unknown> | undefined)?.background as string | undefined) || undefined,
+      backgroundImageUrl: sanitizeLegacyUrl(rawBg) || undefined,
       gridSnap: raw.table?.gridSnap && raw.table.gridSnap > 0 ? raw.table.gridSnap : 20,
     },
     widgets: cleanWidgets,

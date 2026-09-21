@@ -28,6 +28,9 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
 
   useEffect(() => {
     if (!widget.image || !widget.color) return;
+    const isSvg = widget.image.startsWith('data:image/svg+xml') || widget.image.toLowerCase().includes('.svg');
+    if (!isSvg) return;
+
     let cancelled = false;
     fetchAndRecolorSvg(widget.image, widget.color).then((src) => {
       if (!cancelled) setRecoloredSrc(src);

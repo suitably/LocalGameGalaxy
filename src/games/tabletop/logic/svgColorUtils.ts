@@ -62,6 +62,12 @@ export async function fetchAndRecolorSvg(url: string, color: string): Promise<st
     return recolored || url;
   }
 
+  // Only attempt network fetch for actual SVG URLs
+  const isSvgUrl = url.toLowerCase().endsWith('.svg') || url.toLowerCase().includes('.svg?');
+  if (!isSvgUrl) {
+    return url;
+  }
+
   try {
     const res = await fetch(url);
     if (!res.ok) return url;

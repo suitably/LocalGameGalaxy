@@ -39,6 +39,7 @@
     "@mui/material": "^7.3.6",
     "@types/dompurify": "^3.0.5",
     "bittorrent-tracker": "^11.2.2",
+    "bson": "^7.3.3",
     "capacitor-plugin-safe-area": "^5.0.0",
     "dexie": "^4.2.1",
     "dexie-react-hooks": "^4.4.0",
