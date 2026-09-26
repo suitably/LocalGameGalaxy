@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { type Song, getCachedFiles } from '../../db';
+import { type Song } from '../../db';
 import { getYouTubeVideoId } from '../YouTubeBackgroundPlayer';
 import { storage, STORAGE_KEYS } from '../../../../lib/storage';
 
@@ -95,11 +95,6 @@ export function useMediaLoaders(
                     return finalUrl;
                 }
                 return targetStr;
-            } else {
-                const cached = getCachedFiles(song.id);
-                if (cached?.audio) {
-                    return URL.createObjectURL(cached.audio);
-                }
             }
         }
         return undefined;
@@ -248,14 +243,7 @@ export function useMediaLoaders(
                             activeUrl = cleanVideo;
                         }
                     } else {
-                        const cached = getCachedFiles(song.id);
-                        if (cached?.video) {
-                            fileOrBlob = cached.video;
-                            fileName = 'name' in cached.video ? (cached.video as File).name : 'video.mp4';
-                            console.log(`[MelodiqSession] Using cached video file for ${song.title}:`, fileName, `(${cached.video.size} bytes)`);
-                        } else {
-                            console.warn("Video file cache miss:", cleanVideo);
-                        }
+                        console.warn("Video file cache miss:", cleanVideo);
                     }
                 } else {
                     // @ts-ignore
