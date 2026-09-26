@@ -1,0 +1,32 @@
+name: Jules Suggestions (Beta)
+
+on:
+  schedule:
+    - cron: '0 8 * * 1,4' # Runs at 08:00 UTC on Mondays and Thursdays
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+jobs:
+  proactive-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50 # Fetch history to find recently modified files
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install @google/genai @octokit/rest
+
+      - name: Run Jules Suggestions Scanner
+        env:
+          GEMINI_API_KEY: ${{ secrets.JULES_API_KEY }} # Reusing Jules API key since it accesses Gemini API
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/pipeline/jules-suggestions.mjs
