@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - GuessArt: Fixed an issue where the prefilled hint letters would persist in the input bar even after transitioning to hint stage 2, causing them to be duplicated and not correctly matched against the newly revealed hint letter pool (Fixes #140).
 
+### Fixed
+- **Code Health**: Fixed eslint-disable exhaustive-deps in MelodiqSettings.
+
 ### Added
 - **Melodiq Notes UX & Multi-Stem Audio Player**: Responsive mobile sheet music layout, collapsible settings accordion, fixed bottom action bar, and synchronized multi-stem Web Audio playback (#132, PR #189).
 - **Google Jules & Gemini 3.8 Multi-Key Pool**: Cloud-native execution with multi-account rotation across 5 Google AI Pro accounts (`JULES_API_KEY_1..5`).
