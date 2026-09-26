@@ -40,18 +40,29 @@ configRouter.delete('/api/config/directories', async (c) => {
 configRouter.get('/api/browse', (c) => {
   const queryPath = c.req.query('path') || os.homedir();
   try {
-    if (!fs.existsSync(queryPath)) return c.json({ error: 'Path not found' }, 404);
-    const entries = fs.readdirSync(queryPath, { withFileTypes: true });
+    if (queryPath.indexOf('\0') !== -1) {
+      return c.json({ error: 'Invalid path' }, 400);
+    }
+
+    const resolvedPath = path.resolve(queryPath);
+    const baseDir = path.parse(os.homedir()).root;
+
+    if (!resolvedPath.startsWith(baseDir)) {
+      return c.json({ error: 'Access denied' }, 403);
+    }
+
+    if (!fs.existsSync(resolvedPath)) return c.json({ error: 'Path not found' }, 404);
+    const entries = fs.readdirSync(resolvedPath, { withFileTypes: true });
     const dirs = entries
       .filter((dirent) => dirent.isDirectory() && !dirent.name.startsWith('.'))
       .map((dirent) => dirent.name);
 
-    const parent = path.resolve(queryPath, '..');
-    if (parent !== path.resolve(queryPath)) {
+    const parent = path.resolve(resolvedPath, '..');
+    if (parent !== resolvedPath && parent.startsWith(baseDir)) {
       dirs.unshift('..');
     }
 
-    return c.json({ current: path.resolve(queryPath), dirs });
+    return c.json({ current: resolvedPath, dirs });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     return c.json({ error: msg }, 500);
@@ -185,7 +196,7 @@ configRouter.post('/api/feedback', async (c) => {
         error:
           'GitHub Token is not configured on the backend server. Please configure it in the server settings.',
       },
-      400
+      400,
     );
   }
 
@@ -219,11 +230,18 @@ configRouter.post('/api/feedback', async (c) => {
       }),
     });
 
-    const data = (await response.json()) as { message?: string; html_url?: string; number?: number };
+    const data = (await response.json()) as {
+      message?: string;
+      html_url?: string;
+      number?: number;
+    };
 
     if (!response.ok) {
       console.error('[GitHub API Error]', data);
-      return c.json({ error: data.message || 'Failed to create GitHub issue' }, response.status as 400 | 500);
+      return c.json(
+        { error: data.message || 'Failed to create GitHub issue' },
+        response.status as 400 | 500,
+      );
     }
 
     return c.json({ success: true, issueUrl: data.html_url, number: data.number });
