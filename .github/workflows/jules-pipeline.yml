@@ -98,7 +98,7 @@ jobs:
                   const replyText = rawBody.replace(/^\/(jules\s+)?reply\s*/i, '').trim();
                   targets = replyText || 'Please proceed autonomously with the proposed solution and create the pull request.';
                 } else if (body.startsWith('/continue') || body.startsWith('/jules continue')) {
-                  action = 'reply';
+                  action = 'continue';
                   const replyText = rawBody.replace(/^\/(jules\s+)?continue\s*/i, '').trim();
                   targets = replyText || 'Please proceed autonomously with your proposed approach, implement the solution, run tests and create the pull request without asking further questions.';
                 } else if (body.startsWith('/approve-plan') || body.startsWith('/jules approve-plan')) {
@@ -734,7 +734,7 @@ jobs:
   interact-jules:
     name: Relay Command or Feedback to Jules
     needs: triage
-    if: (needs.triage.outputs.action == 'reply' || needs.triage.outputs.action == 'approve-plan' || needs.triage.outputs.action == 'status') && needs.triage.outputs.is_authorized == 'true'
+    if: (needs.triage.outputs.action == 'reply' || needs.triage.outputs.action == 'continue' || needs.triage.outputs.action == 'approve-plan' || needs.triage.outputs.action == 'status') && needs.triage.outputs.is_authorized == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -952,12 +952,29 @@ jobs:
                   issue_number: issueNumber,
                   body: `✅ **Jules-Plan freigegeben!** (Session: \`${sessionId}\`)\nJules setzt die Implementierung der Task jetzt auf \`dev\` fort.`
                 });
-              } else {
+              } else if (action === 'continue') {
+                try {
+                  await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-input' });
+                  await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:in-progress'] });
+                } catch (e) {}
+
                 await github.rest.issues.createComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: issueNumber,
-                  body: `💬 **Nachricht an Google Jules übermittelt!** (Session: \`${sessionId}\`)\n> "${targetText}"\n\nJules hat die Anweisung erhalten und arbeitet autonom weiter.`
+                  body: `▶️ **Fortsetzung freigegeben!** (Session: \`${sessionId}\`)\n\nJules setzt die Arbeit auf \`dev\` jetzt autonom fort. Sobald die Implementierung und Vitest-Tests abgeschlossen sind, wird der Pull Request automatisch geöffnet.`
+                });
+              } else {
+                try {
+                  await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-input' });
+                  await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:in-progress'] });
+                } catch (e) {}
+
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  body: `💬 **Feedback an Jules übermittelt!** (Session: \`${sessionId}\`)\n> "${targetText}"\n\nJules hat deine Anweisung erhalten und setzt die Bearbeitung auf \`dev\` fort.`
                 });
               }
             } else {
