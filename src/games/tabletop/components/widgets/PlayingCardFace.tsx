@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import type { CardContent } from '../../logic/types';
+import { StandardSuitCardFace, parseCardText } from './StandardSuitCardFace';
 
 interface PlayingCardFaceProps {
   frontContent: CardContent;
@@ -11,32 +12,23 @@ interface PlayingCardFaceProps {
   height?: number;
 }
 
-const SUIT_DATA: Record<string, { symbol: string; color: string; name: string }> = {
-  '♠': { symbol: '♠', color: '#1e293b', name: 'spade' },
-  '♠️': { symbol: '♠', color: '#1e293b', name: 'spade' },
-  '♣': { symbol: '♣', color: '#1e293b', name: 'club' },
-  '♣️': { symbol: '♣', color: '#1e293b', name: 'club' },
-  '♥': { symbol: '♥', color: '#dc2626', name: 'heart' },
-  '♥️': { symbol: '♥', color: '#dc2626', name: 'heart' },
-  '♦': { symbol: '♦', color: '#dc2626', name: 'diamond' },
-  '♦️': { symbol: '♦', color: '#dc2626', name: 'diamond' },
+const renderSpriteSheetBox = (sheet: NonNullable<CardContent['spriteSheet']>) => {
+  const { url, col, row, numWidth, numHeight } = sheet;
+  const posX = numWidth > 1 ? (col / (numWidth - 1)) * 100 : 0;
+  const posY = numHeight > 1 ? (row / (numHeight - 1)) * 100 : 0;
+  return (
+    <Box
+      sx={{
+        width: '100%',
+        height: '100%',
+        backgroundImage: `url(${url})`,
+        backgroundSize: `${numWidth * 100}% ${numHeight * 100}%`,
+        backgroundPosition: `${posX}% ${posY}%`,
+        backgroundRepeat: 'no-repeat',
+      }}
+    />
+  );
 };
-
-function parseCardText(value: string) {
-  const trimmed = value.trim();
-  for (const [key, data] of Object.entries(SUIT_DATA)) {
-    if (trimmed.includes(key)) {
-      const rankRaw = trimmed.replace(key, '').trim();
-      let rank = rankRaw.toUpperCase();
-      if (rank === 'ASS') rank = 'A';
-      else if (rank === 'BUBE') rank = 'J';
-      else if (rank === 'DAME') rank = 'Q';
-      else if (rank === 'KÖNIG') rank = 'K';
-      return { suit: data.symbol, color: data.color, rank: rank || 'A' };
-    }
-  }
-  return null;
-}
 
 export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
   frontContent,
@@ -46,6 +38,9 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
 }) => {
   if (!isFaceUp) {
     if (backContent?.type === 'image' && backContent.value) {
+      if (backContent.spriteSheet) {
+        return renderSpriteSheetBox(backContent.spriteSheet);
+      }
       return (
         <Box
           component="img"
@@ -108,6 +103,10 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
     );
   }
 
+  if (frontContent.type === 'image' && frontContent.spriteSheet) {
+    return renderSpriteSheetBox(frontContent.spriteSheet);
+  }
+
   if (frontContent.type === 'image') {
     return (
       <Box
@@ -125,91 +124,8 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
   }
 
   const parsed = parseCardText(frontContent.value);
-
   if (parsed) {
-    const { suit, color, rank } = parsed;
-    const isCourt = ['J', 'Q', 'K'].includes(rank);
-    const isAce = rank === 'A';
-
-    return (
-      <Box
-        sx={{
-          width: '100%',
-          height: '100%',
-          bgcolor: '#fff',
-          p: 0.8,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          position: 'relative',
-          userSelect: 'none',
-          boxSizing: 'border-box',
-        }}
-      >
-        {/* Top-Left Index */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 22, lineHeight: 1 }}>
-          <Typography sx={{ fontSize: '0.95rem', fontWeight: 900, color, lineHeight: 1 }}>
-            {rank}
-          </Typography>
-          <Typography sx={{ fontSize: '0.85rem', color, lineHeight: 1 }}>
-            {suit}
-          </Typography>
-        </Box>
-
-        {/* Center Graphic */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {isAce ? (
-            <Typography sx={{ fontSize: '3rem', color, lineHeight: 1, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}>
-              {suit}
-            </Typography>
-          ) : isCourt ? (
-            <Box sx={{ textAlign: 'center', border: `1.5px solid ${color}`, borderRadius: 1.5, px: 1, py: 0.2 }}>
-              <Typography sx={{ fontSize: '1.6rem', fontWeight: 900, color, lineHeight: 1 }}>
-                {rank}
-              </Typography>
-              <Typography sx={{ fontSize: '1.2rem', color, lineHeight: 1 }}>
-                {suit}
-              </Typography>
-            </Box>
-          ) : (
-            <Typography sx={{ fontSize: '2.2rem', color, lineHeight: 1 }}>
-              {suit}
-            </Typography>
-          )}
-        </Box>
-
-        {/* Bottom-Right Inverted Index */}
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: 22,
-            alignSelf: 'flex-end',
-            transform: 'rotate(180deg)',
-            lineHeight: 1,
-          }}
-        >
-          <Typography sx={{ fontSize: '0.95rem', fontWeight: 900, color, lineHeight: 1 }}>
-            {rank}
-          </Typography>
-          <Typography sx={{ fontSize: '0.85rem', color, lineHeight: 1 }}>
-            {suit}
-          </Typography>
-        </Box>
-      </Box>
-    );
+    return <StandardSuitCardFace suit={parsed.suit} color={parsed.color} rank={parsed.rank} />;
   }
 
   // Custom text card (e.g. Action/UNO style)

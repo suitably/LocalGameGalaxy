@@ -53,7 +53,7 @@ export const useMelodiqNotesState = () => {
         pressedPitches
     } = useMidiInput();
 
-    const { playNote } = useAudioSynth();
+    const { playNote, stopAllNotes } = useAudioSynth();
 
     const playedPitches = useMemo(() => {
         if (inputSource === 'midi') {
@@ -129,22 +129,40 @@ export const useMelodiqNotesState = () => {
         effectiveBpmRef.current = effectiveBpm;
     }, [effectiveBpm]);
 
-    // Compute duration in seconds based on note.duration (Fraction of whole note) and bpm
-    // A whole note is 4 beats. At `bpm` beats/min, 1 beat = 60/bpm seconds.
-    // Whole note = 4 * (60 / bpm) seconds.
-    // A note with duration `d` (where whole note = 1.0, quarter = 0.25, half = 0.5, 8th = 0.125)
-    // has duration = d * 4 * (60 / bpm) seconds.
-    const calculateNoteSeconds = useCallback((notes: TargetNote[], currentBpm: number): number => {
+    // Compute single note duration in seconds based on fraction of whole note (1.0 = whole note) and bpm
+    const calculateNoteSeconds = useCallback((fraction: number | undefined, currentBpm: number): number => {
         const beatDuration = 60 / currentBpm;
-        if (!notes || notes.length === 0) return beatDuration;
-        const noteFraction = notes[0].duration;
-        if (!noteFraction || noteFraction <= 0) return beatDuration;
-        // noteFraction: 1.0 = whole note, 0.5 = half, 0.25 = quarter, 0.125 = eighth, etc.
-        const seconds = noteFraction * 4 * beatDuration;
+        if (!fraction || fraction <= 0) return beatDuration;
+        // fraction: 1.0 = whole note, 0.5 = half, 0.25 = quarter, 0.125 = eighth, etc.
+        const seconds = fraction * 4 * beatDuration;
         return Math.max(0.08, seconds);
     }, []);
 
-    // Playback Step: advances cursor and plays audio with true note duration
+    // Compute step duration until next cursor change based on stepDuration (fraction of whole note)
+    const calculateStepSeconds = useCallback((notes: TargetNote[], currentBpm: number): number => {
+        const beatDuration = 60 / currentBpm;
+        if (!notes || notes.length === 0) return beatDuration;
+        const stepFraction = notes[0]?.stepDuration ?? Math.min(...notes.map(n => n.duration ?? 0.25));
+        if (!stepFraction || stepFraction <= 0) return beatDuration;
+        const seconds = stepFraction * 4 * beatDuration;
+        return Math.max(0.05, seconds);
+    }, []);
+
+    // Plays all active playable targets with their individual note durations.
+    // Sustaining notes (e.g. whole notes on upper staff) continue ringing while shorter notes on other staves advance.
+    const playCurrentTargets = useCallback((targets: TargetNote[]) => {
+        if (!targets || targets.length === 0) return;
+        const isRest = targets.every(t => t.isRest);
+        if (isRest) return;
+        targets.forEach(target => {
+            if (!target.isRest && !target.isTiedContinuation && target.pitch > 0) {
+                const noteSec = calculateNoteSeconds(target.duration ?? 0.25, effectiveBpmRef.current);
+                playNote(target.pitch, noteSec);
+            }
+        });
+    }, [calculateNoteSeconds, playNote]);
+
+    // Playback Step: advances cursor and plays audio with true individual note durations
     const advancePlayback = useCallback((): TargetNote[] => {
         if (!viewerRef.current) return [];
 
@@ -152,20 +170,20 @@ export const useMelodiqNotesState = () => {
         setTargetNotes(nextTargets);
 
         if (nextTargets.length > 0) {
-            const isRest = nextTargets.every(t => t.isRest);
-            if (!isRest) {
-                const noteSeconds = calculateNoteSeconds(nextTargets, effectiveBpmRef.current);
-                nextTargets.forEach(target => {
-                    if (!target.isRest && target.pitch > 0) {
-                        playNote(target.pitch, noteSeconds);
-                    }
-                });
-            }
+            playCurrentTargets(nextTargets);
         } else {
             setIsPlaying(false);
+            stopAllNotes();
         }
         return nextTargets;
-    }, [playNote, calculateNoteSeconds]);
+    }, [playCurrentTargets, stopAllNotes]);
+
+    // Silence active synth voices when playback is stopped
+    useEffect(() => {
+        if (!isPlaying) {
+            stopAllNotes();
+        }
+    }, [isPlaying, stopAllNotes]);
 
     // Continuous Mode Loop with Variable Duration Timers
     useEffect(() => {
@@ -181,8 +199,8 @@ export const useMelodiqNotesState = () => {
 
         const scheduleStep = (currentNotes: TargetNote[]) => {
             if (isCancelled) return;
-            const delaySec = calculateNoteSeconds(currentNotes, effectiveBpmRef.current);
-            const delayMs = Math.max(50, Math.round(delaySec * 1000));
+            const delaySec = calculateStepSeconds(currentNotes, effectiveBpmRef.current);
+            const delayMs = Math.max(30, Math.round(delaySec * 1000));
 
             playbackTimeoutRef.current = setTimeout(() => {
                 if (isCancelled) return;
@@ -191,20 +209,12 @@ export const useMelodiqNotesState = () => {
                 const nextTargets = viewerRef.current.nextNote();
                 if (nextTargets.length === 0) {
                     setIsPlaying(false);
+                    stopAllNotes();
                     return;
                 }
 
                 setTargetNotes(nextTargets);
-                const isRest = nextTargets.every(t => t.isRest);
-                if (!isRest) {
-                    const nextSec = calculateNoteSeconds(nextTargets, effectiveBpmRef.current);
-                    nextTargets.forEach(target => {
-                        if (!target.isRest && target.pitch > 0) {
-                            playNote(target.pitch, nextSec);
-                        }
-                    });
-                }
-
+                playCurrentTargets(nextTargets);
                 scheduleStep(nextTargets);
             }, delayMs);
         };
@@ -217,16 +227,7 @@ export const useMelodiqNotesState = () => {
 
         if (initialNotes.length > 0) {
             setTargetNotes(initialNotes);
-            const isRest = initialNotes.every(t => t.isRest);
-            if (!isRest) {
-                const initialSec = calculateNoteSeconds(initialNotes, effectiveBpmRef.current);
-                // Play the first note immediately upon start!
-                initialNotes.forEach(target => {
-                    if (!target.isRest && target.pitch > 0) {
-                        playNote(target.pitch, initialSec);
-                    }
-                });
-            }
+            playCurrentTargets(initialNotes);
             scheduleStep(initialNotes);
         } else {
             setIsPlaying(false);
@@ -239,50 +240,45 @@ export const useMelodiqNotesState = () => {
                 playbackTimeoutRef.current = null;
             }
         };
-    }, [isPlaying, playMode, playNote, calculateNoteSeconds]);
+    }, [isPlaying, playMode, playCurrentTargets, calculateStepSeconds, stopAllNotes]);
 
     // Wait Mode initial note sound
     useEffect(() => {
         if (isPlaying && playMode === 'wait') {
             const initialNotes = viewerRef.current?.getCurrentNotes() ?? [];
-            const isRest = initialNotes.every(t => t.isRest);
-            if (initialNotes.length > 0 && !isRest) {
-                const noteSec = calculateNoteSeconds(initialNotes, effectiveBpmRef.current);
-                initialNotes.forEach(target => {
-                    if (!target.isRest && target.pitch > 0) {
-                        playNote(target.pitch, noteSec);
-                    }
-                });
+            if (initialNotes.length > 0) {
+                playCurrentTargets(initialNotes);
             }
         }
-    }, [isPlaying, playMode, playNote, calculateNoteSeconds]);
+    }, [isPlaying, playMode, playCurrentTargets]);
 
     // Wait Mode Auto-Advance (on note hit OR auto-advance on rest)
     useEffect(() => {
         if (!isPlaying || playMode !== 'wait') return;
 
         const isRest = targetNotes.length > 0 && targetNotes.every(t => t.isRest);
+        const isAllTied = targetNotes.length > 0 && targetNotes.every(t => t.isRest || t.isTiedContinuation);
 
-        if (isRest) {
-            // Automatically pause for the duration of the rest (e.g. 1.0 = 4 beats, 0.5 = 2 beats), then advance!
-            const restSec = calculateNoteSeconds(targetNotes, effectiveBpmRef.current);
-            const restMs = Math.max(250, Math.round(restSec * 1000));
+        if (isRest || isAllTied) {
+            // Automatically pause for the duration of the rest / held tied note, then advance!
+            const stepSec = calculateStepSeconds(targetNotes, effectiveBpmRef.current);
+            const pauseMs = Math.max(200, Math.round(stepSec * 1000));
             const timeout = setTimeout(() => {
                 advancePlayback();
-            }, restMs);
+            }, pauseMs);
             return () => clearTimeout(timeout);
         }
 
         if (isCurrentNoteHit) {
-            const noteSec = calculateNoteSeconds(targetNotes, effectiveBpmRef.current);
-            // In wait mode, advance smoothly after hitting the note, minimum 200ms
-            const waitMs = Math.min(400, Math.max(200, Math.round(noteSec * 500)));
+            const stepSec = calculateStepSeconds(targetNotes, effectiveBpmRef.current);
+            // In wait mode, advance smoothly after hitting the note, minimum 180ms
+            const waitMs = Math.min(400, Math.max(180, Math.round(stepSec * 500)));
             const timeout = setTimeout(() => {
                 advancePlayback();
             }, waitMs);
             return () => clearTimeout(timeout);
         }
-    }, [isPlaying, playMode, isCurrentNoteHit, advancePlayback, calculateNoteSeconds, targetNotes]);
+    }, [isPlaying, playMode, isCurrentNoteHit, advancePlayback, calculateStepSeconds, targetNotes]);
 
     /** Handles single-file upload from the file input (.xml / .musicxml / .mxl). */
     const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -407,6 +403,7 @@ export const useMelodiqNotesState = () => {
 
     const handleReset = () => {
         setIsPlaying(false);
+        stopAllNotes();
         if (playbackTimeoutRef.current) {
             clearTimeout(playbackTimeoutRef.current);
             playbackTimeoutRef.current = null;

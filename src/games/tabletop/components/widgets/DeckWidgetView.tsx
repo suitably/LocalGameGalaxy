@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import type { DeckWidget } from '../../logic/types';
-import { PlayingCardFace } from './PlayingCardFace';
+import type { DeckWidget, CardWidget } from '../../logic/types';
+import { CardFaceContent } from './CardFaceContent';
 
 interface DeckWidgetViewProps {
   widget: DeckWidget;
@@ -23,7 +23,7 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
   const count = widget.cardIds?.length || 0;
   const isEmpty = count === 0;
 
-  const hasFront = widget.isPile ? (widget.frontContent !== undefined) : Boolean(widget.frontContent);
+  const hasFront = widget.faceUp === true || (widget.activeFace !== undefined && widget.activeFace > 0);
   const rot = widget.rotation || 0;
 
   return (
@@ -65,9 +65,17 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
     >
       {!isEmpty ? (
         <Box position="relative" width="100%" height="100%">
-          <PlayingCardFace
-            frontContent={widget.frontContent || { type: 'text', value: '' }}
-            backContent={widget.backContent}
+          <CardFaceContent
+            card={{
+              ...widget,
+              type: 'card',
+              faceUp: hasFront,
+              frontContent: widget.frontContent || { type: 'text', value: '' },
+              backContent: widget.backContent || { type: 'text', value: '🂠', color: '#0d47a1' },
+              faceObjects: widget.faceObjects,
+              backFaceObjects: widget.backFaceObjects,
+              rotation: 0,
+            } as unknown as CardWidget}
             isFaceUp={hasFront}
           />
           <Box

@@ -144,6 +144,18 @@ describe('Tabletop pcioParser', () => {
     expect(sanitized.minPlayers).toBe(1);
     expect(sanitized.table.width).toBeGreaterThanOrEqual(1600);
     expect(sanitized.widgets.w1.id).toBe('w1');
+
+    const sanitizedWithDeck = validateAndSanitizeGame({
+      name: 'Deck Test',
+      widgets: {
+        normalDeck: { id: 'normalDeck', type: 'deck' } as unknown as DeckWidget,
+        explicitOpenDeck: { id: 'explicitOpenDeck', type: 'deck', faceUp: true } as unknown as DeckWidget,
+      },
+    });
+    expect((sanitizedWithDeck.widgets.normalDeck as DeckWidget).faceUp).toBe(false);
+    expect((sanitizedWithDeck.widgets.normalDeck as DeckWidget).activeFace).toBe(0);
+    expect((sanitizedWithDeck.widgets.explicitOpenDeck as DeckWidget).faceUp).toBe(true);
+    expect((sanitizedWithDeck.widgets.explicitOpenDeck as DeckWidget).activeFace).toBe(1);
   });
 
   it('extracts ruleText from info object or root properties', async () => {
@@ -190,6 +202,61 @@ describe('Tabletop pcioParser', () => {
     const road = result.widgets.road1 as TokenWidget;
     expect(road).toBeDefined();
     expect(road.rotation).toBe(60);
+  });
+
+  it('normalizes draw piles to face-down and open resource piles to face-up', async () => {
+    const rawJson = JSON.stringify({
+      name: 'Pile FaceUp Test',
+      widgets: {
+        deck1: {
+          id: 'deck1',
+          type: 'deck',
+          cardDefaults: {
+            image: '/assets/card_back.png',
+          },
+        },
+        drawPile: {
+          id: 'drawPile',
+          type: 'pile',
+          label: 'Ziehstapel',
+          deck: 'deck1',
+        },
+        openResourcePile: {
+          id: 'openResourcePile',
+          type: 'pile',
+          label: 'Holz',
+          deck: 'deck1',
+        },
+        card1: {
+          id: 'card1',
+          type: 'card',
+          parent: 'drawPile',
+          frontImage: '/assets/draw_front.png',
+          backImage: '/assets/card_back.png',
+          faceUp: false,
+        },
+        card2: {
+          id: 'card2',
+          type: 'card',
+          parent: 'openResourcePile',
+          frontImage: '/assets/wood.png',
+          backImage: '/assets/card_back.png',
+          faceUp: true,
+        },
+      },
+    });
+
+    const result = await parsePcioFile(rawJson);
+    const drawDeck = result.widgets.drawPile as DeckWidget;
+    const resourceDeck = result.widgets.openResourcePile as DeckWidget;
+
+    expect(drawDeck).toBeDefined();
+    expect(drawDeck.faceUp).toBe(false);
+    expect(drawDeck.activeFace).toBe(0);
+
+    expect(resourceDeck).toBeDefined();
+    expect(resourceDeck.faceUp).toBe(true);
+    expect(resourceDeck.activeFace).toBe(1);
   });
 });
 

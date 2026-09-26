@@ -5,7 +5,10 @@ export interface TargetNote {
     step?: string;
     octave?: number;
     duration?: number;
+    stepDuration?: number;
     isRest?: boolean;
+    isTieStart?: boolean;
+    isTiedContinuation?: boolean;
     noteElement?: SVGElement | Element | null;
 }
 
@@ -13,6 +16,28 @@ interface NoteVerifierProps {
     targetNotes: TargetNote[];
     playedPitches: number[]; // From MIDI or Microphone
     toleranceSemitones?: number;
+}
+
+export function verifyNotesMatch(
+    targetNotes: TargetNote[],
+    playedPitches: number[],
+    toleranceSemitones = 0
+): boolean {
+    if (!targetNotes || targetNotes.length === 0) return false;
+
+    // Only notes that are not rests, have a valid pitch, and are not tied continuations require striking
+    const strikeTargets = targetNotes.filter(
+        t => !t.isRest && t.pitch > 0 && !t.isTiedContinuation
+    );
+    if (strikeTargets.length === 0) return false;
+
+    if (playedPitches.length === 0) return false;
+
+    return strikeTargets.some(target =>
+        playedPitches.some(played =>
+            Math.abs(played - target.pitch) <= toleranceSemitones
+        )
+    );
 }
 
 export const useNoteVerifier = ({
@@ -23,33 +48,15 @@ export const useNoteVerifier = ({
     const [score, setScore] = useState<number>(0);
     const [hitCount, setHitCount] = useState<number>(0);
     const [isCurrentNoteHit, setIsCurrentNoteHit] = useState<boolean>(false);
-    const lastHitTargetRef = useRef<string | null>(null);
+    const lastScoredTargetsRef = useRef<TargetNote[] | null>(null);
 
     useEffect(() => {
-        if (!targetNotes || targetNotes.length === 0 || playedPitches.length === 0) {
-            setIsCurrentNoteHit(false);
-            return;
-        }
-
-        const playableTargets = targetNotes.filter(t => !t.isRest && t.pitch > 0);
-        if (playableTargets.length === 0) {
-            setIsCurrentNoteHit(false);
-            return;
-        }
-
-        // Check if any of playedPitches matches any of playableTargets
-        const matched = playableTargets.some(target =>
-            playedPitches.some(played =>
-                Math.abs(played - target.pitch) <= toleranceSemitones
-            )
-        );
-
+        const matched = verifyNotesMatch(targetNotes, playedPitches, toleranceSemitones);
         setIsCurrentNoteHit(matched);
 
         if (matched) {
-            const targetKey = targetNotes.map(n => n.pitch).sort().join('-');
-            if (lastHitTargetRef.current !== targetKey) {
-                lastHitTargetRef.current = targetKey;
+            if (lastScoredTargetsRef.current !== targetNotes) {
+                lastScoredTargetsRef.current = targetNotes;
                 setScore(s => s + 100);
                 setHitCount(h => h + 1);
             }
@@ -60,7 +67,7 @@ export const useNoteVerifier = ({
         setScore(0);
         setHitCount(0);
         setIsCurrentNoteHit(false);
-        lastHitTargetRef.current = null;
+        lastScoredTargetsRef.current = null;
     };
 
     return {

@@ -1,9 +1,10 @@
 /**
  * Hook for managing Tabletop pan/zoom transforms and pointer drags [ID: HOOK-TABLETOP-ENGINE]
  */
-import { useState, useCallback, useRef } from 'react';
-import type { TabletopWidget, HolderWidget, DeckWidget, GridSnapDef } from '../logic/types';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import type { TabletopWidget, DeckWidget, GridSnapDef, TokenWidget } from '../logic/types';
 import { isCardInHand } from '../logic/handLayout';
+import { findPlayerHandHolder, findMatchingSupplyHolder, isBoardSnapTarget } from '../logic/boardFilter';
 export type { GridSnapDef };
 
 export interface TransformState {
@@ -25,7 +26,7 @@ export interface TabletopEngineOptions {
   onMoveWidget: (id: string, x: number, y: number) => void;
   onSnapToHolder: (widgetId: string, holderId: string) => void;
   onDoubleClickWidget?: (widgetId: string) => void;
-  onDrawCardAt?: (deckId: string, x: number, y: number) => void;
+  onDrawCardAt?: (deckId: string, x: number, y: number, cardId?: string) => void;
 }
 
 export function useTabletopEngine(options: TabletopEngineOptions) {
@@ -34,6 +35,7 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
   const [isDraggingActive, setIsDraggingActive] = useState(false);
   const [dragPointer, setDragPointer] = useState<{ x: number; y: number } | null>(null);
   const [grabOffset, setGrabOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
 
   const dragStartRef = useRef<{ pointerX: number; pointerY: number; widgetX: number; widgetY: number; isDeckDraw?: boolean } | null>(null);
   const hasMovedRef = useRef(false);
@@ -42,7 +44,6 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
   const secondPointerRef = useRef<{ id: number; x: number; y: number } | null>(null);
   const pinchStartDistRef = useRef<number | null>(null);
   const pinchStartScaleRef = useRef(1);
-  const captureTargetRef = useRef<HTMLElement | null>(null);
   const rafRef = useRef<number | null>(null);
 
   const screenToBoard = useCallback(
@@ -54,10 +55,10 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
   );
 
   const findCollidingTarget = useCallback(
-    (widgetX: number, widgetY: number, widgetWidth: number, widgetHeight: number): string | null => {
+    (widgetX: number, widgetY: number, widgetWidth: number, widgetHeight: number, draggedType?: TabletopWidget['type']): string | null => {
       const cx = widgetX + widgetWidth / 2, cy = widgetY + widgetHeight / 2;
       for (const [id, w] of Object.entries(options.widgets)) {
-        if (w.type === 'holder' || w.type === 'deck') {
+        if (isBoardSnapTarget(w, draggedType)) {
           if (cx >= w.x && cx <= w.x + w.width && cy >= w.y && cy <= w.y + w.height) return id;
         }
       }
@@ -76,19 +77,17 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
       y: e.clientY - (canvasTop + widget.y * transform.scale),
     });
 
-    // If deck has cards, dragging it draws the top card!
+    // If deck has cards, dragging it draws the top card (last element in cardIds)!
     if (widget.type === 'deck') {
       const deck = widget as DeckWidget;
       if (deck.cardIds && deck.cardIds.length > 0) {
         e.stopPropagation();
-        const topCardId = deck.cardIds[0];
-        options.onDrawCardAt?.(deck.id, deck.x, deck.y);
+        const topCardId = deck.cardIds[deck.cardIds.length - 1];
+        options.onDrawCardAt?.(deck.id, deck.x, deck.y, topCardId);
         setActiveDragId(topCardId);
         setIsDraggingActive(false);
         dragStartRef.current = { pointerX: e.clientX, pointerY: e.clientY, widgetX: deck.x, widgetY: deck.y, isDeckDraw: true };
         hasMovedRef.current = false;
-        captureTargetRef.current = e.target as HTMLElement;
-        captureTargetRef.current.setPointerCapture?.(e.pointerId);
         return;
       }
     }
@@ -111,11 +110,9 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
     setIsDraggingActive(false);
     dragStartRef.current = { pointerX: e.clientX, pointerY: e.clientY, widgetX: widget.x, widgetY: widget.y };
     hasMovedRef.current = false;
-    captureTargetRef.current = e.target as HTMLElement;
-    captureTargetRef.current.setPointerCapture?.(e.pointerId);
   };
 
-  const handlePointerMove = (e: React.PointerEvent) => {
+  const handlePointerMove = (e: PointerEvent | React.PointerEvent) => {
     if (secondPointerRef.current && pinchStartDistRef.current !== null) {
       const primary = panStartRef.current;
       if (!primary) return;
@@ -150,7 +147,7 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
     }
   };
 
-  const handlePointerUp = (e: React.PointerEvent) => {
+  const handlePointerUp = (e: PointerEvent | React.PointerEvent) => {
     if (rafRef.current !== null) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
     if (!e.isPrimary) { secondPointerRef.current = null; pinchStartDistRef.current = null; return; }
     secondPointerRef.current = null;
@@ -162,33 +159,9 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
 
       if (isDroppedInDock) {
         const draggedWidget = options.widgets[activeDragId];
-        const seatIdx = options.currentSeatIndex;
-        const hasSeat = typeof seatIdx === 'number';
-        const seatPrefix = hasSeat ? `player ${seatIdx}` : '';
 
         if (draggedWidget?.type === 'token') {
-          const matchingHolder = Object.values(options.widgets).find((w) => {
-            if (w.type !== 'holder') return false;
-            const hId = w.id.toLowerCase();
-            if (hasSeat && !hId.includes(seatPrefix) && w.ownerSeat !== seatIdx && w.ownerSeat !== (seatIdx - 1)) {
-              return false;
-            }
-            const wLabel = (draggedWidget.label || draggedWidget.id).toLowerCase();
-            if (wLabel.includes('road') && hId.includes('road')) return true;
-            if (wLabel.includes('settlement') && hId.includes('settlement')) return true;
-            if (wLabel.includes('city') && hId.includes('city')) return true;
-            if (wLabel.includes('ship') && hId.includes('ship')) return true;
-            return false;
-          }) || Object.values(options.widgets).find((w) => {
-            if (w.type !== 'holder') return false;
-            const hId = w.id.toLowerCase();
-            const wLabel = (draggedWidget.label || draggedWidget.id).toLowerCase();
-            if (wLabel.includes('road') && hId.includes('road')) return true;
-            if (wLabel.includes('settlement') && hId.includes('settlement')) return true;
-            if (wLabel.includes('city') && hId.includes('city')) return true;
-            if (wLabel.includes('ship') && hId.includes('ship')) return true;
-            return false;
-          });
+          const matchingHolder = findMatchingSupplyHolder(draggedWidget as TokenWidget, options.widgets, options.currentSeatIndex);
           if (matchingHolder) {
             options.onSnapToHolder(activeDragId, matchingHolder.id);
             setActiveDragId(null);
@@ -196,17 +169,12 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
             setDragPointer(null);
             dragStartRef.current = null;
             panStartRef.current = null;
-            try { captureTargetRef.current?.releasePointerCapture?.(e.pointerId); captureTargetRef.current = null; } catch { /* ignore */ }
+            setIsPanning(false);
             return;
           }
         }
 
-        const handHolder = (hasSeat ? Object.values(options.widgets).find(
-          (w) => w.type === 'holder' && (w.id.toLowerCase().includes('hand') || (w as HolderWidget).isHand) &&
-                 (w.id.toLowerCase().includes(seatPrefix) || w.ownerSeat === seatIdx || w.ownerSeat === (seatIdx - 1))
-        ) : undefined) || Object.values(options.widgets).find(
-          (w) => w.type === 'holder' && (w.id.toLowerCase() === 'hand' || w.id.toLowerCase().includes('hand') || (w as HolderWidget).isHand)
-        );
+        const handHolder = findPlayerHandHolder(options.widgets, options.currentSeatIndex);
         if (handHolder) {
           options.onSnapToHolder(activeDragId, handHolder.id);
           setActiveDragId(null);
@@ -214,16 +182,14 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
           setDragPointer(null);
           dragStartRef.current = null;
           panStartRef.current = null;
-          try { captureTargetRef.current?.releasePointerCapture?.(e.pointerId); captureTargetRef.current = null; } catch { /* ignore */ }
+          setIsPanning(false);
           return;
         }
       }
 
       if (isClick) {
         if (dragStartRef.current?.isDeckDraw) {
-          const handHolder = Object.values(options.widgets).find(
-            (w) => w.type === 'holder' && (w.id.toLowerCase() === 'hand' || w.id.toLowerCase().includes('hand') || (w as HolderWidget).isHand)
-          );
+          const handHolder = findPlayerHandHolder(options.widgets, options.currentSeatIndex);
           if (handHolder) options.onSnapToHolder(activeDragId, handHolder.id);
         } else {
           const inHand = isCardInHand(activeDragId, options.widgets);
@@ -245,7 +211,7 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
             const snapped = snapToGridCoords(widget, widget.x, widget.y, widget.grid as GridSnapDef[]);
             if (snapped) { finalX = snapped.x; finalY = snapped.y; options.onMoveWidget(activeDragId, finalX, finalY); }
           }
-          const targetId = findCollidingTarget(finalX, finalY, widget.width, widget.height);
+          const targetId = findCollidingTarget(finalX, finalY, widget.width, widget.height, widget.type);
           if (targetId && targetId !== activeDragId) {
             options.onSnapToHolder(activeDragId, targetId);
           }
@@ -257,8 +223,20 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
       dragStartRef.current = null;
     }
     panStartRef.current = null;
-    try { captureTargetRef.current?.releasePointerCapture?.(e.pointerId); captureTargetRef.current = null; } catch { /* ignore */ }
+    setIsPanning(false);
   };
+
+  const handlePointerCancel = useCallback(() => {
+    if (rafRef.current !== null) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    setActiveDragId(null);
+    setIsDraggingActive(false);
+    setDragPointer(null);
+    dragStartRef.current = null;
+    panStartRef.current = null;
+    secondPointerRef.current = null;
+    pinchStartDistRef.current = null;
+    setIsPanning(false);
+  }, []);
 
   const handleStartPan = (e: React.PointerEvent) => {
     if (!e.isPrimary && panStartRef.current) {
@@ -270,8 +248,36 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
     }
     if (e.button !== 0) return;
     panStartRef.current = { pointerX: e.clientX, pointerY: e.clientY, startX: transform.x, startY: transform.y };
-    try { (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId); } catch { /* ignore */ }
+    setIsPanning(true);
   };
+
+  const moveRef = useRef(handlePointerMove);
+  const upRef = useRef(handlePointerUp);
+  const cancelRef = useRef(handlePointerCancel);
+
+  useEffect(() => {
+    moveRef.current = handlePointerMove;
+    upRef.current = handlePointerUp;
+    cancelRef.current = handlePointerCancel;
+  });
+
+  useEffect(() => {
+    if (!activeDragId && !isPanning) return;
+
+    const onMove = (e: PointerEvent) => moveRef.current(e);
+    const onUp = (e: PointerEvent) => upRef.current(e);
+    const onCancel = () => cancelRef.current();
+
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+    };
+  }, [activeDragId, isPanning]);
 
   const zoomIn = () => setTransform((t) => ({ ...t, scale: Math.min(MAX_ZOOM, t.scale + 0.15) }));
   const zoomOut = () => setTransform((t) => ({ ...t, scale: Math.max(MIN_ZOOM, t.scale - 0.15) }));

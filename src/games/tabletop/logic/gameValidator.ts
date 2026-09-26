@@ -1,14 +1,15 @@
 /**
  * Tabletop Game Validator & Sanitizer [ID: GAME-TABLETOP-VALIDATOR]
  */
-import type { TabletopGameDefinition, TabletopWidget, TabletopPlayMode, TabletopTableConfig } from './types';
+import type { TabletopGameDefinition, TabletopWidget, TabletopPlayMode, TabletopTableConfig, HolderWidget } from './types';
+import { isHandHolder, isSupplyReserveHolder } from './boardFilter';
 
-export type RawTabletopGameInput = Partial<Omit<TabletopGameDefinition, 'widgets' | 'table' | 'version'>> & {
+export type RawTabletopGameInput = TabletopGameDefinition | (Partial<Omit<TabletopGameDefinition, 'widgets' | 'table' | 'version'>> & {
   version?: string | number;
   widgets?: Record<string, Partial<TabletopWidget> | Record<string, unknown>>;
   table?: Partial<TabletopTableConfig>;
   [key: string]: unknown;
-};
+});
 
 export function sanitizeGameSlug(name: string): string {
   const base = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -46,8 +47,26 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
       label: typeof w.label === 'string' ? w.label : undefined,
     };
 
-    if (w.type === 'holder' && (w.isHand || typeof w.ownerSeat === 'number')) {
-      hasHands = true;
+    if (w.type === 'holder') {
+      const holderWidget = { id: widgetId, ...w } as HolderWidget;
+      if (holderWidget.isHand || typeof holderWidget.ownerSeat === 'number' || isHandHolder(holderWidget)) {
+        hasHands = true;
+      }
+      if (isHandHolder(holderWidget) || isSupplyReserveHolder(holderWidget)) {
+        base.x = -99999;
+        base.y = -99999;
+      }
+    }
+
+    if (w.type === 'deck') {
+      let deckFaceUp = false;
+      if (w.faceUp !== undefined) {
+        deckFaceUp = Boolean(w.faceUp);
+      } else if (w.activeFace !== undefined) {
+        deckFaceUp = Number(w.activeFace) > 0;
+      }
+      (base as Record<string, unknown>).faceUp = deckFaceUp;
+      (base as Record<string, unknown>).activeFace = deckFaceUp ? 1 : 0;
     }
 
     cleanWidgets[widgetId] = {

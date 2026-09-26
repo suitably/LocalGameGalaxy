@@ -41,7 +41,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
 
   const {
     transform, setTransform, activeDragId, isDraggingActive, dragPointer, grabOffset,
-    handlePointerDownWidget, handlePointerMove, handlePointerUp, handleStartPan,
+    handlePointerDownWidget, handleStartPan,
     zoomIn, zoomOut,
   } = useTabletopEngine({
     tableWidth: game.table.width,
@@ -51,7 +51,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
     onMoveWidget: (id, x, y) => dispatch({ type: 'MOVE_WIDGET', payload: { id, x, y } }),
     onSnapToHolder: (widgetId, holderId) => dispatch({ type: 'SNAP_TO_HOLDER', payload: { widgetId, holderId } }),
     onDoubleClickWidget: (cardId) => dispatch({ type: 'FLIP_CARD', payload: { cardId } }),
-    onDrawCardAt: (deckId, x, y) => dispatch({ type: 'DRAW_CARD', payload: { deckId, position: { x, y } } }),
+    onDrawCardAt: (deckId, x, y, cardId) => dispatch({ type: 'DRAW_CARD', payload: { deckId, position: { x, y }, cardId } }),
   });
 
   const visibleIds = useViewportCulling(game.widgets, transform, containerSize.width, containerSize.height);
@@ -90,8 +90,6 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
     <Box
       ref={containerRef}
       onPointerDown={handleStartPan}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
       sx={{
         width: '100%',
         height: '100%',

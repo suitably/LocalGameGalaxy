@@ -116,7 +116,7 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
   }
 
   if (hasClipPath && !isFaceUp) {
-    if (card.backContent.type === 'image') {
+    if (card.backContent?.type === 'image' && card.backContent.value) {
       return (
         <Box
           component="img"
@@ -132,7 +132,7 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
         />
       );
     }
-    return <Box sx={{ width: '100%', height: '100%', bgcolor: card.backContent.value }} />;
+    return <Box sx={{ width: '100%', height: '100%', bgcolor: card.backContent?.color || card.backContent?.value || '#1e3a8a' }} />;
   }
 
   return (

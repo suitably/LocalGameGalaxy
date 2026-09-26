@@ -41,6 +41,13 @@ jobs:
       - name: Check Component Size Budget (Anti-God-Component Gate)
         run: npm run check:budget
 
+      - name: Check Code Duplication (Anti-Copy-Paste Gate)
+        run: npm run check:duplicates
+
+      - name: Check Documentation & Translation Sync Gate
+        if: github.event_name == 'pull_request'
+        run: npm run check:docs
+
       - name: Run ESLint
         run: npm run lint
 

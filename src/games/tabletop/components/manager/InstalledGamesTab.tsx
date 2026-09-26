@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import { useTranslation } from 'react-i18next';
@@ -26,6 +27,7 @@ interface InstalledGamesTabProps {
   supportsLocalFolder: boolean;
   onRefresh: () => void | Promise<void>;
   onOpenLocalFolder?: () => void | Promise<void>;
+  onImportWorkshop?: () => void;
   onPlayParty: (id: string) => void;
   onPlayLocal: (id: string) => void;
   onEdit?: (id: string) => void;
@@ -44,6 +46,7 @@ export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
   supportsLocalFolder,
   onRefresh,
   onOpenLocalFolder,
+  onImportWorkshop,
   onPlayParty,
   onPlayLocal,
   onEdit,
@@ -66,7 +69,14 @@ export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
 
   return (
     <Stack spacing={3}>
-      <Box display="flex" justifyContent="flex-end" alignItems="center">
+      <Box display="flex" justifyContent="flex-end" alignItems="center" gap={1} flexWrap="wrap">
+        <Button
+          variant="outlined"
+          startIcon={<CloudDownloadIcon />}
+          onClick={onImportWorkshop}
+        >
+          {t('games.tabletop.import_workshop', 'Steam Workshop importieren')}
+        </Button>
         {supportsLocalFolder ? (
           <Button
             variant="outlined"

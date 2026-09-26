@@ -49,7 +49,7 @@ export interface TabletopGameEntry {
   description?: string;
   widgetCount: number;
   cardCount: number;
-  format: 'flat-json' | 'pcio-folder' | 'unknown';
+  format: 'flat-json' | 'pcio-folder' | 'tts-workshop' | 'unknown';
   jsonPath: string; // absoluter Pfad zur JSON-Datei
   assetsDir: string | null; // absoluter Pfad zu assets/-Ordner oder null
   updatedAt: number;

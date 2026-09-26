@@ -633,6 +633,7 @@
       "cards": "Cards",
       "reserve": "Reserve",
       "placeOnBoard": "Place on board",
+      "dragToPlace": "Drag to place on board",
       "take": "Take"
     }
   },

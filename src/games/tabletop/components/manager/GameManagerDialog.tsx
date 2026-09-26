@@ -9,6 +9,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { InstalledGamesTab } from './InstalledGamesTab';
 import { EditGameDialog } from './EditGameDialog';
+import { ImportWorkshopDialog } from './ImportWorkshopDialog';
 import { useTabletopGames } from '../../hooks/useTabletopGames';
 import { saveTabletopGame, getTabletopGame, deleteTabletopGame } from '../../logic/tabletopStorage';
 import { exportGameAsJson, exportGameAsPcio } from '../../logic/tabletopExporter';
@@ -42,6 +43,7 @@ export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
   } = useTabletopGames();
 
   const [editingGame, setEditingGame] = useState<TabletopGameDefinition | null>(null);
+  const [workshopOpen, setWorkshopOpen] = useState(false);
 
   const fetchFullGame = async (id: string): Promise<TabletopGameDefinition | null> => {
     try {
@@ -134,6 +136,7 @@ export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
             supportsLocalFolder={supportsLocalFolder}
             onRefresh={refresh}
             onOpenLocalFolder={handleOpenLocalFolder}
+            onImportWorkshop={() => setWorkshopOpen(true)}
             onPlayParty={handlePlayParty}
             onPlayLocal={handlePlayLocal}
             onEdit={handleEdit}
@@ -156,6 +159,12 @@ export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
         game={editingGame}
         onClose={() => setEditingGame(null)}
         onSave={handleSaveGame}
+      />
+
+      <ImportWorkshopDialog
+        open={workshopOpen}
+        onClose={() => { setWorkshopOpen(false); refresh(); }}
+        onPlayGame={(id) => { onPlayLocal(id); onClose(); }}
       />
     </>
   );

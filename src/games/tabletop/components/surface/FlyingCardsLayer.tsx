@@ -26,8 +26,8 @@ export const FlyingCardsLayer: React.FC<FlyingCardsLayerProps> = ({
       {flyingCards.map((f) => {
         const card = widgets[f.cardId] as CardWidget | undefined;
         const holder = widgets[f.targetHolderId];
-        const targetX = holder ? holder.x + holder.width / 2 - 40 : tableWidth / 2;
-        const targetY = holder ? holder.y + holder.height / 2 - 60 : tableHeight / 2;
+        const targetX = holder && holder.x > -90000 ? holder.x + holder.width / 2 - 40 : tableWidth / 2;
+        const targetY = holder && holder.y > -90000 ? holder.y + holder.height / 2 - 60 : tableHeight / 2;
 
         return (
           <Box

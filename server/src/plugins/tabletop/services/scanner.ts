@@ -57,7 +57,7 @@ export async function parseGameFile(jsonPath: string): Promise<TabletopGameEntry
     // Ignore stat error
   }
 
-  let format: 'flat-json' | 'pcio-folder' | 'unknown' = 'unknown';
+  let format: 'flat-json' | 'pcio-folder' | 'tts-workshop' | 'unknown' = 'unknown';
   let widgetCount = 0;
   let cardCount = 0;
 
@@ -73,6 +73,43 @@ export async function parseGameFile(jsonPath: string): Promise<TabletopGameEntry
       }
     }
     format = 'pcio-folder';
+  } else if (typeof parsed.SaveName === 'string' && Array.isArray(parsed.ObjectStates)) {
+    format = 'tts-workshop';
+    parsed.name = parsed.SaveName; // so fallback logic uses it
+    
+    const countObjects = (objs: unknown[]): { w: number; c: number } => {
+      let w = 0;
+      let c = 0;
+      for (const obj of objs) {
+        if (!obj || typeof obj !== 'object') continue;
+        w++;
+        const record = obj as Record<string, unknown>;
+        const objName = record.Name as string | undefined;
+        
+        if (objName === 'Card' || objName === 'Deck' || objName === 'DeckCustom') {
+          const deckIds = record.DeckIDs;
+          const contained = record.ContainedObjects;
+          if (Array.isArray(deckIds)) {
+            c += deckIds.length;
+          } else if (Array.isArray(contained)) {
+            c += contained.length;
+          } else {
+            c++;
+          }
+        }
+        
+        if (Array.isArray(record.ContainedObjects)) {
+          const nested = countObjects(record.ContainedObjects);
+          w += nested.w;
+          c += nested.c;
+        }
+      }
+      return { w, c };
+    };
+
+    const counts = countObjects(parsed.ObjectStates);
+    widgetCount = counts.w;
+    cardCount = counts.c;
   } else {
     const entries = Object.entries(parsed);
     const isFlat = entries.some(

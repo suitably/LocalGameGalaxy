@@ -56,7 +56,7 @@ export function TabletopGame() {
         // 1. Try local IndexedDB
         const localCustom = await getTabletopGame(gameId);
         if (localCustom) {
-          dispatch({ type: 'LOAD_GAME', payload: localCustom });
+          dispatch({ type: 'LOAD_GAME', payload: validateAndSanitizeGame(localCustom) });
           return;
         }
 

@@ -299,14 +299,23 @@ export function normalizePcioWidgets(
       // Resolve top card face if any and inherit child Z
       let topFrontContent: { type: 'text' | 'image'; value: string } | undefined;
       let topBackContent: { type: 'text' | 'image'; value: string; color?: string } | undefined;
+      let topFaceObjects: FaceObject[] | undefined;
+      let topBackFaceObjects: FaceObject[] | undefined;
       let pileZ = resolveZIndex(raw, rawWidgets, 0);
+
+      let pileFaceUp = false;
+      if (raw.faceUp !== undefined) {
+        pileFaceUp = Boolean(raw.faceUp);
+      } else if (raw.activeFace !== undefined) {
+        pileFaceUp = Number(raw.activeFace) > 0;
+      }
 
       if (childCardIds.length > 0) {
         const topCardId = childCardIds[childCardIds.length - 1];
         const topCardRaw = rawWidgets[topCardId];
         if (topCardRaw) {
-          const deckId = typeof topCardRaw.deck === 'string' ? topCardRaw.deck : undefined;
-          const deckObj = deckId ? rawWidgets[deckId] : undefined;
+          const deckId = (typeof topCardRaw.deck === 'string' ? topCardRaw.deck : undefined) || (typeof raw.deck === 'string' ? raw.deck : undefined) || parentId;
+          const deckObj = deckId ? (rawWidgets[deckId] as Record<string, unknown> | undefined) : undefined;
           const deckDefaults = deckObj?.cardDefaults as Record<string, unknown> | undefined;
           const cardTypeKey = typeof topCardRaw.cardType === 'string' ? topCardRaw.cardType : undefined;
           const cardTypeObj = deckObj?.cardTypes && typeof deckObj.cardTypes === 'object' && cardTypeKey
@@ -320,10 +329,90 @@ export function normalizePcioWidgets(
           if (frontImg) {
             topFrontContent = { type: 'image', value: frontImg };
           }
-          const backRaw = topCardRaw.backImage || topCardRaw.back || deckObj?.backImage || deckObj?.image;
+
+          let backRaw = topCardRaw.backImage || topCardRaw.back || deckObj?.backImage || deckObj?.image;
+          if (!backRaw && Array.isArray(deckObj?.faceTemplates) && deckObj.faceTemplates.length > 1) {
+            const t0 = deckObj.faceTemplates[0] as { objects?: Array<{ type?: string; value?: string }> } | undefined;
+            if (Array.isArray(t0?.objects)) {
+              const imgObj = t0.objects.find((o) => o.type === 'image' && typeof o.value === 'string' && o.value);
+              if (imgObj?.value) {
+                backRaw = imgObj.value;
+              }
+            }
+          }
           const backImg = resolveAssetUrl(backRaw, assetFiles);
           if (backImg) {
             topBackContent = { type: 'image', value: backImg };
+          }
+
+          // Parse multi-layer face templates for top card preview
+          const templates = deckObj?.faceTemplates as unknown[] | undefined;
+          const numTemplates = Array.isArray(templates) ? templates.length : 0;
+          const frontFaceIdx = numTemplates > 1 ? 1 : 0;
+          const backFaceIdx = numTemplates > 1 ? 0 : -1;
+
+          topFaceObjects = parseFaceTemplateObjects(
+            frontFaceIdx,
+            deckObj?.faceTemplates,
+            cardTypeObj as Record<string, unknown> | undefined,
+            width,
+            height,
+            assetFiles,
+            cardTypeKey
+          );
+
+          topBackFaceObjects = backFaceIdx >= 0
+            ? parseFaceTemplateObjects(
+                backFaceIdx,
+                deckObj?.faceTemplates,
+                cardTypeObj as Record<string, unknown> | undefined,
+                width,
+                height,
+                assetFiles,
+                cardTypeKey
+              )
+            : undefined;
+
+          // Check if deck has a distinct card back
+          const hasDistinctBack = Array.isArray(deckObj?.faceTemplates) && deckObj.faceTemplates.length > 1 &&
+            JSON.stringify(deckObj.faceTemplates[0]) !== JSON.stringify(deckObj.faceTemplates[1]);
+
+          const combinedNames = [
+            id,
+            label,
+            parentId,
+            parentObj?.id,
+            typeof parentObj?.label === 'string' ? parentObj.label : '',
+            typeof parentObj?.text === 'string' ? parentObj.text : '',
+            deckId,
+          ].filter(Boolean).join(' ').toLowerCase();
+
+          const isDiscard = combinedNames.includes('discard') || combinedNames.includes('ablage') || combinedNames.includes('waste');
+          const isDrawPile =
+            !isDiscard &&
+            (combinedNames.includes('draw') ||
+             combinedNames.includes('zieh') ||
+             combinedNames.includes('deck') ||
+             combinedNames.includes('talon') ||
+             combinedNames.includes('stock') ||
+             hasDistinctBack);
+
+          if (raw.faceUp === undefined && raw.activeFace === undefined) {
+            if (topCardRaw.faceUp !== undefined) {
+              pileFaceUp = Boolean(topCardRaw.faceUp);
+            } else if (topCardRaw.activeFace !== undefined) {
+              pileFaceUp = Number(topCardRaw.activeFace) > 0;
+            } else if (deckDefaults?.faceUp !== undefined) {
+              pileFaceUp = Boolean(deckDefaults.faceUp);
+            } else if (deckDefaults?.activeFace !== undefined) {
+              pileFaceUp = Number(deckDefaults.activeFace) > 0;
+            } else if (isDiscard) {
+              pileFaceUp = true;
+            } else if (isDrawPile) {
+              pileFaceUp = false;
+            } else {
+              pileFaceUp = Boolean(frontImg || (topFaceObjects && topFaceObjects.length > 0));
+            }
           }
 
           const defaultCardLayer = typeof deckDefaults?.layer === 'number' ? deckDefaults.layer : 4;
@@ -349,6 +438,10 @@ export function normalizePcioWidgets(
         rotation,
         movable: true,
         pinned: false,
+        faceUp: pileFaceUp,
+        activeFace: pileFaceUp ? 1 : 0,
+        faceObjects: topFaceObjects,
+        backFaceObjects: topBackFaceObjects,
       } as DeckWidget;
       continue;
     }
@@ -390,6 +483,8 @@ export function normalizePcioWidgets(
         rotation,
         movable: Boolean(deckMovable),
         pinned: !deckMovable,
+        faceUp: false,
+        activeFace: 0,
       } as DeckWidget;
       continue;
     }
