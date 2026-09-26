@@ -12,6 +12,7 @@ import {
   Box,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import DOMPurify from 'dompurify';
 
 interface RulesDialogProps {
   open: boolean;
@@ -48,7 +49,7 @@ export const RulesDialog: React.FC<RulesDialogProps> = ({ open, onClose, ruleTex
               fontSize: '0.95rem',
               lineHeight: 1.6,
             }}
-            dangerouslySetInnerHTML={{ __html: ruleText }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(ruleText) }}
           />
         ) : (
           <Typography color="text.secondary">

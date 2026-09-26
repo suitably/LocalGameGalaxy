@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Scanner: Replaced blocking synchronous file IO (`fs.readFileSync`, `fs.existsSync`, `fs.readdirSync`) with asynchronous equivalents in `parseSongFile` for vastly improved event loop performance.
 - Melodiq: Fixed an issue where the PitchVisualizer animation loop would occasionally access stale `currentPitchRef` and `sungSegmentsRef` values by switching `useEffect` to `useLayoutEffect`.
+- Tabletop: Fixed an HTML injection vulnerability in tabletop game rules dialog using DOMPurify.
+- Melodiq Notes: Fixed an issue where the user could not scroll vertically on the game screen by adding CSS properties `height: 100%`, `overflowY: auto`, and `WebkitOverflowScrolling: touch` to the main container component (Fixes #196).
 - GuessArt: Fixed an issue where the prefilled hint letters would persist in the input bar even after transitioning to hint stage 2, causing them to be duplicated and not correctly matched against the newly revealed hint letter pool (Fixes #140).
 
 ### Fixed
