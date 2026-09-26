@@ -2,7 +2,7 @@ name: Jules Issue Auto-Fix Pipeline
 
 on:
   issues:
-    types: [labeled]
+    types: [opened, labeled]
   issue_comment:
     types: [created]
   workflow_dispatch:
@@ -19,6 +19,8 @@ on:
         options:
           - plan
           - fix
+          - curate
+          - curate-all
 
 concurrency:
   group: jules-${{ github.event.issue.number || inputs.issue_number }}
@@ -38,6 +40,7 @@ jobs:
       issue_number: ${{ steps.decide.outputs.issue_number }}
       is_authorized: ${{ steps.decide.outputs.is_authorized }}
       lens_name: ${{ steps.decide.outputs.lens_name }}
+      targets: ${{ steps.decide.outputs.targets }}
     steps:
       - name: Evaluate command and permissions
         id: decide
@@ -49,6 +52,7 @@ jobs:
             let issueNumber = null;
             let isAuthorized = false;
             let lensName = '';
+            let targets = '';
 
             // Security check: Only allow repo owner, members, or collaborators
             const trustedRoles = ['OWNER', 'MEMBER', 'COLLABORATOR'];
@@ -67,8 +71,22 @@ jobs:
                 const authorAssoc = comment.author_association;
                 isAuthorized = trustedRoles.includes(authorAssoc);
 
-                const body = (comment.body || '').trim().toLowerCase();
-                if (body.startsWith('/jules lens')) {
+                const rawBody = (comment.body || '').trim();
+                const body = rawBody.toLowerCase();
+
+                if (body.startsWith('/bundle')) {
+                  action = 'bundle';
+                  const matches = rawBody.match(/#?(\d+)/g) || [];
+                  targets = matches.map(m => m.replace('#', '')).filter(m => m !== String(issueNumber)).join(',');
+                } else if (body.startsWith('/duplicate')) {
+                  action = 'duplicate';
+                  const match = rawBody.match(/#?(\d+)/);
+                  if (match) targets = match[1];
+                } else if (body.startsWith('/curate-all') || body.startsWith('/triage-all')) {
+                  action = 'curate-all';
+                } else if (body.startsWith('/curate') || body.startsWith('/triage') || body.startsWith('/check') || body.startsWith('/dedup')) {
+                  action = 'curate';
+                } else if (body.startsWith('/jules lens')) {
                   action = 'fix';
                   const parts = body.split(/\s+/);
                   if (parts.length > 2) {
@@ -79,6 +97,13 @@ jobs:
                 } else if (body.startsWith('/jules approve') || body.startsWith('/approve') || body.startsWith('/jules fix') || body.startsWith('/fix')) {
                   action = 'fix';
                 }
+              }
+            } else if (eventName === 'issues' && context.payload.action === 'opened') {
+              const issue = context.payload.issue;
+              if (!issue.pull_request) {
+                issueNumber = issue.number;
+                isAuthorized = true;
+                action = 'curate'; // Automatic triage on new issues
               }
             } else if (eventName === 'issues' && context.payload.action === 'labeled') {
               const labelName = context.payload.label.name.toLowerCase();
@@ -91,7 +116,9 @@ jobs:
                 const authorAssoc = issue.author_association;
                 isAuthorized = trustedRoles.includes(authorAssoc) || sender === context.repo.owner;
 
-                if (labelName.startsWith('lens:')) {
+                if (labelName === 'curate' || labelName === 'triage') {
+                  action = 'curate';
+                } else if (labelName.startsWith('lens:')) {
                   action = 'fix';
                   lensName = labelName.replace('lens:', '').trim();
                 } else if (labelName === 'jules' || labelName === 'jules:plan' || labelName === 'plan' || labelName === 'game-factory') {
@@ -102,11 +129,42 @@ jobs:
               }
             }
 
-            console.log({ action, issueNumber, isAuthorized, lensName });
+            console.log({ action, issueNumber, isAuthorized, lensName, targets });
             core.setOutput('action', action);
             core.setOutput('issue_number', issueNumber);
             core.setOutput('is_authorized', isAuthorized ? 'true' : 'false');
             core.setOutput('lens_name', lensName);
+            core.setOutput('targets', targets);
+
+  curate-issue:
+    name: Curate & Triage Issue
+    needs: triage
+    if: (needs.triage.outputs.action == 'curate' || needs.triage.outputs.action == 'bundle' || needs.triage.outputs.action == 'duplicate' || needs.triage.outputs.action == 'curate-all') && needs.triage.outputs.is_authorized == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run Issue Curator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
+          CURATOR_ACTION: ${{ needs.triage.outputs.action }}
+          CURATOR_TARGETS: ${{ needs.triage.outputs.targets }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.JULES_API_KEY_1 || secrets.JULES_API_KEY }}
+          JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
+          JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
+          JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
+          JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
+          JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
+        run: |
+          node scripts/issue-curator.mjs --issue "$ISSUE_NUMBER" --action "$CURATOR_ACTION" --targets "$CURATOR_TARGETS"
 
   generate-plan:
     name: Generate Implementation Plan
