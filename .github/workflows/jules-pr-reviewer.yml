@@ -1,11 +1,11 @@
 name: Multi-Agent PR Reviewer
 
 on:
-  pull_request_target:
-    types: [opened, synchronize, ready_for_review]
-    branches:
-      - dev
-      - main
+  workflow_dispatch:
+    # types: [opened, synchronize, ready_for_review]
+    # branches:
+      # - dev
+      # - main
 
 concurrency:
   group: pr-review-${{ github.event.pull_request.number }}
