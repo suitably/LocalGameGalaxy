@@ -1,19 +1,29 @@
 name: Jules Issue Auto-Fix Pipeline
 
 on:
+  schedule:
+    - cron: '0 8 * * 1,4' # Runs at 08:00 UTC on Mondays and Thursdays
   issues:
     types: [opened, labeled]
   issue_comment:
     types: [created]
   workflow_dispatch:
     inputs:
-      issue_number:
-        description: 'GitHub Issue Number to resolve'
+      scope:
+        description: 'Agent Task Scope (Design = UX Suggestions)'
         required: true
+        default: 'Issue-AutoFix'
+        type: choice
+        options:
+          - Issue-AutoFix
+          - Design
+      issue_number:
+        description: 'GitHub Issue Number (required for Issue-AutoFix)'
+        required: false
         type: number
       mode:
-        description: 'Action to perform'
-        required: true
+        description: 'Action to perform (for Issue-AutoFix)'
+        required: false
         default: 'plan'
         type: choice
         options:
@@ -23,7 +33,7 @@ on:
           - curate
           - curate-all
       yolo:
-        description: 'Enable YOLO mode (maximum autonomy, zero intermediate questions)'
+        description: 'Enable YOLO mode'
         required: false
         type: boolean
         default: false
@@ -40,6 +50,7 @@ permissions:
 jobs:
   triage:
     name: Determine Trigger & Security Gate
+    if: github.event_name != 'schedule' && (github.event_name != 'workflow_dispatch' || inputs.scope != 'Design')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -421,10 +432,8 @@ jobs:
           # 2. Prepare payload
           echo "$USER_PROMPT" > prompt.txt
 
-          REQUIRE_APPROVAL="true"
-          if [ "$YOLO_MODE" = "true" ]; then
-            REQUIRE_APPROVAL="false"
-          fi
+          # NEVER require Jules UI buttons. Approvals happen via GitHub issue comments.
+          REQUIRE_APPROVAL="false"
 
           jq -n \
             --rawfile jules_prompt prompt.txt \
@@ -602,3 +611,30 @@ jobs:
             const interact = require('./scripts/pipeline/jules-interact.cjs');
             await interact({ github, context, core });
 
+
+  design-suggestions:
+    name: Generate UX Design Suggestions
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.scope == 'Design')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install @google/genai @octokit/rest
+
+      - name: Run Jules Suggestions Scanner
+        env:
+          GEMINI_API_KEY: ${{ secrets.JULES_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/pipeline/jules-suggestions.mjs

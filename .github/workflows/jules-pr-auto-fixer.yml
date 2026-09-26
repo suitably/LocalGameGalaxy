@@ -116,7 +116,8 @@ jobs:
                 }
               },
               requirePlanApproval: false,
-              automationMode: "AUTO_CREATE_PR"
+              automationMode: "AUTO_CREATE_PR",
+              connectedMcps: ["Stitch", "Context7"]
             };
             
             fs.writeFileSync('jules_payload.json', JSON.stringify(payload));

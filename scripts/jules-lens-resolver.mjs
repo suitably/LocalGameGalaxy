@@ -62,28 +62,20 @@ function parseArgs() {
   return { lens, domain, repo, branch, mode, isDryRun, isList };
 }
 
-async function fetchRawFile(repo, branch, relativePath) {
-  // Check local filesystem first (if checked out via sparse checkout)
+async function fetchRawFile(relativePath) {
   const localPath = path.join(LOCAL_REPOLENS_DIR, relativePath);
   if (fs.existsSync(localPath)) {
     return fs.readFileSync(localPath, 'utf8');
   }
-
-  // Fallback to GitHub raw fetch
-  const url = `https://raw.githubusercontent.com/${repo}/${branch}/${relativePath}`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch ${relativePath} from ${url} (${res.status} ${res.statusText})`);
-  }
-  return res.text();
+  throw new Error(`Local lens file not found: ${localPath}`);
 }
 
-async function loadDomainsRegistry(repo, branch) {
+async function loadDomainsRegistry() {
   try {
-    const content = await fetchRawFile(repo, branch, 'config/domains.json');
+    const content = await fetchRawFile('config/domains.json');
     return JSON.parse(content);
   } catch (err) {
-    console.warn('Could not load config/domains.json:', err.message);
+    console.warn('Could not load local config/domains.json:', err.message);
     return { domains: [] };
   }
 }
@@ -155,11 +147,11 @@ async function resolveLensPath(requestedLens, requestedDomain, registry) {
 }
 
 async function main() {
-  const { lens, domain, repo, branch, mode, isDryRun, isList } = parseArgs();
-  const registry = await loadDomainsRegistry(repo, branch);
+  const { lens, domain, mode, isDryRun, isList } = parseArgs();
+  const registry = await loadDomainsRegistry();
 
   if (isList) {
-    console.log(`\n=== RepoLens Registry (${repo}@${branch}) ===\n`);
+    console.log(`\n=== Local RepoLens Registry ===\n`);
     for (const d of registry.domains || []) {
       console.log(`📁 Domain: ${d.name || d.id} (${d.id}) - ${d.lenses?.length || 0} lenses`);
       if (d.lenses && d.lenses.length > 0) {
@@ -175,7 +167,7 @@ async function main() {
 
   let lensRaw;
   try {
-    lensRaw = await fetchRawFile(repo, branch, resolved.relativePath);
+    lensRaw = await fetchRawFile(resolved.relativePath);
   } catch (err) {
     console.error(`Error: Could not load lens at ${resolved.relativePath}: ${err.message}`);
     process.exit(1);
@@ -189,18 +181,16 @@ async function main() {
   const prompt = `You are an elite software auditor executing the official RepoLens Audit Suite for LocalGameGalaxy.
 
 ${mode === 'plan' ? `
-🤖 INTERACTIVE MODE: AUDIT & PLAN
-YOUR MISSION HAS TWO STRICT PHASES. YOU MUST STOP AFTER PHASE 1.
+🤖 AUDIT & PLAN MODE: ISSUE GENERATION
+YOUR MISSION IS TO AUDIT THE CODEBASE AND CREATE ISSUES FOR YOUR FINDINGS.
 
-=== PHASE 1: PLANNING (CURRENT PHASE) ===
+=== PLANNING PHASE ===
 - Step 1: Scan the repository through the criteria of this RepoLens lens (${resolved.lensId}).
-- Step 2: Identify the most critical issue matching this lens.
-- Step 3: Formulate a detailed markdown audit report explaining the finding and a step-by-step fix plan.
-- Step 4: Present the plan and explicitly ASK FOR APPROVAL.
-- Step 5: Wait for the user's response. DO NOT WRITE CODE OR CREATE A PR YET.
-
-=== PHASE 2: IMPLEMENTATION (ONLY AFTER USER APPROVAL) ===
-When the user replies with approval or further instructions, proceed to implementation.
+- Step 2: Identify ALL critical architectural issues, violations, or code smells matching this lens.
+- Step 3: For EACH individual finding, create a distinct, detailed GitHub Issue.
+- Step 4: To create these issues, you MUST write them as markdown files in the \`docs/tasks/github-issues/\` directory. Format the content clearly with title and description.
+- Step 5: If available, you can execute \`node scripts/create_github_issues.mjs\` or use the \`gh\` CLI to actually publish them.
+- DO NOT WRITE FIX CODE OR CREATE A PULL REQUEST IN THIS MODE. Your only job is to create the audit issues so the team can approve/schedule them.
 ` : mode === 'review' ? `
 🤖 MULTI-AGENT PR REVIEW MODE
 - Step 1: You are a PR Reviewer. Target PR: #\${process.env.PR_NUMBER}.
@@ -239,10 +229,10 @@ MANDATORY REPOSITORY RULES (from AGENTS.md):
 
 YOUR AUDIT MISSION:
 1. Scan the LocalGameGalaxy repository strictly through the criteria of this RepoLens lens (${resolved.lensId}).
-2. Identify the single most critical or impactful issue / smell matching this lens.
+2. ${mode === 'plan' ? 'Identify ALL critical issues / smells matching this lens.' : 'Identify the single most critical or impactful issue / smell matching this lens.'}
 3. ${
     mode === 'plan'
-      ? 'Do not modify files yet. Instead, formulate a detailed markdown audit report explaining the exact finding, affected files, risk severity, and step-by-step fix plan.'
+      ? 'Do not modify source code files. Instead, create separate markdown files in docs/tasks/github-issues/ for each finding, then use the provided tools (or script) to publish them as GitHub issues.'
       : mode === 'review'
       ? 'DO NOT MODIFY ANY FILES. Your only goal is to review the Pull Request diff and submit a review using the gh cli.'
       : 'Implement the fix cleanly, adhere strictly to all AGENTS.md rules, run verification commands (npm test, npm run check:budget), and open a Pull Request targeting the dev branch. Include a full explanation of the RepoLens finding in the PR description.'

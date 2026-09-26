@@ -85,7 +85,8 @@ jobs:
                   startingBranch: process.env.STARTING_BRANCH
                 }
               },
-              requirePlanApproval: false
+              requirePlanApproval: false,
+              connectedMcps: ["Stitch", "Context7"]
               // No automationMode because the reviewer just posts a review via CLI
             };
             
