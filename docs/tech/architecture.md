@@ -91,6 +91,7 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
     -   Offline-capable karaoke and pitch-matching game supporting UltraStar TXT parsing, multi-track vocals, WebRTC remote microphones, and TV/presentation broadcast mode.
     -   **Dual-Path Video Architecture**: Supports synchronized background videos via local media files (HTTP 206 streaming for MP4, WebM, AVI, MKV) and embedded YouTube URLs (via client-side YouTube IFrame Player API adapter, muted with programmatic seeking synchronized to `audioRef.currentTime`).
     -   **SRP Architecture**: Gameplay session decomposed into focused custom hooks (`useSessionAudioController` for playback, sync, and media lifecycle; `useSessionScoringController` for pitch evaluation, player visibility, and responsive grid layouts; `useParsedSong` for UltraStar parsing) and focused subcomponents (`SessionTopControls`, `SessionLyricsVisualizer`, `SessionBackgroundMedia`, `SessionPauseOverlay`, `SessionScoreOverlay`, `SessionFolderPrompt`) orchestrated by a slim view coordinator (`MelodiqSession.tsx`, < 200 lines).
+<<<<<<< ours
 -   **Wordle (`src/games/wordle`)**:
     -   Daily word challenge (German & English) with offline caching and streak tracking.
     -   **History Integration**: Tracks daily game outcomes natively via `useWordleHistory` custom hook and visualizes past results and evaluation grids in the `WordleHistoryModal`.
@@ -99,6 +100,7 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
     -   **Synchronized Multi-Stem Audio Engine (`useStemAudioPlayer`)**: Web Audio API integration supporting multi-track stems (isolated vocals, backing, instruments) synchronized to sheet cursor timing.
     -   **Responsive Mobile Layout & Fixed Action Bar (`BottomActionBar`)**: Prevents nested viewport scroll traps on mobile devices by decoupling sheet canvas scrolling from sticky bottom playback controls and collapsible settings accordions.
     -   Local library storage via IndexedDB (`melodiq-notes-local`) and MusicXML/MXL parser.
+<<<<<<< ours
 
 ### Shared Components (`src/components/*`)
 Common, reusable UI elements built over Material-UI that enforce consistency across the application.
