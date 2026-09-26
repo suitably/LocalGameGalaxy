@@ -102,3 +102,34 @@ jobs:
           git merge --squash "origin/${HEAD_BRANCH}" -m "chore: auto-merge PR #${PR_NUMBER} into dev (verified by CI quality gates)"
           git push origin dev
           echo "✔ Changes successfully merged and pushed to dev."
+
+  deploy-cloudflare:
+    name: Deploy to Cloudflare
+    needs: validate
+    # Only run on pushes to main or dev, not on PRs (to avoid leaking secrets or deploying untested code)
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Production Build
+        run: npm run build
+
+      - name: Deploy to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: ${{ github.ref == 'refs/heads/main' && 'deploy' || 'preview' }}
