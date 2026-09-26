@@ -169,7 +169,28 @@ module.exports = async ({ github, context, core }) => {
     return;
   }
 
+  
+  // 3b. Deduplication: Check if the triggering comment was already handled by the live bridge
+  const triggeringCommentId = context.payload?.comment?.id;
+  if (triggeringCommentId && action !== 'status') {
+    try {
+      const reactions = await github.rest.reactions.listForIssueComment({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        comment_id: triggeringCommentId
+      });
+      const hasBotThumbsUp = reactions.data.some(r => r.content === '+1');
+      if (hasBotThumbsUp) {
+        console.log('Comment was already processed by the live bridge (has +1 reaction). Skipping duplicate execution.');
+        return;
+      }
+    } catch (e) {
+      console.warn('Failed to check reactions for deduplication:', e.message);
+    }
+  }
+
   // 4. Handle approve-plan, yolo, continue, and reply
+
   const yoloPrompt = `⚡ YOLO MODE ENGAGED ⚡
   You are authorized with 100% full autonomy.
   CRITICAL DIRECTIVES:
@@ -260,7 +281,7 @@ module.exports = async ({ github, context, core }) => {
     if (action !== 'status') {
       console.log('Re-attaching live bridge to monitor Jules response...');
       process.env.SESSION_ID = sessionId;
-      const liveBridge = require('./jules-live-bridge.js');
+      const liveBridge = require('./jules-live-bridge.cjs');
       await liveBridge({ github, context, core });
     }
   } else {

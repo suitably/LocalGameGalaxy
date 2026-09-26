@@ -49,10 +49,18 @@ if (!fs.existsSync(issuesDir)) {
     process.exit(1);
 }
 
-const files = fs.readdirSync(issuesDir).filter((f) => f.endsWith('.md')).sort();
+// Extract explicit file paths from arguments
+const fileArgs = process.argv.slice(2).filter(arg => !arg.startsWith('--'));
+
+let files = [];
+if (fileArgs.length > 0) {
+    files = fileArgs.map(f => path.basename(f));
+} else {
+    files = fs.readdirSync(issuesDir).filter((f) => f.endsWith('.md')).sort();
+}
 
 if (files.length === 0) {
-    console.log('No issue files found in', issuesDir);
+    console.log('No issue files found to process.');
     process.exit(0);
 }
 

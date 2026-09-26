@@ -4,18 +4,26 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY;
 
-if (!GEMINI_API_KEY || !GITHUB_TOKEN || !GITHUB_REPOSITORY) {
-    console.error('Missing required environment variables (GEMINI_API_KEY, GITHUB_TOKEN, GITHUB_REPOSITORY)');
+const candidateKeys = [
+    process.env.GEMINI_API_KEY,
+    process.env.JULES_API_KEY_1,
+    process.env.JULES_API_KEY_2,
+    process.env.JULES_API_KEY_3,
+    process.env.JULES_API_KEY_4,
+    process.env.JULES_API_KEY_5,
+    process.env.JULES_API_KEY
+].filter(Boolean);
+
+if (candidateKeys.length === 0 || !GITHUB_TOKEN || !GITHUB_REPOSITORY) {
+    console.error('Missing required environment variables (API Key pool, GITHUB_TOKEN, GITHUB_REPOSITORY)');
     process.exit(1);
 }
 
 const [owner, repo] = GITHUB_REPOSITORY.split('/');
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 async function run() {
     console.log('🔍 Jules Suggestions (Beta) - Scanning repository for improvements...');
@@ -98,29 +106,48 @@ ${sourceCodeContext}
 
     try {
         let text = '';
-        const modelsToTry = ['gemini-3.1-pro', 'gemini-3.8-pro', 'gemini-3.5-pro', 'gemini-2.0-pro-exp', 'gemini-2.0-pro', 'gemini-1.5-pro'];
+        const modelsToTry = [
+            'gemini-2.5-flash',
+            'gemini-2.0-flash',
+            'gemini-1.5-flash',
+            'gemini-1.5-pro'
+        ];
         let success = false;
-        
-        for (const model of modelsToTry) {
-            try {
-                const response = await ai.models.generateContent({
-                    model: model,
-                    contents: prompt,
-                    config: {
-                        temperature: 0.4,
-                        responseMimeType: 'application/json'
+        let lastError = null;
+
+        for (let k = 0; k < candidateKeys.length; k++) {
+            const apiKey = candidateKeys[k];
+            const ai = new GoogleGenAI({ apiKey });
+            console.log(`Trying API key slot #${k + 1}...`);
+
+            for (const model of modelsToTry) {
+                try {
+                    console.log(`  Evaluating with model '${model}'...`);
+                    const response = await ai.models.generateContent({
+                        model: model,
+                        contents: prompt,
+                        config: {
+                            temperature: 0.4,
+                            responseMimeType: 'application/json'
+                        }
+                    });
+                    text = typeof response.text === 'function' ? response.text() : response.text;
+                    if (text) {
+                        success = true;
+                        console.log(`  ✔ Successfully generated suggestion with model '${model}'!`);
+                        break;
                     }
-                });
-                text = response.text();
-                success = true;
-                break;
-            } catch (err) {
-                console.warn(`Model ${model} failed or is not available. Trying next...`);
+                } catch (err) {
+                    lastError = err;
+                    console.warn(`  ⚠️ Model '${model}' failed: ${err.message || err}`);
+                }
             }
+
+            if (success) break;
         }
-        
+
         if (!success) {
-            throw new Error('All model attempts failed');
+            throw new Error(`All model and key attempts failed. Last error: ${lastError?.message || lastError}`);
         }
         const suggestion = JSON.parse(text);
 

@@ -24,7 +24,7 @@
   "src/games/qwixx/components/QwixxSheetSelector.tsx": 339,
   "src/games/guessart/components/GuessArtHeader.tsx": 321,
   "src/components/connection/ServerConnection.tsx": 317,
-  "src/games/melodiq/hooks/useMelodiqGlobalEvents.tsx": 317,
+  "src/games/melodiq/hooks/useMelodiqGlobalEvents.tsx": 334,
   "src/games/garticphone/components/GarticAlbumReveal.tsx": 316,
   "src/games/melodiq/components/SessionSetup.tsx": 315,
   "src/games/knister/KnisterGame.tsx": 307,
