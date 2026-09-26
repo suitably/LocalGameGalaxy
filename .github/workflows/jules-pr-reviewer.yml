@@ -51,6 +51,7 @@ jobs:
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           LENS_PROMPT: ${{ steps.lens_resolver.outputs.prompt }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
           JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
           JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
@@ -68,6 +69,10 @@ jobs:
             Task: Review Pull Request #${process.env.PR_NUMBER}
             
             ${process.env.LENS_PROMPT}
+            
+            CRITICAL AUTHENTICATION INSTRUCTION:
+            To execute the gh cli commands, you MUST first authenticate by running the following command in your terminal:
+            export GH_TOKEN="${process.env.GITHUB_TOKEN}"
             `;
             
             fs.writeFileSync('prompt.txt', prompt);
