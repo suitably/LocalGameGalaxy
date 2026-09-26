@@ -1115,7 +1115,6 @@
     "selectingWord": "Wortauswahl...",
     "attemptsCount": "{{count}} Versuche",
     "noDrawingData": "Keine Zeichnungsdaten vorhanden.",
-    "guessesHistoryLabel": "Geratene Begriffe:",
     "replayDrawing": "Animation abspielen",
     "showFinalDrawing": "Fertiges Bild anzeigen",
     "gameName": "Spielname",
@@ -1303,6 +1302,12 @@
       "green": "Grün: Buchstabe ist an der richtigen Stelle.",
       "yellow": "Gelb: Buchstabe kommt im Wort vor, aber an anderer Stelle.",
       "gray": "Grau: Buchstabe kommt nicht im Wort vor."
+    },
+    "history": {
+      "title": "Historie (Tagesrätsel)",
+      "empty": "Noch keine Tagesrätsel gespielt.",
+      "target_word": "Gesuchtes Wort:",
+      "btn_tooltip": "Verlauf"
     }
   },
   "sudoku": {
@@ -1349,7 +1354,7 @@
     "turnLabel": "Zug",
     "currentTurnOf": "Am Zug: ",
     "defaultPlayer": "Spieler",
-    "remotePlayer": "Remote",
+    "remotePlayer": "Remote Gerät",
     "localPlayer": "Dieses Gerät",
     "toggleRemoteTooltip": "Zwischen lokal und remote wechseln",
     "readStory": "Geschichte lesen",
@@ -1359,7 +1364,7 @@
     "storyTitleOptional": "Titel der Geschichte (optional)",
     "storyTitlePlaceholder": "z.B. Die Reise zum unbekannten Planeten",
     "markAsRemote": "Als Remote markieren",
-    "claimLocalTurn": "Auf diesem Gerät spielen",
+    "claimLocalTurn": "Auf diesem Gerät schreiben",
     "claimTurnLocal": "Auf diesem Gerät schreiben",
     "prologueTitle": "Kapitel 1: Der Anfang",
     "prologueHint": "Du machst den ersten Schritt! Schreibe den Eröffnungssatz oder die Einleitung für eure gemeinsame Geschichte.",
@@ -1400,11 +1405,7 @@
     "shareLinksDesc": "Mitspieler können per QR-Code oder Link auf ihrem eigenen Gerät mitspielen und Push-Benachrichtigungen empfangen, sobald sie am Zug sind.",
     "scanQrToPlayAs": "Scanne diesen Code, um als {{name}} mitzuspielen!",
     "playHereInstead": "Hier als {{name}} weiterschreiben",
-    "playHereInsteadShort": "Auf diesem Gerät spielen",
-    "localPlayer": "Dieses Gerät",
-    "remotePlayer": "Remote Gerät",
-    "markAsRemote": "Als Remote markieren",
-    "claimLocalTurn": "Auf diesem Gerät schreiben"
+    "playHereInsteadShort": "Auf diesem Gerät spielen"
   },
   "notifications": {
     "turnTitleDraw": "{{gameName}}: Du bist am Zeichnen!",

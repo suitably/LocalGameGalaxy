@@ -6,10 +6,8 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  IconButton,
   Button,
   ButtonGroup,
-  Tooltip,
   Alert,
   Paper,
   Dialog,
@@ -19,8 +17,6 @@ import {
   Stack,
 } from '@mui/material';
 import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
-import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
-import PersonAddAlt1RoundedIcon from '@mui/icons-material/PersonAddAlt1Rounded';
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -32,7 +28,11 @@ import { WordleBoard } from './components/WordleBoard';
 import { WordleKeyboard } from './components/WordleKeyboard';
 import { WordleStatsModal } from './components/WordleStatsModal';
 import { WordleDuelModal } from './components/WordleDuelModal';
+import { WordleHistoryModal } from './components/WordleHistoryModal';
+import { HeaderActionBar } from './components/HeaderActionBar';
 import type { WordleGameMode } from './logic/types';
+
+
 
 export const WordleGame: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -42,6 +42,7 @@ export const WordleGame: React.FC = () => {
   const [statsOpen, setStatsOpen] = useState(false);
   const [duelOpen, setDuelOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   // Check URL parameters for duel challenge
   const duelParam = parseGameUrlParams(location.search, location.hash).get('duel');
@@ -95,35 +96,12 @@ export const WordleGame: React.FC = () => {
       }}
     >
       {/* Header Action Bar */}
-      <Box
-        sx={{
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
-          pb: 1.5,
-          mb: 1.5,
-        }}
-      >
-        <Box sx={{ display: 'flex', gap: 0.5 }}>
-          <Tooltip title={t('wordle.duel.btn_tooltip', 'Freund herausfordern')}>
-            <IconButton onClick={() => setDuelOpen(true)} aria-label={t('wordle.duel.btn_tooltip', 'Freund herausfordern')}>
-              <PersonAddAlt1RoundedIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t('wordle.stats.btn_tooltip', 'Statistiken')}>
-            <IconButton onClick={() => setStatsOpen(true)} aria-label={t('wordle.stats.btn_tooltip', 'Statistiken')}>
-              <BarChartRoundedIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t('common.help', 'Hilfe')}>
-            <IconButton onClick={() => setHelpOpen(true)} aria-label={t('common.help', 'Hilfe')}>
-              <HelpOutlineRoundedIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
+      <HeaderActionBar
+        onHistory={() => setHistoryOpen(true)}
+        onDuel={() => setDuelOpen(true)}
+        onStats={() => setStatsOpen(true)}
+        onHelp={() => setHelpOpen(true)}
+      />
 
       {/* Mode Selector */}
       <ButtonGroup size="small" variant="outlined" sx={{ mb: 1.5 }}>
@@ -231,6 +209,9 @@ export const WordleGame: React.FC = () => {
 
       {/* Duel Creator Modal */}
       <WordleDuelModal open={duelOpen} onClose={() => setDuelOpen(false)} />
+
+      {/* History Modal */}
+      <WordleHistoryModal open={historyOpen} onClose={() => setHistoryOpen(false)} language={i18n.language || 'de'} />
 
       {/* How to play dialog */}
       <Dialog open={helpOpen} onClose={() => setHelpOpen(false)} maxWidth="xs">
