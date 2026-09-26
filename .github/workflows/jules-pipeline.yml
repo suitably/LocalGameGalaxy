@@ -324,13 +324,13 @@ jobs:
               console.warn('Could not fetch comments for Jules prompt:', err.message);
             }
 
-            const yoloBanner = isYolo ? \`
+            const yoloBanner = isYolo ? `
             ⚡⚡⚡ YOLO MODE: MAXIMUM AUTONOMOUS EXECUTION ENGAGED ⚡⚡⚡
             - ABSOLUTE ZERO HUMAN INTERACTION: Do NOT ask for confirmation, feedback, or approval under any circumstances.
             - FULL PROACTIVE AUTHORITY: You are strictly required to make all architectural, refactoring, and file decomposition decisions yourself.
             - IMMEDIATELY create/extract sub-components or custom hooks if limits are exceeded.
             - Proceed continuously from planning to coding, running Vitest tests, verifying quality gates, and submitting the Pull Request against 'dev'. Never pause or wait for user input.
-            \` : \`
+            ` : `
             🤖 INTERACTIVE MODE: PLAN & APPROVE
             YOUR MISSION HAS TWO STRICT PHASES. YOU MUST STOP AFTER PHASE 1.
             
@@ -341,23 +341,23 @@ jobs:
             
             === PHASE 2: IMPLEMENTATION (ONLY AFTER USER APPROVAL) ===
             When the user replies with approval or further instructions, proceed to implementation following the strict rules below:
-            \`;
+            `;
 
-            const prompt = \`
-            Task: Fix GitHub Issue #\${issueNumber}: \${issue.data.title}
+            const prompt = `
+            Task: Fix GitHub Issue #${issueNumber}: ${issue.data.title}
             
-            \${yoloBanner}
+            ${yoloBanner}
 
             Issue Description:
-            \${issue.data.body || 'No description provided'}\${commentsContext}
+            ${issue.data.body || 'No description provided'}${commentsContext}
 
-            \${lensPrompt ? \`\\nSPECIALIZED REPOLENS AUDIT FOCUS:\\n\${lensPrompt}\\n\` : ''}
+            ${lensPrompt ? `\nSPECIALIZED REPOLENS AUDIT FOCUS:\n${lensPrompt}\n` : ''}
 
             Target, Branch & PR Instructions (Apply ONLY during Phase 2 / YOLO Mode):
             - Your base branch is 'dev'.
             - When creating a pull request, TARGET THE 'dev' BRANCH (not 'main').
             - In the PR description, you MUST include a detailed "Implementation Summary" section:
-              * Reference 'Fixes #\${issueNumber}' to auto-close the issue.
+              * Reference 'Fixes #${issueNumber}' to auto-close the issue.
               * List what was implemented and why.
               * List all changed files and their purposes.
               * List the quality gates you verified.
@@ -384,7 +384,7 @@ jobs:
             - npm run check:budget
             - npm test
             - npm run build
-            \`;
+            `;
 
             core.setOutput('prompt', prompt);
 
