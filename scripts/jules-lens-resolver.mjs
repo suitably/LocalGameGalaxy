@@ -243,6 +243,8 @@ YOUR AUDIT MISSION:
 3. ${
     mode === 'plan'
       ? 'Do not modify files yet. Instead, formulate a detailed markdown audit report explaining the exact finding, affected files, risk severity, and step-by-step fix plan.'
+      : mode === 'review'
+      ? 'DO NOT MODIFY ANY FILES. Your only goal is to review the Pull Request diff and submit a review using the gh cli.'
       : 'Implement the fix cleanly, adhere strictly to all AGENTS.md rules, run verification commands (npm test, npm run check:budget), and open a Pull Request targeting the dev branch. Include a full explanation of the RepoLens finding in the PR description.'
   }
 `;
