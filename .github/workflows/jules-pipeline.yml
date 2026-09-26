@@ -280,11 +280,34 @@ jobs:
               });
             } catch (e) {}
 
+            // Fetch relevant user feedback from comments (exclude bots & slash commands)
+            let commentsContext = '';
+            try {
+              const commentsRes = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                per_page: 50
+              });
+              const filteredComments = (commentsRes.data || []).filter(c => {
+                const author = c.user?.login || '';
+                const body = (c.body || '').trim();
+                const isBot = c.user?.type === 'Bot' || author.includes('[bot]') || author === 'github-actions' || body.startsWith('## 🤖') || body.startsWith('### 🔍') || body.startsWith('/');
+                return !isBot && body.length > 0;
+              });
+              if (filteredComments.length > 0) {
+                commentsContext = '\n\nUser Feedback & Clarifications from Issue Comments:\n' +
+                  filteredComments.map(c => `- @${c.user?.login}: ${c.body.trim()}`).join('\n\n');
+              }
+            } catch (err) {
+              console.warn('Could not fetch comments for Jules prompt:', err.message);
+            }
+
             const prompt = `
             Task: Fix GitHub Issue #${issueNumber}: ${issue.data.title}
 
             Issue Description:
-            ${issue.data.body || 'No description provided'}
+            ${issue.data.body || 'No description provided'}${commentsContext}
 
             ${lensPrompt ? `\nSPECIALIZED REPOLENS AUDIT FOCUS:\n${lensPrompt}\n` : ''}
 

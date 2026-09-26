@@ -69,7 +69,38 @@ async function fetchGitHub(endpoint, options = {}) {
 }
 
 async function getIssueDetails(issueNumber) {
-  return fetchGitHub(`/issues/${issueNumber}`);
+  const issue = await fetchGitHub(`/issues/${issueNumber}`);
+  try {
+    const comments = await fetchGitHub(`/issues/${issueNumber}/comments?per_page=100`);
+    if (Array.isArray(comments)) {
+      const userComments = comments.filter((c) => {
+        const author = c.user?.login || '';
+        const body = (c.body || '').trim();
+        const isBot =
+          c.user?.type === 'Bot' ||
+          author.includes('[bot]') ||
+          author === 'github-actions' ||
+          body.startsWith('## 🤖') ||
+          body.startsWith('### 🔍') ||
+          body.startsWith('/plan') ||
+          body.startsWith('/jules') ||
+          body.startsWith('/bundle') ||
+          body.startsWith('/duplicate');
+        return !isBot && body.length > 0;
+      });
+
+      if (userComments.length > 0) {
+        issue.userComments = userComments.map((c) => ({
+          author: c.user?.login || 'User',
+          body: c.body.trim(),
+          createdAt: c.created_at,
+        }));
+      }
+    }
+  } catch (err) {
+    console.warn('[Plan] Could not fetch issue comments:', err.message);
+  }
+  return issue;
 }
 
 async function postIssueComment(issueNumber, commentBody) {
@@ -139,7 +170,8 @@ function savePipelineMemory(memory) {
  */
 function scanCodebaseForContext(issue) {
   const memory = loadPipelineMemory();
-  const text = `${issue.title} ${issue.body || ''}`.toLowerCase();
+  const commentsText = (issue.userComments || []).map((c) => c.body).join(' ');
+  const text = `${issue.title} ${issue.body || ''} ${commentsText}`.toLowerCase();
 
   // 1. Detect all subsystems dynamically from disk
   const gamesDir = path.join(ROOT_DIR, 'src', 'games');
@@ -227,10 +259,11 @@ function scanCodebaseForContext(issue) {
   // 3. Multi-Pass Scoring
   const candidateScores = new Map();
 
-  // Check explicit file mentions in issue
+  // Check explicit file mentions in issue body and discussion comments
+  const fullTextWithComments = `${issue.body || ''}\n${commentsText}`;
   const explicitPathRegex = /(src\/[a-zA-Z0-9_\-\.\/]+\.(?:tsx?|jsx?))/g;
   let expMatch;
-  while ((expMatch = explicitPathRegex.exec(issue.body || '')) !== null) {
+  while ((expMatch = explicitPathRegex.exec(fullTextWithComments)) !== null) {
     const p = expMatch[1];
     if (fs.existsSync(path.join(ROOT_DIR, p))) {
       candidateScores.set(p, 500);
@@ -445,6 +478,11 @@ async function generatePlanWithGemini(issue, candidateFiles) {
   const lensName = process.env.LENS_NAME || '';
   const contextPack = buildTriageContextPack(issue, candidateFiles);
 
+  const commentsBlock = (issue.userComments || []).length > 0
+    ? `\nSUPPLEMENTAL DISCUSSION & USER FEEDBACK (COMMENTS):\n` +
+      issue.userComments.map((c) => `Comment by @${c.author}: ${c.body}`).join('\n\n') + '\n'
+    : '';
+
   const prompt = `You are the lead software architect for LocalGameGalaxy.
 An issue has been requested to be solved by Google Jules.
 Follow the RepoLens RFC / Research Plan standard (as seen in RepoLens #389).
@@ -462,6 +500,7 @@ ISSUE / RFC DETAILS:
 Issue: #${issue.number} - ${issue.title}
 Full Specification:
 ${issue.body || 'No description provided.'}
+${commentsBlock}
 
 CODEBASE EVIDENCE (TRIAGE CONTEXT PACK):
 ${contextPack}
@@ -590,12 +629,20 @@ function generateTemplatePlan(issue, candidateFiles = [], apiError = null) {
     testFilePath = testFilePath.slice(0, -3) + '.test.ts';
   }
 
+  let commentsSection = '';
+  if (issue.userComments && issue.userComments.length > 0) {
+    commentsSection = `\n\n### 💬 Ergänzende Anforderungen & Feedback aus Diskussion\n` +
+      issue.userComments
+        .map((c) => `- **@${c.author}** (${new Date(c.createdAt).toLocaleDateString()}): ${c.body}`)
+        .join('\n');
+  }
+
   return `${notice}# Research & Implementation Plan: Issue #${issue.number} — ${issue.title}
 
 ## 1. Executive Summary & Problem Scope
 - **Ticket / Zielsetzung**: #${issue.number} - ${title}
 - **Vollständige Anforderungsspezifikation**:
-${body || 'Keine zusätzliche Beschreibung angegeben.'}${bundledSection}
+${body || 'Keine zusätzliche Beschreibung angegeben.'}${bundledSection}${commentsSection}
 
 ## 2. Current Behavior & Codebase Analysis (RepoLens Audit)
 ${fileAnalysisSections || '- Codebase-Scan identifiziert die Einstiegspunkte für das Modul.'}
@@ -671,6 +718,13 @@ media.stems und media.sheet_music (musicxml)
 - Web Audio API Engine: Alle 4 Stems in gemeinsamen AudioContext puffern.
 - Mute-Gruppen: Gain-Nodes für Minus-One-Track.
 - MusicXML Rendering: OpenSheetMusicDisplay (OSMD) auf HTML5-Canvas.`,
+      userComments: [
+        {
+          author: 'carsten',
+          body: 'Achtung: melodiq-notes existiert bereits in src/games/melodiq-notes/! Bitte mobile UI, Touch-Scrolling und Multi-Stem Audio einbauen.',
+          createdAt: new Date().toISOString(),
+        },
+      ],
     };
   } else {
     if (!issueNumber) {
