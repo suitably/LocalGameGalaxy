@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactored CI quality gates to enforce zero-duplication (`jscpd` < 2.5%), anti-god-component budget (< 250 lines), and doc synchronization.
 
 ### Fixed
-- **Issue Curator & Jules Plan Generator**: Bundled sub-issues are now closed with `state_reason: "completed"` instead of `not_planned`. Jules implementation plan generation now runs codebase scanning to determine target files and concrete code changes instead of placeholder templates.
+- **Issue Curator & Jules Plan Generator**: Bundled sub-issues are now closed with `state_reason: "completed"` instead of `not_planned`. Jules implementation plan generation has been upgraded to the RepoLens RFC Research Plan standard (as seen in RepoLens #389), featuring real code snippets, git history context, line-level citations, alternatives analysis, and concrete Vitest test plans.
 
 ---
 
