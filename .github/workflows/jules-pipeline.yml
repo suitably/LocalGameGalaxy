@@ -239,19 +239,45 @@ jobs:
       - name: Invoke Google Jules Agent
         id: jules_call
         env:
+          JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
+          JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
+          JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
+          JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
+          JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
           JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+          ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
           STARTING_BRANCH: 'dev'
           REPO: ${{ github.repository }}
           USER_PROMPT: ${{ steps.prep.outputs.prompt }}
         shell: bash
         run: |
-          if [ -z "$JULES_API_KEY" ]; then
-            echo "error_msg=Das Secret JULES_API_KEY ist in den GitHub Repository Secrets nicht hinterlegt." >> $GITHUB_OUTPUT
+          # 1. Collect all available Jules API keys from secrets
+          declare -a KEYS=()
+          declare -a KEY_NAMES=()
+
+          if [ -n "$JULES_API_KEY_1" ]; then KEYS+=("$JULES_API_KEY_1"); KEY_NAMES+=("JULES_API_KEY_1"); fi
+          if [ -n "$JULES_API_KEY_2" ]; then KEYS+=("$JULES_API_KEY_2"); KEY_NAMES+=("JULES_API_KEY_2"); fi
+          if [ -n "$JULES_API_KEY_3" ]; then KEYS+=("$JULES_API_KEY_3"); KEY_NAMES+=("JULES_API_KEY_3"); fi
+          if [ -n "$JULES_API_KEY_4" ]; then KEYS+=("$JULES_API_KEY_4"); KEY_NAMES+=("JULES_API_KEY_4"); fi
+          if [ -n "$JULES_API_KEY_5" ]; then KEYS+=("$JULES_API_KEY_5"); KEY_NAMES+=("JULES_API_KEY_5"); fi
+
+          # Fallback to JULES_API_KEY if none of the numbered keys exist
+          if [ ${#KEYS[@]} -eq 0 ] && [ -n "$JULES_API_KEY" ]; then
+            KEYS+=("$JULES_API_KEY")
+            KEY_NAMES+=("JULES_API_KEY")
+          fi
+
+          TOTAL_KEYS=${#KEYS[@]}
+          if [ "$TOTAL_KEYS" -eq 0 ]; then
+            echo "error_msg=Kein JULES_API_KEY oder JULES_API_KEY_1..5 in den GitHub Repository Secrets hinterlegt." >> $GITHUB_OUTPUT
             echo "success=false" >> $GITHUB_OUTPUT
-            echo "::error::JULES_API_KEY secret is not set!"
+            echo "::error::No Jules API key secrets configured!"
             exit 1
           fi
 
+          echo "Found $TOTAL_KEYS Jules API key(s) in pool: ${KEY_NAMES[*]}"
+
+          # 2. Prepare payload
           echo "$USER_PROMPT" > prompt.txt
 
           jq -n \
@@ -270,28 +296,52 @@ jobs:
               "automationMode": "AUTO_CREATE_PR"
             }' > jules_payload.json
 
-          echo "Calling Jules API at https://jules.googleapis.com/v1alpha/sessions..."
-          HTTP_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
-            'https://jules.googleapis.com/v1alpha/sessions' \
-            -X POST \
-            -H "Content-Type: application/json" \
-            -H "X-Goog-Api-Key: $JULES_API_KEY" \
-            -d @jules_payload.json)
+          # 3. Round-Robin starting index based on issue number
+          NUM_ISSUE=${ISSUE_NUMBER:-1}
+          START_IDX=$(( NUM_ISSUE % TOTAL_KEYS ))
+          echo "Starting dispatch round-robin at slot index $START_IDX (Issue #$NUM_ISSUE)..."
 
-          BODY=$(echo "$HTTP_RESPONSE" | sed -e '$d')
-          STATUS=$(echo "$HTTP_RESPONSE" | tail -n1 | cut -d':' -f2)
+          INVOKED_SUCCESS=false
+          LAST_ERROR=""
 
-          echo "Jules API response status: $STATUS"
-          echo "Response body: $BODY"
+          for (( i=0; i<TOTAL_KEYS; i++ )); do
+            CURRENT_IDX=$(( (START_IDX + i) % TOTAL_KEYS ))
+            CURRENT_KEY="${KEYS[$CURRENT_IDX]}"
+            CURRENT_NAME="${KEY_NAMES[$CURRENT_IDX]}"
 
-          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
-            SESSION_ID=$(echo "$BODY" | jq -r '.id // .name // empty' | awk -F'/' '{print $NF}')
-            echo "session_id=$SESSION_ID" >> $GITHUB_OUTPUT
-            echo "session_url=https://jules.google.com/task/$SESSION_ID" >> $GITHUB_OUTPUT
-            echo "success=true" >> $GITHUB_OUTPUT
-          else
-            echo "::error::Jules API invocation failed with status $STATUS: $BODY"
-            echo "error_msg=Jules API returned status $STATUS: $BODY" >> $GITHUB_OUTPUT
+            echo "▶ Trying Jules API with secret: $CURRENT_NAME (Slot $CURRENT_IDX)..."
+
+            HTTP_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" \
+              'https://jules.googleapis.com/v1alpha/sessions' \
+              -X POST \
+              -H "Content-Type: application/json" \
+              -H "X-Goog-Api-Key: $CURRENT_KEY" \
+              -d @jules_payload.json)
+
+            BODY=$(echo "$HTTP_RESPONSE" | sed -e '$d')
+            STATUS=$(echo "$HTTP_RESPONSE" | tail -n1 | cut -d':' -f2)
+
+            echo "Response Status: $STATUS"
+
+            if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 300 ]; then
+              SESSION_ID=$(echo "$BODY" | jq -r '.id // .name // empty' | awk -F'/' '{print $NF}')
+              echo "✔ Successfully dispatched to Google Jules via $CURRENT_NAME!"
+              echo "Session ID: $SESSION_ID"
+              echo "session_id=$SESSION_ID" >> $GITHUB_OUTPUT
+              echo "session_url=https://jules.google.com/task/$SESSION_ID" >> $GITHUB_OUTPUT
+              echo "key_used=$CURRENT_NAME" >> $GITHUB_OUTPUT
+              echo "success=true" >> $GITHUB_OUTPUT
+              INVOKED_SUCCESS=true
+              break
+            else
+              echo "⚠️ Key $CURRENT_NAME failed with status $STATUS: $BODY"
+              LAST_ERROR="[$CURRENT_NAME, status $STATUS]: $BODY"
+            fi
+          done
+
+          if [ "$INVOKED_SUCCESS" != "true" ]; then
+            echo "::error::All Jules API keys in pool failed! Last error: $LAST_ERROR"
+            echo "error_msg=Alle $TOTAL_KEYS Jules API-Keys im Pool sind fehlgeschlagen. Letzter Fehler: $LAST_ERROR" >> $GITHUB_OUTPUT
             echo "success=false" >> $GITHUB_OUTPUT
             exit 1
           fi
@@ -304,6 +354,7 @@ jobs:
             const issueNumber = Number("${{ needs.triage.outputs.issue_number }}");
             const isSuccess = "${{ steps.jules_call.outputs.success }}" === "true";
             const sessionUrl = "${{ steps.jules_call.outputs.session_url }}";
+            const keyUsed = "${{ steps.jules_call.outputs.key_used }}";
             const errorMsg = "${{ steps.jules_call.outputs.error_msg }}";
 
             try {
@@ -329,7 +380,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issueNumber,
-                body: `🚀 **Google Jules Task gestartet!**\n\nDu kannst den Fortschritt und das VM-Log in Echtzeit hier verfolgen:\n👉 [${sessionUrl}](${sessionUrl})\n\nSobald Jules fertig ist, wird der Pull Request automatisch gegen \`dev\` geöffnet.`
+                body: `🚀 **Google Jules Task gestartet!** (Worker: \`${keyUsed}\`)\n\nDu kannst den Fortschritt und das VM-Log in Echtzeit hier verfolgen:\n👉 [${sessionUrl}](${sessionUrl})\n\nSobald Jules fertig ist, wird der Pull Request automatisch gegen \`dev\` geöffnet.`
               });
             } else {
               try {
