@@ -39,7 +39,6 @@
   "src/games/guessart/components/catalogue/CatalogueEditorDialog.tsx": 268,
   "src/components/feedback/FeedbackDialog.tsx": 267,
   "src/games/garticphone/components/GarticHeader.tsx": 267,
-  "src/games/wordle/WordleGame.tsx": 267,
   "src/modules/sharing/ShareSessionLinksDialog.tsx": 265,
   "src/games/imposter/ImposterGame.tsx": 261,
   "src/games/cards/components/ModernScoreAdjuster.tsx": 256,
