@@ -22,13 +22,13 @@ async function run() {
 
     // 1. Get highly churned files (most modified in last 30 days) to find technical debt
     console.log('Analyzing git history for active UI components...');
-    const gitCmd = \`git log --since="30 days ago" --name-only --pretty=format:"" | grep -v "^$" | grep -E "\\.tsx$" | grep -E "(components/|games/|features/)" | sort | uniq -c | sort -nr | head -n 10 | awk '{print $2}'\`;
+    const gitCmd = `git log --since="30 days ago" --name-only --pretty=format:"" | grep -v "^$" | grep -E "\\.tsx$" | grep -E "(components/|games/|features/)" | sort | uniq -c | sort -nr | head -n 10 | awk '{print $2}'`;
     let activeFiles = [];
     try {
         activeFiles = execSync(gitCmd).toString().trim().split('\\n').filter(Boolean);
     } catch (e) {
         console.warn('Could not get git history, falling back to random component files.');
-        const allFiles = execSync(\`find src -type f -name "*.tsx"\`).toString().trim().split('\\n').filter(Boolean);
+        const allFiles = execSync(`find src -type f -name "*.tsx"`).toString().trim().split('\\n').filter(Boolean);
         activeFiles = allFiles.sort(() => 0.5 - Math.random()).slice(0, 5);
     }
 
@@ -37,7 +37,7 @@ async function run() {
         return;
     }
 
-    console.log(`Selected files for analysis:\n${activeFiles.map(f => \`- \${f}\`).join('\n')}`);
+    console.log(`Selected files for analysis:\n${activeFiles.map(f => `- ${f}`).join('\n')}`);
 
     // 2. Read context
     const architectureDoc = fs.existsSync('docs/tech/architecture.md') ? fs.readFileSync('docs/tech/architecture.md', 'utf-8') : '';
@@ -115,7 +115,7 @@ ${sourceCodeContext}
                 success = true;
                 break;
             } catch (err) {
-                console.warn(\`Model \${model} failed or is not available. Trying next...\`);
+                console.warn(`Model ${model} failed or is not available. Trying next...`);
             }
         }
         
