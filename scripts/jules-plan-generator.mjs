@@ -30,15 +30,7 @@ const MEMORY_FILE = path.join(ROOT_DIR, '.pipeline-memory', 'knowledge-base.json
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY;
 
-const API_KEYS = [
-  process.env.GEMINI_API_KEY,
-  process.env.JULES_API_KEY_1,
-  process.env.JULES_API_KEY_2,
-  process.env.JULES_API_KEY_3,
-  process.env.JULES_API_KEY_4,
-  process.env.JULES_API_KEY_5,
-  process.env.JULES_API_KEY,
-].filter(Boolean);
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -445,8 +437,8 @@ function buildTriageContextPack(issue, candidateFiles) {
 }
 
 async function generatePlanWithGemini(issue, candidateFiles) {
-  if (API_KEYS.length === 0) {
-    return { plan: null, error: 'Keine GEMINI_API_KEY oder JULES_API_KEY Secrets in GitHub Actions hinterlegt.' };
+  if (!GEMINI_API_KEY) {
+    return { plan: null, error: null };
   }
 
   const lensPrompt = process.env.LENS_PROMPT || '';
@@ -508,53 +500,34 @@ Produce a rigorous, deep research and implementation plan formatted in Markdown:
     'gemini-1.5-pro',
   ];
 
-  let lastApiError = null;
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+        }),
+      });
 
-  for (let keyIdx = 0; keyIdx < API_KEYS.length; keyIdx++) {
-    const apiKey = API_KEYS[keyIdx];
-    for (const model of models) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-          }),
-        });
-
-        if (response.status === 429) {
-          console.warn(`[Gemini API] Key #${keyIdx + 1} hit quota limit (429). Trying next key...`);
-          lastApiError = `Key #${keyIdx + 1}: 429 Quota Exceeded`;
-          break; // try next key
-        }
-
-        if (response.status === 403) {
-          console.warn(`[Gemini API] Key #${keyIdx + 1} lacks Generative Language API access (403). Trying next key...`);
-          lastApiError = `Key #${keyIdx + 1}: Generative Language API nicht aktiv (403)`;
-          break; // try next key
-        }
-
-        if (!response.ok) {
-          const errText = await response.text();
-          console.warn(`[Gemini API] Model ${model} on Key #${keyIdx + 1} failed (${response.status}): ${errText.slice(0, 150)}`);
-          lastApiError = `Status ${response.status}`;
-          continue;
-        }
-
-        const data = await response.json();
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text && !text.includes('To be determined')) {
-          return { plan: text, error: null };
-        }
-      } catch (err) {
-        console.warn(`[Gemini API] Error querying model ${model}:`, err.message);
-        lastApiError = err.message;
+      if (!response.ok) {
+        const errText = await response.text();
+        console.warn(`[Gemini API] Model ${model} failed (${response.status}): ${errText.slice(0, 150)}`);
+        continue;
       }
+
+      const data = await response.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text && !text.includes('To be determined')) {
+        return { plan: text, error: null };
+      }
+    } catch (err) {
+      console.warn(`[Gemini API] Error querying model ${model}:`, err.message);
     }
   }
 
-  return { plan: null, error: lastApiError };
+  return { plan: null, error: 'Gemini API nicht verfügbar' };
 }
 
 /**

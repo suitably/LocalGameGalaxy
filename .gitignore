@@ -43,3 +43,9 @@ __pycache__/
 server/music/
 music/
 public/assets
+
+# Profiling & Diagnostics
+*.heapsnapshot
+*.cpuprofile
+diff.txt
+lint_output.txt

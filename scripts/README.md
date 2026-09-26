@@ -15,40 +15,46 @@ Starts a local BitTorrent-based WebRTC signaling tracker on port 8000. Used for 
 
 ---
 
-## 2. Ingestion & Alignment Utilities
+## 2. Quality Gates & Architecture Audits
 
-### `fix_align.py` & `fix_align_logic.py`
-Process vocal alignment data to calibrate lyrics timing with separated audio stems.
-- **Prerequisites**: Python 3.10+, Virtual Environment activated.
+### `check-architecture.mjs`
+Enforces game boundary isolation, zero cross-game imports, and prohibits raw `localStorage` or blocking `window.confirm`.
 - **Execution**:
   ```bash
-  python scripts/fix_align.py
+  npm run check:architecture:diff
   ```
 
-### `remove_blur.py`
-Helper script for preprocessing background images and styling assets.
+### `check-component-budget.js`
+Enforces maximum 250 lines per component and ratchets legacy component baselines via `legacy-component-baselines.json`.
 - **Execution**:
   ```bash
-  python scripts/remove_blur.py
+  npm run check:budget
   ```
 
----
-
-## 3. Localization Utilities
-
-### `update_i18n.py` & `update_i18n_helper.py`
-Synchronizes translation namespaces between the English (`en`) and German (`de`) locales, ensuring keys are present in both translation files.
+### `check-docs-sync.mjs`
+Validates that architectural changes are synced with documentation and i18n files.
 - **Execution**:
   ```bash
-  python scripts/update_i18n.py
+  npm run check:docs
   ```
 
 ---
 
-## 4. Refactoring & Code Patching Scripts
+## 3. Autonomous CI/CD Pipeline & Jules Integration
 
-### `patch_game_settings.py`, `patch_melodiq.py`, & `replace_melodiq.py`
-Automation scripts used during refactoring to update game interfaces, schema configurations, or replace Melodiq state hook bindings.
+### `jules-plan-generator.mjs`
+Introspects the local codebase, verifies line budgets and state hooks, and generates untruncated RepoLens RFC research plans for GitHub Issues.
+- **Execution**:
+  ```bash
+  node scripts/jules-plan-generator.mjs --issue <number>
+  node scripts/jules-plan-generator.mjs --dry-run
+  ```
 
-### `fix_imports.py` & `fix_ts.py`
-Clean-up scripts that automatically adjust import path scopes and patch common TypeScript type checks after refactoring.
+### `jules-lens-resolver.mjs`
+Resolves RepoLens audit lenses (e.g. `capacitor-storage`, `agents-budget`, `i18n-sync`) to focus Jules implementation plans.
+
+### `issue-curator.mjs`
+Automatically analyzes, bundles duplicate/overlapping issues, and synchronizes status with GitHub.
+
+### `scaffold-game.mjs`
+Boilerplate generator for scaffolding new game modules adhering to strict architecture boundaries.

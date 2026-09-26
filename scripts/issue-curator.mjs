@@ -23,16 +23,7 @@ import { fileURLToPath } from 'node:url';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY || 'suitably/LocalGameGalaxy';
 
-// Collect all available Gemini / Jules API keys for multi-account pool rotation
-const API_KEYS = [
-  process.env.GEMINI_API_KEY,
-  process.env.JULES_API_KEY_1,
-  process.env.JULES_API_KEY_2,
-  process.env.JULES_API_KEY_3,
-  process.env.JULES_API_KEY_4,
-  process.env.JULES_API_KEY_5,
-  process.env.JULES_API_KEY,
-].filter(Boolean);
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -135,57 +126,47 @@ async function removeIssueLabel(issueNumber, label) {
 }
 
 /**
- * Calls Gemini with automatic key rotation over available pool
+ * Calls Gemini using GEMINI_API_KEY if configured
  */
 async function queryGemini(prompt, systemInstruction = '') {
-  if (API_KEYS.length === 0) {
-    console.warn('No Gemini / Jules API keys found. Proceeding with fallback rule-based analysis.');
+  if (!GEMINI_API_KEY) {
+    console.log('No GEMINI_API_KEY configured. Proceeding with fast local rule-based analysis.');
     return null;
   }
 
   const models = [
     'gemini-3.8-flash',
-    'gemini-3.8-pro',
-    'gemini-3.1-pro',
-    'gemini-2.5-flash',
     'gemini-2.0-flash',
     'gemini-1.5-flash',
+    'gemini-1.5-pro',
   ];
 
-  for (let i = 0; i < API_KEYS.length; i++) {
-    const apiKey = API_KEYS[i];
-    for (const model of models) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-        const payload = {
-          contents: [{ parts: [{ text: prompt }] }],
-        };
-        if (systemInstruction) {
-          payload.systemInstruction = { parts: [{ text: systemInstruction }] };
-        }
-
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        if (response.status === 429) {
-          console.warn(`Key #${i + 1} hit quota limit (429). Trying next key...`);
-          break; // break to next key
-        }
-
-        if (!response.ok) {
-          console.warn(`Key #${i + 1} with model ${model} returned status ${response.status}.`);
-          continue; // try next model
-        }
-
-        const data = await response.json();
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) return text;
-      } catch (err) {
-        console.warn(`Error using API key #${i + 1} with ${model}:`, err.message);
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+      const payload = {
+        contents: [{ parts: [{ text: prompt }] }],
+      };
+      if (systemInstruction) {
+        payload.systemInstruction = { parts: [{ text: systemInstruction }] };
       }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        console.warn(`Model ${model} returned status ${response.status}.`);
+        continue;
+      }
+
+      const data = await response.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) return text;
+    } catch (err) {
+      console.warn(`Error querying model ${model}:`, err.message);
     }
   }
 

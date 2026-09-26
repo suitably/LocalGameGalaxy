@@ -163,12 +163,7 @@ jobs:
           ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
           CURATOR_ACTION: ${{ needs.triage.outputs.action }}
           CURATOR_TARGETS: ${{ needs.triage.outputs.targets }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.JULES_API_KEY_1 || secrets.JULES_API_KEY }}
-          JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
-          JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
-          JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
-          JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
-          JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           node scripts/issue-curator.mjs --issue "$ISSUE_NUMBER" --action "$CURATOR_ACTION" --targets "$CURATOR_TARGETS"
 
@@ -200,13 +195,7 @@ jobs:
           ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
           LENS_PROMPT: ${{ steps.lens_resolver.outputs.prompt }}
           LENS_NAME: ${{ steps.lens_resolver.outputs.lens_name }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.JULES_API_KEY_1 || secrets.JULES_API_KEY }}
-          JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
-          JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
-          JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
-          JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
-          JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
-          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           node scripts/jules-plan-generator.mjs --issue ${{ needs.triage.outputs.issue_number }}
 
