@@ -110,9 +110,8 @@ jobs:
                   if (parts.length > 2) {
                     lensName = parts[2].trim();
                   }
-                } else if (body.startsWith('/yolo') || body.startsWith('/jules yolo')) {
-                  isYolo = true;
-                  // Check if there is an active session in comments
+                } else {
+                  // 1. Check if there is an active session
                   let hasSession = false;
                   try {
                     const commentsRes = await github.rest.issues.listComments({
@@ -130,31 +129,27 @@ jobs:
                     }
                   } catch (e) {}
 
-                  if (hasSession) {
-                    action = 'yolo';
-                  } else {
+                  // 2. Route commands based on session state
+                  if (body.startsWith('/yolo') || body.startsWith('/jules yolo')) {
+                    action = hasSession ? 'yolo' : 'fix';
+                  } else if (body.startsWith('/jules reply') || body.startsWith('/reply')) {
+                    action = 'reply';
+                    const replyText = rawBody.replace(/^\/(jules\s+)?reply\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
+                    targets = replyText || 'Please proceed autonomously with the proposed solution and create the pull request.';
+                  } else if (body.startsWith('/continue') || body.startsWith('/jules continue') || body.startsWith('/approve') || body.startsWith('/jules approve') || body.startsWith('/approve-plan')) {
+                    if (hasSession) {
+                      action = hasYoloFlag ? 'yolo' : 'continue';
+                      const replyText = rawBody.replace(/^\/(jules\s+)?(continue|approve|approve-plan)\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
+                      targets = replyText || 'Continue with the suggested approach.';
+                    } else {
+                      action = 'fix';
+                    }
+                  } else if (body.startsWith('/status') || body.startsWith('/jules status')) {
+                    action = 'status';
+                  } else if (body.startsWith('/jules plan') || body.startsWith('/plan') || body.startsWith('/jules fix') || body.startsWith('/fix')) {
+                    // Start a new interactive session
                     action = 'fix';
                   }
-                } else if (body.startsWith('/jules reply') || body.startsWith('/reply')) {
-                  action = 'reply';
-                  const replyText = rawBody.replace(/^\/(jules\s+)?reply\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
-                  targets = replyText || 'Please proceed autonomously with the proposed solution and create the pull request.';
-                } else if (body.startsWith('/continue') || body.startsWith('/jules continue')) {
-                  if (hasYoloFlag) {
-                    action = 'yolo';
-                  } else {
-                    action = 'continue';
-                    const replyText = rawBody.replace(/^\/(jules\s+)?continue\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
-                    targets = replyText || 'Continue with the suggested approach.';
-                  }
-                } else if (body.startsWith('/approve-plan') || body.startsWith('/jules approve-plan')) {
-                  action = 'approve-plan';
-                } else if (body.startsWith('/status') || body.startsWith('/jules status')) {
-                  action = 'status';
-                } else if (body.startsWith('/jules plan') || body.startsWith('/plan')) {
-                  action = 'plan';
-                } else if (body.startsWith('/jules approve') || body.startsWith('/approve') || body.startsWith('/jules fix') || body.startsWith('/fix')) {
-                  action = 'fix';
                 }
               }
             } else if (eventName === 'issues' && context.payload.action === 'opened') {
