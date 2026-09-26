@@ -7,8 +7,10 @@
  * 1. Dynamically detects game subsystems and shared modules from the filesystem.
  * 2. Learns from and updates .pipeline-memory/knowledge-base.json for pattern recognition.
  * 3. Deeply introspects candidate files: line budgets, state hooks, key handlers, line citations.
- * 4. Generates rigorous, file-grounded research plans (Gemini or deep dynamic fallback).
- * 5. Self-verifies that zero generic placeholders are ever emitted.
+ *    (Excludes /i18n/ and locale dictionary files from component decomposition).
+ * 4. Generates rigorous, file-grounded research plans using Gemini 3.8 Flash or clean static audit.
+ * 5. Preserves full untruncated issue specifications and ADRs (zero artificial cutoff).
+ * 6. Self-verifies that zero generic placeholders or cross-contaminating text are ever emitted.
  *
  * Usage:
  *   node scripts/jules-plan-generator.mjs --issue <issue_number>
@@ -141,6 +143,7 @@ function savePipelineMemory(memory) {
  * Generic Codebase Scanner & Introspector
  * Dynamically resolves subsystems, scores files via multi-pass heuristics,
  * and extracts concrete line numbers and state hooks.
+ * Automatically excludes pure translation files (/i18n/, /locales/) from being targeted as code components.
  */
 function scanCodebaseForContext(issue) {
   const memory = loadPipelineMemory();
@@ -210,6 +213,10 @@ function scanCodebaseForContext(issue) {
     karte: ['card', 'deck', 'pile', 'hand'],
     karten: ['cards', 'deck', 'pile', 'hand'],
     ziehen: ['draw', 'deal', 'pick'],
+    noten: ['sheet', 'musicxml', 'osmd', 'stems', 'audio'],
+    instrument: ['stem', 'stems', 'musicxml', 'sheet', 'audiocontext'],
+    history: ['history', 'stats', 'previous', 'past', 'record'],
+    historie: ['history', 'stats', 'previous', 'past', 'record'],
   };
 
   const rawTokens = text.match(/[a-zA-Z0-9_\-]{3,}/g) || [];
@@ -254,6 +261,16 @@ function scanCodebaseForContext(issue) {
       ) {
         const relPath = path.relative(ROOT_DIR, fullPath);
         const lowerRel = relPath.toLowerCase();
+
+        // STRICT FILTER: Exclude translation and locale dictionary files from code candidates!
+        if (
+          lowerRel.includes('/i18n/') ||
+          lowerRel.includes('/locales/') ||
+          lowerRel.endsWith('.d.ts') ||
+          lowerRel.endsWith('.json')
+        ) {
+          continue;
+        }
 
         let score = candidateScores.get(relPath) || 0;
 
@@ -301,7 +318,7 @@ function scanCodebaseForContext(issue) {
   // Self-Verification fallback: if 0 candidates found, search entire src with relaxed criteria
   if (candidateScores.size === 0) {
     console.warn('[Scanner] 0 candidates found on first pass. Triggering broad relaxed search...');
-    const topKeywords = ['player', 'game', 'panel', 'view', 'display', 'screen', 'board', 'reducer', 'card', 'hint'];
+    const topKeywords = ['player', 'game', 'panel', 'view', 'display', 'screen', 'board', 'reducer', 'card', 'hint', 'music', 'viewer'];
     for (const kw of topKeywords) {
       if (text.includes(kw)) {
         walk(path.join(ROOT_DIR, 'src'));
@@ -397,7 +414,6 @@ function scanCodebaseForContext(issue) {
         files: candidates.map((c) => c.path),
         recordedAt: new Date().toISOString(),
       });
-      // Limit memory list to 50 items
       if (memory.learnedResolutionPatterns.length > 50) memory.learnedResolutionPatterns.shift();
       savePipelineMemory(memory);
     }
@@ -430,7 +446,7 @@ function buildTriageContextPack(issue, candidateFiles) {
 
 async function generatePlanWithGemini(issue, candidateFiles) {
   if (API_KEYS.length === 0) {
-    return null;
+    return { plan: null, error: 'Keine GEMINI_API_KEY oder JULES_API_KEY Secrets in GitHub Actions hinterlegt.' };
   }
 
   const lensPrompt = process.env.LENS_PROMPT || '';
@@ -452,7 +468,7 @@ ${lensPrompt ? `SPECIALIZED REPOLENS AUDIT LENS (${lensName}):\n${lensPrompt}\n`
 
 ISSUE / RFC DETAILS:
 Issue: #${issue.number} - ${issue.title}
-Body:
+Full Specification:
 ${issue.body || 'No description provided.'}
 
 CODEBASE EVIDENCE (TRIAGE CONTEXT PACK):
@@ -484,16 +500,18 @@ Produce a rigorous, deep research and implementation plan formatted in Markdown:
 [Chronological step-by-step checklist for Jules to execute]
 `;
 
+  // Standard Google Generative Language models:
   const models = [
     'gemini-3.8-flash',
-    'gemini-3.8-pro',
-    'gemini-3.1-pro',
-    'gemini-2.5-flash',
     'gemini-2.0-flash',
     'gemini-1.5-flash',
+    'gemini-1.5-pro',
   ];
 
-  for (const apiKey of API_KEYS) {
+  let lastApiError = null;
+
+  for (let keyIdx = 0; keyIdx < API_KEYS.length; keyIdx++) {
+    const apiKey = API_KEYS[keyIdx];
     for (const model of models) {
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -506,32 +524,40 @@ Produce a rigorous, deep research and implementation plan formatted in Markdown:
         });
 
         if (response.status === 429) {
-          console.warn(`Key hit quota limit (429). Trying next key...`);
+          console.warn(`[Gemini API] Key #${keyIdx + 1} hit quota limit (429). Trying next key...`);
+          lastApiError = `Key #${keyIdx + 1}: 429 Quota Exceeded`;
           break; // try next key
         }
 
         if (!response.ok) {
-          console.warn(`Model ${model} returned status ${response.status}. Trying next model...`);
+          const errText = await response.text();
+          console.warn(`[Gemini API] Model ${model} on Key #${keyIdx + 1} failed (${response.status}): ${errText.slice(0, 150)}`);
+          lastApiError = `Status ${response.status}: ${errText.slice(0, 120)}`;
           continue;
         }
 
         const data = await response.json();
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text && !text.includes('To be determined')) return text;
+        if (text && !text.includes('To be determined')) {
+          return { plan: text, error: null };
+        }
       } catch (err) {
-        console.warn(`Error querying model ${model}:`, err.message);
+        console.warn(`[Gemini API] Error querying model ${model}:`, err.message);
+        lastApiError = err.message;
       }
     }
   }
 
-  return null;
+  return { plan: null, error: lastApiError };
 }
 
 /**
- * High-depth, generic fallback generator adhering to the RepoLens #389 RFC format.
- * Dynamically synthesizes the scanned components, line numbers, state hooks, and issue text.
+ * Clean, generic static codebase audit plan.
+ * Used only when the Google Gemini cloud API is unreachable.
+ * Never invents fake GuessArt text or hallucinated tests.
+ * Preserves the full untruncated specification.
  */
-function generateTemplatePlan(issue, candidateFiles = []) {
+function generateTemplatePlan(issue, candidateFiles = [], apiError = null) {
   const body = issue.body || '';
   const title = issue.title || '';
   const isBundled = body.includes('Konsolidierte Anforderungen') || body.includes('- [ ]');
@@ -549,9 +575,16 @@ function generateTemplatePlan(issue, candidateFiles = []) {
     }
   }
 
+  const notice = apiError
+    ? `> [!NOTE]\n> **Plan generiert durch lokale Codebase-Analyse**: Die Google Cloud Gemini API lieferte \`${apiError}\`.\n> Die nachfolgende Architekturanalyse basiert direkt auf der statischen Code- und Git-Introspektion des GitHub Runners.\n\n`
+    : '';
+
   // Generate Current Behavior & Analysis section from real introspected files
   const fileAnalysisSections = candidateFiles.map((c) => {
     let details = `### \`${c.path}\` (${c.lineCount} Zeilen ${c.isBudgetExceeded ? '⚠️ verletzt 250-Zeilen-Budget' : '✔ im Budget'})\n`;
+    if (c.exportedSymbols.length > 0) {
+      details += `- **Exportierte Symbole / Schnittstellen**: ${c.exportedSymbols.map((s) => `\`${s}\``).join(', ')}\n`;
+    }
     if (c.matchingLines.length > 0) {
       details += `- **Relevante Codezeilen (Fundstellen zum Issue-Kontext)**:\n`;
       for (const m of c.matchingLines.slice(0, 4)) {
@@ -561,7 +594,7 @@ function generateTemplatePlan(issue, candidateFiles = []) {
     if (c.stateHooks.length > 0) {
       details += `- **Zustandsverwaltung / State Hooks**:\n`;
       for (const h of c.stateHooks) {
-        details += `  - Zeile ${h.lineNumber}: Hook \`${h.stateVar}\` steuert den lokalen Komponentenstatus.\n`;
+        details += `  - Zeile ${h.lineNumber}: Hook \`${h.stateVar}\` steuert den lokalen Zustand.\n`;
       }
     }
     if (c.isBudgetExceeded) {
@@ -571,51 +604,54 @@ function generateTemplatePlan(issue, candidateFiles = []) {
   }).join('\n');
 
   // Derive target file name for test plan
-  const primaryComponent = candidateFiles.length > 0 ? candidateFiles[0].path : 'src/games/unknown/Component.tsx';
+  const primaryComponent = candidateFiles.length > 0 ? candidateFiles[0].path : 'src/games/target/Component.tsx';
   const primaryBase = path.basename(primaryComponent, path.extname(primaryComponent));
-  const testFilePath = primaryComponent.replace('/components/', '/components/__tests__/').replace('.tsx', '.test.tsx');
+  let testFilePath = primaryComponent.replace('/components/', '/components/__tests__/').replace('/logic/', '/logic/__tests__/');
+  if (testFilePath.endsWith('.tsx')) {
+    testFilePath = testFilePath.slice(0, -4) + '.test.tsx';
+  } else if (testFilePath.endsWith('.ts')) {
+    testFilePath = testFilePath.slice(0, -3) + '.test.ts';
+  }
 
-  return `# Research & Implementation Plan: Issue #${issue.number} — ${issue.title}
+  return `${notice}# Research & Implementation Plan: Issue #${issue.number} — ${issue.title}
 
 ## 1. Executive Summary & Problem Scope
 - **Ticket / Zielsetzung**: #${issue.number} - ${title}
-- **Fehlerbeschreibung & Anforderung**:
-  ${body.slice(0, 600) || 'Keine zusätzliche Beschreibung angegeben.'}${bundledSection}
+- **Vollständige Anforderungsspezifikation**:
+${body || 'Keine zusätzliche Beschreibung angegeben.'}${bundledSection}
 
 ## 2. Current Behavior & Codebase Analysis (RepoLens Audit)
 ${fileAnalysisSections || '- Codebase-Scan identifiziert die Einstiegspunkte für das Modul.'}
 
 ## 3. Proposed Architectural Changes
-1. **Zustands- und Logik-Synchronisation in \`${path.basename(primaryComponent)}\`**:
-   - Die in Abschnitt 2 identifizierten State-Hooks und Handler so anpassen, dass das vom Benutzer beschriebene Verhalten deterministisch aufgelöst wird.
-   - Eingaben oder Vorbelegungen gegen den aktuellen Pool/Zustand abgleichen und ungültige bzw. bereits verbrauchte Elemente filtern.
+1. **Umsetzung der Anforderungen in \`${path.basename(primaryComponent)}\`**:
+   - Die in Abschnitt 2 identifizierten Komponenten und Schnittstellen gemäß der obigen Spezifikation anpassen.
+   - Sicherstellen, dass neue Features oder Korrekturen rückwärtskompatibel bleiben und bestehende Schnittstellen nicht unvollständig brechen.
 2. **Modulare Dekomposition (Zero-God-Components)**:
    ${candidateFiles.some((c) => c.isBudgetExceeded)
-     ? `- Die Komponente \`${primaryBase}\` modular in eigenständige View- und Hook-Bausteine aufteilen, um unter das 250-Zeilen-Limit zu gelangen.`
-     : `- Bestehende Komponentenstruktur beibehalten, da alle betroffenen Dateien innerhalb des 250-Zeilen-Budgets liegen.`}
+     ? `- **Achtung**: Mindestens eine der identifizierten Komponenten überschreitet das 250-Zeilen-Budget. Die betroffenen Logik- oder UI-Teile von \`${primaryBase}\` müssen in eigenständige Unterkomponenten oder Hooks zerlegt werden, um \`npm run check:budget\` zu erfüllen.`
+     : `- Alle betroffenen Komponenten liegen innerhalb des 250-Zeilen-Budgets (AGENTS.md).`}
 3. **Architektur- und Speicher-Konformität**:
-   - Persistenz ausschließlich über \`src/lib/storage.ts\` mit typsicheren Keys.
+   - Lokale Persistenz ausschließlich über \`src/lib/storage.ts\` mit typsicheren Keys.
    - Keine Cross-Game-Imports (\`check:architecture:diff\`).
 
 ## 4. Alternative Approaches Considered
-1. **Reine UI-Kosmetik (z. B. nur visuelles Ausblenden) vs. Daten-Synchronisation im State**:
-   - *Trade-off*: Reines Verstecken im DOM führt zu Inkonsistenzen bei Formularen und Tastatureingaben.
-   - *Entscheidung*: Direkte Bereinigung und Synchronisation im State-Handler garantiert Single Source of Truth.
-2. **Monolithische Inline-Patches vs. modulare Trennung**:
-   - *Entscheidung*: Saubere modulare Funktionen erhöhen die Testbarkeit in Vitest und erfüllen die AGENTS.md-Qualitätstore.
+1. **Direkte In-Place-Erweiterung vs. eigenständiges Submodul**:
+   - *Entscheidung*: Größere funktionale Erweiterungen sollten modular implementiert werden, um bestehende Spiellogik nicht zu destabilisieren und Unit-Tests isoliert zu halten.
+2. **Monolithische Komponenten vs. Hook-basierte Trennung**:
+   - *Entscheidung*: Aufteilung in Controller/Hook und Präsentations-View gewährleistet die Einhaltung der 250-Zeilen-Grenze.
 
 ## 5. Risks, Edge Cases & Mitigations
-- **Unerwartete Eingaben / Sonderzeichen**: Bereinigung und Normalisierung (z. B. Case-Insensitive Abgleich, Trimmen).
-- **State-Desynchronisation bei schnellen Benutzeraktionen**: Zustandstransitionen atomar in Hook/Reducer kapseln.
-- **Layout-Shift & Mobile Viewports**: Feste Größen und Übergänge ohne plötzliche Layout-Sprünge gewährleisten.
+- **Asynchrone Latenzen & Ladezeiten**: Saubere Loading- und Error-States für asynchrone Daten oder Medien vorhalten.
+- **Ressourcen-Cleanup**: Event-Listener, Web-Audio-Nodes oder Iframe-Verbindungen in \`useEffect\`-Cleanup-Funktionen ordnungsgemäß abbauen.
+- **Plattform-Kompatibilität**: Webview-, Touch- und Desktop-Viewports gleichermaßen unterstützen.
 
 ## 6. Concrete Vitest Test Plan & Quality Gates
 
 ### Unit-Tests (\`${testFilePath}\`)
-1. \`should correctly synchronize state when prefilled elements or hints are triggered\`.
-2. \`should reject or strip invalid inputs that do not belong to the available pool\`.
-3. \`should restore state cleanly on item deletion or reset\`.
-4. \`should maintain component line budget below 250 lines\`.
+1. \`should implement the core functionality described in issue #${issue.number}\`.
+2. \`should handle edge cases and empty/invalid states gracefully without crashing\`.
+3. \`should maintain component line budget below 250 lines\`.
 
 ### Verifikations-Tore (CI Pre-Commit Check)
 \`\`\`bash
@@ -628,7 +664,7 @@ npm test                         # Alle Vitest-Suiten grün
 ## 7. Suggested Implementation Sequence
 1. Branch \`jules/issue-${issue.number}\` basierend auf \`dev\` erstellen.
 2. Tests in \`${testFilePath}\` schreiben (Test-Driven Development).
-3. Logik und State-Synchronisation in \`${primaryComponent}\` implementieren.
+3. Logik und Komponenten in \`${primaryComponent}\` implementieren.
 4. Alle Qualitätstore lokal prüfen (\`npm run check:budget && npm test\`).
 5. PR gegen \`dev\` öffnen mit Referenz \`Closes #${issue.number}\`.`;
 }
@@ -640,13 +676,24 @@ async function main() {
   if (isDryRun && (!issueNumber || !GITHUB_TOKEN)) {
     console.log('[DRY-RUN] Running in local mock mode without GitHub API...');
     issue = {
-      number: issueNumber || 140,
-      title: '[Feedback] GuessArt prefilled bubbles',
-      body: `Wenn ich bereits Buchstaben getippt habe und die bubbles anzeigen lasse, dann sehe ich die Buchstaben da drin. Das ist gut soweit. Jedoch wenn ich nun die Buchstaben anzeigen lasse sollen die ausgeblendet werden, die ich bereits befüllt habe.
-Beispiel
-Ziel ist Fussball, Buchstaben sind FUSSBALLWERTUY
-ich habe bereits FUPS geschrieben. dann sollen FU und ein S ausgeblendet werden.
-Das P steht da, aber ist keines der vorgeschlagenden Buchstaben, daher soll die UI diesen Buchstaben aus den Feldern entfernen, da es kein gültiger Buchstabe ist.`,
+      number: issueNumber || 132,
+      title: '[Feedback] Melodiq Implementierung von Instrument Practice',
+      body: `Erweiterung der Karaoke-Architektur für Instrumenten-Training
+1. Architektur-Entscheidung (ADR)
+Kein Rewrite. Der bestehende Docker-Backend-Service wird um einen "Instrumental-Modus" erweitert. Die bestehende Karaoke-Logik bleibt als Modus A erhalten, das neue Feature wird als Modus B (Multi-Stem & Sheet Music) integriert.
+
+2. Backend & Docker-Service Erweiterungen
+- Datenbank-Migration: Song-Objekt um Stems (Vocals, Drums, Bass, Instrument) und Sheet-Music erweitern.
+- Stem-Separation-Worker: Demucs v4 Integration.
+- MusicXML Scraper / Crawler: Validierungslogik für Tempo und sync_offset.
+
+3. API-Schnittstelle (GET /api/songs/{id})
+media.stems und media.sheet_music (musicxml)
+
+4. Frontend Erweiterungen
+- Web Audio API Engine: Alle 4 Stems in gemeinsamen AudioContext puffern.
+- Mute-Gruppen: Gain-Nodes für Minus-One-Track.
+- MusicXML Rendering: OpenSheetMusicDisplay (OSMD) auf HTML5-Canvas.`,
     };
   } else {
     if (!issueNumber) {
@@ -674,15 +721,16 @@ Das P steht da, aber ist keines der vorgeschlagenden Buchstaben, daher soll die 
     console.error('::error::Codebase scanner could not identify any candidate files!');
   }
 
-  let planContent = await generatePlanWithGemini(issue, candidateFiles);
-  if (!planContent) {
-    console.log('[Plan] Generating high-density RepoLens RFC plan from introspected codebase evidence...');
-    planContent = generateTemplatePlan(issue, candidateFiles);
+  const { plan: planContent, error: geminiError } = await generatePlanWithGemini(issue, candidateFiles);
+  let finalPlan = planContent;
+  if (!finalPlan) {
+    console.log(`[Plan] Gemini API nicht verfügbar (${geminiError}). Erstelle sauberen Codebase-Audit-Plan...`);
+    finalPlan = generateTemplatePlan(issue, candidateFiles, geminiError);
   }
 
   const commentMarkdown = `## 🤖 Jules Implementation Plan (RepoLens Standard)
 
-${planContent}
+${finalPlan}
 
 ---
 
