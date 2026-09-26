@@ -142,13 +142,12 @@ export const useMelodiqGlobalEvents = ({
                     
                     // Intercept single song requests and serve from Host memory if possible
                     // This prevents 404s for newly downloaded songs not yet indexed by the helper server
-                    if (data.path.startsWith('/api/songs/') && data.path.split('/').length === 4) {
-                        const songId = data.path.split('/')[3];
-                        if (songId !== 'refresh') {
+                    if (data.path.startsWith('/api/songs/') && data.path !== '/api/songs/refresh') {
+                        let songId = data.path.substring(11);
+                        try { songId = decodeURIComponent(songId); } catch(e) {}
+                        if (songId) {
                             const fullSong = await getSongById(songId);
-                            if (fullSong && fullSong.txtContent) {
-                                resData = fullSong;
-                            }
+                            if (fullSong && fullSong.txtContent) resData = fullSong;
                         }
                     }
 
