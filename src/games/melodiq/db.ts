@@ -104,9 +104,3 @@ db.version(11).stores({
 
 export default db;
 
-// Dummy cache function to avoid breaking MelodiqSession which used it for legacy browser imports
-export const getCachedFiles = (_songId: string): Record<string, File | Blob> | undefined => {
-    return undefined;
-};
-export const setCachedFiles = (_songId: string, _files: Record<string, unknown>): void => {};
-export const clearFileCache = (): void => {};
