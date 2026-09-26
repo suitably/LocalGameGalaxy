@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 import type { TargetNote } from './useNoteVerifier';
@@ -31,6 +31,8 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
     onBpmDetected
 }, ref) => {
     const { t } = useTranslation();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const containerRef = useRef<HTMLDivElement>(null);
     const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -133,7 +135,7 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
 
             osmd.load(xmlContent)
                 .then(() => {
-                    osmd.zoom = zoom;
+                    osmd.zoom = isMobile ? zoom * 0.65 : zoom;
                     osmd.render();
                     osmd.cursor.show();
                     const initialNotes = extractCurrentCursorNotes();
@@ -190,8 +192,8 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
             <Box
                 sx={{
                     width: '100%',
-                    maxHeight: '60vh',
-                    overflowY: 'auto',
+                    maxHeight: isMobile ? 'none' : '60vh',
+                    overflowY: isMobile ? 'visible' : 'auto',
                     overflowX: 'auto',
                     display: isLoading ? 'none' : 'block',
                     background: '#ffffff',

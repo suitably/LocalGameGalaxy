@@ -4,19 +4,23 @@ import {
     Typography,
     Container,
     Paper,
-    Button,
     Stack,
-    Chip
+    Chip,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails
 } from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import PauseIcon from '@mui/icons-material/Pause';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import { useTranslation } from 'react-i18next';
 
 import { usePageTitle } from '../../context/TitleContext';
 import { SheetMusicViewer } from './SheetMusicViewer';
 import { ControlPanel } from './components/ControlPanel';
+import { BottomActionBar } from './components/BottomActionBar';
+import { useStemAudioPlayer } from './hooks/useStemAudioPlayer';
+import { useMobileMediaQuery } from './hooks/useMobileMediaQuery';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { HardwareStatus } from './components/HardwareStatus';
 import { NoteStatusBar } from './components/NoteStatusBar';
 import { useMelodiqNotesState } from './hooks/useMelodiqNotesState';
@@ -24,6 +28,8 @@ import { useMelodiqNotesState } from './hooks/useMelodiqNotesState';
 export const MelodiqNotesGame: React.FC = () => {
     const { t } = useTranslation();
     usePageTitle(t('games.melodiq_notes.title'));
+
+    const isMobile = useMobileMediaQuery();
 
     const {
         selectedSong,
@@ -68,6 +74,15 @@ export const MelodiqNotesGame: React.FC = () => {
         handleNotesChanged
     } = useMelodiqNotesState();
 
+    const { mutedStems, toggleMute } = useStemAudioPlayer({
+        stems: selectedLocalSong?.stems || selectedSong.stems,
+        speedPercent,
+        syncOffsetMs: selectedLocalSong?.sync_offset_ms || selectedSong.sync_offset_ms || 0,
+        isPlaying
+    });
+
+    const stemsAvailable = !!(selectedLocalSong?.stems || selectedSong.stems);
+
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Paper
@@ -103,41 +118,58 @@ export const MelodiqNotesGame: React.FC = () => {
                     </Stack>
                 </Box>
 
-                {/* Control Panel */}
-                <ControlPanel
-                    selectedSong={selectedSong}
-                    customXmlContent={customXmlContent}
-                    playMode={playMode}
-                    inputSource={inputSource}
-                    speedPercent={speedPercent}
-                    effectiveBpm={effectiveBpm}
-                    librarySongs={librarySongs}
-                    storedFolders={storedFolders}
-                    selectedLocalSong={selectedLocalSong}
-                    isSyncing={isSyncing}
-                    supportsDirectoryPicker={supportsDirectoryPicker}
-                    onSongChange={handleSongChange}
-                    onFileUpload={handleFileUpload}
-                    onPlayModeChange={setPlayMode}
-                    onInputSourceChange={setInputSource}
-                    onSpeedPercentChange={setSpeedPercent}
-                    onLocalSongSelect={handleLocalSongSelect}
-                    onSyncFolder={handleSyncFolder}
-                    onResyncFolders={handleResyncFolders}
-                    onFolderFileInput={handleFolderFileInput}
-                    onRemoveFolder={handleRemoveFolder}
-                />
+                {/* Settings Accordion */}
+                <Accordion
+                    defaultExpanded={!isMobile}
+                    sx={{
+                        mb: 3,
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        '&:before': { display: 'none' }
+                    }}
+                >
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                            <SettingsIcon fontSize="small" />
+                            <Typography>{t('games.melodiq_notes.settings', 'Settings & Setup')}</Typography>
+                        </Stack>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                        {/* Control Panel */}
+                        <ControlPanel
+                            selectedSong={selectedSong}
+                            customXmlContent={customXmlContent}
+                            playMode={playMode}
+                            inputSource={inputSource}
+                            librarySongs={librarySongs}
+                            storedFolders={storedFolders}
+                            selectedLocalSong={selectedLocalSong}
+                            isSyncing={isSyncing}
+                            supportsDirectoryPicker={supportsDirectoryPicker}
+                            onSongChange={handleSongChange}
+                            onFileUpload={handleFileUpload}
+                            onPlayModeChange={setPlayMode}
+                            onInputSourceChange={setInputSource}
+                            onLocalSongSelect={handleLocalSongSelect}
+                            onSyncFolder={handleSyncFolder}
+                            onResyncFolders={handleResyncFolders}
+                            onFolderFileInput={handleFolderFileInput}
+                            onRemoveFolder={handleRemoveFolder}
+                        />
 
-                {/* Hardware Connection Status */}
-                <HardwareStatus
-                    inputSource={inputSource}
-                    midiDevices={midiDevices}
-                    selectedDeviceId={selectedDeviceId}
-                    onSelectDeviceId={setSelectedDeviceId}
-                    isMicActive={isMicActive}
-                    micPitch={micPitch}
-                    onToggleMicrophone={toggleMicrophone}
-                />
+                        {/* Hardware Connection Status */}
+                        <HardwareStatus
+                            inputSource={inputSource}
+                            midiDevices={midiDevices}
+                            selectedDeviceId={selectedDeviceId}
+                            onSelectDeviceId={setSelectedDeviceId}
+                            isMicActive={isMicActive}
+                            micPitch={micPitch}
+                            onToggleMicrophone={toggleMicrophone}
+                        />
+                    </AccordionDetails>
+                </Accordion>
 
                 {/* Target & Played Notes Display */}
                 <NoteStatusBar
@@ -156,30 +188,19 @@ export const MelodiqNotesGame: React.FC = () => {
                     onBpmDetected={handleBpmDetected}
                 />
 
-                {/* Playback Controls Footer */}
-                <Stack direction="row" spacing={2} justifyContent="center" alignItems="center" sx={{ mt: 3 }}>
-                    <Button
-                        variant="contained"
-                        color={isPlaying ? 'warning' : 'success'}
-                        size="large"
-                        startIcon={isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
-                        onClick={() => setIsPlaying(!isPlaying)}
-                        sx={{ px: 4, py: 1.5, borderRadius: 3, fontWeight: 'bold' }}
-                    >
-                        {isPlaying ? t('games.melodiq_notes.pause') : t('games.melodiq_notes.start_practice')}
-                    </Button>
-
-                    <Button
-                        variant="outlined"
-                        color="secondary"
-                        size="large"
-                        startIcon={<RestartAltIcon />}
-                        onClick={handleReset}
-                        sx={{ borderRadius: 3 }}
-                    >
-                        {t('games.melodiq_notes.reset')}
-                    </Button>
-                </Stack>
+                <Box sx={{ pb: { xs: 12, sm: 10 } }} /> {/* Spacer for BottomActionBar */}
+                <BottomActionBar
+                    isPlaying={isPlaying}
+                    playMode={playMode}
+                    speedPercent={speedPercent}
+                    effectiveBpm={effectiveBpm}
+                    mutedStems={mutedStems}
+                    stemsAvailable={stemsAvailable}
+                    onTogglePlay={() => setIsPlaying(!isPlaying)}
+                    onReset={handleReset}
+                    onSpeedPercentChange={setSpeedPercent}
+                    onToggleMute={toggleMute}
+                />
             </Paper>
         </Container>
     );

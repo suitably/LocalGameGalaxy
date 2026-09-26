@@ -1,3 +1,5 @@
+export type StemType = 'drums' | 'bass' | 'instrument' | 'vocals' | 'other';
+
 export interface DemoSong {
     id: string;
     title: string;
@@ -5,6 +7,8 @@ export interface DemoSong {
     difficulty: 'Easy' | 'Medium' | 'Hard';
     xmlContent: string;
     baseBpm?: number;
+    stems?: Partial<Record<StemType, string>>;
+    sync_offset_ms?: number;
 }
 
 export const DIFFICULTY_COLORS: Record<DemoSong['difficulty'], string> = {

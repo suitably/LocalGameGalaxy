@@ -19,6 +19,8 @@ export interface StoredSheetMusic {
     /** ID of the folder this song came from, if any. */
     folderId?: string;
     addedAt: number;
+    stems?: Partial<Record<string, string>>;
+    sync_offset_ms?: number;
 }
 
 /** A directory handle persisted in IDB so the user can re-sync without re-picking. */
