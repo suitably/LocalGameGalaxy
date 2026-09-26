@@ -1,6 +1,8 @@
 name: Jules Suggestions (Beta)
 
 on:
+  push:
+    branches: [ main ]
   schedule:
     - cron: '0 8 * * 1,4' # Runs at 08:00 UTC on Mondays and Thursdays
   workflow_dispatch: # Allows manual trigger from GitHub Actions UI
