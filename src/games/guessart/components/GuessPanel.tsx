@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -15,12 +15,15 @@ import { HintWordSlots } from './HintWordSlots';
 import { HintLetterChips, type LetterEntry } from './HintLetterChips';
 import { normalize } from '../logic/lingo';
 import type { GuessArtRound, HintResult } from '../logic/types';
+import { useGuessArtHints } from '../hooks/useGuessArtHints';
 
 interface GuessPanelProps {
   currentRound: GuessArtRound | null;
   onSubmitGuess: (guess: string) => Promise<{ correct: boolean }>;
   onRequestHint: () => Promise<{ hint?: HintResult; exhausted?: boolean }>;
 }
+
+
 
 export const GuessPanel: React.FC<GuessPanelProps> = ({
   currentRound,
@@ -29,8 +32,7 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
 }) => {
   const { t } = useTranslation();
   const [guess, setGuess] = useState<string>('');
-  const [hintStage, setHintStage] = useState<number>(currentRound?.hintLevel || 0);
-  const [hintLetters, setHintLetters] = useState<LetterEntry[]>([]);
+  const { hintStage, setHintStage, hintLetters, setHintLetters } = useGuessArtHints(currentRound, guess, setGuess);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [requestingHint, setRequestingHint] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{ type: 'error' | 'warning' | 'info'; text: string } | null>(null);
@@ -41,20 +43,7 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
     return currentRound?.wordLength || currentRound?.wordMask?.length || 0;
   }, [hintStage, currentRound]);
 
-  // Sync hint stage & letters from round
-  useEffect(() => {
-    const level = currentRound?.hintLevel || 0;
-    setHintStage(level);
-    if (Array.isArray(currentRound?.hintLetters) && currentRound.hintLetters.length > 0) {
-      setHintLetters(
-        currentRound.hintLetters.map((letter, id) => ({
-          id,
-          letter: letter.toUpperCase(),
-          used: false,
-        })),
-      );
-    }
-  }, [currentRound?.hintLevel, currentRound?.hintLetters]);
+
 
   const handleHintClick = async () => {
     if (hintStage >= 2 || requestingHint) return;
@@ -71,6 +60,20 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
               used: false,
             })),
           );
+
+          setGuess((prev) => {
+            const pool = [...result.hint!.letters].map((l) => l.toUpperCase());
+            let filtered = '';
+            for (const char of prev) {
+              const upper = char.toUpperCase();
+              const idx = pool.indexOf(upper);
+              if (idx !== -1) {
+                filtered += char;
+                pool.splice(idx, 1);
+              }
+            }
+            return filtered;
+          });
         }
       }
     } catch (err) {
@@ -86,29 +89,13 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
       if (slotCount > 0 && prev.length >= slotCount) return prev;
       return prev + entry.letter;
     });
-    setHintLetters((prev) =>
-      prev.map((item) => (item.id === entry.id ? { ...item, used: true } : item)),
-    );
+
   };
 
   const handleSlotClick = (index: number) => {
     if (index >= guess.length) return;
-    const removedChar = guess[index]?.toUpperCase();
     const nextGuess = guess.slice(0, index) + guess.slice(index + 1);
     setGuess(nextGuess);
-
-    // Return letter to pool
-    if (removedChar) {
-      setHintLetters((prev) => {
-        const matchIdx = prev.findIndex((item) => item.used && item.letter === removedChar);
-        if (matchIdx !== -1) {
-          const clone = [...prev];
-          clone[matchIdx] = { ...clone[matchIdx], used: false };
-          return clone;
-        }
-        return prev;
-      });
-    }
   };
 
   const handleSubmit = async () => {
@@ -130,8 +117,7 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
         setFeedback({ type: 'error', text: t('guessart.wrongGuess', 'Leider falsch! Versuch es weiter.') });
         // Reset guess input for next attempt
         setGuess('');
-        // Reset letter pool
-        setHintLetters((prev) => prev.map((l) => ({ ...l, used: false })));
+
       }
     } catch (err) {
       setFeedback({ type: 'error', text: err instanceof Error ? err.message : 'Guess failed' });
@@ -185,7 +171,27 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
         <TextField
           fullWidth
           value={guess}
-          onChange={(e) => setGuess(e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value;
+            let finalVal = val;
+            if (hintStage >= 2 && currentRound?.hintLetters) {
+              const pool = [...currentRound.hintLetters].map((l) => l.toUpperCase());
+              let filtered = '';
+              for (const char of val) {
+                const upper = char.toUpperCase();
+                const idx = pool.indexOf(upper);
+                if (idx !== -1) {
+                  filtered += char;
+                  pool.splice(idx, 1);
+                }
+              }
+              finalVal = filtered;
+            }
+            if (slotCount > 0 && finalVal.length > slotCount) {
+              finalVal = finalVal.slice(0, slotCount);
+            }
+            setGuess(finalVal);
+          }}
           placeholder={t('guessart.guessPlaceholder', 'Was wurde gezeichnet?')}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
