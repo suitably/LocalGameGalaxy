@@ -190,10 +190,17 @@ async function main() {
 
 \${mode === 'plan' ? \`
 🤖 INTERACTIVE MODE: AUDIT & PLAN
+YOUR MISSION HAS TWO STRICT PHASES. YOU MUST STOP AFTER PHASE 1.
+
+=== PHASE 1: PLANNING (CURRENT PHASE) ===
 - Step 1: Scan the repository through the criteria of this RepoLens lens (\${resolved.lensId}).
 - Step 2: Identify the most critical issue matching this lens.
 - Step 3: Formulate a detailed markdown audit report explaining the finding and a step-by-step fix plan.
-- Step 4: Present the plan and ASK FOR APPROVAL before making any code changes.
+- Step 4: Present the plan and explicitly ASK FOR APPROVAL.
+- Step 5: Wait for the user's response. DO NOT WRITE CODE OR CREATE A PR YET.
+
+=== PHASE 2: IMPLEMENTATION (ONLY AFTER USER APPROVAL) ===
+When the user replies with approval or further instructions, proceed to implementation.
 \` : mode === 'review' ? \`
 🤖 MULTI-AGENT PR REVIEW MODE
 - Step 1: You are a PR Reviewer. Target PR: #\${process.env.PR_NUMBER}.

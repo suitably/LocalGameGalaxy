@@ -357,40 +357,46 @@ jobs:
               console.warn('Could not fetch comments for Jules prompt:', err.message);
             }
 
-            const yoloBanner = isYolo ? `
+            const yoloBanner = isYolo ? \`
             ⚡⚡⚡ YOLO MODE: MAXIMUM AUTONOMOUS EXECUTION ENGAGED ⚡⚡⚡
             - ABSOLUTE ZERO HUMAN INTERACTION: Do NOT ask for confirmation, feedback, or approval under any circumstances.
             - FULL PROACTIVE AUTHORITY: You are strictly required to make all architectural, refactoring, and file decomposition decisions yourself.
             - IMMEDIATELY create/extract sub-components or custom hooks if limits are exceeded.
             - Proceed continuously from planning to coding, running Vitest tests, verifying quality gates, and submitting the Pull Request against 'dev'. Never pause or wait for user input.
-            ` : `
+            \` : \`
             🤖 INTERACTIVE MODE: PLAN & APPROVE
-            - Step 1: Analyze the issue and formulate a concrete implementation plan.
-            - Step 2: Present the plan to the user and ASK FOR APPROVAL before making any code changes.
-            - Step 3: Wait for the user's response. Do NOT proceed to implementation until the user explicitly approves the plan or gives further instructions.
-            `;
-
-            const prompt = `
-            Task: Fix GitHub Issue #${issueNumber}: ${issue.data.title}
+            YOUR MISSION HAS TWO STRICT PHASES. YOU MUST STOP AFTER PHASE 1.
             
-            ${yoloBanner}
+            === PHASE 1: PLANNING (CURRENT PHASE) ===
+            - Step 1: Analyze the issue and formulate a concrete implementation plan.
+            - Step 2: Present the plan to the user and explicitly ASK FOR APPROVAL.
+            - Step 3: Wait for the user's response. DO NOT WRITE CODE OR CREATE A PR YET.
+            
+            === PHASE 2: IMPLEMENTATION (ONLY AFTER USER APPROVAL) ===
+            When the user replies with approval or further instructions, proceed to implementation following the strict rules below:
+            \`;
+
+            const prompt = \`
+            Task: Fix GitHub Issue #\${issueNumber}: \${issue.data.title}
+            
+            \${yoloBanner}
 
             Issue Description:
-            ${issue.data.body || 'No description provided'}${commentsContext}
+            \${issue.data.body || 'No description provided'}\${commentsContext}
 
-            ${lensPrompt ? `\nSPECIALIZED REPOLENS AUDIT FOCUS:\n${lensPrompt}\n` : ''}
+            \${lensPrompt ? \`\\nSPECIALIZED REPOLENS AUDIT FOCUS:\\n\${lensPrompt}\\n\` : ''}
 
-            Target, Branch & PR Instructions:
+            Target, Branch & PR Instructions (Apply ONLY during Phase 2 / YOLO Mode):
             - Your base branch is 'dev'.
             - When creating a pull request, TARGET THE 'dev' BRANCH (not 'main').
             - In the PR description, you MUST include a detailed "Implementation Summary" section:
-              * Reference 'Fixes #${issueNumber}' to auto-close the issue.
+              * Reference 'Fixes #\${issueNumber}' to auto-close the issue.
               * List what was implemented and why.
               * List all changed files and their purposes.
               * List the quality gates you verified.
             - Do NOT post the implementation summary as an issue comment. The PR description is sufficient.
 
-            MANDATORY OUTPUT FILES — CI will reject your PR without these:
+            MANDATORY OUTPUT FILES — CI will reject your PR without these (Phase 2):
             1. CHANGELOG.md — Add an entry under [Unreleased] describing what was changed or fixed.
             2. docs/tech/architecture.md — Update if system structure, new modules, or new components were added.
             3. public/locales/de/translation.json AND public/locales/en/translation.json — Update both if any user-facing strings were added or changed.
@@ -404,14 +410,14 @@ jobs:
             - Strict TypeScript: no 'any'. Use discriminated unions.
             - Zero Code Duplication: Search src/modules/ and reuse existing code. 'npm run check:duplicates' will reject PRs with copy-paste clones.
 
-            Verification Checklist (run ALL before creating PR):
+            Verification Checklist (run ALL before creating PR in Phase 2):
             - npm run check:docs (mandatory output files gate)
             - npm run check:architecture:diff
             - npm run check:duplicates
             - npm run check:budget
             - npm test
             - npm run build
-            `;
+            \`;
 
             core.setOutput('prompt', prompt);
 
