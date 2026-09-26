@@ -80,8 +80,8 @@ jobs:
                   startingBranch: process.env.STARTING_BRANCH
                 }
               },
-              requirePlanApproval: false,
-              automationMode: "AUTO_CREATE_PR"
+              requirePlanApproval: false
+              // No automationMode because the reviewer just posts a review via CLI
             };
             
             fs.writeFileSync('jules_payload.json', JSON.stringify(payload));
