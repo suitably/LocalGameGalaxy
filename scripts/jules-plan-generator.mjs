@@ -21,7 +21,16 @@ const ROOT_DIR = path.resolve(__dirname, '..');
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+const API_KEYS = [
+  process.env.GEMINI_API_KEY,
+  process.env.JULES_API_KEY_1,
+  process.env.JULES_API_KEY_2,
+  process.env.JULES_API_KEY_3,
+  process.env.JULES_API_KEY_4,
+  process.env.JULES_API_KEY_5,
+  process.env.JULES_API_KEY,
+].filter(Boolean);
 
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -97,12 +106,14 @@ function readAgentsRules() {
 }
 
 async function generatePlanWithGemini(issue, agentsRules) {
-  if (!GEMINI_API_KEY) {
+  if (API_KEYS.length === 0) {
     return null;
   }
 
   const prompt = `You are the lead software architect for the LocalGameGalaxy repository.
-A GitHub issue has been requested to be solved by Google Jules. Before any code is modified, you must provide a concrete, step-by-step implementation plan for human review and approval.
+A GitHub issue has been requested to be solved by Google Jules.
+Notice: This issue may be a consolidated epic containing multiple sub-requirements in its description checklist.
+Before any code is modified, you must provide a concrete, step-by-step implementation plan that addresses the primary issue AND ALL bundled sub-requirements for human review and approval.
 
 Project Rules from AGENTS.md:
 ${agentsRules.slice(0, 3000)}
@@ -114,7 +125,7 @@ ${issue.body || 'No description provided.'}
 
 Generate a concise, professional markdown implementation plan in the following structure:
 ### 📋 Proposed Solution & Scope
-[Concise root cause analysis or feature breakdown]
+[Concise root cause analysis or feature breakdown covering the main goal and all bundled sub-tasks]
 
 ### 🛠️ Step-by-Step Implementation Plan
 1. [Step 1]
@@ -132,38 +143,67 @@ Generate a concise, professional markdown implementation plan in the following s
 - [Note any AGENTS.md rules to strictly follow: anti-god component <250 lines, no cross-game imports, i18n keys in de and en, etc.]
 `;
 
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-      }),
-    });
+  const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
 
-    if (!response.ok) {
-      console.warn(`Gemini API returned status ${response.status}. Falling back to template plan.`);
-      return null;
+  for (const apiKey of API_KEYS) {
+    for (const model of models) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+          }),
+        });
+
+        if (response.status === 429) {
+          console.warn(`Key hit quota limit (429). Trying next key...`);
+          break; // try next key
+        }
+
+        if (!response.ok) {
+          console.warn(`Model ${model} returned status ${response.status}. Trying next model...`);
+          continue;
+        }
+
+        const data = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) return text;
+      } catch (err) {
+        console.warn(`Error querying model ${model}:`, err.message);
+      }
     }
-
-    const data = await response.json();
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
-  } catch (err) {
-    console.warn('Error querying Gemini API:', err);
-    return null;
   }
+
+  return null;
 }
 
 function generateTemplatePlan(issue) {
+  const body = issue.body || '';
+  const isBundled = body.includes('Konsolidierte Anforderungen') || body.includes('- [ ]');
+
+  let bundledSection = '';
+  if (isBundled) {
+    const checklistItems = body
+      .split('\n')
+      .filter((l) => l.trim().startsWith('- [ ]') || l.trim().startsWith('- [*]'))
+      .map((l) => l.trim())
+      .join('\n');
+
+    if (checklistItems) {
+      bundledSection = `\n\n#### 📦 Enthaltene Teil-Anforderungen (Gebündeltes Epic):\n${checklistItems}\n`;
+    }
+  }
+
   return `### 📋 Proposed Solution & Scope
 - **Issue**: #${issue.number} - ${issue.title}
-- **Objective**: Analyze the issue description, identify root cause or requirements, and prepare changes targeted at the \`dev\` branch.
+- **Objective**: Implement all requirements described in the issue specification and all bundled sub-tasks.${bundledSection}
 
 ### 🛠️ Step-by-Step Implementation Plan
-1. **Analyze Codebase**: Identify components, modules, or tests associated with this issue.
+1. **Analyze Codebase**: Identify components, modules, or tests associated with this issue and its bundled sub-requirements.
 2. **Implement Solution**: Apply changes adhering to \`AGENTS.md\` standards (anti-god component size limit of 250 lines, modular separation).
-3. **Add Tests**: Write unit tests in Vitest covering the fix/feature.
+3. **Add Tests**: Write unit tests in Vitest covering all modified and new features.
 4. **Local Verification**: Verify with \`npm run check:architecture:diff\`, \`npm run check:budget\`, \`npm test\`, and \`npm run build\`.
 5. **Open Pull Request**: Create branch \`jules/issue-${issue.number}\` based on \`dev\` and open PR targeting \`dev\`.
 
