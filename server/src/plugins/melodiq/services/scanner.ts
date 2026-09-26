@@ -109,7 +109,7 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
   }
 
   try {
-    const dirFiles = fs.readdirSync(dir);
+    const dirFiles = await fs.promises.readdir(dir);
     if (!vocalsPath) {
       const vFile = dirFiles.find((f) => f.toLowerCase().endsWith('.mp3') && f.toLowerCase().includes('vocals'));
       if (vFile) vocalsPath = path.resolve(dir, vFile);
