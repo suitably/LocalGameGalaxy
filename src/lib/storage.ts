@@ -65,6 +65,7 @@ export const STORAGE_KEYS = {
     MELODIQ_FALLBACK_BACKGROUND_URL: 'melodiq_fallback_background_url',
     MELODIQ_LYRICS_SCALE: 'melodiq_lyrics_scale',
     MELODIQ_ENABLE_LYRICS_ZOOM: 'melodiq_enable_lyrics_zoom',
+    MELODIQ_LYRICS_LINES: 'melodiq_lyrics_lines',
     MELODIQ_LYRICS_POSITION: 'melodiq_lyrics_position',
     MELODIQ_AUDIO_PLAYBACK_MODE: 'melodiq_audio_playback_mode',
     MELODIQ_SHOW_SCOREBOARD_QR_CODE: 'melodiq_show_scoreboard_qr_code',

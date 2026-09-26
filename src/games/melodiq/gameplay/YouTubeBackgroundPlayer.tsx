@@ -89,9 +89,10 @@ export const YouTubeBackgroundPlayer: React.FC<YouTubeBackgroundPlayerProps> = (
                         modestbranding: 1,
                         rel: 0,
                         iv_load_policy: 3,
+                        cc_load_policy: 0,
                         mute: 1,
                         playsinline: 1,
-                        origin: window.location.origin,
+                        origin: typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' ? window.location.origin : undefined,
                     },
                     events: {
                         onReady: (event: YTPlayerEvent) => {

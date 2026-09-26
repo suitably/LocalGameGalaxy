@@ -23,6 +23,7 @@ export interface SettingsState {
     fallbackBackgroundUrl: string;
     lyricsScale: number;
     enableLyricsZoom: boolean;
+    lyricsLines: number;
     lyricsPosition: 'bottom' | 'center';
     audioPlaybackMode: 'separated' | 'original';
     showScoreboardQrCode: boolean;
@@ -52,6 +53,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
     fallbackBackgroundUrl: '',
     lyricsScale: 1.0,
     enableLyricsZoom: false,
+    lyricsLines: 2,
     lyricsPosition: 'bottom',
     audioPlaybackMode: 'separated',
     showScoreboardQrCode: true,
@@ -107,6 +109,10 @@ export const loadSettings = (): SettingsState => ({
         return stored ? parseFloat(stored) : 1.0;
     })(),
     enableLyricsZoom: storage.get(STORAGE_KEYS.MELODIQ_ENABLE_LYRICS_ZOOM) === 'true',
+    lyricsLines: (() => {
+        const stored = storage.get(STORAGE_KEYS.MELODIQ_LYRICS_LINES);
+        return stored ? parseInt(stored) : 2;
+    })(),
     lyricsPosition: (storage.get(STORAGE_KEYS.MELODIQ_LYRICS_POSITION) as any) || 'bottom',
     audioPlaybackMode: (storage.get(STORAGE_KEYS.MELODIQ_AUDIO_PLAYBACK_MODE) as any) || 'separated',
     showScoreboardQrCode: (() => {
@@ -141,6 +147,7 @@ const persistSettings = (s: SettingsState) => {
     storage.set(STORAGE_KEYS.MELODIQ_FALLBACK_BACKGROUND_URL, s.fallbackBackgroundUrl);
     storage.set(STORAGE_KEYS.MELODIQ_LYRICS_SCALE, String(s.lyricsScale));
     storage.set(STORAGE_KEYS.MELODIQ_ENABLE_LYRICS_ZOOM, String(s.enableLyricsZoom));
+    storage.set(STORAGE_KEYS.MELODIQ_LYRICS_LINES, String(s.lyricsLines));
     storage.set(STORAGE_KEYS.MELODIQ_LYRICS_POSITION, s.lyricsPosition);
     storage.set(STORAGE_KEYS.MELODIQ_AUDIO_PLAYBACK_MODE, s.audioPlaybackMode);
     storage.set(STORAGE_KEYS.MELODIQ_SHOW_SCOREBOARD_QR_CODE, String(s.showScoreboardQrCode));
@@ -170,6 +177,7 @@ const persistSingleSetting = <K extends keyof SettingsState>(key: K, value: Sett
         case 'fallbackBackgroundUrl': storage.set(STORAGE_KEYS.MELODIQ_FALLBACK_BACKGROUND_URL, String(value)); break;
         case 'lyricsScale': storage.set(STORAGE_KEYS.MELODIQ_LYRICS_SCALE, String(value)); break;
         case 'enableLyricsZoom': storage.set(STORAGE_KEYS.MELODIQ_ENABLE_LYRICS_ZOOM, String(value)); break;
+        case 'lyricsLines': storage.set(STORAGE_KEYS.MELODIQ_LYRICS_LINES, String(value)); break;
         case 'lyricsPosition': storage.set(STORAGE_KEYS.MELODIQ_LYRICS_POSITION, String(value)); break;
         case 'audioPlaybackMode': storage.set(STORAGE_KEYS.MELODIQ_AUDIO_PLAYBACK_MODE, String(value)); break;
         case 'showScoreboardQrCode': storage.set(STORAGE_KEYS.MELODIQ_SHOW_SCOREBOARD_QR_CODE, String(value)); break;

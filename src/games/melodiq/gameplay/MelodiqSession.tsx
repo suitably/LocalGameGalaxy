@@ -139,6 +139,7 @@ const MelodiqSessionContent = forwardRef(({
 
     const activeLyricsScale = (isPassive && passiveState?.lyricsScale !== undefined) ? passiveState.lyricsScale : (settings.lyricsScale ?? 1.0);
     const activeLyricsZoom = (isPassive && passiveState?.enableLyricsZoom !== undefined) ? passiveState.enableLyricsZoom : (settings.enableLyricsZoom ?? false);
+    const activeLyricsLines = (isPassive && passiveState?.lyricsLines !== undefined) ? passiveState.lyricsLines : (settings.lyricsLines ?? 2);
     const activeLyricsPosition = (isPassive && passiveState?.lyricsPosition !== undefined) ? passiveState.lyricsPosition : (settings.lyricsPosition ?? 'bottom');
 
     return (
@@ -162,7 +163,7 @@ const MelodiqSessionContent = forwardRef(({
                     <SessionLyricsVisualizer
                         visiblePlayers={scoringCtrl.visiblePlayers} allPlayers={players} parsedSong={parsedSong!}
                         timeProxyRef={audioCtrl.timeProxyRef} lyricsUiScale={uiScale * activeLyricsScale}
-                        activeLyricsZoom={activeLyricsZoom} activeLyricsPosition={activeLyricsPosition}
+                        activeLyricsZoom={activeLyricsZoom} activeLyricsLines={activeLyricsLines} activeLyricsPosition={activeLyricsPosition}
                         gridLayout={scoringCtrl.gridLayout} showDebugOverlay={settings.showDebugOverlay}
                         showNoteLabels={settings.showNoteLabels} uiScale={uiScale} onSwitchTrack={switchTrack}
                     />

@@ -61,6 +61,7 @@ export interface PassiveGameState {
     activeSongId?: string | null;
     lyricsScale?: number;
     enableLyricsZoom?: boolean;
+    lyricsLines?: number;
     lyricsPosition?: 'bottom' | 'center';
 }
 
