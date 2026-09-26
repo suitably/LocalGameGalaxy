@@ -100,10 +100,6 @@ jobs:
                   action = 'duplicate';
                   const match = rawBody.match(/#?(\d+)/);
                   if (match) targets = match[1];
-                } else if (body.startsWith('/curate-all') || body.startsWith('/triage-all')) {
-                  action = 'curate-all';
-                } else if (body.startsWith('/curate') || body.startsWith('/triage') || body.startsWith('/check') || body.startsWith('/dedup')) {
-                  action = 'curate';
                 } else if (body.startsWith('/jules lens')) {
                   action = 'fix';
                   const parts = body.split(/\s+/);
@@ -157,7 +153,6 @@ jobs:
               if (!issue.pull_request) {
                 issueNumber = issue.number;
                 isAuthorized = true;
-                action = 'curate'; // Automatic triage on new issues
               }
             } else if (eventName === 'issues' && context.payload.action === 'labeled') {
               const labelName = context.payload.label.name.toLowerCase();
@@ -170,9 +165,7 @@ jobs:
                 const authorAssoc = issue.author_association;
                 isAuthorized = trustedRoles.includes(authorAssoc) || sender === context.repo.owner;
 
-                if (labelName === 'curate' || labelName === 'triage' || labelName === 'jules:curate') {
-                  action = 'curate';
-                } else if (labelName === 'bundle' || labelName === 'auto-bundle' || labelName === 'bundle-related' || labelName === 'jules:bundle') {
+                if (labelName === 'bundle' || labelName === 'auto-bundle' || labelName === 'bundle-related' || labelName === 'jules:bundle') {
                   action = 'auto-bundle';
                 } else if (labelName === 'duplicate' || labelName === 'jules:duplicate') {
                   action = 'auto-duplicate';
@@ -197,32 +190,6 @@ jobs:
             core.setOutput('lens_name', lensName);
             core.setOutput('targets', targets);
             core.setOutput('yolo', isYolo ? 'true' : 'false');
-
-  curate-issue:
-    name: Curate & Triage Issue
-    needs: triage
-    if: (needs.triage.outputs.action == 'curate' || needs.triage.outputs.action == 'auto-bundle' || needs.triage.outputs.action == 'bundle' || needs.triage.outputs.action == 'auto-duplicate' || needs.triage.outputs.action == 'duplicate' || needs.triage.outputs.action == 'curate-all') && needs.triage.outputs.is_authorized == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Run Issue Curator
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
-          CURATOR_ACTION: ${{ needs.triage.outputs.action }}
-          CURATOR_TARGETS: ${{ needs.triage.outputs.targets }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          node scripts/issue-curator.mjs --issue "$ISSUE_NUMBER" --action "$CURATOR_ACTION" --targets "$CURATOR_TARGETS"
 
   generate-plan:
     name: Generate Implementation Plan
