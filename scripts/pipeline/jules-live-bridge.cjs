@@ -22,9 +22,25 @@ module.exports = async ({ github, context, core }) => {
   const seenActivityIds = new Set();
   const transcriptEntries = [];
 
+  
   console.log(`Starting live bridge watcher for Jules session ${sessionId}...`);
 
+  // Track seen comments to avoid duplicate relaying
+  const seenCommentIds = new Set();
+  try {
+    const initComments = await github.rest.issues.listComments({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      issue_number: issueNumber,
+      per_page: 100
+    });
+    for (const c of initComments.data || []) {
+      seenCommentIds.add(c.id);
+    }
+  } catch (e) {}
+
   const startTime = Date.now();
+
   const maxDurationMs = 20 * 60 * 1000; // max 20 minutes monitoring
   const pollIntervalMs = 15 * 1000;    // check every 15 seconds
 
@@ -142,6 +158,7 @@ module.exports = async ({ github, context, core }) => {
         }
       }
 
+      
       // 2. Fetch session status
       const sessRes = await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}`, {
         headers: { 'X-Goog-Api-Key': apiKey }
@@ -152,10 +169,81 @@ module.exports = async ({ github, context, core }) => {
         finalState = sessData.state || 'IN_PROGRESS';
         console.log(`Session ${sessionId} state: ${finalState}`);
 
-        if (finalState === 'COMPLETED' || finalState === 'FAILED' || finalState === 'AWAITING_USER_INPUT' || finalState === 'AWAITING_USER_FEEDBACK') {
+        if (finalState === 'COMPLETED' || finalState === 'FAILED') {
           break;
         }
+
+        // 2b. Poll for new user comments and forward them to Jules
+        try {
+          const commentsRes = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: issueNumber,
+            per_page: 50
+          });
+          const trustedRoles = ['OWNER', 'MEMBER', 'COLLABORATOR'];
+          
+          for (const c of commentsRes.data || []) {
+            if (!seenCommentIds.has(c.id)) {
+              seenCommentIds.add(c.id);
+              
+              const isAuthorized = trustedRoles.includes(c.author_association) || c.user.login === context.repo.owner;
+              if (!isAuthorized) continue;
+              if (c.user.type === 'Bot' || c.user.login.includes('[bot]') || c.user.login === 'github-actions') continue;
+
+              const body = (c.body || '').trim();
+              
+              // Skip slash commands that trigger other actions, but handle approve/continue/yolo
+              let messageToJules = body;
+              let julesAction = 'sendMessage';
+              
+              if (body.startsWith('/yolo') || body.startsWith('/jules yolo')) {
+                messageToJules = "⚡ YOLO MODE ENGAGED ⚡\nYou are authorized with 100% full autonomy.\nCRITICAL DIRECTIVES:\n1. DO NOT ask any further questions, confirmations, or approvals at any point.\n2. Make all architectural and decomposition decisions yourself immediately.\n3. Implement the solution, execute tests, verify quality gates, and create the Pull Request.\n4. Proceed immediately to completion without waiting for human input.";
+              } else if (body.startsWith('/approve') || body.startsWith('/continue') || body.startsWith('/jules approve') || body.startsWith('/jules continue')) {
+                 julesAction = 'approvePlan';
+                 messageToJules = '';
+              } else if (body.startsWith('/')) {
+                 // Remove known prefixes if they used /reply
+                 messageToJules = body.replace(/^\/(jules\s+)?reply\s*/i, '').trim();
+                 if (!messageToJules) continue; // ignored command
+              }
+
+              const endpoint = julesAction === 'approvePlan' 
+                ? `https://jules.googleapis.com/v1alpha/sessions/${sessionId}:approvePlan`
+                : `https://jules.googleapis.com/v1alpha/sessions/${sessionId}:sendMessage`;
+
+              const payload = julesAction === 'approvePlan' ? {} : { prompt: messageToJules };
+
+              console.log(`Relaying user comment ${c.id} to Jules (${julesAction})...`);
+              const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-Goog-Api-Key': apiKey
+                },
+                body: JSON.stringify(payload)
+              });
+
+              if (res.ok) {
+                 console.log(`Successfully relayed comment ${c.id}`);
+                 try {
+                   await github.rest.reactions.createForIssueComment({
+                     owner: context.repo.owner,
+                     repo: context.repo.repo,
+                     comment_id: c.id,
+                     content: '+1'
+                   });
+                 } catch (e) {}
+              } else {
+                 console.warn(`Failed to relay comment ${c.id}: `, await res.text());
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Error polling for new comments:', e.message);
+        }
       }
+
     } catch (err) {
       console.warn('Error polling Jules API:', err.message);
     }

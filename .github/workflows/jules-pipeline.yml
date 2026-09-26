@@ -137,6 +137,13 @@ jobs:
                   } else if (body.startsWith('/jules plan') || body.startsWith('/plan') || body.startsWith('/jules fix') || body.startsWith('/fix')) {
                     // Start a new interactive session
                     action = 'fix';
+                  } else if (hasSession && !body.startsWith('/')) {
+                    // Plain text reply to an active session
+                    // Ignore bot comments just in case
+                    if (comment.user.type !== 'Bot' && !comment.user.login.includes('[bot]') && comment.user.login !== 'github-actions') {
+                      action = 'reply';
+                      targets = rawBody.trim();
+                    }
                   }
                 }
               }
@@ -427,7 +434,11 @@ jobs:
                 }
               },
               "requirePlanApproval": ($require_approval == "true"),
-              "automationMode": "AUTO_CREATE_PR"
+              "automationMode": "AUTO_CREATE_PR",
+              "connectedMcps": [
+                "Stitch",
+                "Context7"
+              ]
             }' > jules_payload.json
 
           # 3. Round-Robin starting index based on issue number
