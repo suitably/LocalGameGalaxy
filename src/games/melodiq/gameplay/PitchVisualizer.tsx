@@ -116,11 +116,10 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
     const lastAudioTimeRef = useRef<number>(0);
     const lastRealTimeRef = useRef<number>(0);
 
-    // FIX: Track the LATEST ref from props, because parent might pass a new object literal every render
     const latestPitchRef = useRef(currentPitchRef);
     const latestSungSegmentsRef = useRef(sungSegmentsRef);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         latestPitchRef.current = currentPitchRef;
         latestSungSegmentsRef.current = sungSegmentsRef;
     }, [currentPitchRef, sungSegmentsRef]);
