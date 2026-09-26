@@ -49,3 +49,4 @@ public/assets
 *.cpuprofile
 diff.txt
 lint_output.txt
+mock_library/

@@ -20,7 +20,13 @@ export const isScanning = (): boolean => IS_SCANNING;
  * Parses a single UltraStar .txt file into a song object.
  */
 export async function parseSongFile(txtPath: string, libraryPath?: string): Promise<Song | null> {
-  if (!fs.existsSync(txtPath)) return null;
+  let content: string;
+  try {
+    content = await fs.promises.readFile(txtPath, 'utf-8');
+  } catch {
+    return null;
+  }
+
   const dir = path.dirname(txtPath);
 
   const effectiveLibraryPath =
@@ -28,13 +34,6 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
 
   let relativePath = path.relative(effectiveLibraryPath, dir);
   if (relativePath === '') relativePath = '.';
-
-  let content: string;
-  try {
-    content = fs.readFileSync(txtPath, 'utf-8');
-  } catch {
-    return null;
-  }
   if (content.charCodeAt(0) === 0xfeff) {
     content = content.slice(1);
   }
