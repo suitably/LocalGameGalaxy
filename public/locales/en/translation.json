@@ -1124,7 +1124,6 @@
     "selectingWord": "Selecting word...",
     "attemptsCount": "{{count}} attempts",
     "noDrawingData": "No drawing data available.",
-    "guessesHistoryLabel": "Guessed terms:",
     "replayDrawing": "Replay Animation",
     "showFinalDrawing": "Show Final Drawing",
     "gameName": "Game Name",
@@ -1322,6 +1321,12 @@
       "green": "Green: Letter is in the word and in the correct spot.",
       "yellow": "Yellow: Letter is in the word but in the wrong spot.",
       "gray": "Gray: Letter is not in the word in any spot."
+    },
+    "history": {
+      "title": "History (Daily Challenge)",
+      "empty": "No daily challenges played yet.",
+      "target_word": "Target Word:",
+      "btn_tooltip": "History"
     }
   },
   "sudoku": {
@@ -1368,8 +1373,8 @@
     "turnLabel": "Turn",
     "currentTurnOf": "Turn: ",
     "defaultPlayer": "Player",
-    "remotePlayer": "Remote",
-    "localPlayer": "This Device",
+    "remotePlayer": "Remote device",
+    "localPlayer": "This device",
     "toggleRemoteTooltip": "Toggle between local and remote player",
     "readStory": "Read Story",
     "readStorySoFar": "Read story so far",
@@ -1377,8 +1382,8 @@
     "storyTitleLabel": "Story Title",
     "storyTitleOptional": "Story Title (optional)",
     "storyTitlePlaceholder": "e.g. The Voyage to the Unknown Planet",
-    "markAsRemote": "Mark as Remote",
-    "claimLocalTurn": "Play on this device",
+    "markAsRemote": "Mark as remote",
+    "claimLocalTurn": "Write on this device",
     "claimTurnLocal": "Write on this device",
     "prologueTitle": "Chapter 1: The Beginning",
     "prologueHint": "You take the first step! Write the opening sentence or prologue for your collaborative story.",
@@ -1419,11 +1424,7 @@
     "shareLinksDesc": "Players can join using QR code or link on their own device and receive push notifications when it is their turn.",
     "scanQrToPlayAs": "Scan this code to play as {{name}}!",
     "playHereInstead": "Write here as {{name}} instead",
-    "playHereInsteadShort": "Play on this device",
-    "localPlayer": "This device",
-    "remotePlayer": "Remote device",
-    "markAsRemote": "Mark as remote",
-    "claimLocalTurn": "Write on this device"
+    "playHereInsteadShort": "Play on this device"
   },
   "notifications": {
     "turnTitleDraw": "{{gameName}}: It's your turn to draw!",
