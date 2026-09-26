@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
+import { GameLayout } from '../../components/Layout/GameLayout';
 import { useSudoku } from './hooks/useSudoku';
 import { SudokuHeader } from './components/SudokuHeader';
 import { SudokuGrid } from './components/SudokuGrid';
@@ -48,19 +49,17 @@ export const SudokuGame: React.FC = () => {
   };
 
   return (
-    <Box
-      sx={{
-        width: '100%',
-        maxWidth: 600,
-        mx: 'auto',
-        minHeight: '100dvh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        px: { xs: 1.5, sm: 2 },
-        py: { xs: 1.5, sm: 2.5 },
-      }}
-    >
+    <GameLayout maxWidth="sm" disablePadding>
+      <Box
+        sx={{
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          px: { xs: 1.5, sm: 2 },
+          py: { xs: 1.5, sm: 2.5 },
+        }}
+      >
       {/* Header & Status */}
       <SudokuHeader
         difficulty={state.difficulty}
@@ -160,5 +159,6 @@ export const SudokuGame: React.FC = () => {
         </DialogActions>
       </Dialog>
     </Box>
+    </GameLayout>
   );
 };

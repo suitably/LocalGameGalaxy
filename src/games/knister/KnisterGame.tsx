@@ -1,7 +1,6 @@
 import React, { useReducer, useEffect, useState, useCallback } from 'react';
 import {
   Box,
-  Container,
   Typography,
   Button,
   Dialog,
@@ -22,6 +21,7 @@ import { initKnisterI18n } from './i18n';
 import { usePageTitle } from '../../context/TitleContext';
 import { useWakeLock } from '../../hooks/useWakeLock';
 import { storage } from '../../lib/storage';
+import { GameLayout } from '../../components/Layout/GameLayout';
 import { knisterReducer, INITIAL_KNISTER_STATE } from './logic/knisterReducer';
 import type { KnisterState } from './logic/types';
 import { KnisterBoard } from './components/KnisterBoard';
@@ -127,7 +127,7 @@ export const KnisterGame: React.FC = () => {
   const hasActiveSum = state.currentRoll !== null || selectedNumber !== null;
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 1.5, sm: 3 }, px: { xs: 1, sm: 2 } }}>
+    <GameLayout maxWidth="md">
       {/* Header controls */}
       <Box
         sx={{
@@ -300,6 +300,6 @@ export const KnisterGame: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Container>
+    </GameLayout>
   );
 };

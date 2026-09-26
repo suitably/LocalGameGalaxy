@@ -100,6 +100,10 @@ Each game is self-contained. It typically exports a main component (e.g., `Werew
     -   **Responsive Mobile Layout & Fixed Action Bar (`BottomActionBar`)**: Prevents nested viewport scroll traps on mobile devices by decoupling sheet canvas scrolling from sticky bottom playback controls and collapsible settings accordions.
     -   Local library storage via IndexedDB (`melodiq-notes-local`) and MusicXML/MXL parser.
 
+### Shared Components (`src/components/*`)
+Common, reusable UI elements built over Material-UI that enforce consistency across the application.
+-   **Layout**: `GameLayout.tsx` provides a standardized full-screen layout wrapper that enforces consistent outer window edge scrollbars and constrained centered game content for all games.
+
 ### Shared Modules (`src/modules/*`)
 - **Player Management (`src/modules/player-management`)**:
   - Reusable player configuration hook (`useLobbyPlayers`), pure domain functions (`playerLogic.ts`), and UI component (`PlayerManagerCard`) shared across games (GuessArt, Geschichtenschreiber/Storyteller, Imposter, Werewolf, Cards).
