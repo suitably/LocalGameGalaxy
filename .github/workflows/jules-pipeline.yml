@@ -35,6 +35,7 @@ jobs:
   triage:
     name: Determine Trigger & Security Gate
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       action: ${{ steps.decide.outputs.action }}
       issue_number: ${{ steps.decide.outputs.issue_number }}
@@ -145,6 +146,7 @@ jobs:
     needs: triage
     if: (needs.triage.outputs.action == 'curate' || needs.triage.outputs.action == 'auto-bundle' || needs.triage.outputs.action == 'bundle' || needs.triage.outputs.action == 'auto-duplicate' || needs.triage.outputs.action == 'duplicate' || needs.triage.outputs.action == 'curate-all') && needs.triage.outputs.is_authorized == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -175,6 +177,7 @@ jobs:
     needs: triage
     if: needs.triage.outputs.action == 'plan' && needs.triage.outputs.is_authorized == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -184,11 +187,19 @@ jobs:
         with:
           node-version: 22
 
+      - name: Resolve RepoLens Lens (if specified)
+        id: lens_resolver
+        if: needs.triage.outputs.lens_name != ''
+        run: |
+          node scripts/jules-lens-resolver.mjs --lens "${{ needs.triage.outputs.lens_name }}"
+
       - name: Run Plan Generator
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
+          LENS_PROMPT: ${{ steps.lens_resolver.outputs.prompt }}
+          LENS_NAME: ${{ steps.lens_resolver.outputs.lens_name }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.JULES_API_KEY_1 || secrets.JULES_API_KEY }}
           JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
           JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
@@ -204,6 +215,7 @@ jobs:
     needs: triage
     if: needs.triage.outputs.action == 'fix' && needs.triage.outputs.is_authorized == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

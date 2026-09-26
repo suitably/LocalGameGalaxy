@@ -110,6 +110,9 @@ async function generatePlanWithGemini(issue, agentsRules) {
     return null;
   }
 
+  const lensPrompt = process.env.LENS_PROMPT || '';
+  const lensName = process.env.LENS_NAME || '';
+
   const prompt = `You are the lead software architect for the LocalGameGalaxy repository.
 A GitHub issue has been requested to be solved by Google Jules.
 Notice: This issue may be a consolidated epic containing multiple sub-requirements in its description checklist.
@@ -117,6 +120,8 @@ Before any code is modified, you must provide a concrete, step-by-step implement
 
 Project Rules from AGENTS.md:
 ${agentsRules.slice(0, 3000)}
+
+${lensPrompt ? `\nSPECIALIZED REPOLENS AUDIT FOCUS (${lensName}):\n${lensPrompt}\n` : ''}
 
 Issue Details:
 Title: ${issue.title}

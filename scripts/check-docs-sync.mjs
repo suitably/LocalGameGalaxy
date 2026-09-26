@@ -36,6 +36,13 @@ if (changedFiles.length === 0) {
 
 console.log(`\n📋 [Doc-Sync Gate] Checking ${changedFiles.length} changed file(s)...`);
 
+// RepoLens best practice: Check for skip marker in PR_BODY or commit message
+const prBody = process.env.PR_BODY || '';
+if (prBody.includes('[skip docs]') || prBody.includes('[skip changelog]')) {
+  console.log('✔ Doc-sync gate bypassed by [skip docs] / [skip changelog] marker.\n');
+  process.exit(0);
+}
+
 // Check if core code was modified
 const hasCodeChanges = changedFiles.some(f => 
   (f.startsWith('src/games/') || f.startsWith('src/modules/') || f.startsWith('src/lib/')) &&
@@ -44,8 +51,9 @@ const hasCodeChanges = changedFiles.some(f =>
   !f.includes('.spec.')
 );
 
-// Check if documentation or rules were touched
+// Check if documentation, changelog, or rules were touched (RepoLens pattern)
 const hasDocChanges = changedFiles.some(f => 
+  f === 'CHANGELOG.md' ||
   f.startsWith('docs/tech/') ||
   f === 'AGENTS.md' ||
   f === 'README.md' ||
@@ -53,13 +61,14 @@ const hasDocChanges = changedFiles.some(f =>
 );
 
 if (hasCodeChanges && !hasDocChanges) {
-  console.error('\n❌ [Doc-Sync Violation]');
+  console.error('\n❌ [Doc-Sync & Changelog Violation - RepoLens Standard]');
   console.error('Core source code was modified in src/games/, src/modules/, or src/lib/,');
-  console.error('but NO documentation was updated in docs/tech/, AGENTS.md, or public/locales/!');
+  console.error('but NO documentation was updated in CHANGELOG.md, docs/tech/, AGENTS.md, or public/locales/!');
   console.error('\n👉 Rule: Every PR modifying system architecture or game logic must update:');
-  console.error('   1. docs/tech/architecture.md (or relevant tech doc in docs/tech/)');
-  console.error('   2. public/locales/de/ and public/locales/en/ (if UI strings changed)');
-  console.error('\nPlease update the relevant documentation files and commit them to this PR.\n');
+  console.error('   1. CHANGELOG.md (under [Unreleased])');
+  console.error('   2. docs/tech/architecture.md (or relevant tech doc in docs/tech/)');
+  console.error('   3. public/locales/de/ and public/locales/en/ (if UI strings changed)');
+  console.error('\nOr add [skip changelog] / [skip docs] to the PR description for chore-only changes.\n');
   process.exit(1);
 }
 
