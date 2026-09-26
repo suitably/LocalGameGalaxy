@@ -563,6 +563,55 @@ jobs:
                   headers: { 'X-Goog-Api-Key': apiKey }
                 });
 
+                function parseActivity(a) {
+                  if (!a) return { time: '', tag: 'SYSTEM', text: '' };
+                  const time = a.createTime ? new Date(a.createTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+                  const tag = (a.originator || a.type || 'AGENT').toUpperCase();
+                  let text = '';
+
+                  if (a.agentMessaged) {
+                    const am = a.agentMessaged;
+                    text = am.message || am.text || am.prompt || am.content || (typeof am === 'string' ? am : '');
+                  } else if (a.userMessaged) {
+                    const um = a.userMessaged;
+                    text = um.message || um.text || um.prompt || um.content || (typeof um === 'string' ? um : '');
+                  } else if (a.progressUpdated) {
+                    const pu = a.progressUpdated;
+                    text = pu.title || pu.description || pu.message || (typeof pu === 'string' ? pu : '');
+                  } else if (a.planGenerated) {
+                    const pg = a.planGenerated;
+                    text = pg.plan?.steps ? `Plan mit ${pg.plan.steps.length} Schritten generiert` : (pg.title || 'Plan generiert');
+                  } else if (a.sessionCompleted) {
+                    text = 'Task erfolgreich abgeschlossen 🎉';
+                  } else if (a.sessionFailed) {
+                    text = `Task fehlgeschlagen: ${a.sessionFailed.reason || ''}`;
+                  } else if (typeof a.message === 'string' && a.message) {
+                    text = a.message;
+                  } else if (typeof a.title === 'string' && a.title) {
+                    text = a.title;
+                  } else if (typeof a.description === 'string' && a.description) {
+                    text = a.description;
+                  } else if (typeof a.summary === 'string' && a.summary) {
+                    text = a.summary;
+                  }
+
+                  if (!text) {
+                    for (const [k, v] of Object.entries(a)) {
+                      if (['name', 'id', 'createTime', 'updateTime', 'originator', 'type'].includes(k)) continue;
+                      if (typeof v === 'string' && v.trim()) { text = v.trim(); break; }
+                      if (v && typeof v === 'object') {
+                        const sub = v.message || v.text || v.title || v.description || v.content;
+                        if (typeof sub === 'string' && sub.trim()) { text = sub.trim(); break; }
+                      }
+                    }
+                    if (!text) {
+                      const filtered = Object.fromEntries(Object.entries(a).filter(([k]) => !['name', 'id', 'createTime'].includes(k)));
+                      text = Object.keys(filtered).length > 0 ? JSON.stringify(filtered) : (a.type || 'Aktivität');
+                    }
+                  }
+                  return { time, tag, text: text.trim() };
+                }
+
                 if (actRes.ok) {
                   const actData = await actRes.json();
                   const activities = actData.activities || [];
@@ -574,27 +623,21 @@ jobs:
                     if (seenActivityIds.has(act.id)) continue;
                     seenActivityIds.add(act.id);
 
-                    const originator = act.originator || 'system';
-                    const desc = act.description || '';
-                    const agentMsg = (typeof act.agentMessage === 'string' ? act.agentMessage : act.agentMessage?.text) || '';
-                    const createTime = act.createTime || new Date().toISOString();
-
+                    const parsed = parseActivity(act);
                     transcriptEntries.push({
                       id: act.id,
-                      time: createTime,
-                      originator,
-                      description: desc,
-                      agentMessage: agentMsg
+                      time: parsed.time || act.createTime || new Date().toISOString(),
+                      originator: parsed.tag,
+                      description: parsed.text
                     });
 
                     // Relay agent messages or questions directly into the GitHub Issue
-                    if (originator === 'agent' && (agentMsg || desc)) {
-                      const msgText = agentMsg || desc;
-                      if (msgText.length > 20 || msgText.includes('?')) {
+                    if (parsed.tag === 'AGENT' && parsed.text) {
+                      if (parsed.text.length > 20 || parsed.text.includes('?')) {
                         const commentBody = [
                           '### 🤖 Google Jules Chat-Nachricht / Update',
                           '',
-                          `> ${msgText.replace(/\n/g, '\n> ')}`,
+                          `> ${parsed.text.replace(/\n/g, '\n> ')}`,
                           '',
                           '---',
                           '💬 *Du kannst direkt auf diese Frage antworten, indem du hier im Issue kommentierst:*',
@@ -767,7 +810,7 @@ jobs:
                   });
                   if (sRes.ok) {
                     sessData = await sRes.json();
-                    const aRes = await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}/activities?pageSize=10`, {
+                    const aRes = await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}/activities?pageSize=20`, {
                       headers: { 'X-Goog-Api-Key': key }
                     });
                     if (aRes.ok) actData = await aRes.json();
@@ -776,19 +819,87 @@ jobs:
                 } catch (e) {}
               }
 
+              function parseActivity(a) {
+                if (!a) return { time: '', tag: 'SYSTEM', text: '' };
+                const time = a.createTime ? new Date(a.createTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+                const tag = (a.originator || a.type || 'AGENT').toUpperCase();
+                let text = '';
+
+                if (a.agentMessaged) {
+                  const am = a.agentMessaged;
+                  text = am.message || am.text || am.prompt || am.content || (typeof am === 'string' ? am : '');
+                } else if (a.userMessaged) {
+                  const um = a.userMessaged;
+                  text = um.message || um.text || um.prompt || um.content || (typeof um === 'string' ? um : '');
+                } else if (a.progressUpdated) {
+                  const pu = a.progressUpdated;
+                  text = pu.title || pu.description || pu.message || (typeof pu === 'string' ? pu : '');
+                } else if (a.planGenerated) {
+                  const pg = a.planGenerated;
+                  text = pg.plan?.steps ? `Plan mit ${pg.plan.steps.length} Schritten generiert` : (pg.title || 'Plan generiert');
+                } else if (a.sessionCompleted) {
+                  text = 'Task erfolgreich abgeschlossen 🎉';
+                } else if (a.sessionFailed) {
+                  text = `Task fehlgeschlagen: ${a.sessionFailed.reason || ''}`;
+                } else if (typeof a.message === 'string' && a.message) {
+                  text = a.message;
+                } else if (typeof a.title === 'string' && a.title) {
+                  text = a.title;
+                } else if (typeof a.description === 'string' && a.description) {
+                  text = a.description;
+                } else if (typeof a.summary === 'string' && a.summary) {
+                  text = a.summary;
+                }
+
+                if (!text) {
+                  for (const [k, v] of Object.entries(a)) {
+                    if (['name', 'id', 'createTime', 'updateTime', 'originator', 'type'].includes(k)) continue;
+                    if (typeof v === 'string' && v.trim()) { text = v.trim(); break; }
+                    if (v && typeof v === 'object') {
+                      const sub = v.message || v.text || v.title || v.description || v.content;
+                      if (typeof sub === 'string' && sub.trim()) { text = sub.trim(); break; }
+                    }
+                  }
+                  if (!text) {
+                    const filtered = Object.fromEntries(Object.entries(a).filter(([k]) => !['name', 'id', 'createTime'].includes(k)));
+                    text = Object.keys(filtered).length > 0 ? JSON.stringify(filtered) : (a.type || 'Aktivität');
+                  }
+                }
+                return { time, tag, text: text.trim() };
+              }
+
               const state = sessData?.state || 'UNKNOWN';
-              const activities = (actData?.activities || []).slice(-5);
+              const rawActivities = actData?.activities || [];
+              const activities = rawActivities.slice(-6);
               const actLines = activities.map(a => {
-                const orig = (a.originator || 'system').toUpperCase();
-                const msg = (typeof a.agentMessage === 'string' ? a.agentMessage : a.agentMessage?.text) || a.description || '';
-                return `- **[${orig}]** ${msg}`;
+                const p = parseActivity(a);
+                const prefix = p.time ? `\`${p.time}\` ` : '';
+                return `- ${prefix}**[${p.tag}]** ${p.text}`;
               }).join('\n');
+
+              // Extract last question if waiting for feedback
+              let pendingQuestion = '';
+              for (let i = rawActivities.length - 1; i >= 0; i--) {
+                const p = parseActivity(rawActivities[i]);
+                if (p.tag === 'AGENT' && (p.text.includes('?') || p.text.toLowerCase().includes('proceed') || p.text.toLowerCase().includes('approach'))) {
+                  pendingQuestion = p.text;
+                  break;
+                }
+              }
+
+              let statusBody = `📊 **Jules Task Status (Session: \`${sessionId}\`):**\n\n- **Status:** \`${state}\`\n- **Web UI:** https://jules.google.com/task/${sessionId}\n\n`;
+
+              if ((state === 'AWAITING_USER_FEEDBACK' || state === 'AWAITING_USER_INPUT') && pendingQuestion) {
+                statusBody += `### ⚠️ Jules wartet auf dein Feedback:\n> ${pendingQuestion.replace(/\n/g, '\n> ')}\n\n👉 **Antworte direkt hier mit:**\n- \`/continue\` *(um den vorgeschlagenen Ansatz freizugeben)*\n- \`/jules reply <Deine Anweisung>\` *(für individuelles Feedback)*\n\n---\n`;
+              }
+
+              statusBody += `**Letzte Aktivitäten:**\n${actLines || '- Keine Aktivitäten verfügbar.'}\n\n---\n*Tipp: Kommentiere mit \`/continue\` zum Weitermachen oder \`/jules reply <Text>\` zum Antworten.*`;
 
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issueNumber,
-                body: `📊 **Jules Task Status (Session: \`${sessionId}\`):**\n\n- **Status:** \`${state}\`\n- **Web UI:** https://jules.google.com/task/${sessionId}\n\n**Letzte Aktivitäten:**\n${actLines || '- Keine Aktivitäten verfügbar.'}\n\n---\n*Tipp: Kommentiere mit \`/continue\` zum Weitermachen oder \`/jules reply <Text>\` zum Antworten.*`
+                body: statusBody
               });
               return;
             }
