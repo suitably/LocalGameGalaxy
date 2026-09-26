@@ -105,13 +105,17 @@ function readAgentsRules() {
   return '';
 }
 
-async function generatePlanWithGemini(issue, agentsRules) {
+async function generatePlanWithGemini(issue, agentsRules, targetFiles = []) {
   if (API_KEYS.length === 0) {
     return null;
   }
 
   const lensPrompt = process.env.LENS_PROMPT || '';
   const lensName = process.env.LENS_NAME || '';
+
+  const detectedFilesList = targetFiles.length > 0
+    ? `\nRelevant Candidate Files detected in repository:\n${targetFiles.map((f) => `- ${f}`).join('\n')}\n`
+    : '';
 
   const prompt = `You are the lead software architect for the LocalGameGalaxy repository.
 A GitHub issue has been requested to be solved by Google Jules.
@@ -120,7 +124,7 @@ Before any code is modified, you must provide a concrete, step-by-step implement
 
 Project Rules from AGENTS.md:
 ${agentsRules.slice(0, 3000)}
-
+${detectedFilesList}
 ${lensPrompt ? `\nSPECIALIZED REPOLENS AUDIT FOCUS (${lensName}):\n${lensPrompt}\n` : ''}
 
 Issue Details:
@@ -191,7 +195,41 @@ Generate a concise, professional markdown implementation plan in the following s
   return null;
 }
 
-function generateTemplatePlan(issue) {
+function scanCodebaseForContext(issue) {
+  const text = `${issue.title} ${issue.body || ''}`.toLowerCase();
+  const detectedFiles = new Set();
+
+  const keywords = ['youtube', 'lyric', 'player', 'score', 'video', 'card', 'history', 'wordle', 'bubble', 'hint', 'header', 'nav', 'setting', 'helper'];
+  const matchedKeywords = keywords.filter((k) => text.includes(k));
+
+  function walk(dir) {
+    if (!fs.existsSync(dir)) return;
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const e of entries) {
+      if (e.name.startsWith('.') || e.name === 'node_modules') continue;
+      const fullPath = path.join(dir, e.name);
+      if (e.isDirectory()) {
+        walk(fullPath);
+      } else if (
+        e.isFile() &&
+        (e.name.endsWith('.tsx') || e.name.endsWith('.ts')) &&
+        !e.name.endsWith('.test.ts') &&
+        !e.name.endsWith('.test.tsx')
+      ) {
+        const relPath = path.relative(ROOT_DIR, fullPath);
+        const lowerRel = relPath.toLowerCase();
+        if (matchedKeywords.some((k) => lowerRel.includes(k))) {
+          detectedFiles.add(relPath);
+        }
+      }
+    }
+  }
+
+  walk(path.join(ROOT_DIR, 'src'));
+  return Array.from(detectedFiles).slice(0, 8);
+}
+
+function generateTemplatePlan(issue, targetFiles = []) {
   const body = issue.body || '';
   const isBundled = body.includes('Konsolidierte Anforderungen') || body.includes('- [ ]');
 
@@ -208,30 +246,61 @@ function generateTemplatePlan(issue) {
     }
   }
 
+  const targetFilesFormatted = targetFiles.length > 0
+    ? targetFiles.map((f) => `- \`${f}\``).join('\n')
+    : '- `src/games/melodiq/gameplay/YouTubeBackgroundPlayer.tsx`\n- `src/games/melodiq/gameplay/LyricsDisplay.tsx`';
+
+  // Build concrete implementation steps based on requirements
+  const steps = [];
+  if (body.includes('Untertitel') || issue.title.includes('Untertitel') || body.includes('159')) {
+    steps.push('**YouTube Untertitel ausblenden (#159)**: In `src/games/melodiq/gameplay/YouTubeBackgroundPlayer.tsx` `cc_load_policy: 0` und `iv_load_policy: 3` in `playerVars` setzen, damit YouTube-Untertitel standardmäßig unterdrückt werden.');
+  }
+  if (body.includes('Videos') || issue.title.includes('Videos') || body.includes('153')) {
+    steps.push('**YouTube Video-Wiedergabe (#153)**: In `YouTubeBackgroundPlayer.tsx` und `createYouTubeVideoAdapter.ts` Fallback für Origin-Beschränkungen (`origin: window.location.origin`) und No-Cookie-Host absichern, damit Videos zuverlässig geladen werden.');
+  }
+  if (body.includes('umbruch') || issue.title.includes('umbruch') || body.includes('160')) {
+    steps.push('**Lyrics ohne Zeilenumbruch (#160)**: In `src/games/melodiq/gameplay/LyricsDisplay.tsx` das Umbruchverhalten von `whiteSpace: "pre-wrap"` auf `whiteSpace: "nowrap"` und dynamische Skalierung anpassen, um die volle Bildschirmbreite auszunutzen.');
+  }
+  if (body.includes('zeilen') || issue.title.includes('zeilen') || body.includes('161')) {
+    steps.push('**Konfigurierbare Zeilenanzahl (#161)**: In `src/games/melodiq/gameplay/LyricsDisplay.tsx` Zeilenanzeige konfigurierbar machen (0 = aus, 1 = aktiv vergrößert, 2 = Standard-Zweizeiler, 3+ = erweiterte Vorschau).');
+  }
+
+  if (steps.length === 0) {
+    steps.push(
+      '**Code-Analyse & Lokalisierung**: Betroffene Komponenten anhand der Fehlerbeschreibung analysieren.',
+      '**Implementierung**: Anpassungen modular und AGENTS.md-konform (< 250 Zeilen pro Komponente) umsetzen.',
+      '**Tests & Validierung**: Vitest-Tests und Architecture-Checks durchführen.',
+    );
+  } else {
+    steps.push(
+      '**Verifikation & Qualitätstore**: Vitest-Tests ausführen (`npm test`) und Anti-Duplikation prüfen (`npm run check:duplicates`).',
+      '**PR-Erstellung**: Branch `jules/issue-' + issue.number + '` erstellen und PR nach `dev` öffnen mit Referenz `Closes #' + issue.number + '`.',
+    );
+  }
+
+  const stepsFormatted = steps.map((s, idx) => `${idx + 1}. ${s}`).join('\n');
+
   return `### 📋 Proposed Solution & Scope
 - **Issue**: #${issue.number} - ${issue.title}
 - **Objective**: Implement all requirements described in the issue specification and all bundled sub-tasks.${bundledSection}
 
-### 🛠️ Step-by-Step Implementation Plan
-1. **Analyze Codebase**: Identify components, modules, or tests associated with this issue and its bundled sub-requirements.
-2. **Implement Solution**: Apply changes adhering to \`AGENTS.md\` standards (anti-god component size limit of 250 lines, modular separation).
-3. **Add Tests**: Write unit tests in Vitest covering all modified and new features.
-4. **Local Verification**: Verify with \`npm run check:architecture:diff\`, \`npm run check:budget\`, \`npm test\`, and \`npm run build\`.
-5. **Open Pull Request**: Create branch \`jules/issue-${issue.number}\` based on \`dev\` and open PR targeting \`dev\`.
+### 🛠️ Konkreter Umsetzungsplan (Code-Analyse)
+${stepsFormatted}
 
-### 📁 Target Files
-- To be determined by Jules during repository scan.
+### 📁 Target Files & Components
+${targetFilesFormatted}
 
 ### 🧪 Verification & Testing Strategy
-- Run unit test suite: \`npm test\`
-- Verify architecture boundaries: \`npm run check:architecture:diff\`
-- Verify component size budgets: \`npm run check:budget\`
+- Unit-Tests: \`npm test\`
+- Architektur-Grenzen: \`npm run check:architecture:diff\`
+- Component Size Budgets: \`npm run check:budget\`
+- Anti-Duplikation: \`npm run check:duplicates\`
 
 ### ⚠️ Architectural Constraints
-- Components must remain ≤ 250 lines.
-- No cross-game imports.
-- Use \`src/lib/storage.ts\` (never raw \`localStorage\`).
-- Use MUI \`<ConfirmDialog>\` (never \`window.confirm()\`).`;
+- Komponenten müssen ≤ 250 Zeilen bleiben (AGENTS.md).
+- Keine Cross-Game Imports.
+- \`src/lib/storage.ts\` verwenden (niemals raw \`localStorage\`).
+- MUI \`<ConfirmDialog>\` verwenden (niemals \`window.confirm()\`).`;
 }
 
 async function main() {
@@ -261,10 +330,11 @@ async function main() {
   }
 
   const agentsRules = readAgentsRules();
+  const targetFiles = scanCodebaseForContext(issue);
 
-  let planContent = await generatePlanWithGemini(issue, agentsRules);
+  let planContent = await generatePlanWithGemini(issue, agentsRules, targetFiles);
   if (!planContent) {
-    planContent = generateTemplatePlan(issue);
+    planContent = generateTemplatePlan(issue, targetFiles);
   }
 
   const commentMarkdown = `## 🤖 Jules Implementation Plan

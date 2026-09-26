@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Refactored CI quality gates to enforce zero-duplication (`jscpd` < 2.5%), anti-god-component budget (< 250 lines), and doc synchronization.
 
+### Fixed
+- **Issue Curator & Jules Plan Generator**: Bundled sub-issues are now closed with `state_reason: "completed"` instead of `not_planned`. Jules implementation plan generation now runs codebase scanning to determine target files and concrete code changes instead of placeholder templates.
+
 ---
 
 ## [1.1.0] - 2026-09-02

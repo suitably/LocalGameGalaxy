@@ -478,7 +478,7 @@ async function bundleIssues(leadIssueNumber, targetNumbers, isDryRun) {
       await addIssueLabels(ti.number, ['bundled']);
       await removeIssueLabel(ti.number, 'bundle');
       await removeIssueLabel(ti.number, 'auto-bundle');
-      await updateIssue(ti.number, { state: 'closed', state_reason: 'not_planned' });
+      await updateIssue(ti.number, { state: 'closed', state_reason: 'completed' });
       console.log(`[Curator] Closed and linked #${ti.number} -> #${leadIssueNumber}`);
     }
   }
@@ -501,7 +501,7 @@ async function markDuplicate(issueNumber, originalIssueNumber, isDryRun) {
   await addIssueLabels(issueNumber, ['duplicate']);
   await removeIssueLabel(issueNumber, 'curate');
   await removeIssueLabel(issueNumber, 'triage');
-  await updateIssue(issueNumber, { state: 'closed', state_reason: 'not_planned' });
+  await updateIssue(issueNumber, { state: 'closed', state_reason: 'completed' });
 
   // 2. Cross-link on original issue
   const origComment = `🔗 Issue [Issue #${issueNumber}](https://github.com/${GITHUB_REPOSITORY}/issues/${issueNumber}) wurde als Duplikat hierhin verlinkt und geschlossen.`;
