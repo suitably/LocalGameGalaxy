@@ -61,12 +61,14 @@ Only repository **Owners, Members, and Collaborators** can trigger Jules.
 
 | Command | Action | Description |
 | :--- | :--- | :--- |
+| **`/yolo`** or **`/jules yolo`** | **YOLO Autonomy** | Maximum autonomy mode! If an active session is paused/asking, unpauses it and mandates zero questions to PR completion. If on a fresh issue, dispatches a direct fix in YOLO mode. |
+| **`--yolo`** / **`-yolo`** | **Autonomy Flag** | Can be added to any command (e.g. `/fix --yolo`, `/continue --yolo`, `/approve --yolo`) to grant unconditional autonomy and eliminate intermediate confirmations. |
+| **`/continue`** or **`/jules continue`** | **Unpause Jules** | If Jules pauses for intermediate input, commands Jules directly from GitHub to proceed autonomously without visiting `jules.google.com`. |
+| **`/jules fix`** | **Fast-Track** | Skips the plan approval step and commands Jules to fix the issue directly into `dev`. |
 | **`/jules plan`** | **Generate Plan** | Jules/Gemini analyzes the issue and posts an implementation plan as a comment. Labels issue with `jules:waiting-approval`. |
 | **`/jules approve`** | **Execute & PR** | Approves the proposed plan. Dispatches Jules to create a branch based on `dev`, write code, test, and open a PR against `dev`. |
-| **`/jules fix`** | **Fast-Track** | Skips the plan approval step and commands Jules to fix the issue directly into `dev`. |
-| **`/continue`** or **`/jules continue`** | **Unpause Jules** | If Jules pauses for intermediate input, commands Jules directly from GitHub to proceed autonomously without visiting `jules.google.com`. |
 | **`/jules reply <message>`** | **Remote Feedback** | Sends guidance or answers directly to an active Jules task session from the GitHub issue comment. |
-| **`/status`** or **`/jules status`** | **Session Status** | Fetches the live state and last 5 activities of the active Jules session directly into an issue comment. |
+| **`/status`** or **`/jules status`** | **Session Status** | Fetches the live state and last activities of the active Jules session directly into an issue comment. |
 | **`/approve-plan`** | **Approve Plan via API** | Forwards plan approval directly to the running Jules session. |
 
 
@@ -75,6 +77,7 @@ Only repository **Owners, Members, and Collaborators** can trigger Jules.
 - Adding label **`jules:plan`** (or **`jules`**) → Generates the plan comment.
 - Adding label **`jules:approved`** → Executes Jules and creates the PR against `dev`.
 - Adding label **`jules:fix`** → Directly executes Jules.
+- Adding label **`yolo`** or **`jules:yolo`** → Directly executes Jules in YOLO mode.
 
 ### Method 3: Manual Workflow Dispatch
 
@@ -82,7 +85,8 @@ Only repository **Owners, Members, and Collaborators** can trigger Jules.
 2. Select **`Jules Issue Auto-Fix Pipeline`**.
 3. Click **Run workflow**:
    - Provide the **Issue Number**.
-   - Choose mode: **`plan`** or **`fix`**.
+   - Choose mode: **`plan`**, **`fix`**, or **`yolo`**.
+   - Or toggle **`Enable YOLO mode`**.
 
 ---
 

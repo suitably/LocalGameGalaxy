@@ -19,8 +19,14 @@ on:
         options:
           - plan
           - fix
+          - yolo
           - curate
           - curate-all
+      yolo:
+        description: 'Enable YOLO mode (maximum autonomy, zero intermediate questions)'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: jules-${{ github.event.issue.number || inputs.issue_number }}-${{ github.event_name == 'issue_comment' && 'comment' || 'pipeline' }}
@@ -42,6 +48,7 @@ jobs:
       is_authorized: ${{ steps.decide.outputs.is_authorized }}
       lens_name: ${{ steps.decide.outputs.lens_name }}
       targets: ${{ steps.decide.outputs.targets }}
+      yolo: ${{ steps.decide.outputs.yolo }}
     steps:
       - name: Evaluate command and permissions
         id: decide
@@ -54,12 +61,20 @@ jobs:
             let isAuthorized = false;
             let lensName = '';
             let targets = '';
+            let isYolo = false;
 
             // Security check: Only allow repo owner, members, or collaborators
             const trustedRoles = ['OWNER', 'MEMBER', 'COLLABORATOR'];
 
             if (eventName === 'workflow_dispatch') {
               action = context.payload.inputs.mode;
+              if (action === 'yolo') {
+                action = 'fix';
+                isYolo = true;
+              }
+              if (context.payload.inputs.yolo) {
+                isYolo = true;
+              }
               issueNumber = context.payload.inputs.issue_number;
               isAuthorized = true; // workflow_dispatch already requires repository write access
             } else if (eventName === 'issue_comment') {
@@ -74,6 +89,8 @@ jobs:
 
                 const rawBody = (comment.body || '').trim();
                 const body = rawBody.toLowerCase();
+                const hasYoloFlag = /\b(-{1,2})yolo\b/i.test(rawBody);
+                if (hasYoloFlag) isYolo = true;
 
                 if (body.startsWith('/bundle')) {
                   action = 'bundle';
@@ -93,14 +110,43 @@ jobs:
                   if (parts.length > 2) {
                     lensName = parts[2].trim();
                   }
+                } else if (body.startsWith('/yolo') || body.startsWith('/jules yolo')) {
+                  isYolo = true;
+                  // Check if there is an active session in comments
+                  let hasSession = false;
+                  try {
+                    const commentsRes = await github.rest.issues.listComments({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: issueNumber,
+                      per_page: 50
+                    });
+                    for (let i = (commentsRes.data || []).length - 1; i >= 0; i--) {
+                      const cBody = commentsRes.data[i].body || '';
+                      if (cBody.includes('https://jules.google.com/task/')) {
+                        hasSession = true;
+                        break;
+                      }
+                    }
+                  } catch (e) {}
+
+                  if (hasSession) {
+                    action = 'yolo';
+                  } else {
+                    action = 'fix';
+                  }
                 } else if (body.startsWith('/jules reply') || body.startsWith('/reply')) {
                   action = 'reply';
-                  const replyText = rawBody.replace(/^\/(jules\s+)?reply\s*/i, '').trim();
+                  const replyText = rawBody.replace(/^\/(jules\s+)?reply\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
                   targets = replyText || 'Please proceed autonomously with the proposed solution and create the pull request.';
                 } else if (body.startsWith('/continue') || body.startsWith('/jules continue')) {
-                  action = 'continue';
-                  const replyText = rawBody.replace(/^\/(jules\s+)?continue\s*/i, '').trim();
-                  targets = replyText || 'Please proceed autonomously with your proposed approach, implement the solution, run tests and create the pull request without asking further questions.';
+                  if (hasYoloFlag) {
+                    action = 'yolo';
+                  } else {
+                    action = 'continue';
+                    const replyText = rawBody.replace(/^\/(jules\s+)?continue\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
+                    targets = replyText || 'Please proceed autonomously with your proposed approach, implement the solution, run tests and create the pull request without asking further questions.';
+                  }
                 } else if (body.startsWith('/approve-plan') || body.startsWith('/jules approve-plan')) {
                   action = 'approve-plan';
                 } else if (body.startsWith('/status') || body.startsWith('/jules status')) {
@@ -140,18 +186,22 @@ jobs:
                   lensName = labelName.replace('lens:', '').trim();
                 } else if (labelName === 'jules' || labelName === 'jules:plan' || labelName === 'plan' || labelName === 'game-factory') {
                   action = 'plan';
+                } else if (labelName === 'yolo' || labelName === 'jules:yolo') {
+                  action = 'fix';
+                  isYolo = true;
                 } else if (labelName === 'jules:approved' || labelName === 'jules:fix' || labelName === 'approved' || labelName === 'fix' || labelName === 'approve') {
                   action = 'fix';
                 }
               }
             }
 
-            console.log({ action, issueNumber, isAuthorized, lensName, targets });
+            console.log({ action, issueNumber, isAuthorized, lensName, targets, isYolo });
             core.setOutput('action', action);
             core.setOutput('issue_number', issueNumber);
             core.setOutput('is_authorized', isAuthorized ? 'true' : 'false');
             core.setOutput('lens_name', lensName);
             core.setOutput('targets', targets);
+            core.setOutput('yolo', isYolo ? 'true' : 'false');
 
   curate-issue:
     name: Curate & Triage Issue
@@ -249,6 +299,7 @@ jobs:
         env:
           LENS_PROMPT: ${{ steps.lens_resolver.outputs.prompt }}
           LENS_NAME: ${{ steps.lens_resolver.outputs.lens_name }}
+          YOLO_MODE: ${{ needs.triage.outputs.yolo }}
         with:
           script: |
             const issueNumber = Number("${{ needs.triage.outputs.issue_number }}");
@@ -260,11 +311,17 @@ jobs:
 
             const lensPrompt = process.env.LENS_PROMPT || '';
             const lensName = process.env.LENS_NAME || '';
+            const isYolo = process.env.YOLO_MODE === 'true';
 
             // Post dispatch confirmation comment
-            const dispatchMsg = lensName 
-              ? `🤖 **Google Jules Dispatched with RepoLens (${lensName})**\n\nJules has been tasked with resolving this issue using the **${lensName}** lens on a branch based on \`dev\`.\nYou can monitor task progress on [jules.google.com](https://jules.google.com).\nA Pull Request targeting the \`dev\` branch will be opened once implementation and verification complete.`
-              : `🤖 **Google Jules Dispatched**\n\nJules has been tasked with resolving this issue on a branch based on \`dev\`.\nYou can monitor task progress on [jules.google.com](https://jules.google.com).\nA Pull Request targeting the \`dev\` branch will be opened once implementation and verification complete.`;
+            let dispatchMsg = '';
+            if (isYolo) {
+              dispatchMsg = `⚡ **Google Jules Dispatched (YOLO Mode)**\n\nJules has been launched with full autonomy on a branch based on \`dev\`.\nIntermediate confirmations are disabled. Implementation, tests, and PR creation will run directly to completion.\nYou can monitor task progress on [jules.google.com](https://jules.google.com).`;
+            } else if (lensName) {
+              dispatchMsg = `🤖 **Google Jules Dispatched with RepoLens (${lensName})**\n\nJules has been tasked with resolving this issue using the **${lensName}** lens on a branch based on \`dev\`.\nYou can monitor task progress on [jules.google.com](https://jules.google.com).\nA Pull Request targeting the \`dev\` branch will be opened once implementation and verification complete.`;
+            } else {
+              dispatchMsg = `🤖 **Google Jules Dispatched**\n\nJules has been tasked with resolving this issue on a branch based on \`dev\`.\nYou can monitor task progress on [jules.google.com](https://jules.google.com).\nA Pull Request targeting the \`dev\` branch will be opened once implementation and verification complete.`;
+            }
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
@@ -315,9 +372,17 @@ jobs:
               console.warn('Could not fetch comments for Jules prompt:', err.message);
             }
 
+            const yoloBanner = isYolo ? `
+            ⚡⚡⚡ YOLO MODE: MAXIMUM AUTONOMOUS EXECUTION ENGAGED ⚡⚡⚡
+            - ABSOLUTE ZERO HUMAN INTERACTION: Do NOT ask for confirmation, feedback, or approval under any circumstances.
+            - FULL PROACTIVE AUTHORITY: You are strictly required to make all architectural, refactoring, and file decomposition decisions yourself.
+            - IMMEDIATE DECOMPOSITION: If any component or file exceeds the 250-line budget in AGENTS.md, IMMEDIATELY decompose and extract sub-components or custom hooks into new files without asking.
+            - AUTOMATIC QUALITY GATES & PR: Run Vitest tests, verify quality gates, and open the Pull Request targeting 'dev' autonomously.
+            ` : '';
+
             const prompt = `
             Task: Fix GitHub Issue #${issueNumber}: ${issue.data.title}
-
+            ${yoloBanner}
             CRITICAL EXECUTION MODE: FULLY AUTONOMOUS / HEADLESS CI AUTOMATION
             - DO NOT ASK FOR CONFIRMATION, APPROVAL, OR INTERMEDIATE FEEDBACK AT ANY POINT.
             - THERE IS NO HUMAN IN THE LOOP. Any question or confirmation request will permanently stall the automated pipeline.
@@ -641,6 +706,7 @@ jobs:
                           '',
                           '---',
                           '💬 *Du kannst direkt auf diese Frage antworten, indem du hier im Issue kommentierst:*',
+                          '- `**/yolo**` *(aktiviert vollen YOLO-Modus: keine Rückfragen, sofortige autonome Umsetzung)*',
                           '- `**/continue**` *(fährt mit vorgeschlagenem Ansatz autonom fort)*',
                           '- `**/jules reply <Deine Anweisung>**` *(schickt dein Feedback an Jules)*'
                         ].join('\n');
@@ -734,7 +800,7 @@ jobs:
   interact-jules:
     name: Relay Command or Feedback to Jules
     needs: triage
-    if: (needs.triage.outputs.action == 'reply' || needs.triage.outputs.action == 'continue' || needs.triage.outputs.action == 'approve-plan' || needs.triage.outputs.action == 'status') && needs.triage.outputs.is_authorized == 'true'
+    if: (needs.triage.outputs.action == 'reply' || needs.triage.outputs.action == 'continue' || needs.triage.outputs.action == 'yolo' || needs.triage.outputs.action == 'approve-plan' || needs.triage.outputs.action == 'status') && needs.triage.outputs.is_authorized == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -749,6 +815,7 @@ jobs:
           JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
           ACTION: ${{ needs.triage.outputs.action }}
           TARGET_TEXT: ${{ needs.triage.outputs.targets }}
+          IS_YOLO: ${{ needs.triage.outputs.yolo }}
         with:
           script: |
             const issueNumber = Number("${{ needs.triage.outputs.issue_number }}");
@@ -897,10 +964,10 @@ jobs:
               let statusBody = `📊 **Jules Task Status (Session: \`${sessionId}\`):**\n\n- **Status:** \`${state}\`\n- **Web UI:** https://jules.google.com/task/${sessionId}\n\n`;
 
               if ((state === 'AWAITING_USER_FEEDBACK' || state === 'AWAITING_USER_INPUT') && pendingQuestion) {
-                statusBody += `### ⚠️ Jules wartet auf dein Feedback:\n> ${pendingQuestion.replace(/\n/g, '\n> ')}\n\n👉 **Antworte direkt hier mit:**\n- \`/continue\` *(um den vorgeschlagenen Ansatz freizugeben)*\n- \`/jules reply <Deine Anweisung>\` *(für individuelles Feedback)*\n\n---\n`;
+                statusBody += `### ⚠️ Jules wartet auf dein Feedback:\n> ${pendingQuestion.replace(/\n/g, '\n> ')}\n\n👉 **Antworte direkt hier mit:**\n- \`/yolo\` *(für sofortigen Vollautonomie-Modus ohne weitere Rückfragen)*\n- \`/continue\` *(um den vorgeschlagenen Ansatz freizugeben)*\n- \`/jules reply <Deine Anweisung>\` *(für individuelles Feedback)*\n\n---\n`;
               }
 
-              statusBody += `**Letzte Aktivitäten:**\n${actLines || '- Keine Aktivitäten verfügbar.'}\n\n---\n*Tipp: Kommentiere mit \`/continue\` zum Weitermachen oder \`/jules reply <Text>\` zum Antworten.*`;
+              statusBody += `**Letzte Aktivitäten:**\n${actLines || '- Keine Aktivitäten verfügbar.'}\n\n---\n*Tipp: Kommentiere mit \`/yolo\` für Autonomie, \`/continue\` zum Weitermachen oder \`/jules reply <Text>\` zum Antworten.*`;
 
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
@@ -911,12 +978,21 @@ jobs:
               return;
             }
 
-            // 4. Handle approve-plan and reply
+            // 4. Handle approve-plan, yolo, continue, and reply
+            const isYoloAction = action === 'yolo';
+            const yoloPrompt = `⚡ YOLO MODE ENGAGED ⚡
+            You are authorized with 100% full autonomy.
+            CRITICAL DIRECTIVES:
+            1. DO NOT ask any further questions, confirmations, or approvals at any point.
+            2. Make all architectural and decomposition decisions yourself immediately (e.g. splitting any component >250 lines into sub-components or custom hooks to strictly follow AGENTS.md).
+            3. Implement the solution, execute Vitest tests, verify all quality gates, and create the Pull Request targeting 'dev'.
+            4. Proceed immediately to completion without waiting for human input.`;
+
             const endpoint = action === 'approve-plan'
               ? `https://jules.googleapis.com/v1alpha/sessions/${sessionId}:approvePlan`
               : `https://jules.googleapis.com/v1alpha/sessions/${sessionId}:sendMessage`;
 
-            const payload = action === 'approve-plan' ? {} : { prompt: targetText };
+            const payload = action === 'approve-plan' ? {} : { prompt: isYoloAction ? yoloPrompt : targetText };
 
             let success = false;
             let lastError = '';
@@ -951,6 +1027,18 @@ jobs:
                   repo: context.repo.repo,
                   issue_number: issueNumber,
                   body: `✅ **Jules-Plan freigegeben!** (Session: \`${sessionId}\`)\nJules setzt die Implementierung der Task jetzt auf \`dev\` fort.`
+                });
+              } else if (action === 'yolo') {
+                try {
+                  await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-input' });
+                  await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:in-progress'] });
+                } catch (e) {}
+
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  body: `⚡ **YOLO-Mode aktiviert!** (Session: \`${sessionId}\`)\n\nJules übernimmt jetzt vollautonom das Steuer: keine Rückfragen, direkte Umsetzung und PR-Erstellung gegen \`dev\`.`
                 });
               } else if (action === 'continue') {
                 try {
