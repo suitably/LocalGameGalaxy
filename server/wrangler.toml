@@ -5,3 +5,5 @@ compatibility_date = "2024-01-01"
 [vars]
 PLUGINS = "relay"
 ALLOWED_ORIGINS = "*"
+
+compatibility_flags = [ "nodejs_compat" ]

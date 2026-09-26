@@ -20,13 +20,11 @@ export const isScanning = (): boolean => IS_SCANNING;
  * Parses a single UltraStar .txt file into a song object.
  */
 export async function parseSongFile(txtPath: string, libraryPath?: string): Promise<Song | null> {
-  let content: string;
   try {
-    content = await fs.promises.readFile(txtPath, 'utf-8');
+    await fs.promises.access(txtPath);
   } catch {
     return null;
   }
-
   const dir = path.dirname(txtPath);
 
   const effectiveLibraryPath =
@@ -34,6 +32,13 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
 
   let relativePath = path.relative(effectiveLibraryPath, dir);
   if (relativePath === '') relativePath = '.';
+
+  let content: string;
+  try {
+    content = await fs.promises.readFile(txtPath, 'utf-8');
+  } catch {
+    return null;
+  }
   if (content.charCodeAt(0) === 0xfeff) {
     content = content.slice(1);
   }
@@ -79,7 +84,7 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
     return null;
   };
 
-  const getServeUrl = (filename?: string | null): string | null => {
+  const getServeUrl = async (filename?: string | null): Promise<string | null> => {
     if (!filename) return null;
     const cleanFilename = filename.trim().replace(/^["']|["']$/g, '');
     if (!cleanFilename) return null;
@@ -91,17 +96,31 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
       return `https://www.youtube.com/watch?v=${ytId}`;
     }
     const floatPath = path.resolve(dir, cleanFilename);
-    if (fs.existsSync(floatPath)) return floatPath;
-    return null;
+    try {
+      await fs.promises.access(floatPath);
+      return floatPath;
+    } catch {
+      return null;
+    }
   };
 
-  const audioPath = getServeUrl(headers['MP3'] || headers['AUDIO']);
-  let instrumentalPath = getServeUrl(headers['INSTRUMENTAL']);
-  let vocalsPath = getServeUrl(headers['VOCALS']);
-  let originalAudioPath = getServeUrl(headers['ORIGINAL'] || headers['ORIGINALAUDIO']);
-  const videoPath = getServeUrl(headers['VIDEO']);
-  const coverPath = getServeUrl(headers['COVER']);
-  const backgroundPath = getServeUrl(headers['BACKGROUND']);
+  let [
+    audioPath,
+    instrumentalPath,
+    vocalsPath,
+    originalAudioPath,
+    videoPath,
+    coverPath,
+    backgroundPath,
+  ] = await Promise.all([
+    getServeUrl(headers['MP3'] || headers['AUDIO']),
+    getServeUrl(headers['INSTRUMENTAL']),
+    getServeUrl(headers['VOCALS']),
+    getServeUrl(headers['ORIGINAL'] || headers['ORIGINALAUDIO']),
+    getServeUrl(headers['VIDEO']),
+    getServeUrl(headers['COVER']),
+    getServeUrl(headers['BACKGROUND']),
+  ]);
 
   if (!instrumentalPath && audioPath && (headers['MP3'] || '').toLowerCase().includes('instrumental')) {
     instrumentalPath = audioPath;
