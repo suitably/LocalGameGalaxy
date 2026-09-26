@@ -145,7 +145,7 @@ jobs:
                   } else {
                     action = 'continue';
                     const replyText = rawBody.replace(/^\/(jules\s+)?continue\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
-                    targets = replyText || 'Please proceed autonomously with your proposed approach, implement the solution, run tests and create the pull request without asking further questions.';
+                    targets = replyText || 'Continue with the suggested approach.';
                   }
                 } else if (body.startsWith('/approve-plan') || body.startsWith('/jules approve-plan')) {
                   action = 'approve-plan';
@@ -313,22 +313,7 @@ jobs:
             const lensName = process.env.LENS_NAME || '';
             const isYolo = process.env.YOLO_MODE === 'true';
 
-            // Post dispatch confirmation comment
-            let dispatchMsg = '';
-            if (isYolo) {
-              dispatchMsg = `⚡ **Google Jules Dispatched (YOLO Mode)**\n\nJules has been launched with full autonomy on a branch based on \`dev\`.\nIntermediate confirmations are disabled. Implementation, tests, and PR creation will run directly to completion.\nYou can monitor task progress on [jules.google.com](https://jules.google.com).`;
-            } else if (lensName) {
-              dispatchMsg = `🤖 **Google Jules Dispatched with RepoLens (${lensName})**\n\nJules has been tasked with resolving this issue using the **${lensName}** lens on a branch based on \`dev\`.\nYou can monitor task progress on [jules.google.com](https://jules.google.com).\nA Pull Request targeting the \`dev\` branch will be opened once implementation and verification complete.`;
-            } else {
-              dispatchMsg = `🤖 **Google Jules Dispatched**\n\nJules has been tasked with resolving this issue on a branch based on \`dev\`.\nYou can monitor task progress on [jules.google.com](https://jules.google.com).\nA Pull Request targeting the \`dev\` branch will be opened once implementation and verification complete.`;
-            }
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issueNumber,
-              body: dispatchMsg
-            });
+            // Dispatch confirmation is posted after successful API call in 'Update Issue Status on Completion'
 
             // Update labels
             try {
@@ -361,8 +346,13 @@ jobs:
               const filteredComments = (commentsRes.data || []).filter(c => {
                 const author = c.user?.login || '';
                 const body = (c.body || '').trim();
-                const isBot = c.user?.type === 'Bot' || author.includes('[bot]') || author === 'github-actions' || body.startsWith('## 🤖') || body.startsWith('### 🔍') || body.startsWith('/');
-                return !isBot && body.length > 0;
+                // Skip bot authors
+                if (c.user?.type === 'Bot' || author.includes('[bot]') || author === 'github-actions') return false;
+                // Skip pipeline-generated comments (status reports, relay headers)
+                if (body.startsWith('## 🤖') || body.startsWith('### 🔍') || body.startsWith('📊') || body.startsWith('🤖') || body.startsWith('⚡') || body.startsWith('▶️') || body.startsWith('💬') || body.startsWith('❌') || body.startsWith('✅')) return false;
+                // Skip pure slash commands with no substantive text
+                if (/^\/(jules\s+)?(fix|status|plan|continue|yolo|approve-plan|curate|triage|dedup|bundle|check|duplicate)\b/i.test(body) && body.split(/\s+/).length <= 3) return false;
+                return body.length > 0;
               });
               if (filteredComments.length > 0) {
                 commentsContext = '\n\nUser Feedback & Clarifications from Issue Comments:\n' +
@@ -400,6 +390,12 @@ jobs:
             - When creating a pull request, TARGET THE 'dev' BRANCH (not 'main').
             - Reference 'Fixes #${issueNumber}' in the PR description.
 
+            MANDATORY OUTPUT FILES — CI will reject your PR without these:
+            1. CHANGELOG.md — Add an entry under [Unreleased] describing what was changed or fixed.
+            2. docs/tech/architecture.md — Update if system structure, new modules, or new components were added.
+            3. public/locales/de/translation.json AND public/locales/en/translation.json — Update both if any user-facing strings were added or changed.
+            Run 'npm run check:docs' BEFORE committing to verify these files are included. It WILL fail your PR if omitted.
+
             Mandatory Project Rules (from AGENTS.md):
             - Maximum 250 lines per .tsx component. Decompose larger components into hooks and sub-components.
             - No cross-game imports: src/games/<A> must never import from src/games/<B>.
@@ -407,8 +403,14 @@ jobs:
             - Use MUI <Dialog> or <ConfirmDialog>. Never native window.confirm() or alert().
             - Strict TypeScript: no 'any'. Use discriminated unions.
             - Zero Code Duplication: Search src/modules/ and reuse existing code. 'npm run check:duplicates' will reject PRs with copy-paste clones.
-            - Documentation & i18n Sync: Always update docs/tech/architecture.md and both public/locales/de and en translation files. 'npm run check:docs' enforces this.
-            - Verify your work before concluding: run 'npm run check:architecture:diff', 'npm run check:duplicates', 'npm run check:budget', 'npm test', and 'npm run build'.
+
+            Verification Checklist (run ALL before creating PR):
+            - npm run check:docs (mandatory output files gate)
+            - npm run check:architecture:diff
+            - npm run check:duplicates
+            - npm run check:budget
+            - npm test
+            - npm run build
             `;
 
             core.setOutput('prompt', prompt);
@@ -557,7 +559,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issueNumber,
-                body: `🚀 **Google Jules Task gestartet!** (Worker: \`${keyUsed}\`)\n\nDu kannst den Fortschritt und das VM-Log in Echtzeit hier verfolgen:\n👉 [${sessionUrl}](${sessionUrl})\n\nSobald Jules fertig ist, wird der Pull Request automatisch gegen \`dev\` geöffnet.`
+                body: `🤖 **Google Jules Dispatched** (Worker: \`${keyUsed}\`)\n\n👉 [${sessionUrl}](${sessionUrl})\nPR targeting \`dev\` will be opened once implementation and verification are complete.`
               });
             } else {
               try {
@@ -573,7 +575,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issueNumber,
-                body: `❌ **Google Jules konnte nicht gestartet werden:**\n\`\`\`\n${errorMsg || 'Unbekannter Fehler bei der API-Anfrage.'}\n\`\`\`\nBitte überprüfe dein \`JULES_API_KEY\` Secret unter **Settings → Secrets and variables → Actions**.`
+                body: `❌ **Google Jules dispatch failed:**\n\`\`\`\n${errorMsg || 'Unknown API error.'}\n\`\`\`\nCheck your \`JULES_API_KEY\` secret under **Settings → Secrets and variables → Actions**.`
               });
             }
 
@@ -645,11 +647,11 @@ jobs:
                     text = pu.title || pu.description || pu.message || '';
                   } else if (a.planGenerated) {
                     const pg = a.planGenerated;
-                    text = pg.plan?.steps ? `Plan mit ${pg.plan.steps.length} Schritten generiert` : (pg.title || 'Plan generiert');
+                    text = pg.plan?.steps ? `Plan generated with ${pg.plan.steps.length} steps` : (pg.title || 'Plan generated');
                   } else if (a.sessionCompleted) {
-                    text = 'Task erfolgreich abgeschlossen 🎉';
+                    text = 'Task completed successfully 🎉';
                   } else if (a.sessionFailed) {
-                    text = `Task fehlgeschlagen: ${a.sessionFailed.reason || ''}`;
+                    text = `Task failed: ${a.sessionFailed.reason || ''}`;
                   }
 
                   // Check artifacts for code modifications
@@ -665,7 +667,7 @@ jobs:
                       }
                     }
                     if (files.size > 0) {
-                      text = '🛠️ Code-Änderungen an: ' + Array.from(files).map(f => '`' + f + '`').join(', ');
+                      text = '🛠️ Code changes in: ' + Array.from(files).map(f => '`' + f + '`').join(', ');
                     }
                   }
 
@@ -674,7 +676,7 @@ jobs:
                   if (!text && typeof a.description === 'string' && a.description) text = a.description;
                   if (!text && typeof a.summary === 'string' && a.summary) text = a.summary;
 
-                  return { time, tag, text: text.trim() || 'Aktivität ausgeführt' };
+                  return { time, tag, text: text.trim() || 'Activity executed' };
                 }
 
                 if (actRes.ok) {
@@ -700,15 +702,12 @@ jobs:
                     if (parsed.tag === 'AGENT' && parsed.text) {
                       if (parsed.text.length > 20 || parsed.text.includes('?')) {
                         const commentBody = [
-                          '### 🤖 Google Jules Chat-Nachricht / Update',
+                          '### 🤖 Jules Update',
                           '',
                           `> ${parsed.text.replace(/\n/g, '\n> ')}`,
                           '',
                           '---',
-                          '💬 *Du kannst direkt auf diese Frage antworten, indem du hier im Issue kommentierst:*',
-                          '- `**/yolo**` *(aktiviert vollen YOLO-Modus: keine Rückfragen, sofortige autonome Umsetzung)*',
-                          '- `**/continue**` *(fährt mit vorgeschlagenem Ansatz autonom fort)*',
-                          '- `**/jules reply <Deine Anweisung>**` *(schickt dein Feedback an Jules)*'
+                          '`/yolo` — full autonomy | `/continue` — proceed | `/jules reply <text>` — respond'
                         ].join('\n');
 
                         try {
@@ -845,7 +844,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issueNumber,
-                body: `⚠️ **Keine aktive Jules-Session gefunden!**\nAuf Issue #${issueNumber} wurde kein Link zu einer Jules-Task (\`https://jules.google.com/task/...\`) gefunden.`
+                body: `⚠️ **No active Jules session found.**\nNo Jules task link (\`https://jules.google.com/task/...\`) was found on Issue #${issueNumber}.`
               });
               core.setFailed('No active Jules session found on issue');
               return;
@@ -903,11 +902,11 @@ jobs:
                   text = pu.title || pu.description || pu.message || '';
                 } else if (a.planGenerated) {
                   const pg = a.planGenerated;
-                  text = pg.plan?.steps ? `Plan mit ${pg.plan.steps.length} Schritten generiert` : (pg.title || 'Plan generiert');
+                  text = pg.plan?.steps ? `Plan generated with ${pg.plan.steps.length} steps` : (pg.title || 'Plan generated');
                 } else if (a.sessionCompleted) {
-                  text = 'Task erfolgreich abgeschlossen 🎉';
+                  text = 'Task completed successfully 🎉';
                 } else if (a.sessionFailed) {
-                  text = `Task fehlgeschlagen: ${a.sessionFailed.reason || ''}`;
+                  text = `Task failed: ${a.sessionFailed.reason || ''}`;
                 }
 
                 // Check artifacts for code modifications
@@ -923,7 +922,7 @@ jobs:
                     }
                   }
                   if (files.size > 0) {
-                    text = '🛠️ Code-Änderungen an: ' + Array.from(files).map(f => '`' + f + '`').join(', ');
+                    text = '🛠️ Code changes in: ' + Array.from(files).map(f => '`' + f + '`').join(', ');
                   }
                 }
 
@@ -932,7 +931,7 @@ jobs:
                 if (!text && typeof a.description === 'string' && a.description) text = a.description;
                 if (!text && typeof a.summary === 'string' && a.summary) text = a.summary;
 
-                return { time, tag, text: text.trim() || 'Aktivität ausgeführt' };
+                return { time, tag, text: text.trim() || 'Activity executed' };
               }
 
               const state = sessData?.state || 'UNKNOWN';
@@ -964,10 +963,10 @@ jobs:
               let statusBody = `📊 **Jules Task Status (Session: \`${sessionId}\`):**\n\n- **Status:** \`${state}\`\n- **Web UI:** https://jules.google.com/task/${sessionId}\n\n`;
 
               if ((state === 'AWAITING_USER_FEEDBACK' || state === 'AWAITING_USER_INPUT') && pendingQuestion) {
-                statusBody += `### ⚠️ Jules wartet auf dein Feedback:\n> ${pendingQuestion.replace(/\n/g, '\n> ')}\n\n👉 **Antworte direkt hier mit:**\n- \`/yolo\` *(für sofortigen Vollautonomie-Modus ohne weitere Rückfragen)*\n- \`/continue\` *(um den vorgeschlagenen Ansatz freizugeben)*\n- \`/jules reply <Deine Anweisung>\` *(für individuelles Feedback)*\n\n---\n`;
+                statusBody += `### ⚠️ Jules is waiting for your feedback:\n> ${pendingQuestion.replace(/\n/g, '\n> ')}\n\n👉 **Reply here with:**\n- \`/yolo\` — full autonomy, no further questions\n- \`/continue\` — proceed with suggested approach\n- \`/jules reply <your instructions>\` — send custom feedback\n\n---\n`;
               }
 
-              statusBody += `**Letzte Aktivitäten:**\n${actLines || '- Keine Aktivitäten verfügbar.'}\n\n---\n*Tipp: Kommentiere mit \`/yolo\` für Autonomie, \`/continue\` zum Weitermachen oder \`/jules reply <Text>\` zum Antworten.*`;
+              statusBody += `**Recent Activities:**\n${actLines || '- No activities available.'}\n\n---\n*Tip: Comment with \`/yolo\` for full autonomy, \`/continue\` to proceed, or \`/jules reply <text>\` to respond.*`;
 
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
@@ -1026,7 +1025,7 @@ jobs:
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: issueNumber,
-                  body: `✅ **Jules-Plan freigegeben!** (Session: \`${sessionId}\`)\nJules setzt die Implementierung der Task jetzt auf \`dev\` fort.`
+                  body: `✅ **Jules plan approved.** (Session: \`${sessionId}\`)\nJules is now proceeding with implementation on \`dev\`.`
                 });
               } else if (action === 'yolo') {
                 try {
@@ -1038,7 +1037,7 @@ jobs:
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: issueNumber,
-                  body: `⚡ **YOLO-Mode aktiviert!** (Session: \`${sessionId}\`)\n\nJules übernimmt jetzt vollautonom das Steuer: keine Rückfragen, direkte Umsetzung und PR-Erstellung gegen \`dev\`.`
+                  body: `⚡ **YOLO mode activated.** (Session: \`${sessionId}\`)\nFull autonomy engaged — no further questions, direct implementation and PR against \`dev\`.`
                 });
               } else if (action === 'continue') {
                 try {
@@ -1050,7 +1049,7 @@ jobs:
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: issueNumber,
-                  body: `▶️ **Fortsetzung freigegeben!** (Session: \`${sessionId}\`)\n\nJules setzt die Arbeit auf \`dev\` jetzt autonom fort. Sobald die Implementierung und Vitest-Tests abgeschlossen sind, wird der Pull Request automatisch geöffnet.`
+                  body: `▶️ **Continuation approved.** (Session: \`${sessionId}\`)\nJules is proceeding autonomously on \`dev\`. PR will be opened once implementation and tests pass.`
                 });
               } else {
                 try {
@@ -1062,7 +1061,7 @@ jobs:
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: issueNumber,
-                  body: `💬 **Feedback an Jules übermittelt!** (Session: \`${sessionId}\`)\n> "${targetText}"\n\nJules hat deine Anweisung erhalten und setzt die Bearbeitung auf \`dev\` fort.`
+                  body: `💬 **Feedback sent to Jules.** (Session: \`${sessionId}\`)\n> "${targetText}"\nJules received your instructions and is continuing on \`dev\`.`
                 });
               }
             } else {
@@ -1070,7 +1069,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issueNumber,
-                body: `❌ **Konnte Nachricht nicht an Jules übermitteln:**\n\`\`\`\n${lastError}\n\`\`\``
+                body: `❌ **Failed to send message to Jules:**\n\`\`\`\n${lastError}\n\`\`\``
               });
               core.setFailed(`Failed to send to Jules: ${lastError}`);
             }
