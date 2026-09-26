@@ -184,19 +184,26 @@ function scanCodebaseForContext(issue) {
     ? fs.readdirSync(modulesDir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name)
     : [];
 
-  const detectedSubsystems = new Set();
-  for (const g of availableGames) {
+  const matchedGames = availableGames.filter((g) => {
     const cleanG = g.replace(/[^a-z0-9]/g, '');
-    if (text.includes(g) || text.includes(cleanG)) {
-      detectedSubsystems.add(`games/${g}`);
-    }
-  }
-  for (const m of availableModules) {
+    return text.includes(g) || text.includes(cleanG);
+  });
+  // Drop substring games if a more specific game matched (e.g. "melodiq" when "melodiq-notes" is present)
+  const specificGames = matchedGames.filter(
+    (g) => !matchedGames.some((other) => other !== g && other.includes(g))
+  );
+
+  const matchedModules = availableModules.filter((m) => {
     const cleanM = m.replace(/[^a-z0-9]/g, '');
-    if (text.includes(m) || text.includes(cleanM)) {
-      detectedSubsystems.add(`modules/${m}`);
-    }
-  }
+    return text.includes(m) || text.includes(cleanM);
+  });
+  const specificModules = matchedModules.filter(
+    (m) => !matchedModules.some((other) => other !== m && other.includes(m))
+  );
+
+  const detectedSubsystems = new Set();
+  for (const g of specificGames) detectedSubsystems.add(`games/${g}`);
+  for (const m of specificModules) detectedSubsystems.add(`modules/${m}`);
 
   // Check aliases from memory (e.g. "bubble" -> guessart, "lyrics" -> melodiq)
   if (memory.subsystemAliases) {
@@ -207,6 +214,13 @@ function scanCodebaseForContext(issue) {
           if (availableModules.includes(subsystem)) detectedSubsystems.add(`modules/${subsystem}`);
         }
       }
+    }
+  }
+
+  // Specificity pruning: drop parent subsystems if a specific hyphenated subsystem is present (e.g. drop "games/melodiq" if "games/melodiq-notes" is detected)
+  for (const sub of Array.from(detectedSubsystems)) {
+    if (Array.from(detectedSubsystems).some((other) => other !== sub && other.startsWith(sub + '-'))) {
+      detectedSubsystems.delete(sub);
     }
   }
 
@@ -311,6 +325,11 @@ function scanCodebaseForContext(issue) {
         // If specific subsystems were identified, deprioritize orthogonal games
         if (detectedSubsystems.size > 0 && !inDetected && lowerRel.startsWith('src/games/')) {
           continue;
+        }
+
+        // Exact filename mention in issue description or discussion comments
+        if (fullTextWithComments.includes(e.name)) {
+          score += 150;
         }
 
         // Filename match bonus
