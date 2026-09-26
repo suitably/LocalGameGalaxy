@@ -100,7 +100,7 @@ ${sourceCodeContext}
         let text = '';
         const modelsToTry = ['gemini-3.1-pro', 'gemini-3.8-pro', 'gemini-3.5-pro', 'gemini-2.0-pro-exp', 'gemini-2.0-pro', 'gemini-1.5-pro'];
         let success = false;
-        
+
         for (const model of modelsToTry) {
             try {
                 const response = await ai.models.generateContent({
@@ -118,7 +118,7 @@ ${sourceCodeContext}
                 console.warn(`Model ${model} failed or is not available. Trying next...`);
             }
         }
-        
+
         if (!success) {
             throw new Error('All model attempts failed');
         }
