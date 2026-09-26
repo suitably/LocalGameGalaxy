@@ -171,13 +171,11 @@ export const useLayoutContext = useLayout;
 // Hook for components to register their header configuration
 export const useHeader = (title: string, items: MenuItem[] = []) => {
     const { setHeader } = useLayout();
-    const itemLabels = JSON.stringify(items.map(i => i.label));
 
     useEffect(() => {
         setHeader(title, items);
         return () => {
             setHeader(null, []);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [title, setHeader, itemLabels]);
+    }, [title, setHeader, items]);
 };
