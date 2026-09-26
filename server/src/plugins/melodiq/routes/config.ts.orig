@@ -37,18 +37,17 @@ configRouter.delete('/api/config/directories', async (c) => {
 });
 
 // --- DIRECTORY BROWSER ---
-configRouter.get('/api/browse', requireMasterToken, (c) => {
+configRouter.get('/api/browse', (c) => {
   const queryPath = c.req.query('path') || os.homedir();
   try {
-    const safePath = require('../../../utils/helpers').resolveSecurePath(queryPath, [os.homedir(), ...serverConfig.directories]) || queryPath;
-    if (safePath !== queryPath || !fs.existsSync(queryPath)) return c.json({ error: 'Path not found or access denied' }, 403);
-    const entries = fs.readdirSync(safePath, { withFileTypes: true });
+    if (!fs.existsSync(queryPath)) return c.json({ error: 'Path not found' }, 404);
+    const entries = fs.readdirSync(queryPath, { withFileTypes: true });
     const dirs = entries
       .filter((dirent) => dirent.isDirectory() && !dirent.name.startsWith('.'))
       .map((dirent) => dirent.name);
 
-    const parent = path.resolve(safePath, '..');
-    if (parent !== path.resolve(safePath)) {
+    const parent = path.resolve(queryPath, '..');
+    if (parent !== path.resolve(queryPath)) {
       dirs.unshift('..');
     }
 
