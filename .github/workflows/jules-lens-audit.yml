@@ -105,16 +105,17 @@ jobs:
             const lensName = "${{ steps.resolver.outputs.lens_name }}";
             const domain = "${{ steps.resolver.outputs.domain }}";
 
-            const body = `## 🔍 RepoLens Audit Request: ${lensName} (${domain}/${lensId})
-
-A RepoLens audit has been triggered for domain **${domain}** using lens **${lensId}**.
-
-### 🚦 Next Steps:
-- To instruct Jules to plan and fix this audit finding on \`dev\`:
-  Reply with comment: **\`/jules approve\`** or assign label **\`jules:approved\`**.
-- To run another lens:
-  Trigger the **Jules RepoLens Audit Suite** workflow or comment **\`/jules lens <lens-id>\`**.
-`;
+            const body = [
+              `## 🔍 RepoLens Audit Request: ${lensName} (${domain}/${lensId})`,
+              '',
+              `A RepoLens audit has been triggered for domain **${domain}** using lens **${lensId}**.`,
+              '',
+              '### 🚦 Next Steps:',
+              '- To instruct Jules to plan and fix this audit finding on `dev`:',
+              '  Reply with comment: **`/jules approve`** or assign label **`jules:approved`**.',
+              '- To run another lens:',
+              '  Trigger the **Jules RepoLens Audit Suite** workflow or comment **`/jules lens <lens-id>`**.'
+            ].join('\n');
 
             const issue = await github.rest.issues.create({
               owner: context.repo.owner,
