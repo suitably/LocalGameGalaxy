@@ -186,14 +186,14 @@ async function main() {
   const lensRole = metadata.role || `${resolved.lensId} Specialist`;
   const agentsRules = readAgentsRules();
 
-  const prompt = \`You are an elite software auditor executing the official RepoLens Audit Suite for LocalGameGalaxy.
+  const prompt = `You are an elite software auditor executing the official RepoLens Audit Suite for LocalGameGalaxy.
 
-\${mode === 'plan' ? \`
+${mode === 'plan' ? `
 🤖 INTERACTIVE MODE: AUDIT & PLAN
 YOUR MISSION HAS TWO STRICT PHASES. YOU MUST STOP AFTER PHASE 1.
 
 === PHASE 1: PLANNING (CURRENT PHASE) ===
-- Step 1: Scan the repository through the criteria of this RepoLens lens (\${resolved.lensId}).
+- Step 1: Scan the repository through the criteria of this RepoLens lens (${resolved.lensId}).
 - Step 2: Identify the most critical issue matching this lens.
 - Step 3: Formulate a detailed markdown audit report explaining the finding and a step-by-step fix plan.
 - Step 4: Present the plan and explicitly ASK FOR APPROVAL.
@@ -201,21 +201,21 @@ YOUR MISSION HAS TWO STRICT PHASES. YOU MUST STOP AFTER PHASE 1.
 
 === PHASE 2: IMPLEMENTATION (ONLY AFTER USER APPROVAL) ===
 When the user replies with approval or further instructions, proceed to implementation.
-\` : mode === 'review' ? \`
+` : mode === 'review' ? `
 🤖 MULTI-AGENT PR REVIEW MODE
 - Step 1: You are a PR Reviewer. Target PR: #\${process.env.PR_NUMBER}.
-- Step 2: Use \\\`gh pr diff \${process.env.PR_NUMBER}\\\` to download and read the code changes.
-- Step 3: Analyze the PR strictly through the criteria of this RepoLens lens (\${resolved.lensId}).
+- Step 2: Use \`gh pr diff \${process.env.PR_NUMBER}\\\` to download and read the code changes.
+- Step 3: Analyze the PR strictly through the criteria of this RepoLens lens (${resolved.lensId}).
 - Step 4: Submit your review using the GitHub CLI:
-  - If you find issues: \\\`gh pr review \${process.env.PR_NUMBER} --request-changes -b "<your markdown review>"\\\`
-  - If the code is perfect: \\\`gh pr review \${process.env.PR_NUMBER} --approve -b "Approved from \${resolved.lensId} perspective. No issues found."\\\`
+  - If you find issues: \`gh pr review \${process.env.PR_NUMBER} --request-changes -b "<your markdown review>"\\\`
+  - If the code is perfect: \`gh pr review \${process.env.PR_NUMBER} --approve -b "Approved from ${resolved.lensId} perspective. No issues found."\\\`
 - DO NOT MODIFY ANY SOURCE FILES. DO NOT CREATE A PULL REQUEST YOURSELF. Your only job is to review and submit the formal approval or change request.
-\` : \`
+` : `
 ⚡ YOLO MODE: MAXIMUM AUTONOMOUS EXECUTION ENGAGED
 - DO NOT ASK FOR CONFIRMATION, APPROVAL, OR INTERMEDIATE FEEDBACK AT ANY POINT.
 - YOU HAVE FULL PROACTIVE AUTHORITY: You are authorized and REQUIRED to make all implementation and architectural decisions autonomously.
 - Proceed continuously to complete the work, run Vitest tests, and open the Pull Request against 'dev'.
-\`}
+`}
 
 You are operating under the following specialized RepoLens expert persona:
 
