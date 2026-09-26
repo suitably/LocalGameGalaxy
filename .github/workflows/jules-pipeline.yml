@@ -493,7 +493,11 @@ jobs:
 
           if [ "$INVOKED_SUCCESS" != "true" ]; then
             echo "::error::All Jules API keys in pool failed! Last error: $LAST_ERROR"
-            echo "error_msg=Alle $TOTAL_KEYS Jules API-Keys im Pool sind fehlgeschlagen. Letzter Fehler: $LAST_ERROR" >> $GITHUB_OUTPUT
+            {
+              echo "error_msg<<EOF_ERR"
+              echo "Alle $TOTAL_KEYS Jules API-Keys im Pool sind fehlgeschlagen. Letzter Fehler: $LAST_ERROR"
+              echo "EOF_ERR"
+            } >> "$GITHUB_OUTPUT"
             echo "success=false" >> $GITHUB_OUTPUT
             exit 1
           fi
@@ -501,13 +505,18 @@ jobs:
       - name: Update Issue Status on Completion
         if: always()
         uses: actions/github-script@v7
+        env:
+          SUCCESS: ${{ steps.jules_call.outputs.success }}
+          SESSION_URL: ${{ steps.jules_call.outputs.session_url }}
+          KEY_USED: ${{ steps.jules_call.outputs.key_used }}
+          ERROR_MSG: ${{ steps.jules_call.outputs.error_msg }}
         with:
           script: |
             const issueNumber = Number("${{ needs.triage.outputs.issue_number }}");
-            const isSuccess = "${{ steps.jules_call.outputs.success }}" === "true";
-            const sessionUrl = "${{ steps.jules_call.outputs.session_url }}";
-            const keyUsed = "${{ steps.jules_call.outputs.key_used }}";
-            const errorMsg = "${{ steps.jules_call.outputs.error_msg }}";
+            const isSuccess = process.env.SUCCESS === "true";
+            const sessionUrl = process.env.SESSION_URL || '';
+            const keyUsed = process.env.KEY_USED || '';
+            const errorMsg = process.env.ERROR_MSG || '';
 
             try {
               await github.rest.issues.removeLabel({
