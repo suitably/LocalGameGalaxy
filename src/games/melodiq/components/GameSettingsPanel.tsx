@@ -317,6 +317,24 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
                 </Box>
 
                 <Box sx={{ mt: 2 }}>
+                    <Typography gutterBottom>{t('melodiq.settings_panel.lyrics_lines', 'Number of Lyrics Lines')}</Typography>
+                    <ToggleButtonGroup
+                        value={settings.lyricsLines ?? 2}
+                        exclusive
+                        onChange={(_, val) => { if (val !== null) onUpdateSetting('lyricsLines', val); }}
+                        size="small"
+                        fullWidth
+                        sx={{ mb: 1 }}
+                    >
+                        <ToggleButton value={0}>0</ToggleButton>
+                        <ToggleButton value={1}>1</ToggleButton>
+                        <ToggleButton value={2}>2</ToggleButton>
+                        <ToggleButton value={3}>3</ToggleButton>
+                    </ToggleButtonGroup>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                        {t('melodiq.settings_panel.lyrics_lines_desc', 'Choose how many lines of lyrics to display.')}
+                    </Typography>
+
                     <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
                         {t('melodiq.settings_panel.lyrics_position', 'Lyrics Position (No Singers)')}
                     </Typography>

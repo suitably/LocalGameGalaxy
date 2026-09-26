@@ -11,6 +11,7 @@ export interface SessionLyricsVisualizerProps {
     timeProxyRef: React.RefObject<any>;
     lyricsUiScale: number;
     activeLyricsZoom: boolean;
+    activeLyricsLines?: number;
     activeLyricsPosition: 'bottom' | 'center';
     gridLayout: { rows: number[]; columnWidthPercent: number };
     showDebugOverlay?: boolean;
@@ -26,6 +27,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
     timeProxyRef,
     lyricsUiScale,
     activeLyricsZoom,
+    activeLyricsLines,
     activeLyricsPosition,
     gridLayout,
     showDebugOverlay,
@@ -54,6 +56,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
                             audioRef={timeProxyRef}
                             uiScale={lyricsUiScale * 1.45}
                             enableZoom={activeLyricsZoom}
+                            lyricsLines={activeLyricsLines}
                         />
                     </Box>
                 </Box>
@@ -83,6 +86,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
                             audioRef={timeProxyRef}
                             uiScale={lyricsUiScale}
                             enableZoom={activeLyricsZoom}
+                            lyricsLines={activeLyricsLines}
                         />
                     </Box>
                 </Box>
@@ -186,6 +190,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
                         audioRef={timeProxyRef}
                         uiScale={lyricsUiScale}
                         enableZoom={activeLyricsZoom}
+                        lyricsLines={activeLyricsLines}
                     />
                 </Box>
             </Box>
