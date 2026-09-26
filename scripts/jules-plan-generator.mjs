@@ -143,7 +143,14 @@ Generate a concise, professional markdown implementation plan in the following s
 - [Note any AGENTS.md rules to strictly follow: anti-god component <250 lines, no cross-game imports, i18n keys in de and en, etc.]
 `;
 
-  const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+  const models = [
+    'gemini-3.8-flash',
+    'gemini-3.8-pro',
+    'gemini-3.1-pro',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+  ];
 
   for (const apiKey of API_KEYS) {
     for (const model of models) {

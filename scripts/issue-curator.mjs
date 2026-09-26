@@ -143,38 +143,49 @@ async function queryGemini(prompt, systemInstruction = '') {
     return null;
   }
 
+  const models = [
+    'gemini-3.8-flash',
+    'gemini-3.8-pro',
+    'gemini-3.1-pro',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+  ];
+
   for (let i = 0; i < API_KEYS.length; i++) {
     const apiKey = API_KEYS[i];
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-      const payload = {
-        contents: [{ parts: [{ text: prompt }] }],
-      };
-      if (systemInstruction) {
-        payload.systemInstruction = { parts: [{ text: systemInstruction }] };
+    for (const model of models) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const payload = {
+          contents: [{ parts: [{ text: prompt }] }],
+        };
+        if (systemInstruction) {
+          payload.systemInstruction = { parts: [{ text: systemInstruction }] };
+        }
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.status === 429) {
+          console.warn(`Key #${i + 1} hit quota limit (429). Trying next key...`);
+          break; // break to next key
+        }
+
+        if (!response.ok) {
+          console.warn(`Key #${i + 1} with model ${model} returned status ${response.status}.`);
+          continue; // try next model
+        }
+
+        const data = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) return text;
+      } catch (err) {
+        console.warn(`Error using API key #${i + 1} with ${model}:`, err.message);
       }
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.status === 429) {
-        console.warn(`Key #${i + 1} hit quota limit (429). Trying next key...`);
-        continue;
-      }
-
-      if (!response.ok) {
-        console.warn(`Key #${i + 1} returned status ${response.status}. Trying next key...`);
-        continue;
-      }
-
-      const data = await response.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (text) return text;
-    } catch (err) {
-      console.warn(`Error using API key #${i + 1}:`, err.message);
     }
   }
 
