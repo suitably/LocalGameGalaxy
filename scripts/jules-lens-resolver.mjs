@@ -186,14 +186,20 @@ async function main() {
   const lensRole = metadata.role || `${resolved.lensId} Specialist`;
   const agentsRules = readAgentsRules();
 
-  const prompt = `You are an elite software auditor executing the official RepoLens Audit Suite for LocalGameGalaxy.
+  const prompt = \`You are an elite software auditor executing the official RepoLens Audit Suite for LocalGameGalaxy.
 
-CRITICAL EXECUTION MODE: FULLY AUTONOMOUS / HEADLESS CI AUTOMATION
+\${mode === 'plan' ? \`
+🤖 INTERACTIVE MODE: AUDIT & PLAN
+- Step 1: Scan the repository through the criteria of this RepoLens lens (\${resolved.lensId}).
+- Step 2: Identify the most critical issue matching this lens.
+- Step 3: Formulate a detailed markdown audit report explaining the finding and a step-by-step fix plan.
+- Step 4: Present the plan and ASK FOR APPROVAL before making any code changes.
+\` : \`
+⚡ YOLO MODE: MAXIMUM AUTONOMOUS EXECUTION ENGAGED
 - DO NOT ASK FOR CONFIRMATION, APPROVAL, OR INTERMEDIATE FEEDBACK AT ANY POINT.
-- THERE IS NO HUMAN IN THE LOOP. Any question asked will permanently deadlock the automated pipeline.
 - YOU HAVE FULL PROACTIVE AUTHORITY: You are authorized and REQUIRED to make all implementation and architectural decisions autonomously.
-- If a component exceeds the 250-line limit or requires decomposition according to AGENTS.md, IMMEDIATELY create/extract sub-components and custom hooks yourself without asking for permission.
-- Proceed continuously to complete the work, run Vitest tests and quality checks, and open the Pull Request against 'dev'.
+- Proceed continuously to complete the work, run Vitest tests, and open the Pull Request against 'dev'.
+\`}
 
 You are operating under the following specialized RepoLens expert persona:
 

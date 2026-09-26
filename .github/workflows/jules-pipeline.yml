@@ -366,19 +366,19 @@ jobs:
             ⚡⚡⚡ YOLO MODE: MAXIMUM AUTONOMOUS EXECUTION ENGAGED ⚡⚡⚡
             - ABSOLUTE ZERO HUMAN INTERACTION: Do NOT ask for confirmation, feedback, or approval under any circumstances.
             - FULL PROACTIVE AUTHORITY: You are strictly required to make all architectural, refactoring, and file decomposition decisions yourself.
-            - IMMEDIATE DECOMPOSITION: If any component or file exceeds the 250-line budget in AGENTS.md, IMMEDIATELY decompose and extract sub-components or custom hooks into new files without asking.
-            - AUTOMATIC QUALITY GATES & PR: Run Vitest tests, verify quality gates, and open the Pull Request targeting 'dev' autonomously.
-            ` : '';
+            - IMMEDIATELY create/extract sub-components or custom hooks if limits are exceeded.
+            - Proceed continuously from planning to coding, running Vitest tests, verifying quality gates, and submitting the Pull Request against 'dev'. Never pause or wait for user input.
+            ` : `
+            🤖 INTERACTIVE MODE: PLAN & APPROVE
+            - Step 1: Analyze the issue and formulate a concrete implementation plan.
+            - Step 2: Present the plan to the user and ASK FOR APPROVAL before making any code changes.
+            - Step 3: Wait for the user's response. Do NOT proceed to implementation until the user explicitly approves the plan or gives further instructions.
+            `;
 
             const prompt = `
             Task: Fix GitHub Issue #${issueNumber}: ${issue.data.title}
+            
             ${yoloBanner}
-            CRITICAL EXECUTION MODE: FULLY AUTONOMOUS / HEADLESS CI AUTOMATION
-            - DO NOT ASK FOR CONFIRMATION, APPROVAL, OR INTERMEDIATE FEEDBACK AT ANY POINT.
-            - THERE IS NO HUMAN IN THE LOOP. Any question or confirmation request will permanently stall the automated pipeline.
-            - YOU HAVE FULL PROACTIVE AUTHORITY: You are authorized and REQUIRED to make all implementation and architectural decisions autonomously.
-            - If a component exceeds the 250-line limit or requires decomposition according to AGENTS.md (e.g. creating sub-components or custom hooks), IMMEDIATELY create and extract them yourself without asking for user permission.
-            - Proceed continuously from planning to coding, running Vitest tests, verifying quality gates, and submitting the Pull Request against 'dev'. Never pause or wait for user input.
 
             Issue Description:
             ${issue.data.body || 'No description provided'}${commentsContext}
