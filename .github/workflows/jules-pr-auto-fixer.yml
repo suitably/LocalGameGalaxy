@@ -1,0 +1,141 @@
+name: Multi-Agent PR Auto-Fixer
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+concurrency:
+  group: pr-autofix-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  auto-fix:
+    name: Spawn Fixer Agent
+    if: github.event.review.state == 'changes_requested'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+        
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Dispatch Jules Fixer
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REVIEW_BODY: ${{ github.event.review.body }}
+          REVIEWER: ${{ github.event.review.user.login }}
+          JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
+          JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
+          JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
+          JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
+          JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
+          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+          REPO: ${{ github.repository }}
+          STARTING_BRANCH: ${{ github.event.pull_request.head.ref }}
+        with:
+          script: |
+            const fs = require('fs');
+            const { execSync } = require('child_process');
+            
+            const prompt = `
+            Task: Fix Pull Request #${process.env.PR_NUMBER} based on Review Feedback
+            
+            ⚡ YOLO MODE: MAXIMUM AUTONOMOUS EXECUTION ENGAGED
+            - DO NOT ASK FOR CONFIRMATION, APPROVAL, OR INTERMEDIATE FEEDBACK AT ANY POINT.
+            - YOU HAVE FULL PROACTIVE AUTHORITY: You are authorized and REQUIRED to make all implementation and architectural decisions autonomously.
+            - Proceed continuously to complete the work, run Vitest tests, and push the changes to the PR branch.
+            
+            A reviewer (@${process.env.REVIEWER}) has requested changes on this Pull Request.
+            
+            Review Feedback:
+            """
+            ${process.env.REVIEW_BODY}
+            """
+            
+            Instructions:
+            1. Analyze the requested changes.
+            2. Make the necessary code modifications to address the feedback.
+            3. Ensure you follow all AGENTS.md rules.
+            4. The pipeline will automatically push your changes to the PR branch '${process.env.STARTING_BRANCH}'.
+            `;
+            
+            fs.writeFileSync('prompt.txt', prompt);
+            
+            const payload = {
+              prompt: prompt,
+              sourceContext: {
+                source: `sources/github/${process.env.REPO}`,
+                githubRepoContext: {
+                  startingBranch: process.env.STARTING_BRANCH
+                }
+              },
+              requirePlanApproval: false,
+              automationMode: "AUTO_CREATE_PR"
+            };
+            
+            fs.writeFileSync('jules_payload.json', JSON.stringify(payload));
+            
+            const keys = [
+              process.env.JULES_API_KEY_1,
+              process.env.JULES_API_KEY_2,
+              process.env.JULES_API_KEY_3,
+              process.env.JULES_API_KEY_4,
+              process.env.JULES_API_KEY_5,
+              process.env.JULES_API_KEY
+            ].filter(Boolean);
+            
+            if (keys.length === 0) {
+              core.setFailed('No JULES_API_KEY available in secrets.');
+              return;
+            }
+            
+            let success = false;
+            let lastError = '';
+            
+            // Comment on the PR to announce the fixer agent
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt(process.env.PR_NUMBER),
+              body: `🤖 **Multi-Agent Auto-Fixer Dispatched!**\n\nJules has been spawned to address the changes requested by @${process.env.REVIEWER}. The agent is currently working on the \`${process.env.STARTING_BRANCH}\` branch.`
+            });
+            
+            for (let i = 0; i < keys.length; i++) {
+              console.log(`▶ Trying Jules API key slot ${i}...`);
+              try {
+                const result = execSync(`curl -s -w "\nHTTP_STATUS:%{http_code}" 'https://jules.googleapis.com/v1alpha/sessions' -X POST -H "Content-Type: application/json" -H "X-Goog-Api-Key: ${keys[i]}" -d @jules_payload.json`).toString();
+                
+                const lines = result.trim().split('\n');
+                const statusLine = lines.pop();
+                const status = statusLine.split(':')[1];
+                const body = lines.join('\n');
+                
+                if (status === '200') {
+                  const data = JSON.parse(body);
+                  console.log(`✅ Dispatched successfully! Session: ${data.name}`);
+                  success = true;
+                  break;
+                } else {
+                  console.log(`⚠️ Key slot ${i} failed with status ${status}: ${body}`);
+                  lastError = `[Slot ${i}] ${status}: ${body}`;
+                }
+              } catch (e) {
+                console.log(`⚠️ Curl execution failed: ${e.message}`);
+                lastError = e.message;
+              }
+            }
+            
+            if (!success) {
+              core.setFailed(`All API keys failed. Last error: ${lastError}`);
+            }

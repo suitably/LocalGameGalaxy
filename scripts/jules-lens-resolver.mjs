@@ -199,8 +199,10 @@ async function main() {
 - Step 1: You are a PR Reviewer. Target PR: #\${process.env.PR_NUMBER}.
 - Step 2: Use \\\`gh pr diff \${process.env.PR_NUMBER}\\\` to download and read the code changes.
 - Step 3: Analyze the PR strictly through the criteria of this RepoLens lens (\${resolved.lensId}).
-- Step 4: Post your review back to the PR using \\\`gh pr review \${process.env.PR_NUMBER} --comment -b "<your markdown review>"\\\`.
-- DO NOT MODIFY ANY SOURCE FILES. DO NOT CREATE A PULL REQUEST YOURSELF. Your only job is to review and comment.
+- Step 4: Submit your review using the GitHub CLI:
+  - If you find issues: \\\`gh pr review \${process.env.PR_NUMBER} --request-changes -b "<your markdown review>"\\\`
+  - If the code is perfect: \\\`gh pr review \${process.env.PR_NUMBER} --approve -b "Approved from \${resolved.lensId} perspective. No issues found."\\\`
+- DO NOT MODIFY ANY SOURCE FILES. DO NOT CREATE A PULL REQUEST YOURSELF. Your only job is to review and submit the formal approval or change request.
 \` : \`
 ⚡ YOLO MODE: MAXIMUM AUTONOMOUS EXECUTION ENGAGED
 - DO NOT ASK FOR CONFIRMATION, APPROVAL, OR INTERMEDIATE FEEDBACK AT ANY POINT.
