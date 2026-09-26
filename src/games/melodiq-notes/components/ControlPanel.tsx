@@ -17,15 +17,13 @@ import { useTranslation } from 'react-i18next';
 import { DEMO_SONGS } from '../demoSongs';
 import { type DemoSong, type PlayMode, type InputSource, type StoredSheetMusic, type StoredFolderHandle, DIFFICULTY_COLORS } from '../types';
 import { LocalLibraryPanel } from './LocalLibraryPanel';
-import { SpeedControl } from './SpeedControl';
+
 
 interface ControlPanelProps {
     selectedSong: DemoSong;
     customXmlContent: string | null;
     playMode: PlayMode;
     inputSource: InputSource;
-    speedPercent: number;
-    effectiveBpm: number;
     // Local library
     librarySongs: StoredSheetMusic[];
     storedFolders: StoredFolderHandle[];
@@ -36,7 +34,6 @@ interface ControlPanelProps {
     onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onPlayModeChange: (mode: PlayMode) => void;
     onInputSourceChange: (source: InputSource) => void;
-    onSpeedPercentChange: (speed: number) => void;
     onLocalSongSelect: (song: StoredSheetMusic) => void;
     onSyncFolder: () => void;
     onResyncFolders: () => void;
@@ -49,8 +46,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     customXmlContent,
     playMode,
     inputSource,
-    speedPercent,
-    effectiveBpm,
     librarySongs,
     storedFolders,
     selectedLocalSong,
@@ -60,7 +55,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     onFileUpload,
     onPlayModeChange,
     onInputSourceChange,
-    onSpeedPercentChange,
     onLocalSongSelect,
     onSyncFolder,
     onResyncFolders,
@@ -204,14 +198,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                     </Select>
                 </FormControl>
 
-                {/* Speed Control (in %) */}
-                {playMode === 'continuous' && (
-                    <SpeedControl
-                        speedPercent={speedPercent}
-                        effectiveBpm={effectiveBpm}
-                        onSpeedPercentChange={onSpeedPercentChange}
-                    />
-                )}
+
             </Stack>
 
             {/* ── Local Library Row ── */}
