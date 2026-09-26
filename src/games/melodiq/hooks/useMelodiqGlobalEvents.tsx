@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { storage } from '../../../lib/storage';
 import { melodiqFetchDirect } from '../api/melodiqFetch';
-import db, { type Song, type SongMeta } from '../db';
+import { type Song, type SongMeta } from '../db';
 import { type TVEvent } from './useTVMode';
 
 interface UseMelodiqGlobalEventsProps {
@@ -142,29 +142,12 @@ export const useMelodiqGlobalEvents = ({
                     
                     // Intercept single song requests and serve from Host memory if possible
                     // This prevents 404s for newly downloaded songs not yet indexed by the helper server
-                    if (data.path === '/api/songs') {
-                        resData = songs;
-                    } else if (data.path.startsWith('/api/songs/') && data.path !== '/api/songs/refresh') {
+                    if (data.path.startsWith('/api/songs/') && data.path !== '/api/songs/refresh') {
                         let songId = data.path.substring(11);
                         try { songId = decodeURIComponent(songId); } catch(e) {}
                         if (songId) {
                             const fullSong = await getSongById(songId);
                             if (fullSong && fullSong.txtContent) resData = fullSong;
-                        }
-                    } else if (data.path === '/api/playlists') {
-                        if (data.options?.method === 'POST') {
-                            const newPlaylist = JSON.parse(data.options.body);
-                            await db.playlists.put(newPlaylist);
-                            resData = newPlaylist;
-                        } else {
-                            resData = await db.playlists.toArray();
-                        }
-                    } else if (data.path.startsWith('/api/playlists/') && data.options?.method === 'DELETE') {
-                        let playlistId = data.path.substring(15);
-                        try { playlistId = decodeURIComponent(playlistId); } catch(e) {}
-                        if (playlistId) {
-                            await db.playlists.delete(playlistId);
-                            resData = { success: true };
                         }
                     }
 
