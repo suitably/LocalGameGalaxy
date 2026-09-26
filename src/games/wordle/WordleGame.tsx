@@ -21,6 +21,7 @@ import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
+import { GameLayout } from '../../components/Layout/GameLayout';
 import { parseGameUrlParams } from '../../modules/sharing';
 import { useWordle } from './hooks/useWordle';
 import { wordleEngine } from './logic/wordleEngine';
@@ -82,19 +83,16 @@ export const WordleGame: React.FC = () => {
   }, [state.invalidWordShake, clearShake]);
 
   return (
-    <Box
-      sx={{
-        width: '100%',
-        maxWidth: 600,
-        mx: 'auto',
-        minHeight: '100dvh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        px: 2,
-        py: { xs: 1.5, sm: 2.5 },
-      }}
-    >
+    <GameLayout maxWidth="sm" disablePadding>
+      <Box
+        sx={{
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          py: { xs: 1.5, sm: 2.5 },
+        }}
+      >
       {/* Header Action Bar */}
       <HeaderActionBar
         onHistory={() => setHistoryOpen(true)}
@@ -243,5 +241,6 @@ export const WordleGame: React.FC = () => {
         </DialogActions>
       </Dialog>
     </Box>
+    </GameLayout>
   );
 };

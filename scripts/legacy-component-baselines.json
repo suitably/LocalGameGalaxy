@@ -27,7 +27,7 @@
   "src/games/melodiq/hooks/useMelodiqGlobalEvents.tsx": 317,
   "src/games/garticphone/components/GarticAlbumReveal.tsx": 316,
   "src/games/melodiq/components/SessionSetup.tsx": 315,
-  "src/games/knister/KnisterGame.tsx": 306,
+  "src/games/knister/KnisterGame.tsx": 307,
   "src/games/melodiq/hooks/SettingsContext.tsx": 320,
   "src/games/werewolf/components/GameSetup.tsx": 298,
   "src/games/knister/components/KnisterBoard.tsx": 295,

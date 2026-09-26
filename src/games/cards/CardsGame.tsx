@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Container } from '@mui/material';
+
 import { useTranslation } from 'react-i18next';
+import { GameLayout } from '../../components/Layout/GameLayout';
 import { initCardsI18n } from './i18n';
 import { usePageTitle } from '../../context/TitleContext';
 import { useWakeLock } from '../../hooks/useWakeLock';
@@ -32,7 +33,7 @@ export const CardsGame: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 1.5, sm: 3 }, px: { xs: 1, sm: 2 } }}>
+    <GameLayout maxWidth="md">
       {!activeSession ? (
         <CardsLobby onStartGame={handleStartGame} />
       ) : activeSession.game.trackerType === 'lives_elimination' ? (
@@ -54,6 +55,6 @@ export const CardsGame: React.FC = () => {
           onExit={handleExitSession}
         />
       )}
-    </Container>
+    </GameLayout>
   );
 };
