@@ -54,7 +54,7 @@ export const MelodiqSettings: React.FC<MelodiqSettingsProps> = ({ onBack, onNavi
                 activePlayers: [...profilesHook.activePlayers]
             };
         }
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [settingsHook.settings, profilesHook.profiles, profilesHook.activePlayers]);
 
     // Initialize: Load Devices
     useEffect(() => {
