@@ -1,0 +1,31 @@
+--- server/src/plugins/melodiq/routes/config.ts
++++ server/src/plugins/melodiq/routes/config.ts
+@@ -38,15 +38,16 @@
+ });
+
+ // --- DIRECTORY BROWSER ---
+-configRouter.get('/api/browse', (c) => {
++configRouter.get('/api/browse', requireMasterToken, (c) => {
+   const queryPath = c.req.query('path') || os.homedir();
+   try {
+-    if (!fs.existsSync(queryPath)) return c.json({ error: 'Path not found' }, 404);
+-    const entries = fs.readdirSync(queryPath, { withFileTypes: true });
++    const safePath = require('../../../utils/helpers').resolveSecurePath(queryPath, [os.homedir(), ...serverConfig.directories]) || queryPath;
++    if (safePath !== queryPath || !fs.existsSync(queryPath)) return c.json({ error: 'Path not found or access denied' }, 403);
++    const entries = fs.readdirSync(safePath, { withFileTypes: true });
+     const dirs = entries
+       .filter((dirent) => dirent.isDirectory() && !dirent.name.startsWith('.'))
+       .map((dirent) => dirent.name);
+
+-    const parent = path.resolve(queryPath, '..');
+-    if (parent !== path.resolve(queryPath)) {
++    const parent = path.resolve(safePath, '..');
++    if (parent !== path.resolve(safePath)) {
+       dirs.unshift('..');
+     }
+
+-    return c.json({ current: path.resolve(queryPath), dirs });
++    return c.json({ current: path.resolve(safePath), dirs });
+   } catch (e: unknown) {
+     const msg = e instanceof Error ? e.message : String(e);
+     return c.json({ error: msg }, 500);
