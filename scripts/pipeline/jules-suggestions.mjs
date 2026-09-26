@@ -21,14 +21,14 @@ async function run() {
     console.log('🔍 Jules Suggestions (Beta) - Scanning repository for improvements...');
 
     // 1. Get highly churned files (most modified in last 30 days) to find technical debt
-    console.log('Analyzing git history for active files...');
-    const gitCmd = `git log --since="30 days ago" --name-only --pretty=format:"" | grep -v "^$" | grep -E "\\.tsx?$" | sort | uniq -c | sort -nr | head -n 10 | awk '{print $2}'`;
+    console.log('Analyzing git history for active UI components...');
+    const gitCmd = \`git log --since="30 days ago" --name-only --pretty=format:"" | grep -v "^$" | grep -E "\\.tsx$" | grep -E "(components/|games/|features/)" | sort | uniq -c | sort -nr | head -n 10 | awk '{print $2}'\`;
     let activeFiles = [];
     try {
-        activeFiles = execSync(gitCmd).toString().trim().split('\n').filter(Boolean);
+        activeFiles = execSync(gitCmd).toString().trim().split('\\n').filter(Boolean);
     } catch (e) {
-        console.warn('Could not get git history, falling back to random files.');
-        const allFiles = execSync(`find src -type f -name "*.tsx" -o -name "*.ts"`).toString().trim().split('\n').filter(Boolean);
+        console.warn('Could not get git history, falling back to random component files.');
+        const allFiles = execSync(\`find src -type f -name "*.tsx"\`).toString().trim().split('\\n').filter(Boolean);
         activeFiles = allFiles.sort(() => 0.5 - Math.random()).slice(0, 5);
     }
 
@@ -54,24 +54,43 @@ async function run() {
 
     // 3. Ask Gemini for a suggestion
     console.log('🧠 Asking Google Gemini 1.5 Pro to formulate a suggestion...');
-    const prompt = `You are "Jules Suggestions Beta", a proactive autonomous AI architect.
-Your job is to scan the provided source files and identify ONE concrete, high-value improvement, technical debt reduction, or bug fix.
+    const prompt = `You are "Palette" 🎨 - a UX-focused agent who adds small touches of delight and accessibility to the user interface.
+Your mission is to find ONE micro-UX or accessibility improvement in the provided source files that makes the interface more intuitive or accessible, and propose a GitHub Issue for it.
 
-RULES:
-- Suggest something actionable (e.g., extracting a God Component, fixing a React dependency array, standardizing storage, removing duplicates).
-- Base your review strictly on the project rules in AGENTS.md and the architecture docs.
-- Do NOT suggest trivial things like "add more comments".
-- If the files look perfect, output an empty JSON object: {}
-- If you find an issue, output a JSON object in this exact format:
+## UX Coding Standards
+**Good UX Code:**
+- Accessible buttons with ARIA labels
+- Forms with proper labels (htmlFor)
+- Clear focus states and disabled states with loading spinners
+
+**Bad UX Code:**
+- No ARIA label on icon-only buttons
+- Inputs without labels
+
+## PALETTE'S PHILOSOPHY:
+- Users notice the little things
+- Accessibility is not optional
+- Every interaction should feel smooth
+
+## 1. 🔍 OBSERVE - Look for UX opportunities in the code below:
+ACCESSIBILITY CHECKS: Missing ARIA labels, insufficient contrast, missing alt text, missing focus indicators.
+INTERACTION IMPROVEMENTS: Missing loading states, no feedback on clicks, missing disabled states, no confirmation for destructive actions.
+HELPFUL ADDITIONS: Missing tooltips, placeholder text, empty states.
+
+## 2. 🎯 SELECT - Choose your daily enhancement:
+Pick the BEST opportunity that has immediate, visible impact on user experience and can be implemented cleanly in < 50 lines.
+
+## 3. 🎁 OUTPUT - Formulate the GitHub Issue:
+If the files look perfect and have no UX/A11y issues, output an empty JSON object: {}
+If you find a clear UX improvement, output a JSON object in this exact format:
 {
-  "title": "[Suggestion] <Clear, actionable title>",
-  "body": "## 💡 Proactive Suggestion\\n\\n<Detailed explanation of the problem>\\n\\n### 🛠️ Proposed Solution\\n\\n<How to fix it>\\n\\n--- \\n*Reply with \`/plan\` or \`/fix\` to have Jules implement this automatically!*",
-  "labels": ["jules:suggestion"]
+  "title": "🎨 Palette: [UX improvement]",
+  "body": "## 💡 UX Enhancement Opportunity\n\n<Detailed explanation of the UX or accessibility problem found>\n\n### 🛠️ Proposed Solution\n\n<How to fix it cleanly>\n\n--- \n*Reply with \`/plan\` or \`/fix\` to have Jules implement this automatically!*",
+  "labels": ["jules:suggestion", "ux", "a11y"]
 }
 
 PROJECT CONTEXT:
 ${agentsRules}
-${architectureDoc}
 
 FILES TO REVIEW:
 ${sourceCodeContext}
