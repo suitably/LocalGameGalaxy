@@ -97,16 +97,31 @@ ${sourceCodeContext}
 `;
 
     try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-1.5-pro',
-            contents: prompt,
-            config: {
-                temperature: 0.4,
-                responseMimeType: 'application/json'
+        let text = '';
+        const modelsToTry = ['gemini-3.1-pro', 'gemini-3.8-pro', 'gemini-3.5-pro', 'gemini-2.0-pro-exp', 'gemini-2.0-pro', 'gemini-1.5-pro'];
+        let success = false;
+        
+        for (const model of modelsToTry) {
+            try {
+                const response = await ai.models.generateContent({
+                    model: model,
+                    contents: prompt,
+                    config: {
+                        temperature: 0.4,
+                        responseMimeType: 'application/json'
+                    }
+                });
+                text = response.text();
+                success = true;
+                break;
+            } catch (err) {
+                console.warn(\`Model \${model} failed or is not available. Trying next...\`);
             }
-        });
-
-        const text = response.text();
+        }
+        
+        if (!success) {
+            throw new Error('All model attempts failed');
+        }
         const suggestion = JSON.parse(text);
 
         if (!suggestion.title || !suggestion.body) {
