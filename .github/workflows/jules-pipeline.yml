@@ -74,9 +74,9 @@ jobs:
                   if (parts.length > 2) {
                     lensName = parts[2].trim();
                   }
-                } else if (body.startsWith('/jules plan')) {
+                } else if (body.startsWith('/jules plan') || body.startsWith('/plan')) {
                   action = 'plan';
-                } else if (body.startsWith('/jules approve') || body.startsWith('/jules fix')) {
+                } else if (body.startsWith('/jules approve') || body.startsWith('/approve') || body.startsWith('/jules fix') || body.startsWith('/fix')) {
                   action = 'fix';
                 }
               }
@@ -94,9 +94,9 @@ jobs:
                 if (labelName.startsWith('lens:')) {
                   action = 'fix';
                   lensName = labelName.replace('lens:', '').trim();
-                } else if (labelName === 'jules' || labelName === 'jules:plan') {
+                } else if (labelName === 'jules' || labelName === 'jules:plan' || labelName === 'plan' || labelName === 'game-factory') {
                   action = 'plan';
-                } else if (labelName === 'jules:approved' || labelName === 'jules:fix') {
+                } else if (labelName === 'jules:approved' || labelName === 'jules:fix' || labelName === 'approved' || labelName === 'fix') {
                   action = 'fix';
                 }
               }
@@ -127,7 +127,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.JULES_API_KEY_1 || secrets.JULES_API_KEY }}
         run: |
           node scripts/jules-plan-generator.mjs --issue ${{ needs.triage.outputs.issue_number }}
 
