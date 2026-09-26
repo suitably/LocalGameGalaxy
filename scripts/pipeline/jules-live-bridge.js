@@ -115,7 +115,7 @@ module.exports = async ({ github, context, core }) => {
           });
 
           // Relay agent messages or questions directly into the GitHub Issue
-          if ((parsed.tag === 'AGENT' || parsed.tag === 'AGENT_MESSAGED' || parsed.tag === 'PLAN_GENERATED') && parsed.text) {
+          if (parsed.text && parsed.tag !== 'USER' && parsed.tag !== 'USER_MESSAGED') {
             if (parsed.text.length > 20 || parsed.text.includes('?')) {
               const commentBody = [
                 '### 🤖 Jules Update',
@@ -152,7 +152,7 @@ module.exports = async ({ github, context, core }) => {
         finalState = sessData.state || 'IN_PROGRESS';
         console.log(`Session ${sessionId} state: ${finalState}`);
 
-        if (finalState === 'COMPLETED' || finalState === 'FAILED') {
+        if (finalState === 'COMPLETED' || finalState === 'FAILED' || finalState === 'AWAITING_USER_INPUT' || finalState === 'AWAITING_USER_FEEDBACK') {
           break;
         }
       }
