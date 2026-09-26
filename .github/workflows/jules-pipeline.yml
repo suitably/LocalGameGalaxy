@@ -286,9 +286,15 @@ jobs:
                 issue_number: issueNumber,
                 per_page: 50
               });
+              const trustedRoles = ['OWNER', 'MEMBER', 'COLLABORATOR'];
               const filteredComments = (commentsRes.data || []).filter(c => {
                 const author = c.user?.login || '';
                 const body = (c.body || '').trim();
+                
+                // Security: Only include comments from trusted maintainers to prevent Prompt Injection
+                const isAuthorized = trustedRoles.includes(c.author_association) || author === context.repo.owner;
+                if (!isAuthorized) return false;
+                
                 // Skip bot authors
                 if (c.user?.type === 'Bot' || author.includes('[bot]') || author === 'github-actions') return false;
                 // Skip pipeline-generated comments (status reports, relay headers)
