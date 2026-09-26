@@ -23,7 +23,7 @@ on:
           - curate-all
 
 concurrency:
-  group: jules-${{ github.event.issue.number || inputs.issue_number }}
+  group: jules-${{ github.event.issue.number || inputs.issue_number }}-${{ github.event_name == 'issue_comment' && 'comment' || 'pipeline' }}
   cancel-in-progress: false
 
 permissions:
@@ -103,6 +103,8 @@ jobs:
                   targets = replyText || 'Please proceed autonomously with your proposed approach, implement the solution, run tests and create the pull request without asking further questions.';
                 } else if (body.startsWith('/approve-plan') || body.startsWith('/jules approve-plan')) {
                   action = 'approve-plan';
+                } else if (body.startsWith('/status') || body.startsWith('/jules status')) {
+                  action = 'status';
                 } else if (body.startsWith('/jules plan') || body.startsWith('/plan')) {
                   action = 'plan';
                 } else if (body.startsWith('/jules approve') || body.startsWith('/approve') || body.startsWith('/jules fix') || body.startsWith('/fix')) {
@@ -510,10 +512,186 @@ jobs:
               });
             }
 
+      - name: Live Bridge Jules Activities & Save Transcript
+        if: steps.jules_call.outputs.success == 'true'
+        uses: actions/github-script@v7
+        env:
+          SESSION_ID: ${{ steps.jules_call.outputs.session_id }}
+          JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
+          JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
+          JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
+          JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
+          JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
+          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const sessionId = process.env.SESSION_ID;
+            const issueNumber = Number("${{ needs.triage.outputs.issue_number }}");
+
+            const keys = [
+              process.env.JULES_API_KEY_1,
+              process.env.JULES_API_KEY_2,
+              process.env.JULES_API_KEY_3,
+              process.env.JULES_API_KEY_4,
+              process.env.JULES_API_KEY_5,
+              process.env.JULES_API_KEY
+            ].filter(Boolean);
+
+            if (!sessionId || keys.length === 0) {
+              console.log('Skipping live bridge: missing session ID or API keys');
+              return;
+            }
+
+            const apiKey = keys[0];
+            const seenActivityIds = new Set();
+            const transcriptEntries = [];
+
+            console.log(`Starting live bridge watcher for Jules session ${sessionId}...`);
+
+            const startTime = Date.now();
+            const maxDurationMs = 20 * 60 * 1000; // max 20 minutes monitoring
+            const pollIntervalMs = 15 * 1000;    // check every 15 seconds
+
+            let finalState = 'UNKNOWN';
+
+            while (Date.now() - startTime < maxDurationMs) {
+              try {
+                // 1. Fetch activities
+                const actRes = await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}/activities?pageSize=50`, {
+                  headers: { 'X-Goog-Api-Key': apiKey }
+                });
+
+                if (actRes.ok) {
+                  const actData = await actRes.json();
+                  const activities = actData.activities || [];
+
+                  // Sort chronologically if createTime present
+                  activities.sort((a, b) => (a.createTime || '').localeCompare(b.createTime || ''));
+
+                  for (const act of activities) {
+                    if (seenActivityIds.has(act.id)) continue;
+                    seenActivityIds.add(act.id);
+
+                    const originator = act.originator || 'system';
+                    const desc = act.description || '';
+                    const agentMsg = (typeof act.agentMessage === 'string' ? act.agentMessage : act.agentMessage?.text) || '';
+                    const createTime = act.createTime || new Date().toISOString();
+
+                    transcriptEntries.push({
+                      id: act.id,
+                      time: createTime,
+                      originator,
+                      description: desc,
+                      agentMessage: agentMsg
+                    });
+
+                    // Relay agent messages or questions directly into the GitHub Issue
+                    if (originator === 'agent' && (agentMsg || desc)) {
+                      const msgText = agentMsg || desc;
+                      if (msgText.length > 20 || msgText.includes('?')) {
+                        const commentBody = [
+                          '### 🤖 Google Jules Chat-Nachricht / Update',
+                          '',
+                          `> ${msgText.replace(/\n/g, '\n> ')}`,
+                          '',
+                          '---',
+                          '💬 *Du kannst direkt auf diese Frage antworten, indem du hier im Issue kommentierst:*',
+                          '- `**/continue**` *(fährt mit vorgeschlagenem Ansatz autonom fort)*',
+                          '- `**/jules reply <Deine Anweisung>**` *(schickt dein Feedback an Jules)*'
+                        ].join('\n');
+
+                        try {
+                          await github.rest.issues.createComment({
+                            owner: context.repo.owner,
+                            repo: context.repo.repo,
+                            issue_number: issueNumber,
+                            body: commentBody
+                          });
+                          console.log(`Relayed agent message ${act.id} to issue #${issueNumber}`);
+                        } catch (cErr) {
+                          console.warn('Failed to post comment for activity:', cErr.message);
+                        }
+                      }
+                    }
+                  }
+                }
+
+                // 2. Fetch session status
+                const sessRes = await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}`, {
+                  headers: { 'X-Goog-Api-Key': apiKey }
+                });
+
+                if (sessRes.ok) {
+                  const sessData = await sessRes.json();
+                  finalState = sessData.state || 'IN_PROGRESS';
+                  console.log(`Session ${sessionId} state: ${finalState}`);
+
+                  if (finalState === 'COMPLETED' || finalState === 'FAILED') {
+                    break;
+                  }
+                }
+              } catch (err) {
+                console.warn('Error polling Jules API:', err.message);
+              }
+
+              // Sleep 15s
+              await new Promise(r => setTimeout(r, pollIntervalMs));
+            }
+
+            console.log(`Live bridge concluded with state: ${finalState}. Generating transcript...`);
+
+            // 3. Save transcript to repository
+            try {
+              const transcriptsDir = path.join(process.cwd(), '.pipeline-memory', 'jules-transcripts');
+              if (!fs.existsSync(transcriptsDir)) {
+                fs.mkdirSync(transcriptsDir, { recursive: true });
+              }
+
+              const transcriptFile = path.join(transcriptsDir, `issue-${issueNumber}-session-${sessionId}.md`);
+              const markdown = [
+                `# Jules Session Transcript: Issue #${issueNumber}`,
+                `- **Session ID:** \`${sessionId}\``,
+                `- **Final State:** \`${finalState}\``,
+                `- **Archived At:** ${new Date().toISOString()}`,
+                '',
+                '## Activity & Message Timeline',
+                ''
+              ];
+
+              for (const entry of transcriptEntries) {
+                markdown.push(`### [${entry.time}] ${entry.originator.toUpperCase()}`);
+                if (entry.description) markdown.push(`*${entry.description}*`);
+                if (entry.agentMessage) markdown.push(`\n\`\`\`\n${entry.agentMessage}\n\`\`\`\n`);
+                markdown.push('');
+              }
+
+              fs.writeFileSync(transcriptFile, markdown.join('\n'), 'utf8');
+              console.log(`Transcript written to ${transcriptFile}`);
+
+              // Commit transcript to dev branch
+              const { execSync } = require('child_process');
+              execSync('git config user.name "github-actions[bot]"');
+              execSync('git config user.email "github-actions[bot]@users.noreply.github.com"');
+              execSync('git fetch origin dev');
+              execSync('git checkout dev');
+              execSync('git pull origin dev --rebase');
+              execSync(`git add "${transcriptFile}"`);
+              const diff = execSync('git diff --cached --name-only').toString().trim();
+              if (diff) {
+                execSync(`git commit -m "docs(jules): archive transcript for issue #${issueNumber} [skip ci]"`);
+                execSync('git push origin dev');
+                console.log('Transcript pushed to origin/dev');
+              }
+            } catch (err) {
+              console.warn('Failed to commit transcript:', err.message);
+            }
+
   interact-jules:
     name: Relay Command or Feedback to Jules
     needs: triage
-    if: (needs.triage.outputs.action == 'reply' || needs.triage.outputs.action == 'approve-plan') && needs.triage.outputs.is_authorized == 'true'
+    if: (needs.triage.outputs.action == 'reply' || needs.triage.outputs.action == 'approve-plan' || needs.triage.outputs.action == 'status') && needs.triage.outputs.is_authorized == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -578,6 +756,44 @@ jobs:
               return;
             }
 
+            // 3. Handle /status query
+            if (action === 'status') {
+              let sessData = null;
+              let actData = null;
+              for (const key of keys) {
+                try {
+                  const sRes = await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}`, {
+                    headers: { 'X-Goog-Api-Key': key }
+                  });
+                  if (sRes.ok) {
+                    sessData = await sRes.json();
+                    const aRes = await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}/activities?pageSize=10`, {
+                      headers: { 'X-Goog-Api-Key': key }
+                    });
+                    if (aRes.ok) actData = await aRes.json();
+                    break;
+                  }
+                } catch (e) {}
+              }
+
+              const state = sessData?.state || 'UNKNOWN';
+              const activities = (actData?.activities || []).slice(-5);
+              const actLines = activities.map(a => {
+                const orig = (a.originator || 'system').toUpperCase();
+                const msg = (typeof a.agentMessage === 'string' ? a.agentMessage : a.agentMessage?.text) || a.description || '';
+                return `- **[${orig}]** ${msg}`;
+              }).join('\n');
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: `📊 **Jules Task Status (Session: \`${sessionId}\`):**\n\n- **Status:** \`${state}\`\n- **Web UI:** https://jules.google.com/task/${sessionId}\n\n**Letzte Aktivitäten:**\n${actLines || '- Keine Aktivitäten verfügbar.'}\n\n---\n*Tipp: Kommentiere mit \`/continue\` zum Weitermachen oder \`/jules reply <Text>\` zum Antworten.*`
+              });
+              return;
+            }
+
+            // 4. Handle approve-plan and reply
             const endpoint = action === 'approve-plan'
               ? `https://jules.googleapis.com/v1alpha/sessions/${sessionId}:approvePlan`
               : `https://jules.googleapis.com/v1alpha/sessions/${sessionId}:sendMessage`;

@@ -66,6 +66,7 @@ Only repository **Owners, Members, and Collaborators** can trigger Jules.
 | **`/jules fix`** | **Fast-Track** | Skips the plan approval step and commands Jules to fix the issue directly into `dev`. |
 | **`/continue`** or **`/jules continue`** | **Unpause Jules** | If Jules pauses for intermediate input, commands Jules directly from GitHub to proceed autonomously without visiting `jules.google.com`. |
 | **`/jules reply <message>`** | **Remote Feedback** | Sends guidance or answers directly to an active Jules task session from the GitHub issue comment. |
+| **`/status`** or **`/jules status`** | **Session Status** | Fetches the live state and last 5 activities of the active Jules session directly into an issue comment. |
 | **`/approve-plan`** | **Approve Plan via API** | Forwards plan approval directly to the running Jules session. |
 
 
