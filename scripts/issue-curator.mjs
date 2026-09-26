@@ -182,17 +182,16 @@ async function queryGemini(prompt, systemInstruction = '') {
 }
 
 /**
- * Curates a single issue: looks for duplicates and topic clusters among all open issues.
+ * Analyzes an issue against all other open issues
  */
-async function curateIssue(issueNumber, isDryRun) {
+async function analyzeIssue(issueNumber) {
   console.log(`[Curator] Analyzing issue #${issueNumber}...`);
   const currentIssue = await getIssueDetails(issueNumber);
   const allIssues = await getAllOpenIssues();
   const candidateIssues = allIssues.filter((i) => i.number !== issueNumber);
 
   if (candidateIssues.length === 0) {
-    console.log('[Curator] No other open issues found.');
-    return;
+    return { currentIssue, candidateIssues: [], analysis: null };
   }
 
   const prompt = `You are the lead issue curator and repository architect for LocalGameGalaxy.
@@ -272,6 +271,20 @@ RESPOND ONLY WITH VALID JSON (no markdown formatting, no code fence):
     };
   }
 
+  return { currentIssue, candidateIssues, analysis };
+}
+
+/**
+ * Curates a single issue: looks for duplicates and topic clusters among all open issues.
+ */
+async function curateIssue(issueNumber, isDryRun) {
+  const { currentIssue, candidateIssues, analysis } = await analyzeIssue(issueNumber);
+
+  if (!analysis) {
+    console.log('[Curator] No other open issues found.');
+    return;
+  }
+
   // Build Markdown Comment
   const relatedList = analysis.relatedIssueNumbers
     .map((num) => {
@@ -304,17 +317,19 @@ ${relatedList}
 ---
 💡 **Empfohlene Aktion (Duplikat):**
 Dieses Issue scheint ein Duplikat von **#${analysis.duplicateOf}** zu sein.
-Um dieses Issue als Duplikat zu schließen und zu verlinken, antworte einfach mit:
-> **/duplicate #${analysis.duplicateOf}**
+Um dieses Issue als Duplikat zu schließen und zu verlinken:
+- Antworte mit: **\`/duplicate #${analysis.duplicateOf}\`**
+- Oder weise das Label **\`duplicate\`** zu.
 `;
   } else if (bundleCmd) {
     commentBody += `
 ---
 💡 **Empfohlene Aktion (Bündelung):**
-Die oben genannten Issues betreffen dieselbe Komponente. Um sie automatisch in dieses Issue zu konsolidieren (die anderen werden mit Verweis geschlossen und hier als Checkliste verlinkt), antworte mit:
-> **\`${bundleCmd}\`**
+Die oben genannten Issues betreffen dieselbe Komponente. Um sie automatisch in dieses Issue zu konsolidieren:
+- Antworte mit Kommentar: **\`${bundleCmd}\`**
+- Oder weise einfach das Label **\`bundle\`** (oder **\`auto-bundle\`**) zu!
 
-*Sobald gebündelt, kannst du mit **\`/plan\`** einen konsolidierten Umsetzungsplan für das gesamte Paket generieren lassen.*
+*Sobald gebündelt, kannst du mit **\`/plan\`** (oder Label **\`plan\`**) einen konsolidierten Umsetzungsplan generieren lassen.*
 `;
   }
 
@@ -324,7 +339,51 @@ Die oben genannten Issues betreffen dieselbe Komponente. Um sie automatisch in d
   } else {
     await postIssueComment(issueNumber, commentBody);
     await addIssueLabels(issueNumber, ['curated']);
+    await removeIssueLabel(issueNumber, 'curate');
+    await removeIssueLabel(issueNumber, 'triage');
     console.log(`[Curator] Comment posted on #${issueNumber}.`);
+  }
+}
+
+/**
+ * Automatically detects and bundles related cluster issues into the lead issue.
+ */
+async function autoBundle(issueNumber, isDryRun) {
+  console.log(`[Curator] Auto-bundling triggered for lead issue #${issueNumber}...`);
+  const { analysis } = await analyzeIssue(issueNumber);
+
+  if (!analysis || !analysis.suggestedBundleNumbers || analysis.suggestedBundleNumbers.length === 0) {
+    const msg = `ℹ️ **Automatisches Bündeln:** Es wurden keine offenen Issues gefunden, die direkt zu diesem Cluster passen.`;
+    if (isDryRun) {
+      console.log('[DRY RUN]', msg);
+    } else {
+      await postIssueComment(issueNumber, msg);
+      await removeIssueLabel(issueNumber, 'bundle');
+      await removeIssueLabel(issueNumber, 'auto-bundle');
+    }
+    return;
+  }
+
+  console.log(`[Curator] Auto-detected related cluster: [${analysis.suggestedBundleNumbers.join(', ')}]`);
+  await bundleIssues(issueNumber, analysis.suggestedBundleNumbers, isDryRun);
+}
+
+/**
+ * Automatically checks and marks an issue as duplicate if detected.
+ */
+async function autoDuplicate(issueNumber, isDryRun) {
+  console.log(`[Curator] Auto-duplicate check triggered for issue #${issueNumber}...`);
+  const { analysis } = await analyzeIssue(issueNumber);
+
+  if (analysis && analysis.isDuplicate && analysis.duplicateOf) {
+    await markDuplicate(issueNumber, analysis.duplicateOf, isDryRun);
+  } else {
+    const msg = `ℹ️ **Duplikats-Prüfung:** Es wurde kein eindeutiges Duplikat unter den offenen Issues gefunden. Das Ticket bleibt regulär offen.`;
+    if (isDryRun) {
+      console.log('[DRY RUN]', msg);
+    } else {
+      await postIssueComment(issueNumber, msg);
+    }
   }
 }
 
@@ -375,6 +434,10 @@ async function bundleIssues(leadIssueNumber, targetNumbers, isDryRun) {
     // 1. Update lead issue body & labels
     await updateIssue(leadIssueNumber, { body: updatedBody });
     await addIssueLabels(leadIssueNumber, ['bundled-epic']);
+    await removeIssueLabel(leadIssueNumber, 'bundle');
+    await removeIssueLabel(leadIssueNumber, 'auto-bundle');
+    await removeIssueLabel(leadIssueNumber, 'curate');
+    await removeIssueLabel(leadIssueNumber, 'triage');
 
     // 2. Post confirmation comment on lead issue
     const leadComment = `✅ **Issues erfolgreich gebündelt!**\n\nFolgende Issues wurden in dieses Ticket integriert und geschlossen:\n${targetIssues.map((t) => `- #${t.number} (${t.title})`).join('\n')}\n\n👉 Antworte mit **\`/plan\`**, um den konsolidierten Implementierungsplan für alle Anforderungen zu erstellen.`;
@@ -385,6 +448,8 @@ async function bundleIssues(leadIssueNumber, targetNumbers, isDryRun) {
       const closeComment = `🔗 **Dieses Issue wurde in #${leadIssueNumber} konsolidiert.**\n\nDie Anforderungen wurden in [Issue #${leadIssueNumber}](https://github.com/${GITHUB_REPOSITORY}/issues/${leadIssueNumber}) übertragen. Das Issue wird hier geschlossen, um Doppelarbeit zu vermeiden. Alle weiteren Updates und die Umsetzung erfolgen zentral in #${leadIssueNumber}.`;
       await postIssueComment(ti.number, closeComment);
       await addIssueLabels(ti.number, ['bundled']);
+      await removeIssueLabel(ti.number, 'bundle');
+      await removeIssueLabel(ti.number, 'auto-bundle');
       await updateIssue(ti.number, { state: 'closed', state_reason: 'not_planned' });
       console.log(`[Curator] Closed and linked #${ti.number} -> #${leadIssueNumber}`);
     }
@@ -406,6 +471,8 @@ async function markDuplicate(issueNumber, originalIssueNumber, isDryRun) {
   const comment = `🔗 **Geschlossen als Duplikat**\n\nDieses Issue ist ein Duplikat von [Issue #${originalIssueNumber}](https://github.com/${GITHUB_REPOSITORY}/issues/${originalIssueNumber}). Die Bearbeitung erfolgt dort.`;
   await postIssueComment(issueNumber, comment);
   await addIssueLabels(issueNumber, ['duplicate']);
+  await removeIssueLabel(issueNumber, 'curate');
+  await removeIssueLabel(issueNumber, 'triage');
   await updateIssue(issueNumber, { state: 'closed', state_reason: 'not_planned' });
 
   // 2. Cross-link on original issue
@@ -451,6 +518,12 @@ async function main() {
   try {
     if (action === 'curate-all') {
       await curateAll(isDryRun);
+    } else if (action === 'auto-bundle' || (action === 'bundle' && targets.length === 0)) {
+      if (!issueNumber) throw new Error('Lead issue number required for auto-bundling.');
+      await autoBundle(issueNumber, isDryRun);
+    } else if (action === 'auto-duplicate' || (action === 'duplicate' && targets.length === 0)) {
+      if (!issueNumber) throw new Error('Issue number required for auto-duplicate.');
+      await autoDuplicate(issueNumber, isDryRun);
     } else if (action === 'bundle') {
       if (!issueNumber) throw new Error('Lead issue number required for bundling.');
       await bundleIssues(issueNumber, targets, isDryRun);

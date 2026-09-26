@@ -116,14 +116,18 @@ jobs:
                 const authorAssoc = issue.author_association;
                 isAuthorized = trustedRoles.includes(authorAssoc) || sender === context.repo.owner;
 
-                if (labelName === 'curate' || labelName === 'triage') {
+                if (labelName === 'curate' || labelName === 'triage' || labelName === 'jules:curate') {
                   action = 'curate';
+                } else if (labelName === 'bundle' || labelName === 'auto-bundle' || labelName === 'bundle-related' || labelName === 'jules:bundle') {
+                  action = 'auto-bundle';
+                } else if (labelName === 'duplicate' || labelName === 'jules:duplicate') {
+                  action = 'auto-duplicate';
                 } else if (labelName.startsWith('lens:')) {
                   action = 'fix';
                   lensName = labelName.replace('lens:', '').trim();
                 } else if (labelName === 'jules' || labelName === 'jules:plan' || labelName === 'plan' || labelName === 'game-factory') {
                   action = 'plan';
-                } else if (labelName === 'jules:approved' || labelName === 'jules:fix' || labelName === 'approved' || labelName === 'fix') {
+                } else if (labelName === 'jules:approved' || labelName === 'jules:fix' || labelName === 'approved' || labelName === 'fix' || labelName === 'approve') {
                   action = 'fix';
                 }
               }
@@ -139,7 +143,7 @@ jobs:
   curate-issue:
     name: Curate & Triage Issue
     needs: triage
-    if: (needs.triage.outputs.action == 'curate' || needs.triage.outputs.action == 'bundle' || needs.triage.outputs.action == 'duplicate' || needs.triage.outputs.action == 'curate-all') && needs.triage.outputs.is_authorized == 'true'
+    if: (needs.triage.outputs.action == 'curate' || needs.triage.outputs.action == 'auto-bundle' || needs.triage.outputs.action == 'bundle' || needs.triage.outputs.action == 'auto-duplicate' || needs.triage.outputs.action == 'duplicate' || needs.triage.outputs.action == 'curate-all') && needs.triage.outputs.is_authorized == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
