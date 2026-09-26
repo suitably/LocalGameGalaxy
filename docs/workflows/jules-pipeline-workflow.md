@@ -64,6 +64,10 @@ Only repository **Owners, Members, and Collaborators** can trigger Jules.
 | **`/jules plan`** | **Generate Plan** | Jules/Gemini analyzes the issue and posts an implementation plan as a comment. Labels issue with `jules:waiting-approval`. |
 | **`/jules approve`** | **Execute & PR** | Approves the proposed plan. Dispatches Jules to create a branch based on `dev`, write code, test, and open a PR against `dev`. |
 | **`/jules fix`** | **Fast-Track** | Skips the plan approval step and commands Jules to fix the issue directly into `dev`. |
+| **`/continue`** or **`/jules continue`** | **Unpause Jules** | If Jules pauses for intermediate input, commands Jules directly from GitHub to proceed autonomously without visiting `jules.google.com`. |
+| **`/jules reply <message>`** | **Remote Feedback** | Sends guidance or answers directly to an active Jules task session from the GitHub issue comment. |
+| **`/approve-plan`** | **Approve Plan via API** | Forwards plan approval directly to the running Jules session. |
+
 
 ### Method 2: GitHub Labels
 

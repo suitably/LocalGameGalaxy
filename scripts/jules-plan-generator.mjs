@@ -547,7 +547,7 @@ Produce a rigorous, deep research and implementation plan formatted in Markdown:
 [Numbered assertions for unit tests in Vitest. Required CI checks: \`npm run check:architecture:diff\`, \`npm run check:budget\`, \`npm run check:duplicates\`, \`npm test\`]
 
 ## 7. Suggested Implementation Sequence
-[Chronological step-by-step checklist for Jules to execute]
+[Chronological step-by-step checklist for Jules to execute autonomously in headless CI mode without pausing for intermediate user confirmation. Jules has full authority to decompose components into sub-components/hooks to meet the 250-line budget]
 `;
 
   // Standard Google Generative Language models:
@@ -789,8 +789,10 @@ Please review the research & implementation plan above.
 - **To approve and execute this plan with Google Jules:**
   Reply with comment **\`/jules approve\`** or assign label **\`jules:approved\`**.
   *Jules will branch off \`dev\`, implement the changes, run tests, and open a Pull Request targeting \`dev\`.*
-- **To modify the plan:**
+- **To modify the plan before execution:**
   Reply with your feedback or instructions using **\`/jules plan <your changes>\`**.
+- **To unpause or provide instructions during an active Jules session:**
+  Reply with comment **\`/continue\`** or **\`/jules reply <your feedback>\`**.
 `;
 
   if (isDryRun) {

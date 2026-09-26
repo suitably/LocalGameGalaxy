@@ -93,6 +93,16 @@ jobs:
                   if (parts.length > 2) {
                     lensName = parts[2].trim();
                   }
+                } else if (body.startsWith('/jules reply') || body.startsWith('/reply')) {
+                  action = 'reply';
+                  const replyText = rawBody.replace(/^\/(jules\s+)?reply\s*/i, '').trim();
+                  targets = replyText || 'Please proceed autonomously with the proposed solution and create the pull request.';
+                } else if (body.startsWith('/continue') || body.startsWith('/jules continue')) {
+                  action = 'reply';
+                  const replyText = rawBody.replace(/^\/(jules\s+)?continue\s*/i, '').trim();
+                  targets = replyText || 'Please proceed autonomously with your proposed approach, implement the solution, run tests and create the pull request without asking further questions.';
+                } else if (body.startsWith('/approve-plan') || body.startsWith('/jules approve-plan')) {
+                  action = 'approve-plan';
                 } else if (body.startsWith('/jules plan') || body.startsWith('/plan')) {
                   action = 'plan';
                 } else if (body.startsWith('/jules approve') || body.startsWith('/approve') || body.startsWith('/jules fix') || body.startsWith('/fix')) {
@@ -306,6 +316,13 @@ jobs:
             const prompt = `
             Task: Fix GitHub Issue #${issueNumber}: ${issue.data.title}
 
+            CRITICAL EXECUTION MODE: FULLY AUTONOMOUS / HEADLESS CI AUTOMATION
+            - DO NOT ASK FOR CONFIRMATION, APPROVAL, OR INTERMEDIATE FEEDBACK AT ANY POINT.
+            - THERE IS NO HUMAN IN THE LOOP. Any question or confirmation request will permanently stall the automated pipeline.
+            - YOU HAVE FULL PROACTIVE AUTHORITY: You are authorized and REQUIRED to make all implementation and architectural decisions autonomously.
+            - If a component exceeds the 250-line limit or requires decomposition according to AGENTS.md (e.g. creating sub-components or custom hooks), IMMEDIATELY create and extract them yourself without asking for user permission.
+            - Proceed continuously from planning to coding, running Vitest tests, verifying quality gates, and submitting the Pull Request against 'dev'. Never pause or wait for user input.
+
             Issue Description:
             ${issue.data.body || 'No description provided'}${commentsContext}
 
@@ -492,3 +509,130 @@ jobs:
                 body: `❌ **Google Jules konnte nicht gestartet werden:**\n\`\`\`\n${errorMsg || 'Unbekannter Fehler bei der API-Anfrage.'}\n\`\`\`\nBitte überprüfe dein \`JULES_API_KEY\` Secret unter **Settings → Secrets and variables → Actions**.`
               });
             }
+
+  interact-jules:
+    name: Relay Command or Feedback to Jules
+    needs: triage
+    if: (needs.triage.outputs.action == 'reply' || needs.triage.outputs.action == 'approve-plan') && needs.triage.outputs.is_authorized == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Relay Command to Google Jules Session
+        uses: actions/github-script@v7
+        env:
+          JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
+          JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
+          JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
+          JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
+          JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
+          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+          ACTION: ${{ needs.triage.outputs.action }}
+          TARGET_TEXT: ${{ needs.triage.outputs.targets }}
+        with:
+          script: |
+            const issueNumber = Number("${{ needs.triage.outputs.issue_number }}");
+            const action = process.env.ACTION;
+            const targetText = process.env.TARGET_TEXT;
+
+            // 1. Find the latest Jules session URL in comments
+            const commentsRes = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              per_page: 100
+            });
+
+            let sessionId = null;
+            for (let i = (commentsRes.data || []).length - 1; i >= 0; i--) {
+              const body = commentsRes.data[i].body || '';
+              const match = body.match(/https:\/\/jules\.google\.com\/task\/([a-zA-Z0-9_\-]+)/);
+              if (match) {
+                sessionId = match[1];
+                break;
+              }
+            }
+
+            if (!sessionId) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: `⚠️ **Keine aktive Jules-Session gefunden!**\nAuf Issue #${issueNumber} wurde kein Link zu einer Jules-Task (\`https://jules.google.com/task/...\`) gefunden.`
+              });
+              core.setFailed('No active Jules session found on issue');
+              return;
+            }
+
+            // 2. Gather Jules API keys
+            const keys = [
+              process.env.JULES_API_KEY_1,
+              process.env.JULES_API_KEY_2,
+              process.env.JULES_API_KEY_3,
+              process.env.JULES_API_KEY_4,
+              process.env.JULES_API_KEY_5,
+              process.env.JULES_API_KEY
+            ].filter(Boolean);
+
+            if (keys.length === 0) {
+              core.setFailed('No Jules API keys configured in repository secrets');
+              return;
+            }
+
+            const endpoint = action === 'approve-plan'
+              ? `https://jules.googleapis.com/v1alpha/sessions/${sessionId}:approvePlan`
+              : `https://jules.googleapis.com/v1alpha/sessions/${sessionId}:sendMessage`;
+
+            const payload = action === 'approve-plan' ? {} : { prompt: targetText };
+
+            let success = false;
+            let lastError = '';
+
+            for (const key of keys) {
+              try {
+                const res = await fetch(endpoint, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-Goog-Api-Key': key
+                  },
+                  body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                  success = true;
+                  break;
+                } else {
+                  const txt = await res.text();
+                  lastError = `Status ${res.status}: ${txt}`;
+                }
+              } catch (e) {
+                lastError = e.message;
+              }
+            }
+
+            if (success) {
+              if (action === 'approve-plan') {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  body: `✅ **Jules-Plan freigegeben!** (Session: \`${sessionId}\`)\nJules setzt die Implementierung der Task jetzt auf \`dev\` fort.`
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  body: `💬 **Nachricht an Google Jules übermittelt!** (Session: \`${sessionId}\`)\n> "${targetText}"\n\nJules hat die Anweisung erhalten und arbeitet autonom weiter.`
+                });
+              }
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: `❌ **Konnte Nachricht nicht an Jules übermitteln:**\n\`\`\`\n${lastError}\n\`\`\``
+              });
+              core.setFailed(`Failed to send to Jules: ${lastError}`);
+            }
+
