@@ -565,19 +565,19 @@ jobs:
 
                 function parseActivity(a) {
                   if (!a) return { time: '', tag: 'SYSTEM', text: '' };
-                  const time = a.createTime ? new Date(a.createTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
-                  const tag = (a.originator || a.type || 'AGENT').toUpperCase();
+                  const time = a.createTime ? new Date(a.createTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '';
+                  let tag = (a.originator || a.type || 'AGENT').toUpperCase();
                   let text = '';
 
                   if (a.agentMessaged) {
                     const am = a.agentMessaged;
-                    text = am.message || am.text || am.prompt || am.content || (typeof am === 'string' ? am : '');
+                    text = am.agentMessage || am.message || am.text || am.prompt || am.content || '';
                   } else if (a.userMessaged) {
                     const um = a.userMessaged;
-                    text = um.message || um.text || um.prompt || um.content || (typeof um === 'string' ? um : '');
+                    text = um.userMessage || um.message || um.text || um.prompt || um.content || '';
                   } else if (a.progressUpdated) {
                     const pu = a.progressUpdated;
-                    text = pu.title || pu.description || pu.message || (typeof pu === 'string' ? pu : '');
+                    text = pu.title || pu.description || pu.message || '';
                   } else if (a.planGenerated) {
                     const pg = a.planGenerated;
                     text = pg.plan?.steps ? `Plan mit ${pg.plan.steps.length} Schritten generiert` : (pg.title || 'Plan generiert');
@@ -585,31 +585,31 @@ jobs:
                     text = 'Task erfolgreich abgeschlossen 🎉';
                   } else if (a.sessionFailed) {
                     text = `Task fehlgeschlagen: ${a.sessionFailed.reason || ''}`;
-                  } else if (typeof a.message === 'string' && a.message) {
-                    text = a.message;
-                  } else if (typeof a.title === 'string' && a.title) {
-                    text = a.title;
-                  } else if (typeof a.description === 'string' && a.description) {
-                    text = a.description;
-                  } else if (typeof a.summary === 'string' && a.summary) {
-                    text = a.summary;
                   }
 
-                  if (!text) {
-                    for (const [k, v] of Object.entries(a)) {
-                      if (['name', 'id', 'createTime', 'updateTime', 'originator', 'type'].includes(k)) continue;
-                      if (typeof v === 'string' && v.trim()) { text = v.trim(); break; }
-                      if (v && typeof v === 'object') {
-                        const sub = v.message || v.text || v.title || v.description || v.content;
-                        if (typeof sub === 'string' && sub.trim()) { text = sub.trim(); break; }
+                  // Check artifacts for code modifications
+                  if (!text && a.artifacts && a.artifacts.length > 0) {
+                    tag = 'CODE';
+                    const files = new Set();
+                    for (const art of a.artifacts) {
+                      const patch = art.changeSet?.gitPatch?.unidiffPatch || '';
+                      const matches = patch.matchAll(/diff --git a\/(\S+) b\/(\S+)/g);
+                      for (const m of matches) {
+                        const fname = m[2].split('/').pop();
+                        files.add(fname);
                       }
                     }
-                    if (!text) {
-                      const filtered = Object.fromEntries(Object.entries(a).filter(([k]) => !['name', 'id', 'createTime'].includes(k)));
-                      text = Object.keys(filtered).length > 0 ? JSON.stringify(filtered) : (a.type || 'Aktivität');
+                    if (files.size > 0) {
+                      text = '🛠️ Code-Änderungen an: ' + Array.from(files).map(f => '`' + f + '`').join(', ');
                     }
                   }
-                  return { time, tag, text: text.trim() };
+
+                  if (!text && typeof a.message === 'string' && a.message) text = a.message;
+                  if (!text && typeof a.title === 'string' && a.title) text = a.title;
+                  if (!text && typeof a.description === 'string' && a.description) text = a.description;
+                  if (!text && typeof a.summary === 'string' && a.summary) text = a.summary;
+
+                  return { time, tag, text: text.trim() || 'Aktivität ausgeführt' };
                 }
 
                 if (actRes.ok) {
@@ -821,19 +821,19 @@ jobs:
 
               function parseActivity(a) {
                 if (!a) return { time: '', tag: 'SYSTEM', text: '' };
-                const time = a.createTime ? new Date(a.createTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
-                const tag = (a.originator || a.type || 'AGENT').toUpperCase();
+                const time = a.createTime ? new Date(a.createTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '';
+                let tag = (a.originator || a.type || 'AGENT').toUpperCase();
                 let text = '';
 
                 if (a.agentMessaged) {
                   const am = a.agentMessaged;
-                  text = am.message || am.text || am.prompt || am.content || (typeof am === 'string' ? am : '');
+                  text = am.agentMessage || am.message || am.text || am.prompt || am.content || '';
                 } else if (a.userMessaged) {
                   const um = a.userMessaged;
-                  text = um.message || um.text || um.prompt || um.content || (typeof um === 'string' ? um : '');
+                  text = um.userMessage || um.message || um.text || um.prompt || um.content || '';
                 } else if (a.progressUpdated) {
                   const pu = a.progressUpdated;
-                  text = pu.title || pu.description || pu.message || (typeof pu === 'string' ? pu : '');
+                  text = pu.title || pu.description || pu.message || '';
                 } else if (a.planGenerated) {
                   const pg = a.planGenerated;
                   text = pg.plan?.steps ? `Plan mit ${pg.plan.steps.length} Schritten generiert` : (pg.title || 'Plan generiert');
@@ -841,31 +841,31 @@ jobs:
                   text = 'Task erfolgreich abgeschlossen 🎉';
                 } else if (a.sessionFailed) {
                   text = `Task fehlgeschlagen: ${a.sessionFailed.reason || ''}`;
-                } else if (typeof a.message === 'string' && a.message) {
-                  text = a.message;
-                } else if (typeof a.title === 'string' && a.title) {
-                  text = a.title;
-                } else if (typeof a.description === 'string' && a.description) {
-                  text = a.description;
-                } else if (typeof a.summary === 'string' && a.summary) {
-                  text = a.summary;
                 }
 
-                if (!text) {
-                  for (const [k, v] of Object.entries(a)) {
-                    if (['name', 'id', 'createTime', 'updateTime', 'originator', 'type'].includes(k)) continue;
-                    if (typeof v === 'string' && v.trim()) { text = v.trim(); break; }
-                    if (v && typeof v === 'object') {
-                      const sub = v.message || v.text || v.title || v.description || v.content;
-                      if (typeof sub === 'string' && sub.trim()) { text = sub.trim(); break; }
+                // Check artifacts for code modifications
+                if (!text && a.artifacts && a.artifacts.length > 0) {
+                  tag = 'CODE';
+                  const files = new Set();
+                  for (const art of a.artifacts) {
+                    const patch = art.changeSet?.gitPatch?.unidiffPatch || '';
+                    const matches = patch.matchAll(/diff --git a\/(\S+) b\/(\S+)/g);
+                    for (const m of matches) {
+                      const fname = m[2].split('/').pop();
+                      files.add(fname);
                     }
                   }
-                  if (!text) {
-                    const filtered = Object.fromEntries(Object.entries(a).filter(([k]) => !['name', 'id', 'createTime'].includes(k)));
-                    text = Object.keys(filtered).length > 0 ? JSON.stringify(filtered) : (a.type || 'Aktivität');
+                  if (files.size > 0) {
+                    text = '🛠️ Code-Änderungen an: ' + Array.from(files).map(f => '`' + f + '`').join(', ');
                   }
                 }
-                return { time, tag, text: text.trim() };
+
+                if (!text && typeof a.message === 'string' && a.message) text = a.message;
+                if (!text && typeof a.title === 'string' && a.title) text = a.title;
+                if (!text && typeof a.description === 'string' && a.description) text = a.description;
+                if (!text && typeof a.summary === 'string' && a.summary) text = a.summary;
+
+                return { time, tag, text: text.trim() || 'Aktivität ausgeführt' };
               }
 
               const state = sessData?.state || 'UNKNOWN';
@@ -874,13 +874,20 @@ jobs:
               const actLines = activities.map(a => {
                 const p = parseActivity(a);
                 const prefix = p.time ? `\`${p.time}\` ` : '';
-                return `- ${prefix}**[${p.tag}]** ${p.text}`;
+                const maxLen = 120;
+                const truncated = p.text.length > maxLen ? p.text.slice(0, maxLen).replace(/\n/g, ' ') + '...' : p.text.replace(/\n/g, ' ');
+                return `- ${prefix}**[${p.tag}]** ${truncated}`;
               }).join('\n');
 
               // Extract last question if waiting for feedback
               let pendingQuestion = '';
               for (let i = rawActivities.length - 1; i >= 0; i--) {
-                const p = parseActivity(rawActivities[i]);
+                const act = rawActivities[i];
+                if (act.agentMessaged?.agentMessage) {
+                  pendingQuestion = act.agentMessaged.agentMessage;
+                  break;
+                }
+                const p = parseActivity(act);
                 if (p.tag === 'AGENT' && (p.text.includes('?') || p.text.toLowerCase().includes('proceed') || p.text.toLowerCase().includes('approach'))) {
                   pendingQuestion = p.text;
                   break;
