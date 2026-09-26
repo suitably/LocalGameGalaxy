@@ -15,7 +15,8 @@
     "check:architecture": "node scripts/check-architecture.mjs",
     "check:architecture:diff": "node scripts/check-architecture.mjs --diff",
     "check:architecture:strict": "node scripts/check-architecture.mjs --strict",
-    "check:duplicates": "jscpd src/ --config .jscpd.json"
+    "check:duplicates": "jscpd src/ --config .jscpd.json",
+    "check:docs": "node scripts/check-docs-sync.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",

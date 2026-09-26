@@ -230,8 +230,9 @@ jobs:
             - Use src/lib/storage.ts for storage with STORAGE_KEYS. Never raw localStorage or sessionStorage.
             - Use MUI <Dialog> or <ConfirmDialog>. Never native window.confirm() or alert().
             - Strict TypeScript: no 'any'. Use discriminated unions.
-            - Add/update i18n keys in BOTH public/locales/en/translation.json and public/locales/de/translation.json.
-            - Verify your work before concluding: run 'npm run check:architecture:diff', 'npm run check:budget', 'npm run lint', 'npm test', and 'npm run build'.
+            - Zero Code Duplication: Search src/modules/ and reuse existing code. 'npm run check:duplicates' will reject PRs with copy-paste clones.
+            - Documentation & i18n Sync: Always update docs/tech/architecture.md and both public/locales/de and en translation files. 'npm run check:docs' enforces this.
+            - Verify your work before concluding: run 'npm run check:architecture:diff', 'npm run check:duplicates', 'npm run check:budget', 'npm test', and 'npm run build'.
             `;
 
             core.setOutput('prompt', prompt);
