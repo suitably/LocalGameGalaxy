@@ -84,7 +84,15 @@ export const MelodiqNotesGame: React.FC = () => {
     const stemsAvailable = !!(selectedLocalSong?.stems || selectedSong.stems);
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Container
+            maxWidth="lg"
+            sx={{
+                py: 4,
+                height: '100%',
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch'
+            }}
+        >
             <Paper
                 elevation={3}
                 sx={{
