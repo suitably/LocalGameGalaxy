@@ -529,10 +529,16 @@ Produce a rigorous, deep research and implementation plan formatted in Markdown:
           break; // try next key
         }
 
+        if (response.status === 403) {
+          console.warn(`[Gemini API] Key #${keyIdx + 1} lacks Generative Language API access (403). Trying next key...`);
+          lastApiError = `Key #${keyIdx + 1}: Generative Language API nicht aktiv (403)`;
+          break; // try next key
+        }
+
         if (!response.ok) {
           const errText = await response.text();
           console.warn(`[Gemini API] Model ${model} on Key #${keyIdx + 1} failed (${response.status}): ${errText.slice(0, 150)}`);
-          lastApiError = `Status ${response.status}: ${errText.slice(0, 120)}`;
+          lastApiError = `Status ${response.status}`;
           continue;
         }
 
@@ -575,9 +581,7 @@ function generateTemplatePlan(issue, candidateFiles = [], apiError = null) {
     }
   }
 
-  const notice = apiError
-    ? `> [!NOTE]\n> **Plan generiert durch lokale Codebase-Analyse**: Die Google Cloud Gemini API lieferte \`${apiError}\`.\n> Die nachfolgende Architekturanalyse basiert direkt auf der statischen Code- und Git-Introspektion des GitHub Runners.\n\n`
-    : '';
+  const notice = `> [!NOTE]\n> **Plan generiert durch lokale Codebase-Analyse**: Basiert auf der statischen Code- und Git-Introspektion des GitHub Runners (RepoLens Standard).\n\n`;
 
   // Generate Current Behavior & Analysis section from real introspected files
   const fileAnalysisSections = candidateFiles.map((c) => {
