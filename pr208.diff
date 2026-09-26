@@ -1,0 +1,71 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index d6237b7..e106433 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+ ## [Unreleased]
++- Melodiq: Fixed an issue where the PitchVisualizer animation loop would occasionally access stale `currentPitchRef` and `sungSegmentsRef` values by switching `useEffect` to `useLayoutEffect`.
+ - GuessArt: Fixed an issue where the prefilled hint letters would persist in the input bar even after transitioning to hint stage 2, causing them to be duplicated and not correctly matched against the newly revealed hint letter pool (Fixes #140).
+
+ ### Added
+diff --git a/CHANGELOG.md.orig b/CHANGELOG.md.orig
+new file mode 100644
+index 0000000..d6237b7
+--- /dev/null
++++ b/CHANGELOG.md.orig
+@@ -0,0 +1,36 @@
++# Changelog
++
++All notable changes to **LocalGameGalaxy** will be documented in this file.
++
++The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
++and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
++
++## [Unreleased]
++- GuessArt: Fixed an issue where the prefilled hint letters would persist in the input bar even after transitioning to hint stage 2, causing them to be duplicated and not correctly matched against the newly revealed hint letter pool (Fixes #140).
++
++### Added
++- **Melodiq Notes UX & Multi-Stem Audio Player**: Responsive mobile sheet music layout, collapsible settings accordion, fixed bottom action bar, and synchronized multi-stem Web Audio playback (#132, PR #189).
++- **Google Jules & Gemini 3.8 Multi-Key Pool**: Cloud-native execution with multi-account rotation across 5 Google AI Pro accounts (`JULES_API_KEY_1..5`).
++- **RepoLens Lens Integration**: Specialized audit lenses for code duplication, architecture, i18n, and UX directly integrated into Jules tasks (`scripts/jules-lens-resolver.mjs`).
++- **Melodiq Notes (Instrument Practice)**: Complete sheet music viewer with OSMD, MusicXML parsing, Web Audio multi-stem player, and MIDI note verification (`src/games/melodiq-notes/`).
++- **Generalized Cards Suite**: Universal score and lives tracker (`UniversalScoreView.tsx`, `ModernScoreAdjuster.tsx`) in `src/games/cards/`.
++
++### Changed
++- Refactored CI quality gates to enforce zero-duplication (`jscpd` < 2.5%), anti-god-component budget (< 250 lines), and doc synchronization.
++
++### Fixed
++- **Jules Plan Generator**: Jules implementation plan generation has been upgraded to the RepoLens RFC Research Plan standard (as seen in RepoLens #389), featuring real code snippets, git history context, line-level citations, alternatives analysis, and concrete Vitest test plans.
++- **Self-Improving Pipeline Memory**: Added `.pipeline-memory/` persistence allowing the plan generator to learn domain aliases, subsystem component topologies, and resolution patterns dynamically across runs.
++- **Generic Codebase Introspector**: Upgraded scanner to dynamically discover all games and modules, matching AST symbols, state hooks, and exact line citations to guarantee zero generic placeholders.
++
++### Removed
++- **Repository Bloat & Heap Snapshots**: Purged 55+ MB of legacy memory dumps (`baseline.heapsnapshot`, `target.heapsnapshot`), debug logs (`diff.txt`, `lint_output.txt`), and scratch test files from repository root.
++- **Obsolete Python Scripts**: Deleted 10 legacy migration scripts (`scripts/fix_*.py`, `scripts/patch_*.py`, `scripts/update_i18n*.py`).
++- **Legacy Pipeline Fallbacks**: Decoupled Jules agent execution keys from Gemini API callers, eliminating redundant 403 authorization failures on Google Cloud.
++
++---
++
++## [1.1.0] - 2026-09-02
++### Added
++- Multi-game party suite with WebRTC local peer discovery and MQTT relay fallback.
++- Support for Werewolf, Gartic Phone, Storyteller, Tabletop, Sudoku, Knister, Qwixx, and Wordle.
+diff --git a/src/games/melodiq/gameplay/PitchVisualizer.tsx b/src/games/melodiq/gameplay/PitchVisualizer.tsx
+index a8d7ebb..27ea08d 100644
+--- a/src/games/melodiq/gameplay/PitchVisualizer.tsx
++++ b/src/games/melodiq/gameplay/PitchVisualizer.tsx
+@@ -116,11 +116,10 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(({
+     const lastAudioTimeRef = useRef<number>(0);
+     const lastRealTimeRef = useRef<number>(0);
+
+-    // FIX: Track the LATEST ref from props, because parent might pass a new object literal every render
+     const latestPitchRef = useRef(currentPitchRef);
+     const latestSungSegmentsRef = useRef(sungSegmentsRef);
+
+-    useEffect(() => {
++    useLayoutEffect(() => {
+         latestPitchRef.current = currentPitchRef;
+         latestSungSegmentsRef.current = sungSegmentsRef;
+     }, [currentPitchRef, sungSegmentsRef]);
