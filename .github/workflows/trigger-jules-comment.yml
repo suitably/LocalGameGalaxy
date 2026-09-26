@@ -1,0 +1,19 @@
+name: Trigger Jules via Comment
+on:
+  push:
+    branches:
+      - main
+jobs:
+  post-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: 196,
+              body: '/fix'
+            });
