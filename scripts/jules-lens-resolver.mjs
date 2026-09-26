@@ -194,6 +194,13 @@ async function main() {
 - Step 2: Identify the most critical issue matching this lens.
 - Step 3: Formulate a detailed markdown audit report explaining the finding and a step-by-step fix plan.
 - Step 4: Present the plan and ASK FOR APPROVAL before making any code changes.
+\` : mode === 'review' ? \`
+🤖 MULTI-AGENT PR REVIEW MODE
+- Step 1: You are a PR Reviewer. Target PR: #\${process.env.PR_NUMBER}.
+- Step 2: Use \\\`gh pr diff \${process.env.PR_NUMBER}\\\` to download and read the code changes.
+- Step 3: Analyze the PR strictly through the criteria of this RepoLens lens (\${resolved.lensId}).
+- Step 4: Post your review back to the PR using \\\`gh pr review \${process.env.PR_NUMBER} --comment -b "<your markdown review>"\\\`.
+- DO NOT MODIFY ANY SOURCE FILES. DO NOT CREATE A PULL REQUEST YOURSELF. Your only job is to review and comment.
 \` : \`
 ⚡ YOLO MODE: MAXIMUM AUTONOMOUS EXECUTION ENGAGED
 - DO NOT ASK FOR CONFIRMATION, APPROVAL, OR INTERMEDIATE FEEDBACK AT ANY POINT.

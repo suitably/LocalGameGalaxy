@@ -1,0 +1,129 @@
+name: Multi-Agent PR Reviewer
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, ready_for_review]
+    branches:
+      - dev
+      - main
+
+concurrency:
+  group: pr-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  review:
+    name: ${{ matrix.domain }} Lens
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        domain: [security, architecture]
+        
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Resolve RepoLens Lens
+        id: lens_resolver
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          node scripts/jules-lens-resolver.mjs --domain "${{ matrix.domain }}" --mode review
+
+      - name: Dispatch Jules Reviewer
+        uses: actions/github-script@v7
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          LENS_PROMPT: ${{ steps.lens_resolver.outputs.prompt }}
+          JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
+          JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
+          JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
+          JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
+          JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
+          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+          REPO: ${{ github.repository }}
+          STARTING_BRANCH: ${{ github.event.pull_request.head.ref }}
+        with:
+          script: |
+            const fs = require('fs');
+            const { execSync } = require('child_process');
+            
+            const prompt = `
+            Task: Review Pull Request #${process.env.PR_NUMBER}
+            
+            ${process.env.LENS_PROMPT}
+            `;
+            
+            fs.writeFileSync('prompt.txt', prompt);
+            
+            const payload = {
+              prompt: prompt,
+              sourceContext: {
+                source: `sources/github/${process.env.REPO}`,
+                githubRepoContext: {
+                  startingBranch: process.env.STARTING_BRANCH
+                }
+              },
+              requirePlanApproval: false,
+              automationMode: "AUTO_CREATE_PR"
+            };
+            
+            fs.writeFileSync('jules_payload.json', JSON.stringify(payload));
+            
+            const keys = [
+              process.env.JULES_API_KEY_1,
+              process.env.JULES_API_KEY_2,
+              process.env.JULES_API_KEY_3,
+              process.env.JULES_API_KEY_4,
+              process.env.JULES_API_KEY_5,
+              process.env.JULES_API_KEY
+            ].filter(Boolean);
+            
+            if (keys.length === 0) {
+              core.setFailed('No JULES_API_KEY available in secrets.');
+              return;
+            }
+            
+            let success = false;
+            let lastError = '';
+            
+            for (let i = 0; i < keys.length; i++) {
+              console.log(`▶ Trying Jules API key slot ${i}...`);
+              try {
+                const result = execSync(`curl -s -w "\nHTTP_STATUS:%{http_code}" 'https://jules.googleapis.com/v1alpha/sessions' -X POST -H "Content-Type: application/json" -H "X-Goog-Api-Key: ${keys[i]}" -d @jules_payload.json`).toString();
+                
+                const lines = result.trim().split('\n');
+                const statusLine = lines.pop();
+                const status = statusLine.split(':')[1];
+                const body = lines.join('\n');
+                
+                if (status === '200') {
+                  const data = JSON.parse(body);
+                  console.log(`✅ Dispatched successfully! Session: ${data.name}`);
+                  success = true;
+                  break;
+                } else {
+                  console.log(`⚠️ Key slot ${i} failed with status ${status}: ${body}`);
+                  lastError = `[Slot ${i}] ${status}: ${body}`;
+                }
+              } catch (e) {
+                console.log(`⚠️ Curl execution failed: ${e.message}`);
+                lastError = e.message;
+              }
+            }
+            
+            if (!success) {
+              core.setFailed(`All API keys failed. Last error: ${lastError}`);
+            }
