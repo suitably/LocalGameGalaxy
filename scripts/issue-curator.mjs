@@ -211,14 +211,14 @@ TASKS:
    - "bundle": merge multiple related issues into one consolidated task/epic.
    - "standalone": keep as a standalone issue.
 4. If "bundle", propose the lead issue and the list of issue numbers to combine, plus a clear consolidated title.
-5. Suggest the most relevant RepoLens audit lens from TheMorpheus407/RepoLens:
-   - "duplication" (code clones, DRY violations)
-   - "i18n" (translations, locale missing)
-   - "architecture" (modular boundaries, god components)
-   - "state-architecture" (state sync, storage, reactive flow)
-   - "ux-antipatterns" (navigation, buttons, mobile UI flow)
-   - "security" (auth, session, injection, secrets)
-   - "testing" (unit test gaps)
+5. Suggest the MOST RELEVANT RepoLens audit lens based on the issue content:
+   - "architecture": Default for general features, refactoring, new components, or logic changes.
+   - "i18n": ONLY if translations or texts are the main focus.
+   - "state-architecture": ONLY if fixing state bugs, sync, or data flow.
+   - "ux-antipatterns": ONLY for UI/UX visual adjustments and CSS.
+   - "duplication": ONLY if the issue EXPLICITLY mentions DRY violations, code clones, or copy-pasted code. Do NOT suggest this by default.
+   - "security": ONLY for auth/secrets.
+   - "testing": ONLY for missing unit tests.
 
 RESPOND ONLY WITH VALID JSON (no markdown formatting, no code fence):
 {
@@ -264,7 +264,7 @@ RESPOND ONLY WITH VALID JSON (no markdown formatting, no code fence):
       duplicateOf: null,
       confidenceScore: 0.5,
       clusterName: titleWords[0] ? titleWords[0].toUpperCase() : 'Thematisch Verwandt',
-      suggestedRepoLens: 'duplication',
+      suggestedRepoLens: 'architecture',
       relatedIssueNumbers: related.map((r) => r.number),
       recommendation: related.length > 0 ? 'bundle' : 'standalone',
       reason: 'Heuristische Schlüsselwort-Übereinstimmung gefunden.',

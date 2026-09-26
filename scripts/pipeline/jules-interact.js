@@ -246,6 +246,14 @@ module.exports = async ({ github, context, core }) => {
         body: `💬 **Feedback sent to Jules.** (Session: \`${sessionId}\`)\n> "${targetText}"\nJules received your instructions and is continuing on \`dev\`.`
       });
     }
+
+    // Re-attach the live bridge to proactively relay Jules' next response!
+    if (action !== 'status') {
+      console.log('Re-attaching live bridge to monitor Jules response...');
+      process.env.SESSION_ID = sessionId;
+      const liveBridge = require('./jules-live-bridge.js');
+      await liveBridge({ github, context, core });
+    }
   } else {
     await github.rest.issues.createComment({
       owner: context.repo.owner,

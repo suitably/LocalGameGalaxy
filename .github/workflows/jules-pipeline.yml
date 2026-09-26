@@ -605,7 +605,7 @@ jobs:
     needs: triage
     if: (needs.triage.outputs.action == 'reply' || needs.triage.outputs.action == 'continue' || needs.triage.outputs.action == 'yolo' || needs.triage.outputs.action == 'approve-plan' || needs.triage.outputs.action == 'status') && needs.triage.outputs.is_authorized == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 25
     steps:
       - name: Relay Command to Google Jules Session
         uses: actions/github-script@v7
