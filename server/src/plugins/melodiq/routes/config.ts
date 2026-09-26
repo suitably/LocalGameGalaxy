@@ -6,6 +6,7 @@ import { serverConfig } from '../../../config';
 import { scanSongs } from '../services/scanner';
 import { usdbLogin, setUsdbSessionCookie } from '../services/usdb';
 import { requireMasterToken } from '../middleware/auth';
+import { resolveSecurePath } from '../../../utils/helpers';
 import type { HonoEnv } from '../../../core/types';
 
 export const configRouter = new Hono<HonoEnv>();
@@ -40,7 +41,7 @@ configRouter.delete('/api/config/directories', async (c) => {
 configRouter.get('/api/browse', requireMasterToken, (c) => {
   const queryPath = c.req.query('path') || os.homedir();
   try {
-    const safePath = require('../../../utils/helpers').resolveSecurePath(queryPath, [os.homedir(), ...serverConfig.directories]) || queryPath;
+    const safePath = resolveSecurePath(queryPath, [os.homedir(), ...serverConfig.directories]) || queryPath;
     if (safePath !== queryPath || !fs.existsSync(queryPath)) return c.json({ error: 'Path not found or access denied' }, 403);
     const entries = fs.readdirSync(safePath, { withFileTypes: true });
     const dirs = entries
