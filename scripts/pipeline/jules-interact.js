@@ -85,14 +85,14 @@ module.exports = async ({ github, context, core }) => {
         text = pu.title || pu.description || pu.message || '';
       } else if (a.planGenerated) {
         const pg = a.planGenerated;
-        let planText = pg.plan?.steps ? \`Plan generated with \${pg.plan.steps.length} steps\` : (pg.title || 'Plan generated');
+        let planText = pg.plan?.steps ? `Plan generated with ${pg.plan.steps.length} steps` : (pg.title || 'Plan generated');
         if (pg.plan?.steps && Array.isArray(pg.plan.steps)) {
-          planText += '\\n\\n**Proposed Plan:**\\n';
+          planText += '\n\n**Proposed Plan:**\n';
           pg.plan.steps.forEach((step, i) => {
-            planText += \`\${i+1}. **\${step.title || 'Step'}**\\n\`;
-            if (step.description) planText += \`   \${step.description}\\n\`;
+            planText += `${i+1}. **${step.title || 'Step'}**\n`;
+            if (step.description) planText += `   ${step.description}\n`;
           });
-          planText += '\\n*Do you approve this plan?*';
+          planText += '\n*Do you approve this plan?*';
         }
         text = planText;
       } else if (a.sessionCompleted) {
