@@ -1,0 +1,70 @@
+name: '🎮 Neues Spiel (Game Factory Task)'
+description: 'Standardisierte Anforderung für einen AI-Agenten zum Bau eines neuen Spiels'
+title: '[Game]: '
+labels: ['game-factory', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Willkommen in der LocalGameGalaxy Game-Fabrik!
+        Fülle dieses Template aus, damit die autonome Agenten-Pipeline das Spiel direkt ohne Code-Duplikate implementieren kann.
+  - type: input
+    id: game_id
+    attributes:
+      label: Eindeutige Spiel-ID (kebab-case)
+      description: Kleingeschriebener Identifier (z.B. `battleship`, `yatzy`, `memory`)
+      placeholder: z.B. battleship
+    validations:
+      required: true
+  - type: input
+    id: game_title
+    attributes:
+      label: Anzeigename (Titel)
+      description: Der sichtbare Name des Spiels in der UI
+      placeholder: z.B. Schiffe versenken
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Spielkategorie
+      options:
+        - party
+        - dice
+        - cards
+        - drawing
+        - music
+        - social_deduction
+        - puzzle
+    validations:
+      required: true
+  - type: input
+    id: players
+    attributes:
+      label: Spieleranzahl
+      description: Min und Max Spieler (z.B. "2-6 Spieler")
+      placeholder: z.B. 2-4
+    validations:
+      required: true
+  - type: textarea
+    id: rules
+    attributes:
+      label: Spielablauf & Spielregeln
+      description: Wie läuft eine Runde ab? Welche Phasen gibt es?
+      placeholder: |
+        1. Setup: Spieler platzieren ihre Schiffe auf einem 10x10 Raster.
+        2. Spielrunde: Spieler feuern abwechselnd Koordinaten ab.
+        3. Treffer/Versenkung wird synchronisiert.
+        4. Spielende: Wenn alle Schiffe eines Spielers versenkt sind.
+    validations:
+      required: true
+  - type: checkboxes
+    id: modules_required
+    attributes:
+      label: Benötigte geteilte Module (Anti-Duplikat-Pflicht)
+      options:
+        - label: Multiplayer Peer-Sync (`src/modules/sync` / MqttMailboxService)
+        - label: Lobby / Spielerverwaltung (`src/modules/player-management`)
+        - label: 3D-Würfel (`src/components/games/Die3D.tsx`)
+        - label: Audio / Tonhöhenerkennung (`src/modules/audio`)
+        - label: Zeichen-Canvas / Excalidraw (`src/modules/drawing`)
