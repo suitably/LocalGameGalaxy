@@ -92,15 +92,7 @@ jobs:
                 const hasYoloFlag = /\b(-{1,2})yolo\b/i.test(rawBody);
                 if (hasYoloFlag) isYolo = true;
 
-                if (body.startsWith('/bundle')) {
-                  action = 'bundle';
-                  const matches = rawBody.match(/#?(\d+)/g) || [];
-                  targets = matches.map(m => m.replace('#', '')).filter(m => m !== String(issueNumber)).join(',');
-                } else if (body.startsWith('/duplicate')) {
-                  action = 'duplicate';
-                  const match = rawBody.match(/#?(\d+)/);
-                  if (match) targets = match[1];
-                } else if (body.startsWith('/jules lens')) {
+                if (body.startsWith('/jules lens')) {
                   action = 'fix';
                   const parts = body.split(/\s+/);
                   if (parts.length > 2) {
@@ -165,11 +157,7 @@ jobs:
                 const authorAssoc = issue.author_association;
                 isAuthorized = trustedRoles.includes(authorAssoc) || sender === context.repo.owner;
 
-                if (labelName === 'bundle' || labelName === 'auto-bundle' || labelName === 'bundle-related' || labelName === 'jules:bundle') {
-                  action = 'auto-bundle';
-                } else if (labelName === 'duplicate' || labelName === 'jules:duplicate') {
-                  action = 'auto-duplicate';
-                } else if (labelName.startsWith('lens:')) {
+                if (labelName.startsWith('lens:')) {
                   action = 'fix';
                   lensName = labelName.replace('lens:', '').trim();
                 } else if (labelName === 'jules' || labelName === 'jules:plan' || labelName === 'plan' || labelName === 'game-factory') {
@@ -313,7 +301,7 @@ jobs:
                 // Skip pipeline-generated comments (status reports, relay headers)
                 if (body.startsWith('## 🤖') || body.startsWith('### 🔍') || body.startsWith('📊') || body.startsWith('🤖') || body.startsWith('⚡') || body.startsWith('▶️') || body.startsWith('💬') || body.startsWith('❌') || body.startsWith('✅')) return false;
                 // Skip pure slash commands with no substantive text
-                if (/^\/(jules\s+)?(fix|status|plan|continue|yolo|approve-plan|curate|triage|dedup|bundle|check|duplicate)\b/i.test(body) && body.split(/\s+/).length <= 3) return false;
+                if (/^\/(jules\s+)?(fix|status|plan|continue|yolo|approve-plan|check)\b/i.test(body) && body.split(/\s+/).length <= 3) return false;
                 return body.length > 0;
               });
               if (filteredComments.length > 0) {

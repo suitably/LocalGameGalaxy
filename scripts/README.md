@@ -53,8 +53,5 @@ Introspects the local codebase, verifies line budgets and state hooks, and gener
 ### `jules-lens-resolver.mjs`
 Resolves RepoLens audit lenses (e.g. `capacitor-storage`, `agents-budget`, `i18n-sync`) to focus Jules implementation plans.
 
-### `issue-curator.mjs`
-Automatically analyzes, bundles duplicate/overlapping issues, and synchronizes status with GitHub.
-
 ### `scaffold-game.mjs`
 Boilerplate generator for scaffolding new game modules adhering to strict architecture boundaries.
