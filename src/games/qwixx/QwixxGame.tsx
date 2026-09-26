@@ -1,7 +1,6 @@
 import React, { useReducer, useEffect, useState, useCallback, useRef } from 'react';
 import {
     Box,
-    Container,
     Typography,
     Button,
     Dialog,
@@ -24,6 +23,7 @@ import { computeHighlightedNumbers } from './logic/diceHighlight';
 import { getSheetDefinition, ALL_SHEET_TYPES, generateRandomSheetRows } from './logic/sheetDefinitions';
 import type { DieKey } from './logic/diceHighlight';
 import type { RowColor, DiceValues, PlayerSheet, QwixxSheetType, SheetRowDefinition } from './logic/types';
+import { GameLayout } from '../../components/Layout/GameLayout';
 import { QwixxSheet } from './components/QwixxSheet';
 import { QwixxDiceRoller } from './components/QwixxDiceRoller';
 import { QwixxSheetSelector } from './components/QwixxSheetSelector';
@@ -165,16 +165,7 @@ export const QwixxGame: React.FC = () => {
     const currentSheetDef = getSheetDefinition(state.mySheet.sheetType || 'classic');
 
     return (
-        <Container
-            maxWidth="md"
-            sx={{
-                py: { xs: 1.5, sm: 3 },
-                px: { xs: 1, sm: 2 },
-                height: '100%',
-                overflowY: 'auto',
-                WebkitOverflowScrolling: 'touch'
-            }}
-        >
+        <GameLayout maxWidth="md">
             {/* Header Controls */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
@@ -280,6 +271,6 @@ export const QwixxGame: React.FC = () => {
                 onSelectSheet={handleSelectSheet}
                 onClose={() => setSheetSelectorOpen(false)}
             />
-        </Container>
+        </GameLayout>
     );
 };

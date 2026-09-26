@@ -2,7 +2,6 @@ import React from 'react';
 import {
     Box,
     Typography,
-    Container,
     Paper,
     Stack,
     Chip,
@@ -24,6 +23,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import { HardwareStatus } from './components/HardwareStatus';
 import { NoteStatusBar } from './components/NoteStatusBar';
 import { useMelodiqNotesState } from './hooks/useMelodiqNotesState';
+import { GameLayout } from '../../components/Layout/GameLayout';
 
 export const MelodiqNotesGame: React.FC = () => {
     const { t } = useTranslation();
@@ -84,15 +84,8 @@ export const MelodiqNotesGame: React.FC = () => {
     const stemsAvailable = !!(selectedLocalSong?.stems || selectedSong.stems);
 
     return (
-        <Container
-            maxWidth="lg"
-            sx={{
-                py: 4,
-                height: '100%',
-                overflowY: 'auto',
-                WebkitOverflowScrolling: 'touch'
-            }}
-        >
+        <GameLayout maxWidth="lg" disablePadding>
+
             <Paper
                 elevation={3}
                 sx={{
@@ -210,6 +203,6 @@ export const MelodiqNotesGame: React.FC = () => {
                     onToggleMute={toggleMute}
                 />
             </Paper>
-        </Container>
+        </GameLayout>
     );
 };
