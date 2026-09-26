@@ -15,13 +15,22 @@ export const ExcalidrawLazy = React.lazy(async () => {
   const adapter = {
     load: async () => {
       try {
-        return storage.getJson<unknown>(STORAGE_KEYS.EXCALIDRAW_LIBRARY, null);
+        const stored = storage.getJson<any>(STORAGE_KEYS.EXCALIDRAW_LIBRARY, null);
+        if (stored) {
+          if (Array.isArray(stored)) {
+             return { libraryItems: stored };
+          }
+          if (stored.libraryItems) {
+             return { libraryItems: stored.libraryItems };
+          }
+        }
+        return null;
       } catch (err) {
         console.warn('Failed to load Excalidraw library from storage', err);
       }
       return null;
     },
-    save: async (libraryData: unknown) => {
+    save: async (libraryData: any) => {
       try {
         storage.setJson(STORAGE_KEYS.EXCALIDRAW_LIBRARY, libraryData);
       } catch (err) {
@@ -29,6 +38,8 @@ export const ExcalidrawLazy = React.lazy(async () => {
       }
     },
   };
+
+
 
   const ExcalidrawWithLibrary: React.FC<Record<string, unknown>> = (props) => {
     const [api, setApi] = useState<unknown>(null);
