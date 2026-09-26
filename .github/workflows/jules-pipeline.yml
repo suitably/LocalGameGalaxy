@@ -403,6 +403,7 @@ jobs:
           USER_PROMPT: ${{ steps.prep.outputs.prompt }}
         shell: bash
         run: |
+          set +e # Prevent script from exiting immediately on curl/jq errors
           # 1. Collect all available Jules API keys from secrets
           declare -a KEYS=()
           declare -a KEY_NAMES=()
