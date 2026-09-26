@@ -223,20 +223,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Ensure dev branch exists on origin
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if ! git ls-remote --heads origin dev | grep -q 'refs/heads/dev'; then
-            echo "Branch 'dev' does not exist on origin. Creating 'dev' from 'main'..."
-            git fetch origin main
-            git push origin origin/main:refs/heads/dev
-          else
-            echo "Branch 'dev' already exists on origin."
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Resolve RepoLens Lens (if specified)
         id: lens_resolver
         if: needs.triage.outputs.lens_name != ''
@@ -317,7 +303,7 @@ jobs:
             - ABSOLUTE ZERO HUMAN INTERACTION: Do NOT ask for confirmation, feedback, or approval under any circumstances.
             - FULL PROACTIVE AUTHORITY: You are strictly required to make all architectural, refactoring, and file decomposition decisions yourself.
             - IMMEDIATELY create/extract sub-components or custom hooks if limits are exceeded.
-            - Proceed continuously from planning to coding, running Vitest tests, verifying quality gates, and submitting the Pull Request against 'dev'. Never pause or wait for user input.
+            - Proceed continuously from planning to coding, running Vitest tests, verifying quality gates, and submitting the Pull Request against 'main'. Never pause or wait for user input.
             ` : `
             🤖 INTERACTIVE MODE: PLAN & APPROVE
             YOUR MISSION HAS TWO STRICT PHASES. YOU MUST STOP AFTER PHASE 1.
@@ -342,8 +328,8 @@ jobs:
             ${lensPrompt ? `\nSPECIALIZED REPOLENS AUDIT FOCUS:\n${lensPrompt}\n` : ''}
 
             Target, Branch & PR Instructions (Apply ONLY during Phase 2 / YOLO Mode):
-            - Your base branch is 'dev'.
-            - When creating a pull request, TARGET THE 'dev' BRANCH (not 'main').
+            - Your base branch is 'main'.
+            - When creating a pull request, TARGET THE 'main' BRANCH.
             - In the PR description, you MUST include a detailed "Implementation Summary" section:
               * Reference 'Fixes #${issueNumber}' to auto-close the issue.
               * List what was implemented and why.
@@ -386,7 +372,7 @@ jobs:
           JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
           JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
           ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
-          STARTING_BRANCH: 'dev'
+          STARTING_BRANCH: 'main'
           REPO: ${{ github.repository }}
           USER_PROMPT: ${{ steps.prep.outputs.prompt }}
           YOLO_MODE: ${{ needs.triage.outputs.yolo }}
@@ -537,7 +523,7 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issueNumber,
-                body: `🤖 **Google Jules Dispatched** (Worker: \`${keyUsed}\`)\n\n👉 [${sessionUrl}](${sessionUrl})\nPR targeting \`dev\` will be opened once implementation and verification are complete.`
+                body: `🤖 **Google Jules Dispatched** (Worker: \`${keyUsed}\`)\n\n👉 [${sessionUrl}](${sessionUrl})\nPR targeting \`main\` will be opened once implementation and verification are complete.`
               });
             } else {
               try {
@@ -571,7 +557,7 @@ jobs:
           JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
         with:
           script: |
-            const liveBridge = require('./scripts/pipeline/jules-live-bridge.js');
+            const liveBridge = require('./scripts/pipeline/jules-live-bridge.cjs');
             await liveBridge({ github, context, core });
 
   interact-jules:
@@ -596,6 +582,6 @@ jobs:
           IS_YOLO: ${{ needs.triage.outputs.yolo }}
         with:
           script: |
-            const interact = require('./scripts/pipeline/jules-interact.js');
+            const interact = require('./scripts/pipeline/jules-interact.cjs');
             await interact({ github, context, core });
 

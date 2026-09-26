@@ -66,20 +66,6 @@ jobs:
         with:
           node-version: 22
 
-      - name: Ensure dev branch exists on origin
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if ! git ls-remote --heads origin dev | grep -q 'refs/heads/dev'; then
-            echo "Branch 'dev' does not exist on origin. Creating 'dev' from 'main'..."
-            git fetch origin main
-            git push origin origin/main:refs/heads/dev
-          else
-            echo "Branch 'dev' already exists on origin."
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Resolve RepoLens Lens & Assemble Prompt
         id: resolver
         run: |
@@ -111,7 +97,7 @@ jobs:
               `A RepoLens audit has been triggered for domain **${domain}** using lens **${lensId}**.`,
               '',
               '### 🚦 Next Steps:',
-              '- To instruct Jules to plan and fix this audit finding on `dev`:',
+              '- To instruct Jules to plan and fix this audit finding on `main`:',
               '  Reply with comment: **`/jules approve`** or assign label **`jules:approved`**.',
               '- To run another lens:',
               '  Trigger the **Jules RepoLens Audit Suite** workflow or comment **`/jules lens <lens-id>`**.'
@@ -137,7 +123,7 @@ jobs:
           JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
           JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
           JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
-          STARTING_BRANCH: 'dev'
+          STARTING_BRANCH: 'main'
           REPO: ${{ github.repository }}
           USER_PROMPT: ${{ steps.resolver.outputs.prompt }}
         shell: bash

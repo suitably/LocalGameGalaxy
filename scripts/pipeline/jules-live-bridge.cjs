@@ -194,19 +194,19 @@ module.exports = async ({ github, context, core }) => {
     fs.writeFileSync(transcriptFile, markdown.join('\n'), 'utf8');
     console.log(`Transcript written to ${transcriptFile}`);
 
-    // Commit transcript to dev branch
+    // Commit transcript to main branch
     const { execSync } = require('child_process');
     execSync('git config user.name "github-actions[bot]"');
     execSync('git config user.email "github-actions[bot]@users.noreply.github.com"');
-    execSync('git fetch origin dev');
-    execSync('git checkout dev');
-    execSync('git pull origin dev --rebase');
+    execSync('git fetch origin main');
+    execSync('git checkout main');
+    execSync('git pull origin main --rebase');
     execSync(`git add "${transcriptFile}"`);
     const diff = execSync('git diff --cached --name-only').toString().trim();
     if (diff) {
       execSync(`git commit -m "docs(jules): archive transcript for issue #${issueNumber} [skip ci]"`);
-      execSync('git push origin dev');
-      console.log('Transcript pushed to origin/dev');
+      execSync('git push origin main');
+      console.log('Transcript pushed to origin/main');
     }
   } catch (err) {
     console.warn('Failed to commit transcript:', err.message);
