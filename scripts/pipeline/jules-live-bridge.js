@@ -115,7 +115,7 @@ module.exports = async ({ github, context, core }) => {
           });
 
           // Relay agent messages or questions directly into the GitHub Issue
-          if (parsed.tag === 'AGENT' && parsed.text) {
+          if ((parsed.tag === 'AGENT' || parsed.tag === 'AGENT_MESSAGED' || parsed.tag === 'PLAN_GENERATED') && parsed.text) {
             if (parsed.text.length > 20 || parsed.text.includes('?')) {
               const commentBody = [
                 '### 🤖 Jules Update',
