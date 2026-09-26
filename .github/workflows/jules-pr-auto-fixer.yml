@@ -48,6 +48,41 @@ jobs:
             const fs = require('fs');
             const { execSync } = require('child_process');
             
+            // --- LOOP BREAKER LOGIC ---
+            const issueNumber = parseInt(process.env.PR_NUMBER);
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber
+            });
+            const labels = issue.labels.map(l => l.name);
+            let attempt = 1;
+            
+            if (labels.includes('auto-fix:3')) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                body: "🛑 **Auto-Fix Loop Interrupted**\n\nJules has already attempted to fix this PR 3 times without satisfying the reviewers. To prevent an infinite loop, the automated multi-agent cycle has been halted. Human intervention is required."
+              });
+              core.setFailed('Max auto-fix attempts (3) reached. Aborting to prevent infinite loop.');
+              return;
+            } else if (labels.includes('auto-fix:2')) {
+              attempt = 3;
+              try { await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'auto-fix:2' }); } catch(e){}
+            } else if (labels.includes('auto-fix:1')) {
+              attempt = 2;
+              try { await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'auto-fix:1' }); } catch(e){}
+            }
+            
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              labels: [`auto-fix:${attempt}`]
+            });
+            // --------------------------
+            
             const prompt = `
             Task: Fix Pull Request #${process.env.PR_NUMBER} based on Review Feedback
             
