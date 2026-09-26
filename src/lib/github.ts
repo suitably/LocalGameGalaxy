@@ -316,3 +316,56 @@ export async function createGitHubPR(
         return { success: false, error: message };
     }
 }
+
+/**
+ * Submits feedback either via Nexumia Server or directly to GitHub as a fallback.
+ */
+export async function submitFeedback(title: string, body: string): Promise<{ success: boolean; issueUrl?: string; error?: string }> {
+    const { config: ghConfig, source } = resolveGitHubConfig();
+
+    if (source === 'local' && ghConfig) {
+        // Direct GitHub API call with local PAT
+        const result = await createGitHubIssue(ghConfig, {
+            title: `[Feedback] ${title}`,
+            body: body,
+            labels: ['user-feedback'],
+        });
+
+        if (result.success) {
+            return { success: true, issueUrl: result.issueUrl };
+        } else {
+            return { success: false, error: result.error || 'Failed to create issue' };
+        }
+    } else if (source === 'server') {
+        // Proxy through Nexumia Server
+        const baseUrl = storage.getHelperUrl();
+        const token = storage.getHelperToken();
+        const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+
+        try {
+            const res = await fetch(`${cleanBaseUrl}/api/feedback`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({
+                    title: title,
+                    body: body,
+                }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                return { success: false, error: data.error || 'Failed to submit feedback' };
+            }
+
+            return { success: true, issueUrl: data.issueUrl };
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : 'Unknown error';
+            return { success: false, error: message };
+        }
+    } else {
+        return { success: false, error: 'No GitHub connection configured. Please set up a GitHub Token in General Settings or connect a Nexumia Server.' };
+    }
+}

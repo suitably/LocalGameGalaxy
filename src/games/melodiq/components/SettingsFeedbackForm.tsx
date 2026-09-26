@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Paper, Typography, TextField, Button, CircularProgress, Alert, Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { storage } from '../../../lib/storage';
+import { submitFeedback } from '../../../lib/github';
 
 export const SettingsFeedbackForm: React.FC = () => {
     const { t } = useTranslation();
@@ -17,39 +17,28 @@ export const SettingsFeedbackForm: React.FC = () => {
         setSubmitting(true);
         setStatus(null);
 
-        const baseUrl = storage.getHelperUrl();
-        const token = storage.getHelperToken();
-        const cleanBaseUrl = baseUrl.replace(/\/$/, '');
-
         try {
-            const res = await fetch(`${cleanBaseUrl}/api/feedback`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                },
-                body: JSON.stringify({
-                    title: feedbackTitle.trim(),
-                    body: feedbackBody.trim()
-                })
-            });
+            const result = await submitFeedback(feedbackTitle.trim(), feedbackBody.trim());
 
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.error || 'Failed to submit feedback');
+            if (result.success) {
+                setStatus({
+                    type: 'success',
+                    message: t('settings.submit_success', 'Feedback successfully submitted!'),
+                    url: result.issueUrl
+                });
+                setFeedbackTitle('');
+                setFeedbackBody('');
+            } else {
+                setStatus({
+                    type: 'error',
+                    message: t('settings.submit_error', 'Failed to submit feedback: {{error}}', { error: result.error })
+                });
             }
-
-            setStatus({
-                type: 'success',
-                message: t('settings.submit_success', 'Feedback successfully submitted!'),
-                url: data.issueUrl
-            });
-            setFeedbackTitle('');
-            setFeedbackBody('');
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Unknown error';
             setStatus({
                 type: 'error',
-                message: t('settings.submit_error', 'Failed to submit feedback: {{error}}', { error: err.message })
+                message: t('settings.submit_error', 'Failed to submit feedback: {{error}}', { error: message }),
             });
         } finally {
             setSubmitting(false);
