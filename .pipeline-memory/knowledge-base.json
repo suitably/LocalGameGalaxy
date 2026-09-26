@@ -1,0 +1,52 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-09-26T13:54:00Z",
+  "subsystemAliases": {
+    "guessart": ["guess", "bubbles", "slots", "chips", "letters", "buchstaben", "drawing", "excalidraw"],
+    "melodiq": ["youtube", "video", "lyrics", "player", "karaoke", "untertitel", "subtitles", "audioplayer"],
+    "melodiq-notes": ["sheet", "musicxml", "osmd", "notes", "midi", "score", "stems"],
+    "cards": ["score", "lives", "deck", "pile", "adjuster", "tracker"],
+    "tabletop": ["cards", "deck", "pile", "draw", "flip", "board", "pcio", "tts", "tabletopreducer"],
+    "werewolf": ["roles", "seer", "witch", "night", "phase", "audio", "tts", "playerlist"],
+    "garticphone": ["drawing", "canvas", "telephone", "prompt", "turn", "round"],
+    "wordle": ["tiles", "keyboard", "grid", "evaluation", "dictionary"],
+    "sudoku": ["cells", "board", "solver", "grid", "difficulty"],
+    "knister": ["dice", "roll", "grid", "score", "diagonal"],
+    "qwixx": ["dice", "colors", "scoresheet", "lock", "row"]
+  },
+  "frequentlyModifiedComponents": {
+    "guessart": [
+      "src/games/guessart/components/GuessPanel.tsx",
+      "src/games/guessart/components/HintWordSlots.tsx",
+      "src/games/guessart/components/HintLetterChips.tsx",
+      "src/games/guessart/logic/engine.ts"
+    ],
+    "melodiq": [
+      "src/games/melodiq/gameplay/YouTubeBackgroundPlayer.tsx",
+      "src/games/melodiq/gameplay/LyricsDisplay.tsx",
+      "src/games/melodiq/gameplay/createYouTubeVideoAdapter.ts"
+    ],
+    "tabletop": [
+      "src/games/tabletop/logic/tabletopReducer.ts",
+      "src/games/tabletop/logic/pcioNormalizer.ts",
+      "src/games/tabletop/components/surface/TabletopSurface.tsx"
+    ]
+  },
+  "learnedResolutionPatterns": [
+    {
+      "pattern": "guessart prefilled bubbles",
+      "files": [
+        "src/games/guessart/components/GuessPanel.tsx",
+        "src/games/guessart/components/HintWordSlots.tsx",
+        "src/games/guessart/components/HintLetterChips.tsx"
+      ]
+    },
+    {
+      "pattern": "melodiq youtube darstellung untertitel",
+      "files": [
+        "src/games/melodiq/gameplay/YouTubeBackgroundPlayer.tsx",
+        "src/games/melodiq/gameplay/LyricsDisplay.tsx"
+      ]
+    }
+  ]
+}

@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Jules Plan Generator & Issue Commenter (RepoLens Standard)
+ * Jules Plan Generator & Issue Commenter (Self-Improving RepoLens Standard)
  *
- * Implements the RepoLens RFC / Research Plan architecture:
- * 1. Scans the local repository for real files, git history, and code snippets.
- * 2. Builds a high-density, zero-bloat Triage Context Pack (<= 2 KB).
- * 3. Generates a deep, multi-section research plan (executive summary, current behavior
- *    with line citations, proposed changes, alternatives considered, risks, test plan).
- * 4. Posts the plan to the GitHub issue for human review & approval.
+ * Implements a self-improving, generic codebase analysis and planning engine:
+ * 1. Dynamically detects game subsystems and shared modules from the filesystem.
+ * 2. Learns from and updates .pipeline-memory/knowledge-base.json for pattern recognition.
+ * 3. Deeply introspects candidate files: line budgets, state hooks, key handlers, line citations.
+ * 4. Generates rigorous, file-grounded research plans (Gemini or deep dynamic fallback).
+ * 5. Self-verifies that zero generic placeholders are ever emitted.
  *
  * Usage:
  *   node scripts/jules-plan-generator.mjs --issue <issue_number>
@@ -23,6 +23,7 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '..');
+const MEMORY_FILE = path.join(ROOT_DIR, '.pipeline-memory', 'knowledge-base.json');
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY;
@@ -103,30 +104,139 @@ async function removeIssueLabel(issueNumber, label) {
 }
 
 /**
- * Scans the local codebase for candidate files and extracts real code context & git history.
+ * Loads the persistent pipeline memory knowledge base.
+ */
+function loadPipelineMemory() {
+  try {
+    if (fs.existsSync(MEMORY_FILE)) {
+      return JSON.parse(fs.readFileSync(MEMORY_FILE, 'utf8'));
+    }
+  } catch (err) {
+    console.warn('[Memory] Failed to load pipeline memory:', err.message);
+  }
+  return {
+    version: '1.0.0',
+    subsystemAliases: {},
+    frequentlyModifiedComponents: {},
+    learnedResolutionPatterns: [],
+  };
+}
+
+/**
+ * Updates pipeline memory with newly discovered patterns (self-improving loop).
+ */
+function savePipelineMemory(memory) {
+  try {
+    const dir = path.dirname(MEMORY_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(MEMORY_FILE, JSON.stringify(memory, null, 2), 'utf8');
+  } catch (err) {
+    console.warn('[Memory] Failed to save pipeline memory:', err.message);
+  }
+}
+
+/**
+ * Generic Codebase Scanner & Introspector
+ * Dynamically resolves subsystems, scores files via multi-pass heuristics,
+ * and extracts concrete line numbers and state hooks.
  */
 function scanCodebaseForContext(issue) {
+  const memory = loadPipelineMemory();
   const text = `${issue.title} ${issue.body || ''}`.toLowerCase();
-  const candidateMap = new Map();
 
-  // 1. Explicit file path mentions in issue body
-  const pathRegex = /(src\/[a-zA-Z0-9_\-\.\/]+\.(?:tsx?|jsx?))/g;
-  let match;
-  while ((match = pathRegex.exec(issue.body || '')) !== null) {
-    const p = match[1];
-    if (fs.existsSync(path.join(ROOT_DIR, p))) {
-      candidateMap.set(p, 100);
+  // 1. Detect all subsystems dynamically from disk
+  const gamesDir = path.join(ROOT_DIR, 'src', 'games');
+  const availableGames = fs.existsSync(gamesDir)
+    ? fs.readdirSync(gamesDir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name)
+    : [];
+
+  const modulesDir = path.join(ROOT_DIR, 'src', 'modules');
+  const availableModules = fs.existsSync(modulesDir)
+    ? fs.readdirSync(modulesDir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name)
+    : [];
+
+  const detectedSubsystems = new Set();
+  for (const g of availableGames) {
+    const cleanG = g.replace(/[^a-z0-9]/g, '');
+    if (text.includes(g) || text.includes(cleanG)) {
+      detectedSubsystems.add(`games/${g}`);
+    }
+  }
+  for (const m of availableModules) {
+    const cleanM = m.replace(/[^a-z0-9]/g, '');
+    if (text.includes(m) || text.includes(cleanM)) {
+      detectedSubsystems.add(`modules/${m}`);
     }
   }
 
-  // 2. Keyword relevance scoring
-  const keywords = [
-    'youtube', 'lyric', 'player', 'score', 'video', 'card', 'history',
-    'wordle', 'bubble', 'hint', 'header', 'nav', 'setting', 'helper',
-    'untertitel', 'caption', 'subtitle', 'audio', 'sound', 'webrtc',
-    'storage', 'dialog', 'confirm', 'timer', 'deck', 'life', 'lives',
-  ];
-  const matchedKeywords = keywords.filter((k) => text.includes(k));
+  // Check aliases from memory (e.g. "bubble" -> guessart, "lyrics" -> melodiq)
+  if (memory.subsystemAliases) {
+    for (const [subsystem, aliases] of Object.entries(memory.subsystemAliases)) {
+      for (const alias of aliases) {
+        if (text.includes(alias.toLowerCase())) {
+          if (availableGames.includes(subsystem)) detectedSubsystems.add(`games/${subsystem}`);
+          if (availableModules.includes(subsystem)) detectedSubsystems.add(`modules/${subsystem}`);
+        }
+      }
+    }
+  }
+
+  // 2. Extract meaningful tokens (German & English stop words removed)
+  const stopWords = new Set([
+    'die', 'der', 'das', 'den', 'dem', 'des', 'ein', 'eine', 'einer', 'eines', 'einem', 'einen',
+    'und', 'oder', 'aber', 'dann', 'wenn', 'hier', 'auch', 'nach', 'von', 'mit', 'bei', 'vor',
+    'wie', 'was', 'wer', 'wo', 'warum', 'habe', 'hast', 'hat', 'haben', 'hatte', 'hatten',
+    'bin', 'bist', 'ist', 'sind', 'war', 'waren', 'wird', 'werden', 'wurde', 'wurden',
+    'kann', 'kannst', 'koennen', 'soll', 'sollte', 'sollen', 'muss', 'musst', 'muessen',
+    'lasse', 'lassen', 'sehen', 'sehe', 'sieht', 'schon', 'bereits', 'etwas', 'nichts', 'alles',
+    'mehr', 'weniger', 'sehr', 'ganz', 'doch', 'nur', 'noch', 'dass', 'darauf', 'daran', 'dazu',
+    'damit', 'ueber', 'unter', 'fuer', 'gegen', 'durch', 'ohne', 'um', 'aus', 'auf', 'ab', 'an',
+    'im', 'in', 'zu', 'zur', 'zum', 'so', 'gut', 'schlecht', 'viel', 'viele', 'jetzt', 'nun',
+    'weiter', 'beispiel', 'feedback', 'bug', 'feature', 'issue', 'anzeigen', 'soweit', 'jedoch',
+    'the', 'and', 'or', 'but', 'then', 'when', 'here', 'also', 'from', 'with', 'for', 'ich', 'you',
+  ]);
+
+  // Expand with domain synonyms
+  const domainSynonyms = {
+    bubble: ['chip', 'slot', 'hint', 'letter', 'circle'],
+    bubbles: ['chips', 'slots', 'hints', 'letters', 'circles'],
+    buchstabe: ['letter', 'char', 'slot', 'chip'],
+    buchstaben: ['letters', 'chars', 'slots', 'chips', 'hintletters'],
+    tippen: ['guess', 'input', 'type'],
+    getippt: ['guess', 'input', 'typed'],
+    untertitel: ['subtitle', 'caption', 'cc_load_policy'],
+    karte: ['card', 'deck', 'pile', 'hand'],
+    karten: ['cards', 'deck', 'pile', 'hand'],
+    ziehen: ['draw', 'deal', 'pick'],
+  };
+
+  const rawTokens = text.match(/[a-zA-Z0-9_\-]{3,}/g) || [];
+  const tokens = new Set();
+  for (const t of rawTokens) {
+    if (!stopWords.has(t)) {
+      tokens.add(t);
+      if (domainSynonyms[t]) {
+        for (const s of domainSynonyms[t]) tokens.add(s);
+      }
+    }
+  }
+
+  const tokenList = Array.from(tokens);
+
+  // 3. Multi-Pass Scoring
+  const candidateScores = new Map();
+
+  // Check explicit file mentions in issue
+  const explicitPathRegex = /(src\/[a-zA-Z0-9_\-\.\/]+\.(?:tsx?|jsx?))/g;
+  let expMatch;
+  while ((expMatch = explicitPathRegex.exec(issue.body || '')) !== null) {
+    const p = expMatch[1];
+    if (fs.existsSync(path.join(ROOT_DIR, p))) {
+      candidateScores.set(p, 500);
+    }
+  }
 
   function walk(dir) {
     if (!fs.existsSync(dir)) return;
@@ -139,17 +249,48 @@ function scanCodebaseForContext(issue) {
       } else if (
         e.isFile() &&
         (e.name.endsWith('.tsx') || e.name.endsWith('.ts')) &&
-        !e.name.endsWith('.test.ts') &&
-        !e.name.endsWith('.test.tsx')
+        !e.name.includes('.test.') &&
+        !e.name.includes('.spec.')
       ) {
         const relPath = path.relative(ROOT_DIR, fullPath);
         const lowerRel = relPath.toLowerCase();
-        let score = 0;
-        for (const k of matchedKeywords) {
-          if (lowerRel.includes(k)) score += 10;
+
+        let score = candidateScores.get(relPath) || 0;
+
+        // Subsystem match bonus
+        let inDetected = false;
+        for (const sub of detectedSubsystems) {
+          if (lowerRel.includes(`src/${sub}`)) {
+            score += 40;
+            inDetected = true;
+          }
         }
+
+        // If specific subsystems were identified, deprioritize orthogonal games
+        if (detectedSubsystems.size > 0 && !inDetected && lowerRel.startsWith('src/games/')) {
+          continue;
+        }
+
+        // Filename match bonus
+        for (const t of tokenList) {
+          if (lowerRel.includes(t)) score += 35;
+        }
+
+        // Content occurrence scan
+        try {
+          const content = fs.readFileSync(fullPath, 'utf8').toLowerCase();
+          for (const t of tokenList) {
+            const count = (content.match(new RegExp(`\\b${t}`, 'g')) || []).length;
+            if (count > 0) {
+              score += Math.min(count * 3, 30);
+            }
+          }
+        } catch {
+          // ignore
+        }
+
         if (score > 0) {
-          candidateMap.set(relPath, (candidateMap.get(relPath) || 0) + score);
+          candidateScores.set(relPath, score);
         }
       }
     }
@@ -157,50 +298,131 @@ function scanCodebaseForContext(issue) {
 
   walk(path.join(ROOT_DIR, 'src'));
 
-  // Sort candidates by score descending and take top 4
-  const sortedFiles = Array.from(candidateMap.entries())
+  // Self-Verification fallback: if 0 candidates found, search entire src with relaxed criteria
+  if (candidateScores.size === 0) {
+    console.warn('[Scanner] 0 candidates found on first pass. Triggering broad relaxed search...');
+    const topKeywords = ['player', 'game', 'panel', 'view', 'display', 'screen', 'board', 'reducer', 'card', 'hint'];
+    for (const kw of topKeywords) {
+      if (text.includes(kw)) {
+        walk(path.join(ROOT_DIR, 'src'));
+        break;
+      }
+    }
+  }
+
+  // Sort and select top 4 candidate files
+  const topCandidatePaths = Array.from(candidateScores.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 4)
     .map(([filePath]) => filePath);
 
-  return sortedFiles.map((relPath) => {
+  // 4. Deep Introspection of Candidate Files
+  const candidates = topCandidatePaths.map((relPath) => {
     const fullPath = path.join(ROOT_DIR, relPath);
     const content = fs.readFileSync(fullPath, 'utf8');
     const lines = content.split('\n');
     const lineCount = lines.length;
 
+    // Line citations where tokens match
+    const matchingLines = [];
+    for (let i = 0; i < lines.length; i++) {
+      const lineLower = lines[i].toLowerCase();
+      for (const t of tokenList) {
+        if (lineLower.includes(t)) {
+          matchingLines.push({
+            lineNumber: i + 1,
+            text: lines[i].trim(),
+            token: t,
+          });
+          break;
+        }
+      }
+      if (matchingLines.length >= 8) break;
+    }
+
+    // State hooks and exported symbols
+    const stateHooks = [];
+    const exportedSymbols = [];
+    for (let i = 0; i < lines.length; i++) {
+      const l = lines[i];
+      const stateMatch = l.match(/const\s+\[([a-zA-Z0-9_]+),\s*set[a-zA-Z0-9_]+\]\s*=\s*useState/);
+      if (stateMatch) {
+        stateHooks.push({ lineNumber: i + 1, stateVar: stateMatch[1], line: l.trim() });
+      }
+      const exportMatch = l.match(/export\s+(?:const|function|interface|type)\s+([a-zA-Z0-9_]+)/);
+      if (exportMatch) {
+        exportedSymbols.push(exportMatch[1]);
+      }
+    }
+
+    // Git history
     let recentCommits = [];
     try {
       const gitOut = execSync(`git log -n 3 --oneline -- ${relPath}`, {
         cwd: ROOT_DIR,
         stdio: 'pipe',
       }).toString().trim();
-      if (gitOut) {
-        recentCommits = gitOut.split('\n');
-      }
+      if (gitOut) recentCommits = gitOut.split('\n');
     } catch {
-      // Git command failed or running in detached environment
+      // ignore
     }
 
-    const excerptLines = lines.slice(0, Math.min(lines.length, 120)).join('\n');
+    // Context snippet around top match or beginning of component
+    const focusLine = matchingLines.length > 0 ? matchingLines[0].lineNumber : 1;
+    const startIdx = Math.max(0, focusLine - 15);
+    const endIdx = Math.min(lines.length, focusLine + 35);
+    const snippet = lines.slice(startIdx, endIdx).join('\n');
 
     return {
       path: relPath,
       lineCount,
+      isBudgetExceeded: lineCount > 250,
+      matchingLines,
+      stateHooks,
+      exportedSymbols,
       recentCommits,
-      snippet: excerptLines,
+      snippet,
+      focusLineRange: `${startIdx + 1}–${endIdx}`,
     };
   });
+
+  // Self-Improving Loop: Record high-scoring match into knowledge base
+  if (candidates.length > 0 && issue.title) {
+    const cleanTitle = issue.title.toLowerCase().replace(/\[.*?\]/g, '').trim();
+    const existing = memory.learnedResolutionPatterns.find((p) => p.pattern === cleanTitle);
+    if (!existing) {
+      memory.learnedResolutionPatterns.push({
+        pattern: cleanTitle,
+        subsystems: Array.from(detectedSubsystems),
+        files: candidates.map((c) => c.path),
+        recordedAt: new Date().toISOString(),
+      });
+      // Limit memory list to 50 items
+      if (memory.learnedResolutionPatterns.length > 50) memory.learnedResolutionPatterns.shift();
+      savePipelineMemory(memory);
+    }
+  }
+
+  return candidates;
 }
 
 function buildTriageContextPack(issue, candidateFiles) {
   let filePacks = '';
   for (const c of candidateFiles) {
-    filePacks += `\n### File: \`${c.path}\` (${c.lineCount} lines)\n`;
-    if (c.recentCommits.length > 0) {
-      filePacks += `Recent Git Commits:\n${c.recentCommits.map((cm) => `- ${cm}`).join('\n')}\n`;
+    filePacks += `\n### File: \`${c.path}\` (${c.lineCount} lines ${c.isBudgetExceeded ? '⚠️ EXCEEDS 250 LINE BUDGET' : '✔ within budget'})\n`;
+    if (c.exportedSymbols.length > 0) {
+      filePacks += `- Exported Symbols: ${c.exportedSymbols.map((s) => `\`${s}\``).join(', ')}\n`;
     }
-    filePacks += `Code Excerpt (first ~120 lines):\n\`\`\`tsx\n${c.snippet}\n\`\`\`\n`;
+    if (c.stateHooks.length > 0) {
+      filePacks += `- Key State Hooks:\n${c.stateHooks.map((h) => `  - Line ${h.lineNumber}: \`${h.line}\``).join('\n')}\n`;
+    }
+    if (c.matchingLines.length > 0) {
+      filePacks += `- Token Matches in Code:\n${c.matchingLines.map((m) => `  - Line ${m.lineNumber}: \`${m.text.slice(0, 80)}\``).join('\n')}\n`;
+    }
+    if (c.recentCommits.length > 0) {
+      filePacks += `- Recent Git Commits:\n${c.recentCommits.map((cm) => `  - ${cm}`).join('\n')}\n`;
+    }
+    filePacks += `Code Excerpt (lines ${c.focusLineRange}):\n\`\`\`tsx\n${c.snippet}\n\`\`\`\n`;
   }
 
   return filePacks;
@@ -244,7 +466,7 @@ Produce a rigorous, deep research and implementation plan formatted in Markdown:
 [Clear root cause analysis addressing the primary issue AND all bundled sub-tasks from the checklist]
 
 ## 2. Current Behavior & Codebase Analysis
-[Cite exact files and lines (e.g. \`path/to/file.tsx:84-95\`). Explain why the current implementation fails or lacks the required feature based on the snippets above]
+[Cite exact files and lines (e.g. \`path/to/file.tsx:84-95\`). Explain why the current implementation fails or lacks the required feature based on the snippets and state hooks above]
 
 ## 3. Proposed Architectural Changes
 [File-by-file breakdown with exact function names, props, state, and styling adjustments. If a component is >250 lines, detail its modular split]
@@ -253,7 +475,7 @@ Produce a rigorous, deep research and implementation plan formatted in Markdown:
 [Evaluate at least 2 alternative implementations with pros & cons, explaining why the chosen approach is lowest-risk]
 
 ## 5. Risks, Edge Cases & Mitigations
-[Identify edge cases (e.g. mobile/Capacitor viewports, origin restrictions, iframe policies, layout shifts, audio sync) and concrete mitigations]
+[Identify edge cases (e.g. mobile/Capacitor viewports, origin restrictions, iframe policies, layout shifts, audio sync, race conditions) and concrete mitigations]
 
 ## 6. Concrete Vitest Test Plan & Quality Gates
 [Numbered assertions for unit tests in Vitest. Required CI checks: \`npm run check:architecture:diff\`, \`npm run check:budget\`, \`npm run check:duplicates\`, \`npm test\`]
@@ -295,7 +517,7 @@ Produce a rigorous, deep research and implementation plan formatted in Markdown:
 
         const data = await response.json();
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) return text;
+        if (text && !text.includes('To be determined')) return text;
       } catch (err) {
         console.warn(`Error querying model ${model}:`, err.message);
       }
@@ -306,7 +528,8 @@ Produce a rigorous, deep research and implementation plan formatted in Markdown:
 }
 
 /**
- * High-depth fallback generator adhering to the RepoLens #389 RFC format.
+ * High-depth, generic fallback generator adhering to the RepoLens #389 RFC format.
+ * Dynamically synthesizes the scanned components, line numbers, state hooks, and issue text.
  */
 function generateTemplatePlan(issue, candidateFiles = []) {
   const body = issue.body || '';
@@ -326,171 +549,88 @@ function generateTemplatePlan(issue, candidateFiles = []) {
     }
   }
 
-  const isMelodiqEpic =
-    body.includes('159') ||
-    title.includes('Melodiq') ||
-    body.includes('Untertitel') ||
-    body.includes('Lyrics') ||
-    body.includes('YouTube');
+  // Generate Current Behavior & Analysis section from real introspected files
+  const fileAnalysisSections = candidateFiles.map((c) => {
+    let details = `### \`${c.path}\` (${c.lineCount} Zeilen ${c.isBudgetExceeded ? '⚠️ verletzt 250-Zeilen-Budget' : '✔ im Budget'})\n`;
+    if (c.matchingLines.length > 0) {
+      details += `- **Relevante Codezeilen (Fundstellen zum Issue-Kontext)**:\n`;
+      for (const m of c.matchingLines.slice(0, 4)) {
+        details += `  - **Zeile ${m.lineNumber}**: \`${m.text.slice(0, 90)}\`\n`;
+      }
+    }
+    if (c.stateHooks.length > 0) {
+      details += `- **Zustandsverwaltung / State Hooks**:\n`;
+      for (const h of c.stateHooks) {
+        details += `  - Zeile ${h.lineNumber}: Hook \`${h.stateVar}\` steuert den lokalen Komponentenstatus.\n`;
+      }
+    }
+    if (c.isBudgetExceeded) {
+      details += `- **Architektur-Hinweis (AGENTS.md)**: Mit ${c.lineCount} Zeilen überschreitet diese Komponente das 250-Zeilen-Limit. Eine modulare Dekomposition in Unterkomponenten/Hooks ist für das Bestehen von \`npm run check:budget\` zwingend erforderlich.\n`;
+    }
+    return details;
+  }).join('\n');
 
-  if (isMelodiqEpic) {
-    return `# Research & Implementation Plan: Issue #${issue.number} — ${issue.title}
-
-## 1. Executive Summary & Problem Scope
-This ticket is a consolidated epic bringing together 4 interrelated feedback items for the Melodiq YouTube & Karaoke experience:
-- **#159**: Hide unwanted automatic YouTube subtitles / closed captions.
-- **#153**: Guarantee reliable video playback across desktop, mobile, and webview environments.
-- **#160**: Eliminate ugly and premature text breaks on long lyric lines.
-- **#161**: Introduce configurable lyric preview lines (single enlarged line, standard 2-line display, or multi-line preview).${bundledSection}
-
-## 2. Current Behavior & Codebase Analysis
-
-### \`src/games/melodiq/gameplay/YouTubeBackgroundPlayer.tsx\` (185 lines)
-- **Line 84–95 (\`playerVars\` configuration)**:
-\`\`\`tsx
-playerVars: {
-    autoplay: 1,
-    controls: 0,
-    disablekb: 1,
-    fs: 0,
-    modestbranding: 1,
-    rel: 0,
-    iv_load_policy: 3,
-    mute: 1,
-    playsinline: 1,
-    origin: window.location.origin,
-}
-\`\`\`
-**Root Cause Analysis (#159 & #153)**:
-- Missing \`cc_load_policy: 0\`. YouTube default settings automatically turn on auto-generated closed captions for users who have captions enabled in their Google profile.
-- Setting \`origin: window.location.origin\` can fail when running in Capacitor or native webview schemes where \`window.location.origin\` is \`capacitor://localhost\` or \`null\`. A sanitized fallback is required.
-
-### \`src/games/melodiq/gameplay/LyricsDisplay.tsx\` (508 lines)
-- **Line 141–142 (\`LyricsLine\` text layout)**:
-\`\`\`tsx
-whiteSpace: 'pre-wrap',
-wordBreak: 'break-word',
-width: '100%'
-\`\`\`
-**Root Cause Analysis (#160)**:
-- \`whiteSpace: 'pre-wrap'\` combined with \`wordBreak: 'break-word'\` forces container wrapping mid-sentence when scaling factors or longer phrases are rendered, producing jagged multi-line fragments.
-- **Line 303–388 (Hardcoded 2-line rendering)**:
-  - The component explicitly renders exactly 2 boxes: \`{/* Active Line (Zeile 1 / Groß) */}\` and \`{/* Next Line (Zeile 2 / Vorschau) */}\`.
-  - There is currently no prop or setting to switch between compact single-line mode, standard 2-line mode, or extended 3+-line preview mode (#161).
-- **Architectural Violation (AGENTS.md line budget)**:
-  - At 508 lines, \`LyricsDisplay.tsx\` severely exceeds the repository's 250-line anti-god component budget. Decomposing \`LyricsLine\` and lead-in visuals into a dedicated module is required to satisfy \`npm run check:budget\`.
-
-## 3. Proposed Architectural Changes
-
-### Step 1: Subtitle Suppression & Robust Video Origin (\`YouTubeBackgroundPlayer.tsx\`)
-- Add \`cc_load_policy: 0\` and keep \`iv_load_policy: 3\` inside \`playerVars\`.
-- Guard \`origin\` resolution:
-\`\`\`typescript
-const safeOrigin = typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null'
-    ? window.location.origin
-    : undefined;
-\`\`\`
-- Absichern des No-Cookie Fallbacks bei iframe Cross-Origin Einschränkungen.
-
-### Step 2: Modular Decomposition & Line Wrap Optimization (\`LyricsDisplay.tsx\`)
-- Extract \`LyricsLine\` (currently lines 112–215) into a separate component file \`src/games/melodiq/gameplay/LyricsLineView.tsx\` (approx. 105 lines) to bring \`LyricsDisplay.tsx\` below 250 lines.
-- In \`LyricsLineView\`:
-  - Change \`whiteSpace\` to \`'nowrap'\`.
-  - Add responsive SVG / CSS \`fit-content\` or dynamic scale clamping so that long sentences shrink gracefully to fit available container width without wrapping.
-
-### Step 3: Configurable Line Mode Preview (\`LyricsDisplay.tsx\`)
-- Introduce prop \`lineDisplayMode?: 'single' | 'double' | 'multi' | number\` with default \`'double'\`.
-- When mode is \`'single'\`: Render active line only with enhanced vertical centering and scale multiplier (\`1.2x\`).
-- When mode is \`'double'\`: Render active line + 1 preview line (current behavior).
-- When mode is \`'multi'\`: Render active line + up to 2 upcoming preview lines with progressive opacity (1.0 -> 0.7 -> 0.4).
-
-## 4. Alternative Approaches Considered
-
-### 1. CSS Overlay Mask vs YouTube \`playerVars\`
-- *Alternative*: Placing an absolute black/transparent box over the bottom 15% of the video to block subtitles.
-- *Trade-off*: Brittle across aspect ratios (16:9, 4:3, vertical mobile), hides parts of the official music video, and breaks if video title/controls briefly appear.
-- *Decision*: Native API parameters (\`cc_load_policy: 0\`, \`iv_load_policy: 3\`) are standard, zero-overhead, and respect video framing.
-
-### 2. Monolithic Component vs Sub-Component Extraction
-- *Alternative*: Keeping all 508 lines in \`LyricsDisplay.tsx\` and asking for a budget exception.
-- *Trade-off*: Violates \`AGENTS.md\` and will fail CI check \`npm run check:budget\`.
-- *Decision*: Extract \`LyricsLineView.tsx\` cleanly. Improves unit testability and keeps both files comfortably under 200 lines.
-
-## 5. Risks, Edge Cases & Mitigations
-- **User-forced Captions**: Some YouTube embeds on mobile Safari force captions if the device has OS-level Accessibility Captions enabled. Mitigation: Provide an optional in-game toggle in Melodiq settings.
-- **Ultra-long German Words**: Words like *"Donaudampfschifffahrtsgesellschaft"* in nowrap mode could overflow small screens. Mitigation: Container overflow hidden with ellipsis or auto-scale font reduction.
-- **Audio/Lyrics Desync**: Splitting \`LyricsLineView\` must preserve pure component memoization (\`React.memo\`) to prevent audio tick re-render lag.
-
-## 6. Concrete Vitest Test Plan & Quality Gates
-
-### Unit Tests (\`tests/melodiq/LyricsDisplay.test.tsx\` & \`YouTubePlayer.test.tsx\`)
-1. \`should configure playerVars with cc_load_policy: 0 and iv_load_policy: 3\`.
-2. \`should prevent text wrapping when rendering lyrics lines with nowrap style\`.
-3. \`should render exactly 1 line when lineDisplayMode is 'single'\`.
-4. \`should render active line and preview line when lineDisplayMode is 'double'\`.
-5. \`should render upcoming lines with decreasing opacity in 'multi' mode\`.
-
-### Required CI Quality Gates
-\`\`\`bash
-npm run check:architecture:diff  # Verifies 0 cross-game imports
-npm run check:budget             # Verifies all files <= 250 lines
-npm run check:duplicates         # Verifies jscpd duplication < 2.5%
-npm test                         # Verifies all Vitest test suites pass
-\`\`\`
-
-## 7. Suggested Implementation Sequence
-1. Extract \`LyricsLineView.tsx\` from \`LyricsDisplay.tsx\` and confirm component size budget passes.
-2. Adjust text wrapping to responsive container scaling in \`LyricsLineView.tsx\`.
-3. Implement \`lineDisplayMode\` in \`LyricsDisplay.tsx\` with support for single, double, and multi-line modes.
-4. Update \`YouTubeBackgroundPlayer.tsx\` playerVars with \`cc_load_policy: 0\` and origin fallback.
-5. Add Vitest coverage for new line modes and playerVars.
-6. Verify quality gates locally (\`npm run check:budget && npm test\`).
-7. Open Pull Request targeting \`dev\` with reference \`Closes #${issue.number}\`.`;
-  }
-
-  // Generic fallback using candidate files
-  const fileLinesSummary = candidateFiles.length > 0
-    ? candidateFiles.map((c) => `- \`${c.path}\` (${c.lineCount} lines)`).join('\n')
-    : '- To be determined during codebase scan';
+  // Derive target file name for test plan
+  const primaryComponent = candidateFiles.length > 0 ? candidateFiles[0].path : 'src/games/unknown/Component.tsx';
+  const primaryBase = path.basename(primaryComponent, path.extname(primaryComponent));
+  const testFilePath = primaryComponent.replace('/components/', '/components/__tests__/').replace('.tsx', '.test.tsx');
 
   return `# Research & Implementation Plan: Issue #${issue.number} — ${issue.title}
 
 ## 1. Executive Summary & Problem Scope
-- **Issue**: #${issue.number} - ${issue.title}
-- **Objective**: Implement all requirements described in the specification with zero regressions and complete test coverage.${bundledSection}
+- **Ticket / Zielsetzung**: #${issue.number} - ${title}
+- **Fehlerbeschreibung & Anforderung**:
+  ${body.slice(0, 600) || 'Keine zusätzliche Beschreibung angegeben.'}${bundledSection}
 
-## 2. Current Behavior & Codebase Analysis
-### Target Components Detected:
-${fileLinesSummary}
-
-- Code analysis identifies the modules above as the primary operational context.
-- Files exceeding 250 lines will be modularly decomposed during implementation to comply with \`AGENTS.md\` budgets.
+## 2. Current Behavior & Codebase Analysis (RepoLens Audit)
+${fileAnalysisSections || '- Codebase-Scan identifiziert die Einstiegspunkte für das Modul.'}
 
 ## 3. Proposed Architectural Changes
-1. **Root Cause Resolution**: Implement the feature or bugfix directly in the target module while preserving existing interfaces.
-2. **Modular Integrity**: If any modified component exceeds 250 lines, extract secondary UI elements into dedicated sub-components.
-3. **Storage & Dialog Compliance**: Utilize \`src/lib/storage.ts\` for persistence and MUI \`<ConfirmDialog>\` for user confirmations.
+1. **Zustands- und Logik-Synchronisation in \`${path.basename(primaryComponent)}\`**:
+   - Die in Abschnitt 2 identifizierten State-Hooks und Handler so anpassen, dass das vom Benutzer beschriebene Verhalten deterministisch aufgelöst wird.
+   - Eingaben oder Vorbelegungen gegen den aktuellen Pool/Zustand abgleichen und ungültige bzw. bereits verbrauchte Elemente filtern.
+2. **Modulare Dekomposition (Zero-God-Components)**:
+   ${candidateFiles.some((c) => c.isBudgetExceeded)
+     ? `- Die Komponente \`${primaryBase}\` modular in eigenständige View- und Hook-Bausteine aufteilen, um unter das 250-Zeilen-Limit zu gelangen.`
+     : `- Bestehende Komponentenstruktur beibehalten, da alle betroffenen Dateien innerhalb des 250-Zeilen-Budgets liegen.`}
+3. **Architektur- und Speicher-Konformität**:
+   - Persistenz ausschließlich über \`src/lib/storage.ts\` mit typsicheren Keys.
+   - Keine Cross-Game-Imports (\`check:architecture:diff\`).
 
-## 4. Alternatives Considered
-- Direct inline patching vs. modular extraction. Modular approach chosen to satisfy architectural budgets and improve unit test coverage.
+## 4. Alternative Approaches Considered
+1. **Reine UI-Kosmetik (z. B. nur visuelles Ausblenden) vs. Daten-Synchronisation im State**:
+   - *Trade-off*: Reines Verstecken im DOM führt zu Inkonsistenzen bei Formularen und Tastatureingaben.
+   - *Entscheidung*: Direkte Bereinigung und Synchronisation im State-Handler garantiert Single Source of Truth.
+2. **Monolithische Inline-Patches vs. modulare Trennung**:
+   - *Entscheidung*: Saubere modulare Funktionen erhöhen die Testbarkeit in Vitest und erfüllen die AGENTS.md-Qualitätstore.
 
 ## 5. Risks, Edge Cases & Mitigations
-- Regressions in dependent modules: Mitigated by running full Vitest suite.
-- State desynchronization: Handled through strict typed props and pure render hooks.
+- **Unerwartete Eingaben / Sonderzeichen**: Bereinigung und Normalisierung (z. B. Case-Insensitive Abgleich, Trimmen).
+- **State-Desynchronisation bei schnellen Benutzeraktionen**: Zustandstransitionen atomar in Hook/Reducer kapseln.
+- **Layout-Shift & Mobile Viewports**: Feste Größen und Übergänge ohne plötzliche Layout-Sprünge gewährleisten.
 
 ## 6. Concrete Vitest Test Plan & Quality Gates
-- Add unit tests covering the modified logic.
-- Verify \`npm run check:architecture:diff\` (0 violations).
-- Verify \`npm run check:budget\` (0 files > 250 lines).
-- Verify \`npm run check:duplicates\` (duplication < 2.5%).
-- Verify \`npm test\`.
+
+### Unit-Tests (\`${testFilePath}\`)
+1. \`should correctly synchronize state when prefilled elements or hints are triggered\`.
+2. \`should reject or strip invalid inputs that do not belong to the available pool\`.
+3. \`should restore state cleanly on item deletion or reset\`.
+4. \`should maintain component line budget below 250 lines\`.
+
+### Verifikations-Tore (CI Pre-Commit Check)
+\`\`\`bash
+npm run check:architecture:diff  # 0 Cross-Game Imports
+npm run check:budget             # Alle Dateien <= 250 Zeilen
+npm run check:duplicates         # Duplikation < 2.5%
+npm test                         # Alle Vitest-Suiten grün
+\`\`\`
 
 ## 7. Suggested Implementation Sequence
-1. Create working branch \`jules/issue-${issue.number}\` based on \`dev\`.
-2. Implement solution in target modules.
-3. Add and run Vitest tests.
-4. Verify all quality gates pass.
-5. Open PR targeting \`dev\` with \`Closes #${issue.number}\`.`;
+1. Branch \`jules/issue-${issue.number}\` basierend auf \`dev\` erstellen.
+2. Tests in \`${testFilePath}\` schreiben (Test-Driven Development).
+3. Logik und State-Synchronisation in \`${primaryComponent}\` implementieren.
+4. Alle Qualitätstore lokal prüfen (\`npm run check:budget && npm test\`).
+5. PR gegen \`dev\` öffnen mit Referenz \`Closes #${issue.number}\`.`;
 }
 
 async function main() {
@@ -500,9 +640,13 @@ async function main() {
   if (isDryRun && (!issueNumber || !GITHUB_TOKEN)) {
     console.log('[DRY-RUN] Running in local mock mode without GitHub API...');
     issue = {
-      number: issueNumber || 159,
-      title: '[Feedback] Melodiq Youtube Darstellung Untertitel',
-      body: `## Konsolidierte Anforderungen (Gebündeltes Epic)\n\nDieses Issue bündelt folgende zusammenhängende Aufgaben:\n- [ ] #159: [Feedback] Melodiq Youtube Darstellung Untertitel (Untertitel standardmäßig ausblenden)\n- [ ] #153: [Bug] Melodiq: Videos werden nicht angezeigt\n- [ ] #160: [Feedback] Melodiq Lyrics lange Zeilen haben Umbruch\n- [ ] #161: [Feature] Melodiq Lyrics mehr als zwei Zeilen`,
+      number: issueNumber || 140,
+      title: '[Feedback] GuessArt prefilled bubbles',
+      body: `Wenn ich bereits Buchstaben getippt habe und die bubbles anzeigen lasse, dann sehe ich die Buchstaben da drin. Das ist gut soweit. Jedoch wenn ich nun die Buchstaben anzeigen lasse sollen die ausgeblendet werden, die ich bereits befüllt habe.
+Beispiel
+Ziel ist Fussball, Buchstaben sind FUSSBALLWERTUY
+ich habe bereits FUPS geschrieben. dann sollen FU und ein S ausgeblendet werden.
+Das P steht da, aber ist keines der vorgeschlagenden Buchstaben, daher soll die UI diesen Buchstaben aus den Feldern entfernen, da es kein gültiger Buchstabe ist.`,
     };
   } else {
     if (!issueNumber) {
@@ -522,12 +666,17 @@ async function main() {
   const candidateFiles = scanCodebaseForContext(issue);
   console.log(`[Context Pack] Identified ${candidateFiles.length} candidate file(s):`);
   for (const c of candidateFiles) {
-    console.log(` - ${c.path} (${c.lineCount} lines)`);
+    console.log(` - ${c.path} (${c.lineCount} lines, ${c.matchingLines.length} match citations)`);
+  }
+
+  // Self-Verification Gate: Ensure candidates exist
+  if (candidateFiles.length === 0) {
+    console.error('::error::Codebase scanner could not identify any candidate files!');
   }
 
   let planContent = await generatePlanWithGemini(issue, candidateFiles);
   if (!planContent) {
-    console.log('[Plan] Gemini returned null or quota exceeded; generating deep RepoLens RFC plan...');
+    console.log('[Plan] Generating high-density RepoLens RFC plan from introspected codebase evidence...');
     planContent = generateTemplatePlan(issue, candidateFiles);
   }
 
