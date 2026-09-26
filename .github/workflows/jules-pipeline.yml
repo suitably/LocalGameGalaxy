@@ -401,6 +401,7 @@ jobs:
           STARTING_BRANCH: 'dev'
           REPO: ${{ github.repository }}
           USER_PROMPT: ${{ steps.prep.outputs.prompt }}
+          YOLO_MODE: ${{ needs.triage.outputs.yolo }}
         shell: bash
         run: |
           set +e # Prevent script from exiting immediately on curl/jq errors
@@ -433,10 +434,16 @@ jobs:
           # 2. Prepare payload
           echo "$USER_PROMPT" > prompt.txt
 
+          REQUIRE_APPROVAL="true"
+          if [ "$YOLO_MODE" = "true" ]; then
+            REQUIRE_APPROVAL="false"
+          fi
+
           jq -n \
             --rawfile jules_prompt prompt.txt \
             --arg starting_branch "$STARTING_BRANCH" \
             --arg repo_full_name "$REPO" \
+            --arg require_approval "$REQUIRE_APPROVAL" \
             '{
               "prompt": $jules_prompt,
               "sourceContext": {
@@ -445,7 +452,7 @@ jobs:
                   "startingBranch": $starting_branch
                 }
               },
-              "requirePlanApproval": false,
+              "requirePlanApproval": ($require_approval == "true"),
               "automationMode": "AUTO_CREATE_PR"
             }' > jules_payload.json
 
