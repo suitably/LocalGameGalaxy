@@ -1,4 +1,4 @@
-name: Jules Issue Auto-Fix Pipeline
+name: Jules Suggestions
 
 on:
   schedule:
