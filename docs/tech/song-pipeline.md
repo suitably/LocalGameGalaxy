@@ -1,14 +1,3 @@
----
-type: Pipeline Specification
-title: Song Ingestion & Vocal Separation Pipeline
-description: Processing pipeline for downloading songs (yt-dlp), extracting lyrics, and executing AI vocal separation via Demucs / ONNX.
-resource: server/src/plugins/melodiq/
-tags: [audio, demucs, yt-dlp, vocal-separation, ultrastar]
-status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
----
-
 # Song Ingestion & Vocal Separation Pipeline
 
 > [!NOTE]
@@ -69,7 +58,7 @@ User Input (URL / USDB Search)
 - Spawns a Python subprocess running `audio-separator` with the Demucs `htdemucs` model.
 - Input: `audio.mp3`. Outputs: `vocals.mp3` and `instrumental.mp3`.
 - Progress is logged and forwarded to the client via SSE.
-- The Python environment must be pre-configured (see [onboarding-faq.md](docs/tech/onboarding-faq.md)).
+- The Python environment must be pre-configured (see [onboarding-faq.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/onboarding-faq.md)).
 
 ### Stage 4: Forced Alignment (`align_lyrics.py`)
 - Optional step that refines per-syllable timestamps in the UltraStar `.txt` file.

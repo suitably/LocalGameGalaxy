@@ -1,14 +1,3 @@
----
-type: Architecture Decision Record
-title: 'ADR-0001: Dexie for IndexedDB Management'
-description: Decision to use Dexie.js for client-side IndexedDB database access, migrations, and reactive hooks.
-resource: src/lib/
-tags: [adr, indexeddb, dexie, offline-first]
-status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
----
-
 # ADR-0001: Use Dexie as the IndexedDB Abstraction Layer
 
 ## Status

@@ -1,14 +1,3 @@
----
-type: Development Workflow
-title: SOLID Development & Refactoring Workflow
-description: Practical guidelines for applying SOLID principles, avoiding God components, and conducting pre-coding reuse audits.
-resource: docs/workflows/
-tags: [solid, workflow, refactoring, srp]
-status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
----
-
 # SOLID Development Workflow
 
 This workflow guides developers and AI agents in writing maintainable, reusable, and small-footprint code, strictly adhering to SOLID principles.

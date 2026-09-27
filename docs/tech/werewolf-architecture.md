@@ -1,18 +1,7 @@
----
-type: Game Architecture
-title: Werewolf Game Module Architecture
-description: Architecture of the Werewolf moderator engine, role state machines, night resolution order, and player setup.
-resource: src/games/werewolf/
-tags: [werewolf, social-deduction, state-machine, roles]
-status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
----
-
 # Werewolf Game Module Architecture
 
 > [!NOTE]
-> This document covers the Werewolf game module architecture. For Melodiq, see [melodiq-architecture.md](docs/tech/melodiq-architecture.md).
+> This document covers the Werewolf game module architecture. For Melodiq, see [melodiq-architecture.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/melodiq-architecture.md).
 
 ---
 
