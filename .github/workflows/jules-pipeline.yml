@@ -122,10 +122,16 @@ jobs:
                     action = 'reply';
                     const replyText = rawBody.replace(/^\/(jules\s+)?reply\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
                     targets = replyText || 'Please proceed autonomously with the proposed solution and create the pull request.';
-                  } else if (body.startsWith('/continue') || body.startsWith('/jules continue') || body.startsWith('/approve') || body.startsWith('/jules approve') || body.startsWith('/approve-plan')) {
+                  } else if (body.startsWith('/approve') || body.startsWith('/jules approve') || body.startsWith('/approve-plan')) {
+                    if (hasSession) {
+                      action = 'approve-plan';
+                    } else {
+                      action = 'fix';
+                    }
+                  } else if (body.startsWith('/continue') || body.startsWith('/jules continue')) {
                     if (hasSession) {
                       action = hasYoloFlag ? 'yolo' : 'continue';
-                      const replyText = rawBody.replace(/^\/(jules\s+)?(continue|approve|approve-plan)\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
+                      const replyText = rawBody.replace(/^\/(jules\s+)?continue\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
                       targets = replyText || 'Continue with the suggested approach.';
                     } else {
                       action = 'fix';
@@ -160,7 +166,9 @@ jobs:
                 } else if (labelName === 'yolo' || labelName === 'jules:yolo') {
                   action = 'fix';
                   isYolo = true;
-                } else if (labelName === 'jules:approved' || labelName === 'jules:fix' || labelName === 'approved' || labelName === 'fix' || labelName === 'approve') {
+                } else if (labelName === 'jules:approved' || labelName === 'approved' || labelName === 'approve') {
+                  action = hasSession ? 'approve-plan' : 'fix';
+                } else if (labelName === 'jules:fix' || labelName === 'fix') {
                   action = 'fix';
                 }
               }
@@ -521,6 +529,23 @@ jobs:
               });
             }
 
+      - name: Wait for Jules Plan (Fast-Path)
+        if: steps.jules_call.outputs.success == 'true' && needs.triage.outputs.action == 'plan'
+        uses: actions/github-script@v7
+        env:
+          ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
+          SESSION_ID: ${{ steps.jules_call.outputs.session_id }}
+          JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
+          JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
+          JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
+          JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
+          JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
+          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+          MAX_WAIT_SECONDS: '90'
+        with:
+          script: |
+            const watcher = require('./scripts/pipeline/jules-watcher.cjs');
+            await watcher({ github, context, core });
 
   interact-jules:
     name: Relay Command or Feedback to Jules

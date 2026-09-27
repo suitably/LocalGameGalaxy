@@ -1,0 +1,319 @@
+module.exports = async ({ github, context, core }) => {
+  const targetIssueNumber = process.env.ISSUE_NUMBER ? Number(process.env.ISSUE_NUMBER) : null;
+  const initialSessionId = process.env.SESSION_ID || null;
+  const maxWaitSeconds = process.env.MAX_WAIT_SECONDS ? Number(process.env.MAX_WAIT_SECONDS) : 1;
+  const pollIntervalMs = 5000;
+
+  // Gather Jules API keys
+  const keys = [
+    process.env.JULES_API_KEY_1,
+    process.env.JULES_API_KEY_2,
+    process.env.JULES_API_KEY_3,
+    process.env.JULES_API_KEY_4,
+    process.env.JULES_API_KEY_5,
+    process.env.JULES_API_KEY
+  ].filter(Boolean);
+
+  if (keys.length === 0) {
+    console.log('No Jules API keys configured. Skipping watcher.');
+    return;
+  }
+
+  function getApiKey(issueNum) {
+    const idx = (issueNum || 1) % keys.length;
+    return keys[idx];
+  }
+
+  function parseActivity(a) {
+    if (!a) return { time: '', tag: 'SYSTEM', text: '' };
+    const time = a.createTime ? new Date(a.createTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '';
+    let tag = (a.originator || a.type || 'AGENT').toUpperCase();
+    let text = '';
+
+    if (a.agentMessaged) {
+      const am = a.agentMessaged;
+      text = am.agentMessage || am.message || am.text || am.prompt || am.content || '';
+    } else if (a.userMessaged) {
+      const um = a.userMessaged;
+      text = um.userMessage || um.message || um.text || um.prompt || um.content || '';
+    } else if (a.progressUpdated) {
+      const pu = a.progressUpdated;
+      text = pu.title || pu.description || pu.message || '';
+    } else if (a.planGenerated) {
+      tag = 'PLAN';
+      const pg = a.planGenerated;
+      let planText = pg.plan?.steps ? `### 📋 Proposed Plan (${pg.plan.steps.length} steps)` : (pg.title || '### 📋 Proposed Plan');
+      if (pg.plan?.steps && Array.isArray(pg.plan.steps)) {
+        planText += '\n\n';
+        pg.plan.steps.forEach((step, i) => {
+          planText += `${i + 1}. **${step.title || 'Step'}**\n`;
+          if (step.description) planText += `   ${step.description}\n`;
+        });
+      }
+      text = planText;
+    } else if (a.sessionCompleted) {
+      tag = 'COMPLETED';
+      text = 'Task completed successfully 🎉';
+    } else if (a.sessionFailed) {
+      tag = 'FAILED';
+      text = `Task failed: ${a.sessionFailed.reason || ''}`;
+    }
+
+    if (!text && typeof a.message === 'string' && a.message) text = a.message;
+    if (!text && typeof a.title === 'string' && a.title) text = a.title;
+    if (!text && typeof a.description === 'string' && a.description) text = a.description;
+    if (!text && typeof a.summary === 'string' && a.summary) text = a.summary;
+
+    return { time, tag, text: text.trim() };
+  }
+
+  async function checkIssueSession(issueNumber, explicitSessionId = null) {
+    console.log(`Checking issue #${issueNumber}...`);
+
+    // 1. Get comments to find session ID and seen activities
+    let comments = [];
+    try {
+      const commentsRes = await github.rest.issues.listComments({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        issue_number: issueNumber,
+        per_page: 100
+      });
+      comments = commentsRes.data || [];
+    } catch (e) {
+      console.warn(`Could not fetch comments for issue #${issueNumber}:`, e.message);
+      return false;
+    }
+
+    let sessionId = explicitSessionId;
+    if (!sessionId) {
+      for (let i = comments.length - 1; i >= 0; i--) {
+        const body = comments[i].body || '';
+        const match = body.match(/https:\/\/jules\.google\.com\/task\/([a-zA-Z0-9_\-]+)/);
+        if (match) {
+          sessionId = match[1];
+          break;
+        }
+      }
+    }
+
+    if (!sessionId) {
+      console.log(`No active Jules session found on issue #${issueNumber}.`);
+      return false;
+    }
+
+    // Extract all previously posted activity markers to avoid duplicate comments
+    const postedMarkers = new Set();
+    for (const c of comments) {
+      const body = c.body || '';
+      const markerMatches = body.matchAll(/<!-- jules-(?:activity|marker):([a-zA-Z0-9_\-]+) -->/g);
+      for (const m of markerMatches) {
+        postedMarkers.add(m[1]);
+      }
+    }
+
+    // 2. Query Jules API
+    const apiKey = getApiKey(issueNumber);
+    let sessionData = null;
+    let activitiesData = null;
+
+    try {
+      const sessRes = await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}`, {
+        headers: { 'X-Goog-Api-Key': apiKey }
+      });
+      if (sessRes.ok) {
+        sessionData = await sessRes.json();
+      } else {
+        console.warn(`Failed to fetch session ${sessionId}: status ${sessRes.status}`);
+        return false;
+      }
+
+      const actRes = await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}/activities?pageSize=30`, {
+        headers: { 'X-Goog-Api-Key': apiKey }
+      });
+      if (actRes.ok) {
+        activitiesData = await actRes.json();
+      }
+    } catch (e) {
+      console.warn(`Error querying Jules API for session ${sessionId}:`, e.message);
+      return false;
+    }
+
+    const state = sessionData?.state || 'UNKNOWN';
+    console.log(`Session ${sessionId} (Issue #${issueNumber}) state: ${state}`);
+
+    const rawActivities = activitiesData?.activities || [];
+    // Sort chronologically
+    rawActivities.sort((a, b) => (a.createTime || '').localeCompare(b.createTime || ''));
+
+    // Handle AWAITING_USER_FEEDBACK or AWAITING_USER_INPUT
+    if (state === 'AWAITING_USER_FEEDBACK' || state === 'AWAITING_USER_INPUT') {
+      // Find the latest agent message or plan that hasn't been posted yet
+      for (let i = rawActivities.length - 1; i >= 0; i--) {
+        const act = rawActivities[i];
+        if (act.originator === 'USER' || act.userMessaged) continue;
+
+        const actId = act.id || `act-${i}`;
+        if (postedMarkers.has(actId)) {
+          console.log(`Activity ${actId} already posted. Skipping.`);
+          break; // Latest is already posted
+        }
+
+        const parsed = parseActivity(act);
+        if (!parsed.text) continue;
+
+        // Is it a plan or a question?
+        const isPlan = act.planGenerated || parsed.tag === 'PLAN' || parsed.text.toLowerCase().includes('proposed plan') || parsed.text.includes('### 📋');
+
+        if (isPlan) {
+          const planComment = [
+            `<!-- jules-activity:${actId} -->`,
+            `## 🤖 Jules Implementation Plan`,
+            '',
+            parsed.text,
+            '',
+            '---',
+            '### 🚦 Plan Review & Next Steps',
+            '- **`/approve`** — Plan genehmigen. Jules startet die Umsetzung auf einem Feature-Branch.',
+            '- **`/reply <Deine Anweisungen>`** — Feedback oder Fragen an Jules senden. Jules passt den Plan an.',
+            '- **`/yolo`** — Volle Autonomie für die Umsetzung ohne Zwischenfragen.'
+          ].join('\n');
+
+          try {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: planComment
+            });
+            console.log(`Posted plan (activity ${actId}) to issue #${issueNumber}`);
+
+            await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:in-review' }).catch(() => {});
+            await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:waiting-approval'] }).catch(() => {});
+            return true; // Action taken
+          } catch (err) {
+            console.warn(`Failed to post plan comment:`, err.message);
+          }
+        } else {
+          // Unexpected question / feedback needed during execution
+          const questionComment = [
+            `<!-- jules-activity:${actId} -->`,
+            `### ❓ Jules Rückfrage / Feedback benötigt`,
+            '',
+            `> ${parsed.text.replace(/\n/g, '\n> ')}`,
+            '',
+            '---',
+            '👉 **Antworte direkt hier im Issue:**',
+            '- Normaler Kommentar oder **`/reply <Antwort>`**',
+            '- **`/continue`** um mit dem vorgeschlagenen Ansatz fortzufahren',
+            '- **`/yolo`** für 100% Autonomie ohne weitere Fragen'
+          ].join('\n');
+
+          try {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: questionComment
+            });
+            console.log(`Posted question (activity ${actId}) to issue #${issueNumber}`);
+
+            await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:in-progress' }).catch(() => {});
+            await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:waiting-input'] }).catch(() => {});
+            return true; // Action taken
+          } catch (err) {
+            console.warn(`Failed to post question comment:`, err.message);
+          }
+        }
+        break; // Only handle the most recent unhandled activity
+      }
+    } else if (state === 'COMPLETED') {
+      const completionMarker = `completed-${sessionId}`;
+      if (!postedMarkers.has(completionMarker)) {
+        try {
+          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:in-progress' }).catch(() => {});
+          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-input' }).catch(() => {});
+          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-approval' }).catch(() => {});
+          await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:completed'] }).catch(() => {});
+
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: issueNumber,
+            body: `<!-- jules-marker:${completionMarker} -->\n🎉 **Jules hat die Aufgabe erfolgreich abgeschlossen!**\nDer Pull Request wurde erstellt und die Verifikation läuft.`
+          });
+          console.log(`Marked issue #${issueNumber} as completed.`);
+          return true;
+        } catch (e) {}
+      }
+    } else if (state === 'FAILED') {
+      const failureMarker = `failed-${sessionId}`;
+      if (!postedMarkers.has(failureMarker)) {
+        try {
+          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:in-progress' }).catch(() => {});
+          await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:failed'] }).catch(() => {});
+
+          const reason = sessionData.failureReason || 'Unbekannter Fehler bei der Ausführung.';
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: issueNumber,
+            body: `<!-- jules-marker:${failureMarker} -->\n❌ **Jules Task fehlgeschlagen:**\n\`\`\`\n${reason}\n\`\`\``
+          });
+          return true;
+        } catch (e) {}
+      }
+    }
+
+    return false;
+  }
+
+  // Execution:
+  // If targetIssueNumber is specified (Fast-Path right after /plan dispatch):
+  if (targetIssueNumber) {
+    console.log(`Starting fast-path watcher for Issue #${targetIssueNumber} (max ${maxWaitSeconds}s)...`);
+    const startTime = Date.now();
+    const maxDurationMs = maxWaitSeconds * 1000;
+
+    while (Date.now() - startTime < maxDurationMs) {
+      const handled = await checkIssueSession(targetIssueNumber, initialSessionId);
+      if (handled) {
+        console.log(`Fast-path successfully resolved for Issue #${targetIssueNumber}.`);
+        return;
+      }
+      if (Date.now() - startTime + pollIntervalMs >= maxDurationMs) break;
+      await new Promise(r => setTimeout(r, pollIntervalMs));
+    }
+    console.log(`Fast-path wait window concluded for Issue #${targetIssueNumber}. Scheduled watcher will monitor remaining progress.`);
+    return;
+  }
+
+  // Cron Mode: Scan all active issues
+  console.log('Running scheduled scan for active Jules issues...');
+  const activeLabels = ['jules:in-progress', 'jules:in-review', 'jules:waiting-approval'];
+  const issuesToScan = new Map();
+
+  for (const label of activeLabels) {
+    try {
+      const res = await github.rest.issues.listForRepo({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        state: 'open',
+        labels: label,
+        per_page: 20
+      });
+      for (const issue of res.data || []) {
+        if (!issue.pull_request) {
+          issuesToScan.set(issue.number, issue);
+        }
+      }
+    } catch (e) {
+      console.warn(`Could not list issues for label ${label}:`, e.message);
+    }
+  }
+
+  console.log(`Found ${issuesToScan.size} active Jules issue(s) to check.`);
+  for (const [issueNum] of issuesToScan) {
+    await checkIssueSession(issueNum);
+  }
+};

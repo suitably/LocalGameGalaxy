@@ -212,11 +212,41 @@ module.exports = async ({ github, context, core }) => {
 
   if (success) {
     if (action === 'approve-plan') {
+      try {
+        await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-approval' });
+        await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-input' });
+        await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:in-progress'] });
+      } catch (e) {}
+
+      // Send strict autonomy directive to prevent intermediate pauses during coding
+      const autonomyDirective = `⚡ PLAN APPROVED — AUTONOMOUS IMPLEMENTATION ENGAGED ⚡
+You are authorized with 100% full autonomy to implement this approved plan.
+CRITICAL DIRECTIVES:
+1. Proceed immediately with implementation on a feature branch.
+2. DO NOT pause to ask any confirmation questions or PR creation confirmations.
+3. Make all necessary architectural and code decisions yourself according to AGENTS.md.
+4. Run all tests and verification gates, and create the Pull Request targeting 'main'.
+5. Finish the task autonomously.`;
+
+      for (const key of keys) {
+        try {
+          await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}:sendMessage`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Goog-Api-Key': key
+            },
+            body: JSON.stringify({ prompt: autonomyDirective })
+          });
+          break;
+        } catch (e) {}
+      }
+
       await github.rest.issues.createComment({
         owner: context.repo.owner,
         repo: context.repo.repo,
         issue_number: issueNumber,
-        body: `✅ **Plan approved.** (Session: \`${sessionId}\`)\nJules is implementing on a feature branch. A PR against \`main\` will be opened once complete.`
+        body: `✅ **Plan approved.** (Session: \`${sessionId}\`)\nJules is implementing autonomously on a feature branch. A PR against \`main\` will be opened once complete.`
       });
     } else if (action === 'yolo') {
       try {
