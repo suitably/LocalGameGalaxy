@@ -290,8 +290,17 @@ module.exports = async ({ github, context, core }) => {
 
   // Cron Mode: Scan all active issues
   console.log('Running scheduled scan for active Jules issues...');
-  const activeLabels = ['jules:in-progress', 'jules:in-review', 'jules:waiting-approval'];
   const issuesToScan = new Map();
+
+  // 1. Scan issues with any jules-related label
+  const activeLabels = [
+    'jules:in-progress',
+    'jules:in-review',
+    'jules:waiting-approval',
+    'jules:waiting-input',
+    'jules:plan',
+    'jules'
+  ];
 
   for (const label of activeLabels) {
     try {
@@ -310,6 +319,32 @@ module.exports = async ({ github, context, core }) => {
     } catch (e) {
       console.warn(`Could not list issues for label ${label}:`, e.message);
     }
+  }
+
+  // 2. Also check recently updated open issues (fallback if labels were stripped)
+  try {
+    const recentRes = await github.rest.issues.listForRepo({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      state: 'open',
+      sort: 'updated',
+      direction: 'desc',
+      per_page: 25
+    });
+    for (const issue of recentRes.data || []) {
+      if (!issue.pull_request && !issuesToScan.has(issue.number)) {
+        const labels = issue.labels || [];
+        const hasJulesMarker = labels.some(l => {
+          const name = (typeof l === 'string' ? l : l.name || '').toLowerCase();
+          return name.includes('jules') || name === 'plan' || name === 'fix';
+        });
+        if (hasJulesMarker) {
+          issuesToScan.set(issue.number, issue);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Could not scan recently updated issues:', e.message);
   }
 
   console.log(`Found ${issuesToScan.size} active Jules issue(s) to check.`);
