@@ -174,6 +174,13 @@ module.exports = async ({ github, context, core }) => {
         parsed.tag === 'PLAN' || 
         /proposed plan|analyze the issue|root cause|implementation plan|plan review/i.test(parsed.text);
 
+      const isAgentMessage = Boolean(act.agentMessaged);
+
+      // Skip internal progress updates that do not represent direct messages to the user
+      if (!isPlan && !isAgentMessage && state !== 'AWAITING_USER_FEEDBACK' && state !== 'AWAITING_USER_INPUT' && !parsed.text.includes('?')) {
+        continue;
+      }
+
       if (isPlan) {
         const planComment = [
           `<!-- jules-activity:${actId} -->`,
@@ -181,9 +188,6 @@ module.exports = async ({ github, context, core }) => {
           '',
           parsed.text,
           '',
-          '---',
-          '### 🚦 Plan Review & Next Steps',
-          '- **`/approve`** — Plan genehmigen. Jules startet die Umsetzung auf einem Feature-Branch.',
           '---',
           '👉 **Nächste Schritte:**',
           '- Diskutiert frei im Issue über den Plan.',
@@ -207,11 +211,13 @@ module.exports = async ({ github, context, core }) => {
         } catch (err) {
           console.warn(`Failed to post plan comment:`, err.message);
         }
-      } else if (state === 'AWAITING_USER_FEEDBACK' || state === 'AWAITING_USER_INPUT' || parsed.text.includes('?')) {
-        // Unexpected question / feedback needed during execution
+      } else if (isAgentMessage || state === 'AWAITING_USER_FEEDBACK' || state === 'AWAITING_USER_INPUT' || parsed.text.includes('?')) {
+        // Direct response or question from Jules
+        const isQuestion = parsed.text.includes('?') || /frage|question|wie soll|soll ich/i.test(parsed.text);
+        const heading = isQuestion ? '### ❓ Jules Rückfrage / Feedback benötigt' : '### 💬 Jules Antwort / Rückmeldung';
         const questionComment = [
           `<!-- jules-activity:${actId} -->`,
-          `### ❓ Jules Rückfrage / Feedback benötigt`,
+          heading,
           '',
           `> ${parsed.text.replace(/\n/g, '\n> ')}`,
           '',
@@ -227,7 +233,7 @@ module.exports = async ({ github, context, core }) => {
             issue_number: issueNumber,
             body: questionComment
           });
-          console.log(`Posted question (activity ${actId}) to issue #${issueNumber}`);
+          console.log(`Posted message/question (activity ${actId}) to issue #${issueNumber}`);
           postedMarkers.add(actId);
 
           await setSingleJulesLabel(github, context, issueNumber, 'jules:waiting');
@@ -239,8 +245,8 @@ module.exports = async ({ github, context, core }) => {
       break; // Only handle the most recent unhandled activity
     }
 
-    // 4. Handle Completion ONLY if PR was actually created
-    if (state === 'COMPLETED' && hasPrOrCode) {
+    // 4. Handle Completion
+    if (state === 'COMPLETED') {
       const completionMarker = `completed-${sessionId}`;
       if (!postedMarkers.has(completionMarker)) {
         try {

@@ -574,3 +574,21 @@ jobs:
             const interact = require('./scripts/pipeline/jules-interact.cjs');
             await interact({ github, context, core });
 
+      - name: Wait for Jules Activity or PR (Fast-Path)
+        if: needs.triage.outputs.action != 'status'
+        uses: actions/github-script@v7
+        env:
+          ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
+          JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
+          JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
+          JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
+          JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
+          JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
+          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+          MAX_WAIT_SECONDS: '90'
+        with:
+          script: |
+            const watcher = require('./scripts/pipeline/jules-watcher.cjs');
+            await watcher({ github, context, core });
+
+
