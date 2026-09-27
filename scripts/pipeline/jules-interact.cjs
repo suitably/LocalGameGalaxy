@@ -219,7 +219,23 @@ module.exports = async ({ github, context, core }) => {
     return `Here is the discussion since your last message:\n\n${recentLines.join('\n')}`;
   }
 
-  // 4. Handle approve-plan, yolo, continue, send-messages, and reply
+  function hasApprovalIntent(text) {
+    if (!text) return false;
+    const lines = text.split('\n');
+    for (const line of lines) {
+      const t = line.toLowerCase().trim();
+      if (/\b(nicht|not|kein|keineswegs|warten|warte|stop)\b.*\b(go|passt|ok|start|approved?)/i.test(t)) continue;
+      if (/\b(passt|ok|go)\b.*(noch\s+)?(nicht|not)/i.test(t)) continue;
+      const patterns = [
+        /\b(go|start|approved?|genehmigt|freigegeben|passt|lgtm|looks good|leg los|mach das|mach so|einverstanden|proceed|weitermachen|abgemacht|let's go|lets go)\b/i,
+        /plan\s*(ist\s*)?(ok|gut|in ordnung|super|angenommen|in\.?o\.?)/i
+      ];
+      if (patterns.some(p => p.test(t))) return true;
+    }
+    return false;
+  }
+
+  // 4. Handle send-messages (with auto plan-approval detection), yolo, and continue
   const yoloPrompt = `⚡ YOLO MODE ENGAGED ⚡
   You are authorized with 100% full autonomy.
   CRITICAL DIRECTIVES:
@@ -241,11 +257,14 @@ module.exports = async ({ github, context, core }) => {
     return;
   }
 
-  const endpoint = action === 'approve-plan'
+  // Check if discussion contains plan approval intent
+  const isApproval = action === 'approve-plan' || (action === 'send-messages' && hasApprovalIntent(promptToSend));
+
+  const endpoint = isApproval
     ? `https://jules.googleapis.com/v1alpha/sessions/${sessionId}:approvePlan`
     : `https://jules.googleapis.com/v1alpha/sessions/${sessionId}:sendMessage`;
 
-  const payload = action === 'approve-plan' ? {} : { prompt: isYoloAction ? yoloPrompt : promptToSend };
+  const payload = isApproval ? {} : { prompt: isYoloAction ? yoloPrompt : promptToSend };
 
   let success = false;
   let lastError = '';
@@ -266,6 +285,22 @@ module.exports = async ({ github, context, core }) => {
         break;
       } else {
         const txt = await res.text();
+        // If approvePlan fails because plan was already approved earlier, fallback to sendMessage
+        if (isApproval && (res.status === 400 || res.status === 409)) {
+          console.warn(`approvePlan returned status ${res.status}, falling back to sendMessage: ${txt}`);
+          const msgRes = await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}:sendMessage`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Goog-Api-Key': key
+            },
+            body: JSON.stringify({ prompt: promptToSend })
+          });
+          if (msgRes.ok) {
+            success = true;
+            break;
+          }
+        }
         lastError = `Status ${res.status}: ${txt}`;
       }
     } catch (e) {
@@ -274,12 +309,19 @@ module.exports = async ({ github, context, core }) => {
   }
 
   if (success) {
-    if (action === 'approve-plan') {
+    if (isApproval) {
       try {
         await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-approval' });
         await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-input' });
         await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:in-progress'] });
       } catch (e) {}
+
+      // Clean up trigger labels if added
+      for (const l of ['jules:send-messages', 'jules:send', 'send-messages', 'send', 'jules:approved', 'approved', 'approve']) {
+        try {
+          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: l });
+        } catch (e) {}
+      }
 
       // Send discussion (if any) and strict autonomy directive to prevent intermediate pauses during coding
       const autonomyDirective = `⚡ PLAN APPROVED — AUTONOMOUS IMPLEMENTATION ENGAGED ⚡

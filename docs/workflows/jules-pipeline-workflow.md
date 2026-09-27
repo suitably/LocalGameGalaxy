@@ -21,13 +21,10 @@ flowchart TD
     
     Trigger -->|/plan| PlanSession["Jules Session Started\nrequirePlanApproval: true\nNO CODE PHASE"]
     PlanSession --> JulesAnalyzes["Jules analyzes codebase\nPosts plan + open questions\nvia Stitch MCP to issue"]
-    JulesAnalyzes --> Waiting["Session: AWAITING_USER_FEEDBACK"]
-    Waiting -->|"Any comment / /reply"| SendMsg["sendMessage to Jules\nJules answers & refines plan"]
-    SendMsg --> Waiting
-    Waiting -->|"/approve"| ApprovePlan["approvePlan → Jules implements"]
-    
-    Trigger -->|"/fix or /yolo"| DirectFix["Jules Session Started\nrequirePlanApproval: false\nDirect Implementation"]
-    DirectFix --> ApprovePlan
+    JulesAnalyzes --> Discussing["Team discusses freely in issue\n(no bot triggers)"]
+    Discussing -->|"/send (Questions)"| SendMsg["sendMessage to Jules\nJules answers & refines plan"]
+    SendMsg --> Discussing
+    Discussing -->|"/send (Approval: 'go', 'passt')"| ApprovePlan["approvePlan → Jules implements"]
     
     ApprovePlan --> FeatureBranch["Jules creates feature branch\nfrom main (e.g. jules/fix-issue-42)"]
     FeatureBranch --> PRCI["PR opened against main\nCI Quality Gate runs"]
@@ -64,27 +61,17 @@ Only repository **Owners, Members, and Collaborators** can trigger Jules.
 | Command | Action |
 | :--- | :--- |
 | **`/plan`** | Starts Jules in **Plan Mode** (`requirePlanApproval: true`). Jules analyzes the codebase and posts its plan + open questions as a GitHub comment. No code is written. |
-| **`/approve`** or **`/continue`** | Approves Jules' plan (and forwards any intermediate discussion). Jules begins implementation on a feature branch. |
-| **`/send`** or **`/send-messages`** | Forwards recent team discussion since Jules' last message (formatted simply as `User: text`) to Jules without intermediate wrappers. |
-| **`/fix`** | Fast-track: Jules implements directly without the plan-approval phase. |
-| **`/yolo`** | Maximum autonomy: Jules implements immediately with zero confirmations. |
-| **`/reply <message>`** | Alias for `/send` — forwards feedback or answers to the active Jules session. |
-| **`/status`** | Fetches the current Jules session state and last activities into a comment. |
-| **`/jules lens <lens-id>`** | Runs a specialized RepoLens audit (e.g. `/jules lens separation-of-concerns`). |
+| **`/send`** | Forwards recent team discussion since Jules' last message (formatted simply as `User: text`) to Jules without wrappers. If the discussion contains approval (e.g. `go`, `passt`, `approved`, `start`), Jules automatically begins implementation! Otherwise, Jules answers questions and refines the plan. |
 
 > [!TIP]
-> Developers can discuss freely in the issue without triggering Jules on every comment. When you are ready to forward the discussion to Jules, comment `/send` (or add label `jules:send-messages`). When satisfied with the plan, comment `/approve`.
+> Developers can discuss freely in the issue without triggering Jules on every comment. When you are ready to forward the discussion to Jules (whether to ask questions or to say "go"), just comment `/send` (or add label `jules:send-messages`).
 
 ### GitHub Labels
 
 | Label | Action |
 | :--- | :--- |
-| `jules:plan` or `jules` or `plan` | Same as `/plan` |
-| `jules:approved` or `approved` | Same as `/approve` — starts implementation |
-| `jules:send-messages` or `jules:send` | Same as `/send` — forwards recent discussion to Jules without wrappers. Label is automatically cleared after dispatch. |
-| `jules:fix` or `fix` | Same as `/fix` |
-| `yolo` or `jules:yolo` | YOLO mode |
-| `lens:<name>` | RepoLens audit with specified lens |
+| `jules:plan` or `jules` | Same as `/plan` — starts Jules planning |
+| `jules:send-messages` or `jules:send` | Same as `/send` — forwards recent discussion to Jules. Label is automatically cleared after dispatch. |
 
 ### Manual Workflow Dispatch
 
@@ -104,8 +91,8 @@ Only repository **Owners, Members, and Collaborators** can trigger Jules.
    - Files it intends to change
    - Architectural decisions
    - Any open questions for the developer
-4. **Developer reviews & discusses**: Team can discuss freely in comments. Use `/send` to forward discussion to Jules if needed.
-5. **`/approve`** → `approvePlan` API call (with discussion attached) → Jules starts implementing
+4. **Developer reviews & discusses**: Team can discuss freely in comments. Use `/send` to forward questions or feedback.
+5. **Implementation start**: When the discussion contains approval (e.g. `go`, `passt`, `approved`, `start`), commenting `/send` (or adding label `jules:send-messages`) automatically triggers implementation.
 6. **Feature branch created** automatically (e.g. `jules/fix-issue-42`)
 7. **PR opened** against `main` → CI quality gates run
 
