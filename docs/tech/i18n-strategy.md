@@ -1,3 +1,14 @@
+---
+type: Technical Specification
+title: i18n Strategy & Translation Namespace Architecture
+description: Internationalization guidelines, translation key structures, and bilingual parity enforcement for German and English.
+resource: public/locales/
+tags: [i18n, localization, react-i18next, translation]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # i18n Strategy & Translation Namespace Architecture
 
 > [!IMPORTANT]

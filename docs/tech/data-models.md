@@ -1,44 +1,188 @@
-# Data Models
+---
+type: Data Models Specification
+title: Core Data Models Specification
+description: Central specification for application data models, game state schemas, player definitions, and sync envelopes.
+resource: src/
+tags: [models, typescript, interfaces, schemas]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+sources:
+  - id: game-registry
+    resource: src/lib/gameRegistry.tsx
+    title: Dynamic Game Registry
+  - id: player-logic
+    resource: src/modules/player-management/playerLogic.ts
+    title: Shared Player Logic
+---
 
-This document outlines the core data structures used in the application.
+# Core Data Models Specification
 
-## 1. Game State (Werewolf Example)
+> [!IMPORTANT]
+> This document specifies shared interfaces and data schemas across LocalGameGalaxy.
 
-Most games follow a similar pattern, using a `GameState` object.
+---
 
-### `Player`
-Represents a single participant.
+## 1. Game Registry Models (`src/lib/gameRegistry.tsx`)
+
+Games register dynamically into the hub router using `GameDefinition`:
+
 ```typescript
-interface Player {
-    id: string;
-    name: string;
-    role: Role | null; // e.g., 'VILLAGER', 'WEREWOLF'
-    isAlive: boolean;
-    needsToAct: boolean; // True if player needs to perform an action this phase
-    powerState: PlayerPowerState; // Transient state (potions, infections, etc.)
+export type GameCategory = 
+  | 'all' 
+  | 'dice' 
+  | 'drawing' 
+  | 'music' 
+  | 'social_deduction' 
+  | 'cards' 
+  | 'party' 
+  | 'puzzle';
+
+export interface GameRouteDefinition {
+  path: string;
+  component: React.ReactNode;
+}
+
+export interface GameDefinition {
+  id: string;
+  route: string;
+  titleKey: string;
+  descriptionKey: string;
+  icon: React.ReactNode;
+  colorStart: string;
+  colorEnd: string;
+  hoverColor: string;
+  component: React.ReactNode;
+  category: GameCategory;
+  hasSettings?: boolean;
+  nestedRoutes?: GameRouteDefinition[];
+  standaloneRoutes?: GameRouteDefinition[];
 }
 ```
 
-### `GameState`
-The root state object for the game reducer.
+---
+
+## 2. Shared Player Management (`src/modules/player-management`)
+
+Used by GuessArt, Storyteller, Imposter, Werewolf, and Cards:
+
 ```typescript
-interface GameState {
-    players: Player[];
-    phase: GamePhase; // 'SETUP', 'NIGHT', 'DAY', 'VOTING', etc.
-    round: number;
-    nightActionLog: string[]; // History of actions
-    winner: 'VILLAGERS' | 'WEREWOLVES' | ... | null;
+export interface LobbyPlayer {
+  id: string;
+  name: string;
+  color?: string;
+  isHost?: boolean;
+}
+
+export interface PlayerConstraints {
+  minPlayers: number;
+  maxPlayers: number;
 }
 ```
 
-## 2. Roles & Abilities
+---
 
-Roles are defined by `RoleDefinition`.
+## 3. Asynchronous Sync Mailbox Envelopes (`src/modules/sync`)
+
+Envelopes exchanged over MQTT brokers and BroadcastChannels:
+
 ```typescript
-interface RoleDefinition {
-    id: string;
-    description: string;
-    alignment: 'VILLAGER' | 'WEREWOLF' | 'NEUTRAL';
-    abilities: Ability[]; // Defines what they can do at night
+export interface MailboxMessage<T> {
+  senderId: string;
+  timestamp: number;
+  payload: T;
+}
+
+export interface GameSnapshot<TState = unknown> {
+  gameId: string;
+  roundIndex: number;
+  turnPlayerId: string;
+  updatedAt: number;
+  state: TState;
+}
+```
+
+---
+
+## 4. UltraStar Song & Lyric Models (`src/games/melodiq`)
+
+Parsed representation of UltraStar TXT files:
+
+```typescript
+export interface ParsedNote {
+  type: ':' | '*' | 'F' | 'R' | 'G'; // Normal, Golden, Freestyle, Rap, Golden Rap
+  startBeat: number;
+  durationBeats: number;
+  pitch: number;                     // MIDI note pitch
+  syllable: string;
+}
+
+export interface ParsedLine {
+  notes: ParsedNote[];
+  lineBreakBeat: number;
+}
+
+export interface ParsedSong {
+  title: string;
+  artist: string;
+  bpm: number;
+  gap: number;                       // Initial offset in ms
+  lines: ParsedLine[];
+  audioFile?: string;
+  videoFile?: string;
+}
+```
+
+---
+
+## 5. Tabletop Engine Models (`src/games/tabletop`)
+
+Schema for PlayingCards.io packages and custom board games:
+
+```typescript
+export interface TabletopWidget {
+  id: string;
+  type: 'card' | 'deck' | 'spinner' | 'dice' | 'token';
+  x: number;
+  y: number;
+  zIndex: number;
+  faceDown?: boolean;
+  ownerId?: string | null;           // Private hand owner
+  data?: Record<string, unknown>;
+}
+
+export interface TabletopGameDefinition {
+  id: string;
+  title: string;
+  description?: string;
+  version: string;
+  boardWidth: number;
+  boardHeight: number;
+  backgroundColor?: string;
+  backgroundImageUrl?: string;
+  widgets: TabletopWidget[];
+}
+```
+
+---
+
+## 6. Social Deduction & Role Models (`src/games/werewolf`)
+
+```typescript
+export interface WerewolfPlayer {
+  id: string;
+  name: string;
+  role: string | null;
+  isAlive: boolean;
+  protected?: boolean;
+  infected?: boolean;
+}
+
+export interface RoleDefinition {
+  id: string;
+  nameKey: string;
+  descriptionKey: string;
+  team: 'villager' | 'werewolf' | 'neutral';
+  order: number;                     // Night phase call order
 }
 ```

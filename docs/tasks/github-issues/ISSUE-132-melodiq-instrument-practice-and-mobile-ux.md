@@ -1,3 +1,14 @@
+---
+type: Task Specification
+title: 'Issue 132 Melodiq Instrument Practice And Mobile Ux'
+description: Task and backlog specification document.
+resource: src/
+tags: [task, backlog, solid]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # [Feedback] Melodiq-Notes: Instrument Practice (Multi-Stem Audio & Mobile-First UX Refinement)
 
 > **Architektur-Kontext für Jules & Entwickler:**  
