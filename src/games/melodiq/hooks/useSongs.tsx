@@ -99,10 +99,7 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [serverSongs.length]);
 
     useEffect(() => {
-        const isClient = new URLSearchParams(window.location.search).get('role') === 'client';
-        if (!isClient) {
-            loadServerSongs();
-        }
+        loadServerSongs();
 
         const handleSettingsUpdate = (e: Event) => {
             const detail = (e as CustomEvent)?.detail;
