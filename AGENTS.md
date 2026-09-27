@@ -2,6 +2,7 @@
 
 ## 1. Project References
 
+- **Knowledge Bundle (OKF v0.2)**: [`docs/index.md`](docs/index.md) — Open Knowledge Format bundle root with progressive disclosure navigation.
 - **Architecture (SSoT)**: [`docs/tech/architecture.md`](docs/tech/architecture.md) — single source of truth for system design.
 - **Tech Docs**: `docs/tech/` — coding conventions, data models, deployment, i18n strategy, sync protocol, etc.
 - **Workflows & Pipelines**: `docs/workflows/` — reusable step-by-step processes and [CI/CD Pipelines Reference](docs/workflows/ci-cd-pipelines.md). Document new ones here.

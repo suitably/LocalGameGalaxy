@@ -16,7 +16,8 @@
     "check:architecture:diff": "node scripts/check-architecture.mjs --diff",
     "check:architecture:strict": "node scripts/check-architecture.mjs --strict",
     "check:duplicates": "jscpd src/ --config .jscpd.json",
-    "check:docs": "node scripts/check-docs-sync.mjs"
+    "check:docs": "node scripts/check-docs-sync.mjs",
+    "cleanup:previews": "node scripts/cleanup-cloudflare-previews.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
@@ -49,7 +50,7 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-i18next": "^16.5.0",
-    "react-router-dom": "^7.11.0",
+    "react-router-dom": "^7.18.4",
     "react-virtuoso": "^4.18.1",
     "simple-peer": "^9.11.1"
   },

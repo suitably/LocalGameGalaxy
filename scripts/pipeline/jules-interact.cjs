@@ -1,3 +1,5 @@
+const { setSingleJulesLabel } = require('./jules-label-manager.cjs');
+
 module.exports = async ({ github, context, core }) => {
   const issueNumber = Number(process.env.ISSUE_NUMBER);
   const action = process.env.ACTION;
@@ -169,7 +171,79 @@ module.exports = async ({ github, context, core }) => {
     return;
   }
 
-  // 4. Handle approve-plan, yolo, continue, and reply
+  function extractRecentDiscussion(comments) {
+    // 1. Establish stable Role N mapping across all comments in the issue
+    const userMap = new Map();
+    const roleCounters = {};
+
+    for (const c of comments) {
+      const isBot = c.user?.type === 'Bot' || c.user?.login === 'github-actions' || c.user?.login?.includes('[bot]');
+      if (isBot) continue;
+      const login = c.user?.login || 'unknown';
+      if (!userMap.has(login)) {
+        const rawRole = c.author_association || 'CONTRIBUTOR';
+        const role = rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase();
+        roleCounters[role] = (roleCounters[role] || 0) + 1;
+        userMap.set(login, `${role} ${roleCounters[role]}`);
+      }
+    }
+
+    // 2. Find last Jules / bot message
+    let lastJulesIndex = -1;
+    for (let i = comments.length - 1; i >= 0; i--) {
+      const c = comments[i];
+      const isBot = c.user?.type === 'Bot' || c.user?.login === 'github-actions' || c.user?.login?.includes('[bot]');
+      const body = c.body || '';
+      const isJulesPost = body.includes('https://jules.google.com/task/') ||
+                          body.includes('🤖 Jules') ||
+                          body.includes('🤖 **Google Jules Dispatched**') ||
+                          body.includes('**Discussion forwarded to Jules.**');
+      if (isJulesPost || isBot) {
+        lastJulesIndex = i;
+        break;
+      }
+    }
+
+    const recentLines = [];
+    const startIndex = lastJulesIndex >= 0 ? lastJulesIndex + 1 : 0;
+
+    for (let i = startIndex; i < comments.length; i++) {
+      const c = comments[i];
+      const isBot = c.user?.type === 'Bot' || c.user?.login === 'github-actions' || c.user?.login?.includes('[bot]');
+      if (isBot) continue;
+
+      let body = (c.body || '').trim();
+      // Remove any leading slash command (e.g. /send, /sennd, /approve, etc.)
+      body = body.replace(/^\/[a-zA-Z0-9_\-]+\s*/i, '').trim();
+
+      if (!body) continue;
+
+      const login = c.user?.login || 'unknown';
+      const label = userMap.get(login) || 'Contributor 1';
+      recentLines.push(`${label}: ${body}`);
+    }
+
+    if (recentLines.length === 0) return '';
+    return `Here is the discussion since your last message:\n\n${recentLines.join('\n\n')}`;
+  }
+
+  function hasApprovalIntent(text) {
+    if (!text) return false;
+    const lines = text.split('\n');
+    for (const line of lines) {
+      const t = line.toLowerCase().trim();
+      if (/\b(nicht|not|kein|keineswegs|warten|warte|stop)\b.*\b(go|passt|ok|start|approved?)/i.test(t)) continue;
+      if (/\b(passt|ok|go)\b.*(noch\s+)?(nicht|not)/i.test(t)) continue;
+      const patterns = [
+        /\b(go|start|approved?|genehmigt|freigegeben|passt|lgtm|looks good|leg los|mach das|mach so|einverstanden|proceed|weitermachen|abgemacht|let's go|lets go)\b/i,
+        /plan\s*(ist\s*)?(ok|gut|in ordnung|super|angenommen|in\.?o\.?)/i
+      ];
+      if (patterns.some(p => p.test(t))) return true;
+    }
+    return false;
+  }
+
+  // 4. Handle send-messages (with auto plan-approval detection), yolo, and continue
   const yoloPrompt = `⚡ YOLO MODE ENGAGED ⚡
   You are authorized with 100% full autonomy.
   CRITICAL DIRECTIVES:
@@ -178,11 +252,27 @@ module.exports = async ({ github, context, core }) => {
   3. Create a feature branch from 'main', implement the solution, run all Vitest tests and quality gates, and open a Pull Request targeting 'main'.
   4. Proceed immediately to completion without waiting for human input.`;
 
-  const endpoint = action === 'approve-plan'
+  const recentDiscussion = extractRecentDiscussion(commentsRes.data || []);
+  const promptToSend = recentDiscussion || targetText;
+
+  if (!promptToSend && action !== 'approve-plan' && action !== 'yolo') {
+    await github.rest.issues.createComment({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      issue_number: issueNumber,
+      body: `⚠️ **No new discussion found since Jules' last message.**\n\nAdd your comments to the issue first, then comment \`/send\` or add label \`jules:send-messages\` to forward them.`
+    });
+    return;
+  }
+
+  // Check if discussion contains plan approval intent
+  const isApproval = action === 'approve-plan' || (action === 'send-messages' && hasApprovalIntent(promptToSend));
+
+  const endpoint = isApproval
     ? `https://jules.googleapis.com/v1alpha/sessions/${sessionId}:approvePlan`
     : `https://jules.googleapis.com/v1alpha/sessions/${sessionId}:sendMessage`;
 
-  const payload = action === 'approve-plan' ? {} : { prompt: isYoloAction ? yoloPrompt : targetText };
+  const payload = isApproval ? {} : { prompt: isYoloAction ? yoloPrompt : promptToSend };
 
   let success = false;
   let lastError = '';
@@ -203,6 +293,22 @@ module.exports = async ({ github, context, core }) => {
         break;
       } else {
         const txt = await res.text();
+        // If approvePlan fails because plan was already approved earlier, fallback to sendMessage
+        if (isApproval && (res.status === 400 || res.status === 409)) {
+          console.warn(`approvePlan returned status ${res.status}, falling back to sendMessage: ${txt}`);
+          const msgRes = await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}:sendMessage`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Goog-Api-Key': key
+            },
+            body: JSON.stringify({ prompt: promptToSend })
+          });
+          if (msgRes.ok) {
+            success = true;
+            break;
+          }
+        }
         lastError = `Status ${res.status}: ${txt}`;
       }
     } catch (e) {
@@ -211,50 +317,32 @@ module.exports = async ({ github, context, core }) => {
   }
 
   if (success) {
-    if (action === 'approve-plan') {
-      await github.rest.issues.createComment({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        issue_number: issueNumber,
-        body: `✅ **Plan approved.** (Session: \`${sessionId}\`)\nJules is implementing on a feature branch. A PR against \`main\` will be opened once complete.`
-      });
-    } else if (action === 'yolo') {
-      try {
-        await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-input' });
-        await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:in-progress'] });
-      } catch (e) {}
+    // Enforce Mutex: Any message/approval sent to Jules transitions issue to strictly 'jules:in-progress'
+    await setSingleJulesLabel(github, context, issueNumber, 'jules:in-progress');
 
-      await github.rest.issues.createComment({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        issue_number: issueNumber,
-        body: `⚡ **YOLO mode activated.** (Session: \`${sessionId}\`)\nFull autonomy engaged — Jules will implement on a feature branch and open a PR against \`main\`.`
-      });
-    } else if (action === 'continue') {
-      try {
-        await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-input' });
-        await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:in-progress'] });
-      } catch (e) {}
-
-      await github.rest.issues.createComment({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        issue_number: issueNumber,
-        body: `▶️ **Continuing.** (Session: \`${sessionId}\`)\nJules is proceeding on the feature branch. A PR against \`main\` will be opened once implementation and tests pass.`
-      });
-    } else {
-      try {
-        await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-input' });
-        await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:in-progress'] });
-      } catch (e) {}
-
-      await github.rest.issues.createComment({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        issue_number: issueNumber,
-        body: `💬 **Message sent to Jules.** (Session: \`${sessionId}\`)\n> "${targetText}"\nJules received your instructions and will continue.`
-      });
+    if (isApproval && promptToSend) {
+      for (const key of keys) {
+        try {
+          await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}:sendMessage`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Goog-Api-Key': key
+            },
+            body: JSON.stringify({ prompt: promptToSend })
+          });
+          break;
+        } catch (e) {}
+      }
     }
+
+    const commentSuffix = promptToSend ? `\n\n> ${promptToSend.replace(/\n/g, '\n> ')}` : '';
+    await github.rest.issues.createComment({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      issue_number: issueNumber,
+      body: `💬 **Discussion forwarded to Jules.** (Session: \`${sessionId}\`)${commentSuffix}`
+    });
   } else {
     await github.rest.issues.createComment({
       owner: context.repo.owner,

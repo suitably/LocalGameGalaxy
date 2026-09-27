@@ -1,3 +1,14 @@
+---
+type: Deployment Specification
+title: Deployment Architecture & Multi-Platform Packaging
+description: Deployment targets including SPA web hosting, Android packaging via Capacitor, and Dockerized companion backend.
+resource: server/Dockerfile
+tags: [deployment, capacitor, docker, cloudflare, pwa]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # Deployment Architecture & Multi-Platform Packaging
 
 ---
@@ -43,7 +54,7 @@ npx cap build android   # 3. Build the signed APK via Gradle
 - **Plugins**: `StatusBar`, `SplashScreen`, `SafeArea`
 
 ### Edge-to-Edge Display
-Android API 35+ enforces edge-to-edge rendering. The app uses `capacitor-plugin-safe-area` CSS variables (`var(--safe-area-inset-top)`) in the root layout to offset content from system bars. See [styling.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/styling.md) for details.
+Android API 35+ enforces edge-to-edge rendering. The app uses `capacitor-plugin-safe-area` CSS variables (`var(--safe-area-inset-top)`) in the root layout to offset content from system bars. See [styling.md](docs/tech/styling.md) for details.
 
 ---
 
@@ -64,7 +75,7 @@ cd server && docker compose up
 # Development (local build, no image pull)
 cd server && docker compose -f docker-compose.dev.yml up --build
 ```
-See [dev-compose-workflow.md](file:///home/deck/Projects/LocalGameGalaxy/docs/workflows/dev-compose-workflow.md) for details.
+See [dev-compose-workflow.md](docs/workflows/dev-compose-workflow.md) for details.
 
 ### 4c. Standalone Native Binaries (`pkg`)
 The server can be compiled into self-contained executables using `pkg`:
@@ -89,6 +100,7 @@ All deployments and binary releases are automated via GitHub Actions pipelines. 
 | Target / Artifact | Workflow File | Trigger | Output |
 | :--- | :--- | :--- | :--- |
 | **Web SPA (Prod & Preview)** | `.github/workflows/ci.yml` | Push / PR to `main` | Production at `nexumia.de`, preview deployments for PRs |
+| **Cloudflare Preview Cleanup** | [`.github/workflows/cleanup-preview.yml`](file:///.github/workflows/cleanup-preview.yml) | `pull_request` (`closed`), `workflow_dispatch` | Deletes obsolete preview branches & environments |
 | **Push Relay Worker** | `.github/workflows/deploy-push-relay.yml` | Push to `server/cloudflare-push-relay/**` | Cloudflare Worker for Web Push & ntfy relay |
 | **Docker Images** | `.github/workflows/docker-publish.yml` | Push to `server/**` or tag `v*` | Hub images: `base` (~200MB) & `full` (~2GB, AI Demucs) |
 | **Android APK** | `.github/workflows/build-apk.yml` | Tag `v*` / GitHub Release | Attached `nexumia.apk` on release |
