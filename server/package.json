@@ -12,7 +12,7 @@
     "@hono/node-server": "^2.1.1",
     "fast-glob": "^3.3.2",
     "hono": "^4.13.5",
-    "music-metadata": "^7.14.0",
+    "music-metadata": "^11.12.3",
     "sanitize-filename": "^1.6.3"
   },
   "devDependencies": {
