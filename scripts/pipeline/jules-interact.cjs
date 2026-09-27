@@ -304,59 +304,29 @@ module.exports = async ({ github, context, core }) => {
     // Enforce Mutex: Any message/approval sent to Jules transitions issue to strictly 'jules:in-progress'
     await setSingleJulesLabel(github, context, issueNumber, 'jules:in-progress');
 
-    if (isApproval) {
-      if (promptToSend) {
-        for (const key of keys) {
-          try {
-            await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}:sendMessage`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-Goog-Api-Key': key
-              },
-              body: JSON.stringify({ prompt: promptToSend })
-            });
-            break;
-          } catch (e) {}
-        }
+    if (isApproval && promptToSend) {
+      for (const key of keys) {
+        try {
+          await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}:sendMessage`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Goog-Api-Key': key
+            },
+            body: JSON.stringify({ prompt: promptToSend })
+          });
+          break;
+        } catch (e) {}
       }
-
-      const commentSuffix = promptToSend ? `\n\n> ${promptToSend.replace(/\n/g, '\n> ')}` : '';
-      await github.rest.issues.createComment({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        issue_number: issueNumber,
-        body: `✅ **Plan approved.** (Session: \`${sessionId}\`)\nJules is implementing on a feature branch. A PR against \`main\` will be opened once complete.${commentSuffix}`
-      });
-    } else if (action === 'yolo') {
-      await github.rest.issues.createComment({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        issue_number: issueNumber,
-        body: `⚡ **YOLO mode activated.** (Session: \`${sessionId}\`)\nFull autonomy engaged — Jules will implement on a feature branch and open a PR against \`main\`.`
-      });
-    } else if (action === 'continue') {
-      await github.rest.issues.createComment({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        issue_number: issueNumber,
-        body: `▶️ **Continuing.** (Session: \`${sessionId}\`)\nJules is proceeding on the feature branch. A PR against \`main\` will be opened once implementation and tests pass.`
-      });
-    } else if (action === 'send-messages') {
-      await github.rest.issues.createComment({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        issue_number: issueNumber,
-        body: `💬 **Discussion forwarded to Jules.** (Session: \`${sessionId}\`)\n\n> ${promptToSend.replace(/\n/g, '\n> ')}`
-      });
-    } else {
-      await github.rest.issues.createComment({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        issue_number: issueNumber,
-        body: `💬 **Message sent to Jules.** (Session: \`${sessionId}\`)\n> "${targetText}"\nJules received your instructions and will continue.`
-      });
     }
+
+    const commentSuffix = promptToSend ? `\n\n> ${promptToSend.replace(/\n/g, '\n> ')}` : '';
+    await github.rest.issues.createComment({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      issue_number: issueNumber,
+      body: `💬 **Discussion forwarded to Jules.** (Session: \`${sessionId}\`)${commentSuffix}`
+    });
   } else {
     await github.rest.issues.createComment({
       owner: context.repo.owner,
