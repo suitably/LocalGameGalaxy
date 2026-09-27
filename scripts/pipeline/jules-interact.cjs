@@ -172,6 +172,23 @@ module.exports = async ({ github, context, core }) => {
   }
 
   function extractRecentDiscussion(comments) {
+    // 1. Establish stable Role N mapping across all comments in the issue
+    const userMap = new Map();
+    const roleCounters = {};
+
+    for (const c of comments) {
+      const isBot = c.user?.type === 'Bot' || c.user?.login === 'github-actions' || c.user?.login?.includes('[bot]');
+      if (isBot) continue;
+      const login = c.user?.login || 'unknown';
+      if (!userMap.has(login)) {
+        const rawRole = c.author_association || 'CONTRIBUTOR';
+        const role = rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase();
+        roleCounters[role] = (roleCounters[role] || 0) + 1;
+        userMap.set(login, `${role} ${roleCounters[role]}`);
+      }
+    }
+
+    // 2. Find last Jules / bot message
     let lastJulesIndex = -1;
     for (let i = comments.length - 1; i >= 0; i--) {
       const c = comments[i];
@@ -180,10 +197,7 @@ module.exports = async ({ github, context, core }) => {
       const isJulesPost = body.includes('https://jules.google.com/task/') ||
                           body.includes('🤖 Jules') ||
                           body.includes('🤖 **Google Jules Dispatched**') ||
-                          body.includes('**Discussion forwarded to Jules.**') ||
-                          body.includes('**Message sent to Jules.**') ||
-                          body.includes('**Plan approved.**') ||
-                          body.includes('**YOLO mode activated.**');
+                          body.includes('**Discussion forwarded to Jules.**');
       if (isJulesPost || isBot) {
         lastJulesIndex = i;
         break;
@@ -192,8 +206,6 @@ module.exports = async ({ github, context, core }) => {
 
     const recentLines = [];
     const startIndex = lastJulesIndex >= 0 ? lastJulesIndex + 1 : 0;
-    const userMap = new Map();
-    let userCounter = 1;
 
     for (let i = startIndex; i < comments.length; i++) {
       const c = comments[i];
@@ -207,14 +219,8 @@ module.exports = async ({ github, context, core }) => {
       if (!body) continue;
 
       const login = c.user?.login || 'unknown';
-      if (!userMap.has(login)) {
-        const rawRole = c.author_association || 'CONTRIBUTOR';
-        const role = rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase();
-        userMap.set(login, { id: userCounter++, role });
-      }
-
-      const { id, role } = userMap.get(login);
-      recentLines.push(`User ${id} (${role}): ${body}`);
+      const label = userMap.get(login) || 'Contributor 1';
+      recentLines.push(`${label}: ${body}`);
     }
 
     if (recentLines.length === 0) return '';

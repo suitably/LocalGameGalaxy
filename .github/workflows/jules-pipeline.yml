@@ -272,17 +272,18 @@ jobs:
               });
               if (filteredComments.length > 0) {
                 const promptUserMap = new Map();
-                let promptUserCounter = 1;
+                const promptRoleCounters = {};
                 commentsContext = '\n\nUser Feedback & Clarifications from Issue Comments:\n' +
                   filteredComments.map(c => {
                     const login = c.user?.login || 'unknown';
                     if (!promptUserMap.has(login)) {
                       const rawRole = c.author_association || 'CONTRIBUTOR';
                       const role = rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase();
-                      promptUserMap.set(login, { id: promptUserCounter++, role });
+                      promptRoleCounters[role] = (promptRoleCounters[role] || 0) + 1;
+                      promptUserMap.set(login, `${role} ${promptRoleCounters[role]}`);
                     }
-                    const { id, role } = promptUserMap.get(login);
-                    return `- User ${id} (${role}): ${c.body.trim()}`;
+                    const label = promptUserMap.get(login);
+                    return `- ${label}: ${c.body.trim()}`;
                   }).join('\n\n');
               }
             } catch (err) {
