@@ -199,18 +199,8 @@ module.exports = async ({ github, context, core }) => {
       if (isBot) continue;
 
       let body = (c.body || '').trim();
-      // Remove triggering slash command if this comment was the slash command itself
-      const replaced = body.replace(/^\/(?:jules\s+)?(?:send-messages|send|reply|approve|approve-plan|continue)\b[^\n]*/i, '').trim();
-      if (!replaced) {
-        const inlineMatch = body.match(/^\/(?:jules\s+)?(?:send-messages|send|reply|approve|approve-plan|continue)\s+(.+)$/is);
-        if (inlineMatch && inlineMatch[1]) {
-          body = inlineMatch[1].trim();
-        } else {
-          body = '';
-        }
-      } else {
-        body = replaced;
-      }
+      // Remove any leading slash command (e.g. /send, /sennd, /approve, etc.)
+      body = body.replace(/^\/[a-zA-Z0-9_\-]+\s*/i, '').trim();
 
       if (body) {
         recentLines.push(`${c.user.login}: ${body}`);
@@ -218,7 +208,7 @@ module.exports = async ({ github, context, core }) => {
     }
 
     if (recentLines.length === 0) return '';
-    return `Here is the discussion since your last message:\n\n${recentLines.join('\n')}`;
+    return `Here is the discussion since your last message:\n\n${recentLines.join('\n\n')}`;
   }
 
   function hasApprovalIntent(text) {
@@ -315,38 +305,28 @@ module.exports = async ({ github, context, core }) => {
     await setSingleJulesLabel(github, context, issueNumber, 'jules:in-progress');
 
     if (isApproval) {
-      // Send discussion (if any) and strict autonomy directive to prevent intermediate pauses during coding
-      const autonomyDirective = `⚡ PLAN APPROVED — AUTONOMOUS IMPLEMENTATION ENGAGED ⚡
-You are authorized with 100% full autonomy to implement this approved plan.
-CRITICAL DIRECTIVES:
-1. Proceed immediately with implementation on a feature branch.
-2. DO NOT pause to ask any confirmation questions or PR creation confirmations.
-3. Make all necessary architectural and code decisions yourself according to AGENTS.md.
-4. Run all tests and verification gates, and create the Pull Request targeting 'main'.
-5. Finish the task autonomously.`;
-
-      const messageOnApproval = recentDiscussion ? `${recentDiscussion}\n\n${autonomyDirective}` : autonomyDirective;
-
-      for (const key of keys) {
-        try {
-          await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}:sendMessage`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Goog-Api-Key': key
-            },
-            body: JSON.stringify({ prompt: messageOnApproval })
-          });
-          break;
-        } catch (e) {}
+      if (promptToSend) {
+        for (const key of keys) {
+          try {
+            await fetch(`https://jules.googleapis.com/v1alpha/sessions/${sessionId}:sendMessage`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Goog-Api-Key': key
+              },
+              body: JSON.stringify({ prompt: promptToSend })
+            });
+            break;
+          } catch (e) {}
+        }
       }
 
-      const commentSuffix = recentDiscussion ? `\n\n> ${recentDiscussion.replace(/\n/g, '\n> ')}` : '';
+      const commentSuffix = promptToSend ? `\n\n> ${promptToSend.replace(/\n/g, '\n> ')}` : '';
       await github.rest.issues.createComment({
         owner: context.repo.owner,
         repo: context.repo.repo,
         issue_number: issueNumber,
-        body: `✅ **Plan approved.** (Session: \`${sessionId}\`)\nJules is implementing autonomously on a feature branch. A PR against \`main\` will be opened once complete.${commentSuffix}`
+        body: `✅ **Plan approved.** (Session: \`${sessionId}\`)\nJules is implementing on a feature branch. A PR against \`main\` will be opened once complete.${commentSuffix}`
       });
     } else if (action === 'yolo') {
       await github.rest.issues.createComment({
