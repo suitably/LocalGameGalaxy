@@ -64,15 +64,16 @@ Only repository **Owners, Members, and Collaborators** can trigger Jules.
 | Command | Action |
 | :--- | :--- |
 | **`/plan`** | Starts Jules in **Plan Mode** (`requirePlanApproval: true`). Jules analyzes the codebase and posts its plan + open questions as a GitHub comment. No code is written. |
-| **`/approve`** or **`/continue`** | Approves Jules' plan. Jules begins implementation on a feature branch. |
+| **`/approve`** or **`/continue`** | Approves Jules' plan (and forwards any intermediate discussion). Jules begins implementation on a feature branch. |
+| **`/send`** or **`/send-messages`** | Forwards recent team discussion since Jules' last message (formatted simply as `User: text`) to Jules without intermediate wrappers. |
 | **`/fix`** | Fast-track: Jules implements directly without the plan-approval phase. |
 | **`/yolo`** | Maximum autonomy: Jules implements immediately with zero confirmations. |
-| **`/reply <message>`** | Sends custom feedback or answers to the active Jules session. |
+| **`/reply <message>`** | Alias for `/send` — forwards feedback or answers to the active Jules session. |
 | **`/status`** | Fetches the current Jules session state and last activities into a comment. |
 | **`/jules lens <lens-id>`** | Runs a specialized RepoLens audit (e.g. `/jules lens separation-of-concerns`). |
 
 > [!TIP]
-> While Jules is in **AWAITING_USER_FEEDBACK** state, you can just type a normal comment — it will be forwarded to Jules automatically. Use `/approve` or `/continue` when you are satisfied with the plan.
+> Developers can discuss freely in the issue without triggering Jules on every comment. When you are ready to forward the discussion to Jules, comment `/send` (or add label `jules:send-messages`). When satisfied with the plan, comment `/approve`.
 
 ### GitHub Labels
 
@@ -80,6 +81,7 @@ Only repository **Owners, Members, and Collaborators** can trigger Jules.
 | :--- | :--- |
 | `jules:plan` or `jules` or `plan` | Same as `/plan` |
 | `jules:approved` or `approved` | Same as `/approve` — starts implementation |
+| `jules:send-messages` or `jules:send` | Same as `/send` — forwards recent discussion to Jules without wrappers. Label is automatically cleared after dispatch. |
 | `jules:fix` or `fix` | Same as `/fix` |
 | `yolo` or `jules:yolo` | YOLO mode |
 | `lens:<name>` | RepoLens audit with specified lens |
@@ -102,8 +104,8 @@ Only repository **Owners, Members, and Collaborators** can trigger Jules.
    - Files it intends to change
    - Architectural decisions
    - Any open questions for the developer
-4. **Developer reviews**: Read the plan in the issue. Ask questions by commenting (forwarded to Jules via `sendMessage`).
-5. **`/approve`** → `approvePlan` API call → Jules starts implementing
+4. **Developer reviews & discusses**: Team can discuss freely in comments. Use `/send` to forward discussion to Jules if needed.
+5. **`/approve`** → `approvePlan` API call (with discussion attached) → Jules starts implementing
 6. **Feature branch created** automatically (e.g. `jules/fix-issue-42`)
 7. **PR opened** against `main` → CI quality gates run
 
@@ -112,10 +114,11 @@ Only repository **Owners, Members, and Collaborators** can trigger Jules.
 ## 5. Message Relay During Active Sessions
 
 While Jules is active on an issue:
-- Any authorized plain-text comment is forwarded to Jules via `sendMessage`
-- The `interact-jules` job handles `/reply`, `/continue`, `/approve`, `/yolo`, `/status` commands
-- Jules answers questions by posting comments via Stitch MCP
-- Monitor detailed progress at `jules.google.com/task/<sessionId>`
+- Developers discuss freely without each comment pinging Jules.
+- When ready, maintainers comment `/send` (or `/send-messages` or add label `jules:send-messages`).
+- The pipeline batches all comments since Jules' last message cleanly (`Here is the discussion since your last message:\n\nUser: text`) without any wrapper boilerplate.
+- Jules answers questions by posting comments via Stitch MCP.
+- Monitor detailed progress at `jules.google.com/task/<sessionId>`.
 
 ---
 

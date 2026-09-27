@@ -118,10 +118,10 @@ jobs:
                   // 2. Route commands based on session state
                   if (body.startsWith('/yolo') || body.startsWith('/jules yolo')) {
                     action = hasSession ? 'yolo' : 'fix';
-                  } else if (body.startsWith('/jules reply') || body.startsWith('/reply')) {
-                    action = 'reply';
-                    const replyText = rawBody.replace(/^\/(jules\s+)?reply\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
-                    targets = replyText || 'Please proceed autonomously with the proposed solution and create the pull request.';
+                  } else if (body.startsWith('/send') || body.startsWith('/send-messages') || body.startsWith('/jules send') || body.startsWith('/jules send-messages') || body.startsWith('/jules reply') || body.startsWith('/reply')) {
+                    action = 'send-messages';
+                    const replyText = rawBody.replace(/^\/(jules\s+)?(send-messages|send|reply)\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
+                    targets = replyText;
                   } else if (body.startsWith('/approve') || body.startsWith('/jules approve') || body.startsWith('/approve-plan')) {
                     if (hasSession) {
                       action = 'approve-plan';
@@ -158,6 +158,23 @@ jobs:
                 const authorAssoc = issue.author_association;
                 isAuthorized = trustedRoles.includes(authorAssoc) || sender === context.repo.owner;
 
+                let hasSession = false;
+                try {
+                  const commentsRes = await github.rest.issues.listComments({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    per_page: 50
+                  });
+                  for (let i = (commentsRes.data || []).length - 1; i >= 0; i--) {
+                    const cBody = commentsRes.data[i].body || '';
+                    if (cBody.includes('https://jules.google.com/task/')) {
+                      hasSession = true;
+                      break;
+                    }
+                  }
+                } catch (e) {}
+
                 if (labelName.startsWith('lens:')) {
                   action = 'fix';
                   lensName = labelName.replace('lens:', '').trim();
@@ -168,6 +185,8 @@ jobs:
                   isYolo = true;
                 } else if (labelName === 'jules:approved' || labelName === 'approved' || labelName === 'approve') {
                   action = hasSession ? 'approve-plan' : 'fix';
+                } else if (labelName === 'jules:send-messages' || labelName === 'jules:send' || labelName === 'send-messages' || labelName === 'send') {
+                  action = 'send-messages';
                 } else if (labelName === 'jules:fix' || labelName === 'fix') {
                   action = 'fix';
                 }
@@ -550,7 +569,7 @@ jobs:
   interact-jules:
     name: Relay Command or Feedback to Jules
     needs: triage
-    if: (needs.triage.outputs.action == 'reply' || needs.triage.outputs.action == 'continue' || needs.triage.outputs.action == 'yolo' || needs.triage.outputs.action == 'approve-plan' || needs.triage.outputs.action == 'status') && needs.triage.outputs.is_authorized == 'true'
+    if: (needs.triage.outputs.action == 'send-messages' || needs.triage.outputs.action == 'reply' || needs.triage.outputs.action == 'continue' || needs.triage.outputs.action == 'yolo' || needs.triage.outputs.action == 'approve-plan' || needs.triage.outputs.action == 'status') && needs.triage.outputs.is_authorized == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
