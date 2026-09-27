@@ -1,3 +1,14 @@
+---
+type: Runbook
+title: Standalone WebRTC Tracker Deployment Runbook
+description: Deployment, process management, and security constraints for the standalone BitTorrent WebRTC tracker.
+resource: scripts/start-tracker.js
+tags: [runbook, webrtc, tracker, bittorrent]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # Standalone WebRTC Tracker Deployment Runbook [ID: OPS-WEBRTC-TRACKER]
 
 This runbook covers deployment, configuration, process management, and security constraints for the self-hosted WebRTC signaling tracker.

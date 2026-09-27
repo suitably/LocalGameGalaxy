@@ -1,3 +1,14 @@
+---
+type: Game Architecture
+title: Melodiq Karaoke Architecture
+description: Architectural specification of the Melodiq karaoke module, dual-path video sync, pitch evaluation, and controller separation.
+resource: src/games/melodiq/
+tags: [melodiq, karaoke, audio, pitch-detection, ultrastar]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # Melodiq Architecture
 
 > [!IMPORTANT]

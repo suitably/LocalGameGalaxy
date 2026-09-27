@@ -1,3 +1,14 @@
+---
+type: Pipeline Architecture
+title: CI/CD & Multi-Agent Pipelines Architecture
+description: Single Source of Truth for all continuous integration, automated deployment, and autonomous multi-agent pipelines.
+resource: .github/workflows/
+tags: [ci, cd, github-actions, jules, pipelines]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # CI/CD & Multi-Agent Pipelines Architecture
 
 This document serves as the Single Source of Truth (SSoT) for all continuous integration, automated deployment, and autonomous multi-agent pipelines in LocalGameGalaxy.
@@ -40,12 +51,12 @@ flowchart TD
 | Workflow File | Pipeline Name | Trigger(s) | Target / Output |
 | :--- | :--- | :--- | :--- |
 | [`.github/workflows/ci.yml`](file:///.github/workflows/ci.yml) | **CI Quality Gate** | `push` (main), `pull_request` (main) | 7 Quality Gates + Cloudflare Production / Preview Deploy |
-| [`.github/workflows/cleanup-preview.yml`](file:///.github/workflows/cleanup-preview.yml) | **Cleanup Cloudflare Preview** | `pull_request` (`closed`), `workflow_dispatch` | Deletes obsolete preview branches & environments from Cloudflare |
 | [`.github/workflows/build-apk.yml`](file:///.github/workflows/build-apk.yml) | **Build Android APK** | `release` (published), `push` tags (`v*`) | Compiles debug APK via Gradle & attaches `nexumia.apk` to release |
 | [`.github/workflows/deploy-push-relay.yml`](file:///.github/workflows/deploy-push-relay.yml) | **Deploy Cloudflare Push Relay** | `push` (main on `server/cloudflare-push-relay/**`), `workflow_dispatch` | Deploys serverless Web Push & ntfy relay worker to Cloudflare |
 | [`.github/workflows/docker-publish.yml`](file:///.github/workflows/docker-publish.yml) | **Build and Push Docker Images** | `push` (main on `server/**`), tags (`v*`), `workflow_dispatch` | Multi-target build: `base` (~200MB) and `full` (~2GB, AI Demucs) to Docker Hub |
 | [`.github/workflows/release_helper.yml`](file:///.github/workflows/release_helper.yml) | **Release Nexumia Server** | `release` (published), tags (`v*`), `workflow_dispatch` | `pkg` compiles native standalone binaries (Linux, Win, macOS) with startup scripts |
-| [`.github/workflows/jules-pipeline.yml`](file:///.github/workflows/jules-pipeline.yml) | **Jules Issue Auto-Fix Pipeline** | `issues (labeled)`, `issue_comment`, `workflow_dispatch` | Triage & RBAC, Google Jules REST API dispatch (Plan & Fix modes via `requirePlanApproval`), Command Relay (`jules-interact.cjs`) |
+| [`.github/workflows/jules-pipeline.yml`](file:///.github/workflows/jules-pipeline.yml) | **Jules Issue Auto-Fix Pipeline** | `issues (labeled)`, `issue_comment`, `workflow_dispatch` | Triage & RBAC, Google Jules REST API dispatch (Plan & Fix modes via `requirePlanApproval`), Fast-Path Plan Waiter, Command Relay (`jules-interact.cjs`) |
+| [`.github/workflows/jules-watcher.yml`](file:///.github/workflows/jules-watcher.yml) | **Jules Status Watcher** | `schedule` (`*/5 * * * *`), `workflow_dispatch` | Polling watcher: automatically relays Jules' plans, questions, and completions to GitHub issue comments |
 | [`.github/workflows/jules-pr-reviewer.yml`](file:///.github/workflows/jules-pr-reviewer.yml) | **Multi-Agent PR Reviewer** | `workflow_dispatch` | Matrix code review (Security & Architecture lenses) via Jules & `gh` CLI |
 | [`.github/workflows/jules-pr-auto-fixer.yml`](file:///.github/workflows/jules-pr-auto-fixer.yml) | **Multi-Agent PR Auto-Fixer** | `pull_request_review` (`changes_requested`) | 3-attempt loop-breaker, autonomous YOLO fix directly committed to PR branch |
 
@@ -111,21 +122,7 @@ flowchart LR
 
 ---
 
-### 2.2 Cloudflare Preview Cleanup (`cleanup-preview.yml`)
-
-Cleans up preview environments and deployments in Cloudflare once a PR is closed/merged or when manually triggered.
-
-- **Trigger**:
-  - `pull_request`: `types: [closed]` (runs on merge or PR closure).
-  - `workflow_dispatch`: Manual trigger with `delete_all` option to purge all historical preview deployments.
-- **Actions**:
-  - Executes `scripts/cleanup-cloudflare-previews.mjs`.
-  - Deletes Worker Previews (`/workers/workers/nexumia/previews/<branch>`) and legacy Pages deployments.
-  - Updates the PR comment to indicate the preview environment has been cleaned up.
-
----
-
-### 2.3 Android APK Packaging (`build-apk.yml`)
+### 2.2 Android APK Packaging (`build-apk.yml`)
 
 Automates Android package compilation whenever a new release is published or a version tag (`v*`) is pushed.
 
@@ -139,7 +136,7 @@ Automates Android package compilation whenever a new release is published or a v
 
 ---
 
-### 2.4 Cloudflare Push Relay Worker (`deploy-push-relay.yml`)
+### 2.3 Cloudflare Push Relay Worker (`deploy-push-relay.yml`)
 
 Automates the deployment of the serverless push notification relay.
 
@@ -149,7 +146,7 @@ Automates the deployment of the serverless push notification relay.
 
 ---
 
-### 2.5 Docker Hub Multi-Target Publishing (`docker-publish.yml`)
+### 2.4 Docker Hub Multi-Target Publishing (`docker-publish.yml`)
 
 Builds and pushes production multi-architecture Docker container images for the companion server.
 
@@ -167,7 +164,7 @@ Builds and pushes production multi-architecture Docker container images for the 
 
 ---
 
-### 2.6 Standalone Server Packaging & Release (`release_helper.yml`)
+### 2.5 Standalone Server Packaging & Release (`release_helper.yml`)
 
 Packages the Node.js server into zero-dependency standalone binaries for Linux, Windows, and macOS.
 
@@ -233,10 +230,15 @@ flowchart TD
    - Connects to `https://jules.googleapis.com/v1alpha/sessions` with `automationMode: "AUTO_CREATE_PR"`.
    - Injects connected MCP servers: `["Stitch", "Context7"]`. Jules uses Stitch (`gh issue comment`) to post plans and updates directly.
    - Sets base branch to `main`. Jules isolates work in an auto-named feature branch (e.g. `jules/fix-issue-<id>`) and targets `main` for the PR.
-5. **Bidirectional Command Relay (`jules-interact.cjs`)**:
+5. **Fast-Path Plan Waiter & 5-Minute Status Watcher (`jules-watcher.cjs`, `jules-watcher.yml`)**:
+   - **Fast-Path**: After `/plan` is dispatched, the runner waits up to 90 seconds for Jules to generate its plan and posts it immediately into the issue with `/approve` instructions.
+   - **5-Minute Watcher**: A lightweight cron job runs every 5 minutes to scan active sessions for generated plans, unexpected clarification questions (`AWAITING_USER_FEEDBACK`), and completions. It extracts the message and posts it into the issue thread.
+6. **Autonomy Directive on Plan Approval**:
+   - When maintainers comment `/approve`, `jules-interact.cjs` calls `:approvePlan` and sends a strict autonomy directive instructing Jules to complete implementation, run all tests, and open the PR without pausing for confirmation questions.
+7. **Bidirectional Command Relay (`jules-interact.cjs`)**:
    - Enables maintainers to steer running sessions from GitHub comment threads without opening the Jules web console.
    - Supported commands: `/reply <text>`, `/continue`, `/approve`, `/yolo`, `/status`.
-6. **RepoLens Lens Integration (`jules-lens-resolver.mjs`)**:
+8. **RepoLens Lens Integration (`jules-lens-resolver.mjs`)**:
    - Maintains over 350 specialized auditing lenses across Architecture, Testing, Security, and Performance.
    - Invoked via `/jules lens <lens-name>` or label `lens:<name>`.
 

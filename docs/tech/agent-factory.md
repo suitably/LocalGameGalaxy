@@ -1,3 +1,14 @@
+---
+type: Architecture
+title: LocalGameGalaxy Agent Factory
+description: Autonomous development pipeline pooling multiple AI accounts with strict quality gates against code duplication.
+resource: scripts/
+tags: [agent-factory, automation, quality-gates, ci]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # 🏭 LocalGameGalaxy Agent Factory
 
 Die **Agent Factory** ist eine autonome Entwicklungs-Pipeline, die mehrere **Google AI Pro Accounts** parallel als Worker-Pool bündelt und durch **strikte Qualitäts-Schranken (Quality Gates)** Code-Duplikate und Architektur-Wildwuchs verhindert.

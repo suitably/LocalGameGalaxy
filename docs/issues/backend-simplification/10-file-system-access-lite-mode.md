@@ -1,3 +1,14 @@
+---
+type: Issue Specification
+title: '10 File System Access Lite Mode'
+description: Historical task specification for MelodiQ backend simplification.
+resource: server/
+tags: [issue, backend-simplification, historical]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # File System Access API — Lite-Modus (kein Server nötig)
 
 ## Context

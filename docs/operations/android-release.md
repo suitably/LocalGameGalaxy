@@ -1,3 +1,14 @@
+---
+type: Runbook
+title: Android App (Capacitor) Packaging & Release Runbook
+description: Workflow for compiling, signing, testing, and releasing the LocalGameGalaxy Android app via Capacitor.
+resource: android/
+tags: [runbook, android, capacitor, release]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # Android App (Capacitor) Packaging & Release Runbook [ID: OPS-ANDROID-RELEASE]
 
 This runbook outlines the workflow for compiling, signing, testing, and releasing the LocalGameGalaxy Android app via Capacitor.
@@ -91,4 +102,4 @@ Android devices have a hardware back button (or gesture navigation swipe). In `C
 
 ## 6. SSL Certificate Handshake Errors in WebView
 The Android WebView blocks self-signed certificates by default, preventing the phone app from connecting to local servers serving local SSL keys.
-- **For local testing**: Ensure the developer phone trusts the local certificate authority, or use local developer settings to bypass SSL check (see [troubleshooting.md](file:///home/deck/Projects/LocalGameGalaxy/docs/operations/troubleshooting.md)).
+- **For local testing**: Ensure the developer phone trusts the local certificate authority, or use local developer settings to bypass SSL check (see [troubleshooting.md](docs/operations/troubleshooting.md)).

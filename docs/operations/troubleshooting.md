@@ -1,3 +1,14 @@
+---
+type: Troubleshooting Guide
+title: Production Troubleshooting & Diagnostics Guide
+description: Diagnostic commands, common failure modes, CORS issues, and recovery checklists for LocalGameGalaxy.
+resource: docs/operations/
+tags: [troubleshooting, diagnostics, operations, faq]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # Production Troubleshooting & Diagnostics Guide [ID: OPS-TROUBLESHOOTING]
 
 This guide provides troubleshooting paths, diagnostic commands, and recovery checklists for common production issues and failure modes in LocalGameGalaxy.
@@ -107,5 +118,5 @@ App hangs on startup. Console logs show database schema upgrade errors or versio
 1. Open Console (F12) -> Check if `DexieError` occurs with message `VersionChangeError` or `UpgradeError`.
 
 ### Mitigation Steps
-1. Clear browser database storage to force a clean database re-initialization (see [onboarding-faq.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/onboarding-faq.md#3-indexeddb--dexie-schema-lockups)).
+1. Clear browser database storage to force a clean database re-initialization (see [onboarding-faq.md](docs/tech/onboarding-faq.md#3-indexeddb--dexie-schema-lockups)).
 2. Ensure you have incremented the Dexie schema version number in `src/lib/db.ts` when adding new tables.

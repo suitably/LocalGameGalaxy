@@ -1,3 +1,14 @@
+---
+type: Game Specification
+title: Qwixx Spielvarianten & Sheet-Regelwerk
+description: Rules, scoring matrices, and layout definitions for official Qwixx expansions (Classic, Gemixxt, Big Points, Connected, Double, Bonus).
+resource: src/games/qwixx/logic/sheetDefinitions.ts
+tags: [qwixx, dice, rules, scoring, variants]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # Qwixx Spielvarianten & Sheet-Regelwerk
 
 Dieses Dokument ist das verbindliche **Regelwerk und die Spezifikation aller Qwixx-Spielvarianten und Wertungsbögen** für die Implementierung in **LocalGameGalaxy**.

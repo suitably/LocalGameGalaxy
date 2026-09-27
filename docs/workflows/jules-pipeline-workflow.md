@@ -1,3 +1,14 @@
+---
+type: Autonomous Workflow
+title: Google Jules Issue Autofix Pipeline & Best Practice Workflow
+description: Autonomous coding agent workflow with multi-key rotation, plan approval, and PR auto-fixer lifecycle.
+resource: .github/workflows/jules-pipeline.yml
+tags: [jules, ai-agent, automation, workflow]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # Google Jules Issue Autofix Pipeline & Best Practice Workflow
 
 ## 1. Overview & Architecture
@@ -10,13 +21,10 @@ flowchart TD
     
     Trigger -->|/plan| PlanSession["Jules Session Started\nrequirePlanApproval: true\nNO CODE PHASE"]
     PlanSession --> JulesAnalyzes["Jules analyzes codebase\nPosts plan + open questions\nvia Stitch MCP to issue"]
-    JulesAnalyzes --> Waiting["Session: AWAITING_USER_FEEDBACK"]
-    Waiting -->|"Any comment / /reply"| SendMsg["sendMessage to Jules\nJules answers & refines plan"]
-    SendMsg --> Waiting
-    Waiting -->|"/approve"| ApprovePlan["approvePlan → Jules implements"]
-
-    Trigger -->|"/fix or /yolo"| DirectFix["Jules Session Started\nrequirePlanApproval: false\nDirect Implementation"]
-    DirectFix --> ApprovePlan
+    JulesAnalyzes --> Discussing["Team discusses freely in issue\n(no bot triggers)"]
+    Discussing -->|"/send (Questions)"| SendMsg["sendMessage to Jules\nJules answers & refines plan"]
+    SendMsg --> Discussing
+    Discussing -->|"/send (Approval: 'go', 'passt')"| ApprovePlan["approvePlan → Jules implements"]
     
     ApprovePlan --> FeatureBranch["Jules creates feature branch\nfrom main (e.g. jules/fix-issue-42)"]
     FeatureBranch --> PRCI["PR opened against main\nCI Quality Gate runs"]
@@ -53,58 +61,57 @@ Only repository **Owners, Members, and Collaborators** can trigger Jules.
 | Command | Action |
 | :--- | :--- |
 | **`/plan`** | Starts Jules in **Plan Mode** (`requirePlanApproval: true`). Jules analyzes the codebase and posts its plan + open questions as a GitHub comment. No code is written. |
-| **`/approve`** or **`/continue`** | Approves Jules' plan. Jules begins implementation on a feature branch. |
-| **`/fix`** | Fast-track: Jules implements directly without the plan-approval phase. |
-| **`/yolo`** | Maximum autonomy: Jules implements immediately with zero confirmations. |
-| **`/reply <message>`** | Sends custom feedback or answers to the active Jules session. |
-| **`/status`** | Fetches the current Jules session state and last activities into a comment. |
-| **`/jules lens <lens-id>`** | Runs a specialized RepoLens audit (e.g. `/jules lens separation-of-concerns`). |
+| **`/send`** | Forwards recent team discussion since Jules' last message (formatted simply as `User: text`) to Jules without wrappers. If the discussion contains approval (e.g. `go`, `passt`, `approved`, `start`), Jules automatically begins implementation! Otherwise, Jules answers questions and refines the plan. |
 
 > [!TIP]
-> While Jules is in **AWAITING_USER_FEEDBACK** state, you can just type a normal comment — it will be forwarded to Jules automatically. Use `/approve` or `/continue` when you are satisfied with the plan.
+> Developers can discuss freely in the issue without triggering Jules on every comment. When you are ready to forward the discussion to Jules (whether to ask questions or to say "go"), just comment `/send` (or add label `jules:send-messages`).
 
-### GitHub Labels
+### GitHub Labels & State Lifecycle (Mutex Rule)
 
-| Label | Action |
+Strictly **one** `jules:*` label exists on an issue at any time. When a new state is reached, older Jules labels are automatically pruned:
+
+| Label | Meaning & Transition |
 | :--- | :--- |
-| `jules:plan` or `jules` or `plan` | Same as `/plan` |
-| `jules:approved` or `approved` | Same as `/approve` — starts implementation |
-| `jules:fix` or `fix` | Same as `/fix` |
-| `yolo` or `jules:yolo` | YOLO mode |
-| `lens:<name>` | RepoLens audit with specified lens |
+| **`jules:in-progress`** | Jules is actively working (analyzing/planning or implementing). Set on `/plan` dispatch and whenever discussion is forwarded via `/send`. |
+| **`jules:waiting`** | Jules has posted its plan or a clarifying question and is waiting for team feedback. Replaces `jules:in-progress`. |
+| **`jules:send-messages`** | Trigger label: adding this label acts identically to commenting `/send`. It forwards recent discussion, purges older labels, and sets `jules:in-progress`. |
+| *(None / cleared)* | Once Jules creates the Pull Request, all `jules:*` labels are stripped from the issue and the PR is linked directly in a completion comment. |
 
 ### Manual Workflow Dispatch
 
 1. Go to **Actions** → **Jules Suggestions**
 2. Click **Run workflow**:
    - Scope: `Issue-AutoFix` or `Design` (UX scanner)
-   - Mode: `plan`, `fix`, or `yolo`
+   - Mode: `plan` or `fix` (legacy `yolo` is deprecated and treated as `fix`)
    - Issue Number: the target issue
+
+> [!NOTE]
+> **YOLO Mode Deprecation**: Legacy YOLO triggers (`/yolo`, `jules:yolo`, `--yolo`) have been neutralized to have no special side effects and are slated for removal. Jules operates safely via standard Plan/Approve or direct Fix flows.
 
 ---
 
 ## 4. The Plan → Approve → Implement Flow
 
-1. **`/plan`** → Jules session created with `requirePlanApproval: true`
-2. **Jules analyzes**: Reads the issue, inspects relevant source files, checks AGENTS.md constraints
-3. **Jules posts plan**: Via Stitch MCP (`gh issue comment`), Jules adds a structured plan comment with:
-   - Files it intends to change
-   - Architectural decisions
-   - Any open questions for the developer
-4. **Developer reviews**: Read the plan in the issue. Ask questions by commenting (forwarded to Jules via `sendMessage`).
-5. **`/approve`** → `approvePlan` API call → Jules starts implementing
-6. **Feature branch created** automatically (e.g. `jules/fix-issue-42`)
-7. **PR opened** against `main` → CI quality gates run
+1. **`/plan`** → Jules session created with `requirePlanApproval: true` → issue label set to `jules:in-progress`.
+2. **Jules analyzes & plans**: Jules inspects relevant source files and posts its plan via Stitch MCP.
+3. **Watcher detects plan**: Fast-path or scheduled watcher switches label to `jules:waiting`.
+4. **Developer reviews & discusses**: Team discusses freely in comments without triggering the bot.
+5. **Forwarding / Approval**: Commenting `/send` (or adding label `jules:send-messages`):
+   - If discussion contains approval (e.g. `go`, `passt`, `approved`), Jules starts coding immediately!
+   - If discussion contains questions, Jules answers and refines the plan.
+   - Label switches back to `jules:in-progress`.
+6. **Completion**: Jules creates a feature branch targeting `main` and opens a PR. Watcher strips all `jules:*` labels from the issue and posts the PR link!
 
 ---
 
 ## 5. Message Relay During Active Sessions
 
 While Jules is active on an issue:
-- Any authorized plain-text comment is forwarded to Jules via `sendMessage`
-- The `interact-jules` job handles `/reply`, `/continue`, `/approve`, `/yolo`, `/status` commands
-- Jules answers questions by posting comments via Stitch MCP
-- Monitor detailed progress at `jules.google.com/task/<sessionId>`
+- Developers discuss freely without each comment pinging Jules.
+- When ready, maintainers comment `/send` (or `/send-messages` or add label `jules:send-messages`).
+- The pipeline batches all comments since Jules' last message cleanly (`Here is the discussion since your last message:\n\nUser: text`) without any wrapper boilerplate.
+- Jules answers questions by posting comments via Stitch MCP.
+- Monitor detailed progress at `jules.google.com/task/<sessionId>`.
 
 ---
 

@@ -1,3 +1,14 @@
+---
+type: Operational Guide
+title: Operational Backup & Recovery Procedures
+description: Backup mechanisms, retention policies, and recovery procedures for server songs, configs, and browser IndexedDB.
+resource: docs/operations/
+tags: [operations, backup, recovery, disaster-recovery]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # Operational Backup & Recovery Procedures [ID: OPS-BACKUP-RECOVERY]
 
 This document details the backup mechanisms, retention policies, and recovery procedures for LocalGameGalaxy configurations, playlists, and browser-side IndexedDB databases.
