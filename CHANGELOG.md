@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Code Health**: Fixed eslint-disable exhaustive-deps in MelodiqSettings.
 
 ### Added
+- **Cloudflare Preview Cleanup Pipeline**: Automated deletion of preview branches & deployments on Cloudflare upon PR merge or closure (`.github/workflows/cleanup-preview.yml`) and manual `workflow_dispatch` trigger to purge all historical preview deployments.
 - **Melodiq Notes UX & Multi-Stem Audio Player**: Responsive mobile sheet music layout, collapsible settings accordion, fixed bottom action bar, and synchronized multi-stem Web Audio playback (#132, PR #189).
 
 - **AI Issue Curator & Deduplication Pipeline**: Automated issue clustering, duplicate detection, and 1-click issue bundling via `/curate`, `/bundle`, and `/duplicate` slash commands and GitHub labels (`curate`, `bundle`, `duplicate`, `plan`, `approved`).
