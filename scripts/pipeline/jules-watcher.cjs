@@ -189,14 +189,47 @@ module.exports = async ({ github, context, core }) => {
         try {
           await setSingleJulesLabel(github, context, issueNumber, null);
 
+          // Find branch to construct preview link
+          let prBranch = '';
+          for (const pr of pullsRes.data || []) {
+            if (pr.number === prNumber) {
+              prBranch = pr.head?.ref || '';
+              break;
+            }
+          }
+          const sanitizedBranch = prBranch.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+          const previewUrl = sanitizedBranch ? `https://${sanitizedBranch}.nexumia.de/` : '';
+          const previewLine = previewUrl ? `\n🌐 **Cloudflare Preview:** [${previewUrl}](${previewUrl})` : '';
+
           const prLinkText = prUrl ? `\n\n👉 **Pull Request:** [#${prNumber} - Jules PR](${prUrl})` : '';
           await github.rest.issues.createComment({
             owner: context.repo.owner,
             repo: context.repo.repo,
             issue_number: issueNumber,
-            body: `<!-- jules-marker:${completionMarker} -->\n🎉 **Jules hat die Aufgabe erfolgreich abgeschlossen!**${prLinkText}\n\nDer Pull Request wurde erstellt und die Verifikation läuft.`
+            body: `<!-- jules-marker:${completionMarker} -->\n🎉 **Jules hat die Aufgabe erfolgreich abgeschlossen!**${prLinkText}${previewLine}\n\nDer Pull Request wurde erstellt und die Verifikation läuft.`
           });
           console.log(`Marked issue #${issueNumber} as completed (PR: ${prNumber || 'found'}).`);
+
+          // Update PR body if missing preview URL
+          if (prNumber && previewUrl) {
+            try {
+              const prRes = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber
+              });
+              const currentBody = prRes.data?.body || '';
+              if (!currentBody.includes('nexumia.de')) {
+                await github.rest.pulls.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber,
+                  body: `> 🚀 **Cloudflare Preview:** [${previewUrl}](${previewUrl})\n\n${currentBody}`
+                });
+              }
+            } catch (e) {}
+          }
+
           return true;
         } catch (e) {}
       }

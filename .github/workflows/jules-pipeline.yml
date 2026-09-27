@@ -628,17 +628,38 @@ jobs:
             const pr = context.payload.pull_request;
             const { setSingleJulesLabel } = require('./scripts/pipeline/jules-label-manager.cjs');
 
+            const branch = pr.head?.ref || '';
+            const sanitizedBranch = branch.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+            const previewUrl = sanitizedBranch ? `https://${sanitizedBranch}.nexumia.de/` : '';
+            const previewLine = previewUrl ? `\n🌐 **Cloudflare Preview:** [${previewUrl}](${previewUrl})` : '';
+
             // Remove all jules:* labels from the issue (non-Jules labels are preserved)
             await setSingleJulesLabel(github, context, issueNumber, null);
 
-            // Post completion comment with PR link
+            // Post completion comment with PR link & Preview URL
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issueNumber,
-              body: `🎉 **Jules hat die Umsetzung abgeschlossen und Pull Request #${pr.number} erstellt:**\n\n👉 [#${pr.number} - ${pr.title}](${pr.html_url})\n\nAlle Jules-Labels wurden vom Issue entfernt. Die Verifikation und das Review laufen nun auf dem PR.`
+              body: `🎉 **Jules hat die Umsetzung abgeschlossen und Pull Request #${pr.number} erstellt:**\n\n👉 [#${pr.number} - ${pr.title}](${pr.html_url})${previewLine}\n\nAlle Jules-Labels wurden vom Issue entfernt. Die Verifikation und das Review laufen nun auf dem PR.`
             });
             console.log(`Cleaned Jules labels and linked PR #${pr.number} to issue #${issueNumber}`);
+
+            // Add Preview banner to PR description
+            try {
+              const currentBody = pr.body || '';
+              if (!currentBody.includes('nexumia.de') && previewUrl) {
+                const updatedBody = `> 🚀 **Cloudflare Preview:** [${previewUrl}](${previewUrl})\n\n${currentBody}`;
+                await github.rest.pulls.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  body: updatedBody
+                });
+              }
+            } catch (err) {
+              console.warn('Could not update PR body with preview URL:', err.message);
+            }
 
 
 
