@@ -21,12 +21,6 @@ on:
         options:
           - plan
           - fix
-          - yolo
-      yolo:
-        description: 'Enable YOLO mode (maximum autonomy, zero intermediate questions)'
-        required: false
-        type: boolean
-        default: false
 
 concurrency:
   group: jules-${{ github.event.issue.number || github.event.pull_request.number || inputs.issue_number }}-${{ github.event_name == 'issue_comment' && 'comment' || 'pipeline' }}
@@ -48,7 +42,6 @@ jobs:
       is_authorized: ${{ steps.decide.outputs.is_authorized }}
       lens_name: ${{ steps.decide.outputs.lens_name }}
       targets: ${{ steps.decide.outputs.targets }}
-      yolo: ${{ steps.decide.outputs.yolo }}
     steps:
       - name: Evaluate command and permissions
         id: decide
@@ -61,20 +54,12 @@ jobs:
             let isAuthorized = false;
             let lensName = '';
             let targets = '';
-            let isYolo = false;
 
             // Security check: Only allow repo owner, members, or collaborators
             const trustedRoles = ['OWNER', 'MEMBER', 'COLLABORATOR'];
 
             if (eventName === 'workflow_dispatch') {
               action = context.payload.inputs.mode;
-              if (action === 'yolo') {
-                action = 'fix';
-                isYolo = true;
-              }
-              if (context.payload.inputs.yolo) {
-                isYolo = true;
-              }
               issueNumber = context.payload.inputs.issue_number;
               isAuthorized = true; // workflow_dispatch already requires repository write access
             } else if (eventName === 'issue_comment') {
@@ -89,8 +74,6 @@ jobs:
 
                 const rawBody = (comment.body || '').trim();
                 const body = rawBody.toLowerCase();
-                const hasYoloFlag = /\b(-{1,2})yolo\b/i.test(rawBody);
-                if (hasYoloFlag) isYolo = true;
 
                 if (body.startsWith('/jules lens')) {
                   action = 'fix';
@@ -118,22 +101,16 @@ jobs:
                   } catch (e) {}
 
                   // 2. Route commands based on session state
-                  if (body.startsWith('/yolo') || body.startsWith('/jules yolo')) {
-                    action = hasSession ? 'yolo' : 'fix';
-                  } else if (body.startsWith('/send') || body.startsWith('/send-messages') || body.startsWith('/jules send') || body.startsWith('/jules send-messages') || body.startsWith('/jules reply') || body.startsWith('/reply')) {
+                  if (body.startsWith('/send') || body.startsWith('/send-messages') || body.startsWith('/jules send') || body.startsWith('/jules send-messages') || body.startsWith('/jules reply') || body.startsWith('/reply')) {
                     action = 'send-messages';
-                    const replyText = rawBody.replace(/^\/(jules\s+)?(send-messages|send|reply)\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
+                    const replyText = rawBody.replace(/^\/(jules\s+)?(send-messages|send|reply)\s*/i, '').trim();
                     targets = replyText;
                   } else if (body.startsWith('/approve') || body.startsWith('/jules approve') || body.startsWith('/approve-plan')) {
-                    if (hasSession) {
-                      action = 'approve-plan';
-                    } else {
-                      action = 'fix';
-                    }
+                    action = hasSession ? 'approve-plan' : 'fix';
                   } else if (body.startsWith('/continue') || body.startsWith('/jules continue')) {
                     if (hasSession) {
-                      action = hasYoloFlag ? 'yolo' : 'continue';
-                      const replyText = rawBody.replace(/^\/(jules\s+)?continue\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
+                      action = 'continue';
+                      const replyText = rawBody.replace(/^\/(jules\s+)?continue\s*/i, '').trim();
                       targets = replyText || 'Continue with the suggested approach.';
                     } else {
                       action = 'fix';
@@ -141,10 +118,8 @@ jobs:
                   } else if (body.startsWith('/status') || body.startsWith('/jules status')) {
                     action = 'status';
                   } else if (body.startsWith('/jules plan') || body.startsWith('/plan')) {
-                    // Start planning session - Jules will plan but NOT code yet
                     action = 'plan';
                   } else if (body.startsWith('/jules fix') || body.startsWith('/fix')) {
-                    // Fast-track: Jules implements directly without plan approval
                     action = 'fix';
                   }
                 }
@@ -182,9 +157,6 @@ jobs:
                   lensName = labelName.replace('lens:', '').trim();
                 } else if (labelName === 'jules' || labelName === 'jules:plan' || labelName === 'plan' || labelName === 'game-factory') {
                   action = 'plan';
-                } else if (labelName === 'yolo' || labelName === 'jules:yolo') {
-                  action = 'fix';
-                  isYolo = true;
                 } else if (labelName === 'jules:approved' || labelName === 'approved' || labelName === 'approve') {
                   action = hasSession ? 'approve-plan' : 'fix';
                 } else if (labelName === 'jules:send-messages' || labelName === 'jules:send' || labelName === 'send-messages' || labelName === 'send') {
@@ -212,13 +184,12 @@ jobs:
               }
             }
 
-            console.log({ action, issueNumber, isAuthorized, lensName, targets, isYolo });
+            console.log({ action, issueNumber, isAuthorized, lensName, targets });
             core.setOutput('action', action);
             core.setOutput('issue_number', issueNumber);
             core.setOutput('is_authorized', isAuthorized ? 'true' : 'false');
             core.setOutput('lens_name', lensName);
             core.setOutput('targets', targets);
-            core.setOutput('yolo', isYolo ? 'true' : 'false');
 
 
   execute-jules:
@@ -245,7 +216,6 @@ jobs:
         env:
           LENS_PROMPT: ${{ steps.lens_resolver.outputs.prompt }}
           LENS_NAME: ${{ steps.lens_resolver.outputs.lens_name }}
-          YOLO_MODE: ${{ needs.triage.outputs.yolo }}
         with:
           script: |
             const issueNumber = Number("${{ needs.triage.outputs.issue_number }}");
@@ -257,7 +227,6 @@ jobs:
 
             const lensPrompt = process.env.LENS_PROMPT || '';
             const lensName = process.env.LENS_NAME || '';
-            const isYolo = process.env.YOLO_MODE === 'true';
 
             // Dispatch confirmation is posted after successful API call in 'Update Issue Status on Completion'
 
@@ -286,7 +255,7 @@ jobs:
                 // Skip pipeline-generated comments (status reports, relay headers)
                 if (body.startsWith('## 🤖') || body.startsWith('### 🔍') || body.startsWith('📊') || body.startsWith('🤖') || body.startsWith('⚡') || body.startsWith('▶️') || body.startsWith('💬') || body.startsWith('❌') || body.startsWith('✅')) return false;
                 // Skip pure slash commands with no substantive text
-                if (/^\/(jules\s+)?(fix|status|plan|continue|yolo|approve-plan|check)\b/i.test(body) && body.split(/\s+/).length <= 3) return false;
+                if (/^\/(jules\s+)?(fix|status|plan|continue|approve-plan|check)\b/i.test(body) && body.split(/\s+/).length <= 3) return false;
                 return body.length > 0;
               });
               if (filteredComments.length > 0) {
@@ -310,13 +279,7 @@ jobs:
             }
 
             const isPlan = "${{ needs.triage.outputs.action }}" === 'plan';
-            const yoloBanner = isYolo ? `
-            ⚡⚡⚡ YOLO MODE: MAXIMUM AUTONOMOUS EXECUTION ENGAGED ⚡⚡⚡
-            - ABSOLUTE ZERO HUMAN INTERACTION: Do NOT ask for confirmation, feedback, or approval under any circumstances.
-            - FULL PROACTIVE AUTHORITY: You are strictly required to make all architectural, refactoring, and file decomposition decisions yourself.
-            - IMMEDIATELY create/extract sub-components or custom hooks if limits are exceeded.
-            - Create a feature branch from 'main', implement the solution completely, run all Vitest tests and quality gates, and open a Pull Request targeting 'main'. Never pause or wait for user input.
-            ` : isPlan ? `
+            const banner = isPlan ? `
             📋 PLAN MODE — DO NOT WRITE ANY CODE OR MAKE ANY COMMITS YET.
             
             YOUR MISSION IS TO PLAN AND WAIT FOR APPROVAL:
@@ -325,25 +288,23 @@ jobs:
             3. Generate your implementation plan. Post it as a comment on this GitHub Issue using Stitch (gh issue comment).
             4. In your plan comment, clearly list: what files you will change, how, and why.
             5. If you have questions that would affect your approach, ask them in the same comment.
-            6. STOP. Do not write code. Wait for the user to reply with /approve.
-            
-            When the user sends /approve, this session will receive an approvePlan signal and you THEN proceed to implementation on a feature branch targeting 'main'.
+            6. STOP. Do not write code. Wait for user discussion and /send.
             ` : `
-            🤖 INTERACTIVE MODE: DIRECT IMPLEMENTATION
+            🤖 DIRECT IMPLEMENTATION MODE
             Proceed with implementing the fix on a feature branch from 'main'. Run all quality gates and open a PR against 'main'.
             `;
 
             const prompt = `
             Task: Fix GitHub Issue #${issueNumber}: ${issue.data.title}
             
-            ${yoloBanner}
+            ${banner}
 
             Issue Description:
             ${issue.data.body || 'No description provided'}${commentsContext}
 
             ${lensPrompt ? `\nSPECIALIZED REPOLENS AUDIT FOCUS:\n${lensPrompt}\n` : ''}
 
-            Target, Branch & PR Instructions (Apply ONLY during Phase 2 / YOLO Mode):
+            Target, Branch & PR Instructions (Implementation Phase):
             - Create a new feature branch from 'main' (Jules auto-names it, e.g. jules/fix-issue-${issueNumber}).
             - When creating the pull request, TARGET 'main' AS THE BASE BRANCH.
             - Do NOT push directly to main.
@@ -395,7 +356,6 @@ jobs:
           STARTING_BRANCH: 'main'
           REPO: ${{ github.repository }}
           USER_PROMPT: ${{ steps.prep.outputs.prompt }}
-          YOLO_MODE: ${{ needs.triage.outputs.yolo }}
           ACTION: ${{ needs.triage.outputs.action }}
         shell: bash
         run: |
@@ -590,7 +550,6 @@ jobs:
           JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
           ACTION: ${{ needs.triage.outputs.action }}
           TARGET_TEXT: ${{ needs.triage.outputs.targets }}
-          IS_YOLO: ${{ needs.triage.outputs.yolo }}
         with:
           script: |
             const interact = require('./scripts/pipeline/jules-interact.cjs');
