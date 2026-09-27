@@ -5,6 +5,8 @@ on:
     types: [created]
   issues:
     types: [labeled]
+  pull_request:
+    types: [opened]
   workflow_dispatch:
     inputs:
       issue_number:
@@ -27,7 +29,7 @@ on:
         default: false
 
 concurrency:
-  group: jules-${{ github.event.issue.number || inputs.issue_number }}-${{ github.event_name == 'issue_comment' && 'comment' || 'pipeline' }}
+  group: jules-${{ github.event.issue.number || github.event.pull_request.number || inputs.issue_number }}-${{ github.event_name == 'issue_comment' && 'comment' || 'pipeline' }}
   cancel-in-progress: false
 
 permissions:
@@ -190,6 +192,23 @@ jobs:
                 } else if (labelName === 'jules:fix' || labelName === 'fix') {
                   action = 'fix';
                 }
+              }
+            } else if (eventName === 'pull_request' && context.payload.action === 'opened') {
+              const pr = context.payload.pull_request;
+              const branch = pr.head?.ref || '';
+              const body = pr.body || '';
+              const title = pr.title || '';
+
+              // Match branch like jules/fix-issue-231-17878712329664652791 or issue-231
+              // or PR body like Fixes #231, Closes #231, Resolves #231
+              const match = branch.match(/issue-?(\d+)/i) ||
+                            body.match(/(?:Fixes|Closes|Resolves)\s+#(\d+)/i) ||
+                            title.match(/#(\d+)/i);
+
+              if (match) {
+                issueNumber = Number(match[1]);
+                action = 'pr-opened';
+                isAuthorized = true;
               }
             }
 
@@ -590,5 +609,36 @@ jobs:
           script: |
             const watcher = require('./scripts/pipeline/jules-watcher.cjs');
             await watcher({ github, context, core });
+
+  handle-pr-opened:
+    name: Link PR to Issue & Clear Jules Labels
+    needs: triage
+    if: needs.triage.outputs.action == 'pr-opened' && needs.triage.outputs.issue_number != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clear Jules Labels & Link PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueNumber = Number("${{ needs.triage.outputs.issue_number }}");
+            const pr = context.payload.pull_request;
+            const { setSingleJulesLabel } = require('./scripts/pipeline/jules-label-manager.cjs');
+
+            // Remove all jules:* labels from the issue (non-Jules labels are preserved)
+            await setSingleJulesLabel(github, context, issueNumber, null);
+
+            // Post completion comment with PR link
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: `🎉 **Jules hat die Umsetzung abgeschlossen und Pull Request #${pr.number} erstellt:**\n\n👉 [#${pr.number} - ${pr.title}](${pr.html_url})\n\nAlle Jules-Labels wurden vom Issue entfernt. Die Verifikation und das Review laufen nun auf dem PR.`
+            });
+            console.log(`Cleaned Jules labels and linked PR #${pr.number} to issue #${issueNumber}`);
+
 
 

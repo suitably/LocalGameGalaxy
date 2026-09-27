@@ -13,11 +13,15 @@ async function setSingleJulesLabel(github, context, issueNumber, targetLabel) {
     });
     const currentLabels = (issue.labels || []).map(l => typeof l === 'string' ? l : l.name);
 
-    // Identify all existing jules:* labels + trigger labels to remove
+    // Identify all existing jules:* labels (and legacy triggers) to remove.
+    // Standard issue labels (e.g. bug, enhancement, frontend) are ALWAYS preserved!
     const julesLabelsToRemove = currentLabels.filter(name => {
       const lower = name.toLowerCase();
       if (targetLabel && lower === targetLabel.toLowerCase()) return false;
-      return lower.startsWith('jules:') || ['jules', 'plan', 'send-messages', 'send', 'approved', 'approve', 'yolo'].includes(lower);
+      if (lower.startsWith('jules:') || lower === 'jules') return true;
+      // If setting a new Jules label, also clean up trigger shortcut labels
+      if (targetLabel && ['plan', 'send-messages', 'send', 'approved', 'approve', 'yolo'].includes(lower)) return true;
+      return false;
     });
 
     for (const name of julesLabelsToRemove) {

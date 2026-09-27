@@ -148,7 +148,7 @@ module.exports = async ({ github, context, core }) => {
     // Sort chronologically
     rawActivities.sort((a, b) => (a.createTime || '').localeCompare(b.createTime || ''));
 
-    // 3. First, inspect all rawActivities for unposted plan or questions REGARDLESS of session state
+    // Calculate if activities contain code or PR
     let hasPrOrCode = false;
     for (const a of rawActivities) {
       if ((a.artifacts && a.artifacts.length > 0) || a.changeSet || a.pullRequest || /pull\/\d+|created pull request|gitPatch/i.test(JSON.stringify(a))) {
@@ -156,7 +156,54 @@ module.exports = async ({ github, context, core }) => {
       }
     }
 
-    // Check chronologically for unposted plan or question
+    // 3. First, check if a Pull Request already exists for this issue
+    let prUrl = null;
+    let prNumber = null;
+    try {
+      const pullsRes = await github.rest.pulls.list({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        state: 'all',
+        per_page: 30
+      });
+      for (const pr of pullsRes.data || []) {
+        const branch = pr.head?.ref || '';
+        const body = pr.body || '';
+        const title = pr.title || '';
+        if (branch.includes(`issue-${issueNumber}`) || 
+            branch.includes(`issue${issueNumber}`) ||
+            branch.startsWith('jules/') ||
+            new RegExp(`#${issueNumber}\\b`).test(body) ||
+            new RegExp(`#${issueNumber}\\b`).test(title)) {
+          prUrl = pr.html_url;
+          prNumber = pr.number;
+          break;
+        }
+      }
+    } catch (e) {}
+
+    // If PR was created or session completed with code, finalize immediately!
+    if (prUrl || (state === 'COMPLETED' && hasPrOrCode)) {
+      const completionMarker = `completed-${sessionId}`;
+      if (!postedMarkers.has(completionMarker)) {
+        try {
+          await setSingleJulesLabel(github, context, issueNumber, null);
+
+          const prLinkText = prUrl ? `\n\n👉 **Pull Request:** [#${prNumber} - Jules PR](${prUrl})` : '';
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: issueNumber,
+            body: `<!-- jules-marker:${completionMarker} -->\n🎉 **Jules hat die Aufgabe erfolgreich abgeschlossen!**${prLinkText}\n\nDer Pull Request wurde erstellt und die Verifikation läuft.`
+          });
+          console.log(`Marked issue #${issueNumber} as completed (PR: ${prNumber || 'found'}).`);
+          return true;
+        } catch (e) {}
+      }
+      return false; // Already handled
+    }
+
+    // 4. Check chronologically for unposted plan or question (only if no PR exists yet)
     for (let i = rawActivities.length - 1; i >= 0; i--) {
       const act = rawActivities[i];
       if (act.originator === 'USER' || act.userMessaged) continue;
@@ -169,10 +216,12 @@ module.exports = async ({ github, context, core }) => {
       const parsed = parseActivity(act);
       if (!parsed.text) continue;
 
-      // Detect if this activity represents a plan / analysis
-      const isPlan = act.planGenerated || 
+      // Detect if this activity represents a genuine implementation plan
+      const isPlan = Boolean(act.planGenerated) || 
         parsed.tag === 'PLAN' || 
-        /proposed plan|analyze the issue|root cause|implementation plan|plan review/i.test(parsed.text);
+        parsed.text.includes('### 📋 Proposed Plan') ||
+        /^\s*###?\s*📋?\s*proposed plan/i.test(parsed.text) ||
+        /\b(proposed implementation plan|here is the proposed plan)\b/i.test(parsed.text);
 
       const isAgentMessage = Boolean(act.agentMessaged);
 
@@ -245,52 +294,7 @@ module.exports = async ({ github, context, core }) => {
       break; // Only handle the most recent unhandled activity
     }
 
-    // 4. Handle Completion
-    if (state === 'COMPLETED') {
-      const completionMarker = `completed-${sessionId}`;
-      if (!postedMarkers.has(completionMarker)) {
-        try {
-          // Search for the PR created by Jules for this issue
-          let prUrl = null;
-          let prNumber = null;
-          try {
-            const pullsRes = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'all',
-              per_page: 30
-            });
-            for (const pr of pullsRes.data || []) {
-              const branch = pr.head?.ref || '';
-              const body = pr.body || '';
-              const title = pr.title || '';
-              if (branch.includes(`issue-${issueNumber}`) || 
-                  branch.includes(`issue${issueNumber}`) ||
-                  branch.startsWith('jules/') ||
-                  new RegExp(`#${issueNumber}\\b`).test(body) ||
-                  new RegExp(`#${issueNumber}\\b`).test(title)) {
-                prUrl = pr.html_url;
-                prNumber = pr.number;
-                break;
-              }
-            }
-          } catch (e) {}
-
-          // Remove all Jules labels from the issue as requested
-          await setSingleJulesLabel(github, context, issueNumber, null);
-
-          const prLinkText = prUrl ? `\n\n👉 **Pull Request:** [#${prNumber} - Jules PR](${prUrl})` : '';
-          await github.rest.issues.createComment({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: issueNumber,
-            body: `<!-- jules-marker:${completionMarker} -->\n🎉 **Jules hat die Aufgabe erfolgreich abgeschlossen!**${prLinkText}\n\nDer Pull Request wurde erstellt und die Verifikation läuft.`
-          });
-          console.log(`Marked issue #${issueNumber} as completed (PR: ${prNumber || 'found'}).`);
-          return true;
-        } catch (e) {}
-      }
-    } else if (state === 'FAILED') {
+    if (state === 'FAILED') {
       const failureMarker = `failed-${sessionId}`;
       if (!postedMarkers.has(failureMarker)) {
         try {
