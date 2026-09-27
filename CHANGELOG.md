@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- **Melodiq**: Fixed proxy connection for phones in "Lite modus" by ensuring helperUrl and token are appended to the QR code connection URL, allowing the client to discover and proxy requests through the host.
 - **Melodiq**: Fixed an issue where the "Back" button was broken when exiting the settings view during a game by properly memoizing the exit callback to prevent unstable reference loops with the GlobalHeader state.
 - **Settings**: Extracted GitHub issue submission logic and Server proxy feedback logic from `FeedbackDialog` and `SettingsFeedbackForm` components into a single `submitFeedback` function within `src/lib/github.ts` to fix a Separation of Concerns violation.
 - Fixed GuessArt game redirect URLs (#126)
