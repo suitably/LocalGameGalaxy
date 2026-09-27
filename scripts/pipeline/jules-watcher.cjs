@@ -146,88 +146,101 @@ module.exports = async ({ github, context, core }) => {
     // Sort chronologically
     rawActivities.sort((a, b) => (a.createTime || '').localeCompare(b.createTime || ''));
 
-    // Handle AWAITING_USER_FEEDBACK or AWAITING_USER_INPUT
-    if (state === 'AWAITING_USER_FEEDBACK' || state === 'AWAITING_USER_INPUT') {
-      // Find the latest agent message or plan that hasn't been posted yet
-      for (let i = rawActivities.length - 1; i >= 0; i--) {
-        const act = rawActivities[i];
-        if (act.originator === 'USER' || act.userMessaged) continue;
-
-        const actId = act.id || `act-${i}`;
-        if (postedMarkers.has(actId)) {
-          console.log(`Activity ${actId} already posted. Skipping.`);
-          break; // Latest is already posted
-        }
-
-        const parsed = parseActivity(act);
-        if (!parsed.text) continue;
-
-        // Is it a plan or a question?
-        const isPlan = act.planGenerated || parsed.tag === 'PLAN' || parsed.text.toLowerCase().includes('proposed plan') || parsed.text.includes('### 📋');
-
-        if (isPlan) {
-          const planComment = [
-            `<!-- jules-activity:${actId} -->`,
-            `## 🤖 Jules Implementation Plan`,
-            '',
-            parsed.text,
-            '',
-            '---',
-            '### 🚦 Plan Review & Next Steps',
-            '- **`/approve`** — Plan genehmigen. Jules startet die Umsetzung auf einem Feature-Branch.',
-            '- **`/reply <Deine Anweisungen>`** — Feedback oder Fragen an Jules senden. Jules passt den Plan an.',
-            '- **`/yolo`** — Volle Autonomie für die Umsetzung ohne Zwischenfragen.'
-          ].join('\n');
-
-          try {
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issueNumber,
-              body: planComment
-            });
-            console.log(`Posted plan (activity ${actId}) to issue #${issueNumber}`);
-
-            await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:in-review' }).catch(() => {});
-            await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:waiting-approval'] }).catch(() => {});
-            return true; // Action taken
-          } catch (err) {
-            console.warn(`Failed to post plan comment:`, err.message);
-          }
-        } else {
-          // Unexpected question / feedback needed during execution
-          const questionComment = [
-            `<!-- jules-activity:${actId} -->`,
-            `### ❓ Jules Rückfrage / Feedback benötigt`,
-            '',
-            `> ${parsed.text.replace(/\n/g, '\n> ')}`,
-            '',
-            '---',
-            '👉 **Antworte direkt hier im Issue:**',
-            '- Normaler Kommentar oder **`/reply <Antwort>`**',
-            '- **`/continue`** um mit dem vorgeschlagenen Ansatz fortzufahren',
-            '- **`/yolo`** für 100% Autonomie ohne weitere Fragen'
-          ].join('\n');
-
-          try {
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issueNumber,
-              body: questionComment
-            });
-            console.log(`Posted question (activity ${actId}) to issue #${issueNumber}`);
-
-            await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:in-progress' }).catch(() => {});
-            await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:waiting-input'] }).catch(() => {});
-            return true; // Action taken
-          } catch (err) {
-            console.warn(`Failed to post question comment:`, err.message);
-          }
-        }
-        break; // Only handle the most recent unhandled activity
+    // 3. First, inspect all rawActivities for unposted plan or questions REGARDLESS of session state
+    let hasPrOrCode = false;
+    for (const a of rawActivities) {
+      if ((a.artifacts && a.artifacts.length > 0) || a.changeSet || a.pullRequest || /pull\/\d+|created pull request|gitPatch/i.test(JSON.stringify(a))) {
+        hasPrOrCode = true;
       }
-    } else if (state === 'COMPLETED') {
+    }
+
+    // Check chronologically for unposted plan or question
+    for (let i = rawActivities.length - 1; i >= 0; i--) {
+      const act = rawActivities[i];
+      if (act.originator === 'USER' || act.userMessaged) continue;
+
+      const actId = act.id || `act-${i}`;
+      if (postedMarkers.has(actId)) {
+        continue;
+      }
+
+      const parsed = parseActivity(act);
+      if (!parsed.text) continue;
+
+      // Detect if this activity represents a plan / analysis
+      const isPlan = act.planGenerated || 
+        parsed.tag === 'PLAN' || 
+        /proposed plan|analyze the issue|root cause|implementation plan|plan review/i.test(parsed.text);
+
+      if (isPlan) {
+        const planComment = [
+          `<!-- jules-activity:${actId} -->`,
+          `## 🤖 Jules Implementation Plan`,
+          '',
+          parsed.text,
+          '',
+          '---',
+          '### 🚦 Plan Review & Next Steps',
+          '- **`/approve`** — Plan genehmigen. Jules startet die Umsetzung auf einem Feature-Branch.',
+          '- **`/reply <Deine Anweisungen>`** — Feedback oder Fragen an Jules senden. Jules passt den Plan an.',
+          '- **`/yolo`** — Volle Autonomie für die Umsetzung ohne Zwischenfragen.'
+        ].join('\n');
+
+        try {
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: issueNumber,
+            body: planComment
+          });
+          console.log(`Posted plan (activity ${actId}) to issue #${issueNumber}`);
+          postedMarkers.add(actId);
+
+          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:in-review' }).catch(() => {});
+          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:completed' }).catch(() => {});
+          await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:waiting-approval'] }).catch(() => {});
+          return true; // Action taken
+        } catch (err) {
+          console.warn(`Failed to post plan comment:`, err.message);
+        }
+      } else if (state === 'AWAITING_USER_FEEDBACK' || state === 'AWAITING_USER_INPUT' || parsed.text.includes('?')) {
+        // Unexpected question / feedback needed during execution
+        const questionComment = [
+          `<!-- jules-activity:${actId} -->`,
+          `### ❓ Jules Rückfrage / Feedback benötigt`,
+          '',
+          `> ${parsed.text.replace(/\n/g, '\n> ')}`,
+          '',
+          '---',
+          '👉 **Antworte direkt hier im Issue:**',
+          '- Normaler Kommentar oder **`/reply <Antwort>`**',
+          '- **`/continue`** um mit dem vorgeschlagenen Ansatz fortzufahren',
+          '- **`/yolo`** für 100% Autonomie ohne weitere Fragen'
+        ].join('\n');
+
+        try {
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: issueNumber,
+            body: questionComment
+          });
+          console.log(`Posted question (activity ${actId}) to issue #${issueNumber}`);
+          postedMarkers.add(actId);
+
+          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:in-progress' }).catch(() => {});
+          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:completed' }).catch(() => {});
+          await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:waiting-input'] }).catch(() => {});
+          return true; // Action taken
+        } catch (err) {
+          console.warn(`Failed to post question comment:`, err.message);
+        }
+      }
+      break; // Only handle the most recent unhandled activity
+    }
+
+    // 4. Handle Completion ONLY if PR was actually created
+    if (state === 'COMPLETED' && hasPrOrCode) {
       const completionMarker = `completed-${sessionId}`;
       if (!postedMarkers.has(completionMarker)) {
         try {
