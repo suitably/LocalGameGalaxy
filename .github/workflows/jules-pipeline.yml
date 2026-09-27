@@ -118,20 +118,14 @@ jobs:
                   // 2. Route commands based on session state
                   if (body.startsWith('/yolo') || body.startsWith('/jules yolo')) {
                     action = hasSession ? 'yolo' : 'fix';
-                  } else if (body.startsWith('/send') || body.startsWith('/send-messages') || body.startsWith('/jules send') || body.startsWith('/jules send-messages') || body.startsWith('/jules reply') || body.startsWith('/reply')) {
-                    action = 'send-messages';
-                    const replyText = rawBody.replace(/^\/(jules\s+)?(send-messages|send|reply)\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
-                    targets = replyText;
-                  } else if (body.startsWith('/approve') || body.startsWith('/jules approve') || body.startsWith('/approve-plan')) {
-                    if (hasSession) {
-                      action = 'approve-plan';
-                    } else {
-                      action = 'fix';
-                    }
-                  } else if (body.startsWith('/continue') || body.startsWith('/jules continue')) {
+                  } else if (body.startsWith('/jules reply') || body.startsWith('/reply')) {
+                    action = 'reply';
+                    const replyText = rawBody.replace(/^\/(jules\s+)?reply\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
+                    targets = replyText || 'Please proceed autonomously with the proposed solution and create the pull request.';
+                  } else if (body.startsWith('/continue') || body.startsWith('/jules continue') || body.startsWith('/approve') || body.startsWith('/jules approve') || body.startsWith('/approve-plan')) {
                     if (hasSession) {
                       action = hasYoloFlag ? 'yolo' : 'continue';
-                      const replyText = rawBody.replace(/^\/(jules\s+)?continue\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
+                      const replyText = rawBody.replace(/^\/(jules\s+)?(continue|approve|approve-plan)\s*/i, '').replace(/--yolo|-yolo/gi, '').trim();
                       targets = replyText || 'Continue with the suggested approach.';
                     } else {
                       action = 'fix';
@@ -158,23 +152,6 @@ jobs:
                 const authorAssoc = issue.author_association;
                 isAuthorized = trustedRoles.includes(authorAssoc) || sender === context.repo.owner;
 
-                let hasSession = false;
-                try {
-                  const commentsRes = await github.rest.issues.listComments({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: issueNumber,
-                    per_page: 50
-                  });
-                  for (let i = (commentsRes.data || []).length - 1; i >= 0; i--) {
-                    const cBody = commentsRes.data[i].body || '';
-                    if (cBody.includes('https://jules.google.com/task/')) {
-                      hasSession = true;
-                      break;
-                    }
-                  }
-                } catch (e) {}
-
                 if (labelName.startsWith('lens:')) {
                   action = 'fix';
                   lensName = labelName.replace('lens:', '').trim();
@@ -183,11 +160,7 @@ jobs:
                 } else if (labelName === 'yolo' || labelName === 'jules:yolo') {
                   action = 'fix';
                   isYolo = true;
-                } else if (labelName === 'jules:approved' || labelName === 'approved' || labelName === 'approve') {
-                  action = hasSession ? 'approve-plan' : 'fix';
-                } else if (labelName === 'jules:send-messages' || labelName === 'jules:send' || labelName === 'send-messages' || labelName === 'send') {
-                  action = 'send-messages';
-                } else if (labelName === 'jules:fix' || labelName === 'fix') {
+                } else if (labelName === 'jules:approved' || labelName === 'jules:fix' || labelName === 'approved' || labelName === 'fix' || labelName === 'approve') {
                   action = 'fix';
                 }
               }
@@ -242,13 +215,24 @@ jobs:
 
             // Dispatch confirmation is posted after successful API call in 'Update Issue Status on Completion'
 
-            // Update labels using label manager to enforce single-label mutex
+            // Update labels
             try {
-              const { setSingleJulesLabel } = require('./scripts/pipeline/jules-label-manager.cjs');
-              await setSingleJulesLabel(github, context, issueNumber, 'jules:in-progress');
-            } catch (e) {
-              console.warn('Could not update labels:', e.message);
-            }
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                name: 'jules:waiting-approval'
+              });
+            } catch (e) {}
+
+            try {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                labels: ['jules:in-progress']
+              });
+            } catch (e) {}
 
             // Fetch relevant user feedback from comments (exclude bots & slash commands)
             let commentsContext = '';
@@ -271,20 +255,8 @@ jobs:
                 return body.length > 0;
               });
               if (filteredComments.length > 0) {
-                const promptUserMap = new Map();
-                const promptRoleCounters = {};
                 commentsContext = '\n\nUser Feedback & Clarifications from Issue Comments:\n' +
-                  filteredComments.map(c => {
-                    const login = c.user?.login || 'unknown';
-                    if (!promptUserMap.has(login)) {
-                      const rawRole = c.author_association || 'CONTRIBUTOR';
-                      const role = rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase();
-                      promptRoleCounters[role] = (promptRoleCounters[role] || 0) + 1;
-                      promptUserMap.set(login, `${role} ${promptRoleCounters[role]}`);
-                    }
-                    const label = promptUserMap.get(login);
-                    return `- ${label}: ${c.body.trim()}`;
-                  }).join('\n\n');
+                  filteredComments.map(c => `- @${c.user?.login}: ${c.body.trim()}`).join('\n\n');
               }
             } catch (err) {
               console.warn('Could not fetch comments for Jules prompt:', err.message);
@@ -502,14 +474,28 @@ jobs:
             const keyUsed = process.env.KEY_USED || '';
             const errorMsg = process.env.ERROR_MSG || '';
 
-            const { setSingleJulesLabel } = require('./scripts/pipeline/jules-label-manager.cjs');
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                name: 'jules:in-progress'
+              });
+            } catch (e) {}
 
             if (isSuccess && sessionUrl) {
-              await setSingleJulesLabel(github, context, issueNumber, 'jules:in-progress');
+              try {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  labels: ['jules:in-review']
+                });
+              } catch (e) {}
 
               const actionMode = "${{ needs.triage.outputs.action }}";
               const modeMsg = actionMode === 'plan'
-                ? 'Jules is **analyzing and planning**. You can discuss freely in the comments. When ready, comment `/send` (or add label `jules:send-messages`) to forward questions or say „go“ to start implementation.'
+                ? 'Jules is **analyzing and planning**. It will post a plan comment here via Stitch. Reply with `/approve` to start implementation, or ask questions and Jules will answer.'
                 : 'Jules is **implementing**. A PR against `main` will be opened once implementation and quality gates pass.';
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
@@ -518,7 +504,14 @@ jobs:
                 body: `🤖 **Google Jules Dispatched** (Worker: \`${keyUsed}\`)\n\n👉 [Monitor on Jules.google.com](${sessionUrl})\n\n${modeMsg}`
               });
             } else {
-              await setSingleJulesLabel(github, context, issueNumber, 'jules:failed');
+              try {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  labels: ['jules:failed']
+                });
+              } catch (e) {}
 
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
@@ -528,34 +521,14 @@ jobs:
               });
             }
 
-      - name: Wait for Jules Plan (Fast-Path)
-        if: steps.jules_call.outputs.success == 'true' && needs.triage.outputs.action == 'plan'
-        uses: actions/github-script@v7
-        env:
-          ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
-          SESSION_ID: ${{ steps.jules_call.outputs.session_id }}
-          JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
-          JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
-          JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
-          JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
-          JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
-          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
-          MAX_WAIT_SECONDS: '90'
-        with:
-          script: |
-            const watcher = require('./scripts/pipeline/jules-watcher.cjs');
-            await watcher({ github, context, core });
 
   interact-jules:
     name: Relay Command or Feedback to Jules
     needs: triage
-    if: (needs.triage.outputs.action == 'send-messages' || needs.triage.outputs.action == 'reply' || needs.triage.outputs.action == 'continue' || needs.triage.outputs.action == 'yolo' || needs.triage.outputs.action == 'approve-plan' || needs.triage.outputs.action == 'status') && needs.triage.outputs.is_authorized == 'true'
+    if: (needs.triage.outputs.action == 'reply' || needs.triage.outputs.action == 'continue' || needs.triage.outputs.action == 'yolo' || needs.triage.outputs.action == 'approve-plan' || needs.triage.outputs.action == 'status') && needs.triage.outputs.is_authorized == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Relay Command to Google Jules Session
         uses: actions/github-script@v7
         env:
@@ -573,22 +546,4 @@ jobs:
           script: |
             const interact = require('./scripts/pipeline/jules-interact.cjs');
             await interact({ github, context, core });
-
-      - name: Wait for Jules Activity or PR (Fast-Path)
-        if: needs.triage.outputs.action != 'status'
-        uses: actions/github-script@v7
-        env:
-          ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
-          JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
-          JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
-          JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
-          JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
-          JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
-          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
-          MAX_WAIT_SECONDS: '90'
-        with:
-          script: |
-            const watcher = require('./scripts/pipeline/jules-watcher.cjs');
-            await watcher({ github, context, core });
-
 

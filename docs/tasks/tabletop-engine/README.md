@@ -1,14 +1,3 @@
----
-type: Task Specification
-title: 'Readme'
-description: Task and backlog specification document.
-resource: src/
-tags: [task, backlog, solid]
-status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
----
-
 # Declarative Tabletop Engine & Community Games Library
 
 Dieses Verzeichnis enthält die vollständigen, agenten-tauglichen GitHub-Issues zur Implementierung der **deklarativen Tabletop-Engine** mit **dynamischem Smartphone-Controller**, **TV-/Tablet-Brettansicht** und **Party-Lobby-Integration** in **LocalGameGalaxy**.

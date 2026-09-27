@@ -1,14 +1,3 @@
----
-type: Styling Guide
-title: Styling, Theme & Multi-Device Layout Architecture
-description: MUI theming conventions, dark/light palette tokens, Capacitor safe area insets, and responsive layout guidelines.
-resource: src/theme.ts
-tags: [styling, mui, theme, css, mobile, capacitor]
-status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
----
-
 # Styling, Theme & Multi-Device Layout Architecture
 
 ---

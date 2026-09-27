@@ -1,14 +1,3 @@
----
-type: Issue Specification
-title: '09 Fix Video Dual Path'
-description: Historical task specification for MelodiQ backend simplification.
-resource: server/
-tags: [issue, backend-simplification, historical]
-status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
----
-
 # Fix Video Dual-Path (Embedded YouTube + Local Files)
 
 ## Context

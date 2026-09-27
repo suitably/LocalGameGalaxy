@@ -1,14 +1,3 @@
----
-type: Task Specification
-title: 'Readme'
-description: Task and backlog specification document.
-resource: src/
-tags: [task, backlog, solid]
-status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
----
-
 # LocalGameGalaxy GitHub Issues
 
 Dieses Verzeichnis enthält die vorbereiteten, agenten-tauglichen GitHub-Issues für die Architektur-Bereinigung, SOLID-Refactorings und Duplikat-Konsolidierung von **LocalGameGalaxy**.

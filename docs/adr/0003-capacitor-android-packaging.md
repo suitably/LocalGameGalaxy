@@ -1,14 +1,3 @@
----
-type: Architecture Decision Record
-title: 'ADR-0003: Capacitor for Android Packaging'
-description: Decision to use Capacitor to package the React SPA as a native Android application without dual codebases.
-resource: capacitor.config.ts
-tags: [adr, capacitor, android, mobile]
-status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
----
-
 # ADR-0003: Use Capacitor for Android App Packaging
 
 ## Status
