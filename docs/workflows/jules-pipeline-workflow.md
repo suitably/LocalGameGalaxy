@@ -2,172 +2,132 @@
 
 ## 1. Overview & Architecture
 
-This workflow integrates **Google Jules** (Google Labs' autonomous cloud coding agent) into LocalGameGalaxy. It establishes a secure, human-in-the-loop (HITL) development lifecycle where GitHub issues are planned, approved, implemented, and verified on a `dev` branch before being promoted to `main`.
+This workflow integrates **Google Jules** (Google Labs' autonomous cloud coding agent) into LocalGameGalaxy. The default path is **Plan → Approve → Implement** on a feature branch targeting `main`.
 
 ```mermaid
 flowchart TD
-    Issue["GitHub Issue Opened / Reported"] --> Trigger{"Trigger Action<br/>(Label / Comment / Dispatch)"}
+    Issue["GitHub Issue Created"] --> Trigger{"Authorized user\ncommands via comment"}
     
-    Trigger -->|/jules plan or jules:plan| PlanGen["1. Plan Generation<br/>(scripts/jules-plan-generator.mjs)"]
-    PlanGen --> PostComment["Post Plan Comment &<br/>Set label jules:waiting-approval"]
+    Trigger -->|/plan| PlanSession["Jules Session Started\nrequirePlanApproval: true\nNO CODE PHASE"]
+    PlanSession --> JulesAnalyzes["Jules analyzes codebase\nPosts plan + open questions\nvia Stitch MCP to issue"]
+    JulesAnalyzes --> Waiting["Session: AWAITING_USER_FEEDBACK"]
+    Waiting -->|"Any comment / /reply"| SendMsg["sendMessage to Jules\nJules answers & refines plan"]
+    SendMsg --> Waiting
+    Waiting -->|"/approve"| ApprovePlan["approvePlan → Jules implements"]
     
-    PostComment --> Review{"Human Review<br/>in Issue Thread"}
-    Review -->|Need changes| Refine["Reply /jules plan <notes>"]
-    Refine --> PlanGen
-    Review -->|Approved| Approve["Reply /jules approve or<br/>set label jules:approved"]
+    Trigger -->|"/fix or /yolo"| DirectFix["Jules Session Started\nrequirePlanApproval: false\nDirect Implementation"]
+    DirectFix --> ApprovePlan
     
-    Trigger -->|/jules fix or jules:fix| DirectFix["Fast-Track Direct Fix"]
-    
-    Approve --> JulesAgent["2. Google Jules Invocation<br/>(google-labs-code/jules-invoke@v1)"]
-    DirectFix --> JulesAgent
-    
-    JulesAgent --> JulesVM["Google Cloud VM<br/>Clones 'dev' & runs checks"]
-    JulesVM --> OpenPR["3. Jules Opens PR against 'dev'<br/>(fixes #issue)"]
-    
-    OpenPR --> CI["4. CI Quality Gate Runs on PR<br/>(Architecture, Budget, Tests, Build)"]
-    CI --> MergeDev["Merge PR into 'dev'"]
-    MergeDev --> DevVerify["Staging / Preview Testing"]
-    DevVerify --> Promote["5. Promote 'dev' to 'main'<br/>(promote-dev-to-main workflow)"]
+    ApprovePlan --> FeatureBranch["Jules creates feature branch\nfrom main (e.g. jules/fix-issue-42)"]
+    FeatureBranch --> PRCI["PR opened against main\nCI Quality Gate runs"]
+    PRCI --> UserMerge["User reviews & merges"]
 ```
 
 ---
 
 ## 2. Prerequisites & Setup
 
-### A. Jules API Key
+### A. Jules API Keys (Key Pool)
 1. Visit [jules.google.com](https://jules.google.com) and authenticate with your GitHub account.
 2. In your Jules account settings, generate an API Key.
-3. In your GitHub repository:
-   - Go to **Settings** → **Secrets and variables** → **Actions**.
-   - Create a repository secret named **`JULES_API_KEY`**.
+3. In your GitHub repository: **Settings → Secrets and variables → Actions**
+   - Create secret **`JULES_API_KEY`** (primary key)
+   - Optionally add **`JULES_API_KEY_1`** through **`JULES_API_KEY_5`** for load-balancing
 
-### B. Optional: Gemini API Key (for Enhanced Plan Generation)
-The plan generator script uses Gemini to construct detailed plans before Jules writes code.
-- If **`GEMINI_API_KEY`** is added to repository secrets (from [Google AI Studio](https://aistudio.google.com)), it generates an in-depth code architecture plan.
-- If omitted, a structured planning template adhering to `AGENTS.md` is generated automatically.
+### B. Gemini API Key (UX Scanner)
+- Optional: Add **`GEMINI_API_KEY`** (from [Google AI Studio](https://aistudio.google.com)) for the scheduled UX suggestion scanner.
 
-### C. The `dev` Branch
-The workflow automatically ensures that the `dev` branch exists on origin before Jules branches off.
+### C. Connected MCP Servers
+Jules uses:
+- **`Stitch`** — GitHub MCP: Jules posts plan comments and interacts with the issue directly
+- **`Context7`** — Repository context and documentation lookup
 
 ---
 
-## 3. How to Trigger Jules ("On Demand")
-
-To prevent unauthorized credit burn or uncontrolled runs, Jules **only runs when you explicitly order it**.
+## 3. How to Trigger Jules
 
 Only repository **Owners, Members, and Collaborators** can trigger Jules.
 
-### Method 1: Issue Comments (Recommended)
+### Slash Commands (Issue Comments)
 
-| Command | Action | Description |
-| :--- | :--- | :--- |
-| **`/yolo`** or **`/jules yolo`** | **YOLO Autonomy** | Maximum autonomy mode! If an active session is paused/asking, unpauses it and mandates zero questions to PR completion. If on a fresh issue, dispatches a direct fix in YOLO mode. |
-| **`--yolo`** / **`-yolo`** | **Autonomy Flag** | Can be added to any command (e.g. `/fix --yolo`, `/continue --yolo`, `/approve --yolo`) to grant unconditional autonomy and eliminate intermediate confirmations. |
-| **`/continue`** or **`/jules continue`** | **Unpause Jules** | If Jules pauses for intermediate input, commands Jules directly from GitHub to proceed autonomously without visiting `jules.google.com`. |
-| **`/jules fix`** | **Fast-Track** | Skips the plan approval step and commands Jules to fix the issue directly into `dev`. |
-| **`/jules plan`** | **Generate Plan** | Jules/Gemini analyzes the issue and posts an implementation plan as a comment. Labels issue with `jules:waiting-approval`. |
-| **`/jules approve`** | **Execute & PR** | Approves the proposed plan. Dispatches Jules to create a branch based on `dev`, write code, test, and open a PR against `dev`. |
-| **`/jules reply <message>`** | **Remote Feedback** | Sends guidance or answers directly to an active Jules task session from the GitHub issue comment. |
-| **`/status`** or **`/jules status`** | **Session Status** | Fetches the live state and last activities of the active Jules session directly into an issue comment. |
-| **`/approve-plan`** | **Approve Plan via API** | Forwards plan approval directly to the running Jules session. |
+| Command | Action |
+| :--- | :--- |
+| **`/plan`** | Starts Jules in **Plan Mode** (`requirePlanApproval: true`). Jules analyzes the codebase and posts its plan + open questions as a GitHub comment. No code is written. |
+| **`/approve`** or **`/continue`** | Approves Jules' plan. Jules begins implementation on a feature branch. |
+| **`/fix`** | Fast-track: Jules implements directly without the plan-approval phase. |
+| **`/yolo`** | Maximum autonomy: Jules implements immediately with zero confirmations. |
+| **`/reply <message>`** | Sends custom feedback or answers to the active Jules session. |
+| **`/status`** | Fetches the current Jules session state and last activities into a comment. |
+| **`/jules lens <lens-id>`** | Runs a specialized RepoLens audit (e.g. `/jules lens separation-of-concerns`). |
 
+> [!TIP]
+> While Jules is in **AWAITING_USER_FEEDBACK** state, you can just type a normal comment — it will be forwarded to Jules automatically. Use `/approve` or `/continue` when you are satisfied with the plan.
 
-### Method 2: GitHub Labels
+### GitHub Labels
 
-- Adding label **`jules:plan`** (or **`jules`**) → Generates the plan comment.
-- Adding label **`jules:approved`** → Executes Jules and creates the PR against `dev`.
-- Adding label **`jules:fix`** → Directly executes Jules.
-- Adding label **`yolo`** or **`jules:yolo`** → Directly executes Jules in YOLO mode.
+| Label | Action |
+| :--- | :--- |
+| `jules:plan` or `jules` or `plan` | Same as `/plan` |
+| `jules:approved` or `approved` | Same as `/approve` — starts implementation |
+| `jules:fix` or `fix` | Same as `/fix` |
+| `yolo` or `jules:yolo` | YOLO mode |
+| `lens:<name>` | RepoLens audit with specified lens |
 
-### Method 3: Manual Workflow Dispatch
+### Manual Workflow Dispatch
 
-1. Go to the GitHub repository **Actions** tab.
-2. Select **`Jules Issue Auto-Fix Pipeline`**.
-3. Click **Run workflow**:
-   - Provide the **Issue Number**.
-   - Choose mode: **`plan`**, **`fix`**, or **`yolo`**.
-   - Or toggle **`Enable YOLO mode`**.
-
----
-
-## 4. The Human-in-the-Loop Plan & Approval Loop
-
-1. **Analysis & Plan Generation**:
-   When `/jules plan` is triggered, Jules evaluates:
-   - The issue title and problem description.
-   - Architectural constraints in `AGENTS.md` (≤ 250 lines per component, no cross-game imports, strict TypeScript, storage abstraction).
-   - Target files and required Vitest test cases.
-2. **Review in Issue**:
-   The plan is posted as a structured comment directly into the issue conversation.
-3. **Approval Gate**:
-   You can inspect the proposed approach. If changes are needed, you provide guidance in a comment. Once satisfied, reply `/jules approve`.
-4. **Execution & PR**:
-   Jules creates an isolated branch (`jules/issue-<id>`), commits the fix, runs verification commands, and opens a Pull Request against `dev`.
+1. Go to **Actions** → **Jules Suggestions**
+2. Click **Run workflow**:
+   - Scope: `Issue-AutoFix` or `Design` (UX scanner)
+   - Mode: `plan`, `fix`, or `yolo`
+   - Issue Number: the target issue
 
 ---
 
-## 5. Branch Lifecycle: `dev` Staging and Promotion to `main`
+## 4. The Plan → Approve → Implement Flow
 
-### A. CI Validation on `dev`
-The `.github/workflows/ci.yml` pipeline listens to both `main` and `dev`:
-- Architecture & Boundary check (`npm run check:architecture:diff`)
-- Component size budget ratchet (`npm run check:budget`)
-- ESLint (`npm run lint`)
-- Vitest unit tests (`npm test`)
-- TypeScript & Vite production build (`npm run build`)
-
-Every PR created by Jules against `dev` is validated by CI before you merge it.
-
-### B. Promoting `dev` to `main`
-Once tested on `dev`, you can promote changes to `main`:
-
-1. **Via GitHub PR**: Open a PR with base `main` and compare `dev`.
-2. **Via Promotion Workflow**: Run the `.github/workflows/promote-dev-to-main.yml` workflow with options:
-   - `create_pr` (Opens an automated release PR with a diff summary)
-   - `direct_merge` (Fast-forwards / merges `dev` into `main`)
+1. **`/plan`** → Jules session created with `requirePlanApproval: true`
+2. **Jules analyzes**: Reads the issue, inspects relevant source files, checks AGENTS.md constraints
+3. **Jules posts plan**: Via Stitch MCP (`gh issue comment`), Jules adds a structured plan comment with:
+   - Files it intends to change
+   - Architectural decisions
+   - Any open questions for the developer
+4. **Developer reviews**: Read the plan in the issue. Ask questions by commenting (forwarded to Jules via `sendMessage`).
+5. **`/approve`** → `approvePlan` API call → Jules starts implementing
+6. **Feature branch created** automatically (e.g. `jules/fix-issue-42`)
+7. **PR opened** against `main` → CI quality gates run
 
 ---
 
-## 6. Best Practice Guide
+## 5. Message Relay During Active Sessions
 
-| Practice | Why It Is Important | How We Enforce It |
-| :--- | :--- | :--- |
-| **Never commit directly to `main`** | Prevents untested AI regressions from hitting production | Jules targets `dev` via `starting_branch: 'dev'` |
-| **Explicit Trigger Only** | Prevents cost/token consumption on every issue created by external users | Role check (`OWNER`, `MEMBER`, `COLLABORATOR`) on comments and labels |
-| **Human Approval Loop** | Allows the maintainer to steer the AI's architectural intent before code is written | 2-step `/jules plan` → `/jules approve` loop |
-| **Grounding via `AGENTS.md`** | Prevents God-components (>250 lines) and cross-game imports | Prompt explicitly injects repository constraints from `AGENTS.md` |
-| **CI Quality Gate** | Ensures AI code passes lint, tests, budgets, and production build | CI triggers on all PRs and pushes to `dev` |
+While Jules is active on an issue:
+- Any authorized plain-text comment is forwarded to Jules via `sendMessage`
+- The `interact-jules` job handles `/reply`, `/continue`, `/approve`, `/yolo`, `/status` commands
+- Jules answers questions by posting comments via Stitch MCP
+- Monitor detailed progress at `jules.google.com/task/<sessionId>`
 
 ---
 
-## 7. RepoLens Integration Suite (350+ Lenses)
+## 6. Feature Branch & PR Flow
 
-LocalGameGalaxy integrates the full audit lens catalog from **TheMorpheus407/RepoLens** (or your custom fork) into Google Jules, allowing Jules to assume specialized auditor personas without third-party LLM costs.
+- Jules always creates a **feature branch** from `main` (auto-named: `jules/fix-issue-<id>`)
+- PR targets `main`
+- CI quality gates run on the PR (see [ci-cd-pipelines.md](ci-cd-pipelines.md))
+- If a reviewer requests changes → `jules-pr-auto-fixer.yml` spawns Jules to fix (max 3 attempts)
+- Developer merges the approved PR
 
-### A. How to Run a RepoLens Audit
+---
 
-#### 1. Via GitHub Actions Tab:
-- Go to **Actions** $\rightarrow$ **Jules RepoLens Audit Suite**.
-- Select a **Domain** (e.g., `architecture`, `performance`, `testing`, `security`, `frontend`, `android`).
-- (Optional) Enter a specific **Lens ID** (e.g., `single-responsibility`, `module-boundaries`, `algorithm`, `memory`, `unit-test-gaps`, `secrets-in-apk`).
-- Choose Mode:
-  - **`fix`**: Jules audits the codebase, implements the solution adhering to `AGENTS.md`, and opens a PR against `dev`.
-  - **`plan`**: Jules creates a structured GitHub Issue detailing findings and awaits approval.
+## 7. RepoLens Audit Lenses
 
-#### 2. Via Issue Slash Command:
 In any issue, comment:
 ```text
 /jules lens <lens-id>
 ```
-*(e.g., `/jules lens single-responsibility` or `/jules lens algorithm`)*
 
-Jules fetches the exact expert focus and search patterns from RepoLens, applies them to the issue, and opens a Pull Request against `dev`.
-
-### B. Popular Lenses for LocalGameGalaxy:
-
-- **Architecture:** `single-responsibility`, `module-boundaries`, `circular-deps`, `coupling`
-- **Performance:** `algorithm`, `memory`, `frontend-perf`, `startup-perf`
-- **Testing:** `unit-test-gaps`, `edge-cases`, `error-path-tests`, `test-anti-patterns`
-- **Android / Mobile:** `apk-dependencies`, `manifest-audit`, `secrets-in-apk`, `webview-security`
-- **Security:** `secrets`, `injection`, `xss-csrf`, `auth-session`
-
+**Popular lenses:**
+- **Architecture:** `separation-of-concerns`, `module-boundaries`, `circular-deps`
+- **Performance:** `algorithm`, `memory`, `frontend-perf`
+- **Testing:** `unit-test-gaps`, `edge-cases`, `error-path-tests`
+- **Security:** `injection`, `xss-csrf`, `auth-session`
+- **Android:** `secrets-in-apk`, `webview-security`

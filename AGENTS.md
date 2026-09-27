@@ -4,7 +4,7 @@
 
 - **Architecture (SSoT)**: [`docs/tech/architecture.md`](docs/tech/architecture.md) — single source of truth for system design.
 - **Tech Docs**: `docs/tech/` — coding conventions, data models, deployment, i18n strategy, sync protocol, etc.
-- **Workflows**: `docs/workflows/` — reusable step-by-step processes. Document new ones here.
+- **Workflows & Pipelines**: `docs/workflows/` — reusable step-by-step processes and [CI/CD Pipelines Reference](docs/workflows/ci-cd-pipelines.md). Document new ones here.
 
 ## 2. Workflow
 
@@ -69,6 +69,8 @@ The project enforces quality gates via GitHub Actions (`.github/workflows/ci.yml
 ```bash
 npm run check:architecture:diff # Verifies changed files against boundaries
 npm run check:budget            # Component budget & anti-God-component ratchet
+npm run check:duplicates        # Code duplication scan (jscpd)
+npm run check:docs              # Documentation & translation sync gate
 npm run lint                    # ESLint (0 errors)
 npm test                        # Vitest unit tests
 npm run build                   # tsc -b && vite build

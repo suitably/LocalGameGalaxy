@@ -79,3 +79,18 @@ Target architectures are defined in `server/package.json` under `pkg.targets`. R
 
 > [!NOTE]
 > Standalone binaries bundle Node.js runtime and all dependencies. They are ideal for end-user distribution on systems without Node.js installed.
+
+---
+
+## 5. Automated CI/CD Pipelines & Cloud Deployment
+
+All deployments and binary releases are automated via GitHub Actions pipelines. See the dedicated [CI/CD Pipelines Documentation](file:///home/carsten/LocalGameGalaxy/docs/workflows/ci-cd-pipelines.md) for full architecture details:
+
+| Target / Artifact | Workflow File | Trigger | Output |
+| :--- | :--- | :--- | :--- |
+| **Web SPA (Prod & Preview)** | `.github/workflows/ci.yml` | Push / PR to `main` | Production at `nexumia.de`, preview deployments for PRs |
+| **Push Relay Worker** | `.github/workflows/deploy-push-relay.yml` | Push to `server/cloudflare-push-relay/**` | Cloudflare Worker for Web Push & ntfy relay |
+| **Docker Images** | `.github/workflows/docker-publish.yml` | Push to `server/**` or tag `v*` | Hub images: `base` (~200MB) & `full` (~2GB, AI Demucs) |
+| **Android APK** | `.github/workflows/build-apk.yml` | Tag `v*` / GitHub Release | Attached `nexumia.apk` on release |
+| **Standalone Binaries** | `.github/workflows/release_helper.yml` | Tag `v*` / GitHub Release | Linux, Windows, and macOS packaged archives on release |
+

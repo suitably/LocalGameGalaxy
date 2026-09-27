@@ -15,7 +15,7 @@ This directory contains technical documentation and architectural decisions.
 - [song-pipeline.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/song-pipeline.md): Song ingestion, download, and vocal separation pipeline.
 - [i18n-strategy.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/i18n-strategy.md): Localization strategy and translation namespace architecture.
 - [werewolf-architecture.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/werewolf-architecture.md): Werewolf game module: state machine, roles, night resolution, and TTS.
-- [deployment.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/deployment.md): Deployment modes — Vite build, Capacitor Android, Docker, standalone binaries.
+- [deployment.md](deployment.md): Deployment modes — Vite build, Capacitor Android, Docker, standalone binaries, and automated CI/CD pipelines (see [ci-cd-pipelines.md](../workflows/ci-cd-pipelines.md)).
 - [styling.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/styling.md): MUI theming, safe area insets, mobile-native CSS, and multi-device layout.
 - [qwixx-sheet-rules.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/qwixx-sheet-rules.md): Official rules and layout definitions for all Qwixx score sheet variants (Gemixxt, Big Points, Connected, Double, Bonus).
 - [ui-modularization-solid-analysis.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/ui-modularization-solid-analysis.md): Comprehensive cross-game audit of duplicated UI patterns, state logic, and SOLID modularization guidelines.

@@ -175,7 +175,7 @@ module.exports = async ({ github, context, core }) => {
   CRITICAL DIRECTIVES:
   1. DO NOT ask any further questions, confirmations, or approvals at any point.
   2. Make all architectural and decomposition decisions yourself immediately (e.g. splitting any component >250 lines into sub-components or custom hooks to strictly follow AGENTS.md).
-  3. Implement the solution, execute Vitest tests, verify all quality gates, and create the Pull Request targeting 'dev'.
+  3. Create a feature branch from 'main', implement the solution, run all Vitest tests and quality gates, and open a Pull Request targeting 'main'.
   4. Proceed immediately to completion without waiting for human input.`;
 
   const endpoint = action === 'approve-plan'
@@ -216,7 +216,7 @@ module.exports = async ({ github, context, core }) => {
         owner: context.repo.owner,
         repo: context.repo.repo,
         issue_number: issueNumber,
-        body: `✅ **Jules plan approved.** (Session: \`${sessionId}\`)\nJules is now proceeding with implementation on \`dev\`.`
+        body: `✅ **Plan approved.** (Session: \`${sessionId}\`)\nJules is implementing on a feature branch. A PR against \`main\` will be opened once complete.`
       });
     } else if (action === 'yolo') {
       try {
@@ -228,7 +228,7 @@ module.exports = async ({ github, context, core }) => {
         owner: context.repo.owner,
         repo: context.repo.repo,
         issue_number: issueNumber,
-        body: `⚡ **YOLO mode activated.** (Session: \`${sessionId}\`)\nFull autonomy engaged — no further questions, direct implementation and PR against \`dev\`.`
+        body: `⚡ **YOLO mode activated.** (Session: \`${sessionId}\`)\nFull autonomy engaged — Jules will implement on a feature branch and open a PR against \`main\`.`
       });
     } else if (action === 'continue') {
       try {
@@ -240,7 +240,7 @@ module.exports = async ({ github, context, core }) => {
         owner: context.repo.owner,
         repo: context.repo.repo,
         issue_number: issueNumber,
-        body: `▶️ **Continuation approved.** (Session: \`${sessionId}\`)\nJules is proceeding autonomously on \`dev\`. PR will be opened once implementation and tests pass.`
+        body: `▶️ **Continuing.** (Session: \`${sessionId}\`)\nJules is proceeding on the feature branch. A PR against \`main\` will be opened once implementation and tests pass.`
       });
     } else {
       try {
@@ -252,16 +252,8 @@ module.exports = async ({ github, context, core }) => {
         owner: context.repo.owner,
         repo: context.repo.repo,
         issue_number: issueNumber,
-        body: `💬 **Feedback sent to Jules.** (Session: \`${sessionId}\`)\n> "${targetText}"\nJules received your instructions and is continuing on \`dev\`.`
+        body: `💬 **Message sent to Jules.** (Session: \`${sessionId}\`)\n> "${targetText}"\nJules received your instructions and will continue.`
       });
-    }
-
-    // Re-attach the live bridge to proactively relay Jules' next response!
-    if (action !== 'status') {
-      console.log('Re-attaching live bridge to monitor Jules response...');
-      process.env.SESSION_ID = sessionId;
-      const liveBridge = require('./jules-live-bridge.js');
-      await liveBridge({ github, context, core });
     }
   } else {
     await github.rest.issues.createComment({

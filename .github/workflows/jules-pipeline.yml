@@ -1,10 +1,10 @@
 name: Jules Issue Auto-Fix Pipeline
 
 on:
-  issues:
-    types: [opened, labeled]
   issue_comment:
     types: [created]
+  issues:
+    types: [labeled]
   workflow_dispatch:
     inputs:
       issue_number:
@@ -20,8 +20,6 @@ on:
           - plan
           - fix
           - yolo
-          - curate
-          - curate-all
       yolo:
         description: 'Enable YOLO mode (maximum autonomy, zero intermediate questions)'
         required: false
@@ -134,17 +132,14 @@ jobs:
                     }
                   } else if (body.startsWith('/status') || body.startsWith('/jules status')) {
                     action = 'status';
-                  } else if (body.startsWith('/jules plan') || body.startsWith('/plan') || body.startsWith('/jules fix') || body.startsWith('/fix')) {
-                    // Start a new interactive session
+                  } else if (body.startsWith('/jules plan') || body.startsWith('/plan')) {
+                    // Start planning session - Jules will plan but NOT code yet
+                    action = 'plan';
+                  } else if (body.startsWith('/jules fix') || body.startsWith('/fix')) {
+                    // Fast-track: Jules implements directly without plan approval
                     action = 'fix';
                   }
                 }
-              }
-            } else if (eventName === 'issues' && context.payload.action === 'opened') {
-              const issue = context.payload.issue;
-              if (!issue.pull_request) {
-                issueNumber = issue.number;
-                isAuthorized = true;
               }
             } else if (eventName === 'issues' && context.payload.action === 'labeled') {
               const labelName = context.payload.label.name.toLowerCase();
@@ -179,42 +174,11 @@ jobs:
             core.setOutput('targets', targets);
             core.setOutput('yolo', isYolo ? 'true' : 'false');
 
-  generate-plan:
-    name: Generate Implementation Plan
-    needs: triage
-    if: needs.triage.outputs.action == 'plan' && needs.triage.outputs.is_authorized == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Resolve RepoLens Lens (if specified)
-        id: lens_resolver
-        if: needs.triage.outputs.lens_name != ''
-        run: |
-          node scripts/jules-lens-resolver.mjs --lens "${{ needs.triage.outputs.lens_name }}"
-
-      - name: Run Plan Generator
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
-          LENS_PROMPT: ${{ steps.lens_resolver.outputs.prompt }}
-          LENS_NAME: ${{ steps.lens_resolver.outputs.lens_name }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          node scripts/jules-plan-generator.mjs --issue ${{ needs.triage.outputs.issue_number }}
 
   execute-jules:
     name: Execute Task with Google Jules
     needs: triage
-    if: needs.triage.outputs.action == 'fix' && needs.triage.outputs.is_authorized == 'true'
+    if: (needs.triage.outputs.action == 'fix' || needs.triage.outputs.action == 'plan') && needs.triage.outputs.is_authorized == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -298,23 +262,28 @@ jobs:
               console.warn('Could not fetch comments for Jules prompt:', err.message);
             }
 
+            const isPlan = "${{ needs.triage.outputs.action }}" === 'plan';
             const yoloBanner = isYolo ? `
             ⚡⚡⚡ YOLO MODE: MAXIMUM AUTONOMOUS EXECUTION ENGAGED ⚡⚡⚡
             - ABSOLUTE ZERO HUMAN INTERACTION: Do NOT ask for confirmation, feedback, or approval under any circumstances.
             - FULL PROACTIVE AUTHORITY: You are strictly required to make all architectural, refactoring, and file decomposition decisions yourself.
             - IMMEDIATELY create/extract sub-components or custom hooks if limits are exceeded.
-            - Proceed continuously from planning to coding, running Vitest tests, verifying quality gates, and submitting the Pull Request against 'main'. Never pause or wait for user input.
+            - Create a feature branch from 'main', implement the solution completely, run all Vitest tests and quality gates, and open a Pull Request targeting 'main'. Never pause or wait for user input.
+            ` : isPlan ? `
+            📋 PLAN MODE — DO NOT WRITE ANY CODE OR MAKE ANY COMMITS YET.
+            
+            YOUR MISSION IS TO PLAN AND WAIT FOR APPROVAL:
+            1. Read the issue carefully, including all comments.
+            2. Analyze the relevant codebase files using Context7 and direct file reads.
+            3. Generate your implementation plan. Post it as a comment on this GitHub Issue using Stitch (gh issue comment).
+            4. In your plan comment, clearly list: what files you will change, how, and why.
+            5. If you have questions that would affect your approach, ask them in the same comment.
+            6. STOP. Do not write code. Wait for the user to reply with /approve.
+            
+            When the user sends /approve, this session will receive an approvePlan signal and you THEN proceed to implementation on a feature branch targeting 'main'.
             ` : `
-            🤖 INTERACTIVE MODE: PLAN & APPROVE
-            YOUR MISSION HAS TWO STRICT PHASES. YOU MUST STOP AFTER PHASE 1.
-            
-            === PHASE 1: PLANNING (CURRENT PHASE) ===
-            - Step 1: Analyze the issue and formulate a concrete implementation plan.
-            - Step 2: Present the plan to the user and explicitly ASK FOR APPROVAL.
-            - Step 3: Wait for the user's response. DO NOT WRITE CODE OR CREATE A PR YET.
-            
-            === PHASE 2: IMPLEMENTATION (ONLY AFTER USER APPROVAL) ===
-            When the user replies with approval or further instructions, proceed to implementation following the strict rules below:
+            🤖 INTERACTIVE MODE: DIRECT IMPLEMENTATION
+            Proceed with implementing the fix on a feature branch from 'main'. Run all quality gates and open a PR against 'main'.
             `;
 
             const prompt = `
@@ -328,8 +297,9 @@ jobs:
             ${lensPrompt ? `\nSPECIALIZED REPOLENS AUDIT FOCUS:\n${lensPrompt}\n` : ''}
 
             Target, Branch & PR Instructions (Apply ONLY during Phase 2 / YOLO Mode):
-            - Your base branch is 'main'.
-            - When creating a pull request, TARGET THE 'main' BRANCH.
+            - Create a new feature branch from 'main' (Jules auto-names it, e.g. jules/fix-issue-${issueNumber}).
+            - When creating the pull request, TARGET 'main' AS THE BASE BRANCH.
+            - Do NOT push directly to main.
             - In the PR description, you MUST include a detailed "Implementation Summary" section:
               * Reference 'Fixes #${issueNumber}' to auto-close the issue.
               * List what was implemented and why.
@@ -376,6 +346,7 @@ jobs:
           REPO: ${{ github.repository }}
           USER_PROMPT: ${{ steps.prep.outputs.prompt }}
           YOLO_MODE: ${{ needs.triage.outputs.yolo }}
+          ACTION: ${{ needs.triage.outputs.action }}
         shell: bash
         run: |
           set +e # Prevent script from exiting immediately on curl/jq errors
@@ -408,8 +379,11 @@ jobs:
           # 2. Prepare payload
           echo "$USER_PROMPT" > prompt.txt
 
-          REQUIRE_APPROVAL="true"
-          if [ "$YOLO_MODE" = "true" ]; then
+          # Plan mode: Jules generates plan and waits for /approve before coding.
+          # Fix/YOLO mode: Jules implements directly without intermediate approval.
+          if [ "$ACTION" == "plan" ]; then
+            REQUIRE_APPROVAL="true"
+          else
             REQUIRE_APPROVAL="false"
           fi
 
@@ -519,11 +493,15 @@ jobs:
                 });
               } catch (e) {}
 
+              const actionMode = "${{ needs.triage.outputs.action }}";
+              const modeMsg = actionMode === 'plan'
+                ? 'Jules is **analyzing and planning**. It will post a plan comment here via Stitch. Reply with `/approve` to start implementation, or ask questions and Jules will answer.'
+                : 'Jules is **implementing**. A PR against `main` will be opened once implementation and quality gates pass.';
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issueNumber,
-                body: `🤖 **Google Jules Dispatched** (Worker: \`${keyUsed}\`)\n\n👉 [${sessionUrl}](${sessionUrl})\nPR targeting \`main\` will be opened once implementation and verification are complete.`
+                body: `🤖 **Google Jules Dispatched** (Worker: \`${keyUsed}\`)\n\n👉 [Monitor on Jules.google.com](${sessionUrl})\n\n${modeMsg}`
               });
             } else {
               try {
@@ -543,22 +521,6 @@ jobs:
               });
             }
 
-      - name: Live Bridge Jules Activities & Save Transcript
-        if: steps.jules_call.outputs.success == 'true'
-        uses: actions/github-script@v7
-        env:
-          ISSUE_NUMBER: ${{ needs.triage.outputs.issue_number }}
-          SESSION_ID: ${{ steps.jules_call.outputs.session_id }}
-          JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
-          JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
-          JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
-          JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
-          JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
-          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
-        with:
-          script: |
-            const liveBridge = require('./scripts/pipeline/jules-live-bridge.cjs');
-            await liveBridge({ github, context, core });
 
   interact-jules:
     name: Relay Command or Feedback to Jules

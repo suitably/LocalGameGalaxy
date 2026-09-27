@@ -701,15 +701,16 @@ ${fileAnalysisSections || '- Codebase-Scan identifiziert die Einstiegspunkte fü
 npm run check:architecture:diff  # 0 Cross-Game Imports
 npm run check:budget             # Alle Dateien <= 250 Zeilen
 npm run check:duplicates         # Duplikation < 2.5%
+npm run check:docs               # Docs & i18n Sync Gate
 npm test                         # Alle Vitest-Suiten grün
 \`\`\`
 
 ## 7. Suggested Implementation Sequence
-1. Branch \`jules/issue-${issue.number}\` basierend auf \`dev\` erstellen.
+1. Jules erstellt automatisch einen Feature Branch (z.B. \`jules/issue-${issue.number}\`) von \`main\`.
 2. Tests in \`${testFilePath}\` schreiben (Test-Driven Development).
 3. Logik und Komponenten in \`${primaryComponent}\` implementieren.
 4. Alle Qualitätstore lokal prüfen (\`npm run check:budget && npm test\`).
-5. PR gegen \`dev\` öffnen mit Referenz \`Closes #${issue.number}\`.`;
+5. PR gegen \`main\` öffnen mit Referenz \`Closes #${issue.number}\`.`;
 }
 
 async function main() {
@@ -788,7 +789,7 @@ ${finalPlan}
 Please review the research & implementation plan above.
 - **To approve and execute this plan with Google Jules:**
   Reply with comment **\`/jules approve\`** or assign label **\`jules:approved\`**.
-  *Jules will branch off \`dev\`, implement the changes, run tests, and open a Pull Request targeting \`dev\`.*
+  *Jules will create a feature branch from \`main\`, implement the changes, run tests, and open a Pull Request targeting \`main\`.*
 - **To modify the plan before execution:**
   Reply with your feedback or instructions using **\`/jules plan <your changes>\`**.
 - **To unpause or provide instructions during an active Jules session:**
