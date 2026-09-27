@@ -51,6 +51,7 @@ flowchart TD
 | Workflow File | Pipeline Name | Trigger(s) | Target / Output |
 | :--- | :--- | :--- | :--- |
 | [`.github/workflows/ci.yml`](file:///.github/workflows/ci.yml) | **CI Quality Gate** | `push` (main), `pull_request` (main) | 7 Quality Gates + Cloudflare Production / Preview Deploy |
+| [`.github/workflows/cleanup-preview.yml`](file:///.github/workflows/cleanup-preview.yml) | **Cleanup Cloudflare Preview** | `pull_request` (`closed`), `workflow_dispatch` | Deletes obsolete preview branches & environments from Cloudflare |
 | [`.github/workflows/build-apk.yml`](file:///.github/workflows/build-apk.yml) | **Build Android APK** | `release` (published), `push` tags (`v*`) | Compiles debug APK via Gradle & attaches `nexumia.apk` to release |
 | [`.github/workflows/deploy-push-relay.yml`](file:///.github/workflows/deploy-push-relay.yml) | **Deploy Cloudflare Push Relay** | `push` (main on `server/cloudflare-push-relay/**`), `workflow_dispatch` | Deploys serverless Web Push & ntfy relay worker to Cloudflare |
 | [`.github/workflows/docker-publish.yml`](file:///.github/workflows/docker-publish.yml) | **Build and Push Docker Images** | `push` (main on `server/**`), tags (`v*`), `workflow_dispatch` | Multi-target build: `base` (~200MB) and `full` (~2GB, AI Demucs) to Docker Hub |
@@ -122,7 +123,21 @@ flowchart LR
 
 ---
 
-### 2.2 Android APK Packaging (`build-apk.yml`)
+### 2.2 Cloudflare Preview Cleanup (`cleanup-preview.yml`)
+
+Cleans up preview environments and deployments in Cloudflare once a PR is closed/merged or when manually triggered.
+
+- **Trigger**:
+  - `pull_request`: `types: [closed]` (runs on merge or PR closure).
+  - `workflow_dispatch`: Manual trigger with `delete_all` option to purge all historical preview deployments.
+- **Actions**:
+  - Executes `scripts/cleanup-cloudflare-previews.mjs`.
+  - Deletes Worker Previews (`/workers/workers/nexumia/previews/<branch>`) and legacy Pages deployments.
+  - Updates the PR comment to indicate the preview environment has been cleaned up.
+
+---
+
+### 2.3 Android APK Packaging (`build-apk.yml`)
 
 Automates Android package compilation whenever a new release is published or a version tag (`v*`) is pushed.
 
@@ -136,7 +151,7 @@ Automates Android package compilation whenever a new release is published or a v
 
 ---
 
-### 2.3 Cloudflare Push Relay Worker (`deploy-push-relay.yml`)
+### 2.4 Cloudflare Push Relay Worker (`deploy-push-relay.yml`)
 
 Automates the deployment of the serverless push notification relay.
 
@@ -146,7 +161,7 @@ Automates the deployment of the serverless push notification relay.
 
 ---
 
-### 2.4 Docker Hub Multi-Target Publishing (`docker-publish.yml`)
+### 2.5 Docker Hub Multi-Target Publishing (`docker-publish.yml`)
 
 Builds and pushes production multi-architecture Docker container images for the companion server.
 
@@ -164,7 +179,7 @@ Builds and pushes production multi-architecture Docker container images for the 
 
 ---
 
-### 2.5 Standalone Server Packaging & Release (`release_helper.yml`)
+### 2.6 Standalone Server Packaging & Release (`release_helper.yml`)
 
 Packages the Node.js server into zero-dependency standalone binaries for Linux, Windows, and macOS.
 
