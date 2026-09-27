@@ -1,14 +1,3 @@
----
-type: Technical Specification
-title: WebRTC Signaling & Connection Architecture
-description: Peer-to-peer signaling state machine, BitTorrent tracker communication, ICE candidate exchange, and auto-reconnect logic.
-resource: src/lib/webrtc/
-tags: [webrtc, signaling, bittorrent-tracker, simple-peer, p2p]
-status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
----
-
 # WebRTC Signaling & Connection Architecture
 
 This document details the WebRTC peer-to-peer communication stack, signaling flow, peer discovery, connection establishment, and retry/recovery mechanics utilized in LocalGameGalaxy.

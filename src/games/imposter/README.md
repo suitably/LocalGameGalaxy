@@ -1,7 +1,7 @@
 # Imposter Game Module [ID: TECH-IMPOSTER]
 
 > [!NOTE]
-> This document covers the Imposter game module. For Melodiq see [melodiq-architecture.md](docs/tech/melodiq-architecture.md) and for Werewolf see [werewolf-architecture.md](docs/tech/werewolf-architecture.md).
+> This document covers the Imposter game module. For Melodiq see [melodiq-architecture.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/melodiq-architecture.md) and for Werewolf see [werewolf-architecture.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/werewolf-architecture.md).
 
 ---
 

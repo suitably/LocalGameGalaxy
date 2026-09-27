@@ -41,14 +41,18 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, activeSub: pro
     usePageTitle(t('settings.title', 'Settings'));
 
     // Register onBack handler for GlobalHeader when rendered embedded with custom back action
+    // Only attempt to mutate the GlobalHeader if we are actually rendered as the top-level settings page (not embedded).
+    // An embedded Settings component (e.g., inside a game like Melodiq) should let its parent handle the header layout.
+    const isEmbedded = Boolean(activeGameId);
+
     useEffect(() => {
-        if (onBack) {
+        if (onBack && !isEmbedded) {
             setHomeAction(onBack);
             return () => {
                 setHomeAction(null);
             };
         }
-    }, [onBack, setHomeAction]);
+    }, [onBack, setHomeAction, isEmbedded]);
 
     // Determine active tab & sub-level navigation:
     // Melodiq is default ONLY when coming from Melodiq; otherwise Allgemein (general) is default.

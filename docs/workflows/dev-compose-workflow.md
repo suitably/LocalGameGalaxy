@@ -1,14 +1,3 @@
----
-type: Development Workflow
-title: Local Dev Server with Docker Compose
-description: Guide for running and testing the Melodiq helper server locally via Docker Compose without external registries.
-resource: docker-compose.yml
-tags: [workflow, docker, docker-compose, local-dev]
-status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
----
-
 # Workflow: Local Dev Server with Docker Compose
 
 ## Purpose

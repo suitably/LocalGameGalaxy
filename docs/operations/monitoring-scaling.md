@@ -1,14 +1,3 @@
----
-type: Operational Guide
-title: Monitoring, Alerting, and Capacity Scaling
-description: Resource profiles, CPU/memory constraints for PyTorch audio separation, and container scaling thresholds.
-resource: server/
-tags: [operations, monitoring, scaling, metrics]
-status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
----
-
 # Monitoring, Alerting, and Capacity Scaling [ID: OPS-MONITORING-SCALING]
 
 This document details the operational resource profiles, monitoring configurations, and capacity limits for the CPU-intensive PyTorch vocal separation and audio alignment tasks in LocalGameGalaxy.
