@@ -82,8 +82,11 @@ Strictly **one** `jules:*` label exists on an issue at any time. When a new stat
 1. Go to **Actions** → **Jules Suggestions**
 2. Click **Run workflow**:
    - Scope: `Issue-AutoFix` or `Design` (UX scanner)
-   - Mode: `plan`, `fix`, or `yolo`
+   - Mode: `plan` or `fix` (legacy `yolo` is deprecated and treated as `fix`)
    - Issue Number: the target issue
+
+> [!NOTE]
+> **YOLO Mode Deprecation**: Legacy YOLO triggers (`/yolo`, `jules:yolo`, `--yolo`) have been neutralized to have no special side effects and are slated for removal. Jules operates safely via standard Plan/Approve or direct Fix flows.
 
 ---
 

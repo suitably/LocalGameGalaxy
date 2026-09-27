@@ -197,7 +197,10 @@ module.exports = async ({ github, context, core }) => {
               break;
             }
           }
-          const sanitizedBranch = prBranch.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+          const branch = prBranch
+            .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+            .replace(/Ä/g, 'ae').replace(/Ö/g, 'oe').replace(/Ü/g, 'ue');
+          const sanitizedBranch = branch.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
           const previewUrl = sanitizedBranch ? `https://${sanitizedBranch}.nexumia.de/` : '';
           const previewLine = previewUrl ? `\n🌐 **Cloudflare Preview:** [${previewUrl}](${previewUrl})` : '';
 

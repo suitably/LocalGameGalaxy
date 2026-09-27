@@ -99,7 +99,10 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const branch = context.payload.pull_request?.head?.ref || '';
+            const rawBranch = context.payload.pull_request?.head?.ref || '';
+            const branch = rawBranch
+              .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+              .replace(/Ä/g, 'ae').replace(/Ö/g, 'oe').replace(/Ü/g, 'ue');
             const sanitizedBranch = branch.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
             const previewUrl = sanitizedBranch ? `https://${sanitizedBranch}.nexumia.de/` : ("${{ steps.cloudflare.outputs.deployment-url }}" || '');
             const prNumber = context.payload.pull_request.number;
