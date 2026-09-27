@@ -5,8 +5,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import VpnKeyRoundedIcon from '@mui/icons-material/VpnKeyRounded';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { resolveGitHubConfig, createGitHubIssue, hasGitHubPAT } from '../../lib/github';
-import { storage } from '../../lib/storage';
+import { hasGitHubPAT, submitFeedback } from '../../lib/github';
 
 export const FeedbackDialog: React.FC = () => {
     const { t } = useTranslation();
@@ -49,63 +48,22 @@ export const FeedbackDialog: React.FC = () => {
         setSubmitting(true);
         setStatus(null);
 
-        const { config: ghConfig, source } = resolveGitHubConfig();
-
         try {
-            if (source === 'local' && ghConfig) {
-                // Direct GitHub API call with local PAT
-                const result = await createGitHubIssue(ghConfig, {
-                    title: `[Feedback] ${feedbackTitle.trim()}`,
-                    body: feedbackBody.trim(),
-                    labels: ['user-feedback'],
-                });
+            const result = await submitFeedback(feedbackTitle.trim(), feedbackBody.trim());
 
-                if (result.success) {
-                    setStatus({
-                        type: 'success',
-                        message: t('settings.submit_success', 'Feedback successfully submitted!'),
-                        url: result.issueUrl,
-                    });
-                    setFeedbackTitle('');
-                    setFeedbackBody('');
-                } else {
-                    throw new Error(result.error || 'Failed to create issue');
-                }
-            } else if (source === 'server') {
-                // Proxy through Nexumia Server
-                const baseUrl = storage.getHelperUrl();
-                const token = storage.getHelperToken();
-                const cleanBaseUrl = baseUrl.replace(/\/$/, '');
-
-                const res = await fetch(`${cleanBaseUrl}/api/feedback`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                    },
-                    body: JSON.stringify({
-                        title: feedbackTitle.trim(),
-                        body: feedbackBody.trim(),
-                    }),
-                });
-
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Failed to submit feedback');
-
+            if (result.success) {
                 setStatus({
                     type: 'success',
                     message: t('settings.submit_success', 'Feedback successfully submitted!'),
-                    url: data.issueUrl,
+                    url: result.issueUrl,
                 });
                 setFeedbackTitle('');
                 setFeedbackBody('');
             } else {
-                throw new Error(
-                    t(
-                        'settings.feedback_no_config',
-                        'No GitHub connection configured. Please set up a GitHub Token in General Settings or connect a Nexumia Server.',
-                    ),
-                );
+                setStatus({
+                    type: 'error',
+                    message: t('settings.submit_error', 'Failed to submit feedback: {{error}}', { error: result.error }),
+                });
             }
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Unknown error';
