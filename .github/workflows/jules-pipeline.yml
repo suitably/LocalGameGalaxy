@@ -242,24 +242,13 @@ jobs:
 
             // Dispatch confirmation is posted after successful API call in 'Update Issue Status on Completion'
 
-            // Update labels
+            // Update labels using label manager to enforce single-label mutex
             try {
-              await github.rest.issues.removeLabel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issueNumber,
-                name: 'jules:waiting-approval'
-              });
-            } catch (e) {}
-
-            try {
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issueNumber,
-                labels: ['jules:in-progress']
-              });
-            } catch (e) {}
+              const { setSingleJulesLabel } = require('./scripts/pipeline/jules-label-manager.cjs');
+              await setSingleJulesLabel(github, context, issueNumber, 'jules:in-progress');
+            } catch (e) {
+              console.warn('Could not update labels:', e.message);
+            }
 
             // Fetch relevant user feedback from comments (exclude bots & slash commands)
             let commentsContext = '';
@@ -501,28 +490,14 @@ jobs:
             const keyUsed = process.env.KEY_USED || '';
             const errorMsg = process.env.ERROR_MSG || '';
 
-            try {
-              await github.rest.issues.removeLabel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: issueNumber,
-                name: 'jules:in-progress'
-              });
-            } catch (e) {}
+            const { setSingleJulesLabel } = require('./scripts/pipeline/jules-label-manager.cjs');
 
             if (isSuccess && sessionUrl) {
-              try {
-                await github.rest.issues.addLabels({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: issueNumber,
-                  labels: ['jules:in-review']
-                });
-              } catch (e) {}
+              await setSingleJulesLabel(github, context, issueNumber, 'jules:in-progress');
 
               const actionMode = "${{ needs.triage.outputs.action }}";
               const modeMsg = actionMode === 'plan'
-                ? 'Jules is **analyzing and planning**. It will post a plan comment here via Stitch. Reply with `/approve` to start implementation, or ask questions and Jules will answer.'
+                ? 'Jules is **analyzing and planning**. You can discuss freely in the comments. When ready, comment `/send` (or add label `jules:send-messages`) to forward questions or say „go“ to start implementation.'
                 : 'Jules is **implementing**. A PR against `main` will be opened once implementation and quality gates pass.';
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
@@ -531,14 +506,7 @@ jobs:
                 body: `🤖 **Google Jules Dispatched** (Worker: \`${keyUsed}\`)\n\n👉 [Monitor on Jules.google.com](${sessionUrl})\n\n${modeMsg}`
               });
             } else {
-              try {
-                await github.rest.issues.addLabels({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: issueNumber,
-                  labels: ['jules:failed']
-                });
-              } catch (e) {}
+              await setSingleJulesLabel(github, context, issueNumber, 'jules:failed');
 
               await github.rest.issues.createComment({
                 owner: context.repo.owner,

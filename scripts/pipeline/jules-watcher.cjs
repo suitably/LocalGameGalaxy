@@ -1,3 +1,5 @@
+const { setSingleJulesLabel } = require('./jules-label-manager.cjs');
+
 module.exports = async ({ github, context, core }) => {
   const targetIssueNumber = process.env.ISSUE_NUMBER ? Number(process.env.ISSUE_NUMBER) : null;
   const initialSessionId = process.env.SESSION_ID || null;
@@ -182,8 +184,12 @@ module.exports = async ({ github, context, core }) => {
           '---',
           '### 🚦 Plan Review & Next Steps',
           '- **`/approve`** — Plan genehmigen. Jules startet die Umsetzung auf einem Feature-Branch.',
-          '- **`/reply <Deine Anweisungen>`** — Feedback oder Fragen an Jules senden. Jules passt den Plan an.',
-          '- **`/yolo`** — Volle Autonomie für die Umsetzung ohne Zwischenfragen.'
+          '---',
+          '👉 **Nächste Schritte:**',
+          '- Diskutiert frei im Issue über den Plan.',
+          '- Schreibt **`/send`** (oder fügt Label `jules:send-messages` hinzu), wenn ihr bereit seid:',
+          '  - Enthält eure Diskussion eine Freigabe („go“, „passt“, „approved“), startet Jules sofort die Umsetzung!',
+          '  - Stellt ihr Fragen, antwortet Jules und verfeinert den Plan.'
         ].join('\n');
 
         try {
@@ -196,9 +202,7 @@ module.exports = async ({ github, context, core }) => {
           console.log(`Posted plan (activity ${actId}) to issue #${issueNumber}`);
           postedMarkers.add(actId);
 
-          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:in-review' }).catch(() => {});
-          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:completed' }).catch(() => {});
-          await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:waiting-approval'] }).catch(() => {});
+          await setSingleJulesLabel(github, context, issueNumber, 'jules:waiting');
           return true; // Action taken
         } catch (err) {
           console.warn(`Failed to post plan comment:`, err.message);
@@ -213,9 +217,7 @@ module.exports = async ({ github, context, core }) => {
           '',
           '---',
           '👉 **Antworte direkt hier im Issue:**',
-          '- Normaler Kommentar oder **`/reply <Antwort>`**',
-          '- **`/continue`** um mit dem vorgeschlagenen Ansatz fortzufahren',
-          '- **`/yolo`** für 100% Autonomie ohne weitere Fragen'
+          '- Diskutiert eure Antwort und sendet sie mit **`/send`** (oder Label `jules:send-messages`) an Jules.'
         ].join('\n');
 
         try {
@@ -228,9 +230,7 @@ module.exports = async ({ github, context, core }) => {
           console.log(`Posted question (activity ${actId}) to issue #${issueNumber}`);
           postedMarkers.add(actId);
 
-          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:in-progress' }).catch(() => {});
-          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:completed' }).catch(() => {});
-          await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:waiting-input'] }).catch(() => {});
+          await setSingleJulesLabel(github, context, issueNumber, 'jules:waiting');
           return true; // Action taken
         } catch (err) {
           console.warn(`Failed to post question comment:`, err.message);
@@ -244,18 +244,43 @@ module.exports = async ({ github, context, core }) => {
       const completionMarker = `completed-${sessionId}`;
       if (!postedMarkers.has(completionMarker)) {
         try {
-          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:in-progress' }).catch(() => {});
-          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-input' }).catch(() => {});
-          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-approval' }).catch(() => {});
-          await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:completed'] }).catch(() => {});
+          // Search for the PR created by Jules for this issue
+          let prUrl = null;
+          let prNumber = null;
+          try {
+            const pullsRes = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              per_page: 30
+            });
+            for (const pr of pullsRes.data || []) {
+              const branch = pr.head?.ref || '';
+              const body = pr.body || '';
+              const title = pr.title || '';
+              if (branch.includes(`issue-${issueNumber}`) || 
+                  branch.includes(`issue${issueNumber}`) ||
+                  branch.startsWith('jules/') ||
+                  new RegExp(`#${issueNumber}\\b`).test(body) ||
+                  new RegExp(`#${issueNumber}\\b`).test(title)) {
+                prUrl = pr.html_url;
+                prNumber = pr.number;
+                break;
+              }
+            }
+          } catch (e) {}
 
+          // Remove all Jules labels from the issue as requested
+          await setSingleJulesLabel(github, context, issueNumber, null);
+
+          const prLinkText = prUrl ? `\n\n👉 **Pull Request:** [#${prNumber} - Jules PR](${prUrl})` : '';
           await github.rest.issues.createComment({
             owner: context.repo.owner,
             repo: context.repo.repo,
             issue_number: issueNumber,
-            body: `<!-- jules-marker:${completionMarker} -->\n🎉 **Jules hat die Aufgabe erfolgreich abgeschlossen!**\nDer Pull Request wurde erstellt und die Verifikation läuft.`
+            body: `<!-- jules-marker:${completionMarker} -->\n🎉 **Jules hat die Aufgabe erfolgreich abgeschlossen!**${prLinkText}\n\nDer Pull Request wurde erstellt und die Verifikation läuft.`
           });
-          console.log(`Marked issue #${issueNumber} as completed.`);
+          console.log(`Marked issue #${issueNumber} as completed (PR: ${prNumber || 'found'}).`);
           return true;
         } catch (e) {}
       }
@@ -263,8 +288,7 @@ module.exports = async ({ github, context, core }) => {
       const failureMarker = `failed-${sessionId}`;
       if (!postedMarkers.has(failureMarker)) {
         try {
-          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:in-progress' }).catch(() => {});
-          await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:failed'] }).catch(() => {});
+          await setSingleJulesLabel(github, context, issueNumber, 'jules:failed');
 
           const reason = sessionData.failureReason || 'Unbekannter Fehler bei der Ausführung.';
           await github.rest.issues.createComment({
@@ -308,11 +332,9 @@ module.exports = async ({ github, context, core }) => {
   // 1. Scan issues with any jules-related label
   const activeLabels = [
     'jules:in-progress',
-    'jules:in-review',
+    'jules:waiting',
     'jules:waiting-approval',
-    'jules:waiting-input',
-    'jules:plan',
-    'jules'
+    'jules:waiting-input'
   ];
 
   for (const label of activeLabels) {

@@ -1,3 +1,5 @@
+const { setSingleJulesLabel } = require('./jules-label-manager.cjs');
+
 module.exports = async ({ github, context, core }) => {
   const issueNumber = Number(process.env.ISSUE_NUMBER);
   const action = process.env.ACTION;
@@ -309,20 +311,10 @@ module.exports = async ({ github, context, core }) => {
   }
 
   if (success) {
+    // Enforce Mutex: Any message/approval sent to Jules transitions issue to strictly 'jules:in-progress'
+    await setSingleJulesLabel(github, context, issueNumber, 'jules:in-progress');
+
     if (isApproval) {
-      try {
-        await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-approval' });
-        await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-input' });
-        await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:in-progress'] });
-      } catch (e) {}
-
-      // Clean up trigger labels if added
-      for (const l of ['jules:send-messages', 'jules:send', 'send-messages', 'send', 'jules:approved', 'approved', 'approve']) {
-        try {
-          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: l });
-        } catch (e) {}
-      }
-
       // Send discussion (if any) and strict autonomy directive to prevent intermediate pauses during coding
       const autonomyDirective = `⚡ PLAN APPROVED — AUTONOMOUS IMPLEMENTATION ENGAGED ⚡
 You are authorized with 100% full autonomy to implement this approved plan.
@@ -357,11 +349,6 @@ CRITICAL DIRECTIVES:
         body: `✅ **Plan approved.** (Session: \`${sessionId}\`)\nJules is implementing autonomously on a feature branch. A PR against \`main\` will be opened once complete.${commentSuffix}`
       });
     } else if (action === 'yolo') {
-      try {
-        await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-input' });
-        await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:in-progress'] });
-      } catch (e) {}
-
       await github.rest.issues.createComment({
         owner: context.repo.owner,
         repo: context.repo.repo,
@@ -369,11 +356,6 @@ CRITICAL DIRECTIVES:
         body: `⚡ **YOLO mode activated.** (Session: \`${sessionId}\`)\nFull autonomy engaged — Jules will implement on a feature branch and open a PR against \`main\`.`
       });
     } else if (action === 'continue') {
-      try {
-        await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-input' });
-        await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:in-progress'] });
-      } catch (e) {}
-
       await github.rest.issues.createComment({
         owner: context.repo.owner,
         repo: context.repo.repo,
@@ -381,17 +363,6 @@ CRITICAL DIRECTIVES:
         body: `▶️ **Continuing.** (Session: \`${sessionId}\`)\nJules is proceeding on the feature branch. A PR against \`main\` will be opened once implementation and tests pass.`
       });
     } else if (action === 'send-messages') {
-      try {
-        await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-input' });
-        await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:in-progress'] });
-      } catch (e) {}
-
-      for (const l of ['jules:send-messages', 'jules:send', 'send-messages', 'send']) {
-        try {
-          await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: l });
-        } catch (e) {}
-      }
-
       await github.rest.issues.createComment({
         owner: context.repo.owner,
         repo: context.repo.repo,
@@ -399,11 +370,6 @@ CRITICAL DIRECTIVES:
         body: `💬 **Discussion forwarded to Jules.** (Session: \`${sessionId}\`)\n\n> ${promptToSend.replace(/\n/g, '\n> ')}`
       });
     } else {
-      try {
-        await github.rest.issues.removeLabel({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, name: 'jules:waiting-input' });
-        await github.rest.issues.addLabels({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber, labels: ['jules:in-progress'] });
-      } catch (e) {}
-
       await github.rest.issues.createComment({
         owner: context.repo.owner,
         repo: context.repo.repo,

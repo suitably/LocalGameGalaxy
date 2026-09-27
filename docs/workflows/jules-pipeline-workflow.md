@@ -66,12 +66,16 @@ Only repository **Owners, Members, and Collaborators** can trigger Jules.
 > [!TIP]
 > Developers can discuss freely in the issue without triggering Jules on every comment. When you are ready to forward the discussion to Jules (whether to ask questions or to say "go"), just comment `/send` (or add label `jules:send-messages`).
 
-### GitHub Labels
+### GitHub Labels & State Lifecycle (Mutex Rule)
 
-| Label | Action |
+Strictly **one** `jules:*` label exists on an issue at any time. When a new state is reached, older Jules labels are automatically pruned:
+
+| Label | Meaning & Transition |
 | :--- | :--- |
-| `jules:plan` or `jules` | Same as `/plan` — starts Jules planning |
-| `jules:send-messages` or `jules:send` | Same as `/send` — forwards recent discussion to Jules. Label is automatically cleared after dispatch. |
+| **`jules:in-progress`** | Jules is actively working (analyzing/planning or implementing). Set on `/plan` dispatch and whenever discussion is forwarded via `/send`. |
+| **`jules:waiting`** | Jules has posted its plan or a clarifying question and is waiting for team feedback. Replaces `jules:in-progress`. |
+| **`jules:send-messages`** | Trigger label: adding this label acts identically to commenting `/send`. It forwards recent discussion, purges older labels, and sets `jules:in-progress`. |
+| *(None / cleared)* | Once Jules creates the Pull Request, all `jules:*` labels are stripped from the issue and the PR is linked directly in a completion comment. |
 
 ### Manual Workflow Dispatch
 
@@ -85,16 +89,15 @@ Only repository **Owners, Members, and Collaborators** can trigger Jules.
 
 ## 4. The Plan → Approve → Implement Flow
 
-1. **`/plan`** → Jules session created with `requirePlanApproval: true`
-2. **Jules analyzes**: Reads the issue, inspects relevant source files, checks AGENTS.md constraints
-3. **Jules posts plan**: Via Stitch MCP (`gh issue comment`), Jules adds a structured plan comment with:
-   - Files it intends to change
-   - Architectural decisions
-   - Any open questions for the developer
-4. **Developer reviews & discusses**: Team can discuss freely in comments. Use `/send` to forward questions or feedback.
-5. **Implementation start**: When the discussion contains approval (e.g. `go`, `passt`, `approved`, `start`), commenting `/send` (or adding label `jules:send-messages`) automatically triggers implementation.
-6. **Feature branch created** automatically (e.g. `jules/fix-issue-42`)
-7. **PR opened** against `main` → CI quality gates run
+1. **`/plan`** → Jules session created with `requirePlanApproval: true` → issue label set to `jules:in-progress`.
+2. **Jules analyzes & plans**: Jules inspects relevant source files and posts its plan via Stitch MCP.
+3. **Watcher detects plan**: Fast-path or scheduled watcher switches label to `jules:waiting`.
+4. **Developer reviews & discusses**: Team discusses freely in comments without triggering the bot.
+5. **Forwarding / Approval**: Commenting `/send` (or adding label `jules:send-messages`):
+   - If discussion contains approval (e.g. `go`, `passt`, `approved`), Jules starts coding immediately!
+   - If discussion contains questions, Jules answers and refines the plan.
+   - Label switches back to `jules:in-progress`.
+6. **Completion**: Jules creates a feature branch targeting `main` and opens a PR. Watcher strips all `jules:*` labels from the issue and posts the PR link!
 
 ---
 
