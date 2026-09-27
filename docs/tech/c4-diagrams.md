@@ -1,3 +1,14 @@
+---
+type: Architecture Diagrams
+title: System Context & Container Diagrams (C4)
+description: C4 Model context and container diagrams for the LocalGameGalaxy multi-device runtime and network topologies.
+resource: src/
+tags: [c4, diagrams, architecture, webrtc, mqtt, hono]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # System Context & Container Diagrams
 
 > [!IMPORTANT]

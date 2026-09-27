@@ -1,3 +1,14 @@
+---
+type: Playbook
+title: Incident Response & Postmortem Guidelines
+description: Protocols for handling operational incidents, severity levels, escalation paths, and conducting post-incident reviews.
+resource: docs/operations/
+tags: [incident-response, playbook, operations, postmortem]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # Incident Response & Postmortem Guidelines [ID: OPS-INCIDENT-RESPONSE]
 
 This document outlines the protocols for handling operational incidents, escalation paths, and conducting post-incident reviews (postmortems) for LocalGameGalaxy.

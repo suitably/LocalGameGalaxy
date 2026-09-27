@@ -1,3 +1,14 @@
+---
+type: Security Specification
+title: Secrets & Local Configuration Management
+description: Guidelines for managing local tokens, certificates, config.json, and secure HTTPS/WSS development contexts.
+resource: server/config.example.json
+tags: [security, secrets, config, ssl, certificates]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # Secrets & Local Configuration Management
 
 To run the LocalGameGalaxy companion server and frontend locally with secure contexts (HTTPS/WSS required for WebRTC and Web Audio APIs), developers must manage local configurations and self-signed certificates.

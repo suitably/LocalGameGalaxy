@@ -1,3 +1,14 @@
+---
+type: Testing Guide
+title: Testing Guide & Quality Assurance Patterns
+description: Vitest unit testing setup, mocking strategies for IndexedDB and WebSockets, and coverage requirements.
+resource: src/
+tags: [testing, vitest, unit-tests, mocks, qa]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # Testing Guide
 
 This document outlines the testing strategy, frameworks, execution commands, and patterns for writing and maintaining tests in LocalGameGalaxy.

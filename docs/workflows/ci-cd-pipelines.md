@@ -1,3 +1,14 @@
+---
+type: Pipeline Architecture
+title: CI/CD & Multi-Agent Pipelines Architecture
+description: Single Source of Truth for all continuous integration, automated deployment, and autonomous multi-agent pipelines.
+resource: .github/workflows/
+tags: [ci, cd, github-actions, jules, pipelines]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # CI/CD & Multi-Agent Pipelines Architecture
 
 This document serves as the Single Source of Truth (SSoT) for all continuous integration, automated deployment, and autonomous multi-agent pipelines in LocalGameGalaxy.

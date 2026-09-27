@@ -1,3 +1,14 @@
+---
+type: Issue Specification
+title: 'Readme'
+description: Historical task specification for MelodiQ backend simplification.
+resource: server/
+tags: [issue, backend-simplification, historical]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # MelodiQ Backend Simplification
 
 > **Ziel**: Das MelodiQ-Backend wird vereinfacht. Die separate Admin-UI wird entfernt, alle Verwaltungsfunktionen wandern ins React-Frontend. Unnötige Features werden entfernt. Der Express-Server wird zu Hono migriert und als Docker One-Click-Image bereitgestellt.

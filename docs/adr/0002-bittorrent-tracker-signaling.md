@@ -1,3 +1,14 @@
+---
+type: Architecture Decision Record
+title: 'ADR-0002: BitTorrent Tracker for WebRTC Signaling'
+description: Decision to adopt a self-hosted WebSocket BitTorrent tracker for peer discovery and WebRTC offer/answer exchange.
+resource: scripts/start-tracker.js
+tags: [adr, webrtc, signaling, bittorrent-tracker]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # ADR-0002: Use BitTorrent Tracker Network for WebRTC Signaling
 
 ## Status

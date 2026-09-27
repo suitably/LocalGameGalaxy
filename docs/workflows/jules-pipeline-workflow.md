@@ -1,3 +1,14 @@
+---
+type: Autonomous Workflow
+title: Google Jules Issue Autofix Pipeline & Best Practice Workflow
+description: Autonomous coding agent workflow with multi-key rotation, plan approval, and PR auto-fixer lifecycle.
+resource: .github/workflows/jules-pipeline.yml
+tags: [jules, ai-agent, automation, workflow]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # Google Jules Issue Autofix Pipeline & Best Practice Workflow
 
 ## 1. Overview & Architecture
