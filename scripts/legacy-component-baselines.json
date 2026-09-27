@@ -1,7 +1,7 @@
 {
   "src/features/party/PartyLobby.tsx": 624,
   "src/components/connection/ServerAdminPanel.tsx": 618,
-  "src/games/melodiq/MelodiqGame.tsx": 611,
+  "src/games/melodiq/MelodiqGame.tsx": 615,
   "src/games/melodiq/gameplay/PitchVisualizer.tsx": 569,
   "src/games/melodiq/components/GameSettingsPanel.tsx": 560,
   "src/games/qwixx/components/QwixxRow.tsx": 522,
