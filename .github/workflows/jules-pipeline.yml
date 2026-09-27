@@ -271,8 +271,19 @@ jobs:
                 return body.length > 0;
               });
               if (filteredComments.length > 0) {
+                const promptUserMap = new Map();
+                let promptUserCounter = 1;
                 commentsContext = '\n\nUser Feedback & Clarifications from Issue Comments:\n' +
-                  filteredComments.map(c => `- @${c.user?.login}: ${c.body.trim()}`).join('\n\n');
+                  filteredComments.map(c => {
+                    const login = c.user?.login || 'unknown';
+                    if (!promptUserMap.has(login)) {
+                      const rawRole = c.author_association || 'CONTRIBUTOR';
+                      const role = rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase();
+                      promptUserMap.set(login, { id: promptUserCounter++, role });
+                    }
+                    const { id, role } = promptUserMap.get(login);
+                    return `- User ${id} (${role}): ${c.body.trim()}`;
+                  }).join('\n\n');
               }
             } catch (err) {
               console.warn('Could not fetch comments for Jules prompt:', err.message);

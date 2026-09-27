@@ -192,6 +192,8 @@ module.exports = async ({ github, context, core }) => {
 
     const recentLines = [];
     const startIndex = lastJulesIndex >= 0 ? lastJulesIndex + 1 : 0;
+    const userMap = new Map();
+    let userCounter = 1;
 
     for (let i = startIndex; i < comments.length; i++) {
       const c = comments[i];
@@ -202,9 +204,17 @@ module.exports = async ({ github, context, core }) => {
       // Remove any leading slash command (e.g. /send, /sennd, /approve, etc.)
       body = body.replace(/^\/[a-zA-Z0-9_\-]+\s*/i, '').trim();
 
-      if (body) {
-        recentLines.push(`${c.user.login}: ${body}`);
+      if (!body) continue;
+
+      const login = c.user?.login || 'unknown';
+      if (!userMap.has(login)) {
+        const rawRole = c.author_association || 'CONTRIBUTOR';
+        const role = rawRole.charAt(0).toUpperCase() + rawRole.slice(1).toLowerCase();
+        userMap.set(login, { id: userCounter++, role });
       }
+
+      const { id, role } = userMap.get(login);
+      recentLines.push(`User ${id} (${role}): ${body}`);
     }
 
     if (recentLines.length === 0) return '';
