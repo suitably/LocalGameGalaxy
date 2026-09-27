@@ -347,6 +347,9 @@ jobs:
             - Create a new feature branch from 'main' (Jules auto-names it, e.g. jules/fix-issue-${issueNumber}).
             - When creating the pull request, TARGET 'main' AS THE BASE BRANCH.
             - Do NOT push directly to main.
+            - DESCRIPTIVE PR TITLE: Give the Pull Request a clear, meaningful title following Conventional Commits, including the issue number:
+              * Format: 'fix: ${issue.data.title.replace(/'/g, '')} (#${issueNumber})'
+              * NEVER use the branch name (e.g. 'jules/...') or generic 'Fix issue' as the PR title!
             - In the PR description, you MUST include a detailed "Implementation Summary" section:
               * Reference 'Fixes #${issueNumber}' to auto-close the issue.
               * List what was implemented and why.
@@ -633,6 +636,37 @@ jobs:
             const previewUrl = sanitizedBranch ? `https://${sanitizedBranch}.nexumia.de/` : '';
             const previewLine = previewUrl ? `\n🌐 **Cloudflare Preview:** [${previewUrl}](${previewUrl})` : '';
 
+            // Auto-beautify PR Title if Jules used the branch name or a generic title
+            let prTitle = pr.title || '';
+            try {
+              const issueRes = await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber
+              });
+              const issueTitle = (issueRes.data?.title || '').trim();
+              const isGenericTitle = !prTitle || 
+                                     prTitle.startsWith('jules/') || 
+                                     /^fix\s+issue\s*#?\d+$/i.test(prTitle) ||
+                                     prTitle.includes(branch);
+
+              if (isGenericTitle && issueTitle) {
+                const prefix = issueTitle.toLowerCase().includes('feat') || issueTitle.toLowerCase().includes('neu') ? 'feat' : 'fix';
+                const cleanIssueTitle = issueTitle.replace(/^(?:fix|feat|chore|refactor)\s*:\s*/i, '');
+                const beautifiedTitle = `${prefix}: ${cleanIssueTitle} (#${issueNumber})`;
+                console.log(`Beautifying PR title: "${prTitle}" -> "${beautifiedTitle}"`);
+                await github.rest.pulls.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  title: beautifiedTitle
+                });
+                prTitle = beautifiedTitle;
+              }
+            } catch (err) {
+              console.warn('Could not beautify PR title:', err.message);
+            }
+
             // Remove all jules:* labels from the issue (non-Jules labels are preserved)
             await setSingleJulesLabel(github, context, issueNumber, null);
 
@@ -641,7 +675,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issueNumber,
-              body: `🎉 **Jules hat die Umsetzung abgeschlossen und Pull Request #${pr.number} erstellt:**\n\n👉 [#${pr.number} - ${pr.title}](${pr.html_url})${previewLine}\n\nAlle Jules-Labels wurden vom Issue entfernt. Die Verifikation und das Review laufen nun auf dem PR.`
+              body: `🎉 **Jules hat die Umsetzung abgeschlossen und Pull Request #${pr.number} erstellt:**\n\n👉 [#${pr.number} - ${prTitle}](${pr.html_url})${previewLine}\n\nAlle Jules-Labels wurden vom Issue entfernt. Die Verifikation und das Review laufen nun auf dem PR.`
             });
             console.log(`Cleaned Jules labels and linked PR #${pr.number} to issue #${issueNumber}`);
 
