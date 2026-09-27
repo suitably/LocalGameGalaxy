@@ -1,14 +1,3 @@
----
-type: Issue Specification
-title: '07 Express To Hono Migration'
-description: Historical task specification for MelodiQ backend simplification.
-resource: server/
-tags: [issue, backend-simplification, historical]
-status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
----
-
 # Migrate Express.js Server to Hono
 
 ## Context

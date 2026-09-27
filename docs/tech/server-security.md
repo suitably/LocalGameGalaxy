@@ -1,18 +1,7 @@
----
-type: Security Specification
-title: Server Security Model & Authentication
-description: Authentication model, bearer token enforcement, CORS headers, Private Network Access (PNA), and TLS termination.
-resource: server/src/core/auth.ts
-tags: [security, hono, auth, pna, cors]
-status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
----
-
 # Server Security Model & Authentication
 
 > [!CAUTION]
-> This document contains descriptions of security-sensitive flows. Never commit real tokens, private keys, or certificates to the repository. See [secrets-management.md](docs/tech/secrets-management.md) for configuration setup.
+> This document contains descriptions of security-sensitive flows. Never commit real tokens, private keys, or certificates to the repository. See [secrets-management.md](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/secrets-management.md) for configuration setup.
 
 ---
 

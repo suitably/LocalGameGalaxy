@@ -182,6 +182,11 @@ export const MelodiqGameContent: React.FC = () => {
         }
     }, [searchParams, setSearchParams]);
 
+    const handleBackFromSettings = useCallback(() => {
+        refreshSongs();
+        handleCloseSubView();
+    }, [refreshSongs, handleCloseSubView]);
+
     useEffect(() => {
         const isSubView = currentView === 'Connection' || currentView === 'Playlists' || currentView === 'PlaylistDetails';
         if (isSubView) {
@@ -414,14 +419,14 @@ export const MelodiqGameContent: React.FC = () => {
             return (
                 <Box sx={{ height: '100%', overflow: 'auto' }}>
                     {isClient ? (
-                        <ClientSettings onBack={handleCloseSubView} />
+                        <ClientSettings onBack={handleBackFromSettings} />
                     ) : (
                         <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
                             <Settings 
                                 key={searchParams.get('sub') || 'all'}
                                 activeGameId="melodiq"
                                 activeSub={searchParams.get('sub') || 'all'}
-                                onBack={() => { refreshSongs(); handleCloseSubView(); }} 
+                                onBack={handleBackFromSettings}
                                 onNavigateToPlaylists={() => setCurrentView('Playlists')}
                             />
                         </Suspense>

@@ -8,7 +8,7 @@ LocalGameGalaxy is a purely client-side, offline-first web application suite des
 
 LocalGameGalaxy is composed of two main units:
 1. **React Frontend Application (main workspace)**: A client-side Single Page Application (SPA) built with React, TypeScript, and Vite. It runs in the web browser or as a native Android app via Capacitor.
-2. **Companion Server & Tracker (`/server`)**: A lightweight Node/Hono helper running locally to host the media server, coordinate local file ingestion (e.g., song downloads/processing), and host a local BitTorrent signaling tracker for WebRTC discovery.
+2. **Companion Server & Tracker (`/server`)**: A lightweight Node/Express helper running locally to host the media server, coordinate local file ingestion (e.g., song downloads/processing), and host a local BitTorrent signaling tracker for WebRTC discovery.
 
 ---
 
@@ -44,7 +44,7 @@ Copy the example configuration to initialize the local server and client setting
 ```bash
 cp config.example.json config.json
 ```
-For advanced steps, local SSL certificates, and generating security tokens, refer to the [Secrets & Local Configuration Guide](docs/tech/secrets-management.md).
+For advanced steps, local SSL certificates, and generating security tokens, refer to the [Secrets & Local Configuration Guide](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/secrets-management.md).
 
 ---
 
@@ -82,18 +82,14 @@ By default, this launches Vite on `http://localhost:5173`. Open this URL to acce
   ```bash
   npm run build
   ```
-- **Testing**: For detailed instructions on running unit and integration tests, refer to the [Testing Guide](docs/tech/testing-guide.md) (coming soon).
+- **Testing**: For detailed instructions on running unit and integration tests, refer to the [Testing Guide](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/testing-guide.md) (coming soon).
 
 ---
 
-## 6. Documentation Resources (OKF v0.2 Knowledge Bundle)
+## 6. Documentation Resources
 
-For deeper technical information, please consult the `docs/` Open Knowledge Bundle:
-- [Knowledge Bundle Root](docs/index.md) (OKF v0.2 Index)
-- [System Architecture (SSoT)](docs/tech/architecture.md)
-- [Cross-Device Synchronization Protocol](docs/tech/sync-protocol.md)
-- [Data Persistence Layer](docs/tech/persistence.md)
-- [Coding Conventions & Anti-God-Component Architecture](docs/tech/coding-conventions.md)
-- [Secrets & Local Configuration](docs/tech/secrets-management.md)
-- [Melodiq Game Architecture](docs/tech/melodiq-architecture.md)
-- [Data Models Specification](docs/tech/data-models.md)
+For deeper technical information, please consult the `docs/` directory:
+- [System Architecture](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/architecture.md)
+- [Secrets & Local Configuration](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/secrets-management.md)
+- [Melodiq Game Architecture](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/melodiq-architecture.md)
+- [Data Models Specification](file:///home/deck/Projects/LocalGameGalaxy/docs/tech/data-models.md)

@@ -1,14 +1,3 @@
----
-type: Onboarding Guide
-title: Developer Onboarding FAQ & Troubleshooting Guide
-description: Solutions for local development setup, secure context configuration (HTTPS/WSS), and common developer pitfalls.
-resource: docs/tech/
-tags: [onboarding, troubleshooting, faq, local-development]
-status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
----
-
 # Developer Onboarding FAQ & Troubleshooting Guide
 
 This document contains solutions to common issues encountered when setting up the LocalGameGalaxy local development environment.
