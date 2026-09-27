@@ -7,17 +7,13 @@ export interface BuildDeviceConnectionUrlOptions {
     clientPath: string;
     partyId: string;
     trackerUrls?: string[];
-    helperUrl?: string;
-    helperToken?: string;
 }
 
 export function buildDeviceConnectionUrl({
     baseUrl,
     clientPath,
     partyId,
-    trackerUrls = [],
-    helperUrl,
-    helperToken
+    trackerUrls = []
 }: BuildDeviceConnectionUrlOptions): string {
     const defaultOrigin = typeof window !== 'undefined' && window.location?.origin
         ? window.location.origin
@@ -37,14 +33,6 @@ export function buildDeviceConnectionUrl({
 
     if (partyId) {
         url.searchParams.set('party', partyId);
-    }
-
-    if (helperUrl) {
-        url.searchParams.set('helperUrl', helperUrl);
-    }
-
-    if (helperToken) {
-        url.searchParams.set('token', helperToken);
     }
 
     let targetHost = '';

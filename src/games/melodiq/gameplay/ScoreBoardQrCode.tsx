@@ -34,16 +34,11 @@ export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({ sx, compact 
             ? activeTrackerUrls
             : storage.getJson<string[]>(STORAGE_KEYS.MELODIQ_TRACKER_URLS, []);
 
-        const helperUrl = storage.get(STORAGE_KEYS.HELPER_URL) || undefined;
-        const helperToken = storage.get(STORAGE_KEYS.HELPER_TOKEN) || undefined;
-
         const url = buildDeviceConnectionUrl({
             baseUrl,
             clientPath: '/games/melodiq?role=client',
             partyId,
-            trackerUrls: trackers,
-            helperUrl,
-            helperToken
+            trackerUrls: trackers
         });
 
         QRCode.toDataURL(url, { width: 250, margin: 1 })

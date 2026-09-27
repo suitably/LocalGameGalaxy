@@ -88,18 +88,13 @@ export function useDeviceConnectionSettings({
     }, [baseUrl, gameId]);
 
     const connectionUrl = useMemo(() => {
-        const helperUrl = helperStorageKey ? storage.get(helperStorageKey) : undefined;
-        const helperToken = helperTokenKey ? storage.get(helperTokenKey) : undefined;
-
         return buildDeviceConnectionUrl({
             baseUrl,
             clientPath,
             partyId,
-            trackerUrls: activeTrackerUrls,
-            helperUrl: helperUrl || undefined,
-            helperToken: helperToken || undefined
+            trackerUrls: activeTrackerUrls
         });
-    }, [baseUrl, clientPath, partyId, activeTrackerUrls, helperStorageKey, helperTokenKey]);
+    }, [baseUrl, clientPath, partyId, activeTrackerUrls]);
 
     // Generate QR Code data URL when connectionUrl changes
     useEffect(() => {
