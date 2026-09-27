@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '*/5 * * * *' # Polls every 5 minutes for active Jules questions & plans
   workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Specific issue number to poll (e.g. 230, optional)'
+        required: false
+        type: string
 
 concurrency:
   group: jules-watcher
@@ -31,6 +36,7 @@ jobs:
       - name: Run Status Watcher
         uses: actions/github-script@v7
         env:
+          ISSUE_NUMBER: ${{ github.event.inputs.issue_number }}
           JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
           JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
           JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}

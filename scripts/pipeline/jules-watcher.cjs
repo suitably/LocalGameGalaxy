@@ -34,10 +34,18 @@ module.exports = async ({ github, context, core }) => {
 
     if (a.agentMessaged) {
       const am = a.agentMessaged;
-      text = am.agentMessage || am.message || am.text || am.prompt || am.content || '';
+      text = am.agentMessage || am.message || am.text || am.prompt || am.content || am.chatMessage || (typeof am === 'string' ? am : '');
+      if (!text && typeof am === 'object') {
+        for (const val of Object.values(am)) {
+          if (typeof val === 'string' && val.trim().length > 0) {
+            text = val;
+            break;
+          }
+        }
+      }
     } else if (a.userMessaged) {
       const um = a.userMessaged;
-      text = um.userMessage || um.message || um.text || um.prompt || um.content || '';
+      text = um.userMessage || um.message || um.text || um.prompt || um.content || (typeof um === 'string' ? um : '');
     } else if (a.progressUpdated) {
       const pu = a.progressUpdated;
       text = pu.title || pu.description || pu.message || '';
@@ -170,11 +178,17 @@ module.exports = async ({ github, context, core }) => {
         const branch = pr.head?.ref || '';
         const body = pr.body || '';
         const title = pr.title || '';
-        if (branch.includes(`issue-${issueNumber}`) || 
-            branch.includes(`issue${issueNumber}`) ||
-            branch.startsWith('jules/') ||
-            new RegExp(`#${issueNumber}\\b`).test(body) ||
-            new RegExp(`#${issueNumber}\\b`).test(title)) {
+        const branchMatches = 
+          branch.includes(`issue-${issueNumber}-`) || 
+          branch.includes(`issue-${issueNumber}`) || 
+          branch.includes(`issue${issueNumber}`) ||
+          branch.endsWith(`issue-${issueNumber}`);
+        const textMatches = 
+          new RegExp(`\\b(?:fixes|closes|resolves|issue)\\s*#?${issueNumber}\\b`, 'i').test(body) ||
+          new RegExp(`\\b(?:fixes|closes|resolves|issue)\\s*#?${issueNumber}\\b`, 'i').test(title) ||
+          new RegExp(`#${issueNumber}\\b`).test(title);
+
+        if (branchMatches || textMatches) {
           prUrl = pr.html_url;
           prNumber = pr.number;
           break;
@@ -182,8 +196,11 @@ module.exports = async ({ github, context, core }) => {
       }
     } catch (e) {}
 
+    const isWaitingFeedback = state === 'AWAITING_USER_FEEDBACK' || state === 'AWAITING_USER_INPUT';
+
     // If PR was created or session completed with code, finalize immediately!
-    if (prUrl || (state === 'COMPLETED' && hasPrOrCode)) {
+    // NEVER finalize if the session is currently awaiting user feedback or clarification!
+    if (!isWaitingFeedback && (prUrl || (state === 'COMPLETED' && hasPrOrCode))) {
       const completionMarker = `completed-${sessionId}`;
       if (!postedMarkers.has(completionMarker)) {
         try {
@@ -240,11 +257,12 @@ module.exports = async ({ github, context, core }) => {
     }
 
     // 4. Check chronologically for unposted plan or question (only if no PR exists yet)
+    let handledActivity = false;
     for (let i = rawActivities.length - 1; i >= 0; i--) {
       const act = rawActivities[i];
       if (act.originator === 'USER' || act.userMessaged) continue;
 
-      const actId = act.id || `act-${i}`;
+      const actId = act.id || (act.name ? act.name.split('/').pop() : null) || (act.createTime ? `act-${new Date(act.createTime).getTime()}` : `act-${i}`);
       if (postedMarkers.has(actId)) {
         continue;
       }
@@ -262,7 +280,7 @@ module.exports = async ({ github, context, core }) => {
       const isAgentMessage = Boolean(act.agentMessaged);
 
       // Skip internal progress updates that do not represent direct messages to the user
-      if (!isPlan && !isAgentMessage && state !== 'AWAITING_USER_FEEDBACK' && state !== 'AWAITING_USER_INPUT' && !parsed.text.includes('?')) {
+      if (!isPlan && !isAgentMessage && !isWaitingFeedback && !parsed.text.includes('?')) {
         continue;
       }
 
@@ -292,13 +310,14 @@ module.exports = async ({ github, context, core }) => {
           postedMarkers.add(actId);
 
           await setSingleJulesLabel(github, context, issueNumber, 'jules:waiting');
+          handledActivity = true;
           return true; // Action taken
         } catch (err) {
           console.warn(`Failed to post plan comment:`, err.message);
         }
-      } else if (isAgentMessage || state === 'AWAITING_USER_FEEDBACK' || state === 'AWAITING_USER_INPUT' || parsed.text.includes('?')) {
+      } else if (isAgentMessage || isWaitingFeedback || parsed.text.includes('?')) {
         // Direct response or question from Jules
-        const isQuestion = parsed.text.includes('?') || /frage|question|wie soll|soll ich/i.test(parsed.text);
+        const isQuestion = parsed.text.includes('?') || /frage|question|wie soll|soll ich|should i|do you prefer|focus on/i.test(parsed.text);
         const heading = isQuestion ? '### ❓ Jules Rückfrage / Feedback benötigt' : '### 💬 Jules Antwort / Rückmeldung';
         const questionComment = [
           `<!-- jules-activity:${actId} -->`,
@@ -322,12 +341,60 @@ module.exports = async ({ github, context, core }) => {
           postedMarkers.add(actId);
 
           await setSingleJulesLabel(github, context, issueNumber, 'jules:waiting');
+          handledActivity = true;
           return true; // Action taken
         } catch (err) {
           console.warn(`Failed to post question comment:`, err.message);
         }
       }
       break; // Only handle the most recent unhandled activity
+    }
+
+    // Fallback: If session is explicitly waiting for feedback, ensure question is posted and label is jules:waiting
+    if (isWaitingFeedback && !handledActivity) {
+      await setSingleJulesLabel(github, context, issueNumber, 'jules:waiting');
+
+      const hasQuestionComment = comments.some(c => (c.body || '').includes('Jules Rückfrage') || (c.body || '').includes('Feedback benötigt'));
+      if (!hasQuestionComment) {
+        let questionText = '';
+        let actId = `feedback-${sessionId}`;
+        for (let i = rawActivities.length - 1; i >= 0; i--) {
+          const parsed = parseActivity(rawActivities[i]);
+          if (parsed.text) {
+            questionText = parsed.text;
+            actId = rawActivities[i].id || (rawActivities[i].name ? rawActivities[i].name.split('/').pop() : null) || `act-${i}`;
+            break;
+          }
+        }
+        if (!questionText) {
+          questionText = sessionData?.title || sessionData?.description || sessionData?.message || 'Jules wartet auf Feedback zu diesem Issue.';
+        }
+
+        const heading = '### ❓ Jules Rückfrage / Feedback benötigt';
+        const questionComment = [
+          `<!-- jules-activity:${actId} -->`,
+          heading,
+          '',
+          `> ${questionText.replace(/\n/g, '\n> ')}`,
+          '',
+          '---',
+          '👉 **Antworte direkt hier im Issue:**',
+          '- Diskutiert eure Antwort und sendet sie mit **`/send`** (oder Label `jules:send-messages`) an Jules.'
+        ].join('\n');
+
+        try {
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: issueNumber,
+            body: questionComment
+          });
+          console.log(`Fallback-posted question to issue #${issueNumber}`);
+          return true;
+        } catch (err) {
+          console.warn(`Failed to post fallback question comment:`, err.message);
+        }
+      }
     }
 
     if (state === 'FAILED') {
@@ -380,7 +447,12 @@ module.exports = async ({ github, context, core }) => {
     'jules:in-progress',
     'jules:waiting',
     'jules:waiting-approval',
-    'jules:waiting-input'
+    'jules:waiting-input',
+    'jules:plan',
+    'jules:fix',
+    'jules',
+    'plan',
+    'fix'
   ];
 
   for (const label of activeLabels) {
@@ -410,7 +482,7 @@ module.exports = async ({ github, context, core }) => {
       state: 'open',
       sort: 'updated',
       direction: 'desc',
-      per_page: 25
+      per_page: 30
     });
     for (const issue of recentRes.data || []) {
       if (!issue.pull_request && !issuesToScan.has(issue.number)) {
@@ -419,7 +491,7 @@ module.exports = async ({ github, context, core }) => {
           const name = (typeof l === 'string' ? l : l.name || '').toLowerCase();
           return name.includes('jules') || name === 'plan' || name === 'fix';
         });
-        if (hasJulesMarker) {
+        if (hasJulesMarker || (issue.body || '').includes('jules.google.com/task/')) {
           issuesToScan.set(issue.number, issue);
         }
       }
