@@ -1,3 +1,14 @@
+---
+type: Runbook
+title: Production Operations & Secret Rotation Runbook
+description: Production deployment, security token rotation, CORS configurations, and SSL management for the companion server.
+resource: server/
+tags: [runbook, server, hono, security, deployment]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # Production Operations & Secret Rotation Runbook [ID: OPS-SERVER-RUNBOOK]
 
 This guide covers production operations, security token rotation, CORS configurations, and SSL certificate management for the companion Node.js server.

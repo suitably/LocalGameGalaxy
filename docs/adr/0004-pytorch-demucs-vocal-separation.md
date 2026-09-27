@@ -1,3 +1,14 @@
+---
+type: Architecture Decision Record
+title: 'ADR-0004: PyTorch Demucs for Local Vocal Separation'
+description: Decision to run Facebook's Demucs AI model locally on the companion server for offline karaoke vocal isolation.
+resource: server/
+tags: [adr, ai, demucs, audio-separation, pytorch]
+status: stable
+generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
+verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+---
+
 # ADR-0004: Use PyTorch/Demucs (audio-separator) for On-Device Vocal Separation
 
 ## Status
