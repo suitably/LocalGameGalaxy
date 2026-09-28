@@ -5,6 +5,34 @@ import type { KniffelPlayer, KniffelCategory } from '../logic/types';
 import { getUpperSectionSum, getUpperSectionBonus, getLowerSectionSum, getTotalScore } from '../logic/kniffelScoring';
 import { Die3D } from '../../../components/games/Die3D';
 
+const KniffelRow = ({ label, hint, category, dieFace, players, renderCell }: { label: string; hint: string; category: KniffelCategory; dieFace?: number; players: KniffelPlayer[]; renderCell: (cat: KniffelCategory, idx: number) => React.ReactNode }) => (
+  <Box sx={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)', alignItems: 'center' }}>
+    <Box sx={{ flex: 2, display: 'flex', alignItems: 'center', gap: 1, p: 1 }}>
+      {dieFace && <Die3D value={dieFace} sx={{ width: 24, height: 24, fontSize: '1rem', minWidth: 24 }} />}
+      <Box>
+        <Typography variant="body2" fontWeight="bold">{label}</Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>{hint}</Typography>
+      </Box>
+    </Box>
+    {players.map((_, idx) => (
+      <React.Fragment key={idx}>{renderCell(category, idx)}</React.Fragment>
+    ))}
+  </Box>
+);
+
+const KniffelSumRow = ({ label, values }: { label: string, values: (number | string)[] }) => (
+  <Box sx={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)', alignItems: 'center', bgcolor: 'rgba(0,0,0,0.2)' }}>
+    <Box sx={{ flex: 2, p: 1 }}>
+      <Typography variant="body2" fontWeight="bold">{label}</Typography>
+    </Box>
+    {values.map((val, idx) => (
+      <Box key={idx} sx={{ flex: 1, textAlign: 'center', p: 1, borderLeft: '1px solid rgba(255,255,255,0.1)', fontWeight: 'bold' }}>
+        {val}
+      </Box>
+    ))}
+  </Box>
+);
+
 interface KniffelBoardProps {
   players: KniffelPlayer[];
   activePlayerIndex: number;
@@ -83,33 +111,6 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
     );
   };
 
-  const Row = ({ label, hint, category, dieFace }: { label: string; hint: string; category: KniffelCategory; dieFace?: number }) => (
-    <Box sx={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)', alignItems: 'center' }}>
-      <Box sx={{ flex: 2, display: 'flex', alignItems: 'center', gap: 1, p: 1 }}>
-        {dieFace && <Die3D value={dieFace} sx={{ width: 24, height: 24, fontSize: '1rem', minWidth: 24 }} />}
-        <Box>
-          <Typography variant="body2" fontWeight="bold">{label}</Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>{hint}</Typography>
-        </Box>
-      </Box>
-      {players.map((_, idx) => (
-        <React.Fragment key={idx}>{renderCell(category, idx)}</React.Fragment>
-      ))}
-    </Box>
-  );
-
-  const SumRow = ({ label, values }: { label: string, values: (number | string)[] }) => (
-    <Box sx={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)', alignItems: 'center', bgcolor: 'rgba(0,0,0,0.2)' }}>
-      <Box sx={{ flex: 2, p: 1 }}>
-        <Typography variant="body2" fontWeight="bold">{label}</Typography>
-      </Box>
-      {values.map((val, idx) => (
-        <Box key={idx} sx={{ flex: 1, textAlign: 'center', p: 1, borderLeft: '1px solid rgba(255,255,255,0.1)', fontWeight: 'bold' }}>
-          {val}
-        </Box>
-      ))}
-    </Box>
-  );
 
   return (
     <Paper sx={{ bgcolor: '#0E211B', color: '#F2EDE1', borderRadius: 2, overflow: 'hidden' }}>
@@ -130,16 +131,16 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
           {t('games.kniffel.upper_section', 'Oberer Teil')}
         </Typography>
       </Box>
-      <Row label={t('games.kniffel.cat.ones', 'Einser')} hint={t('games.kniffel.hint.ones', 'Summe aller Einsen')} category="ones" dieFace={1} />
-      <Row label={t('games.kniffel.cat.twos', 'Zweier')} hint={t('games.kniffel.hint.twos', 'Summe aller Zweien')} category="twos" dieFace={2} />
-      <Row label={t('games.kniffel.cat.threes', 'Dreier')} hint={t('games.kniffel.hint.threes', 'Summe aller Dreien')} category="threes" dieFace={3} />
-      <Row label={t('games.kniffel.cat.fours', 'Vierer')} hint={t('games.kniffel.hint.fours', 'Summe aller Vieren')} category="fours" dieFace={4} />
-      <Row label={t('games.kniffel.cat.fives', 'Fünfer')} hint={t('games.kniffel.hint.fives', 'Summe aller Fünfen')} category="fives" dieFace={5} />
-      <Row label={t('games.kniffel.cat.sixes', 'Sechser')} hint={t('games.kniffel.hint.sixes', 'Summe aller Sechsen')} category="sixes" dieFace={6} />
+      <KniffelRow label={t('games.kniffel.cat.ones', 'Einser')} hint={t('games.kniffel.hint.ones', 'Summe aller Einsen')} category="ones" dieFace={1} players={players} renderCell={renderCell} />
+      <KniffelRow label={t('games.kniffel.cat.twos', 'Zweier')} hint={t('games.kniffel.hint.twos', 'Summe aller Zweien')} category="twos" dieFace={2} players={players} renderCell={renderCell} />
+      <KniffelRow label={t('games.kniffel.cat.threes', 'Dreier')} hint={t('games.kniffel.hint.threes', 'Summe aller Dreien')} category="threes" dieFace={3} players={players} renderCell={renderCell} />
+      <KniffelRow label={t('games.kniffel.cat.fours', 'Vierer')} hint={t('games.kniffel.hint.fours', 'Summe aller Vieren')} category="fours" dieFace={4} players={players} renderCell={renderCell} />
+      <KniffelRow label={t('games.kniffel.cat.fives', 'Fünfer')} hint={t('games.kniffel.hint.fives', 'Summe aller Fünfen')} category="fives" dieFace={5} players={players} renderCell={renderCell} />
+      <KniffelRow label={t('games.kniffel.cat.sixes', 'Sechser')} hint={t('games.kniffel.hint.sixes', 'Summe aller Sechsen')} category="sixes" dieFace={6} players={players} renderCell={renderCell} />
 
-      <SumRow label={t('games.kniffel.subtotal', 'Zwischensumme')} values={players.map(p => getUpperSectionSum(p.scores as unknown as Record<string, number | null>))} />
-      <SumRow label={t('games.kniffel.bonus', 'Bonus ab 63')} values={players.map(p => getUpperSectionBonus(p.scores as unknown as Record<string, number | null>) ? '+35' : '0')} />
-      <SumRow label={t('games.kniffel.upper_total', 'Summe oben')} values={players.map(p => getUpperSectionSum(p.scores as unknown as Record<string, number | null>) + getUpperSectionBonus(p.scores as unknown as Record<string, number | null>))} />
+      <KniffelSumRow label={t('games.kniffel.subtotal', 'Zwischensumme')} values={players.map(p => getUpperSectionSum(p.scores as unknown as Record<string, number | null>))} />
+      <KniffelSumRow label={t('games.kniffel.bonus', 'Bonus ab 63')} values={players.map(p => getUpperSectionBonus(p.scores as unknown as Record<string, number | null>) ? '+35' : '0')} />
+      <KniffelSumRow label={t('games.kniffel.upper_total', 'Summe oben')} values={players.map(p => getUpperSectionSum(p.scores as unknown as Record<string, number | null>) + getUpperSectionBonus(p.scores as unknown as Record<string, number | null>))} />
 
       {/* Lower Section */}
       <Box sx={{ bgcolor: 'rgba(255,255,255,0.02)', px: 1, py: 0.5 }}>
@@ -147,13 +148,13 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
           {t('games.kniffel.lower_section', 'Unterer Teil')}
         </Typography>
       </Box>
-      <Row label={t('games.kniffel.cat.three_of_a_kind', 'Dreierpasch')} hint={t('games.kniffel.hint.three_of_a_kind', 'Alle Augen zählen')} category="three_of_a_kind" />
-      <Row label={t('games.kniffel.cat.four_of_a_kind', 'Viererpasch')} hint={t('games.kniffel.hint.four_of_a_kind', 'Alle Augen zählen')} category="four_of_a_kind" />
-      <Row label={t('games.kniffel.cat.full_house', 'Full House')} hint={t('games.kniffel.hint.full_house', '3 + 2 gleiche · 25')} category="full_house" />
-      <Row label={t('games.kniffel.cat.small_straight', 'Kleine Straße')} hint={t('games.kniffel.hint.small_straight', '4 in Folge · 30')} category="small_straight" />
-      <Row label={t('games.kniffel.cat.large_straight', 'Große Straße')} hint={t('games.kniffel.hint.large_straight', '5 in Folge · 40')} category="large_straight" />
-      <Row label={t('games.kniffel.cat.kniffel', 'Kniffel')} hint={t('games.kniffel.hint.kniffel', '5 gleiche · 50')} category="kniffel" />
-      <Row label={t('games.kniffel.cat.chance', 'Chance')} hint={t('games.kniffel.hint.chance', 'Alle Augen zählen')} category="chance" />
+      <KniffelRow label={t('games.kniffel.cat.three_of_a_kind', 'Dreierpasch')} hint={t('games.kniffel.hint.three_of_a_kind', 'Alle Augen zählen')} category="three_of_a_kind" players={players} renderCell={renderCell} />
+      <KniffelRow label={t('games.kniffel.cat.four_of_a_kind', 'Viererpasch')} hint={t('games.kniffel.hint.four_of_a_kind', 'Alle Augen zählen')} category="four_of_a_kind" players={players} renderCell={renderCell} />
+      <KniffelRow label={t('games.kniffel.cat.full_house', 'Full House')} hint={t('games.kniffel.hint.full_house', '3 + 2 gleiche · 25')} category="full_house" players={players} renderCell={renderCell} />
+      <KniffelRow label={t('games.kniffel.cat.small_straight', 'Kleine Straße')} hint={t('games.kniffel.hint.small_straight', '4 in Folge · 30')} category="small_straight" players={players} renderCell={renderCell} />
+      <KniffelRow label={t('games.kniffel.cat.large_straight', 'Große Straße')} hint={t('games.kniffel.hint.large_straight', '5 in Folge · 40')} category="large_straight" players={players} renderCell={renderCell} />
+      <KniffelRow label={t('games.kniffel.cat.kniffel', 'Kniffel')} hint={t('games.kniffel.hint.kniffel', '5 gleiche · 50')} category="kniffel" players={players} renderCell={renderCell} />
+      <KniffelRow label={t('games.kniffel.cat.chance', 'Chance')} hint={t('games.kniffel.hint.chance', 'Alle Augen zählen')} category="chance" players={players} renderCell={renderCell} />
 
       {/* Kniffel Bonus row, custom logic because it can be clicked multiple times */}
       <Box sx={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)', alignItems: 'center' }}>
@@ -186,7 +187,7 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
         })}
       </Box>
 
-      <SumRow label={t('games.kniffel.lower_total', 'Summe unten')} values={players.map(p => getLowerSectionSum(p.scores as unknown as Record<string, number | null>))} />
+      <KniffelSumRow label={t('games.kniffel.lower_total', 'Summe unten')} values={players.map(p => getLowerSectionSum(p.scores as unknown as Record<string, number | null>))} />
 
       {/* Score Modal */}
       <Modal open={!!selectedCell} onClose={() => setSelectedCell(null)}>
