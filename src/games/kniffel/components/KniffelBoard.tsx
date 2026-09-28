@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Typography, Paper, Button, Modal } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import type { KniffelPlayer, KniffelCategory, KniffelScores } from '../logic/types';
+import type { KniffelPlayer, KniffelCategory } from '../logic/types';
 import { getUpperSectionSum, getUpperSectionBonus, getLowerSectionSum, getTotalScore } from '../logic/kniffelScoring';
 import { Die3D } from '../../../components/games/Die3D';
 
@@ -119,7 +119,7 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
         {players.map((p, idx) => (
           <Box key={p.id} sx={{ flex: 1, textAlign: 'center', p: 1, borderLeft: '1px solid rgba(255,255,255,0.1)', color: idx === activePlayerIndex ? '#E3B268' : 'inherit' }}>
             <Typography variant="subtitle2" fontWeight="bold">{p.name}</Typography>
-            <Typography variant="h6" sx={{ fontFamily: 'monospace' }}>{getTotalScore(p.scores)}</Typography>
+            <Typography variant="h6" sx={{ fontFamily: 'monospace' }}>{getTotalScore(p.scores as unknown as Record<string, number | null>)}</Typography>
           </Box>
         ))}
       </Box>
@@ -137,9 +137,9 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
       <Row label={t('games.kniffel.cat.fives', 'Fünfer')} hint={t('games.kniffel.hint.fives', 'Summe aller Fünfen')} category="fives" dieFace={5} />
       <Row label={t('games.kniffel.cat.sixes', 'Sechser')} hint={t('games.kniffel.hint.sixes', 'Summe aller Sechsen')} category="sixes" dieFace={6} />
 
-      <SumRow label={t('games.kniffel.subtotal', 'Zwischensumme')} values={players.map(p => getUpperSectionSum(p.scores))} />
-      <SumRow label={t('games.kniffel.bonus', 'Bonus ab 63')} values={players.map(p => getUpperSectionBonus(p.scores) ? '+35' : '0')} />
-      <SumRow label={t('games.kniffel.upper_total', 'Summe oben')} values={players.map(p => getUpperSectionSum(p.scores) + getUpperSectionBonus(p.scores))} />
+      <SumRow label={t('games.kniffel.subtotal', 'Zwischensumme')} values={players.map(p => getUpperSectionSum(p.scores as unknown as Record<string, number | null>))} />
+      <SumRow label={t('games.kniffel.bonus', 'Bonus ab 63')} values={players.map(p => getUpperSectionBonus(p.scores as unknown as Record<string, number | null>) ? '+35' : '0')} />
+      <SumRow label={t('games.kniffel.upper_total', 'Summe oben')} values={players.map(p => getUpperSectionSum(p.scores as unknown as Record<string, number | null>) + getUpperSectionBonus(p.scores as unknown as Record<string, number | null>))} />
 
       {/* Lower Section */}
       <Box sx={{ bgcolor: 'rgba(255,255,255,0.02)', px: 1, py: 0.5 }}>
@@ -186,7 +186,7 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
         })}
       </Box>
 
-      <SumRow label={t('games.kniffel.lower_total', 'Summe unten')} values={players.map(p => getLowerSectionSum(p.scores))} />
+      <SumRow label={t('games.kniffel.lower_total', 'Summe unten')} values={players.map(p => getLowerSectionSum(p.scores as unknown as Record<string, number | null>))} />
 
       {/* Score Modal */}
       <Modal open={!!selectedCell} onClose={() => setSelectedCell(null)}>

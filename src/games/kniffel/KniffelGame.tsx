@@ -2,17 +2,17 @@ import React, { useReducer, useEffect, useState } from 'react';
 import { Box, Typography, Button, IconButton, Tabs, Tab, Tooltip } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
 import { useTranslation } from 'react-i18next';
-import { usePageTitle } from '../../../context/TitleContext';
-import { storage } from '../../../lib/storage';
-import { GameLayout } from '../../../components/Layout/GameLayout';
-import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
+import { usePageTitle } from '../../context/TitleContext';
+import { storage } from '../../lib/storage';
+import { GameLayout } from '../../components/Layout/GameLayout';
+import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 
-import { kniffelReducer, INITIAL_KNIFFEL_STATE } from '../logic/kniffelReducer';
-import { evaluatePossibleScores } from '../logic/kniffelScoring';
-import type { KniffelState, KniffelCategory } from '../logic/types';
-import { KniffelBoard } from './KniffelBoard';
-import { KniffelDiceRoller } from './KniffelDiceRoller';
-import { initKniffelI18n } from '../i18n';
+import { kniffelReducer, INITIAL_KNIFFEL_STATE } from './logic/kniffelReducer';
+import { evaluatePossibleScores } from './logic/kniffelScoring';
+import type { KniffelState, KniffelCategory, KniffelPlayer } from './logic/types';
+import { KniffelBoard } from './components/KniffelBoard';
+import { KniffelDiceRoller } from './components/KniffelDiceRoller';
+import { initKniffelI18n } from './i18n';
 
 const STORAGE_KEY_KNIFFEL_STATE = 'kniffel_current_game';
 
@@ -84,7 +84,7 @@ export const KniffelGame: React.FC = () => {
             variant="scrollable"
             scrollButtons="auto"
           >
-            {state.players.map((p, idx) => (
+            {state.players.map((p: KniffelPlayer, idx: number) => (
               <Tab
                 key={p.id}
                 label={`${idx + 1}. ${p.name}`}
@@ -136,7 +136,7 @@ export const KniffelGame: React.FC = () => {
       <ConfirmDialog
         open={resetDialogOpen}
         title={t('games.kniffel.new_game', 'Neues Spiel')}
-        content={t('games.kniffel.new_game_confirm', 'Möchtest du wirklich eine neue Runde starten? Der aktuelle Spielstand geht verloren.')}
+        message={t('games.kniffel.new_game_confirm', 'Möchtest du wirklich eine neue Runde starten? Der aktuelle Spielstand geht verloren.')}
         confirmText={t('games.kniffel.new_game', 'Neustart')}
         onConfirm={() => {
           dispatch({ type: 'NEW_GAME' });
