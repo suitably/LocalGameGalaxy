@@ -1,0 +1,26 @@
+### 📋 Implementation Plan: Game: Dart Checker
+
+Hello! I have reviewed the issue and your request to build a Darts Checker game to track scores during a match. You also asked: **"Was ist denn best practice?" (What is the best practice?)**
+
+For dart tracking (e.g., 301/501), the best practice is:
+1. **Inputs:** A numeric keypad (1-20, Bull, Miss) along with multipliers (Single, Double, Triple).
+2. **Game Modes:** Start with a specific score (e.g., 501 or 301) and count down to exactly 0. You requested "auf oder abzählen" (counting up or down), so I will also include a mode starting from 0 and counting up indefinitely.
+3. **Finish:** In typical X01 countdowns, ending on a "Double" is standard, but I can make this a toggleable setting if you'd like a simpler "Straight Out" (any score to finish). Let me know if you want the Double-Out rule enforced strictly.
+4. **Legs/Sets (Optional):** Usually, a match is played Best of X Legs. I'll stick to basic point tracking per leg for now to keep it straightforward, as per your request.
+
+Here is my plan to implement this:
+
+1. **Create the Darts Module (`src/games/darts`):**
+   - **`DartsGame.tsx`**: Main view and layout orchestrator.
+   - **`useDartsGame.ts`**: The core state hook (X01 logic, tracking scores, undo logic, mode switching).
+   - **`components/DartsInput.tsx`**: The keypad for user input (Numbers 1-20, Bull (25), Bullseye (50), Multipliers).
+   - **`components/DartsScoreboard.tsx`**: To display player names, remaining scores, and a history of throws.
+2. **Register the Game:**
+   - Add it to `src/lib/gameRegistry.tsx` (using an icon like `SportsMotorsportsIcon` or similar, since there is no native dart icon, maybe `AdsClickIcon`).
+3. **Translations:**
+   - Add EN and DE strings in `public/locales` (e.g., "Dart Checker", "301 Count Down", "Count Up", "Single", "Double", "Triple", "Bull").
+4. **Quality Gates & Docs:**
+   - Update `docs/tech/architecture.md` and `CHANGELOG.md`.
+   - Run the budget checker, architecture linter, and tests.
+
+Does this plan look good to you? Do you want me to add multiple player support or just a single player tracker for now? I will implement it for multiple players (at least 2) by default since it's a match. I will await your approval (e.g. by saying `/send`) before starting code!
