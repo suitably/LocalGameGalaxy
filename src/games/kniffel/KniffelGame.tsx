@@ -1,6 +1,7 @@
 import React, { useReducer, useEffect, useState } from 'react';
 import { Box, Typography, Button, IconButton, Tabs, Tab, Tooltip } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
+import CasinoIcon from '@mui/icons-material/Casino';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
 import { storage } from '../../lib/storage';
@@ -15,6 +16,7 @@ import { KniffelDiceRoller } from './components/KniffelDiceRoller';
 import { initKniffelI18n } from './i18n';
 
 const STORAGE_KEY_KNIFFEL_STATE = 'kniffel_current_game';
+const STORAGE_KEY_SHOW_DICE = 'kniffel_show_dice';
 
 initKniffelI18n();
 
@@ -30,11 +32,16 @@ export const KniffelGame: React.FC = () => {
     return initial;
   });
 
+  const [showDice, setShowDice] = useState<boolean>(() => storage.get(STORAGE_KEY_SHOW_DICE, 'true') === 'true');
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   useEffect(() => {
     storage.setJson(STORAGE_KEY_KNIFFEL_STATE, state);
   }, [state]);
+
+  useEffect(() => {
+    storage.set(STORAGE_KEY_SHOW_DICE, String(showDice));
+  }, [showDice]);
 
   const handleRollDice = (newDice: number[]) => {
     dispatch({ type: 'ROLL_DICE', dice: newDice });
@@ -53,7 +60,7 @@ export const KniffelGame: React.FC = () => {
   return (
     <GameLayout maxWidth="md">
       {/* Header controls */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
         <Typography
           variant="h4"
           component="h1"
@@ -68,11 +75,26 @@ export const KniffelGame: React.FC = () => {
           {t('games.kniffel.title', 'Kniffel')}
         </Typography>
 
-        <Tooltip title={t('games.kniffel.new_game', 'Neues Spiel')}>
-          <IconButton onClick={() => setResetDialogOpen(true)} color="inherit" size="small">
-            <ReplayIcon />
-          </IconButton>
-        </Tooltip>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Tooltip title={t('games.kniffel.show_dice_tooltip', 'Virtuelle Würfel ein-/ausblenden')}>
+            <Button
+              variant={showDice ? 'contained' : 'outlined'}
+              size="small"
+              color="secondary"
+              startIcon={<CasinoIcon />}
+              onClick={() => setShowDice((prev) => !prev)}
+              sx={{ borderRadius: 50, fontWeight: 700, textTransform: 'none' }}
+            >
+              {showDice ? t('games.kniffel.hide_dice', 'Würfel') : t('games.kniffel.show_dice', 'Würfel')}
+            </Button>
+          </Tooltip>
+
+          <Tooltip title={t('games.kniffel.new_game', 'Neues Spiel')}>
+            <IconButton onClick={() => setResetDialogOpen(true)} color="inherit" size="small">
+              <ReplayIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
 
       {/* Players Tabs */}
@@ -96,14 +118,16 @@ export const KniffelGame: React.FC = () => {
       )}
 
       {/* Dice Roller */}
-      <KniffelDiceRoller
-        dice={state.dice}
-        heldDice={state.heldDice}
-        rollCount={state.rollCount}
-        onRoll={handleRollDice}
-        onToggleHold={handleToggleHold}
-        disabled={state.isGameOver}
-      />
+      {showDice && (
+        <KniffelDiceRoller
+          dice={state.dice}
+          heldDice={state.heldDice}
+          rollCount={state.rollCount}
+          onRoll={handleRollDice}
+          onToggleHold={handleToggleHold}
+          disabled={state.isGameOver}
+        />
+      )}
 
       {/* Score Board */}
       <KniffelBoard
@@ -113,6 +137,7 @@ export const KniffelGame: React.FC = () => {
         rollCount={state.rollCount}
         onScoreCategory={handleScoreCategory}
         disabled={state.isGameOver}
+        showDice={showDice}
       />
 
       {/* Game Over Message */}

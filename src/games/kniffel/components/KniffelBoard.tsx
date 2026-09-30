@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Box, Typography, Paper, Button, Modal } from '@mui/material';
+import { Box, Typography, Paper, Modal } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { KniffelPlayer, KniffelCategory } from '../logic/types';
 import { getUpperSectionSum, getUpperSectionBonus, getLowerSectionSum, getTotalScore } from '../logic/kniffelScoring';
 import { Die3D } from '../../../components/games/Die3D';
+import { KniffelScoreInput } from './KniffelScoreInput';
 
 const KniffelRow = ({ label, hint, category, dieFace, players, renderCell }: { label: string; hint: string; category: KniffelCategory; dieFace?: number; players: KniffelPlayer[]; renderCell: (cat: KniffelCategory, idx: number) => React.ReactNode }) => (
   <Box sx={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)', alignItems: 'center' }}>
@@ -40,6 +41,7 @@ interface KniffelBoardProps {
   rollCount: number;
   onScoreCategory: (category: KniffelCategory, score: number) => void;
   disabled?: boolean;
+  showDice: boolean;
 }
 
 export const KniffelBoard: React.FC<KniffelBoardProps> = ({
@@ -49,12 +51,14 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
   rollCount,
   onScoreCategory,
   disabled = false,
+  showDice,
 }) => {
   const { t } = useTranslation();
   const [selectedCell, setSelectedCell] = useState<{ category: KniffelCategory; playerIdx: number } | null>(null);
 
   const handleCellClick = (category: KniffelCategory, playerIdx: number) => {
-    if (disabled || playerIdx !== activePlayerIndex || rollCount === 0) return;
+    if (disabled || playerIdx !== activePlayerIndex) return;
+    if (showDice && rollCount === 0) return; // if dice are shown, you must roll first
     const player = players[playerIdx];
     if (player.scores[category] !== null && category !== 'kniffel_bonus') return; // Already scored, unless it's bonus
 
@@ -85,10 +89,10 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
       displayValue = String(score * 50);
     }
 
-    const isClickable = !disabled && isActive && !isScored && rollCount > 0;
+    const isClickable = !disabled && isActive && !isScored && (!showDice || rollCount > 0);
 
     // Highlight possible score if clickable
-    const highlightPotential = isClickable && possibleScores[category] > 0;
+    const highlightPotential = isClickable && showDice && possibleScores[category] > 0;
 
     return (
       <Box
@@ -165,13 +169,18 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
         {players.map((p, idx) => {
           const s = p.scores.kniffel_bonus;
           const display = s ? `${s}x (50)` : '–';
-          const canScoreBonus = !disabled && idx === activePlayerIndex && rollCount > 0 && p.scores.kniffel !== null && p.scores.kniffel > 0 && possibleScores.kniffel_bonus > 0;
+          // When dice hidden, allow manual kniffel bonus if they have kniffel. When dice shown, auto check
+          const canScoreBonus = !disabled && idx === activePlayerIndex && p.scores.kniffel !== null && p.scores.kniffel > 0 && (!showDice || (rollCount > 0 && possibleScores.kniffel_bonus > 0));
           return (
             <Box
               key={idx}
               onClick={() => {
                 if (canScoreBonus) {
-                  onScoreCategory('kniffel_bonus', 50);
+                  if (showDice) {
+                    onScoreCategory('kniffel_bonus', 50);
+                  } else {
+                     setSelectedCell({ category: 'kniffel_bonus', playerIdx: idx });
+                  }
                 }
               }}
               sx={{
@@ -203,26 +212,13 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
               <Typography variant="body2" mb={3} color="text.secondary">
                 {players[selectedCell.playerIdx].name}
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="large"
-                  onClick={() => handleScoreConfirm(possibleScores[selectedCell.category])}
-                >
-                  {possibleScores[selectedCell.category]} {t('games.kniffel.points', 'Punkte eintragen')}
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={() => handleScoreConfirm(0)}
-                >
-                  {t('games.kniffel.strike', 'Streichen (0)')}
-                </Button>
-                <Button variant="text" onClick={() => setSelectedCell(null)}>
-                  {t('common.cancel', 'Abbrechen')}
-                </Button>
-              </Box>
+              <KniffelScoreInput
+                category={selectedCell.category}
+                showDice={showDice}
+                calculatedScore={possibleScores[selectedCell.category]}
+                onConfirm={handleScoreConfirm}
+                onCancel={() => setSelectedCell(null)}
+              />
             </>
           )}
         </Box>
