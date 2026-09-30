@@ -62,8 +62,7 @@ export function kniffelReducer(state: KniffelState, action: KniffelAction): Knif
     }
 
     case 'SCORE_CATEGORY': {
-      if (state.rollCount === 0) return state; // Must roll first
-
+      // Removed rollCount === 0 check to allow manual entry
       const currentPlayer = state.players[state.activePlayerIndex];
       const isBonus = action.category === 'kniffel_bonus';
 
