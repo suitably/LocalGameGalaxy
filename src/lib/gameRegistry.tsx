@@ -10,6 +10,7 @@ import AbcIcon from '@mui/icons-material/Abc';
 import Grid4x4Icon from '@mui/icons-material/Grid4x4';
 import StyleIcon from '@mui/icons-material/Style';
 import TableBarIcon from '@mui/icons-material/TableBar';
+import AdsClickIcon from '@mui/icons-material/AdsClick';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import PianoIcon from '@mui/icons-material/Piano';
 import { SongsProvider } from '../games/melodiq';
@@ -52,9 +53,22 @@ const WordleGame = lazy(() => import('../games/wordle').then(m => ({ default: m.
 const SudokuGame = lazy(() => import('../games/sudoku').then(m => ({ default: m.SudokuGame })));
 const PartyLobby = lazy(() => import('../features/party/PartyLobby').then(m => ({ default: m.PartyLobby })));
 const TabletopGame = lazy(() => import('../games/tabletop').then(m => ({ default: m.TabletopGame })));
+const DartsGame = lazy(() => import('../games/darts').then(m => ({ default: m.DartsGame })));
 
 class GameRegistry {
     private games: GameDefinition[] = [
+        {
+            id: 'darts',
+            route: 'games/darts',
+            titleKey: 'games.darts.title',
+            descriptionKey: 'games.darts.description',
+            icon: <AdsClickIcon sx={{ fontSize: 72, mb: 2 }} />,
+            colorStart: '#ef4444',
+            colorEnd: '#b91c1c',
+            hoverColor: '#b91c1c',
+            category: 'party',
+            component: <DartsGame />
+        },
         {
             id: 'qwixx',
             route: 'games/qwixx',

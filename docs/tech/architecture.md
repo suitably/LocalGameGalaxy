@@ -81,6 +81,13 @@ src/
 
 ### 3.1 Game Modules (`src/games/*`)
 
+9. **Dart Checker (`src/games/darts`)**:
+   - Points tracker for dart matches.
+   - **Offline-First Hook Architecture**: Core game logic (score calculation, X01 rules, count up, undo functionality) isolated in `useDartsGame.ts`.
+   - **Persisted State**: Auto-persists all match state to IndexedDB/localStorage via `STORAGE_KEY = 'darts_game_state'` to prevent data loss on reload.
+   - **Modular UI**: Decomposed into `DartsInput` (keypad and multipliers), `DartsScoreboard` (player totals and throw history), and `DartsSettings` (game mode configuration).
+
+
 Each game is completely self-contained. It registers dynamically via `src/lib/gameRegistry.tsx` (Open-Closed Principle), exports its entry component, and manages its internal state via a state machine, reducer, or custom hook. **Cross-game imports between `src/games/<A>` and `src/games/<B>` are strictly forbidden.**
 
 1. **GuessArt (`src/games/guessart`)**:
