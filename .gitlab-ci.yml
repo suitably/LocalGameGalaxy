@@ -1,0 +1,96 @@
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+stages:
+  - setup
+  - code_quality
+  - test
+  - security
+  - build
+
+variables:
+  NODE_VERSION: "24"
+
+default:
+  image: node:${NODE_VERSION}
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm/
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+
+# -- Setup Stage --
+install_dependencies:
+  stage: setup
+  script:
+    - npm ci
+  artifacts:
+    paths:
+      - node_modules/
+    expire_in: 1 hour
+
+# -- Code Quality Stage --
+lint:
+  stage: code_quality
+  script:
+    - npm run lint
+  needs: ["install_dependencies"]
+
+architecture_check:
+  stage: code_quality
+  script:
+    - npm run check:architecture
+  needs: ["install_dependencies"]
+
+component_budget:
+  stage: code_quality
+  script:
+    - npm run check:budget
+  needs: ["install_dependencies"]
+
+duplicates_check:
+  stage: code_quality
+  script:
+    - npm run check:duplicates
+  needs: ["install_dependencies"]
+
+docs_sync_check:
+  stage: code_quality
+  script:
+    - npm run check:docs
+  needs: ["install_dependencies"]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# -- Test Stage --
+unit_tests:
+  stage: test
+  script:
+    - npm test
+  needs: ["install_dependencies"]
+
+# -- Security Stage --
+npm_audit:
+  stage: security
+  script:
+    - npm audit --audit-level=high
+  allow_failure: true
+  needs: ["install_dependencies"]
+
+# Note: SAST and Secret-Detection jobs are injected by the include templates
+
+# -- Build Stage --
+build_app:
+  stage: build
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - dev-dist/
+      - dist/
+    expire_in: 1 week
+  needs: ["install_dependencies", "lint", "unit_tests"]
