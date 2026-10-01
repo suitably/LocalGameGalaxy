@@ -78,15 +78,17 @@ export function DartsScoreboard({ state }: Props) {
         elevation={4}
         sx={{
           flex: { xs: 'none', md: 1 },
-          p: 3,
+          p: { xs: 1.5, md: 3 },
           bgcolor: winner ? 'success.light' : 'primary.light',
           color: 'primary.contrastText',
-          position: 'relative',
+          position: { xs: 'sticky', md: 'relative' },
+          top: { xs: 0, md: 'auto' },
+          zIndex: { xs: 10, md: 1 },
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: { xs: 200, md: 'auto' },
+          minHeight: { xs: 'auto', md: 'auto' },
         }}
       >
         {winner && (
@@ -101,7 +103,12 @@ export function DartsScoreboard({ state }: Props) {
 
         <Typography
           variant="h1"
-          sx={{ my: 2, fontWeight: 'bold', fontSize: { xs: '4rem', sm: '5rem', md: '6rem' } }}
+          sx={{
+            my: { xs: 0.5, md: 2 },
+            fontWeight: 'bold',
+            fontSize: { xs: '3.5rem', sm: '5rem', md: '6rem' },
+            lineHeight: 1,
+          }}
         >
           {getPlayerScore(focusPlayer.id)}
         </Typography>
@@ -116,13 +123,13 @@ export function DartsScoreboard({ state }: Props) {
         <Paper
           elevation={1}
           sx={{
-            flex: { xs: 'none', md: 1 },
+            flex: 1,
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
           }}
         >
-          <TableContainer sx={{ flex: 1, maxHeight: { xs: 200, md: 'none' } }}>
+          <TableContainer sx={{ flex: 1, maxHeight: 'none' }}>
             <Table size="small" stickyHeader>
               <TableHead>
                 <TableRow>
