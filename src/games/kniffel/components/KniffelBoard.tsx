@@ -40,6 +40,7 @@ interface KniffelBoardProps {
   possibleScores: Record<KniffelCategory, number>;
   rollCount: number;
   onScoreCategory: (category: KniffelCategory, score: number) => void;
+  onSwitchPlayer: (index: number) => void;
   disabled?: boolean;
   showDice: boolean;
 }
@@ -50,6 +51,7 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
   possibleScores,
   rollCount,
   onScoreCategory,
+  onSwitchPlayer,
   disabled = false,
   showDice,
 }) => {
@@ -121,12 +123,31 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
       {/* Header */}
       <Box sx={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.2)', bgcolor: '#16342B' }}>
         <Box sx={{ flex: 2, p: 1 }} />
-        {players.map((p, idx) => (
-          <Box key={p.id} sx={{ flex: 1, textAlign: 'center', p: 1, borderLeft: '1px solid rgba(255,255,255,0.1)', color: idx === activePlayerIndex ? '#E3B268' : 'inherit' }}>
-            <Typography variant="subtitle2" fontWeight="bold">{p.name}</Typography>
-            <Typography variant="h6" sx={{ fontFamily: 'monospace' }}>{getTotalScore(p.scores as unknown as Record<string, number | null>)}</Typography>
-          </Box>
-        ))}
+        {players.map((p, idx) => {
+          const isActive = idx === activePlayerIndex;
+          return (
+            <Box
+              key={p.id}
+              onClick={() => onSwitchPlayer(idx)}
+              sx={{
+                flex: 1,
+                textAlign: 'center',
+                p: 1,
+                borderLeft: '1px solid rgba(255,255,255,0.1)',
+                color: isActive ? '#E3B268' : 'inherit',
+                bgcolor: isActive ? 'rgba(255,255,255,0.05)' : 'transparent',
+                cursor: 'pointer',
+                borderBottom: isActive ? '2px solid #E3B268' : '2px solid transparent',
+                '&:hover': {
+                  bgcolor: 'rgba(255,255,255,0.1)'
+                }
+              }}
+            >
+              <Typography variant="subtitle2" fontWeight="bold">{p.name}</Typography>
+              <Typography variant="h6" sx={{ fontFamily: 'monospace' }}>{getTotalScore(p.scores as unknown as Record<string, number | null>)}</Typography>
+            </Box>
+          );
+        })}
       </Box>
 
       {/* Upper Section */}

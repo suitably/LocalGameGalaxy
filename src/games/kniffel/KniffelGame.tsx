@@ -1,5 +1,5 @@
 import React, { useReducer, useEffect, useState } from 'react';
-import { Box, Typography, Button, IconButton, Tabs, Tab, Tooltip } from '@mui/material';
+import { Box, Typography, Button, IconButton, Tooltip } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
 import CasinoIcon from '@mui/icons-material/Casino';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +11,7 @@ import UndoIcon from '@mui/icons-material/Undo';
 
 import { kniffelReducer, INITIAL_KNIFFEL_STATE } from './logic/kniffelReducer';
 import { evaluatePossibleScores } from './logic/kniffelScoring';
-import type { KniffelState, KniffelCategory, KniffelPlayer } from './logic/types';
+import type { KniffelState, KniffelCategory } from './logic/types';
 import { KniffelBoard } from './components/KniffelBoard';
 import { KniffelDiceRoller } from './components/KniffelDiceRoller';
 import { initKniffelI18n } from './i18n';
@@ -61,21 +61,7 @@ export const KniffelGame: React.FC = () => {
   return (
     <GameLayout maxWidth="md">
       {/* Header controls */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
-        <Typography
-          variant="h4"
-          component="h1"
-          sx={{
-            fontWeight: 900,
-            fontSize: { xs: '1.6rem', sm: '2.1rem' },
-            background: 'linear-gradient(90deg, #ef4444, #991b1b)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}
-        >
-          {t('games.kniffel.title', 'Kniffel')}
-        </Typography>
-
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Tooltip title={t('games.kniffel.show_dice_tooltip', 'Virtuelle Würfel ein-/ausblenden')}>
             <Button
@@ -115,26 +101,6 @@ export const KniffelGame: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Players Tabs */}
-      {state.players.length > 1 && (
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
-          <Tabs
-            value={state.activePlayerIndex}
-            onChange={(_, val) => dispatch({ type: 'SWITCH_PLAYER', index: val })}
-            variant="scrollable"
-            scrollButtons="auto"
-          >
-            {state.players.map((p: KniffelPlayer, idx: number) => (
-              <Tab
-                key={p.id}
-                label={`${idx + 1}. ${p.name}`}
-                sx={{ textTransform: 'none', fontWeight: 700 }}
-              />
-            ))}
-          </Tabs>
-        </Box>
-      )}
-
       {/* Dice Roller */}
       {showDice && (
         <KniffelDiceRoller
@@ -154,6 +120,7 @@ export const KniffelGame: React.FC = () => {
         possibleScores={possibleScores}
         rollCount={state.rollCount}
         onScoreCategory={handleScoreCategory}
+        onSwitchPlayer={(idx) => dispatch({ type: 'SWITCH_PLAYER', index: idx })}
         disabled={state.isGameOver}
         showDice={showDice}
       />
