@@ -223,7 +223,7 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
       <Modal open={!!selectedCell} onClose={() => setSelectedCell(null)}>
         <Box sx={{
           position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-          width: 300, bgcolor: 'background.paper', border: '2px solid #000', boxShadow: 24, p: 4, borderRadius: 2
+          width: { xs: '90%', sm: 400, md: 500 }, bgcolor: 'background.paper', border: '2px solid #000', boxShadow: 24, p: 4, borderRadius: 2
         }}>
           {selectedCell && (
             <>

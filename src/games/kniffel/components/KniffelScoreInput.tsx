@@ -41,15 +41,15 @@ export const KniffelScoreInput: React.FC<KniffelScoreInputProps> = ({
       case 'three_of_a_kind':
       case 'four_of_a_kind':
       case 'chance':
-        // Not practical to show 30 buttons. Let's provide a number input or a grid of numbers 5..30
+        // Grid of numbers 5..30
         return (
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 1, maxHeight: 200, overflowY: 'auto' }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: 1, width: '100%', maxHeight: 300, overflowY: 'auto' }}>
             {Array.from({ length: 26 }, (_, i) => i + 5).map((score) => (
               <Button key={score} variant="outlined" onClick={() => onConfirm(score)} sx={{ minWidth: 0, p: 0.5 }}>
                 {score}
               </Button>
             ))}
-            <Button variant="outlined" color="error" onClick={() => onConfirm(0)} sx={{ gridColumn: 'span 5' }}>
+            <Button variant="outlined" color="error" onClick={() => onConfirm(0)} sx={{ gridColumn: '1 / -1' }}>
               0
             </Button>
           </Box>
