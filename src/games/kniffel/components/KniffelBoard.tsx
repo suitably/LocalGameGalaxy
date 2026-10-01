@@ -59,13 +59,13 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
   const handleCellClick = (category: KniffelCategory, playerIdx: number) => {
     if (disabled || playerIdx !== activePlayerIndex) return;
     if (showDice && rollCount === 0) return; // if dice are shown, you must roll first
+
     const player = players[playerIdx];
-    if (player.scores[category] !== null && category !== 'kniffel_bonus') return; // Already scored, unless it's bonus
 
     // For Kniffel bonus, we only allow scoring if they already have a Kniffel, and they rolled another one (possibleScores.kniffel_bonus > 0)
     if (category === 'kniffel_bonus') {
        if (player.scores.kniffel === null || player.scores.kniffel === 0) return;
-       if (possibleScores.kniffel_bonus === 0) return;
+       if (showDice && possibleScores.kniffel_bonus === 0) return;
     }
 
     setSelectedCell({ category, playerIdx });
@@ -89,10 +89,10 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
       displayValue = String(score * 50);
     }
 
-    const isClickable = !disabled && isActive && !isScored && (!showDice || rollCount > 0);
+    const isClickable = !disabled && isActive && (!showDice || rollCount > 0);
 
     // Highlight possible score if clickable
-    const highlightPotential = isClickable && showDice && possibleScores[category] > 0;
+    const highlightPotential = isClickable && showDice && possibleScores[category] > 0 && !isScored;
 
     return (
       <Box

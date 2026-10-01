@@ -37,6 +37,16 @@ export interface KniffelPlayer {
   scores: KniffelScores;
 }
 
+export interface KniffelMoveHistoryEntry {
+  playerIndex: number;
+  category: KniffelCategory;
+  previousScore: number | null;
+  previousActivePlayerIndex: number;
+  previousDice: number[];
+  previousHeldDice: boolean[];
+  previousRollCount: number;
+}
+
 export interface KniffelState {
   players: KniffelPlayer[];
   activePlayerIndex: number;
@@ -44,12 +54,14 @@ export interface KniffelState {
   heldDice: boolean[];
   rollCount: number;
   isGameOver: boolean;
+  moveHistory: KniffelMoveHistoryEntry[];
 }
 
 export type KniffelAction =
   | { type: 'ROLL_DICE'; dice: number[] }
   | { type: 'TOGGLE_HOLD_DIE'; index: number }
   | { type: 'SCORE_CATEGORY'; category: KniffelCategory; score: number }
+  | { type: 'UNDO_MOVE' }
   | { type: 'NEW_GAME' }
   | { type: 'SET_PLAYERS'; names: string[] }
   | { type: 'SWITCH_PLAYER'; index: number };

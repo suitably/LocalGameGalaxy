@@ -28,6 +28,7 @@ export const INITIAL_KNIFFEL_STATE: KniffelState = {
   heldDice: [false, false, false, false, false],
   rollCount: 0,
   isGameOver: false,
+  moveHistory: [],
 };
 
 const checkGameOver = (players: KniffelPlayer[]): boolean => {
@@ -67,11 +68,13 @@ export function kniffelReducer(state: KniffelState, action: KniffelAction): Knif
       const isBonus = action.category === 'kniffel_bonus';
 
       let newScoreValue: number;
+      const previousScore = currentPlayer.scores[action.category];
+
       if (isBonus) {
          // Kniffel bonus is special, it increments
-         newScoreValue = (currentPlayer.scores.kniffel_bonus || 0) + 1;
+         newScoreValue = (previousScore || 0) + 1;
       } else {
-        if (currentPlayer.scores[action.category] !== null) return state; // Already scored
+        // Now allows overwriting: removing the check for !== null
         newScoreValue = action.score;
       }
 
@@ -100,6 +103,46 @@ export function kniffelReducer(state: KniffelState, action: KniffelAction): Knif
         heldDice: [false, false, false, false, false],
         rollCount: 0,
         isGameOver: isOver,
+        moveHistory: [
+          ...state.moveHistory,
+          {
+            playerIndex: state.activePlayerIndex,
+            category: action.category,
+            previousScore,
+            previousActivePlayerIndex: state.activePlayerIndex,
+            previousDice: [...state.dice],
+            previousHeldDice: [...state.heldDice],
+            previousRollCount: state.rollCount,
+          }
+        ]
+      };
+    }
+
+    case 'UNDO_MOVE': {
+      if (state.moveHistory.length === 0) return state;
+
+      const lastMove = state.moveHistory[state.moveHistory.length - 1];
+      const newHistory = state.moveHistory.slice(0, -1);
+
+      const newPlayers = [...state.players];
+      const player = newPlayers[lastMove.playerIndex];
+      newPlayers[lastMove.playerIndex] = {
+        ...player,
+        scores: {
+          ...player.scores,
+          [lastMove.category]: lastMove.previousScore,
+        }
+      };
+
+      return {
+        ...state,
+        players: newPlayers,
+        activePlayerIndex: lastMove.previousActivePlayerIndex,
+        dice: lastMove.previousDice,
+        heldDice: lastMove.previousHeldDice,
+        rollCount: lastMove.previousRollCount,
+        isGameOver: false, // if we undo, the game cannot be over
+        moveHistory: newHistory,
       };
     }
 
@@ -116,6 +159,7 @@ export function kniffelReducer(state: KniffelState, action: KniffelAction): Knif
         heldDice: [false, false, false, false, false],
         rollCount: 0,
         isGameOver: false,
+        moveHistory: [],
       };
     }
 
@@ -138,6 +182,7 @@ export function kniffelReducer(state: KniffelState, action: KniffelAction): Knif
         heldDice: [false, false, false, false, false],
         rollCount: 0,
         isGameOver: false,
+        moveHistory: [],
       };
     }
 

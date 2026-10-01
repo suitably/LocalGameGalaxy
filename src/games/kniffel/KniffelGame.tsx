@@ -7,6 +7,7 @@ import { usePageTitle } from '../../context/TitleContext';
 import { storage } from '../../lib/storage';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
+import UndoIcon from '@mui/icons-material/Undo';
 
 import { kniffelReducer, INITIAL_KNIFFEL_STATE } from './logic/kniffelReducer';
 import { evaluatePossibleScores } from './logic/kniffelScoring';
@@ -87,6 +88,23 @@ export const KniffelGame: React.FC = () => {
             >
               {showDice ? t('games.kniffel.hide_dice', 'Würfel') : t('games.kniffel.show_dice', 'Würfel')}
             </Button>
+          </Tooltip>
+
+          <Tooltip title={t('games.kniffel.undo_tooltip', 'Letzten Eintrag rückgängig machen')}>
+            <span>
+              <IconButton
+                onClick={() => dispatch({ type: 'UNDO_MOVE' })}
+                disabled={!state.moveHistory || state.moveHistory.length === 0 || state.isGameOver}
+                color="inherit"
+                size="small"
+                sx={{
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  '&.Mui-disabled': { opacity: 0.35 },
+                }}
+              >
+                <UndoIcon fontSize="small" />
+              </IconButton>
+            </span>
           </Tooltip>
 
           <Tooltip title={t('games.kniffel.new_game', 'Neues Spiel')}>
