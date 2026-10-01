@@ -271,7 +271,7 @@ All browser-side storage is managed through `src/lib/storage.ts`:
 
 ## 5. Verification & Quality Gates
 
-The project enforces quality gates via automated scripts and GitHub Actions:
+The project enforces quality gates via automated scripts running in CI/CD pipelines (GitHub Actions and GitLab CI). For a detailed analysis of these deterministic tools and how they prevent spaghetti code and ensure security, see [Pipeline Quality Gates](pipeline-quality-gates.md).
 
 ```bash
 npm run check:architecture:diff # Verifies changed files against boundaries
@@ -279,6 +279,7 @@ npm run check:budget            # Component budget & anti-God-component ratchet
 npm run check:duplicates        # Code duplication scan (jscpd)
 npm run check:docs              # Documentation & translation sync gate
 npm run lint                    # ESLint (0 errors)
+npm run check:security          # npm audit for dependency vulnerabilities
 npm test                        # Vitest unit tests
 npm run build                   # tsc -b && vite build
 ```

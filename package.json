@@ -17,6 +17,7 @@
     "check:architecture:strict": "node scripts/check-architecture.mjs --strict",
     "check:duplicates": "jscpd src/ --config .jscpd.json",
     "check:docs": "node scripts/check-docs-sync.mjs",
+    "check:security": "npm audit",
     "cleanup:previews": "node scripts/cleanup-cloudflare-previews.mjs"
   },
   "dependencies": {
