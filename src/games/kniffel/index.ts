@@ -1,0 +1,1 @@
+export { KniffelGame } from './KniffelGame';
