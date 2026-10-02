@@ -67,6 +67,7 @@ class GameRegistry {
             colorEnd: '#b91c1c',
             hoverColor: '#b91c1c',
             category: 'party',
+            hasSettings: true,
             component: <DartsGame />
         },
         {
