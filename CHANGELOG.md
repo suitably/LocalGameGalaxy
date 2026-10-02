@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Melodiq**: Fixed an issue where the YouTube background video would go permanently out of sync (delayed) by correcting the soft drift tolerance threshold and seek cooldown rate limits.
+
 ### Added
 - Dart Checker game for tracking scores in 301, 501, and Count Up modes.
 - **Documentation**: Added `docs/tech/pipeline-quality-gates.md` documenting our deterministic tools strategy (eslint, tsc, component budget, jscpd, and architecture checks). Also updated `docs/tech/architecture.md`.

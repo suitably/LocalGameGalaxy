@@ -48,7 +48,7 @@ describe('createYouTubeVideoAdapter', () => {
     });
 
     describe('soft drift tolerance & seek rate-limiting', () => {
-        it('does not seek if drift is within tolerance (e.g. 0.8s with tolerance 1.8s)', () => {
+        it('does not seek if drift is within tolerance (e.g. 0.3s with tolerance 0.4s)', () => {
             isReady = true;
             mockPlayer.getCurrentTime = vi.fn().mockReturnValue(10.0);
 
@@ -56,18 +56,18 @@ describe('createYouTubeVideoAdapter', () => {
                 videoId: 'dQw4w9WgXcQ',
                 getPlayer: () => mockPlayer as YTPlayerInstance,
                 isPlayerReady: () => isReady,
-                driftToleranceSec: 1.8,
-                seekCooldownMs: 3000,
+                driftToleranceSec: 0.4,
+                seekCooldownMs: 1000,
             });
 
-            // Minor drift of 0.8s
-            adapter.currentTime = 10.8;
+            // Minor drift of 0.3s
+            adapter.currentTime = 10.3;
 
             expect(mockPlayer.seekTo).not.toHaveBeenCalled();
             expect(adapter.currentTime).toBe(10);
         });
 
-        it('seeks when drift exceeds tolerance (e.g. 2.5s > 1.8s)', () => {
+        it('seeks when drift exceeds tolerance (e.g. 0.6s > 0.4s)', () => {
             isReady = true;
             mockPlayer.getCurrentTime = vi.fn().mockReturnValue(10.0);
 
@@ -75,14 +75,14 @@ describe('createYouTubeVideoAdapter', () => {
                 videoId: 'dQw4w9WgXcQ',
                 getPlayer: () => mockPlayer as YTPlayerInstance,
                 isPlayerReady: () => isReady,
-                driftToleranceSec: 1.8,
-                seekCooldownMs: 3000,
+                driftToleranceSec: 0.4,
+                seekCooldownMs: 1000,
             });
 
-            // Desync of 2.5s exceeds 1.8s
-            adapter.currentTime = 12.5;
+            // Desync of 0.6s exceeds 0.4s
+            adapter.currentTime = 10.6;
 
-            expect(mockPlayer.seekTo).toHaveBeenCalledWith(12.5, true);
+            expect(mockPlayer.seekTo).toHaveBeenCalledWith(10.6, true);
         });
 
         it('enforces seek cooldown between consecutive seeks', () => {
@@ -93,8 +93,8 @@ describe('createYouTubeVideoAdapter', () => {
                 videoId: 'dQw4w9WgXcQ',
                 getPlayer: () => mockPlayer as YTPlayerInstance,
                 isPlayerReady: () => isReady,
-                driftToleranceSec: 1.8,
-                seekCooldownMs: 3000,
+                driftToleranceSec: 0.4,
+                seekCooldownMs: 1000,
             });
 
             // First seek: should trigger

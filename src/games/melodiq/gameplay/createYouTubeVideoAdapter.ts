@@ -5,9 +5,9 @@ export interface YouTubeVideoAdapterOptions {
     getPlayer: () => YTPlayerInstance | null;
     isPlayerReady: () => boolean;
     initialTime?: number;
-    /** Desync threshold in seconds before seekTo is invoked. Default: 1.8s */
+    /** Desync threshold in seconds before seekTo is invoked. Default: 0.4s */
     driftToleranceSec?: number;
-    /** Minimum milliseconds between seekTo calls. Default: 3000ms */
+    /** Minimum milliseconds between seekTo calls. Default: 1000ms */
     seekCooldownMs?: number;
 }
 
@@ -33,17 +33,18 @@ export interface YouTubeVideoAdapter {
 /**
  * Creates an HTMLVideoElement-compatible adapter around a YouTube IFrame Player instance.
  *
- * Employs softer drift tolerance (1.8s) and seek rate-limiting (3000ms cooldown)
+ * Employs softer drift tolerance (0.4s) and seek rate-limiting (1000ms cooldown)
  * along with play/pause deduplication to avoid triggering YouTube's animated
- * play/pause bezel icon during background video playback.
+ * play/pause bezel icon during background video playback while still respecting
+ * standard media sync thresholds.
  */
 export function createYouTubeVideoAdapter({
     videoId,
     getPlayer,
     isPlayerReady,
     initialTime = 0,
-    driftToleranceSec = 1.8,
-    seekCooldownMs = 3000,
+    driftToleranceSec = 0.4,
+    seekCooldownMs = 1000,
 }: YouTubeVideoAdapterOptions): YouTubeVideoAdapter {
     let lastKnownTime = initialTime;
     let lastSeekTimestamp = -seekCooldownMs;
