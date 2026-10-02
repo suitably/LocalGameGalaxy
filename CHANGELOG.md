@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Added
+- Dart Checker game for tracking scores in 301, 501, and Count Up modes.
 - **Documentation**: Added `docs/tech/pipeline-quality-gates.md` documenting our deterministic tools strategy (eslint, tsc, component budget, jscpd, and architecture checks). Also updated `docs/tech/architecture.md`.
 - **CI/CD**: Added a fully functional `.gitlab-ci.yml` pipeline with security gates (SAST, Secret-Detection, npm audit), and integrated `npm run check:security` into the GitHub Actions CI pipeline.
 - **Documentation (OKF v0.2)**: Converted technical documentation into an Open Knowledge Format (OKF) v0.2 Knowledge Bundle with root `index.md`, `log.md`, and typed frontmatter. Brought `docs/tech/architecture.md` and related tech docs up to date with the current codebase (all 13 games, shared modules, Hono micro-kernel, Cloudflare Quick Tunnel, and segregated layout contexts).

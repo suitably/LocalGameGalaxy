@@ -27,6 +27,26 @@
     }
   },
   "games": {
+    "darts": {
+      "title": "Dart Checker",
+      "description": "Track your score in 301, 501 or Count Up games.",
+      "settings": "Game Settings",
+      "mode": "Game Mode",
+      "count_up": "Count Up",
+      "double_out": "Double Out Required",
+      "players": "Players",
+      "add_player": "Add Player",
+      "player": "Player",
+      "single": "Single",
+      "double": "Double",
+      "triple": "Triple",
+      "miss": "Miss",
+      "busted": "Busted!",
+      "last_score": "Score: {{score}}",
+      "restart_title": "Restart Game?",
+      "restart_desc": "Are you sure you want to restart? All current scores and throws will be lost."
+    },
+
     "wordle": {
       "title": "Wordle",
       "description": "Guess the hidden 5-letter word in 6 attempts. Play the daily challenge or duel friends."

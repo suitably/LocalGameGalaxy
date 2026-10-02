@@ -27,6 +27,26 @@
     }
   },
   "games": {
+    "darts": {
+      "title": "Dart Checker",
+      "description": "Verfolge deinen Punktestand in 301, 501 oder aufzählen.",
+      "settings": "Spieleinstellungen",
+      "mode": "Spielmodus",
+      "count_up": "Aufzählen",
+      "double_out": "Double Out (Doppel-Aus)",
+      "players": "Spieler",
+      "add_player": "Spieler hinzufügen",
+      "player": "Spieler",
+      "single": "Einfach",
+      "double": "Doppel",
+      "triple": "Dreifach",
+      "miss": "Vorbei",
+      "busted": "Überworfen!",
+      "last_score": "Wurf: {{score}}",
+      "restart_title": "Spiel neustarten?",
+      "restart_desc": "Bist du sicher? Der aktuelle Spielstand geht verloren."
+    },
+
     "wordle": {
       "title": "Wordle",
       "description": "Errate das 5-Buchstaben-Wort in 6 Versuchen. Spiele das Tagesrätsel oder fordere Freunde heraus."
