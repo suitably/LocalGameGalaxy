@@ -27,6 +27,7 @@ export const STORAGE_KEYS = {
     MELODIQ_PARTY_ID: 'melodiq_party_id',
     MELODIQ_HOST_BASE_URL: 'melodiq_host_base_url',
     EXCALIDRAW_DRAWING: 'excalidraw',
+    DARTS_GAME_STATE: 'darts_game_state',
     
     // Queue & play state
     NOW_PLAYING: 'melodiq_now_playing',

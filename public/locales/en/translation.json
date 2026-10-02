@@ -27,6 +27,26 @@
     }
   },
   "games": {
+    "darts": {
+      "title": "Dart Checker",
+      "description": "Track your score in 301, 501 or Count Up games.",
+      "settings": "Game Settings",
+      "mode": "Game Mode",
+      "count_up": "Count Up",
+      "double_out": "Double Out Required",
+      "players": "Players",
+      "add_player": "Add Player",
+      "player": "Player",
+      "single": "Single",
+      "double": "Double",
+      "triple": "Triple",
+      "miss": "Miss",
+      "busted": "Busted!",
+      "last_score": "Score: {{score}}",
+      "restart_title": "Restart Game?",
+      "restart_desc": "Are you sure you want to restart? All current scores and throws will be lost."
+    },
+
     "wordle": {
       "title": "Wordle",
       "description": "Guess the hidden 5-letter word in 6 attempts. Play the daily challenge or duel friends."
@@ -521,6 +541,56 @@
       "rest": "Rest",
       "sync_folder": "Sync Folder",
       "resync": "Re-sync All"
+    },
+    "kniffel": {
+      "title": "Yahtzee",
+      "description": "The classic dice game. Score points by cleverly combining 5 dice.",
+      "roll": "Roll",
+      "rolling": "Rolling...",
+      "new_game": "New Game",
+      "new_game_confirm": "Do you really want to start a new round? Current game progress will be lost.",
+      "upper_section": "Upper Section",
+      "lower_section": "Lower Section",
+      "subtotal": "Subtotal",
+      "bonus": "Bonus (63+)",
+      "upper_total": "Upper Total",
+      "lower_total": "Lower Total",
+      "game_over": "Game Over!",
+      "play_again": "Play Again",
+      "points": "Score Points",
+      "strike": "Strike (0)",
+      "cat": {
+        "ones": "Ones",
+        "twos": "Twos",
+        "threes": "Threes",
+        "fours": "Fours",
+        "fives": "Fives",
+        "sixes": "Sixes",
+        "three_of_a_kind": "3 of a Kind",
+        "four_of_a_kind": "4 of a Kind",
+        "full_house": "Full House",
+        "small_straight": "Small Straight",
+        "large_straight": "Large Straight",
+        "kniffel": "Yahtzee",
+        "chance": "Chance",
+        "kniffel_bonus": "Yahtzee Bonus"
+      },
+      "hint": {
+        "ones": "Sum of all Ones",
+        "twos": "Sum of all Twos",
+        "threes": "Sum of all Threes",
+        "fours": "Sum of all Fours",
+        "fives": "Sum of all Fives",
+        "sixes": "Sum of all Sixes",
+        "three_of_a_kind": "Sum of all dice",
+        "four_of_a_kind": "Sum of all dice",
+        "full_house": "3 + 2 of a kind · 25",
+        "small_straight": "4 in a row · 30",
+        "large_straight": "5 in a row · 40",
+        "kniffel": "5 of a kind · 50",
+        "chance": "Sum of all dice",
+        "kniffel_bonus": "Each additional · 50"
+      }
     },
     "knister": {
       "title": "Knister",

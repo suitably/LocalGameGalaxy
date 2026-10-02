@@ -81,6 +81,13 @@ src/
 
 ### 3.1 Game Modules (`src/games/*`)
 
+9. **Dart Checker (`src/games/darts`)**:
+   - Points tracker for dart matches.
+   - **Offline-First Hook Architecture**: Core game logic (score calculation, X01 rules, count up, undo functionality) isolated in `useDartsGame.ts`.
+   - **Persisted State**: Auto-persists all match state to IndexedDB/localStorage via `STORAGE_KEY = 'darts_game_state'` to prevent data loss on reload.
+   - **Modular UI**: Decomposed into `DartsInput` (keypad and multipliers), `DartsScoreboard` (player totals and throw history), and `DartsSettings` (game mode configuration).
+
+
 Each game is completely self-contained. It registers dynamically via `src/lib/gameRegistry.tsx` (Open-Closed Principle), exports its entry component, and manages its internal state via a state machine, reducer, or custom hook. **Cross-game imports between `src/games/<A>` and `src/games/<B>` are strictly forbidden.**
 
 1. **GuessArt (`src/games/guessart`)**:
@@ -116,6 +123,11 @@ Each game is completely self-contained. It registers dynamically via `src/lib/ga
    - Players simultaneously enter the rolled dice sum into their private 5x5 grid.
    - Evaluates horizontal, vertical, and diagonal lines for poker-like combinations (Pairs, Two Pairs, Three of a Kind, Four of a Kind, Full House, Straight, Five of a Kind).
    - Fully offline-capable with local score history and automatic scoring verification.
+
+5. **Kniffel (`src/games/kniffel`)**:
+   - Implementation of the classic 5-dice game.
+   - Complete implementation of the upper and lower score sections including Kniffel Bonus mechanics.
+   - Reuses the shared 3D dice component (`Die3D`).
 
 5. **Universal Party Lobby & Gartic Phone (`src/features/party` & `src/games/garticphone`)**:
    - Centralized "Jackbox-style" room lobby where all players connect once via QR code or link (`#/party?room=XYZ`).
@@ -271,7 +283,7 @@ All browser-side storage is managed through `src/lib/storage.ts`:
 
 ## 5. Verification & Quality Gates
 
-The project enforces quality gates via automated scripts and GitHub Actions:
+The project enforces quality gates via automated scripts running in CI/CD pipelines (GitHub Actions and GitLab CI). For a detailed analysis of these deterministic tools and how they prevent spaghetti code and ensure security, see [Pipeline Quality Gates](pipeline-quality-gates.md).
 
 ```bash
 npm run check:architecture:diff # Verifies changed files against boundaries
@@ -279,6 +291,7 @@ npm run check:budget            # Component budget & anti-God-component ratchet
 npm run check:duplicates        # Code duplication scan (jscpd)
 npm run check:docs              # Documentation & translation sync gate
 npm run lint                    # ESLint (0 errors)
+npm run check:security          # npm audit for dependency vulnerabilities
 npm test                        # Vitest unit tests
 npm run build                   # tsc -b && vite build
 ```

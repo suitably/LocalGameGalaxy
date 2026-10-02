@@ -11,7 +11,7 @@
   "dependencies": {
     "@hono/node-server": "^2.1.1",
     "fast-glob": "^3.3.2",
-    "hono": "^4.13.5",
+    "hono": "^4.13.12",
     "music-metadata": "^11.12.3",
     "sanitize-filename": "^1.6.3"
   },
