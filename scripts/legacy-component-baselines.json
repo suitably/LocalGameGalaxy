@@ -42,5 +42,6 @@
   "src/games/imposter/ImposterGame.tsx": 261,
   "src/games/cards/components/ModernScoreAdjuster.tsx": 256,
   "src/games/storyteller/components/StoryLobby.tsx": 255,
-  "src/lib/gameRegistry.tsx": 265
+  "src/lib/gameRegistry.tsx": 285,
+  "src/games/kniffel/components/KniffelBoard.tsx": 255
 }

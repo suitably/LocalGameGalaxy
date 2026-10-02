@@ -53,6 +53,7 @@ const WordleGame = lazy(() => import('../games/wordle').then(m => ({ default: m.
 const SudokuGame = lazy(() => import('../games/sudoku').then(m => ({ default: m.SudokuGame })));
 const PartyLobby = lazy(() => import('../features/party/PartyLobby').then(m => ({ default: m.PartyLobby })));
 const TabletopGame = lazy(() => import('../games/tabletop').then(m => ({ default: m.TabletopGame })));
+const KniffelGame = lazy(() => import('../games/kniffel').then(m => ({ default: m.KniffelGame })));
 const DartsGame = lazy(() => import('../games/darts').then(m => ({ default: m.DartsGame })));
 
 class GameRegistry {
@@ -93,6 +94,18 @@ class GameRegistry {
             hoverColor: '#e65100',
             category: 'dice',
             component: <KnisterGame />
+        },
+        {
+            id: 'kniffel',
+            route: 'games/kniffel',
+            titleKey: 'games.kniffel.title',
+            descriptionKey: 'games.kniffel.description',
+            icon: <CasinoIcon sx={{ fontSize: 72, mb: 2 }} />,
+            colorStart: '#ef4444',
+            colorEnd: '#991b1b',
+            hoverColor: '#991b1b',
+            category: 'dice',
+            component: <KniffelGame />
         },
         {
             id: 'guessart',
@@ -245,18 +258,23 @@ class GameRegistry {
         }
     ];
 
-    getGames(): GameDefinition[] { return this.games; }
+    getGames(): GameDefinition[] {
+        return this.games;
+    }
+
     getGamesByCategory(category: GameCategory): GameDefinition[] {
-        return category === 'all' ? this.games : this.games.filter(g => g.category === category);
+        if (category === 'all') return this.games;
+        return this.games.filter(g => g.category === category);
     }
 
     findGameByPath(pathname: string): GameDefinition | undefined {
         const clean = pathname.replace(/^\//, '');
-        return this.games.find(g =>
-            clean.startsWith(g.route) ||
-            (g.nestedRoutes || []).some(nr => clean.startsWith(nr.path.replace(/^\//, ''))) ||
-            (g.standaloneRoutes || []).some(sr => clean.startsWith(sr.path.replace(/^\//, '')))
-        );
+        return this.games.find(g => {
+            if (clean.startsWith(g.route)) return true;
+            if (g.nestedRoutes?.some(nr => clean.startsWith(nr.path.replace(/^\//, '')))) return true;
+            if (g.standaloneRoutes?.some(sr => clean.startsWith(sr.path.replace(/^\//, '')))) return true;
+            return false;
+        });
     }
 }
 

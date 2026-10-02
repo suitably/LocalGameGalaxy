@@ -124,6 +124,11 @@ Each game is completely self-contained. It registers dynamically via `src/lib/ga
    - Evaluates horizontal, vertical, and diagonal lines for poker-like combinations (Pairs, Two Pairs, Three of a Kind, Four of a Kind, Full House, Straight, Five of a Kind).
    - Fully offline-capable with local score history and automatic scoring verification.
 
+5. **Kniffel (`src/games/kniffel`)**:
+   - Implementation of the classic 5-dice game.
+   - Complete implementation of the upper and lower score sections including Kniffel Bonus mechanics.
+   - Reuses the shared 3D dice component (`Die3D`).
+
 5. **Universal Party Lobby & Gartic Phone (`src/features/party` & `src/games/garticphone`)**:
    - Centralized "Jackbox-style" room lobby where all players connect once via QR code or link (`#/party?room=XYZ`).
    - **Serverless Real-Time Communication**: Operates 100% serverless over public WSS MQTT brokers (`wss://broker.hivemq.com:8884/mqtt` / `wss://broker.emqx.io:8084/mqtt`) and local `BroadcastChannel`. No local helper server or backend connection is required.
@@ -278,7 +283,7 @@ All browser-side storage is managed through `src/lib/storage.ts`:
 
 ## 5. Verification & Quality Gates
 
-The project enforces quality gates via automated scripts and GitHub Actions:
+The project enforces quality gates via automated scripts running in CI/CD pipelines (GitHub Actions and GitLab CI). For a detailed analysis of these deterministic tools and how they prevent spaghetti code and ensure security, see [Pipeline Quality Gates](pipeline-quality-gates.md).
 
 ```bash
 npm run check:architecture:diff # Verifies changed files against boundaries
@@ -286,6 +291,7 @@ npm run check:budget            # Component budget & anti-God-component ratchet
 npm run check:duplicates        # Code duplication scan (jscpd)
 npm run check:docs              # Documentation & translation sync gate
 npm run lint                    # ESLint (0 errors)
+npm run check:security          # npm audit for dependency vulnerabilities
 npm test                        # Vitest unit tests
 npm run build                   # tsc -b && vite build
 ```

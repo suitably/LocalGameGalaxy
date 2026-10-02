@@ -22,13 +22,11 @@ export function DartsGame() {
   useEffect(() => {
     setMenuItems([
       {
-
         label: t('games.darts.restart_title'),
         icon: <RestartAltIcon />,
         action: () => setConfirmRestartOpen(true),
       },
       {
-
         label: t('games.darts.settings'),
         icon: <SettingsIcon />,
         action: () => setSettingsOpen(true),
