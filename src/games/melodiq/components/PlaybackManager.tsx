@@ -2,6 +2,7 @@ import { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo, 
 import { Box, Snackbar, Alert } from '@mui/material';
 import { type Song, type SongMeta } from '../db';
 import { MelodiqSession, type MelodiqSessionHandle } from '../gameplay/MelodiqSession';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { MiniPlayer } from './MiniPlayer';
 import { useQueue } from '../hooks/useQueue';
 import { useClientEngine } from '../PhoneClientEngine';
@@ -153,7 +154,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                 setFeedbackMessage("Waiting for download to finish...");
                 return;
             }
-            localStorage.removeItem('melodiq_saved_time');
+            storage.remove(STORAGE_KEYS.MELODIQ_SAVED_TIME);
             const nextItem = popNext();
             if (nextItem) {
                 onSelectSong(nextItem.song, true, nextItem.participants);
@@ -252,7 +253,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         });
             
         if (selectedSong && state.currentTime > 0 && (now - lastStorageRef.current > 1000)) {
-            localStorage.setItem('melodiq_saved_time', JSON.stringify({ id: selectedSong.id, time: state.currentTime }));
+            storage.setJson(STORAGE_KEYS.MELODIQ_SAVED_TIME, { id: selectedSong.id, time: state.currentTime });
             lastStorageRef.current = now;
         }
     }, [selectedSong]);
@@ -280,7 +281,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                         initialTime={initialTime}
                         onExit={(forceHome = false) => {
                             setNowPlaying(null);
-                            localStorage.removeItem('melodiq_saved_time');
+                            storage.remove(STORAGE_KEYS.MELODIQ_SAVED_TIME);
                             if (!forceHome) {
                                 const nextItem = popNext();
                                 if (nextItem) {

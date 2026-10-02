@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { useWebRTC } from '../audio/WebRTCContext';
 import { useQueue } from '../hooks/useQueue';
 import { useSongs } from '../hooks/useSongs';
@@ -44,8 +45,8 @@ export const PhoneQueueBridge: React.FC = () => {
                     // Also send helper_config so the client knows the helper URL
                     // and can load songs via the WebRTC proxy.
                     // This is the trigger for the client's useSongs to start loading.
-                    const helperUrl = localStorage.getItem('melodiq_helper_url');
-                    const helperToken = localStorage.getItem('melodiq_helper_token');
+                    const helperUrl = storage.getHelperUrl();
+                    const helperToken = storage.getHelperToken();
                     if (helperUrl) {
                         manager.sendToPeer(peerId, {
                             type: 'helper_config',
@@ -116,7 +117,7 @@ export const PhoneQueueBridge: React.FC = () => {
                         if (song) {
                             const peer = manager.getConnectedPeers().find(p => p.peerId === peerId);
                             if (peer) {
-                                const storedRoles = localStorage.getItem('melodiq_client_roles');
+                                const storedRoles = storage.get(STORAGE_KEYS.MELODIQ_CLIENT_ROLES);
                                 let role = 'singer';
                                 if (storedRoles && peer.deviceId) {
                                     try { role = JSON.parse(storedRoles)[peer.deviceId] || 'singer'; } catch (e) {}
@@ -136,7 +137,7 @@ export const PhoneQueueBridge: React.FC = () => {
                     if (data.songId) {
                         const peer = manager.getConnectedPeers().find(p => p.peerId === peerId);
                         if (peer) {
-                            const storedRoles = localStorage.getItem('melodiq_client_roles');
+                            const storedRoles = storage.get(STORAGE_KEYS.MELODIQ_CLIENT_ROLES);
                             let role = 'singer';
                             if (storedRoles && peer.deviceId) {
                                 try { role = JSON.parse(storedRoles)[peer.deviceId] || 'singer'; } catch (e) {}
@@ -163,7 +164,7 @@ export const PhoneQueueBridge: React.FC = () => {
                     if (data.itemId) {
                         const peer = manager.getConnectedPeers().find(p => p.peerId === peerId);
                         if (peer) {
-                            const storedRoles = localStorage.getItem('melodiq_client_roles');
+                            const storedRoles = storage.get(STORAGE_KEYS.MELODIQ_CLIENT_ROLES);
                             let role = 'singer';
                             if (storedRoles && peer.deviceId) {
                                 try { role = JSON.parse(storedRoles)[peer.deviceId] || 'singer'; } catch (e) {}
@@ -190,7 +191,7 @@ export const PhoneQueueBridge: React.FC = () => {
                     if (data.itemId && typeof data.startIndex === 'number' && typeof data.endIndex === 'number') {
                         const peer = manager.getConnectedPeers().find(p => p.peerId === peerId);
                         if (peer) {
-                            const storedRoles = localStorage.getItem('melodiq_client_roles');
+                            const storedRoles = storage.get(STORAGE_KEYS.MELODIQ_CLIENT_ROLES);
                             let role = 'singer';
                             if (storedRoles && peer.deviceId) {
                                 try { role = JSON.parse(storedRoles)[peer.deviceId] || 'singer'; } catch (e) {}
@@ -212,7 +213,7 @@ export const PhoneQueueBridge: React.FC = () => {
                     if (data.itemId && data.deviceId) {
                         const peer = manager.getConnectedPeers().find(p => p.peerId === peerId);
                         if (peer) {
-                            const storedRoles = localStorage.getItem('melodiq_client_roles');
+                            const storedRoles = storage.get(STORAGE_KEYS.MELODIQ_CLIENT_ROLES);
                             let role = 'singer';
                             if (storedRoles && peer.deviceId) {
                                 try { role = JSON.parse(storedRoles)[peer.deviceId] || 'singer'; } catch (e) {}

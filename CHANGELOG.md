@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Core: Migrated direct `localStorage` and `sessionStorage` calls in Melodiq to the unified `storage.ts` service with typed constants (`STORAGE_KEYS`), enforcing the zero raw storage policy and resolving Dependency Inversion Principle (DIP) violations.
 
 ### Fixed
 - **Melodiq**: Fixed an issue where the YouTube background video would go permanently out of sync (delayed) by correcting the soft drift tolerance threshold and seek cooldown rate limits.
@@ -67,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for Werewolf, Gartic Phone, Storyteller, Tabletop, Sudoku, Knister, Qwixx, and Wordle.
 
 ## [Unreleased]
+- Core: Migrated direct `localStorage` and `sessionStorage` calls in Melodiq to the unified `storage.ts` service with typed constants (`STORAGE_KEYS`), enforcing the zero raw storage policy and resolving Dependency Inversion Principle (DIP) violations.
 
 ### Refactored
 - `ServerAdminPanel`: Decomposed into smaller sub-components and extracted state into `useServerApiKeys` custom hook to resolve Separation of Concerns and God Component size violations.

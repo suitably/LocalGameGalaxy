@@ -1,4 +1,5 @@
 import React from 'react';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogTitle, DialogContent, List, ListItem, ListItemAvatar, Avatar, ListItemText, Switch, Button, DialogActions, Box, Typography } from '@mui/material';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
@@ -36,8 +37,7 @@ export const QueueParticipantDialog: React.FC<QueueParticipantDialogProps> = ({
     const item = isDirectMode ? null : queue.find((q) => q.id === queueItemId);
 
     // Combine local profiles and connected remote peers
-    const storedProfiles = localStorage.getItem('melodiq_profiles');
-    const localProfiles = storedProfiles ? JSON.parse(storedProfiles) : [];
+    const localProfiles = storage.getJson<any[]>(STORAGE_KEYS.PROFILES, []);
     const remoteProfiles = activePeers.map(peer => ({
         id: peer.deviceId || peer.peerId, // Prefer deviceId to match what is stored in queue participants
         peerId: peer.peerId,
@@ -91,9 +91,9 @@ export const QueueParticipantDialog: React.FC<QueueParticipantDialogProps> = ({
                 <DragDropContext onDragEnd={handleDragEnd}>
                     <Droppable droppableId="participants-list">
                         {(provided) => {
-                            const storedMicSlots = JSON.parse(localStorage.getItem('melodiq_mic_slots') || '[]');
-                            const storedMicNames = JSON.parse(localStorage.getItem('melodiq_mic_names') || '{}');
-                            const storedOriginalNames = JSON.parse(localStorage.getItem('melodiq_mic_original_names') || '{}');
+                            const storedMicSlots = storage.getJson<string[]>(STORAGE_KEYS.MELODIQ_MIC_SLOTS, []);
+                            const storedMicNames = storage.getJson<Record<string, string>>(STORAGE_KEYS.MELODIQ_MIC_NAMES, {});
+                            const storedOriginalNames = storage.getJson<Record<string, string>>(STORAGE_KEYS.MELODIQ_MIC_ORIGINAL_NAMES, {});
 
                             return (
                                 <List {...provided.droppableProps} ref={provided.innerRef} sx={{ pt: 0 }}>

@@ -4,6 +4,7 @@ import { Box, Typography, Button, List, ListItem, ListItemText, Switch, LinearPr
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
 import { MicrophoneManager } from '../audio/MicrophoneManager';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 
 const MicVolumeMeter: React.FC<{ deviceId: string }> = ({ deviceId }) => {
 
@@ -64,16 +65,15 @@ export const HardwareMicSetup: React.FC = () => {
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
     const [enabledMics, setEnabledMics] = useState<string[]>(() => {
         try {
-            const stored = localStorage.getItem('melodiq_mic_slots');
-            return stored ? JSON.parse(stored).filter((id: string) => id) : [];
+            const stored = storage.getJson<string[]>(STORAGE_KEYS.MELODIQ_MIC_SLOTS, []);
+            return stored.filter((id: string) => id);
         } catch {
             return [];
         }
     });
     const [customNames, setCustomNames] = useState<Record<string, string>>(() => {
         try {
-            const stored = localStorage.getItem('melodiq_mic_names');
-            return stored ? JSON.parse(stored) : {};
+            return storage.getJson<Record<string, string>>(STORAGE_KEYS.MELODIQ_MIC_NAMES, {});
         } catch {
             return {};
         }
@@ -93,7 +93,7 @@ export const HardwareMicSetup: React.FC = () => {
             devs.forEach(d => {
                 if (d.label) originalNames[d.deviceId] = d.label;
             });
-            localStorage.setItem('melodiq_mic_original_names', JSON.stringify(originalNames));
+            storage.setJson(STORAGE_KEYS.MELODIQ_MIC_ORIGINAL_NAMES, originalNames);
 
             stream.getTracks().forEach(t => t.stop());
         } catch (e) {
@@ -114,7 +114,7 @@ export const HardwareMicSetup: React.FC = () => {
             newEnabled.push(deviceId);
         }
         setEnabledMics(newEnabled);
-        localStorage.setItem('melodiq_mic_slots', JSON.stringify(newEnabled));
+        storage.setJson(STORAGE_KEYS.MELODIQ_MIC_SLOTS, newEnabled);
     };
 
     return (
@@ -157,7 +157,7 @@ export const HardwareMicSetup: React.FC = () => {
                                             if (e.key === 'Enter') {
                                                 const newNames = { ...customNames, [d.deviceId]: editValue };
                                                 setCustomNames(newNames);
-                                                localStorage.setItem('melodiq_mic_names', JSON.stringify(newNames));
+                                                storage.setJson(STORAGE_KEYS.MELODIQ_MIC_NAMES, newNames);
                                                 setEditingId(null);
                                             }
                                         }}
@@ -166,7 +166,7 @@ export const HardwareMicSetup: React.FC = () => {
                                     <IconButton onClick={() => {
                                         const newNames = { ...customNames, [d.deviceId]: editValue };
                                         setCustomNames(newNames);
-                                        localStorage.setItem('melodiq_mic_names', JSON.stringify(newNames));
+                                        storage.setJson(STORAGE_KEYS.MELODIQ_MIC_NAMES, newNames);
                                         setEditingId(null);
                                     }}>
                                         <CheckIcon />
