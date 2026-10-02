@@ -1,3 +1,6 @@
+### Added
+- **Kniffel**: Added the classic dice game Kniffel to the local game galaxy. Players can roll 5 dice up to 3 times, score in 13 categories across upper and lower sections, and compete for the highest score. Implements full offline persistence and German/English localization.
+
 # Changelog
 
 All notable changes to **LocalGameGalaxy** will be documented in this file.
