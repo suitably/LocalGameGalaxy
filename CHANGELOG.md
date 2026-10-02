@@ -1,5 +1,11 @@
 
 ## [Unreleased]
+### Changed
+- Decoupled Cloudflare preview deployments from CI tests to speed up review previews.
+
+
+
+## [Unreleased]
 ### Added
 - Pre-commit hooks for running quality gates automatically before committing locally.
 

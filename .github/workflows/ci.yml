@@ -63,7 +63,6 @@ jobs:
 
   deploy-cloudflare:
     name: Deploy to Cloudflare
-    needs: validate
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 10
