@@ -82,3 +82,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Refactored
 - `ServerAdminPanel`: Decomposed into smaller sub-components and extracted state into `useServerApiKeys` custom hook to resolve Separation of Concerns and God Component size violations.
+
+## [Unreleased]
+- **Melodiq Notes**: Enhanced UI to be mobile-first and responsive. Also updated sheet music viewer to have a cleaner modern layout.

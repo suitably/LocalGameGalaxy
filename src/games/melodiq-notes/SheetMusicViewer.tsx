@@ -17,6 +17,7 @@ interface SheetMusicViewerProps {
     xmlContent: string;
     zoom?: number;
     isCurrentNoteHit?: boolean;
+    renderMode?: 'horizontal' | 'vertical';
     onNotesChanged?: (targetNotes: TargetNote[]) => void;
     onSongEnd?: () => void;
     onBpmDetected?: (bpm: number) => void;
@@ -26,6 +27,7 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
     xmlContent,
     zoom = 1.0,
     isCurrentNoteHit = false,
+    renderMode = 'vertical',
     onNotesChanged,
     onSongEnd,
     onBpmDetected
@@ -55,6 +57,11 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
     const updateCursorHighlight = useCallback((isHit: boolean) => {
         if (!osmdRef.current || !osmdRef.current.cursor) return;
         const cursorElement = osmdRef.current.cursor.cursorElement;
+
+        // Ensure standard scrolling logic happens (cursor centering)
+        if (osmdRef.current && osmdRef.current.cursor && cursorElement && renderMode === 'vertical') {
+             cursorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
         if (cursorElement) {
             cursorElement.style.backgroundColor = isHit
                 ? 'rgba(76, 175, 80, 0.5)'
@@ -65,7 +72,7 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
 
     useEffect(() => {
         updateCursorHighlight(isCurrentNoteHit);
-    }, [isCurrentNoteHit, updateCursorHighlight]);
+    }, [isCurrentNoteHit, updateCursorHighlight, renderMode]);
 
     useImperativeHandle(ref, () => ({
         nextNote: () => {
@@ -122,13 +129,34 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
         containerRef.current.innerHTML = '';
 
         try {
+            // Destroy previous instance if it exists
+            if (osmdRef.current) {
+                containerRef.current.innerHTML = '';
+            }
+
+            // Destroy previous instance if it exists
+            if (osmdRef.current) {
+                containerRef.current.innerHTML = '';
+            }
+
             const osmd = new OpenSheetMusicDisplay(containerRef.current, {
                 autoResize: true,
-                drawTitle: true,
+                drawTitle: false,
                 drawSubtitle: false,
-                drawComposer: true,
+                drawComposer: false,
                 drawingParameters: 'compact',
                 followCursor: true,
+                pageFormat: 'Endless',
+                renderSingleHorizontalStaffline: renderMode === 'horizontal',
+                drawMeasureNumbers: false,
+
+
+
+                autoBeam: true,
+                colorStemsLikeNoteheads: true,
+            });
+            osmd.setOptions({
+                cursorsOptions: [{ type: 0, color: '#3b82f6', alpha: 0.5, follow: true }]
             });
 
             osmdRef.current = osmd;
@@ -193,9 +221,11 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
                 sx={{
                     width: '100%',
                     maxHeight: isMobile ? 'none' : '60vh',
-                    overflowY: isMobile ? 'visible' : 'auto',
+                    overflowY: 'hidden',
                     overflowX: 'auto',
-                    display: isLoading ? 'none' : 'block',
+                    whiteSpace: renderMode === 'horizontal' ? 'nowrap' : 'normal',
+                    display: isLoading ? 'none' : (renderMode === 'horizontal' ? 'flex' : 'block'),
+                    alignItems: renderMode === 'horizontal' ? 'center' : 'flex-start',
                     background: '#ffffff',
                     borderRadius: 2,
                     boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
