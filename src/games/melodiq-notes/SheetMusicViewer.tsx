@@ -124,12 +124,13 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
         try {
             const osmd = new OpenSheetMusicDisplay(containerRef.current, {
                 autoResize: true,
-                drawTitle: true,
+                drawTitle: false,
                 drawSubtitle: false,
-                drawComposer: true,
+                drawComposer: false,
                 drawingParameters: 'compact',
                 followCursor: true,
                 pageFormat: 'Endless',
+                renderSingleHorizontalStaffline: true,
                 drawMeasureNumbers: false,
 
 
@@ -203,9 +204,12 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
                 sx={{
                     width: '100%',
                     maxHeight: isMobile ? 'none' : '60vh',
-                    overflowY: isMobile ? 'visible' : 'auto',
+                    overflowY: 'hidden',
                     overflowX: 'auto',
-                    display: isLoading ? 'none' : 'block',
+                    whiteSpace: 'nowrap',
+                    display: isLoading ? 'none' : 'flex',
+                    alignItems: 'center',
+
                     background: '#ffffff',
                     borderRadius: 2,
                     boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
