@@ -1,9 +1,10 @@
 import { useState, useCallback } from 'react';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import type { ClientRole } from '../types';
 
 export const useClientRoles = () => {
     const [roles, setRoles] = useState<Record<string, ClientRole>>(() => {
-        const stored = localStorage.getItem('melodiq_client_roles');
+        const stored = storage.get(STORAGE_KEYS.MELODIQ_CLIENT_ROLES);
         return stored ? JSON.parse(stored) : {};
     });
 
@@ -14,7 +15,7 @@ export const useClientRoles = () => {
     const setRole = useCallback((deviceId: string, role: ClientRole) => {
         setRoles(prev => {
             const next = { ...prev, [deviceId]: role };
-            localStorage.setItem('melodiq_client_roles', JSON.stringify(next));
+            storage.setJson(STORAGE_KEYS.MELODIQ_CLIENT_ROLES, next);
             // Trigger a global event so WebRTCHostContext can broadcast the updated roles
             window.dispatchEvent(new CustomEvent('melodiq_roles_updated', { detail: next }));
             return next;

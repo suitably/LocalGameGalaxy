@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { storage, STORAGE_KEYS } from '../../../../lib/storage';
 import { PlayerRuntime } from './PlayerRuntime';
 import { type PassiveGameState } from '../../types';
 import { type ScoreDisplayHandle } from '../ScoreDisplay';
@@ -157,7 +158,7 @@ export function usePassiveSync({
         if (!isClient) return;
 
         let myName = 'Phone';
-        const storedProfile = localStorage.getItem('melodiq_client_profile');
+        const storedProfile = storage.get(STORAGE_KEYS.CLIENT_PROFILE);
         if (storedProfile) {
             try {
                 const parsed = JSON.parse(storedProfile);

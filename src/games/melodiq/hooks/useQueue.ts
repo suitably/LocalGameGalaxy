@@ -68,13 +68,13 @@ const getBroadcastChannel = (): BroadcastChannel | null => {
 export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [queue, setQueue] = useState<QueueItem[]>(() => {
         if (isClient) return [];
-        const stored = localStorage.getItem(QUEUE_STORAGE_KEY);
+        const stored = storage.get(QUEUE_STORAGE_KEY);
         return stored ? JSON.parse(stored) : [];
     });
 
     const [nowPlaying, setNowPlayingState] = useState<SongMeta | null>(() => {
         if (isClient) return null;
-        const stored = localStorage.getItem('melodiq_now_playing');
+        const stored = storage.get(STORAGE_KEYS.NOW_PLAYING);
         return stored ? JSON.parse(stored) : null;
     });
 
@@ -122,7 +122,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const syncQueue = useCallback((newQueue: QueueItem[]) => {
         setQueue(newQueue);
         if (!isClient) {
-            localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(newQueue));
+            storage.setJson(QUEUE_STORAGE_KEY, newQueue);
         }
     }, []);
 
@@ -130,9 +130,9 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setNowPlayingState(song);
         if (!isClient) {
             if (song) {
-                localStorage.setItem('melodiq_now_playing', JSON.stringify(song));
+                storage.setJson(STORAGE_KEYS.NOW_PLAYING, song);
             } else {
-                localStorage.removeItem('melodiq_now_playing');
+                storage.remove(STORAGE_KEYS.NOW_PLAYING);
             }
         }
     }, []);
@@ -149,8 +149,8 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             return;
         }
 
-        const activeSession = JSON.parse(localStorage.getItem('melodiq_active_session') || '[]');
-        const storedProfiles = JSON.parse(localStorage.getItem('melodiq_profiles') || '[]');
+        const activeSession = storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
+        const storedProfiles = storage.getJson<any[]>(STORAGE_KEYS.PROFILES, []);
         
         const enrichedSession = activeSession.map((p: any) => {
             if (p.profileId === 'BOT') return { ...p, name: 'Bot Player', hue: 330, isRemote: false };
@@ -172,7 +172,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         setQueue(prev => {
             const next = [...prev, newItem];
-            localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(next));
+            storage.setJson(QUEUE_STORAGE_KEY, next);
             broadcastQueue(next);
             return next;
         });
@@ -187,7 +187,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         setQueue(prev => {
             const next = prev.filter(item => item.id !== itemId);
-            localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(next));
+            storage.setJson(QUEUE_STORAGE_KEY, next);
             broadcastQueue(next);
             return next;
         });
@@ -219,8 +219,8 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [syncQueue, broadcastQueue]);
 
     const playPlaylistNow = useCallback((songs: SongMeta[], requester?: string) => {
-        const activeSession = JSON.parse(localStorage.getItem('melodiq_active_session') || '[]');
-        const storedProfiles = JSON.parse(localStorage.getItem('melodiq_profiles') || '[]');
+        const activeSession = storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
+        const storedProfiles = storage.getJson<any[]>(STORAGE_KEYS.PROFILES, []);
         
         const enrichedSession = activeSession.map((p: any) => {
             if (p.profileId === 'BOT') return { ...p, name: 'Bot Player', hue: 330, isRemote: false };
@@ -246,8 +246,8 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [syncQueue, broadcastQueue]);
 
     const addNext = useCallback((song: SongMeta, requester?: string, requesterId?: string) => {
-        const activeSession = JSON.parse(localStorage.getItem('melodiq_active_session') || '[]');
-        const storedProfiles = JSON.parse(localStorage.getItem('melodiq_profiles') || '[]');
+        const activeSession = storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
+        const storedProfiles = storage.getJson<any[]>(STORAGE_KEYS.PROFILES, []);
         
         const enrichedSession = activeSession.map((p: any) => {
             if (p.profileId === 'BOT') return { ...p, name: 'Bot Player', hue: 330, isRemote: false };
@@ -269,7 +269,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         setQueue(prev => {
             const next = [newItem, ...prev];
-            localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(next));
+            storage.setJson(QUEUE_STORAGE_KEY, next);
             broadcastQueue(next);
             return next;
         });
@@ -280,7 +280,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (isClient) return;
         setQueue(prev => {
             const next = prev.map(item => item.id === itemId ? { ...item, song: newSong } : item);
-            localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(next));
+            storage.setJson(QUEUE_STORAGE_KEY, next);
             broadcastQueue(next);
             return next;
         });
@@ -316,7 +316,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 }
                 return item;
             });
-            localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(next));
+            storage.setJson(QUEUE_STORAGE_KEY, next);
             broadcastQueue(next);
             return next;
         });
@@ -339,7 +339,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 }
                 return item;
             });
-            localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(next));
+            storage.setJson(QUEUE_STORAGE_KEY, next);
             broadcastQueue(next);
             return next;
         });
@@ -353,7 +353,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const [movedItem] = next.splice(fromIndex, 1);
             next.splice(toIndex, 0, movedItem);
 
-            localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(next));
+            storage.setJson(QUEUE_STORAGE_KEY, next);
             broadcastQueue(next);
             return next;
         });
