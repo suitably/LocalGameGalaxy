@@ -17,6 +17,7 @@ interface SheetMusicViewerProps {
     xmlContent: string;
     zoom?: number;
     isCurrentNoteHit?: boolean;
+    renderMode?: 'horizontal' | 'vertical';
     onNotesChanged?: (targetNotes: TargetNote[]) => void;
     onSongEnd?: () => void;
     onBpmDetected?: (bpm: number) => void;
@@ -26,6 +27,7 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
     xmlContent,
     zoom = 1.0,
     isCurrentNoteHit = false,
+    renderMode = 'vertical',
     onNotesChanged,
     onSongEnd,
     onBpmDetected
@@ -122,6 +124,16 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
         containerRef.current.innerHTML = '';
 
         try {
+            // Destroy previous instance if it exists
+            if (osmdRef.current) {
+                containerRef.current.innerHTML = '';
+            }
+
+            // Destroy previous instance if it exists
+            if (osmdRef.current) {
+                containerRef.current.innerHTML = '';
+            }
+
             const osmd = new OpenSheetMusicDisplay(containerRef.current, {
                 autoResize: true,
                 drawTitle: false,
@@ -130,7 +142,7 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
                 drawingParameters: 'compact',
                 followCursor: true,
                 pageFormat: 'Endless',
-                renderSingleHorizontalStaffline: true,
+                renderSingleHorizontalStaffline: renderMode === 'horizontal',
                 drawMeasureNumbers: false,
 
 
@@ -206,10 +218,9 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
                     maxHeight: isMobile ? 'none' : '60vh',
                     overflowY: 'hidden',
                     overflowX: 'auto',
-                    whiteSpace: 'nowrap',
-                    display: isLoading ? 'none' : 'flex',
-                    alignItems: 'center',
-
+                    whiteSpace: renderMode === 'horizontal' ? 'nowrap' : 'normal',
+                    display: isLoading ? 'none' : (renderMode === 'horizontal' ? 'flex' : 'block'),
+                    alignItems: renderMode === 'horizontal' ? 'center' : 'flex-start',
                     background: '#ffffff',
                     borderRadius: 2,
                     boxShadow: '0 4px 12px rgba(0,0,0,0.1)',

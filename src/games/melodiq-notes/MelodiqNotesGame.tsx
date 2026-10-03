@@ -36,6 +36,8 @@ export const MelodiqNotesGame: React.FC = () => {
         customXmlContent,
         playMode,
         setPlayMode,
+        renderMode,
+        setRenderMode,
         inputSource,
         setInputSource,
         isPlaying,
@@ -151,6 +153,8 @@ export const MelodiqNotesGame: React.FC = () => {
                             onSongChange={handleSongChange}
                             onFileUpload={handleFileUpload}
                             onPlayModeChange={setPlayMode}
+                            renderMode={renderMode}
+                            onRenderModeChange={setRenderMode}
                             onInputSourceChange={setInputSource}
                             onLocalSongSelect={handleLocalSongSelect}
                             onSyncFolder={handleSyncFolder}
@@ -183,6 +187,7 @@ export const MelodiqNotesGame: React.FC = () => {
                 <SheetMusicViewer
                     ref={viewerRef}
                     xmlContent={currentXmlContent}
+                    renderMode={renderMode}
                     isCurrentNoteHit={isCurrentNoteHit}
                     onNotesChanged={handleNotesChanged}
                     onSongEnd={handleSongEnd}

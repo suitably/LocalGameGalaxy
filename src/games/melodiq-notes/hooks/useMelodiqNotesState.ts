@@ -22,6 +22,7 @@ export const useMelodiqNotesState = () => {
     const [selectedSong, setSelectedSong] = useState<DemoSong>(DEMO_SONGS[0]);
     const [customXmlContent, setCustomXmlContent] = useState<string | null>(null);
     const [playMode, setPlayMode] = useState<PlayMode>('continuous');
+    const [renderMode, setRenderMode] = useState<'horizontal' | 'vertical'>('vertical');
     const [inputSource, setInputSource] = useState<InputSource>('midi');
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [speedPercent, setSpeedPercent] = useState<number>(100);
@@ -435,6 +436,8 @@ export const useMelodiqNotesState = () => {
         customXmlContent,
         playMode,
         setPlayMode,
+        renderMode,
+        setRenderMode,
         inputSource,
         setInputSource,
         isPlaying,

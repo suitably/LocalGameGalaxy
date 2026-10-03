@@ -23,6 +23,7 @@ interface ControlPanelProps {
     selectedSong: DemoSong;
     customXmlContent: string | null;
     playMode: PlayMode;
+    renderMode?: 'horizontal' | 'vertical';
     inputSource: InputSource;
     // Local library
     librarySongs: StoredSheetMusic[];
@@ -33,6 +34,7 @@ interface ControlPanelProps {
     onSongChange: (song: DemoSong) => void;
     onFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
     onPlayModeChange: (mode: PlayMode) => void;
+    onRenderModeChange?: (mode: 'horizontal' | 'vertical') => void;
     onInputSourceChange: (source: InputSource) => void;
     onLocalSongSelect: (song: StoredSheetMusic) => void;
     onSyncFolder: () => void;
@@ -45,6 +47,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     selectedSong,
     customXmlContent,
     playMode,
+    renderMode,
     inputSource,
     librarySongs,
     storedFolders,
@@ -54,6 +57,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     onSongChange,
     onFileUpload,
     onPlayModeChange,
+    onRenderModeChange,
     onInputSourceChange,
     onLocalSongSelect,
     onSyncFolder,
@@ -183,6 +187,20 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                         <MenuItem value="wait">{t('games.melodiq_notes.wait_mode')}</MenuItem>
                     </Select>
                 </FormControl>
+                {onRenderModeChange && (
+                    <FormControl size="small" sx={{ minWidth: 150, width: { xs: '100%', md: 'auto' } }}>
+                        <InputLabel id="render-select-label">{t('games.melodiq_notes.render_mode', 'Layout')}</InputLabel>
+                        <Select
+                            labelId="render-select-label"
+                            value={renderMode}
+                            label={t('games.melodiq_notes.render_mode', 'Layout')}
+                            onChange={(e) => onRenderModeChange(e.target.value as 'horizontal' | 'vertical')}
+                        >
+                            <MenuItem value="vertical">{t('games.melodiq_notes.render_vertical', 'Vertical')}</MenuItem>
+                            <MenuItem value="horizontal">{t('games.melodiq_notes.render_horizontal', 'Horizontal')}</MenuItem>
+                        </Select>
+                    </FormControl>
+                )}
 
                 {/* Input Source Switcher */}
                 <FormControl size="small" sx={{ minWidth: 150 }}>
