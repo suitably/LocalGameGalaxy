@@ -129,6 +129,16 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
                 drawComposer: true,
                 drawingParameters: 'compact',
                 followCursor: true,
+                pageFormat: 'Endless',
+                drawMeasureNumbers: false,
+                drawMeasureNumbersOnlyAtSystemStart: false,
+                spacingBetweenTextAndSystem: 1,
+                spacingBetweenSystems: 2,
+                autoBeam: true,
+                colorStemsLikeNoteheads: true,
+            });
+            osmd.setOptions({
+                cursorsOptions: [{ type: 0, color: '#3b82f6', alpha: 0.5, size: 2 }]
             });
 
             osmdRef.current = osmd;
