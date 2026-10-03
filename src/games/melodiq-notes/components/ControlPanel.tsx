@@ -69,9 +69,9 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
 
     return (
         <Paper sx={{ p: 2, mb: 3, bgcolor: 'rgba(255, 255, 255, 0.05)', borderRadius: 2 }}>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center" justifyContent="space-between">
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'stretch', md: 'center' }} justifyContent="space-between">
                 {/* Song Selector */}
-                <FormControl size="small" sx={{ minWidth: 240, maxWidth: 360, flex: '1 1 240px' }}>
+                <FormControl size="small" sx={{ minWidth: 240, width: { xs: '100%', md: 'auto' }, maxWidth: { xs: '100%', md: 360 }, flex: '1 1 240px' }}>
                     <InputLabel id="song-select-label">{t('games.melodiq_notes.song')}</InputLabel>
                     <Select
                         labelId="song-select-label"
@@ -175,7 +175,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                 </Button>
 
                 {/* Mode Switcher */}
-                <FormControl size="small" sx={{ minWidth: 150 }}>
+                <FormControl size="small" sx={{ minWidth: 150, width: { xs: '100%', md: 'auto' } }}>
                     <InputLabel id="mode-select-label">{t('games.melodiq_notes.mode')}</InputLabel>
                     <Select
                         labelId="mode-select-label"
@@ -203,7 +203,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                 )}
 
                 {/* Input Source Switcher */}
-                <FormControl size="small" sx={{ minWidth: 150 }}>
+                <FormControl size="small" sx={{ minWidth: 150, width: { xs: '100%', md: 'auto' } }}>
                     <InputLabel id="input-select-label">{t('games.melodiq_notes.input_source')}</InputLabel>
                     <Select
                         labelId="input-select-label"

@@ -57,6 +57,11 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
     const updateCursorHighlight = useCallback((isHit: boolean) => {
         if (!osmdRef.current || !osmdRef.current.cursor) return;
         const cursorElement = osmdRef.current.cursor.cursorElement;
+
+        // Ensure standard scrolling logic happens (cursor centering)
+        if (osmdRef.current && osmdRef.current.cursor && cursorElement && renderMode === 'vertical') {
+             cursorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
         if (cursorElement) {
             cursorElement.style.backgroundColor = isHit
                 ? 'rgba(76, 175, 80, 0.5)'
@@ -67,7 +72,7 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
 
     useEffect(() => {
         updateCursorHighlight(isCurrentNoteHit);
-    }, [isCurrentNoteHit, updateCursorHighlight]);
+    }, [isCurrentNoteHit, updateCursorHighlight, renderMode]);
 
     useImperativeHandle(ref, () => ({
         nextNote: () => {
