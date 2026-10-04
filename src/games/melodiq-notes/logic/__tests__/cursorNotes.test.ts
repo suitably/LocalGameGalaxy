@@ -4,8 +4,8 @@ import type { Cursor } from 'opensheetmusicdisplay';
 
 describe('extractCursorData', () => {
     it('returns empty notes and default stepDuration when cursor is null or undefined', () => {
-        expect(extractCursorData(null)).toEqual({ targetNotes: [], stepDuration: 0.25 });
-        expect(extractCursorData(undefined)).toEqual({ targetNotes: [], stepDuration: 0.25 });
+        expect(extractCursorData(null)).toEqual({ targetNotes: [], allCursorNotes: [], stepDuration: 0.25, isEndReached: true });
+        expect(extractCursorData(undefined)).toEqual({ targetNotes: [], allCursorNotes: [], stepDuration: 0.25, isEndReached: true });
     });
 
     it('returns empty notes when iterator has EndReached = true', () => {
@@ -15,7 +15,7 @@ describe('extractCursorData', () => {
             }
         } as unknown as Cursor;
 
-        expect(extractCursorData(mockCursor)).toEqual({ targetNotes: [], stepDuration: 0.25 });
+        expect(extractCursorData(mockCursor)).toEqual({ targetNotes: [], allCursorNotes: [], stepDuration: 0.25, isEndReached: true });
     });
 
     it('extracts multiple voices with independent durations and computes stepDuration from iterator clone', () => {
@@ -335,5 +335,70 @@ describe('extractCursorData', () => {
         expect(contResult.targetNotes[0].isTieStart).toBe(false);
         expect(contResult.targetNotes[0].isTiedContinuation).toBe(true);
         expect(contResult.targetNotes[0].duration).toBe(0.25);
+    });
+
+    it('isolates targetNotes for selectedPartId while providing allCursorNotes for ensemble playback', () => {
+        const fluteVoice = {
+            ParentVoice: {
+                Parent: {
+                    IdString: 'P1',
+                    Name: 'Flute',
+                    MidiInstrumentId: 74
+                }
+            },
+            Notes: [
+                {
+                    Pitch: { getHalfTone: () => 60 },
+                    Length: { RealValue: 0.25 }
+                }
+            ]
+        };
+
+        const guitarVoice = {
+            ParentVoice: {
+                Parent: {
+                    IdString: 'P3',
+                    Name: 'Guitar 1',
+                    MidiInstrumentId: 27
+                }
+            },
+            Notes: [
+                {
+                    Pitch: { getHalfTone: () => 40 },
+                    Length: { RealValue: 0.5 }
+                }
+            ]
+        };
+
+        const mockCursor = {
+            iterator: {
+                EndReached: false,
+                CurrentSourceTimestamp: { RealValue: 0.0 },
+                clone: vi.fn(() => ({
+                    EndReached: false,
+                    CurrentSourceTimestamp: { RealValue: 0.25 },
+                    moveToNext: vi.fn()
+                }))
+            },
+            VoicesUnderCursor: vi.fn(() => [fluteVoice, guitarVoice])
+        } as unknown as Cursor;
+
+        // When user plays Guitar 1 ('P3')
+        const guitarResult = extractCursorData(mockCursor, 'P3');
+        expect(guitarResult.targetNotes).toHaveLength(1);
+        expect(guitarResult.targetNotes[0].partId).toBe('P3');
+        expect(guitarResult.targetNotes[0].partName).toBe('Guitar 1');
+        expect(guitarResult.targetNotes[0].pitch).toBe(52); // 40 + 12
+        expect(guitarResult.allCursorNotes).toHaveLength(2);
+
+        // When user plays Flute ('P1')
+        const fluteResult = extractCursorData(mockCursor, 'P1');
+        expect(fluteResult.targetNotes).toHaveLength(1);
+        expect(fluteResult.targetNotes[0].partId).toBe('P1');
+        expect(fluteResult.targetNotes[0].pitch).toBe(72); // 60 + 12
+
+        // When user selects 'all'
+        const allResult = extractCursorData(mockCursor, 'all');
+        expect(allResult.targetNotes).toHaveLength(2);
     });
 });

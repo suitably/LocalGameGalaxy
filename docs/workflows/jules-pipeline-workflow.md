@@ -29,3 +29,15 @@ flowchart LR
 
 ## Secret
 `JULES_API_KEY` and/or `JULES_API_KEY_*` (rotation by issue number, fallback to next key; key name stored in the session comment).
+
+---
+
+## Declarative Scheduled Agents (`.github/agents/`)
+
+Autonomous agents can run on a schedule (e.g. weekly security audit) and automatically deliver Pull Requests:
+1. Define each agent as a markdown file with YAML frontmatter in `.github/agents/<id>.md` (e.g. `security.md`).
+2. Set `schedule: monday` (or any weekday / `daily`) and `enabled: true`.
+3. The orchestrator workflow (`.github/workflows/jules-audit.yml`) triggers `scripts/pipeline/jules-agent-runner.cjs`.
+4. The runner creates an audit tracking issue and dispatches Jules. Jules inspects the codebase, applies fixes, and opens a Pull Request linked to the issue (`Fixes #...`).
+5. `jules-watch.yml` tracks the session and cleans up the active label upon PR delivery.
+

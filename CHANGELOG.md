@@ -1,16 +1,21 @@
 
 ## [Unreleased]
 ### Changed
+- **Melodiq Notes**: Streamlined UI for mobile-first responsiveness. Integrated song title and settings directly into `GlobalHeader`, removed in-sheet overlay controls, compacted page HUD into a single note and score bar, and made playback controls icon-only on mobile.
+- Melodiq: Limited the maximum score per track to 1000 points.
 - Actions pinned to commit SHAs (Dependabot keeps them current), `persist-credentials: false`, actionlint + unit tests (`npm run test:scripts`) for Jules scripts in CI precheck; watcher isolates per-issue failures and no longer re-posts PR links.
 
 ### Added
+- Declarative Jules Agents Registry: added `.github/agents/` with scheduled orchestrator workflow (`jules-audit.yml`) and runner (`jules-agent-runner.cjs`) allowing scheduled autonomous audits (e.g. security) that automatically create tracking issues and PRs.
 - `npm run check:hygiene` deterministic prechecks (stray artifacts, conflict markers, JSON validity, i18n parity ratchet, secret patterns, workflow permissions) as first CI job; `ci.yml` now has `permissions`, `concurrency`, fork-safe deploy; removed tracked `.orig`/`.diff` leftovers.
 
 ### Changed
+- Melodiq: Limited the maximum score per track to 1000 points.
 - Jules pipeline reduced to minimal `/jules` trigger (`jules-start.yml`) plus cron watcher (`jules-watch.yml`); removed lens, reviewer, auto-fixer and suggestions workflows.
 - Jules key rotation via `JULES_API_KEY_*` secrets; watcher only polls issues labeled `jules:active`.
 
 ### Changed
+- Melodiq: Limited the maximum score per track to 1000 points.
 - Decoupled Cloudflare preview deployments from CI tests to speed up review previews.
 
 
@@ -31,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- **Melodiq**: Phone client correctly utilizes WebRTC passthrough to access the Host's song library directly instead of failing due to a missing local helper configuration (Fixes #248).
 - Core: Migrated direct `localStorage` and `sessionStorage` calls in Melodiq to the unified `storage.ts` service with typed constants (`STORAGE_KEYS`), enforcing the zero raw storage policy and resolving Dependency Inversion Principle (DIP) violations.
 
 ### Fixed
@@ -70,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Generalized Cards Suite**: Universal score and lives tracker (`UniversalScoreView.tsx`, `ModernScoreAdjuster.tsx`) in `src/games/cards/`.
 
 ### Changed
+- Melodiq: Limited the maximum score per track to 1000 points.
 - Refactored CI quality gates to enforce zero-duplication (`jscpd` < 2.5%), anti-god-component budget (< 250 lines), and doc synchronization.
 
 ### Fixed

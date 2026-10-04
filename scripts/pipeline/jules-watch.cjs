@@ -72,13 +72,36 @@ module.exports = async ({ github, context, core }) => {
         owner, repo, issue_number: issue.number,
         body: `<!-- jules:pr-${sessionId} -->\n🔀 Pull Request: ${prUrl}`,
       });
+      // Safety net: ensure PR description links to this issue
+      const prMatch = prUrl.match(/pull\/(\d+)/);
+      if (prMatch && github.rest.pulls) {
+        try {
+          const prNumber = Number(prMatch[1]);
+          const pr = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+          const currentBody = pr.data?.body || '';
+          if (!new RegExp(`\\b(?:fixes|closes|resolves)\\s+#${issue.number}\\b`, 'i').test(currentBody)) {
+            await github.rest.pulls.update({
+              owner, repo, pull_number: prNumber,
+              body: `Fixes #${issue.number}\n\n${currentBody}`,
+            });
+          }
+        } catch (e) {
+          core.warning(`Could not update PR body: ${e.message}`);
+        }
+      }
     }
-    if (session.state === 'COMPLETED' || session.state === 'FAILED') {
-      await github.rest.issues.createComment({
-        owner, repo, issue_number: issue.number,
-        body: `<!-- jules:done-${sessionId} -->\nJules-Session beendet: ${session.state}`,
-      });
-      await github.rest.issues.removeLabel({ owner, repo, issue_number: issue.number, name: LABEL });
+    if (prUrl || session.state === 'COMPLETED' || session.state === 'FAILED') {
+      if (!seen.has(`done-${sessionId}`)) {
+        await github.rest.issues.createComment({
+          owner, repo, issue_number: issue.number,
+          body: `<!-- jules:done-${sessionId} -->\nJules-Session beendet: ${session.state || 'COMPLETED'}`,
+        });
+      }
+      try {
+        await github.rest.issues.removeLabel({ owner, repo, issue_number: issue.number, name: LABEL });
+      } catch (e) {
+        /* label may already be removed */
+      }
     }
   };
 

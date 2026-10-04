@@ -66,7 +66,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
 
     // Profile State
     const [clientProfile, setClientProfile] = useState<ClientProfile>(() => {
-                const parsed = storage.getJson<ClientProfile | null>(STORAGE_KEYS.CLIENT_PROFILE, null);
+        const parsed = storage.getJson<ClientProfile | null>(STORAGE_KEYS.CLIENT_PROFILE, null);
         if (parsed) {
             try { 
                 if (!parsed.displayMode) parsed.displayMode = 'lyrics';
@@ -215,7 +215,8 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
 
         } else if (data.type === 'helper_config') {
             if (data.url) {
-                storage.setHelperUrl(data.url as string); storage.setHelperActive(true);
+                storage.setHelperUrl(data.url as string);
+                storage.setHelperActive(true);
                 window.dispatchEvent(new Event('melodiq_settings_updated'));
             }
         }

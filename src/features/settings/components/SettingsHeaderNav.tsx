@@ -17,6 +17,7 @@ import FeedbackIcon from '@mui/icons-material/Feedback';
 import VpnKeyRoundedIcon from '@mui/icons-material/VpnKeyRounded';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import PianoIcon from '@mui/icons-material/Piano';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { subPillSx } from '../settingsStyles';
@@ -118,6 +119,9 @@ export const SettingsHeaderToolbar: React.FC = () => {
             return t('settings.server_tab', 'Server');
         }
         if (activeTab === 'notifications') return t('settings.notifications_tab', 'Benachrichtigungen');
+        if (activeTab === 'melodiq-notes') {
+            return `Melodiq Notes › ${t('settings.melodiq_notes_tab', 'Instrumenten-Sounds')}`;
+        }
         if (activeTab === 'melodiq') {
             if (activeSub === 'microphones') return `Melodiq › ${t('melodiq.settings.microphones', 'Mikrofone')}`;
             if (activeSub === 'profiles') return `Melodiq › ${t('melodiq.settings.profiles', 'Profile')}`;
@@ -202,63 +206,54 @@ export const SettingsHeaderToolbar: React.FC = () => {
         </Button>
     );
 
+    const renderMelodiqNotesButton = () => (
+        <Button
+            onClick={() => updateNav('melodiq-notes')}
+            startIcon={<PianoIcon fontSize="small" />}
+            sx={mainMenuBtnSx(activeTab === 'melodiq-notes')}
+        >
+            {t('settings.melodiq_notes_tab', 'Instrumenten-Sounds')}
+        </Button>
+    );
+
     const renderMobileMenuItems = () => {
         const generalMenuItems = (
             <React.Fragment key="general-group">
-                <MenuItem disabled sx={{ opacity: '0.6 !important', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', py: 0.5 }}>
-                    {t('settings.general_tab', 'Allgemein')}
-                </MenuItem>
-                <MenuItem onClick={() => updateNav('general', 'all')} selected={activeTab === 'general' && (activeSub === 'all' || !activeSub)}>
-                    <ListItemIcon><SettingsIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('common.all', 'Alle')} />
-                </MenuItem>
-                <MenuItem onClick={() => updateNav('general', 'language')} selected={activeTab === 'general' && activeSub === 'language'}>
-                    <ListItemIcon><LanguageIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('settings.language_preferences', 'Sprache')} />
-                </MenuItem>
-                <MenuItem onClick={() => updateNav('general', 'feedback')} selected={activeTab === 'general' && activeSub === 'feedback'}>
-                    <ListItemIcon><FeedbackIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('settings.feedback_title', 'Feedback')} />
-                </MenuItem>
-                <MenuItem onClick={() => updateNav('general', 'github')} selected={activeTab === 'general' && (activeSub === 'github' || activeSub === 'pat')}>
-                    <ListItemIcon><VpnKeyRoundedIcon fontSize="small" /></ListItemIcon><ListItemText primary="GitHub (PAT)" />
-                </MenuItem>
+                <MenuItem disabled sx={{ opacity: '0.6 !important', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', py: 0.5 }}>{t('settings.general_tab', 'Allgemein')}</MenuItem>
+                <MenuItem onClick={() => updateNav('general', 'all')} selected={activeTab === 'general' && (activeSub === 'all' || !activeSub)}><ListItemIcon><SettingsIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('common.all', 'Alle')} /></MenuItem>
+                <MenuItem onClick={() => updateNav('general', 'language')} selected={activeTab === 'general' && activeSub === 'language'}><ListItemIcon><LanguageIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('settings.language_preferences', 'Sprache')} /></MenuItem>
+                <MenuItem onClick={() => updateNav('general', 'feedback')} selected={activeTab === 'general' && activeSub === 'feedback'}><ListItemIcon><FeedbackIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('settings.feedback_title', 'Feedback')} /></MenuItem>
+                <MenuItem onClick={() => updateNav('general', 'github')} selected={activeTab === 'general' && (activeSub === 'github' || activeSub === 'pat')}><ListItemIcon><VpnKeyRoundedIcon fontSize="small" /></ListItemIcon><ListItemText primary="GitHub (PAT)" /></MenuItem>
+            </React.Fragment>
+        );
+
+        const melodiqNotesMenuItems = (
+            <React.Fragment key="melodiq-notes-group">
+                <MenuItem disabled sx={{ opacity: '0.6 !important', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', py: 0.5 }}>Melodiq Notes</MenuItem>
+                <MenuItem onClick={() => updateNav('melodiq-notes')} selected={activeTab === 'melodiq-notes'}><ListItemIcon><PianoIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('settings.melodiq_notes_tab', 'Instrumenten-Sounds')} /></MenuItem>
             </React.Fragment>
         );
 
         const notificationsMenuItems = (
             <React.Fragment key="notifications-group">
-                <MenuItem disabled sx={{ opacity: '0.6 !important', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', py: 0.5 }}>
-                    {t('settings.notifications_tab', 'Benachrichtigungen')}
-                </MenuItem>
-                <MenuItem onClick={() => updateNav('notifications')} selected={activeTab === 'notifications'}>
-                    <ListItemIcon><NotificationsActiveIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('settings.notifications_tab', 'Push & ntfy')} />
-                </MenuItem>
+                <MenuItem disabled sx={{ opacity: '0.6 !important', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', py: 0.5 }}>{t('settings.notifications_tab', 'Benachrichtigungen')}</MenuItem>
+                <MenuItem onClick={() => updateNav('notifications')} selected={activeTab === 'notifications'}><ListItemIcon><NotificationsActiveIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('settings.notifications_tab', 'Push & ntfy')} /></MenuItem>
             </React.Fragment>
         );
 
         const serverMenuItems = (
             <React.Fragment key="server-group">
-                <MenuItem disabled sx={{ opacity: '0.6 !important', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', py: 0.5 }}>
-                    {t('settings.server_tab', 'Server')}
-                </MenuItem>
-                <MenuItem onClick={() => updateNav('server', 'all')} selected={activeTab === 'server' && (activeSub === 'all' || !activeSub)}>
-                    <ListItemIcon><DnsIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('common.all', 'Alle')} />
-                </MenuItem>
-                <MenuItem onClick={() => updateNav('server', 'signaling', 'signaling')} selected={activeTab === 'server' && activeSub === 'signaling'}>
-                    <ListItemIcon><HubIcon fontSize="small" /></ListItemIcon><ListItemText primary="WebRTC Signaling" />
-                </MenuItem>
-                <MenuItem onClick={() => updateNav('server', 'companion', 'companion')} selected={activeTab === 'server' && activeSub === 'companion'}>
-                    <ListItemIcon><ExtensionIcon fontSize="small" /></ListItemIcon><ListItemText primary="Companion Plugins" />
-                </MenuItem>
+                <MenuItem disabled sx={{ opacity: '0.6 !important', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', py: 0.5 }}>{t('settings.server_tab', 'Server')}</MenuItem>
+                <MenuItem onClick={() => updateNav('server', 'all')} selected={activeTab === 'server' && (activeSub === 'all' || !activeSub)}><ListItemIcon><DnsIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('common.all', 'Alle')} /></MenuItem>
+                <MenuItem onClick={() => updateNav('server', 'signaling', 'signaling')} selected={activeTab === 'server' && activeSub === 'signaling'}><ListItemIcon><HubIcon fontSize="small" /></ListItemIcon><ListItemText primary="WebRTC Signaling" /></MenuItem>
+                <MenuItem onClick={() => updateNav('server', 'companion', 'companion')} selected={activeTab === 'server' && activeSub === 'companion'}><ListItemIcon><ExtensionIcon fontSize="small" /></ListItemIcon><ListItemText primary="Companion Plugins" /></MenuItem>
             </React.Fragment>
         );
 
         const melodiqMenuItems = (
             <React.Fragment key="melodiq-group">
-                <MenuItem disabled sx={{ opacity: '0.6 !important', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', py: 0.5 }}>
-                    {t('games.melodiq.title', 'Melodiq')}
-                </MenuItem>
-                <MenuItem onClick={() => updateNav('melodiq', 'all')} selected={activeTab === 'melodiq' && (activeSub === 'all' || !activeSub)}>
-                    <ListItemIcon><MicIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('common.all', 'Alle Einstellungen')} />
-                </MenuItem>
+                <MenuItem disabled sx={{ opacity: '0.6 !important', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', py: 0.5 }}>{t('games.melodiq.title', 'Melodiq')}</MenuItem>
+                <MenuItem onClick={() => updateNav('melodiq', 'all')} selected={activeTab === 'melodiq' && (activeSub === 'all' || !activeSub)}><ListItemIcon><MicIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('common.all', 'Alle Einstellungen')} /></MenuItem>
                 <MenuItem onClick={() => updateNav('melodiq', 'microphones')} selected={activeTab === 'melodiq' && activeSub === 'microphones'}>
                     <ListItemIcon><MicIcon fontSize="small" /></ListItemIcon><ListItemText primary={t('melodiq.settings.microphones', 'Mikrofone')} />
                 </MenuItem>
@@ -275,27 +270,13 @@ export const SettingsHeaderToolbar: React.FC = () => {
         );
 
         // If coming from Melodiq, show Melodiq first; otherwise show Allgemein first
-        if (isFromMelodiq) {
-            return [
-                melodiqMenuItems,
-                <Divider key="d1" sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />,
-                generalMenuItems,
-                <Divider key="d2" sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />,
-                serverMenuItems,
-                <Divider key="d3" sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />,
-                notificationsMenuItems,
-            ];
-        }
+        const baseItems = isFromMelodiq
+            ? [melodiqMenuItems, generalMenuItems, serverMenuItems, notificationsMenuItems, melodiqNotesMenuItems]
+            : [generalMenuItems, melodiqNotesMenuItems, serverMenuItems, notificationsMenuItems, melodiqMenuItems];
 
-        return [
-            generalMenuItems,
-            <Divider key="d1" sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />,
-            serverMenuItems,
-            <Divider key="d2" sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />,
-            notificationsMenuItems,
-            <Divider key="d3" sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />,
-            melodiqMenuItems,
-        ];
+        return baseItems.flatMap((item, idx) =>
+            idx === 0 ? [item] : [<Divider key={`d${idx}`} sx={{ my: 0.5, borderColor: 'rgba(255,255,255,0.08)' }} />, item]
+        );
     };
 
     return (
@@ -357,12 +338,14 @@ export const SettingsHeaderToolbar: React.FC = () => {
                         <>
                             {renderMelodiqDropdown()}
                             {renderGeneralButton()}
+                            {renderMelodiqNotesButton()}
                             {renderServerButton()}
                             {renderNotificationsButton()}
                         </>
                     ) : (
                         <>
                             {renderGeneralButton()}
+                            {renderMelodiqNotesButton()}
                             {renderServerButton()}
                             {renderNotificationsButton()}
                             {renderMelodiqDropdown()}

@@ -28,8 +28,9 @@ export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLon
     const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPressRef = React.useRef(false);
 
-    const coverUrl = (song.hasCover && typeof song.cover === 'string' && song.cover.length > 0)
-        ? song.cover
+    const rawCover = song.cover || song.coverThumbnail;
+    const coverUrl = (typeof rawCover === 'string' && rawCover.length > 0)
+        ? rawCover
         : null;
 
     const handleStart = () => {
@@ -112,9 +113,21 @@ export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLon
                 <Typography variant="body1" noWrap sx={{ fontWeight: 500 }}>
                     {song.title}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" noWrap>
-                    {song.artist}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    <Typography variant="body2" color="text.secondary" noWrap sx={{ minWidth: 0 }}>
+                        {song.artist}
+                    </Typography>
+                    {(song.duration || song.year) && (
+                        <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            noWrap
+                            sx={{ display: { xs: 'inline', sm: 'none' }, opacity: 0.8, flexShrink: 0 }}
+                        >
+                            • {[song.year, song.duration ? formatDuration(song.duration) : null].filter(Boolean).join(' • ')}
+                        </Typography>
+                    )}
+                </Box>
             </Box>
 
             {/* Metadata (Hidden on very small screens) */}
