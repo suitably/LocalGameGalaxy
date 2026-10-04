@@ -92,7 +92,6 @@ const LocalSongsViewComponent: React.FC<LocalSongsViewProps> = ({
                                 activeJobType={activeJob?.type}
                                 downloadProgress={progress}
                                 onClick={isSinger ? () => {} : () => handleSelectSong(song)}
-                                onLongPress={isSinger ? undefined : () => handleSongLongPress(song)}
                             />
                         );
                     }}
@@ -130,7 +129,6 @@ const LocalSongsViewComponent: React.FC<LocalSongsViewProps> = ({
                                 activeJobType={activeJob?.type}
                                 downloadProgress={progress}
                                 onClick={isSinger ? () => {} : () => handleSelectSong(song)}
-                                onLongPress={isSinger ? undefined : () => handleSongLongPress(song)}
                                 onMenuClick={isSinger ? undefined : () => handleSongLongPress(song)}
                             />
                         </Box>

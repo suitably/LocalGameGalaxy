@@ -11,7 +11,6 @@ import { useTranslation } from 'react-i18next';
 interface SongCardProps {
     song: SongMeta | any; // Allow USDB songs too
     onClick: () => void;
-    onLongPress?: () => void;
     onActionClick?: (e: React.MouseEvent) => void;
     isDownloading?: boolean;
     isDownloaded?: boolean;
@@ -24,47 +23,16 @@ interface SongCardProps {
  * SongCard displays lightweight SongMeta for fast rendering.
  * Cover is loaded on-demand from the full Song table when visible.
  */
-export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, onActionClick, isDownloading, isDownloaded, downloadProgress, hasActiveJob, activeJobType }) => {
+export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onActionClick, isDownloading, isDownloaded, downloadProgress, hasActiveJob, activeJobType }) => {
     const { t } = useTranslation();
-    const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-    const isLongPressRef = React.useRef(false);
 
     const rawCover = song.cover || song.coverThumbnail;
     const coverUrl = (song.hasCover !== false && rawCover && typeof rawCover === 'string' && rawCover.length > 0)
         ? rawCover
         : null;
 
-    const handleStart = () => {
+    const handleClick = () => {
         if (isDownloading) return;
-        isLongPressRef.current = false;
-        longPressTimerRef.current = setTimeout(() => {
-            isLongPressRef.current = true;
-            if (onLongPress) {
-                onLongPress();
-            }
-        }, 600); // 600ms threshold
-    };
-
-    const handleEnd = (e: React.MouseEvent | React.TouchEvent) => {
-        if (isDownloading) return;
-        if (longPressTimerRef.current) {
-            clearTimeout(longPressTimerRef.current);
-            longPressTimerRef.current = null;
-        }
-        // If it was a long press, prevent the click
-        if (isLongPressRef.current) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-    };
-
-    const handleClick = (e: React.MouseEvent) => {
-        if (isDownloading) return;
-        if (isLongPressRef.current) {
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-        }
         onClick();
     };
 
@@ -89,15 +57,6 @@ export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, 
             }}
             tabIndex={0}
             onClick={handleClick}
-            onMouseDown={handleStart}
-            onMouseUp={handleEnd}
-            onMouseLeave={handleEnd}
-            onTouchStart={handleStart}
-            onTouchEnd={handleEnd}
-            onContextMenu={(e) => {
-                // Prevent context menu on long press if we handled it
-                if (isLongPressRef.current) e.preventDefault();
-            }}
             onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();

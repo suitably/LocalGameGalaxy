@@ -63,9 +63,6 @@ export const OnlineSongsView: React.FC<OnlineSongsViewProps> = ({
                                         handleDownloadAndQueue(song);
                                     }
                                 }}
-                                onLongPress={isSinger ? undefined : () => {
-                                    if (isDownloaded && localSong) handleSongLongPress(localSong);
-                                }}
                                 onActionClick={(canDownload && !isSinger) ? () => {
                                     if (!isDl && !isDownloaded) handleDownloadOnly(song);
                                 } : undefined}
@@ -104,9 +101,6 @@ export const OnlineSongsView: React.FC<OnlineSongsViewProps> = ({
                                     } else if (!isDl && !isDownloaded && canDownload) {
                                         handleDownloadAndQueue(song);
                                     }
-                                }}
-                                onLongPress={isSinger ? undefined : () => {
-                                    if (isDownloaded && localSong) handleSongLongPress(localSong);
                                 }}
                                 onMenuClick={isSinger ? undefined : () => {
                                     if (isDownloaded && localSong) handleSongLongPress(localSong);
