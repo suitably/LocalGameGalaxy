@@ -67,6 +67,28 @@ export interface TimelineTrack {
     notes: TimelineNote[];
 }
 
+export interface SheetMusicViewerRef {
+    nextNote: () => CursorNotesResult;
+    previousNote: () => CursorNotesResult;
+    resetCursor: () => CursorNotesResult;
+    getCurrentNotes: () => CursorNotesResult;
+    getStepDuration: () => number;
+}
+
+export interface SheetMusicViewerProps {
+    xmlContent: string;
+    selectedPartId?: string;
+    soloInstrumentInSheet?: boolean;
+    zoom?: number;
+    renderMode?: 'horizontal' | 'vertical';
+    isCurrentNoteHit?: boolean;
+    onRenderModeChange?: (mode: 'horizontal' | 'vertical') => void;
+    onNotesChanged?: (targetNotes: TargetNote[], allNotes?: TargetNote[]) => void;
+    onSongEnd?: () => void;
+    onBpmDetected?: (bpm: number) => void;
+}
+
 // Re-export for convenience so other files in this game only import from types.ts
+export type { CursorNotesResult } from './logic/cursorNotes';
 export type { StoredSheetMusic, StoredFolderHandle } from './logic/db';
 export type { TargetNote } from './useNoteVerifier';

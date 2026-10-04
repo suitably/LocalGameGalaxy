@@ -53,21 +53,22 @@ export const PlaybackControlsBar: React.FC<PlaybackControlsBarProps> = ({
         >
             <Stack
                 direction={{ xs: 'column', md: 'row' }}
-                spacing={2.5}
+                spacing={{ xs: 2, md: 2.5 }}
                 alignItems="center"
                 justifyContent="space-between"
                 flexWrap="wrap"
             >
                 {/* Left: Play / Pause and Reset */}
-                <Stack direction="row" spacing={1.5} alignItems="center">
+                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: { xs: '100%', md: 'auto' } }}>
                     <Button
                         variant="contained"
                         color={isPlaying ? 'warning' : 'success'}
-                        size="large"
+                        size="medium"
                         startIcon={isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
                         onClick={onTogglePlay}
                         sx={{
-                            px: 3.5,
+                            flex: { xs: 2, sm: 'none' },
+                            px: { xs: 2, sm: 3.5 },
                             py: 1.25,
                             borderRadius: 2.5,
                             fontWeight: 'bold',
@@ -82,18 +83,23 @@ export const PlaybackControlsBar: React.FC<PlaybackControlsBarProps> = ({
                     <Button
                         variant="outlined"
                         color="inherit"
-                        size="large"
+                        size="medium"
                         startIcon={<RestartAltIcon />}
                         onClick={onReset}
-                        sx={{ borderRadius: 2.5, borderColor: 'rgba(255,255,255,0.2)' }}
+                        sx={{
+                            flex: { xs: 1, sm: 'none' },
+                            borderRadius: 2.5,
+                            borderColor: 'rgba(255,255,255,0.2)',
+                            py: 1.25,
+                        }}
                     >
                         {t('games.melodiq_notes.reset')}
                     </Button>
                 </Stack>
 
                 {/* Center: Mode & Input source */}
-                <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
-                    <FormControl size="small" sx={{ minWidth: 140 }}>
+                <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" sx={{ width: { xs: '100%', md: 'auto' } }}>
+                    <FormControl size="small" sx={{ flex: { xs: 1, sm: 'none' }, minWidth: { xs: 120, sm: 140 } }}>
                         <InputLabel>{t('games.melodiq_notes.mode')}</InputLabel>
                         <Select
                             value={playMode}
@@ -105,7 +111,7 @@ export const PlaybackControlsBar: React.FC<PlaybackControlsBarProps> = ({
                         </Select>
                     </FormControl>
 
-                    <FormControl size="small" sx={{ minWidth: 140 }}>
+                    <FormControl size="small" sx={{ flex: { xs: 1, sm: 'none' }, minWidth: { xs: 120, sm: 140 } }}>
                         <InputLabel>{t('games.melodiq_notes.input_source')}</InputLabel>
                         <Select
                             value={inputSource}
@@ -130,7 +136,7 @@ export const PlaybackControlsBar: React.FC<PlaybackControlsBarProps> = ({
 
                 {/* Right: Speed Slider */}
                 {playMode === 'continuous' && (
-                    <Box sx={{ minWidth: 180, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{ width: { xs: '100%', md: 'auto' }, minWidth: { xs: '100%', md: 180 }, display: 'flex', alignItems: 'center', gap: 1.5 }}>
                         <SpeedIcon fontSize="small" sx={{ color: 'text.secondary' }} />
                         <Box sx={{ flex: 1 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>

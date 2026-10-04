@@ -573,7 +573,9 @@
       "tracks": "Spuren",
       "zoom_in": "Vergrößern",
       "zoom_out": "Verkleinern",
-      "zoom_reset": "Zoom zurücksetzen"
+      "zoom_reset": "Zoom zurücksetzen",
+      "render_mode_horizontal": "Horizontales Band",
+      "render_mode_vertical": "Vertikale Noten"
     },
     "kniffel": {
       "title": "Kniffel",

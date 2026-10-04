@@ -28,15 +28,28 @@ export const NoteStatusBar: React.FC<NoteStatusBarProps> = ({
         : t('games.melodiq_notes.none');
 
     return (
-        <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+        <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+                mb: 1.5,
+                flexWrap: 'wrap',
+                gap: 1,
+                alignItems: 'center',
+            }}
+        >
             <Chip
+                size="small"
                 label={t('games.melodiq_notes.target_notes', { notes: targetString })}
                 color="primary"
                 variant="outlined"
+                sx={{ fontSize: { xs: '0.72rem', sm: '0.8rem' }, fontWeight: 600 }}
             />
             <Chip
+                size="small"
                 label={t('games.melodiq_notes.played_notes', { notes: playedString })}
                 color={isCurrentNoteHit ? 'success' : 'default'}
+                sx={{ fontSize: { xs: '0.72rem', sm: '0.8rem' }, fontWeight: 600 }}
             />
         </Stack>
     );

@@ -48,6 +48,10 @@ export const useMelodiqNotesState = ({ viewerRef }: UseMelodiqNotesStateOptions)
         const val = storage.get(STORAGE_KEYS.MELODIQ_NOTES_VIEW_MODE, 'classic');
         return val === 'modern' ? 'modern' : 'classic';
     });
+    const [sheetRenderMode, setSheetRenderMode] = useState<'horizontal' | 'vertical'>(() => {
+        const val = storage.get(STORAGE_KEYS.MELODIQ_NOTES_SHEET_RENDER_MODE, 'vertical');
+        return val === 'horizontal' ? 'horizontal' : 'vertical';
+    });
     const [modernSubMode, setModernSubMode] = useState<ModernViewSubMode>('focus');
     const [currentBeats, setCurrentBeats] = useState<number>(0);
 
@@ -410,6 +414,11 @@ export const useMelodiqNotesState = ({ viewerRef }: UseMelodiqNotesStateOptions)
         storage.set(STORAGE_KEYS.MELODIQ_NOTES_VIEW_MODE, mode);
     };
 
+    const handleSheetRenderModeChange = (mode: 'horizontal' | 'vertical') => {
+        setSheetRenderMode(mode);
+        storage.set(STORAGE_KEYS.MELODIQ_NOTES_SHEET_RENDER_MODE, mode);
+    };
+
     return {
         selectedSong,
         currentXmlContent,
@@ -438,6 +447,8 @@ export const useMelodiqNotesState = ({ viewerRef }: UseMelodiqNotesStateOptions)
         setSoloInstrumentInSheet,
         viewMode,
         handleViewModeChange,
+        sheetRenderMode,
+        setSheetRenderMode: handleSheetRenderModeChange,
         modernSubMode,
         setModernSubMode,
         currentBeats,

@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     Box, Typography, Stack, Button, IconButton,
-    ToggleButtonGroup, ToggleButton, Chip, Tooltip
+    ToggleButtonGroup, ToggleButton, Chip, Tooltip, useMediaQuery, useTheme
 } from '@mui/material';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
@@ -40,20 +40,32 @@ export const MelodiqNotesHeader: React.FC<MelodiqNotesHeaderProps> = ({
     onOpenSongSelect,
 }) => {
     const { t } = useTranslation();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     return (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2.5, flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: { xs: 1.5, sm: 2.5 }, flexWrap: 'wrap', gap: { xs: 1.5, sm: 2 } }}>
             {/* Song Meta & Selector Button */}
-            <Stack direction="row" spacing={1.5} alignItems="center">
-                <MusicNoteIcon sx={{ fontSize: 36, color: 'primary.main' }} />
-                <Box>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ maxWidth: { xs: '100%', md: '50%' } }}>
+                <MusicNoteIcon sx={{ fontSize: { xs: 28, sm: 36 }, color: 'primary.main', flexShrink: 0 }} />
+                <Box sx={{ minWidth: 0 }}>
                     <Stack direction="row" spacing={1} alignItems="center">
-                        <Typography variant="h5" fontWeight="bold" sx={{ color: 'white' }}>
+                        <Typography
+                            variant={isMobile ? 'subtitle1' : 'h5'}
+                            fontWeight="bold"
+                            noWrap
+                            sx={{ color: 'white', maxWidth: { xs: 160, sm: 280 } }}
+                        >
                             {currentTitle}
                         </Typography>
-                        <Chip label={`${effectiveBpm} BPM`} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.68rem', color: 'text.secondary' }} />
+                        <Chip
+                            label={`${effectiveBpm} BPM`}
+                            size="small"
+                            variant="outlined"
+                            sx={{ height: 18, fontSize: '0.65rem', color: 'text.secondary', flexShrink: 0 }}
+                        />
                     </Stack>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block', maxWidth: 200 }}>
                         {currentArtist}
                     </Typography>
                 </Box>
@@ -62,39 +74,39 @@ export const MelodiqNotesHeader: React.FC<MelodiqNotesHeaderProps> = ({
                     variant="outlined"
                     startIcon={<LibraryMusicIcon />}
                     onClick={onOpenSongSelect}
-                    sx={{ ml: 1, textTransform: 'none', borderRadius: 2 }}
+                    sx={{ ml: 0.5, textTransform: 'none', borderRadius: 2, flexShrink: 0, px: { xs: 1, sm: 1.5 }, minWidth: { xs: 'auto', sm: 70 } }}
                 >
-                    {t('games.melodiq_notes.song', 'Song')}
+                    {isMobile ? '' : t('games.melodiq_notes.song', 'Song')}
                 </Button>
             </Stack>
 
             {/* Middle: Score HUD */}
-            <Stack direction="row" spacing={2.5} alignItems="center">
+            <Stack direction="row" spacing={{ xs: 2, sm: 3 }} alignItems="center">
                 <Box textAlign="center">
-                    <Typography variant="caption" color="text.secondary">{t('games.melodiq_notes.score')}</Typography>
-                    <Typography variant="h5" fontWeight="bold" color="primary.main">{score}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.68rem', letterSpacing: 0.5 }}>{t('games.melodiq_notes.score')}</Typography>
+                    <Typography variant={isMobile ? 'subtitle1' : 'h5'} fontWeight="bold" color="primary.main">{score}</Typography>
                 </Box>
                 <Box textAlign="center">
-                    <Typography variant="caption" color="text.secondary">{t('games.melodiq_notes.hits')}</Typography>
-                    <Typography variant="h5" fontWeight="bold" color="success.main">{hitCount}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.68rem', letterSpacing: 0.5 }}>{t('games.melodiq_notes.hits')}</Typography>
+                    <Typography variant={isMobile ? 'subtitle1' : 'h5'} fontWeight="bold" color="success.main">{hitCount}</Typography>
                 </Box>
             </Stack>
 
             {/* Right: View Switcher & Action Dialogs */}
-            <Stack direction="row" spacing={1.5} alignItems="center">
+            <Stack direction="row" spacing={1} alignItems="center">
                 <ToggleButtonGroup
                     size="small"
                     value={viewMode}
                     exclusive
                     onChange={(_, val) => val && onViewModeChange(val as MelodiqNotesViewMode)}
                 >
-                    <ToggleButton value="classic" sx={{ px: 1.5, py: 0.5, fontSize: '0.8rem' }}>
-                        <MenuBookIcon sx={{ fontSize: 16, mr: 0.5 }} />
-                        {t('games.melodiq_notes.view_classic', 'Notenblatt')}
+                    <ToggleButton value="classic" sx={{ px: { xs: 1, sm: 1.5 }, py: 0.25, fontSize: '0.75rem' }}>
+                        <MenuBookIcon sx={{ fontSize: 16, mr: { xs: 0, sm: 0.5 } }} />
+                        {!isMobile && t('games.melodiq_notes.view_classic', 'Noten')}
                     </ToggleButton>
-                    <ToggleButton value="modern" sx={{ px: 1.5, py: 0.5, fontSize: '0.8rem' }}>
-                        <ElectricBoltIcon sx={{ fontSize: 16, mr: 0.5, color: '#f59e0b' }} />
-                        {t('games.melodiq_notes.view_modern', 'Modern')}
+                    <ToggleButton value="modern" sx={{ px: { xs: 1, sm: 1.5 }, py: 0.25, fontSize: '0.75rem' }}>
+                        <ElectricBoltIcon sx={{ fontSize: 16, mr: { xs: 0, sm: 0.5 }, color: '#f59e0b' }} />
+                        {!isMobile && t('games.melodiq_notes.view_modern', 'Modern')}
                     </ToggleButton>
                 </ToggleButtonGroup>
 
@@ -105,9 +117,9 @@ export const MelodiqNotesHeader: React.FC<MelodiqNotesHeaderProps> = ({
                             variant="outlined"
                             startIcon={<GraphicEqIcon />}
                             onClick={onOpenMixer}
-                            sx={{ borderRadius: 2, textTransform: 'none' }}
+                            sx={{ borderRadius: 2, textTransform: 'none', px: { xs: 1, sm: 1.5 }, minWidth: { xs: 'auto', sm: 80 } }}
                         >
-                            Mixer ({partsCount})
+                            {isMobile ? `(${partsCount})` : `Mixer (${partsCount})`}
                         </Button>
                     </Tooltip>
                 )}

@@ -100,6 +100,8 @@ export const MelodiqNotesGame: React.FC = () => {
                         xmlContent={state.currentXmlContent}
                         selectedPartId={state.selectedPartId}
                         soloInstrumentInSheet={state.soloInstrumentInSheet}
+                        renderMode={state.sheetRenderMode}
+                        onRenderModeChange={state.setSheetRenderMode}
                         isCurrentNoteHit={state.isCurrentNoteHit}
                         onNotesChanged={state.handleNotesChanged}
                         onSongEnd={state.handleSongEnd}

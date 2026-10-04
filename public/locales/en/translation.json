@@ -573,7 +573,9 @@
       "tracks": "Tracks",
       "zoom_in": "Zoom In",
       "zoom_out": "Zoom Out",
-      "zoom_reset": "Reset Zoom"
+      "zoom_reset": "Reset Zoom",
+      "render_mode_horizontal": "Horizontal Ribbon",
+      "render_mode_vertical": "Vertical Score"
     },
     "kniffel": {
       "title": "Yahtzee",
