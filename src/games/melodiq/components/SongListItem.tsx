@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, IconButton, Chip } from '@mui/material';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -12,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 interface SongListItemProps {
     song: SongMeta;
     onClick: () => void;
+    onMenuClick?: (e: React.MouseEvent) => void;
     onActionClick?: (e: React.MouseEvent) => void;
     isDownloading?: boolean;
     isDownloaded?: boolean;
@@ -20,7 +22,7 @@ interface SongListItemProps {
     activeJobType?: string;
 }
 
-export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onActionClick, isDownloading, isDownloaded, downloadProgress, hasActiveJob, activeJobType }) => {
+export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onMenuClick, onActionClick, isDownloading, isDownloaded, downloadProgress, hasActiveJob, activeJobType }) => {
     const { t } = useTranslation();
 
     const rawCover = song.cover || song.coverThumbnail;
@@ -156,6 +158,19 @@ export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onAct
                     }}
                 >
                     <CloudDownloadIcon />
+                </IconButton>
+            )}
+
+            {/* Menu Action (for touch devices mainly, or standard access) */}
+            {onMenuClick && (
+                <IconButton
+                    size="small"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onMenuClick(e);
+                    }}
+                >
+                    <MoreVertIcon fontSize="small" />
                 </IconButton>
             )}
         </Box>

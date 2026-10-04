@@ -86,6 +86,7 @@ export const MelodiqQueue: React.FC = () => {
                                 jobs={jobs}
                                 handleSelectSong={(song) => addToQueue(song, 'User')}
                                 handleDownloadAndQueue={handleDownloadAndQueue}
+                                handleSongLongPress={() => {}} // Not used in queue view
                                 handleDownloadOnly={handleDownloadOnly}
                             />
                         ) : (
@@ -93,6 +94,7 @@ export const MelodiqQueue: React.FC = () => {
                                 viewMode="grid"
                                 filteredSongs={filteredSongs as any}
                                 handleSelectSong={(song) => addToQueue(song, 'User')}
+                                handleSongLongPress={() => {}} // Not used in queue view
                             />
                         )}
                     </Box>

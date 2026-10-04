@@ -12,6 +12,7 @@ interface OnlineSongsViewProps {
     jobs: any[];
     handleSelectSong: (song: any) => void;
     handleDownloadAndQueue: (song: any) => void;
+    handleSongLongPress: (song: any) => void;
     handleDownloadOnly: (song: any) => void;
     isSinger?: boolean;
     canDownload?: boolean;
@@ -19,7 +20,7 @@ interface OnlineSongsViewProps {
 
 export const OnlineSongsView: React.FC<OnlineSongsViewProps> = ({
     isSearchingOnline, viewMode, filteredOnlineSongs, songs, jobs,
-    handleSelectSong, handleDownloadAndQueue, handleDownloadOnly,
+    handleSelectSong, handleDownloadAndQueue, handleSongLongPress, handleDownloadOnly,
     isSinger, canDownload = true
 }) => {
     if (isSearchingOnline) {
@@ -100,6 +101,9 @@ export const OnlineSongsView: React.FC<OnlineSongsViewProps> = ({
                                     } else if (!isDl && !isDownloaded && canDownload) {
                                         handleDownloadAndQueue(song);
                                     }
+                                }}
+                                onMenuClick={isSinger ? undefined : () => {
+                                    if (isDownloaded && localSong) handleSongLongPress(localSong);
                                 }}
                                 onActionClick={(canDownload && !isSinger) ? () => {
                                     if (!isDl && !isDownloaded) handleDownloadOnly(song);

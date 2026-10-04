@@ -60,7 +60,7 @@ export const MelodiqGameContent: React.FC = () => {
     const memoizedJobs = React.useMemo(() => jobs, [jobs]);
 
     const [remoteSong, setRemoteSong] = useState<SongMeta | null>(null);
-    const [selectedSongForQueue] = useState<SongMeta | null>(null);
+    const [selectedSongForQueue, setSelectedSongForQueue] = useState<SongMeta | null>(null);
     const [queueDialogOpen, setQueueDialogOpen] = useState(false);
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
     const [showQueueDrawer, setShowQueueDrawer] = useState(false);
@@ -322,6 +322,15 @@ export const MelodiqGameContent: React.FC = () => {
         }
     }, [selectedSong, addToQueue, popNext, setNowPlaying, setRemoteSong, handleSelectSong, setSelectedSong, setCurrentView, setFeedbackMessage]);
 
+    const handleSongLongPress = (song: SongMeta) => {
+        if (isClient && clientRole === 'singer') {
+            setFeedbackMessage('Als Sänger kannst du keine Lieder zur Warteschlange hinzufügen.');
+            return;
+        }
+        setSelectedSongForQueue(song);
+        setQueueDialogOpen(true);
+    };
+
     const handleDownloadOnly = async (usdbSong: UsdbSongItem) => {
         if (isClient && clientRole !== 'admin' && clientRole !== 'queue_manager') {
             setFeedbackMessage('Nur Queue Manager können Songs herunterladen.');
@@ -490,6 +499,7 @@ export const MelodiqGameContent: React.FC = () => {
                         jobs={memoizedJobs}
                         handleSelectSong={handleSelectSong}
                         handleDownloadAndQueue={handleDownloadAndQueue}
+                        handleSongLongPress={handleSongLongPress}
                         handleDownloadOnly={handleDownloadOnly}
                         isSinger={isClient && clientRole === 'singer'}
                         canDownload={!isClient || clientRole === 'admin' || clientRole === 'queue_manager'}
@@ -501,6 +511,7 @@ export const MelodiqGameContent: React.FC = () => {
                         viewMode={settings.defaultViewMode}
                         filteredSongs={memoizedFilteredSongs}
                         handleSelectSong={handleSelectSong}
+                        handleSongLongPress={handleSongLongPress}
                         isSinger={isClient && clientRole === 'singer'}
                         jobs={memoizedJobs}
                     />
