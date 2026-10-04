@@ -1,5 +1,4 @@
-import { describe } from "vitest";
-const vbench = (_name: string, _fn: any) => {};
+import { bench, describe } from 'vitest';
 import { getDeathCascade } from './utils';
 import type { Player } from './types';
 
@@ -52,23 +51,23 @@ const chain1000 = createLongChainPlayers(1000);
 const chain2000 = createLongChainPlayers(2000);
 
 describe('getDeathCascade Benchmark', () => {
-    vbench('100 players paired lovers', () => {
+    bench('100 players paired lovers', () => {
         getDeathCascade(['0', '10', '20', '30'], players100);
     });
 
-    vbench('1000 players paired lovers', () => {
+    bench('1000 players paired lovers', () => {
         getDeathCascade(['0', '100', '200', '300'], players1000);
     });
 
-    vbench('5000 players paired lovers', () => {
+    bench('5000 players paired lovers', () => {
         getDeathCascade(['0', '500', '1000', '1500'], players5000);
     });
 
-    vbench('1000 players long chain cascade', () => {
+    bench('1000 players long chain cascade', () => {
         getDeathCascade(['0'], chain1000);
     });
 
-    vbench('2000 players long chain cascade', () => {
+    bench('2000 players long chain cascade', () => {
         getDeathCascade(['0'], chain2000);
     });
 });
