@@ -11,7 +11,8 @@ export type WidgetType =
   | 'token'
   | 'die'
   | 'counter'
-  | 'seat';
+  | 'seat'
+  | 'bag';
 
 /** A single renderable object within a card face template */
 export interface FaceObject {
@@ -164,6 +165,17 @@ export interface SeatWidget extends BaseWidget {
   turn?: boolean;
 }
 
+export interface BagWidget extends BaseWidget {
+  type: 'bag';
+  color?: string; // Fabric/pouch color (from TTS ColorDiffuse)
+  isInfinite?: boolean; // Infinite supply if true
+  itemCount?: number; // Count for finite bags
+  itemIds?: string[]; // IDs for finite bags
+  templateWidget?: TabletopWidget; // Template widget to clone when drawn from
+  previewImage?: string; // Preview image of contained token/item
+  previewLabel?: string; // Label of contained token/item
+}
+
 export type TabletopWidget =
   | CardWidget
   | DeckWidget
@@ -171,7 +183,8 @@ export type TabletopWidget =
   | TokenWidget
   | CounterWidget
   | DieWidget
-  | SeatWidget;
+  | SeatWidget
+  | BagWidget;
 
 export interface TabletopTableConfig {
   width: number;

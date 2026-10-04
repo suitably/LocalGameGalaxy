@@ -16,6 +16,7 @@ import {
   type TokenWidget,
   type HolderWidget,
   type CardContent,
+  type BagWidget,
 } from './types';
 import { validateAndSanitizeGame } from './gameValidator';
 import { resolveCardSprite, resolveBackSprite } from './ttsSpritesheet';

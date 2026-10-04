@@ -56,6 +56,17 @@ export function useTabletopSync({
             payload: { deckId: action.deckId, targetHolderId: action.targetHolderId },
           });
           break;
+        case 'DRAW_FROM_BAG':
+          dispatch({
+            type: 'DRAW_FROM_BAG',
+            payload: {
+              bagId: action.bagId,
+              position: action.position,
+              spawnedId: action.spawnedId,
+              targetHolderId: action.targetHolderId,
+            },
+          });
+          break;
         case 'MOVE_WIDGET':
           dispatch({
             type: 'MOVE_WIDGET',
