@@ -1,5 +1,8 @@
 # Directory Update Log
 
+## 2026-10-04
+* **Update**: Replaced the multi-workflow Jules pipeline with a minimal `/plan` + cron watcher (`jules-plan.yml`, `jules-watch.yml`); removed lens, reviewer, auto-fixer, suggestions workflows and scripts.
+
 ## 2026-09-27
 * **Update**: Converted entire documentation corpus to the Open Knowledge Format (OKF) v0.2 specification.
 * **Update**: Modernized `docs/tech/architecture.md` (SSoT) to fully represent all 13 games, 6 shared modules, Hono micro-kernel, Cloudflare Quick Tunnel, and segregated layout contexts.

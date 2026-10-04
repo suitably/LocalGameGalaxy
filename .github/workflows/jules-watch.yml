@@ -1,0 +1,34 @@
+name: Jules Watch
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: jules-watch
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+          JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
+          JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
+          JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
+          JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
+          JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
+        with:
+          script: |
+            await require('./scripts/pipeline/jules-watch.cjs')({ github, context, core });
