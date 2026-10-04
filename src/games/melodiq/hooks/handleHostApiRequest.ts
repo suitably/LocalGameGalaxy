@@ -24,24 +24,34 @@ export async function handleHostApiRequest({
 
         if (isSongList) {
             if (songs && songs.length > 0) {
-                resData = songs.map(s => ({
-                    id: s.id,
-                    source: s.source,
-                    title: s.title,
-                    artist: s.artist,
-                    bpm: (s as unknown as { bpm?: number }).bpm,
-                    duration: s.duration,
-                    year: s.year,
-                    genre: s.genre,
-                    language: s.language,
-                    edition: s.edition,
-                    album: s.album,
-                    hasCover: s.hasCover ?? Boolean(s.cover),
-                    hasVideo: s.hasVideo ?? Boolean(s.video),
-                    hasSeparation: s.hasSeparation,
-                    cover: typeof s.cover === 'string' ? s.cover : undefined,
-                    video: typeof s.video === 'string' ? s.video : undefined
-                }));
+                resData = songs.map(s => {
+                    let coverToSend: string | undefined;
+                    if (typeof s.coverThumbnail === 'string' && s.coverThumbnail.startsWith('data:')) {
+                        coverToSend = s.coverThumbnail;
+                    } else if (typeof s.cover === 'string' && !s.cover.startsWith('blob:')) {
+                        coverToSend = s.cover;
+                    }
+
+                    return {
+                        id: s.id,
+                        source: s.source,
+                        title: s.title,
+                        artist: s.artist,
+                        bpm: (s as unknown as { bpm?: number }).bpm,
+                        duration: s.duration,
+                        year: s.year,
+                        genre: s.genre,
+                        language: s.language,
+                        edition: s.edition,
+                        album: s.album,
+                        hasCover: s.hasCover ?? Boolean(coverToSend || s.cover || s.coverThumbnail),
+                        hasVideo: s.hasVideo ?? Boolean(s.video),
+                        hasSeparation: s.hasSeparation,
+                        cover: coverToSend,
+                        coverThumbnail: typeof s.coverThumbnail === 'string' ? s.coverThumbnail : undefined,
+                        video: typeof s.video === 'string' ? s.video : undefined
+                    };
+                });
             } else if (storage.isHelperActive()) {
                 try {
                     resData = await melodiqFetchDirect(data.path, data.options);
@@ -57,6 +67,13 @@ export async function handleHostApiRequest({
             if (songId) {
                 const fullSong = await getSongById(songId);
                 if (fullSong) {
+                    let coverToSend: string | undefined;
+                    if (typeof fullSong.coverThumbnail === 'string' && fullSong.coverThumbnail.startsWith('data:')) {
+                        coverToSend = fullSong.coverThumbnail;
+                    } else if (typeof fullSong.cover === 'string' && !fullSong.cover.startsWith('blob:')) {
+                        coverToSend = fullSong.cover;
+                    }
+
                     resData = {
                         id: fullSong.id,
                         source: fullSong.source,
@@ -70,11 +87,12 @@ export async function handleHostApiRequest({
                         edition: fullSong.edition,
                         album: fullSong.album,
                         duration: fullSong.duration,
-                        hasCover: fullSong.hasCover ?? Boolean(fullSong.cover),
+                        hasCover: fullSong.hasCover ?? Boolean(coverToSend || fullSong.cover || fullSong.coverThumbnail),
                         hasVideo: fullSong.hasVideo ?? Boolean(fullSong.video),
                         hasSeparation: fullSong.hasSeparation,
                         video: typeof fullSong.video === 'string' ? fullSong.video : undefined,
-                        cover: typeof fullSong.cover === 'string' ? fullSong.cover : undefined,
+                        cover: coverToSend,
+                        coverThumbnail: fullSong.coverThumbnail,
                         txtContent: fullSong.txtContent
                     };
                 }

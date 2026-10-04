@@ -144,6 +144,7 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             language: s.language,
             genre: s.genre,
             cover: s.cover,
+            coverThumbnail: s.coverThumbnail,
             video: s.video,
             audio: s.audio,
             originalAudio: s.originalAudio,

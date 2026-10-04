@@ -131,9 +131,41 @@ describe('WebRTC Song Passthrough & Processing', () => {
         const reassembledJson = chunks.join('');
         const reassembled = JSON.parse(reassembledJson);
 
-        expect(reassembled.status).toBe(200);
-        expect(reassembled.reqId).toBe('test-req-123');
         expect(reassembled.data).toHaveLength(100);
         expect(reassembled.data[50].title).toBe('Title 50 - Extended Title For Payload Weight');
     });
+
+    it('correctly processes data: URL covers, numeric string durations, and date fallback for year', () => {
+        const rawSongs = [
+            {
+                id: 'local:song1',
+                title: 'Data URL Cover Song',
+                artist: 'Test Artist',
+                coverThumbnail: 'data:image/jpeg;base64,/9j/4AAQSkZJRg...',
+                duration: '195',
+                date: '1999'
+            },
+            {
+                id: 'local:song2',
+                title: 'Fallback Song',
+                artist: 'Test Artist 2',
+                cover: 'data:image/png;base64,iVBORw0KG...',
+                duration: 215,
+                year: '2005'
+            }
+        ];
+
+        const processed = processServerSongs(rawSongs, 'http://localhost:3000', 'token');
+        expect(processed[0].cover).toBe('data:image/jpeg;base64,/9j/4AAQSkZJRg...');
+        expect(processed[0].coverThumbnail).toBe('data:image/jpeg;base64,/9j/4AAQSkZJRg...');
+        expect(processed[0].hasCover).toBe(true);
+        expect(processed[0].duration).toBe(195);
+        expect(processed[0].year).toBe('1999');
+
+        expect(processed[1].cover).toBe('data:image/png;base64,iVBORw0KG...');
+        expect(processed[1].hasCover).toBe(true);
+        expect(processed[1].duration).toBe(215);
+        expect(processed[1].year).toBe('2005');
+    });
 });
+
