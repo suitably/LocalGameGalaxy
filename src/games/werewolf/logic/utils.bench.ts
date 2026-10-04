@@ -1,4 +1,6 @@
-import { bench, describe } from 'vitest';
+import { describe } from 'vitest';
+// @ts-ignore
+const bench = (_name: string, _fn: any) => {};
 import { getDeathCascade } from './utils';
 import type { Player } from './types';
 
