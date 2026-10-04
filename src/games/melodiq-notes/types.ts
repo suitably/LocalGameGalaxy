@@ -1,3 +1,6 @@
+import type { CursorNotesResult } from './logic/cursorNotes';
+import type { TargetNote } from './useNoteVerifier';
+
 export type StemType = 'drums' | 'bass' | 'instrument' | 'vocals' | 'other';
 
 export interface DemoSong {
