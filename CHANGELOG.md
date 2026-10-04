@@ -6,6 +6,7 @@
 - Actions pinned to commit SHAs (Dependabot keeps them current), `persist-credentials: false`, actionlint + unit tests (`npm run test:scripts`) for Jules scripts in CI precheck; watcher isolates per-issue failures and no longer re-posts PR links.
 
 ### Added
+- Declarative Jules Agents Registry: added `.github/agents/` with scheduled orchestrator workflow (`jules-audit.yml`) and runner (`jules-agent-runner.cjs`) allowing scheduled autonomous audits (e.g. security) that automatically create tracking issues and PRs.
 - `npm run check:hygiene` deterministic prechecks (stray artifacts, conflict markers, JSON validity, i18n parity ratchet, secret patterns, workflow permissions) as first CI job; `ci.yml` now has `permissions`, `concurrency`, fork-safe deploy; removed tracked `.orig`/`.diff` leftovers.
 
 ### Changed

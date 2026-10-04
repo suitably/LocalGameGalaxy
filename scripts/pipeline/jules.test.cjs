@@ -111,3 +111,26 @@ test('watch skips finished sessions and reports API errors without aborting othe
   assert.equal(m.core.warnings.length, 2);
   assert.match(m.core.failed, /#1.*#2/);
 });
+
+const agentRunner = require('./jules-agent-runner.cjs');
+
+test('agentRunner discovers agent and dispatches issue + jules session', async () => {
+  setEnv({ JULES_API_KEY: 'k', AGENT_TARGET: 'security' });
+  const createdIssues = [];
+  global.fetch = async () => ({
+    ok: true,
+    status: 200,
+    text: async () => JSON.stringify({ name: 'sessions/aud123' }),
+  });
+  const m = mockGithub();
+  m.github.rest.issues.create = async (a) => {
+    createdIssues.push(a);
+    return { data: { number: 42 } };
+  };
+  await agentRunner(m);
+  assert.equal(createdIssues.length, 1);
+  assert.match(createdIssues[0].title, /\[Audit\] Security & Vulnerability Auditor/);
+  assert.match(createdIssues[0].body, /Role: Security & Vulnerability Auditor/);
+  assert.deepEqual(m.calls.labels, ['jules:active']);
+});
+
