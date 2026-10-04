@@ -13,8 +13,20 @@ module.exports = async ({ github, context, core }) => {
   const issueNumber = Number(process.env.ISSUE_NUMBER);
   const { data: issue } = await github.rest.issues.get({ owner, repo, issue_number: issueNumber });
 
+  const prompt = [
+    `Task: Fix GitHub Issue #${issueNumber}: ${issue.title}`,
+    '',
+    'Issue Description:',
+    issue.body || 'No description provided',
+    '',
+    'PR Instructions:',
+    `- Include "Fixes #${issueNumber}" in the Pull Request body so GitHub links and auto-closes the issue.`,
+    `- Format PR title: "fix: ${issue.title} (#${issueNumber})"`,
+    `- Add an entry to CHANGELOG.md under [Unreleased] describing the change (or add [skip docs] in the PR description).`,
+  ].join('\n');
+
   const body = JSON.stringify({
-    prompt: `# ${issue.title}\n\n${issue.body || ''}`,
+    prompt,
     sourceContext: {
       source: `sources/github/${owner}/${repo}`,
       githubRepoContext: { startingBranch: 'main' },
