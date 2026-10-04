@@ -1,11 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { Paper, Box } from '@mui/material';
-import { useTranslation } from 'react-i18next';
-import { usePageTitle } from '../../context/TitleContext';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { useMelodiqNotesState } from './hooks/useMelodiqNotesState';
 import { useStemAudioPlayer } from './hooks/useStemAudioPlayer';
-import { MelodiqNotesHeader } from './components/MelodiqNotesHeader';
 import { InstrumentSelectorBar } from './components/InstrumentSelectorBar';
 import { SheetMusicViewer, type SheetMusicViewerRef } from './SheetMusicViewer';
 import { ModernNoteHighway } from './components/ModernNoteHighway';
@@ -15,17 +12,22 @@ import { EnsembleMixerDialog } from './components/EnsembleMixerDialog';
 import { MelodiqNotesSettingsDialog } from './components/MelodiqNotesSettingsDialog';
 import { SongSelectDialog } from './components/SongSelectDialog';
 
+import { useMelodiqNotesHeader } from './hooks/useMelodiqNotesHeader';
+
 export const MelodiqNotesGame: React.FC = () => {
-    const { t } = useTranslation();
     const viewerRef = useRef<SheetMusicViewerRef>(null);
     const state = useMelodiqNotesState({ viewerRef });
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-    usePageTitle(
-        state.currentTitle
-            ? `${state.currentTitle} - ${t('games.melodiq_notes.title')}`
-            : t('games.melodiq_notes.title')
-    );
+    useMelodiqNotesHeader({
+        currentTitle: state.currentTitle,
+        currentArtist: state.currentArtist,
+        effectiveBpm: state.effectiveBpm,
+        partsCount: state.parts.length,
+        onOpenSongSelect: () => state.setIsSongSelectOpen(true),
+        onOpenMixer: () => state.setIsMixerOpen(true),
+        onOpenSettings: () => setIsSettingsOpen(true),
+    });
 
     useStemAudioPlayer({
         stems: state.selectedLocalSong?.stems || state.selectedSong?.stems,
@@ -47,20 +49,16 @@ export const MelodiqNotesGame: React.FC = () => {
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.45)',
                 }}
             >
-                {/* 1. Header with Song Title, Score HUD & Settings Icon */}
-                <MelodiqNotesHeader
-                    currentTitle={state.currentTitle}
-                    currentArtist={state.currentArtist}
-                    effectiveBpm={state.effectiveBpm}
+                {/* 1. Note Accuracy & Score HUD Bar */}
+                <NoteStatusBar
+                    targetNotes={state.targetNotes}
+                    playedPitches={state.playedPitches}
+                    isCurrentNoteHit={state.isCurrentNoteHit}
                     score={state.score}
                     hitCount={state.hitCount}
-                    partsCount={state.parts.length}
-                    onOpenSongSelect={() => state.setIsSongSelectOpen(true)}
-                    onOpenSettings={() => setIsSettingsOpen(true)}
-                    onOpenMixer={() => state.setIsMixerOpen(true)}
                 />
 
-                {/* 2. Multi-Instrument Track Selector Bar (only shown if multi-track) */}
+                {/* 2. Track Selector Bar (only shown if multi-track) */}
                 {state.parts.length > 1 && (
                     <InstrumentSelectorBar
                         parts={state.parts}
@@ -73,12 +71,6 @@ export const MelodiqNotesGame: React.FC = () => {
                     />
                 )}
 
-                {/* 3. Note Accuracy & Pitch Status Bar */}
-                <NoteStatusBar
-                    targetNotes={state.targetNotes}
-                    playedPitches={state.playedPitches}
-                    isCurrentNoteHit={state.isCurrentNoteHit}
-                />
 
                 {/* 4. Main Stage: Classic Sheet Music & Modern Note Highway */}
                 <Box
