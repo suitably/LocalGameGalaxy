@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 import type { CursorNotesResult, SheetMusicViewerRef, SheetMusicViewerProps } from './types';
 import { extractCursorData } from './logic/cursorNotes';
-import { SheetViewerControls } from './components/SheetViewerControls';
 
 export type { SheetMusicViewerRef, SheetMusicViewerProps };
 
@@ -15,7 +14,7 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
     zoom = 1.0,
     renderMode = 'vertical',
     isCurrentNoteHit = false,
-    onRenderModeChange,
+    onRenderModeChange: _onRenderModeChange,
     onNotesChanged,
     onSongEnd,
     onBpmDetected
@@ -28,7 +27,6 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
 
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [currentZoom, setCurrentZoom] = useState(zoom);
 
     const onNotesChangedRef = useRef(onNotesChanged);
     onNotesChangedRef.current = onNotesChanged;
@@ -109,15 +107,6 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
         };
     }, [extractCurrentData]);
 
-    const handleZoom = (delta: number) => {
-        const next = Math.min(2.0, Math.max(0.6, Math.round((currentZoom + delta) * 10) / 10));
-        setCurrentZoom(next);
-        if (osmdRef.current) {
-            osmdRef.current.zoom = next;
-            try { osmdRef.current.render(); } catch {}
-        }
-    };
-
     useEffect(() => {
         if (!containerRef.current) return;
         setIsLoading(true);
@@ -139,7 +128,7 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
 
             osmd.load(xmlContent)
                 .then(() => {
-                    osmd.zoom = isMobile ? currentZoom * 0.65 : currentZoom;
+                    osmd.zoom = isMobile ? zoom * 0.65 : zoom;
                     osmd.render();
                     osmd.cursor.show();
                     const initial = extractCurrentData();
@@ -167,23 +156,10 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
                 try { osmdRef.current.clear(); } catch { /* ignore */ }
             }
         };
-    }, [xmlContent, renderMode]);
+    }, [xmlContent, renderMode, isMobile, zoom, t]);
 
     return (
         <Box sx={{ position: 'relative', width: '100%', my: 1.5 }}>
-            {!isLoading && !error && (
-                <SheetViewerControls
-                    currentZoom={currentZoom}
-                    onZoom={handleZoom}
-                    onResetZoom={() => {
-                        setCurrentZoom(1.0);
-                        if (osmdRef.current) { osmdRef.current.zoom = 1.0; osmdRef.current.render(); }
-                    }}
-                    renderMode={renderMode}
-                    onToggleRenderMode={() => onRenderModeChange?.(renderMode === 'horizontal' ? 'vertical' : 'horizontal')}
-                    isMobile={isMobile}
-                />
-            )}
 
             {isLoading && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 6 }}>

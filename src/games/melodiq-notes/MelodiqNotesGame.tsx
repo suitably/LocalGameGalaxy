@@ -126,7 +126,6 @@ export const MelodiqNotesGame: React.FC = () => {
                     onTogglePlay={() => state.setIsPlaying(!state.isPlaying)}
                     onReset={state.handleReset}
                     onSpeedPercentChange={state.setSpeedPercent}
-                    onOpenSettings={() => setIsSettingsOpen(true)}
                 />
             </Paper>
 
