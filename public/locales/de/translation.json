@@ -575,7 +575,12 @@
       "zoom_out": "Verkleinern",
       "zoom_reset": "Zoom zurücksetzen",
       "render_mode_horizontal": "Horizontales Band",
-      "render_mode_vertical": "Vertikale Noten"
+      "render_mode_vertical": "Vertikale Noten",
+      "change_song": "Song wechseln",
+      "settings": "Einstellungen",
+      "gameplay_settings": "Gameplay & Ansicht",
+      "all_sound_settings": "Alle Sound-Einstellungen",
+      "sheet_render_mode": "Notenblatt-Darstellung"
     },
     "kniffel": {
       "title": "Kniffel",

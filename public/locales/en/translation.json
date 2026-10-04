@@ -575,7 +575,12 @@
       "zoom_out": "Zoom Out",
       "zoom_reset": "Reset Zoom",
       "render_mode_horizontal": "Horizontal Ribbon",
-      "render_mode_vertical": "Vertical Score"
+      "render_mode_vertical": "Vertical Score",
+      "change_song": "Change song",
+      "settings": "Settings",
+      "gameplay_settings": "Gameplay & View",
+      "all_sound_settings": "All Sound Settings",
+      "sheet_render_mode": "Sheet notation style"
     },
     "kniffel": {
       "title": "Yahtzee",

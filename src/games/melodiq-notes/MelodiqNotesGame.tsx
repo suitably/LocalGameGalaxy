@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Paper, Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
@@ -11,17 +11,21 @@ import { SheetMusicViewer, type SheetMusicViewerRef } from './SheetMusicViewer';
 import { ModernNoteHighway } from './components/ModernNoteHighway';
 import { NoteStatusBar } from './components/NoteStatusBar';
 import { PlaybackControlsBar } from './components/PlaybackControlsBar';
-import { HardwareStatus } from './components/HardwareStatus';
 import { EnsembleMixerDialog } from './components/EnsembleMixerDialog';
-import { SoundSettingsDialog } from './components/SoundSettingsDialog';
+import { MelodiqNotesSettingsDialog } from './components/MelodiqNotesSettingsDialog';
 import { SongSelectDialog } from './components/SongSelectDialog';
 
 export const MelodiqNotesGame: React.FC = () => {
     const { t } = useTranslation();
-    usePageTitle(t('games.melodiq_notes.title'));
-
     const viewerRef = useRef<SheetMusicViewerRef>(null);
     const state = useMelodiqNotesState({ viewerRef });
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+    usePageTitle(
+        state.currentTitle
+            ? `${state.currentTitle} - ${t('games.melodiq_notes.title')}`
+            : t('games.melodiq_notes.title')
+    );
 
     useStemAudioPlayer({
         stems: state.selectedLocalSong?.stems || state.selectedSong?.stems,
@@ -35,7 +39,7 @@ export const MelodiqNotesGame: React.FC = () => {
             <Paper
                 elevation={3}
                 sx={{
-                    p: { xs: 2, sm: 3.5 },
+                    p: { xs: 1.5, sm: 3 },
                     borderRadius: 3.5,
                     background: 'linear-gradient(135deg, rgba(26, 26, 42, 0.95) 0%, rgba(15, 15, 26, 0.95) 100%)',
                     backdropFilter: 'blur(12px)',
@@ -43,22 +47,20 @@ export const MelodiqNotesGame: React.FC = () => {
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.45)',
                 }}
             >
-                {/* 1. Header with Song Title, Score & View Mode Toggle */}
+                {/* 1. Header with Song Title, Score HUD & Settings Icon */}
                 <MelodiqNotesHeader
                     currentTitle={state.currentTitle}
                     currentArtist={state.currentArtist}
                     effectiveBpm={state.effectiveBpm}
                     score={state.score}
                     hitCount={state.hitCount}
-                    viewMode={state.viewMode}
                     partsCount={state.parts.length}
-                    onViewModeChange={state.handleViewModeChange}
-                    onOpenMixer={() => state.setIsMixerOpen(true)}
-                    onOpenSoundSettings={() => state.setIsSoundSettingsOpen(true)}
                     onOpenSongSelect={() => state.setIsSongSelectOpen(true)}
+                    onOpenSettings={() => setIsSettingsOpen(true)}
+                    onOpenMixer={() => state.setIsMixerOpen(true)}
                 />
 
-                {/* 2. Multi-Instrument Track Selector Bar */}
+                {/* 2. Multi-Instrument Track Selector Bar (only shown if multi-track) */}
                 {state.parts.length > 1 && (
                     <InstrumentSelectorBar
                         parts={state.parts}
@@ -78,7 +80,7 @@ export const MelodiqNotesGame: React.FC = () => {
                     isCurrentNoteHit={state.isCurrentNoteHit}
                 />
 
-                {/* 4. Main Stage: Classic Sheet Music & Modern Note Highway (kept mounted for 0ms toggle) */}
+                {/* 4. Main Stage: Classic Sheet Music & Modern Note Highway */}
                 <Box
                     sx={
                         state.viewMode === 'classic'
@@ -108,6 +110,7 @@ export const MelodiqNotesGame: React.FC = () => {
                         onBpmDetected={state.handleBpmDetected}
                     />
                 </Box>
+
                 {state.viewMode === 'modern' && (
                     <ModernNoteHighway
                         tracks={state.timelineTracks}
@@ -123,29 +126,15 @@ export const MelodiqNotesGame: React.FC = () => {
                     />
                 )}
 
-                {/* 5. Hardware Device Status */}
-                <HardwareStatus
-                    inputSource={state.inputSource}
-                    midiDevices={state.midiDevices}
-                    selectedDeviceId={state.selectedDeviceId}
-                    onSelectDeviceId={state.setSelectedDeviceId}
-                    isMicActive={state.isMicActive}
-                    micPitch={state.micPitch}
-                    onToggleMicrophone={state.toggleMicrophone}
-                />
-
-                {/* 6. Docked Playback Controls Bar */}
+                {/* 5. Docked Playback Controls Bar (Play, Reset, Speed Popover & Settings) */}
                 <PlaybackControlsBar
                     isPlaying={state.isPlaying}
-                    playMode={state.playMode}
-                    inputSource={state.inputSource}
                     speedPercent={state.speedPercent}
                     effectiveBpm={state.effectiveBpm}
                     onTogglePlay={() => state.setIsPlaying(!state.isPlaying)}
                     onReset={state.handleReset}
-                    onPlayModeChange={state.setPlayMode}
-                    onInputSourceChange={state.setInputSource}
                     onSpeedPercentChange={state.setSpeedPercent}
+                    onOpenSettings={() => setIsSettingsOpen(true)}
                 />
             </Paper>
 
@@ -181,10 +170,26 @@ export const MelodiqNotesGame: React.FC = () => {
                 onToggleMutePlayerPart={state.setMutePlayerPart}
             />
 
-            <SoundSettingsDialog
-                open={state.isSoundSettingsOpen}
-                onClose={() => state.setIsSoundSettingsOpen(false)}
-                onConfigChanged={state.reloadSoundConfig}
+            <MelodiqNotesSettingsDialog
+                open={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
+                viewMode={state.viewMode}
+                onViewModeChange={state.handleViewModeChange}
+                sheetRenderMode={state.sheetRenderMode}
+                onSheetRenderModeChange={state.setSheetRenderMode}
+                playMode={state.playMode}
+                onPlayModeChange={state.setPlayMode}
+                inputSource={state.inputSource}
+                onInputSourceChange={state.setInputSource}
+                midiDevices={state.midiDevices}
+                selectedDeviceId={state.selectedDeviceId}
+                onSelectDeviceId={state.setSelectedDeviceId}
+                isMicActive={state.isMicActive}
+                micPitch={state.micPitch}
+                onToggleMicrophone={state.toggleMicrophone}
+                partsCount={state.parts.length}
+                onOpenMixer={() => state.setIsMixerOpen(true)}
+                onSoundConfigChanged={state.reloadSoundConfig}
             />
         </GameLayout>
     );
