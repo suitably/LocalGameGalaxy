@@ -104,8 +104,8 @@ jobs:
 
   deploy-cloudflare:
     name: Deploy to Cloudflare
-    # Fork PRs have no access to secrets -> skip instead of failing.
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    # Fork PRs and bot PRs have no access to secrets -> skip instead of failing.
+    if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]' && github.actor != 'dependabot'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
