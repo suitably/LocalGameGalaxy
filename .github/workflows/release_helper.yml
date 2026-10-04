@@ -15,13 +15,14 @@ jobs:
   build-and-release:
     name: Build & Release Nexumia Server
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '18'
           cache: 'npm'
@@ -56,12 +57,12 @@ jobs:
 
       - name: Create Archives
         run: |
-          cd release/linux && tar -czf ../../nexumia-server-linux.tar.gz * && cd ../..
-          cd release/windows && zip -r ../../nexumia-server-win.zip * && cd ../..
-          cd release/macos && tar -czf ../../nexumia-server-macos.tar.gz * && cd ../..
+          cd release/linux && tar -czf ../../nexumia-server-linux.tar.gz ./* && cd ../..
+          cd release/windows && zip -r ../../nexumia-server-win.zip ./* && cd ../..
+          cd release/macos && tar -czf ../../nexumia-server-macos.tar.gz ./* && cd ../..
 
       - name: Attach Server Binaries to Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           files: |
             nexumia-server-linux.tar.gz

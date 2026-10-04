@@ -33,17 +33,13 @@ flowchart TD
     end
 
     subgraph Autonomous["Tier 3: Multi-Agent Cloud Ecosystem"]
-        JulesAgent["Jules Issue Auto-Fix Pipeline<br/>(jules-pipeline.yml)"]
-        JulesReviewer["Multi-Agent PR Reviewer<br/>(jules-pr-reviewer.yml)"]
-        JulesFixer["Multi-Agent PR Auto-Fixer<br/>(jules-pr-auto-fixer.yml)"]
+        JulesPlan["Jules Plan + Watch<br/>(jules-start.yml, jules-watch.yml)"]
     end
 
     CodePush["Git Push / PR to main"] --> CI
     RelayCode["Push to server/cloudflare-push-relay/**"] --> CF_Relay
     TagPush["Git Tag v* / Release Published"] --> APK & Docker & ServerRelease
-    IssueActivity["Issue Created / Labeled / Slash Command"] --> JulesAgent
-    ReviewChanges["PR Review: Changes Requested"] --> JulesFixer
-    ManualPRReview["Workflow Dispatch on PR"] --> JulesReviewer
+    IssueActivity["Issue comment /jules"] --> JulesPlan
 ```
 
 ### Complete Pipeline Inventory
@@ -56,10 +52,6 @@ flowchart TD
 | [`.github/workflows/deploy-push-relay.yml`](file:///.github/workflows/deploy-push-relay.yml) | **Deploy Cloudflare Push Relay** | `push` (main on `server/cloudflare-push-relay/**`), `workflow_dispatch` | Deploys serverless Web Push & ntfy relay worker to Cloudflare |
 | [`.github/workflows/docker-publish.yml`](file:///.github/workflows/docker-publish.yml) | **Build and Push Docker Images** | `push` (main on `server/**`), tags (`v*`), `workflow_dispatch` | Multi-target build: `base` (~200MB) and `full` (~2GB, AI Demucs) to Docker Hub |
 | [`.github/workflows/release_helper.yml`](file:///.github/workflows/release_helper.yml) | **Release Nexumia Server** | `release` (published), tags (`v*`), `workflow_dispatch` | `pkg` compiles native standalone binaries (Linux, Win, macOS) with startup scripts |
-| [`.github/workflows/jules-pipeline.yml`](file:///.github/workflows/jules-pipeline.yml) | **Jules Issue Auto-Fix Pipeline** | `issues (labeled)`, `issue_comment`, `workflow_dispatch` | Triage & RBAC, Google Jules REST API dispatch (Plan & Fix modes via `requirePlanApproval`), Fast-Path Plan Waiter, Command Relay (`jules-interact.cjs`) |
-| [`.github/workflows/jules-watcher.yml`](file:///.github/workflows/jules-watcher.yml) | **Jules Status Watcher** | `schedule` (`*/5 * * * *`), `workflow_dispatch` | Polling watcher: automatically relays Jules' plans, questions, and completions to GitHub issue comments |
-| [`.github/workflows/jules-pr-reviewer.yml`](file:///.github/workflows/jules-pr-reviewer.yml) | **Multi-Agent PR Reviewer** | `workflow_dispatch` | Matrix code review (Security & Architecture lenses) via Jules & `gh` CLI |
-| [`.github/workflows/jules-pr-auto-fixer.yml`](file:///.github/workflows/jules-pr-auto-fixer.yml) | **Multi-Agent PR Auto-Fixer** | `pull_request_review` (`changes_requested`) | 3-attempt loop-breaker, autonomous YOLO fix directly committed to PR branch |
 
 ---
 
@@ -193,114 +185,15 @@ Packages the Node.js server into zero-dependency standalone binaries for Linux, 
 
 ---
 
-## 3. Autonomous Multi-Agent Cloud Ecosystem
+### 2.7 Deterministic Prechecks (`npm run check:hygiene`)
 
-LocalGameGalaxy integrates Google Jules (cloud coding agent) and Google Gemini into a multi-agent development and quality assurance lifecycle.
-
-### 3.1 Jules Issue Auto-Fix Pipeline (`jules-pipeline.yml`)
-
-An event-driven orchestration pipeline enabling human maintainers to command Jules directly from GitHub Issues.
-
-```mermaid
-flowchart TD
-    Trigger["Issue Labeled / Commented / Cron"] --> Triage["1. Triage & RBAC Gate<br/>(OWNER / MEMBER / COLLABORATOR)"]
-
-    Triage -->|Command: /plan or Label: jules:plan| Plan["2. Plan Mode Session<br/>(requirePlanApproval: true, NO CODE)"]
-    Plan --> KeyPool["Multi-Key Pool Rotation<br/>(JULES_API_KEY_1..5)"]
-    KeyPool --> JulesREST["POST https://jules.googleapis.com/v1alpha/sessions<br/>connectedMcps: Stitch, Context7<br/>startingBranch: main"]
-    JulesREST --> PlanPost["Jules posts plan & open questions<br/>via Stitch MCP (gh issue comment)"]
-    PlanPost --> Waiting["Session: AWAITING_USER_FEEDBACK"]
-
-    Waiting -->|Comment or /reply| RelayMsg["sendMessage to Jules<br/>(jules-interact.cjs)"]
-    RelayMsg --> JulesREST
-
-    Waiting -->|Command: /approve or Label: jules:approved| ApprovePlan["approvePlan to Jules<br/>(jules-interact.cjs)"]
-    ApprovePlan --> JulesImplement["Jules creates feature branch<br/>from main & implements"]
-
-    Triage -->|Command: /fix or /yolo or Label: jules:fix| DirectFix["3. Direct Fix Mode<br/>(requirePlanApproval: false)"]
-    DirectFix --> KeyPool
-    DirectFix --> JulesImplement
-
-    JulesImplement --> OpenPR["PR created targeting main<br/>(automated via AUTO_CREATE_PR)"]
-    OpenPR --> PRCI["CI Quality Gate runs on PR"]
-
-    Triage -->|Command: /status| RelayStatus["Command Relay (/status)<br/>(jules-interact.cjs)"]
-
-    Trigger -->|Cron / Scope: Design| Scanner["4. UX Design Scanner<br/>(jules-suggestions.mjs)"]
-    Scanner --> ProposeIssue["Create Structured UX Improvement Issue"]
-```
-
-#### Key Capabilities & Architecture
-
-1. **RBAC Security Gate**:
-   - Only repository `OWNER`, `MEMBER`, or `COLLABORATOR` can invoke or interact with Jules. External issue comments are ignored to prevent unauthorized token burn or prompt injection.
-2. **Multi-Key Pool & Round-Robin Load Balancing**:
-   - Supports up to 5 concurrent Google Jules API keys (`JULES_API_KEY_1` to `JULES_API_KEY_5`), falling back to `JULES_API_KEY`.
-   - Starting slot index is calculated via `issue_number % total_keys` to evenly distribute quota usage across keys.
-   - If an API key encounters quota or rate limits, the runner seamlessly attempts the next slot in the pool.
-3. **Dynamic Plan Approval (`requirePlanApproval`)**:
-   - In `/plan` mode: Initiates session with `requirePlanApproval: true`. Jules analyzes the codebase and posts its proposed plan and clarifying questions via Stitch MCP without writing code or creating commits.
-   - In `/fix` or `/yolo` mode: Initiates session with `requirePlanApproval: false` to implement directly without intermediate pausing.
-4. **Direct REST API Invocation & Feature Branches**:
-   - Connects to `https://jules.googleapis.com/v1alpha/sessions` with `automationMode: "AUTO_CREATE_PR"`.
-   - Injects connected MCP servers: `["Stitch", "Context7"]`. Jules uses Stitch (`gh issue comment`) to post plans and updates directly.
-   - Sets base branch to `main`. Jules isolates work in an auto-named feature branch (e.g. `jules/fix-issue-<id>`) and targets `main` for the PR.
-5. **Fast-Path Plan Waiter & 5-Minute Status Watcher (`jules-watcher.cjs`, `jules-watcher.yml`)**:
-   - **Fast-Path**: After `/plan` is dispatched, the runner waits up to 90 seconds for Jules to generate its plan and posts it immediately into the issue with `/approve` instructions.
-   - **5-Minute Watcher**: A lightweight cron job runs every 5 minutes to scan active sessions for generated plans, unexpected clarification questions (`AWAITING_USER_FEEDBACK`), and completions. It extracts the message and posts it into the issue thread.
-6. **Autonomy Directive on Plan Approval**:
-   - When maintainers comment `/approve`, `jules-interact.cjs` calls `:approvePlan` and sends a strict autonomy directive instructing Jules to complete implementation, run all tests, and open the PR without pausing for confirmation questions.
-7. **Bidirectional Command Relay (`jules-interact.cjs`)**:
-   - Enables maintainers to steer running sessions from GitHub comment threads without opening the Jules web console.
-   - Supported commands: `/reply <text>`, `/continue`, `/approve`, `/yolo`, `/status`.
-8. **RepoLens Lens Integration (`jules-lens-resolver.mjs`)**:
-   - Maintains over 350 specialized auditing lenses across Architecture, Testing, Security, and Performance.
-   - Invoked via `/jules lens <lens-name>` or label `lens:<name>`.
+First CI job (`precheck`, no `npm ci`), also part of `quality-gates`/pre-commit. Fails on: tracked `.orig/.rej/.bak/*.diff` artifacts, merge conflict markers, invalid JSON, new de/en i18n key gaps (known gaps in `scripts/i18n-parity-baseline.json`, ratchet), focused tests (`.only`), `debugger`, secret patterns, workflows without `permissions`. Warns on missing job timeouts and files > 5 MB. `ci.yml` also uses `concurrency` (cancels superseded PR runs) and skips Cloudflare deploy for fork PRs.
 
 ---
 
-### 3.2 Multi-Agent PR Reviewer (`jules-pr-reviewer.yml`)
+## 3. Jules (minimal)
 
-Performs automated multi-persona code reviews on pull requests.
-
-- **Trigger**: `workflow_dispatch` on Pull Requests.
-- **Review Matrix**:
-  - **Security Lens**: `domain: security`, `lens: injection` (evaluates input sanitization, XSS, command injection, path traversal).
-  - **Architecture Lens**: `domain: architecture`, `lens: separation-of-concerns` (evaluates God components, SRP, storage abstraction, module boundaries).
-- **Execution**: Jules runs as an auditor persona, uses `GH_TOKEN` to interact with GitHub, and submits structured reviews directly onto the PR.
-
----
-
-### 3.3 Multi-Agent PR Auto-Fixer (`jules-pr-auto-fixer.yml`)
-
-Automatically repairs Pull Requests when a human or automated reviewer requests changes.
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Reviewer as Reviewer (Human / Jules)
-    participant GH as GitHub PR Event
-    participant Fixer as Multi-Agent Auto-Fixer
-    participant Jules as Google Jules Cloud Agent
-
-    Reviewer->>GH: Submit PR Review (state: changes_requested)
-    GH->>Fixer: Trigger pull_request_review event
-    Fixer->>Fixer: Check Loop Breaker (auto-fix:1, 2, 3)
-    alt Attempt <= 3
-        Fixer->>GH: Add label auto-fix:N + Announce comment
-        Fixer->>Jules: Dispatch Fixer Agent in YOLO Mode (PR Head Branch)
-        Jules->>Jules: Apply feedback, run Vitest & build
-        Jules->>GH: Push commit directly to PR head branch
-    else Attempt > 3
-        Fixer->>GH: Add comment "Max auto-fix attempts reached"
-        Fixer->>Fixer: Abort execution to prevent infinite agent loop
-    end
-```
-
-#### Loop Breaker Mechanism
-To prevent infinite agent ping-pong (Reviewer requests change $\rightarrow$ Fixer commits $\rightarrow$ Reviewer requests change), the workflow implements a strict 3-attempt circuit breaker:
-- Tracks labels `auto-fix:1`, `auto-fix:2`, `auto-fix:3`.
-- After 3 attempts without PR approval, the workflow automatically terminates and leaves a notification requesting human developer intervention.
+See [jules-pipeline-workflow.md](jules-pipeline-workflow.md). Comment `/jules` on an issue → `jules-start.yml` sends issue title + body to Jules; `jules-watch.yml` (cron `*/5`) posts new Jules activity and PR links back to the issue.
 
 ---
 
@@ -314,25 +207,13 @@ The following secrets are used across the 8 pipelines. Configure them under **Gi
 | `CLOUDFLARE_ACCOUNT_ID` | `ci.yml`, `deploy-push-relay.yml` | Cloudflare Account Identifier | Required for Cloudflare deployment |
 | `DOCKERHUB_USERNAME` | `docker-publish.yml` | Docker Hub account username | Required for Docker Hub image publishing |
 | `DOCKERHUB_TOKEN` | `docker-publish.yml` | Docker Hub personal access token | Required for Docker Hub image publishing |
-| `JULES_API_KEY` | Jules workflows | Primary Google Jules REST API key (from [jules.google.com](https://jules.google.com)) | Required for Jules agent |
-| `JULES_API_KEY_1..5` | Jules workflows | Optional multi-key pool for load-balancing across accounts | Recommended for high volume |
-| `GEMINI_API_KEY` | `jules-suggestions.yml` | Google AI Studio API key for scheduled UX scanner | Optional (gracefully skipped if omitted) |
+| `JULES_API_KEY` / `JULES_API_KEY_*` | `jules-start.yml`, `jules-watch.yml` | Primary Google Jules REST API key (from [jules.google.com](https://jules.google.com)) | Required for Jules agent |
 | `GITHUB_TOKEN` | All workflows | Automatically provided by GitHub Actions (`secrets.GITHUB_TOKEN`) | Automatic |
 
 ---
 
-## 5. Slash Commands & Interaction Cheatsheet
+## 5. Slash Commands
 
-Repository maintainers (`OWNER`, `MEMBER`, `COLLABORATOR`) can control Jules workflows directly from GitHub Issue comments:
-
-| Command | Action | Example |
-| :--- | :--- | :--- |
-| `/yolo` or `/jules yolo` | Run Jules in 100% autonomous mode with zero confirmation questions | `/yolo` |
-| `--yolo` (flag) | Append to any command to enforce autonomous execution | `/fix --yolo` |
-| `/plan` or `/jules plan` | Start Jules in Plan Mode (`requirePlanApproval: true`) to analyze and post plan via Stitch MCP without writing code | `/jules plan` |
-| `/fix` or `/jules fix` | Direct fix on feature branch targeting `main` without waiting for plan approval | `/jules fix` |
-| `/approve` or `/jules approve` | Approve proposed plan and trigger Jules to implement on a feature branch | `/jules approve` |
-| `/reply <message>` | Send guidance, clarification, or feedback to active Jules session | `/reply Focus on mobile layout first` |
-| `/continue` or `/jules continue` | Resume a paused Jules task | `/continue` |
-| `/status` or `/jules status` | Fetch live session status, phase, and last activities | `/status` |
-| `/jules lens <lens-id>` | Apply specialized RepoLens audit persona to the issue | `/jules lens separation-of-concerns` |
+| Command | Action |
+| :--- | :--- |
+| `/jules` | Start a Jules session with the issue title + body (OWNER/MEMBER/COLLABORATOR only) |

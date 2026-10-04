@@ -16,11 +16,13 @@
     "check:architecture:diff": "node scripts/check-architecture.mjs --diff",
     "check:architecture:strict": "node scripts/check-architecture.mjs --strict",
     "check:duplicates": "jscpd src/ --config .jscpd.json",
+    "check:hygiene": "node scripts/check-repo-hygiene.mjs",
+    "test:scripts": "node --test scripts/pipeline/*.test.cjs",
     "check:docs": "node scripts/check-docs-sync.mjs",
     "check:security": "npm audit",
     "cleanup:previews": "node scripts/cleanup-cloudflare-previews.mjs",
     "prepare": "husky",
-    "quality-gates": "npm run check:architecture:diff && npm run check:budget && npm run check:duplicates && npm run lint && npm test"
+    "quality-gates": "npm run check:hygiene && npm run check:architecture:diff && npm run check:budget && npm run check:duplicates && npm run lint && npm test"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",

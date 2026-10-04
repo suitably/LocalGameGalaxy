@@ -1,0 +1,45 @@
+name: Jules Start
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number'
+        required: true
+        type: number
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: jules-start-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: false
+
+jobs:
+  start:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (!github.event.issue.pull_request &&
+       startsWith(github.event.comment.body, '/jules') &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue_number }}
+          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+          JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
+          JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
+          JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
+          JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
+          JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
+        with:
+          script: |
+            await require('./scripts/pipeline/jules-start.cjs')({ github, context, core });
