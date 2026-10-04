@@ -26,13 +26,8 @@ export const TVModeButton: React.FC<TVModeButtonProps> = ({
     const open = Boolean(anchorEl);
 
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-        // If connected, or presentation available, show menu
-        if (isTVConnected || isPresentationAvailable) {
-            setAnchorEl(event.currentTarget);
-        } else {
-            // Default to opening window if no cast available and not connected
-            onOpenTV();
-        }
+        // Always show the menu to let the user select between Casting or Opening a Window
+        setAnchorEl(event.currentTarget);
     };
 
     const handleClose = () => {

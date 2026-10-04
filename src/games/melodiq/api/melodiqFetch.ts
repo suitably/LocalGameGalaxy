@@ -39,7 +39,7 @@ export const melodiqFetchDirect = async <T = any>(path: string, options: Request
  * Resolves immediately if already connected, or waits up to `timeoutMs` for the
  * `melodiq_rtc_connected` event.
  */
-const waitForConnection = (timeoutMs = 15000): Promise<void> => {
+const waitForConnection = (timeoutMs = 30000): Promise<void> => {
     return new Promise((resolve, reject) => {
         // Check if already connected (use window var instead of sessionStorage to reset on reload)
         if ((window as any).__melodiq_rtc_connected) {
@@ -88,11 +88,11 @@ export const melodiqFetch = async <T = any>(path: string, options: RequestInit =
             
             window.addEventListener(`melodiq_api_response_${reqId}`, handleResponse);
             
-            // Timeout after 45 seconds (chunked large responses need more time)
+            // Timeout after 60 seconds (chunked large responses need more time, and wait for WebRTC)
             timer = setTimeout(() => {
                 window.removeEventListener(`melodiq_api_response_${reqId}`, handleResponse);
                 reject(new Error('API Request Timeout'));
-            }, 45000);
+            }, 60000);
             
             window.dispatchEvent(new CustomEvent('melodiq_client_send_data', {
                 detail: { type: 'api_request', reqId, path, options }

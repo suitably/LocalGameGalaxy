@@ -487,6 +487,7 @@ export const MelodiqGameContent: React.FC = () => {
                     songsLength={isOnlineSearch ? (songs?.length || 0) : (memoizedFilteredSongs?.length || 0)}
                     isOnlineSearch={isOnlineSearch}
                     refreshSongs={refreshSongs}
+                    isClient={isClient}
                 />
 
                 {isOnlineSearch && (

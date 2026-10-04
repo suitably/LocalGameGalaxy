@@ -47,9 +47,13 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const loadServerSongs = useCallback(async (forceRefresh = false) => {
         let mounted = true;
+
+        // Determine if we are running on the Phone client or Host.
+        const isClient = new URLSearchParams(window.location.search).get('role') === 'client';
         const { url, token, enabled } = getHelperConfig();
 
-        if (!enabled) {
+        // Phone client always fetches from Host via WebRTC, Host needs helper enabled
+        if (!enabled && !isClient) {
             setIsServerLoading(false);
             return () => { mounted = false; };
         }
@@ -72,7 +76,9 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
 
         let loadedFromCache = false;
-        if (!forceRefresh) {
+
+        // Caching doesn't make sense for Phone clients since the Host serves it
+        if (!forceRefresh && !isClient) {
             const cachedData = await loadCachedServerSongs(url);
             if (cachedData && cachedData.length > 0) {
                 applyServerData(cachedData);
@@ -81,12 +87,18 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
 
         try {
+            // fetchServerSongs internally uses melodiqFetch.
+            // On Host, it hits the local helper server.
+            // On Phone, it sends an api_request over WebRTC to the Host.
             const freshData = await fetchServerSongs();
             if (mounted) setHasConnectionError(false);
-            await saveServerSongsToCache(url, freshData);
+
+            if (!isClient) {
+                await saveServerSongsToCache(url, freshData);
+            }
             applyServerData(freshData);
         } catch (e) {
-            console.warn('[SongsProvider] Helper connection failed:', e);
+            console.warn('[SongsProvider] Helper/WebRTC connection failed:', e);
             if (mounted && !loadedFromCache) {
                 setIsServerLoading(false);
                 setHasConnectionError(true);
@@ -99,10 +111,7 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [serverSongs.length]);
 
     useEffect(() => {
-        const isClient = new URLSearchParams(window.location.search).get('role') === 'client';
-        if (!isClient) {
-            loadServerSongs();
-        }
+        loadServerSongs();
 
         const handleSettingsUpdate = (e: Event) => {
             const detail = (e as CustomEvent)?.detail;
@@ -111,9 +120,15 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             }
         };
 
+        const handleRtcConnected = () => {
+            loadServerSongs(true);
+        };
+
         window.addEventListener('melodiq_settings_updated', handleSettingsUpdate);
+        window.addEventListener('melodiq_rtc_connected', handleRtcConnected);
         return () => {
             window.removeEventListener('melodiq_settings_updated', handleSettingsUpdate);
+            window.removeEventListener('melodiq_rtc_connected', handleRtcConnected);
         };
     }, [loadServerSongs]);
 
@@ -129,6 +144,7 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             language: s.language,
             genre: s.genre,
             cover: s.cover,
+            coverThumbnail: s.coverThumbnail,
             video: s.video,
             audio: s.audio,
             originalAudio: s.originalAudio,

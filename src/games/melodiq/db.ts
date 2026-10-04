@@ -20,6 +20,7 @@ export interface Song {
     hasCover?: boolean;
     hasVideo?: boolean;
     cover?: string | Blob | FileSystemFileHandle; 
+    coverThumbnail?: string;
     background?: string | Blob | FileSystemFileHandle; 
     audio?: string | Blob | FileSystemFileHandle; 
     originalAudio?: string | Blob | FileSystemFileHandle; 
@@ -51,6 +52,7 @@ export interface SongMeta {
     edition?: string;
     album?: string;
     cover?: string | Blob | FileSystemFileHandle; 
+    coverThumbnail?: string;
     video?: string | Blob | FileSystemFileHandle;
     audio?: string | Blob | FileSystemFileHandle;
     originalAudio?: string | Blob | FileSystemFileHandle;

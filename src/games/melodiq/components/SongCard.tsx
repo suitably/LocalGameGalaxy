@@ -29,8 +29,9 @@ export const SongCard: React.FC<SongCardProps> = ({ song, onClick, onLongPress, 
     const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLongPressRef = React.useRef(false);
 
-    const coverUrl = (song.hasCover !== false && song.cover && typeof song.cover === 'string' && song.cover.length > 0)
-        ? song.cover
+    const rawCover = song.cover || song.coverThumbnail;
+    const coverUrl = (song.hasCover !== false && rawCover && typeof rawCover === 'string' && rawCover.length > 0)
+        ? rawCover
         : null;
 
     const handleStart = () => {

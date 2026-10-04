@@ -35,6 +35,9 @@ export function processServerSongs(
 
         const processUrl = (url?: unknown): string | undefined => {
             if (typeof url === 'string') {
+                if (url.startsWith('data:')) {
+                    return url;
+                }
                 if (url.includes('/media') && url.includes('path=http')) {
                     try {
                         const parsed = new URL(url, window.location.origin);
@@ -65,16 +68,38 @@ export function processServerSongs(
         const ytId = typeof rawVideo === 'string' ? getYouTubeVideoId(rawVideo) : null;
         const videoStr = ytId ? `https://www.youtube.com/watch?v=${ytId}` : processUrl(rawVideo);
 
+        let parsedDuration: number | undefined;
+        if (typeof s.duration === 'number' && Number.isFinite(s.duration) && s.duration > 0) {
+            parsedDuration = s.duration;
+        } else if (typeof s.duration === 'string' && s.duration.trim() !== '') {
+            const parsed = Number(s.duration);
+            if (Number.isFinite(parsed) && parsed > 0) {
+                parsedDuration = parsed;
+            }
+        }
+
+        const rawYear = s.year ?? s.date;
+        const year = (typeof rawYear === 'string' || typeof rawYear === 'number') && String(rawYear).trim() !== ''
+            ? String(rawYear).trim()
+            : undefined;
+
+        const rawCover = (typeof s.cover === 'string' && s.cover) ? s.cover : (typeof s.coverThumbnail === 'string' ? s.coverThumbnail : undefined);
+        const coverUrl = processUrl(rawCover);
+        const coverThumbnail = typeof s.coverThumbnail === 'string' && s.coverThumbnail.startsWith('data:')
+            ? s.coverThumbnail
+            : undefined;
+
         return {
             id,
             source: 'server',
             title: String(s.title || ''),
             artist: String(s.artist || ''),
             bpm: typeof s.bpm === 'number' ? s.bpm : undefined,
-            year: typeof s.year === 'string' || typeof s.year === 'number' ? String(s.year) : undefined,
+            year,
             language: typeof s.language === 'string' ? s.language : undefined,
             genre: typeof s.genre === 'string' ? s.genre : undefined,
-            cover: processUrl(s.cover),
+            cover: coverUrl,
+            coverThumbnail,
             video: videoStr,
             audio: processUrl(s.audio),
             originalAudio: processUrl(s.originalAudio),
@@ -83,9 +108,9 @@ export function processServerSongs(
             hasSeparation: typeof s.hasSeparation === 'boolean'
                 ? s.hasSeparation
                 : Boolean(s.vocalsAudio || (txtContent && txtContent.includes('#VOCALS:'))),
-            duration: typeof s.duration === 'number' ? s.duration : undefined,
+            duration: parsedDuration,
             edition: typeof s.edition === 'string' ? s.edition : undefined,
-            hasCover: typeof s.hasCover === 'boolean' ? s.hasCover : Boolean(s.cover),
+            hasCover: typeof s.hasCover === 'boolean' ? s.hasCover : Boolean(coverUrl || coverThumbnail),
             hasVideo: typeof s.hasVideo === 'boolean' ? s.hasVideo : Boolean(rawVideo || ytId),
             usdbId: typeof s.usdbId === 'number' ? s.usdbId : undefined,
             txtPath: typeof s.txtPath === 'string' ? s.txtPath : undefined
