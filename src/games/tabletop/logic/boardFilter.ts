@@ -1,7 +1,7 @@
 /**
  * Filter functions for deciding which widgets render on the shared table canvas [ID: LOGIC-BOARD-FILTER]
  */
-import type { TabletopWidget, HolderWidget, DeckWidget, CardWidget, TokenWidget } from './types';
+import type { TabletopWidget, HolderWidget, DeckWidget, CardWidget, TokenWidget, BagWidget } from './types';
 import { isCardInHand } from './handLayout';
 
 /**
@@ -12,6 +12,19 @@ export function isCardInDeck(cardId: string, widgets: Record<string, TabletopWid
     if (w.type === 'deck') {
       const deck = w as DeckWidget;
       if (deck.cardIds?.includes(cardId)) return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Checks whether an item is stored inside a finite bag.
+ */
+export function isItemInBag(itemId: string, widgets: Record<string, TabletopWidget>): boolean {
+  for (const w of Object.values(widgets)) {
+    if (w.type === 'bag') {
+      const bag = w as BagWidget;
+      if (bag.itemIds?.includes(itemId)) return true;
     }
   }
   return false;
@@ -187,6 +200,7 @@ export function filterBoardWidgets(
         if (!isTvMode && isCardInHand(w.id, widgets)) return false;
       }
       if (!isTvMode && w.type === 'token' && isPieceInSupplyReserve(w, widgets)) return false;
+      if (isItemInBag(w.id, widgets)) return false;
       return true;
     })
     .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));

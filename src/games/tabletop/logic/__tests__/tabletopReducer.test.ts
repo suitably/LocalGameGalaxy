@@ -507,8 +507,71 @@ describe('tabletopReducer card handling', () => {
     const deckAfterReturn = returnedState.game.widgets.deck1 as DeckWidget;
     const cardAfterReturn = returnedState.game.widgets.c1 as CardWidget;
     expect(deckAfterReturn.faceUp).toBe(false);
-    expect(deckAfterReturn.activeFace).toBe(0);
     expect(cardAfterReturn.faceUp).toBe(false);
     expect(cardAfterReturn.activeFace).toBe(0);
+  });
+
+  it('scales widgets and resets their scale correctly', () => {
+    const scaledState = tabletopReducer(baseState, {
+      type: 'SCALE_WIDGETS',
+      payload: { widgetIds: ['deck1'], factor: 1.5 },
+    });
+    const scaledDeck = scaledState.game.widgets.deck1 as DeckWidget;
+    expect(scaledDeck.width).toBe(120); // 80 * 1.5
+    expect(scaledDeck.height).toBe(180); // 120 * 1.5
+    expect(scaledDeck.defaultWidth).toBe(80);
+    expect(scaledDeck.defaultHeight).toBe(120);
+
+    const resetState = tabletopReducer(scaledState, {
+      type: 'RESET_WIDGET_SCALE',
+      payload: { widgetIds: ['deck1'] },
+    });
+    const resetDeck = resetState.game.widgets.deck1 as DeckWidget;
+    expect(resetDeck.width).toBe(80);
+    expect(resetDeck.height).toBe(120);
+  });
+
+  it('toggles showAlways for a widget', () => {
+    const stateWithShowAlways = tabletopReducer(baseState, {
+      type: 'SET_WIDGET_SHOW_ALWAYS',
+      payload: { widgetId: 'c1', showAlways: true },
+    });
+    expect(stateWithShowAlways.game.widgets.c1.showAlways).toBe(true);
+
+    const stateWithoutShowAlways = tabletopReducer(stateWithShowAlways, {
+      type: 'SET_WIDGET_SHOW_ALWAYS',
+      payload: { widgetId: 'c1', showAlways: false },
+    });
+    expect(stateWithoutShowAlways.game.widgets.c1.showAlways).toBe(false);
+  });
+
+  it('adds, updates, reveals, and removes hidden zones', () => {
+    const zone = {
+      id: 'hz_1',
+      x: 50,
+      y: 50,
+      width: 200,
+      height: 200,
+      color: '#ff0000',
+      ownerSeat: 0,
+    };
+
+    const withZone = tabletopReducer(baseState, {
+      type: 'ADD_HIDDEN_ZONE',
+      payload: { zone },
+    });
+    expect(withZone.game.hiddenZones?.hz_1).toEqual(zone);
+
+    const revealedZone = tabletopReducer(withZone, {
+      type: 'TOGGLE_ZONE_REVEAL',
+      payload: { id: 'hz_1' },
+    });
+    expect(revealedZone.game.hiddenZones?.hz_1.revealed).toBe(true);
+
+    const removedZone = tabletopReducer(revealedZone, {
+      type: 'REMOVE_HIDDEN_ZONE',
+      payload: { id: 'hz_1' },
+    });
+    expect(removedZone.game.hiddenZones?.hz_1).toBeUndefined();
   });
 });

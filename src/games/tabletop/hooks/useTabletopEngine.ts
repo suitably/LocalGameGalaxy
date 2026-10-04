@@ -36,6 +36,7 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
   const [dragPointer, setDragPointer] = useState<{ x: number; y: number } | null>(null);
   const [grabOffset, setGrabOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
+  const [hoveredTargetId, setHoveredTargetId] = useState<string | null>(null);
 
   const dragStartRef = useRef<{ pointerX: number; pointerY: number; widgetX: number; widgetY: number; isDeckDraw?: boolean } | null>(null);
   const hasMovedRef = useRef(false);
@@ -135,6 +136,11 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
         const deltaY = (e.clientY - dragStartRef.current.pointerY) / transform.scale;
         const newX = Math.round(dragStartRef.current.widgetX + deltaX);
         const newY = Math.round(dragStartRef.current.widgetY + deltaY);
+        const draggedW = options.widgets[activeDragId];
+        if (draggedW) {
+          const target = findCollidingTarget(newX, newY, draggedW.width, draggedW.height, draggedW.type);
+          setHoveredTargetId(target);
+        }
         if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
         rafRef.current = requestAnimationFrame(() => {
           options.onMoveWidget(activeDragId, newX, newY);
@@ -220,6 +226,7 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
       setActiveDragId(null);
       setIsDraggingActive(false);
       setDragPointer(null);
+      setHoveredTargetId(null);
       dragStartRef.current = null;
     }
     panStartRef.current = null;
@@ -231,6 +238,7 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
     setActiveDragId(null);
     setIsDraggingActive(false);
     setDragPointer(null);
+    setHoveredTargetId(null);
     dragStartRef.current = null;
     panStartRef.current = null;
     secondPointerRef.current = null;
@@ -285,7 +293,7 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
 
   return {
     transform, setTransform, activeDragId, isDraggingActive, dragPointer,
-    grabOffset, screenToBoard,
+    grabOffset, screenToBoard, hoveredTargetId,
     handlePointerDownWidget, handlePointerMove, handlePointerUp, handleStartPan,
     zoomIn, zoomOut, resetZoom,
   };

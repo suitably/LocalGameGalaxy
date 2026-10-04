@@ -4,14 +4,17 @@
 import { useState, useCallback } from 'react';
 import { storage } from '../../../lib/storage';
 import { parsePcioFile } from '../logic/pcioParser';
+import { parseTtsSaveFile } from '../logic/ttsParser';
 import { saveTabletopGame } from '../logic/tabletopStorage';
 import {
   extractWorkshopId,
   fetchWorkshopDetails,
   downloadWorkshopMod,
+  downloadWorkshopModDirect,
 } from '../logic/steamWorkshopApi';
 import type { WorkshopItemDetails } from '../logic/steamWorkshopApi';
 import type { TabletopGameDefinition } from '../logic/types';
+import type { TTSSaveFile } from '../logic/ttsTypes';
 
 export type WorkshopImportStatus =
   | 'idle'
@@ -49,29 +52,19 @@ export function useWorkshopImport() {
     });
   }, []);
 
-  /** Fetch workshop metadata from Steam via server proxy */
+  /** Fetch workshop metadata from Steam via server proxy or direct proxy */
   const loadMeta = useCallback(async (urlOrId: string) => {
     const workshopId = extractWorkshopId(urlOrId);
     if (!workshopId) {
-      setState((s) => ({ ...s, status: 'error', error: 'Ungültige Steam Workshop URL' }));
-      return;
-    }
-
-    if (!storage.isHelperActive()) {
-      setState((s) => ({
-        ...s,
-        status: 'error',
-        error: 'Kein Server verbunden — Workshop-Import benötigt den Companion Server',
-        serverAvailable: false,
-      }));
+      setState((s) => ({ ...s, status: 'error', error: 'Ungültige Steam Workshop URL oder ID' }));
       return;
     }
 
     setState((s) => ({ ...s, status: 'loading_meta', error: null, meta: null, game: null }));
 
     try {
-      const baseUrl = storage.getHelperUrl().replace(/\/$/, '');
-      const token = storage.getHelperToken();
+      const baseUrl = storage.isHelperActive() ? storage.getHelperUrl().replace(/\/$/, '') : undefined;
+      const token = storage.isHelperActive() ? storage.getHelperToken() : undefined;
       const meta = await fetchWorkshopDetails(workshopId, baseUrl, token);
       setState((s) => ({ ...s, status: 'meta_loaded', meta }));
     } catch (err) {
@@ -83,27 +76,45 @@ export function useWorkshopImport() {
     }
   }, []);
 
-  /** Download and parse the workshop mod via server */
-  const importViaServer = useCallback(async () => {
+  /** Download and parse the workshop mod via server or direct Steam CDN */
+  const importWorkshop = useCallback(async () => {
     if (!state.meta?.id) return;
-
-    const baseUrl = storage.getHelperUrl().replace(/\/$/, '');
-    const token = storage.getHelperToken();
 
     setState((s) => ({ ...s, status: 'downloading', error: null }));
 
     try {
-      const data = await downloadWorkshopMod(state.meta.id, baseUrl, token);
+      let game: TabletopGameDefinition | null = null;
 
-      setState((s) => ({ ...s, status: 'parsing' }));
+      // Path A: Try companion server first if configured
+      if (storage.isHelperActive()) {
+        try {
+          const baseUrl = storage.getHelperUrl().replace(/\/$/, '');
+          const token = storage.getHelperToken();
+          const data = await downloadWorkshopMod(state.meta.id, baseUrl, token);
 
-      const game = await parsePcioFile(data.rawJson, {
-        assetFiles: data.assetMap,
-        defaultName: state.meta.title,
-      });
+          setState((s) => ({ ...s, status: 'parsing' }));
+          game = await parsePcioFile(data.rawJson, {
+            assetFiles: data.assetMap,
+            defaultName: state.meta.title,
+          });
+        } catch {
+          // Companion server failed/unreachable - fall through to direct browser download
+        }
+      }
+
+      // Path B: Direct download from Steam CDN (has Access-Control-Allow-Origin: *)
+      if (!game && state.meta.fileUrl) {
+        setState((s) => ({ ...s, status: 'downloading' }));
+        const decoded = await downloadWorkshopModDirect(state.meta.fileUrl);
+        setState((s) => ({ ...s, status: 'parsing' }));
+        game = parseTtsSaveFile(decoded as TTSSaveFile, { defaultName: state.meta.title });
+      }
+
+      if (!game) {
+        throw new Error('Mod-Download fehlgeschlagen — keine gültige Download-URL');
+      }
 
       await saveTabletopGame(game);
-
       setState((s) => ({ ...s, status: 'success', game }));
     } catch (err) {
       setState((s) => ({
@@ -135,7 +146,7 @@ export function useWorkshopImport() {
   return {
     ...state,
     loadMeta,
-    importViaServer,
+    importViaServer: importWorkshop,
     importFromFile,
     reset,
   };

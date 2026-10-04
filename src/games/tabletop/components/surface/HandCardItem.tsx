@@ -63,6 +63,7 @@ export const HandCardItem: React.FC<HandCardItemProps> = ({
           transform: `scale(${scale})`,
           transformOrigin: 'top left',
           pointerEvents: 'none',
+          clipPath: card.clipPath,
         }}
       >
         <CardFaceContent card={card} isFaceUp={true} />

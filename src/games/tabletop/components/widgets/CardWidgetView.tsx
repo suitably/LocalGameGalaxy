@@ -38,7 +38,11 @@ export const CardWidgetView: React.FC<CardWidgetViewProps> = ({
         zIndex: widget.zIndex + (isDragging ? 500000 : 0),
         borderRadius: isUnstyledContainer ? 0 : 2,
         boxShadow: isUnstyledContainer ? 'none' : isDragging ? 8 : 3,
-        filter: isUnstyledContainer && isDragging ? 'drop-shadow(0 8px 12px rgba(0,0,0,0.5))' : 'none',
+        filter: isUnstyledContainer
+          ? isDragging
+            ? 'drop-shadow(0 8px 14px rgba(0,0,0,0.55))'
+            : 'drop-shadow(0 3px 6px rgba(0,0,0,0.4))'
+          : 'none',
         cursor: widget.movable === false ? 'default' : 'grab',
         touchAction: 'none',
         userSelect: 'none',
