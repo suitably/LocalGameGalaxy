@@ -11,13 +11,45 @@ interface LibraryEmptyStateProps {
     songsLength: number;
     isOnlineSearch: boolean;
     refreshSongs: () => void;
+    isClient?: boolean;
 }
 
 export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
-    hasConnectionError, songsLength, isOnlineSearch, refreshSongs
+    hasConnectionError, songsLength, isOnlineSearch, refreshSongs, isClient
 }) => {
     const { t } = useTranslation();
     const { localLibrary } = useSongs();
+
+    if (isClient) {
+        if (hasConnectionError) {
+            return (
+                <Box sx={{ width: '100%', textAlign: 'center', py: 6, px: 2, opacity: 0.9, flexGrow: 1, maxWidth: 650, mx: 'auto' }}>
+                    <Typography variant="h5">{t('melodiq.client_connection_error', 'Konnte keine Songs vom Host laden')}</Typography>
+                    <Typography sx={{ mt: 1, mb: 3, color: 'text.secondary' }}>
+                        {t('melodiq.client_connection_error_desc', 'Bitte stelle sicher, dass der Host verbunden ist und Songs bereitstellt.')}
+                    </Typography>
+                    <Button onClick={refreshSongs} variant="outlined" sx={{ borderRadius: 50, px: 3, py: 1 }}>
+                        {t('melodiq.retry_connection', 'Erneut versuchen')}
+                    </Button>
+                </Box>
+            );
+        }
+
+        if (songsLength === 0 && !isOnlineSearch) {
+            return (
+                <Box sx={{ width: '100%', textAlign: 'center', py: 8, px: 2, opacity: 0.9, flexGrow: 1, maxWidth: 600, mx: 'auto' }}>
+                    <Typography variant="h5">{t('melodiq.client_empty_library_title', 'Keine Songs vom Host verfügbar')}</Typography>
+                    <Typography sx={{ mt: 1, mb: 3, color: 'text.secondary' }}>
+                        {t('melodiq.client_empty_library_desc', 'Der Host hat momentan keine Songs in der Bibliothek geladen.')}
+                    </Typography>
+                    <Button onClick={refreshSongs} variant="outlined" sx={{ borderRadius: 50, px: 3, py: 1 }}>
+                        {t('melodiq.retry_connection', 'Erneut versuchen')}
+                    </Button>
+                </Box>
+            );
+        }
+        return null;
+    }
 
     if (hasConnectionError) {
         return (

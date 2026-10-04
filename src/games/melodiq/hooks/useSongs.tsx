@@ -120,9 +120,15 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             }
         };
 
+        const handleRtcConnected = () => {
+            loadServerSongs(true);
+        };
+
         window.addEventListener('melodiq_settings_updated', handleSettingsUpdate);
+        window.addEventListener('melodiq_rtc_connected', handleRtcConnected);
         return () => {
             window.removeEventListener('melodiq_settings_updated', handleSettingsUpdate);
+            window.removeEventListener('melodiq_rtc_connected', handleRtcConnected);
         };
     }, [loadServerSongs]);
 
