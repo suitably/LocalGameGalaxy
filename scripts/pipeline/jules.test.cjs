@@ -12,7 +12,7 @@ function setEnv(env) {
 }
 
 function mockGithub({ issue = { number: 7, title: 'T', body: 'B' }, comments = [], issues = [] } = {}) {
-  const calls = { comments: [], labels: [], removed: [] };
+  const calls = { comments: [], labels: [], removed: [], pulls: [] };
   const github = {
     paginate: async (fn) => (fn === 'issues' ? issues : comments),
     rest: {
@@ -23,6 +23,10 @@ function mockGithub({ issue = { number: 7, title: 'T', body: 'B' }, comments = [
         createComment: async (a) => calls.comments.push(a.body),
         addLabels: async (a) => calls.labels.push(...a.labels),
         removeLabel: async (a) => calls.removed.push(a.name),
+      },
+      pulls: {
+        get: async () => ({ data: { body: 'initial' } }),
+        update: async (a) => calls.pulls.push(a),
       },
     },
   };
@@ -35,7 +39,7 @@ test('loadKeys returns JULES_API_KEY* sorted, ignores others and empty values', 
   assert.deepEqual(loadKeys().map((k) => k.name), ['JULES_API_KEY', 'JULES_API_KEY_1', 'JULES_API_KEY_2']);
 });
 
-test('start sends only title + body, falls back to next key, labels before commenting', async () => {
+test('start sends title + body + PR instructions, falls back to next key, labels before commenting', async () => {
   setEnv({ JULES_API_KEY_1: 'k1', JULES_API_KEY_2: 'k2', ISSUE_NUMBER: '7' });
   const seen = [];
   global.fetch = async (url, init) => {
@@ -47,7 +51,8 @@ test('start sends only title + body, falls back to next key, labels before comme
   const m = mockGithub();
   await start(m);
   assert.equal(seen.length, 2);
-  assert.equal(seen[0].body.prompt, '# T\n\nB');
+  assert.match(seen[0].body.prompt, /Task: Fix GitHub Issue #7: T/);
+  assert.match(seen[0].body.prompt, /Fixes #7/);
   assert.equal(seen[1].body.requirePlanApproval, false);
   assert.deepEqual(m.calls.labels, ['jules:active']);
   assert.match(m.calls.comments[0], /jules-key:JULES_API_KEY_\d/);
@@ -106,3 +111,26 @@ test('watch skips finished sessions and reports API errors without aborting othe
   assert.equal(m.core.warnings.length, 2);
   assert.match(m.core.failed, /#1.*#2/);
 });
+
+const agentRunner = require('./jules-agent-runner.cjs');
+
+test('agentRunner discovers agent and dispatches issue + jules session', async () => {
+  setEnv({ JULES_API_KEY: 'k', AGENT_TARGET: 'security' });
+  const createdIssues = [];
+  global.fetch = async () => ({
+    ok: true,
+    status: 200,
+    text: async () => JSON.stringify({ name: 'sessions/aud123' }),
+  });
+  const m = mockGithub();
+  m.github.rest.issues.create = async (a) => {
+    createdIssues.push(a);
+    return { data: { number: 42 } };
+  };
+  await agentRunner(m);
+  assert.equal(createdIssues.length, 1);
+  assert.match(createdIssues[0].title, /\[Audit\] Security & Vulnerability Auditor/);
+  assert.match(createdIssues[0].body, /Role: Security & Vulnerability Auditor/);
+  assert.deepEqual(m.calls.labels, ['jules:active']);
+});
+

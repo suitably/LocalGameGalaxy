@@ -9,6 +9,7 @@ describe('resolveSettingsNav', () => {
             activeSub: 'all',
             activeSection: '',
             isFromMelodiq: true,
+            isFromMelodiqNotes: false,
         });
 
         const params2 = new URLSearchParams('tab=melodiq&sub=microphones');
@@ -17,6 +18,7 @@ describe('resolveSettingsNav', () => {
             activeSub: 'microphones',
             activeSection: '',
             isFromMelodiq: true,
+            isFromMelodiqNotes: false,
         });
 
         const params3 = new URLSearchParams('tab=melodiq&sub=server');
@@ -25,6 +27,7 @@ describe('resolveSettingsNav', () => {
             activeSub: 'server',
             activeSection: '',
             isFromMelodiq: true,
+            isFromMelodiqNotes: false,
         });
 
         const params4 = new URLSearchParams('tab=server');
@@ -33,6 +36,7 @@ describe('resolveSettingsNav', () => {
             activeSub: 'all',
             activeSection: '',
             isFromMelodiq: false,
+            isFromMelodiqNotes: false,
         });
 
         const params5 = new URLSearchParams('sub=signaling');
@@ -41,6 +45,16 @@ describe('resolveSettingsNav', () => {
             activeSub: 'signaling',
             activeSection: '',
             isFromMelodiq: false,
+            isFromMelodiqNotes: false,
+        });
+
+        const params6 = new URLSearchParams('tab=melodiq-notes');
+        expect(resolveSettingsNav(params6, null, 'melodiq-notes')).toEqual({
+            activeTab: 'melodiq-notes',
+            activeSub: 'all',
+            activeSection: '',
+            isFromMelodiq: false,
+            isFromMelodiqNotes: true,
         });
     });
 });

@@ -1,6 +1,7 @@
 import { type Song } from '../db';
 import { parseUltraStarTxt, type ParsedSong } from '../parser';
 import { getYouTubeVideoId } from '../gameplay/YouTubeBackgroundPlayer';
+import { createCoverThumbnail } from './coverThumbnail';
 
 export interface LocalSong extends Song {
     source: 'local';
@@ -95,6 +96,19 @@ function resolveFileHandle(
  * Calculates estimated song duration in seconds from parsed UltraStar data.
  */
 function estimateDuration(parsed: ParsedSong): number {
+    if (parsed.headers['DURATION']) {
+        const rawDur = parseFloat(parsed.headers['DURATION'].replace(',', '.'));
+        if (!isNaN(rawDur) && rawDur > 0) {
+            return Math.ceil(rawDur);
+        }
+    }
+    if (parsed.headers['END']) {
+        const rawEnd = parseFloat(parsed.headers['END'].replace(',', '.'));
+        if (!isNaN(rawEnd) && rawEnd > 0) {
+            return Math.ceil(rawEnd > 1000 ? rawEnd / 1000 : rawEnd);
+        }
+    }
+
     let maxBeat = 0;
     for (const track of parsed.tracks) {
         for (const note of track.notes) {
@@ -200,11 +214,13 @@ export async function scanLocalDirectory(
 
                 // Create cover Blob URL if cover file exists
                 let coverUrl: string | undefined;
+                let coverThumbnail: string | undefined;
                 if (coverHandle) {
                     try {
                         const coverFile = await coverHandle.getFile();
                         coverUrl = URL.createObjectURL(coverFile);
                         activeCoverBlobUrls.add(coverUrl);
+                        coverThumbnail = await createCoverThumbnail(coverFile);
                     } catch (e) {
                         console.warn('[LocalLibrary] Failed to create cover URL:', e);
                     }
@@ -213,13 +229,14 @@ export async function scanLocalDirectory(
                 const duration = estimateDuration(parsed);
                 const relativeSongPath = currentPath ? `${currentPath}/${fileName}` : fileName;
                 const songId = `local:${relativeSongPath}`;
+                const year = parsed.headers['YEAR'] || parsed.headers['DATE'];
 
                 const song: LocalSong = {
                     id: songId,
                     source: 'local',
                     title,
                     artist,
-                    year: parsed.headers['YEAR'],
+                    year,
                     genre: parsed.headers['GENRE'],
                     language: parsed.headers['LANGUAGE'],
                     edition: parsed.headers['EDITION'],
@@ -232,7 +249,8 @@ export async function scanLocalDirectory(
                     hasSeparation: Boolean(vocalsHandle || instrumentalHandle),
                     video: videoTarget,
                     cover: coverUrl,
-                    hasCover: Boolean(coverUrl),
+                    coverThumbnail,
+                    hasCover: Boolean(coverUrl || coverThumbnail),
                     hasVideo: Boolean(videoTarget),
                     dirPath: currentPath || currentDir.name,
                     txtContent: text,

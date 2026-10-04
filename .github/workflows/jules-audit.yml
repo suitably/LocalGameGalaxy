@@ -1,0 +1,41 @@
+name: Jules Scheduled Audit
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      agent:
+        description: 'Agent ID to run (e.g. "security" or "all")'
+        default: 'all'
+        required: false
+        type: string
+
+concurrency:
+  group: jules-audit
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          AGENT_TARGET: ${{ github.event.inputs.agent || 'all' }}
+          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+          JULES_API_KEY_1: ${{ secrets.JULES_API_KEY_1 }}
+          JULES_API_KEY_2: ${{ secrets.JULES_API_KEY_2 }}
+          JULES_API_KEY_3: ${{ secrets.JULES_API_KEY_3 }}
+          JULES_API_KEY_4: ${{ secrets.JULES_API_KEY_4 }}
+          JULES_API_KEY_5: ${{ secrets.JULES_API_KEY_5 }}
+        with:
+          script: |
+            await require('./scripts/pipeline/jules-agent-runner.cjs')({ github, context, core });

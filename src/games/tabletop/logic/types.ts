@@ -11,7 +11,8 @@ export type WidgetType =
   | 'token'
   | 'die'
   | 'counter'
-  | 'seat';
+  | 'seat'
+  | 'bag';
 
 /** A single renderable object within a card face template */
 export interface FaceObject {
@@ -66,6 +67,9 @@ export interface BaseWidget {
   movable?: boolean;
   grid?: GridSnapDef[];
   hasPileChild?: boolean;
+  showAlways?: boolean;
+  defaultWidth?: number;
+  defaultHeight?: number;
 }
 
 export interface CardContent {
@@ -128,8 +132,8 @@ export interface HolderWidget extends BaseWidget {
 
 export interface TokenWidget extends BaseWidget {
   type: 'token';
-  color: string;
-  shape: 'circle' | 'square' | 'meeple';
+  color?: string;
+  shape?: 'circle' | 'square' | 'meeple' | 'rectangle';
   subText?: string;
   textColor?: string;
   rotation?: number;
@@ -161,6 +165,17 @@ export interface SeatWidget extends BaseWidget {
   turn?: boolean;
 }
 
+export interface BagWidget extends BaseWidget {
+  type: 'bag';
+  color?: string; // Fabric/pouch color (from TTS ColorDiffuse)
+  isInfinite?: boolean; // Infinite supply if true
+  itemCount?: number; // Count for finite bags
+  itemIds?: string[]; // IDs for finite bags
+  templateWidget?: TabletopWidget; // Template widget to clone when drawn from
+  previewImage?: string; // Preview image of contained token/item
+  previewLabel?: string; // Label of contained token/item
+}
+
 export type TabletopWidget =
   | CardWidget
   | DeckWidget
@@ -168,7 +183,8 @@ export type TabletopWidget =
   | TokenWidget
   | CounterWidget
   | DieWidget
-  | SeatWidget;
+  | SeatWidget
+  | BagWidget;
 
 export interface TabletopTableConfig {
   width: number;
@@ -189,6 +205,18 @@ export interface TabletopGameMetadata {
   supportedModes?: TabletopPlayMode[];
 }
 
+export interface HiddenZone {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color?: string; // Player seat color or fog color e.g. '#4caf50' or '#222222'
+  ownerSeat?: number; // 0-indexed player seat index that owns the zone; undefined = GM/table
+  revealed?: boolean; // When true, content is temporarily revealed to all players
+  label?: string;
+}
+
 export interface TabletopGameDefinition extends TabletopGameMetadata {
   version: string;
   minPlayers: number;
@@ -199,6 +227,7 @@ export interface TabletopGameDefinition extends TabletopGameMetadata {
   assetFiles?: Record<string, string>; // Base64 or Blob URLs
   updatedAt?: number;
   ruleText?: string;
+  hiddenZones?: Record<string, HiddenZone>;
 }
 
 export interface TabletopGameSummary extends TabletopGameMetadata {
@@ -211,3 +240,6 @@ export interface TabletopGameSummary extends TabletopGameMetadata {
   updatedAt: number;
   format?: 'flat-json' | 'pcio-folder' | 'tts-workshop' | 'unknown';
 }
+
+export const HEX_CLIP_PATH = 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)';
+export const CIRCLE_CLIP_PATH = 'circle(50% at 50% 50%)';

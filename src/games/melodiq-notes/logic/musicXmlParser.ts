@@ -1,10 +1,13 @@
 import * as fflate from 'fflate';
 
+import type { ScorePartInfo, InstrumentCategory } from '../types';
+
 export interface ParsedSheetMusic {
     title: string;
     artist: string;
     baseBpm: number;
     xmlContent: string;
+    parts: ScorePartInfo[];
 }
 
 /**
@@ -122,6 +125,78 @@ function formatName(str: string): string {
         .replace(/\b\w/g, c => c.toUpperCase());
 }
 
+const INSTRUMENT_PALETTE = [
+    '#f59e0b', // Amber / Gold (Guitar 1)
+    '#3b82f6', // Blue (Flute / Vocals)
+    '#10b981', // Emerald / Green (Guitar 2)
+    '#8b5cf6', // Violet (Bass)
+    '#ec4899', // Pink (Strings / Violins)
+    '#ef4444', // Red (Drums)
+    '#06b6d4', // Cyan (Alto Flute)
+    '#f97316', // Orange (Guitar 3)
+    '#a855f7', // Purple (Guitar 4)
+    '#14b8a6', // Teal (Acoustic)
+];
+
+export function determineInstrumentCategory(name: string, midiProgram?: number): InstrumentCategory {
+    const s = name.toLowerCase();
+    if (s.includes('flute') || s.includes('pipe') || (midiProgram && midiProgram >= 73 && midiProgram <= 80)) return 'flute';
+    if (s.includes('bass') || (midiProgram && midiProgram >= 33 && midiProgram <= 40)) return 'bass';
+    if (s.includes('drum') || s.includes('percussion') || (midiProgram && midiProgram >= 113 && midiProgram <= 120)) return 'drums';
+    if (s.includes('guitar') || (midiProgram && midiProgram >= 25 && midiProgram <= 32)) return 'guitar';
+    if (s.includes('violin') || s.includes('string') || (midiProgram && midiProgram >= 41 && midiProgram <= 52)) return 'strings';
+    if (s.includes('piano') || (midiProgram && midiProgram >= 1 && midiProgram <= 24)) return 'piano';
+    return 'other';
+}
+
+export function extractPartsFromXml(xml: string): ScorePartInfo[] {
+    const parts: ScorePartInfo[] = [];
+    const partRegex = /<score-part\s+id="([^"]+)">([\s\S]*?)<\/score-part>/gi;
+    let match: RegExpExecArray | null;
+    let colorIdx = 0;
+
+    while ((match = partRegex.exec(xml)) !== null) {
+        const id = match[1];
+        const content = match[2];
+        const nameMatch = content.match(/<part-name>([\s\S]*?)<\/part-name>/i);
+        const instNameMatch = content.match(/<instrument-name>([\s\S]*?)<\/instrument-name>/i);
+        const midiProgramMatch = content.match(/<midi-program>(\d+)<\/midi-program>/i);
+        const midiChannelMatch = content.match(/<midi-channel>(\d+)<\/midi-channel>/i);
+
+        const name = nameMatch ? nameMatch[1].trim() : id;
+        const instrumentName = instNameMatch ? instNameMatch[1].trim() : name;
+        const midiProgram = midiProgramMatch ? parseInt(midiProgramMatch[1], 10) : undefined;
+        const midiChannel = midiChannelMatch ? parseInt(midiChannelMatch[1], 10) : undefined;
+
+        const category = determineInstrumentCategory(`${name} ${instrumentName}`, midiProgram);
+        const color = INSTRUMENT_PALETTE[colorIdx % INSTRUMENT_PALETTE.length];
+        colorIdx++;
+
+        parts.push({
+            id,
+            name,
+            instrumentName,
+            midiProgram,
+            midiChannel,
+            color,
+            category,
+        });
+    }
+
+    if (parts.length === 0) {
+        parts.push({
+            id: 'P1',
+            name: 'Lead',
+            instrumentName: 'Lead Instrument',
+            midiProgram: 1,
+            color: INSTRUMENT_PALETTE[0],
+            category: 'piano',
+        });
+    }
+
+    return parts;
+}
+
 /**
  * Loads and parses a File object (.mxl, .xml, or .musicxml)
  */
@@ -137,12 +212,14 @@ export async function loadMusicXmlFile(file: File): Promise<ParsedSheetMusic> {
     }
 
     const { title, artist, baseBpm } = extractMetadataFromXml(xmlContent, file.name);
+    const parts = extractPartsFromXml(xmlContent);
 
     return {
         title,
         artist,
         baseBpm,
-        xmlContent
+        xmlContent,
+        parts
     };
 }
 

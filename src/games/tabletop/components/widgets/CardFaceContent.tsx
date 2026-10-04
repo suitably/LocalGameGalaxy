@@ -99,6 +99,19 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
 
   const hasClipPath = Boolean(card.clipPath);
   if (hasClipPath && isFaceUp && card.frontContent.type === 'image') {
+    if (card.frontContent.spriteSheet) {
+      return (
+        <PlayingCardFace
+          frontContent={card.frontContent}
+          backContent={card.backContent}
+          isFaceUp={isFaceUp}
+          label={card.label}
+          width={width || card.width}
+          height={height || card.height}
+          clipPath={card.clipPath}
+        />
+      );
+    }
     return (
       <Box
         component="img"
@@ -110,12 +123,26 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
           objectFit: 'cover',
           display: 'block',
           pointerEvents: 'none',
+          clipPath: card.clipPath,
         }}
       />
     );
   }
 
   if (hasClipPath && !isFaceUp) {
+    if (card.backContent?.spriteSheet) {
+      return (
+        <PlayingCardFace
+          frontContent={card.frontContent}
+          backContent={card.backContent}
+          isFaceUp={false}
+          label={card.label}
+          width={width || card.width}
+          height={height || card.height}
+          clipPath={card.clipPath}
+        />
+      );
+    }
     if (card.backContent?.type === 'image' && card.backContent.value) {
       return (
         <Box
@@ -128,11 +155,21 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
             objectFit: 'cover',
             display: 'block',
             pointerEvents: 'none',
+            clipPath: card.clipPath,
           }}
         />
       );
     }
-    return <Box sx={{ width: '100%', height: '100%', bgcolor: card.backContent?.color || card.backContent?.value || '#1e3a8a' }} />;
+    return (
+      <Box
+        sx={{
+          width: '100%',
+          height: '100%',
+          bgcolor: card.backContent?.color || card.backContent?.value || '#1e3a8a',
+          clipPath: card.clipPath,
+        }}
+      />
+    );
   }
 
   return (
@@ -143,6 +180,7 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
       label={card.label}
       width={width || card.width}
       height={height || card.height}
+      clipPath={card.clipPath}
     />
   );
 };

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { storage } from '../../../lib/storage';
-import { melodiqFetchDirect } from '../api/melodiqFetch';
+import { handleHostApiRequest } from './handleHostApiRequest';
 import { type Song, type SongMeta } from '../db';
 import { type TVEvent } from './useTVMode';
 
@@ -39,6 +39,16 @@ export const useMelodiqGlobalEvents = ({
     useEffect(() => {
         handleSelectSongRef.current = handleSelectSong;
     }, [handleSelectSong]);
+
+    const songsRef = useRef(songs);
+    useEffect(() => {
+        songsRef.current = songs;
+    }, [songs]);
+
+    const getSongByIdRef = useRef(getSongById);
+    useEffect(() => {
+        getSongByIdRef.current = getSongById;
+    }, [getSongById]);
 
     const processedEventRef = useRef<number | null>(null);
     // Holds the song ID from the last session_sync when songs hadn't loaded yet
@@ -136,67 +146,13 @@ export const useMelodiqGlobalEvents = ({
                     window.dispatchEvent(new CustomEvent('melodiq_host_command', { detail: { command: data.command, value: data.value } }));
                 }
             } else if (data.type === 'api_request') {
-                // Host handles API requests on behalf of Client
-                try {
-                    let resData;
-                    
-                    // Intercept single song requests and serve from Host memory if possible
-                    // This prevents 404s for newly downloaded songs not yet indexed by the helper server
-                    if (data.path.startsWith('/api/songs/') && data.path !== '/api/songs/refresh') {
-                        let songId = data.path.substring(11);
-                        try { songId = decodeURIComponent(songId); } catch(e) {}
-                        if (songId) {
-                            const fullSong = await getSongById(songId);
-                            if (fullSong && fullSong.txtContent) resData = fullSong;
-                        }
-                    }
-
-                    if (!resData) {
-                        resData = await melodiqFetchDirect(data.path, data.options);
-                    }
-                    
-                    // Strip heavy fields from /api/songs to keep payload manageable
-                    if (data.path === '/api/songs' && Array.isArray(resData)) {
-                        resData = resData.map((s: any) => {
-                            const { txtContent, ...rest } = s;
-                            return rest;
-                        });
-                    }
-                    
-                    const jsonStr = JSON.stringify({
-                        type: 'api_response',
-                        reqId: data.reqId,
-                        status: 200,
-                        data: resData
-                    });
-                    
-                    const chunkSize = 16000;
-                    const totalChunks = Math.ceil(jsonStr.length / chunkSize);
-                    for (let i = 0; i < totalChunks; i++) {
-                        manager.sendToPeer(peerId, {
-                            type: 'api_response_chunk',
-                            reqId: data.reqId,
-                            chunk: jsonStr.substring(i * chunkSize, (i + 1) * chunkSize),
-                            index: i,
-                            total: totalChunks
-                        });
-                    }
-                } catch (error: any) {
-                    const errorStr = JSON.stringify({
-                        type: 'api_response',
-                        reqId: data.reqId,
-                        status: 500,
-                        error: error.message || 'Host API Request Failed'
-                    });
-                    
-                    manager.sendToPeer(peerId, {
-                        type: 'api_response_chunk',
-                        reqId: data.reqId,
-                        chunk: errorStr,
-                        index: 0,
-                        total: 1
-                    });
-                }
+                handleHostApiRequest({
+                    manager,
+                    peerId,
+                    data,
+                    songs: songsRef.current,
+                    getSongById: getSongByIdRef.current
+                });
             }
         };
 

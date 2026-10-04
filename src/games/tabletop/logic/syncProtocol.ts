@@ -8,6 +8,7 @@ export type TabletopSyncAction =
   | { type: 'STATE_SNAPSHOT'; state: TabletopGameDefinition }
   | { type: 'FLICK_CARD_TO_TABLE'; cardId: string; targetHolderId: string; senderSeat?: number }
   | { type: 'DRAW_CARD'; deckId: string; targetHolderId?: string }
+  | { type: 'DRAW_FROM_BAG'; bagId: string; position?: { x: number; y: number }; spawnedId?: string; targetHolderId?: string }
   | { type: 'ROLL_DICE'; dieIds: string[] }
   | { type: 'MOVE_WIDGET'; id: string; x: number; y: number; zIndex?: number }
   | { type: 'UPDATE_COUNTER'; counterId: string; delta: number }

@@ -1,7 +1,7 @@
 /**
  * Reducer for state transitions in Tabletop games [ID: GAME-TABLETOP-REDUCER]
  */
-import type { TabletopGameDefinition, TabletopWidget, CardWidget, DeckWidget, HolderWidget, CounterWidget, DieWidget, SeatWidget, GridSnapDef } from './types';
+import type { TabletopGameDefinition, TabletopWidget, CardWidget, DeckWidget, HolderWidget, CounterWidget, DieWidget, SeatWidget, GridSnapDef, HiddenZone, BagWidget } from './types';
 import { calculateHandLayout } from './handLayout';
 import { snapToGridCoords } from './gridLogic';
 import { isBoardSnapTarget } from './boardFilter';
@@ -25,6 +25,7 @@ export type TabletopAction =
   | { type: 'FLIP_CARD'; payload: { cardId: string } }
   | { type: 'SHUFFLE_DECK'; payload: { deckId: string; newCardIds?: string[] } }
   | { type: 'DRAW_CARD'; payload: { deckId: string; cardId?: string; targetHolderId?: string; position?: { x: number; y: number } } }
+  | { type: 'DRAW_FROM_BAG'; payload: { bagId: string; position?: { x: number; y: number }; spawnedId?: string; targetHolderId?: string } }
   | { type: 'SNAP_TO_HOLDER'; payload: { widgetId: string; holderId: string } }
   | { type: 'RETURN_CARD_TO_DECK'; payload: { cardId: string; deckId: string } }
   | { type: 'UPDATE_COUNTER'; payload: { counterId: string; delta: number } }
@@ -34,7 +35,14 @@ export type TabletopAction =
   | { type: 'FINISH_ANIMATION'; payload: { animationId: string } }
   | { type: 'SELECT_SEAT'; payload: { seatId: string; playerName?: string } }
   | { type: 'TAKE_PIECE_FROM_SUPPLY'; payload: { pieceId: string; targetPosition?: { x: number; y: number } } }
-  | { type: 'PLAY_CARD_FROM_HAND'; payload: { cardId: string; position: { x: number; y: number } } };
+  | { type: 'PLAY_CARD_FROM_HAND'; payload: { cardId: string; position: { x: number; y: number } } }
+  | { type: 'SCALE_WIDGETS'; payload: { widgetIds: string[]; factor: number } }
+  | { type: 'RESET_WIDGET_SCALE'; payload: { widgetIds: string[] } }
+  | { type: 'SET_WIDGET_SHOW_ALWAYS'; payload: { widgetId: string; showAlways: boolean } }
+  | { type: 'ADD_HIDDEN_ZONE'; payload: { zone: HiddenZone } }
+  | { type: 'UPDATE_HIDDEN_ZONE'; payload: { id: string; changes: Partial<HiddenZone> } }
+  | { type: 'REMOVE_HIDDEN_ZONE'; payload: { id: string } }
+  | { type: 'TOGGLE_ZONE_REVEAL'; payload: { id: string } };
 
 export function tabletopReducer(state: TabletopGameState, action: TabletopAction): TabletopGameState {
   switch (action.type) {
@@ -318,6 +326,97 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       };
     }
 
+    case 'DRAW_FROM_BAG': {
+      const bagWidget = state.game.widgets[action.payload.bagId];
+      if (!bagWidget || bagWidget.type !== 'bag') return state;
+      const bag = bagWidget as BagWidget;
+      const widgets: Record<string, TabletopWidget> = { ...state.game.widgets };
+
+      if (bag.isInfinite && bag.templateWidget) {
+        const template = bag.templateWidget;
+        const spawnedId = action.payload.spawnedId || `tok_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
+
+        let nextX = bag.x + bag.width + 16;
+        let nextY = bag.y;
+
+        if (action.payload.position) {
+          nextX = action.payload.position.x;
+          nextY = action.payload.position.y;
+        } else if (action.payload.targetHolderId && widgets[action.payload.targetHolderId]) {
+          const holder = widgets[action.payload.targetHolderId] as HolderWidget;
+          const childIndex = holder.childIds?.length || 0;
+          widgets[holder.id] = {
+            ...holder,
+            childIds: [...(holder.childIds || []), spawnedId],
+          };
+          const spread = Math.min(30, (holder.width - 40) / Math.max(1, childIndex + 1));
+          nextX = holder.x + 10 + childIndex * spread;
+          nextY = holder.y + 10;
+        }
+
+        const maxZ = Math.max(1, ...Object.values(widgets).map((w) => w.zIndex || 0));
+
+        const cloned: TabletopWidget = {
+          ...template,
+          id: spawnedId,
+          x: nextX,
+          y: nextY,
+          zIndex: maxZ + 1,
+          movable: true,
+          pinned: false,
+        };
+
+        widgets[spawnedId] = cloned;
+
+        return {
+          ...state,
+          game: {
+            ...state.game,
+            widgets,
+            updatedAt: Date.now(),
+          },
+        };
+      } else if (!bag.isInfinite && bag.itemIds && bag.itemIds.length > 0) {
+        const drawnId = bag.itemIds[bag.itemIds.length - 1];
+        const remainingItemIds = bag.itemIds.filter((id) => id !== drawnId);
+
+        widgets[bag.id] = {
+          ...bag,
+          itemIds: remainingItemIds,
+          itemCount: remainingItemIds.length,
+        };
+
+        let nextX = bag.x + bag.width + 16;
+        let nextY = bag.y;
+        if (action.payload.position) {
+          nextX = action.payload.position.x;
+          nextY = action.payload.position.y;
+        }
+
+        const item = widgets[drawnId];
+        if (item) {
+          widgets[drawnId] = {
+            ...item,
+            x: nextX,
+            y: nextY,
+            movable: true,
+            pinned: false,
+          };
+        }
+
+        return {
+          ...state,
+          game: {
+            ...state.game,
+            widgets,
+            updatedAt: Date.now(),
+          },
+        };
+      }
+
+      return state;
+    }
+
     case 'RETURN_CARD_TO_DECK': {
       const { cardId, deckId } = action.payload;
       const deckWidget = state.game.widgets[deckId];
@@ -530,8 +629,10 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
           }
         } else {
           const childIndex = updatedHolder.childIds.indexOf(widgetId);
-          let childX = updatedHolder.x + 4;
-          let childY = updatedHolder.y + 4;
+          const childW = widgets[widgetId]?.width || 80;
+          const childH = widgets[widgetId]?.height || 120;
+          let childX = updatedHolder.x + Math.max(0, Math.round((updatedHolder.width - childW) / 2));
+          let childY = updatedHolder.y + Math.max(0, Math.round((updatedHolder.height - childH) / 2));
           switch (updatedHolder.layout) {
             case 'stack':
               childX += childIndex * 2;
@@ -832,6 +933,130 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
         game: {
           ...state.game,
           widgets,
+        },
+      };
+    }
+
+    case 'SCALE_WIDGETS': {
+      const { widgetIds, factor } = action.payload;
+      if (!widgetIds || widgetIds.length === 0 || factor <= 0) return state;
+      const widgets = { ...state.game.widgets };
+      for (const id of widgetIds) {
+        const w = widgets[id];
+        if (!w || w.pinned) continue;
+        const defaultW = w.defaultWidth ?? w.width;
+        const defaultH = w.defaultHeight ?? w.height;
+        const newW = Math.max(24, Math.min(1200, Math.round(w.width * factor)));
+        const newH = Math.max(24, Math.min(1200, Math.round(w.height * factor)));
+        const dx = Math.round((newW - w.width) / 2);
+        const dy = Math.round((newH - w.height) / 2);
+        widgets[id] = {
+          ...w,
+          width: newW,
+          height: newH,
+          x: w.x - dx,
+          y: w.y - dy,
+          defaultWidth: defaultW,
+          defaultHeight: defaultH,
+        };
+      }
+      return { ...state, game: { ...state.game, widgets } };
+    }
+
+    case 'RESET_WIDGET_SCALE': {
+      const { widgetIds } = action.payload;
+      if (!widgetIds || widgetIds.length === 0) return state;
+      const widgets = { ...state.game.widgets };
+      for (const id of widgetIds) {
+        const w = widgets[id];
+        if (!w || w.pinned) continue;
+        if (w.defaultWidth && w.defaultHeight) {
+          const dx = Math.round((w.defaultWidth - w.width) / 2);
+          const dy = Math.round((w.defaultHeight - w.height) / 2);
+          widgets[id] = {
+            ...w,
+            width: w.defaultWidth,
+            height: w.defaultHeight,
+            x: w.x - dx,
+            y: w.y - dy,
+          };
+        }
+      }
+      return { ...state, game: { ...state.game, widgets } };
+    }
+
+    case 'SET_WIDGET_SHOW_ALWAYS': {
+      const { widgetId, showAlways } = action.payload;
+      const w = state.game.widgets[widgetId];
+      if (!w) return state;
+      return {
+        ...state,
+        game: {
+          ...state.game,
+          widgets: {
+            ...state.game.widgets,
+            [widgetId]: { ...w, showAlways },
+          },
+        },
+      };
+    }
+
+    case 'ADD_HIDDEN_ZONE': {
+      const { zone } = action.payload;
+      const hiddenZones = { ...(state.game.hiddenZones || {}), [zone.id]: zone };
+      return {
+        ...state,
+        game: {
+          ...state.game,
+          hiddenZones,
+        },
+      };
+    }
+
+    case 'UPDATE_HIDDEN_ZONE': {
+      const { id, changes } = action.payload;
+      const existing = state.game.hiddenZones?.[id];
+      if (!existing) return state;
+      const hiddenZones = {
+        ...(state.game.hiddenZones || {}),
+        [id]: { ...existing, ...changes },
+      };
+      return {
+        ...state,
+        game: {
+          ...state.game,
+          hiddenZones,
+        },
+      };
+    }
+
+    case 'REMOVE_HIDDEN_ZONE': {
+      const { id } = action.payload;
+      if (!state.game.hiddenZones || !state.game.hiddenZones[id]) return state;
+      const hiddenZones = { ...state.game.hiddenZones };
+      delete hiddenZones[id];
+      return {
+        ...state,
+        game: {
+          ...state.game,
+          hiddenZones,
+        },
+      };
+    }
+
+    case 'TOGGLE_ZONE_REVEAL': {
+      const { id } = action.payload;
+      const existing = state.game.hiddenZones?.[id];
+      if (!existing) return state;
+      const hiddenZones = {
+        ...(state.game.hiddenZones || {}),
+        [id]: { ...existing, revealed: !existing.revealed },
+      };
+      return {
+        ...state,
+        game: {
+          ...state.game,
+          hiddenZones,
         },
       };
     }

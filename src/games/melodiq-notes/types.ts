@@ -1,3 +1,6 @@
+import type { CursorNotesResult } from './logic/cursorNotes';
+import type { TargetNote } from './useNoteVerifier';
+
 export type StemType = 'drums' | 'bass' | 'instrument' | 'vocals' | 'other';
 
 export interface DemoSong {
@@ -27,5 +30,68 @@ export interface OsmdPitch {
     getHalfTone?: () => number;
 }
 
+export type InstrumentCategory = 'flute' | 'guitar' | 'bass' | 'strings' | 'drums' | 'piano' | 'other';
+
+export interface ScorePartInfo {
+    id: string;
+    name: string;
+    instrumentName: string;
+    midiProgram?: number;
+    midiChannel?: number;
+    color: string;
+    category: InstrumentCategory;
+}
+
+export interface InstrumentMixerChannel {
+    partId: string;
+    volume: number; // 0 to 1
+    muted: boolean;
+    solo: boolean;
+    customSampleUrl?: string;
+    soundPreset?: string;
+}
+
+export type MelodiqNotesViewMode = 'classic' | 'modern';
+export type ModernViewSubMode = 'focus' | 'ensemble';
+
+export interface TimelineNote {
+    id: string;
+    pitch: number;
+    noteName: string;
+    startBeats: number;
+    durationBeats: number;
+    isRest: boolean;
+    partId: string;
+    color: string;
+}
+
+export interface TimelineTrack {
+    part: ScorePartInfo;
+    notes: TimelineNote[];
+}
+
+export interface SheetMusicViewerRef {
+    nextNote: () => CursorNotesResult;
+    previousNote: () => CursorNotesResult;
+    resetCursor: () => CursorNotesResult;
+    getCurrentNotes: () => CursorNotesResult;
+    getStepDuration: () => number;
+}
+
+export interface SheetMusicViewerProps {
+    xmlContent: string;
+    selectedPartId?: string;
+    soloInstrumentInSheet?: boolean;
+    zoom?: number;
+    renderMode?: 'horizontal' | 'vertical';
+    isCurrentNoteHit?: boolean;
+    onRenderModeChange?: (mode: 'horizontal' | 'vertical') => void;
+    onNotesChanged?: (targetNotes: TargetNote[], allNotes?: TargetNote[]) => void;
+    onSongEnd?: () => void;
+    onBpmDetected?: (bpm: number) => void;
+}
+
 // Re-export for convenience so other files in this game only import from types.ts
+export type { CursorNotesResult } from './logic/cursorNotes';
 export type { StoredSheetMusic, StoredFolderHandle } from './logic/db';
+export type { TargetNote } from './useNoteVerifier';

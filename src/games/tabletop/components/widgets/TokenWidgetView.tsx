@@ -28,6 +28,9 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
 
   useEffect(() => {
     if (!widget.image || !widget.color) return;
+    const isSvg = widget.image.startsWith('data:image/svg+xml') || widget.image.toLowerCase().includes('.svg');
+    if (!isSvg) return;
+
     let cancelled = false;
     fetchAndRecolorSvg(widget.image, widget.color).then((src) => {
       if (!cancelled) setRecoloredSrc(src);
@@ -37,8 +40,11 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
     };
   }, [widget.image, widget.color]);
 
-  // Render Image Token (e.g. Robber, custom meeples, pieces)
+  // Render Image Token (e.g. Robber, custom meeples, pieces, board)
   if (widget.image) {
+    const isPinned = widget.pinned || widget.movable === false;
+    const isBoard = isPinned && widget.shape === 'rectangle';
+
     return (
       <Box
         onPointerDown={onPointerDown}
@@ -49,14 +55,21 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
           width: widget.width,
           height: widget.height,
           zIndex: widget.zIndex + (isDragging ? 100 : 0),
-          cursor: 'grab',
+          cursor: isPinned ? 'inherit' : 'grab',
           touchAction: 'none',
           userSelect: 'none',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          transform: `rotate(${rot}deg) ${isDragging ? 'scale(1.15)' : ''}`,
-          filter: isDragging ? 'drop-shadow(0 6px 10px rgba(0,0,0,0.5))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+          transform: rot ? `rotate(${rot}deg) ${isDragging ? 'scale(1.15)' : ''}` : isDragging ? 'scale(1.15)' : undefined,
+          filter: isDragging
+            ? 'drop-shadow(0 6px 10px rgba(0,0,0,0.5))'
+            : isBoard
+              ? undefined
+              : 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+          boxShadow: isBoard ? '0 10px 30px rgba(0,0,0,0.6)' : undefined,
+          borderRadius: isBoard ? 1.5 : undefined,
+          overflow: isBoard ? 'hidden' : undefined,
           transition: isDragging ? 'none' : 'filter 0.2s, transform 0.15s ease',
         }}
       >
@@ -67,7 +80,7 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
           sx={{
             width: '100%',
             height: '100%',
-            objectFit: 'contain',
+            objectFit: isBoard ? 'cover' : 'contain',
             display: 'block',
             pointerEvents: 'none',
           }}

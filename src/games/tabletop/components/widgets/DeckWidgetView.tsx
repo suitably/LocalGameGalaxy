@@ -41,16 +41,24 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
         width: widget.width,
         height: widget.height,
         zIndex: widget.zIndex,
-        borderRadius: 2,
-        boxShadow: isDragging 
+        borderRadius: widget.clipPath ? 0 : 2,
+        clipPath: widget.clipPath,
+        boxShadow: widget.clipPath
+          ? 'none'
+          : isDragging 
           ? '0 10px 25px rgba(0,0,0,0.5)' 
           : isEmpty
           ? 1
           : '1px 1px 0 rgba(255,255,255,0.8), 2px 2px 0 #1e3a8a, 3px 3px 0 rgba(255,255,255,0.8), 4px 4px 0 #1e3a8a, 6px 6px 14px rgba(0,0,0,0.45)',
+        filter: widget.clipPath
+          ? isDragging
+            ? 'drop-shadow(0 8px 16px rgba(0,0,0,0.55))'
+            : 'drop-shadow(0 4px 8px rgba(0,0,0,0.45))'
+          : undefined,
         cursor: widget.movable !== false ? 'grab' : isEmpty ? 'default' : 'pointer',
         userSelect: 'none',
-        bgcolor: isEmpty ? 'rgba(0,0,0,0.1)' : '#fff',
-        border: '1.5px solid rgba(0,0,0,0.2)',
+        bgcolor: isEmpty ? 'rgba(0,0,0,0.1)' : widget.clipPath ? 'transparent' : '#fff',
+        border: widget.clipPath ? 'none' : '1.5px solid rgba(0,0,0,0.2)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -64,12 +72,13 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
       }}
     >
       {!isEmpty ? (
-        <Box position="relative" width="100%" height="100%">
+        <Box position="relative" width="100%" height="100%" sx={{ clipPath: widget.clipPath }}>
           <CardFaceContent
             card={{
               ...widget,
               type: 'card',
               faceUp: hasFront,
+              clipPath: widget.clipPath,
               frontContent: widget.frontContent || { type: 'text', value: '' },
               backContent: widget.backContent || { type: 'text', value: '🂠', color: '#0d47a1' },
               faceObjects: widget.faceObjects,
@@ -82,7 +91,7 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
             sx={{
               position: 'absolute',
               top: 6,
-              right: 6,
+              right: widget.clipPath ? 36 : 6,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

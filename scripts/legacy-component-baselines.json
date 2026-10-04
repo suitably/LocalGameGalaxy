@@ -5,7 +5,7 @@
   "src/games/melodiq/gameplay/PitchVisualizer.tsx": 569,
   "src/games/melodiq/components/GameSettingsPanel.tsx": 560,
   "src/games/qwixx/components/QwixxRow.tsx": 522,
-  "src/features/settings/components/SettingsHeaderNav.tsx": 512,
+  "src/features/settings/components/SettingsHeaderNav.tsx": 491,
   "src/games/cards/components/SchwimmenGameView.tsx": 510,
   "src/games/melodiq/gameplay/LyricsDisplay.tsx": 508,
   "src/games/melodiq/components/SongActionDialogs.tsx": 490,

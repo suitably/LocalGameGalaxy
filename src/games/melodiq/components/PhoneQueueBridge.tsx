@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { storage, STORAGE_KEYS } from '../../../lib/storage';
+import { storage } from '../../../lib/storage';
 import { useWebRTC } from '../audio/WebRTCContext';
 import { useQueue } from '../hooks/useQueue';
 import { useSongs } from '../hooks/useSongs';
+import { getRoleForDevice } from './useStoredRoles';
 
 
 export const PhoneQueueBridge: React.FC = () => {
@@ -117,11 +118,7 @@ export const PhoneQueueBridge: React.FC = () => {
                         if (song) {
                             const peer = manager.getConnectedPeers().find(p => p.peerId === peerId);
                             if (peer) {
-                                const storedRoles = storage.get(STORAGE_KEYS.MELODIQ_CLIENT_ROLES);
-                                let role = 'singer';
-                                if (storedRoles && peer.deviceId) {
-                                    try { role = JSON.parse(storedRoles)[peer.deviceId] || 'singer'; } catch (e) {}
-                                }
+                                const role = getRoleForDevice(peer.deviceId);
                                 if (role !== 'singer') {
                                     addToQueue(song, peer.name, peer.deviceId);
                                 } else {
@@ -137,11 +134,7 @@ export const PhoneQueueBridge: React.FC = () => {
                     if (data.songId) {
                         const peer = manager.getConnectedPeers().find(p => p.peerId === peerId);
                         if (peer) {
-                            const storedRoles = storage.get(STORAGE_KEYS.MELODIQ_CLIENT_ROLES);
-                            let role = 'singer';
-                            if (storedRoles && peer.deviceId) {
-                                try { role = JSON.parse(storedRoles)[peer.deviceId] || 'singer'; } catch (e) {}
-                            }
+                            const role = getRoleForDevice(peer.deviceId);
                             if (role !== 'singer') {
                                 const canForcePlay = (role === 'admin' || role === 'queue_manager') && data.forcePlay;
                                 window.dispatchEvent(new CustomEvent('melodiq_remote_select_song', { 
@@ -164,11 +157,7 @@ export const PhoneQueueBridge: React.FC = () => {
                     if (data.itemId) {
                         const peer = manager.getConnectedPeers().find(p => p.peerId === peerId);
                         if (peer) {
-                            const storedRoles = storage.get(STORAGE_KEYS.MELODIQ_CLIENT_ROLES);
-                            let role = 'singer';
-                            if (storedRoles && peer.deviceId) {
-                                try { role = JSON.parse(storedRoles)[peer.deviceId] || 'singer'; } catch (e) {}
-                            }
+                            const role = getRoleForDevice(peer.deviceId);
                             
                             if (role === 'admin' || role === 'queue_manager') {
                                 removeFromQueue(data.itemId);
@@ -191,11 +180,7 @@ export const PhoneQueueBridge: React.FC = () => {
                     if (data.itemId && typeof data.startIndex === 'number' && typeof data.endIndex === 'number') {
                         const peer = manager.getConnectedPeers().find(p => p.peerId === peerId);
                         if (peer) {
-                            const storedRoles = storage.get(STORAGE_KEYS.MELODIQ_CLIENT_ROLES);
-                            let role = 'singer';
-                            if (storedRoles && peer.deviceId) {
-                                try { role = JSON.parse(storedRoles)[peer.deviceId] || 'singer'; } catch (e) {}
-                            }
+                            const role = getRoleForDevice(peer.deviceId);
 
                             const isManager = role === 'admin' || role === 'queue_manager';
                             const isOwner = role === 'queue_contributor' && queue.find(i => i.id === data.itemId)?.requesterId === peer.deviceId;
@@ -213,11 +198,7 @@ export const PhoneQueueBridge: React.FC = () => {
                     if (data.itemId && data.deviceId) {
                         const peer = manager.getConnectedPeers().find(p => p.peerId === peerId);
                         if (peer) {
-                            const storedRoles = storage.get(STORAGE_KEYS.MELODIQ_CLIENT_ROLES);
-                            let role = 'singer';
-                            if (storedRoles && peer.deviceId) {
-                                try { role = JSON.parse(storedRoles)[peer.deviceId] || 'singer'; } catch (e) {}
-                            }
+                            const role = getRoleForDevice(peer.deviceId);
 
                             const isSelfToggle = data.deviceId === peer.deviceId || data.deviceId === peer.peerId;
                             const isManager = role === 'admin' || role === 'queue_manager';

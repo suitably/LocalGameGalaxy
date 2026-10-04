@@ -19,7 +19,22 @@ export async function createGalaxyServer(config: ServerConfig): Promise<Hono<Hon
   app.use(
     '*',
     cors({
-      origin: config.allowedOrigins && config.allowedOrigins.length > 0 ? config.allowedOrigins : '*',
+      origin: (reqOrigin) => {
+        if (!config.allowedOrigins || config.allowedOrigins.length === 0 || config.allowedOrigins.includes('*')) {
+          return reqOrigin || '*';
+        }
+        if (config.allowedOrigins.includes(reqOrigin)) {
+          return reqOrigin;
+        }
+        // Always allow localhost and private network development origins
+        if (
+          /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(reqOrigin) ||
+          /^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(reqOrigin)
+        ) {
+          return reqOrigin;
+        }
+        return null;
+      },
       allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
       exposeHeaders: ['Content-Length', 'X-Requested-With', 'X-Total-Count', 'X-Page', 'X-Limit'],

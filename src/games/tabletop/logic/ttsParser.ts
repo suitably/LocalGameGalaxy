@@ -4,16 +4,18 @@
  * Converts TTS save file JSON (3D ObjectStates) into the Galaxy
  * TabletopGameDefinition (2D widget-based) format.
  */
-import type { TTSSaveFile, TTSObjectState, TTSCustomDeckEntry } from './ttsTypes';
-import type {
-  TabletopGameDefinition,
-  TabletopWidget,
-  CardWidget,
-  DeckWidget,
-  DieWidget,
-  TokenWidget,
-  HolderWidget,
-  CardContent,
+import type { TTSSaveFile, TTSObjectState, TTSCustomDeckEntry, TTSSnapPoint, TTSVector3 } from './ttsTypes';
+import {
+  HEX_CLIP_PATH,
+  CIRCLE_CLIP_PATH,
+  type TabletopGameDefinition,
+  type TabletopWidget,
+  type CardWidget,
+  type DeckWidget,
+  type DieWidget,
+  type TokenWidget,
+  type HolderWidget,
+  type CardContent,
 } from './types';
 import { validateAndSanitizeGame } from './gameValidator';
 import { resolveCardSprite, resolveBackSprite } from './ttsSpritesheet';
@@ -21,12 +23,26 @@ import { resolveCardSprite, resolveBackSprite } from './ttsSpritesheet';
 /** Scale factor: 1 TTS unit ≈ this many pixels */
 const TTS_SCALE = 50;
 /** Default card dimensions in pixels */
-const CARD_W = 80;
-const CARD_H = 120;
+const CARD_W = 135;
+const CARD_H = 190;
 /** Token/figurine default size */
-const TOKEN_SIZE = 40;
+const TOKEN_SIZE = 76;
 /** Die default size */
-const DIE_SIZE = 54;
+const DIE_SIZE = 80;
+
+export { HEX_CLIP_PATH, CIRCLE_CLIP_PATH };
+
+export function getCardShapeAndSize(deck?: TTSCustomDeckEntry): { width: number; height: number; clipPath?: string } {
+  if (deck?.Type === 2 || deck?.Type === 3) {
+    // Hex cards: TTS hex base is ~1.15 aspect ratio
+    return { width: 210, height: 182, clipPath: HEX_CLIP_PATH };
+  }
+  if (deck?.Type === 4) {
+    // Circle cards
+    return { width: 100, height: 100, clipPath: CIRCLE_CLIP_PATH };
+  }
+  return { width: CARD_W, height: CARD_H };
+}
 
 // ─── Detection ───────────────────────────────────────────────────────
 
@@ -77,10 +93,20 @@ function computeBounds(objects: TTSObjectState[]): BoundingBox {
 
   for (const obj of objects) {
     const { posX, posZ } = obj.Transform;
-    if (posX < minX) minX = posX;
-    if (posX > maxX) maxX = posX;
-    if (posZ < minZ) minZ = posZ;
-    if (posZ > maxZ) maxZ = posZ;
+    let halfW = 0;
+    let halfZ = 0;
+    if (obj.Name === 'Custom_Board') {
+      const scaleX = obj.Transform.scaleX || 1;
+      const scaleZ = obj.Transform.scaleZ || 1;
+      const widthScale = obj.CustomImage?.WidthScale || 1;
+      const imageScalar = obj.CustomImage?.ImageScalar || 1;
+      halfW = (24.5 * scaleX * widthScale) / 2;
+      halfZ = (24.5 * scaleZ * imageScalar) / 2;
+    }
+    if (posX - halfW < minX) minX = posX - halfW;
+    if (posX + halfW > maxX) maxX = posX + halfW;
+    if (posZ - halfZ < minZ) minZ = posZ - halfZ;
+    if (posZ + halfZ > maxZ) maxZ = posZ + halfZ;
   }
 
   // Fallback for single-object or empty scenes
@@ -100,6 +126,77 @@ function projectPosition(
   // posY (height) → zIndex — higher objects are on top
   const zIndex = Math.round(obj.Transform.posY * 100);
   return { x: Math.round(x), y: Math.round(y), zIndex: Math.max(1, zIndex) };
+}
+
+function calculateWorldPosOfSnapPoint(
+  parentObj: TTSObjectState,
+  spPos: TTSVector3,
+): { x: number; z: number } {
+  const rotYDeg = parentObj.Transform.rotY || 0;
+  const rotYRad = (rotYDeg * Math.PI) / 180;
+  const cos = Math.cos(rotYRad);
+  const sin = Math.sin(rotYRad);
+  const scaleX = parentObj.Transform.scaleX || 1;
+  const scaleZ = parentObj.Transform.scaleZ || 1;
+  // Custom_Board snap points are stored in visual-space local coords, which include
+  // the WidthScale and ImageScalar stretch. We must apply these before rotating so
+  // the resulting world position aligns with the stretched board image in 2D.
+  const widthScale = parentObj.CustomImage?.WidthScale || 1;
+  const imageScalar = parentObj.CustomImage?.ImageScalar || 1;
+
+  const localX = spPos.x * widthScale;
+  const localZ = spPos.z * imageScalar;
+
+  const rotX = localX * cos + localZ * sin;
+  const rotZ = -localX * sin + localZ * cos;
+
+  return {
+    x: parentObj.Transform.posX + rotX * scaleX,
+    z: parentObj.Transform.posZ + rotZ * scaleZ,
+  };
+}
+
+function projectWorldPos(
+  worldPos: { x: number; z: number },
+  bounds: BoundingBox,
+  margin: number,
+): { x: number; y: number } {
+  const x = (worldPos.x - bounds.minX) * TTS_SCALE + margin;
+  const y = (worldPos.z - bounds.minZ) * TTS_SCALE + margin;
+  return { x: Math.round(x), y: Math.round(y) };
+}
+
+function createSnapHolderWidget(
+  id: string,
+  screenX: number,
+  screenY: number,
+  zIndex: number,
+  sp: TTSSnapPoint,
+  hasHexDeck: boolean,
+): HolderWidget {
+  const isHex = sp.Tags?.some((t) => /feld|hex/i.test(t)) || hasHexDeck;
+  const snapW = isHex ? 210 : 80;
+  const snapH = isHex ? 182 : 120;
+  const label = sp.Tags?.[0] || 'Ablage';
+
+  return {
+    id,
+    type: 'holder',
+    x: Math.round(screenX - snapW / 2),
+    y: Math.round(screenY - snapH / 2),
+    width: snapW,
+    height: snapH,
+    zIndex,
+    label,
+    dropTargetTypes: ['card', 'token'],
+    childIds: [],
+    layout: 'stack',
+    dropTarget: true,
+    pinned: true,
+    movable: false,
+    clipPath: isHex ? HEX_CLIP_PATH : undefined,
+    customCss: 'transparent',
+  };
 }
 
 // ─── Card sprite content builder ─────────────────────────────────────
@@ -159,6 +256,15 @@ function nextId(prefix: string): string {
   return `${prefix}_${++widgetIdCounter}`;
 }
 
+function sanitizeCustomDecks(decks?: Record<string, TTSCustomDeckEntry>): Record<string, TTSCustomDeckEntry> {
+  if (!decks) return {};
+  const res: Record<string, TTSCustomDeckEntry> = {};
+  for (const [k, d] of Object.entries(decks)) {
+    res[k] = { ...d, FaceURL: sanitizeTtsUrl(d.FaceURL), BackURL: sanitizeTtsUrl(d.BackURL) };
+  }
+  return res;
+}
+
 function convertCard(
   obj: TTSObjectState,
   pos: { x: number; y: number; zIndex: number },
@@ -166,13 +272,18 @@ function convertCard(
   deckWidgetId?: string,
 ): CardWidget {
   const cardId = obj.CardID ?? 0;
-  const decks = { ...allCustomDecks, ...(obj.CustomDeck || {}) };
+  const decks = { ...allCustomDecks, ...sanitizeCustomDecks(obj.CustomDeck) };
+  const deckIndex = Math.floor(cardId / 100);
+  const deckEntry = decks[String(deckIndex)];
+  const shapeInfo = getCardShapeAndSize(deckEntry);
 
   return {
     id: obj.GUID,
     type: 'card',
     x: pos.x, y: pos.y,
-    width: CARD_W, height: CARD_H,
+    width: shapeInfo.width,
+    height: shapeInfo.height,
+    clipPath: shapeInfo.clipPath,
     zIndex: pos.zIndex,
     label: obj.Nickname || `Karte ${cardId}`,
     deckId: deckWidgetId,
@@ -192,7 +303,17 @@ function convertDeck(
   widgets: Record<string, TabletopWidget>,
 ): DeckWidget {
   const deckId = nextId('deck');
-  const mergedDecks = { ...allCustomDecks, ...(obj.CustomDeck || {}) };
+  const objDecks = sanitizeCustomDecks(obj.CustomDeck);
+  const mergedDecks = { ...allCustomDecks, ...objDecks };
+
+  let deckIndex: string | undefined = Object.keys(objDecks)[0];
+  if (!deckIndex && obj.DeckIDs && obj.DeckIDs.length > 0) {
+    deckIndex = String(Math.floor(obj.DeckIDs[0] / 100));
+  } else if (!deckIndex && obj.ContainedObjects && obj.ContainedObjects.length > 0 && obj.ContainedObjects[0].CardID) {
+    deckIndex = String(Math.floor(obj.ContainedObjects[0].CardID / 100));
+  }
+  const thisDeck = (deckIndex ? mergedDecks[deckIndex] : undefined) || Object.values(mergedDecks)[0];
+  const shapeInfo = getCardShapeAndSize(thisDeck);
   const cardIds: string[] = [];
 
   // Create cards from ContainedObjects
@@ -209,11 +330,16 @@ function convertDeck(
     // Create cards from DeckIDs (no ContainedObjects)
     for (const dId of obj.DeckIDs) {
       const cId = nextId('card');
+      const dIndex = Math.floor(dId / 100);
+      const cardDeck = mergedDecks[String(dIndex)] || thisDeck;
+      const cardShape = getCardShapeAndSize(cardDeck);
       const card: CardWidget = {
         id: cId,
         type: 'card',
         x: pos.x, y: pos.y,
-        width: CARD_W, height: CARD_H,
+        width: cardShape.width,
+        height: cardShape.height,
+        clipPath: cardShape.clipPath,
         zIndex: pos.zIndex + 1,
         label: `Karte ${dId}`,
         deckId,
@@ -231,18 +357,18 @@ function convertDeck(
     }
   }
 
-  // Get back image from first CustomDeck entry
-  const firstDeckKey = Object.keys(mergedDecks)[0];
-  const firstDeck = firstDeckKey ? mergedDecks[firstDeckKey] : undefined;
-  const backContent: CardContent = firstDeck?.BackURL
-    ? { type: 'image', value: firstDeck.BackURL }
+  // Get back image from CustomDeck entry
+  const backContent: CardContent = thisDeck?.BackURL
+    ? { type: 'image', value: thisDeck.BackURL }
     : { type: 'text', value: '🂠', color: '#1565c0' };
 
   return {
     id: deckId,
     type: 'deck',
     x: pos.x, y: pos.y,
-    width: CARD_W, height: CARD_H,
+    width: shapeInfo.width,
+    height: shapeInfo.height,
+    clipPath: shapeInfo.clipPath,
     zIndex: pos.zIndex,
     label: obj.Nickname || 'Kartenstapel',
     cardIds,
@@ -275,13 +401,48 @@ function convertDie(
   };
 }
 
+function convertBoard(
+  obj: TTSObjectState,
+  pos: { x: number; y: number; zIndex: number },
+): TokenWidget {
+  const imageUrl = obj.CustomImage?.ImageURL ? sanitizeTtsUrl(obj.CustomImage.ImageURL) : undefined;
+  const scaleX = obj.Transform.scaleX || 1;
+  const scaleZ = obj.Transform.scaleZ || 1;
+  const widthScale = obj.CustomImage?.WidthScale || 1;
+  const imageScalar = obj.CustomImage?.ImageScalar || 1;
+  const unitW = 24.5 * scaleX * widthScale;
+  const unitH = 24.5 * scaleZ * imageScalar;
+  const width = Math.round(unitW * TTS_SCALE);
+  const height = Math.round(unitH * TTS_SCALE);
+
+  return {
+    id: obj.GUID,
+    type: 'token',
+    shape: 'rectangle',
+    x: Math.round(pos.x - width / 2),
+    y: Math.round(pos.y - height / 2),
+    width,
+    height,
+    zIndex: 0,
+    label: obj.Nickname || 'Spielbrett',
+    image: imageUrl,
+    movable: false,
+    pinned: true,
+  };
+}
+
 function convertToken(
   obj: TTSObjectState,
   pos: { x: number; y: number; zIndex: number },
 ): TokenWidget {
-  const imageUrl = obj.CustomImage?.ImageURL || undefined;
+  const imageUrl = obj.CustomImage?.ImageURL ? sanitizeTtsUrl(obj.CustomImage.ImageURL) : undefined;
   const scale = Math.max(obj.Transform.scaleX || 1, obj.Transform.scaleZ || 1);
-  const size = Math.round(TOKEN_SIZE * Math.min(scale, 3));
+  const rawSize = Math.round(TOKEN_SIZE * Math.min(Math.max(scale, 0.85), 3));
+  const size = Math.max(68, rawSize);
+
+  const rawName = obj.Name || '';
+  const isGeneric = rawName.startsWith('backgammon') || rawName.startsWith('PiecePack');
+  const label = obj.Nickname || (isGeneric ? undefined : rawName);
 
   return {
     id: obj.GUID,
@@ -289,7 +450,7 @@ function convertToken(
     x: pos.x, y: pos.y,
     width: size, height: size,
     zIndex: pos.zIndex,
-    label: obj.Nickname || obj.Name,
+    label,
     color: ttsColorToHex(obj.ColorDiffuse),
     image: imageUrl,
     shape: 'circle',
@@ -307,7 +468,7 @@ function convertHandTrigger(
     id: obj.GUID,
     type: 'holder',
     x: pos.x, y: pos.y,
-    width: 240, height: 140,
+    width: 340, height: 200,
     zIndex: pos.zIndex + 1000,
     label: `Hand ${seatIndex + 1}`,
     dropTargetTypes: ['card'],
@@ -343,23 +504,34 @@ export function parseTtsSaveFile(
   // Collect all CustomDeck entries globally
   const globalDecks: Record<string, TTSCustomDeckEntry> = {};
   collectCustomDecks(save.ObjectStates, globalDecks);
+  const hasAnyHexDeck = Object.values(globalDecks).some((d) => d.Type === 2 || d.Type === 3);
 
   // Track HandTrigger seat assignment
   let handSeatCounter = 0;
-
-  // Find the board image (Custom_Board or large Custom_Model)
-  let boardImageUrl: string | undefined;
-  for (const obj of save.ObjectStates) {
-    if (obj.Name === 'Custom_Board' && obj.CustomImage?.ImageURL) {
-      boardImageUrl = obj.CustomImage.ImageURL;
-      break;
-    }
-  }
 
   // Process all top-level objects
   for (const obj of save.ObjectStates) {
     const pos = projectPosition(obj, bounds, margin);
     const name = obj.Name;
+
+    // AttachedSnapPoints on objects
+    if (obj.AttachedSnapPoints && obj.AttachedSnapPoints.length > 0) {
+      for (let i = 0; i < obj.AttachedSnapPoints.length; i++) {
+        const sp = obj.AttachedSnapPoints[i];
+        const worldPos = calculateWorldPosOfSnapPoint(obj, sp.Position);
+        const screenPos = projectWorldPos(worldPos, bounds, margin);
+        const holderId = `snap_${obj.GUID}_${i}`;
+        const holder = createSnapHolderWidget(
+          holderId,
+          screenPos.x,
+          screenPos.y,
+          (pos.zIndex || 0) + 1,
+          sp,
+          hasAnyHexDeck,
+        );
+        widgets[holder.id] = holder;
+      }
+    }
 
     // Skip meta-only objects
     if (name === 'Custom_Assetbundle' || name === 'Custom_PDF') continue;
@@ -423,10 +595,9 @@ export function parseTtsSaveFile(
       continue;
     }
 
-    // Custom_Board → skip if used as background, otherwise token
+    // Custom_Board → convert to pinned board token widget
     if (name === 'Custom_Board') {
-      if (obj.CustomImage?.ImageURL === boardImageUrl) continue;
-      widgets[obj.GUID] = convertToken(obj, pos);
+      widgets[obj.GUID] = convertBoard(obj, pos);
       continue;
     }
 
@@ -447,6 +618,24 @@ export function parseTtsSaveFile(
     // Default fallback: generic token for any unrecognized object
     if (!name.startsWith('Notecard') && !name.startsWith('Tablet')) {
       widgets[obj.GUID] = convertToken(obj, pos);
+    }
+  }
+
+  // Global snap points
+  if (save.SnapPoints && save.SnapPoints.length > 0) {
+    for (let i = 0; i < save.SnapPoints.length; i++) {
+      const sp = save.SnapPoints[i];
+      const screenPos = projectWorldPos({ x: sp.Position.x, z: sp.Position.z }, bounds, margin);
+      const holderId = `snap_global_${i}`;
+      const holder = createSnapHolderWidget(
+        holderId,
+        screenPos.x,
+        screenPos.y,
+        1,
+        sp,
+        hasAnyHexDeck,
+      );
+      widgets[holder.id] = holder;
     }
   }
 
@@ -471,7 +660,6 @@ export function parseTtsSaveFile(
     table: {
       width: Math.max(1600, tableWidth),
       height: Math.max(1000, tableHeight),
-      backgroundImageUrl: boardImageUrl,
       backgroundColor: '#1a472a',
     },
     widgets,
@@ -481,6 +669,19 @@ export function parseTtsSaveFile(
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
+/**
+ * Rewrites legacy or blocked Steam UGC URLs to modern working CDN endpoints with CORS support.
+ * Legacy: http://cloud-3.steamusercontent.com/ugc/... (returns 403 Forbidden)
+ * Modern: https://steamusercontent-a.akamaihd.net/ugc/... (returns 200 OK + Access-Control-Allow-Origin: *)
+ */
+export function sanitizeTtsUrl(url?: string): string {
+  if (!url) return '';
+  return url
+    .replace(/^https?:\/\/cloud-\d+\.steamusercontent\.com\//i, 'https://steamusercontent-a.akamaihd.net/')
+    .replace(/^http:\/\/steamusercontent-a\.akamaihd\.net\//i, 'https://steamusercontent-a.akamaihd.net/')
+    .replace(/^http:\/\/steamuserimages-a\.akamaihd\.net\//i, 'https://steamuserimages-a.akamaihd.net/');
+}
+
 /** Recursively collects all CustomDeck entries from the object tree */
 function collectCustomDecks(
   objects: TTSObjectState[],
@@ -489,7 +690,13 @@ function collectCustomDecks(
   for (const obj of objects) {
     if (obj.CustomDeck) {
       for (const [key, deck] of Object.entries(obj.CustomDeck)) {
-        if (!out[key]) out[key] = deck;
+        if (!out[key]) {
+          out[key] = {
+            ...deck,
+            FaceURL: sanitizeTtsUrl(deck.FaceURL),
+            BackURL: sanitizeTtsUrl(deck.BackURL),
+          };
+        }
       }
     }
     if (obj.ContainedObjects) {
