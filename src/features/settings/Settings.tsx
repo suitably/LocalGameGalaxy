@@ -11,6 +11,7 @@ import { resolveSettingsNav } from './settingsNav';
 const NotificationSettingsCategory = lazy(() => import('./components/NotificationSettingsCategory').then(m => ({ default: m.NotificationSettingsCategory })));
 const ServerSettingsCategory = lazy(() => import('./components/ServerSettingsCategory').then(m => ({ default: m.ServerSettingsCategory })));
 const MelodiqSettingsCategory = lazy(() => import('./components/MelodiqSettingsCategory').then(m => ({ default: m.MelodiqSettingsCategory })));
+const MelodiqNotesSettingsCategory = lazy(() => import('./components/MelodiqNotesSettingsCategory').then(m => ({ default: m.MelodiqNotesSettingsCategory })));
 
 interface SettingsProps {
     activeGameId?: string;
@@ -114,6 +115,11 @@ export const Settings: React.FC<SettingsProps> = ({ activeGameId, activeSub: pro
                         autoFocusUsdb={isMissingUsdbParam}
                         onBackToGame={onBack}
                     />
+                </Suspense>
+            )}
+            {activeTab === 'melodiq-notes' && (
+                <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
+                    <MelodiqNotesSettingsCategory onBackToGame={onBack} />
                 </Suspense>
             )}
         </Box>
