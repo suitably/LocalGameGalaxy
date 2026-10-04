@@ -1,4 +1,7 @@
 import { useRef, useCallback, useEffect } from 'react';
+import type { InstrumentCategory } from './types';
+import { SoundfontPlayer } from './logic/soundfontPlayer';
+import { getStoredSoundConfig, resolveSoundfontName, type InstrumentSoundConfig } from './logic/soundSettings';
 
 declare global {
     interface Window {
@@ -6,20 +9,28 @@ declare global {
     }
 }
 
-/** Converts MIDI note number to Hz frequency */
-const midiToFreq = (midi: number): number => {
-    return 440 * Math.pow(2, (midi - 69) / 12);
-};
+export interface PlayInstrumentNoteOptions {
+    midiPitch: number;
+    durationSeconds?: number;
+    velocity?: number;
+    partId?: string;
+    midiProgram?: number;
+    category?: InstrumentCategory;
+    volume?: number;
+}
 
 export const useAudioSynth = () => {
     const audioCtxRef = useRef<AudioContext | null>(null);
-    const activeVoicesRef = useRef<Set<{ osc: OscillatorNode; osc2: OscillatorNode; gain: GainNode }>>(new Set());
+    const soundfontPlayerRef = useRef<SoundfontPlayer | null>(null);
+    const activeStoppersRef = useRef<Set<() => void>>(new Set());
+    const soundConfigRef = useRef<InstrumentSoundConfig>(getStoredSoundConfig());
 
     const initAudioContext = useCallback(() => {
         if (!audioCtxRef.current) {
             const AudioCtx = window.AudioContext || window.webkitAudioContext;
             if (AudioCtx) {
                 audioCtxRef.current = new AudioCtx();
+                soundfontPlayerRef.current = new SoundfontPlayer(audioCtxRef.current);
             }
         }
         if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
@@ -27,86 +38,72 @@ export const useAudioSynth = () => {
         }
     }, []);
 
-    /** Plays a synthesized piano-like tone for a given MIDI note pitch */
-    const playNote = useCallback((midiPitch: number, durationSeconds: number = 0.5, velocity: number = 0.8) => {
+    const reloadSoundConfig = useCallback(() => {
+        soundConfigRef.current = getStoredSoundConfig();
+    }, []);
+
+    /**
+     * Plays a note for a specific instrument with its configured soundfont or synthesizer model
+     */
+    const playInstrumentNote = useCallback(({
+        midiPitch,
+        durationSeconds = 0.5,
+        velocity = 0.8,
+        partId,
+        midiProgram,
+        category = 'piano',
+        volume = 1.0,
+    }: PlayInstrumentNoteOptions) => {
         initAudioContext();
         const ctx = audioCtxRef.current;
-        if (!ctx) return;
+        const player = soundfontPlayerRef.current;
+        if (!ctx || !player) return;
 
-        const freq = midiToFreq(midiPitch);
-        const now = ctx.currentTime;
+        const config = soundConfigRef.current;
+        const partVolume = (partId && config.volumes[partId] !== undefined)
+            ? config.volumes[partId]
+            : 1.0;
+        const finalVolume = Math.max(0, Math.min(1, velocity * volume * partVolume));
+        if (finalVolume <= 0.001) return;
 
-        // Create oscillator (Fundamental)
-        const osc = ctx.createOscillator();
-        const osc2 = ctx.createOscillator();
-        const gain = ctx.createGain();
+        const instrumentSlug = (partId && config.customPresets[partId])
+            ? config.customPresets[partId]
+            : resolveSoundfontName(midiProgram, category);
 
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, now);
+        const customUrl = (partId && config.customUrls[partId]) || config.customBaseUrl;
 
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(freq * 2, now); // 2nd harmonic
+        const voice = player.play(
+            config.provider,
+            instrumentSlug,
+            category,
+            midiPitch,
+            durationSeconds,
+            finalVolume,
+            customUrl
+        );
 
-        // Envelope (Attack, Decay, Sustain, Release)
-        // Accurately sustain the tone for the full durationSeconds
-        const volume = Math.min(1, Math.max(0, velocity));
-        const dur = Math.max(0.08, durationSeconds);
-        const attackTime = Math.min(0.015, dur * 0.15);
-        const releaseTime = Math.min(0.08, dur * 0.25);
-        const sustainEndTime = Math.max(attackTime + 0.01, dur - releaseTime);
-
-        gain.gain.setValueAtTime(0.0001, now);
-        // Fast attack up to peak volume
-        gain.gain.linearRampToValueAtTime(0.4 * volume, now + attackTime);
-        // Sustain: gentle decay during note duration down to 65% of peak
-        gain.gain.exponentialRampToValueAtTime(0.26 * volume, now + sustainEndTime);
-        // Release: fade out at note end
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-
-        osc.connect(gain);
-        osc2.connect(gain);
-        gain.connect(ctx.destination);
-
-        const voice = { osc, osc2, gain };
-        activeVoicesRef.current.add(voice);
-
-        osc.start(now);
-        osc2.start(now);
-
-        const stopTime = now + dur + 0.05;
-        osc.stop(stopTime);
-        osc2.stop(stopTime);
-
-        // Disconnect nodes after stop to prevent leak
-        const handleEnded = () => {
-            activeVoicesRef.current.delete(voice);
-            try {
-                osc.disconnect();
-                osc2.disconnect();
-                gain.disconnect();
-            } catch {
-                // Ignore if already disconnected
-            }
-        };
-        osc.addEventListener('ended', handleEnded, { once: true });
+        activeStoppersRef.current.add(voice.stop);
+        setTimeout(() => {
+            activeStoppersRef.current.delete(voice.stop);
+        }, (durationSeconds + 0.1) * 1000);
     }, [initAudioContext]);
 
-    const stopAllNotes = useCallback(() => {
-        const ctx = audioCtxRef.current;
-        if (!ctx) return;
-        const now = ctx.currentTime;
-        activeVoicesRef.current.forEach(({ osc, osc2, gain }) => {
-            try {
-                gain.gain.cancelScheduledValues(now);
-                gain.gain.setValueAtTime(gain.gain.value, now);
-                gain.gain.linearRampToValueAtTime(0.0001, now + 0.03);
-                osc.stop(now + 0.04);
-                osc2.stop(now + 0.04);
-            } catch {
-                // Ignore if already stopped
-            }
+    /** Fallback simple note playback */
+    const playNote = useCallback((midiPitch: number, durationSeconds: number = 0.5, velocity: number = 0.8) => {
+        playInstrumentNote({
+            midiPitch,
+            durationSeconds,
+            velocity,
+            category: 'piano',
+            midiProgram: 1,
         });
-        activeVoicesRef.current.clear();
+    }, [playInstrumentNote]);
+
+    const stopAllNotes = useCallback(() => {
+        activeStoppersRef.current.forEach(stop => {
+            try { stop(); } catch { /* ignore */ }
+        });
+        activeStoppersRef.current.clear();
     }, []);
 
     useEffect(() => {
@@ -120,7 +117,9 @@ export const useAudioSynth = () => {
 
     return {
         playNote,
+        playInstrumentNote,
         stopAllNotes,
-        initAudioContext
+        initAudioContext,
+        reloadSoundConfig,
     };
 };

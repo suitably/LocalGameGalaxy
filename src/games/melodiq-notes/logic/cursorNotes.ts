@@ -4,26 +4,36 @@ import { midiNoteFromPitchObject } from './musicXmlParser';
 
 export interface CursorNotesResult {
     targetNotes: TargetNote[];
+    allCursorNotes: TargetNote[];
     stepDuration: number;
+    isEndReached: boolean;
 }
 
 /**
  * Extracts target notes at current cursor position and calculates step duration
- * to the next cursor timestamp. This handles multi-voice and multi-staff scores
- * where voices have different note durations (e.g. sustaining whole note on upper
- * staff while lower staff plays consecutive eighth notes).
+ * to the next cursor timestamp. Handles multi-voice, multi-staff, and multi-instrument
+ * scores where voices have different note durations.
  */
-export function extractCursorData(cursor: Cursor | null | undefined): CursorNotesResult {
+export function extractCursorData(
+    cursor: Cursor | null | undefined,
+    selectedPartId?: string
+): CursorNotesResult {
     if (!cursor || !cursor.iterator || cursor.iterator.EndReached) {
-        return { targetNotes: [], stepDuration: 0.25 };
+        return { targetNotes: [], allCursorNotes: [], stepDuration: 0.25, isEndReached: true };
     }
 
     const iterator = cursor.iterator;
     const voiceEntries = cursor.VoicesUnderCursor();
-    const targets: TargetNote[] = [];
+    const allNotes: TargetNote[] = [];
     let maxRestDur = 0;
 
     voiceEntries.forEach(ve => {
+        // Retrieve instrument details from OSMD voice hierarchy
+        const instrument = ve.ParentVoice?.Parent;
+        const partId = instrument?.IdString || (instrument?.Name ? String(instrument.Name) : undefined);
+        const partName = instrument?.Name || instrument?.PartAbbreviation || partId;
+        const midiProgram = typeof instrument?.MidiInstrumentId === 'number' ? instrument.MidiInstrumentId : undefined;
+
         ve.Notes.forEach(note => {
             if (note.Pitch) {
                 const midi = midiNoteFromPitchObject(note.Pitch);
@@ -35,7 +45,7 @@ export function extractCursorData(cursor: Cursor | null | undefined): CursorNote
                         ? note.NoteTie.Duration.RealValue
                         : (note.Length?.RealValue ?? note.TypeLength?.RealValue ?? 0.25);
 
-                    targets.push({
+                    allNotes.push({
                         pitch: midi,
                         step: note.Pitch.FundamentalNote !== undefined ? String(note.Pitch.FundamentalNote) : undefined,
                         octave: note.Pitch.Octave,
@@ -43,6 +53,9 @@ export function extractCursorData(cursor: Cursor | null | undefined): CursorNote
                         isRest: false,
                         isTieStart,
                         isTiedContinuation,
+                        partId,
+                        partName,
+                        midiProgram,
                     });
                 }
             } else {
@@ -64,31 +77,48 @@ export function extractCursorData(cursor: Cursor | null | undefined): CursorNote
             }
         }
     } catch {
-        // In case cloning or moveToNext fails, fall back to note durations
+        // Fall back to note durations if clone fails
     }
 
     if (stepDuration === 0) {
-        if (targets.length > 0) {
-            const positiveDurs = targets.map(t => t.duration).filter((d): d is number => typeof d === 'number' && d > 0);
+        if (allNotes.length > 0) {
+            const positiveDurs = allNotes.map(t => t.duration).filter((d): d is number => typeof d === 'number' && d > 0);
             stepDuration = positiveDurs.length > 0 ? Math.min(...positiveDurs) : (maxRestDur > 0 ? maxRestDur : 0.25);
         } else {
             stepDuration = maxRestDur > 0 ? maxRestDur : (iterator.CurrentMeasure?.Duration?.RealValue ?? 1.0);
         }
     }
 
-    if (targets.length === 0) {
-        const restTargets: TargetNote[] = [{
-            pitch: 0,
-            duration: stepDuration,
-            stepDuration,
-            isRest: true,
-        }];
-        return { targetNotes: restTargets, stepDuration };
-    }
-
-    targets.forEach(t => {
+    allNotes.forEach(t => {
         t.stepDuration = stepDuration;
     });
 
-    return { targetNotes: targets, stepDuration };
+    // Filter target notes for active player instrument if specified
+    let targetNotes: TargetNote[] = [];
+    if (selectedPartId && selectedPartId !== 'all') {
+        targetNotes = allNotes.filter(n => n.partId === selectedPartId);
+        if (targetNotes.length === 0) {
+            targetNotes = [{
+                pitch: 0,
+                duration: stepDuration,
+                stepDuration,
+                isRest: true,
+                partId: selectedPartId
+            }];
+        }
+    } else {
+        targetNotes = allNotes.length > 0 ? allNotes : [{
+            pitch: 0,
+            duration: stepDuration,
+            stepDuration,
+            isRest: true
+        }];
+    }
+
+    return {
+        targetNotes,
+        allCursorNotes: allNotes,
+        stepDuration,
+        isEndReached: false,
+    };
 }

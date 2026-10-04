@@ -2,30 +2,19 @@ import { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardR
 import { Box, CircularProgress, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
-import type { TargetNote } from './useNoteVerifier';
+import type { CursorNotesResult, SheetMusicViewerRef, SheetMusicViewerProps } from './types';
 import { extractCursorData } from './logic/cursorNotes';
 
-export interface SheetMusicViewerRef {
-    nextNote: () => TargetNote[];
-    previousNote: () => TargetNote[];
-    resetCursor: () => TargetNote[];
-    getCurrentNotes: () => TargetNote[];
-    getStepDuration: () => number;
-}
-
-interface SheetMusicViewerProps {
-    xmlContent: string;
-    zoom?: number;
-    isCurrentNoteHit?: boolean;
-    onNotesChanged?: (targetNotes: TargetNote[]) => void;
-    onSongEnd?: () => void;
-    onBpmDetected?: (bpm: number) => void;
-}
+export type { SheetMusicViewerRef, SheetMusicViewerProps };
 
 export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewerProps>(({
     xmlContent,
+    selectedPartId,
+    soloInstrumentInSheet = false,
     zoom = 1.0,
+    renderMode = 'vertical',
     isCurrentNoteHit = false,
+    onRenderModeChange: _onRenderModeChange,
     onNotesChanged,
     onSongEnd,
     onBpmDetected
@@ -35,31 +24,29 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const containerRef = useRef<HTMLDivElement>(null);
     const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Keep callback refs current without adding them to the OSMD load effect deps.
     const onNotesChangedRef = useRef(onNotesChanged);
+    onNotesChangedRef.current = onNotesChanged;
     const onSongEndRef = useRef(onSongEnd);
+    onSongEndRef.current = onSongEnd;
     const onBpmDetectedRef = useRef(onBpmDetected);
-    useEffect(() => {
-        onNotesChangedRef.current = onNotesChanged;
-        onSongEndRef.current = onSongEnd;
-        onBpmDetectedRef.current = onBpmDetected;
-    });
+    onBpmDetectedRef.current = onBpmDetected;
+    const selectedPartIdRef = useRef(selectedPartId);
+    selectedPartIdRef.current = selectedPartId;
 
-    const extractCurrentCursorNotes = useCallback((): TargetNote[] => {
-        return extractCursorData(osmdRef.current?.cursor).targetNotes;
+    const extractCurrentData = useCallback((): CursorNotesResult => {
+        return extractCursorData(osmdRef.current?.cursor, selectedPartIdRef.current);
     }, []);
 
     const updateCursorHighlight = useCallback((isHit: boolean) => {
-        if (!osmdRef.current || !osmdRef.current.cursor) return;
-        const cursorElement = osmdRef.current.cursor.cursorElement;
+        const cursorElement = osmdRef.current?.cursor?.cursorElement;
         if (cursorElement) {
-            cursorElement.style.backgroundColor = isHit
-                ? 'rgba(76, 175, 80, 0.5)'
-                : 'rgba(33, 150, 243, 0.5)';
+            cursorElement.style.backgroundColor = isHit ? 'rgba(76, 175, 80, 0.5)' : 'rgba(33, 150, 243, 0.5)';
             cursorElement.style.transition = 'background-color 0.15s ease';
+            cursorElement.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
         }
     }, []);
 
@@ -67,70 +54,76 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
         updateCursorHighlight(isCurrentNoteHit);
     }, [isCurrentNoteHit, updateCursorHighlight]);
 
-    useImperativeHandle(ref, () => ({
-        nextNote: () => {
-            if (osmdRef.current && osmdRef.current.cursor) {
-                const cursor = osmdRef.current.cursor;
-                if (cursor.iterator && cursor.iterator.EndReached) {
-                    onSongEndRef.current?.();
-                    return [];
-                }
-                cursor.next();
-                if (cursor.iterator && cursor.iterator.EndReached) {
-                    onSongEndRef.current?.();
-                    return [];
-                }
-                const notes = extractCurrentCursorNotes();
-                onNotesChangedRef.current?.(notes);
-                return notes;
+    // Handle soloing active instrument or showing full score in OSMD
+    useEffect(() => {
+        const osmd = osmdRef.current;
+        if (!osmd?.Sheet?.Instruments) return;
+        let changed = false;
+        osmd.Sheet.Instruments.forEach(inst => {
+            const visible = soloInstrumentInSheet && selectedPartId && selectedPartId !== 'all'
+                ? (inst.IdString === selectedPartId || inst.Name === selectedPartId)
+                : true;
+            if (inst.Visible !== visible) {
+                inst.Visible = visible;
+                changed = true;
             }
-            return [];
-        },
-        previousNote: () => {
-            if (osmdRef.current && osmdRef.current.cursor) {
-                osmdRef.current.cursor.previous();
-                const notes = extractCurrentCursorNotes();
-                onNotesChangedRef.current?.(notes);
-                return notes;
+        });
+        if (changed) { try { osmd.render(); } catch { /* ignore */ } }
+    }, [soloInstrumentInSheet, selectedPartId]);
+
+    // Update targets on instrument change
+    useEffect(() => {
+        if (!osmdRef.current?.cursor) return;
+        const current = extractCurrentData();
+        onNotesChangedRef.current?.(current.targetNotes, current.allCursorNotes);
+    }, [selectedPartId, extractCurrentData]);
+
+    useImperativeHandle(ref, () => {
+        const move = (step: () => void): CursorNotesResult => {
+            const cursor = osmdRef.current?.cursor;
+            if (!cursor || cursor.iterator?.EndReached) {
+                onSongEndRef.current?.();
+                return { targetNotes: [], allCursorNotes: [], stepDuration: 0.25, isEndReached: true };
             }
-            return [];
-        },
-        resetCursor: () => {
-            if (osmdRef.current && osmdRef.current.cursor) {
-                osmdRef.current.cursor.reset();
-                osmdRef.current.cursor.show();
-                const notes = extractCurrentCursorNotes();
-                onNotesChangedRef.current?.(notes);
-                return notes;
-            }
-            return [];
-        },
-        getCurrentNotes: () => {
-            return extractCurrentCursorNotes();
-        },
-        getStepDuration: () => {
-            return extractCursorData(osmdRef.current?.cursor).stepDuration;
-        }
-    }), [extractCurrentCursorNotes]);
+            step();
+            if (cursor.iterator?.EndReached) onSongEndRef.current?.();
+            const data = extractCurrentData();
+            onNotesChangedRef.current?.(data.targetNotes, data.allCursorNotes);
+            return data;
+        };
+
+        return {
+            nextNote: () => move(() => osmdRef.current?.cursor?.next()),
+            previousNote: () => move(() => osmdRef.current?.cursor?.previous()),
+            resetCursor: () => {
+                const c = osmdRef.current?.cursor;
+                if (c) { c.reset(); c.show(); }
+                const data = extractCurrentData();
+                onNotesChangedRef.current?.(data.targetNotes, data.allCursorNotes);
+                return data;
+            },
+            getCurrentNotes: extractCurrentData,
+            getStepDuration: () => extractCurrentData().stepDuration,
+        };
+    }, [extractCurrentData]);
 
     useEffect(() => {
         if (!containerRef.current) return;
-
         setIsLoading(true);
         setError(null);
-
         containerRef.current.innerHTML = '';
 
         try {
             const osmd = new OpenSheetMusicDisplay(containerRef.current, {
                 autoResize: true,
-                drawTitle: true,
+                drawTitle: false,
                 drawSubtitle: false,
-                drawComposer: true,
+                drawComposer: false,
                 drawingParameters: 'compact',
                 followCursor: true,
+                pageFormat: 'Endless',
+                renderSingleHorizontalStaffline: renderMode === 'horizontal',
             });
-
             osmdRef.current = osmd;
 
             osmd.load(xmlContent)
@@ -138,14 +131,13 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
                     osmd.zoom = isMobile ? zoom * 0.65 : zoom;
                     osmd.render();
                     osmd.cursor.show();
-                    const initialNotes = extractCurrentCursorNotes();
-                    onNotesChangedRef.current?.(initialNotes);
+                    const initial = extractCurrentData();
+                    onNotesChangedRef.current?.(initial.targetNotes, initial.allCursorNotes);
 
                     const detectedBpm = osmd.Sheet?.DefaultStartTempoInBpm || osmd.cursor?.Iterator?.CurrentBpm;
                     if (detectedBpm && detectedBpm > 0) {
                         onBpmDetectedRef.current?.(Math.round(detectedBpm));
                     }
-
                     setIsLoading(false);
                 })
                 .catch((err: unknown) => {
@@ -153,7 +145,6 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
                     setError(t('games.melodiq_notes.error_loading_sheet'));
                     setIsLoading(false);
                 });
-
         } catch (err) {
             console.error('[SheetMusicViewer] Error initializing OSMD:', err);
             setError(t('games.melodiq_notes.error_init_sheet'));
@@ -162,23 +153,18 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
 
         return () => {
             if (osmdRef.current) {
-                try {
-                    osmdRef.current.clear();
-                } catch {
-                    // Ignore cleanup errors
-                }
+                try { osmdRef.current.clear(); } catch { /* ignore */ }
             }
         };
-    }, [xmlContent, zoom, extractCurrentCursorNotes, t]);
+    }, [xmlContent, renderMode, isMobile, zoom, t]);
 
     return (
-        <Box sx={{ position: 'relative', width: '100%', my: 2 }}>
+        <Box sx={{ position: 'relative', width: '100%', my: 1.5 }}>
+
             {isLoading && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 6 }}>
                     <CircularProgress size={48} />
-                    <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
-                        {t('games.melodiq_notes.loading_sheet')}
-                    </Typography>
+                    <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>{t('games.melodiq_notes.loading_sheet')}</Typography>
                 </Box>
             )}
 
@@ -188,26 +174,23 @@ export const SheetMusicViewer = forwardRef<SheetMusicViewerRef, SheetMusicViewer
                 </Box>
             )}
 
-            {/* Scrollable sheet music container */}
             <Box
                 sx={{
                     width: '100%',
-                    maxHeight: isMobile ? 'none' : '60vh',
-                    overflowY: isMobile ? 'visible' : 'auto',
+                    maxHeight: renderMode === 'horizontal' ? (isMobile ? '200px' : '240px') : (isMobile ? 'none' : '60vh'),
+                    overflowY: renderMode === 'horizontal' ? 'hidden' : (isMobile ? 'visible' : 'auto'),
                     overflowX: 'auto',
-                    display: isLoading ? 'none' : 'block',
+                    whiteSpace: renderMode === 'horizontal' ? 'nowrap' : 'normal',
+                    display: isLoading ? 'none' : (renderMode === 'horizontal' ? 'flex' : 'block'),
+                    alignItems: renderMode === 'horizontal' ? 'center' : 'flex-start',
                     background: '#ffffff',
-                    borderRadius: 2,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                    // Thin scrollbar on Webkit browsers
+                    borderRadius: 2.5,
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
                     '&::-webkit-scrollbar': { width: 6, height: 6 },
                     '&::-webkit-scrollbar-thumb': { background: 'rgba(0,0,0,0.25)', borderRadius: 3 },
                 }}
             >
-                <Box
-                    ref={containerRef}
-                    sx={{ p: 2 }}
-                />
+                <Box ref={containerRef} sx={{ p: { xs: 1, sm: 2 } }} />
             </Box>
         </Box>
     );

@@ -1,6 +1,7 @@
 
 ## [Unreleased]
 ### Changed
+- **Melodiq Notes**: Streamlined UI for mobile-first responsiveness. Integrated song title and settings directly into `GlobalHeader`, removed in-sheet overlay controls, compacted page HUD into a single note and score bar, and made playback controls icon-only on mobile.
 - Melodiq: Limited the maximum score per track to 1000 points.
 - Actions pinned to commit SHAs (Dependabot keeps them current), `persist-credentials: false`, actionlint + unit tests (`npm run test:scripts`) for Jules scripts in CI precheck; watcher isolates per-issue failures and no longer re-posts PR links.
 
