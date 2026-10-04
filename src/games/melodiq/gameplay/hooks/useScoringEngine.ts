@@ -194,11 +194,11 @@ export function useScoringEngine({
                 const semitoneDiff = Math.min(diff, 12 - diff);
 
                 if (semitoneDiff < 1.2) {
-                    // Standard UltraStar target score: 10,000 points per track
+                    // Standard UltraStar target score is 10,000, we limit it to 1,000 points per track
                     const totalTrackBeats = notesSource
                         .filter(n => n.type !== '-' && n.type !== 'R' && n.type !== 'G')
                         .reduce((sum, n) => sum + (n.duration * (n.type === '*' ? goldenNoteMultiplier : 1)), 0);
-                    const pointsPerBeat = totalTrackBeats > 0 ? (10000 / totalTrackBeats) : 10;
+                    const pointsPerBeat = totalTrackBeats > 0 ? (1000 / totalTrackBeats) : 10;
 
                     const durationUnitsCovered = deltaTimeMs / beatDuration;
                     let points = durationUnitsCovered * pointsPerBeat * currentScoreWeight;
