@@ -80,7 +80,8 @@ function getChangedFiles() {
       .split('\n')
       .map(f => f.trim())
       .filter(f => f.startsWith('src/') && (f.endsWith('.ts') || f.endsWith('.tsx')))
-      .map(f => path.join(ROOT_DIR, f));
+      .map(f => path.join(ROOT_DIR, f))
+      .filter(f => fs.existsSync(f));
   } catch {
     return [];
   }

@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
+import { storage } from '../../../lib/storage';
 import { useWebRTC } from '../audio/WebRTCContext';
 import { useQueue } from '../hooks/useQueue';
 import { useSongs } from '../hooks/useSongs';
 import { getRoleForDevice } from './useStoredRoles';
-import { storage, STORAGE_KEYS } from '../../../lib/storage';
 
 
 export const PhoneQueueBridge: React.FC = () => {
@@ -46,8 +46,8 @@ export const PhoneQueueBridge: React.FC = () => {
                     // Also send helper_config so the client knows the helper URL
                     // and can load songs via the WebRTC proxy.
                     // This is the trigger for the client's useSongs to start loading.
-                    const helperUrl = storage.get(STORAGE_KEYS.HELPER_URL);
-                    const helperToken = storage.get(STORAGE_KEYS.HELPER_TOKEN);
+                    const helperUrl = storage.getHelperUrl();
+                    const helperToken = storage.getHelperToken();
                     if (helperUrl) {
                         manager.sendToPeer(peerId, {
                             type: 'helper_config',

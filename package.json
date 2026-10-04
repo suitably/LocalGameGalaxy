@@ -16,8 +16,13 @@
     "check:architecture:diff": "node scripts/check-architecture.mjs --diff",
     "check:architecture:strict": "node scripts/check-architecture.mjs --strict",
     "check:duplicates": "jscpd src/ --config .jscpd.json",
+    "check:hygiene": "node scripts/check-repo-hygiene.mjs",
+    "test:scripts": "node --test scripts/pipeline/*.test.cjs",
     "check:docs": "node scripts/check-docs-sync.mjs",
-    "cleanup:previews": "node scripts/cleanup-cloudflare-previews.mjs"
+    "check:security": "npm audit",
+    "cleanup:previews": "node scripts/cleanup-cloudflare-previews.mjs",
+    "prepare": "husky",
+    "quality-gates": "npm run check:hygiene && npm run check:architecture:diff && npm run check:budget && npm run check:duplicates && npm run lint && npm test"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
@@ -57,7 +62,7 @@
   "devDependencies": {
     "@capacitor/cli": "^8.1.0",
     "@eslint/js": "^9.39.1",
-    "@types/node": "^24.10.1",
+    "@types/node": "^24.19.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
@@ -66,6 +71,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "husky": "^9.1.7",
     "jscpd": "^5.3.2",
     "prettier": "3.9.5",
     "typescript": "~5.9.3",

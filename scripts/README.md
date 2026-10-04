@@ -40,18 +40,7 @@ Validates that architectural changes are synced with documentation and i18n file
 
 ---
 
-## 3. Autonomous CI/CD Pipeline & Jules Integration
-
-### `jules-plan-generator.mjs`
-Introspects the local codebase, verifies line budgets and state hooks, and generates untruncated RepoLens RFC research plans for GitHub Issues.
-- **Execution**:
-  ```bash
-  node scripts/jules-plan-generator.mjs --issue <number>
-  node scripts/jules-plan-generator.mjs --dry-run
-  ```
-
-### `jules-lens-resolver.mjs`
-Resolves RepoLens audit lenses (e.g. `capacitor-storage`, `agents-budget`, `i18n-sync`) to focus Jules implementation plans.
+## 3. CI/CD Tooling (Jules scripts: `scripts/pipeline/jules-start.cjs`, `jules-watch.cjs`)
 
 ### `scaffold-game.mjs`
 Boilerplate generator for scaffolding new game modules adhering to strict architecture boundaries.

@@ -27,6 +27,7 @@ export const STORAGE_KEYS = {
     MELODIQ_PARTY_ID: 'melodiq_party_id',
     MELODIQ_HOST_BASE_URL: 'melodiq_host_base_url',
     EXCALIDRAW_DRAWING: 'excalidraw',
+    DARTS_GAME_STATE: 'darts_game_state',
     
     // Queue & play state
     NOW_PLAYING: 'melodiq_now_playing',
@@ -70,6 +71,11 @@ export const STORAGE_KEYS = {
     MELODIQ_AUDIO_PLAYBACK_MODE: 'melodiq_audio_playback_mode',
     MELODIQ_SHOW_SCOREBOARD_QR_CODE: 'melodiq_show_scoreboard_qr_code',
     MELODIQ_MIC_LATENCY: 'melodiq_mic_latency',
+
+    // Melodiq Notes preferences
+    MELODIQ_NOTES_SOUND_CONFIG: 'melodiq_notes_sound_config',
+    MELODIQ_NOTES_VIEW_MODE: 'melodiq_notes_view_mode',
+    MELODIQ_NOTES_SHEET_RENDER_MODE: 'melodiq_notes_sheet_render_mode',
     
     // Werewolf game state
     WEREWOLF_STATE: 'werewolf-game-state',

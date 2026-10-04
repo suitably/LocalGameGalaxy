@@ -10,6 +10,10 @@ export interface TargetNote {
     isTieStart?: boolean;
     isTiedContinuation?: boolean;
     noteElement?: SVGElement | Element | null;
+    partId?: string;
+    partName?: string;
+    midiProgram?: number;
+    midiChannel?: number;
 }
 
 interface NoteVerifierProps {

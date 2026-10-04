@@ -2,8 +2,8 @@ import React, { useEffect, useState, createContext, useContext, useRef, useCallb
 import { useWebRTCClient } from '../../lib/webrtc';
 import { MicrophoneManager } from './audio/MicrophoneManager';
 import { generateUUID } from '../../lib/uuid';
+import { storage, sessionStorageSafe, STORAGE_KEYS } from '../../lib/storage';
 import { type MelodiqNetworkMessage, type MelodiqParticipant, type MelodiqRosterMember } from './types';
-import { storage, STORAGE_KEYS } from '../../lib/storage';
 
 export interface ClientProfile {
     name: string;
@@ -53,9 +53,9 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
         if (urls.length > 0) {
             return urls;
         }
-        const parsed = storage.getJson<string[]>(STORAGE_KEYS.MELODIQ_TRACKER_URLS, []);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
+        const stored = storage.getJson<string[]>(STORAGE_KEYS.MELODIQ_TRACKER_URLS, []);
+        if (Array.isArray(stored) && stored.length > 0) {
+            return stored;
         }
         return [
             'wss://tracker.openwebtorrent.com',
@@ -66,14 +66,16 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
 
     // Profile State
     const [clientProfile, setClientProfile] = useState<ClientProfile>(() => {
-        const stored = storage.getJson<ClientProfile | null>(STORAGE_KEYS.CLIENT_PROFILE, null);
-        if (stored) {
-            if (!stored.displayMode) stored.displayMode = 'lyrics';
-            if (!stored.deviceId) {
-                stored.deviceId = generateUUID();
-                storage.setJson(STORAGE_KEYS.CLIENT_PROFILE, stored);
-            }
-            return stored;
+        const parsed = storage.getJson<ClientProfile | null>(STORAGE_KEYS.CLIENT_PROFILE, null);
+        if (parsed) {
+            try { 
+                if (!parsed.displayMode) parsed.displayMode = 'lyrics';
+                if (!parsed.deviceId) {
+                    parsed.deviceId = generateUUID();
+                    storage.setJson(STORAGE_KEYS.CLIENT_PROFILE, parsed);
+                }
+                return parsed;
+            } catch (e) {}
         }
         const newProfile: ClientProfile = { 
             name: 'Phone', 
@@ -213,8 +215,8 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
 
         } else if (data.type === 'helper_config') {
             if (data.url) {
-                storage.set(STORAGE_KEYS.HELPER_URL, data.url as string);
-                storage.set(STORAGE_KEYS.HELPER_ACTIVE, 'true');
+                storage.setHelperUrl(data.url as string);
+                storage.setHelperActive(true);
                 window.dispatchEvent(new Event('melodiq_settings_updated'));
             }
         }
@@ -237,11 +239,11 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     // Signal connection state for melodiqFetch waitForConnection()
     useEffect(() => {
         if (isConnected) {
-            storage.set(STORAGE_KEYS.MELODIQ_RTC_CONNECTED, 'true');
+            sessionStorageSafe.set(STORAGE_KEYS.MELODIQ_RTC_CONNECTED, 'true');
             (window as unknown as { __melodiq_rtc_connected?: boolean }).__melodiq_rtc_connected = true;
             window.dispatchEvent(new Event('melodiq_rtc_connected'));
         } else {
-            storage.remove(STORAGE_KEYS.MELODIQ_RTC_CONNECTED);
+            sessionStorageSafe.remove(STORAGE_KEYS.MELODIQ_RTC_CONNECTED);
             (window as unknown as { __melodiq_rtc_connected?: boolean }).__melodiq_rtc_connected = false;
         }
     }, [isConnected]);

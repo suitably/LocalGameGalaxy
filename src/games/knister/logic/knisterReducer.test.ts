@@ -16,7 +16,7 @@ describe('knisterReducer', () => {
   });
 
   it('handles direct manual placement with value', () => {
-    let state = knisterReducer(INITIAL_KNISTER_STATE, {
+    const state = knisterReducer(INITIAL_KNISTER_STATE, {
       type: 'PLACE_NUMBER',
       row: 2,
       col: 2,

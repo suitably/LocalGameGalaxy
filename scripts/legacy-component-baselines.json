@@ -5,7 +5,7 @@
   "src/games/melodiq/gameplay/PitchVisualizer.tsx": 569,
   "src/games/melodiq/components/GameSettingsPanel.tsx": 560,
   "src/games/qwixx/components/QwixxRow.tsx": 522,
-  "src/features/settings/components/SettingsHeaderNav.tsx": 512,
+  "src/features/settings/components/SettingsHeaderNav.tsx": 491,
   "src/games/cards/components/SchwimmenGameView.tsx": 510,
   "src/games/melodiq/gameplay/LyricsDisplay.tsx": 508,
   "src/games/melodiq/components/SongActionDialogs.tsx": 490,
@@ -37,10 +37,11 @@
   "src/games/guessart/components/EditGameDialog.tsx": 279,
   "src/games/guessart/components/WordSelector.tsx": 269,
   "src/games/guessart/components/catalogue/CatalogueEditorDialog.tsx": 268,
-  "src/components/feedback/FeedbackDialog.tsx": 267,
   "src/games/garticphone/components/GarticHeader.tsx": 267,
   "src/modules/sharing/ShareSessionLinksDialog.tsx": 265,
   "src/games/imposter/ImposterGame.tsx": 261,
   "src/games/cards/components/ModernScoreAdjuster.tsx": 256,
-  "src/games/storyteller/components/StoryLobby.tsx": 255
+  "src/games/storyteller/components/StoryLobby.tsx": 255,
+  "src/lib/gameRegistry.tsx": 282,
+  "src/games/kniffel/components/KniffelBoard.tsx": 255
 }

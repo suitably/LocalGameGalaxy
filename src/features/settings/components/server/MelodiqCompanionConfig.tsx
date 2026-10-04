@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import { ServerConnection } from '../../../../components/connection/ServerConnection';
-import { ServerAdminPanel } from '../../../../components/connection/ServerAdminPanel';
+import { ServerAdminPanel } from '../../../../components/connection/admin/ServerAdminPanel';
 import { ServerDirectoryManager } from '../../../../components/connection/ServerDirectoryManager';
 import { ServerPreferences } from '../../../../components/connection/ServerPreferences';
 import { ServerUsdbConfig } from '../../../../components/connection/ServerUsdbConfig';
