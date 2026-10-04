@@ -10,7 +10,6 @@ interface LocalSongsViewProps {
     viewMode: 'list' | 'grid';
     filteredSongs: SongMeta[];
     handleSelectSong: (song: SongMeta) => void;
-    handleSongLongPress: (song: SongMeta) => void;
     isSinger?: boolean;
     jobs?: any[];
 }
@@ -58,7 +57,7 @@ const virtuosoComponents = {
 };
 
 const LocalSongsViewComponent: React.FC<LocalSongsViewProps> = ({
-    viewMode, filteredSongs, handleSelectSong, handleSongLongPress, isSinger, jobs
+    viewMode, filteredSongs, handleSelectSong, isSinger, jobs
 }) => {
     if (filteredSongs.length === 0) return null;
 
@@ -92,7 +91,6 @@ const LocalSongsViewComponent: React.FC<LocalSongsViewProps> = ({
                                 activeJobType={activeJob?.type}
                                 downloadProgress={progress}
                                 onClick={isSinger ? () => {} : () => handleSelectSong(song)}
-                                onLongPress={isSinger ? undefined : () => handleSongLongPress(song)}
                             />
                         );
                     }}
@@ -130,8 +128,6 @@ const LocalSongsViewComponent: React.FC<LocalSongsViewProps> = ({
                                 activeJobType={activeJob?.type}
                                 downloadProgress={progress}
                                 onClick={isSinger ? () => {} : () => handleSelectSong(song)}
-                                onLongPress={isSinger ? undefined : () => handleSongLongPress(song)}
-                                onMenuClick={isSinger ? undefined : () => handleSongLongPress(song)}
                             />
                         </Box>
                     );

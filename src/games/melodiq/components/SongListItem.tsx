@@ -1,7 +1,6 @@
 import React from 'react';
 import { Box, Typography, IconButton, Chip } from '@mui/material';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -13,8 +12,6 @@ import { useTranslation } from 'react-i18next';
 interface SongListItemProps {
     song: SongMeta;
     onClick: () => void;
-    onLongPress?: () => void;
-    onMenuClick?: (e: React.MouseEvent) => void;
     onActionClick?: (e: React.MouseEvent) => void;
     isDownloading?: boolean;
     isDownloaded?: boolean;
@@ -23,43 +20,15 @@ interface SongListItemProps {
     activeJobType?: string;
 }
 
-export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLongPress, onMenuClick, onActionClick, isDownloading, isDownloaded, downloadProgress, hasActiveJob, activeJobType }) => {
+export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onActionClick, isDownloading, isDownloaded, downloadProgress, hasActiveJob, activeJobType }) => {
     const { t } = useTranslation();
-    const longPressTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-    const isLongPressRef = React.useRef(false);
 
     const rawCover = song.cover || song.coverThumbnail;
     const coverUrl = (typeof rawCover === 'string' && rawCover.length > 0)
         ? rawCover
         : null;
 
-    const handleStart = () => {
-        isLongPressRef.current = false;
-        longPressTimerRef.current = setTimeout(() => {
-            isLongPressRef.current = true;
-            if (onLongPress) {
-                onLongPress();
-            }
-        }, 600);
-    };
-
-    const handleEnd = (e: React.MouseEvent | React.TouchEvent) => {
-        if (longPressTimerRef.current) {
-            clearTimeout(longPressTimerRef.current);
-            longPressTimerRef.current = null;
-        }
-        if (isLongPressRef.current) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-    };
-
-    const handleClick = (e: React.MouseEvent) => {
-        if (isLongPressRef.current) {
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-        }
+    const handleClick = () => {
         onClick();
     };
 
@@ -83,11 +52,6 @@ export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLon
                 pointerEvents: isDownloading ? 'none' : 'auto',
             }}
             onClick={handleClick}
-            onMouseDown={handleStart}
-            onMouseUp={handleEnd}
-            onMouseLeave={handleEnd}
-            onTouchStart={handleStart}
-            onTouchEnd={handleEnd}
         >
             {/* Cover Art */}
             <Box sx={{
@@ -192,19 +156,6 @@ export const SongListItem: React.FC<SongListItemProps> = ({ song, onClick, onLon
                     }}
                 >
                     <CloudDownloadIcon />
-                </IconButton>
-            )}
-
-            {/* Menu Action (for touch devices mainly, or standard access) */}
-            {onMenuClick && (
-                <IconButton
-                    size="small"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onMenuClick(e);
-                    }}
-                >
-                    <MoreVertIcon fontSize="small" />
                 </IconButton>
             )}
         </Box>
