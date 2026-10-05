@@ -1,5 +1,12 @@
 
 ## [Unreleased]
+### Security
+- Applied security audit fixes (Security & Vulnerability Auditor).
+- Hardened `DOMPurify.sanitize` usage in `RulesDialog` with strict allowlists for tags and attributes.
+- Hardened server routes in `relayPlugin` with explicit length constraints and type checking for POST requests.
+- Pinned all dependency versions in `package.json` and `server/package.json` to fixed versions (removed caret `^` and tilde `~` modifiers) to ensure reproducible builds.
+- Updated vulnerable dependencies via `npm audit fix --force`.
+
 ### Changed
 - **Melodiq**: Das Halten eines Songs öffnet nicht mehr die Einstellungen/Warteschlange.
 - **Melodiq Notes**: Streamlined UI for mobile-first responsiveness. Integrated song title and settings directly into `GlobalHeader`, removed in-sheet overlay controls, compacted page HUD into a single note and score bar, and made playback controls icon-only on mobile.

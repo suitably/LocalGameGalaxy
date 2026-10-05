@@ -72,7 +72,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff,woff2}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
-        importScripts: ['/sw-push.js']
+        importScripts: ['/sw-push.js'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024 // 5 MB
       },
       devOptions: {
         enabled: true
