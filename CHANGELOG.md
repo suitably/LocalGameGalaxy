@@ -1,6 +1,7 @@
 
 ## [Unreleased]
 ### Changed
+- **Melodiq**: Settings view now renders without unmounting the main game view, keeping background processes running smoothly.
 - **Melodiq**: Das Halten eines Songs öffnet nicht mehr die Einstellungen/Warteschlange.
 - **Melodiq Notes**: Streamlined UI for mobile-first responsiveness. Integrated song title and settings directly into `GlobalHeader`, removed in-sheet overlay controls, compacted page HUD into a single note and score bar, and made playback controls icon-only on mobile.
 - Melodiq: Limited the maximum score per track to 1000 points.
