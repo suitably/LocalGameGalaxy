@@ -1,5 +1,6 @@
 
 ## [Unreleased]
+- Fixed Excalidraw drawing canvas layout on mobile devices (#277).
 ### Security
 - Applied security audit fixes (Security & Vulnerability Auditor).
 - Hardened `DOMPurify.sanitize` usage in `RulesDialog` with strict allowlists for tags and attributes.

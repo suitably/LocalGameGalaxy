@@ -61,7 +61,26 @@ export const ExcalidrawLazy = React.lazy(async () => {
       });
     }
 
-    return <ExcalidrawComponent {...props} excalidrawAPI={handleApi} libraryReturnUrl={typeof window !== 'undefined' ? window.location.href : undefined} />;
+    const baseOptions = (props as any).UIOptions || {};
+    const mergedOptions = {
+      ...baseOptions,
+      canvasActions: {
+        ...(baseOptions.canvasActions || {}),
+        toggleTheme: false,
+      },
+      dockedSidebarBreakpoint: 0,
+    };
+
+    return (
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+        <ExcalidrawComponent
+          {...props}
+          UIOptions={mergedOptions}
+          excalidrawAPI={handleApi}
+          libraryReturnUrl={typeof window !== 'undefined' ? window.location.href : undefined}
+        />
+      </div>
+    );
   };
 
   return { default: ExcalidrawWithLibrary };
