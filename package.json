@@ -24,6 +24,12 @@
     "prepare": "husky",
     "quality-gates": "npm run check:hygiene && npm run check:architecture:diff && npm run check:budget && npm run check:duplicates && npm run lint && npm test"
   },
+  "overrides": {
+    "@excalidraw/excalidraw": {
+      "react": "^19.2.0",
+      "react-dom": "^19.2.0"
+    }
+  },
   "dependencies": {
     "@capacitor/android": "8.1.0",
     "@capacitor/app": "8.1.0",
@@ -59,7 +65,7 @@
     "react-router-dom": "7.18.4",
     "react-virtuoso": "4.18.1",
     "simple-peer": "9.11.1",
-    "uuid": "^14.0.2"
+    "uuid": "14.0.2"
   },
   "devDependencies": {
     "@capacitor/cli": "8.1.0",
@@ -67,7 +73,7 @@
     "@types/node": "24.19.1",
     "@types/react": "19.2.5",
     "@types/react-dom": "19.2.3",
-    "@types/uuid": "^10.0.0",
+    "@types/uuid": "10.0.0",
     "@vitejs/plugin-react": "5.1.1",
     "concurrently": "9.2.4",
     "eslint": "9.39.1",
@@ -80,7 +86,7 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.46.4",
     "vite": "7.3.6",
-    "vite-plugin-node-polyfills": "^0.28.0",
+    "vite-plugin-node-polyfills": "0.28.0",
     "vite-plugin-pwa": "1.2.0",
     "vitest": "5.0.3"
   }
