@@ -55,7 +55,7 @@ export const ExcalidrawLazy = React.lazy(async () => {
 
     if (useHandleLibrary) {
       // eslint-disable-next-line react-hooks/rules-of-hooks
-      useHandleLibrary({
+      (useHandleLibrary as any)({
         excalidrawAPI: api as never,
         adapter: adapter as never,
       });

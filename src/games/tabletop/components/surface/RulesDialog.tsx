@@ -49,7 +49,17 @@ export const RulesDialog: React.FC<RulesDialogProps> = ({ open, onClose, ruleTex
               fontSize: '0.95rem',
               lineHeight: 1.6,
             }}
-            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(ruleText) }}
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(ruleText, {
+                ALLOWED_TAGS: [
+                  'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr',
+                  'ul', 'ol', 'li', 'strong', 'em', 'b', 'i', 'u', 's',
+                  'table', 'thead', 'tbody', 'tr', 'th', 'td',
+                  'a', 'span', 'blockquote', 'code', 'pre'
+                ],
+                ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style'],
+              }),
+            }}
           />
         ) : (
           <Typography color="text.secondary">

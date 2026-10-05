@@ -6,11 +6,7 @@ export const ensureStyles = (): Promise<void> => {
   }
 
   if (!stylePromise) {
-    stylePromise = import('@excalidraw/excalidraw/index.css')
-      .then(() => {})
-      .catch((error) => {
-        console.warn('Failed to load Excalidraw stylesheet', error);
-      });
+    stylePromise = Promise.resolve(); // V17+ no longer ships index.css to require
   }
 
   return stylePromise;

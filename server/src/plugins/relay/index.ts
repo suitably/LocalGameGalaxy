@@ -31,12 +31,25 @@ export const relayPlugin: GalaxyPlugin = {
   description: 'Lightweight room coordinator and WebRTC signaling relay for all Galaxy games',
 
   init(app: Hono<HonoEnv>, _config: ServerConfig) {
+    // Helper to sanitize strings
+    const sanitizeStr = (val: any, maxLength: number, defaultVal: string): string => {
+      if (typeof val === 'string') {
+        const trimmed = val.trim();
+        if (trimmed.length > 0) {
+          return trimmed.substring(0, maxLength);
+        }
+      }
+      return defaultVal;
+    };
+
     // Create or get room
     app.post('/api/relay/rooms', async (c) => {
       const body = await c.req.json().catch(() => ({}));
-      const roomId = body.roomId || Math.random().toString(36).substring(2, 9).toUpperCase();
-      const hostId = body.hostId || `host_${Math.random().toString(36).substring(2, 8)}`;
-      const gameType = body.gameType || 'generic';
+
+      const roomId = sanitizeStr(body.roomId, 32, Math.random().toString(36).substring(2, 9).toUpperCase());
+      const hostId = sanitizeStr(body.hostId, 64, `host_${Math.random().toString(36).substring(2, 8)}`);
+      const gameType = sanitizeStr(body.gameType, 64, 'generic');
+      const hostName = sanitizeStr(body.hostName, 64, '');
 
       let room = activeRooms.get(roomId);
       if (!room) {
@@ -52,10 +65,10 @@ export const relayPlugin: GalaxyPlugin = {
         activeRooms.set(roomId, room);
       }
 
-      if (body.hostName) {
+      if (hostName) {
         room.players.set(hostId, {
           id: hostId,
-          name: body.hostName,
+          name: hostName,
           joinedAt: Date.now(),
           isHost: true,
         });
@@ -91,8 +104,9 @@ export const relayPlugin: GalaxyPlugin = {
     app.post('/api/relay/rooms/:roomId/join', async (c) => {
       const roomId = c.req.param('roomId');
       const body = await c.req.json().catch(() => ({}));
-      const playerId = body.playerId || `p_${Math.random().toString(36).substring(2, 8)}`;
-      const playerName = body.playerName || 'Player';
+
+      const playerId = sanitizeStr(body.playerId, 64, `p_${Math.random().toString(36).substring(2, 8)}`);
+      const playerName = sanitizeStr(body.playerName, 64, 'Player');
 
       const room = activeRooms.get(roomId);
       if (!room) {
@@ -120,7 +134,8 @@ export const relayPlugin: GalaxyPlugin = {
     app.post('/api/relay/rooms/:roomId/leave', async (c) => {
       const roomId = c.req.param('roomId');
       const body = await c.req.json().catch(() => ({}));
-      const playerId = body.playerId;
+
+      const playerId = sanitizeStr(body.playerId, 64, '');
 
       const room = activeRooms.get(roomId);
       if (room && playerId) {
@@ -140,7 +155,7 @@ export const relayPlugin: GalaxyPlugin = {
         return c.json({ error: 'Room not found' }, 404);
       }
 
-      if (body.state) {
+      if (body.state !== undefined) {
         room.state = body.state;
         room.updatedAt = Date.now();
       }
