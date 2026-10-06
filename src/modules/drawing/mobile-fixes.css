@@ -1,20 +1,18 @@
 
-.excalidraw .ToolIcon__icon {
-  width: var(--default-icon-size, 2rem) !important;
-  height: var(--default-icon-size, 2rem) !important;
-}
-.excalidraw .App-mobile-menu .ToolIcon__icon {
-  width: 2rem !important;
-  height: 2rem !important;
-}
-.excalidraw .mobile-misc-tools-container .ToolIcon__icon {
+.excalidraw .ToolIcon_type_radio:checked+.ToolIcon__icon,
+.excalidraw .ToolIcon.fillabl,
+.excalidraw .ToolIcon_type_checkbox:checked+.ToolIcon__icon {
   width: 2rem !important;
   height: 2rem !important;
 }
 
-
-.excalidraw .ToolIcon__icon svg,
+.excalidraw label.ToolIcon .ToolIcon__icon,
 .excalidraw .ToolIcon__icon {
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+.excalidraw .ToolIcon__icon svg {
   width: 2rem !important;
   height: 2rem !important;
 }
