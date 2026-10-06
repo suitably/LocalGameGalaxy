@@ -24,7 +24,6 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
-      pull-requests: write
       issues: write
 
     steps:
@@ -51,37 +50,5 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const branch = context.payload.pull_request?.head?.ref || '';
-            const prNumber = context.payload.pull_request.number;
-            const commentHeader = '### 🚀 Cloudflare Preview Deployment';
-            const merged = context.payload.pull_request.merged;
-            const statusText = merged ? 'Merged & Cleaned Up' : 'Closed & Cleaned Up';
-            const body = `${commentHeader}\n\n🧹 **Status: ${statusText}**\nThe Cloudflare preview environment for branch \`${branch}\` has been deleted.`;
-
-            try {
-              const { data: comments } = await github.rest.issues.listComments({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: prNumber,
-                per_page: 50
-              });
-
-              const existingComment = comments.find(c => c.body?.includes(commentHeader));
-              if (existingComment) {
-                await github.rest.issues.updateComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: existingComment.id,
-                  body
-                });
-              } else {
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: prNumber,
-                  body
-                });
-              }
-            } catch (err) {
-              console.warn('Could not update PR comment:', err.message);
-            }
+            const handlePreviewComment = require('./scripts/pipeline/preview-comment.cjs');
+            await handlePreviewComment({ github, context, core }, { status: 'cleaned-up' });

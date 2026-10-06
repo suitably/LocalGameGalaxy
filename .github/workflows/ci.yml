@@ -148,7 +148,6 @@ jobs:
     permissions:
       contents: read
       issues: write
-      pull-requests: write
 
     steps:
       - name: Checkout repository
@@ -174,72 +173,13 @@ jobs:
       - name: Comment PR with Preview Link
         if: github.event_name == 'pull_request'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          DEPLOYMENT_URL: ${{ steps.cloudflare.outputs.deployment-url }}
         with:
           script: |
-            const rawBranch = context.payload.pull_request?.head?.ref || '';
-            const branch = rawBranch
-              .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
-              .replace(/Ä/g, 'ae').replace(/Ö/g, 'oe').replace(/Ü/g, 'ue');
-            const sanitizedBranch = branch.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-            const previewUrl = sanitizedBranch ? `https://${sanitizedBranch}.nexumia.de/` : ("${{ steps.cloudflare.outputs.deployment-url }}" || '');
-            const prNumber = context.payload.pull_request.number;
-
-            // 1. Post or update PR deployment comment
-            const commentHeader = '### 🚀 Cloudflare Preview Deployment';
-            const body = `${commentHeader}\n\n👉 **Preview URL:** [${previewUrl}](${previewUrl})\n\nBranch: \`${branch}\``;
-
-            try {
-              const { data: comments } = await github.rest.issues.listComments({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: prNumber,
-                per_page: 50
-              });
-
-              const existingComment = comments.find(c => c.body?.includes(commentHeader));
-              if (existingComment) {
-                await github.rest.issues.updateComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: existingComment.id,
-                  body
-                });
-              } else {
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: prNumber,
-                  body
-                });
-              }
-            } catch (err) {
-              console.warn('Could not post PR comment:', err.message);
-            }
-
-            // 2. Also ensure Preview link is added to the PR body description
-            try {
-              let currentBody = context.payload.pull_request.body || '';
-              try {
-                const freshPr = await github.rest.pulls.get({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: prNumber
-                });
-                currentBody = freshPr.data?.body || currentBody;
-              } catch (e) {
-                // fallback to payload body
-              }
-
-              if (!currentBody.includes('nexumia.de') && previewUrl) {
-                const updatedBody = `> 🚀 **Cloudflare Preview:** [${previewUrl}](${previewUrl})\n\n${currentBody}`;
-                await github.rest.pulls.update({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: prNumber,
-                  body: updatedBody
-                });
-              }
-            } catch (err) {
-              console.warn('Could not update PR body:', err.message);
-            }
+            const handlePreviewComment = require('./scripts/pipeline/preview-comment.cjs');
+            await handlePreviewComment({ github, context, core }, {
+              status: 'deployed',
+              deploymentUrl: process.env.DEPLOYMENT_URL || ''
+            });
 
