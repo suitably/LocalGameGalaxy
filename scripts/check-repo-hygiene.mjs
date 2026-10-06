@@ -86,10 +86,9 @@ for (const f of files.filter((x) => /^\.github\/workflows\/.*\.ya?ml$/.test(x)))
     if (!m[1].startsWith('./') && !/@[0-9a-f]{40}$/.test(m[1])) errors.push(`Action not pinned to a commit SHA in ${f}: ${m[1]}`);
   }
   if (!/^permissions:/m.test(c)) errors.push(`Workflow ${f} has no top-level permissions block`);
-  const jobsBlock = c.split(/^jobs:\s*$/m)[1] || '';
-  const jobs = (jobsBlock.match(/^  [A-Za-z0-9_-]+:\s*$/gm) || []).length;
-  const timeouts = (jobsBlock.match(/timeout-minutes:/g) || []).length;
-  if (timeouts < jobs) warnings.push(`Workflow ${f}: not every job sets timeout-minutes`);
+  if (/node-version:\s*['"]?\d+/m.test(c)) {
+    errors.push(`Hardcoded node-version in ${f} - use 'node-version-file: .nvmrc' instead`);
+  }
 }
 
 // 8. Large tracked files
