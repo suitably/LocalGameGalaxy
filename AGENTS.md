@@ -62,7 +62,11 @@ The following patterns are **strictly forbidden**. Any pull request, task, or co
 
 ## 4. Verification & CI Pipeline
 
-The project enforces quality gates via GitHub Actions (`.github/workflows/ci.yml`).
+The project enforces quality gates via local Git hooks (Husky) and GitHub Actions (`.github/workflows/ci.yml`).
+
+- **Pre-Commit Hook (`.husky/pre-commit`)** (< 10s): Runs `lint-staged` (ESLint `--fix`, Prettier formatting on staged files), `check:hygiene`, and `check:architecture:diff`.
+- **Pre-Push Hook (`.husky/pre-push`)** (< 2 min): Runs `check:budget`, `check:duplicates`, and `npm test` (Vitest) before pushing code.
+- **Local Full Suite (`npm run quality-gates`)**: Shortcut running all hygiene, architecture, budget, duplicate, lint, and vitest checks locally.
 
 **When to run**: Only **after making code changes**, before marking a task as done.
 **Do NOT run** lint, test, build, or any verification commands during the **planning or research phase** — no code has changed, so verification adds no value and wastes resources.
