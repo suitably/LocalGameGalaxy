@@ -89,6 +89,9 @@ for (const f of files.filter((x) => /^\.github\/workflows\/.*\.ya?ml$/.test(x)))
   if (/node-version:\s*['"]?\d+/m.test(c)) {
     errors.push(`Hardcoded node-version in ${f} - use 'node-version-file: .nvmrc' instead`);
   }
+  if (/curl\s+[^\n|]+\|\s*(?:bash|sh)|bash\s*<\(\s*curl/i.test(c)) {
+    errors.push(`Disallowed curl | bash pattern detected in ${f} - use a pinned GitHub action instead`);
+  }
 }
 
 // 8. Large tracked files
