@@ -19,10 +19,7 @@ module.exports = async ({ github, context, core }) => {
     'Issue Description:',
     issue.body || 'No description provided',
     '',
-    'PR Instructions:',
-    `- Include "Fixes #${issueNumber}" in the Pull Request body so GitHub links and auto-closes the issue.`,
-    `- Format PR title: "fix: ${issue.title} (#${issueNumber})"`,
-    `- Add an entry to CHANGELOG.md under [Unreleased] describing the change (or add [skip docs] in the PR description).`,
+    `Include "Fixes #${issueNumber}" in the Pull Request body so GitHub links and auto-closes the issue.`,
   ].join('\n');
 
   const body = JSON.stringify({
