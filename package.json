@@ -69,7 +69,7 @@
     "i18next-http-backend": "4.0.2",
     "lz-string": "1.5.0",
     "mqtt": "5.16.0",
-    "opensheetmusicdisplay": "1.9.9",
+    "opensheetmusicdisplay": "2.2.0",
     "qrcode": "1.5.4",
     "qrcode.react": "4.2.0",
     "react": "19.3.0",
