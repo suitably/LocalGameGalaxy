@@ -3,6 +3,11 @@
 import fs from 'node:fs';
 import { execSync } from 'node:child_process';
 
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const { sanitizeBranch } = require('./pipeline/preview-comment.cjs');
+
 const token = process.env.CLOUDFLARE_API_TOKEN;
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
 
@@ -29,18 +34,6 @@ const args = process.argv.slice(2);
 const deleteAll = process.env.DELETE_ALL === 'true' || args.includes('--all');
 const branchArg = args.find(arg => !arg.startsWith('-'));
 const rawBranch = process.env.BRANCH_NAME || branchArg || '';
-
-// Transliterate branch names (matching ci.yml sanitization)
-function sanitizeBranch(name) {
-  if (!name) return '';
-  return name
-    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
-    .replace(/Ä/g, 'ae').replace(/Ö/g, 'oe').replace(/Ü/g, 'ue')
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-}
 
 const sanitizedBranch = sanitizeBranch(rawBranch);
 
