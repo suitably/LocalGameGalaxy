@@ -1,0 +1,13 @@
+
+.excalidraw .ToolIcon__icon {
+  width: var(--default-icon-size, 2rem) !important;
+  height: var(--default-icon-size, 2rem) !important;
+}
+.excalidraw .App-mobile-menu .ToolIcon__icon {
+  width: 2rem !important;
+  height: 2rem !important;
+}
+.excalidraw .mobile-misc-tools-container .ToolIcon__icon {
+  width: 2rem !important;
+  height: 2rem !important;
+}
