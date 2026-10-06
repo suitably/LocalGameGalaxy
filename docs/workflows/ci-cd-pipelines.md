@@ -202,3 +202,13 @@ The `main` branch is protected via a repository ruleset (`.github/rulesets/main.
 | Command | Action |
 | :--- | :--- |
 | `/jules` | Start a Jules session with the issue title + body (OWNER/MEMBER/COLLABORATOR only) |
+
+---
+
+## 7. GitLab CI & Repository Mirroring
+
+The repository maintains an automated mirror on GitLab (`.gitlab-ci.yml`):
+- **Authority**: GitHub is the primary source of truth for branch protection, code review, release creation, and deployments.
+- **GitLab Role**: Supplementary security scanning (GitLab SAST and Secret Detection templates) and mirror integrity.
+- **Parity via `npm run ci:gates`**: To prevent divergence, GitLab invokes the unified `npm run ci:gates` entry point (hygiene, script tests, blocking architecture audit, budget check, duplicate scan, ESLint, and Vitest) matching GitHub's validation logic identically.
+- **Efficiency**: Redundant intermediate `install_dependencies` jobs and unused `node_modules` artifacts are eliminated in favor of cached npm offline runs.
