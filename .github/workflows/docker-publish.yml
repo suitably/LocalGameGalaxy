@@ -9,13 +9,45 @@ on:
       - '!server/cloudflare-push-relay/**'
     tags:
       - 'v*'
-  workflow_dispatch: # Allows manual workflow triggering
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  test-server:
+    name: Test Server Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./server
+        run: npm ci
+
+      - name: Build Server
+        working-directory: ./server
+        run: npm run build
+
+      - name: Run Tests
+        working-directory: ./server
+        run: npm test
+
   build-and-push:
+    name: Build & Push Docker Images
+    needs: test-server
+    if: github.repository == 'suitably/LocalGameGalaxy'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -49,7 +81,24 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 1. Build & Push Lightweight Base Image (~200MB) -> :latest, :base
+      # Docker Metadata for Base Image
+      - name: Extract Docker metadata (Base Image)
+        id: meta_base
+        if: steps.check_docker_creds.outputs.has_creds == 'true'
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
+        with:
+          images: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server
+            ${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server
+          flavor: |
+            latest=auto
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=base
+            type=sha,prefix=sha-
+
+      # 1. Build & Push Lightweight Base Image (~200MB)
       - name: Build and Push Base Image
         if: steps.check_docker_creds.outputs.has_creds == 'true'
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -58,15 +107,30 @@ jobs:
           file: ./server/Dockerfile
           target: base
           push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:base
-            ${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:base
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:buildcache-base
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:buildcache-base,mode=max
+          tags: ${{ steps.meta_base.outputs.tags }}
+          labels: ${{ steps.meta_base.outputs.labels }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:buildcache-base
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:buildcache-base,mode=max
 
-      # 2. Build & Push Full Image with PyTorch & AI Vocal Separation (~2GB) -> :full, :ai, :melodiq
+      # Docker Metadata for Full Image
+      - name: Extract Docker metadata (Full Image)
+        id: meta_full
+        if: steps.check_docker_creds.outputs.has_creds == 'true'
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
+        with:
+          images: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server
+            ${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server
+          flavor: |
+            suffix=-full
+            latest=false
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=full
+            type=sha,prefix=sha-
+
+      # 2. Build & Push Full Image with PyTorch & AI Vocal Separation (~2GB)
       - name: Build and Push Full Image (Melodiq AI)
         if: steps.check_docker_creds.outputs.has_creds == 'true'
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -75,11 +139,7 @@ jobs:
           file: ./server/Dockerfile
           target: full
           push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:ai
-            ${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:full
-            ${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:melodiq
-            ${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:full
-            ${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:melodiq
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:buildcache-full
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server:buildcache-full,mode=max
+          tags: ${{ steps.meta_full.outputs.tags }}
+          labels: ${{ steps.meta_full.outputs.labels }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:buildcache-full
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:buildcache-full,mode=max
