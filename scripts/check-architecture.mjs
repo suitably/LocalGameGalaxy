@@ -29,9 +29,20 @@ const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '..');
 const SRC_DIR = path.join(ROOT_DIR, 'src');
 const GAMES_DIR = path.join(SRC_DIR, 'games');
+const BASELINE_FILE = path.join(__dirname, 'architecture-baseline.json');
 
 const isStrict = process.argv.includes('--strict');
 const isDiff = process.argv.includes('--diff');
+
+let baselineEntries = [];
+if (fs.existsSync(BASELINE_FILE)) {
+  try {
+    baselineEntries = JSON.parse(fs.readFileSync(BASELINE_FILE, 'utf-8'));
+  } catch (e) {
+    console.error(`Failed to parse ${BASELINE_FILE}:`, e.message);
+  }
+}
+const baselineSet = new Set(baselineEntries.map(e => typeof e === 'string' ? e : `${e.type}:${e.file}`));
 
 // ANSI Colors
 const RED = '\x1b[31m';
@@ -285,21 +296,45 @@ if (violations.largeComponents.length > 0) {
 }
 
 // Summary and Exit Code
-const totalViolations = violations.crossGameImports.length + violations.rawStorage.length + violations.nativeDialogs.length + violations.trackedServerMedia.length;
+const allCritical = [
+  ...violations.crossGameImports.map(v => ({ type: 'crossGameImports', file: v.file, detail: `${v.currentGame} -> ${v.targetGame}` })),
+  ...violations.rawStorage.map(v => ({ type: 'rawStorage', file: v.file, detail: v.snippet })),
+  ...violations.nativeDialogs.map(v => ({ type: 'nativeDialogs', file: v.file, detail: v.snippet })),
+  ...violations.trackedServerMedia.map(f => ({ type: 'trackedServerMedia', file: f, detail: 'tracked server media' })),
+];
+
+const totalViolations = allCritical.length;
+
+// Check against baseline (ratchet mechanism)
+const freshViolations = allCritical.filter(v => !baselineSet.has(`${v.type}:${v.file}`));
+const currentKeys = new Set(allCritical.map(v => `${v.type}:${v.file}`));
+const resolvedBaselineGaps = [...baselineSet].filter(key => !currentKeys.has(key));
+
+if (!isDiff && resolvedBaselineGaps.length > 0) {
+  console.log(`${YELLOW}ℹ Fixed ${resolvedBaselineGaps.length} architecture baseline gap(s) - remove them from scripts/architecture-baseline.json to lock in progress.${RESET}`);
+}
 
 if (totalViolations === 0) {
   console.log(`${GREEN}${BOLD}🎉 Architecture Audit Passed! All boundaries respected.${RESET}\n`);
   process.exit(0);
 } else {
-  console.log(`${BOLD}Summary: ${RED}${totalViolations} critical violations${RESET}, ${YELLOW}${violations.largeComponents.length} oversized components.${RESET}`);
-  if (isStrict) {
-    console.error(`\n${RED}${BOLD}✖ Strict mode enabled: Audit failed.${RESET}\n`);
+  console.log(`${BOLD}Summary: ${RED}${totalViolations} critical violations (${freshViolations.length} new)${RESET}, ${YELLOW}${violations.largeComponents.length} oversized components.${RESET}`);
+
+  // Both diff mode and full scan fail on new / un-baselined critical violations
+  if (freshViolations.length > 0) {
+    console.error(`\n${RED}${BOLD}✖ Architecture gate failed: Found ${freshViolations.length} critical boundary violation(s) not in baseline.${RESET}\n`);
+    for (const v of freshViolations) {
+      console.error(`  ${RED}• [${v.type}] ${v.file}${RESET} (${v.detail})`);
+    }
+    console.error('');
     process.exit(1);
-  } else if (isDiff && (violations.crossGameImports.length > 0 || violations.nativeDialogs.length > 0 || violations.trackedServerMedia.length > 0)) {
-    console.error(`\n${RED}${BOLD}✖ Diff check failed: Newly modified files contain critical architectural violations.${RESET}\n`);
-    process.exit(1);
-  } else {
-    console.log(`\n${CYAN}💡 Run with --strict to enforce in CI, or --diff to enforce on changed files only.${RESET}\n`);
-    process.exit(0);
   }
+
+  if (isStrict) {
+    console.error(`\n${RED}${BOLD}✖ Strict mode enabled: Audit failed with ${totalViolations} violations.${RESET}\n`);
+    process.exit(1);
+  }
+
+  console.log(`\n${YELLOW}✔ All critical violations are covered by architecture baseline ratchet.${RESET}\n`);
+  process.exit(0);
 }
