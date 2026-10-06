@@ -16,9 +16,9 @@ export function resolveBaseRef(explicitBase, cwd = process.cwd()) {
   if (process.env.GITHUB_BASE_REF) {
     const ghBase = process.env.GITHUB_BASE_REF.trim();
     if (ghBase) {
-      // Check if remote tracking ref exists, e.g. origin/main
       if (hasGitRef(`origin/${ghBase}`, cwd)) return `origin/${ghBase}`;
       if (hasGitRef(ghBase, cwd)) return ghBase;
+      return `origin/${ghBase}`;
     }
   }
 
