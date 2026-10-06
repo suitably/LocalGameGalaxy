@@ -1,0 +1,11 @@
+--- CHANGELOG.md
++++ CHANGELOG.md
+@@ -1,5 +1,8 @@
+
+ ## [Unreleased]
++### Fixed
++- Refactor Melodiq settings view to not unmount main view. Fixes #272
++
+ ### Security
+ - Applied security audit fixes (Security & Vulnerability Auditor).
+ - Hardened `DOMPurify.sanitize` usage in `RulesDialog` with strict allowlists for tags and attributes.
