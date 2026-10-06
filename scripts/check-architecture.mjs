@@ -22,6 +22,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { getChangedFiles as getRepoChangedFiles } from './lib/changed-files.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -71,20 +72,19 @@ function getSourceFiles(dir, fileList = []) {
 }
 
 /**
- * Get changed files compared to git HEAD (if git is available)
+ * Get changed files compared to base branch/ref
  */
 function getChangedFiles() {
-  try {
-    const output = execSync('git diff --name-only HEAD', { cwd: ROOT_DIR, encoding: 'utf-8' });
-    return output
-      .split('\n')
-      .map(f => f.trim())
-      .filter(f => f.startsWith('src/') && (f.endsWith('.ts') || f.endsWith('.tsx')))
-      .map(f => path.join(ROOT_DIR, f))
-      .filter(f => fs.existsSync(f));
-  } catch {
-    return [];
-  }
+  const result = getRepoChangedFiles({ cwd: ROOT_DIR, absolute: true });
+  const changed = result.files
+    .filter(f => {
+      const rel = path.relative(ROOT_DIR, f);
+      return rel.startsWith('src/') && (rel.endsWith('.ts') || rel.endsWith('.tsx'));
+    });
+
+  const baseLabel = result.mergeBase ? `${result.baseRef} (merge-base ${result.mergeBase.slice(0, 7)})` : result.baseRef;
+  console.log(`${CYAN}🔍 [Architecture Diff] Checking ${changed.length} changed file(s) against ${baseLabel}...${RESET}\n`);
+  return changed;
 }
 
 const games = getGameDirectories();
