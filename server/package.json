@@ -19,7 +19,7 @@
     "sanitize-filename": "1.6.3"
   },
   "devDependencies": {
-    "@types/node": "24.10.1",
+    "@types/node": "26.6.4",
     "typescript": "5.9.3"
   }
 }
