@@ -67,6 +67,8 @@ The primary defense line for code quality, architectural integrity, and automate
 
 ```mermaid
 flowchart LR
+    Job0["Job: precheck (5m)"] -->|Success| Job1
+
     subgraph Job1["Job: validate (15m timeout)"]
         direction TB
         S1["npm ci (Node 22)"] --> S2["Architecture Check<br/>(check:architecture:diff)"]
@@ -80,7 +82,7 @@ flowchart LR
 
     subgraph Job2["Job: deploy-cloudflare (10m timeout)"]
         direction TB
-        D1["Build Production SPA"] --> D2{"Branch == main?"}
+        D1["Download dist Artifact"] --> D2{"Branch == main?"}
         D2 -->|Yes| D3["Deploy to Production<br/>(nexumia.de)"]
         D2 -->|No / PR| D4["Deploy Preview<br/>(branch-preview.nexumia.de)"]
         D4 --> D5["Post Preview Link Comment on PR"]
