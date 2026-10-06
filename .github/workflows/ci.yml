@@ -41,12 +41,11 @@ jobs:
       - name: Lint workflows (actionlint)
         uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
 
-  validate:
-    name: Lint, Architecture, Budget, Test & Build
+  static-analysis:
+    name: Architecture, Budget & Duplicates
     needs: precheck
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -54,14 +53,8 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version-file: .nvmrc
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
+      - name: Setup Node & Dependencies
+        uses: ./.github/actions/setup
 
       - name: Architecture & Boundary Check (Changed Files)
         if: github.event_name == 'pull_request'
@@ -83,6 +76,20 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: npm run check:docs
 
+  lint:
+    name: ESLint & Security Audit
+    needs: precheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node & Dependencies
+        uses: ./.github/actions/setup
+
       - name: Run ESLint
         run: npm run lint
 
@@ -90,8 +97,36 @@ jobs:
         continue-on-error: true
         run: npm run check:security
 
+  test:
+    name: Unit & Integration Tests (Vitest)
+    needs: precheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node & Dependencies
+        uses: ./.github/actions/setup
+
       - name: Run Unit Tests
-        run: npm test
+        run: npm test -- --reporter=default --reporter=github-actions
+
+  build:
+    name: Production Web Build
+    needs: precheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node & Dependencies
+        uses: ./.github/actions/setup
 
       - name: Run Production Build
         run: npm run build
@@ -114,16 +149,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - name: Setup Node & Dependencies
+        uses: ./.github/actions/setup
         with:
-          node-version-file: .nvmrc
-          cache: 'npm'
+          working-directory: server
           cache-dependency-path: server/package-lock.json
-
-      - name: Install server dependencies
-        working-directory: server
-        run: npm ci
 
       - name: Build server (tsc)
         working-directory: server
@@ -133,9 +163,26 @@ jobs:
         working-directory: server
         run: npm test
 
+  ci-ok:
+    name: CI Quality Gate (Aggregator)
+    needs: [precheck, static-analysis, lint, test, build, server-validate]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Evaluate Check Results
+        run: |
+          STATUSES="${{ join(needs.*.result, ' ') }}"
+          echo "Dependency statuses: $STATUSES"
+          if echo "$STATUSES" | grep -E -q '(failure|cancelled)'; then
+            echo "::error::One or more required CI gate jobs failed or were cancelled."
+            exit 1
+          fi
+          echo "🎉 All required CI gates passed successfully!"
+
   deploy-cloudflare:
     name: Deploy to Cloudflare
-    needs: validate
+    needs: [build, ci-ok]
     # Fork PRs and bot PRs have no access to secrets -> skip instead of failing.
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]' && github.actor != 'dependabot'
     runs-on: ubuntu-latest
@@ -177,4 +224,3 @@ jobs:
               status: 'deployed',
               deploymentUrl: process.env.DEPLOYMENT_URL || ''
             });
-
