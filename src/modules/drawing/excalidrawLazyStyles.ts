@@ -1,3 +1,4 @@
+import '@excalidraw/excalidraw/index.css';
 let stylePromise: Promise<void> | null = null;
 
 export const ensureStyles = (): Promise<void> => {

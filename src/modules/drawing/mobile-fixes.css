@@ -1,0 +1,24 @@
+
+.excalidraw .ToolIcon_type_radio:checked+.ToolIcon__icon,
+.excalidraw .ToolIcon.fillabl,
+.excalidraw .ToolIcon_type_checkbox:checked+.ToolIcon__icon {
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+.excalidraw label.ToolIcon .ToolIcon__icon,
+.excalidraw .ToolIcon__icon {
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+.excalidraw .ToolIcon__icon svg {
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+.excalidraw.theme--dark .ToolIcon__icon svg,
+.excalidraw.theme--light .ToolIcon__icon svg {
+  width: 100% !important;
+  height: 100% !important;
+}
