@@ -5,7 +5,7 @@ This directory contains repeatable workflow definitions, automated CI/CD pipelin
 ## Automated Pipelines
 
 * [CI/CD & Multi-Agent Pipelines Architecture](ci-cd-pipelines.md) - Single Source of Truth for all continuous integration, automated deployment, and autonomous multi-agent pipelines.
-* [Google Jules Minimal Pipeline](jules-pipeline-workflow.md) - `/jules` on an issue starts Jules; cron watcher reports back.
+* [Google Jules Streaming Pipeline](jules-pipeline-workflow.md) - `/jules` on an issue starts Jules and streams progress live until PR completion.
 
 ## Development & Refactoring Guides
 

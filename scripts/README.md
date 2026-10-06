@@ -40,7 +40,7 @@ Validates that architectural changes are synced with documentation and i18n file
 
 ---
 
-## 3. CI/CD Tooling (Jules scripts: `scripts/pipeline/jules-start.cjs`, `jules-watch.cjs`)
+## 3. CI/CD Tooling (Jules scripts: `scripts/pipeline/jules-start.cjs`, `jules-agent-runner.cjs`)
 
 ### `scaffold-game.mjs`
 Boilerplate generator for scaffolding new game modules adhering to strict architecture boundaries.

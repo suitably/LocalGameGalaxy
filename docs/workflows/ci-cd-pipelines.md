@@ -33,12 +33,12 @@ flowchart TD
     end
 
     subgraph Autonomous["Tier 3: Multi-Agent Cloud Ecosystem"]
-        JulesPlan["Jules Plan + Watch<br/>(jules-start.yml, jules-watch.yml)"]
+        JulesPlan["Jules Streaming Pipe<br/>(jules-start.yml, jules-audit.yml)"]
     end
 
     CodePush["Git Push / PR to main"] --> CI
     RelayCode["Push to server/cloudflare-push-relay/**"] --> CF_Relay
-    TagPush["Git Tag v* / Release Published"] --> APK & Docker & ServerRelease
+    TagPush["Git Tag v*"] --> APK & Docker & ServerRelease
     IssueActivity["Issue comment /jules"] --> JulesPlan
 ```
 
@@ -48,10 +48,12 @@ flowchart TD
 | :--- | :--- | :--- | :--- |
 | [`.github/workflows/ci.yml`](file:///.github/workflows/ci.yml) | **CI Quality Gate** | `push` (main), `pull_request` (main) | 7 Quality Gates + Cloudflare Production / Preview Deploy |
 | [`.github/workflows/cleanup-preview.yml`](file:///.github/workflows/cleanup-preview.yml) | **Cleanup Cloudflare Preview** | `pull_request` (`closed`), `workflow_dispatch` | Deletes obsolete preview branches & environments from Cloudflare |
-| [`.github/workflows/build-apk.yml`](file:///.github/workflows/build-apk.yml) | **Build Android APK** | `release` (published), `push` tags (`v*`) | Compiles debug APK via Gradle & attaches `nexumia.apk` to release |
+| [`.github/workflows/build-apk.yml`](file:///.github/workflows/build-apk.yml) | **Build Android APK** | `push` tags (`v*`) | Compiles debug APK via Gradle & attaches `nexumia.apk` to release |
 | [`.github/workflows/deploy-push-relay.yml`](file:///.github/workflows/deploy-push-relay.yml) | **Deploy Cloudflare Push Relay** | `push` (main on `server/cloudflare-push-relay/**`), `workflow_dispatch` | Deploys serverless Web Push & ntfy relay worker to Cloudflare |
 | [`.github/workflows/docker-publish.yml`](file:///.github/workflows/docker-publish.yml) | **Build and Push Docker Images** | `push` (main on `server/**`), tags (`v*`), `workflow_dispatch` | Multi-target build: `base` (~200MB) and `full` (~2GB, AI Demucs) to Docker Hub |
-| [`.github/workflows/release_helper.yml`](file:///.github/workflows/release_helper.yml) | **Release Nexumia Server** | `release` (published), tags (`v*`), `workflow_dispatch` | `pkg` compiles native standalone binaries (Linux, Win, macOS) with startup scripts |
+| [`.github/workflows/release_helper.yml`](file:///.github/workflows/release_helper.yml) | **Release Nexumia Server** | tags (`v*`), `workflow_dispatch` | `pkg` compiles native standalone binaries (Linux, Win, macOS) with startup scripts |
+| [`.github/workflows/jules-start.yml`](file:///.github/workflows/jules-start.yml) | **Jules Start & Stream** | `issue_comment` (`/jules`), `workflow_dispatch` | Dispatches session & streams progress live to issue until PR delivery |
+| [`.github/workflows/jules-audit.yml`](file:///.github/workflows/jules-audit.yml) | **Jules Scheduled Audit** | `schedule` (cron daily), `workflow_dispatch` | Runs scheduled repository audit agents defined in `.github/agents/*.md` |
 
 ---
 
@@ -191,15 +193,15 @@ First CI job (`precheck`, no `npm ci`), also part of `quality-gates`/pre-commit.
 
 ---
 
-## 3. Jules (minimal)
+## 3. Jules Streaming Pipeline
 
-See [jules-pipeline-workflow.md](jules-pipeline-workflow.md). Comment `/jules` on an issue → `jules-start.yml` sends issue title + body to Jules; `jules-watch.yml` (cron `*/5`) posts new Jules activity and PR links back to the issue.
+See [jules-pipeline-workflow.md](jules-pipeline-workflow.md). Comment `/jules` on an issue → `jules-start.yml` dispatches the task to Jules and keeps the runner active in a live polling stream, posting progress back to the issue until a PR is opened or the session completes.
 
 ---
 
 ## 4. Repository Secrets Reference
 
-The following secrets are used across the 8 pipelines. Configure them under **GitHub Repository Settings $\rightarrow$ Secrets and variables $\rightarrow$ Actions**:
+The following secrets are used across repository pipelines. Configure them under **GitHub Repository Settings $\rightarrow$ Secrets and variables $\rightarrow$ Actions**:
 
 | Secret Name | Consumed By | Description | Mandatory? |
 | :--- | :--- | :--- | :--- |
@@ -207,7 +209,7 @@ The following secrets are used across the 8 pipelines. Configure them under **Gi
 | `CLOUDFLARE_ACCOUNT_ID` | `ci.yml`, `deploy-push-relay.yml` | Cloudflare Account Identifier | Required for Cloudflare deployment |
 | `DOCKERHUB_USERNAME` | `docker-publish.yml` | Docker Hub account username | Required for Docker Hub image publishing |
 | `DOCKERHUB_TOKEN` | `docker-publish.yml` | Docker Hub personal access token | Required for Docker Hub image publishing |
-| `JULES_API_KEY` / `JULES_API_KEY_*` | `jules-start.yml`, `jules-watch.yml` | Primary Google Jules REST API key (from [jules.google.com](https://jules.google.com)) | Required for Jules agent |
+| `JULES_API_KEY` / `JULES_API_KEY_*` | `jules-start.yml`, `jules-audit.yml` | Primary Google Jules REST API key (from [jules.google.com](https://jules.google.com)) | Required for Jules agent |
 | `GITHUB_TOKEN` | All workflows | Automatically provided by GitHub Actions (`secrets.GITHUB_TOKEN`) | Automatic |
 
 ---

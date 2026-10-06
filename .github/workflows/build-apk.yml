@@ -1,8 +1,6 @@
 name: Build Android APK
 
 on:
-  release:
-    types: [published]
   push:
     tags:
       - 'v*'

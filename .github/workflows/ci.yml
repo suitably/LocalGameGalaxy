@@ -187,7 +187,18 @@ jobs:
 
             // 2. Also ensure Preview link is added to the PR body description
             try {
-              const currentBody = context.payload.pull_request.body || '';
+              let currentBody = context.payload.pull_request.body || '';
+              try {
+                const freshPr = await github.rest.pulls.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber
+                });
+                currentBody = freshPr.data?.body || currentBody;
+              } catch (e) {
+                // fallback to payload body
+              }
+
               if (!currentBody.includes('nexumia.de') && previewUrl) {
                 const updatedBody = `> 🚀 **Cloudflare Preview:** [${previewUrl}](${previewUrl})\n\n${currentBody}`;
                 await github.rest.pulls.update({
