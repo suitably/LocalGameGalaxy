@@ -17,7 +17,7 @@ This document serves as the Single Source of Truth (SSoT) for all continuous int
 
 ## 1. High-Level Pipelines Overview
 
-The repository operates **8 automated GitHub Actions workflows** organized into three distinct tiers:
+The repository operates **7 automated GitHub Actions workflows** organized into three distinct tiers:
 
 ```mermaid
 flowchart TD
@@ -26,10 +26,9 @@ flowchart TD
         CF_Relay["Cloudflare Push Relay Deploy<br/>(deploy-push-relay.yml)"]
     end
 
-    subgraph Releases["Tier 2: Build & Release Artifacts"]
-        APK["Android APK Build<br/>(build-apk.yml)"]
-        Docker["Docker Hub Dual-Target Publish<br/>(docker-publish.yml)"]
-        ServerRelease["Standalone Server Binaries<br/>(release_helper.yml)"]
+    subgraph Releases["Tier 2: Gated Release & Packaging"]
+        Release["Consolidated Release Workflow<br/>(release.yml)"]
+        DockerPublish["Docker Hub Publishing<br/>(docker-publish.yml)"]
     end
 
     subgraph Autonomous["Tier 3: Multi-Agent Cloud Ecosystem"]
@@ -38,7 +37,8 @@ flowchart TD
 
     CodePush["Git Push / PR to main"] --> CI
     RelayCode["Push to server/cloudflare-push-relay/**"] --> CF_Relay
-    TagPush["Git Tag v*"] --> APK & Docker & ServerRelease
+    TagPush["Git Tag v*"] --> Release
+    Release -.->|Reusable Workflow Call| DockerPublish
     IssueActivity["Issue comment /jules"] --> JulesPlan
 ```
 
@@ -48,10 +48,9 @@ flowchart TD
 | :--- | :--- | :--- | :--- |
 | [`.github/workflows/ci.yml`](file:///.github/workflows/ci.yml) | **CI Quality Gate** | `push` (main), `pull_request` (main) | 7 Quality Gates + Cloudflare Production / Preview Deploy |
 | [`.github/workflows/cleanup-preview.yml`](file:///.github/workflows/cleanup-preview.yml) | **Cleanup Cloudflare Preview** | `pull_request` (`closed`), `workflow_dispatch` | Deletes obsolete preview branches & environments from Cloudflare |
-| [`.github/workflows/build-apk.yml`](file:///.github/workflows/build-apk.yml) | **Build Android APK** | `push` tags (`v*`) | Compiles debug APK via Gradle & attaches `nexumia.apk` to release |
+| [`.github/workflows/release.yml`](file:///.github/workflows/release.yml) | **Release (Consolidated & Gated)** | `push` tags (`v*`), `workflow_dispatch` | Gated draft release, signed Android APK, server binaries (Linux/Win/macOS), Docker publish, and auto-undraft |
 | [`.github/workflows/deploy-push-relay.yml`](file:///.github/workflows/deploy-push-relay.yml) | **Deploy Cloudflare Push Relay** | `push` (main on `server/cloudflare-push-relay/**`), `workflow_dispatch` | Deploys serverless Web Push & ntfy relay worker to Cloudflare |
-| [`.github/workflows/docker-publish.yml`](file:///.github/workflows/docker-publish.yml) | **Build and Push Docker Images** | `push` (main on `server/**`), tags (`v*`), `workflow_dispatch` | Multi-target build: `base` (~200MB) and `full` (~2GB, AI Demucs) to Docker Hub |
-| [`.github/workflows/release_helper.yml`](file:///.github/workflows/release_helper.yml) | **Release Nexumia Server** | tags (`v*`), `workflow_dispatch` | `pkg` compiles native standalone binaries (Linux, Win, macOS) with startup scripts |
+| [`.github/workflows/docker-publish.yml`](file:///.github/workflows/docker-publish.yml) | **Build and Push Docker Images** | `push` (main on `server/**`), `workflow_call`, `workflow_dispatch` | Multi-target build: `base` (~200MB) and `full` (~2GB, AI Demucs) to Docker Hub |
 | [`.github/workflows/jules-start.yml`](file:///.github/workflows/jules-start.yml) | **Jules Start & Stream** | `issue_comment` (`/jules`), `workflow_dispatch` | Dispatches session & streams progress live to issue until PR delivery |
 | [`.github/workflows/jules-audit.yml`](file:///.github/workflows/jules-audit.yml) | **Jules Scheduled Audit** | `schedule` (cron daily), `workflow_dispatch` | Runs scheduled repository audit agents defined in `.github/agents/*.md` |
 
@@ -131,59 +130,27 @@ Cleans up preview environments and deployments in Cloudflare once a PR is closed
 
 ---
 
-### 2.3 Android APK Packaging (`build-apk.yml`)
+### 2.3 Consolidated & Gated Release Pipeline (`release.yml`)
 
-Automates Android package compilation whenever a new release is published or a version tag (`v*`) is pushed.
+Consolidates Android packaging, server binary creation, Docker publishing, and release draft lifecycle into a single atomic workflow triggered on version tags (`v*`) or manual `workflow_dispatch`.
 
-- **Environment**: Ubuntu runner, Node 22, Java 21 Zulu (`actions/setup-java@v4`).
-- **Steps**:
-  1. Compiles web bundle: `npm ci && npm run build`.
-  2. Synchronizes native assets: `npx cap sync android`.
-  3. Executes Gradle compilation: `./gradlew assembleDebug` in `android/`.
-  4. Renames output binary to `nexumia.apk`.
-  5. Attaches `nexumia.apk` directly to the GitHub Release via `softprops/action-gh-release@v2`.
+```mermaid
+flowchart LR
+    gates["1. Quality Gates (Lint, Arch, Test, Build, Server)"] --> draft["2. Create Draft Release (gh release create --draft)"]
+    draft --> apk["3a. Android APK (Signed / Debug Fallback)"]
+    draft --> pkg["3b. Server Binaries (pkg: Linux, Win, macOS)"]
+    draft --> dkr["3c. Docker Images (workflow_call docker-publish)"]
+    apk & pkg & dkr --> pub["4. Publish Release (gh release edit --draft=false)"]
+```
 
----
-
-### 2.4 Cloudflare Push Relay Worker (`deploy-push-relay.yml`)
-
-Automates the deployment of the serverless push notification relay.
-
-- **Trigger**: Pushes to `main` touching `server/cloudflare-push-relay/**` or manual `workflow_dispatch`.
-- **Function**: Deploys the Cloudflare Worker located in `server/cloudflare-push-relay/` via `cloudflare/wrangler-action@v3`.
-- **Security Check**: Gracefully skips deployment if `CLOUDFLARE_API_TOKEN` is not set in repository secrets.
-
----
-
-### 2.5 Docker Hub Multi-Target Publishing (`docker-publish.yml`)
-
-Builds and pushes production multi-architecture Docker container images for the companion server.
-
-- **Trigger**: Pushes to `main` touching `server/**` (excluding `server/cloudflare-push-relay/**`), version tags (`v*`), or manual dispatch.
-- **Dual-Target Strategy**:
-  1. **Base Image (`target: base`)** (~200MB):
-     - Lightweight Node.js runtime for standard party hosting and WebRTC signaling.
-     - Published tags: `<username>/melodiq-server:latest`, `:base`, and `<username>/nexumia-server:latest`, `:base`.
-     - Registry cache: `<username>/melodiq-server:buildcache-base`.
-  2. **Full Image (`target: full`)** (~2GB):
-     - Bundles Python, PyTorch, and Demucs AI models for offline vocal/instrumental separation.
-     - Published tags: `<username>/melodiq-server:ai`, `:full`, `:melodiq`, and `<username>/nexumia-server:full`, `:melodiq`.
-     - Registry cache: `<username>/melodiq-server:buildcache-full`.
-- **Required Secrets**: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`.
-
----
-
-### 2.6 Standalone Server Packaging & Release (`release_helper.yml`)
-
-Packages the Node.js server into zero-dependency standalone binaries for Linux, Windows, and macOS.
-
-- **Trigger**: GitHub Release publication, version tag (`v*`), or manual dispatch.
-- **Build Engine**: `pkg` run via `cd server && npm run package`.
-- **Artifact Packaging**:
-  - **Linux**: Bundles `nexumia-server-linux`, `start-server.sh`, and `NexumiaServer.desktop` into `nexumia-server-linux.tar.gz`.
-  - **Windows**: Bundles `nexumia-server-win.exe` and `start-server.bat` into `nexumia-server-win.zip`.
-  - **macOS**: Bundles `nexumia-server-macos` and `start-server.command` into `nexumia-server-macos.tar.gz`.
-- **Publishing**: Automatically attaches all three archives to the GitHub Release.
+- **Execution Flow**:
+  1. **`gates`**: Runs hygiene, scripts unit tests, component budget check, architecture check, ESLint, vitest frontend tests, production web build, and companion server tests. If any gate fails, no release artifacts are produced.
+  2. **`create-release`**: Atomically creates a single GitHub Release in `--draft` mode with generated release notes.
+  3. **Parallel artifact build**:
+     - **Android APK (`build-android`)**: Compiles web bundle, runs `npx cap sync android`. If `ANDROID_KEYSTORE_BASE64` secret is configured, signs `nexumia.apk` with the production release keystore via `./gradlew assembleRelease`; otherwise falls back gracefully to `assembleDebug` with a notice. Uploads `nexumia.apk` to the draft release.
+     - **Server Binaries (`build-server-binaries`)**: Runs `pkg` in `server/`, bundles Linux (`tar.gz`), Windows (`.zip`), and macOS (`tar.gz`) archives with launcher scripts, and uploads them to the draft release.
+     - **Docker Publishing (`build-docker`)**: Calls the reusable `.github/workflows/docker-publish.yml` to build and push `base` and `full` images to Docker Hub.
+  4. **`publish-release`**: Once all three parallel packaging jobs succeed, undrafts the release via `gh release edit "$TAG" --draft=false`. Releases never appear in half-baked or corrupted states.
 
 ---
 
@@ -209,6 +176,10 @@ The following secrets are used across repository pipelines. Configure them under
 | `CLOUDFLARE_ACCOUNT_ID` | `ci.yml`, `deploy-push-relay.yml` | Cloudflare Account Identifier | Required for Cloudflare deployment |
 | `DOCKERHUB_USERNAME` | `docker-publish.yml` | Docker Hub account username | Required for Docker Hub image publishing |
 | `DOCKERHUB_TOKEN` | `docker-publish.yml` | Docker Hub personal access token | Required for Docker Hub image publishing |
+| `ANDROID_KEYSTORE_BASE64` | `release.yml` | Base64-encoded release `.jks` Android signing keystore | Optional (falls back to debug if absent) |
+| `ANDROID_KEYSTORE_PASSWORD` | `release.yml` | Keystore password for Android release signing | Optional |
+| `ANDROID_KEY_ALIAS` | `release.yml` | Key alias in Android keystore (defaults to `nexumia`) | Optional |
+| `ANDROID_KEY_PASSWORD` | `release.yml` | Key password for Android release signing | Optional |
 | `JULES_API_KEY` / `JULES_API_KEY_*` | `jules-start.yml`, `jules-audit.yml` | Primary Google Jules REST API key (from [jules.google.com](https://jules.google.com)) | Required for Jules agent |
 | `GITHUB_TOKEN` | All workflows | Automatically provided by GitHub Actions (`secrets.GITHUB_TOKEN`) | Automatic |
 

@@ -41,7 +41,11 @@ server/models/
 __pycache__/
 *.pyc
 server/music/
-music/
+# Android signing & keystores
+*.jks
+*.keystore
+keystore.properties
+
 public/assets
 
 # Profiling & Diagnostics

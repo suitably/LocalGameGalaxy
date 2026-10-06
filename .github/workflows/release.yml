@@ -1,0 +1,263 @@
+name: Release (Consolidated & Gated)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag or release version to build (e.g. v1.1.0)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  gates:
+    name: Verify Quality Gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+
+      - name: Install Root Dependencies
+        run: npm ci
+
+      - name: Run Repository Hygiene
+        run: npm run check:hygiene
+
+      - name: Run Pipeline Scripts Tests
+        run: npm run test:scripts
+
+      - name: Run Component Budget Gate
+        run: npm run check:budget
+
+      - name: Run Full Architecture Audit
+        run: npm run check:architecture
+
+      - name: Run Duplication Check
+        run: npm run check:duplicates
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Frontend Tests
+        run: npm test
+
+      - name: Verify Web Production Build
+        run: npm run build
+
+      - name: Install & Test Server
+        working-directory: ./server
+        run: |
+          npm ci
+          npm run build
+          npm test
+
+  create-release:
+    name: Create Draft Release
+    needs: gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      tag_name: ${{ steps.resolve_tag.outputs.tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Resolve Release Tag
+        id: resolve_tag
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          if [ -z "$TAG" ]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Release tag: $TAG"
+
+      - name: Create Draft Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.resolve_tag.outputs.tag }}
+        run: |
+          gh release create "$TAG" \
+            --draft \
+            --title "$TAG" \
+            --generate-notes
+
+  build-android:
+    name: Build & Attach Android APK
+    needs: create-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Web App
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Setup Java
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Decode Release Keystore if Configured
+        id: setup_signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > android/app/release.jks
+            echo "has_keystore=true" >> "$GITHUB_OUTPUT"
+            echo "Release keystore configured and decoded."
+          else
+            echo "has_keystore=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::ANDROID_KEYSTORE_BASE64 not configured. Falling back to assembleDebug."
+          fi
+
+      - name: Build APK (Release or Debug Fallback)
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ "${{ steps.setup_signing.outputs.has_keystore }}" = "true" ]; then
+            ./gradlew assembleRelease
+            cp app/build/outputs/apk/release/app-release.apk ../nexumia.apk
+          else
+            ./gradlew assembleDebug
+            cp app/build/outputs/apk/debug/app-debug.apk ../nexumia.apk
+          fi
+
+      - name: Upload APK to Draft Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.create-release.outputs.tag_name }}
+        run: |
+          gh release upload "$TAG" nexumia.apk --clobber
+
+  build-server-binaries:
+    name: Build & Attach Server Binaries
+    needs: create-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install Server Dependencies
+        working-directory: ./server
+        run: npm ci
+
+      - name: Build Binaries (pkg)
+        working-directory: ./server
+        run: npm run package
+
+      - name: Prepare Release Artifacts
+        run: |
+          mkdir -p release/linux release/windows release/macos
+
+          # Linux
+          cp server/dist/nexumia-server-linux release/linux/
+          cp server/release-scripts/start-server.sh release/linux/
+          cp server/release-scripts/NexumiaServer.desktop release/linux/
+          chmod +x release/linux/nexumia-server-linux release/linux/start-server.sh
+
+          # Windows
+          cp server/dist/nexumia-server-win.exe release/windows/
+          cp server/release-scripts/start-server.bat release/windows/
+
+          # macOS
+          cp server/dist/nexumia-server-macos release/macos/
+          cp server/release-scripts/start-server.command release/macos/
+          chmod +x release/macos/nexumia-server-macos release/macos/start-server.command
+
+      - name: Create Archives
+        run: |
+          cd release/linux && tar -czf ../../nexumia-server-linux.tar.gz ./* && cd ../..
+          cd release/windows && zip -r ../../nexumia-server-win.zip ./* && cd ../..
+          cd release/macos && tar -czf ../../nexumia-server-macos.tar.gz ./* && cd ../..
+
+      - name: Upload Server Archives to Draft Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.create-release.outputs.tag_name }}
+        run: |
+          gh release upload "$TAG" \
+            nexumia-server-linux.tar.gz \
+            nexumia-server-macos.tar.gz \
+            nexumia-server-win.zip \
+            --clobber
+
+  build-docker:
+    name: Build & Push Docker Images
+    needs: create-release
+    uses: ./.github/workflows/docker-publish.yml
+    secrets: inherit
+
+  publish-release:
+    name: Undraft & Publish Release
+    needs: [create-release, build-android, build-server-binaries, build-docker]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Undraft Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.create-release.outputs.tag_name }}
+        run: |
+          gh release edit "$TAG" --draft=false
+          echo "🎉 Release $TAG is now published!"
