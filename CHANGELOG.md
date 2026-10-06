@@ -1,5 +1,8 @@
 
 ## [Unreleased]
+### Fixed
+- **Melodiq TV**: Fixed an issue where clicking the Cast button would open a new window instead of initiating a stream to the TV because of dynamic query string mismatches.
+
 ### Security
 - Applied security audit fixes (Security & Vulnerability Auditor).
 - Hardened `DOMPurify.sanitize` usage in `RulesDialog` with strict allowlists for tags and attributes.
