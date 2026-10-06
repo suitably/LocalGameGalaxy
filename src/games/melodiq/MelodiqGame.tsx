@@ -38,7 +38,7 @@ type View = 'Home' | 'Settings' | 'Session' | 'Connection' | 'Playlists' | 'Play
 initMelodiqI18n();
 
 export const MelodiqGameContent: React.FC = () => {
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams();
     const isClient = searchParams.get('role') === 'client';
 
     const { songs, refreshSongs, getSongById, isLoading, hasConnectionError, localLibrary } = useSongs();
@@ -119,13 +119,8 @@ export const MelodiqGameContent: React.FC = () => {
     const isSettingsFromUrl = Boolean(searchParams.get('tab') || searchParams.get('sub'));
     const [currentView, setCurrentView] = useState<View>(() => isSettingsFromUrl ? 'Settings' : 'Home');
     const handleSetCurrentView = useCallback((v: string) => {
-        if (v === 'Settings') {
-            const nextParams = new URLSearchParams(searchParams);
-            nextParams.set('tab', 'melodiq');
-            setSearchParams(nextParams);
-        }
         setCurrentView(v as View);
-    }, [searchParams, setSearchParams]);
+    }, []);
     const [selectedSong, setSelectedSong] = useState<Song | SongMeta | null>(null);
 
     const [, setIsPlaybackPlaying] = useState<boolean>(false);
@@ -160,27 +155,13 @@ export const MelodiqGameContent: React.FC = () => {
         isClient, jobs: memoizedJobs, queue, refreshSongs, replaceItem, selectedSong, onCurrentSongDownloaded: handleCurrentSongDownloaded
     });
 
-    useEffect(() => {
-        const hasSettingsParam = Boolean(searchParams.get('tab') || searchParams.get('sub'));
-        if (hasSettingsParam && currentView !== 'Settings') {
-            setCurrentView('Settings');
-        } else if (!hasSettingsParam && currentView === 'Settings') {
-            setCurrentView('Home');
-        }
-    }, [searchParams, currentView]);
-
     const handleCloseSubView = useCallback(() => {
-        const nextParams = new URLSearchParams(searchParams);
-        nextParams.delete('tab');
-        nextParams.delete('sub');
-        nextParams.delete('section');
-        setSearchParams(nextParams, { replace: true });
         if (window.history.state?.melodiqSubView) {
             window.history.back();
         } else {
             setCurrentView('Home');
         }
-    }, [searchParams, setSearchParams]);
+    }, []);
 
     const handleBackFromSettings = useCallback(() => {
         refreshSongs();
@@ -188,7 +169,7 @@ export const MelodiqGameContent: React.FC = () => {
     }, [refreshSongs, handleCloseSubView]);
 
     useEffect(() => {
-        const isSubView = currentView === 'Connection' || currentView === 'Playlists' || currentView === 'PlaylistDetails';
+        const isSubView = currentView === 'Settings' || currentView === 'Connection' || currentView === 'Playlists' || currentView === 'PlaylistDetails';
         if (isSubView) {
             window.history.pushState({ melodiqSubView: true }, '', window.location.href);
             const handlePopState = () => setCurrentView('Home');
