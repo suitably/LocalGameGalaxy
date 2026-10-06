@@ -1,1 +1,1 @@
-npm run quality-gates
+npx lint-staged && npm run check:hygiene && npm run check:architecture:diff

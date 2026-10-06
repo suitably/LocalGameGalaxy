@@ -154,9 +154,22 @@ flowchart LR
 
 ---
 
-### 2.7 Deterministic Prechecks (`npm run check:hygiene`)
+### 2.7 Local Git Hooks & Quality Gate Lifecycle
 
-First CI job (`precheck`, no `npm ci`), also part of `quality-gates`/pre-commit. Fails on: tracked `.orig/.rej/.bak/*.diff` artifacts, merge conflict markers, invalid JSON, new de/en i18n key gaps (known gaps in `scripts/i18n-parity-baseline.json`, ratchet), focused tests (`.only`), `debugger`, secret patterns, workflows without `permissions`. Warns on missing job timeouts and files > 5 MB. `ci.yml` also uses `concurrency` (cancels superseded PR runs) and skips Cloudflare deploy for fork PRs.
+The project divides developer validation by cost into tiered stages to ensure rapid local iteration:
+
+1. **Pre-Commit Hook (`.husky/pre-commit`)** (< 10 s):
+   - Runs `npx lint-staged` with `eslint --fix` and `prettier --write` on staged files.
+   - Runs deterministic repository prechecks (`npm run check:hygiene`).
+   - Runs architectural boundary diff on staged/changed files (`npm run check:architecture:diff`).
+2. **Pre-Push Hook (`.husky/pre-push`)** (< 2 min):
+   - Runs component size budget check (`npm run check:budget`).
+   - Runs code duplication scan (`npm run check:duplicates`).
+   - Runs unit test suite (`npm test`).
+3. **Local Suite Shortcut (`npm run quality-gates`)**:
+   - Runs the full local test and lint suite (`check:hygiene && check:architecture:diff && check:budget && check:duplicates && lint && test`).
+4. **CI Server Quality Gates (`ci.yml`)**:
+   - Executes deterministic prechecks, full validation, companion server tests, and Cloudflare deployment on push/PR.
 
 ---
 
