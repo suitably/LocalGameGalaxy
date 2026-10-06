@@ -16,10 +16,13 @@ const isText = (f) => /\.(ts|tsx|js|jsx|mjs|cjs|json|md|ya?ml|css|html|yml)$/.te
 const read = (f) => readFileSync(f, 'utf8');
 const textFiles = files.filter((f) => isText(f) && !f.includes('package-lock.json') && !f.startsWith('dev-dist/'));
 
-// 1. Leftover merge/patch artifacts
+// 1. Leftover merge/patch artifacts & keystores
 for (const f of files) {
   if (/\.(orig|rej|bak)$/.test(f) || /(^|\/)(patch|pr\d+)\.diff$/.test(f)) {
     errors.push(`Stray artifact tracked in git: ${f}`);
+  }
+  if (/\.(jks|keystore|p12)$/i.test(f) || /(^|\/)keystore\.properties$/i.test(f)) {
+    errors.push(`Keystore or signing file tracked in git: ${f}`);
   }
 }
 

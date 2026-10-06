@@ -48,6 +48,19 @@ npx cap sync            # 2. Copy web assets to android/ native project
 npx cap build android   # 3. Build the signed APK via Gradle
 ```
 
+### Release Signing & Keystore Management
+For distribution builds, APK signing is handled in `android/app/build.gradle`:
+- **Keystore Generation (one-time)**:
+  ```bash
+  keytool -genkeypair -v -keystore nexumia-release.jks -alias nexumia \
+    -keyalg RSA -keysize 4096 -validity 10000
+  ```
+- **Configuration**:
+  - The keystore is injected in CI via the `ANDROID_KEYSTORE_BASE64` secret and decoded to `android/app/release.jks`.
+  - Passwords and alias are passed via `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD`.
+  - If secrets are absent (forks or dev environments), the pipeline gracefully falls back to `./gradlew assembleDebug`.
+  - **Security Rule**: Keystores (`*.jks`, `*.keystore`, `keystore.properties`) must never be committed to git and are blocked by `scripts/check-repo-hygiene.mjs`.
+
 ### Capacitor Configuration (`capacitor.config.ts`)
 - **App ID**: Defined in `capacitor.config.ts`
 - **Server URL**: In development, Capacitor can proxy to `http://localhost:5173`. In production the bundled assets are used directly.
@@ -102,7 +115,6 @@ All deployments and binary releases are automated via GitHub Actions pipelines. 
 | **Web SPA (Prod & Preview)** | `.github/workflows/ci.yml` | Push / PR to `main` | Production at `nexumia.de`, preview deployments for PRs |
 | **Cloudflare Preview Cleanup** | [`.github/workflows/cleanup-preview.yml`](file:///.github/workflows/cleanup-preview.yml) | `pull_request` (`closed`), `workflow_dispatch` | Deletes obsolete preview branches & environments |
 | **Push Relay Worker** | `.github/workflows/deploy-push-relay.yml` | Push to `server/cloudflare-push-relay/**` | Cloudflare Worker for Web Push & ntfy relay |
-| **Docker Images** | `.github/workflows/docker-publish.yml` | Push to `server/**` or tag `v*` | Hub images: `base` (~200MB) & `full` (~2GB, AI Demucs) |
-| **Android APK** | `.github/workflows/build-apk.yml` | Tag `v*` / GitHub Release | Attached `nexumia.apk` on release |
-| **Standalone Binaries** | `.github/workflows/release_helper.yml` | Tag `v*` / GitHub Release | Linux, Windows, and macOS packaged archives on release |
+| **Release Artifacts & Binaries** | `.github/workflows/release.yml` | Tag `v*` / Manual dispatch | Gated draft release, signed APK, Linux/Win/macOS server packages, Docker images |
+| **Docker Images** | `.github/workflows/docker-publish.yml` | Push to `server/**`, call from release | Hub images: `base` (~200MB) & `full` (~2GB, AI Demucs) |
 
