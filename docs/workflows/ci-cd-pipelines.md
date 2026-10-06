@@ -214,7 +214,19 @@ The following secrets are used across repository pipelines. Configure them under
 
 ---
 
-## 5. Slash Commands
+## 5. Branch Protection & Quality Gate Ruleset
+
+The `main` branch is protected via a repository ruleset (`.github/rulesets/main.json`):
+- **Pull Request Required**: Direct pushes to `main` are restricted; code enters through reviewed and tested PRs.
+- **Required Status Checks**:
+  1. `Deterministic Prechecks (no install)`: Repository hygiene, actionlint, i18n parity, test:scripts.
+  2. `Lint, Architecture, Budget, Test & Build`: ESLint, ratcheted architecture check, component budget, code duplicates, doc-sync, vitest, and web build.
+  3. `Server Build & Tests`: Server dependency compilation and test suite.
+- **Non-Fast-Forward Blocked**: Force pushes and branch deletions are disabled.
+
+---
+
+## 6. Slash Commands
 
 | Command | Action |
 | :--- | :--- |
