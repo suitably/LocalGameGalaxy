@@ -414,37 +414,29 @@ export const MelodiqGameContent: React.FC = () => {
         );
     }
 
-    const renderView = () => {
-        if (currentView === 'Settings') {
-            return (
-                <Box sx={{ height: '100%', overflow: 'auto' }}>
-                    {isClient ? (
-                        <ClientSettings onBack={handleBackFromSettings} />
-                    ) : (
-                        <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
-                            <Settings 
-                                key={searchParams.get('sub') || 'all'}
-                                activeGameId="melodiq"
-                                activeSub={searchParams.get('sub') || 'all'}
-                                onBack={handleBackFromSettings}
-                                onNavigateToPlaylists={() => setCurrentView('Playlists')}
-                            />
-                        </Suspense>
-                    )}
-                </Box>
-            );
-        }
+    return (
+        <Box sx={{ width: '100vw', height: '100%', overflow: 'hidden', bgcolor: 'background.default', color: 'text.primary' }}>
+            <Box sx={{ display: currentView === 'Settings' ? 'block' : 'none', height: '100%', overflow: 'auto' }}>
+                {isClient ? (
+                    <ClientSettings onBack={handleBackFromSettings} />
+                ) : (
+                    <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
+                        <Settings
+                            key={searchParams.get('sub') || 'all'}
+                            activeGameId="melodiq"
+                            activeSub={searchParams.get('sub') || 'all'}
+                            onBack={handleBackFromSettings}
+                            onNavigateToPlaylists={() => setCurrentView('Playlists')}
+                        />
+                    </Suspense>
+                )}
+            </Box>
 
-        if (currentView === 'Connection') {
-            return (
-                <Box sx={{ height: '100%', overflow: 'auto' }}>
-                    <MelodiqConnection onBack={handleCloseSubView} />
-                </Box>
-            );
-        }
+            <Box sx={{ display: currentView === 'Connection' ? 'block' : 'none', height: '100%', overflow: 'auto' }}>
+                <MelodiqConnection onBack={handleCloseSubView} />
+            </Box>
 
-        if (currentView === 'Playlists') {
-            return (
+            <Box sx={{ display: currentView === 'Playlists' ? 'block' : 'none', height: '100%' }}>
                 <MelodiqPlaylists 
                     onBack={handleCloseSubView} 
                     onSelectPlaylist={(p) => {
@@ -452,22 +444,20 @@ export const MelodiqGameContent: React.FC = () => {
                         setCurrentView('PlaylistDetails');
                     }} 
                 />
-            );
-        }
+            </Box>
 
-        if (currentView === 'PlaylistDetails' && activePlaylist) {
-            return (
-                <PlaylistDetails 
-                    playlist={activePlaylist} 
-                    onBack={() => setCurrentView('Playlists')} 
-                />
-            );
-        }
+            <Box sx={{ display: currentView === 'PlaylistDetails' ? 'block' : 'none', height: '100%' }}>
+                {activePlaylist && (
+                    <PlaylistDetails
+                        playlist={activePlaylist}
+                        onBack={() => setCurrentView('Playlists')}
+                    />
+                )}
+            </Box>
 
-        return (
             <Box sx={{
+                display: (currentView === 'Home' || currentView === 'Session') ? 'flex' : 'none',
                 height: '100%',
-                display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
                 pb: '64px'
@@ -517,12 +507,6 @@ export const MelodiqGameContent: React.FC = () => {
                     />
                 )}
             </Box >
-        );
-    };
-
-    return (
-        <Box sx={{ width: '100vw', height: '100%', overflow: 'hidden', bgcolor: 'background.default', color: 'text.primary' }}>
-            {renderView()}
 
             <PlaybackManager
                 selectedSong={selectedSong}
