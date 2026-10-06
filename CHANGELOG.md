@@ -8,6 +8,7 @@
 - Updated vulnerable dependencies via `npm audit fix --force`.
 
 ### Changed
+- **Melodiq**: Opening the settings inside the game no longer unmounts the background views, enabling seamless background execution.
 - **Melodiq**: Das Halten eines Songs öffnet nicht mehr die Einstellungen/Warteschlange.
 - **Melodiq Notes**: Streamlined UI for mobile-first responsiveness. Integrated song title and settings directly into `GlobalHeader`, removed in-sheet overlay controls, compacted page HUD into a single note and score bar, and made playback controls icon-only on mobile.
 - Melodiq: Limited the maximum score per track to 1000 points.

@@ -38,7 +38,7 @@ type View = 'Home' | 'Settings' | 'Session' | 'Connection' | 'Playlists' | 'Play
 initMelodiqI18n();
 
 export const MelodiqGameContent: React.FC = () => {
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams();
     const isClient = searchParams.get('role') === 'client';
 
     const { songs, refreshSongs, getSongById, isLoading, hasConnectionError, localLibrary } = useSongs();
@@ -119,13 +119,8 @@ export const MelodiqGameContent: React.FC = () => {
     const isSettingsFromUrl = Boolean(searchParams.get('tab') || searchParams.get('sub'));
     const [currentView, setCurrentView] = useState<View>(() => isSettingsFromUrl ? 'Settings' : 'Home');
     const handleSetCurrentView = useCallback((v: string) => {
-        if (v === 'Settings') {
-            const nextParams = new URLSearchParams(searchParams);
-            nextParams.set('tab', 'melodiq');
-            setSearchParams(nextParams);
-        }
         setCurrentView(v as View);
-    }, [searchParams, setSearchParams]);
+    }, []);
     const [selectedSong, setSelectedSong] = useState<Song | SongMeta | null>(null);
 
     const [, setIsPlaybackPlaying] = useState<boolean>(false);
@@ -160,27 +155,13 @@ export const MelodiqGameContent: React.FC = () => {
         isClient, jobs: memoizedJobs, queue, refreshSongs, replaceItem, selectedSong, onCurrentSongDownloaded: handleCurrentSongDownloaded
     });
 
-    useEffect(() => {
-        const hasSettingsParam = Boolean(searchParams.get('tab') || searchParams.get('sub'));
-        if (hasSettingsParam && currentView !== 'Settings') {
-            setCurrentView('Settings');
-        } else if (!hasSettingsParam && currentView === 'Settings') {
-            setCurrentView('Home');
-        }
-    }, [searchParams, currentView]);
-
     const handleCloseSubView = useCallback(() => {
-        const nextParams = new URLSearchParams(searchParams);
-        nextParams.delete('tab');
-        nextParams.delete('sub');
-        nextParams.delete('section');
-        setSearchParams(nextParams, { replace: true });
         if (window.history.state?.melodiqSubView) {
             window.history.back();
         } else {
             setCurrentView('Home');
         }
-    }, [searchParams, setSearchParams]);
+    }, []);
 
     const handleBackFromSettings = useCallback(() => {
         refreshSongs();
@@ -188,7 +169,7 @@ export const MelodiqGameContent: React.FC = () => {
     }, [refreshSongs, handleCloseSubView]);
 
     useEffect(() => {
-        const isSubView = currentView === 'Connection' || currentView === 'Playlists' || currentView === 'PlaylistDetails';
+        const isSubView = currentView === 'Settings' || currentView === 'Connection' || currentView === 'Playlists' || currentView === 'PlaylistDetails';
         if (isSubView) {
             window.history.pushState({ melodiqSubView: true }, '', window.location.href);
             const handlePopState = () => setCurrentView('Home');
@@ -414,37 +395,29 @@ export const MelodiqGameContent: React.FC = () => {
         );
     }
 
-    const renderView = () => {
-        if (currentView === 'Settings') {
-            return (
-                <Box sx={{ height: '100%', overflow: 'auto' }}>
-                    {isClient ? (
-                        <ClientSettings onBack={handleBackFromSettings} />
-                    ) : (
-                        <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
-                            <Settings 
-                                key={searchParams.get('sub') || 'all'}
-                                activeGameId="melodiq"
-                                activeSub={searchParams.get('sub') || 'all'}
-                                onBack={handleBackFromSettings}
-                                onNavigateToPlaylists={() => setCurrentView('Playlists')}
-                            />
-                        </Suspense>
-                    )}
-                </Box>
-            );
-        }
+    return (
+        <Box sx={{ width: '100vw', height: '100%', overflow: 'hidden', bgcolor: 'background.default', color: 'text.primary' }}>
+            <Box sx={{ display: currentView === 'Settings' ? 'block' : 'none', height: '100%', overflow: 'auto' }}>
+                {isClient ? (
+                    <ClientSettings onBack={handleBackFromSettings} />
+                ) : (
+                    <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
+                        <Settings
+                            key={searchParams.get('sub') || 'all'}
+                            activeGameId="melodiq"
+                            activeSub={searchParams.get('sub') || 'all'}
+                            onBack={handleBackFromSettings}
+                            onNavigateToPlaylists={() => setCurrentView('Playlists')}
+                        />
+                    </Suspense>
+                )}
+            </Box>
 
-        if (currentView === 'Connection') {
-            return (
-                <Box sx={{ height: '100%', overflow: 'auto' }}>
-                    <MelodiqConnection onBack={handleCloseSubView} />
-                </Box>
-            );
-        }
+            <Box sx={{ display: currentView === 'Connection' ? 'block' : 'none', height: '100%', overflow: 'auto' }}>
+                <MelodiqConnection onBack={handleCloseSubView} />
+            </Box>
 
-        if (currentView === 'Playlists') {
-            return (
+            <Box sx={{ display: currentView === 'Playlists' ? 'block' : 'none', height: '100%' }}>
                 <MelodiqPlaylists 
                     onBack={handleCloseSubView} 
                     onSelectPlaylist={(p) => {
@@ -452,22 +425,20 @@ export const MelodiqGameContent: React.FC = () => {
                         setCurrentView('PlaylistDetails');
                     }} 
                 />
-            );
-        }
+            </Box>
 
-        if (currentView === 'PlaylistDetails' && activePlaylist) {
-            return (
-                <PlaylistDetails 
-                    playlist={activePlaylist} 
-                    onBack={() => setCurrentView('Playlists')} 
-                />
-            );
-        }
+            <Box sx={{ display: currentView === 'PlaylistDetails' ? 'block' : 'none', height: '100%' }}>
+                {activePlaylist && (
+                    <PlaylistDetails
+                        playlist={activePlaylist}
+                        onBack={() => setCurrentView('Playlists')}
+                    />
+                )}
+            </Box>
 
-        return (
             <Box sx={{
+                display: (currentView === 'Home' || currentView === 'Session') ? 'flex' : 'none',
                 height: '100%',
-                display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
                 pb: '64px'
@@ -517,12 +488,6 @@ export const MelodiqGameContent: React.FC = () => {
                     />
                 )}
             </Box >
-        );
-    };
-
-    return (
-        <Box sx={{ width: '100vw', height: '100%', overflow: 'hidden', bgcolor: 'background.default', color: 'text.primary' }}>
-            {renderView()}
 
             <PlaybackManager
                 selectedSong={selectedSong}
