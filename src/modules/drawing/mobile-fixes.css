@@ -11,3 +11,16 @@
   width: 2rem !important;
   height: 2rem !important;
 }
+
+
+.excalidraw .ToolIcon__icon svg,
+.excalidraw .ToolIcon__icon {
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+.excalidraw.theme--dark .ToolIcon__icon svg,
+.excalidraw.theme--light .ToolIcon__icon svg {
+  width: 100% !important;
+  height: 100% !important;
+}
