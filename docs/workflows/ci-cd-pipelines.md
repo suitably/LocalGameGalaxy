@@ -69,7 +69,7 @@ The primary defense line for code quality, architectural integrity, and automate
 flowchart LR
     subgraph Job1["Job: validate (15m timeout)"]
         direction TB
-        S1["npm ci (Node 22)"] --> S2["Architecture Check<br/>(check:architecture:diff)"]
+        S1["npm ci (.nvmrc / Node 24)"] --> S2["Architecture Check<br/>(check:architecture:diff)"]
         S2 --> S3["Component Budget Gate<br/>(check:budget)"]
         S3 --> S4["Duplicate Code Scan<br/>(check:duplicates)"]
         S4 --> S5["Doc-Sync & Changelog Gate<br/>(check:docs)"]
