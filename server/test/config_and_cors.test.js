@@ -102,7 +102,7 @@ test('Hono Server Endpoints, Auth & CORS', async (t) => {
     });
 
     assert.strictEqual(res.status, 204);
-    assert.strictEqual(res.headers.get('access-control-allow-origin'), '*');
+    assert.strictEqual(res.headers.get('access-control-allow-origin'), 'http://localhost:5173');
   });
 
   await t.test('GET /api/status requires valid token', async () => {
