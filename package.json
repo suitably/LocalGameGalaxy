@@ -25,7 +25,8 @@
     "check:security": "npm audit --omit=dev --audit-level=high",
     "cleanup:previews": "node scripts/cleanup-cloudflare-previews.mjs",
     "prepare": "husky",
-    "quality-gates": "npm run check:hygiene && npm run check:architecture:diff && npm run check:budget && npm run check:duplicates && npm run lint && npm test"
+    "quality-gates": "npm run check:hygiene && npm run check:architecture:diff && npm run check:budget && npm run check:duplicates && npm run lint && npm test",
+    "ci:gates": "npm run check:hygiene && npm run test:scripts && npm run check:architecture && npm run check:budget && npm run check:duplicates && npm run lint && npm test"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,mjs,cjs}": [
