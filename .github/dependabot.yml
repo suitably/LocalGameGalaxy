@@ -12,7 +12,16 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: eslint
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@eslint/js'
+        update-types: ['version-update:semver-major']
     groups:
+      capacitor:
+        patterns: ['@capacitor/*', 'capacitor-*']
+      mui:
+        patterns: ['@mui/*']
       minor-and-patch:
         patterns: ['*']
         update-types: ['minor', 'patch']
@@ -25,4 +34,3 @@ updates:
       minor-and-patch:
         patterns: ['*']
         update-types: ['minor', 'patch']
-
