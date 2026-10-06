@@ -404,19 +404,17 @@ export const MelodiqGameContent: React.FC = () => {
         setRestoredSong(null);
     }
 
-    if (currentView === 'DownloadWait') {
-        return (
-            <DownloadWaitScreen 
-                songTitle={selectedSong?.title || ''}
-                artist={selectedSong?.artist || ''}
-                onSkipAndRequeue={handleSkipAndRequeue}
-            />
-        );
-    }
+    return (
+        <Box sx={{ width: '100vw', height: '100%', overflow: 'hidden', bgcolor: 'background.default', color: 'text.primary' }}>
+            {currentView === 'DownloadWait' && (
+                <DownloadWaitScreen
+                    songTitle={selectedSong?.title || ''}
+                    artist={selectedSong?.artist || ''}
+                    onSkipAndRequeue={handleSkipAndRequeue}
+                />
+            )}
 
-    const renderView = () => {
-        if (currentView === 'Settings') {
-            return (
+            {currentView === 'Settings' && (
                 <Box sx={{ height: '100%', overflow: 'auto' }}>
                     {isClient ? (
                         <ClientSettings onBack={handleBackFromSettings} />
@@ -432,19 +430,15 @@ export const MelodiqGameContent: React.FC = () => {
                         </Suspense>
                     )}
                 </Box>
-            );
-        }
+            )}
 
-        if (currentView === 'Connection') {
-            return (
+            {currentView === 'Connection' && (
                 <Box sx={{ height: '100%', overflow: 'auto' }}>
                     <MelodiqConnection onBack={handleCloseSubView} />
                 </Box>
-            );
-        }
+            )}
 
-        if (currentView === 'Playlists') {
-            return (
+            {currentView === 'Playlists' && (
                 <MelodiqPlaylists 
                     onBack={handleCloseSubView} 
                     onSelectPlaylist={(p) => {
@@ -452,22 +446,18 @@ export const MelodiqGameContent: React.FC = () => {
                         setCurrentView('PlaylistDetails');
                     }} 
                 />
-            );
-        }
+            )}
 
-        if (currentView === 'PlaylistDetails' && activePlaylist) {
-            return (
+            {currentView === 'PlaylistDetails' && activePlaylist && (
                 <PlaylistDetails 
                     playlist={activePlaylist} 
                     onBack={() => setCurrentView('Playlists')} 
                 />
-            );
-        }
+            )}
 
-        return (
             <Box sx={{
                 height: '100%',
-                display: 'flex',
+                display: currentView === 'Home' ? 'flex' : 'none',
                 flexDirection: 'column',
                 overflow: 'hidden',
                 pb: '64px'
@@ -516,13 +506,7 @@ export const MelodiqGameContent: React.FC = () => {
                         jobs={memoizedJobs}
                     />
                 )}
-            </Box >
-        );
-    };
-
-    return (
-        <Box sx={{ width: '100vw', height: '100%', overflow: 'hidden', bgcolor: 'background.default', color: 'text.primary' }}>
-            {renderView()}
+            </Box>
 
             <PlaybackManager
                 selectedSong={selectedSong}
