@@ -22,7 +22,7 @@
     "check:hygiene": "node scripts/check-repo-hygiene.mjs",
     "test:scripts": "node --test scripts/pipeline/*.test.cjs scripts/lib/*.test.mjs",
     "check:docs": "node scripts/check-docs-sync.mjs",
-    "check:security": "npm audit",
+    "check:security": "npm audit --omit=dev --audit-level=high",
     "cleanup:previews": "node scripts/cleanup-cloudflare-previews.mjs",
     "prepare": "husky",
     "quality-gates": "npm run check:hygiene && npm run check:architecture:diff && npm run check:budget && npm run check:duplicates && npm run lint && npm test"

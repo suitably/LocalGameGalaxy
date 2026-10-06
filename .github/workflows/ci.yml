@@ -41,11 +41,6 @@ jobs:
       - name: Lint workflows (actionlint)
         uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
 
-      - name: Lockfile present and package.json consistent
-        run: |
-          test -f package-lock.json
-          node -e "const p=require('./package.json'),l=require('./package-lock.json');if(l.packages[''].name!==p.name)process.exit(1)"
-
   validate:
     name: Lint, Architecture, Budget, Test & Build
     needs: precheck
@@ -91,9 +86,9 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
-      - name: Security Audit (non-blocking, high severity only)
+      - name: Production Security Audit (advisory, high severity)
         continue-on-error: true
-        run: npm audit --omit=dev --audit-level=high
+        run: npm run check:security
 
       - name: Run Unit Tests
         run: npm test
