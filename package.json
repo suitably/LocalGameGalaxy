@@ -17,7 +17,7 @@
     "check:architecture:strict": "node scripts/check-architecture.mjs --strict",
     "check:duplicates": "jscpd src/ --config .jscpd.json",
     "check:hygiene": "node scripts/check-repo-hygiene.mjs",
-    "test:scripts": "node --test scripts/pipeline/*.test.cjs",
+    "test:scripts": "node --test scripts/pipeline/*.test.cjs scripts/lib/*.test.mjs",
     "check:docs": "node scripts/check-docs-sync.mjs",
     "check:security": "npm audit",
     "cleanup:previews": "node scripts/cleanup-cloudflare-previews.mjs",
