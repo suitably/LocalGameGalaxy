@@ -66,26 +66,14 @@ The primary defense line for code quality, architectural integrity, and automate
 
 ```mermaid
 flowchart LR
-    subgraph Job1["Job: validate (15m timeout)"]
-        direction TB
-        S1["npm ci (.nvmrc / Node 24)"] --> S2["Architecture Check<br/>(check:architecture:diff)"]
-        S2 --> S3["Component Budget Gate<br/>(check:budget)"]
-        S3 --> S4["Duplicate Code Scan<br/>(check:duplicates)"]
-        S4 --> S5["Doc-Sync & Changelog Gate<br/>(check:docs)"]
-        S5 --> S6["ESLint (lint)"]
-        S6 --> S7["Vitest (test)"]
-        S7 --> S8["Production Build (build)"]
-    end
+    precheck["Job: precheck (no install)"] --> static["Job: static-analysis<br/>(arch, budget, duplicates, docs)"]
+    precheck --> lint["Job: lint<br/>(eslint & advisory audit)"]
+    precheck --> test["Job: test<br/>(vitest + annotations)"]
+    precheck --> build["Job: build<br/>(tsc + vite -> dist)"]
+    precheck --> server["Job: server-validate<br/>(tsc & server tests)"]
 
-    subgraph Job2["Job: deploy-cloudflare (10m timeout)"]
-        direction TB
-        D1["Download 'dist' Artifact"] --> D2{"Branch == main?"}
-        D2 -->|Yes| D3["Deploy to Production<br/>(nexumia.de)"]
-        D2 -->|No / PR| D4["Deploy Preview<br/>(branch-preview.nexumia.de)"]
-        D4 --> D5["Post Preview Link Comment on PR"]
-    end
-
-    Job1 -->|Success| Job2
+    static & lint & test & build & server --> ciok["Job: ci-ok<br/>(Aggregator Gate)"]
+    build & ciok --> deploy["Job: deploy-cloudflare<br/>(Production / Preview)"]
 ```
 
 #### Quality Gates Explained
@@ -204,8 +192,7 @@ The `main` branch is protected via a repository ruleset (`.github/rulesets/main.
 - **Pull Request Required**: Direct pushes to `main` are restricted; code enters through reviewed and tested PRs.
 - **Required Status Checks**:
   1. `Deterministic Prechecks (no install)`: Repository hygiene, actionlint, i18n parity, test:scripts.
-  2. `Lint, Architecture, Budget, Test & Build`: ESLint, ratcheted architecture check, component budget, code duplicates, doc-sync, vitest, and web build.
-  3. `Server Build & Tests`: Server dependency compilation and test suite.
+  2. `CI Quality Gate (Aggregator)`: Single immutable aggregator check verifying that `static-analysis`, `lint`, `test`, `build`, and `server-validate` all completed successfully.
 - **Non-Fast-Forward Blocked**: Force pushes and branch deletions are disabled.
 
 ---

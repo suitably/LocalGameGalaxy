@@ -1,0 +1,27 @@
+name: 'Setup Node.js & Dependencies'
+description: 'Standardized Node.js setup with root .nvmrc and npm ci cache'
+
+inputs:
+  working-directory:
+    description: 'Working directory for npm ci'
+    required: false
+    default: '.'
+  cache-dependency-path:
+    description: 'Path to package-lock.json for cache key'
+    required: false
+    default: 'package-lock.json'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version-file: .nvmrc
+        cache: 'npm'
+        cache-dependency-path: ${{ inputs.cache-dependency-path }}
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: npm ci

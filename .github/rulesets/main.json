@@ -36,10 +36,7 @@
             "context": "Deterministic Prechecks (no install)"
           },
           {
-            "context": "Lint, Architecture, Budget, Test & Build"
-          },
-          {
-            "context": "Server Build & Tests"
+            "context": "CI Quality Gate (Aggregator)"
           }
         ]
       }
