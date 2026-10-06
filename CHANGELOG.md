@@ -29,6 +29,9 @@
 
 
 ## [Unreleased]
+### Fixed
+- **GuessArt**: Fixed a "Cannot read properties of undefined (reading 'ReactCurrentOwner')" error during drawing turns by updating `@excalidraw/excalidraw` to version `0.18.1` for React 19 compatibility.
+
 ### Added
 - Pre-commit hooks for running quality gates automatically before committing locally.
 
