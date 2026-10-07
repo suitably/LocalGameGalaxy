@@ -1,5 +1,5 @@
-// Starts a Jules session and streams progress directly to GitHub issue comments.
-// Keeps the workflow running until the agent produces a PR, completes, or fails.
+// Starts a Jules session using Fire-and-Forget by default to conserve GitHub runner minutes.
+// Optionally streams progress to GitHub issue comments when stream: true is specified.
 const loadKeys = require('./jules-keys.cjs');
 
 const API = 'https://jules.googleapis.com/v1alpha/sessions';
@@ -17,12 +17,21 @@ function activityText(a) {
   return '';
 }
 
-async function streamSession({ github, context, core, issueNumber, sessionId, key, pollIntervalMs = DEFAULT_POLL_INTERVAL_MS, maxDurationMs }) {
+async function streamSession({
+  github,
+  context,
+  core,
+  issueNumber,
+  sessionId,
+  key,
+  pollIntervalMs = DEFAULT_POLL_INTERVAL_MS,
+  maxDurationMs,
+}) {
   const { owner, repo } = context.repo;
   const headers = { 'X-Goog-Api-Key': key.value };
   const seenActivities = new Set();
   const startTime = Date.now();
-  const limit = maxDurationMs || (DEFAULT_MAX_WAIT_MINUTES * 60 * 1000);
+  const limit = maxDurationMs || DEFAULT_MAX_WAIT_MINUTES * 60 * 1000;
 
   console.log(`📡 Streaming Jules session ${sessionId} for Issue #${issueNumber}...`);
 
@@ -39,14 +48,20 @@ async function streamSession({ github, context, core, issueNumber, sessionId, ke
       activities.sort((a, b) => (a.createTime || '').localeCompare(b.createTime || ''));
 
       for (const a of activities) {
-        const id = a.id || String(a.name || '').split('/').pop();
+        const id =
+          a.id ||
+          String(a.name || '')
+            .split('/')
+            .pop();
         const text = activityText(a);
         if (!id || !text || a.originator === 'USER' || seenActivities.has(id)) continue;
         seenActivities.add(id);
 
         console.log(`💬 Streaming Jules update (${id}): ${text.slice(0, 80)}...`);
         await github.rest.issues.createComment({
-          owner, repo, issue_number: issueNumber,
+          owner,
+          repo,
+          issue_number: issueNumber,
           body: `<!-- jules:${id} -->\n🤖 **Jules:**\n\n${text}`,
         });
       }
@@ -56,7 +71,9 @@ async function streamSession({ github, context, core, issueNumber, sessionId, ke
       if (prUrl) {
         console.log(`🎉 Pull Request created: ${prUrl}`);
         await github.rest.issues.createComment({
-          owner, repo, issue_number: issueNumber,
+          owner,
+          repo,
+          issue_number: issueNumber,
           body: `<!-- jules:pr-${sessionId} -->\n🔀 Pull Request: ${prUrl}`,
         });
 
@@ -67,9 +84,15 @@ async function streamSession({ github, context, core, issueNumber, sessionId, ke
             const prNumber = Number(prMatch[1]);
             const pr = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
             const currentBody = pr.data?.body || '';
-            if (!new RegExp(`\\b(?:fixes|closes|resolves)\\s+#${issueNumber}\\b`, 'i').test(currentBody)) {
+            if (
+              !new RegExp(`\\b(?:fixes|closes|resolves)\\s+#${issueNumber}\\b`, 'i').test(
+                currentBody,
+              )
+            ) {
               await github.rest.pulls.update({
-                owner, repo, pull_number: prNumber,
+                owner,
+                repo,
+                pull_number: prNumber,
                 body: `Fixes #${issueNumber}\n\n${currentBody}`,
               });
             }
@@ -79,7 +102,9 @@ async function streamSession({ github, context, core, issueNumber, sessionId, ke
         }
 
         await github.rest.issues.createComment({
-          owner, repo, issue_number: issueNumber,
+          owner,
+          repo,
+          issue_number: issueNumber,
           body: `<!-- jules:done-${sessionId} -->\nJules-Session beendet: COMPLETED (PR erstellt)`,
         });
         return { status: 'COMPLETED', prUrl };
@@ -89,7 +114,9 @@ async function streamSession({ github, context, core, issueNumber, sessionId, ke
       if (session.state === 'COMPLETED' || session.state === 'FAILED') {
         console.log(`Jules session finished with state: ${session.state}`);
         await github.rest.issues.createComment({
-          owner, repo, issue_number: issueNumber,
+          owner,
+          repo,
+          issue_number: issueNumber,
           body: `<!-- jules:done-${sessionId} -->\nJules-Session beendet: ${session.state}`,
         });
         return { status: session.state };
@@ -103,13 +130,22 @@ async function streamSession({ github, context, core, issueNumber, sessionId, ke
   const timeoutMsg = `Jules-Session Stream Timeout nach ${Math.round((Date.now() - startTime) / 60000)} Minuten erreicht.`;
   core.warning(timeoutMsg);
   await github.rest.issues.createComment({
-    owner, repo, issue_number: issueNumber,
+    owner,
+    repo,
+    issue_number: issueNumber,
     body: `⚠️ ${timeoutMsg} Bitte Status auf https://jules.google.com/task/${sessionId} prüfen.`,
   });
   return { status: 'TIMEOUT' };
 }
 
-module.exports = async ({ github, context, core, pollIntervalMs, maxDurationMs }) => {
+module.exports = async ({
+  github,
+  context,
+  core,
+  stream = false,
+  pollIntervalMs,
+  maxDurationMs,
+}) => {
   const keys = loadKeys();
   if (keys.length === 0) {
     core.setFailed('No JULES_API_KEY / JULES_API_KEY_* secret configured.');
@@ -153,24 +189,32 @@ module.exports = async ({ github, context, core, pollIntervalMs, maxDurationMs }
       continue;
     }
     const session = JSON.parse(text);
-    const sessionId = String(session.id || session.name || '').split('/').pop();
+    const sessionId = String(session.id || session.name || '')
+      .split('/')
+      .pop();
 
     await github.rest.issues.createComment({
-      owner, repo, issue_number: issueNumber,
-      body: `<!-- jules-key:${key.name} -->\n🤖 Jules gestartet: https://jules.google.com/task/${sessionId}\n\n*Streamt Fortschritt live in dieses Issue...*`,
+      owner,
+      repo,
+      issue_number: issueNumber,
+      body: `<!-- jules-key:${key.name} -->\n🤖 **Jules gestartet:** https://jules.google.com/task/${sessionId}\n\nJules bearbeitet die Aufgabe im Hintergrund und erstellt automatisch einen Pull Request, sobald die Änderungen bereitstehen.\n\n*Live-Fortschritt direkt im verlinkten Task einsehbar.*`,
     });
 
-    // Directly stream until completed/PR created
-    return await streamSession({
-      github,
-      context,
-      core,
-      issueNumber,
-      sessionId,
-      key,
-      pollIntervalMs,
-      maxDurationMs,
-    });
+    if (stream) {
+      // Directly stream until completed/PR created if explicitly enabled
+      return await streamSession({
+        github,
+        context,
+        core,
+        issueNumber,
+        sessionId,
+        key,
+        pollIntervalMs,
+        maxDurationMs,
+      });
+    }
+
+    return { status: 'STARTED', sessionId, prUrl: null };
   }
 
   core.setFailed(`All Jules keys failed. Last: ${lastError}`);
