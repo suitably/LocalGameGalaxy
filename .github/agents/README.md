@@ -12,15 +12,15 @@ This directory contains standalone agent definitions for autonomous repository a
 
 The agents are orchestrated across the week to cover the most critical quality and security dimensions:
 
-| Day           | Agent ID               | Focus / RepoLens Domains                                       |
-| :------------ | :--------------------- | :------------------------------------------------------------- |
-| **Monday**    | `security`             | Injection, XSS/Sanitization, Secrets, CVEs, Rate Abuse         |
-| **Tuesday**   | `performance`          | Bundle Size, Re-Renders, Web Audio/Canvas, Memory Leaks        |
-| **Wednesday** | `architecture`         | Anti-God-Components, Cross-Game Isolation, Dead Code           |
-| **Thursday**  | `testing`              | Vitest Suite, Game Logic Coverage, Race Conditions, Edge Cases |
-| **Friday**    | `mobile-ux`            | Capacitor Safe Areas, Touch Targets, UX Anti-Patterns          |
-| **Saturday**  | `i18n-maintainability` | DE/EN Translation Parity, Type Safety (`no any`), Tech Debt    |
-| **Sunday**    | `open-source`          | License Compliance, Media Tracking Hygiene, Documentation      |
+| Day           | Agent ID               | Focus / RepoLens Domains                                                        |
+| :------------ | :--------------------- | :------------------------------------------------------------------------------ |
+| **Monday**    | `security`             | Injection, XSS/Sanitization, Secrets, CVEs, Rate Abuse                          |
+| **Tuesday**   | `performance`          | Bundle Size, Re-Renders, Web Audio/Canvas, Memory Leaks                         |
+| **Wednesday** | `architecture`         | Anti-God-Components, Cross-Game Isolation, Dead Code, Duplicate Logic (`jscpd`) |
+| **Thursday**  | `testing`              | Vitest Suite, Game Logic Coverage, Race Conditions, Edge Cases                  |
+| **Friday**    | `mobile-ux`            | Capacitor Safe Areas, Touch Targets, UX Anti-Patterns                           |
+| **Saturday**  | `i18n-maintainability` | DE/EN Translation Parity, Type Safety (`no any`), Tech Debt                     |
+| **Sunday**    | `open-source`          | Documentation Gaps, Architecture Sync (SSoT), Licenses, Media Hygiene           |
 
 The granular RepoLens prompts backing these domains are mirrored under `.github/lenses/`.
 
