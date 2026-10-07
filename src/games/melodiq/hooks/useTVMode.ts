@@ -222,19 +222,13 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
         if (!window.PresentationRequest) return;
 
         try {
-            const info = getLatestSessionInfo();
-            const params = new URLSearchParams();
-            if (info.partyId) params.set('party', info.partyId);
-            if (info.baseUrl) params.set('baseUrl', info.baseUrl);
-            const qs = params.toString() ? `?${params.toString()}` : '';
-
-            const request = new window.PresentationRequest([`/games/melodiq/tv${qs}`]);
+            const request = new window.PresentationRequest(['/games/melodiq/tv']);
             const connection = await request.start();
             setupPresentationConnection(connection);
         } catch (error) {
             console.error('Presentation request failed:', error);
         }
-    }, [setupPresentationConnection, getLatestSessionInfo]);
+    }, [setupPresentationConnection]);
 
     const openTVWindow = useCallback(() => {
         if (tvWindowRef.current && !tvWindowRef.current.closed) {
