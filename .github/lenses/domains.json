@@ -264,6 +264,17 @@
         "code-attribution",
         "trademark-branding"
       ]
+    },
+    {
+      "id": "documentation",
+      "name": "Documentation",
+      "order": 21,
+      "lenses": [
+        "code-docs",
+        "architecture-docs",
+        "operational-docs",
+        "onboarding-docs"
+      ]
     }
   ]
 }
