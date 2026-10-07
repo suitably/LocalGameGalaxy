@@ -1,0 +1,269 @@
+{
+  "domains": [
+    {
+      "id": "security",
+      "name": "Security",
+      "order": 1,
+      "lenses": [
+        "injection",
+        "xss-csrf",
+        "auth-session",
+        "authorization",
+        "secrets",
+        "dependency-cves",
+        "security-headers",
+        "cryptography",
+        "input-sanitization",
+        "data-exposure",
+        "rate-abuse"
+      ],
+      "keywords": [
+        "auth",
+        "login",
+        "session",
+        "token",
+        "jwt",
+        "csrf",
+        "xss",
+        "injection",
+        "credential",
+        "leak"
+      ]
+    },
+    {
+      "id": "code-quality",
+      "name": "Code Quality",
+      "order": 2,
+      "lenses": [
+        "naming",
+        "complexity",
+        "dead-code",
+        "duplication",
+        "magic-values",
+        "code-smells",
+        "linting",
+        "formatting",
+        "comments",
+        "type-safety",
+        "immutability",
+        "readability",
+        "consistency",
+        "pattern-consistency"
+      ]
+    },
+    {
+      "id": "architecture",
+      "name": "Architecture",
+      "order": 3,
+      "lenses": [
+        "separation-of-concerns",
+        "module-boundaries",
+        "circular-deps",
+        "coupling",
+        "single-responsibility",
+        "dependency-direction",
+        "api-contract",
+        "state-architecture",
+        "extensibility"
+      ]
+    },
+    {
+      "id": "testing",
+      "name": "Testing",
+      "order": 4,
+      "lenses": [
+        "unit-test-gaps",
+        "integration-test-gaps",
+        "e2e-test-gaps",
+        "test-quality",
+        "test-anti-patterns",
+        "edge-cases",
+        "error-path-tests",
+        "test-maintainability",
+        "test-determinism"
+      ]
+    },
+    {
+      "id": "error-handling",
+      "name": "Error Handling",
+      "order": 5,
+      "lenses": [
+        "unhandled-errors",
+        "error-swallowing",
+        "error-messages",
+        "error-boundaries",
+        "graceful-degradation",
+        "timeout-retry"
+      ],
+      "keywords": [
+        "exception",
+        "error",
+        "catch",
+        "throw",
+        "swallow",
+        "stacktrace",
+        "retry",
+        "crash",
+        "panic"
+      ]
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "order": 6,
+      "lenses": [
+        "query-performance",
+        "memory",
+        "blocking-io",
+        "frontend-perf",
+        "caching",
+        "algorithm",
+        "pagination",
+        "connection-mgmt",
+        "startup-perf"
+      ],
+      "keywords": [
+        "slow",
+        "lag",
+        "freeze",
+        "memory",
+        "leak",
+        "cpu",
+        "frame",
+        "jank",
+        "cold-start",
+        "blocking"
+      ]
+    },
+    {
+      "id": "frontend",
+      "name": "Frontend",
+      "order": 9,
+      "lenses": [
+        "component-architecture",
+        "accessibility",
+        "responsive-design",
+        "routing",
+        "frontend-security"
+      ]
+    },
+    {
+      "id": "interaction-design",
+      "name": "Interaction Design",
+      "order": 12,
+      "lenses": [
+        "loading-states",
+        "error-states",
+        "form-ux",
+        "animation-transitions",
+        "interactive-feedback",
+        "touch-targets",
+        "scroll-behavior",
+        "keyboard-navigation"
+      ]
+    },
+    {
+      "id": "ux-antipatterns",
+      "name": "UX Anti-Patterns",
+      "order": 15,
+      "lenses": [
+        "dark-patterns",
+        "cognitive-overload",
+        "destructive-actions",
+        "flow-dead-ends",
+        "permission-antipatterns",
+        "notification-interrupts"
+      ]
+    },
+    {
+      "id": "maintainability",
+      "name": "Maintainability",
+      "order": 19,
+      "lenses": [
+        "tech-debt",
+        "upgrade-paths",
+        "config-patterns",
+        "error-traceability",
+        "modularity",
+        "dep-supply-risk"
+      ]
+    },
+    {
+      "id": "i18n",
+      "name": "Internationalization",
+      "order": 20,
+      "lenses": [
+        "i18n-strings",
+        "i18n-formatting"
+      ]
+    },
+    {
+      "id": "concurrency",
+      "name": "Concurrency",
+      "order": 22,
+      "lenses": [
+        "race-conditions",
+        "async-patterns",
+        "resource-contention",
+        "transaction-concurrency"
+      ],
+      "keywords": [
+        "race",
+        "deadlock",
+        "lock",
+        "mutex",
+        "isolate",
+        "thread",
+        "async",
+        "await",
+        "lifecycle"
+      ]
+    },
+    {
+      "id": "android",
+      "name": "Android",
+      "order": 32,
+      "mode": "deploy",
+      "lenses": [
+        "apk-overview",
+        "secrets-in-apk",
+        "apk-dependencies",
+        "native-libraries",
+        "webview-security",
+        "manifest-audit",
+        "network-security-config",
+        "exported-components",
+        "intent-filters",
+        "intent-fuzzing",
+        "drozer-attack-surface",
+        "logcat-leaks",
+        "ssl-pinning-mitm",
+        "frida-runtime",
+        "detection-bypass",
+        "keystore-extraction",
+        "gradle-static-analysis"
+      ]
+    },
+    {
+      "id": "open-source-readiness",
+      "name": "Open Source Readiness",
+      "order": 25,
+      "mode": "opensource",
+      "lenses": [
+        "secret-leaks",
+        "license-compliance",
+        "dependency-licensing",
+        "internal-exposure",
+        "git-history-secrets",
+        "community-readiness",
+        "documentation-gaps",
+        "monetization-exposure",
+        "pii-data-leakage",
+        "build-reproducibility",
+        "security-posture",
+        "code-attribution",
+        "trademark-branding"
+      ]
+    }
+  ]
+}
