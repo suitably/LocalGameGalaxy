@@ -40,137 +40,71 @@ export const QwixxMiniSheet: React.FC<QwixxMiniSheetProps> = ({
                 overflow: 'hidden'
             }}
         >
-            {/* Standard Rows 1 & 2 */}
-            {rows.slice(0, 2).map((rowDef) => (
-                <Box
-                    key={rowDef.id}
-                    sx={{
-                        display: 'flex',
-                        gap: 0.3,
-                        p: 0.4,
-                        borderRadius: 1,
-                        bgcolor: ROW_COLORS[rowDef.defaultColor]?.bg || '#d32f2f',
-                        alignItems: 'center'
-                    }}
-                >
-                    {rowDef.cells.map((cell, idx) => (
-                        <Box
-                            key={idx}
-                            sx={{
-                                flex: 1,
-                                height: 12,
-                                borderRadius: 0.5,
-                                bgcolor: cell.color ? ROW_COLORS[cell.color]?.bg : 'rgba(255, 255, 255, 0.85)',
-                                opacity: cell.color && cell.color !== rowDef.defaultColor ? 0.95 : 0.85,
-                                border: cell.isStair
-                                    ? '1.5px solid #ffd700'
-                                    : (cell.isDouble ? '1.5px solid #ffffff' : 'none')
-                            }}
-                        />
-                    ))}
-                    {/* Mini Lock Circle */}
+            {rows.slice(0, 4).map((rowDef, index) => (
+                <React.Fragment key={rowDef.id}>
                     <Box
                         sx={{
-                            width: 12,
-                            height: 12,
-                            borderRadius: '50%',
-                            bgcolor: 'rgba(255, 255, 255, 0.3)'
+                            display: 'flex',
+                            gap: 0.3,
+                            p: 0.4,
+                            borderRadius: 1,
+                            bgcolor: ROW_COLORS[rowDef.defaultColor]?.bg || '#388e3c',
+                            alignItems: 'center'
                         }}
-                    />
-                </Box>
-            ))}
-
-            {/* Big Points Bonus Row 1 */}
-            {sheetDef.hasBonusRows && sheetDef.bonusRows?.[0] && (
-                <Box
-                    sx={{
-                        display: 'flex',
-                        gap: 0.3,
-                        p: 0.3,
-                        borderRadius: 1,
-                        bgcolor: 'rgba(255, 213, 79, 0.25)',
-                        border: '1px dashed #ffd54f'
-                    }}
-                >
-                    {sheetDef.bonusRows[0].cells.map((_, idx) => (
+                    >
+                        {rowDef.cells.map((cell, idx) => (
+                            <Box
+                                key={idx}
+                                sx={{
+                                    flex: 1,
+                                    height: 12,
+                                    borderRadius: 0.5,
+                                    bgcolor: cell.color ? ROW_COLORS[cell.color]?.bg : 'rgba(255, 255, 255, 0.85)',
+                                    opacity: cell.color && cell.color !== rowDef.defaultColor ? 0.95 : 0.85,
+                                    border: cell.isStair
+                                        ? '1.5px solid #ffd700'
+                                        : (cell.isDouble ? '1.5px solid #ffffff' : 'none')
+                                }}
+                            />
+                        ))}
+                        {/* Mini Lock Circle */}
                         <Box
-                            key={idx}
                             sx={{
-                                flex: 1,
-                                height: 8,
-                                borderRadius: 0.5,
-                                bgcolor: '#ffd54f'
-                            }}
-                        />
-                    ))}
-                </Box>
-            )}
-
-            {/* Standard Rows 3 & 4 */}
-            {rows.slice(2, 4).map((rowDef) => (
-                <Box
-                    key={rowDef.id}
-                    sx={{
-                        display: 'flex',
-                        gap: 0.3,
-                        p: 0.4,
-                        borderRadius: 1,
-                        bgcolor: ROW_COLORS[rowDef.defaultColor]?.bg || '#388e3c',
-                        alignItems: 'center'
-                    }}
-                >
-                    {rowDef.cells.map((cell, idx) => (
-                        <Box
-                            key={idx}
-                            sx={{
-                                flex: 1,
+                                width: 12,
                                 height: 12,
-                                borderRadius: 0.5,
-                                bgcolor: cell.color ? ROW_COLORS[cell.color]?.bg : 'rgba(255, 255, 255, 0.85)',
-                                opacity: cell.color && cell.color !== rowDef.defaultColor ? 0.95 : 0.85,
-                                border: cell.isStair
-                                    ? '1.5px solid #ffd700'
-                                    : (cell.isDouble ? '1.5px solid #ffffff' : 'none')
+                                borderRadius: '50%',
+                                bgcolor: 'rgba(255, 255, 255, 0.3)'
                             }}
                         />
-                    ))}
-                    {/* Mini Lock Circle */}
-                    <Box
-                        sx={{
-                            width: 12,
-                            height: 12,
-                            borderRadius: '50%',
-                            bgcolor: 'rgba(255, 255, 255, 0.3)'
-                        }}
-                    />
-                </Box>
-            ))}
+                    </Box>
 
-            {/* Big Points Bonus Row 2 */}
-            {sheetDef.hasBonusRows && sheetDef.bonusRows?.[1] && (
-                <Box
-                    sx={{
-                        display: 'flex',
-                        gap: 0.3,
-                        p: 0.3,
-                        borderRadius: 1,
-                        bgcolor: 'rgba(129, 199, 132, 0.25)',
-                        border: '1px dashed #81c784'
-                    }}
-                >
-                    {sheetDef.bonusRows[1].cells.map((_, idx) => (
+                    {/* Big Points Bonus Rows inserted after row index 1 and 3 */}
+                    {(index === 1 || index === 3) && sheetDef.hasBonusRows && sheetDef.bonusRows?.[index === 1 ? 0 : 1] && (
                         <Box
-                            key={idx}
                             sx={{
-                                flex: 1,
-                                height: 8,
-                                borderRadius: 0.5,
-                                bgcolor: '#81c784'
+                                display: 'flex',
+                                gap: 0.3,
+                                p: 0.3,
+                                borderRadius: 1,
+                                bgcolor: index === 1 ? 'rgba(255, 213, 79, 0.25)' : 'rgba(129, 199, 132, 0.25)',
+                                border: index === 1 ? '1px dashed #ffd54f' : '1px dashed #81c784'
                             }}
-                        />
-                    ))}
-                </Box>
-            )}
+                        >
+                            {sheetDef.bonusRows[index === 1 ? 0 : 1].cells.map((_, idx) => (
+                                <Box
+                                    key={idx}
+                                    sx={{
+                                        flex: 1,
+                                        height: 8,
+                                        borderRadius: 0.5,
+                                        bgcolor: index === 1 ? '#ffd54f' : '#81c784'
+                                    }}
+                                />
+                            ))}
+                        </Box>
+                    )}
+                </React.Fragment>
+            ))}
         </Paper>
     );
 };

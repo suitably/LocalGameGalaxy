@@ -1,3 +1,5 @@
+import { shuffle } from '../../../lib/utils/shuffle';
+
 export const STORY_WORDS_DE: readonly string[] = [
   'Dampfschiff',
   'Gummiente',
@@ -114,6 +116,6 @@ export const getRandomWords = (
     (w) => !excludeWords.map((e) => e.toLowerCase()).includes(w.toLowerCase()),
   );
   const source = available.length >= count ? available : pool;
-  const shuffled = [...source].sort(() => Math.random() - 0.5);
+  const shuffled = shuffle([...source]);
   return shuffled.slice(0, count);
 };

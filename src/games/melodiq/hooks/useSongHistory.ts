@@ -14,7 +14,7 @@ const MAX_HISTORY_ITEMS = 50;
 /**
  * `useSongHistory` — Phone & Client Song History Hook
  *
- * Persists songs requested or sung on this device to localStorage.
+ * Persists songs requested or sung on this device to storage.
  * Enables quick re-queueing and favorite lookup across sessions.
  */
 export function useSongHistory() {
