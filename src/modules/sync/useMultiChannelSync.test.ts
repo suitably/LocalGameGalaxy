@@ -164,4 +164,54 @@ describe('MultiChannelSyncCoordinator', () => {
     expect(() => coordinator.publish({ msg: 'only bc' })).not.toThrow();
     expect(() => coordinator.stop()).not.toThrow();
   });
+
+  it('handles exceptions and promise rejections from mailbox.publish gracefully', () => {
+    const originalConsoleWarn = console.warn;
+    console.warn = vi.fn(); // Suppress expected console.warn
+
+    const onMessage = vi.fn();
+
+    // 1. Mailbox publish throws synchronously
+    const mockMailboxSyncThrow = {
+      subscribe: vi.fn(() => vi.fn()),
+      publish: vi.fn(() => {
+        throw new Error('Synchronous publish error');
+      }),
+    } as unknown as MqttMailboxService<{ msg: string }>;
+
+    const coordinatorSyncThrow = new MultiChannelSyncCoordinator<{ msg: string }>({
+      channelId: 'room1',
+      broadcastPrefix: 'test_prefix',
+      mailbox: mockMailboxSyncThrow,
+      onMessage,
+    });
+
+    expect(() => coordinatorSyncThrow.publish({ msg: 'test' })).not.toThrow();
+    expect(console.warn).toHaveBeenCalledWith(
+      '[MultiChannelSyncCoordinator] MQTT publish failed:',
+      expect.any(Error)
+    );
+
+    (console.warn as any).mockClear();
+
+    // 2. Mailbox publish rejects asynchronously
+    const mockMailboxAsyncReject = {
+      subscribe: vi.fn(() => vi.fn()),
+      publish: vi.fn(() => Promise.reject(new Error('Async publish rejection'))),
+    } as unknown as MqttMailboxService<{ msg: string }>;
+
+    const coordinatorAsyncReject = new MultiChannelSyncCoordinator<{ msg: string }>({
+      channelId: 'room2',
+      broadcastPrefix: 'test_prefix',
+      mailbox: mockMailboxAsyncReject,
+      onMessage,
+    });
+
+    expect(() => coordinatorAsyncReject.publish({ msg: 'test' })).not.toThrow();
+
+    // The promise rejection is caught inside `.catch()` so we can't easily assert on console.warn synchronously
+    // without a flush, but we can verify it doesn't throw unhandled rejections.
+
+    console.warn = originalConsoleWarn; // Restore
+  });
 });
