@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { MicrophoneManager } from '../audio/MicrophoneManager';
+import { MicrophoneManager } from '../../audio/MicrophoneManager';
 
 export function useLatencyCalibration(
     deviceId: string,
