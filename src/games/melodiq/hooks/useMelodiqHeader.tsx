@@ -29,7 +29,7 @@ export const useMelodiqHeader = ({
     currentView, setCurrentView,
     isClient, isTVConnected, isPresentationAvailable,
     openTVWindow, startPresentation, disconnectTV,
-    onBackToHome, onOpenLocalFolder
+    clientRole, onBackToHome, onOpenLocalFolder
 }: UseMelodiqHeaderProps) => {
     const { t } = useTranslation();
     const { setHeader, setCustomHeaderActions } = useLayout();
@@ -88,6 +88,16 @@ export const useMelodiqHeader = ({
                     action: () => callbacksRef.current.setCurrentView('Connection'),
                     showAlways: true
                 });
+            } else if (clientRole === 'admin') {
+                headerActions.push({
+                    label: t('melodiq.host_settings', 'Host Settings'),
+                    icon: <SettingsIcon />,
+                    action: () => callbacksRef.current.setCurrentView('HostSettings'),
+                    showAlways: false
+                });
+            }
+
+            if (!isClient) {
 
                 if (callbacksRef.current.onOpenLocalFolder) {
                     headerActions.push({
@@ -107,6 +117,9 @@ export const useMelodiqHeader = ({
             } else {
                 setHeader(t('settings.title', 'Einstellungen'), [], homeAction, null, true, false);
             }
+            setCustomHeaderActions(null);
+        } else if (currentView === 'HostSettings') {
+            setHeader(t('melodiq.host_settings', 'Host Settings'), [], homeAction, null, true, false);
             setCustomHeaderActions(null);
         } else {
             setHeader(t('melodiq.title'), [], homeAction, null, false, isClient);

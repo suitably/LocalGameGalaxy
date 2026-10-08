@@ -32,7 +32,7 @@ import { useDownloadSync } from './hooks/useDownloadSync';
 import { DownloadWaitScreen } from './components/DownloadWaitScreen';
 import { type MelodiqParticipant, type MelodiqProfile, type UsdbSongItem, type PassiveGameState } from './types';
 
-type View = 'Home' | 'Settings' | 'Session' | 'Connection' | 'Playlists' | 'PlaylistDetails' | 'DownloadWait';
+type View = 'Home' | 'Settings' | 'HostSettings' | 'Session' | 'Connection' | 'Playlists' | 'PlaylistDetails' | 'DownloadWait';
 
 // Initialize i18n bundles at module load time to prevent setState side-effects during render
 initMelodiqI18n();
@@ -50,13 +50,31 @@ export const MelodiqGameContent: React.FC = () => {
         isTVConnected, isPresentationAvailable, openTVWindow, startPresentation,
         playSongOnTV, lastEvent, sendRemoteCommand, sendGameUpdate, disconnectTV
     } = useTVMode({ partyId, activeTrackerUrls });
-    const { settings } = useMelodiqSettings();
+    const settingsHook = useMelodiqSettings();
+    const { settings } = settingsHook;
     const { clientRole, clientProfile } = useClientEngine();
 
     const searchFilterState = useSearchFilters(songs, jobs);
     const { isOnlineSearch, isSearchingOnline, filteredSongs, filteredOnlineSongs } = searchFilterState;
 
     const memoizedFilteredSongs = React.useMemo(() => filteredSongs, [filteredSongs]);
+
+    // Send settings updates to host if client is admin
+    useEffect(() => {
+        if (!isClient || clientRole !== 'admin' || !manager) return;
+
+        const handleSettingsUpdate = (e: any) => {
+            if (e.detail && Object.keys(e.detail).length > 0) {
+                // If the detail object has values, it's either the whole settings or a specific update
+                window.dispatchEvent(new CustomEvent('melodiq_client_send_data', {
+                    detail: { type: 'remote.command', command: 'UPDATE_SETTINGS', value: e.detail }
+                }));
+            }
+        };
+
+        window.addEventListener('melodiq_settings_updated', handleSettingsUpdate);
+        return () => window.removeEventListener('melodiq_settings_updated', handleSettingsUpdate);
+    }, [isClient, clientRole, manager]);
     const memoizedJobs = React.useMemo(() => jobs, [jobs]);
 
     const [remoteSong, setRemoteSong] = useState<SongMeta | null>(null);
@@ -169,7 +187,7 @@ export const MelodiqGameContent: React.FC = () => {
     }, [refreshSongs, handleCloseSubView]);
 
     useEffect(() => {
-        const isSubView = currentView === 'Settings' || currentView === 'Connection' || currentView === 'Playlists' || currentView === 'PlaylistDetails';
+        const isSubView = currentView === 'Settings' || currentView === 'HostSettings' || currentView === 'Connection' || currentView === 'Playlists' || currentView === 'PlaylistDetails';
         if (isSubView) {
             window.history.pushState({ melodiqSubView: true }, '', window.location.href);
             const handlePopState = () => setCurrentView('Home');
@@ -283,7 +301,7 @@ export const MelodiqGameContent: React.FC = () => {
         handleSelectSong, manager, isTVConnected, sendRemoteCommand,
         currentView, refreshSongs, isClient, getSongById, setSelectedSong,
         setCurrentView, selectedSong, remoteSong, songs, activeParticipants,
-        setActiveParticipants
+        setActiveParticipants, updateSetting: settingsHook.updateSetting as any
     });
 
     const handleSkipAndRequeue = useCallback(() => {
@@ -406,6 +424,18 @@ export const MelodiqGameContent: React.FC = () => {
                             key={searchParams.get('sub') || 'all'}
                             activeGameId="melodiq"
                             activeSub={searchParams.get('sub') || 'all'}
+                            onBack={handleBackFromSettings}
+                            onNavigateToPlaylists={() => setCurrentView('Playlists')}
+                        />
+                    </Suspense>
+                )}
+            </Box>
+
+            <Box sx={{ display: currentView === 'HostSettings' ? 'block' : 'none', height: '100%', overflow: 'auto' }}>
+                {isClient && clientRole === 'admin' && (
+                    <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
+                        <Settings
+                            activeGameId="melodiq"
                             onBack={handleBackFromSettings}
                             onNavigateToPlaylists={() => setCurrentView('Playlists')}
                         />

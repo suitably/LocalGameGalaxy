@@ -25,6 +25,7 @@ interface UseMelodiqGlobalEventsProps {
     songs: SongMeta[];
     activeParticipants?: any[] | null;
     setActiveParticipants: (p: any[] | null) => void;
+    updateSetting: (key: string, value: any) => void;
 }
 
 export const useMelodiqGlobalEvents = ({
@@ -32,7 +33,7 @@ export const useMelodiqGlobalEvents = ({
     handleSelectSong, manager, isTVConnected, sendRemoteCommand,
     currentView, refreshSongs, isClient, getSongById, setSelectedSong,
     setCurrentView, selectedSong, remoteSong, songs, activeParticipants,
-    setActiveParticipants
+    setActiveParticipants, updateSetting
 }: UseMelodiqGlobalEventsProps) => {
 
     const handleSelectSongRef = useRef(handleSelectSong);
@@ -116,6 +117,15 @@ export const useMelodiqGlobalEvents = ({
                     return;
                 }
                 
+                if (data.command === 'UPDATE_SETTINGS' && !isClient) {
+                    if (data.value && typeof data.value === 'object') {
+                        Object.entries(data.value).forEach(([key, value]) => {
+                            updateSetting(key as any, value);
+                        });
+                    }
+                    return;
+                }
+
                 if (data.command === 'CALIBRATE_BEEP') {
                     const ctx = new window.AudioContext();
                     const osc = ctx.createOscillator();

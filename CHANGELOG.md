@@ -1,5 +1,8 @@
 
 ## [Unreleased]
+### Added
+- Added ability for Melodiq Admin players to access and modify the Host Settings directly from their phones.
+
 ### Fixed
 - **Melodiq TV**: Fixed an issue where clicking the Cast button would open a new window instead of initiating a stream to the TV because of dynamic query string mismatches.
 
