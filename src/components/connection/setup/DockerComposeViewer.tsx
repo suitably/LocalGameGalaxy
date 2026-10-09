@@ -6,7 +6,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CodeIcon from '@mui/icons-material/Code';
 import { useTranslation } from 'react-i18next';
-import { DockerEdition } from './SetupDockerTab';
+import type { DockerEdition } from './SetupDockerTab';
 
 interface DockerComposeViewerProps {
     composeFilename: string;
