@@ -1,28 +1,19 @@
 import React, { useState } from 'react';
 import {
     Box,
-    Button,
     Typography,
     Paper,
-    IconButton,
-    Tooltip,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
     ToggleButtonGroup,
     ToggleButton,
     FormControlLabel,
     Switch,
 } from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
-import DownloadIcon from '@mui/icons-material/Download';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CodeIcon from '@mui/icons-material/Code';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import PsychologyIcon from '@mui/icons-material/Psychology';
 import PublicIcon from '@mui/icons-material/Public';
 import { useTranslation } from 'react-i18next';
+import { DockerCommandCard } from './DockerCommandCard';
+import { DockerComposeViewer } from './DockerComposeViewer';
 
 export type DockerEdition = 'standard' | 'ai';
 
@@ -180,106 +171,24 @@ export const SetupDockerTab: React.FC<SetupDockerTabProps> = ({ token, downloadD
             </Paper>
 
             {/* 3. Docker Run 1-Liner */}
-            <Paper sx={{ p: 2, bgcolor: 'rgba(255, 255, 255, 0.03)', borderRadius: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                        {t('server.setup.docker.run_command', 'Docker 1-Command Quickstart:')}
-                    </Typography>
-                    <Tooltip title={copiedRun ? t('server.setup.copied', 'Copied!') : t('server.setup.copy', 'Copy')}>
-                        <IconButton size="small" onClick={handleCopyRun} color={copiedRun ? 'success' : 'default'}>
-                            {copiedRun ? <CheckIcon fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
-                        </IconButton>
-                    </Tooltip>
-                </Box>
-                <Paper
-                    sx={{
-                        p: 1.5,
-                        bgcolor: 'rgba(0, 0, 0, 0.5)',
-                        fontFamily: 'monospace',
-                        fontSize: '0.85rem',
-                        overflowX: 'auto',
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-all',
-                        color: 'primary.light',
-                        borderRadius: 1.5,
-                    }}
-                >
-                    {dockerRunCmd}
-                    {includeTunnel && (
-                        <Box sx={{ mt: 1.5, pt: 1.5, borderTop: '1px solid rgba(255,255,255,0.1)', color: 'info.light' }}>
-                            <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mb: 0.5 }}>
-                                # Tunnel separat starten:
-                            </Typography>
-                            {tunnelRunCmd}
-                        </Box>
-                    )}
-                </Paper>
-            </Paper>
+            <DockerCommandCard
+                dockerRunCmd={dockerRunCmd}
+                includeTunnel={includeTunnel}
+                tunnelRunCmd={tunnelRunCmd}
+                copiedRun={copiedRun}
+                onCopy={handleCopyRun}
+            />
 
             {/* 4. Expandable Docker Compose File */}
-            <Accordion
-                defaultExpanded={true}
-                sx={{
-                    bgcolor: 'rgba(255, 255, 255, 0.03)',
-                    borderRadius: '8px !important',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    '&:before': { display: 'none' },
-                }}
-            >
-                <AccordionSummary
-                    expandIcon={<ExpandMoreIcon sx={{ color: 'text.secondary' }} />}
-                    sx={{ px: 2 }}
-                >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <CodeIcon fontSize="small" color="primary" />
-                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                            {composeFilename} {t('server.setup.docker.compose_file_title', 'Konfiguration')}
-                        </Typography>
-                    </Box>
-                </AccordionSummary>
-                <AccordionDetails sx={{ px: 2, pt: 0, pb: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
-                        <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={copiedCompose ? <CheckIcon /> : <ContentCopyIcon />}
-                            onClick={handleCopyCompose}
-                            color={copiedCompose ? 'success' : 'primary'}
-                            sx={{ borderRadius: 50, textTransform: 'none' }}
-                        >
-                            {copiedCompose ? t('server.setup.copied', 'Kopiert!') : t('server.setup.docker.copy_compose', 'YAML kopieren')}
-                        </Button>
-                        <Button
-                            variant="contained"
-                            size="small"
-                            startIcon={<DownloadIcon />}
-                            onClick={() => downloadDockerCompose(edition, includeTunnel)}
-                            sx={{ borderRadius: 50, textTransform: 'none' }}
-                        >
-                            Download {composeFilename}
-                        </Button>
-                    </Box>
-
-                    <Paper
-                        sx={{
-                            p: 1.5,
-                            bgcolor: 'rgba(0, 0, 0, 0.6)',
-                            fontFamily: 'monospace',
-                            fontSize: '0.8rem',
-                            overflowX: 'auto',
-                            whiteSpace: 'pre',
-                            color: '#a5d6a7',
-                            borderRadius: 1.5,
-                            maxHeight: 280,
-                            overflowY: 'auto',
-                            border: '1px solid rgba(255,255,255,0.06)',
-                        }}
-                    >
-                        {dockerComposeYaml}
-                    </Paper>
-                </AccordionDetails>
-            </Accordion>
+            <DockerComposeViewer
+                composeFilename={composeFilename}
+                dockerComposeYaml={dockerComposeYaml}
+                edition={edition}
+                includeTunnel={includeTunnel}
+                copiedCompose={copiedCompose}
+                onCopy={handleCopyCompose}
+                downloadDockerCompose={downloadDockerCompose}
+            />
         </Box>
     );
 };
-
