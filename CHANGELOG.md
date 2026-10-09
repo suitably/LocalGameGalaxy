@@ -123,3 +123,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Refactored
 - `ServerAdminPanel`: Decomposed into smaller sub-components and extracted state into `useServerApiKeys` custom hook to resolve Separation of Concerns and God Component size violations.
+
+## [Unreleased]
+### Refactored
+- Deduplicated `guessart` and `storyteller` core primitives by extracting pure IndexedDB operations into `src/modules/async-game`, round-robin player assignment logic into `src/lib/utils/turnAssignment.ts`, and sharing dialogs logic via `useSessionSharing` into `src/modules/sharing`.
