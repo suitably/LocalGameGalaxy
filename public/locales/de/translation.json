@@ -46,7 +46,6 @@
       "restart_title": "Spiel neustarten?",
       "restart_desc": "Bist du sicher? Der aktuelle Spielstand geht verloren."
     },
-
     "wordle": {
       "title": "Wordle",
       "description": "Errate das 5-Buchstaben-Wort in 6 Versuchen. Spiele das Tagesrätsel oder fordere Freunde heraus."
@@ -775,7 +774,16 @@
       "reserve": "Vorrat",
       "placeOnBoard": "Aufs Spielbrett legen",
       "dragToPlace": "Ziehen, um aufs Spielbrett zu legen",
-      "take": "Nehmen"
+      "take": "Nehmen",
+      "empty": "Leer",
+      "hand": "Hand",
+      "discard": "Ablage",
+      "dropHere": "Hier ablegen",
+      "cardCount": "{{count}} Karten",
+      "tile": "Plättchen",
+      "loading": "Spiel wird geladen...",
+      "backToLobby": "Zurück zur Party-Lobby",
+      "backToOverview": "Zurück zur Übersicht"
     }
   },
   "lobby": {
@@ -1342,7 +1350,19 @@
     "prFailedTitle": "Fehler beim Erstellen des Pull Requests",
     "helperServerHint": "Stelle sicher, dass der Helper-Server läuft und ein GitHub-Token in den Server-Einstellungen hinterlegt ist.",
     "githubErrorHint": "Stelle sicher, dass dein GitHub Personal Access Token (PAT) in den Einstellungen hinterlegt ist und Schreibrechte besitzt.",
-    "submitPrButton": "Pull Request auf GitHub erstellen"
+    "submitPrButton": "Pull Request auf GitHub erstellen",
+    "roundsCount": "Gespielte Runden",
+    "created": "Erstellt",
+    "lastPlayed": "Zuletzt gespielt",
+    "pointsPerWord": "Punkte pro Wort",
+    "pointsDeductionPerHint": "Abzug pro Hinweis",
+    "playerScores": "Spielerpunkte",
+    "roundDetails": "Details zu Runde {{round}}",
+    "drawnBy": "Gezeichnet von:",
+    "timeTaken": "Benötigte Zeit:",
+    "hintsUsed": "Genutzte Hinweise:",
+    "allGuesses": "Alle Tipps:",
+    "catalogueTitle": "Wortkatalog & Kategorien"
   },
   "party": {
     "hubBannerTitle": "Party-Modus (Mehrspieler-Lobby)",
