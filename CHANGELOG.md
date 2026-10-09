@@ -37,6 +37,9 @@
 
 
 ## [Unreleased]
+### Changed
+- Deduplicated queue participant logic in Melodiq game and removed `any` types from song downloader.
+
 ### Added
 - **Testing Suite**: Added comprehensive test coverage for MQTT mailbox network sync, addressing edge-cases (JSON parsing, LZString decompression), error paths (broker failover handling), and race conditions in cross-channel synchronization (Fixes #350).
 
