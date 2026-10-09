@@ -44,6 +44,39 @@ export type TabletopAction =
   | { type: 'REMOVE_HIDDEN_ZONE'; payload: { id: string } }
   | { type: 'TOGGLE_ZONE_REVEAL'; payload: { id: string } };
 
+function removeFromHolderAndUpdateHand(widgets: Record<string, TabletopWidget>, childId: string) {
+  for (const [wId, w] of Object.entries(widgets)) {
+    if (w.type === 'holder') {
+      const h = w as HolderWidget;
+      if (h.childIds.includes(childId)) {
+        const nextChildIds = h.childIds.filter((id) => id !== childId);
+        const updatedH = {
+          ...h,
+          childIds: nextChildIds,
+        };
+        widgets[wId] = updatedH;
+        const isHand = updatedH.isHand || updatedH.id.toLowerCase() === 'hand' || updatedH.id.toLowerCase().includes('hand');
+        if (isHand) {
+          const remainingCards = nextChildIds.map((id) => widgets[id] as CardWidget).filter(Boolean);
+          const layout = calculateHandLayout(updatedH, remainingCards);
+          for (const [cId, pos] of Object.entries(layout)) {
+            const w = widgets[cId];
+            if (w && w.type === 'card') {
+              widgets[cId] = {
+                ...w,
+                x: pos.x,
+                y: pos.y,
+                zIndex: pos.zIndex,
+                stackCount: pos.stackCount,
+              };
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 export function tabletopReducer(state: TabletopGameState, action: TabletopAction): TabletopGameState {
   switch (action.type) {
     case 'LOAD_GAME':
@@ -426,36 +459,7 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       if (!card || card.type !== 'card') return state;
 
       const widgets = { ...state.game.widgets };
-      for (const [wId, w] of Object.entries(widgets)) {
-        if (w.type === 'holder') {
-          const h = w as HolderWidget;
-          if (h.childIds.includes(cardId)) {
-            const nextChildIds = h.childIds.filter((id) => id !== cardId);
-            const updatedH = {
-              ...h,
-              childIds: nextChildIds,
-            };
-            widgets[wId] = updatedH;
-            const isHand = updatedH.isHand || updatedH.id.toLowerCase() === 'hand' || updatedH.id.toLowerCase().includes('hand');
-            if (isHand) {
-              const remainingCards = nextChildIds.map((id) => widgets[id] as CardWidget).filter(Boolean);
-              const layout = calculateHandLayout(updatedH, remainingCards);
-              for (const [cId, pos] of Object.entries(layout)) {
-                const w = widgets[cId];
-                if (w && w.type === 'card') {
-                  widgets[cId] = {
-                    ...w,
-                    x: pos.x,
-                    y: pos.y,
-                    zIndex: pos.zIndex,
-                    stackCount: pos.stackCount,
-                  };
-                }
-              }
-            }
-          }
-        }
-      }
+      removeFromHolderAndUpdateHand(widgets, cardId);
 
       const newCardIds = deck.cardIds.includes(cardId)
         ? deck.cardIds
@@ -565,36 +569,7 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       const holder = targetWidget as HolderWidget;
 
       // Remove from any prior holder
-      for (const [wId, w] of Object.entries(widgets)) {
-        if (w.type === 'holder') {
-          const h = w as HolderWidget;
-          if (h.childIds.includes(widgetId)) {
-            const nextChildIds = h.childIds.filter((id) => id !== widgetId);
-            const updatedH = {
-              ...h,
-              childIds: nextChildIds,
-            };
-            widgets[wId] = updatedH;
-            const priorIsHand = updatedH.isHand || updatedH.id.toLowerCase() === 'hand' || updatedH.id.toLowerCase().includes('hand');
-            if (priorIsHand) {
-              const remainingCards = nextChildIds.map((id) => widgets[id] as CardWidget).filter(Boolean);
-              const layout = calculateHandLayout(updatedH, remainingCards);
-              for (const [cId, pos] of Object.entries(layout)) {
-                const w = widgets[cId];
-                if (w && w.type === 'card') {
-                  widgets[cId] = {
-                    ...w,
-                    x: pos.x,
-                    y: pos.y,
-                    zIndex: pos.zIndex,
-                    stackCount: pos.stackCount,
-                  };
-                }
-              }
-            }
-          }
-        }
-      }
+      removeFromHolderAndUpdateHand(widgets, widgetId);
 
       // Add to new holder if not already present
       if (!holder.childIds.includes(widgetId)) {
@@ -860,27 +835,7 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       const widgets = { ...state.game.widgets };
 
       // Remove from any hand or parent holder
-      for (const [wId, w] of Object.entries(widgets)) {
-        if (w.type === 'holder') {
-          const h = w as HolderWidget;
-          if (h.childIds.includes(cardId)) {
-            const nextChildIds = h.childIds.filter((id) => id !== cardId);
-            const updatedH = { ...h, childIds: nextChildIds };
-            widgets[wId] = updatedH;
-            const isHand = updatedH.isHand || updatedH.id.toLowerCase().includes('hand');
-            if (isHand) {
-              const remainingCards = nextChildIds.map((id) => widgets[id] as CardWidget).filter(Boolean);
-              const layout = calculateHandLayout(updatedH, remainingCards);
-              for (const [cId, pos] of Object.entries(layout)) {
-                const cw = widgets[cId];
-                if (cw && cw.type === 'card') {
-                  widgets[cId] = { ...cw, x: pos.x, y: pos.y, zIndex: pos.zIndex, stackCount: pos.stackCount };
-                }
-              }
-            }
-          }
-        }
-      }
+      removeFromHolderAndUpdateHand(widgets, cardId);
 
       let posX = position.x;
       let posY = position.y;

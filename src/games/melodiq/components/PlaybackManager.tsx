@@ -21,7 +21,7 @@ interface PlaybackManagerProps {
     setRemoteSong: (song: SongMeta | null) => void;
     onShowQueue: () => void;
     sendGameUpdate?: (state: any) => void;
-    /** Song that was playing before the last page reload, restored from localStorage */
+    /** Song that was playing before the last page reload, restored from storage */
     restoredSong?: SongMeta | null;
     /** Clears the restored song state in the parent once the user resumes */
     onClearRestoredSong?: () => void;

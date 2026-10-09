@@ -1,5 +1,9 @@
 
 ## [Unreleased]
+### Refactored
+- **Code Quality**: Deduplicated multiple areas of the codebase to adhere to DRY principles, including extracting a shared `shuffle` utility, optimizing component logic in `Qwixx` and `Melodiq`, and extracting the `removeFromHolderAndUpdateHand` function in `TabletopReducer`.
+- **Dead Code**: Eliminated unused local storage references and docstrings in `wordle` and `melodiq`.
+
 ### Fixed
 - **Melodiq TV**: Fixed an issue where clicking the Cast button would open a new window instead of initiating a stream to the TV because of dynamic query string mismatches.
 

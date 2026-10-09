@@ -55,7 +55,7 @@ export function useWordle(language = 'de', initialMode: WordleGameMode = 'daily'
     };
   });
 
-  // Save daily game state to localStorage whenever it changes
+  // Save daily game state to storage whenever it changes
   useEffect(() => {
     if (state.mode === 'daily') {
       saveDailyGameState(language, state.dateKey, {
@@ -66,7 +66,7 @@ export function useWordle(language = 'de', initialMode: WordleGameMode = 'daily'
     }
   }, [state.guesses, state.evaluations, state.status, state.mode, state.dateKey, language]);
 
-  // Save stats to localStorage whenever stats change
+  // Save stats to storage whenever stats change
   useEffect(() => {
     saveWordleStats(stats);
   }, [stats]);
