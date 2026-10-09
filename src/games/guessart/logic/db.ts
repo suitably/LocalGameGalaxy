@@ -1,4 +1,4 @@
-import { createIdbStoreOperations } from '../../../modules/async-game';
+import { createDatabaseExports } from '../../../modules/async-game/idbHelper';
 
 const DB_NAME = 'guessart-local';
 const DB_VERSION = 1;
@@ -7,8 +7,6 @@ export const STORE_GAMES = 'games';
 export const STORE_ROUNDS = 'rounds';
 export const STORE_CATALOGUES = 'catalogues';
 export const STORE_METADATA = 'metadata';
-
-let openRequestPromise: Promise<IDBDatabase> | null = null;
 
 const createUpgradeHandler = (event: IDBVersionChangeEvent) => {
   const target = event.target as IDBOpenDBRequest;
@@ -28,41 +26,12 @@ const createUpgradeHandler = (event: IDBVersionChangeEvent) => {
   }
 };
 
-export const openDatabase = (): Promise<IDBDatabase> => {
-  if (typeof window === 'undefined' || !('indexedDB' in window)) {
-    return Promise.reject(new Error('IndexedDB unavailable'));
-  }
-  if (openRequestPromise) {
-    return openRequestPromise;
-  }
-
-  openRequestPromise = new Promise<IDBDatabase>((resolve, reject) => {
-    const request = window.indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onupgradeneeded = createUpgradeHandler;
-    request.onerror = () => reject(request.error || new Error('IndexedDB open failed'));
-    request.onsuccess = () => resolve(request.result);
-  })
-    .then((db) => {
-      db.onversionchange = () => {
-        db.close();
-        openRequestPromise = null;
-      };
-      return db;
-    })
-    .catch((error) => {
-      openRequestPromise = null;
-      throw error;
-    });
-
-  return openRequestPromise;
-};
-
-const ops = createIdbStoreOperations(openDatabase);
-
-export const withStore = ops.withStore;
-export const getAll = ops.getAll;
-export const getByKey = ops.getByKey;
-export const putItem = ops.putItem;
-export const deleteByKey = ops.deleteByKey;
-export const clearStore = ops.clearStore;
+export const {
+  openDatabase,
+  withStore,
+  getAll,
+  getByKey,
+  putItem,
+  deleteByKey,
+  clearStore,
+} = createDatabaseExports(DB_NAME, DB_VERSION, createUpgradeHandler);

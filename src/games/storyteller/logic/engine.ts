@@ -18,6 +18,7 @@ import type {
   StoryModifierSettings,
 } from '../types';
 import { playerAssignment } from './playerAssignment';
+import { isGameBaseSnapshotNewer, mergePlayerProfiles, hasPlayerChannelUpdates } from '../../../lib/utils/turnAssignment';
 
 export const isStorySnapshotNewer = (
   snapshot: StoryGameSnapshot,
@@ -34,36 +35,12 @@ export const isStorySnapshotNewer = (
     return true;
   }
 
-  // Check if player names, game name, or notification channels were edited
-  if (snapshot.game.name !== existingGame.name) return true;
-  if (
-    snapshot.game.players &&
-    existingGame.players &&
-    JSON.stringify(
-      snapshot.game.players.map((p) => ({
-        id: p.id,
-        name: p.name,
-        ntfyTopic: p.ntfyTopic,
-        relayUrl: p.relayUrl,
-        notificationMethod: p.notificationMethod,
-      })),
-    ) !==
-      JSON.stringify(
-        existingGame.players.map((p) => ({
-          id: p.id,
-          name: p.name,
-          ntfyTopic: p.ntfyTopic,
-          relayUrl: p.relayUrl,
-          notificationMethod: p.notificationMethod,
-        })),
-      )
-  ) {
-    return true;
+  const baseResult = isGameBaseSnapshotNewer(snapshot.game, existingGame);
+  if (baseResult !== null) {
+    return baseResult;
   }
 
-  const snapTime = new Date(snapshot.game.updatedAt || 0).getTime();
-  const existTime = new Date(existingGame.updatedAt || 0).getTime();
-  return snapTime > existTime;
+  return false;
 };
 
 export const LocalStoryEngine = {
@@ -235,26 +212,14 @@ export const LocalStoryEngine = {
     }
 
     const existingEntries = await fetchEntriesForGame(existing.id);
-    const existingPlayersById = new Map((existing.players || []).map((p) => [p.id, p]));
 
     if (isStorySnapshotNewer(snapshot, existing, existingEntries)) {
-      const mergedPlayers = (snapshot.game.players || []).map((incomingP) => {
-        const existingP = existingPlayersById.get(incomingP.id);
-        const isExistingLocal = existingP ? playerAssignment.isPlayerLocal(existing.id, existingP.id, false) : false;
-        return {
-          ...existingP,
-          ...incomingP,
-          ntfyTopic: isExistingLocal
-            ? existingP?.ntfyTopic || incomingP.ntfyTopic
-            : incomingP.ntfyTopic || existingP?.ntfyTopic,
-          relayUrl: isExistingLocal
-            ? existingP?.relayUrl || incomingP.relayUrl
-            : incomingP.relayUrl || existingP?.relayUrl,
-          notificationMethod: isExistingLocal
-            ? existingP?.notificationMethod || incomingP.notificationMethod
-            : incomingP.notificationMethod || existingP?.notificationMethod,
-        };
-      });
+      const mergedPlayers = mergePlayerProfiles(
+        snapshot.game.players || [],
+        existing.players || [],
+        existing.id,
+        playerAssignment.isPlayerLocal.bind(playerAssignment),
+      );
       await upsertGame({ ...snapshot.game, players: mergedPlayers });
       for (const entry of snapshot.entries || []) {
         await upsertEntry(entry);
@@ -265,19 +230,14 @@ export const LocalStoryEngine = {
     // Even if story entries are not newer, merge player channel updates
     const incomingPlayersById = new Map((snapshot.game.players || []).map((p) => [p.id, p]));
 
-    const hasPlayerChannelUpdates = snapshot.game.players?.some((incomingP) => {
-      const existingP = existingPlayersById.get(incomingP.id);
-      if (!existingP) return false;
-      const isExistingLocal = playerAssignment.isPlayerLocal(existing.id, existingP.id, false);
-      if (isExistingLocal) return false;
-      return (
-        (incomingP.ntfyTopic && incomingP.ntfyTopic !== existingP.ntfyTopic) ||
-        (incomingP.relayUrl && incomingP.relayUrl !== existingP.relayUrl) ||
-        (incomingP.notificationMethod && incomingP.notificationMethod !== existingP.notificationMethod)
-      );
-    });
+    const hasUpdates = hasPlayerChannelUpdates(
+      snapshot.game.players || [],
+      existing.players || [],
+      existing.id,
+      playerAssignment.isPlayerLocal.bind(playerAssignment),
+    );
 
-    if (hasPlayerChannelUpdates) {
+    if (hasUpdates) {
       const mergedPlayers = existing.players.map((existingP) => {
         const incomingP = incomingPlayersById.get(existingP.id);
         if (!incomingP) return existingP;
