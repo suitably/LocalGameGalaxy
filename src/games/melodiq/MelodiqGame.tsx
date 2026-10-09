@@ -13,7 +13,6 @@ import { MelodiqConnection } from './MelodiqConnection';
 import { useSongs, SongsProvider } from './hooks/useSongs';
 import { useQueue, QueueProvider } from './hooks/useQueue';
 import { useDownloads } from './hooks/useDownloads';
-import { melodiqFetch } from './api/melodiqFetch';
 import { PhoneQueueBridge } from './components/PhoneQueueBridge';
 import { PhoneClientEngine, useClientEngine } from './PhoneClientEngine';
 import { useTVMode } from './hooks/useTVMode';
@@ -30,6 +29,7 @@ import { useMelodiqHeader } from './hooks/useMelodiqHeader';
 import { useMelodiqGlobalEvents } from './hooks/useMelodiqGlobalEvents';
 import { useDownloadSync } from './hooks/useDownloadSync';
 import { DownloadWaitScreen } from './components/DownloadWaitScreen';
+import { useSongDownloader } from './hooks/useSongDownloader';
 import { type MelodiqParticipant, type MelodiqProfile, type UsdbSongItem, type PassiveGameState } from './types';
 
 type View = 'Home' | 'Settings' | 'Session' | 'Connection' | 'Playlists' | 'PlaylistDetails' | 'DownloadWait';
@@ -312,28 +312,17 @@ export const MelodiqGameContent: React.FC = () => {
         setQueueDialogOpen(true);
     };
 
+    const { handleDownloadOnly: originalHandleDownloadOnly, handleDownloadAndQueue: originalHandleDownloadAndQueue } = useSongDownloader({
+        addToQueue,
+        setFeedbackMessage
+    });
+
     const handleDownloadOnly = async (usdbSong: UsdbSongItem) => {
         if (isClient && clientRole !== 'admin' && clientRole !== 'queue_manager') {
             setFeedbackMessage('Nur Queue Manager können Songs herunterladen.');
             return;
         }
-        try {
-            const data = await melodiqFetch('/api/usdb/download', {
-                method: 'POST',
-                body: JSON.stringify({
-                    usdbId: usdbSong.usdbId,
-                    artist: usdbSong.artist,
-                    title: usdbSong.title,
-                    videoMode: 'stream'
-                })
-            });
-            if (data.jobIds && data.jobIds.length > 0) {
-                setFeedbackMessage(`Downloading: ${usdbSong.title}`);
-            }
-        } catch (err) {
-            console.error('Download failed', err);
-            setFeedbackMessage('Download fehlgeschlagen.');
-        }
+        return originalHandleDownloadOnly(usdbSong);
     };
 
     const handleDownloadAndQueue = async (usdbSong: UsdbSongItem) => {
@@ -341,32 +330,7 @@ export const MelodiqGameContent: React.FC = () => {
             setFeedbackMessage('Nur Queue Manager können Songs herunterladen.');
             return;
         }
-        try {
-            const data = await melodiqFetch('/api/usdb/download', {
-                method: 'POST',
-                body: JSON.stringify({
-                    usdbId: usdbSong.usdbId,
-                    artist: usdbSong.artist,
-                    title: usdbSong.title,
-                    videoMode: 'stream'
-                })
-            });
-            if (data.jobIds && data.jobIds.length > 0) {
-                const jobId = data.jobIds[0];
-                const dummySong: SongMeta = {
-                    id: `dl-${jobId}`,
-                    title: usdbSong.title,
-                    artist: usdbSong.artist,
-                    isDownloading: true,
-                    jobId: jobId
-                };
-                addToQueue(dummySong, 'User');
-                setFeedbackMessage(`Downloading and Queuing: ${usdbSong.title}`);
-            }
-        } catch (err) {
-            console.error('Download failed', err);
-            setFeedbackMessage('Download fehlgeschlagen.');
-        }
+        return originalHandleDownloadAndQueue(usdbSong);
     };
 
     const lastGameUpdateRef = React.useRef<number>(0);
