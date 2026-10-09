@@ -33,6 +33,9 @@
 
 
 ## [Unreleased]
+### Added
+- **Testing Suite**: Added comprehensive test coverage for MQTT mailbox network sync, addressing edge-cases (JSON parsing, LZString decompression), error paths (broker failover handling), and race conditions in cross-channel synchronization (Fixes #350).
+
 ### Fixed
 - **GuessArt**: Fixed a "Cannot read properties of undefined (reading 'ReactCurrentOwner')" error during drawing turns by updating `@excalidraw/excalidraw` to version `0.18.1` for React 19 compatibility.
 
