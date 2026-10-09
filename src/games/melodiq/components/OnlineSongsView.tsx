@@ -3,6 +3,7 @@ import { Box, CircularProgress, Grid } from '@mui/material';
 import { VirtuosoGrid, Virtuoso } from 'react-virtuoso';
 import { SongCard } from './SongCard';
 import { SongListItem } from './SongListItem';
+import { getSongItemActions } from './hooks/useSongItemActions';
 
 interface OnlineSongsViewProps {
     isSearchingOnline: boolean;
@@ -42,30 +43,32 @@ export const OnlineSongsView: React.FC<OnlineSongsViewProps> = ({
                         Item: React.forwardRef((props, ref) => <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} {...props} ref={ref as any} />)
                     }}
                     itemContent={(index) => {
-                        const song = filteredOnlineSongs[index];
-                        const localSong = songs.find(s => s.title.toLowerCase() === song.title.toLowerCase() && s.artist.toLowerCase() === song.artist.toLowerCase());
-                        const activeJob = jobs.find(j => j.usdbId === song.usdbId && (j.status === 'pending' || j.status === 'running'));
-                        
-                        const isDownloaded = !!localSong;
-                        const isDl = !!(activeJob && !isDownloaded);
-                        const progress = activeJob ? activeJob.progress : 0;
+                        const rawSong = filteredOnlineSongs[index];
+                        const {
+                            song,
+                            isDownloaded,
+                            isDownloading,
+                            progress,
+                            onClick,
+                            onActionClick
+                        } = getSongItemActions({
+                            song: rawSong,
+                            songs,
+                            jobs,
+                            isSinger,
+                            canDownload,
+                            handleSelectSong,
+                            handleDownloadAndQueue,
+                            handleDownloadOnly
+                        });
                         return (
                             <SongCard
-                                song={localSong || song}
-                                isDownloading={isDl}
+                                song={song}
+                                isDownloading={isDownloading}
                                 isDownloaded={isDownloaded}
                                 downloadProgress={progress}
-                                onClick={() => {
-                                    if (isSinger) return;
-                                    if (isDownloaded && localSong) {
-                                        handleSelectSong(localSong);
-                                    } else if (!isDl && !isDownloaded && canDownload) {
-                                        handleDownloadAndQueue(song);
-                                    }
-                                }}
-                                onActionClick={(canDownload && !isSinger) ? () => {
-                                    if (!isDl && !isDownloaded) handleDownloadOnly(song);
-                                } : undefined}
+                                onClick={onClick}
+                                onActionClick={onActionClick}
                             />
                         );
                     }}
@@ -80,34 +83,37 @@ export const OnlineSongsView: React.FC<OnlineSongsViewProps> = ({
                 style={{ height: '100%', width: '100%' }}
                 totalCount={filteredOnlineSongs.length}
                 itemContent={(index) => {
-                    const song = filteredOnlineSongs[index];
-                    const localSong = songs.find(s => s.title.toLowerCase() === song.title.toLowerCase() && s.artist.toLowerCase() === song.artist.toLowerCase());
-                    const activeJob = jobs.find(j => j.usdbId === song.usdbId && (j.status === 'pending' || j.status === 'running'));
-                    
-                    const isDownloaded = !!localSong;
-                    const isDl = !!(activeJob && !isDownloaded);
-                    const progress = activeJob ? activeJob.progress : 0;
+                    const rawSong = filteredOnlineSongs[index];
+                    const {
+                        song,
+                        localSong,
+                        isDownloaded,
+                        isDownloading,
+                        progress,
+                        onClick,
+                        onActionClick
+                    } = getSongItemActions({
+                        song: rawSong,
+                        songs,
+                        jobs,
+                        isSinger,
+                        canDownload,
+                        handleSelectSong,
+                        handleDownloadAndQueue,
+                        handleDownloadOnly
+                    });
                     return (
                         <Box sx={{ px: 2, py: 0.5 }}>
                             <SongListItem
-                                song={localSong || song}
-                                isDownloading={isDl}
+                                song={song}
+                                isDownloading={isDownloading}
                                 isDownloaded={isDownloaded}
                                 downloadProgress={progress}
-                                onClick={() => {
-                                    if (isSinger) return;
-                                    if (isDownloaded && localSong) {
-                                        handleSelectSong(localSong);
-                                    } else if (!isDl && !isDownloaded && canDownload) {
-                                        handleDownloadAndQueue(song);
-                                    }
-                                }}
+                                onClick={onClick}
                                 onMenuClick={isSinger ? undefined : () => {
                                     if (isDownloaded && localSong) handleSongLongPress(localSong);
                                 }}
-                                onActionClick={(canDownload && !isSinger) ? () => {
-                                    if (!isDl && !isDownloaded) handleDownloadOnly(song);
-                                } : undefined}
+                                onActionClick={onActionClick}
                             />
                         </Box>
                     );
