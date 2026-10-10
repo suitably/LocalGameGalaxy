@@ -46,7 +46,6 @@
       "restart_title": "Spiel neustarten?",
       "restart_desc": "Bist du sicher? Der aktuelle Spielstand geht verloren."
     },
-
     "wordle": {
       "title": "Wordle",
       "description": "Errate das 5-Buchstaben-Wort in 6 Versuchen. Spiele das Tagesrätsel oder fordere Freunde heraus."
@@ -730,13 +729,6 @@
       "url_import_success": "\"{{name}}\" erfolgreich installiert!",
       "url_examples": "Beispiel-Vorlagen aus dem Web:",
       "community_sources": "PlayingCards.io Raum exportieren oder Web-Links einfügen.",
-      "yourHand": "Deine Hand",
-      "handEmpty": "Keine Karten auf der Hand",
-      "returnToDeck": "Zurück ins Deck",
-      "clickToFlipHint": "Klick = Karte umdrehen",
-      "rulesButton": "Regeln",
-      "rulesDialogTitle": "Spielregeln",
-      "noRulesAvailable": "Keine Regeln für dieses Spiel verfügbar.",
       "zoomIn": "Vergrößern",
       "zoomOut": "Verkleinern",
       "resetView": "Ansicht zurücksetzen",
@@ -763,6 +755,13 @@
       "revealZone": "Aufdecken (für alle zeigen)",
       "hideZone": "Wieder verbergen",
       "deleteZone": "Bereich löschen",
+      "yourHand": "Deine Hand",
+      "handEmpty": "Keine Karten auf der Hand",
+      "returnToDeck": "Zurück ins Deck",
+      "clickToFlipHint": "Klick = Karte umdrehen",
+      "rulesButton": "Regeln",
+      "rulesDialogTitle": "Spielregeln",
+      "noRulesAvailable": "Keine Regeln für dieses Spiel verfügbar.",
       "seat": "Sitz",
       "playerHud": "Spieler-Übersicht",
       "playerOverview": "Spieler-Übersicht",
@@ -775,7 +774,16 @@
       "reserve": "Vorrat",
       "placeOnBoard": "Aufs Spielbrett legen",
       "dragToPlace": "Ziehen, um aufs Spielbrett zu legen",
-      "take": "Nehmen"
+      "take": "Nehmen",
+      "empty": "Leer",
+      "hand": "Hand",
+      "discard": "Ablagestapel",
+      "dropHere": "Hier ablegen",
+      "cardCount": "Karten: {{count}}",
+      "tile": "Plättchen",
+      "loading": "Wird geladen...",
+      "backToLobby": "Zurück zur Lobby",
+      "backToOverview": "Zurück zur Übersicht"
     }
   },
   "lobby": {
@@ -1342,7 +1350,19 @@
     "prFailedTitle": "Fehler beim Erstellen des Pull Requests",
     "helperServerHint": "Stelle sicher, dass der Helper-Server läuft und ein GitHub-Token in den Server-Einstellungen hinterlegt ist.",
     "githubErrorHint": "Stelle sicher, dass dein GitHub Personal Access Token (PAT) in den Einstellungen hinterlegt ist und Schreibrechte besitzt.",
-    "submitPrButton": "Pull Request auf GitHub erstellen"
+    "submitPrButton": "Pull Request auf GitHub erstellen",
+    "roundsCount": "Rundenanzahl",
+    "created": "Erstellt am",
+    "lastPlayed": "Zuletzt gespielt",
+    "pointsPerWord": "Punkte pro Wort",
+    "pointsDeductionPerHint": "Punktabzug pro Hinweis",
+    "playerScores": "Spielerpunkte",
+    "roundDetails": "Rundendetails",
+    "drawnBy": "Gezeichnet von",
+    "timeTaken": "Benötigte Zeit",
+    "hintsUsed": "Hinweise genutzt",
+    "allGuesses": "Alle Versuche",
+    "catalogueTitle": "Katalog"
   },
   "party": {
     "hubBannerTitle": "Party-Modus (Mehrspieler-Lobby)",
