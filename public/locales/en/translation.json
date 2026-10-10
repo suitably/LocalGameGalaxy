@@ -46,7 +46,6 @@
       "restart_title": "Restart Game?",
       "restart_desc": "Are you sure you want to restart? All current scores and throws will be lost."
     },
-
     "wordle": {
       "title": "Wordle",
       "description": "Guess the hidden 5-letter word in 6 attempts. Play the daily challenge or duel friends."
@@ -1417,7 +1416,9 @@
     "guessart_desc": "Pictionary drawing game with pass-and-play or peer sync.",
     "no_custom_tabletop": "No custom party-ready tabletop games imported yet.",
     "custom_game_info": "{{min}}-{{max}} Players • {{cards}} Cards",
-    "party_ready": "Party Ready"
+    "party_ready": "Party Ready",
+    "roomCodeLabel": "Room Code",
+    "moreGamesSoonTitle": "More Party Games"
   },
   "gartic": {
     "waitingHeader": "Waiting for other players...",
