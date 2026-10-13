@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+
 import { useTranslation } from 'react-i18next';
 import type { GuessArtGameRecord, GuessArtRound } from '../logic/types';
 import { playerAssignment } from '../logic/playerAssignment';
@@ -27,16 +28,15 @@ export const SharePlayerLinksDialog: React.FC<SharePlayerLinksDialogProps> = ({
   onPlayerChanged,
 }) => {
   const { t } = useTranslation();
-  const [activeRound, setActiveRound] = useState<GuessArtRound | null>(round || null);
+  const [fetchedRound, setFetchedRound] = useState<GuessArtRound | null>(null);
+  const activeRound = round || fetchedRound;
 
   useEffect(() => {
-    if (round) {
-      setActiveRound(round);
-    } else if (game) {
+    if (!round && game) {
       LocalGameEngine.getGameSnapshot(game.id)
         .then((snap) => {
           if (snap.round) {
-            setActiveRound(snap.round);
+            setFetchedRound(snap.round);
           }
         })
         .catch((e) => console.warn('[SharePlayerLinksDialog] Failed to fetch round:', e));
@@ -57,8 +57,8 @@ export const SharePlayerLinksDialog: React.FC<SharePlayerLinksDialogProps> = ({
     publishSync: guessArtMailbox.publish.bind(guessArtMailbox),
   });
 
-  const isPlayerLocal = useCallback(
-    createIsPlayerLocalHelper(game, playerAssignment.isPlayerLocal.bind(playerAssignment)),
+  const isPlayerLocal = useMemo(
+    () => createIsPlayerLocalHelper(game, playerAssignment.isPlayerLocal.bind(playerAssignment)),
     [game],
   );
 

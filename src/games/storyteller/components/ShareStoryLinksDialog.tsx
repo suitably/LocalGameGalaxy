@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { StoryEntry, StoryGameRecord, StoryGameSnapshot } from '../types';
 import { playerAssignment } from '../logic/playerAssignment';
@@ -43,8 +43,8 @@ export const ShareStoryLinksDialog: React.FC<ShareStoryLinksDialogProps> = ({
       storytellerMailboxService.publish(gameId, { type: 'STORY_SYNC', snapshot }),
   });
 
-  const isPlayerLocal = useCallback(
-    createIsPlayerLocalHelper(game, playerAssignment.isPlayerLocal.bind(playerAssignment)),
+  const isPlayerLocal = useMemo(
+    () => createIsPlayerLocalHelper(game, playerAssignment.isPlayerLocal.bind(playerAssignment)),
     [game],
   );
 
