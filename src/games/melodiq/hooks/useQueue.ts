@@ -3,6 +3,7 @@ import React from 'react';
 import type { SongMeta } from '../db';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { generateUUID } from '../../../lib/uuid';
+import { enrichQueueParticipants } from '../logic/queueParticipantUtils';
 
 function recordSongToHistory(song: SongMeta) {
     try {
@@ -151,12 +152,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         const activeSession = storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
         const storedProfiles = storage.getJson<any[]>(STORAGE_KEYS.PROFILES, []);
-        
-        const enrichedSession = activeSession.map((p: any) => {
-            if (p.profileId === 'BOT') return { ...p, name: 'Bot Player', hue: 330, isRemote: false };
-            const profile = storedProfiles.find((prof: any) => prof.id === p.profileId);
-            return profile ? { ...p, name: profile.name, hue: profile.hue, isRemote: p.isRemote ?? false } : p;
-        });
+        const enrichedSession = enrichQueueParticipants(activeSession, storedProfiles);
         
         const newItem: QueueItem = {
             id: generateUUID(),
@@ -221,12 +217,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const playPlaylistNow = useCallback((songs: SongMeta[], requester?: string) => {
         const activeSession = storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
         const storedProfiles = storage.getJson<any[]>(STORAGE_KEYS.PROFILES, []);
-        
-        const enrichedSession = activeSession.map((p: any) => {
-            if (p.profileId === 'BOT') return { ...p, name: 'Bot Player', hue: 330, isRemote: false };
-            const profile = storedProfiles.find((prof: any) => prof.id === p.profileId);
-            return profile ? { ...p, name: profile.name, hue: profile.hue, isRemote: p.isRemote ?? false } : p;
-        });
+        const enrichedSession = enrichQueueParticipants(activeSession, storedProfiles);
 
         const next: QueueItem[] = songs.map(song => ({
             id: generateUUID(),
@@ -248,12 +239,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const addNext = useCallback((song: SongMeta, requester?: string, requesterId?: string) => {
         const activeSession = storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
         const storedProfiles = storage.getJson<any[]>(STORAGE_KEYS.PROFILES, []);
-        
-        const enrichedSession = activeSession.map((p: any) => {
-            if (p.profileId === 'BOT') return { ...p, name: 'Bot Player', hue: 330, isRemote: false };
-            const profile = storedProfiles.find((prof: any) => prof.id === p.profileId);
-            return profile ? { ...p, name: profile.name, hue: profile.hue, isRemote: p.isRemote ?? false } : p;
-        });
+        const enrichedSession = enrichQueueParticipants(activeSession, storedProfiles);
 
         const newItem: QueueItem = {
             id: generateUUID(),

@@ -1,14 +1,15 @@
-
 import { melodiqFetch } from '../api/melodiqFetch';
+import type { UsdbSongItem } from '../types';
+import type { SongMeta } from '../db';
 
 interface UseSongDownloaderProps {
-    addToQueue: (song: any, requester?: string) => void;
+    addToQueue: (song: SongMeta, requester?: string) => void;
     setFeedbackMessage: (msg: string | null) => void;
 }
 
 export const useSongDownloader = ({ addToQueue, setFeedbackMessage }: UseSongDownloaderProps) => {
 
-    const handleDownloadOnly = async (usdbSong: any) => {
+    const triggerSongDownload = async (usdbSong: UsdbSongItem, videoMode: string = 'stream'): Promise<string[] | null> => {
         try {
             const data = await melodiqFetch('/api/usdb/download', {
                 method: 'POST',
@@ -16,42 +17,42 @@ export const useSongDownloader = ({ addToQueue, setFeedbackMessage }: UseSongDow
                     usdbId: usdbSong.usdbId,
                     artist: usdbSong.artist,
                     title: usdbSong.title,
-                    videoMode: 'stream'
+                    videoMode
                 })
             });
             if (data.jobIds && data.jobIds.length > 0) {
-                setFeedbackMessage(`Downloading: ${usdbSong.title}`);
+                return data.jobIds;
             }
         } catch (err) {
             console.error('Download failed', err);
         }
+        return null;
     };
 
-    const handleDownloadAndQueue = async (usdbSong: any) => {
-        try {
-            const data = await melodiqFetch('/api/usdb/download', {
-                method: 'POST',
-                body: JSON.stringify({
-                    usdbId: usdbSong.usdbId,
-                    artist: usdbSong.artist,
-                    title: usdbSong.title,
-                    videoMode: 'stream'
-                })
-            });
-            if (data.jobIds && data.jobIds.length > 0) {
-                const jobId = data.jobIds[0];
-                const dummySong = {
-                    id: `dl-${jobId}`,
-                    title: usdbSong.title,
-                    artist: usdbSong.artist,
-                    isDownloading: true,
-                    jobId: jobId
-                } as any;
-                addToQueue(dummySong, 'User');
-                setFeedbackMessage(`Downloading and Queuing: ${usdbSong.title}`);
-            }
-        } catch (err) {
-            console.error('Download failed', err);
+    const handleDownloadOnly = async (usdbSong: UsdbSongItem) => {
+        const jobIds = await triggerSongDownload(usdbSong);
+        if (jobIds) {
+            setFeedbackMessage(`Downloading: ${usdbSong.title}`);
+        } else {
+            setFeedbackMessage('Download fehlgeschlagen.');
+        }
+    };
+
+    const handleDownloadAndQueue = async (usdbSong: UsdbSongItem) => {
+        const jobIds = await triggerSongDownload(usdbSong);
+        if (jobIds) {
+            const jobId = jobIds[0];
+            const dummySong: SongMeta = {
+                id: `dl-${jobId}`,
+                title: usdbSong.title,
+                artist: usdbSong.artist,
+                isDownloading: true,
+                jobId: jobId
+            };
+            addToQueue(dummySong, 'User');
+            setFeedbackMessage(`Downloading and Queuing: ${usdbSong.title}`);
+        } else {
+            setFeedbackMessage('Download fehlgeschlagen.');
         }
     };
 
