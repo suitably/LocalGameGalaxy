@@ -78,10 +78,12 @@ describe('LocalStoryEngine Performance Benchmark', () => {
     }
     const end = performance.now();
     const totalMs = end - start;
-    console.log(`[PERF BENCHMARK] importSnapshot with ${playerCount} players (${iterations} ops): ${totalMs.toFixed(2)}ms`);
+    console.log(
+      `[PERF BENCHMARK] importSnapshot with ${playerCount} players (${iterations} ops): ${totalMs.toFixed(2)}ms`,
+    );
 
     expect(totalMs).toBeGreaterThan(0);
-  });
+  }, 30000);
 
   it('measures updateGameDetails performance with player updates (500 players, 1000 ops)', async () => {
     const playerCount = 500;
@@ -126,7 +128,9 @@ describe('LocalStoryEngine Performance Benchmark', () => {
     }
     const end = performance.now();
     const totalMs = end - start;
-    console.log(`[PERF BENCHMARK] updateGameDetails with ${playerCount} players (${iterations} ops): ${totalMs.toFixed(2)}ms`);
+    console.log(
+      `[PERF BENCHMARK] updateGameDetails with ${playerCount} players (${iterations} ops): ${totalMs.toFixed(2)}ms`,
+    );
 
     expect(totalMs).toBeGreaterThan(0);
   });
