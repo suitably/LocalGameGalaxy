@@ -151,4 +151,53 @@ describe('MqttMailboxService', () => {
     service.disconnect();
     expect(mockClient.end).toHaveBeenCalled();
   });
+
+  it('handles throwing channel listeners gracefully without interrupting global listeners', async () => {
+    const buggyChannelListener = vi.fn().mockImplementation(() => {
+      throw new Error('Buggy listener failure');
+    });
+    const goodGlobalListener = vi.fn();
+
+    service.subscribe('channel-err', buggyChannelListener);
+    service.subscribeGlobal(goodGlobalListener);
+
+    const mockConnect = mqtt.connect as unknown as ReturnType<typeof vi.fn>;
+    const mockClient = mockConnect.mock.results[0].value;
+    const messageCallback = mockClient.on.mock.calls.find((call: any[]) => call[0] === 'message')?.[1];
+
+    const envelope = {
+      version: 1,
+      channelId: 'channel-err',
+      senderClientId: 'other_client',
+      timestamp: Date.now(),
+      payload: { text: 'error-test' },
+    };
+
+    await expect(
+      messageCallback('lgg/test/v1/channel-err', Buffer.from(JSON.stringify(envelope)))
+    ).resolves.not.toThrow();
+
+    expect(buggyChannelListener).toHaveBeenCalled();
+    expect(goodGlobalListener).toHaveBeenCalledWith({ text: 'error-test' }, 'channel-err', envelope.timestamp);
+  });
+
+  it('compresses payloads when useCompression is true and payload is large', async () => {
+    const compressedService = new MqttMailboxService<{ text: string }>({
+      topicPrefix: 'lgg/test/v1',
+      useCompression: true,
+    });
+
+    const mockConnect = mqtt.connect as unknown as ReturnType<typeof vi.fn>;
+
+    const largeText = 'A'.repeat(500);
+    await compressedService.publish('channel-comp', { text: largeText });
+
+    const lastResultIndex = mockConnect.mock.results.length - 1;
+    const mockClient = mockConnect.mock.results[lastResultIndex].value;
+    const publishCall = mockClient.publish.mock.calls.find((call: any[]) => call[0] === 'lgg/test/v1/channel-comp');
+    expect(publishCall).toBeDefined();
+    expect(publishCall[1]).toMatch(/^LZ:/);
+
+    compressedService.disconnect();
+  });
 });
