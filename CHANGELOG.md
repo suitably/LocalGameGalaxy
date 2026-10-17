@@ -1,5 +1,8 @@
 
 ## [Unreleased]
+### Fixed
+- **i18n & Type Safety**: Resolved translation key parity gaps across German and English locale files (`de` and `en`) and updated parity baseline. Refactored unsafe `as any` type assertions in `GlobalHeader.tsx`, `PlaybackManager.tsx`, and `HostQueueDrawer.tsx` (Fixes #389).
+
 ### Refactored
 - **Code Quality**: Deduplicated multiple areas of the codebase to adhere to DRY principles, including extracting a shared `shuffle` utility, optimizing component logic in `Qwixx` and `Melodiq`, and extracting the `removeFromHolderAndUpdateHand` function in `TabletopReducer`.
 - **Dead Code**: Eliminated unused local storage references and docstrings in `wordle` and `melodiq`.

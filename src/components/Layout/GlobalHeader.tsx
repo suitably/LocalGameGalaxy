@@ -54,7 +54,8 @@ export const GlobalHeader: React.FC = () => {
         } else if (isSettingsPage) {
             const searchParams = new URLSearchParams(location.search);
             const game = searchParams.get('game');
-            const from = (location.state as any)?.from;
+            const locationState = location.state as { from?: unknown } | null;
+            const from = locationState?.from;
 
             if (from && typeof from === 'string' && !from.startsWith('/settings')) {
                 navigate(from);

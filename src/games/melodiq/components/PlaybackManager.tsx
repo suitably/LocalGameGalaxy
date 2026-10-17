@@ -76,11 +76,13 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
 
     const initialTime = useMemo(() => {
         if (!selectedSong) return 0;
-        if (typeof (selectedSong as any).currentTime === 'number' && (selectedSong as any).currentTime > 0) {
-            return (selectedSong as any).currentTime;
+        const songWithTime = selectedSong as Song & { currentTime?: number };
+        if (typeof songWithTime.currentTime === 'number' && songWithTime.currentTime > 0) {
+            return songWithTime.currentTime;
         }
-        if (restoredSong && restoredSong.id === selectedSong.id && typeof (restoredSong as any).currentTime === 'number' && (restoredSong as any).currentTime > 0) {
-            return (restoredSong as any).currentTime;
+        const restoredSongWithTime = restoredSong as (SongMeta & { currentTime?: number }) | null;
+        if (restoredSongWithTime && restoredSongWithTime.id === selectedSong.id && typeof restoredSongWithTime.currentTime === 'number' && restoredSongWithTime.currentTime > 0) {
+            return restoredSongWithTime.currentTime;
         }
         return 0;
     }, [selectedSong, restoredSong]);
