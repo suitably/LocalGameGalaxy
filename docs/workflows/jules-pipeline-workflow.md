@@ -5,8 +5,12 @@ description: Comment /jules on an issue; Jules runs and streams activity live to
 resource: .github/workflows/jules-start.yml
 tags: [jules, ai-agent, automation, workflow]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-10-06T16:00:00Z }
-verified: { by: process:ci, at: 2026-10-06T16:00:00Z }
+generated:
+  at: 2026-10-06T16:00:00Z
+  by: previous-agent
+verified:
+  at: 2026-10-18
+  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
 # Google Jules Streaming Pipeline

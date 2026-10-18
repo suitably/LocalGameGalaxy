@@ -5,8 +5,12 @@ description: Backup mechanisms, retention policies, and recovery procedures for 
 resource: docs/operations/
 tags: [operations, backup, recovery, disaster-recovery]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-09-27T10:00:00Z
+  by: previous-agent
+verified:
+  at: 2026-10-18
+  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
 # Operational Backup & Recovery Procedures [ID: OPS-BACKUP-RECOVERY]
@@ -19,20 +23,22 @@ This document details the backup mechanisms, retention policies, and recovery pr
 
 The application stores data on both the server and client hosts. The following elements must be backed up:
 
-| Scope | Data Type | Location | Backup Strategy |
-|-------|-----------|----------|-----------------|
-| **Server** | Credentials & SSL keys | `server/config.json` | File backup (manual/automation) |
-| **Server** | User playlists data | `playlists.json` | File backup (automated job) |
-| **Server** | Downloaded media stems | `server/music/` | Directory backup |
-| **Client** | Game states, custom roles, word categories | IndexedDB (`LocalGameGalaxyDB`, `MelodiqDB`) | Export to JSON file via Dexie |
-| **Client** | App preferences, themes | `localStorage` | Serialized JSON file export |
+| Scope      | Data Type                                                                              | Location                                                                                                             | Backup Strategy                                                                    |
+| ---------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **Server** | Token, API keys, USDB/GitHub credentials                                               | `config.json` (Docker: `./config/config.json` → `/app/config`)                                                       | File backup (manual/automation)                                                    |
+| **Server** | User playlists data                                                                    | `playlists.json` next to `config.json`                                                                               | File backup (automated job)                                                        |
+| **Server** | Songs and stems                                                                        | `MUSIC_DIR` / configured directories (Docker: `./music` → `/app/music`)                                              | Directory backup                                                                   |
+| **Client** | Scores, playlists, sheet music, word pairs, GuessArt/Storyteller games, tabletop games | IndexedDB (`MelodiqDB`, `MelodiqNotesDB`, `ImposterDB`, `guessart-local`, `storyteller-local`, `galaxy_tabletop_db`) | **No export feature in the app** (**Inference** from code search); per-device only |
+| **Client** | App preferences, game state                                                            | `localStorage` (`STORAGE_KEYS`)                                                                                      | No export feature; per-device only                                                 |
 
 ---
 
 ## 2. Server-Side Backup & Restore Procedures
 
 ### Automated Backup Script
+
 Run this script hourly/daily on the host to create snapshots:
+
 ```bash
 #!/bin/bash
 BACKUP_DIR="/var/backups/localgamegalaxy"
@@ -49,6 +55,7 @@ find "$BACKUP_DIR" -type f -mtime +14 -delete
 ```
 
 ### Restore Procedure
+
 1. Stop the active server container:
    ```bash
    docker compose down
@@ -74,14 +81,16 @@ find "$BACKUP_DIR" -type f -mtime +14 -delete
 Client-side data is stored in the browser's IndexedDB. Browser updates or disk clearing can wipe this data.
 
 ### Exporting Client Databases (Dexie)
+
 Users can export their libraries and custom roles via the Settings UI (using `dexie-export-import`):
+
 ```typescript
-import { exportDB } from "dexie-export-import";
+import { exportDB } from 'dexie-export-import';
 
 async function backupDatabase(db) {
   const blob = await exportDB(db, { prettyJson: true });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
+  const a = document.createElement('a');
   a.href = url;
   a.download = `${db.name}_backup.json`;
   a.click();
@@ -89,28 +98,32 @@ async function backupDatabase(db) {
 ```
 
 ### Restoring Client Databases
+
 To import a previously saved database file:
+
 ```typescript
-import { importInto } from "dexie-export-import";
+import { importInto } from 'dexie-export-import';
 
 async function restoreDatabase(db, file) {
   await db.delete(); // Clear existing databases
   await db.open();
   await importInto(db, file, {
     overwriteValues: true,
-    clearDatabase: true
+    clearDatabase: true,
   });
 }
 ```
 
 ### localStorage Backup
+
 Preferences (themes, settings) can be dumped/loaded via JavaScript:
+
 ```javascript
 // Backup
 const preferences = JSON.stringify(localStorage);
 // Restore
 const data = JSON.parse(preferences);
-Object.keys(data).forEach(key => localStorage.setItem(key, data[key]));
+Object.keys(data).forEach((key) => localStorage.setItem(key, data[key]));
 ```
 
 ---
@@ -118,6 +131,7 @@ Object.keys(data).forEach(key => localStorage.setItem(key, data[key]));
 ## 4. Disaster Recovery Plan
 
 In the event of complete server failure:
+
 1. Provision a new host instance with Docker installed.
 2. Clone the repository and copy back the latest `config.json` and `playlists.json` from backups.
 3. If music backups are unavailable, users must re-download songs from the interface. The metadata and playlists will load cleanly from `playlists.json`.

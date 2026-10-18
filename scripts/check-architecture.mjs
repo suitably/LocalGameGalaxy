@@ -42,7 +42,9 @@ if (fs.existsSync(BASELINE_FILE)) {
     console.error(`Failed to parse ${BASELINE_FILE}:`, e.message);
   }
 }
-const baselineSet = new Set(baselineEntries.map(e => typeof e === 'string' ? e : `${e.type}:${e.file}`));
+const baselineSet = new Set(
+  baselineEntries.map((e) => (typeof e === 'string' ? e : `${e.type}:${e.file}`)),
+);
 
 // ANSI Colors
 const RED = '\x1b[31m';
@@ -57,9 +59,10 @@ const RESET = '\x1b[0m';
  */
 function getGameDirectories() {
   if (!fs.existsSync(GAMES_DIR)) return [];
-  return fs.readdirSync(GAMES_DIR, { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name);
+  return fs
+    .readdirSync(GAMES_DIR, { withFileTypes: true })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
 }
 
 /**
@@ -87,14 +90,17 @@ function getSourceFiles(dir, fileList = []) {
  */
 function getChangedFiles() {
   const result = getRepoChangedFiles({ cwd: ROOT_DIR, absolute: true });
-  const changed = result.files
-    .filter(f => {
-      const rel = path.relative(ROOT_DIR, f);
-      return rel.startsWith('src/') && (rel.endsWith('.ts') || rel.endsWith('.tsx'));
-    });
+  const changed = result.files.filter((f) => {
+    const rel = path.relative(ROOT_DIR, f);
+    return rel.startsWith('src/') && (rel.endsWith('.ts') || rel.endsWith('.tsx'));
+  });
 
-  const baseLabel = result.mergeBase ? `${result.baseRef} (merge-base ${result.mergeBase.slice(0, 7)})` : result.baseRef;
-  console.log(`${CYAN}🔍 [Architecture Diff] Checking ${changed.length} changed file(s) against ${baseLabel}...${RESET}\n`);
+  const baseLabel = result.mergeBase
+    ? `${result.baseRef} (merge-base ${result.mergeBase.slice(0, 7)})`
+    : result.baseRef;
+  console.log(
+    `${CYAN}🔍 [Architecture Diff] Checking ${changed.length} changed file(s) against ${baseLabel}...${RESET}\n`,
+  );
   return changed;
 }
 
@@ -156,7 +162,8 @@ for (const filePath of allFiles) {
       if (line.includes('localStorage.') || line.includes('sessionStorage.')) {
         // Skip comment lines
         const trimmed = line.trim();
-        if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) continue;
+        if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*'))
+          continue;
 
         violations.rawStorage.push({
           file: relativePath,
@@ -174,7 +181,9 @@ for (const filePath of allFiles) {
       line.includes('window.confirm') ||
       line.includes('window.prompt') ||
       line.includes('window.alert') ||
-      /\bconfirm\s*\(/.test(line) && !line.includes('ConfirmDialog') && !line.includes('onConfirm')
+      (/\bconfirm\s*\(/.test(line) &&
+        !line.includes('ConfirmDialog') &&
+        !line.includes('onConfirm'))
     ) {
       const trimmed = line.trim();
       if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) continue;
@@ -189,7 +198,7 @@ for (const filePath of allFiles) {
 
   // Check 4: Large components (>300 lines for React UI .tsx files)
   if (filePath.endsWith('.tsx') && !relativePath.includes('test')) {
-    const nonCommentLines = lines.filter(l => {
+    const nonCommentLines = lines.filter((l) => {
       const t = l.trim();
       return t.length > 0 && !t.startsWith('//') && !t.startsWith('*') && !t.startsWith('/*');
     }).length;
@@ -206,8 +215,14 @@ for (const filePath of allFiles) {
 
 // Check 5: Tracked Server Media (server/music/ or music/ must never contain git-tracked files)
 try {
-  const tracked = execSync('git ls-files "server/music" "music"', { cwd: ROOT_DIR, encoding: 'utf-8' });
-  const files = tracked.split('\n').map(f => f.trim()).filter(Boolean);
+  const tracked = execSync('git ls-files "server/music" "music"', {
+    cwd: ROOT_DIR,
+    encoding: 'utf-8',
+  });
+  const files = tracked
+    .split('\n')
+    .map((f) => f.trim())
+    .filter(Boolean);
   violations.trackedServerMedia.push(...files);
 } catch {
   // git not available or command failed
@@ -226,10 +241,16 @@ let hasErrors = false;
 // Report Cross-Game Imports
 if (violations.crossGameImports.length > 0) {
   hasErrors = true;
-  console.log(`${RED}${BOLD}✖ Cross-Game Direct Imports Found (${violations.crossGameImports.length})${RESET}`);
-  console.log(`  Rule: Games must NEVER import from other games (AGENTS.md Section 4.3).`);
+  console.log(
+    `${RED}${BOLD}✖ Cross-Game Direct Imports Found (${violations.crossGameImports.length})${RESET}`,
+  );
+  console.log(
+    `  Rule: Games must NEVER import from other games (docs/tech/coding-conventions.md §2).`,
+  );
   for (const v of violations.crossGameImports) {
-    console.log(`  ${RED}•${RESET} ${BOLD}${v.file}:${v.line}${RESET} (${v.currentGame} -> ${v.targetGame})`);
+    console.log(
+      `  ${RED}•${RESET} ${BOLD}${v.file}:${v.line}${RESET} (${v.currentGame} -> ${v.targetGame})`,
+    );
     console.log(`    ${CYAN}${v.snippet}${RESET}`);
   }
   console.log('');
@@ -240,8 +261,12 @@ if (violations.crossGameImports.length > 0) {
 // Report Raw Storage
 if (violations.rawStorage.length > 0) {
   hasErrors = true;
-  console.log(`${RED}${BOLD}✖ Raw localStorage / sessionStorage Bypasses Found (${violations.rawStorage.length})${RESET}`);
-  console.log(`  Rule: All storage must use src/lib/storage.ts with STORAGE_KEYS (AGENTS.md Section 4.5).`);
+  console.log(
+    `${RED}${BOLD}✖ Raw localStorage / sessionStorage Bypasses Found (${violations.rawStorage.length})${RESET}`,
+  );
+  console.log(
+    `  Rule: All storage must use src/lib/storage.ts with STORAGE_KEYS (docs/tech/coding-conventions.md §2).`,
+  );
   for (const v of violations.rawStorage.slice(0, 10)) {
     console.log(`  ${RED}•${RESET} ${v.file}:${v.line} -> ${CYAN}${v.snippet}${RESET}`);
   }
@@ -256,8 +281,12 @@ if (violations.rawStorage.length > 0) {
 // Report Native Dialogs
 if (violations.nativeDialogs.length > 0) {
   hasErrors = true;
-  console.log(`${RED}${BOLD}✖ Native window.confirm / prompt / alert Found (${violations.nativeDialogs.length})${RESET}`);
-  console.log(`  Rule: Always use MUI Dialog or ConfirmDialog (AGENTS.md Section 4.5).`);
+  console.log(
+    `${RED}${BOLD}✖ Native window.confirm / prompt / alert Found (${violations.nativeDialogs.length})${RESET}`,
+  );
+  console.log(
+    `  Rule: Always use MUI Dialog or ConfirmDialog (docs/tech/coding-conventions.md §2).`,
+  );
   for (const v of violations.nativeDialogs) {
     console.log(`  ${RED}•${RESET} ${v.file}:${v.line} -> ${CYAN}${v.snippet}${RESET}`);
   }
@@ -269,8 +298,12 @@ if (violations.nativeDialogs.length > 0) {
 // Report Tracked Server Media
 if (violations.trackedServerMedia.length > 0) {
   hasErrors = true;
-  console.log(`${RED}${BOLD}✖ Tracked Server Music / Media Files Found (${violations.trackedServerMedia.length})${RESET}`);
-  console.log(`  Rule: Server songs and audio stems must NEVER be tracked in Git (AGENTS.md Section 3.2).`);
+  console.log(
+    `${RED}${BOLD}✖ Tracked Server Music / Media Files Found (${violations.trackedServerMedia.length})${RESET}`,
+  );
+  console.log(
+    `  Rule: Server songs and audio stems must NEVER be tracked in Git (docs/tech/coding-conventions.md §2).`,
+  );
   for (const f of violations.trackedServerMedia) {
     console.log(`  ${RED}•${RESET} ${f}`);
   }
@@ -281,11 +314,17 @@ if (violations.trackedServerMedia.length > 0) {
 
 // Report Large Components
 if (violations.largeComponents.length > 0) {
-  console.log(`${YELLOW}${BOLD}⚠ Components Exceeding 300 Lines (${violations.largeComponents.length})${RESET}`);
-  console.log(`  Rule: Keep components small (< 250-300 lines) to satisfy SRP (AGENTS.md Section 4.2).`);
+  console.log(
+    `${YELLOW}${BOLD}⚠ Components Exceeding 300 Lines (${violations.largeComponents.length})${RESET}`,
+  );
+  console.log(
+    `  Rule: Keep components small (< 250-300 lines) to satisfy SRP (docs/tech/coding-conventions.md §1).`,
+  );
   const sorted = [...violations.largeComponents].sort((a, b) => b.lines - a.lines);
   for (const v of sorted.slice(0, 10)) {
-    console.log(`  ${YELLOW}•${RESET} ${v.file} (${BOLD}${v.lines} lines${RESET}, ${v.codeLines} code lines)`);
+    console.log(
+      `  ${YELLOW}•${RESET} ${v.file} (${BOLD}${v.lines} lines${RESET}, ${v.codeLines} code lines)`,
+    );
   }
   if (sorted.length > 10) {
     console.log(`  ... and ${sorted.length - 10} more large components.`);
@@ -297,32 +336,50 @@ if (violations.largeComponents.length > 0) {
 
 // Summary and Exit Code
 const allCritical = [
-  ...violations.crossGameImports.map(v => ({ type: 'crossGameImports', file: v.file, detail: `${v.currentGame} -> ${v.targetGame}` })),
-  ...violations.rawStorage.map(v => ({ type: 'rawStorage', file: v.file, detail: v.snippet })),
-  ...violations.nativeDialogs.map(v => ({ type: 'nativeDialogs', file: v.file, detail: v.snippet })),
-  ...violations.trackedServerMedia.map(f => ({ type: 'trackedServerMedia', file: f, detail: 'tracked server media' })),
+  ...violations.crossGameImports.map((v) => ({
+    type: 'crossGameImports',
+    file: v.file,
+    detail: `${v.currentGame} -> ${v.targetGame}`,
+  })),
+  ...violations.rawStorage.map((v) => ({ type: 'rawStorage', file: v.file, detail: v.snippet })),
+  ...violations.nativeDialogs.map((v) => ({
+    type: 'nativeDialogs',
+    file: v.file,
+    detail: v.snippet,
+  })),
+  ...violations.trackedServerMedia.map((f) => ({
+    type: 'trackedServerMedia',
+    file: f,
+    detail: 'tracked server media',
+  })),
 ];
 
 const totalViolations = allCritical.length;
 
 // Check against baseline (ratchet mechanism)
-const freshViolations = allCritical.filter(v => !baselineSet.has(`${v.type}:${v.file}`));
-const currentKeys = new Set(allCritical.map(v => `${v.type}:${v.file}`));
-const resolvedBaselineGaps = [...baselineSet].filter(key => !currentKeys.has(key));
+const freshViolations = allCritical.filter((v) => !baselineSet.has(`${v.type}:${v.file}`));
+const currentKeys = new Set(allCritical.map((v) => `${v.type}:${v.file}`));
+const resolvedBaselineGaps = [...baselineSet].filter((key) => !currentKeys.has(key));
 
 if (!isDiff && resolvedBaselineGaps.length > 0) {
-  console.log(`${YELLOW}ℹ Fixed ${resolvedBaselineGaps.length} architecture baseline gap(s) - remove them from scripts/architecture-baseline.json to lock in progress.${RESET}`);
+  console.log(
+    `${YELLOW}ℹ Fixed ${resolvedBaselineGaps.length} architecture baseline gap(s) - remove them from scripts/architecture-baseline.json to lock in progress.${RESET}`,
+  );
 }
 
 if (totalViolations === 0) {
   console.log(`${GREEN}${BOLD}🎉 Architecture Audit Passed! All boundaries respected.${RESET}\n`);
   process.exit(0);
 } else {
-  console.log(`${BOLD}Summary: ${RED}${totalViolations} critical violations (${freshViolations.length} new)${RESET}, ${YELLOW}${violations.largeComponents.length} oversized components.${RESET}`);
+  console.log(
+    `${BOLD}Summary: ${RED}${totalViolations} critical violations (${freshViolations.length} new)${RESET}, ${YELLOW}${violations.largeComponents.length} oversized components.${RESET}`,
+  );
 
   // Both diff mode and full scan fail on new / un-baselined critical violations
   if (freshViolations.length > 0) {
-    console.error(`\n${RED}${BOLD}✖ Architecture gate failed: Found ${freshViolations.length} critical boundary violation(s) not in baseline.${RESET}\n`);
+    console.error(
+      `\n${RED}${BOLD}✖ Architecture gate failed: Found ${freshViolations.length} critical boundary violation(s) not in baseline.${RESET}\n`,
+    );
     for (const v of freshViolations) {
       console.error(`  ${RED}• [${v.type}] ${v.file}${RESET} (${v.detail})`);
     }
@@ -331,10 +388,14 @@ if (totalViolations === 0) {
   }
 
   if (isStrict) {
-    console.error(`\n${RED}${BOLD}✖ Strict mode enabled: Audit failed with ${totalViolations} violations.${RESET}\n`);
+    console.error(
+      `\n${RED}${BOLD}✖ Strict mode enabled: Audit failed with ${totalViolations} violations.${RESET}\n`,
+    );
     process.exit(1);
   }
 
-  console.log(`\n${YELLOW}✔ All critical violations are covered by architecture baseline ratchet.${RESET}\n`);
+  console.log(
+    `\n${YELLOW}✔ All critical violations are covered by architecture baseline ratchet.${RESET}\n`,
+  );
   process.exit(0);
 }

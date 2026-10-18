@@ -5,14 +5,18 @@ description: Architecture of the Werewolf moderator engine, role state machines,
 resource: src/games/werewolf/
 tags: [werewolf, social-deduction, state-machine, roles]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-09-27T10:00:00Z
+  by: previous-agent
+verified:
+  at: 2026-10-18
+  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
 # Werewolf Game Module Architecture
 
 > [!NOTE]
-> This document covers the Werewolf game module architecture. For Melodiq, see [melodiq-architecture.md](docs/tech/melodiq-architecture.md).
+> This document covers the Werewolf game module architecture. For Melodiq, see [melodiq-architecture.md](melodiq-architecture.md).
 
 ---
 
@@ -49,15 +53,15 @@ All game state is managed by a single **Redux-pattern reducer** in `src/games/we
 
 ```typescript
 interface GameState {
-  players: Player[];           // All players with roles and alive status
-  phase: GamePhase;            // Current game phase
-  round: number;               // Current round counter
+  players: Player[]; // All players with roles and alive status
+  phase: GamePhase; // Current game phase
+  round: number; // Current round counter
   nightDecisions: NightDecision[]; // Collected night actions (resolved at dawn)
-  nightActionLog: string[];    // Human-readable log for moderator
-  winner: WinnerFaction | null;// Set when win condition is met
-  enabledRoles: Role[];        // Roles active in this game
+  nightActionLog: string[]; // Human-readable log for moderator
+  winner: WinnerFaction | null; // Set when win condition is met
+  enabledRoles: Role[]; // Roles active in this game
   customRoles: RoleDefinition[]; // User-defined custom roles
-  pendingHunterIds: string[];  // Hunters awaiting their shot
+  pendingHunterIds: string[]; // Hunters awaiting their shot
   nextPhaseAfterShot: GamePhase | null;
 }
 ```
@@ -96,17 +100,17 @@ Night actions are **collected during the NIGHT phase** and **resolved atomically
 
 `getWinningFaction()` evaluates after every player death:
 
-| Faction | Win Condition |
-|---------|---------------|
-| **Villagers** | All Werewolves (and Black Werewolf) are dead |
-| **Werewolves** | Werewolves ≥ Villagers (by count) |
-| **White Werewolf** | Only the White Werewolf remains alive |
-| **Lovers** | Only the Cupid-linked lover pair remains alive |
-| **Angel** | Angel is eliminated on Round 1 Day vote |
-| **Ripper** | Ripper is the last player alive |
-| **Survivor** | Survivor is alive when any other faction wins |
-| **Pyromaniac** | All non-Pyromaniac players are burned |
-| **Easter Bunny** | Easter Bunny gave an egg to every alive player |
+| Faction            | Win Condition                                  |
+| ------------------ | ---------------------------------------------- |
+| **Villagers**      | All Werewolves (and Black Werewolf) are dead   |
+| **Werewolves**     | Werewolves ≥ Villagers (by count)              |
+| **White Werewolf** | Only the White Werewolf remains alive          |
+| **Lovers**         | Only the Cupid-linked lover pair remains alive |
+| **Angel**          | Angel is eliminated on Round 1 Day vote        |
+| **Ripper**         | Ripper is the last player alive                |
+| **Survivor**       | Survivor is alive when any other faction wins  |
+| **Pyromaniac**     | All non-Pyromaniac players are burned          |
+| **Easter Bunny**   | Easter Bunny gave an egg to every alive player |
 
 ---
 
@@ -116,8 +120,8 @@ Custom roles are defined using the `RoleDefinition` interface:
 
 ```typescript
 interface RoleDefinition {
-  id: string;           // Unique ID (UUID for custom roles)
-  name: string;         // Display name
+  id: string; // Unique ID (UUID for custom roles)
+  name: string; // Display name
   alignment: 'VILLAGER' | 'WEREWOLF' | 'NEUTRAL';
   abilities: Ability[]; // Night action definitions
   inheritsFrom?: string; // Base role ID to inherit behavior from
@@ -125,13 +129,14 @@ interface RoleDefinition {
 }
 ```
 
-Custom roles are persisted to `localStorage` (`werewolf_custom_roles`) and merged into `GameState.customRoles` on game start.
+Custom roles are persisted via `storage` (`STORAGE_KEYS.WEREWOLF_CUSTOM_ROLES` = `werewolf-custom-roles`) and merged into `GameState.customRoles` on game start.
 
 ---
 
 ## 6. Text-to-Speech (TTS) Integration
 
 The `useTTS` hook in `src/games/werewolf/hooks/` provides narrator voice during the night phase. It:
+
 - Uses the Web Speech API (`window.speechSynthesis`).
 - Reads `narratorText` from each role's `RoleDefinition`.
 - Queues speech utterances to play sequentially as each role's turn begins.

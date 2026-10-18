@@ -1,145 +1,158 @@
 ---
-type: Technical Specification
-title: Cross-Device Synchronization Protocol
-description: Single Source of Truth for cross-device synchronization protocols, MQTT mailboxes, WebRTC DataChannels, and BroadcastChannels.
-resource: src/modules/sync/
-tags: [sync, webrtc, mqtt, broadcastchannel, protocol, webpush]
+type: Reference
+title: 'Cross-device synchronization protocol'
+description: 'How devices exchange state: MQTT mailbox (topics, envelope, compression, broker failover), useMultiChannelSync (BroadcastChannel + MQTT), Melodiq WebRTC data-channel and TV messages, Web Push / ntfy relay endpoints, and the storage keys involved.'
+tags: [sync, mqtt, broadcastchannel, webrtc, webpush, ntfy, protocol]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-10-18T15:00:00+02:00
+  by: claude-code
+verified:
+  at: 2026-10-18
+  method: 'read src/modules/sync/*.ts, src/lib/webrtc/*, src/games/melodiq/{PhoneClientEngine.tsx,hooks/useTVMode.ts,hooks/useTVReceiver.ts,hooks/useMelodiqGlobalEvents.tsx}, public/sw-push.js, server/cloudflare-push-relay/worker.ts'
 sources:
-  - id: sync-module
-    resource: src/modules/sync/MqttMailboxService.ts
-    title: Generic MQTT Mailbox Service
-  - id: multichannel-sync
-    resource: src/modules/sync/useMultiChannelSync.ts
-    title: Multi-Channel Synchronization Hook
+  - 'src/modules/sync/MqttMailboxService.ts'
+  - 'src/modules/sync/useMultiChannelSync.ts'
+  - 'src/lib/webrtc/'
+  - 'server/cloudflare-push-relay/worker.ts'
 ---
 
-# Cross-Device Synchronization Protocol
+# Cross-device synchronization protocol
 
-> [!IMPORTANT]
-> This document is the Single Source of Truth for all message schemas, synchronization protocols, and peer-to-peer communication mechanisms used across LocalGameGalaxy.
+Single home for message formats and transport rules. If you add a channel or message type, document it here in the same PR.
 
----
+## 1. Channels at a glance
 
-## 1. Communication Channels Overview
+| Channel             | Used for                                                  | Transport                                                                   | Code                                                          |
+| ------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| MQTT mailbox        | turn-based / room state across devices                    | public WSS MQTT brokers, QoS 1, retained                                    | `src/modules/sync/MqttMailboxService.ts`                      |
+| Multi-channel sync  | same-device tabs **and** remote devices with one API      | `BroadcastChannel` + optional MQTT mailbox                                  | `src/modules/sync/useMultiChannelSync.ts`                     |
+| WebRTC data channel | Melodiq host ↔ phones (pitch, session, proxied API calls) | `simple-peer`, signaled over WebTorrent trackers                            | `src/lib/webrtc/`, `src/games/melodiq/`                       |
+| TV control          | Melodiq host ↔ TV window                                  | `BroadcastChannel('melodiq_tv_control')` or W3C Presentation API connection | `hooks/useTVMode.ts`, `hooks/useTVReceiver.ts`                |
+| Web Push / ntfy     | wake background devices on turn change                    | Cloudflare Worker relay → Web Push and/or ntfy                              | `src/lib/push/pushClient.ts`, `server/cloudflare-push-relay/` |
 
-LocalGameGalaxy utilizes four distinct communication and synchronization mechanisms depending on the topology, latency requirements, and physical deployment:
+Which game uses which channel: [game-catalog §3](game-catalog.md#3-sync-and-multi-device).
 
-| Channel | Used For | Technology & Transport | Module Path |
-|---------|----------|------------------------|-------------|
-| **MQTT Mailbox Service** | Asynchronous turn-based game progression & room presence | Public WSS MQTT Brokers (`hivemq`, `emqx`) with LZString compression | `src/modules/sync/MqttMailboxService.ts` |
-| **Multi-Channel Sync Coordinator** | Unified local + remote peer synchronization with fallback | `BroadcastChannel` + `MqttMailboxService` | `src/modules/sync/useMultiChannelSync.ts` |
-| **WebRTC DataChannel** | Low-latency real-time pitch streaming & controller input | `simple-peer` over WebSocket BitTorrent signaling tracker | `src/modules/sync/`, `src/games/melodiq/` |
-| **Web Push & ntfy Relays** | Mobile background wake-up and turn notifications | RFC 8291 Web Push & ntfy HTTP POST via Cloudflare Worker | `src/lib/push/pushClient.ts` |
-| **Presentation API & Local BC** | TV mode presentation on secondary displays / local browser tabs | W3C Presentation API & `BroadcastChannel('melodiq_tv_control')` | `src/games/melodiq/` |
+## 2. MQTT mailbox (`MqttMailboxService<T>`)
 
----
+### Brokers and connection
 
-## 2. MQTT Mailbox Service (`MqttMailboxService<T>`)
+- `DEFAULT_BROKER_URLS`: `wss://broker.hivemq.com:8884/mqtt`, then `wss://broker.emqx.io:8084/mqtt`. Override per instance via `brokerUrls`.
+- One lazily created client per service instance; client id `<clientPrefix|lgg_sync>_<random>_<timestamp>`.
+- `reconnectPeriod` 5 s (fixed, no exponential backoff), `keepalive` 60 s, `connectTimeout` 10 s. On `error` the service rotates to the next broker URL.
+- On (re)connect it re-subscribes every channel in `subscribedChannels`.
 
-The `MqttMailboxService` provides a decentralized, serverless mailbox pattern for turn-based state exchange.
+### Topics
 
-### Architecture & Broker Fallback
-- Connects over WebSockets (`wss://`) to resilient public brokers:
-  - Primary: `wss://broker.hivemq.com:8884/mqtt`
-  - Fallback: `wss://broker.emqx.io:8084/mqtt`
-- Automatically retries connection with exponential backoff on network flaps.
-- Compresses large game snapshots using `lz-string` to minimize bandwidth and fit within broker packet quotas.
+Topic = `<topicPrefix>/<channelId>`. Prefixes in use:
 
-### Topic Namespace Pattern
-```
-localgamegalaxy/<gameId>/<sessionId>/state
-localgamegalaxy/<gameId>/<sessionId>/presence
-```
+| Prefix               | Instance                                        |
+| -------------------- | ----------------------------------------------- |
+| `lgg/ga`             | `src/games/guessart/logic/guessArtMailbox.ts`   |
+| `lgg/storyteller/v1` | `src/games/storyteller/logic/mailboxService.ts` |
+| `lgg/tabletop`       | `src/games/tabletop/hooks/useTabletopSync.ts`   |
+| `lgg/party`          | `src/features/party/logic/partyMailbox.ts`      |
 
-### Snapshot Payload Structure
+`channelId` is the game / room id chosen by the game.
+
+### Envelope
+
 ```typescript
-interface MailboxMessage<T> {
-  senderId: string;
+// src/modules/sync/MqttMailboxService.ts
+export interface MqttEnvelope<T> {
+  version: number;
+  channelId: string;
+  senderClientId: string;
   timestamp: number;
   payload: T;
 }
 ```
 
-Games consuming `MqttMailboxService`:
-- **GuessArt**: Synchronizes drawings, active turn tokens, and round guessing evaluations.
-- **Storyteller**: Exchanges story segments, turn countdown tokens, and story completion snapshots.
-- **Tabletop Engine**: Reconciles board and player card hand state snapshots.
-- **Universal Party**: Broadcasts room lobby metadata and launches synchronized game instances.
+- Published with `{ qos: 1, retain: true }` — the **last message per topic is retained by the broker** and delivered to late joiners.
+- With `useCompression` (default `true`) the JSON is sent as `LZ:` + `LZString.compressToUTF16(...)`.
+- Receive side drops: empty / `{}` messages, envelopes whose `channelId` does not match the topic, own echoes (`senderClientId === clientId`), and an exact repeat of the last processed payload per channel.
+- Listeners: per channel (`subscribe(channelId, fn)` returns an unsubscribe) and global.
 
----
+Public brokers: anyone who knows a topic can read and write it. Do not put secrets in payloads.
 
-## 3. Multi-Channel Synchronization (`useMultiChannelSync<T>`)
-
-The `useMultiChannelSync` custom hook and `MultiChannelSyncCoordinator` combine local `BroadcastChannel` (for instant zero-latency same-device tabs) and remote MQTT (for multi-device connectivity).
-
-### Synchronization Flow
-1. **Local Emission**: State changes are published immediately to the local `BroadcastChannel`.
-2. **Remote Emission**: Concurrently published to the active MQTT topic.
-3. **Reconciliation**: Incoming snapshots are deduplicated by timestamp/turn counter so local broadcasts take precedence without duplicate reducer processing.
-4. **Lifecycle Safety**: Automatically tears down MQTT client subscriptions and closes `BroadcastChannel` instances on component unmount, preventing memory and socket leaks.
-
----
-
-## 4. WebRTC DataChannel (Host ↔ Phone Microphones)
-
-Phone clients and the Host exchange JSON-serialized messages over WebRTC DataChannels for Melodiq karaoke pitch streaming.
+## 3. Multi-channel sync (`useMultiChannelSync<T>`)
 
 ```typescript
-interface PeerMessage {
-  type: PeerMessageType;
-  payload?: unknown;
-}
+useMultiChannelSync<T>({
+  channelId, // null/undefined = inactive
+  broadcastPrefix, // BroadcastChannel name = `${broadcastPrefix}_${channelId}`
+  mailbox, // optional MqttMailboxService<T>
+  onMessage, // (payload, source: 'broadcast' | 'mqtt') => void
+  enabled, // default true
+}); // → { publish(payload, targetChannelId?) }
 ```
 
-### Host → Phone Messages
+- `MultiChannelSyncCoordinator` opens the `BroadcastChannel` and MQTT subscription on start and closes both on stop/unmount; any option change restarts it.
+- `publish` posts to a fresh `BroadcastChannel` for the target channel and, if a mailbox is set, publishes via MQTT. There is **no built-in ordering or conflict resolution** — games reconcile snapshots themselves (e.g. tabletop `logic/syncProtocol.ts`).
+- Users: storyteller, tabletop, garticphone. Melodiq and the party manager still open `BroadcastChannel`s directly ([open-questions Q4](../open-questions.md#q4--melodiq-uses-inline-broadcastchannel)).
 
-| Type | Description | Payload |
-|------|-------------|---------|
-| `TRACKER_SIGNAL` | Forwards BitTorrent tracker signal data during handshake | `{ signal: SimplePeerSignalData }` |
-| `QUEUE_UPDATE` | Syncs current song queue to phone | `{ queue: QueueItem[] }` |
-| `GAME_STARTED` | Notifies phone that a song started | `{ songTitle: string }` |
-| `GAME_STOPPED` | Notifies phone session ended | — |
-| `SCORES` | Sends final scores at session end | `{ scores: PlayerScore[] }` |
+## 4. Melodiq WebRTC and TV messages
 
-### Phone → Host Messages
+`MelodiqNetworkMessage` (`src/games/melodiq/types.ts`) has `type: string` plus loose optional fields — the vocabulary below is **derived from the code**, not from a typed union.
 
-| Type | Description | Payload |
-|------|-------------|---------|
-| `TRACKER_SIGNAL` | Returns signal data back during handshake | `{ signal: SimplePeerSignalData }` |
-| `ADD_TO_QUEUE` | Phone requests a song to be added | `{ song: SongMeta }` |
-| `REMOVE_FROM_QUEUE` | Phone requests removal | `{ songId: string }` |
-| `SUNG_SEGMENT` | Real-time singing pitch data for visual trails | `{ playerId: string, segments: SungSegment[] }` |
+### 4.1 Signaling handshake (tracker peer, `src/lib/webrtc/`)
 
----
+Details and sequence diagram: [webrtc-signaling.md](webrtc-signaling.md).
 
-## 5. Web Push & ntfy Notification Protocol
+| Message                                                    | Direction    | Purpose                                               |
+| ---------------------------------------------------------- | ------------ | ----------------------------------------------------- |
+| `host_hello` `{partyId}`                                   | host → phone | host announces itself on a tracker peer               |
+| `client_probe`                                             | phone → host | phone checks whether a tracker peer is the right host |
+| `{connectionId, signal}` (signal `offer` / `answer` / ICE) | both         | wrapped SDP exchange for the data peer                |
+| `identify` `{connectionId, profile…}`                      | phone → host | binds the data peer to a device/profile               |
 
-Used by asynchronous games (e.g. Geschichtenschreiber / Storyteller) to notify sleeping or background mobile devices:
+### 4.2 Data channel (host ↔ phone)
 
-```typescript
-interface PushNotificationPayload {
-  title: string;
-  body: string;
-  url: string;        // Deep link into active game session
-  gameId: string;
-  turnPlayer: string;
-}
-```
+| Message                                                              | Direction                                          | Code                                                         |
+| -------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------ |
+| `session_sync`                                                       | host → phone                                       | `hooks/useMelodiqGlobalEvents.tsx` → `PhoneClientEngine.tsx` |
+| `helper_config`                                                      | host → phone (companion URL/token for passthrough) | same                                                         |
+| `game_state_update` `{state}`                                        | host → phone                                       | `PhoneClientEngine.tsx`                                      |
+| `api_request` `{reqId, path, options}`                               | phone → host (phone uses host's library)           | `api/melodiqFetch.ts`                                        |
+| `api_response` / `api_response_chunk` `{reqId, chunk, index, total}` | host → phone                                       | `PhoneClientEngine.tsx`                                      |
+| `pitch` `{frequency, note, volume}`                                  | phone → host (`-1` = silence)                      | `PhoneClientEngine.tsx`                                      |
+| `configure` `{config}`                                               | phone → host                                       | `useMelodiqGlobalEvents.tsx`                                 |
 
-- Dispatched via Cloudflare Push Relay (`server/cloudflare-push-relay/index.ts`).
-- Service Worker (`public/sw-push.js`) wakes on message and focuses or opens the target game route upon click.
+### 4.3 TV control (`melodiq_tv_control` / Presentation API)
 
----
+| Message                                                                                                                        | Direction |
+| ------------------------------------------------------------------------------------------------------------------------------ | --------- |
+| `HOST_SESSION_INFO`, `PLAY_SONG`, `STOP_SONG`, `GAME_STATE`, `SETTINGS_UPDATE`, `REMOTE_COMMAND` (`WAIT_FOR_DOWNLOAD`), `PING` | host → TV |
+| `TV_READY`, `PONG`, `SONG_ENDED`                                                                                               | TV → host |
 
-## 6. Storage Keys & Session Persistence
+Host-internal events (`PLAYBACK_STARTED`, `SONG_ENDED`, `TV_READY`) are also dispatched as DOM `CustomEvent`s (`melodiq_client_send_data` and friends) inside the host page.
 
-All storage operations use `src/lib/storage.ts` with typed `STORAGE_KEYS`:
+## 5. Web Push and ntfy
 
-| Key | Type | Purpose |
-|-----|------|---------|
-| `STORAGE_KEYS.MELODIQ_ACTIVE_SESSION` | `ActiveSession \| null` | Persists active game session across refreshes |
-| `STORAGE_KEYS.MELODIQ_SETTINGS` | `MelodiqSettings` | User-level settings (latency, theme, mic) |
-| `STORAGE_KEYS.GAME_RELAY_PREFIX` | `string` | Custom push relay endpoint for game sessions |
+- Client chooses `auto | webpush | ntfy | both` (`storage.getNotificationMethod()`); ntfy server default `https://ntfy.sh`, personal topic from `storage.getUserNtfyTopic()`.
+- Relay endpoints (`server/cloudflare-push-relay/worker.ts`; each also under `/api/push/…`):
+
+| Path                | Method | Purpose                                                                                                        |
+| ------------------- | ------ | -------------------------------------------------------------------------------------------------------------- |
+| `/` or `/health`    | GET    | status, whether KV is bound                                                                                    |
+| `/vapid-public-key` | GET    | VAPID public key (env `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`, else generated and stored in KV)                 |
+| `/subscribe`        | POST   | store a push subscription                                                                                      |
+| `/unsubscribe`      | POST   | remove it                                                                                                      |
+| `/notify`           | POST   | `{gameId, senderPlayerId, title, body, url, action, targetPlayerId, ntfyTopic}` → fan-out to Web Push and ntfy |
+
+- Subscriptions live in KV binding `PUSH_KV` if configured — the binding is **commented out** in `wrangler.toml`, so without dashboard configuration the relay uses in-memory storage that is lost on cold start.
+- Service worker `public/sw-push.js`: payload `{title, body, icon, tag, url}`; defaults title `LocalGameGalaxy`, body `Du bist an der Reihe!`, tag `lgg-game-turn`; click opens/focuses `url`.
+
+## 6. Storage keys involved
+
+| Key                                                                                                                               | Purpose                                |
+| --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `STORAGE_KEYS.ACTIVE_SESSION` (`melodiq_active_session`)                                                                          | Melodiq session across reloads         |
+| `STORAGE_KEYS.MELODIQ_PARTY_ID`, `STORAGE_PREFIXES.WEBRTC_PARTY_ID`                                                               | WebRTC party / info-hash id            |
+| `STORAGE_KEYS.MELODIQ_TRACKER_URLS`, `MELODIQ_DISABLED_TRACKER_URLS`, `MELODIQ_TRACKER_PREFERENCES`, prefix `WEBRTC_TRACKER_PREF` | tracker list and per-tracker overrides |
+| `STORAGE_KEYS.SIGNALING_URL`                                                                                                      | explicit self-hosted tracker URL       |
+| `STORAGE_KEYS.PUSH_RELAY_URL`, `NOTIFICATION_METHOD`, `NTFY_SERVER_URL`, `NTFY_TOPIC`                                             | notifications                          |
+| `STORAGE_PREFIXES.GAME_RELAY` (`galaxy_game_relay_`)                                                                              | per-game relay URL from a share link   |
+| `STORAGE_PREFIXES.PARTY_STATE`, `PARTY_HOST_ID`, `STORAGE_KEYS.PARTY_MY_PLAYER_ID`, `HOST_ROOM_CODE`                              | party room                             |
+
+All keys: [persistence.md](persistence.md).

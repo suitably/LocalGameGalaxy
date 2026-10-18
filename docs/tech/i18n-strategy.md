@@ -1,12 +1,20 @@
 ---
-type: Technical Specification
-title: i18n Strategy & Translation Namespace Architecture
-description: Internationalization guidelines, translation key structures, and bilingual parity enforcement for German and English.
-resource: public/locales/
+type: Reference
+title: 'i18n strategy (de/en)'
+description: 'How translations are loaded (i18next HTTP backend + per-game resource bundles), where a string must be added, the 17 top-level namespaces, interpolation/plural conventions, and the parity ratchet in the hygiene check.'
 tags: [i18n, localization, react-i18next, translation]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-10-18T15:00:00+02:00
+  by: claude-code
+verified:
+  at: 2026-10-18
+  method: 'read src/i18n.ts, src/games/*/i18n/index.ts, public/locales/*/translation.json top-level keys, scripts/check-repo-hygiene.mjs (parity check)'
+sources:
+  - 'src/i18n.ts'
+  - 'public/locales/'
+  - 'scripts/check-repo-hygiene.mjs'
+  - 'merged from: previous version of 2026-09-27'
 ---
 
 # i18n Strategy & Translation Namespace Architecture
@@ -18,57 +26,36 @@ verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
 
 ## 1. Technology Stack
 
-| Component | Library |
-|-----------|---------|
-| Core i18n engine | `i18next` v25 |
-| React integration | `react-i18next` v16 |
-| Backend loader | `i18next-http-backend` v4 |
+| Component         | Library                       |
+| ----------------- | ----------------------------- |
+| Core i18n engine  | `i18next` v25                 |
+| React integration | `react-i18next` v16           |
+| Backend loader    | `i18next-http-backend` v4     |
 | Supported locales | `en` (English), `de` (German) |
 
 ---
 
-## 2. Initialization
+## 2. Initialization (`src/i18n.ts`)
 
-i18n is initialized in `src/i18n.ts`:
-- Language is detected from `localStorage` key `lgg_language`, falling back to the browser's `navigator.language`.
-- Translation files are loaded lazily via HTTP from `public/locales/<lang>/translation.json`.
-- The default namespace is `translation`.
+- Initial language: `storage.get(STORAGE_KEYS.LANGUAGE)` (`lgg_language`), then the legacy key `language`, then `navigator.language` (`de*` → `de`, else `en`). Changes are written back to both keys.
+- `i18next-http-backend` loads `/locales/{{lng}}/{{ns}}.json`; `fallbackLng: 'en'`, `preload: ['en', 'de']`, default namespace `translation`, `useSuspense: false`.
 
----
+## 3. Two places where strings live
 
-## 3. Directory Structure
+| Source                                    | Who uses it                                                                                                                                                      | How it is loaded                                                                                                                                  |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public/locales/{en,de}/translation.json` | app shell, hub, settings, party, connection, notifications, and the games darts, guessart, storyteller, melodiq-notes, werewolf, imposter, tabletop, garticphone | HTTP backend at start-up                                                                                                                          |
+| `src/games/<id>/i18n/index.ts`            | cards, kniffel, knister, melodiq, qwixx, sudoku, wordle                                                                                                          | the game calls its `init<Game>I18n()` which runs `i18next.addResourceBundle(lang, 'translation', …, deep=true, overwrite=true)` for `en` and `de` |
 
-```
-public/
-└── locales/
-    ├── en/
-    │   └── translation.json    ← English strings (source of truth)
-    └── de/
-        └── translation.json    ← German strings (must mirror en/ exactly)
-```
+Rule: add a string **where its game already keeps its strings**, in both languages. Do not move a game between the two systems as a side effect.
 
-> [!WARNING]
-> Both locale files must always have **identical key structures**. Missing keys in one locale will cause raw key strings to render in the UI for that language.
+`src/i18n/locales/{de,en}/imposter.json` exist but are imported nowhere ([open-questions Q6](../open-questions.md#q6--dead-translation-files)).
 
----
+## 4. Namespaces in `translation.json`
 
-## 4. Key Namespace Structure
+Top-level keys (identical in `en` and `de`): `app`, `common`, `connection`, `games`, `gartic`, `github`, `guessart`, `hub`, `lobby`, `notifications`, `party`, `server`, `settings`, `signaling`, `storyteller`, `sudoku`, `wordle`. Game titles/descriptions for the hub are under `games.<id>.title` / `.description` (the keys referenced by `gameRegistry.tsx`).
 
-The single `translation.json` file is divided into logical namespaces as top-level JSON keys:
-
-```
-translation.json
-├── app.*              → Global app UI (title, navigation, welcome messages)
-├── games.*            → Game-specific strings
-│   ├── werewolf.*     → All Werewolf UI text (roles, phases, actions)
-│   ├── melodiq.*      → All Melodiq UI text (queue, settings, scores)
-│   └── imposter.*     → All Imposter UI text (setup, reveal, voting)
-├── settings.*         → App and game settings panel strings
-├── common.*           → Shared UI strings (buttons, errors, loading states)
-└── feedback.*         → Feedback dialog strings
-```
-
-### Example Usage in Components
+### Example
 
 ```tsx
 import { useTranslation } from 'react-i18next';
@@ -79,32 +66,30 @@ function MyComponent() {
 }
 ```
 
----
+### Parity gate
 
-## 5. Adding New Translation Keys (Mandatory Steps)
+`npm run check:hygiene` (pre-commit and CI) flattens both `public/locales` files and fails on **new** keys missing in either language; known gaps are listed in `scripts/i18n-parity-baseline.json` (currently empty) and must be removed from it when fixed. Per-game bundles in `src/games/*/i18n/` are **not** covered by this check.
 
-When adding any new user-facing string:
+## 5. Adding new translation keys
 
-1. **Add the key to `public/locales/en/translation.json`** under the correct namespace.
-2. **Add the same key to `public/locales/de/translation.json`** with the German translation.
-3. **Use the key in the component** via `t('namespace.key')`.
-4. **Never commit** a PR that adds keys to one locale but not the other.
+1. Find where the surrounding component's strings live (§3).
+2. Add the key to **both** `en` and `de` in that place (`public/locales/*/translation.json`, or both objects of the game's `i18n/index.ts`).
+3. Use it via `t('namespace.key')`. A default value as second argument (`t('connection.party_id', 'Party ID')`) is used in a few places as fallback; it does not replace the entries.
+4. Run `npm run check:hygiene` for the `public/locales` parity check.
 
-### Adding a New Game Module
-
-If a new game is added, create a new top-level namespace key (e.g., `games.trivia.*`) and add all strings to both locale files before writing any UI component text.
-
----
+New game: the hub renders `games.<id>.title` / `.description` before any game bundle is initialised, so these two keys always go into `public/locales/*/translation.json` — also for games that keep the rest of their strings in a bundle (qwixx, cards, kniffel do this).
 
 ## 6. Interpolation and Pluralization
 
 Variables are injected using double-brace syntax:
+
 ```tsx
 // Key: "pass_device_instruction": "Pass device to {{name}}"
-t('games.werewolf.pass_device_instruction', { name: player.name })
+t('games.werewolf.pass_device_instruction', { name: player.name });
 ```
 
 Plural forms use the `_one` / `_other` suffix convention supported by i18next:
+
 ```json
 "player_count_one": "{{count}} Player",
 "player_count_other": "{{count}} Players"
