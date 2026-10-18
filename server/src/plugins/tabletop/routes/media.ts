@@ -50,17 +50,7 @@ tabletopMediaRouter.get('/tabletop/media', async (c) => {
     return c.text('Remote URLs are not supported via /tabletop/media', 400);
   }
 
-  // Token authentication check
-  const queryToken = c.req.query('token');
-  const authHeader = c.req.header('Authorization');
-  const token = queryToken || (authHeader ? authHeader.replace(/^Bearer\s+/i, '').trim() : null);
-
-  if (serverConfig.token && token && token !== serverConfig.token) {
-    const isApiKey = serverConfig.apiKeys.some((k) => k.token === token);
-    if (!isApiKey) {
-      return c.text('Unauthorized', 401);
-    }
-  }
+  // Token is enforced by requireAuth (see plugins/tabletop/index.ts)
 
   // Verify targetPath is securely within tabletopDirectories
   const safePath = resolveSecurePath(targetPath, serverConfig.tabletopDirectories);
