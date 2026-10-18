@@ -14,14 +14,14 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@hono/node-server": "2.1.4",
+    "@hono/node-server": "2.1.5",
     "fast-glob": "3.3.3",
     "hono": "4.13.13",
-    "music-metadata": "12.1.0",
+    "music-metadata": "12.2.1",
     "sanitize-filename": "1.6.4"
   },
   "devDependencies": {
-    "@types/node": "26.6.4",
+    "@types/node": "26.6.5",
     "@yao-pkg/pkg": "6.23.0",
     "esbuild": "0.28.2",
     "typescript": "7.0.2"
