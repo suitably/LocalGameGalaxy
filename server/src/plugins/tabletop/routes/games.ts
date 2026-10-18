@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import fg from 'fast-glob';
 import { serverConfig } from '../../../config';
+import { getRequestToken } from '../../../core/auth';
 import { cloudflareTunnel } from '../../../core/tunnel';
 import { getLocalIp } from '../../../utils/helpers';
 import { getGameCache, isScanning, scanGames } from '../services/scanner';
@@ -16,6 +17,8 @@ import type {
 export const tabletopGamesRouter = new Hono<HonoEnv>();
 
 const toClientGameEntry = (entry: TabletopGameEntry): ClientTabletopGameEntry => {
+  // Destructured only to omit server paths from the client payload.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { jsonPath: _jsonPath, assetsDir: _assetsDir, ...clientSafe } = entry;
   return clientSafe;
 };
@@ -46,7 +49,8 @@ tabletopGamesRouter.get('/api/tabletop/games/:id/raw', async (c) => {
   const tunnelUrl = cloudflareTunnel.getUrl();
   const localIp = getLocalIp();
   const publicUrl = tunnelUrl ?? `http://${localIp}:${serverConfig.port}`;
-  const token = serverConfig.token || '';
+  // Embed the caller's own token, never the master token: these URLs go back to the client.
+  const token = encodeURIComponent(getRequestToken(c) ?? '');
 
   const assetMap: Record<string, string> = {};
 

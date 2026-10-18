@@ -12,10 +12,13 @@
 
 ### Fixed
 
+- **Release**: `release.yml` called `npm run package` in `server/`, which no longer existed, so server binaries and the release publish step failed. `server/` now bundles with esbuild and packages Node 24 binaries for Linux, Windows and macOS with `@yao-pkg/pkg`; the release archives also ship `scripts/align_lyrics.py`.
 - **Melodiq TV**: Fixed an issue where clicking the Cast button would open a new window instead of initiating a stream to the TV because of dynamic query string mismatches.
 
 ### Security
 
+- **Companion server**: all tabletop routes (`/api/tabletop/*`, `/tabletop/media`) now require a valid token; changing tabletop directories needs the master token or a management API key. Previously `/tabletop/media` accepted requests without a token and the directory routes were open, which allowed reading arbitrary files.
+- **Companion server**: media URLs returned by `/api/songs` and `/api/tabletop/games/:id/raw` carry the caller's own token instead of the master token, so restricted API keys can no longer obtain the master token.
 - Applied security audit fixes (Security & Vulnerability Auditor).
 - Hardened `DOMPurify.sanitize` usage in `RulesDialog` with strict allowlists for tags and attributes.
 - Hardened server routes in `relayPlugin` with explicit length constraints and type checking for POST requests.
@@ -50,6 +53,8 @@
 
 - Deduplicated queue participant logic in Melodiq game and removed `any` types from song downloader.
 - Resolved 23 i18n translation parity gaps across tabletop, guessart, and party modules.
+
+## [Unreleased]
 
 ### Added
 
@@ -156,5 +161,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ServerAdminPanel`: Decomposed into smaller sub-components and extracted state into `useServerApiKeys` custom hook to resolve Separation of Concerns and God Component size violations.
 
 ## [Unreleased]
+
 ### Refactored
+
 - Deduplicated `guessart` and `storyteller` core primitives by extracting pure IndexedDB operations into `src/modules/async-game`, round-robin player assignment logic into `src/lib/utils/turnAssignment.ts`, and sharing dialogs logic via `useSessionSharing` into `src/modules/sharing`.

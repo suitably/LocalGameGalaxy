@@ -27,7 +27,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: 'npm'
@@ -115,7 +115,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: 'npm'
@@ -185,7 +185,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: 'npm'
@@ -201,7 +201,12 @@ jobs:
 
       - name: Prepare Release Artifacts
         run: |
-          mkdir -p release/linux release/windows release/macos
+          mkdir -p release/linux/scripts release/windows/scripts release/macos/scripts
+
+          # Lyric alignment script (found via <cwd>/scripts/ — the launchers cd into their own folder)
+          for os in linux windows macos; do
+            cp server/src/scripts/align_lyrics.py "release/$os/scripts/"
+          done
 
           # Linux
           cp server/dist/nexumia-server-linux release/linux/
