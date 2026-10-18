@@ -83,7 +83,7 @@ Node version drift (`node:20-slim` vs Node 24 elsewhere): [open-questions Q10](.
 
 ### 4c. Standalone binaries (currently broken)
 
-`release.yml` runs `npm run package` in `server/` and expects `server/dist/nexumia-server-{linux,win.exe,macos}` plus launchers from `server/release-scripts/` (`start-server.sh`, `NexumiaServer.desktop`, `start-server.bat`, `start-server.command`). `server/package.json` has **no `package` script** since 2026-09-13, so this job fails. → [open-questions Q1](../open-questions.md#q1--release-pipeline-calls-a-script-that-no-longer-exists)
+`release.yml` runs `npm run package` in `server/` and expects `server/dist/nexumia-server-{linux,win.exe,macos}` plus launchers from `server/release-scripts/` (`start-server.sh`, `NexumiaServer.desktop`, `start-server.bat`, `start-server.command`). `server/package.json` has **no `package` script** since 2026-09-13, so this job fails. Fix pending in PR #394. → [open-questions Q1](../open-questions.md#q1--release-pipeline-calls-a-script-that-no-longer-exists)
 
 ## 5. Signaling tracker
 

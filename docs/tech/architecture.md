@@ -130,7 +130,7 @@ UI layout state is split to avoid app-wide re-renders (`src/context/`):
   - `relay` — in-memory HTTP room relay (`/api/relay/rooms/*`, rooms expire after 4 h idle). It is **not** the WebRTC tracker.
   - `tabletop` — tabletop asset folders, game listing, workshop import, image proxy.
 - Core: CORS + Private Network Access header + `/health` + `/api/info` (`core/app.ts`); optional Cloudflare Quick Tunnel (`core/tunnel.ts`, `ENABLE_TUNNEL=true` or `--tunnel`).
-- Config: `config.json` found via `CONFIG_PATH`, cwd or next to the executable; env overrides `PORT`, `SECURITY_TOKEN`/`TOKEN`, `MUSIC_DIR`, `DIRECTORIES`, `TABLETOP_DIR`, `MODELS_DIR`, `ALLOWED_ORIGINS`. Token auto-generated if empty. Details: [server-security](server-security.md), [secrets-management](secrets-management.md).
+- Config: `config.json` found via `CONFIG_PATH`, `/app/config`, cwd or next to the executable; env overrides `PORT`, `SECURITY_TOKEN`/`TOKEN`, `MUSIC_DIR`, `DIRECTORIES`, `TABLETOP_DIR`, `MODELS_DIR`, `ALLOWED_ORIGINS`. Token auto-generated if empty. Details: [server-security](server-security.md), [secrets-management](secrets-management.md).
 - Plain HTTP only; TLS comes from the tunnel or a reverse proxy.
 
 ### 3.7 Signaling tracker (`signaling/`)

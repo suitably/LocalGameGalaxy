@@ -22,14 +22,14 @@ Read [server-security §6](../tech/server-security.md#6-known-gaps) before expos
 
 ## 1. Files and ports
 
-| What      | Where                                                                                                                                   |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Config    | `config.json` (lookup: `CONFIG_PATH`, cwd, executable dir — [secrets-management §2](../tech/secrets-management.md#2-server-configjson)) |
-| Playlists | `playlists.json` next to the config; `/app/config/playlists.json` in Docker                                                             |
-| Songs     | configured `directories` / `MUSIC_DIR`; downloads into `downloadDir`                                                                    |
-| Models    | `MODELS_DIR` or `<cwd>/models`                                                                                                          |
-| Ports     | server 3000, signaling tracker 8000                                                                                                     |
-| Health    | `GET http://<host>:3000/health`, `GET http://<host>:8000/health`                                                                        |
+| What      | Where                                                                                                                                                  |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Config    | `config.json` (lookup: `CONFIG_PATH`, `/app/config`, cwd, executable dir — [secrets-management §2](../tech/secrets-management.md#2-server-configjson)) |
+| Playlists | `playlists.json` next to the config; `/app/config/playlists.json` in Docker                                                                            |
+| Songs     | configured `directories` / `MUSIC_DIR`; downloads into `downloadDir`                                                                                   |
+| Models    | `MODELS_DIR` or `<cwd>/models`                                                                                                                         |
+| Ports     | server 3000, signaling tracker 8000                                                                                                                    |
+| Health    | `GET http://<host>:3000/health`, `GET http://<host>:8000/health`                                                                                       |
 
 ## 2. Start, stop, update
 

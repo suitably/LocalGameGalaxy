@@ -2,6 +2,12 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-18 — Q0/Q1 fixes referenced (claude-code)
+
+- Q0 (tabletop auth, master-token leak incl. `/api/songs`) and Q1 (release binaries) are fixed in PR #394; docs mark them pending until merge.
+- `config.json` lookup order corrected (`/app/config` was missing) in persistence, architecture, secrets-management, server runbook.
+- **No code changed on this branch.**
+
 ## 2026-10-18 — Docs-vs-code audit and OKF restructuring (claude-code)
 
 - Audited all 104 doc files against the code: 149 broken references in 49 files, invented APIs/messages/DB names, false "verified by CI" claims. Report: [reports/2026-10-18-docs-vs-code-audit.md](reports/2026-10-18-docs-vs-code-audit.md).

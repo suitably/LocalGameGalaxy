@@ -6,6 +6,8 @@ Found by the [2026-10-18 docs-vs-code audit](reports/2026-10-18-docs-vs-code-aud
 
 ## Q0 — Unauthenticated tabletop routes allow file reads
 
+**Fix pending: PR #394** (auth on all tabletop routes, caller token instead of master token in `/raw` **and** `/api/songs` URLs, which had the same leak). After merge: move the result into [server-security](tech/server-security.md) and delete this item; the room relay stays unauthenticated by design.
+
 **[security, user]** The `melodiq` plugin protects its paths with `requireAuth`; the `tabletop` and `relay` plugins register no auth middleware.
 
 - `POST /api/tabletop/config/directories` (`server/src/plugins/tabletop/routes/config.ts`) adds **any existing directory** to `tabletopDirectories` without a token.
@@ -16,6 +18,8 @@ Found by the [2026-10-18 docs-vs-code audit](reports/2026-10-18-docs-vs-code-aud
   Analysed from code only (2026-10-18), not exploited. Resolve: stop embedding the master token in URLs (issue a scoped, short-lived media token or rely on the caller's own token), put `requireAuth` (and `requireMasterToken` for config writes) in front of the tabletop config/refresh/workshop routes, and make `/tabletop/media` reject requests without a valid token (keep the `?token=` query form the client already sends). → [server-security §6](tech/server-security.md#6-known-gaps)
 
 ## Q1 — Release pipeline calls a script that no longer exists
+
+**Fix pending: PR #394** (`npm run bundle` with esbuild + `npm run package` with `@yao-pkg/pkg` 6.23.0 for `node24-{linux,win,macos}-x64`; archives also ship `scripts/align_lyrics.py`). After merge: update [deployment §4c](tech/deployment.md#4c-standalone-binaries-currently-broken) and delete this item.
 
 **[bug]** `.github/workflows/release.yml` job `build-server-binaries` runs `npm run package` in `server/` and copies `server/dist/nexumia-server-{linux,win.exe,macos}`. `server/package.json` only has `build`, `start`, `test`; the `package` script and `pkg` were removed in commit `1e64b51` (2026-09-13, "refactor melodiq backend"), after the last release `1.1.0` (2026-09-03). The next `v*` tag will fail in that job, and `publish-release` (which `needs` it) will never undraft the release.
 Resolve: either restore a binary build (e.g. `pkg`/`@yao-pkg/pkg` or Node SEA) in `server/package.json`, or remove the job and its `needs` entry. → [ci-cd-pipelines §2.3](workflows/ci-cd-pipelines.md#23-consolidated--gated-release-pipeline-releaseyml), [deployment §4c](tech/deployment.md#4c-standalone-binaries-currently-broken)

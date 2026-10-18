@@ -107,6 +107,6 @@ CORS only restricts browsers. It is not access control — tokens are.
 
 ## 6. Known gaps
 
-- **Tabletop and relay plugins have no auth middleware**, `/tabletop/media` accepts requests without a token, and `/api/tabletop/games/:id/raw` embeds the master token in returned URLs. Together this allows reading files and obtaining the master token without credentials. Details and fix: [open-questions Q0](../open-questions.md#q0--unauthenticated-tabletop-routes-allow-file-reads).
+- **Tabletop and relay plugins have no auth middleware**, `/tabletop/media` accepts requests without a token, and `/api/tabletop/games/:id/raw` embeds the master token in returned URLs. Together this allows reading files and obtaining the master token without credentials. Fixed in PR #394 (pending merge). Details: [open-questions Q0](../open-questions.md#q0--unauthenticated-tabletop-routes-allow-file-reads).
 - Tokens travel in query strings (`?token=`) for media URLs, so they end up in logs and browser history.
 - The server is meant for trusted LANs. Exposing it through the tunnel publishes all of the above.

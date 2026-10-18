@@ -33,7 +33,7 @@ sources:
 
 ## 2. Server `config.json`
 
-Lookup order (`server/src/config.ts`): `CONFIG_PATH` → current working directory → directory of the executable → its parent. If none exists the server starts with defaults and writes the file when settings change.
+Lookup order (`server/src/config.ts`): `CONFIG_PATH` (if the file exists) → `/app/config` → current working directory → directory of the executable → its parent. A stale `config.json` next to a binary therefore wins over the working directory. If none exists the server starts with defaults and writes the file when settings change.
 
 Start from the example:
 
