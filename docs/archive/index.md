@@ -1,0 +1,7 @@
+# Archive
+
+Completed task specs and retired tooling, kept because the reasoning may matter again. Paths inside these files describe the code **at the time of writing** and are often gone.
+
+- [Backend simplification](backend-simplification/README.md) — 11 specs that turned the Express server into the Hono plugin server (no auto-sync, no VAPID in the server, no SSL generator, no admin UI, simplified auth, frontend config UI, File System Access lite mode, Dockerfile/compose). All implemented.
+- [Tabletop engine](tabletop-engine/README.md) — TT-01…TT-08: schema + `.pcio` parser, IndexedDB manager, surface + widgets, smartphone controller, peer sync, party integration, GitHub PR publishing, built-in library. All implemented.
+- [SOLID task batch](solid-tasks/README.md) — SOLID-01…12, 15, 16, 18, 19 and ISSUE-132 (cross-game imports, shared sync/drawing/sharing modules, storage migration, native dialogs, God-component splits, layout context split, i18n of connection UI). Verified done in code on 2026-10-18. Still open: SOLID-13, 14, 17 in [tasks/](../tasks/index.md).

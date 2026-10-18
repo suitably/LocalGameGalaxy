@@ -5,8 +5,12 @@ description: C4 Model context and container diagrams for the LocalGameGalaxy mul
 resource: src/
 tags: [c4, diagrams, architecture, webrtc, mqtt, hono]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-09-27T10:00:00Z
+  by: previous-agent
+verified:
+  at: 2026-10-18
+  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
 # System Context & Container Diagrams
@@ -33,7 +37,7 @@ C4Context
     System_Ext(youtube, "YouTube / yt-dlp", "Source for song audio download.")
     System_Ext(usdb, "USDB (UltraStar Database)", "Source for UltraStar lyric files and song metadata.")
     System_Ext(bt_tracker, "BitTorrent Tracker", "Public WebRTC signaling relay used for peer discovery.")
-    System_Ext(demucs, "Demucs / audio-separator (PyTorch)", "Local CPU/GPU model for separating vocals from instrumentals.")
+    System_Ext(demucs, "audio-separator (UVR-MDX-NET ONNX) + whisper-timestamped", "Local CPU models for stem separation and lyric alignment.")
 
     Rel(host, lgg, "Manages game sessions via browser or Android app")
     Rel(singer, lgg, "Joins via QR code, streams microphone audio")

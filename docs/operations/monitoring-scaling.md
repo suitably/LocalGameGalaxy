@@ -5,8 +5,12 @@ description: Resource profiles, CPU/memory constraints for PyTorch audio separat
 resource: server/
 tags: [operations, monitoring, scaling, metrics]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-09-27T10:00:00Z
+  by: previous-agent
+verified:
+  at: 2026-10-18
+  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
 # Monitoring, Alerting, and Capacity Scaling [ID: OPS-MONITORING-SCALING]
@@ -17,19 +21,19 @@ This document details the operational resource profiles, monitoring configuratio
 
 ## 1. Resource Profiles for Audio Separation
 
-Audio separation (Facebook Demucs) and forced lyric alignment are highly resource-intensive background operations.
+Audio separation (`audio-separator` with the UVR-MDX-NET ONNX model) and forced lyric alignment (`whisper-timestamped`) are highly resource-intensive background operations.
 
 ### Resource Utilization Profiles
 
-| Job Phase | Core CPU Usage | RAM Usage | Duration (per song) |
-|-----------|----------------|-----------|---------------------|
-| **yt-dlp Download** | Low (0.1–0.5 cores) | Low (~100 MB) | 10–30 seconds |
-| **FFmpeg Conversion**| High (1–2 cores) | Medium (~250 MB) | 5–15 seconds |
-| **Vocal Separation (Demucs CPU)** | **Critical** (Maxes all allocated cores) | **High** (1.5 GB – 2.5 GB) | 3–8 minutes |
-| **Lyric Alignment** | Medium (1 core) | Low (~150 MB) | 10–20 seconds |
+| Job Phase                                  | Core CPU Usage                           | RAM Usage                  | Duration (per song) |
+| ------------------------------------------ | ---------------------------------------- | -------------------------- | ------------------- |
+| **yt-dlp Download**                        | Low (0.1–0.5 cores)                      | Low (~100 MB)              | 10–30 seconds       |
+| **FFmpeg Conversion**                      | High (1–2 cores)                         | Medium (~250 MB)           | 5–15 seconds        |
+| **Vocal Separation (audio-separator CPU)** | **Critical** (Maxes all allocated cores) | **High** (1.5 GB – 2.5 GB) | 3–8 minutes         |
+| **Lyric Alignment**                        | Medium (1 core)                          | Low (~150 MB)              | 10–20 seconds       |
 
 > [!WARNING]
-> Running multiple Demucs separation jobs simultaneously without resource limits will exhaust system memory, trigger the OS Out-Of-Memory (OOM) killer, and crash the main Express web server.
+> Running multiple separation jobs simultaneously without resource limits will exhaust system memory, trigger the OS Out-Of-Memory (OOM) killer, and crash the main Express web server.
 
 ---
 
@@ -38,7 +42,9 @@ Audio separation (Facebook Demucs) and forced lyric alignment are highly resourc
 To safeguard Express API responsiveness, you must limit resources allocated to the server container.
 
 ### Docker Compose Configuration
+
 Apply CPU and RAM limits in `docker-compose.yml` to prevent host starvation:
+
 ```yaml
 services:
   melodiq-server:
@@ -46,10 +52,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '4.0'          # Limit container to 4 CPU cores
-          memory: 3000M        # Limit container to 3GB RAM
+          cpus: '4.0' # Limit container to 4 CPU cores
+          memory: 3000M # Limit container to 3GB RAM
         reservations:
-          memory: 1000M        # Reserve 1GB RAM minimum
+          memory: 1000M # Reserve 1GB RAM minimum
 ```
 
 ---
@@ -59,16 +65,22 @@ services:
 Operators should monitor the following metrics on the host machine:
 
 ### 1. CPU Utilization
+
 Exhaustion will cause API timeouts.
+
 - **CLI Check**: `htop` or `top`
 - **Docker Check**: `docker stats`
 
 ### 2. RAM Utilization
+
 Check if the server is approaching the 3GB limit.
+
 - **CLI Check**: `free -m`
 
 ### 3. Disk Space
+
 Audio files and models consume significant storage.
+
 - **CLI Check**: `df -h`
 - **Model Check**: ONNX separation models are stored in `/server/models/` (~1.2 GB total).
 - **Stems Check**: Each song directory consumes ~50–150 MB of disk space.
@@ -79,18 +91,19 @@ Audio files and models consume significant storage.
 
 Configure your monitoring stack (e.g. Prometheus + Alertmanager or custom scripts) with these recommended alert thresholds:
 
-| Metric | Condition | Severity | Description / Action |
-|--------|-----------|----------|----------------------|
-| **Container RAM** | `> 85%` for 2m | Warning | Nearing OOM crash threshold. Review active jobs queue. |
-| **Container CPU** | `> 95%` for 10m | Warning | CPU cores saturated. API response times might degrade. |
-| **Disk Space** | `> 90%` | Critical | Disks nearing capacity. Clean up cached/failed download folders. |
-| **Health Check** | API fails `GET /api/progress` | Critical | Web server is dead or unresponsive. Trigger restart. |
+| Metric            | Condition                     | Severity | Description / Action                                             |
+| ----------------- | ----------------------------- | -------- | ---------------------------------------------------------------- |
+| **Container RAM** | `> 85%` for 2m                | Warning  | Nearing OOM crash threshold. Review active jobs queue.           |
+| **Container CPU** | `> 95%` for 10m               | Warning  | CPU cores saturated. API response times might degrade.           |
+| **Disk Space**    | `> 90%`                       | Critical | Disks nearing capacity. Clean up cached/failed download folders. |
+| **Health Check**  | API fails `GET /api/progress` | Critical | Web server is dead or unresponsive. Trigger restart.             |
 
 ---
 
 ## 5. Scaling Strategy
 
 The companion server utilizes a **single-worker job queue** to run separation tasks sequentially.
+
 - **Concurrency**: The server executes exactly **one** separation job at a time. Other requests remain queued in `separatorQueue`.
 - **Scaling Limit**: Do **not** attempt to scale horizontally by running multiple instances of the server sharing the same directory without a distributed lock manager. This would corrupt the database files and lead to file lock conflicts on `playlists.json`.
 - **Hardware Requirement**: For reliable CPU-based separation, the host machine must have at least **4 CPU cores** and **4 GB of total system RAM**.

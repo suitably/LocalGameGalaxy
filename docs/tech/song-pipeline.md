@@ -1,102 +1,77 @@
 ---
-type: Pipeline Specification
-title: Song Ingestion & Vocal Separation Pipeline
-description: Processing pipeline for downloading songs (yt-dlp), extracting lyrics, and executing AI vocal separation via Demucs / ONNX.
-resource: server/src/plugins/melodiq/
-tags: [audio, demucs, yt-dlp, vocal-separation, ultrastar]
+type: Reference
+title: 'Song ingestion, vocal separation and lyric alignment pipeline'
+description: "How the companion server's melodiq plugin downloads songs (USDB .txt + yt-dlp audio/cover/video), separates stems (audio-separator, UVR-MDX-NET ONNX model), aligns lyrics (whisper-timestamped), and which job-based HTTP endpoints the client polls."
+tags: [melodiq, server, usdb, yt-dlp, audio-separator, whisper, pipeline]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-10-18T15:00:00+02:00
+  by: claude-code
+verified:
+  at: 2026-10-18
+  method: 'read server/src/plugins/melodiq/{services/download.ts,services/separator.ts,services/usdb.ts,routes/*.ts}, server/src/scripts/align_lyrics.py'
+sources:
+  - 'server/src/plugins/melodiq/services/download.ts'
+  - 'server/src/plugins/melodiq/services/separator.ts'
+  - 'server/src/scripts/align_lyrics.py'
 ---
 
-# Song Ingestion & Vocal Separation Pipeline
+# Song pipeline (companion server, `melodiq` plugin)
 
-> [!NOTE]
-> This pipeline runs entirely on the companion server (`/server`) as a series of sequential subprocesses. It is CPU-intensive; see the operational guide for hardware recommendations.
+Runs only when the companion server is used. Everything is **job-based**: the client starts a job, then polls its status. There is no SSE stream.
 
----
+## 1. Download job (`services/download.ts`)
 
-## 1. Pipeline Overview
+Started by `POST /api/usdb/download`; poll `GET /api/usdb/status/:jobId`; list `GET /api/usdb/jobs`; cancel/clear `DELETE /api/usdb/jobs/:jobId?`.
+
+1. **Target folder** — `downloadDir`, else the first configured directory, else cwd; one sub-folder per song (sanitised name).
+2. **Lyrics** — reuse an existing local `.txt` with notes, else log in to USDB (`usdb.animux.de`, credentials via `POST /api/config/usdb-credentials`) and fetch `?link=gettxt&id=<usdbId>`. Without credentials/ID a minimal `.txt` is generated.
+3. **YouTube URL** — taken from the request or resolved by search (`GET /api/youtube/search`).
+4. **Cover, audio, video** — via `yt-dlp`. Video either downloaded (`bestvideo[ext=mp4]+bestaudio[ext=m4a]/…`) or, in `stream` mode (`defaultDownloadMode`, default `stream`), only the stream URL is written to the `.txt` header.
+5. **Write `.txt`** with media headers, rescan, and — if `autoVocalSeparation` is enabled in config — queue a separation job.
+
+`yt-dlp` resolution: looks in `PATH` and several fixed locations; if missing it tries `pip3 install --user yt-dlp`, then downloads the **latest** release binary from GitHub. **Inference:** this is an unpinned runtime download — relevant for security reviews and offline hosts. `ffmpeg` must be installed separately.
+
+## 2. Separation and alignment jobs (`services/separator.ts`)
+
+| Endpoint                                                                                            | Purpose                                                                                                                                                |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /api/separator/status`                                                                         | whether Python deps are installed                                                                                                                      |
+| `POST /api/separator/install`                                                                       | installs CPU-only PyTorch, then `audio-separator[cpu]` and `whisper-timestamped` via `pip3` (adds `--break-system-packages` on system-managed Pythons) |
+| `POST /api/separator/job`                                                                           | start a separation or alignment job (`SeparatorJobRequest`)                                                                                            |
+| `GET /api/separator/jobs`, `GET /api/separator/status/:jobId`, `DELETE /api/separator/jobs/:jobId?` | list / poll / cancel                                                                                                                                   |
+
+- **Separation:** `audio-separator` with model `UVR-MDX-NET-Inst_HQ_3.onnx` from `MODELS_DIR` (default `<cwd>/models`). Output stems are `.mp3` files whose names contain `Vocals` / `Instrumental`; the scanner picks them up next to the `.txt`.
+- **Alignment ("Full AI Sync"):** `python3 server/src/scripts/align_lyrics.py <txt> <audio>` — Whisper `base` model on CPU (`whisper-timestamped`, models in `WHISPER_MODELS_DIR` / `TORCH_HOME` / `/app/models`), uses the vocals stem if present, else the master audio, and rewrites note timings in the `.txt`.
+- The Docker `full` image pre-installs the Python stack; the `base` image does not (see [deployment](deployment.md)).
+
+ADR-0004 still describes Demucs; see [open-questions Q13](../open-questions.md#q13--adr-0004-no-longer-matches-the-separation-stack).
+
+## 3. Library and media endpoints
+
+| Endpoint                               | Purpose                                                              |
+| -------------------------------------- | -------------------------------------------------------------------- |
+| `GET /api/songs`, `GET /api/songs/:id` | scanned library (UltraStar `*.txt` under the configured directories) |
+| `POST /api/songs/refresh`              | rescan                                                               |
+| `PUT /api/songs/:id/txt`               | overwrite the `.txt`                                                 |
+| `POST /api/songs/:id/video`            | set / download a video                                               |
+| `DELETE /api/songs/:id`                | delete (needs master token or API key with `allowSongDeletion`)      |
+| `GET /media?path=…`                    | file streaming with HTTP 206 range support                           |
+| `GET /api/browse`                      | directory browser for the config UI                                  |
+| `GET/POST/DELETE /api/playlists…`      | server playlists (`playlists.json`)                                  |
+
+Auth for all of these: [server-security.md](server-security.md). Client side: `src/games/melodiq/api/` and the settings UI under `src/features/settings/components/server/`.
+
+## 4. Song folder layout
+
+No fixed file names — whatever the `.txt` headers reference:
 
 ```
-User Input (URL / USDB Search)
-        │
-        ▼
-┌─────────────────┐
-│  1. USDB Search │  ── Scrape USDB for song metadata + lyrics (.txt)
-│  (usdb.js)      │
-└────────┬────────┘
-         │ if YouTube URL provided
-         ▼
-┌─────────────────┐
-│  2. Download    │  ── yt-dlp downloads audio as MP3/M4A
-│  (yt-dlp)       │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  3. Separation  │  ── audio-separator (Demucs) splits vocals / instrumental
-│  (separator.js) │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  4. Alignment   │  ── Python align_lyrics.py syncs lyric timestamps to audio
-│  (align_lyrics) │
-└────────┬────────┘
-         │
-         ▼
-   Song marked 'ready' in MelodiqDB
-   Files available via /api/songs/:id/stream
+<library dir>/<Artist - Title>/
+├── <name>.txt                 # UltraStar lyrics + #MP3/#VIDEO/#COVER headers
+├── <audio>.mp3|m4a|…          # master audio
+├── <… Vocals …>.mp3           # stem (optional)
+├── <… Instrumental …>.mp3     # stem (optional)
+├── <video>.mp4                # optional (or stream URL in the .txt)
+└── <cover>.jpg|png            # optional
 ```
-
----
-
-## 2. Stage Details
-
-### Stage 1: USDB Metadata Scraping (`usdb.js`)
-- Queries the USDB website using a custom HTML scraper (`scrapeUSDB()`).
-- Parses the search results HTML to extract song ID, title, artist, and lyrics URL.
-- Downloads the UltraStar `.txt` lyric file and saves it to the song directory.
-
-### Stage 2: Audio Download (`yt-dlp`)
-- Accepts a YouTube URL or auto-searches YouTube by title+artist.
-- Spawns `yt-dlp` as a child process with `--audio-format mp3 --audio-quality 0`.
-- Output is saved as `audio.mp3` in the song directory.
-- Status is tracked and streamed to the client via Server-Sent Events (SSE).
-
-### Stage 3: Vocal Separation (`separator.js`)
-- Spawns a Python subprocess running `audio-separator` with the Demucs `htdemucs` model.
-- Input: `audio.mp3`. Outputs: `vocals.mp3` and `instrumental.mp3`.
-- Progress is logged and forwarded to the client via SSE.
-- The Python environment must be pre-configured (see [onboarding-faq.md](docs/tech/onboarding-faq.md)).
-
-### Stage 4: Forced Alignment (`align_lyrics.py`)
-- Optional step that refines per-syllable timestamps in the UltraStar `.txt` file.
-- Uses `auditok` for audio activity detection and `difflib` for lyric-to-audio matching.
-- Updates the `.txt` file in-place with corrected BPM note timings.
-
----
-
-## 3. File Layout (per song)
-
-```
-<configured_music_directory>/
-└── <song-uuid>/
-    ├── audio.mp3          # Full mixed audio (from yt-dlp)
-    ├── vocals.mp3         # Separated vocal stem (from Demucs)
-    ├── instrumental.mp3   # Separated instrumental stem (from Demucs)
-    └── lyrics.txt         # UltraStar format lyrics file (from USDB + alignment)
-```
-
----
-
-## 4. API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `POST /api/songs` | POST | Add song to queue (triggers download pipeline) |
-| `GET /api/songs` | GET | List all songs with processing status |
-| `GET /api/songs/:id/stream` | GET | Stream audio file (vocals or instrumental) |
-| `POST /api/separate/:id` | POST | Trigger re-separation for an existing song |
-| `GET /api/progress` | GET (SSE) | Server-Sent Events stream for pipeline progress |

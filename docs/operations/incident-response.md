@@ -5,8 +5,12 @@ description: Protocols for handling operational incidents, severity levels, esca
 resource: docs/operations/
 tags: [incident-response, playbook, operations, postmortem]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-09-27T10:00:00Z
+  by: previous-agent
+verified:
+  at: 2026-10-18
+  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
 # Incident Response & Postmortem Guidelines [ID: OPS-INCIDENT-RESPONSE]
@@ -17,11 +21,11 @@ This document outlines the protocols for handling operational incidents, escalat
 
 ## 1. Severity Levels
 
-| Severity | Impact | Example | Action |
-|----------|--------|---------|--------|
-| **Sev-1: Critical** | Core gameplay is entirely broken for all users. | Central WebRTC signaling tracker is down; companion server OOM crashes. | Immediate mitigation. On-call alert. |
-| **Sev-2: Major** | Feature-specific failure affecting active users; workaround exists. | Lyric separation fails on specific YouTube videos; self-signed certificate expired. | Mitigate same-day. |
-| **Sev-3: Minor** | Cosmetic bug or minor utility failure. | Translation typo; log warnings without functional impact. | Schedule fix in sprint. |
+| Severity            | Impact                                                              | Example                                                                             | Action                               |
+| ------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------ |
+| **Sev-1: Critical** | Core gameplay is entirely broken for all users.                     | Central WebRTC signaling tracker is down; companion server OOM crashes.             | Immediate mitigation. On-call alert. |
+| **Sev-2: Major**    | Feature-specific failure affecting active users; workaround exists. | Lyric separation fails on specific YouTube videos; self-signed certificate expired. | Mitigate same-day.                   |
+| **Sev-3: Minor**    | Cosmetic bug or minor utility failure.                              | Translation typo; log warnings without functional impact.                           | Schedule fix in sprint.              |
 
 ---
 
@@ -30,11 +34,14 @@ This document outlines the protocols for handling operational incidents, escalat
 In the event of an outage or error report during a session:
 
 ### Step 1: Detect & Verify
+
 1. Attempt to reproduce the issue on a local device.
 2. Check browser Developer Console (F12) for WebSocket connection errors or database transaction lockups.
 
 ### Step 2: Check Companion Server Status
+
 Run diagnostics on the host:
+
 ```bash
 # Check if container is running
 docker compose ps
@@ -44,7 +51,9 @@ docker compose logs -n 100 server
 ```
 
 ### Step 3: Check Tracker Accessibility
+
 If client pairing fails:
+
 - Run a ping check to the WebSocket tracker from both Host and Phone.
 - Test connection to the local tracker: `curl http://localhost:8000`.
 
@@ -58,7 +67,9 @@ When an incident cannot be mitigated immediately by local operators:
 2. **Core Developer**: Backend exceptions, database migration locks, frontend router errors.
 
 ### Communication Template
+
 Use this template to report active Sev-1 / Sev-2 incidents:
+
 ```
 INCIDENT ALERT: [Game Mode / Service affected]
 SEVERITY: [Sev-1 / Sev-2]
@@ -78,22 +89,26 @@ Every Sev-1 incident requires a postmortem conducted within 48 hours of resoluti
 # Incident Review: [Incident Title] (Date: YYYY-MM-DD)
 
 ## Summary
+
 - **Severity**: Sev-1
 - **Duration**: [XX minutes]
 - **Impacted Users**: [Description of users affected]
 - **Resolution**: [Short description of fix]
 
 ## Timeline
+
 - **HH:MM**: Outage detected. Alert triggered.
 - **HH:MM**: Operators start investigation.
 - **HH:MM**: Root cause identified.
 - **HH:MM**: Mitigation applied. Services restored.
 
 ## Root Cause Analysis (RCA)
+
 - Why did the issue occur? [Detail the failure mode]
 - Why was it not caught earlier?
 
 ## Action Items (Corrective & Preventative)
+
 - [ ] Action item 1 (Owner: name, Deadline: date)
 - [ ] Action item 2 (Owner: name, Deadline: date)
 ```

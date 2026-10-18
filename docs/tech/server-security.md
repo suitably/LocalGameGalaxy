@@ -1,18 +1,25 @@
 ---
-type: Security Specification
-title: Server Security Model & Authentication
-description: Authentication model, bearer token enforcement, CORS headers, Private Network Access (PNA), and TLS termination.
-resource: server/src/core/auth.ts
-tags: [security, hono, auth, pna, cors]
+type: Reference
+title: 'Companion server security model'
+description: 'Transport (no TLS in the server; tunnel or proxy), master token and API keys, which routes requireAuth / requireMasterToken protect, CORS and Private Network Access behaviour, and the known gaps in the tabletop and relay plugins.'
+tags: [security, auth, cors, pna, server, tokens]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-10-18T15:00:00+02:00
+  by: claude-code
+verified:
+  at: 2026-10-18
+  method: 'read server/src/core/app.ts, server/src/plugins/melodiq/{index.ts,middleware/auth.ts}, server/src/plugins/tabletop/routes/*.ts, server/src/plugins/relay/index.ts, server/src/utils/helpers.ts'
+sources:
+  - 'server/src/plugins/melodiq/middleware/auth.ts'
+  - 'server/src/core/app.ts'
+  - 'merged from: previous version of 2026-09-27'
 ---
 
 # Server Security Model & Authentication
 
 > [!CAUTION]
-> This document contains descriptions of security-sensitive flows. Never commit real tokens, private keys, or certificates to the repository. See [secrets-management.md](docs/tech/secrets-management.md) for configuration setup.
+> This document contains descriptions of security-sensitive flows. Never commit real tokens, private keys, or certificates to the repository. See [secrets-management.md](secrets-management.md) for configuration setup.
 
 ---
 
@@ -35,7 +42,7 @@ The Melodiq Helper Server implements a multi-layer security model designed for t
 │                                                          │
 │  • CORS & Private Network Access (PNA) headers           │
 │  • Token middleware (Bearer auth / API key capabilities) │
-│  • Modular Hono plugins (Melodiq, WebRTC Relay)          │
+│  • Hono plugins: melodiq, relay (rooms), tabletop        │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -58,13 +65,15 @@ Every authenticated API request from the SPA to the server must include a **Bear
 Authorization: Bearer <token>
 ```
 
-The token is stored in `config.json` and loaded at server startup via `server/src/config.ts`. The SPA reads this token from a pairing QR code or direct connection input and stores it in memory for the session.
+The token is stored in `config.json` and loaded at server startup via `server/src/config.ts`. The SPA gets the token from a pairing QR code or manual input and keeps it in `localStorage` (`STORAGE_KEYS.HELPER_TOKEN`) until changed.
 
 **Token validation middleware** (`server/src/plugins/melodiq/middleware/auth.ts`):
-- Checks `req.headers.authorization` or query parameter for `Bearer <token>`.
+
+- Reads `Authorization: Bearer <token>` or the `?token=` query parameter.
+- Applied by the `melodiq` plugin to: `/api/songs*`, `/api/status`, `/api/auth/me`, `/media`, `/api/usdb/*`, `/api/youtube/*`, `/api/separator/*`, `/api/config/*`, `/api/playlists*`, `/api/browse`, `/api/feedback` (`server/src/plugins/melodiq/index.ts`). Public: `/health`, `/api/info`.
 - Matches against the master `config.token` (which grants full permissions) or a valid API key in `config.apiKeys`.
 - Returns `401 Unauthorized` if missing or mismatched.
-- Sensitive admin routes (e.g. server config, key management) require `requireMasterToken` (valid master token or API key with `allowManagement: true`).
+- Management routes in `routes/config.ts` additionally use `requireMasterToken` (master token or API key with `allowManagement: true`; else `403`). Song deletion checks `allowSongDeletion`.
 
 ---
 
@@ -73,6 +82,7 @@ The token is stored in `config.json` and loaded at server startup via `server/sr
 For clients and guests that should not have unrestricted master access, the server supports granular API keys:
 
 Each API key contains:
+
 - `id`: Unique identifier
 - `name`: Display label (e.g., "Living Room TV")
 - `token`: Bearer authentication token
@@ -84,12 +94,19 @@ API keys are passed via the standard `Authorization: Bearer <token>` header and 
 
 ---
 
-## 5. CORS Configuration
+## 5. CORS and Private Network Access
 
-The server's CORS policy is controlled by the `ALLOWED_ORIGINS` environment variable (or defaults):
+`server/src/core/app.ts`:
 
-| Environment | Allowed Origins |
-|-------------|-----------------|
-| Development | All origins (`*`) |
-| Production  | Explicitly listed origins (e.g., `https://nexumia.de`) |
+- Every response carries `Access-Control-Allow-Private-Network: true` (Chrome PNA preflights from public origins to LAN IPs).
+- `allowedOrigins` comes from env `ALLOWED_ORIGINS` (comma list). If it is unset, empty or contains `*`, the request origin is **reflected** (any origin allowed).
+- Otherwise listed origins are allowed **plus always** `http(s)://localhost|127.0.0.1[:port]` and RFC 1918 addresses (`192.168.*`, `10.*`, `172.16–31.*`).
+- Methods `GET POST PUT DELETE OPTIONS`; headers `Content-Type, Authorization, X-Requested-With`; `maxAge` 86400.
 
+CORS only restricts browsers. It is not access control — tokens are.
+
+## 6. Known gaps
+
+- **Tabletop and relay plugins have no auth middleware**, `/tabletop/media` accepts requests without a token, and `/api/tabletop/games/:id/raw` embeds the master token in returned URLs. Together this allows reading files and obtaining the master token without credentials. Details and fix: [open-questions Q0](../open-questions.md#q0--unauthenticated-tabletop-routes-allow-file-reads).
+- Tokens travel in query strings (`?token=`) for media URLs, so they end up in logs and browser history.
+- The server is meant for trusted LANs. Exposing it through the tunnel publishes all of the above.

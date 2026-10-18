@@ -1,138 +1,145 @@
-# Agent Guidelines
+# AGENTS.md — operating rules for agents in LocalGameGalaxy
 
-## 1. Project References & OKF (Open Knowledge Format)
+You are working in `suitably/LocalGameGalaxy` (product name **Nexumia**): an offline-first React 19 / Vite PWA with 15 local party games, an optional Hono companion server (`server/`) and a signaling tracker (`signaling/`). Other agents (Jules, Copilot, Claude Code) read this file too — `.github/copilot-instructions.md` and `CLAUDE.md` point here.
 
-- **Knowledge Bundle Root (OKF v0.2)**: [`docs/index.md`](docs/index.md) — The central index for progressive disclosure navigation across technical domains.
-- **Architecture SSoT**: [`docs/tech/architecture.md`](docs/tech/architecture.md) — Single Source of Truth for system design, state architecture, and shared modules.
-- **Domain Tech Specs**: `docs/tech/` — [Sync Protocol](docs/tech/sync-protocol.md), [Data Persistence](docs/tech/persistence.md), [Coding Conventions](docs/tech/coding-conventions.md), [i18n](docs/tech/i18n-strategy.md), etc.
-- **Workflows & Pipelines**: `docs/workflows/` — [SOLID Development Workflow](docs/workflows/solid_development.md) and [CI/CD Pipelines Reference](docs/workflows/ci-cd-pipelines.md).
-- **Mandatory OKF Pre-Flight**: Before implementing or refactoring any feature, you MUST read the corresponding domain specification in `docs/tech/` via [`docs/index.md`](docs/index.md). Do not guess contracts or invent ad-hoc protocols.
-- **OKF Maintenance**: When introducing or modifying architectural patterns, data models, or cross-game mechanisms, you MUST update the corresponding OKF document and verify [`docs/index.md`](docs/index.md).
+The knowledge base is [`docs/`](docs/index.md) (Open Knowledge Format v0.2). Start there.
 
-## 2. Agent Workflow: Scope Control & Incremental Delivery
+## 1. Before you act
 
-To prevent AI context drift, logical contradictions, and untested code sprawl:
+1. Read [`docs/index.md`](docs/index.md), then the doc for your area. For anything game-specific read [`docs/tech/game-catalog.md`](docs/tech/game-catalog.md) first.
+2. Check [`docs/open-questions.md`](docs/open-questions.md) — your topic may have a known contradiction or a pending maintainer decision. Do not silently "fix" an item marked _(user)_.
+3. **Verify, don't trust.** Every doc carries `verified.at`. Code wins over docs; if they disagree, fix the doc in the same change or add an open question. Quick checks are in §9.
+4. Read the target file and its neighbouring tests before editing. Check open PRs for overlapping work (`gh pr list`) — many branches are opened by Jules and stacked on each other.
 
-- **Bite-Sized Slices**: Never implement multiple architectural layers at once (e.g., storage + sync + logic + multi-screen UI). Split work into:
-  1. _Domain Logic & Types_: Pure functions + unit tests in `logic/`.
-  2. _State & Integration_: Custom hooks (`use<Feature>State.ts`) connecting to storage/sync.
-  3. _UI Components_: Composable presentation under 250 lines.
-- **Reuse Audit (MANDATORY)**: Before writing code, search `src/modules/`, `src/components/`, `src/lib/`, and `src/hooks/` (see §6 catalog). If a solution exists, reuse or extend it. Reinventing existing primitives is strictly forbidden.
-- **Read Before Modifying**: Always read the existing target file and its neighboring tests before proposing edits.
-- **Verification Gate**: Run verification (§5) immediately after code changes. Never leave code unverified.
+## 2. Environment and workflow
 
-## 3. Project-Specific Code Rules
+- Node **24** (`.nvmrc`, `engines`). Three npm packages with their own lockfiles: root, `server/`, `signaling/` — run `npm ci` in the one you touch.
+- GitHub is primary; `main` is protected (PR required; required checks "Deterministic Prechecks (no install)" and "CI Quality Gate (Aggregator)"). GitLab (`gitlab` remote) is a mirror running the same `npm run ci:gates`.
+- Branches `feature/…`, `bugfix/…`, `docs/…`, `refactor/…`, `chore/…`; commits in Conventional Commits ([CONTRIBUTING.md](CONTRIBUTING.md)). The PR title prefix matters: `chore|refactor|style|test|docs|perf:` bypasses the doc-sync gate.
+- Husky runs gates on commit and push. Do not bypass them with `--no-verify`.
+- Do not edit generated or local-only paths: `dist/`, `dev-dist/`, `server/dist/`, `node_modules/`, `android/app/build/`, `android/local.properties`, `server/music/`.
+- **Secrets — do not read, print or commit:** any `config.json` (server token, USDB password, GitHub token), `.env*`, keystores (`*.jks`, `*.keystore`, `*.p12`), `android/app/release.jks`. Use `server/config.example.json` for examples.
 
-- **Pure Logic Separation**: All game rules, turn transitions, scoring, and validations MUST reside as pure, side-effect-free functions in `logic/*.ts` and be verified with Vitest (`logic/*.test.ts`). React components MUST NOT contain raw game mechanics.
-- **State Invariants & Discriminated Unions**: Eliminate contradictory boolean states (e.g., `isLoading && isError` or `isPlaying && isLobby`). Always model states with discriminated unions (`type State = { status: 'idle' } | { status: 'loading' } | ...`).
-- **No Cross-Game Imports**: `src/games/<A>` must never import from `src/games/<B>`. Extract shared code to `src/modules/`, `src/components/`, or `src/lib/`.
-- **Dialogs**: Use MUI `<Dialog>` or [`ConfirmDialog`](src/components/common/ConfirmDialog.tsx). Never `window.confirm()` or native `<dialog>`.
-- **Storage**: Use [`src/lib/storage.ts`](src/lib/storage.ts) with registered keys in `STORAGE_KEYS`. Never call raw `localStorage` or `sessionStorage`.
-- **Header**: Integrate with `GlobalHeader` via [`LayoutContext`](src/context/LayoutContext.tsx) / `usePageTitle`. No duplicate top bars or floating hub-exit buttons.
-- **TypeScript**: No `any`. Strict typings, generics, or type-guarded `unknown`.
-- **CSS**: CSS variables, Grid/Flexbox, `100dvh`.
+## 3. Scope control and incremental delivery
 
-### 3.1 Anti-God-Component Architecture & Decomposition Pattern
+- **Bite-sized slices.** Do not implement several layers at once (storage + sync + logic + multi-screen UI). Order: (1) domain logic and types — pure functions + tests in `logic/`; (2) state and integration — `use<Feature>State.ts` hooks; (3) UI — components under 250 lines.
+- **Reuse audit first.** Search `src/modules/`, `src/components/`, `src/lib/`, `src/hooks/` (catalog in §5). Extend what exists; never build a second implementation of the same concept (player rosters, sync, dice, dialogs, latency calibration, song download).
+- **Verification gate.** Run §8 after code changes, not during research or planning.
 
-To prevent monolithic components that bundle state, effects, and layouts:
+## 4. Code rules
 
-- **Single Responsibility Principle (SRP)**: A component must either orchestrate (Container) or present (Presenter/Leaf), never mix storage/network sync + calculation + layout in one file.
-- **Size Budget**:
-  - **Hard Limit**: Max **250 lines** per `.tsx` component.
-  - **Warning Zone**: **200–250 lines** — extract hooks or sub-components before adding more code.
-  - **Orchestrator Components**: Target **< 160 lines** by composing sub-components with clean props.
-- **Standard 3-Tier Decomposition Pattern**:
-  1. **Custom Hook**: Extract state, side-effects (`useEffect`), storage persistence, and network/event handlers into `use<Feature>State.ts` or `use<Component>Settings.ts`.
-  2. **Focused Sub-Components**: Break distinct UI blocks (dialogs, cards, lists, toolbars) into dedicated sub-components with typed props. Co-locate in the same directory or a `components/` subfolder.
-  3. **Types Extraction**: Place shared interfaces in a co-located `types.ts` and re-export from the entry point for backward compatibility.
-- **Ratchet Rule for Legacy Components**:
-  - Existing components exceeding 250 lines are tracked in `scripts/legacy-component-baselines.json`.
-  - **Never expand a God Component**: Any modification to a legacy file must maintain or decrease its line count. New logic must be placed in extracted hooks or sub-components.
-  - When a legacy component is refactored below 250 lines, remove it from `scripts/legacy-component-baselines.json` to lock in the improvement.
+The full rule set with what enforces each rule lives in [`docs/tech/coding-conventions.md`](docs/tech/coding-conventions.md). The essentials:
 
-### 3.2 Zero-Tolerance Anti-Pattern Matrix
+- **No cross-game imports** (`src/games/<A>` → `src/games/<B>`). Shared code goes to `src/modules/`, `src/components/` or `src/lib/`. _(check:architecture fails)_
+- **Storage only via `src/lib/storage.ts`** (`storage`, `sessionStorageSafe`) with keys registered in `STORAGE_KEYS` / `STORAGE_PREFIXES`. Never `localStorage.` / `sessionStorage.` directly. _(check:architecture fails on raw access; unregistered keys are a known gap — Q8)_
+- **No native dialogs** (`confirm`, `prompt`, `alert`). Use [`ConfirmDialog`](src/components/common/ConfirmDialog.tsx) or MUI `<Dialog>`. _(ESLint + check:architecture fail)_
+- **Component budget:** new `.tsx` files ≤ 250 lines (aim < 160 for orchestrators); files in `scripts/legacy-component-baselines.json` must never grow, and are removed from it once ≤ 250. Decompose into a `use<Feature>State.ts` hook, focused sub-components and a co-located `types.ts`. _(check:budget fails)_
+- **Pure game logic** in `logic/*.ts` with Vitest tests; components hold no game rules.
+- **Discriminated unions** instead of contradictory boolean flags.
+- **No `any`** in new or changed code — use generics, interfaces or `unknown` with guards. _(ESLint only warns; existing debt: Q3)_
+- **No inline `BroadcastChannel`** in games — use `useMultiChannelSync()`. _(review only; Melodiq still violates it: Q4)_
+- **No hardcoded UI strings** (§6).
+- **Header:** integrate with `GlobalHeader` via `TitleContext` / `HeaderLayoutContext` (`usePageTitle`, `useHeaderLayout`); `LayoutContext` is the backward-compatible composite. No second top bar, no floating hub-exit buttons.
+- **CSS:** theme tokens (no hard-coded hex in components), Grid/Flexbox, `100dvh`.
+- **Never commit media** under `server/music/` (songs, stems). _(check:architecture fails)_
+- **No copy-paste** blocks; `jscpd` fails above 2.5 % duplication (clones from 12 lines). _(check:duplicates)_
 
-The following patterns are **strictly forbidden**. Any pull request, task, or commit containing them will be rejected by CI and automated architecture linting:
+## 5. Reuse catalog
 
-| 🚫 Forbidden Anti-Pattern                                             | Why It Is Blocked                                                | ✅ Mandatory Solution                                             |
-| :-------------------------------------------------------------------- | :--------------------------------------------------------------- | :---------------------------------------------------------------- |
-| **Cross-Game Import** (`from '../<other>/...'`)                       | Couples games, breaks modular independence                       | Move to `src/modules/*` or `src/components/*`                     |
-| **Reinventing Shared Primitives**                                     | Creates duplicate, divergent logic (players, dice, sync, modals) | Consult OKF (§1) & Reuse Catalog (§6); reuse `src/modules/*`      |
-| **Embedded Game Rules in UI**                                         | Untestable game logic, spaghetti event handlers                  | Extract pure functions to `logic/*.ts` + unit tests               |
-| **Contradictory Boolean Flags** (`isStarting && isEnded`)             | Causes illegal UI states and logic desync                        | Discriminated unions (`status: 'lobby' \| 'round' \| 'finished'`) |
-| **Raw Storage** (`localStorage.` / `sessionStorage.`)                 | Bypasses memory fallback and key registry                        | Use `storage.get/set/remove()` from `src/lib/storage.ts`          |
-| **Native Dialogs** (`window.confirm()`, `window.prompt()`, `alert()`) | Blocks main thread, breaks on Capacitor, unstyled                | Use `<ConfirmDialog />` or MUI `<Dialog>`                         |
-| **Untyped Code** (`: any`, `<any>`, `as any`)                         | Disables TypeScript compiler safety                              | Use generics, interfaces, or `unknown` with type guards           |
-| **God Component** (> 250 lines in `.tsx`)                             | Violates SRP, unmaintainable, test barrier                       | Split into sub-components + custom hook (`useFeatureLogic`)       |
-| **Inline BroadcastChannel Sync** in Games                             | Duplicates network logic, leaks channels                         | Use `useMultiChannelSync()` from `src/modules/sync`               |
-| **Hardcoded UI Strings** (`"Save"`, `"Delete"`)                       | Breaks internationalization (i18n)                               | Use `t('key')` and add to both `de` and `en`                      |
-| **Tracked Server Media** (`server/music/`, audio stems)               | Bloats git history with copyrighted binaries                     | Keep in `.gitignore`, never track songs or stems in git           |
+| Module                 | Path                                                      | Provides                                                                                                      |
+| :--------------------- | :-------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------ |
+| Player management      | `src/modules/player-management`                           | `PlayerManagerCard`, `useLobbyPlayers`, `playerLogic.ts` — lobby lists, add/remove, min/max, persistence      |
+| Sync & mailbox         | `src/modules/sync`                                        | `MqttMailboxService<T>` (HiveMQ → EMQX, LZString, dedup), `useMultiChannelSync` (BroadcastChannel + MQTT)     |
+| Drawing                | `src/modules/drawing`                                     | `DrawingCanvas`, `ExcalidrawViewer`, `ExcalidrawLazy`, `excalidrawScene.ts`                                   |
+| Sharing                | `src/modules/sharing`                                     | `ShareSessionLinksDialog`, `EditSessionDialog`, `useGameJoinUrl`, `parseGameUrlParams`, `cleanWindowUrlQuery` |
+| Async game IDB         | `src/modules/async-game`                                  | `createOpenDatabase`, `createIdbStoreOperations`, `runWithStore`, `cursorCollect`                             |
+| Audio                  | `src/modules/audio`                                       | `MicrophoneManager`, `AudioUtils` — pitch detection, RMS gate, MIDI mapping                                   |
+| Confirm dialog         | `src/components/common/ConfirmDialog.tsx`                 | MUI confirmation modal                                                                                        |
+| 3D dice                | `src/components/games/Die3D.tsx`                          | animated die                                                                                                  |
+| Header & titles        | `src/context/TitleContext.tsx`, `HeaderLayoutContext.tsx` | `usePageTitle`, `useHeaderLayout`, actions, menu items, safe hub exit                                         |
+| Push                   | `src/components/push/`, `src/lib/push/pushClient.ts`      | permission banner, settings, Web Push / ntfy client                                                           |
+| Storage                | `src/lib/storage.ts`                                      | key/value storage with memory fallback, `STORAGE_KEYS`                                                        |
+| Wake lock, orientation | `src/hooks/useWakeLock.ts`, `useScreenOrientation.ts`     | keep screen on, lock orientation                                                                              |
+| GitHub publishing      | `src/lib/github.ts`                                       | `createGitHubPR` (REST via `fetch`)                                                                           |
+| WebRTC                 | `src/lib/webrtc`                                          | `WebRTCHostManager`, `useWebRTCClient`, `WebRTCHostContext`, tracker logic                                    |
 
-## 4. Anti-Duplication Rule & Code Hygiene
+## 6. i18n
 
-- **Duplication Threshold**: Code duplication across files is monitored by `jscpd` (`npm run check:duplicates`). Copy-pasting logic blocks (> 10 lines) is blocked.
-- **Refactor Before Copy**: If you need logic or UI that exists in another component or game, extract it to a shared module (`src/modules/`, `src/hooks/`, `src/components/`) first.
-- **Single Source of Truth**: Never maintain two parallel implementations of the same domain concept (e.g., latency calibration, song downloading, player rosters).
+- All user-facing text via `t('key')`, always in **both** `de` and `en`.
+- Put a string where its game already keeps its strings: `public/locales/{de,en}/translation.json`, or the game's own bundle `src/games/<id>/i18n/index.ts` (cards, kniffel, knister, melodiq, qwixx, sudoku, wordle). Hub title/description keys always go to `public/locales`. Details: [`docs/tech/i18n-strategy.md`](docs/tech/i18n-strategy.md).
 
-## 5. Verification & CI Pipeline
+## 7. Capacitor (Android) UI
 
-The project enforces quality gates via local Git hooks (Husky) and GitHub Actions (`.github/workflows/ci.yml`).
+- Safe areas: `var(--safe-area-inset-top)` from `capacitor-plugin-safe-area` on root containers and full-screen overlays; fallback `env(safe-area-inset-top, 0px)`.
+- Touch: `user-select: none`, `-webkit-touch-callout: none` (except inputs), `-webkit-tap-highlight-color: transparent`, `overscroll-behavior-y: contain`.
+- Back button: `App.addListener('backButton', …)` — close modals / navigate before exiting.
+- After web changes that must reach the app: `npm run build && npx cap sync android`.
 
-- **Pre-Commit Hook (`.husky/pre-commit`)** (< 10s): Runs `lint-staged` (ESLint `--fix`, Prettier formatting on staged files), `check:hygiene`, and `check:architecture:diff`.
-- **Pre-Push Hook (`.husky/pre-push`)** (< 2 min): Runs `check:budget`, `check:duplicates`, and `npm test` (Vitest) before pushing code.
-- **Local Full Suite (`npm run quality-gates`)**: Shortcut running all hygiene, architecture, budget, duplicate, lint, and vitest checks locally.
+## 8. Verification
 
-**When to run**: Only **after making code changes**, before marking a task as done.
-**Do NOT run** lint, test, build, or any verification commands during the **planning or research phase** — no code has changed, so verification adds no value and wastes resources.
+Run **after code changes**, before you call a task done. Do not run gates during research or planning.
 
 ```bash
-npm run check:architecture:diff # Verifies changed files against boundaries
-npm run check:budget            # Component budget & anti-God-component ratchet
-npm run check:duplicates        # Code duplication scan (jscpd)
-npm run check:docs              # Documentation & translation sync gate
-npm run lint                    # ESLint (0 errors)
-npm test                        # Vitest unit tests
+npm run check:architecture:diff # boundaries on changed files (fails on new violations)
+npm run check:budget            # 250-line budget + legacy ratchet
+npm run check:duplicates        # jscpd
+npm run check:docs              # doc-sync gate: core changes in src/games|modules|lib need CHANGELOG/docs/tech/AGENTS/README/locales
+npm run lint                    # ESLint, 0 errors
+npm test                        # Vitest
 npm run build                   # tsc -b && vite build
+npm run quality-gates           # hygiene + architecture:diff + budget + duplicates + lint + test
+cd server && npm run build && npm test   # when server/ changed (tests run against dist/)
 ```
 
-## 6. Reuse Catalog
+Hooks: pre-commit = `lint-staged` + `check:hygiene` + `check:architecture:diff`; pre-push = `check:budget` + `check:duplicates` + `npm test`.
 
-Search this inventory before building new feature code:
+## 9. Keeping the knowledge bundle correct (OKF v0.2)
 
-| Module                | Path                                             | Provides                                                                                                                                                           |
-| :-------------------- | :----------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Player Management** | `src/modules/player-management`                  | `<PlayerManagerCard>`, `useLobbyPlayers`, `playerLogic.ts` — lobby player lists, add/remove, min/max, persistence                                                  |
-| **Sync & Mailbox**    | `src/modules/sync`                               | `MqttMailboxService<T>`, `useMultiChannelSync` — MQTT peer-sync with multi-broker fallback & BroadcastChannel                                                      |
-| **Drawing**           | `src/modules/drawing`                            | `<DrawingCanvas>`, `<ExcalidrawViewer>`, `<ExcalidrawLazy>`, `excalidrawScene.ts` — canvas rendering, interactive drawing + stroke replay                          |
-| **Sharing**           | `src/modules/sharing`                            | `<ShareSessionLinksDialog>`, `<EditSessionDialog>`, `useGameJoinUrl`, `parseGameUrlParams` — QR codes, LZString links, URL param parsing, join hook, Web Share API |
-| **Async Game IDB**    | `src/modules/async-game`                         | `createIdbStoreOperations`, `runWithStore` — IndexedDB CRUD helpers                                                                                                |
-| **Confirm Dialog**    | `src/components/common/ConfirmDialog.tsx`        | MUI confirmation modal (replaces `window.confirm()`)                                                                                                               |
-| **3D Dice**           | `src/components/games/Die3D.tsx`                 | Animated 3D die with rolling animation, selection glow, preset colors                                                                                              |
-| **Header & Titles**   | `src/context/LayoutContext.tsx`                  | `GlobalHeader`, `usePageTitle`, action menus, safe hub exit                                                                                                        |
-| **Push Banner**       | `src/components/push/PushNotificationBanner.tsx` | Web Push & ntfy permission banner                                                                                                                                  |
-| **Storage**           | `src/lib/storage.ts`                             | Centralized storage with memory fallback. All keys registered in `STORAGE_KEYS`                                                                                    |
-| **Audio Processing**  | `src/modules/audio`                              | `MicrophoneManager`, `AudioUtils` — pitch detection, autocorrelation, RMS volume, MIDI pitch mapping                                                               |
+Format: one concept per markdown file, YAML front matter, progressive disclosure through `index.md` files ([spec](docs/references/external-sources.md#okf)).
 
-## 7. i18n
+**Front matter for concept docs** (everything except `index.md` files, `log.md`, `open-questions.md`):
 
-- All user-facing text via `t('key')`. Never hardcode strings.
-- Update **both** [`public/locales/en/translation.json`](public/locales/en/translation.json) and [`public/locales/de/translation.json`](public/locales/de/translation.json) for every new key.
+```yaml
+---
+type: Reference | Howto | Report | ADR | Task
+title: '…'
+description: 'One sentence — agents use it to decide whether to open the file.'
+tags: […]
+status: stable | draft | deprecated
+generated:
+  at: 2026-10-18T15:00:00+02:00 # last meaningful content edit
+  by: claude-code # tool/agent name, no model ids
+verified:
+  at: 2026-10-18 # last time claims were checked against the code
+  method: 'what you read or ran'
+sources:
+  - 'src/… or URL'
+---
+```
 
-## 8. Capacitor (Android) UI
+Rules:
 
-- **Safe Areas**: Use `var(--safe-area-inset-top)` from `capacitor-plugin-safe-area` on root containers and full-screen overlays. Fallback: `env(safe-area-inset-top, 0px)`.
-- **Touch**: `user-select: none`, `-webkit-touch-callout: none` (except inputs), `-webkit-tap-highlight-color: transparent`, `overscroll-behavior-y: contain`.
-- **Back Button**: Handle via `App.addListener('backButton', ...)` — close modals/navigate before exiting.
-- **Build**: Run `npx cap sync` after updating web assets.
+- Only the root `docs/index.md` carries `okf_version`. Directory `index.md` files have no front matter.
+- **Relative markdown links** with `.md` (`[text](../tech/persistence.md#2-indexeddb-databases)`). Never `file:///…` or absolute home paths.
+- **One topic, one home.** Link to the owning doc instead of copying facts — duplicated facts drift (the 2026-10-18 audit found 149 broken references).
+- Document what the code **does**, not what it should do. Name real files and symbols; check that they exist (`grep -rn <symbol> src server/src`) before writing them down.
+- Mark uncertainty: `**Unverified:**`, `**Inference:**`.
+- Contradiction you cannot resolve → add it to [`docs/open-questions.md`](docs/open-questions.md); resolved → move the answer into the owning doc, delete the item, note it in [`docs/log.md`](docs/log.md).
+- Every change to the bundle → an entry at the top of [`docs/log.md`](docs/log.md) (`## YYYY-MM-DD — summary (agent)`; say whether code outside `docs/` changed).
+- One-off investigations, audits, evaluations → `docs/reports/YYYY-MM-DD-topic.md`, never updated later except for corrections.
+- Finished task specs and retired setups → `status: deprecated`, move to `docs/archive/`, fix incoming links. Open task specs live in `docs/tasks/` and mirror GitHub issues.
+- New file → add it to its directory `index.md` and, if top-level relevant, to the table in `docs/index.md`.
+- Architecture, data model, storage key, sync message, server route or game changes → update the owning doc (`architecture.md`, `game-catalog.md`, `persistence.md`, `sync-protocol.md`, …) in the same PR.
+- Write docs in **English**.
 
-## 9. Enforcement & Quality Gates
+## 10. Quick facts (read-only)
 
-Every pull request and commit must pass automated checks. Violations will cause immediate failure in the CI pipeline (`.github/workflows/ci.yml`).
-
-- **Pre-Flight Architecture Check**: Always execute `npm run check:architecture:diff` before submitting work. Zero violations permitted.
-- **Component Size Ratchet**: `npm run check:budget` ensures no component grows beyond its budget.
-- **No Cross-Game Imports**: Games must never import from other games (`src/games/<A>` -> `src/games/<B>` is strictly forbidden and blocked by ESLint and `check-architecture.mjs`).
-- **No Raw Storage**: Always use `src/lib/storage.ts` with `STORAGE_KEYS`. Never call `localStorage` or `sessionStorage` directly.
-- **No Native Dialogs**: Always use MUI `<Dialog>` or `<ConfirmDialog>`. `window.confirm` and `window.prompt` will fail the build.
-- **Strict TypeScript**: Avoid `any`. Interfaces and discriminated unions are mandatory.
-- **Do not introduce lint or compiler errors**: `npm run lint` and `npm run build` must pass without errors.
+```sh
+grep -n "id: '" src/lib/gameRegistry.tsx                  # registered games, hub order
+grep -rn "topicPrefix:" src                               # MQTT topic prefixes
+grep -rn -E "new Dexie\(|DB_NAME =|super\('" src/games    # IndexedDB databases
+sed -n '/STORAGE_KEYS = {/,/} as const/p' src/lib/storage.ts
+cat scripts/legacy-component-baselines.json               # components allowed over 250 lines
+node scripts/check-architecture.mjs                       # full boundary report (no changes)
+gh issue list --state open; gh pr list                    # open work
+```

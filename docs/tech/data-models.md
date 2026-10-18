@@ -1,47 +1,54 @@
 ---
-type: Data Models Specification
-title: Core Data Models Specification
-description: Central specification for application data models, game state schemas, player definitions, and sync envelopes.
-resource: src/
-tags: [models, typescript, interfaces, schemas]
+type: Reference
+title: 'Core data models — where the real types live'
+description: 'Map of the TypeScript types that define the registry, players, sync envelopes, songs, tabletop games, Werewolf, GuessArt, Storyteller, Gartic Phone, Imposter and push payloads, with short excerpts copied from the code. The code is authoritative; this page only tells you which file to open.'
+tags: [types, data-models, typescript]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-10-18T15:00:00+02:00
+  by: claude-code
+verified:
+  at: 2026-10-18
+  method: 'excerpts copied from the listed files; export lists via grep'
 sources:
-  - id: game-registry
-    resource: src/lib/gameRegistry.tsx
-    title: Dynamic Game Registry
-  - id: player-logic
-    resource: src/modules/player-management/playerLogic.ts
-    title: Shared Player Logic
+  - 'src/lib/gameRegistry.tsx'
+  - 'src/modules/player-management/types.ts'
+  - 'src/modules/sync/MqttMailboxService.ts'
+  - 'src/games/*/types.ts, src/games/*/logic/types.ts'
 ---
 
-# Core Data Models Specification
+# Core data models
 
-> [!IMPORTANT]
-> This document specifies shared interfaces and data schemas across LocalGameGalaxy.
+Do **not** copy types from here into code — import them from the source file. Excerpts may lag behind; re-open the file before relying on a field.
 
----
+## 1. Where to look
 
-## 1. Game Registry Models (`src/lib/gameRegistry.tsx`)
+| Domain                    | File                                      | Main exports                                                                                                             |
+| ------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Game registry             | `src/lib/gameRegistry.tsx`                | `GameCategory`, `GameDefinition`, `GameRouteDefinition`                                                                  |
+| Player lobby              | `src/modules/player-management/types.ts`  | `LobbyPlayerItem`, `UseLobbyPlayersOptions`, `UseLobbyPlayersResult`, `PlayerManagerCardProps`                           |
+| MQTT sync                 | `src/modules/sync/MqttMailboxService.ts`  | `MqttEnvelope<T>`, `MqttMailboxOptions`, `MessageListener<T>`                                                            |
+| Multi-channel sync        | `src/modules/sync/useMultiChannelSync.ts` | `UseMultiChannelSyncOptions<T>`, `UseMultiChannelSyncReturn<T>`                                                          |
+| Melodiq song parsing      | `src/games/melodiq/parser.ts`             | `Note`, `SongTrack`, `ParsedSong`                                                                                        |
+| Melodiq library / DB      | `src/games/melodiq/db.ts`                 | `Song`, `SongMeta`, `Score`, `Playlist`, `StoredDirectoryHandle`                                                         |
+| Melodiq runtime / network | `src/games/melodiq/types.ts`              | `UserProfile`, `ActivePlayer`, `PassiveGameState`, `MelodiqParticipant`, `MelodiqNetworkMessage`, Presentation API shims |
+| Tabletop                  | `src/games/tabletop/logic/types.ts`       | `WidgetType`, `TabletopWidget` (union of `CardWidget`, `DeckWidget`, …), `TabletopGameDefinition`, `HiddenZone`          |
+| Werewolf                  | `src/games/werewolf/logic/types.ts`       | `RoleDefinition`, `Role`, `Player`, `NightAction`, `GamePhase`, `GameState`                                              |
+| GuessArt                  | `src/games/guessart/logic/types.ts`       | `GuessArtGameRecord`, `GuessArtRound`, `GameSnapshot`, `CategoryItem`, `WordItem`, `MasterCatalogue`                     |
+| Storyteller               | `src/games/storyteller/types.ts`          | `StoryGameRecord`, `StoryEntry`, `StoryModifierSettings`, `StoryGameSnapshot`                                            |
+| Gartic Phone              | `src/games/garticphone/types.ts`          | `GarticPhase`, `GarticGameState`, `GarticAction`, `GarticBook`                                                           |
+| Imposter                  | `src/games/imposter/logic/types.ts`       | `GamePhase`, `Player`, `Category`, `WordPair`, `GameState`                                                               |
+| Push                      | `src/lib/push/pushTypes.ts`               | `NotificationMethod`, `PushNotificationPayload`, `NotifyPushRequest`, …                                                  |
+| Server config             | `server/src/core/types.ts`                | `ServerConfigData`, `ApiKey`, `GalaxyPlugin`, `ServerConfig`                                                             |
 
-Games register dynamically into the hub router using `GameDefinition`:
+## 2. Excerpts
+
+### Game registry
 
 ```typescript
-export type GameCategory = 
-  | 'all' 
-  | 'dice' 
-  | 'drawing' 
-  | 'music' 
-  | 'social_deduction' 
-  | 'cards' 
-  | 'party' 
-  | 'puzzle';
-
-export interface GameRouteDefinition {
-  path: string;
-  component: React.ReactNode;
-}
+// src/lib/gameRegistry.tsx
+export type GameCategory =
+  'all' | 'dice' | 'drawing' | 'music' | 'social_deduction' | 'cards' | 'party' | 'puzzle';
 
 export interface GameDefinition {
   id: string;
@@ -60,129 +67,97 @@ export interface GameDefinition {
 }
 ```
 
----
-
-## 2. Shared Player Management (`src/modules/player-management`)
-
-Used by GuessArt, Storyteller, Imposter, Werewolf, and Cards:
+### Sync envelope
 
 ```typescript
-export interface LobbyPlayer {
-  id: string;
-  name: string;
-  color?: string;
-  isHost?: boolean;
-}
-
-export interface PlayerConstraints {
-  minPlayers: number;
-  maxPlayers: number;
-}
-```
-
----
-
-## 3. Asynchronous Sync Mailbox Envelopes (`src/modules/sync`)
-
-Envelopes exchanged over MQTT brokers and BroadcastChannels:
-
-```typescript
-export interface MailboxMessage<T> {
-  senderId: string;
+// src/modules/sync/MqttMailboxService.ts
+export interface MqttEnvelope<T> {
+  version: number;
+  channelId: string;
+  senderClientId: string;
   timestamp: number;
   payload: T;
 }
-
-export interface GameSnapshot<TState = unknown> {
-  gameId: string;
-  roundIndex: number;
-  turnPlayerId: string;
-  updatedAt: number;
-  state: TState;
-}
 ```
 
----
+GuessArt's payload type, for example, is `GameSnapshot { game: GuessArtGameRecord; round: GuessArtRound | null }`.
 
-## 4. UltraStar Song & Lyric Models (`src/games/melodiq`)
-
-Parsed representation of UltraStar TXT files:
+### UltraStar song
 
 ```typescript
-export interface ParsedNote {
-  type: ':' | '*' | 'F' | 'R' | 'G'; // Normal, Golden, Freestyle, Rap, Golden Rap
-  startBeat: number;
-  durationBeats: number;
-  pitch: number;                     // MIDI note pitch
-  syllable: string;
+// src/games/melodiq/parser.ts
+export interface Note {
+  type: string; // ':' normal, '*' golden, 'F' freestyle, 'R' rap, 'G' golden rap, '-' line break
+  start: number; // beats after GAP
+  duration: number; // beats
+  pitch: number; // MIDI number (0 for line breaks)
+  text: string; // syllable
 }
-
-export interface ParsedLine {
-  notes: ParsedNote[];
-  lineBreakBeat: number;
-}
-
-export interface ParsedSong {
-  title: string;
-  artist: string;
-  bpm: number;
-  gap: number;                       // Initial offset in ms
-  lines: ParsedLine[];
-  audioFile?: string;
-  videoFile?: string;
-}
-```
-
----
-
-## 5. Tabletop Engine Models (`src/games/tabletop`)
-
-Schema for PlayingCards.io packages and custom board games:
-
-```typescript
-export interface TabletopWidget {
-  id: string;
-  type: 'card' | 'deck' | 'spinner' | 'dice' | 'token';
-  x: number;
-  y: number;
-  zIndex: number;
-  faceDown?: boolean;
-  ownerId?: string | null;           // Private hand owner
-  data?: Record<string, unknown>;
-}
-
-export interface TabletopGameDefinition {
-  id: string;
-  title: string;
-  description?: string;
-  version: string;
-  boardWidth: number;
-  boardHeight: number;
-  backgroundColor?: string;
-  backgroundImageUrl?: string;
-  widgets: TabletopWidget[];
-}
-```
-
----
-
-## 6. Social Deduction & Role Models (`src/games/werewolf`)
-
-```typescript
-export interface WerewolfPlayer {
-  id: string;
+export interface SongTrack {
   name: string;
-  role: string | null;
-  isAlive: boolean;
-  protected?: boolean;
-  infected?: boolean;
+  notes: Note[];
 }
+export interface ParsedSong {
+  headers: Record<string, string>; // upper-cased #KEY: value
+  notes: Note[]; // @deprecated → tracks[0].notes
+  tracks: SongTrack[]; // duets have two
+  bpm: number; // default 120
+  gap: number; // ms, default 0
+}
+```
 
+### Tabletop
+
+```typescript
+// src/games/tabletop/logic/types.ts
+export type WidgetType = 'card' | 'deck' | 'holder' | 'token' | 'die' | 'counter' | 'seat' | 'bag';
+
+export interface TabletopGameDefinition extends TabletopGameMetadata {
+  version: string;
+  minPlayers: number;
+  maxPlayers: number;
+  supportedModes: TabletopPlayMode[];
+  table: TabletopTableConfig;
+  widgets: Record<string, TabletopWidget>;
+  assetFiles?: Record<string, string>;
+  updatedAt?: number;
+  ruleText?: string;
+  hiddenZones?: Record<string, HiddenZone>;
+}
+```
+
+### Werewolf
+
+```typescript
+// src/games/werewolf/logic/types.ts
+export type RoleAlignment = 'VILLAGER' | 'WEREWOLF' | 'NEUTRAL';
 export interface RoleDefinition {
   id: string;
-  nameKey: string;
-  descriptionKey: string;
-  team: 'villager' | 'werewolf' | 'neutral';
-  order: number;                     // Night phase call order
+  name: string;
+  description: string;
+  icon: string;
+  alignment: RoleAlignment;
+  abilities: Ability[];
+  isCustom?: boolean;
+  narratorText?: string;
+  inheritsFrom?: string;
+}
+export interface Player {
+  id: PlayerId;
+  name: string;
+  role: Role | null;
+  isAlive: boolean;
+  needsToAct: boolean;
+  powerState: PlayerPowerState;
+}
+```
+
+### Player lobby
+
+```typescript
+// src/modules/player-management/types.ts
+export interface LobbyPlayerItem {
+  name: string;
+  isRemote?: boolean;
 }
 ```

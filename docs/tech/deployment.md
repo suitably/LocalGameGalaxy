@@ -1,120 +1,95 @@
 ---
-type: Deployment Specification
-title: Deployment Architecture & Multi-Platform Packaging
-description: Deployment targets including SPA web hosting, Android packaging via Capacitor, and Dockerized companion backend.
-resource: server/Dockerfile
-tags: [deployment, capacitor, docker, cloudflare, pwa]
+type: Reference
+title: 'Deployment and packaging'
+description: 'How each artifact is built and shipped: the SPA on Cloudflare Workers static assets, the Capacitor Android APK, the companion server as Node process or Docker image (base/full), the push relay worker, the signaling tracker, and the currently broken standalone server binaries.'
+tags: [deployment, cloudflare, capacitor, android, docker, pwa]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-10-18T15:00:00+02:00
+  by: claude-code
+verified:
+  at: 2026-10-18
+  method: 'read wrangler.jsonc, capacitor.config.ts, android/app/build.gradle, server/Dockerfile, server/docker-compose*.yml, .github/workflows/{ci,release,docker-publish,deploy-push-relay}.yml, server/package.json'
+sources:
+  - 'wrangler.jsonc'
+  - 'capacitor.config.ts'
+  - 'server/Dockerfile'
+  - '.github/workflows/release.yml'
 ---
 
-# Deployment Architecture & Multi-Platform Packaging
+# Deployment and packaging
 
----
+## 1. Artifacts at a glance
 
-## 1. Deployment Modes Overview
+| Artifact                          | Built by                                                                       | Shipped to                                                                                                                                      |
+| --------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web SPA + PWA                     | `npm run build` → `dist/`                                                      | Cloudflare Workers static assets `nexumia` (`ci.yml` → `deploy-cloudflare`): `main` = production (`nexumia.de`), PRs = preview with bot comment |
+| Android APK `nexumia.apk`         | `release.yml` → `build-android`                                                | GitHub Release asset                                                                                                                            |
+| Companion server image            | `docker-publish.yml` (targets `base`, `full`)                                  | Docker Hub `<user>/nexumia-server`, `<user>/melodiq-server`                                                                                     |
+| Server binaries (Linux/Win/macOS) | `release.yml` → `build-server-binaries`                                        | **broken** — see §4c                                                                                                                            |
+| Push relay worker                 | `deploy-push-relay.yml` (`wrangler deploy` in `server/cloudflare-push-relay/`) | Cloudflare Workers                                                                                                                              |
+| Signaling tracker                 | `signaling/Dockerfile`                                                         | image `nexumia/galaxy-signaling` (no publish workflow in this repo — **Unverified** where it is built)                                          |
 
-LocalGameGalaxy supports three distinct deployment/packaging configurations:
+CI details and secrets: [workflows/ci-cd-pipelines.md](../workflows/ci-cd-pipelines.md).
 
-| Mode | Target Platform | Entry Point |
-|------|-----------------|-------------|
-| **Web (Vite dev/build)** | Any browser on local network | `npm run dev` / `npm run build` |
-| **Android App (Capacitor)** | Android phones, Android TV | `npx cap build android` |
-| **Companion Server (Node)** | Linux / macOS / Windows | `npm run host` or standalone binary |
+## 2. Web SPA
 
----
-
-## 2. Frontend: Vite Build & Static Hosting
-
-The React SPA is built with Vite:
 ```bash
-npm run build       # Outputs to dist/
-```
-The `dist/` folder can be served from any static web host or HTTPS server. In production, it is typically hosted via the companion server's Express static middleware or a CDN.
-
-A **PWA Service Worker** (`vite-plugin-pwa`) is generated automatically, enabling offline caching of app assets.
-
----
-
-## 3. Android App: Capacitor
-
-The SPA is wrapped as a native Android APK using Capacitor.
-
-### Build Process
-```bash
-npm run build           # 1. Build the web bundle
-npx cap sync            # 2. Copy web assets to android/ native project
-npx cap build android   # 3. Build the signed APK via Gradle
+npm run build      # tsc -b && vite build → dist/
+npm run preview    # serve dist/ locally
 ```
 
-### Release Signing & Keystore Management
-For distribution builds, APK signing is handled in `android/app/build.gradle`:
-- **Keystore Generation (one-time)**:
-  ```bash
-  keytool -genkeypair -v -keystore nexumia-release.jks -alias nexumia \
-    -keyalg RSA -keysize 4096 -validity 10000
-  ```
-- **Configuration**:
-  - The keystore is injected in CI via the `ANDROID_KEYSTORE_BASE64` secret and decoded to `android/app/release.jks`.
-  - Passwords and alias are passed via `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD`.
-  - If secrets are absent (forks or dev environments), the pipeline gracefully falls back to `./gradlew assembleDebug`.
-  - **Security Rule**: Keystores (`*.jks`, `*.keystore`, `keystore.properties`) must never be committed to git and are blocked by `scripts/check-repo-hygiene.mjs`.
+- `wrangler.jsonc`: worker `nexumia`, assets from `./dist`, `not_found_handling: "single-page-application"` (deep links fall back to `index.html`).
+- `vite-plugin-pwa` generates the service worker; `public/sw-push.js` adds push handling.
+- `dist/` can be served by any static host; the companion server does **not** serve it.
 
-### Capacitor Configuration (`capacitor.config.ts`)
-- **App ID**: Defined in `capacitor.config.ts`
-- **Server URL**: In development, Capacitor can proxy to `http://localhost:5173`. In production the bundled assets are used directly.
-- **Plugins**: `StatusBar`, `SplashScreen`, `SafeArea`
+## 3. Android (Capacitor)
 
-### Edge-to-Edge Display
-Android API 35+ enforces edge-to-edge rendering. The app uses `capacitor-plugin-safe-area` CSS variables (`var(--safe-area-inset-top)`) in the root layout to offset content from system bars. See [styling.md](docs/tech/styling.md) for details.
+`capacitor.config.ts`: `appId` `com.localgamegalaxy.melodiq`, `appName` `Nexumia`, `webDir` `dist`, plugins `SplashScreen`, `StatusBar`; safe areas via `capacitor-plugin-safe-area` (see [styling](styling.md)). `android/app/build.gradle`: `versionName` `1.1.0`, `versionCode` 2.
 
----
-
-## 4. Companion Server: Docker & Standalone Binaries
-
-The companion server (`/server`) supports three distribution modes:
-
-### 4a. Local Node.js (Development)
 ```bash
-cd server && npm start
+npm run build
+npx cap sync android
+cd android && ./gradlew assembleDebug        # local; needs Android SDK (android/local.properties → sdk.dir)
 ```
+
+Release signing (CI): secret `ANDROID_KEYSTORE_BASE64` is decoded to `android/app/release.jks`; `build.gradle` signs with it when `ANDROID_KEYSTORE_PASSWORD` is set (`ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` optional). Without the secret CI builds `assembleDebug`. Keystores (`*.jks`, `*.keystore`, `*.p12`, `keystore.properties`) are blocked by `scripts/check-repo-hygiene.mjs`. Runbook: [operations/android-release.md](../operations/android-release.md).
+
+## 4. Companion server
+
+### 4a. Node process
+
+```bash
+npm run host                 # = cd server && npm start → node dist/index.js (build first: cd server && npm run build)
+cd server && npm run build   # tsc
+```
+
+Env: see [architecture §3.6](architecture.md#36-companion-server-server-optional). Tunnel: `ENABLE_TUNNEL=true` or `--tunnel` (needs `cloudflared`).
 
 ### 4b. Docker
+
+`server/Dockerfile` stages: `builder` (tsc), `base` (`node:20-slim` + ffmpeg, python3, `yt-dlp`; port 3000), `full` (`base` + CPU PyTorch, `audio-separator`, `whisper-timestamped` for separation/alignment).
+
+| Compose file                       | Purpose                                                                                                                             |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `server/docker-compose.yml`        | signaling (8000) + server (3000) + optional `cloudflared`; `SECURITY_TOKEN=` empty → auto-generated                                 |
+| `server/docker-compose.dev.yml`    | local build, containers `melodiq-server-dev`, `galaxy-signaling-dev` — [dev-compose-workflow](../workflows/dev-compose-workflow.md) |
+| `server/docker-compose.ai.yml`     | `nexumia/melodiq-server:ai` image variant                                                                                           |
+| `server/docker-compose.tunnel.yml` | server + Cloudflare tunnel                                                                                                          |
+
+The Settings UI can generate a compose file (`src/features/settings/components/server/composeYamlGenerator.ts`).
+
+Node version drift (`node:20-slim` vs Node 24 elsewhere): [open-questions Q10](../open-questions.md#q10--node-version-drift).
+
+### 4c. Standalone binaries (currently broken)
+
+`release.yml` runs `npm run package` in `server/` and expects `server/dist/nexumia-server-{linux,win.exe,macos}` plus launchers from `server/release-scripts/` (`start-server.sh`, `NexumiaServer.desktop`, `start-server.bat`, `start-server.command`). `server/package.json` has **no `package` script** since 2026-09-13, so this job fails. → [open-questions Q1](../open-questions.md#q1--release-pipeline-calls-a-script-that-no-longer-exists)
+
+## 5. Signaling tracker
+
 ```bash
-# Production
-cd server && docker compose up
-
-# Development (local build, no image pull)
-cd server && docker compose -f docker-compose.dev.yml up --build
+npm run tracker                      # scripts/start-tracker.js → signaling/src/index.js
+cd signaling && docker compose up    # image nexumia/galaxy-signaling
 ```
-See [dev-compose-workflow.md](docs/workflows/dev-compose-workflow.md) for details.
 
-### 4c. Standalone Native Binaries (`pkg`)
-The server can be compiled into self-contained executables using `pkg`:
-```bash
-cd server && npm run package
-# Outputs to server/dist/:
-#   melodiq-server-linux
-#   melodiq-server-win.exe
-#   melodiq-server-macos
-```
-Target architectures are defined in `server/package.json` under `pkg.targets`. Release scripts live in `server/release-scripts/`.
-
-> [!NOTE]
-> Standalone binaries bundle Node.js runtime and all dependencies. They are ideal for end-user distribution on systems without Node.js installed.
-
----
-
-## 5. Automated CI/CD Pipelines & Cloud Deployment
-
-All deployments and binary releases are automated via GitHub Actions pipelines. See the dedicated [CI/CD Pipelines Documentation](file:///home/carsten/LocalGameGalaxy/docs/workflows/ci-cd-pipelines.md) for full architecture details:
-
-| Target / Artifact | Workflow File | Trigger | Output |
-| :--- | :--- | :--- | :--- |
-| **Web SPA (Prod & Preview)** | `.github/workflows/ci.yml` | Push / PR to `main` | Production at `nexumia.de`, preview deployments for PRs |
-| **Cloudflare Preview Cleanup** | [`.github/workflows/cleanup-preview.yml`](file:///.github/workflows/cleanup-preview.yml) | `pull_request` (`closed`), `workflow_dispatch` | Deletes obsolete preview branches & environments |
-| **Push Relay Worker** | `.github/workflows/deploy-push-relay.yml` | Push to `server/cloudflare-push-relay/**` | Cloudflare Worker for Web Push & ntfy relay |
-| **Release Artifacts & Binaries** | `.github/workflows/release.yml` | Tag `v*` / Manual dispatch | Gated draft release, signed APK, Linux/Win/macOS server packages, Docker images |
-| **Docker Images** | `.github/workflows/docker-publish.yml` | Push to `server/**`, call from release | Hub images: `base` (~200MB) & `full` (~2GB, AI Demucs) |
-
+Runbook: [operations/webrtc-tracker.md](../operations/webrtc-tracker.md).

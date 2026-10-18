@@ -1,134 +1,71 @@
 ---
-type: Runbook
-title: Production Operations & Secret Rotation Runbook
-description: Production deployment, security token rotation, CORS configurations, and SSL management for the companion server.
-resource: server/
-tags: [runbook, server, hono, security, deployment]
+type: Howto
+title: 'Companion server runbook'
+description: 'Start, stop and update the companion server (Docker Compose or Node), where its files live, how to rotate the master token and API keys, how to restrict CORS, and how to publish it over HTTPS.'
+tags: [operations, server, docker, token, cors, runbook]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-10-18T15:00:00+02:00
+  by: claude-code
+verified:
+  at: 2026-10-18
+  method: 'read server/docker-compose*.yml, server/src/config.ts, server/src/core/app.ts, server/src/plugins/melodiq/routes/config.ts; commands not executed'
+sources:
+  - 'server/docker-compose.yml'
+  - 'server/src/config.ts'
+  - 'merged from: previous version of 2026-09-27'
 ---
 
-# Production Operations & Secret Rotation Runbook [ID: OPS-SERVER-RUNBOOK]
+# Companion server runbook
 
-This guide covers production operations, security token rotation, CORS configurations, and SSL certificate management for the companion Node.js server.
+Read [server-security §6](../tech/server-security.md#6-known-gaps) before exposing the server beyond a trusted LAN.
 
----
+## 1. Files and ports
 
-## 1. Server Configuration & Architecture
+| What      | Where                                                                                                                                   |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Config    | `config.json` (lookup: `CONFIG_PATH`, cwd, executable dir — [secrets-management §2](../tech/secrets-management.md#2-server-configjson)) |
+| Playlists | `playlists.json` next to the config; `/app/config/playlists.json` in Docker                                                             |
+| Songs     | configured `directories` / `MUSIC_DIR`; downloads into `downloadDir`                                                                    |
+| Models    | `MODELS_DIR` or `<cwd>/models`                                                                                                          |
+| Ports     | server 3000, signaling tracker 8000                                                                                                     |
+| Health    | `GET http://<host>:3000/health`, `GET http://<host>:8000/health`                                                                        |
 
-The production server is deployed via Docker Compose or node process on the host.
+## 2. Start, stop, update
 
-### File Locations
-- **Active Configuration**: `server/config.json` (untracked, contains SSL keys and security token).
-- **Playlists Storage**: `playlists.json` (stored in the server execution directory).
-- **Music & Stems Folder**: `/server/music/` (or configured directory).
-
----
-
-## 2. Startup, Shutdown, and Updates
-
-### Starting the Server
 ```bash
-# Start in background
-docker compose up -d
-
-# Start dev-compose
-docker compose -f docker-compose.dev.yml up -d
-```
-
-### Stopping the Server
-```bash
+cd server
+docker compose up -d                       # signaling + server (+ optional cloudflared)
+docker compose logs -f melodiq-server
 docker compose down
+docker compose pull && docker compose up -d   # update to the latest published image
+docker compose -f docker-compose.dev.yml up -d --build   # local build, see workflows/dev-compose-workflow.md
 ```
 
-### Zero-Downtime Updates (Rolling Reload)
-Since local game rooms require active WebSocket connections, standard restarts will briefly drop clients. To minimize impact:
-1. Re-build the new image in the background:
-   ```bash
-   docker compose build server
-   ```
-2. Reload the server container utilizing docker-compose rolling restart:
-   ```bash
-   docker compose up -d --no-deps --build server
-   ```
+Without Docker: `cd server && npm ci && npm run build && npm start` (or `npm run host` from the repo root).
 
----
+Restarts drop WebRTC/WebSocket clients for a moment; phones reconnect automatically (see [webrtc-signaling §4](../tech/webrtc-signaling.md#4-reconnection-and-resiliency)).
 
-## 3. Secret Rotation Playbook: Security Token
+## 3. Rotating the master token
 
-The Melodiq companion server relies on a master security token (`Bearer token`) in `config.json` to authorize administrative API requests (e.g. initiating song downloads, triggers, and audio separation).
+1. Generate: `openssl rand -hex 16`.
+2. Set it — either `token` in `config.json`, or `SECURITY_TOKEN=<new>` in the compose file / environment (env wins).
+3. Restart: `docker compose restart melodiq-server` (or restart the Node process).
+4. Verify: `curl -H "Authorization: Bearer <new>" http://localhost:3000/api/auth/me` → `200`; the old token → `401`.
+5. Re-pair clients (QR code / settings); until then they get `401`.
 
-### Step-by-Step Rotation Procedure
+To force a fresh random token, clear `token` in `config.json` and unset `SECURITY_TOKEN`; the server generates and saves a new one at start.
 
-1. **Generate a new secure cryptographically strong token**:
-   ```bash
-   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-   # Output: e.g. "a4b1c2d3e4f5..."
-   ```
+**Caveat:** until [Q0](../open-questions.md#q0--unauthenticated-tabletop-routes-allow-file-reads) is fixed, the token can leak through `/api/tabletop/games/:id/raw`; rotation does not help against that.
 
-2. **Update the configuration**:
-   Open `config.json` and replace the existing `securityToken` value:
-   ```json
-   {
-     "securityToken": "NEW_GENERATED_TOKEN_HEX",
-     "port": 3000
-   }
-   ```
+### API keys
 
-3. **Reload the Server**:
-   To apply the new token, reload the server process:
-   ```bash
-   docker compose restart server
-   ```
-   *Note: Active client connections will temporarily get a `401 Unauthorized` until they scan the newly generated QR pairing code containing the updated token.*
+`GET/POST /api/config/apikeys`, `PUT/DELETE /api/config/apikeys/:id` (master token or key with `allowManagement`). Revoke a key by deleting it; no restart needed.
 
-4. **Verify the new token**:
-   Test authorization with a curl request:
-   ```bash
-   curl -k -H "Authorization: Bearer NEW_GENERATED_TOKEN_HEX" https://localhost:3000/api/songs
-   ```
-   It should return a `200 OK` HTTP status.
+## 4. Restricting CORS
 
----
+Set `ALLOWED_ORIGINS` (comma-separated) in the environment, e.g. `ALLOWED_ORIGINS=https://nexumia.de`. Unset/empty/`*` reflects any origin. localhost and private-network origins are always allowed. Behaviour: [server-security §5](../tech/server-security.md#5-cors-and-private-network-access).
 
-## 4. Configuring CORS (`ALLOWED_ORIGINS`)
+## 5. HTTPS
 
-To prevent unauthorized cross-origin sites from querying your local media helper, configure the `ALLOWED_ORIGINS` CORS filter.
-
-### Configuration Matrix
-
-In `config.json`, configure the array of permitted HTTP origins:
-
-| Origin Setting | Use Case | Security Level |
-|----------------|----------|----------------|
-| `["*"]` | Local LAN testing, client dev modes. | Low (vulnerable to CSRF if exposed to WAN) |
-| `["https://nexumia.de", "https://localhost:5173"]` | Strict production. Limits API access only to the official Host client domains. | High |
-
-Example `config.json` configuration:
-```json
-{
-  "allowedOrigins": [
-    "https://nexumia.de",
-    "https://localhost:5173"
-  ]
-}
-```
-
----
-
-## 5. Manual SSL/TLS Certificate Setup
-
-To configure custom, non-auto-generated SSL certificates (e.g. from an internal PKI or Let's Encrypt):
-
-1. Obtain your private key (`privkey.pem`) and certificate chain (`fullchain.pem`).
-2. Read the files and paste their contents into `config.json` as string variables:
-   ```json
-   {
-     "ssl": {
-       "key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQD...",
-       "cert": "-----BEGIN CERTIFICATE-----\nMIIFdzCCBF+gAwIBAgISBJ1vYvU4/8X/4Qx9iXpQ4CqyMA0GCSqG..."
-     }
-   }
-   ```
-3. Restart the server. The server will now serve HTTPS utilizing these custom credentials instead of generating a temporary self-signed key pair on boot.
+The server has no TLS. Options: Cloudflare Quick Tunnel (`ENABLE_TUNNEL=true`, or the `cloudflared` service in `docker-compose.yml`), or a reverse proxy with a certificate in front of ports 3000 and 8000 (tracker example: [webrtc-tracker §4](webrtc-tracker.md#4-security--mixed-content-restrictions)).

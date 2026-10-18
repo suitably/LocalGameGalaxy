@@ -5,8 +5,12 @@ description: Architectural specification of the Melodiq karaoke module, dual-pat
 resource: src/games/melodiq/
 tags: [melodiq, karaoke, audio, pitch-detection, ultrastar]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-09-27T10:00:00Z
+  by: previous-agent
+verified:
+  at: 2026-10-18
+  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
 # Melodiq Architecture
@@ -27,27 +31,32 @@ Melodiq is a local karaoke/rhythm game that supports three distinct roles/views,
 Melodiq follows a strict separation of concerns, divided into domains:
 
 ### 2.1 State & Global Context
--   `SettingsContext.tsx` & `useSettings.ts`: Manages user preferences (mic latency, theme).
--   `useQueue.ts`: Manages the global song queue. Synced across tabs using `BroadcastChannel`.
--   `useMelodiqGlobalEvents.tsx`: Orchestrates cross-component events (e.g., auto-playing the next song when TV connects).
+
+- `SettingsContext.tsx` & `useSettings.ts`: Manages user preferences (mic latency, theme).
+- `useQueue.ts`: Manages the global song queue. Synced across tabs using `BroadcastChannel`.
+- `useMelodiqGlobalEvents.tsx`: Orchestrates cross-component events (e.g., auto-playing the next song when TV connects).
 
 ### 2.2 Host & Game Loop
--   `PlaybackManager.tsx`: Container component. Manages the audio elements and acts as the bridge between the UI and the actual gameplay session.
--   `MelodiqSession.tsx`: The core game loop container. 
-    -   *Logic Hooks*: `usePlaybackControls.ts` (Play/Pause), `usePassiveSync.ts` (TV/Client sync), `useSessionEnd.ts` (Scoreboard transitions).
-    -   *Presentational Components*: `LyricsDisplay.tsx`, `PitchVisualizer.tsx`, `ScoreBoard.tsx`.
+
+- `PlaybackManager.tsx`: Container component. Manages the audio elements and acts as the bridge between the UI and the actual gameplay session.
+- `MelodiqSession.tsx`: The core game loop container.
+  - _Logic Hooks_: `usePlaybackControls.ts` (Play/Pause), `usePassiveSync.ts` (TV/Client sync), `useSessionEnd.ts` (Scoreboard transitions).
+  - _Presentational Components_: `LyricsDisplay.tsx`, `PitchVisualizer.tsx`, `ScoreBoard.tsx`.
 
 ### 2.3 Network & Synchronization
--   **TV Sync**: `useTVMode.ts` uses the `Presentation API` and `BroadcastChannel` to send `PLAY_SONG`, `STOP_SONG`, and `GAME_STATE` to `MelodiqTV.tsx`.
--   **Client Data Sync**: Custom DOM Events (`melodiq_client_send_data`) and React states sync the Host queue with the Phone clients.
--   **Audio Streaming**: `WebRTCContext.tsx` and `MicrophoneManager.ts` handle low-latency audio streaming from phone mics to the host browser.
+
+- **TV Sync**: `useTVMode.ts` uses the `Presentation API` and `BroadcastChannel` to send `PLAY_SONG`, `STOP_SONG`, and `GAME_STATE` to `MelodiqTV.tsx`.
+- **Client Data Sync**: Custom DOM Events (`melodiq_client_send_data`) and React states sync the Host queue with the Phone clients.
+- **Audio Streaming**: `WebRTCContext.tsx` and `MicrophoneManager.ts` handle low-latency audio streaming from phone mics to the host browser.
 
 ### 2.4 Audio Stem Separation & Playback Mode
--   **Separation Backend**: `server/src/services/separator.js` and `scanner.js` extract and index separated stems (`(Instrumental)`, `(Vocals)`).
--   **Playback Modes**: Configurable via `settings.audioPlaybackMode` (`'separated'` vs `'original'`):
-    -   `'separated'`: Plays instrumental on master audio element and vocal stem on secondary audio element with continuous millisecond drift alignment (`useLocalMediaSync.ts`). Allows independent vocal volume reduction.
-    -   `'original'`: Plays the untouched original mix directly without secondary vocal stem.
--   **Audio Track Resolution**: `useMediaLoaders.ts` resolves stem paths and URLs automatically based on the user's selected mode and available files.
+
+- **Separation Backend**: `server/src/plugins/melodiq/services/separator.ts` and `scanner.ts` extract and index separated stems (`(Instrumental)`, `(Vocals)`).
+- **Playback Modes**: Configurable via `settings.audioPlaybackMode` (`'separated'` vs `'original'`):
+  - `'separated'`: Plays instrumental on master audio element and vocal stem on secondary audio element with continuous millisecond drift alignment (`useLocalMediaSync.ts`). Allows independent vocal volume reduction.
+  - `'original'`: Plays the untouched original mix directly without secondary vocal stem.
+- **Audio Track Resolution**: `useMediaLoaders.ts` resolves stem paths and URLs automatically based on the user's selected mode and available files.
+
 ## 3. Known Technical Debt & Refactoring Goals
 
 To ensure Melodiq aligns perfectly with the SOLID principles outlined in the main architecture doc, the following areas are targeted for future refactoring:
@@ -59,7 +68,7 @@ To ensure Melodiq aligns perfectly with the SOLID principles outlined in the mai
 
 > [!WARNING]
 > **Mixed Responsibilities in `PlaybackManager.tsx`**
-> This component renders the `MelodiqSession`, renders the `MiniPlayer`, and manages `audio` state. 
+> This component renders the `MelodiqSession`, renders the `MiniPlayer`, and manages `audio` state.
 > **Goal**: Extract the complex React logic into a `usePlaybackManager.ts` custom hook, leaving `PlaybackManager.tsx` as a pure Presentational Container.
 
 ## 4. Development Rules for Melodiq

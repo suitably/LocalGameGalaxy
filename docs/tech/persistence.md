@@ -1,114 +1,87 @@
 ---
-type: Technical Specification
-title: Data Persistence Layer Architecture
-description: Single Source of Truth for browser-side storage, IndexedDB databases, and centralized storage services.
-resource: src/lib/storage.ts
-tags: [storage, persistence, indexeddb, dexie, localstorage]
+type: Reference
+title: 'Data persistence layer'
+description: "Where LocalGameGalaxy stores data: the storage.ts key/value service (API, memory fallback, STORAGE_KEYS groups, prefixes, sessionStorageSafe), the six IndexedDB databases with their stores and access technique, and the companion server's files (config.json, playlists.json, song folders, models)."
+tags: [persistence, storage, indexeddb, dexie, localstorage, server]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-10-18T15:00:00+02:00
+  by: claude-code
+verified:
+  at: 2026-10-18
+  method: 'read src/lib/storage.ts, all db.ts / tabletopStorage.ts files, server/src/config.ts, server/src/plugins/melodiq/services/{scanner,playlists,download,separator}.ts'
 sources:
-  - id: storage-service
-    resource: src/lib/storage.ts
-    title: Centralized Storage Service
-  - id: agy-rules
-    resource: /AGENTS.md
-    title: Agent Guidelines & Zero Raw Storage Policy
+  - 'src/lib/storage.ts'
+  - 'src/games/*/logic/db.ts, src/games/melodiq/db.ts, src/games/tabletop/logic/tabletopStorage.ts'
+  - 'server/src/config.ts'
 ---
 
-# Data Persistence Layer Architecture
+# Data persistence layer
 
-> [!IMPORTANT]
-> This document is the Single Source of Truth for all browser-side and server-side data storage in LocalGameGalaxy. Update this document whenever a new database table, `STORAGE_KEYS` entry, or storage mechanism is introduced.
+Update this document whenever you add a storage key, an IndexedDB database/store/version, or a server-side file.
 
----
+## 1. Key/value: `src/lib/storage.ts`
 
-## 1. Storage Architecture Overview
+The only file allowed to touch `localStorage` / `sessionStorage` (enforced by `npm run check:architecture`).
 
-LocalGameGalaxy enforces an **offline-first** persistence architecture. Direct calls to `window.localStorage` and `window.sessionStorage` are strictly prohibited (enforced via CI and `scripts/check-architecture.mjs`). All client state is persisted through typed wrappers and IndexedDB databases:
+| API                                                         | Notes                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `storage.get(key, fallback = '')`, `set`, `remove`, `clear` | strings; every call is wrapped in `try/catch` and mirrored into an in-memory `Map` so private mode / blocked storage still works for the session                                                                                                                                                                                 |
+| `storage.getJson<T>(key, fallback)`, `setJson`              | JSON helpers; parse errors return `fallback`                                                                                                                                                                                                                                                                                     |
+| `storage.findKeysWithPrefix(prefix)`                        | used for per-game prefixed keys                                                                                                                                                                                                                                                                                                  |
+| `storage.session` / `sessionStorageSafe`                    | same API on `sessionStorage`                                                                                                                                                                                                                                                                                                     |
+| Typed accessors                                             | `getHelperUrl` (default `http://localhost:3000`), `getHelperToken`, `isHelperActive`, `getSignalingUrl` (derives `ws(s)://<helper-host>:8000`), `get/setDisabledTrackerUrls(gameId)`, `getPushRelayUrl`, `getNotificationMethod`, `getNtfyServerUrl` (default `https://ntfy.sh`), `getUserNtfyTopic` / `regenerateUserNtfyTopic` |
 
-| Mechanism | Technology | Scope | Purpose |
-|-----------|------------|-------|---------|
-| **Central Storage Service** | `src/lib/storage.ts` (`storage.get/set`) | App preferences & active session recovery | Key-value settings with in-memory fallback |
-| **`guessart-local`** | IndexedDB (`async-game` helpers) | Drawing rounds, game logs, catalogues | GuessArt game state & catalogues |
-| **`storyteller-local`** | IndexedDB (`async-game` helpers) | Collaborative stories & turn logs | Geschichtenschreiber stories |
-| **`MelodiqDB`** | Dexie 4 | Songs, playlists, history | Melodiq karaoke song library |
-| **`melodiq-notes-local`** | IndexedDB / Dexie | MusicXML & MXL sheets | Melodiq Notes sheet music library |
-| **`galaxy_tabletop_db`** | Dexie 4 | PlayingCards.io definitions & assets | Virtual Tabletop imported games |
-| **Server Filesystem** | Node.js `fs` | Audio files, separated vocal stems | Melodiq companion server storage |
+### `STORAGE_KEYS` groups (91 keys)
 
----
+| Group                   | Examples (value in parentheses)                                                                                                                                    |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Companion helper        | `HELPER_URL` (`melodiq_helper_url`), `HELPER_TOKEN`, `HELPER_ACTIVE`, `SIGNALING_URL` (`galaxy_signaling_url`)                                                     |
+| Melodiq client/session  | `CLIENT_PROFILE`, `PROFILES`, `ACTIVE_SESSION`, `CURRENT_SONG_PARTICIPANTS`, `MELODIQ_TRACKER_*`, `MELODIQ_MIC_*`, `MELODIQ_PARTY_ID`, `MELODIQ_HOST_BASE_URL`     |
+| Melodiq queue           | `NOW_PLAYING`, `QUEUE`, `SONG_HISTORY`                                                                                                                             |
+| Melodiq legacy profiles | `MELODIQ_P1_*`, `MELODIQ_P2_*` (migration only)                                                                                                                    |
+| Melodiq settings        | `MELODIQ_SHOW_*`, `MELODIQ_*_VOLUME`, `MELODIQ_LYRICS_*`, `MELODIQ_AUDIO_PLAYBACK_MODE`, `MELODIQ_MIC_LATENCY`, …                                                  |
+| Melodiq Notes           | `MELODIQ_NOTES_SOUND_CONFIG`, `_VIEW_MODE`, `_SHEET_RENDER_MODE`                                                                                                   |
+| Werewolf                | `WEREWOLF_STATE` (`werewolf-game-state`), `WEREWOLF_SETUP_PLAYERS`, `WEREWOLF_CUSTOM_ROLES` (`werewolf-custom-roles`), `WEREWOLF_SETTINGS`, `WEREWOLF_TTS_ENABLED` |
+| Imposter                | `IMPOSTER_SETTINGS`, `IMPOSTER_SETUP_PLAYERS`, `IMPOSTER_SEEN_INFO`                                                                                                |
+| GitHub publishing       | `GITHUB_TOKEN` (`nexumia_github_token`, a PAT — see `src/lib/github.ts` security note), `GITHUB_OWNER`, `GITHUB_REPO`                                              |
+| Notifications           | `PUSH_RELAY_URL`, `NOTIFICATION_METHOD`, `NTFY_SERVER_URL`, `NTFY_TOPIC`                                                                                           |
+| Small games             | `DARTS_GAME_STATE`, `SUDOKU_STATE`, `SUDOKU_STATS`, `WORDLE_STATS`, `CARDS_LOBBY_PLAYERS`, `KNISTER_*`, `QWIXX_*`                                                  |
+| Party / Gartic          | `GARTIC_STATE_PREFIX`, `GARTIC_HOST_PREFIX`, `PARTY_MY_PLAYER_ID`, `HOST_ROOM_CODE`                                                                                |
+| App                     | `SHARE_WEBAPP_URL`, `PWA_BANNER_DISMISSED`, `LANGUAGE` (`lgg_language`), `LANGUAGE_LEGACY` (`language`), `EXCALIDRAW_LIBRARY`, `EXCALIDRAW_DRAWING`                |
 
-## 2. IndexedDB Databases
+Read the file for the full list — this table is a map, not a copy.
 
-### 2.1 `guessart-local`
-Managed via `src/modules/async-game` runners (`createIdbStoreOperations`, `runWithStore`):
-- `games`: Active and past GuessArt session snapshots.
-- `rounds`: Drawing strokes, word mask, hints, and guess logs.
-- `catalogues`: Custom bilingual category and word definitions edited in `CatalogueEditorDialog`.
-- `metadata`: Schema versions and catalogue timestamps.
+`STORAGE_PREFIXES`: `PARTY_STATE` (`galaxy_party_state_`), `PARTY_HOST_ID`, `GAME_RELAY` (`galaxy_game_relay_`), and the per-game WebRTC suffixes `WEBRTC_PARTY_ID`, `WEBRTC_TRACKER_URLS`, `WEBRTC_TRACKER_PREF`, `WEBRTC_ACTIVE_PEERS`, `HOST_BASE_URL`, `ENABLE_HELPER` (used as `` `${gameId}${suffix}` ``).
 
-### 2.2 `storyteller-local`
-Managed via `src/modules/async-game` runners:
-- `games`: Story metadata, modifiers (Blind Mode, Time Attack, Word Roulette), and participants.
-- `entries`: Individual submitted story turns and chapter fragments.
+**Known drift:** several games keep key strings in local constants and some registered keys are unused — [open-questions Q8](../open-questions.md#q8--game-local-storage-keys-bypass-the-storage_keys-registry), per-game list in [game-catalog §2](game-catalog.md#2-persistence).
 
-### 2.3 `MelodiqDB`
-Managed via Dexie 4:
-- `songs`: UltraStar parsed metadata, status (`pending`, `downloading`, `downloaded`, `separating`, `ready`, `error`).
-- `playlists`: User-defined song playlists.
-- `playlistItems`: Join table connecting playlists and songs.
-- `songHistory`: Play counts, timestamps, and high scores.
+## 2. IndexedDB databases
 
-### 2.4 `melodiq-notes-local`
-Stores local MusicXML / MXL files, track stems, and user practice tempos for the interactive sheet music visualizer.
+| Database             | Access                           | Version  | Stores (key path / indexes)                                                                                                                                                                           | Code                                          |
+| -------------------- | -------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `MelodiqDB`          | Dexie                            | 11       | `scores` (`++id, songId, profileId, score, date, difficulty`), `playlists` (`id, name, creatorToken, isGlobal, updatedAt`), `folderHandles` (`id, name, updatedAt` — File System Access handles, v11) | `src/games/melodiq/db.ts`                     |
+| `MelodiqNotesDB`     | Dexie                            | 1        | `songs` (`id, title, artist, folderId, addedAt` — MusicXML, stems, sync offset), `folders` (`id, name, updatedAt`)                                                                                    | `src/games/melodiq-notes/logic/db.ts`         |
+| `ImposterDB`         | Dexie (subclass)                 | 1        | `imposter_categories` (`id`), `imposter_word_pairs` (`++id, *categoryIds`)                                                                                                                            | `src/games/imposter/logic/db.ts`              |
+| `guessart-local`     | raw IDB via `modules/async-game` | see file | `games` (`id`), `rounds` (`id`), `catalogues` (`language`), `metadata` (`key`)                                                                                                                        | `src/games/guessart/logic/db.ts`              |
+| `storyteller-local`  | raw IDB via `modules/async-game` | see file | `games` (`id`), `entries` (`id`)                                                                                                                                                                      | `src/games/storyteller/logic/db.ts`           |
+| `galaxy_tabletop_db` | raw IDB + `runWithStore`         | see file | `custom_games` (`id`)                                                                                                                                                                                 | `src/games/tabletop/logic/tabletopStorage.ts` |
 
-### 2.5 `galaxy_tabletop_db`
-Stores unzipped PlayingCards.io (`.pcio` / `.json`) game packages:
-- Game metadata, custom board backgrounds, card templates, widget geometries, and deck definitions.
+Rules:
 
----
+- Dexie: add a new `db.version(n+1).stores({...})` block; never edit an old version's schema. `MelodiqDB` declares only v10 and v11 — browsers with an older version upgrade through them.
+- Raw IDB: use `createOpenDatabase` / `createIdbStoreOperations` / `runWithStore` from `src/modules/async-game`; create stores in the upgrade handler guarded by `objectStoreNames.contains`.
+- Deleting a database during development: browser DevTools → Application → IndexedDB.
 
-## 3. Central Storage Service (`src/lib/storage.ts`)
+## 3. Companion server files
 
-All non-relational settings and transient game tokens must use `storage` methods:
-```typescript
-import { storage, STORAGE_KEYS } from '../lib/storage';
+| What              | Where                                                                                                                                                                                                                                                                                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `config.json`     | first match of: `CONFIG_PATH`, current working directory, directory of the executable, its parent (`server/src/config.ts`). Created/updated by the server (token auto-generated). Example: `server/config.example.json`. Git-ignored.                                                                                                     |
+| Env overrides     | `PORT`, `SECURITY_TOKEN` / `TOKEN`, `MUSIC_DIR` / `DIRECTORIES` (comma lists), `TABLETOP_DIR`, `MODELS_DIR`                                                                                                                                                                                                                               |
+| `playlists.json`  | next to `config.json` / explicit config dir; `/app/config/playlists.json` in Docker; else cwd (`services/playlists.ts`)                                                                                                                                                                                                                   |
+| Song library      | any folder below the configured `directories`; every UltraStar `*.txt` is a song. Media next to it: audio, optional video and cover, separated stems recognised by `vocals` / `instrumental` in `.mp3` names (`services/scanner.ts`). Downloads go to `downloadDir` or the first directory, one folder per song (`services/download.ts`). |
+| Separation models | `MODELS_DIR` or `<cwd>/models` (`UVR-MDX-NET-Inst_HQ_3.onnx`; tracked in git, see [Q11](../open-questions.md#q11--637-mb-onnx-model-tracked-in-git))                                                                                                                                                                                      |
+| Tabletop assets   | `tabletopDirectories` / `TABLETOP_DIR`                                                                                                                                                                                                                                                                                                    |
 
-// Safe get with fallback
-const settings = storage.get(STORAGE_KEYS.MELODIQ_SETTINGS, defaultSettings);
-
-// Type-safe set with quota error handling
-storage.set(STORAGE_KEYS.SIGNALING_URL, 'wss://...');
-
-// Clean removal
-storage.remove(STORAGE_KEYS.ACTIVE_SESSION);
-```
-
-### Key Storage Domains in `STORAGE_KEYS`
-
-| Category | Typical Keys | Description |
-|----------|--------------|-------------|
-| **Companion Server** | `HELPER_URL`, `HELPER_TOKEN`, `HELPER_ACTIVE`, `SIGNALING_URL` | Micro-kernel connectivity & tokens |
-| **Melodiq Session** | `ACTIVE_SESSION`, `NOW_PLAYING`, `QUEUE`, `MELODIQ_SETTINGS`, `MIC_SLOTS` | Karaoke session & audio latency offsets |
-| **Social Deduction** | `WEREWOLF_STATE`, `WEREWOLF_CUSTOM_ROLES`, `IMPOSTER_SETTINGS` | Werewolf & Imposter setups |
-| **Push Notifications**| `PUSH_RELAY_URL`, `NOTIFICATION_METHOD`, `NTFY_SERVER_URL`, `NTFY_TOPIC` | Web Push / ntfy preferences |
-| **Puzzle Games** | `SUDOKU_STATE`, `SUDOKU_STATS`, `WORDLE_STATE` | Daily puzzle state & streaks |
-| **GitHub Integration**| `GITHUB_TOKEN`, `GITHUB_OWNER`, `GITHUB_REPO` | Personal Access Token for PR publishing |
-
----
-
-## 4. Server Filesystem Storage
-
-The companion server stores media files in the directory configured by `MUSIC_DIR` (or `server/music/`):
-```
-<music_directory>/
-├── <song-id>/
-│   ├── audio.mp3          # Original downloaded audio track
-│   ├── vocals.mp3         # Separated vocals stem (Demucs / ONNX)
-│   ├── instrumental.mp3   # Separated instrumental stem
-│   ├── video.mp4          # Optional background video (HTTP 206 streaming)
-│   └── lyrics.txt         # UltraStar format text lyrics
-```
-> [!NOTE]
-> The server stores no credentials or PII. Media directories are strictly kept out of Git via `.gitignore`.
+The server stores no player data. Song media and stems must never be committed (`server/music/` is git-ignored).
