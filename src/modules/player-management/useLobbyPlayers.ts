@@ -12,6 +12,9 @@ import {
   togglePlayerRemoteInLobby,
 } from './playerLogic';
 
+/**
+ * Custom hook for managing game lobby player lists with automatic local persistence and validation.
+ */
 export const useLobbyPlayers = (options: UseLobbyPlayersOptions): UseLobbyPlayersResult => {
   const {
     storageKey,

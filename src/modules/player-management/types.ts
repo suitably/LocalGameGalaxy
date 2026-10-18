@@ -1,11 +1,13 @@
 import type { ReactNode } from 'react';
 import type { SxProps, Theme } from '@mui/material';
 
+/** Player item in a game lobby. */
 export interface LobbyPlayerItem {
   name: string;
   isRemote?: boolean;
 }
 
+/** Options for the `useLobbyPlayers` custom hook. */
 export interface UseLobbyPlayersOptions {
   /**
    * LocalStorage key to persist player names across reloads.
@@ -30,6 +32,7 @@ export interface UseLobbyPlayersOptions {
   legacyStorageKeys?: string[];
 }
 
+/** Return type of the `useLobbyPlayers` hook. */
 export interface UseLobbyPlayersResult {
   players: LobbyPlayerItem[];
   addPlayer: (name: string, isRemote?: boolean) => boolean;
@@ -42,6 +45,7 @@ export interface UseLobbyPlayersResult {
   maxPlayers?: number;
 }
 
+/** Props for the PlayerManagerCard component. */
 export interface PlayerManagerCardProps {
   players: LobbyPlayerItem[];
   onAddPlayer: (name: string, isRemote?: boolean) => boolean | void;

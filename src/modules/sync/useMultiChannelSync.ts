@@ -13,6 +13,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import type { MqttMailboxService } from './MqttMailboxService';
 
+/** Options for configuring multi-channel sync (BroadcastChannel + MQTT). */
 export interface UseMultiChannelSyncOptions<T> {
   channelId: string | null | undefined;
   broadcastPrefix: string;
@@ -21,10 +22,14 @@ export interface UseMultiChannelSyncOptions<T> {
   enabled?: boolean;
 }
 
+/** Return object provided by `useMultiChannelSync`. */
 export interface UseMultiChannelSyncReturn<T> {
   publish: (payload: T, targetChannelId?: string) => void;
 }
 
+/**
+ * Coordinator class managing BroadcastChannel and MQTT subscriptions and message dispatching.
+ */
 export class MultiChannelSyncCoordinator<T> {
   private options: UseMultiChannelSyncOptions<T>;
   private bc: BroadcastChannel | null = null;
@@ -120,6 +125,9 @@ export class MultiChannelSyncCoordinator<T> {
   }
 }
 
+/**
+ * React hook unifying BroadcastChannel and MQTT peer sync.
+ */
 export function useMultiChannelSync<T>(
   options: UseMultiChannelSyncOptions<T>
 ): UseMultiChannelSyncReturn<T> {

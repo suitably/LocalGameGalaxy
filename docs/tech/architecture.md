@@ -81,13 +81,6 @@ src/
 
 ### 3.1 Game Modules (`src/games/*`)
 
-9. **Dart Checker (`src/games/darts`)**:
-   - Points tracker for dart matches.
-   - **Offline-First Hook Architecture**: Core game logic (score calculation, X01 rules, count up, undo functionality) isolated in `useDartsGame.ts`.
-   - **Persisted State**: Auto-persists all match state to IndexedDB/localStorage via `STORAGE_KEY = 'darts_game_state'` to prevent data loss on reload.
-   - **Modular UI**: Decomposed into `DartsInput` (keypad and multipliers), `DartsScoreboard` (player totals and throw history), and `DartsSettings` (game mode configuration).
-
-
 Each game is completely self-contained. It registers dynamically via `src/lib/gameRegistry.tsx` (Open-Closed Principle), exports its entry component, and manages its internal state via a state machine, reducer, or custom hook. **Cross-game imports between `src/games/<A>` and `src/games/<B>` are strictly forbidden.**
 
 1. **GuessArt (`src/games/guessart`)**:
@@ -129,13 +122,19 @@ Each game is completely self-contained. It registers dynamically via `src/lib/ga
    - Complete implementation of the upper and lower score sections including Kniffel Bonus mechanics.
    - Reuses the shared 3D dice component (`Die3D`).
 
-5. **Universal Party Lobby & Gartic Phone (`src/features/party` & `src/games/garticphone`)**:
+6. **Dart Checker (`src/games/darts`)**:
+   - Points tracker for dart matches.
+   - **Offline-First Hook Architecture**: Core game logic (score calculation, X01 rules, count up, undo functionality) isolated in `useDartsGame.ts`.
+   - **Persisted State**: Auto-persists all match state to IndexedDB/localStorage via `STORAGE_KEY = 'darts_game_state'` to prevent data loss on reload.
+   - **Modular UI**: Decomposed into `DartsInput` (keypad and multipliers), `DartsScoreboard` (player totals and throw history), and `DartsSettings` (game mode configuration).
+
+7. **Universal Party Lobby & Gartic Phone (`src/features/party` & `src/games/garticphone`)**:
    - Centralized "Jackbox-style" room lobby where all players connect once via QR code or link (`#/party?room=XYZ`).
    - **Serverless Real-Time Communication**: Operates 100% serverless over public WSS MQTT brokers (`wss://broker.hivemq.com:8884/mqtt` / `wss://broker.emqx.io:8084/mqtt`) and local `BroadcastChannel`. No local helper server or backend connection is required.
    - Hosts can launch **Gartic Phone** or **Tabletop Games** for all connected devices simultaneously, with isolated drawing/guessing views per device, synchronized round progression, animated album reveals, and seamless return to the lobby.
    - **SRP Architecture**: Decomposed into focused custom hooks (`useGarticGameState` for pure game rules and `sessionStorageSafe` persistence, `useGarticSync` for `useMultiChannelSync` coordination) and a slim view coordinator component (`GarticPhoneGame.tsx`, < 180 lines).
 
-6. **Virtual Tabletop Engine (`src/games/tabletop`)**:
+8. **Virtual Tabletop Engine (`src/games/tabletop`)**:
    - Declarative PlayingCards.io (`.pcio` / `.json`) and universal tabletop game engine.
    - **Multi-View Architecture**: Dual-view setup supporting a shared tabletop board on TV/tablet (`TabletopSurface.tsx` with auto-fit, fog-of-war for opponent hands, and flying card animations) and private smartphone controllers (`TabletopControllerView.tsx` with hand dock, swipe-up "Flick to TV" card gesture, and `[Hand | Tisch]` view switcher).
    - **Storage & Ingest**: Client-side ZIP unpacking via `fflate`, IndexedDB persistence (`galaxy_tabletop_db`), in-app metadata editor, and `.pcio`/`.json` exporter.
@@ -143,38 +142,38 @@ Each game is completely self-contained. It registers dynamically via `src/lib/ga
    - **Party Mode Integration**: Direct integration into `UniversalPartyManager` and `PartyGamePickerModal`, allowing the party host to launch any built-in or custom imported tabletop game for connected guests.
    - **Community Publishing**: Integrated GitHub PR creation via Octokit/REST API (`createGitHubPR`) to submit new game definitions upstream.
 
-7. **Melodiq (`src/games/melodiq`)**:
+9. **Melodiq (`src/games/melodiq`)**:
    - Offline-capable karaoke and pitch-matching game supporting UltraStar TXT parsing, multi-track vocals, WebRTC remote microphones, and TV/presentation broadcast mode.
    - **Dual-Path Video Architecture**: Supports synchronized background videos via local media files (HTTP 206 streaming for MP4, WebM, AVI, MKV) and embedded YouTube URLs (via client-side YouTube IFrame Player API adapter, muted with programmatic seeking synchronized to `audioRef.currentTime`).
    - **SRP Architecture**: Gameplay session decomposed into focused custom hooks (`useSessionAudioController` for playback, sync, and media lifecycle; `useSessionScoringController` for pitch evaluation, player visibility, and responsive grid layouts; `useParsedSong` for UltraStar parsing) and focused subcomponents (`SessionTopControls`, `SessionLyricsVisualizer`, `SessionBackgroundMedia`, `SessionPauseOverlay`, `SessionScoreOverlay`, `SessionFolderPrompt`) orchestrated by a slim view coordinator (`MelodiqSession.tsx`, < 200 lines).
 
-8. **Melodiq Notes (`src/games/melodiq-notes`)**:
+10. **Melodiq Notes (`src/games/melodiq-notes`)**:
    - Interactive sheet music reader and instrumental practice tool using OpenSheetMusicDisplay (OSMD).
    - **Synchronized Multi-Stem Audio Engine (`useStemAudioPlayer`)**: Web Audio API integration supporting multi-track stems (isolated vocals, backing, instruments) synchronized to sheet cursor timing.
    - **Responsive Mobile Layout & Fixed Action Bar (`BottomActionBar`)**: Prevents nested viewport scroll traps on mobile devices by decoupling sheet canvas scrolling from sticky bottom playback controls and collapsible settings accordions.
    - Local library storage via IndexedDB (`melodiq-notes-local`) and MusicXML/MXL parser.
 
-9. **Cards (`src/games/cards`)**:
+11. **Cards (`src/games/cards`)**:
    - Multi-game card suite and digital score sheet supporting traditional card games.
    - `SchwimmenGameView`: Knack / 31 with life tracking, swimming state, and elimination logic.
    - `OhHellGameView`: Bids and tricks tracker with customizable round sequences (e.g. Rage / Wizard variants).
    - `UniversalScoreView`: Generic round-based scorekeeper for arbitrary card and board games.
 
-10. **Werewolf (`src/games/werewolf`)**:
+12. **Werewolf (`src/games/werewolf`)**:
     - Moderator engine and role management tool for *Die Werwölfe von Düsterwald*.
     - Handles setup, role allocation, night phase sequence orchestration (Seer, Werewolves, Witch, Hunter), daylight voting, and win condition checks.
     - Integrated with `player-management` module for lobby player setups.
 
-11. **Imposter (`src/games/imposter`)**:
+13. **Imposter (`src/games/imposter`)**:
     - Local pass-the-device social deduction game where one or more imposters receive a related hint word while ordinary players receive the secret word.
     - Strict phase state machine: `LOBBY` → `HANDOVER` → `TIMER` → `VOTING` → `RESULT`.
     - Integrated category selection, customizable timers, and pass-and-play handover cards.
 
-12. **Wordle (`src/games/wordle`)**:
+14. **Wordle (`src/games/wordle`)**:
     - Daily 5-letter word puzzle in German and English with offline caching and streak tracking.
     - History integration via `useWordleHistory` custom hook and interactive review in `WordleHistoryModal`.
 
-13. **Sudoku (`src/games/sudoku`)**:
+15. **Sudoku (`src/games/sudoku`)**:
     - Daily and freeplay Sudoku generator and solver with multiple difficulty levels (easy, medium, hard, expert).
     - Note-taking mode, automated conflict validation, hints, timer, and persistent statistics.
 

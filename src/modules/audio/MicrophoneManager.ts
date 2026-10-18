@@ -2,6 +2,7 @@ import { type PitchResult, computeRMS, autoCorrelate, freqToMidi } from './Audio
 
 export { type PitchResult };
 
+/** Stats about audio volume and Web Audio context state. */
 export interface AudioStats {
     volume: number;
     contextState: string;

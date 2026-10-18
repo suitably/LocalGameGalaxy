@@ -14,6 +14,9 @@ import PersonAddAltRoundedIcon from '@mui/icons-material/PersonAddAltRounded';
 import { useTranslation } from 'react-i18next';
 import type { PlayerManagerCardProps } from './types';
 
+/**
+ * UI Component for adding, removing, and listing players in a game lobby card.
+ */
 export const PlayerManagerCard: React.FC<PlayerManagerCardProps> = ({
   players,
   onAddPlayer,

@@ -34,6 +34,7 @@ interface ElementLike {
   [key: string]: unknown;
 }
 
+/** Excalidraw scene payload containing element list, app state, and binary files. */
 export interface ExcalidrawScenePayload {
   elements: ElementLike[];
   appState: Record<string, unknown>;
@@ -75,6 +76,9 @@ const collectActiveElementIds = (elements: ElementLike[]): string[] => {
   return active;
 };
 
+/**
+ * Ensures drawing metadata (stroke order and sequence tracking) is attached to the Excalidraw scene payload.
+ */
 export const ensureDrawMetadata = ({
   elements = [],
   appState = {},
@@ -138,6 +142,9 @@ export const ensureDrawMetadata = ({
   };
 };
 
+/**
+ * Safely parses raw JSON or object scene data into a validated ExcalidrawScenePayload.
+ */
 export const parseSceneData = (data: unknown): ExcalidrawScenePayload => {
   if (!data) {
     return ensureDrawMetadata({});
@@ -158,6 +165,9 @@ export const parseSceneData = (data: unknown): ExcalidrawScenePayload => {
   }
 };
 
+/**
+ * Computes a unique string fingerprint for an Excalidraw scene to optimize re-render and animation diffing.
+ */
 export const buildSceneFingerprint = (scene?: ExcalidrawScenePayload | null): string => {
   const normalized = ensureDrawMetadata(scene || {});
   const parts: string[] = [];
@@ -186,6 +196,9 @@ export const buildSceneFingerprint = (scene?: ExcalidrawScenePayload | null): st
   return parts.join('|');
 };
 
+/**
+ * Returns element list sorted in their chronological drawing order for stroke replay.
+ */
 export const getOrderedElements = (scene?: ExcalidrawScenePayload | null): ElementLike[] => {
   const normalized = ensureDrawMetadata(scene || {});
   const elements = Array.isArray(normalized.elements) ? normalized.elements : [];

@@ -15,11 +15,13 @@ import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
 import { useTranslation } from 'react-i18next';
 
+/** Represents a player entry that can be edited in a session dialog. */
 export interface EditableSessionPlayer {
   id: string;
   name: string;
 }
 
+/** Props for the EditSessionDialog component. */
 export interface EditSessionDialogProps {
   open: boolean;
   onClose: () => void;
@@ -32,6 +34,9 @@ export interface EditSessionDialogProps {
   extraContent?: React.ReactNode;
 }
 
+/**
+ * Dialog component for editing active game session titles, player names, and custom options.
+ */
 export const EditSessionDialog: React.FC<EditSessionDialogProps> = ({
   open,
   onClose,

@@ -26,6 +26,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useTranslation } from 'react-i18next';
 import { PushNotificationBanner } from '../../components/push/PushNotificationBanner';
 
+/** Represents a player entry for generating share links and QR codes. */
 export interface SessionPlayerItem {
   id: string;
   name: string;
@@ -33,6 +34,7 @@ export interface SessionPlayerItem {
   relayUrl?: string;
 }
 
+/** Props for the ShareSessionLinksDialog component. */
 export interface ShareSessionLinksDialogProps {
   open: boolean;
   onClose: () => void;
@@ -49,6 +51,9 @@ export interface ShareSessionLinksDialogProps {
   enablePushBanner?: boolean;
 }
 
+/**
+ * Dialog component for sharing game session deep links and QR codes with remote players.
+ */
 export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = ({
   open,
   onClose,
@@ -93,11 +98,7 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
       : `🎮 Hallo ${player.name}! Spiele mit uns mit: ${link}`;
 
     if (navigator.share) {
-      try {
-        await navigator.share({ title, text, url: link });
-      } catch {
-        // User cancelled or share failed
-      }
+      try { await navigator.share({ title, text, url: link }); } catch { /* ignore */ }
     } else {
       navigator.clipboard.writeText(text);
       setCopiedPlayerId(player.id);
@@ -134,63 +135,27 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
             const isHostUser = index === 0 && isLocal;
 
             return (
-              <Paper
-                key={p.id}
-                variant="outlined"
-                sx={{
-                  mb: 1.5,
-                  p: 1.5,
-                  borderRadius: 2.5,
-                  bgcolor: 'background.paper',
-                  borderColor: 'divider',
-                }}
-              >
+              <Paper key={p.id} variant="outlined" sx={{ mb: 1.5, p: 1.5, borderRadius: 2.5, bgcolor: 'background.paper', borderColor: 'divider' }}>
                 <ListItem
                   disableGutters
                   secondaryAction={
                     isHostUser ? (
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        color="success"
-                        label={t('common.hostDeviceBadge', 'Dein Gerät')}
-                        sx={{ fontWeight: 700 }}
-                      />
+                      <Chip size="small" variant="outlined" color="success" label={t('common.hostDeviceBadge', 'Dein Gerät')} sx={{ fontWeight: 700 }} />
                     ) : (
                       <Box display="flex" alignItems="center" gap={0.5}>
                         <Tooltip title={t('common.showQrCode', 'QR-Code anzeigen')}>
-                          <IconButton
-                            size="small"
-                            color={showQr ? 'primary' : 'default'}
-                            onClick={() => handleToggleQr(p.id)}
-                            aria-label={t('common.showQrCode', 'QR-Code anzeigen')}
-                            sx={{ bgcolor: 'action.hover' }}
-                          >
+                          <IconButton size="small" color={showQr ? 'primary' : 'default'} onClick={() => handleToggleQr(p.id)} aria-label={t('common.showQrCode', 'QR-Code anzeigen')} sx={{ bgcolor: 'action.hover' }}>
                             <QrCodeRoundedIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-
                         <Tooltip title={isCopied ? t('common.copied', 'Kopiert!') : t('common.copyLink', 'Link kopieren')}>
-                          <IconButton
-                            size="small"
-                            color={isCopied ? 'success' : 'primary'}
-                            onClick={() => handleCopyLink(p.id)}
-                            aria-label={t('common.copyLink', 'Link kopieren')}
-                            sx={{ bgcolor: 'action.hover' }}
-                          >
+                          <IconButton size="small" color={isCopied ? 'success' : 'primary'} onClick={() => handleCopyLink(p.id)} aria-label={t('common.copyLink', 'Link kopieren')} sx={{ bgcolor: 'action.hover' }}>
                             {isCopied ? <CheckRoundedIcon fontSize="small" /> : <ContentCopyRoundedIcon fontSize="small" />}
                           </IconButton>
                         </Tooltip>
-
                         {typeof navigator !== 'undefined' && 'share' in navigator && (
                           <Tooltip title={t('common.share', 'Teilen')}>
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => handleNativeShare(p)}
-                              aria-label={t('common.share', 'Teilen')}
-                              sx={{ bgcolor: 'action.hover' }}
-                            >
+                            <IconButton size="small" color="primary" onClick={() => handleNativeShare(p)} aria-label={t('common.share', 'Teilen')} sx={{ bgcolor: 'action.hover' }}>
                               <ShareRoundedIcon fontSize="small" />
                             </IconButton>
                           </Tooltip>
@@ -200,51 +165,31 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
                   }
                 >
                   <ListItemAvatar>
-                    <Avatar sx={{ bgcolor: 'primary.main', fontWeight: 'bold' }}>
-                      {p.name.charAt(0).toUpperCase()}
-                    </Avatar>
+                    <Avatar sx={{ bgcolor: 'primary.main', fontWeight: 'bold' }}>{p.name.charAt(0).toUpperCase()}</Avatar>
                   </ListItemAvatar>
                   <ListItemText
                     primary={
                       <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
-                        <Typography variant="subtitle1" fontWeight={700}>
-                          {p.name}
-                        </Typography>
-                        <Chip
-                          size="small"
-                          label={isLocal ? t('common.localPlayer', 'Dieses Gerät') : t('common.remotePlayer', 'Remote Gerät')}
-                          color={isLocal ? 'default' : 'primary'}
-                          sx={{ height: 20, fontSize: '0.72rem', fontWeight: 600 }}
-                        />
+                        <Typography variant="subtitle1" fontWeight={700}>{p.name}</Typography>
+                        <Chip size="small" label={isLocal ? t('common.localPlayer', 'Dieses Gerät') : t('common.remotePlayer', 'Remote Gerät')} color={isLocal ? 'default' : 'primary'} sx={{ height: 20, fontSize: '0.72rem', fontWeight: 600 }} />
                       </Box>
                     }
                     secondary={
                       !isLocal && onMarkPlayerLocal ? (
-                        <Button
-                          size="small"
-                          variant="text"
-                          color="inherit"
-                          startIcon={<TransferWithinAStationRoundedIcon fontSize="small" />}
-                          onClick={() => onMarkPlayerLocal(p.id)}
-                          sx={{ textTransform: 'none', fontSize: '0.75rem', p: 0, mt: 0.5, color: 'text.secondary' }}
-                        >
+                        <Button size="small" variant="text" color="inherit" startIcon={<TransferWithinAStationRoundedIcon fontSize="small" />} onClick={() => onMarkPlayerLocal(p.id)} sx={{ textTransform: 'none', fontSize: '0.75rem', p: 0, mt: 0.5, color: 'text.secondary' }}>
                           {t('common.playHereInsteadShort', 'Auf diesem Gerät spielen')}
                         </Button>
                       ) : null
                     }
                   />
                 </ListItem>
-
                 {showQr && (
                   <Box display="flex" flexDirection="column" alignItems="center" py={1.5} gap={1}>
                     <Paper sx={{ p: 1.5, bgcolor: '#ffffff', borderRadius: 2 }}>
                       <QRCodeSVG value={link} size={150} />
                     </Paper>
                     <Typography variant="caption" color="text.secondary">
-                      {t('common.scanQrToPlayAs', {
-                        name: p.name,
-                        defaultValue: `Scanne diesen Code, um als ${p.name} mitzuspielen!`,
-                      })}
+                      {t('common.scanQrToPlayAs', { name: p.name, defaultValue: `Scanne diesen Code, um als ${p.name} mitzuspielen!` })}
                     </Typography>
                   </Box>
                 )}

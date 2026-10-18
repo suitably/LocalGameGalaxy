@@ -1,3 +1,6 @@
+/**
+ * Converts an IndexedDB IDBRequest into a standard Promise.
+ */
 export const requestToPromise = <T>(request: IDBRequest<T>): Promise<T> => {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => resolve(request.result);
@@ -5,6 +8,9 @@ export const requestToPromise = <T>(request: IDBRequest<T>): Promise<T> => {
   });
 };
 
+/**
+ * Iterates an IndexedDB cursor and collects items matching an optional predicate into an array Promise.
+ */
 export const cursorCollect = <T>(
   request: IDBRequest<IDBCursorWithValue | null>,
   predicate?: (value: T) => boolean,
@@ -27,6 +33,9 @@ export const cursorCollect = <T>(
   });
 };
 
+/**
+ * Executes a callback within an IndexedDB transaction and handles completion/abortion safely.
+ */
 export const runWithStore = async <T>(
   openDb: () => Promise<IDBDatabase>,
   storeName: string,
@@ -65,6 +74,9 @@ export const runWithStore = async <T>(
   });
 };
 
+/**
+ * Creates a set of reusable CRUD operations for a given IndexedDB database.
+ */
 export const createIdbStoreOperations = (openDatabase: () => Promise<IDBDatabase>) => {
   const withStore = <T>(
     storeName: string,

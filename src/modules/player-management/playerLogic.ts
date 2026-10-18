@@ -1,5 +1,8 @@
 import type { LobbyPlayerItem } from './types';
 
+/**
+ * Normalizes a raw string or player object into a standard LobbyPlayerItem.
+ */
 export const normalizePlayerItem = (
   item: string | LobbyPlayerItem,
   defaultRemote = false,
@@ -13,12 +16,16 @@ export const normalizePlayerItem = (
   };
 };
 
+/** Result object returned by `addPlayerToLobby`. */
 export interface AddPlayerResult {
   success: boolean;
   reason?: 'empty' | 'max_reached' | 'duplicate';
   players: LobbyPlayerItem[];
 }
 
+/**
+ * Pure function to add a player to a lobby player list, enforcing name uniqueness and player count limits.
+ */
 export const addPlayerToLobby = (
   players: LobbyPlayerItem[],
   name: string,
@@ -49,6 +56,9 @@ export const addPlayerToLobby = (
   };
 };
 
+/**
+ * Pure function to remove a player from a lobby list by name or index.
+ */
 export const removePlayerFromLobby = (
   players: LobbyPlayerItem[],
   nameOrIndex: string | number,
@@ -60,6 +70,9 @@ export const removePlayerFromLobby = (
   return players.filter((p) => p.name.trim().toLowerCase() !== target);
 };
 
+/**
+ * Pure function to toggle the remote status of a player in a lobby list.
+ */
 export const togglePlayerRemoteInLobby = (
   players: LobbyPlayerItem[],
   name: string,

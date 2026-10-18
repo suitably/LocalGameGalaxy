@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ensureDrawMetadata, parseSceneData, type ExcalidrawScenePayload } from './excalidrawScene';
 import { ExcalidrawLazy } from './ExcalidrawLazy';
 
+/** Props for the DrawingCanvas component. */
 export interface DrawingCanvasProps {
   initialCanvasData?: string | null;
   onSubmit: (canvasData: string) => Promise<void>;
@@ -12,6 +13,9 @@ export interface DrawingCanvasProps {
   submitButtonLabel?: string;
 }
 
+/**
+ * Interactive drawing canvas component wrapping Excalidraw with submission handling.
+ */
 export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   initialCanvasData,
   onSubmit,

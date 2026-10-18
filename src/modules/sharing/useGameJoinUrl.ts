@@ -9,6 +9,7 @@ import { useEffect, useRef } from 'react';
 import LZString from 'lz-string';
 import { parseGameUrlParams, cleanWindowUrlQuery } from './parseGameUrlParams';
 
+/** Options for the `useGameJoinUrl` custom hook. */
 export interface UseGameJoinUrlOptions<T> {
   onSnapshotLoaded?: (snapshot: T, params: URLSearchParams) => Promise<void> | void;
   onDirectGameId?: (gameId: string, params: URLSearchParams) => Promise<void> | void;
@@ -18,6 +19,9 @@ export interface UseGameJoinUrlOptions<T> {
   enabled?: boolean;
 }
 
+/**
+ * Custom hook for extracting game snapshots or direct join game IDs from URL parameters.
+ */
 export function useGameJoinUrl<T>({
   onSnapshotLoaded,
   onDirectGameId,

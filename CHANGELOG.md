@@ -1,5 +1,10 @@
 
 ## [Unreleased]
+### Documentation & Repository Hygiene
+- **Architecture Sync (SSoT)**: Updated `docs/tech/architecture.md` to fix duplicate section headers and cleanly number all 15 game modules sequentially from 1 to 15 (Fixes #391).
+- **Code Documentation**: Added JSDoc comments across all exported functions, types, hooks, and component props in shared `src/modules/` (`sharing`, `player-management`, `async-game`, `audio`, `sync`, `drawing`).
+- **Repository Hygiene**: Verified documentation accuracy, licensing, and repository hygiene prechecks (`npm run check:docs`, `npm run check:hygiene`).
+
 ### Refactored
 - **Code Quality**: Deduplicated multiple areas of the codebase to adhere to DRY principles, including extracting a shared `shuffle` utility, optimizing component logic in `Qwixx` and `Melodiq`, and extracting the `removeFromHolderAndUpdateHand` function in `TabletopReducer`.
 - **Dead Code**: Eliminated unused local storage references and docstrings in `wordle` and `melodiq`.

@@ -17,6 +17,7 @@ export const DEFAULT_BROKER_URLS = [
   'wss://broker.emqx.io:8084/mqtt',
 ];
 
+/** Wrapper envelope for MQTT message payloads. */
 export interface MqttEnvelope<T> {
   version: number;
   channelId: string;
@@ -25,8 +26,10 @@ export interface MqttEnvelope<T> {
   payload: T;
 }
 
+/** Callback listener function type for MQTT mailbox channels. */
 export type MessageListener<T> = (payload: T, channelId: string, timestamp: number) => Promise<void> | void;
 
+/** Options for instantiating an MQTT mailbox service. */
 export interface MqttMailboxOptions {
   topicPrefix: string;
   clientPrefix?: string;
@@ -34,6 +37,9 @@ export interface MqttMailboxOptions {
   useCompression?: boolean;
 }
 
+/**
+ * Generic service managing MQTT client connections, channel subscriptions, and compressed publishing.
+ */
 export class MqttMailboxService<T> {
   private client: MqttClient | null = null;
   private subscribedChannels: Set<string> = new Set();
