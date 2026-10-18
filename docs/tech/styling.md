@@ -5,8 +5,12 @@ description: MUI theming conventions, dark/light palette tokens, Capacitor safe 
 resource: src/theme.ts
 tags: [styling, mui, theme, css, mobile, capacitor]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-09-27T10:00:00Z
+  by: previous-agent
+verified:
+  at: 2026-10-18
+  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
 # Styling, Theme & Multi-Device Layout Architecture
@@ -25,12 +29,12 @@ LocalGameGalaxy uses **Material UI (MUI) v7** for all UI components and theming.
 
 ## 2. Styling Conventions
 
-| Approach | When to Use |
-|----------|-------------|
-| **`sx` prop** | Small, one-off layout adjustments (padding, flex alignment, margins) |
-| **`styled()` from `@mui/material/styles`** | Complex, reusable styled components requiring clean DOM |
-| **CSS Variables** | Safe area insets, dynamic values from Capacitor plugins |
-| **Global CSS** (rare) | Root-level resets only (`index.css`) |
+| Approach                                   | When to Use                                                          |
+| ------------------------------------------ | -------------------------------------------------------------------- |
+| **`sx` prop**                              | Small, one-off layout adjustments (padding, flex alignment, margins) |
+| **`styled()` from `@mui/material/styles`** | Complex, reusable styled components requiring clean DOM              |
+| **CSS Variables**                          | Safe area insets, dynamic values from Capacitor plugins              |
+| **Global CSS** (rare)                      | Root-level resets only (`index.css`)                                 |
 
 **Do not** use Tailwind CSS, plain CSS files per component, or hardcoded inline style objects for layout.
 
@@ -40,11 +44,11 @@ LocalGameGalaxy uses **Material UI (MUI) v7** for all UI components and theming.
 
 The app renders across three distinct device contexts:
 
-| Device | Screen | Layout Strategy |
-|--------|--------|-----------------|
-| **Host PC/Laptop** | Desktop browser, wide viewport | Standard MUI responsive grid |
-| **Phone Client** | Smartphone portrait (360–430px wide) | Mobile-first, full-height `100dvh` |
-| **TV Mode** | Large display (1080p+), landscape | Full-bleed canvas overlays |
+| Device             | Screen                               | Layout Strategy                    |
+| ------------------ | ------------------------------------ | ---------------------------------- |
+| **Host PC/Laptop** | Desktop browser, wide viewport       | Standard MUI responsive grid       |
+| **Phone Client**   | Smartphone portrait (360–430px wide) | Mobile-first, full-height `100dvh` |
+| **TV Mode**        | Large display (1080p+), landscape    | Full-bleed canvas overlays         |
 
 Use `useMediaQuery(theme.breakpoints.down('sm'))` to conditionally render mobile vs desktop layouts.
 
@@ -74,17 +78,29 @@ Apply these CSS rules globally in `index.css` or the root layout to prevent defa
 
 ```css
 /* Prevent text selection on tap (except in inputs) */
-* { user-select: none; -webkit-touch-callout: none; }
-input, textarea { user-select: auto; }
+* {
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+input,
+textarea {
+  user-select: auto;
+}
 
 /* Disable gray flash on tap */
-* { -webkit-tap-highlight-color: transparent; }
+* {
+  -webkit-tap-highlight-color: transparent;
+}
 
 /* Prevent pull-to-refresh */
-body { overscroll-behavior-y: contain; }
+body {
+  overscroll-behavior-y: contain;
+}
 
 /* Use dynamic viewport height (avoids mobile browser bar issues) */
-.full-height { height: 100dvh; }
+.full-height {
+  height: 100dvh;
+}
 ```
 
 ---

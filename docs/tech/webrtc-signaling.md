@@ -5,8 +5,12 @@ description: Peer-to-peer signaling state machine, BitTorrent tracker communicat
 resource: src/lib/webrtc/
 tags: [webrtc, signaling, bittorrent-tracker, simple-peer, p2p]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-09-27T10:00:00Z
+  by: previous-agent
+verified:
+  at: 2026-10-18
+  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
 # WebRTC Signaling & Connection Architecture
@@ -20,17 +24,18 @@ This document details the WebRTC peer-to-peer communication stack, signaling flo
 LocalGameGalaxy operates in a local-network environment but supports internet-based discovery via WebRTC. Standard WebRTC requires a signaling server to exchange connection offers, answers, and ICE candidate metadata. To avoid hosting dedicated signaling servers, the application leverages the **BitTorrent Tracker Protocol** over WebSockets.
 
 ### Announce InfoHash Mapping
+
 Rather than exchanging hashes of torrent files, the game maps the active **Room ID / Party ID** to a unique 20-byte InfoHash:
 
 ```typescript
 const stringToInfoHash = (partyId: string): Uint8Array => {
-    const hash = new Uint8Array(20);
-    const encoder = new TextEncoder();
-    const strBuf = encoder.encode(partyId);
-    for (let i = 0; i < 20; i++) {
-        hash[i] = strBuf[i % strBuf.length];
-    }
-    return hash;
+  const hash = new Uint8Array(20);
+  const encoder = new TextEncoder();
+  const strBuf = encoder.encode(partyId);
+  for (let i = 0; i < 20; i++) {
+    hash[i] = strBuf[i % strBuf.length];
+  }
+  return hash;
 };
 ```
 
@@ -102,7 +107,7 @@ The signaling infrastructure manages multiple trackers with distinct classificat
 3. **Custom User Trackers**: Manually added by users in the Device Connection settings.
 
 ### Coexistence and Default Activation Rules
+
 - **No Backend Configured**: Free public trackers are **enabled by default** to ensure out-of-the-box phone connectivity without setup hurdles.
 - **Backend Configured**: When a self-hosted signaling microservice or companion server is present, the self-hosted tracker is enabled by default, while free public trackers remain listed in the UI but are **deactivated by default**. This ensures local/private signaling takes precedence without leaking data to public trackers, while avoiding accidental tracker removal. Users can explicitly reactivate individual public fallback trackers at any time via the UI toggle switch.
 - **Preferences Persistence**: Explicit user overrides per tracker URL are persisted in `${gameId}_tracker_preferences` via `storage.ts`.
-

@@ -5,8 +5,12 @@ description: Workflow for compiling, signing, testing, and releasing the LocalGa
 resource: android/
 tags: [runbook, android, capacitor, release]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-09-27T10:00:00Z
+  by: previous-agent
+verified:
+  at: 2026-10-18
+  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
 # Android App (Capacitor) Packaging & Release Runbook [ID: OPS-ANDROID-RELEASE]
@@ -40,7 +44,8 @@ npm run build
 # Step 2: Sync web assets and plugin bindings to the android folder
 npx cap sync
 ```
-*Note: Run `npx cap sync` every time you modify files in `src/` to ensure changes compile in Android.*
+
+_Note: Run `npx cap sync` every time you modify files in `src/` to ensure changes compile in Android._
 
 ---
 
@@ -59,19 +64,24 @@ A signed release build is required to install the app on devices or publish to G
 ## 4. Compiling a Release APK/AAB
 
 ### Method A: Gradle CLI (Recommended for CI/CD)
+
 To compile a signed release APK directly from terminal:
+
 ```bash
 cd android/
 ./gradlew assembleRelease
 ```
-Outputs: `android/app/build/outputs/apk/release/app-release-unsigned.apk`.
+
+Outputs: `android/app/build/outputs/apk/release/app-release.apk` when the `release` signing config is active (env `ANDROID_KEYSTORE_PASSWORD` + `android/app/release.jks`), otherwise `app-release-unsigned.apk`.
 
 To align and sign the APK:
+
 ```bash
 apksigner sign --ks localgamegalaxy.keystore --ks-key-alias lgg-alias --out release.apk app-release-unsigned.apk
 ```
 
 ### Method B: Android Studio GUI
+
 1. Run `npx cap open android` to launch Android Studio.
 2. Select **Build > Generate Signed Bundle / APK...**
 3. Select **APK** or **Android App Bundle (AAB)**.
@@ -83,6 +93,7 @@ apksigner sign --ks localgamegalaxy.keystore --ks-key-alias lgg-alias --out rele
 ## 5. Device Verification & Native Controls
 
 ### Testing hardware back button:
+
 Android devices have a hardware back button (or gesture navigation swipe). In `Capacitor` apps, pressing the back button by default exits the application. LocalGameGalaxy overrides this behavior to close overlays, drawer views, and active modals:
 
 1. Connect phone via USB with developer mode enabled.
@@ -94,12 +105,14 @@ Android devices have a hardware back button (or gesture navigation swipe). In `C
    ```typescript
    import { App } from '@capacitor/app';
    App.addListener('backButton', ({ canGoBack }) => {
-       // Close modal or router back
+     // Close modal or router back
    });
    ```
 
 ---
 
 ## 6. SSL Certificate Handshake Errors in WebView
+
 The Android WebView blocks self-signed certificates by default, preventing the phone app from connecting to local servers serving local SSL keys.
-- **For local testing**: Ensure the developer phone trusts the local certificate authority, or use local developer settings to bypass SSL check (see [troubleshooting.md](docs/operations/troubleshooting.md)).
+
+- **For local testing**: Ensure the developer phone trusts the local certificate authority, or use local developer settings to bypass SSL check (see [troubleshooting.md](troubleshooting.md)).

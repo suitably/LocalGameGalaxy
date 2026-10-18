@@ -1,12 +1,20 @@
 ---
-type: Pipeline Architecture
-title: CI/CD & Multi-Agent Pipelines Architecture
-description: Single Source of Truth for all continuous integration, automated deployment, and autonomous multi-agent pipelines.
-resource: .github/workflows/
-tags: [ci, cd, github-actions, jules, pipelines]
+type: Reference
+title: 'CI/CD pipelines'
+description: 'All seven GitHub Actions workflows (CI gate + Cloudflare deploy, preview cleanup, gated release, push relay, Docker images, Jules start/audit), the local Husky hooks, repository secrets, branch protection and the GitLab mirror.'
+tags: [ci, cd, github-actions, gitlab, release, cloudflare, docker, jules]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-10-18T15:00:00+02:00
+  by: claude-code
+verified:
+  at: 2026-10-18
+  method: 'read .github/workflows/*.yml, .github/rulesets/main.json, .husky/*, .gitlab-ci.yml, .jscpd.json, scripts/check-*.mjs'
+sources:
+  - '.github/workflows/'
+  - '.github/rulesets/main.json'
+  - '.gitlab-ci.yml'
+  - 'merged from: previous version of 2026-09-27'
 ---
 
 # CI/CD & Multi-Agent Pipelines Architecture
@@ -44,15 +52,15 @@ flowchart TD
 
 ### Complete Pipeline Inventory
 
-| Workflow File | Pipeline Name | Trigger(s) | Target / Output |
-| :--- | :--- | :--- | :--- |
-| [`.github/workflows/ci.yml`](file:///.github/workflows/ci.yml) | **CI Quality Gate** | `push` (main), `pull_request` (main) | 7 Quality Gates + Cloudflare Production / Preview Deploy |
-| [`.github/workflows/cleanup-preview.yml`](file:///.github/workflows/cleanup-preview.yml) | **Cleanup Cloudflare Preview** | `pull_request` (`closed`), `workflow_dispatch` | Deletes obsolete preview branches & environments from Cloudflare |
-| [`.github/workflows/release.yml`](file:///.github/workflows/release.yml) | **Release (Consolidated & Gated)** | `push` tags (`v*`), `workflow_dispatch` | Gated draft release, signed Android APK, server binaries (Linux/Win/macOS), Docker publish, and auto-undraft |
-| [`.github/workflows/deploy-push-relay.yml`](file:///.github/workflows/deploy-push-relay.yml) | **Deploy Cloudflare Push Relay** | `push` (main on `server/cloudflare-push-relay/**`), `workflow_dispatch` | Deploys serverless Web Push & ntfy relay worker to Cloudflare |
-| [`.github/workflows/docker-publish.yml`](file:///.github/workflows/docker-publish.yml) | **Build and Push Docker Images** | `push` (main on `server/**`), `workflow_call`, `workflow_dispatch` | Multi-target build: `base` (~200MB) and `full` (~2GB, AI Demucs) to Docker Hub |
-| [`.github/workflows/jules-start.yml`](file:///.github/workflows/jules-start.yml) | **Jules Start & Stream** | `issue_comment` (`/jules`), `workflow_dispatch` | Dispatches session & streams progress live to issue until PR delivery |
-| [`.github/workflows/jules-audit.yml`](file:///.github/workflows/jules-audit.yml) | **Jules Scheduled Audit** | `schedule` (cron daily), `workflow_dispatch` | Runs scheduled repository audit agents defined in `.github/agents/*.md` |
+| Workflow File                                                                              | Pipeline Name                      | Trigger(s)                                                              | Target / Output                                                                                                                                             |
+| :----------------------------------------------------------------------------------------- | :--------------------------------- | :---------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)                               | **CI Quality Gate**                | `push` (main), `pull_request` (main)                                    | 7 Quality Gates + Cloudflare Production / Preview Deploy                                                                                                    |
+| [`.github/workflows/cleanup-preview.yml`](../../.github/workflows/cleanup-preview.yml)     | **Cleanup Cloudflare Preview**     | `pull_request` (`closed`), `workflow_dispatch`                          | Deletes obsolete preview branches & environments from Cloudflare                                                                                            |
+| [`.github/workflows/release.yml`](../../.github/workflows/release.yml)                     | **Release (Consolidated & Gated)** | `push` tags (`v*`), `workflow_dispatch`                                 | Gated draft release, signed Android APK, server binaries (Linux/Win/macOS), Docker publish, and auto-undraft                                                |
+| [`.github/workflows/deploy-push-relay.yml`](../../.github/workflows/deploy-push-relay.yml) | **Deploy Cloudflare Push Relay**   | `push` (main on `server/cloudflare-push-relay/**`), `workflow_dispatch` | Deploys serverless Web Push & ntfy relay worker to Cloudflare                                                                                               |
+| [`.github/workflows/docker-publish.yml`](../../.github/workflows/docker-publish.yml)       | **Build and Push Docker Images**   | `push` (main on `server/**`), `workflow_call`, `workflow_dispatch`      | Multi-target build: `base` and `full` (with `audio-separator` + `whisper-timestamped`) to Docker Hub as `<user>/nexumia-server` and `<user>/melodiq-server` |
+| [`.github/workflows/jules-start.yml`](../../.github/workflows/jules-start.yml)             | **Jules Start & Stream**           | `issue_comment` (`/jules`), `workflow_dispatch`                         | Dispatches session & streams progress live to issue until PR delivery                                                                                       |
+| [`.github/workflows/jules-audit.yml`](../../.github/workflows/jules-audit.yml)             | **Jules Scheduled Audit**          | `schedule` (cron daily), `workflow_dispatch`                            | Runs scheduled repository audit agents defined in `.github/agents/*.md`                                                                                     |
 
 ---
 
@@ -82,23 +90,25 @@ flowchart LR
    - Enforces zero cross-game imports (`src/games/<A>` cannot import from `src/games/<B>`).
    - Forbids raw `localStorage` / `sessionStorage` (mandates `src/lib/storage.ts`).
    - Forbids native blocking dialogs (`window.confirm()`, `window.prompt()`, `alert()`).
-   - Blocks untyped `: any` usage.
+   - Does **not** check `any` (ESLint only warns — [open-questions Q3](../open-questions.md#q3--no-any-is-documented-as-enforced-but-is-not)) and does not check inline `BroadcastChannel`.
+   - Also fails on tracked server media; warns (does not fail) on `.tsx` files over 300 lines.
 2. **Component Size Budget Gate (`check:budget`)**:
    - Enforces max 250 lines per `.tsx` component file.
    - Ratchet mechanism: Legacy components exceeding budget are tracked in `scripts/legacy-component-baselines.json`. Any edit must decrease or preserve line count; never expand a God component.
 3. **Duplicate Code Scan (`check:duplicates`)**:
    - Uses `jscpd` with `.jscpd.json` configuration.
-   - Rejects PRs introducing copy-paste clones (>12 duplicate lines or >2.5% duplication threshold).
+   - Fails when total duplication exceeds the 2.5 % threshold; clones are counted from 12 lines / 60 tokens (`minLines`, `minTokens`). Ignores tests, `server/`, `public/`, JSON.
 4. **Documentation & Translation Sync Gate (`check:docs`)**:
    - Executed on PRs. If core logic in `src/games/`, `src/modules/`, or `src/lib/` is modified, the PR must also update at least one of: `CHANGELOG.md`, `docs/tech/`, `AGENTS.md`, `README.md`, or `public/locales/`.
-   - Bypassable for chore-only changes by adding `[skip docs]` or `[skip changelog]` in the PR description.
+   - Bypassed by `[skip docs]` / `[skip changelog]` in PR title or body, by PR titles starting with `chore|refactor|style|test|docs|perf`, and for `fix:` PRs touching ≤ 3 core files / ≤ 50 lines. With `GEMINI_API_KEY` set, an optional Gemini Flash review can waive it.
 5. **ESLint (`npm run lint`)**: Zero errors allowed.
 6. **Vitest (`npm test`)**: All unit tests must pass.
 7. **Production Build (`npm run build`)**: `tsc -b && vite build` verifies zero TypeScript compiler errors and produces production bundles.
 
 #### Cloudflare Deployment Step
-- Runs after `validate` succeeds.
-- Uses `cloudflare/wrangler-action@v3` with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+
+- Runs after `build` and the `ci-ok` aggregator succeed.
+- Uses `cloudflare/wrangler-action` (pinned by SHA) with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
 - Pushes to `main` trigger a full production release.
 - Pull requests deploy an isolated preview environment, and a bot comments on the PR with `https://${sanitized-branch}.nexumia.de/`.
 
@@ -136,7 +146,7 @@ flowchart LR
   2. **`create-release`**: Atomically creates a single GitHub Release in `--draft` mode with generated release notes.
   3. **Parallel artifact build**:
      - **Android APK (`build-android`)**: Compiles web bundle, runs `npx cap sync android`. If `ANDROID_KEYSTORE_BASE64` secret is configured, signs `nexumia.apk` with the production release keystore via `./gradlew assembleRelease`; otherwise falls back gracefully to `assembleDebug` with a notice. Uploads `nexumia.apk` to the draft release.
-     - **Server Binaries (`build-server-binaries`)**: Runs `pkg` in `server/`, bundles Linux (`tar.gz`), Windows (`.zip`), and macOS (`tar.gz`) archives with launcher scripts, and uploads them to the draft release.
+     - **Server Binaries (`build-server-binaries`)**: runs `npm run package` in `server/` and bundles Linux (`tar.gz`), Windows (`.zip`) and macOS (`tar.gz`) archives with the launchers from `server/release-scripts/`. Also ships `scripts/align_lyrics.py` per archive. (Broken between 2026-09-13 and PR #394, when `server/package.json` had no `package` script.)
      - **Docker Publishing (`build-docker`)**: Calls the reusable `.github/workflows/docker-publish.yml` to build and push `base` and `full` images to Docker Hub.
   4. **`publish-release`**: Once all three parallel packaging jobs succeed, undrafts the release via `gh release edit "$TAG" --draft=false`. Releases never appear in half-baked or corrupted states.
 
@@ -171,24 +181,25 @@ See [jules-pipeline-workflow.md](jules-pipeline-workflow.md). Comment `/jules` o
 
 The following secrets are used across repository pipelines. Configure them under **GitHub Repository Settings $\rightarrow$ Secrets and variables $\rightarrow$ Actions**:
 
-| Secret Name | Consumed By | Description | Mandatory? |
-| :--- | :--- | :--- | :--- |
-| `CLOUDFLARE_API_TOKEN` | `ci.yml`, `deploy-push-relay.yml` | API token with Cloudflare Pages & Workers deployment permissions | Required for web preview/prod & push relay |
-| `CLOUDFLARE_ACCOUNT_ID` | `ci.yml`, `deploy-push-relay.yml` | Cloudflare Account Identifier | Required for Cloudflare deployment |
-| `DOCKERHUB_USERNAME` | `docker-publish.yml` | Docker Hub account username | Required for Docker Hub image publishing |
-| `DOCKERHUB_TOKEN` | `docker-publish.yml` | Docker Hub personal access token | Required for Docker Hub image publishing |
-| `ANDROID_KEYSTORE_BASE64` | `release.yml` | Base64-encoded release `.jks` Android signing keystore | Optional (falls back to debug if absent) |
-| `ANDROID_KEYSTORE_PASSWORD` | `release.yml` | Keystore password for Android release signing | Optional |
-| `ANDROID_KEY_ALIAS` | `release.yml` | Key alias in Android keystore (defaults to `nexumia`) | Optional |
-| `ANDROID_KEY_PASSWORD` | `release.yml` | Key password for Android release signing | Optional |
-| `JULES_API_KEY` / `JULES_API_KEY_*` | `jules-start.yml`, `jules-audit.yml` | Primary Google Jules REST API key (from [jules.google.com](https://jules.google.com)) | Required for Jules agent |
-| `GITHUB_TOKEN` | All workflows | Automatically provided by GitHub Actions (`secrets.GITHUB_TOKEN`) | Automatic |
+| Secret Name                         | Consumed By                          | Description                                                                           | Mandatory?                                 |
+| :---------------------------------- | :----------------------------------- | :------------------------------------------------------------------------------------ | :----------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`              | `ci.yml`, `deploy-push-relay.yml`    | API token with Cloudflare Pages & Workers deployment permissions                      | Required for web preview/prod & push relay |
+| `CLOUDFLARE_ACCOUNT_ID`             | `ci.yml`, `deploy-push-relay.yml`    | Cloudflare Account Identifier                                                         | Required for Cloudflare deployment         |
+| `DOCKERHUB_USERNAME`                | `docker-publish.yml`                 | Docker Hub account username                                                           | Required for Docker Hub image publishing   |
+| `DOCKERHUB_TOKEN`                   | `docker-publish.yml`                 | Docker Hub personal access token                                                      | Required for Docker Hub image publishing   |
+| `ANDROID_KEYSTORE_BASE64`           | `release.yml`                        | Base64-encoded release `.jks` Android signing keystore                                | Optional (falls back to debug if absent)   |
+| `ANDROID_KEYSTORE_PASSWORD`         | `release.yml`                        | Keystore password for Android release signing                                         | Optional                                   |
+| `ANDROID_KEY_ALIAS`                 | `release.yml`                        | Key alias in Android keystore (defaults to `nexumia`)                                 | Optional                                   |
+| `ANDROID_KEY_PASSWORD`              | `release.yml`                        | Key password for Android release signing                                              | Optional                                   |
+| `JULES_API_KEY` / `JULES_API_KEY_*` | `jules-start.yml`, `jules-audit.yml` | Primary Google Jules REST API key (from [jules.google.com](https://jules.google.com)) | Required for Jules agent                   |
+| `GITHUB_TOKEN`                      | All workflows                        | Automatically provided by GitHub Actions (`secrets.GITHUB_TOKEN`)                     | Automatic                                  |
 
 ---
 
 ## 5. Branch Protection & Quality Gate Ruleset
 
 The `main` branch is protected via a repository ruleset (`.github/rulesets/main.json`):
+
 - **Pull Request Required**: Direct pushes to `main` are restricted; code enters through reviewed and tested PRs.
 - **Required Status Checks**:
   1. `Deterministic Prechecks (no install)`: Repository hygiene, actionlint, i18n parity, test:scripts.
@@ -199,8 +210,8 @@ The `main` branch is protected via a repository ruleset (`.github/rulesets/main.
 
 ## 6. Slash Commands
 
-| Command | Action |
-| :--- | :--- |
+| Command  | Action                                                                             |
+| :------- | :--------------------------------------------------------------------------------- |
 | `/jules` | Start a Jules session with the issue title + body (OWNER/MEMBER/COLLABORATOR only) |
 
 ---
@@ -208,7 +219,8 @@ The `main` branch is protected via a repository ruleset (`.github/rulesets/main.
 ## 7. GitLab CI & Repository Mirroring
 
 The repository maintains an automated mirror on GitLab (`.gitlab-ci.yml`):
+
 - **Authority**: GitHub is the primary source of truth for branch protection, code review, release creation, and deployments.
 - **GitLab Role**: Supplementary security scanning (GitLab SAST and Secret Detection templates) and mirror integrity.
 - **Parity via `npm run ci:gates`**: To prevent divergence, GitLab invokes the unified `npm run ci:gates` entry point (hygiene, script tests, blocking architecture audit, budget check, duplicate scan, ESLint, and Vitest) matching GitHub's validation logic identically.
-- **Efficiency**: Redundant intermediate `install_dependencies` jobs and unused `node_modules` artifacts are eliminated in favor of cached npm offline runs.
+- **Jobs**: `ci_quality_gates` (`npm run ci:gates`), `server_tests`, `docs_sync_check` (merge requests only), `build_app` (artifact `dist/`, 1 day); npm cache in `.npm/`.

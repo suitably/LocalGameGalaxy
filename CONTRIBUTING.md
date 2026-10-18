@@ -7,6 +7,7 @@ Thank you for contributing to LocalGameGalaxy! To maintain code quality, consist
 ## 1. Branch Naming Conventions
 
 All branch names should be lowercase and hyphen-separated, prefixed by the type of change being introduced:
+
 - **Features**: `feature/[short-description]` (e.g., `feature/latency-calibration`)
 - **Bugfixes**: `bugfix/[short-description]` (e.g., `bugfix/pitch-scoring-leak`)
 - **Documentation**: `docs/[short-description]` (e.g., `docs/testing-guide`)
@@ -28,6 +29,7 @@ We enforce the **Conventional Commits** specification. Commit messages should ha
 ```
 
 ### Types
+
 - `feat`: A new feature (e.g., `feat(melodiq): add audio latency calibration slider`)
 - `fix`: A bug fix (e.g., `fix(webrtc): prevent listener leak on session restart`)
 - `docs`: Documentation-only changes (e.g., `docs(tech): create secrets management guide`)
@@ -55,6 +57,11 @@ Before pushing your branch or opening a pull request, you **must** run the follo
    ```bash
    npm run build
    ```
+4. **Quality gates**: hygiene, architecture, component budget, duplicates, lint and tests in one go (the same checks Husky and CI run):
+   ```bash
+   npm run quality-gates
+   ```
+5. **Docs**: if you change architecture, a game, storage keys, sync messages or server routes, update the owning doc in `docs/` and add a line to `docs/log.md` (rules in [AGENTS.md §9](AGENTS.md#9-keeping-the-knowledge-bundle-correct-okf-v02)).
 
 ---
 

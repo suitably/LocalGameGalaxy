@@ -4,9 +4,13 @@ title: LocalGameGalaxy Agent Factory
 description: Autonomous development pipeline pooling multiple AI accounts with strict quality gates against code duplication.
 resource: scripts/
 tags: [agent-factory, automation, quality-gates, ci]
-status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+status: draft
+generated:
+  at: 2026-09-27T10:00:00Z
+  by: previous-agent
+verified:
+  at: 2026-10-18
+  method: 'orchestrator.mjs and scaffold-game.mjs exist; scaffolder output differs from the existing game layout (open-questions Q7)'
 ---
 
 # 🏭 LocalGameGalaxy Agent Factory
@@ -28,8 +32,6 @@ Um die Google AI Pro Abos ohne Token-Kosten voll auszuschöpfen, laufen 5 isolie
 └── worker5/  --> Google AI Pro Konto 5 (z.B. Refactoring & QA)
 ```
 
-Jedes Profil besitzt eine eigene, persistente OAuth-Session (`antigravity-oauth-token`).
-
 ---
 
 ## 2. Die 4-Stufen Quality Gates (Zero-Tolerance)
@@ -48,15 +50,15 @@ flowchart LR
 ```
 
 1. **Architecture Boundary Check (`npm run check:architecture:diff`):**
-   * Keine Cross-Game-Imports (`src/games/A` -> `src/games/B` ist verboten).
-   * Kein rohes `localStorage` / `sessionStorage` (nur `src/lib/storage.ts`).
-   * Keine nativen Alerts (`window.confirm()`).
+   - Keine Cross-Game-Imports (`src/games/A` -> `src/games/B` ist verboten).
+   - Kein rohes `localStorage` / `sessionStorage` (nur `src/lib/storage.ts`).
+   - Keine nativen Alerts (`window.confirm()`).
 2. **Duplikate-Scanner (`npm run check:duplicates` via `jscpd`):**
-   * Scannt TS/TSX-Code. Bricht sofort ab, wenn Copy-Paste-Klone von mehr als 12 Zeilen erkannt werden.
+   - Scannt TS/TSX-Code. Bricht sofort ab, wenn Copy-Paste-Klone von mehr als 12 Zeilen erkannt werden.
 3. **Component Budget Gate (`npm run check:budget`):**
-   * Verhindert Monolithen (Hard Limit: 250 Zeilen pro `.tsx` Datei).
+   - Verhindert Monolithen (Hard Limit: 250 Zeilen pro `.tsx` Datei).
 4. **Unit Tests (`npm test`):**
-   * Alle 430+ Vitest-Tests müssen fehlerfrei durchlaufen.
+   - Alle 430+ Vitest-Tests müssen fehlerfrei durchlaufen.
 
 ---
 
@@ -69,13 +71,14 @@ node scripts/scaffold-game.mjs --id=battleship --title="Schiffe versenken" --cat
 ```
 
 **Was automatisch generiert wird:**
-* `src/games/<id>/gameManifest.ts` (Manifest für Auto-Discovery)
-* `src/games/<id>/types.ts` (Discriminated Unions für State)
-* `src/games/<id>/hooks/use<Game>State.ts` (State Management via `storage.ts`)
-* `src/games/<id>/<Game>Game.tsx` (MUI-Presenter, strikt unter 150 Zeilen)
-* `src/games/<id>/tests/<id>.test.ts` (Basis-Unittest)
-* i18n-Einträge in `public/locales/de/translation.json` und `en/translation.json`
-* Registrierung in `src/lib/gameRegistry.tsx`
+
+- `src/games/<id>/gameManifest.ts` (Manifest für Auto-Discovery)
+- `src/games/<id>/types.ts` (Discriminated Unions für State)
+- `src/games/<id>/hooks/use<Game>State.ts` (State Management via `storage.ts`)
+- `src/games/<id>/<Game>Game.tsx` (MUI-Presenter, strikt unter 150 Zeilen)
+- `src/games/<id>/tests/<id>.test.ts` (Basis-Unittest)
+- i18n-Einträge in `public/locales/de/translation.json` und `en/translation.json`
+- Registrierung in `src/lib/gameRegistry.tsx`
 
 ---
 
@@ -88,8 +91,9 @@ node scripts/agent-factory/orchestrator.mjs --task="Implementiere die 10x10 Gitt
 ```
 
 **Was der Orchestrator tut:**
+
 1. Prüft `/tmp/agentfactory_locks/` und wählt den nächsten freien Worker (Worker 1..5).
-2. Füttert den Task zusammen mit den strikten [AGENTS.md](file:///home/carsten/LocalGameGalaxy/AGENTS.md)-Regeln an `agy`.
+2. Füttert den Task zusammen mit den strikten [AGENTS.md](../../AGENTS.md)-Regeln an `agy`.
 3. Lässt die 4 Quality Gates laufen.
-4. Falls Fehler auftreten: Schickt die Fehlermeldungen automatisch an `agy` zurück (*Self-Healing Loop*, bis zu 3 Versuche).
+4. Falls Fehler auftreten: Schickt die Fehlermeldungen automatisch an `agy` zurück (_Self-Healing Loop_, bis zu 3 Versuche).
 5. Bei Erfolg: Schließt den Lock und meldet Vollzug.

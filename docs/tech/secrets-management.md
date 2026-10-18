@@ -1,67 +1,67 @@
 ---
-type: Security Specification
-title: Secrets & Local Configuration Management
-description: Guidelines for managing local tokens, certificates, config.json, and secure HTTPS/WSS development contexts.
-resource: server/config.example.json
-tags: [security, secrets, config, ssl, certificates]
+type: Howto
+title: 'Secrets and local configuration'
+description: 'Where secrets live (server config.json, env vars, browser storage, CI secrets), how the server token is created and rotated, and how to get HTTPS for phones now that the server has no built-in TLS.'
+tags: [secrets, config, token, https, tunnel]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-10-18T15:00:00+02:00
+  by: claude-code
+verified:
+  at: 2026-10-18
+  method: 'read server/src/config.ts, server/config.example.json, server/src/core/tunnel.ts, src/lib/storage.ts, src/lib/github.ts'
+sources:
+  - 'server/src/config.ts'
+  - 'server/config.example.json'
 ---
 
-# Secrets & Local Configuration Management
+# Secrets and local configuration
 
-To run the LocalGameGalaxy companion server and frontend locally with secure contexts (HTTPS/WSS required for WebRTC and Web Audio APIs), developers must manage local configurations and self-signed certificates.
+## 1. Inventory
 
----
+| Secret                                               | Where it lives                                                                                      | Never commit                                                                           |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Server master token                                  | `config.json` → `token`, or env `SECURITY_TOKEN` / `TOKEN`                                          | `config.json` is git-ignored                                                           |
+| Server API keys                                      | `config.json` → `apiKeys[]` (created via `POST /api/config/apikeys`)                                | same                                                                                   |
+| USDB login                                           | `config.json` → `usdbUsername`, `usdbPassword`                                                      | same                                                                                   |
+| GitHub token for server-side publishing              | `config.json` → `githubToken`                                                                       | same                                                                                   |
+| Browser-side helper token                            | `STORAGE_KEYS.HELPER_TOKEN` (localStorage)                                                          | —                                                                                      |
+| GitHub PAT for in-app PR publishing                  | `STORAGE_KEYS.GITHUB_TOKEN` (localStorage; see the security note in `src/lib/github.ts`)            | —                                                                                      |
+| Android keystore, Cloudflare, Docker Hub, Jules keys | GitHub Actions secrets ([ci-cd §4](../workflows/ci-cd-pipelines.md#4-repository-secrets-reference)) | `*.jks`, `*.keystore`, `*.p12`, `keystore.properties` are blocked by the hygiene check |
 
-## 1. Local Configuration Setup
+`scripts/check-repo-hygiene.mjs` also scans tracked text files (outside `docs/` and `*.example.*`) for secret patterns.
 
-The root `config.json` contains directories for song ingestion, port settings, security tokens, and SSL keys/certificates. This file is excluded from Git to prevent exposing credentials and environment-specific paths.
+## 2. Server `config.json`
 
-To configure your local environment:
-1. Copy the example configuration file:
-   ```bash
-   cp config.example.json config.json
-   ```
-2. Open `config.json` and adjust the configuration values to match your local setup.
+Lookup order (`server/src/config.ts`): `CONFIG_PATH` (if the file exists) → `/app/config` → current working directory → directory of the executable → its parent. A stale `config.json` next to a binary therefore wins over the working directory. If none exists the server starts with defaults and writes the file when settings change.
 
----
-
-## 2. Generating a Security Token
-
-The `token` field is used to authenticate requests between the game clients (phones, TVs) and the companion server. You can generate a secure random token using the following command:
+Start from the example:
 
 ```bash
-# On Linux/macOS:
-openssl rand -hex 16
-# Example output: b90f665727cae0b570256b32acefe34e
+cd server && cp config.example.json config.json
 ```
 
-Paste this generated value into the `"token"` field in your `config.json`.
-
----
-
-## 3. Generating Self-Signed SSL Certificates
-
-WebRTC and Web Audio APIs (used for audio streaming, microphone pitch detection, and multiplayer sync) require a secure context (HTTPS/WSS) when running on local network devices (e.g., testing on actual mobile phones connected to a computer).
-
-To generate a self-signed key and certificate valid for local development:
-
-```bash
-openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -sha256 -days 365 -nodes \
-  -subj "/CN=localhost" \
-  -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
+```json
+{ "directories": ["/path/to/music/folder"], "port": 3000, "token": "YOUR_SECURE_TOKEN_HERE" }
 ```
 
-After generating `key.pem` and `cert.pem`:
-1. Open both files in a text editor.
-2. Copy the full content of `key.pem` (including the header and footer) and paste it into the `"ssl"."key"` field in your `config.json`. Make sure to replace newlines with `\n` or format it as a valid JSON string.
-3. Copy the full content of `cert.pem` and paste it into the `"ssl"."cert"` field.
+Other keys the server understands (defaults in `defaultConfig`): `tabletopDirectories`, `downloadDir`, `usdbUsername`, `usdbPassword`, `apiKeys`, `defaultDownloadMode` (`stream`), `autoVocalSeparation` (`false`), `githubOwner` (`suitably`), `githubRepo` (`LocalGameGalaxy`), `githubToken`.
 
----
+> The repo-root `config.example.json` (with an `ssl` block) is obsolete — [open-questions Q5](../open-questions.md#q5--root-configexamplejson-is-obsolete).
 
-## 4. Registering client certificates on Mobile Devices
-For Chrome and other browsers on Android to accept the self-signed certificate, you may need to:
-1. Install the generated `cert.pem` on your phone (Settings > Security > More Security Settings > Encryption & credentials > Install a certificate > CA certificate).
-2. Or use a tool like `mkcert` to generate certificates trusted by your local machines and devices.
+## 3. Token
+
+- Empty or missing token → the server generates `crypto.randomBytes(16).toString('hex')` at start-up and persists it.
+- Generate one yourself: `openssl rand -hex 16`.
+- Env (`SECURITY_TOKEN`, then `TOKEN`) overrides `config.json`; surrounding quotes are stripped.
+- Rotation: [operations/server-runbook §3](../operations/server-runbook.md#3-rotating-the-master-token).
+
+## 4. HTTPS for phones
+
+Microphone, WebRTC and service workers need a secure context; `http://localhost` counts as secure, a LAN IP does not. The server only speaks plain HTTP, so use one of:
+
+1. **Cloudflare Quick Tunnel** — `ENABLE_TUNNEL=true` or `npm start -- --tunnel` in `server/` (needs `cloudflared`), or the `cloudflared` service in `server/docker-compose.yml`. Prints a temporary `https://*.trycloudflare.com` URL.
+2. **Reverse proxy** with a real certificate (Caddy, Traefik, Nginx) in front of port 3000 and the tracker on 8000.
+3. **Hosted SPA** (`https://nexumia.de`) talking to the local server: the server sends `Access-Control-Allow-Private-Network: true`, but browsers still block `http://` fetches from an `https://` page (mixed content) — a tunnel or proxy is required for the server URL as well.
+
+Self-signed certificates for the Vite dev server are not configured (`vite.config.ts` has no `https` option).

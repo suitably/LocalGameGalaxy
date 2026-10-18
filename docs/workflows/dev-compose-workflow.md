@@ -5,8 +5,12 @@ description: Guide for running and testing the Melodiq helper server locally via
 resource: docker-compose.yml
 tags: [workflow, docker, docker-compose, local-dev]
 status: stable
-generated: { by: antigravity/2.0, at: 2026-09-27T10:00:00Z }
-verified: { by: process:ci, at: 2026-09-27T10:00:00Z }
+generated:
+  at: 2026-09-27T10:00:00Z
+  by: previous-agent
+verified:
+  at: 2026-10-18
+  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
 # Workflow: Local Dev Server with Docker Compose
@@ -47,8 +51,9 @@ docker compose -f docker-compose.dev.yml up --build
 ### 3. Check the Server
 
 Once started, the server is accessible at:
+
 - HTTP: `http://localhost:3000`
-- HTTPS (if SSL is configured): `https://localhost:3000`
+- HTTPS: not served by the server itself — use the tunnel or a proxy ([secrets-management §4](../tech/secrets-management.md#4-https-for-phones))
 
 ### 4. Stop the Container
 
@@ -58,10 +63,10 @@ docker compose -f docker-compose.dev.yml down
 
 ## Differences from Production (`docker-compose.yml`)
 
-| Feature            | Production                   | Dev                          |
-|--------------------|------------------------------|------------------------------|
-| Image Source       | `nexumia/melodiq-server:latest` (Pull) | Local build via `Dockerfile` |
-| `restart` Policy   | `always`                     | `no`                         |
-| `ALLOWED_ORIGINS`  | `https://nexumia.de,...`     | Empty (all origins allowed)  |
-| `NODE_ENV`         | `production`                 | `development`                |
-| Container Name     | `melodiq-server`             | `melodiq-server-dev`         |
+| Feature           | Production                             | Dev                          |
+| ----------------- | -------------------------------------- | ---------------------------- |
+| Image Source      | `nexumia/melodiq-server:latest` (Pull) | Local build via `Dockerfile` |
+| `restart` Policy  | `always`                               | `no`                         |
+| `ALLOWED_ORIGINS` | `https://nexumia.de,...`               | Empty (all origins allowed)  |
+| `NODE_ENV`        | `production`                           | `development`                |
+| Container Name    | `melodiq-server`                       | `melodiq-server-dev`         |
