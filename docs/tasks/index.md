@@ -4,12 +4,7 @@ Agent-ready specs for **open** work. Each mirrors a GitHub issue in `suitably/Lo
 
 | Spec                                                                                                                          | Issue | State on PR #384 branch                                                               |
 | ----------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------- |
-| [Decompose SetupDockerTab](ISSUE-353-decompose-setup-docker-tab.md)                                                           | #353  | implemented (194 lines), issue still open                                             |
-| [Melodiq queue & downloader dedup](ISSUE-354-melodiq-queue-and-downloader-dedup.md)                                           | #354  | implemented (merged into #384)                                                        |
-| [Melodiq song views dedup](ISSUE-355-melodiq-song-views-dedup.md)                                                             | #355  | implemented (merged into #384)                                                        |
 | [Melodiq RemoteHostSettingsModal + typed WebRTC RPC](ISSUE-356-melodiq-remote-host-settings.md)                               | #356  | open                                                                                  |
-| [Dedup GuessArt / Storyteller](ISSUE-357-dedup-guessart-storyteller.md)                                                       | #357  | implemented (merged into #384)                                                        |
-| [i18n zero parity gaps](ISSUE-358-i18n-zero-parity-gaps.md)                                                                   | #358  | implemented (merged into #384)                                                        |
 | [Decompose PartyLobby](ISSUE-359-decompose-party-lobby.md)                                                                    | #359  | open (`PartyLobby.tsx` 614 lines) — same goal as SOLID-17                             |
 | [Cards score views dedup](ISSUE-360-cards-views-dedup.md)                                                                     | #360  | open                                                                                  |
 | [WebRTC heartbeat dedup](ISSUE-361-webrtc-heartbeat-dedup.md)                                                                 | #361  | open                                                                                  |

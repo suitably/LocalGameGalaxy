@@ -21,7 +21,7 @@ Per `AGENTS.md` (Section 4), components exceeding ~250 lines must be split into 
 
 ## Problem Details & Exact Code Locations
 
-- File: [`src/features/party/PartyLobby.tsx:1-623`](../../../src/features/party/PartyLobby.tsx#L1)
+- File: [`src/features/party/PartyLobby.tsx:1-623`](../../src/features/party/PartyLobby.tsx#L1)
 - Mixes network synchronization calls with DOM styling and layout rendering.
 
 ## Dependencies & Preconditions
