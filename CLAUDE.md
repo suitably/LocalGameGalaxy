@@ -5,7 +5,7 @@
 ## Session start
 
 1. `docs/index.md` is the map of the knowledge base. Open the doc for your area before touching code; for game work start with `docs/tech/game-catalog.md`.
-2. Read `docs/open-questions.md` — known bugs and pending decisions (Q0 is a security issue in the companion server's tabletop routes).
+2. Read `docs/open-questions.md` — known bugs and pending decisions.
 3. Check overlapping work: `git status`, `gh pr list`. Do not commit to `main`.
 
 ## Commands

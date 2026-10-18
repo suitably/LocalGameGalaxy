@@ -146,7 +146,7 @@ flowchart LR
   2. **`create-release`**: Atomically creates a single GitHub Release in `--draft` mode with generated release notes.
   3. **Parallel artifact build**:
      - **Android APK (`build-android`)**: Compiles web bundle, runs `npx cap sync android`. If `ANDROID_KEYSTORE_BASE64` secret is configured, signs `nexumia.apk` with the production release keystore via `./gradlew assembleRelease`; otherwise falls back gracefully to `assembleDebug` with a notice. Uploads `nexumia.apk` to the draft release.
-     - **Server Binaries (`build-server-binaries`)**: runs `npm run package` in `server/` and bundles Linux (`tar.gz`), Windows (`.zip`) and macOS (`tar.gz`) archives with the launchers from `server/release-scripts/`. **Currently broken:** `server/package.json` has no `package` script, so the job — and therefore `publish-release` — fails ([open-questions Q1](../open-questions.md#q1--release-pipeline-calls-a-script-that-no-longer-exists)).
+     - **Server Binaries (`build-server-binaries`)**: runs `npm run package` in `server/` and bundles Linux (`tar.gz`), Windows (`.zip`) and macOS (`tar.gz`) archives with the launchers from `server/release-scripts/`. Also ships `scripts/align_lyrics.py` per archive. (Broken between 2026-09-13 and PR #394, when `server/package.json` had no `package` script.)
      - **Docker Publishing (`build-docker`)**: Calls the reusable `.github/workflows/docker-publish.yml` to build and push `base` and `full` images to Docker Hub.
   4. **`publish-release`**: Once all three parallel packaging jobs succeed, undrafts the release via `gh release edit "$TAG" --draft=false`. Releases never appear in half-baked or corrupted states.
 

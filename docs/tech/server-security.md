@@ -67,10 +67,11 @@ Authorization: Bearer <token>
 
 The token is stored in `config.json` and loaded at server startup via `server/src/config.ts`. The SPA gets the token from a pairing QR code or manual input and keeps it in `localStorage` (`STORAGE_KEYS.HELPER_TOKEN`) until changed.
 
-**Token validation middleware** (`server/src/plugins/melodiq/middleware/auth.ts`):
+**Token validation middleware** (`server/src/core/auth.ts`, re-exported by `server/src/plugins/melodiq/middleware/auth.ts`):
 
 - Reads `Authorization: Bearer <token>` or the `?token=` query parameter.
 - Applied by the `melodiq` plugin to: `/api/songs*`, `/api/status`, `/api/auth/me`, `/media`, `/api/usdb/*`, `/api/youtube/*`, `/api/separator/*`, `/api/config/*`, `/api/playlists*`, `/api/browse`, `/api/feedback` (`server/src/plugins/melodiq/index.ts`). Public: `/health`, `/api/info`.
+- Applied by the `tabletop` plugin to `/api/tabletop/*` and `/tabletop/media`; `/api/tabletop/config/*` additionally needs `requireMasterToken`. `/tabletop/proxy-image` checks its token itself.
 - Matches against the master `config.token` (which grants full permissions) or a valid API key in `config.apiKeys`.
 - Returns `401 Unauthorized` if missing or mismatched.
 - Management routes in `routes/config.ts` additionally use `requireMasterToken` (master token or API key with `allowManagement: true`; else `403`). Song deletion checks `allowSongDeletion`.
@@ -107,6 +108,8 @@ CORS only restricts browsers. It is not access control — tokens are.
 
 ## 6. Known gaps
 
-- **Tabletop and relay plugins have no auth middleware**, `/tabletop/media` accepts requests without a token, and `/api/tabletop/games/:id/raw` embeds the master token in returned URLs. Together this allows reading files and obtaining the master token without credentials. Fixed in PR #394 (pending merge). Details: [open-questions Q0](../open-questions.md#q0--unauthenticated-tabletop-routes-allow-file-reads).
-- Tokens travel in query strings (`?token=`) for media URLs, so they end up in logs and browser history.
-- The server is meant for trusted LANs. Exposing it through the tunnel publishes all of the above.
+- The in-memory room relay (`/api/relay/rooms/*`) has no auth. It holds no files or secrets and no frontend code calls it; it also runs in the token-less Workers entry (`server/src/worker.ts`).
+- Tokens travel in query strings (`?token=`) for media URLs, so they end up in logs and browser history. Since PR #394 these URLs carry the **caller's** token (`getRequestToken`), never the master token.
+- The server is meant for trusted LANs. Exposing it through the tunnel publishes every route to the internet.
+
+History: until PR #394 (2026-10-18) the tabletop plugin had no auth, `/tabletop/media` accepted token-less requests and `/raw` and `/api/songs` embedded the master token in URLs.

@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-18 — Q0/Q1 resolved by PR #394 (claude-code)
+
+- Q0/Q1 moved out of open-questions into server-security, deployment §4c, ci-cd, architecture; runbook caveat removed.
+- **No code changed on this branch** (fixes are in #394 on `main`).
+
 ## 2026-10-18 — Q0/Q1 fixes referenced (claude-code)
 
 - Q0 (tabletop auth, master-token leak incl. `/api/songs`) and Q1 (release binaries) are fixed in PR #394; docs mark them pending until merge.

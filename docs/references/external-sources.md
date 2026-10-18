@@ -48,15 +48,16 @@ These are public services without an SLA. Game state sent over MQTT is readable 
 
 ## Companion server and signaling
 
-| Project                                                                                                            | Used for                                                  |
-| ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
-| [Hono](https://hono.dev/) + `@hono/node-server`                                                                    | `server/src/core/app.ts`, plugin server                   |
-| [bittorrent-tracker](https://github.com/webtorrent/bittorrent-tracker)                                             | `signaling/src/index.js` (port 8000, `/health`)           |
-| [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) Quick Tunnel         | `server/src/core/tunnel.ts`, `ENABLE_TUNNEL` / `--tunnel` |
-| [yt-dlp](https://github.com/yt-dlp/yt-dlp)                                                                         | `server/src/plugins/melodiq/services/download.ts`         |
-| [USDB](https://usdb.animux.de/) (UltraStar song DB)                                                                | `server/src/plugins/melodiq/services/usdb.ts`             |
-| [python-audio-separator](https://github.com/nomadkaraoke/python-audio-separator) with `UVR-MDX-NET-Inst_HQ_3.onnx` | `server/src/plugins/melodiq/services/separator.ts`        |
-| [whisper-timestamped](https://github.com/linto-ai/whisper-timestamped)                                             | `server/src/scripts/align_lyrics.py`                      |
+| Project                                                                                                            | Used for                                                                 |
+| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| [Hono](https://hono.dev/) + `@hono/node-server`                                                                    | `server/src/core/app.ts`, plugin server                                  |
+| [bittorrent-tracker](https://github.com/webtorrent/bittorrent-tracker)                                             | `signaling/src/index.js` (port 8000, `/health`)                          |
+| [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) Quick Tunnel         | `server/src/core/tunnel.ts`, `ENABLE_TUNNEL` / `--tunnel`                |
+| [yt-dlp](https://github.com/yt-dlp/yt-dlp)                                                                         | `server/src/plugins/melodiq/services/download.ts`                        |
+| [USDB](https://usdb.animux.de/) (UltraStar song DB)                                                                | `server/src/plugins/melodiq/services/usdb.ts`                            |
+| [python-audio-separator](https://github.com/nomadkaraoke/python-audio-separator) with `UVR-MDX-NET-Inst_HQ_3.onnx` | `server/src/plugins/melodiq/services/separator.ts`                       |
+| [whisper-timestamped](https://github.com/linto-ai/whisper-timestamped)                                             | `server/src/scripts/align_lyrics.py`                                     |
+| [esbuild](https://esbuild.github.io/) + [@yao-pkg/pkg](https://github.com/yao-pkg/pkg)                             | `server/package.json` scripts `bundle` / `package` (standalone binaries) |
 
 ## Hosting and CI
 

@@ -126,9 +126,9 @@ UI layout state is split to avoid app-wide re-renders (`src/context/`):
 
 - **Hono** on `@hono/node-server` (`server/src/index.ts`); a Workers entry exists in `server/src/worker.ts`.
 - Plugins loaded from env `PLUGINS` (default `relay,melodiq,tabletop`):
-  - `melodiq` — song scan of configured directories, HTTP 206 media streaming (`/media`), USDB search/download jobs, `yt-dlp`, stem separation and lyric alignment jobs, playlists, config/API-key management. Auth middleware `plugins/melodiq/middleware/auth.ts`.
+  - `melodiq` — song scan of configured directories, HTTP 206 media streaming (`/media`), USDB search/download jobs, `yt-dlp`, stem separation and lyric alignment jobs, playlists, config/API-key management. Auth middleware `core/auth.ts` (`requireAuth`, `requireMasterToken`, `getRequestToken`).
   - `relay` — in-memory HTTP room relay (`/api/relay/rooms/*`, rooms expire after 4 h idle). It is **not** the WebRTC tracker.
-  - `tabletop` — tabletop asset folders, game listing, workshop import, image proxy.
+  - `tabletop` — tabletop asset folders, game listing, workshop import, image proxy; all routes require a token.
 - Core: CORS + Private Network Access header + `/health` + `/api/info` (`core/app.ts`); optional Cloudflare Quick Tunnel (`core/tunnel.ts`, `ENABLE_TUNNEL=true` or `--tunnel`).
 - Config: `config.json` found via `CONFIG_PATH`, `/app/config`, cwd or next to the executable; env overrides `PORT`, `SECURITY_TOKEN`/`TOKEN`, `MUSIC_DIR`, `DIRECTORIES`, `TABLETOP_DIR`, `MODELS_DIR`, `ALLOWED_ORIGINS`. Token auto-generated if empty. Details: [server-security](server-security.md), [secrets-management](secrets-management.md).
 - Plain HTTP only; TLS comes from the tunnel or a reverse proxy.

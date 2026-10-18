@@ -26,7 +26,7 @@ sources:
 | Web SPA + PWA                     | `npm run build` → `dist/`                                                      | Cloudflare Workers static assets `nexumia` (`ci.yml` → `deploy-cloudflare`): `main` = production (`nexumia.de`), PRs = preview with bot comment |
 | Android APK `nexumia.apk`         | `release.yml` → `build-android`                                                | GitHub Release asset                                                                                                                            |
 | Companion server image            | `docker-publish.yml` (targets `base`, `full`)                                  | Docker Hub `<user>/nexumia-server`, `<user>/melodiq-server`                                                                                     |
-| Server binaries (Linux/Win/macOS) | `release.yml` → `build-server-binaries`                                        | **broken** — see §4c                                                                                                                            |
+| Server binaries (Linux/Win/macOS) | `release.yml` → `build-server-binaries`                                        | GitHub Release assets — see §4c                                                                                                                 |
 | Push relay worker                 | `deploy-push-relay.yml` (`wrangler deploy` in `server/cloudflare-push-relay/`) | Cloudflare Workers                                                                                                                              |
 | Signaling tracker                 | `signaling/Dockerfile`                                                         | image `nexumia/galaxy-signaling` (no publish workflow in this repo — **Unverified** where it is built)                                          |
 
@@ -81,9 +81,17 @@ The Settings UI can generate a compose file (`src/features/settings/components/s
 
 Node version drift (`node:20-slim` vs Node 24 elsewhere): [open-questions Q10](../open-questions.md#q10--node-version-drift).
 
-### 4c. Standalone binaries (currently broken)
+### 4c. Standalone binaries
 
-`release.yml` runs `npm run package` in `server/` and expects `server/dist/nexumia-server-{linux,win.exe,macos}` plus launchers from `server/release-scripts/` (`start-server.sh`, `NexumiaServer.desktop`, `start-server.bat`, `start-server.command`). `server/package.json` has **no `package` script** since 2026-09-13, so this job fails. Fix pending in PR #394. → [open-questions Q1](../open-questions.md#q1--release-pipeline-calls-a-script-that-no-longer-exists)
+```bash
+cd server
+npm run bundle     # esbuild src/index.ts → dist/nexumia-server.cjs (CJS bundle; needed because music-metadata 12 is ESM-only)
+npm run package    # bundle + @yao-pkg/pkg → dist/nexumia-server-{linux,win.exe,macos} (node24-*-x64)
+```
+
+`release.yml` → `build-server-binaries` runs `npm run package` and packs each binary with its launcher from `server/release-scripts/` (`start-server.sh` + `NexumiaServer.desktop`, `start-server.bat`, `start-server.command`) and `scripts/align_lyrics.py`. The launchers `cd` into their folder, so the binary finds `config.json` and `scripts/` there. Separation/alignment still need Python and `ffmpeg` on the host.
+
+Restored in PR #394 (the `package` script had been removed on 2026-09-13). Only the Linux binary was smoke-tested.
 
 ## 5. Signaling tracker
 

@@ -32,5 +32,5 @@ How the code works **right now**. One topic, one file. Start with the architectu
 
 - [Server security](server-security.md) — token, API keys, protected routes, CORS/PNA, **known gaps**.
 - [Secrets & configuration](secrets-management.md) — `config.json`, env vars, HTTPS for phones.
-- [Deployment](deployment.md) — Cloudflare hosting, Android, Docker, binaries (broken), tracker.
+- [Deployment](deployment.md) — Cloudflare hosting, Android, Docker, server binaries, tracker.
 - [Onboarding FAQ](onboarding-faq.md) — common local-setup problems.

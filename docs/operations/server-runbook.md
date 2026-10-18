@@ -56,8 +56,6 @@ Restarts drop WebRTC/WebSocket clients for a moment; phones reconnect automatica
 
 To force a fresh random token, clear `token` in `config.json` and unset `SECURITY_TOKEN`; the server generates and saves a new one at start.
 
-**Caveat:** until [Q0](../open-questions.md#q0--unauthenticated-tabletop-routes-allow-file-reads) is fixed, the token can leak through `/api/tabletop/games/:id/raw`; rotation does not help against that.
-
 ### API keys
 
 `GET/POST /api/config/apikeys`, `PUT/DELETE /api/config/apikeys/:id` (master token or key with `allowManagement`). Revoke a key by deleting it; no restart needed.

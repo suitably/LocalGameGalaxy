@@ -4,26 +4,6 @@ Living list. Each item: what is unclear or broken, the evidence, what would reso
 
 Found by the [2026-10-18 docs-vs-code audit](reports/2026-10-18-docs-vs-code-audit.md) unless noted.
 
-## Q0 — Unauthenticated tabletop routes allow file reads
-
-**Fix pending: PR #394** (auth on all tabletop routes, caller token instead of master token in `/raw` **and** `/api/songs` URLs, which had the same leak). After merge: move the result into [server-security](tech/server-security.md) and delete this item; the room relay stays unauthenticated by design.
-
-**[security, user]** The `melodiq` plugin protects its paths with `requireAuth`; the `tabletop` and `relay` plugins register no auth middleware.
-
-- `POST /api/tabletop/config/directories` (`server/src/plugins/tabletop/routes/config.ts`) adds **any existing directory** to `tabletopDirectories` without a token.
-- `GET /tabletop/media?path=…` (`routes/media.ts`) only rejects a token that is _present and wrong_ (`if (serverConfig.token && token && token !== …)`); a request **without** a token passes, and `resolveSecurePath` then allows any file under the configured directories.
-- Together: anyone who can reach port 3000 can add e.g. `/app` or the server directory and read `config.json` (master token, USDB password, GitHub token). With `ENABLE_TUNNEL=true` that includes the internet. CORS does not help — it only limits browsers, not `curl`.
-- `GET /api/tabletop/games` and `GET /api/tabletop/games/:id/raw` (`routes/games.ts`) are unauthenticated too, and `/raw` builds asset URLs as `…/tabletop/media?path=…&token=${serverConfig.token}` — it **hands the master token to any caller** as soon as one installed game has an assets folder.
-- Also unauthenticated: `DELETE /api/tabletop/config/directories`, `POST /api/tabletop/games/refresh`, the workshop import routes, and the in-memory room relay `/api/relay/rooms/*`.
-  Analysed from code only (2026-10-18), not exploited. Resolve: stop embedding the master token in URLs (issue a scoped, short-lived media token or rely on the caller's own token), put `requireAuth` (and `requireMasterToken` for config writes) in front of the tabletop config/refresh/workshop routes, and make `/tabletop/media` reject requests without a valid token (keep the `?token=` query form the client already sends). → [server-security §6](tech/server-security.md#6-known-gaps)
-
-## Q1 — Release pipeline calls a script that no longer exists
-
-**Fix pending: PR #394** (`npm run bundle` with esbuild + `npm run package` with `@yao-pkg/pkg` 6.23.0 for `node24-{linux,win,macos}-x64`; archives also ship `scripts/align_lyrics.py`). After merge: update [deployment §4c](tech/deployment.md#4c-standalone-binaries-currently-broken) and delete this item.
-
-**[bug]** `.github/workflows/release.yml` job `build-server-binaries` runs `npm run package` in `server/` and copies `server/dist/nexumia-server-{linux,win.exe,macos}`. `server/package.json` only has `build`, `start`, `test`; the `package` script and `pkg` were removed in commit `1e64b51` (2026-09-13, "refactor melodiq backend"), after the last release `1.1.0` (2026-09-03). The next `v*` tag will fail in that job, and `publish-release` (which `needs` it) will never undraft the release.
-Resolve: either restore a binary build (e.g. `pkg`/`@yao-pkg/pkg` or Node SEA) in `server/package.json`, or remove the job and its `needs` entry. → [ci-cd-pipelines §2.3](workflows/ci-cd-pipelines.md#23-consolidated--gated-release-pipeline-releaseyml), [deployment §4c](tech/deployment.md#4c-standalone-binaries-currently-broken)
-
 ## Q3 — "No `any`" is documented as enforced, but is not
 
 **[user]** Until 2026-10-18 AGENTS.md and coding-conventions called `any` "blocked by CI" (now corrected). Reality: ESLint has `@typescript-eslint/no-explicit-any: 'warn'`, `check-architecture.mjs` does not check `any`, and there are **219** occurrences in non-test code (top: `src/lib/webrtc/WebRTCHostManager.ts` 37, `useWebRTCClient.ts` 22, `melodiq/hooks/useMelodiqGlobalEvents.tsx` 13). Open tasks [SOLID-13](tasks/ISSUE-SOLID-13-eliminate-typescript-any-types-in-melodiq.md) / [SOLID-14](tasks/ISSUE-SOLID-14-eliminate-typescript-any-types-in-shared-connection-and-party.md) cover part of it.
@@ -83,3 +63,8 @@ ADR-0004 says "Demucs via PyTorch". `server/src/plugins/melodiq/services/separat
 
 The task specs in [tasks/](tasks/index.md) mirror open issues. Branch `consolidated/quality-sprint-october` (PR #384) already merges work for #353, #354, #355, #357 and #358; #356, #359, #360 and #361 are not implemented (`PartyLobby.tsx` still 614 lines; no `dataChannelHeartbeat.ts`, `RemoteHostSettingsModal.tsx`, `CardGameScoreSummary.tsx`).
 Resolve: when #384 merges, close the implemented issues and move their specs to `archive/`.
+
+## Resolved 2026-10-18
+
+- Q0 unauthenticated tabletop routes / master token in media URLs → fixed in PR #394: auth on all tabletop routes, management rights for directory changes, caller token in `/raw` and `/api/songs` URLs. [server-security](tech/server-security.md)
+- Q1 release job called a removed `npm run package` → fixed in PR #394: esbuild bundle + `@yao-pkg/pkg` Node 24 binaries. [deployment §4c](tech/deployment.md#4c-standalone-binaries)
