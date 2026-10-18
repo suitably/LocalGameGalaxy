@@ -201,7 +201,12 @@ jobs:
 
       - name: Prepare Release Artifacts
         run: |
-          mkdir -p release/linux release/windows release/macos
+          mkdir -p release/linux/scripts release/windows/scripts release/macos/scripts
+
+          # Lyric alignment script (found via <cwd>/scripts/ — the launchers cd into their own folder)
+          for os in linux windows macos; do
+            cp server/src/scripts/align_lyrics.py "release/$os/scripts/"
+          done
 
           # Linux
           cp server/dist/nexumia-server-linux release/linux/

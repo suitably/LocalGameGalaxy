@@ -54,7 +54,11 @@ test('Media Endpoint & Streaming', async (t) => {
           headers: authHeaders,
         });
         assert.strictEqual(res.status, 200, `Failed for ${tf.name}`);
-        assert.strictEqual(res.headers.get('content-type'), tf.mime, `MIME mismatch for ${tf.name}`);
+        assert.strictEqual(
+          res.headers.get('content-type'),
+          tf.mime,
+          `MIME mismatch for ${tf.name}`,
+        );
         // Fully consume the response stream
         await res.text();
       }
@@ -72,4 +76,43 @@ test('Media Endpoint & Streaming', async (t) => {
       serverConfig.directories = serverConfig.directories.filter((d) => d !== tempDir);
     }
   });
+
+  await t.test(
+    'GET /api/songs embeds the caller token in media URLs, never the master token',
+    async () => {
+      const { getSongCache, setSongCache } = require('../dist/plugins/melodiq/services/scanner.js');
+      const previous = getSongCache();
+      const guestKey = {
+        id: 'guest',
+        name: 'Guest',
+        token: 'guest_song_token',
+        allowManagement: false,
+        allowSongDeletion: false,
+        createdAt: new Date().toISOString(),
+      };
+      serverConfig.apiKeys.push(guestKey);
+      setSongCache([
+        {
+          id: 's1',
+          title: 'Song',
+          artist: 'Artist',
+          audio: '/music/song.mp3',
+          video: null,
+          originalAudio: null,
+        },
+      ]);
+      try {
+        const res = await app.request('/api/songs', {
+          headers: { Authorization: `Bearer ${guestKey.token}` },
+        });
+        assert.strictEqual(res.status, 200);
+        const text = await res.text();
+        assert.ok(text.includes(`token=${guestKey.token}`), 'media URL carries the caller token');
+        assert.ok(!text.includes(serverConfig.token), 'response must not contain the master token');
+      } finally {
+        setSongCache(previous);
+        serverConfig.apiKeys.splice(serverConfig.apiKeys.indexOf(guestKey), 1);
+      }
+    },
+  );
 });

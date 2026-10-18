@@ -11,16 +11,18 @@ import {
   addOrUpdateSongInCache,
 } from '../services/scanner';
 import type { HonoEnv, Song, ClientSong } from '../../../core/types';
+import { getRequestToken } from '../../../core/auth';
 
 export const songsRouter = new Hono<HonoEnv>();
 
-const toClientSong = (s: Song): ClientSong => {
+// `token` is the caller's own token; media URLs must never carry the master token.
+const toClientSong = (s: Song, token: string): ClientSong => {
   const secureUrl = (absPath: string | null): string | null => {
     if (!absPath) return null;
     if (absPath.startsWith('http://') || absPath.startsWith('https://')) {
       return absPath;
     }
-    return `/media?path=${encodeURIComponent(absPath)}&token=${serverConfig.token}`;
+    return `/media?path=${encodeURIComponent(absPath)}&token=${encodeURIComponent(token)}`;
   };
 
   return {
@@ -49,7 +51,9 @@ songsRouter.get('/api/songs', (c) => {
 
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
-  const paginated = results.slice(startIndex, endIndex).map(toClientSong);
+  const paginated = results
+    .slice(startIndex, endIndex)
+    .map((s) => toClientSong(s, getRequestToken(c) ?? ''));
 
   c.header('X-Total-Count', String(results.length));
   c.header('X-Page', String(page));
@@ -67,7 +71,7 @@ songsRouter.get('/api/songs/:id', (c) => {
     return c.json({ error: 'Song not found' }, 404);
   }
 
-  return c.json(toClientSong(song));
+  return c.json(toClientSong(song, getRequestToken(c) ?? ''));
 });
 
 // DELETE /api/songs/:id — Delete song + cleanup
@@ -91,14 +95,17 @@ songsRouter.delete('/api/songs/:id', async (c) => {
   }
 
   try {
-    const isRootConfigDir = serverConfig.directories.some((dir) => path.normalize(dir) === safeFolder);
+    const isRootConfigDir = serverConfig.directories.some(
+      (dir) => path.normalize(dir) === safeFolder,
+    );
     if (isRootConfigDir) {
       // Root config directory - delete individual files to avoid deleting the library root folder
       if (fs.existsSync(song.txtPath)) await fs.promises.unlink(song.txtPath);
       if (song.audio && fs.existsSync(song.audio)) await fs.promises.unlink(song.audio);
       if (song.video && fs.existsSync(song.video)) await fs.promises.unlink(song.video);
       if (song.cover && fs.existsSync(song.cover)) await fs.promises.unlink(song.cover);
-      if (song.background && fs.existsSync(song.background)) await fs.promises.unlink(song.background);
+      if (song.background && fs.existsSync(song.background))
+        await fs.promises.unlink(song.background);
     } else {
       // Delete the full song directory
       await fs.promises.rm(safeFolder, { recursive: true, force: true });
