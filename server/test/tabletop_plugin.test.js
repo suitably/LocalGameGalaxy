@@ -6,7 +6,11 @@ const path = require('node:path');
 test('Tabletop Plugin - Endpoints, Scanner & Media Serving', async (t) => {
   const { serverConfig } = require('../dist/config.js');
   const { createGalaxyServer } = require('../dist/core/app.js');
-  const { scanGames, getGameCache, isScanning } = require('../dist/plugins/tabletop/services/scanner.js');
+  const {
+    scanGames,
+    getGameCache,
+    isScanning,
+  } = require('../dist/plugins/tabletop/services/scanner.js');
 
   const app = await createGalaxyServer({
     port: 3000,
@@ -37,8 +41,14 @@ test('Tabletop Plugin - Endpoints, Scanner & Media Serving', async (t) => {
   fs.writeFileSync(path.join(gameFolderDir, 'game.json'), JSON.stringify(structuredGameJson));
 
   // Asset files: one with extension, one extensionless PNG (magic bytes: 89 50 4e 47)
-  fs.writeFileSync(path.join(assetsDir, 'card.jpg'), Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]));
-  fs.writeFileSync(path.join(assetsDir, '-126126741_56719'), Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  fs.writeFileSync(
+    path.join(assetsDir, 'card.jpg'),
+    Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]),
+  );
+  fs.writeFileSync(
+    path.join(assetsDir, '-126126741_56719'),
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+  );
 
   // 2. Flat room-state JSON without assets
   const flatGameJson = {
@@ -52,8 +62,10 @@ test('Tabletop Plugin - Endpoints, Scanner & Media Serving', async (t) => {
   serverConfig.tabletopDirectories = [tempDir];
   await scanGames();
 
+  const auth = { Authorization: `Bearer ${serverConfig.token}` };
+
   await t.test('GET /api/tabletop/status returns scanner status', async () => {
-    const res = await app.request('/api/tabletop/status');
+    const res = await app.request('/api/tabletop/status', { headers: auth });
     assert.strictEqual(res.status, 200);
     const json = await res.json();
     assert.strictEqual(typeof json.scanning, 'boolean');
@@ -62,7 +74,7 @@ test('Tabletop Plugin - Endpoints, Scanner & Media Serving', async (t) => {
   });
 
   await t.test('GET /api/tabletop/games returns client-safe game entries', async () => {
-    const res = await app.request('/api/tabletop/games');
+    const res = await app.request('/api/tabletop/games', { headers: auth });
     assert.strictEqual(res.status, 200);
     const games = await res.json();
     assert.strictEqual(games.length, 2);
@@ -89,7 +101,7 @@ test('Tabletop Plugin - Endpoints, Scanner & Media Serving', async (t) => {
     const folderGame = cache.find((g) => g.name === 'Folder Game');
     assert.ok(folderGame);
 
-    const res = await app.request(`/api/tabletop/games/${folderGame.id}/raw`);
+    const res = await app.request(`/api/tabletop/games/${folderGame.id}/raw`, { headers: auth });
     assert.strictEqual(res.status, 200);
     const body = await res.json();
 
@@ -108,53 +120,56 @@ test('Tabletop Plugin - Endpoints, Scanner & Media Serving', async (t) => {
     assert.ok(targetUrl.includes('&token='));
   });
 
-  await t.test('GET /tabletop/media serves files with magic-bytes detection and range headers', async () => {
-    const extensionlessPath = path.join(assetsDir, '-126126741_56719');
-    const token = serverConfig.token || '';
+  await t.test(
+    'GET /tabletop/media serves files with magic-bytes detection and range headers',
+    async () => {
+      const extensionlessPath = path.join(assetsDir, '-126126741_56719');
+      const token = serverConfig.token || '';
 
-    // 1. Valid fetch with magic bytes MIME (PNG)
-    const res = await app.request(
-      `/tabletop/media?path=${encodeURIComponent(extensionlessPath)}&token=${token}`
-    );
-    assert.strictEqual(res.status, 200);
-    assert.strictEqual(res.headers.get('content-type'), 'image/png');
-    await res.arrayBuffer();
+      // 1. Valid fetch with magic bytes MIME (PNG)
+      const res = await app.request(
+        `/tabletop/media?path=${encodeURIComponent(extensionlessPath)}&token=${token}`,
+      );
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'image/png');
+      await res.arrayBuffer();
 
-    // 2. JPEG with extension
-    const jpgPath = path.join(assetsDir, 'card.jpg');
-    const resJpg = await app.request(
-      `/tabletop/media?path=${encodeURIComponent(jpgPath)}&token=${token}`
-    );
-    assert.strictEqual(resJpg.status, 200);
-    assert.strictEqual(resJpg.headers.get('content-type'), 'image/jpeg');
-    await resJpg.arrayBuffer();
+      // 2. JPEG with extension
+      const jpgPath = path.join(assetsDir, 'card.jpg');
+      const resJpg = await app.request(
+        `/tabletop/media?path=${encodeURIComponent(jpgPath)}&token=${token}`,
+      );
+      assert.strictEqual(resJpg.status, 200);
+      assert.strictEqual(resJpg.headers.get('content-type'), 'image/jpeg');
+      await resJpg.arrayBuffer();
 
-    // 3. Range request
-    const resRange = await app.request(
-      `/tabletop/media?path=${encodeURIComponent(jpgPath)}&token=${token}`,
-      { headers: { range: 'bytes=0-3' } }
-    );
-    assert.strictEqual(resRange.status, 206);
-    assert.strictEqual(resRange.headers.get('content-length'), '4');
-    await resRange.arrayBuffer();
+      // 3. Range request
+      const resRange = await app.request(
+        `/tabletop/media?path=${encodeURIComponent(jpgPath)}&token=${token}`,
+        { headers: { range: 'bytes=0-3' } },
+      );
+      assert.strictEqual(resRange.status, 206);
+      assert.strictEqual(resRange.headers.get('content-length'), '4');
+      await resRange.arrayBuffer();
 
-    // 4. Security check: path outside tabletopDirectories -> 403
-    const forbiddenPath = path.resolve(__dirname, '../package.json');
-    const resForbidden = await app.request(
-      `/tabletop/media?path=${encodeURIComponent(forbiddenPath)}&token=${token}`
-    );
-    assert.strictEqual(resForbidden.status, 403);
+      // 4. Security check: path outside tabletopDirectories -> 403
+      const forbiddenPath = path.resolve(__dirname, '../package.json');
+      const resForbidden = await app.request(
+        `/tabletop/media?path=${encodeURIComponent(forbiddenPath)}&token=${token}`,
+      );
+      assert.strictEqual(resForbidden.status, 403);
 
-    // 5. Invalid token -> 401
-    const resUnauthorized = await app.request(
-      `/tabletop/media?path=${encodeURIComponent(jpgPath)}&token=wrong_token`
-    );
-    assert.strictEqual(resUnauthorized.status, 401);
-  });
+      // 5. Invalid token -> 401
+      const resUnauthorized = await app.request(
+        `/tabletop/media?path=${encodeURIComponent(jpgPath)}&token=wrong_token`,
+      );
+      assert.strictEqual(resUnauthorized.status, 401);
+    },
+  );
 
   await t.test('Tabletop Config Endpoints: GET, POST, DELETE', async () => {
     // GET
-    const resGet = await app.request('/api/tabletop/config');
+    const resGet = await app.request('/api/tabletop/config', { headers: auth });
     assert.strictEqual(resGet.status, 200);
     const jsonGet = await resGet.json();
     assert.ok(Array.isArray(jsonGet.directories));
@@ -162,7 +177,7 @@ test('Tabletop Plugin - Endpoints, Scanner & Media Serving', async (t) => {
     // POST non-existent directory -> 400
     const resPostInvalid = await app.request('/api/tabletop/config/directories', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...auth },
       body: JSON.stringify({ path: '/non/existent/path/xyz' }),
     });
     assert.strictEqual(resPostInvalid.status, 400);
@@ -172,7 +187,7 @@ test('Tabletop Plugin - Endpoints, Scanner & Media Serving', async (t) => {
     fs.mkdirSync(newDir, { recursive: true });
     const resPostValid = await app.request('/api/tabletop/config/directories', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...auth },
       body: JSON.stringify({ path: newDir }),
     });
     assert.strictEqual(resPostValid.status, 200);
@@ -181,18 +196,74 @@ test('Tabletop Plugin - Endpoints, Scanner & Media Serving', async (t) => {
     // DELETE directory
     const resDelete = await app.request('/api/tabletop/config/directories', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...auth },
       body: JSON.stringify({ path: newDir }),
     });
     assert.strictEqual(resDelete.status, 200);
     assert.strictEqual(serverConfig.tabletopDirectories.includes(newDir), false);
   });
 
+  await t.test(
+    'Security: tabletop routes reject missing tokens and never leak the master token',
+    async () => {
+      const jpgPath = path.join(assetsDir, 'card.jpg');
+
+      // No token -> 401 on API, media and config writes
+      assert.strictEqual((await app.request('/api/tabletop/games')).status, 401);
+      assert.strictEqual(
+        (await app.request(`/tabletop/media?path=${encodeURIComponent(jpgPath)}`)).status,
+        401,
+      );
+      const resNoTokenPost = await app.request('/api/tabletop/config/directories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: tempDir }),
+      });
+      assert.strictEqual(resNoTokenPost.status, 401);
+
+      // API key without management rights
+      const guestKey = {
+        id: 'guest',
+        name: 'Guest',
+        token: 'guest_token_for_tests',
+        allowManagement: false,
+        allowSongDeletion: false,
+        createdAt: new Date().toISOString(),
+      };
+      serverConfig.apiKeys.push(guestKey);
+      try {
+        const guestAuth = { Authorization: `Bearer ${guestKey.token}` };
+
+        const resGuestPost = await app.request('/api/tabletop/config/directories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...guestAuth },
+          body: JSON.stringify({ path: tempDir }),
+        });
+        assert.strictEqual(resGuestPost.status, 403);
+
+        const folderGame = getGameCache().find((g) => g.name === 'Folder Game');
+        const resRaw = await app.request(`/api/tabletop/games/${folderGame.id}/raw`, {
+          headers: guestAuth,
+        });
+        assert.strictEqual(resRaw.status, 200);
+        const body = await resRaw.json();
+        const urls = Object.values(body.assetMap).join(' ');
+        assert.ok(urls.includes(`token=${guestKey.token}`), 'asset URLs carry the caller token');
+        assert.ok(
+          !urls.includes(serverConfig.token),
+          'asset URLs must not contain the master token',
+        );
+      } finally {
+        serverConfig.apiKeys.splice(serverConfig.apiKeys.indexOf(guestKey), 1);
+      }
+    },
+  );
+
   await t.test('POST /api/tabletop/games/refresh triggers rescan', async () => {
     while (isScanning()) {
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
-    const res = await app.request('/api/tabletop/games/refresh', { method: 'POST' });
+    const res = await app.request('/api/tabletop/games/refresh', { method: 'POST', headers: auth });
     assert.strictEqual(res.status, 200);
     const json = await res.json();
     assert.strictEqual(json.message, 'Scan started');
