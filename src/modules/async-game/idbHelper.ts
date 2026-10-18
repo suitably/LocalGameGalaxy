@@ -111,3 +111,59 @@ export const createIdbStoreOperations = (openDatabase: () => Promise<IDBDatabase
     clearStore,
   };
 };
+
+export const createOpenDatabase = (
+  dbName: string,
+  dbVersion: number,
+  createUpgradeHandler: (event: IDBVersionChangeEvent) => void,
+): (() => Promise<IDBDatabase>) => {
+  let openRequestPromise: Promise<IDBDatabase> | null = null;
+
+  return (): Promise<IDBDatabase> => {
+    if (typeof window === 'undefined' || !('indexedDB' in window)) {
+      return Promise.reject(new Error('IndexedDB unavailable'));
+    }
+    if (openRequestPromise) {
+      return openRequestPromise;
+    }
+
+    openRequestPromise = new Promise<IDBDatabase>((resolve, reject) => {
+      const request = window.indexedDB.open(dbName, dbVersion);
+
+      request.onupgradeneeded = createUpgradeHandler;
+      request.onerror = () => reject(request.error || new Error('IndexedDB open failed'));
+      request.onsuccess = () => resolve(request.result);
+    })
+      .then((db) => {
+        db.onversionchange = () => {
+          db.close();
+          openRequestPromise = null;
+        };
+        return db;
+      })
+      .catch((error) => {
+        openRequestPromise = null;
+        throw error;
+      });
+
+    return openRequestPromise;
+  };
+};
+
+export const createDatabaseExports = (
+  dbName: string,
+  dbVersion: number,
+  createUpgradeHandler: (event: IDBVersionChangeEvent) => void,
+) => {
+  const openDatabase = createOpenDatabase(dbName, dbVersion, createUpgradeHandler);
+  const ops = createIdbStoreOperations(openDatabase);
+  return {
+    openDatabase,
+    withStore: ops.withStore,
+    getAll: ops.getAll,
+    getByKey: ops.getByKey,
+    putItem: ops.putItem,
+    deleteByKey: ops.deleteByKey,
+    clearStore: ops.clearStore,
+  };
+};

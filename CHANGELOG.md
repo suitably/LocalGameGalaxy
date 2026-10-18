@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Changed
+
+- Fixed missing i18n keys for guessart, tabletop and party translations.
+- Refactored any to unknown in melodiqFetch.
+
 ### Refactored
 
 - **Code Quality**: Deduplicated multiple areas of the codebase to adhere to DRY principles, including extracting a shared `shuffle` utility, optimizing component logic in `Qwixx` and `Melodiq`, and extracting the `removeFromHolderAndUpdateHand` function in `TabletopReducer`.
@@ -43,6 +48,11 @@
 
 - Melodiq: Limited the maximum score per track to 1000 points.
 - Decoupled Cloudflare preview deployments from CI tests to speed up review previews.
+
+### Changed
+
+- Deduplicated queue participant logic in Melodiq game and removed `any` types from song downloader.
+- Resolved 23 i18n translation parity gaps across tabletop, guessart, and party modules.
 
 ## [Unreleased]
 
@@ -149,3 +159,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Refactored
 
 - `ServerAdminPanel`: Decomposed into smaller sub-components and extracted state into `useServerApiKeys` custom hook to resolve Separation of Concerns and God Component size violations.
+
+## [Unreleased]
+
+### Refactored
+
+- Deduplicated `guessart` and `storyteller` core primitives by extracting pure IndexedDB operations into `src/modules/async-game`, round-robin player assignment logic into `src/lib/utils/turnAssignment.ts`, and sharing dialogs logic via `useSessionSharing` into `src/modules/sharing`.

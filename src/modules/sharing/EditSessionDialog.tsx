@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Button,
   CircularProgress,
@@ -48,12 +48,14 @@ export const EditSessionDialog: React.FC<EditSessionDialogProps> = ({
   const [players, setPlayers] = useState<EditableSessionPlayer[]>(initialPlayers);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setName(initialName);
       setPlayers(initialPlayers.map((p) => ({ ...p })));
     }
-  }, [open, initialName, initialPlayers]);
+  }
 
   const handlePlayerNameChange = (id: string, newName: string) => {
     setPlayers((prev) => prev.map((p) => (p.id === id ? { ...p, name: newName } : p)));
