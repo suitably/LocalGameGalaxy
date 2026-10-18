@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-18 — PR cleanup: #384 and #394 on main (claude-code)
+
+- #384 merged; specs for #353, #354, #355, #357, #358 moved to `archive/issue-specs/`, Q15 resolved. #358 closed (parity baseline empty), PR #364 closed as superseded.
+- **No code changed on this branch.**
+
 ## 2026-10-18 — Q0/Q1 resolved by PR #394 (claude-code)
 
 - Q0/Q1 moved out of open-questions into server-security, deployment §4c, ci-cd, architecture; runbook caveat removed.

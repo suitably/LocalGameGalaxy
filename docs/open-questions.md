@@ -59,12 +59,9 @@ Resolve _(user)_: consolidate into one `[Unreleased]` section before the next re
 
 ADR-0004 says "Demucs via PyTorch". `server/src/plugins/melodiq/services/separator.ts` runs `audio-separator[cpu]` with model `UVR-MDX-NET-Inst_HQ_3.onnx` and aligns lyrics with `whisper-timestamped` (`server/src/scripts/align_lyrics.py`). The ADR now carries a note; a superseding ADR is a maintainer decision.
 
-## Q15 — GitHub issues #353–#361 vs branch state
-
-The task specs in [tasks/](tasks/index.md) mirror open issues. Branch `consolidated/quality-sprint-october` (PR #384) already merges work for #353, #354, #355, #357 and #358; #356, #359, #360 and #361 are not implemented (`PartyLobby.tsx` still 614 lines; no `dataChannelHeartbeat.ts`, `RemoteHostSettingsModal.tsx`, `CardGameScoreSummary.tsx`).
-Resolve: when #384 merges, close the implemented issues and move their specs to `archive/`.
-
 ## Resolved 2026-10-18
+
+- Q15 issues #353–#361 vs branch state → #384 merged; #353, #354, #355, #357, #358 closed, specs moved to [archive/issue-specs](archive/index.md). Open: #356, #359, #360, #361 ([tasks](tasks/index.md)).
 
 - Q0 unauthenticated tabletop routes / master token in media URLs → fixed in PR #394: auth on all tabletop routes, management rights for directory changes, caller token in `/raw` and `/api/songs` URLs. [server-security](tech/server-security.md)
 - Q1 release job called a removed `npm run package` → fixed in PR #394: esbuild bundle + `@yao-pkg/pkg` Node 24 binaries. [deployment §4c](tech/deployment.md#4c-standalone-binaries)

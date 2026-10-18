@@ -1,6 +1,6 @@
 # Tasks
 
-Agent-ready specs for **open** work. Each mirrors a GitHub issue in `suitably/LocalGameGalaxy`. When the issue closes, move the spec to [archive/](../archive/index.md) and update this list. Status checked 2026-10-18 against `consolidated/quality-sprint-october` (PR #384) — see [open-questions Q15](../open-questions.md#q15--github-issues-353361-vs-branch-state).
+Agent-ready specs for **open** work. Each mirrors a GitHub issue in `suitably/LocalGameGalaxy`. When the issue closes, move the spec to [archive/](../archive/index.md) and update this list. Status checked 2026-10-18 on `main` after merging #384 and #394.
 
 | Spec                                                                                                                          | Issue | State on PR #384 branch                                                               |
 | ----------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------- |
