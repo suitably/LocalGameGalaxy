@@ -100,9 +100,13 @@ export class MultiChannelSyncCoordinator<T> {
 
     try {
       if (typeof BroadcastChannel !== 'undefined') {
-        const bc = new BroadcastChannel(`${this.options.broadcastPrefix}_${effectiveChannelId}`);
-        bc.postMessage(payload);
-        bc.close();
+        if (effectiveChannelId === this.options.channelId && this.bc) {
+          this.bc.postMessage(payload);
+        } else {
+          const bc = new BroadcastChannel(`${this.options.broadcastPrefix}_${effectiveChannelId}`);
+          bc.postMessage(payload);
+          bc.close();
+        }
       }
     } catch (err) {
       console.warn(`[MultiChannelSyncCoordinator] BroadcastChannel postMessage failed:`, err);
@@ -127,7 +131,7 @@ export function useMultiChannelSync<T>(
 
   useEffect(() => {
     coordinator.updateOptions(options);
-  });
+  }, [coordinator, options]);
 
   useEffect(() => {
     coordinator.start();

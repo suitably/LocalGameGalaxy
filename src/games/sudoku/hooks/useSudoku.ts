@@ -63,13 +63,20 @@ export function useSudoku(initialDifficulty: SudokuDifficulty = 'medium') {
     return () => clearInterval(timer);
   }, [state.isPaused, state.isCompleted, state.isGameOver]);
 
-  // Persist state
+  // Persist state (debounced to avoid LocalStorage thrashing on every 1s timer tick)
   useEffect(() => {
-    if (!state.isCompleted && !state.isGameOver) {
-      storage.setJson(STORAGE_KEYS.SUDOKU_STATE, state);
-    } else {
+    if (state.isCompleted || state.isGameOver) {
       storage.remove(STORAGE_KEYS.SUDOKU_STATE);
+      return;
     }
+
+    const handler = setTimeout(() => {
+      storage.setJson(STORAGE_KEYS.SUDOKU_STATE, state);
+    }, 3000);
+
+    return () => {
+      clearTimeout(handler);
+    };
   }, [state]);
 
   // Persist stats

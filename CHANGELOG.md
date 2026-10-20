@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Performance & Optimization
+
+- **Bundle Size & Code Splitting**: Implemented dynamic `React.lazy()` imports for `Hub`, `Settings`, and `PartyLobby` in `App.tsx`, resolving Vite build warnings and reducing initial bundle size (Fixes #401).
+- **BroadcastChannel Lifecycle**: Optimized `useMultiChannelSync` to reuse active `BroadcastChannel` instances on publish instead of allocating new instances per message send (Fixes #401).
+- **Storage I/O**: Debounced Sudoku state persistence in `useSudoku` to prevent high-frequency synchronous LocalStorage writes on 1-second timer ticks (Fixes #401).
+- **Resource Cleanup**: Ensured window polling intervals in `useTVMode` and `BroadcastChannel` instances in `useQueue` are properly cleaned up on component unmount (Fixes #401).
+
 ### Changed
 
 - Fixed missing i18n keys for guessart, tabletop and party translations.

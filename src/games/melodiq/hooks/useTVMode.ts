@@ -85,6 +85,17 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
     const channelRef = useRef<BroadcastChannel | null>(null);
     const presentationConnectionRef = useRef<PresentationConnection | null>(null);
     const tvWindowRef = useRef<Window | null>(null);
+    const tvCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    // Clean up window poll interval on unmount
+    useEffect(() => {
+        return () => {
+            if (tvCheckIntervalRef.current) {
+                clearInterval(tvCheckIntervalRef.current);
+                tvCheckIntervalRef.current = null;
+            }
+        };
+    }, []);
 
     // Forward ref to sendMessage so handlers defined prior can use it
     const sendMessageRef = useRef<(type: string, payload?: any) => void>(() => {});
@@ -251,9 +262,16 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
         );
         tvWindowRef.current = win;
 
-        const interval = setInterval(() => {
+        if (tvCheckIntervalRef.current) {
+            clearInterval(tvCheckIntervalRef.current);
+        }
+
+        tvCheckIntervalRef.current = setInterval(() => {
             if (win?.closed) {
-                clearInterval(interval);
+                if (tvCheckIntervalRef.current) {
+                    clearInterval(tvCheckIntervalRef.current);
+                    tvCheckIntervalRef.current = null;
+                }
                 // Only mark disconnected if NO presentation needs connection either
                 if (!presentationConnectionRef.current || presentationConnectionRef.current.state !== 'connected') {
                     setIsTVConnected(false);
@@ -293,6 +311,11 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
     }, [sendMessage]);
 
     const disconnectTV = useCallback(() => {
+        if (tvCheckIntervalRef.current) {
+            clearInterval(tvCheckIntervalRef.current);
+            tvCheckIntervalRef.current = null;
+        }
+
         // 1. Close Window if open
         if (tvWindowRef.current) {
             tvWindowRef.current.close();
