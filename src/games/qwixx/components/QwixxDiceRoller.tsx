@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { Box, Paper, Typography, Button } from '@mui/material';
 import CasinoIcon from '@mui/icons-material/Casino';
 import { useTranslation } from 'react-i18next';
 import { Die3D } from '../../../components/games/Die3D';
+import { useDiceRollAnimation } from '../../../components/games/useDiceRollAnimation';
 import type { DiceValues } from '../logic/types';
 import type { DieKey } from '../logic/diceHighlight';
 
@@ -35,37 +36,22 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
   maxDieValue = 6,
 }) => {
   const { t } = useTranslation();
-  const [animating, setAnimating] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+  const { animating, startRoll } = useDiceRollAnimation();
 
   const handleRollClick = () => {
     if (disabled || isRolling || animating) return;
-
-    setAnimating(true);
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-
-    timeoutRef.current = setTimeout(() => {
+    startRoll(() => {
       const limit = maxDieValue || 6;
-      const newDice: DiceValues = {
-        white1: Math.floor(Math.random() * limit) + 1,
-        white2: Math.floor(Math.random() * limit) + 1,
-        red: Math.floor(Math.random() * limit) + 1,
-        yellow: Math.floor(Math.random() * limit) + 1,
-        green: Math.floor(Math.random() * limit) + 1,
-        blue: Math.floor(Math.random() * limit) + 1,
-      };
-      setAnimating(false);
-      onRoll(newDice);
-      timeoutRef.current = null;
-    }, 350);
+      const roll = () => Math.floor(Math.random() * limit) + 1;
+      onRoll({
+        white1: roll(),
+        white2: roll(),
+        red: roll(),
+        yellow: roll(),
+        green: roll(),
+        blue: roll(),
+      });
+    });
   };
 
   const whiteSum = dice.white1 + dice.white2;

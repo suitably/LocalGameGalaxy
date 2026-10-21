@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Shared dice roll animation (claude-code)
+
+- #426 (dice rollers): `docs/tech/architecture.md` §3.2 lists `useDiceRollAnimation`.
+- **Code changed:** `src/components/games/useDiceRollAnimation.ts`, `KnisterDiceRoller.tsx`, `QwixxDiceRoller.tsx`; preceded by a formatting-only commit.
+
 ## 2026-10-21 — STUN settings UI (claude-code)
 
 - #422: `docs/tech/webrtc-signaling.md` §6 describes the new settings UI.

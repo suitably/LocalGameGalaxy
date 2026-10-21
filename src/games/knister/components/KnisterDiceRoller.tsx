@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { Box, Paper, Typography, Button, Chip } from '@mui/material';
 import CasinoIcon from '@mui/icons-material/Casino';
 import { useTranslation } from 'react-i18next';
 import { Die3D } from '../../../components/games/Die3D';
+import { useDiceRollAnimation } from '../../../components/games/useDiceRollAnimation';
 
 interface KnisterDiceRollerProps {
   currentRoll: { die1: number; die2: number; sum: number } | null;
@@ -20,34 +21,18 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
   disabled = false,
 }) => {
   const { t } = useTranslation();
-  const [animating, setAnimating] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+  const { animating, startRoll } = useDiceRollAnimation();
 
   const handleRollClick = () => {
     if (disabled || animating || rollCount >= 25 || currentRoll !== null) return;
-
-    setAnimating(true);
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       navigator.vibrate(40);
     }
-
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-
-    timeoutRef.current = setTimeout(() => {
+    startRoll(() => {
       const d1 = Math.floor(Math.random() * 6) + 1;
       const d2 = Math.floor(Math.random() * 6) + 1;
-      setAnimating(false);
       onRoll(d1, d2);
-      timeoutRef.current = null;
-    }, 350);
+    });
   };
 
   const renderDie = (key: string, val: number | undefined) => (
