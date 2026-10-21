@@ -1,4 +1,3 @@
-import { evaluateGuess } from './guessEvaluator';
 import { getTurnPlayers } from './turnUtils';
 import {
   buildWordMask,
@@ -31,7 +30,12 @@ import type {
   WordTranslationEntry,
 } from './types';
 import { playerAssignment } from './playerAssignment';
-import { isGameBaseSnapshotNewer, mergePlayerProfiles, hasPlayerChannelUpdates } from '../../../lib/utils/turnAssignment';
+import { advanceAfterCorrectGuess, applyGuess, createEmptyRound } from './transitions';
+import {
+  isGameBaseSnapshotNewer,
+  mergePlayerProfiles,
+  hasPlayerChannelUpdates,
+} from '../../../lib/utils/turnAssignment';
 
 const DEFAULT_SCENE = JSON.stringify({ elements: [], appState: {}, files: {} });
 
@@ -199,7 +203,7 @@ export const LocalGameEngine = {
 
     const updatedGame = await updateLocalGame(gameId, (current) => ({
       ...current,
-      name: payload.name !== undefined ? (payload.name.trim() || undefined) : current.name,
+      name: payload.name !== undefined ? payload.name.trim() || undefined : current.name,
       players: updatedPlayers,
     }));
 
@@ -445,61 +449,19 @@ export const LocalGameEngine = {
     if (!game) {
       throw new Error('Local game not found');
     }
-    if (game.status !== 'guessing') {
-      throw new Error('Guess submission only allowed during guessing phase');
-    }
     const round = await getRoundByNumber(gameId, game.roundNumber);
     if (!round) {
       throw new Error('Active round missing');
     }
 
-    const guesses = Array.isArray(round.guesses) ? [...round.guesses, guess] : [guess];
-    const translations = round.translations || {};
-    const isCorrect = evaluateGuess(translations, round.word, guess, {
-      exactOnly: (round.hintLevel || 0) >= 2,
-    });
+    // Phase guard and rule live in applyGuess; this method only loads and persists.
+    const { correct, round: guessedRound } = applyGuess(game, round, guess, new Date());
+    let updatedRound = await upsertRound(guessedRound);
 
-    let updatedRound = await upsertRound({
-      ...round,
-      guesses,
-      guess: isCorrect ? guess : round.guess,
-      status: isCorrect ? 'completed' : round.status,
-      completedAt: isCorrect ? new Date().toISOString() : round.completedAt,
-    });
-
-    let updatedGame = game;
-
-    if (isCorrect) {
-      const isTemp = isTemporaryClaim ?? Boolean(round.temporaryClaim);
-      updatedGame = await updateLocalGame(gameId, (current) => ({
-        ...current,
-        status: 'selecting',
-        roundNumber: current.roundNumber + 1,
-        currentPlayerIndex: current.currentPlayerIndex,
-        statistics: {
-          roundsCompleted: (current.statistics?.roundsCompleted || 0) + 1,
-        },
-      }));
-
-      await appendRound(gameId, {
-        roundNumber: updatedGame.roundNumber,
-        drawnById: updatedGame.players[updatedGame.currentPlayerIndex]?.id,
-        status: 'selecting',
-        temporaryClaim: isTemp,
-        word: '',
-        wordId: null,
-        wordLanguageCode: updatedGame.options.language,
-        wordDifficulty: 3,
-        translations: {},
-        guesses: [],
-        hintLevel: 0,
-        hintRequested: false,
-        hintLetters: [],
-        wordMask: [],
-        wordLength: 0,
-        canvasData: DEFAULT_SCENE,
-      });
-
+    if (correct) {
+      const temporaryClaim = isTemporaryClaim ?? Boolean(round.temporaryClaim);
+      const updatedGame = await updateLocalGame(gameId, advanceAfterCorrectGuess);
+      await appendRound(gameId, createEmptyRound(updatedGame, temporaryClaim));
       const nextRound = await getRoundByNumber(gameId, updatedGame.roundNumber);
       return {
         correct: true,
@@ -508,21 +470,22 @@ export const LocalGameEngine = {
       };
     }
 
-    const fetchedRound = await getRoundByNumber(gameId, updatedGame.roundNumber);
+    const fetchedRound = await getRoundByNumber(gameId, game.roundNumber);
     if (fetchedRound) {
       updatedRound = fetchedRound;
     }
-    return {
-      correct: false,
-      game: updatedGame,
-      round: toRoundPayload(updatedRound, updatedGame, language),
-    };
+    return { correct: false, game, round: toRoundPayload(updatedRound, game, language) };
   },
 
   async requestHint(
     gameId: string,
     language?: string,
-  ): Promise<{ game: GuessArtGameRecord; round: GuessArtRound | null; hint?: HintResult; exhausted?: boolean }> {
+  ): Promise<{
+    game: GuessArtGameRecord;
+    round: GuessArtRound | null;
+    hint?: HintResult;
+    exhausted?: boolean;
+  }> {
     const game = await getLocalGame(gameId);
     if (!game) {
       throw new Error('Local game not found');
