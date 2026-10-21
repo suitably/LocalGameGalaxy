@@ -65,7 +65,7 @@ Read the file for the full list — this table is a map, not a copy.
 | `ImposterDB`         | Dexie (subclass)                 | 1        | `imposter_categories` (`id`), `imposter_word_pairs` (`++id, *categoryIds`)                                                                                                                            | `src/games/imposter/logic/db.ts`              |
 | `guessart-local`     | raw IDB via `modules/async-game` | see file | `games` (`id`), `rounds` (`id`), `catalogues` (`language`), `metadata` (`key`)                                                                                                                        | `src/games/guessart/logic/db.ts`              |
 | `storyteller-local`  | raw IDB via `modules/async-game` | see file | `games` (`id`), `entries` (`id`)                                                                                                                                                                      | `src/games/storyteller/logic/db.ts`           |
-| `galaxy_tabletop_db` | raw IDB + `runWithStore`         | see file | `custom_games` (`id`)                                                                                                                                                                                 | `src/games/tabletop/logic/tabletopStorage.ts` |
+| `galaxy_tabletop_db` | raw IDB + `runWithStore`         | see file | `custom_games` (`id`), `sessions` (`key`, v3: running game autosaved by host/local play, key `room:<roomId>:<gameId>` or `local:<gameId>`)                                                            | `src/games/tabletop/logic/tabletopStorage.ts` |
 
 Rules:
 

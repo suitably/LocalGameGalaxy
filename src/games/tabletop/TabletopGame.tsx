@@ -7,7 +7,12 @@ import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
 import { tabletopReducer } from './logic/tabletopReducer';
 import { validateAndSanitizeGame } from './logic/gameValidator';
-import { getTabletopGame } from './logic/tabletopStorage';
+import {
+  deleteTabletopSession,
+  getTabletopGame,
+  getTabletopSession,
+  sessionKey,
+} from './logic/tabletopStorage';
 import { parsePcioFile } from './logic/pcioParser';
 import { storage } from '../../lib/storage';
 import { TabletopSurface } from './components/surface/TabletopSurface';
@@ -16,6 +21,8 @@ import { TabletopControllerView } from './components/controller/TabletopControll
 import { TabletopLobbyView } from './components/views/TabletopLobbyView';
 import { useTabletopSync } from './hooks/useTabletopSync';
 import { usePartyLobbyReturn } from './hooks/usePartyLobbyReturn';
+import { useTabletopAutosave } from './hooks/useTabletopAutosave';
+import { RestartGameButton } from './components/views/RestartGameButton';
 
 export function TabletopGame() {
   const { t } = useTranslation();
@@ -33,6 +40,11 @@ export function TabletopGame() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [restartCount, setRestartCount] = useState(0);
+  const isHost = role === 'tv';
+  /** Host and local play own the state, so they save and resume it; phones get snapshots. */
+  const ownsState = isLocal || isHost;
+  const saveKey = sessionKey(roomId, gameId);
 
   const [gameState, dispatch] = useReducer(tabletopReducer, {
     game: validateAndSanitizeGame({ id: gameId, name: 'Lade Spiel...' }),
@@ -53,6 +65,13 @@ export function TabletopGame() {
 
     const fetchGame = async () => {
       try {
+        // 0. Resume a running game
+        const session = ownsState ? await getTabletopSession(saveKey) : null;
+        if (session && session.game.id === gameId) {
+          dispatch({ type: 'LOAD_GAME', payload: session.game });
+          return;
+        }
+
         // 1. Try local IndexedDB
         const localCustom = await getTabletopGame(gameId);
         if (localCustom) {
@@ -98,10 +117,17 @@ export function TabletopGame() {
     };
 
     fetchGame();
-  }, [gameId, roomId, isLocal]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- saveKey/ownsState derive from these
+  }, [gameId, roomId, isLocal, restartCount]);
+
+  useTabletopAutosave(saveKey, gameState.game, ownsState && !loading && !error);
+
+  const restartGame = async () => {
+    await deleteTabletopSession(saveKey);
+    setRestartCount((n) => n + 1);
+  };
 
   // Sync setup
-  const isHost = role === 'tv';
   const { broadcastAction, syncedDispatch } = useTabletopSync({
     roomId,
     isHost,
@@ -159,6 +185,7 @@ export function TabletopGame() {
         >
           Zurück zur Party-Lobby
         </Button>
+        <RestartGameButton onRestart={restartGame} />
         <TabletopSurface state={gameState} dispatch={syncedDispatch} isTvMode={true} />
       </Box>
     );
@@ -189,6 +216,7 @@ export function TabletopGame() {
     return (
       <Box display="flex" flexDirection="column" width="100%" height="100%" overflow="hidden">
         <Box flex={1} position="relative" minHeight={0}>
+          <RestartGameButton onRestart={restartGame} />
           <TabletopSurface state={gameState} dispatch={syncedDispatch} />
         </Box>
         <HandDockStrip state={gameState} dispatch={syncedDispatch} />

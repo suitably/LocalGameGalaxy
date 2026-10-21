@@ -783,7 +783,9 @@
       "reserve": "Reserve",
       "placeOnBoard": "Place on board",
       "dragToPlace": "Drag to place on board",
-      "take": "Take"
+      "take": "Take",
+      "restart": "Restart game",
+      "restart_confirm": "Start this game again from the beginning? The current table is lost."
     }
   },
   "lobby": {

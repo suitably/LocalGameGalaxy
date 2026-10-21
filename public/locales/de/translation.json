@@ -783,7 +783,9 @@
       "tile": "Plättchen",
       "loading": "Wird geladen...",
       "backToLobby": "Zurück zur Lobby",
-      "backToOverview": "Zurück zur Übersicht"
+      "backToOverview": "Zurück zur Übersicht",
+      "restart": "Spiel neu starten",
+      "restart_confirm": "Dieses Spiel von vorn beginnen? Der aktuelle Tisch geht verloren."
     }
   },
   "lobby": {

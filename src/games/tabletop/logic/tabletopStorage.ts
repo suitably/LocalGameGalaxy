@@ -1,12 +1,18 @@
 /**
  * Tabletop IndexedDB Storage Repository [ID: GAME-TABLETOP-STORAGE]
  */
-import { requestToPromise, runWithStore, cursorCollect } from '../../../modules/async-game/idbHelper';
+import {
+  requestToPromise,
+  runWithStore,
+  cursorCollect,
+} from '../../../modules/async-game/idbHelper';
 import type { TabletopGameDefinition, TabletopGameSummary } from './types';
 
 const DB_NAME = 'galaxy_tabletop_db';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_GAMES = 'custom_games';
+/** Running games, keyed by `sessionKey()`; v3. */
+const STORE_SESSIONS = 'sessions';
 
 let dbInstance: IDBDatabase | null = null;
 
@@ -22,6 +28,9 @@ export async function openTabletopDb(): Promise<IDBDatabase> {
         const store = db.createObjectStore(STORE_GAMES, { keyPath: 'id' });
         store.createIndex('name', 'name', { unique: false });
         store.createIndex('updatedAt', 'updatedAt', { unique: false });
+      }
+      if (!db.objectStoreNames.contains(STORE_SESSIONS)) {
+        db.createObjectStore(STORE_SESSIONS, { keyPath: 'key' });
       }
     };
 
@@ -65,34 +74,69 @@ export async function listTabletopGames(): Promise<TabletopGameSummary[]> {
     const cursorReq = store.openCursor();
     const fullGames = await cursorCollect<TabletopGameDefinition>(cursorReq);
 
-    return fullGames.map((g) => {
-      let cardCount = 0;
-      let widgetCount = 0;
-      for (const w of Object.values(g.widgets || {})) {
-        widgetCount++;
-        if (w.type === 'card') cardCount++;
-        else if (w.type === 'deck') cardCount += w.cardIds?.length || 0;
-      }
+    return fullGames
+      .map((g) => {
+        let cardCount = 0;
+        let widgetCount = 0;
+        for (const w of Object.values(g.widgets || {})) {
+          widgetCount++;
+          if (w.type === 'card') cardCount++;
+          else if (w.type === 'deck') cardCount += w.cardIds?.length || 0;
+        }
 
-      return {
-        id: g.id,
-        name: g.name,
-        description: g.description,
-        author: g.author,
-        version: g.version || '1.0.0',
-        minPlayers: g.minPlayers ?? 1,
-        maxPlayers: g.maxPlayers ?? 8,
-        supportedModes: g.supportedModes || ['party_multi_device', 'local_pass_and_play', 'solo'],
-        cardCount,
-        widgetCount,
-        updatedAt: g.updatedAt || 0,
-      };
-    }).sort((a, b) => b.updatedAt - a.updatedAt);
+        return {
+          id: g.id,
+          name: g.name,
+          description: g.description,
+          author: g.author,
+          version: g.version || '1.0.0',
+          minPlayers: g.minPlayers ?? 1,
+          maxPlayers: g.maxPlayers ?? 8,
+          supportedModes: g.supportedModes || ['party_multi_device', 'local_pass_and_play', 'solo'],
+          cardCount,
+          widgetCount,
+          updatedAt: g.updatedAt || 0,
+        };
+      })
+      .sort((a, b) => b.updatedAt - a.updatedAt);
   });
 }
 
 export async function deleteTabletopGame(id: string): Promise<void> {
   return runWithStore(openTabletopDb, STORE_GAMES, 'readwrite', (store) => {
     store.delete(id);
+  });
+}
+
+export interface TabletopSessionRecord {
+  key: string;
+  game: TabletopGameDefinition;
+  savedAt: number;
+}
+
+/** One saved session per party room, or per game when played locally on one device. */
+export const sessionKey = (roomId: string | null, gameId: string): string =>
+  roomId ? `room:${roomId}:${gameId}` : `local:${gameId}`;
+
+export async function saveTabletopSession(
+  key: string,
+  game: TabletopGameDefinition,
+): Promise<void> {
+  const record: TabletopSessionRecord = { key, game, savedAt: Date.now() };
+  return runWithStore(openTabletopDb, STORE_SESSIONS, 'readwrite', (store) => {
+    store.put(record);
+  });
+}
+
+export async function getTabletopSession(key: string): Promise<TabletopSessionRecord | null> {
+  return runWithStore(openTabletopDb, STORE_SESSIONS, 'readonly', async (store) => {
+    const res = await requestToPromise<TabletopSessionRecord | undefined>(store.get(key));
+    return res ?? null;
+  });
+}
+
+export async function deleteTabletopSession(key: string): Promise<void> {
+  return runWithStore(openTabletopDb, STORE_SESSIONS, 'readwrite', (store) => {
+    store.delete(key);
   });
 }
