@@ -2,6 +2,13 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Issue cleanup (claude-code)
+
+- GitHub: closed 12 Jules audit issues (#350–#401, #386 as completed via #405), #361 (wrong premise), #247, #244 (answered), #347 (duplicate of #356); status comment on #342.
+- `tasks/ISSUE-361-…` → `archive/issue-specs/`, `tasks/ISSUE-SOLID-17-…` → `archive/solid-tasks/` (duplicate of #359); `tasks/index.md`, `open-questions.md` Q15 note, `archive/index.md` updated.
+- Removed agent leftovers in the repo root: `pr_comment.sh`, `pr_description.md`, `review.json`, `test.cjs` (none referenced).
+- **Files outside `docs/` deleted; no source code changed.**
+
 ## 2026-10-21 — STUN server selection (claude-code)
 
 - `tech/webrtc-signaling.md` §6 (ICE / STUN servers), `tech/persistence.md` (two new keys), `operations/troubleshooting.md` STUN hint.
