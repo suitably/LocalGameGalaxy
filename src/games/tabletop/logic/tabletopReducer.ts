@@ -10,6 +10,8 @@ import type {
   DieWidget,
   SeatWidget,
   HiddenZone,
+  TabletopTableConfig,
+  TabletopWidget,
 } from './types';
 import { applyLayout, layoutHolderChildren } from './holderLayout';
 import { applyGameDelta, type GameDelta } from './stateDelta';
@@ -19,6 +21,8 @@ import { deckReducer } from './reducers/deckReducer';
 import { bagReducer } from './reducers/bagReducer';
 import { pieceReducer } from './reducers/pieceReducer';
 import { viewReducer } from './reducers/viewReducer';
+import { editReducer } from './reducers/editReducer';
+import type { WidgetPatch } from './widgetEdits';
 
 export interface FlyingCardAnimation {
   id: string;
@@ -58,6 +62,12 @@ export type TabletopAction =
     }
   | { type: 'SNAP_TO_HOLDER'; payload: { widgetId: string; holderId: string } }
   | { type: 'APPLY_REMOTE_DELTA'; payload: GameDelta }
+  /** Undo/redo from the editor; unlike APPLY_REMOTE_DELTA it is synced as an intent. */
+  | { type: 'APPLY_EDIT_DELTA'; payload: GameDelta }
+  | { type: 'PATCH_WIDGETS'; payload: { patches: Record<string, WidgetPatch> } }
+  | { type: 'ADD_WIDGET'; payload: { widget: TabletopWidget } }
+  | { type: 'DELETE_WIDGETS'; payload: { ids: string[] } }
+  | { type: 'UPDATE_TABLE'; payload: { changes: Partial<TabletopTableConfig> } }
   | { type: 'RETURN_CARD_TO_DECK'; payload: { cardId: string; deckId: string } }
   | { type: 'UPDATE_COUNTER'; payload: { counterId: string; delta: number } }
   | { type: 'ROLL_DIE'; payload: { dieId: string; value?: number } }
@@ -90,6 +100,7 @@ export function tabletopReducer(
       };
 
     case 'APPLY_REMOTE_DELTA':
+    case 'APPLY_EDIT_DELTA':
       return { ...state, game: applyGameDelta(state.game, action.payload) };
 
     case 'MOVE_WIDGET': {
@@ -387,6 +398,12 @@ export function tabletopReducer(
     case 'REMOVE_HIDDEN_ZONE':
     case 'TOGGLE_ZONE_REVEAL':
       return viewReducer(state, action);
+
+    case 'PATCH_WIDGETS':
+    case 'ADD_WIDGET':
+    case 'DELETE_WIDGETS':
+    case 'UPDATE_TABLE':
+      return editReducer(state, action);
 
     default:
       return state;
