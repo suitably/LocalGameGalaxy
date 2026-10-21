@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateHandLayout, isActionCard, isCardInHand } from '../handLayout';
+import { calculateHandLayout, groupHandCards, isActionCard, isCardInHand } from '../handLayout';
 import type { CardWidget, HolderWidget } from '../types';
 
 describe('handLayout', () => {
@@ -70,10 +70,7 @@ describe('handLayout', () => {
   });
 
   it('maintains generous gap between distinct card groups', () => {
-    const cards = [
-      createCard('w1', 'Wood', 'Resources'),
-      createCard('b1', 'Bricks', 'Resources'),
-    ];
+    const cards = [createCard('w1', 'Wood', 'Resources'), createCard('b1', 'Bricks', 'Resources')];
     const layout = calculateHandLayout(dummyHolder, cards);
 
     // Distance between start of Wood and start of Bricks should be at least card width (80) + gap (>= 36)
@@ -104,5 +101,17 @@ describe('handLayout', () => {
     expect(isCardInHand('c2', widgets)).toBe(true);
     expect(isCardInHand('c3', widgets)).toBe(false);
     expect(isCardInHand('c4', widgets)).toBe(false);
+  });
+
+  it('groups hand cards by type, label or deck for the dock', () => {
+    const cards = [
+      { id: 'a', type: 'card', cardType: 'wood' },
+      { id: 'b', type: 'card', cardType: 'wood' },
+      { id: 'c', type: 'card', label: 'Knight' },
+    ] as unknown as CardWidget[];
+    expect(groupHandCards(cards).map((g) => [g.key, g.cards.map((c) => c.id)])).toEqual([
+      ['wood', ['a', 'b']],
+      ['Knight', ['c']],
+    ]);
   });
 });

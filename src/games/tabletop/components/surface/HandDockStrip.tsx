@@ -5,14 +5,14 @@ import React, { useState, useMemo } from 'react';
 import { Box, Typography, Chip } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { TabletopGameState, TabletopAction } from '../../logic/tabletopReducer';
-import type { CardWidget, HolderWidget, SeatWidget } from '../../logic/types';
-import { isActionCard } from '../../logic/handLayout';
+import type { CardWidget, SeatWidget } from '../../logic/types';
+import { groupHandCards } from '../../logic/handLayout';
 import { getSeatWidgets, getPlayerSupplyPieces } from '../../logic/seatLogic';
 import { useDockDragDrop } from '../../hooks/useDockDragDrop';
 import { DockDragOverlay } from './DockDragOverlay';
 import { HandCardItem, CARD_W, CARD_H } from './HandCardItem';
 import { SupplyPieceItem } from './SupplyPieceItem';
-import { isHandHolderWidget } from '../../logic/handHolder';
+import { findPlayerHandHolder } from '../../logic/boardFilter';
 
 interface HandDockStripProps {
   state: TabletopGameState;
@@ -38,23 +38,10 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
     return seats[0];
   }, [seats, state.currentSeatId, state.game.widgets]);
 
-  const handHolder = useMemo(() => {
-    const seatIdx = activeSeat?.index;
-    const seatPrefix = seatIdx ? `player ${seatIdx}` : '';
-    const holders = Object.values(state.game.widgets).filter((w): w is HolderWidget =>
-      isHandHolderWidget(w as HolderWidget),
-    );
-    if (seatIdx) {
-      const match = holders.find(
-        (h) =>
-          h.ownerSeat === seatIdx - 1 ||
-          h.ownerSeat === seatIdx ||
-          h.id.toLowerCase().includes(seatPrefix),
-      );
-      if (match) return match;
-    }
-    return holders[0];
-  }, [activeSeat, state.game.widgets]);
+  const handHolder = useMemo(
+    () => findPlayerHandHolder(state.game.widgets, activeSeat?.index || undefined),
+    [activeSeat, state.game.widgets],
+  );
 
   const supplyPieces = useMemo(() => {
     if (!activeSeat) return {};
@@ -71,20 +58,7 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
       .filter((w): w is CardWidget => Boolean(w && w.type === 'card'));
   }, [handHolder, state.game.widgets]);
 
-  const groups = useMemo(() => {
-    const map = new Map<string, CardWidget[]>();
-    for (const card of handCards) {
-      const key = card.cardType || card.label || card.deckId || 'card';
-      const arr = map.get(key) || [];
-      arr.push(card);
-      map.set(key, arr);
-    }
-    return Array.from(map.entries()).map(([key, cards]) => ({
-      key,
-      isAction: isActionCard(cards[0]),
-      cards,
-    }));
-  }, [handCards]);
+  const groups = useMemo(() => groupHandCards(handCards), [handCards]);
 
   if (!handHolder && !hasSupplyPieces) return null;
   const showSupplies = dockTab === 'supplies' && hasSupplyPieces;

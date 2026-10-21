@@ -206,3 +206,23 @@ export function isCardInHand(
     (w) => isHandHolderWidget(w) && Array.isArray(w.childIds) && w.childIds.includes(cardId),
   );
 }
+
+export interface HandCardGroup {
+  key: string;
+  isAction: boolean;
+  cards: CardWidget[];
+}
+
+/** Groups hand cards by type/label/deck for the hand dock; action cards are fanned, others stacked. */
+export function groupHandCards(cards: CardWidget[]): HandCardGroup[] {
+  const map = new Map<string, CardWidget[]>();
+  for (const card of cards) {
+    const key = card.cardType || card.label || card.deckId || 'card';
+    map.set(key, [...(map.get(key) || []), card]);
+  }
+  return Array.from(map.entries()).map(([key, group]) => ({
+    key,
+    isAction: isActionCard(group[0]),
+    cards: group,
+  }));
+}
