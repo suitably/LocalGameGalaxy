@@ -4,405 +4,412 @@
  */
 
 export const STORAGE_KEYS = {
-    // Companion helper configuration
-    HELPER_URL: 'melodiq_helper_url',
-    HELPER_TOKEN: 'melodiq_helper_token',
-    HELPER_ACTIVE: 'melodiq_enable_helper',
-    SIGNALING_URL: 'galaxy_signaling_url',
-    WEBRTC_STUN_CUSTOM_URLS: 'galaxy_stun_custom_urls',
-    WEBRTC_STUN_PREFERENCES: 'galaxy_stun_preferences',
-    
-    // Client connection states
-    CLIENT_PROFILE: 'melodiq_client_profile',
-    PROFILES: 'melodiq_profiles',
-    ACTIVE_SESSION: 'melodiq_active_session',
-    CURRENT_SONG_PARTICIPANTS: 'melodiq_current_song_participants',
-    MELODIQ_TRACKER_URLS: 'melodiq_tracker_urls',
-    MELODIQ_DISABLED_TRACKER_URLS: 'melodiq_disabled_tracker_urls',
-    MELODIQ_TRACKER_PREFERENCES: 'melodiq_tracker_preferences',
-    MELODIQ_CARD_SIZE: 'melodiq_card_size',
-    MELODIQ_MIC_SLOTS: 'melodiq_mic_slots',
-    MELODIQ_MIC_NAMES: 'melodiq_mic_names',
-    MELODIQ_MIC_ORIGINAL_NAMES: 'melodiq_mic_original_names',
-    MELODIQ_CLIENT_ROLES: 'melodiq_client_roles',
-    MELODIQ_SAVED_TIME: 'melodiq_saved_time',
-    MELODIQ_PARTY_ID: 'melodiq_party_id',
-    MELODIQ_HOST_BASE_URL: 'melodiq_host_base_url',
-    EXCALIDRAW_DRAWING: 'excalidraw',
-    DARTS_GAME_STATE: 'darts_game_state',
-    
-    // Queue & play state
-    NOW_PLAYING: 'melodiq_now_playing',
-    QUEUE: 'melodiq_queue',
-    SONG_HISTORY: 'melodiq_song_history',
+  // Companion helper configuration
+  HELPER_URL: 'melodiq_helper_url',
+  HELPER_TOKEN: 'melodiq_helper_token',
+  HELPER_ACTIVE: 'melodiq_enable_helper',
+  SIGNALING_URL: 'galaxy_signaling_url',
+  WEBRTC_STUN_CUSTOM_URLS: 'galaxy_stun_custom_urls',
+  WEBRTC_STUN_PREFERENCES: 'galaxy_stun_preferences',
 
-    // Melodiq Legacy Profile Migration
-    MELODIQ_P1_NAME: 'melodiq_p1_name',
-    MELODIQ_P2_NAME: 'melodiq_p2_name',
-    MELODIQ_P1_HUE: 'melodiq_p1_hue',
-    MELODIQ_P2_HUE: 'melodiq_p2_hue',
-    MELODIQ_P1_DEVICE: 'melodiq_p1_device',
-    MELODIQ_P2_DEVICE: 'melodiq_p2_device',
+  // Client connection states
+  CLIENT_PROFILE: 'melodiq_client_profile',
+  PROFILES: 'melodiq_profiles',
+  ACTIVE_SESSION: 'melodiq_active_session',
+  CURRENT_SONG_PARTICIPANTS: 'melodiq_current_song_participants',
+  MELODIQ_TRACKER_URLS: 'melodiq_tracker_urls',
+  MELODIQ_DISABLED_TRACKER_URLS: 'melodiq_disabled_tracker_urls',
+  MELODIQ_TRACKER_PREFERENCES: 'melodiq_tracker_preferences',
+  MELODIQ_CARD_SIZE: 'melodiq_card_size',
+  MELODIQ_MIC_SLOTS: 'melodiq_mic_slots',
+  MELODIQ_MIC_NAMES: 'melodiq_mic_names',
+  MELODIQ_MIC_ORIGINAL_NAMES: 'melodiq_mic_original_names',
+  MELODIQ_CLIENT_ROLES: 'melodiq_client_roles',
+  MELODIQ_SAVED_TIME: 'melodiq_saved_time',
+  MELODIQ_PARTY_ID: 'melodiq_party_id',
+  MELODIQ_HOST_BASE_URL: 'melodiq_host_base_url',
+  EXCALIDRAW_DRAWING: 'excalidraw',
+  DARTS_GAME_STATE: 'darts_game_state',
 
-    // Melodiq Playlists & Session
-    MELODIQ_ENABLE_PLAYLIST_SYNC: 'melodiq_enable_playlist_sync',
-    MELODIQ_META_CACHE: 'melodiq_meta_cache',
-    MELODIQ_RTC_CONNECTED: 'melodiq_rtc_connected',
+  // Queue & play state
+  NOW_PLAYING: 'melodiq_now_playing',
+  QUEUE: 'melodiq_queue',
+  SONG_HISTORY: 'melodiq_song_history',
 
-    // Melodiq Settings
-    MELODIQ_SHOW_OVERLAY: 'melodiq_show_overlay',
-    MELODIQ_SHOW_SLIDER: 'melodiq_show_slider',
-    MELODIQ_SHOW_NOTE_LABELS: 'melodiq_show_note_labels',
-    MELODIQ_SHOW_VIDEO_ERRORS: 'melodiq_show_video_errors',
-    MELODIQ_CUSTOM_LAYOUTS: 'melodiq_custom_layouts',
-    MELODIQ_CUSTOM_TARGET_COLUMNS: 'melodiq_custom_target_columns',
-    MELODIQ_SONG_VOLUME: 'melodiq_song_volume',
-    MELODIQ_MASTER_VOLUME: 'melodiq_master_volume',
-    MELODIQ_VOCALS_VOLUME: 'melodiq_vocals_volume',
-    MELODIQ_GOLDEN_NOTE_MULTIPLIER: 'melodiq_golden_note_multiplier',
-    MELODIQ_DEFAULT_SONG_CLICK_ACTION: 'melodiq_default_song_click_action',
-    MELODIQ_DEFAULT_VIEW_MODE: 'melodiq_default_view_mode',
-    MELODIQ_AUTOPLAY_NO_PLAYERS: 'melodiq_autoplay_no_players',
-    MELODIQ_AUTOPLAY_WITH_PLAYERS: 'melodiq_autoplay_with_players',
-    MELODIQ_HIDE_BACKGROUND_VIDEO: 'melodiq_hide_background_video',
-    MELODIQ_FALLBACK_BACKGROUND_URL: 'melodiq_fallback_background_url',
-    MELODIQ_LYRICS_SCALE: 'melodiq_lyrics_scale',
-    MELODIQ_ENABLE_LYRICS_ZOOM: 'melodiq_enable_lyrics_zoom',
-    MELODIQ_LYRICS_LINES: 'melodiq_lyrics_lines',
-    MELODIQ_LYRICS_POSITION: 'melodiq_lyrics_position',
-    MELODIQ_AUDIO_PLAYBACK_MODE: 'melodiq_audio_playback_mode',
-    MELODIQ_SHOW_SCOREBOARD_QR_CODE: 'melodiq_show_scoreboard_qr_code',
-    MELODIQ_MIC_LATENCY: 'melodiq_mic_latency',
+  // Melodiq Legacy Profile Migration
+  MELODIQ_P1_NAME: 'melodiq_p1_name',
+  MELODIQ_P2_NAME: 'melodiq_p2_name',
+  MELODIQ_P1_HUE: 'melodiq_p1_hue',
+  MELODIQ_P2_HUE: 'melodiq_p2_hue',
+  MELODIQ_P1_DEVICE: 'melodiq_p1_device',
+  MELODIQ_P2_DEVICE: 'melodiq_p2_device',
 
-    // Melodiq Notes preferences
-    MELODIQ_NOTES_SOUND_CONFIG: 'melodiq_notes_sound_config',
-    MELODIQ_NOTES_VIEW_MODE: 'melodiq_notes_view_mode',
-    MELODIQ_NOTES_SHEET_RENDER_MODE: 'melodiq_notes_sheet_render_mode',
-    
-    // Werewolf game state
-    WEREWOLF_STATE: 'werewolf-game-state',
-    WEREWOLF_SETUP_PLAYERS: 'werewolf-setup-players',
-    WEREWOLF_CUSTOM_ROLES: 'werewolf-custom-roles',
-    WEREWOLF_SETTINGS: 'werewolf-setup-settings',
-    WEREWOLF_TTS_ENABLED: 'werewolf_narrator_tts_enabled',
-    
-    // Imposter game settings
-    IMPOSTER_SETTINGS: 'imposter-setup-settings',
-    IMPOSTER_SETUP_PLAYERS: 'imposter-setup-players',
-    IMPOSTER_SEEN_INFO: 'imposter-has-seen-info',
-    
-    // GitHub direct integration
-    GITHUB_TOKEN: 'nexumia_github_token',
-    GITHUB_OWNER: 'nexumia_github_owner',
-    GITHUB_REPO: 'nexumia_github_repo',
+  // Melodiq Playlists & Session
+  MELODIQ_ENABLE_PLAYLIST_SYNC: 'melodiq_enable_playlist_sync',
+  MELODIQ_META_CACHE: 'melodiq_meta_cache',
+  MELODIQ_RTC_CONNECTED: 'melodiq_rtc_connected',
 
-    // Push notification relay for async games (GuessArt, etc.)
-    PUSH_RELAY_URL: 'galaxy_push_relay_url',
-    NOTIFICATION_METHOD: 'galaxy_notification_method',
-    NTFY_SERVER_URL: 'galaxy_ntfy_server_url',
-    NTFY_TOPIC: 'galaxy_ntfy_topic',
+  // Melodiq Settings
+  MELODIQ_SHOW_OVERLAY: 'melodiq_show_overlay',
+  MELODIQ_SHOW_SLIDER: 'melodiq_show_slider',
+  MELODIQ_SHOW_NOTE_LABELS: 'melodiq_show_note_labels',
+  MELODIQ_SHOW_VIDEO_ERRORS: 'melodiq_show_video_errors',
+  MELODIQ_CUSTOM_LAYOUTS: 'melodiq_custom_layouts',
+  MELODIQ_CUSTOM_TARGET_COLUMNS: 'melodiq_custom_target_columns',
+  MELODIQ_SONG_VOLUME: 'melodiq_song_volume',
+  MELODIQ_MASTER_VOLUME: 'melodiq_master_volume',
+  MELODIQ_VOCALS_VOLUME: 'melodiq_vocals_volume',
+  MELODIQ_GOLDEN_NOTE_MULTIPLIER: 'melodiq_golden_note_multiplier',
+  MELODIQ_DEFAULT_SONG_CLICK_ACTION: 'melodiq_default_song_click_action',
+  MELODIQ_DEFAULT_VIEW_MODE: 'melodiq_default_view_mode',
+  MELODIQ_AUTOPLAY_NO_PLAYERS: 'melodiq_autoplay_no_players',
+  MELODIQ_AUTOPLAY_WITH_PLAYERS: 'melodiq_autoplay_with_players',
+  MELODIQ_HIDE_BACKGROUND_VIDEO: 'melodiq_hide_background_video',
+  MELODIQ_FALLBACK_BACKGROUND_URL: 'melodiq_fallback_background_url',
+  MELODIQ_LYRICS_SCALE: 'melodiq_lyrics_scale',
+  MELODIQ_ENABLE_LYRICS_ZOOM: 'melodiq_enable_lyrics_zoom',
+  MELODIQ_LYRICS_LINES: 'melodiq_lyrics_lines',
+  MELODIQ_LYRICS_POSITION: 'melodiq_lyrics_position',
+  MELODIQ_AUDIO_PLAYBACK_MODE: 'melodiq_audio_playback_mode',
+  MELODIQ_SHOW_SCOREBOARD_QR_CODE: 'melodiq_show_scoreboard_qr_code',
+  MELODIQ_MIC_LATENCY: 'melodiq_mic_latency',
 
-    // Sudoku
-    SUDOKU_STATE: 'galaxy_sudoku_state',
-    SUDOKU_STATS: 'galaxy_sudoku_stats',
+  // Melodiq Notes preferences
+  MELODIQ_NOTES_SOUND_CONFIG: 'melodiq_notes_sound_config',
+  MELODIQ_NOTES_VIEW_MODE: 'melodiq_notes_view_mode',
+  MELODIQ_NOTES_SHEET_RENDER_MODE: 'melodiq_notes_sheet_render_mode',
 
-    // Wordle
-    WORDLE_STATS: 'galaxy_wordle_stats',
+  // Werewolf game state
+  WEREWOLF_STATE: 'werewolf-game-state',
+  WEREWOLF_SETUP_PLAYERS: 'werewolf-setup-players',
+  WEREWOLF_CUSTOM_ROLES: 'werewolf-custom-roles',
+  WEREWOLF_SETTINGS: 'werewolf-setup-settings',
+  WEREWOLF_TTS_ENABLED: 'werewolf_narrator_tts_enabled',
 
-    // Cards
-    CARDS_LOBBY_PLAYERS: 'cards_lobby_players',
+  // Imposter game settings
+  IMPOSTER_SETTINGS: 'imposter-setup-settings',
+  IMPOSTER_SETUP_PLAYERS: 'imposter-setup-players',
+  IMPOSTER_SEEN_INFO: 'imposter-has-seen-info',
 
-    // Knister & Qwixx
-    KNISTER_CURRENT_GAME: 'knister_current_game',
-    KNISTER_SHOW_DICE: 'knister_show_dice',
-    QWIXX_MY_SHEET: 'qwixx_my_sheet',
-    QWIXX_SHOW_DICE: 'qwixx_show_dice',
+  // GitHub direct integration
+  GITHUB_TOKEN: 'nexumia_github_token',
+  GITHUB_OWNER: 'nexumia_github_owner',
+  GITHUB_REPO: 'nexumia_github_repo',
 
-    // Gartic Phone & Universal Party
-    GARTIC_STATE_PREFIX: 'galaxy_gartic_state_',
-    GARTIC_HOST_PREFIX: 'gartic_host_',
-    PARTY_MY_PLAYER_ID: 'party_my_player_id',
-    HOST_ROOM_CODE: 'galaxy_host_room_code',
+  // Push notification relay for async games (GuessArt, etc.)
+  PUSH_RELAY_URL: 'galaxy_push_relay_url',
+  NOTIFICATION_METHOD: 'galaxy_notification_method',
+  NTFY_SERVER_URL: 'galaxy_ntfy_server_url',
+  NTFY_TOPIC: 'galaxy_ntfy_topic',
 
-    // Connection & WebApp
-    SHARE_WEBAPP_URL: 'nexumia_share_webapp_url',
+  // Sudoku
+  SUDOKU_STATE: 'galaxy_sudoku_state',
+  SUDOKU_STATS: 'galaxy_sudoku_stats',
 
-    // App & Environment
-    PWA_BANNER_DISMISSED: 'pwa-banner-dismissed',
-    LANGUAGE: 'lgg_language',
-    LANGUAGE_LEGACY: 'language',
-    EXCALIDRAW_LIBRARY: 'guessart_excalidraw_library',
+  // Wordle
+  WORDLE_STATS: 'galaxy_wordle_stats',
+
+  // Cards
+  CARDS_LOBBY_PLAYERS: 'cards_lobby_players',
+
+  // Knister & Qwixx
+  KNISTER_CURRENT_GAME: 'knister_current_game',
+  KNISTER_SHOW_DICE: 'knister_show_dice',
+  QWIXX_MY_SHEET: 'qwixx_my_sheet',
+  QWIXX_SHOW_DICE: 'qwixx_show_dice',
+
+  // Gartic Phone & Universal Party
+  GARTIC_STATE_PREFIX: 'galaxy_gartic_state_',
+  GARTIC_HOST_PREFIX: 'gartic_host_',
+  PARTY_MY_PLAYER_ID: 'party_my_player_id',
+  /** Player name shared by the party lobby and party games (historical key name). */
+  PARTY_PLAYER_NAME: 'guessart_player_name',
+  HOST_ROOM_CODE: 'galaxy_host_room_code',
+
+  // Connection & WebApp
+  SHARE_WEBAPP_URL: 'nexumia_share_webapp_url',
+
+  // App & Environment
+  PWA_BANNER_DISMISSED: 'pwa-banner-dismissed',
+  LANGUAGE: 'lgg_language',
+  LANGUAGE_LEGACY: 'language',
+  EXCALIDRAW_LIBRARY: 'guessart_excalidraw_library',
 } as const;
 
 export const STORAGE_PREFIXES = {
-    PARTY_STATE: 'galaxy_party_state_',
-    PARTY_HOST_ID: 'party_host_id_',
-    GAME_RELAY: 'galaxy_game_relay_',
-    WEBRTC_PARTY_ID: '_party_id',
-    WEBRTC_TRACKER_URLS: '_tracker_urls',
-    WEBRTC_TRACKER_PREF: '_tracker_preferences',
-    WEBRTC_ACTIVE_PEERS: '_active_peer_ids',
-    HOST_BASE_URL: '_host_base_url',
-    ENABLE_HELPER: '_enable_helper',
+  PARTY_STATE: 'galaxy_party_state_',
+  PARTY_HOST_ID: 'party_host_id_',
+  GAME_RELAY: 'galaxy_game_relay_',
+  WEBRTC_PARTY_ID: '_party_id',
+  WEBRTC_TRACKER_URLS: '_tracker_urls',
+  WEBRTC_TRACKER_PREF: '_tracker_preferences',
+  WEBRTC_ACTIVE_PEERS: '_active_peer_ids',
+  HOST_BASE_URL: '_host_base_url',
+  ENABLE_HELPER: '_enable_helper',
 } as const;
 
 const memoryFallback = new Map<string, string>();
 
 export const storage = {
-    get(key: string, fallback = ''): string {
-        try {
-            if (typeof localStorage !== 'undefined') {
-                return localStorage.getItem(key) ?? fallback;
-            }
-            return memoryFallback.get(key) ?? fallback;
-        } catch {
-            return memoryFallback.get(key) ?? fallback;
-        }
-    },
-    
-    set(key: string, value: string): void {
-        try {
-            if (typeof localStorage !== 'undefined') {
-                localStorage.setItem(key, value);
-            }
-            memoryFallback.set(key, value);
-        } catch (e) {
-            memoryFallback.set(key, value);
-        }
-    },
-    
-    remove(key: string): void {
-        try {
-            if (typeof localStorage !== 'undefined') {
-                localStorage.removeItem(key);
-            }
-            memoryFallback.delete(key);
-        } catch (e) {
-            memoryFallback.delete(key);
-        }
-    },
-    
-    clear(): void {
-        try {
-            if (typeof localStorage !== 'undefined') {
-                localStorage.clear();
-            }
-            memoryFallback.clear();
-        } catch (e) {
-            memoryFallback.clear();
-        }
-    },
-    
-    getJson<T>(key: string, fallback: T): T {
-        const val = this.get(key);
-        if (!val) return fallback;
-        try {
-            return JSON.parse(val) as T;
-        } catch {
-            return fallback;
-        }
-    },
-    
-    setJson<T>(key: string, value: T): void {
-        this.set(key, JSON.stringify(value));
-    },
+  get(key: string, fallback = ''): string {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        return localStorage.getItem(key) ?? fallback;
+      }
+      return memoryFallback.get(key) ?? fallback;
+    } catch {
+      return memoryFallback.get(key) ?? fallback;
+    }
+  },
 
-    get session() {
-        return sessionStorageSafe;
-    },
+  set(key: string, value: string): void {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(key, value);
+      }
+      memoryFallback.set(key, value);
+    } catch (e) {
+      memoryFallback.set(key, value);
+    }
+  },
 
-    findKeysWithPrefix(prefix: string): string[] {
-        const matching: string[] = [];
-        try {
-            if (typeof localStorage !== 'undefined') {
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && key.startsWith(prefix)) {
-                        matching.push(key);
-                    }
-                }
-                return matching;
-            }
-        } catch {
-            // fallback below
-        }
-        for (const key of memoryFallback.keys()) {
-            if (key.startsWith(prefix)) {
-                matching.push(key);
-            }
+  remove(key: string): void {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(key);
+      }
+      memoryFallback.delete(key);
+    } catch (e) {
+      memoryFallback.delete(key);
+    }
+  },
+
+  clear(): void {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.clear();
+      }
+      memoryFallback.clear();
+    } catch (e) {
+      memoryFallback.clear();
+    }
+  },
+
+  getJson<T>(key: string, fallback: T): T {
+    const val = this.get(key);
+    if (!val) return fallback;
+    try {
+      return JSON.parse(val) as T;
+    } catch {
+      return fallback;
+    }
+  },
+
+  setJson<T>(key: string, value: T): void {
+    this.set(key, JSON.stringify(value));
+  },
+
+  get session() {
+    return sessionStorageSafe;
+  },
+
+  findKeysWithPrefix(prefix: string): string[] {
+    const matching: string[] = [];
+    try {
+      if (typeof localStorage !== 'undefined') {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith(prefix)) {
+            matching.push(key);
+          }
         }
         return matching;
-    },
+      }
+    } catch {
+      // fallback below
+    }
+    for (const key of memoryFallback.keys()) {
+      if (key.startsWith(prefix)) {
+        matching.push(key);
+      }
+    }
+    return matching;
+  },
 
-    // Companion Helper Config Accessors
-    getHelperUrl(): string {
-        return this.get(STORAGE_KEYS.HELPER_URL, 'http://localhost:3000');
-    },
-    
-    setHelperUrl(url: string): void {
-        this.set(STORAGE_KEYS.HELPER_URL, url);
-    },
-    
-    getHelperToken(): string {
-        return this.get(STORAGE_KEYS.HELPER_TOKEN, '');
-    },
-    
-    setHelperToken(token: string): void {
-        this.set(STORAGE_KEYS.HELPER_TOKEN, token);
-    },
-    
-    isHelperActive(): boolean {
-        const val = this.get(STORAGE_KEYS.HELPER_ACTIVE);
-        return val !== 'false';
-    },
-    
-    setHelperActive(active: boolean): void {
-        this.set(STORAGE_KEYS.HELPER_ACTIVE, active ? 'true' : 'false');
-    },
+  // Companion Helper Config Accessors
+  getHelperUrl(): string {
+    return this.get(STORAGE_KEYS.HELPER_URL, 'http://localhost:3000');
+  },
 
-    // WebRTC Signaling Tracker Accessors
-    getSignalingUrl(): string {
-        const custom = this.get(STORAGE_KEYS.SIGNALING_URL);
-        if (custom) return custom;
-        if (this.isHelperActive()) {
-            try {
-                const helper = this.getHelperUrl();
-                const parsed = new URL(helper || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'));
-                const wsProto = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
-                return `${wsProto}//${parsed.hostname}:8000`;
-            } catch {
-                return 'ws://localhost:8000';
-            }
-        }
-        return '';
-    },
+  setHelperUrl(url: string): void {
+    this.set(STORAGE_KEYS.HELPER_URL, url);
+  },
 
-    setSignalingUrl(url: string): void {
-        this.set(STORAGE_KEYS.SIGNALING_URL, url);
-    },
+  getHelperToken(): string {
+    return this.get(STORAGE_KEYS.HELPER_TOKEN, '');
+  },
 
-    getDisabledTrackerUrls(gameId = 'melodiq'): string[] {
-        const key = `${gameId}_disabled_tracker_urls`;
-        const val = this.get(key);
-        if (!val) return [];
-        try {
-            return JSON.parse(val);
-        } catch {
-            return [];
-        }
-    },
+  setHelperToken(token: string): void {
+    this.set(STORAGE_KEYS.HELPER_TOKEN, token);
+  },
 
-    setDisabledTrackerUrls(urls: string[], gameId = 'melodiq'): void {
-        const key = `${gameId}_disabled_tracker_urls`;
-        this.set(key, JSON.stringify(urls));
-    },
+  isHelperActive(): boolean {
+    const val = this.get(STORAGE_KEYS.HELPER_ACTIVE);
+    return val !== 'false';
+  },
 
-    // Push Relay Config Accessors (for async games like GuessArt)
-    getPushRelayUrl(): string {
-        return this.get(STORAGE_KEYS.PUSH_RELAY_URL, '');
-    },
+  setHelperActive(active: boolean): void {
+    this.set(STORAGE_KEYS.HELPER_ACTIVE, active ? 'true' : 'false');
+  },
 
-    setPushRelayUrl(url: string): void {
-        this.set(STORAGE_KEYS.PUSH_RELAY_URL, url.trim().replace(/\/$/, ''));
-    },
+  // WebRTC Signaling Tracker Accessors
+  getSignalingUrl(): string {
+    const custom = this.get(STORAGE_KEYS.SIGNALING_URL);
+    if (custom) return custom;
+    if (this.isHelperActive()) {
+      try {
+        const helper = this.getHelperUrl();
+        const parsed = new URL(
+          helper ||
+            (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'),
+        );
+        const wsProto = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
+        return `${wsProto}//${parsed.hostname}:8000`;
+      } catch {
+        return 'ws://localhost:8000';
+      }
+    }
+    return '';
+  },
 
-    getNotificationMethod(): 'auto' | 'webpush' | 'ntfy' | 'both' {
-        const val = this.get(STORAGE_KEYS.NOTIFICATION_METHOD, 'auto');
-        if (val === 'webpush' || val === 'ntfy' || val === 'both') {
-            return val;
-        }
-        return 'auto';
-    },
+  setSignalingUrl(url: string): void {
+    this.set(STORAGE_KEYS.SIGNALING_URL, url);
+  },
 
-    setNotificationMethod(method: 'auto' | 'webpush' | 'ntfy' | 'both'): void {
-        this.set(STORAGE_KEYS.NOTIFICATION_METHOD, method);
-    },
+  getDisabledTrackerUrls(gameId = 'melodiq'): string[] {
+    const key = `${gameId}_disabled_tracker_urls`;
+    const val = this.get(key);
+    if (!val) return [];
+    try {
+      return JSON.parse(val);
+    } catch {
+      return [];
+    }
+  },
 
-    getNtfyServerUrl(): string {
-        return this.get(STORAGE_KEYS.NTFY_SERVER_URL, 'https://ntfy.sh');
-    },
+  setDisabledTrackerUrls(urls: string[], gameId = 'melodiq'): void {
+    const key = `${gameId}_disabled_tracker_urls`;
+    this.set(key, JSON.stringify(urls));
+  },
 
-    setNtfyServerUrl(url: string): void {
-        const clean = url.trim().replace(/\/$/, '');
-        this.set(STORAGE_KEYS.NTFY_SERVER_URL, clean || 'https://ntfy.sh');
-    },
+  // Push Relay Config Accessors (for async games like GuessArt)
+  getPushRelayUrl(): string {
+    return this.get(STORAGE_KEYS.PUSH_RELAY_URL, '');
+  },
 
-    getUserNtfyTopic(): string {
-        let topic = this.get(STORAGE_KEYS.NTFY_TOPIC);
-        if (!topic) {
-            topic = generateUserNtfyTopic();
-            this.set(STORAGE_KEYS.NTFY_TOPIC, topic);
-        }
-        return topic;
-    },
+  setPushRelayUrl(url: string): void {
+    this.set(STORAGE_KEYS.PUSH_RELAY_URL, url.trim().replace(/\/$/, ''));
+  },
 
-    setUserNtfyTopic(topic: string): void {
-        const clean = topic.trim().replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 64);
-        this.set(STORAGE_KEYS.NTFY_TOPIC, clean || generateUserNtfyTopic());
-    },
+  getNotificationMethod(): 'auto' | 'webpush' | 'ntfy' | 'both' {
+    const val = this.get(STORAGE_KEYS.NOTIFICATION_METHOD, 'auto');
+    if (val === 'webpush' || val === 'ntfy' || val === 'both') {
+      return val;
+    }
+    return 'auto';
+  },
 
-    regenerateUserNtfyTopic(): string {
-        const topic = generateUserNtfyTopic();
-        this.set(STORAGE_KEYS.NTFY_TOPIC, topic);
-        return topic;
-    },
+  setNotificationMethod(method: 'auto' | 'webpush' | 'ntfy' | 'both'): void {
+    this.set(STORAGE_KEYS.NOTIFICATION_METHOD, method);
+  },
+
+  getNtfyServerUrl(): string {
+    return this.get(STORAGE_KEYS.NTFY_SERVER_URL, 'https://ntfy.sh');
+  },
+
+  setNtfyServerUrl(url: string): void {
+    const clean = url.trim().replace(/\/$/, '');
+    this.set(STORAGE_KEYS.NTFY_SERVER_URL, clean || 'https://ntfy.sh');
+  },
+
+  getUserNtfyTopic(): string {
+    let topic = this.get(STORAGE_KEYS.NTFY_TOPIC);
+    if (!topic) {
+      topic = generateUserNtfyTopic();
+      this.set(STORAGE_KEYS.NTFY_TOPIC, topic);
+    }
+    return topic;
+  },
+
+  setUserNtfyTopic(topic: string): void {
+    const clean = topic
+      .trim()
+      .replace(/[^a-zA-Z0-9_-]/g, '_')
+      .slice(0, 64);
+    this.set(STORAGE_KEYS.NTFY_TOPIC, clean || generateUserNtfyTopic());
+  },
+
+  regenerateUserNtfyTopic(): string {
+    const topic = generateUserNtfyTopic();
+    this.set(STORAGE_KEYS.NTFY_TOPIC, topic);
+    return topic;
+  },
 };
 
 export function generateUserNtfyTopic(): string {
-    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-        const bytes = new Uint8Array(8);
-        crypto.getRandomValues(bytes);
-        const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-        return `lgg-user-${hex}`;
-    }
-    const rand = Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
-    return `lgg-user-${rand.slice(0, 16)}`;
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const bytes = new Uint8Array(8);
+    crypto.getRandomValues(bytes);
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+    return `lgg-user-${hex}`;
+  }
+  const rand = Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
+  return `lgg-user-${rand.slice(0, 16)}`;
 }
 
 const sessionMemoryFallback = new Map<string, string>();
 
 export const sessionStorageSafe = {
-    get(key: string, fallback = ''): string {
-        try {
-            if (typeof sessionStorage !== 'undefined') {
-                return sessionStorage.getItem(key) ?? fallback;
-            }
-            return sessionMemoryFallback.get(key) ?? fallback;
-        } catch {
-            return sessionMemoryFallback.get(key) ?? fallback;
-        }
-    },
-    set(key: string, value: string): void {
-        try {
-            if (typeof sessionStorage !== 'undefined') {
-                sessionStorage.setItem(key, value);
-            }
-            sessionMemoryFallback.set(key, value);
-        } catch {
-            sessionMemoryFallback.set(key, value);
-        }
-    },
-    remove(key: string): void {
-        try {
-            if (typeof sessionStorage !== 'undefined') {
-                sessionStorage.removeItem(key);
-            }
-            sessionMemoryFallback.delete(key);
-        } catch {
-            sessionMemoryFallback.delete(key);
-        }
-    },
-    getJson<T>(key: string, fallback: T): T {
-        const val = this.get(key);
-        if (!val) return fallback;
-        try {
-            return JSON.parse(val) as T;
-        } catch {
-            return fallback;
-        }
-    },
-    setJson<T>(key: string, value: T): void {
-        this.set(key, JSON.stringify(value));
-    },
+  get(key: string, fallback = ''): string {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        return sessionStorage.getItem(key) ?? fallback;
+      }
+      return sessionMemoryFallback.get(key) ?? fallback;
+    } catch {
+      return sessionMemoryFallback.get(key) ?? fallback;
+    }
+  },
+  set(key: string, value: string): void {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(key, value);
+      }
+      sessionMemoryFallback.set(key, value);
+    } catch {
+      sessionMemoryFallback.set(key, value);
+    }
+  },
+  remove(key: string): void {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem(key);
+      }
+      sessionMemoryFallback.delete(key);
+    } catch {
+      sessionMemoryFallback.delete(key);
+    }
+  },
+  getJson<T>(key: string, fallback: T): T {
+    const val = this.get(key);
+    if (!val) return fallback;
+    try {
+      return JSON.parse(val) as T;
+    } catch {
+      return fallback;
+    }
+  },
+  setJson<T>(key: string, value: T): void {
+    this.set(key, JSON.stringify(value));
+  },
 };
-
