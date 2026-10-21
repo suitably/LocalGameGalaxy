@@ -19,8 +19,7 @@ import { generateComposeYaml, type ComposeGeneratorOptions } from './composeYaml
 
 const SERVICES = [
   { id: 'melodiq', label: 'MelodiQ (Karaoke KI)', port: 3000, defaultChecked: true },
-  { id: 'tabletop', label: 'Tabletop (BYOG Games)', port: 3002, defaultChecked: false },
-  { id: 'push', label: 'Push Relay (Benachrichtigungen)', port: 3001, defaultChecked: false },
+  { id: 'tabletop', label: 'Tabletop (BYOG Games)', port: 3000, defaultChecked: false },
   {
     id: 'tunnel',
     label: 'Cloudflare Tunnel (Internet-Freigabe)',
@@ -53,7 +52,6 @@ export const ComposeGeneratorPanel: React.FC = () => {
     const options: ComposeGeneratorOptions = {
       melodiq: Boolean(selectedServices['melodiq']),
       tabletop: Boolean(selectedServices['tabletop']),
-      push: Boolean(selectedServices['push']),
       tunnel: Boolean(selectedServices['tunnel']),
     };
     return generateComposeYaml(options);

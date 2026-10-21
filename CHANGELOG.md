@@ -8,6 +8,7 @@
 
 ### Changed
 
+- **Self-hosting**: the compose generator in the server settings no longer emits the non-existent `tabletop-companion` and `galaxy-push-relay` images; it creates one companion container with `PLUGINS` for the selected games next to the signaling tracker. `server/docker-compose.yml` drops the commented tabletop container (#342).
 - **Melodiq Notes**: the soundfont provider select and custom URL field are one component (`SoundfontProviderFields.tsx`) used by the in-game sound settings and the settings page; the settings page looks the same (#426).
 - **Melodiq Notes**: the mixer, song-select and sound-settings dialogs share `NotesDialogFrame.tsx` (frame, title, close button) instead of three copies (#426).
 - **GuessArt / Storyteller**: which lobby players are local to the creating device is decided by `localPlayerIdsForDevice` in `src/modules/player-management/playerLogic.ts` (tested) instead of two copies (#426).

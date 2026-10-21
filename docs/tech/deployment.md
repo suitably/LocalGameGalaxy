@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-18
+  at: 2026-10-21
   method: 'read wrangler.jsonc, capacitor.config.ts, android/app/build.gradle, server/Dockerfile, server/docker-compose*.yml, .github/workflows/{ci,release,docker-publish,deploy-push-relay}.yml, server/package.json'
 sources:
   - 'wrangler.jsonc'
@@ -77,7 +77,7 @@ Env: see [architecture §3.6](architecture.md#36-companion-server-server-optiona
 | `server/docker-compose.ai.yml`     | `nexumia/melodiq-server:ai` image variant                                                                                           |
 | `server/docker-compose.tunnel.yml` | server + Cloudflare tunnel                                                                                                          |
 
-The Settings UI can generate a compose file (`src/features/settings/components/server/composeYamlGenerator.ts`).
+The Settings UI can generate a compose file (`src/features/settings/components/server/composeYamlGenerator.ts`): the signaling tracker plus one companion container (`nexumia/melodiq-server`) whose `PLUGINS` follow the selected games, and an optional Cloudflare quick tunnel. There are no separate tabletop or push containers: tabletop is a server plugin, push runs via ntfy or the Cloudflare worker. The standalone tracker stays because the companion server has no WebSocket tracker of its own (#342).
 
 Node version drift (`node:20-slim` vs Node 24 elsewhere): [open-questions Q10](../open-questions.md#q10--node-version-drift).
 
