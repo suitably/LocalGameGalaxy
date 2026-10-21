@@ -3,7 +3,7 @@ import { LocalGameEngine } from '../logic/engine';
 import { playerAssignment } from '../logic/playerAssignment';
 import { guessArtMailbox } from '../logic/guessArtMailbox';
 import { guessArtNotificationService } from '../logic/notificationService';
-import { useLobbyPlayers } from '../../../modules/player-management';
+import { localPlayerIdsForDevice, useLobbyPlayers } from '../../../modules/player-management';
 import type { LobbyPlayerItem } from '../../../modules/player-management';
 import type { GuessArtGameRecord } from '../logic/types';
 
@@ -50,36 +50,39 @@ export const useGuessArtLobby = () => {
 
   // Listen for background remote snapshots to keep active games list up to date
   useEffect(() => {
-    const unsub = guessArtMailbox.subscribeGlobal(async (remoteSnapshot, _snapshotGameId, timestamp) => {
-      try {
-        const language = remoteSnapshot.game?.options?.language || 'de';
-        const importResult = await LocalGameEngine.importSnapshot(remoteSnapshot, language);
-        if (importResult.updated) {
-          const isHistorical = timestamp ? Date.now() - timestamp > 30000 : false;
-          const isInitialGameStart =
-            !importResult.round ||
-            (importResult.round.roundNumber === 1 &&
-              (importResult.round.status === 'selecting' ||
-                (importResult.round.status === 'drawing' && !importResult.round.word)));
+    const unsub = guessArtMailbox.subscribeGlobal(
+      async (remoteSnapshot, _snapshotGameId, timestamp) => {
+        try {
+          const language = remoteSnapshot.game?.options?.language || 'de';
+          const importResult = await LocalGameEngine.importSnapshot(remoteSnapshot, language);
+          if (importResult.updated) {
+            const isHistorical = timestamp ? Date.now() - timestamp > 30000 : false;
+            const isInitialGameStart =
+              !importResult.round ||
+              (importResult.round.roundNumber === 1 &&
+                (importResult.round.status === 'selecting' ||
+                  (importResult.round.status === 'drawing' && !importResult.round.word)));
 
-          if (!isHistorical) {
-            await guessArtNotificationService.notifyTurnIfEligible({
-              game: importResult.game,
-              round: importResult.round,
-              isRemoteEvent: true,
-              isInitialGameStart,
-              activeGameScreenId: guessArtNotificationService.getActiveScreenGameId(),
-              isDocumentVisible: typeof document !== 'undefined' ? document.visibilityState === 'visible' : true,
-            });
+            if (!isHistorical) {
+              await guessArtNotificationService.notifyTurnIfEligible({
+                game: importResult.game,
+                round: importResult.round,
+                isRemoteEvent: true,
+                isInitialGameStart,
+                activeGameScreenId: guessArtNotificationService.getActiveScreenGameId(),
+                isDocumentVisible:
+                  typeof document !== 'undefined' ? document.visibilityState === 'visible' : true,
+              });
+            }
           }
-        }
 
-        const games = await LocalGameEngine.listGames();
-        setActiveGames(games);
-      } catch (err) {
-        console.error('Failed to refresh active games on remote snapshot', err);
-      }
-    });
+          const games = await LocalGameEngine.listGames();
+          setActiveGames(games);
+        } catch (err) {
+          console.error('Failed to refresh active games on remote snapshot', err);
+        }
+      },
+    );
     return () => {
       unsub();
     };
@@ -101,14 +104,10 @@ export const useGuessArtLobby = () => {
         manualWordMode: options.manualWordMode,
       });
 
-      // Save local player IDs on this device: Only players who are not remote are stored as local players
-      const localPlayers = record.players.filter((p, index) => {
-        const lobbyMatch = lobbyPlayers[index];
-        return lobbyMatch ? !lobbyMatch.isRemote : !p.isRemote;
-      });
+      // Only non-remote players are stored as local players of this device
       playerAssignment.setLocalPlayerIds(
         record.id,
-        localPlayers.length > 0 ? localPlayers.map((p) => p.id) : [record.players[0].id],
+        localPlayerIdsForDevice(record.players, lobbyPlayers),
       );
 
       await loadActiveGames();

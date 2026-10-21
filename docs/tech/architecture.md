@@ -96,7 +96,7 @@ The full per-game table (route, size, storage, sync, i18n source, shared modules
 | `player-management` | `PlayerManagerCard`, `useLobbyPlayers`, `playerLogic.ts` (min/max, duplicates, trimming; players may be removed down to 0)                           | cards, guessart, imposter, storyteller, werewolf    |
 | `sync`              | `MqttMailboxService<T>` (brokers HiveMQ → EMQX, LZString, dedup), `useMultiChannelSync<T>` / `MultiChannelSyncCoordinator` (BroadcastChannel + MQTT) | guessart, storyteller, tabletop, garticphone, party |
 | `drawing`           | `DrawingCanvas`, `ExcalidrawLazy`, `ExcalidrawViewer` (stroke replay), `excalidrawScene.ts`                                                          | guessart, garticphone                               |
-| `sharing`           | `ShareSessionLinksDialog`, `EditSessionDialog`, `parseGameUrlParams`, `cleanWindowUrlQuery`, `useGameJoinUrl`                                        | guessart, storyteller, wordle, garticphone          |
+| `sharing`           | `ShareSessionLinksDialog`, `EditSessionDialog`, `parseGameUrlParams`, `cleanWindowUrlQuery`, `useGameJoinUrl`, `useShareOrCopy`                      | guessart, storyteller, wordle, garticphone, sudoku  |
 | `async-game`        | `createIdbStoreOperations`, `runWithStore`, `createOpenDatabase` (raw IndexedDB helpers)                                                             | guessart, storyteller, tabletop                     |
 | `audio`             | `MicrophoneManager`, `AudioUtils` (autocorrelation pitch, RMS gate, MIDI mapping)                                                                    | melodiq, melodiq-notes                              |
 

@@ -2,6 +2,16 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Lobby local-player rule shared (claude-code)
+
+- #426 (lobby hooks): no doc names the rule; `CHANGELOG.md` updated.
+- **Code changed:** `src/modules/player-management/playerLogic.ts` (+ test), `useGuessArtLobby.ts`, `useStorytellerLobby.ts`; preceded by a formatting-only commit.
+
+## 2026-10-21 — Shared share-or-copy hook (claude-code)
+
+- #426 (victory/stats modal): `docs/tech/architecture.md` §3.2 lists `useShareOrCopy`.
+- **Code changed:** `src/modules/sharing/useShareOrCopy.ts`, `index.ts`, `SudokuVictoryModal.tsx`, `WordleStatsModal.tsx`; preceded by a formatting-only commit.
+
 ## 2026-10-21 — Melodiq latency calibrator dedup (claude-code)
 
 - #426 (latency calibrator): no doc described the calibrator UI; `CHANGELOG.md` updated.
