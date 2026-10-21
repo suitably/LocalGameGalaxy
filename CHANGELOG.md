@@ -7,6 +7,7 @@
 
 ### Changed
 
+- **Tabletop**: holder layout (hand, stack, fan, grid) moved from `tabletopReducer.ts` into `src/games/tabletop/logic/holderLayout.ts` with named constants and characterisation tests; the hand re-layout write-back exists once instead of four times (#414).
 - **Melodiq server**: the song download job is split into steps; yt-dlp lookup/install/spawn lives in `services/ytdlp.ts` (one install path instead of two copies, shared with `routes/usdb.ts`) and UltraStar `.txt` header handling in `services/ultrastarTxt.ts`, with tests (#413).
 - **Performance**: `Hub`, `Settings` and `PartyLobby` are lazy-loaded routes (own chunks). Melodiq TV mode clears its popup-window poll on disconnect and unmount instead of only when the window closes; the host queue's BroadcastChannel is documented as page-lifetime (#427, salvaged from the closed #402 without its Sudoku/sync regressions).
 - **Tabletop**: one rule decides whether a holder is a player's hand (`src/games/tabletop/logic/handHolder.ts`), replacing seven diverging copies in the reducer, hand layout, seat logic, hand dock and board filter. An explicit `isHand` flag wins; games without it are classified once on load. Seat-owned public areas ("player area", "Spielerbereich", bare `ownerSeat`) stay off the shared table but are no longer treated as hands, and ids that merely contain "hand" (e.g. `handout_pile`) are no longer hands (#410).

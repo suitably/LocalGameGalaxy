@@ -14,7 +14,7 @@ import type {
   HiddenZone,
   BagWidget,
 } from './types';
-import { calculateHandLayout } from './handLayout';
+import { applyLayout, layoutHand, layoutHolderChildren } from './holderLayout';
 import { snapToGridCoords } from './gridLogic';
 import { isBoardSnapTarget } from './boardFilter';
 import { isHandHolder, isHandHolderWidget, normalizeHandHolders } from './handHolder';
@@ -78,35 +78,13 @@ export type TabletopAction =
 
 function removeFromHolderAndUpdateHand(widgets: Record<string, TabletopWidget>, childId: string) {
   for (const [wId, w] of Object.entries(widgets)) {
-    if (w.type === 'holder') {
-      const h = w as HolderWidget;
-      if (h.childIds.includes(childId)) {
-        const nextChildIds = h.childIds.filter((id) => id !== childId);
-        const updatedH = {
-          ...h,
-          childIds: nextChildIds,
-        };
-        widgets[wId] = updatedH;
-        const isHand = isHandHolder(updatedH);
-        if (isHand) {
-          const remainingCards = nextChildIds
-            .map((id) => widgets[id] as CardWidget)
-            .filter(Boolean);
-          const layout = calculateHandLayout(updatedH, remainingCards);
-          for (const [cId, pos] of Object.entries(layout)) {
-            const w = widgets[cId];
-            if (w && w.type === 'card') {
-              widgets[cId] = {
-                ...w,
-                x: pos.x,
-                y: pos.y,
-                zIndex: pos.zIndex,
-                stackCount: pos.stackCount,
-              };
-            }
-          }
-        }
-      }
+    if (w.type !== 'holder') continue;
+    const h = w as HolderWidget;
+    if (!h.childIds?.includes(childId)) continue;
+    const updatedH = { ...h, childIds: h.childIds.filter((id) => id !== childId) };
+    widgets[wId] = updatedH;
+    if (isHandHolder(updatedH)) {
+      applyLayout(widgets, layoutHand(updatedH, updatedH.childIds, widgets));
     }
   }
 }
@@ -138,36 +116,7 @@ export function tabletopReducer(
       }
 
       // Remove from any holder that contains it
-      for (const [wId, w] of Object.entries(widgets)) {
-        if (w.type === 'holder') {
-          const h = w as HolderWidget;
-          if (h.childIds?.includes(action.payload.id)) {
-            const nextChildIds = h.childIds.filter((id) => id !== action.payload.id);
-            const updatedH = { ...h, childIds: nextChildIds };
-            widgets[wId] = updatedH;
-
-            const isHand = isHandHolder(updatedH);
-            if (isHand) {
-              const remainingCards = nextChildIds
-                .map((id) => widgets[id] as CardWidget)
-                .filter(Boolean);
-              const layout = calculateHandLayout(updatedH, remainingCards);
-              for (const [cId, pos] of Object.entries(layout)) {
-                const cw = widgets[cId];
-                if (cw && cw.type === 'card') {
-                  widgets[cId] = {
-                    ...cw,
-                    x: pos.x,
-                    y: pos.y,
-                    zIndex: pos.zIndex,
-                    stackCount: pos.stackCount,
-                  };
-                }
-              }
-            }
-          }
-        }
-      }
+      removeFromHolderAndUpdateHand(widgets, action.payload.id);
 
       const previousParent = widget.parent || widget.supplyHolderId;
       widgets[action.payload.id] = {
@@ -351,22 +300,7 @@ export function tabletopReducer(
             };
           }
 
-          const handCards = updatedChildIds
-            .map((cId) => widgets[cId] as CardWidget)
-            .filter(Boolean);
-          const layout = calculateHandLayout(handHolder, handCards);
-          for (const [cId, pos] of Object.entries(layout)) {
-            const w = widgets[cId];
-            if (w && w.type === 'card') {
-              widgets[cId] = {
-                ...w,
-                x: pos.x,
-                y: pos.y,
-                zIndex: pos.zIndex,
-                stackCount: pos.stackCount,
-              };
-            }
-          }
+          applyLayout(widgets, layoutHand(handHolder, updatedChildIds, widgets));
         } else {
           nextX = Math.round(state.game.table.width / 2 - cardWidth / 2);
           nextY = Math.round(state.game.table.height - cardHeight - 30);
@@ -630,79 +564,7 @@ export function tabletopReducer(
       // Move widget coordinates to holder
       if (widgets[widgetId]) {
         const updatedHolder = widgets[holderId] as HolderWidget;
-        const isHand = isHandHolder(updatedHolder);
-
-        if (isHand) {
-          const handCards = updatedHolder.childIds
-            .map((id) => widgets[id] as CardWidget)
-            .filter(Boolean);
-          const layout = calculateHandLayout(updatedHolder, handCards);
-          for (const [cId, pos] of Object.entries(layout)) {
-            const w = widgets[cId];
-            if (w && w.type === 'card') {
-              widgets[cId] = {
-                ...w,
-                parent: holderId,
-                x: pos.x,
-                y: pos.y,
-                zIndex: pos.zIndex,
-                stackCount: pos.stackCount,
-              };
-            }
-          }
-        } else {
-          const childIndex = updatedHolder.childIds.indexOf(widgetId);
-          const childW = widgets[widgetId]?.width || 80;
-          const childH = widgets[widgetId]?.height || 120;
-          let childX =
-            updatedHolder.x + Math.max(0, Math.round((updatedHolder.width - childW) / 2));
-          let childY =
-            updatedHolder.y + Math.max(0, Math.round((updatedHolder.height - childH) / 2));
-          switch (updatedHolder.layout) {
-            case 'stack':
-              childX += childIndex * 2;
-              childY += childIndex * 2;
-              break;
-            case 'fan': {
-              const totalCards = updatedHolder.childIds.length;
-              const cardW = 80;
-              const maxSpread = cardW + 16;
-              const availableWidth = Math.max(0, updatedHolder.width - cardW - 32);
-              const spread =
-                totalCards > 1
-                  ? Math.min(maxSpread, Math.max(36, availableWidth / (totalCards - 1)))
-                  : maxSpread;
-
-              updatedHolder.childIds.forEach((cId, idx) => {
-                if (widgets[cId]) {
-                  widgets[cId] = {
-                    ...widgets[cId],
-                    parent: holderId,
-                    x: updatedHolder.x + 16 + idx * spread,
-                    y: updatedHolder.y + Math.max(4, (updatedHolder.height - 120) / 2),
-                    zIndex: updatedHolder.zIndex + 10 + idx,
-                  };
-                }
-              });
-              childX = updatedHolder.x + 16 + childIndex * spread;
-              childY = updatedHolder.y + Math.max(4, (updatedHolder.height - 120) / 2);
-              break;
-            }
-            case 'grid': {
-              const cols = Math.floor(updatedHolder.width / 84);
-              childX += (childIndex % cols) * 84;
-              childY += Math.floor(childIndex / cols) * 124;
-              break;
-            }
-          }
-          widgets[widgetId] = {
-            ...widgets[widgetId],
-            parent: holderId,
-            x: childX,
-            y: childY,
-            zIndex: Math.max(widgets[widgetId].zIndex, holder.zIndex + 10),
-          };
-        }
+        applyLayout(widgets, layoutHolderChildren(updatedHolder, widgets, widgetId), holderId);
       }
 
       return {
