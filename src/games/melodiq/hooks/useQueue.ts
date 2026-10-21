@@ -97,6 +97,12 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         return () => {
             channel.removeEventListener('message', handleMessage);
+            if (queueBroadcastChannel) {
+                try {
+                    queueBroadcastChannel.close();
+                } catch {}
+                queueBroadcastChannel = null;
+            }
         };
     }, []);
 

@@ -2,7 +2,7 @@
  * useSudoku.ts - React Hook Managing Sudoku State, Timer, History & Persistence
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { sudokuGenerator } from '../logic/sudokuGenerator';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import type {
@@ -63,14 +63,35 @@ export function useSudoku(initialDifficulty: SudokuDifficulty = 'medium') {
     return () => clearInterval(timer);
   }, [state.isPaused, state.isCompleted, state.isGameOver]);
 
-  // Persist state
+  // Keep stateRef up-to-date for throttled persistence
+  const stateRef = useRef(state);
   useEffect(() => {
-    if (!state.isCompleted && !state.isGameOver) {
-      storage.setJson(STORAGE_KEYS.SUDOKU_STATE, state);
-    } else {
-      storage.remove(STORAGE_KEYS.SUDOKU_STATE);
-    }
+    stateRef.current = state;
   }, [state]);
+
+  // Persist state: immediate on game end/unmount, throttled 5s interval during gameplay
+  useEffect(() => {
+    if (state.isCompleted || state.isGameOver) {
+      storage.remove(STORAGE_KEYS.SUDOKU_STATE);
+      return;
+    }
+
+    // Save initial state on start/load
+    storage.setJson(STORAGE_KEYS.SUDOKU_STATE, stateRef.current);
+
+    const interval = setInterval(() => {
+      if (!stateRef.current.isCompleted && !stateRef.current.isGameOver) {
+        storage.setJson(STORAGE_KEYS.SUDOKU_STATE, stateRef.current);
+      }
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      if (!stateRef.current.isCompleted && !stateRef.current.isGameOver) {
+        storage.setJson(STORAGE_KEYS.SUDOKU_STATE, stateRef.current);
+      }
+    };
+  }, [state.isCompleted, state.isGameOver]);
 
   // Persist stats
   useEffect(() => {

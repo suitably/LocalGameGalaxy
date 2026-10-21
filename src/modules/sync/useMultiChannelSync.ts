@@ -127,7 +127,7 @@ export function useMultiChannelSync<T>(
 
   useEffect(() => {
     coordinator.updateOptions(options);
-  });
+  }, [coordinator, options]);
 
   useEffect(() => {
     coordinator.start();
