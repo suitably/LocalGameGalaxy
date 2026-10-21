@@ -54,3 +54,6 @@ public/assets
 diff.txt
 lint_output.txt
 mock_library/
+
+# Claude Code personal settings
+.claude/settings.local.json

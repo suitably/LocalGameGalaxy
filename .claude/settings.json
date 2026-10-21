@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Read(**/config.json)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(**/*.jks)",
+      "Read(**/*.keystore)",
+      "Read(**/*.p12)",
+      "Read(**/.vapid_keys.json)",
+      "Read(**/.push_subscriptions.json)",
+      "Read(./dist/**)",
+      "Read(./dev-dist/**)",
+      "Read(./server/dist/**)",
+      "Read(./android/app/build/**)",
+      "Read(./server/music/**)",
+      "Read(./server/models/**)",
+      "Read(./coverage/**)"
+    ]
+  }
+}

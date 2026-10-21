@@ -61,7 +61,7 @@ Before pushing your branch or opening a pull request, you **must** run the follo
    ```bash
    npm run quality-gates
    ```
-5. **Docs**: if you change architecture, a game, storage keys, sync messages or server routes, update the owning doc in `docs/` and add a line to `docs/log.md` (rules in [AGENTS.md §9](AGENTS.md#9-keeping-the-knowledge-bundle-correct-okf-v02)).
+5. **Docs**: if you change architecture, a game, storage keys, sync messages or server routes, update the owning doc in `docs/` and add a line to `docs/log.md` (rules in [docs/workflows/knowledge-base-maintenance.md](docs/workflows/knowledge-base-maintenance.md)).
 
 ---
 
