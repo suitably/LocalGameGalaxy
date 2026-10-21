@@ -1,23 +1,12 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  Stack,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  TextField,
-  Tooltip,
-} from '@mui/material';
+import { Box, Typography, Button, Stack, Tooltip } from '@mui/material';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import { useTranslation } from 'react-i18next';
+import { SoundfontProviderFields } from './SoundfontProviderFields';
 import {
   getStoredSoundConfig,
   saveStoredSoundConfig,
-  type SoundfontProvider,
   type InstrumentSoundConfig,
 } from '../logic/soundSettings';
 import { useAudioSynth } from '../useAudioSynth';
@@ -37,8 +26,7 @@ export const SoundSettingsSection: React.FC<SoundSettingsSectionProps> = ({
   const [config, setConfig] = useState<InstrumentSoundConfig>(getStoredSoundConfig);
   const { playInstrumentNote } = useAudioSynth();
 
-  const handleProviderChange = (provider: SoundfontProvider) => {
-    const next = { ...config, provider };
+  const handleConfigChange = (next: InstrumentSoundConfig) => {
     setConfig(next);
     saveStoredSoundConfig(next);
     onSoundConfigChanged?.();
@@ -65,34 +53,7 @@ export const SoundSettingsSection: React.FC<SoundSettingsSectionProps> = ({
         {t('games.melodiq_notes.sound_settings', 'Sound & Klänge')}
       </Typography>
       <Stack spacing={1.5}>
-        <FormControl fullWidth size="small">
-          <InputLabel>{t('games.melodiq_notes.soundfont_provider')}</InputLabel>
-          <Select
-            value={config.provider}
-            label={t('games.melodiq_notes.soundfont_provider')}
-            onChange={(e) => handleProviderChange(e.target.value as SoundfontProvider)}
-          >
-            <MenuItem value="fluid">{t('games.melodiq_notes.soundfont_fluid')}</MenuItem>
-            <MenuItem value="musyng">{t('games.melodiq_notes.soundfont_musyng')}</MenuItem>
-            <MenuItem value="synth">{t('games.melodiq_notes.soundfont_synth')}</MenuItem>
-            <MenuItem value="custom">{t('games.melodiq_notes.soundfont_custom')}</MenuItem>
-          </Select>
-        </FormControl>
-
-        {config.provider === 'custom' && (
-          <TextField
-            fullWidth
-            size="small"
-            label={t('games.melodiq_notes.soundfont_custom')}
-            value={config.customBaseUrl || ''}
-            onChange={(e) => {
-              const next = { ...config, customBaseUrl: e.target.value };
-              setConfig(next);
-              saveStoredSoundConfig(next);
-              onSoundConfigChanged?.();
-            }}
-          />
-        )}
+        <SoundfontProviderFields config={config} onChange={handleConfigChange} />
 
         <Box
           sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 0.5 }}

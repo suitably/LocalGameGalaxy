@@ -8,6 +8,7 @@
 
 ### Changed
 
+- **Melodiq Notes**: the soundfont provider select and custom URL field are one component (`SoundfontProviderFields.tsx`) used by the in-game sound settings and the settings page; the settings page looks the same (#426).
 - **Melodiq Notes**: the mixer, song-select and sound-settings dialogs share `NotesDialogFrame.tsx` (frame, title, close button) instead of three copies (#426).
 - **GuessArt / Storyteller**: which lobby players are local to the creating device is decided by `localPlayerIdsForDevice` in `src/modules/player-management/playerLogic.ts` (tested) instead of two copies (#426).
 - **Sudoku / Wordle**: the result dialogs share via `useShareOrCopy` (`src/modules/sharing`) instead of two copies of the share-or-clipboard code; the "copied" timer is now cleared on unmount (#426).

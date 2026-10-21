@@ -4,10 +4,6 @@ import {
   Paper,
   Typography,
   Stack,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   TextField,
   Slider,
   IconButton,
@@ -20,11 +16,11 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import { useTranslation } from 'react-i18next';
+import { SoundfontProviderFields } from '../../../games/melodiq-notes/components/SoundfontProviderFields';
 import {
   getStoredSoundConfig,
   saveStoredSoundConfig,
   DEFAULT_SOUND_CONFIG,
-  type SoundfontProvider,
   type InstrumentSoundConfig,
 } from '../../../games/melodiq-notes';
 import { useAudioSynth } from '../../../games/melodiq-notes/useAudioSynth';
@@ -100,8 +96,7 @@ export const MelodiqNotesSettingsCategory: React.FC<MelodiqNotesSettingsCategory
   const [config, setConfig] = useState<InstrumentSoundConfig>(getStoredSoundConfig);
   const { playInstrumentNote } = useAudioSynth();
 
-  const handleProviderChange = (provider: SoundfontProvider) => {
-    const next = { ...config, provider };
+  const handleConfigChange = (next: InstrumentSoundConfig) => {
     setConfig(next);
     saveStoredSoundConfig(next);
   };
@@ -173,34 +168,12 @@ export const MelodiqNotesSettingsCategory: React.FC<MelodiqNotesSettingsCategory
           )}
         </Typography>
 
-        <FormControl fullWidth size="small" sx={{ mb: config.provider === 'custom' ? 2 : 0 }}>
-          <InputLabel>{t('games.melodiq_notes.soundfont_provider')}</InputLabel>
-          <Select
-            value={config.provider}
-            label={t('games.melodiq_notes.soundfont_provider')}
-            onChange={(e) => handleProviderChange(e.target.value as SoundfontProvider)}
-          >
-            <MenuItem value="fluid">{t('games.melodiq_notes.soundfont_fluid')}</MenuItem>
-            <MenuItem value="musyng">{t('games.melodiq_notes.soundfont_musyng')}</MenuItem>
-            <MenuItem value="synth">{t('games.melodiq_notes.soundfont_synth')}</MenuItem>
-            <MenuItem value="custom">{t('games.melodiq_notes.soundfont_custom')}</MenuItem>
-          </Select>
-        </FormControl>
-
-        {config.provider === 'custom' && (
-          <TextField
-            fullWidth
-            size="small"
-            label={t('games.melodiq_notes.soundfont_custom')}
-            value={config.customBaseUrl || ''}
-            placeholder="https://example.com/soundfonts/"
-            onChange={(e) => {
-              const next = { ...config, customBaseUrl: e.target.value };
-              setConfig(next);
-              saveStoredSoundConfig(next);
-            }}
-          />
-        )}
+        <SoundfontProviderFields
+          config={config}
+          onChange={handleConfigChange}
+          gap={2}
+          urlPlaceholder="https://example.com/soundfonts/"
+        />
       </Paper>
 
       {/* Instrument mapping card */}
