@@ -1,5 +1,5 @@
 {
-  "src/features/party/PartyLobby.tsx": 615,
+  "src/features/party/PartyLobby.tsx": 540,
   "src/games/melodiq/MelodiqGame.tsx": 544,
   "src/games/melodiq/gameplay/PitchVisualizer.tsx": 569,
   "src/games/melodiq/components/GameSettingsPanel.tsx": 553,

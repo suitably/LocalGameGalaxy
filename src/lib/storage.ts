@@ -122,6 +122,8 @@ export const STORAGE_KEYS = {
   GARTIC_STATE_PREFIX: 'galaxy_gartic_state_',
   GARTIC_HOST_PREFIX: 'gartic_host_',
   PARTY_MY_PLAYER_ID: 'party_my_player_id',
+  /** Player name shared by the party lobby and party games (historical key name). */
+  PARTY_PLAYER_NAME: 'guessart_player_name',
   HOST_ROOM_CODE: 'galaxy_host_room_code',
 
   // Connection & WebApp

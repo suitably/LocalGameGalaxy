@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getOrCreatePlayerName } from './PartyLobby';
-import { storage } from '../../lib/storage';
+import { getOrCreatePlayerName } from './playerName';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 
-const STORAGE_PLAYER_NAME = 'guessart_player_name';
+const STORAGE_PLAYER_NAME = STORAGE_KEYS.PARTY_PLAYER_NAME;
 
 describe('getOrCreatePlayerName', () => {
   beforeEach(() => {

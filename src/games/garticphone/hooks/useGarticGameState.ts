@@ -18,7 +18,7 @@ import { universalPartyManager } from '../../../features/party/logic/universalPa
 import { storage, sessionStorageSafe, STORAGE_KEYS } from '../../../lib/storage';
 import type { GarticGameState, GarticPlayer } from '../types';
 
-const STORAGE_GARTIC_NAME = 'guessart_player_name';
+const STORAGE_GARTIC_NAME = STORAGE_KEYS.PARTY_PLAYER_NAME;
 
 interface UseGarticGameStateOptions {
   initialRoomId?: string;
