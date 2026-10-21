@@ -7,6 +7,8 @@
 
 ### Refactored
 
+- **Architecture & Code Quality Audit**: Ratcheted down component budget baselines in `scripts/legacy-component-baselines.json`, removing deleted (`ServerAdminPanel`) and graduated (`SetupDockerTab`) components while tightening limits on shrunk components.
+- **Duplication & DRY**: Extracted `FeedbackForm` into `src/components/feedback/FeedbackForm.tsx` and refactored `FeedbackDialog` and `SettingsFeedbackForm` to reuse it, eliminating duplicate feedback form UI code (Fixes #403).
 - **Code Quality**: Deduplicated multiple areas of the codebase to adhere to DRY principles, including extracting a shared `shuffle` utility, optimizing component logic in `Qwixx` and `Melodiq`, and extracting the `removeFromHolderAndUpdateHand` function in `TabletopReducer`.
 - **Dead Code**: Eliminated unused local storage references and docstrings in `wordle` and `melodiq`.
 
