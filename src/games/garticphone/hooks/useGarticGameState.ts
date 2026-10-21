@@ -51,7 +51,9 @@ export function useGarticGameState({ initialRoomId }: UseGarticGameStateOptions 
       return saved;
     }
 
-    const isParty = Boolean(partyState && (!parsedUrl.room || partyState.roomId === parsedUrl.room));
+    const isParty = Boolean(
+      partyState && (!parsedUrl.room || partyState.roomId === parsedUrl.room),
+    );
 
     if (isParty && partyState && partyState.players.length > 0) {
       const partyPlayers: GarticPlayer[] = partyState.players.map((p) => ({
@@ -78,11 +80,7 @@ export function useGarticGameState({ initialRoomId }: UseGarticGameStateOptions 
       sessionStorageSafe.set(savedHostKey, myPlayerId);
     }
 
-    return createInitialGarticState(
-      amHost ? myPlayerId : '',
-      myPlayerName,
-      effectiveRoomId,
-    );
+    return createInitialGarticState(amHost ? myPlayerId : '', myPlayerName, effectiveRoomId);
   });
 
   // Persist state changes in sessionStorageSafe to enable seamless rejoining from lobby
@@ -111,25 +109,25 @@ export function useGarticGameState({ initialRoomId }: UseGarticGameStateOptions 
 
   const applyRemoteState = useCallback((remoteState: GarticGameState) => {
     setGameState(remoteState);
-    sessionStorageSafe.setJson(`${STORAGE_KEYS.GARTIC_STATE_PREFIX}${remoteState.roomId}`, remoteState);
+    sessionStorageSafe.setJson(
+      `${STORAGE_KEYS.GARTIC_STATE_PREFIX}${remoteState.roomId}`,
+      remoteState,
+    );
   }, []);
 
   const applyRemoteStep = useCallback((playerId: string, content: string) => {
     setGameState((prev) => submitPlayerGarticStep(prev, playerId, content));
   }, []);
 
-  const applyPlayerJoin = useCallback(
-    (newPlayer: GarticPlayer): GarticGameState | null => {
-      let updated: GarticGameState | null = null;
-      setGameState((prev) => {
-        if (prev.players.some((p) => p.id === newPlayer.id)) return prev;
-        updated = addPlayerToGarticGame(prev, newPlayer);
-        return updated;
-      });
+  const applyPlayerJoin = useCallback((newPlayer: GarticPlayer): GarticGameState | null => {
+    let updated: GarticGameState | null = null;
+    setGameState((prev) => {
+      if (prev.players.some((p) => p.id === newPlayer.id)) return prev;
+      updated = addPlayerToGarticGame(prev, newPlayer);
       return updated;
-    },
-    []
-  );
+    });
+    return updated;
+  }, []);
 
   const submitStep = useCallback(
     (content: string): { updatedState: GarticGameState; isRoundCompleted: boolean } | null => {
@@ -140,7 +138,7 @@ export function useGarticGameState({ initialRoomId }: UseGarticGameStateOptions 
         updated.roundIndex !== gameState.roundIndex || updated.phase !== gameState.phase;
       return { updatedState: updated, isRoundCompleted };
     },
-    [gameState, myPlayer]
+    [gameState, myPlayer],
   );
 
   const restartGame = useCallback((): GarticGameState => {
@@ -165,7 +163,7 @@ export function useGarticGameState({ initialRoomId }: UseGarticGameStateOptions 
       setGameState(updated);
       return updated;
     },
-    [gameState]
+    [gameState],
   );
 
   const endGame = useCallback(() => {
