@@ -1,8 +1,18 @@
 /**
  * Filter functions for deciding which widgets render on the shared table canvas [ID: LOGIC-BOARD-FILTER]
  */
-import type { TabletopWidget, HolderWidget, DeckWidget, CardWidget, TokenWidget, BagWidget } from './types';
+import type {
+  TabletopWidget,
+  HolderWidget,
+  DeckWidget,
+  CardWidget,
+  TokenWidget,
+  BagWidget,
+} from './types';
 import { isCardInHand } from './handLayout';
+import { isHandHolder } from './handHolder';
+
+export { isHandHolder };
 
 /**
  * Checks whether a card is currently stored inside a deck or a pile.
@@ -31,39 +41,18 @@ export function isItemInBag(itemId: string, widgets: Record<string, TabletopWidg
 }
 
 /**
- * Checks whether a holder is a player hand holder or personal player area.
- */
-export function isHandHolder(holder: HolderWidget): boolean {
-  if (holder.isHand) return true;
-  if (typeof holder.ownerSeat === 'number' && !isSupplyReserveHolder(holder)) return true;
-  const idLower = (holder.id || '').toLowerCase();
-  const labelLower = (holder.label || '').toLowerCase();
-  return (
-    idLower === 'hand' ||
-    idLower.includes('_hand') ||
-    idLower.includes('hand_') ||
-    idLower.includes('- hand') ||
-    idLower.endsWith('hand') ||
-    labelLower.includes('hand') ||
-    idLower.includes('player area') ||
-    labelLower.includes('player area') ||
-    idLower.includes('spielerbereich') ||
-    labelLower.includes('spielerbereich') ||
-    /player \d+.*hand/i.test(idLower) ||
-    /spieler \d+.*hand/i.test(idLower)
-  );
-}
-
-/**
  * Checks whether a widget is a valid snap target on the table board canvas.
  * Excludes personal player hands and supply reserve organizers since they
  * are managed in the separate player dock and are NOT part of the board canvas.
  */
-export function isBoardSnapTarget(widget: TabletopWidget, draggedType?: TabletopWidget['type']): boolean {
+export function isBoardSnapTarget(
+  widget: TabletopWidget,
+  draggedType?: TabletopWidget['type'],
+): boolean {
   if (widget.type === 'deck') return draggedType === 'card' || !draggedType;
   if (widget.type === 'holder') {
     const holder = widget as HolderWidget;
-    if (isHandHolder(holder)) return false;
+    if (isPersonalHolder(holder)) return false;
     if (isSupplyReserveHolder(holder)) return false;
     if (draggedType && holder.dropTargetTypes && !holder.dropTargetTypes.includes(draggedType)) {
       return false;
@@ -88,14 +77,34 @@ export function findPlayerHandHolder(
           (w): w is HolderWidget =>
             w.type === 'holder' &&
             isHandHolder(w as HolderWidget) &&
-            (w.id.toLowerCase().includes(seatPrefix) || w.ownerSeat === seatIdx || w.ownerSeat === seatIdx - 1),
+            (w.id.toLowerCase().includes(seatPrefix) ||
+              w.ownerSeat === seatIdx ||
+              w.ownerSeat === seatIdx - 1),
         )
       : undefined) ||
     Object.values(widgets).find(
-      (w): w is HolderWidget =>
-        w.type === 'holder' && isHandHolder(w as HolderWidget),
+      (w): w is HolderWidget => w.type === 'holder' && isHandHolder(w as HolderWidget),
     )
   );
+}
+
+/**
+ * Seat-owned public area (e.g. a tableau): has an owner or is named "player area" /
+ * "Spielerbereich", but is not a hand and not a supply reserve. Not fanned, not in the hand dock.
+ */
+export function isSeatArea(holder: HolderWidget): boolean {
+  if (isHandHolder(holder) || isSupplyReserveHolder(holder)) return false;
+  if (typeof holder.ownerSeat === 'number') return true;
+  const idLower = (holder.id || '').toLowerCase();
+  const labelLower = (holder.label || '').toLowerCase();
+  return ['player area', 'spielerbereich'].some(
+    (name) => idLower.includes(name) || labelLower.includes(name),
+  );
+}
+
+/** Hands and seat areas: personal holders that are kept off the shared table canvas. */
+export function isPersonalHolder(holder: HolderWidget): boolean {
+  return isHandHolder(holder) || isSeatArea(holder);
 }
 
 /**
@@ -149,16 +158,28 @@ export function findMatchingSupplyHolder(
   const seatPrefix = hasSeat ? `player ${seatIdx}` : '';
   const matchTokenLabel = (w: HolderWidget, requireSeat: boolean) => {
     const hId = w.id.toLowerCase();
-    if (requireSeat && hasSeat && !hId.includes(seatPrefix) && w.ownerSeat !== seatIdx && w.ownerSeat !== seatIdx - 1) {
+    if (
+      requireSeat &&
+      hasSeat &&
+      !hId.includes(seatPrefix) &&
+      w.ownerSeat !== seatIdx &&
+      w.ownerSeat !== seatIdx - 1
+    ) {
       return false;
     }
     const wLabel = (draggedWidget.label || draggedWidget.id).toLowerCase();
-    const matches = ['road', 'settlement', 'city', 'ship'].some((k) => wLabel.includes(k) && hId.includes(k));
+    const matches = ['road', 'settlement', 'city', 'ship'].some(
+      (k) => wLabel.includes(k) && hId.includes(k),
+    );
     return matches || isSupplyReserveHolder(w);
   };
   return (
-    Object.values(widgets).find((w): w is HolderWidget => w.type === 'holder' && matchTokenLabel(w, true)) ||
-    Object.values(widgets).find((w): w is HolderWidget => w.type === 'holder' && matchTokenLabel(w, false))
+    Object.values(widgets).find(
+      (w): w is HolderWidget => w.type === 'holder' && matchTokenLabel(w, true),
+    ) ||
+    Object.values(widgets).find(
+      (w): w is HolderWidget => w.type === 'holder' && matchTokenLabel(w, false),
+    )
   );
 }
 
@@ -175,7 +196,7 @@ export function filterBoardHolders(
     .filter((w): w is HolderWidget => w.type === 'holder' && visibleIds.has(w.id))
     .filter((h) => {
       if (isTvMode) return true;
-      if (isHandHolder(h)) return false;
+      if (isPersonalHolder(h)) return false;
       if (isSupplyReserveHolder(h)) return false;
       return true;
     });

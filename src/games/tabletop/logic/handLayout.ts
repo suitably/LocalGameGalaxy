@@ -1,4 +1,5 @@
 import type { CardWidget, HolderWidget } from './types';
+import { isHandHolderWidget } from './handHolder';
 
 export interface HandLayoutResult {
   [cardId: string]: {
@@ -18,7 +19,20 @@ export function isActionCard(card: CardWidget): boolean {
   const cardType = (card.cardType || '').toLowerCase();
 
   if (deckId.includes('develop') || deckId.includes('action')) return true;
-  if (['knight', '1 point', 'roads', 'monopoly', 'resources', 'ritter', 'siegpunkt', 'straßenbau', 'erfindung', 'monopol'].includes(cardType)) {
+  if (
+    [
+      'knight',
+      '1 point',
+      'roads',
+      'monopoly',
+      'resources',
+      'ritter',
+      'siegpunkt',
+      'straßenbau',
+      'erfindung',
+      'monopol',
+    ].includes(cardType)
+  ) {
     return true;
   }
   return false;
@@ -38,12 +52,36 @@ export function isResourceCard(card: CardWidget): boolean {
   }
 
   const resourceNames = [
-    'wood', 'brick', 'wool', 'wheat', 'ore', 'grain', 'sheep', 'lumber', 'clay',
-    'stone', 'gold', 'iron', 'coal', 'food', 'water',
-    'holz', 'lehm', 'wolle', 'getreide', 'erz', 'stein', 'rohstoff', 'resource',
+    'wood',
+    'brick',
+    'wool',
+    'wheat',
+    'ore',
+    'grain',
+    'sheep',
+    'lumber',
+    'clay',
+    'stone',
+    'gold',
+    'iron',
+    'coal',
+    'food',
+    'water',
+    'holz',
+    'lehm',
+    'wolle',
+    'getreide',
+    'erz',
+    'stein',
+    'rohstoff',
+    'resource',
   ];
 
-  if (resourceNames.some((r) => cardType === r || cardType.includes(r) || label === r || label.includes(r))) {
+  if (
+    resourceNames.some(
+      (r) => cardType === r || cardType.includes(r) || label === r || label.includes(r),
+    )
+  ) {
     if (isActionCard(card)) return false;
     return true;
   }
@@ -162,13 +200,9 @@ export function calculateHandLayout(
  */
 export function isCardInHand(
   cardId: string,
-  widgets: Record<string, { type: string; id?: string; isHand?: boolean; childIds?: string[] }>
+  widgets: Record<string, { type: string; id?: string; isHand?: boolean; childIds?: string[] }>,
 ): boolean {
   return Object.values(widgets).some(
-    (w) =>
-      w.type === 'holder' &&
-      ((w.id || '').toLowerCase() === 'hand' || Boolean(w.isHand) || (w.id || '').toLowerCase().includes('hand')) &&
-      Array.isArray(w.childIds) &&
-      w.childIds.includes(cardId)
+    (w) => isHandHolderWidget(w) && Array.isArray(w.childIds) && w.childIds.includes(cardId),
   );
 }

@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Tabletop hand rule (claude-code)
+
+- #410: no doc owned the hand-holder rule; it is documented in the header of `src/games/tabletop/logic/handHolder.ts` and in `CHANGELOG.md`.
+- **Code changed:** `src/games/tabletop/logic/` (`handHolder.ts` new, `boardFilter.ts`, `gameValidator.ts`, `handLayout.ts`, `seatLogic.ts`, `tabletopReducer.ts`), `components/surface/HandDockStrip.tsx`, new tests.
+
 ## 2026-10-21 — Server config no longer persists env overrides (claude-code)
 
 - #409: `tech/secrets-management.md` §3, `tech/persistence.md`, `operations/server-runbook.md` §3 describe the runtime-only env overrides and the start-up cleanup.
