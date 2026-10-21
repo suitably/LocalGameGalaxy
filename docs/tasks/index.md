@@ -2,10 +2,10 @@
 
 Agent-ready specs for **open** work. Each mirrors a GitHub issue in `suitably/LocalGameGalaxy`. When the issue closes, move the spec to [archive/](../archive/index.md) and update this list. Status checked 2026-10-21 on `main`; #361 closed and SOLID-17 archived as duplicate of #359 that day.
 
-| Spec                                                                                                                          | Issue | State on PR #384 branch                                                               |
-| ----------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------- |
-| [Melodiq RemoteHostSettingsModal + typed WebRTC RPC](ISSUE-356-melodiq-remote-host-settings.md)                               | #356  | open                                                                                  |
-| [Decompose PartyLobby](ISSUE-359-decompose-party-lobby.md)                                                                    | #359  | open (`PartyLobby.tsx` 615 lines)                                                     |
-| [Cards score views dedup](ISSUE-360-cards-views-dedup.md)                                                                     | #360  | open                                                                                  |
-| [Eliminate `any` in Melodiq](ISSUE-SOLID-13-eliminate-typescript-any-types-in-melodiq.md)                                     | —     | open (see [Q3](../open-questions.md#q3--no-any-is-documented-as-enforced-but-is-not)) |
-| [Eliminate `any` in shared connection/party](ISSUE-SOLID-14-eliminate-typescript-any-types-in-shared-connection-and-party.md) | —     | open                                                                                  |
+| Spec                                                                                                                          | Issue | State on PR #384 branch                                                          |
+| ----------------------------------------------------------------------------------------------------------------------------- | ----- | -------------------------------------------------------------------------------- |
+| [Melodiq RemoteHostSettingsModal + typed WebRTC RPC](ISSUE-356-melodiq-remote-host-settings.md)                               | #356  | open                                                                             |
+| [Decompose PartyLobby](ISSUE-359-decompose-party-lobby.md)                                                                    | #359  | open (`PartyLobby.tsx` 615 lines)                                                |
+| [Cards score views dedup](ISSUE-360-cards-views-dedup.md)                                                                     | #360  | open                                                                             |
+| [Eliminate `any` in Melodiq](ISSUE-SOLID-13-eliminate-typescript-any-types-in-melodiq.md)                                     | —     | open (see [warning budget](../tech/coding-conventions.md#eslint-warning-budget)) |
+| [Eliminate `any` in shared connection/party](ISSUE-SOLID-14-eliminate-typescript-any-types-in-shared-connection-and-party.md) | —     | open                                                                             |

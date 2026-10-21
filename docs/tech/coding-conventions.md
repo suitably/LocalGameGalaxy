@@ -57,7 +57,7 @@ Forbidden in **new and changed code**. "Enforced by" says what fails automatical
 | **Copy-paste** (clones ≥ 12 lines / 60 tokens)                                     | divergent duplicates                      | extract to a shared module                                       | `check:duplicates` (fails above 2.5 % total)                                                                                                                          |
 | **Tracked server media** (`server/music/`, stems)                                  | copyrighted binaries in git               | keep ignored                                                     | `check:architecture` (fails)                                                                                                                                          |
 | **Committed keystores / secrets / `.only` tests / `debugger`**                     | leaks, broken CI                          | —                                                                | `check:hygiene` (fails)                                                                                                                                               |
-| **Untyped code** (`: any`, `as any`, `<any>`)                                      | disables type safety                      | generics, interfaces, `unknown` + guards                         | ESLint **warning only**; 219 existing uses ([Q3](../open-questions.md#q3--no-any-is-documented-as-enforced-but-is-not))                                               |
+| **Untyped code** (`: any`, `as any`, `<any>`)                                      | disables type safety                      | generics, interfaces, `unknown` + guards                         | ESLint warning; `check:lint-budget` fails when a file gains warnings ([budget](#eslint-warning-budget))                                                               |
 | **Inline `BroadcastChannel` sync** in games                                        | leaks channels, duplicates sync           | `useMultiChannelSync()`                                          | review only; Melodiq still violates it ([Q4](../open-questions.md#q4--melodiq-uses-inline-broadcastchannel))                                                          |
 | **Hardcoded UI strings**                                                           | breaks i18n                               | `t('key')` in both languages ([i18n-strategy](i18n-strategy.md)) | review only (`public/locales` parity is checked by `check:hygiene`)                                                                                                   |
 | **Game rules inside components**                                                   | untestable                                | pure functions in `logic/*.ts` + Vitest                          | review only                                                                                                                                                           |
@@ -102,6 +102,15 @@ Forbidden in **new and changed code**. "Enforced by" says what fails automatical
 
 ---
 
+### ESLint warning budget
+
+`no-explicit-any`, `max-lines`, `no-unused-vars` and the other rules configured as `warn` are enforced by a per-file ratchet, `npm run check:lint-budget` (`scripts/check-lint-budget.mjs`, logic in `scripts/lib/lint-budget.mjs`):
+
+- `scripts/lint-warning-baselines.json` holds the allowed warning count per file (generated 2026-10-21: 516 warnings in 157 files). A file above its count, or a new file with any warning, fails.
+- When a file improves, the check fails until the baseline is lowered: `npm run check:lint-budget -- --update` (only lowers, never raises). Commit the JSON in the same PR.
+- Runs in `pre-push`, `npm run quality-gates`, `npm run ci:gates` and the CI `lint` job. `lint-staged` runs `eslint --fix` (errors block; warnings are left to the budget), so a file with old warnings can be edited without `--no-verify`.
+- Errors still fail `npm run lint`.
+
 ## 5. Verification Commands
 
 Run before marking tasks as complete:
@@ -112,6 +121,7 @@ npm run check:budget
 npm run check:duplicates
 npm run check:docs
 npm run lint
+npm run check:lint-budget
 npm test
 npm run build
 ```

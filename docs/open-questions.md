@@ -4,11 +4,6 @@ Living list. Each item: what is unclear or broken, the evidence, what would reso
 
 Found by the [2026-10-18 docs-vs-code audit](reports/2026-10-18-docs-vs-code-audit.md) unless noted.
 
-## Q3 — "No `any`" is documented as enforced, but is not
-
-**[user]** Until 2026-10-18 AGENTS.md and coding-conventions called `any` "blocked by CI" (now corrected). Reality: ESLint has `@typescript-eslint/no-explicit-any: 'warn'`, `check-architecture.mjs` does not check `any`, and there are **219** occurrences in non-test code (top: `src/lib/webrtc/WebRTCHostManager.ts` 37, `useWebRTCClient.ts` 22, `melodiq/hooks/useMelodiqGlobalEvents.tsx` 13). Open tasks [SOLID-13](tasks/ISSUE-SOLID-13-eliminate-typescript-any-types-in-melodiq.md) / [SOLID-14](tasks/ISSUE-SOLID-14-eliminate-typescript-any-types-in-shared-connection-and-party.md) cover part of it.
-Resolve: decide between a ratchet baseline (like the component budget) or switching the lint rule to `error` after cleanup. Until then the docs say "forbidden in new code, existing debt tolerated".
-
 ## Q4 — Melodiq uses inline `BroadcastChannel`
 
 The anti-pattern matrix forbids inline `BroadcastChannel` sync in games, but Melodiq creates channels directly in `hooks/useTVMode.ts`, `hooks/useTVReceiver.ts`, `hooks/SettingsContext.tsx`, `gameplay/hooks/useSessionEnd.ts` (channel `melodiq_tv_control`) and `hooks/useQueue.ts` (queue sync). The party lobby does the same in `src/features/party/logic/universalPartyManager.ts` (`party_bc_<roomId>`) — outside `src/games`, so the rule's wording does not cover it. `check-architecture.mjs` does not check this rule.
