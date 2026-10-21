@@ -1,7 +1,5 @@
 import React from 'react';
 import {
-  Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
@@ -12,11 +10,10 @@ import {
   ListItemText,
   Chip,
   Divider,
-  IconButton,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { useTranslation } from 'react-i18next';
+import { NotesDialogFrame } from './NotesDialogFrame';
 import { DEMO_SONGS } from '../demoSongs';
 import {
   type DemoSong,
@@ -65,29 +62,13 @@ export const SongSelectDialog: React.FC<SongSelectDialogProps> = ({
   const { t } = useTranslation();
 
   return (
-    <Dialog
+    <NotesDialogFrame
       open={open}
       onClose={onClose}
       maxWidth="sm"
-      fullWidth
-      PaperProps={{
-        sx: {
-          bgcolor: '#1a1a2e',
-          backgroundImage: 'none',
-          borderRadius: 3,
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-        },
-      }}
+      title={t('games.melodiq_notes.song', 'Song auswählen')}
+      titleSx={{}}
     >
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Typography variant="h6" fontWeight={700}>
-          {t('games.melodiq_notes.song', 'Song auswählen')}
-        </Typography>
-        <IconButton size="small" onClick={onClose}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-
       <DialogContent dividers sx={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
         {/* Upload Action */}
         <Stack direction="row" spacing={1.5} sx={{ mb: 2.5 }}>
@@ -192,6 +173,6 @@ export const SongSelectDialog: React.FC<SongSelectDialogProps> = ({
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose}>{t('common.cancel', 'Abbrechen')}</Button>
       </DialogActions>
-    </Dialog>
+    </NotesDialogFrame>
   );
 };

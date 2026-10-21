@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Melodiq Notes dialog frame (claude-code)
+
+- #426 (Melodiq Notes dialogs): no doc described the dialogs; `CHANGELOG.md` updated.
+- **Code changed:** `src/games/melodiq-notes/components/{NotesDialogFrame,EnsembleMixerDialog,SongSelectDialog,SoundSettingsDialog}.tsx`; preceded by a formatting-only commit.
+
 ## 2026-10-21 — Lobby local-player rule shared (claude-code)
 
 - #426 (lobby hooks): no doc names the rule; `CHANGELOG.md` updated.

@@ -1,7 +1,5 @@
 import React from 'react';
 import {
-  Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
@@ -18,8 +16,8 @@ import {
 } from '@mui/material';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
-import CloseIcon from '@mui/icons-material/Close';
 import { useTranslation } from 'react-i18next';
+import { NotesDialogFrame } from './NotesDialogFrame';
 import type { ScorePartInfo, InstrumentMixerChannel } from '../types';
 
 interface EnsembleMixerDialogProps {
@@ -66,31 +64,12 @@ export const EnsembleMixerDialog: React.FC<EnsembleMixerDialogProps> = ({
   };
 
   return (
-    <Dialog
+    <NotesDialogFrame
       open={open}
       onClose={onClose}
       maxWidth="sm"
-      fullWidth
-      PaperProps={{
-        sx: {
-          bgcolor: '#1a1a2e',
-          backgroundImage: 'none',
-          borderRadius: 3,
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-        },
-      }}
+      title={t('games.melodiq_notes.ensemble_mixer', 'Band-Mixer')}
     >
-      <DialogTitle
-        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}
-      >
-        <Typography variant="h6" fontWeight={700}>
-          {t('games.melodiq_notes.ensemble_mixer', 'Band-Mixer')}
-        </Typography>
-        <IconButton size="small" onClick={onClose}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-
       <DialogContent dividers sx={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
         {/* Master Volume & Options */}
         <Paper sx={{ p: 2, mb: 2.5, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 2 }}>
@@ -222,6 +201,6 @@ export const EnsembleMixerDialog: React.FC<EnsembleMixerDialogProps> = ({
           {t('common.done', 'Fertig')}
         </Button>
       </DialogActions>
-    </Dialog>
+    </NotesDialogFrame>
   );
 };

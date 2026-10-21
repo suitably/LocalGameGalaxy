@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import {
-  Dialog,
-  DialogTitle,
   DialogContent,
   DialogActions,
   Button,
@@ -13,13 +11,12 @@ import {
   FormControl,
   InputLabel,
   TextField,
-  IconButton,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import SettingsIcon from '@mui/icons-material/Settings';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { NotesDialogFrame } from './NotesDialogFrame';
 import {
   getStoredSoundConfig,
   saveStoredSoundConfig,
@@ -67,31 +64,12 @@ export const SoundSettingsDialog: React.FC<SoundSettingsDialogProps> = ({
   };
 
   return (
-    <Dialog
+    <NotesDialogFrame
       open={open}
       onClose={onClose}
       maxWidth="xs"
-      fullWidth
-      PaperProps={{
-        sx: {
-          bgcolor: '#1a1a2e',
-          backgroundImage: 'none',
-          borderRadius: 3,
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-        },
-      }}
+      title={t('games.melodiq_notes.sound_settings', 'Sound-Einstellungen')}
     >
-      <DialogTitle
-        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}
-      >
-        <Typography variant="h6" fontWeight={700}>
-          {t('games.melodiq_notes.sound_settings', 'Sound-Einstellungen')}
-        </Typography>
-        <IconButton size="small" onClick={onClose}>
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-
       <DialogContent dividers sx={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
         <Stack spacing={2.5}>
           <FormControl fullWidth size="small">
@@ -152,6 +130,6 @@ export const SoundSettingsDialog: React.FC<SoundSettingsDialogProps> = ({
           {t('common.done', 'Fertig')}
         </Button>
       </DialogActions>
-    </Dialog>
+    </NotesDialogFrame>
   );
 };
