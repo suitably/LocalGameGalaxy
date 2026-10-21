@@ -214,4 +214,39 @@ describe('MultiChannelSyncCoordinator', () => {
 
     console.warn = originalConsoleWarn; // Restore
   });
+
+  it('updates options dynamically and restarts channels when channelId changes', () => {
+    const onMessage = vi.fn();
+    const unsubMock1 = vi.fn();
+    const unsubMock2 = vi.fn();
+    const mockMailbox = {
+      subscribe: vi.fn()
+        .mockReturnValueOnce(unsubMock1)
+        .mockReturnValueOnce(unsubMock2),
+      publish: vi.fn().mockResolvedValue(true),
+    } as unknown as MqttMailboxService<{ msg: string }>;
+
+    const coordinator = new MultiChannelSyncCoordinator<{ msg: string }>({
+      channelId: 'room1',
+      broadcastPrefix: 'test_prefix',
+      mailbox: mockMailbox,
+      onMessage,
+    });
+
+    coordinator.start();
+    expect(mockMailbox.subscribe).toHaveBeenCalledWith('room1', expect.any(Function));
+
+    coordinator.updateOptions({
+      channelId: 'room2',
+      broadcastPrefix: 'test_prefix',
+      mailbox: mockMailbox,
+      onMessage,
+    });
+
+    expect(unsubMock1).toHaveBeenCalled();
+    expect(mockMailbox.subscribe).toHaveBeenCalledWith('room2', expect.any(Function));
+
+    coordinator.stop();
+    expect(unsubMock2).toHaveBeenCalled();
+  });
 });

@@ -1,5 +1,12 @@
 
 ## [Unreleased]
+### Added
+- **Testing & Edge-Case Audit**: Added comprehensive unit tests for Kniffel scoring (`kniffelScoring.ts`) and game reducer (`kniffelReducer.ts`), Darts game rules, countdown modes, double-out evaluation, and bust logic (`useDartsGame.ts`), and Imposter database repository & seeder (`imposterRepository.ts`, `dbSeeder.ts`) (Fixes #386).
+- **Sync & Resilience Tests**: Extended `MqttMailboxService` and `MultiChannelSyncCoordinator` test suites with coverage for listener error isolation, LZString payload compression, and dynamic channel re-subscription edge cases (Fixes #386).
+
+### Fixed
+- **Darts**: Hardened `useDartsGame` persistence against corrupted JSON storage values by using `storage.getJson` with safe structure validation and fallbacks to prevent UI crashes on mount (Fixes #386).
+
 ### Refactored
 - **Code Quality**: Deduplicated multiple areas of the codebase to adhere to DRY principles, including extracting a shared `shuffle` utility, optimizing component logic in `Qwixx` and `Melodiq`, and extracting the `removeFromHolderAndUpdateHand` function in `TabletopReducer`.
 - **Dead Code**: Eliminated unused local storage references and docstrings in `wordle` and `melodiq`.
