@@ -14,6 +14,8 @@
 
 ### Refactored
 
+- **Dead code**: removed `src/games/melodiq/MelodiqSettings.tsx` and `components/SettingsFeedbackForm.tsx` (no importer; the settings route uses `MelodiqSettingsCategory`) (#423).
+- **Werewolf tests**: the scripts `logic/tests/verify_*.ts` never ran; their Easter Bunny, Hunter and Guardian scenarios are now Vitest tests in `logic/roleScenarios.test.ts` (#424).
 - **WebRTC (Melodiq)**: tracker info hash, peer id, NDJSON decoding and the tracker URL filter are shared by host and client via `src/lib/webrtc/trackerProtocol.ts` (with tests) instead of four hand-written copies. A malformed line in a data-channel chunk no longer drops the rest of that chunk on the host; the client now also de-duplicates tracker URLs (#411).
 - **Quality gates**: New per-file ESLint warning ratchet `npm run check:lint-budget` (baseline `scripts/lint-warning-baselines.json`, 516 warnings in 157 files). `lint-staged` no longer rejects files with pre-existing warnings; warnings can only decrease (#421).
 - **CI**: Removed the Google Jules integration (`/jules` issue command, daily Jules audit workflow, `scripts/pipeline/jules-*.cjs`, `.github/agents/`, `.github/lenses/`, `.pipeline-memory/`). The `JULES_API_KEY*` repository secrets are no longer used.
