@@ -23,6 +23,7 @@
 
 ### Fixed
 
+- **Companion server**: environment overrides (`SECURITY_TOKEN`/`TOKEN`, `PORT`, `MUSIC_DIR`, `DIRECTORIES`, `TABLETOP_DIR`, auto-discovered `/app/music`) were written into `config.json` whenever a setting changed, so removing the env var left the old token, port and directories active. They now apply at runtime only; identical leftovers are removed from `config.json` at start (#409).
 - **Darts**: Hardened `useDartsGame` persistence against corrupted JSON storage values by using `storage.getJson` with safe structure validation and fallbacks to prevent UI crashes on mount (Fixes #386).
 - **Release**: `release.yml` called `npm run package` in `server/`, which no longer existed, so server binaries and the release publish step failed. `server/` now bundles with esbuild and packages Node 24 binaries for Linux, Windows and macOS with `@yao-pkg/pkg`; the release archives also ship `scripts/align_lyrics.py`.
 - **Melodiq TV**: Fixed an issue where clicking the Cast button would open a new window instead of initiating a stream to the TV because of dynamic query string mismatches.

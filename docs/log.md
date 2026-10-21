@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Server config no longer persists env overrides (claude-code)
+
+- #409: `tech/secrets-management.md` §3, `tech/persistence.md`, `operations/server-runbook.md` §3 describe the runtime-only env overrides and the start-up cleanup.
+- **Code changed:** `server/src/config.ts`, new `server/src/core/configSources.ts`, new `server/test/config_env_overrides.test.js`.
+
 ## 2026-10-21 — Leaner agent context (claude-code)
 
 - `AGENTS.md`: reuse catalog (§5) moved into `tech/architecture.md` §3.2, OKF editing rules (§9) moved to new `workflows/knowledge-base-maintenance.md`, Capacitor section (§7) shortened to a pointer to `tech/styling.md`; §1 now asks for targeted doc reads (one doc, grep `game-catalog.md`) instead of reading index, open questions and catalog up front. File shrank from ~13 KB to ~8 KB; it is loaded into every Claude Code session via `CLAUDE.md`.

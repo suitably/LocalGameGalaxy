@@ -53,7 +53,7 @@ Other keys the server understands (defaults in `defaultConfig`): `tabletopDirect
 
 - Empty or missing token → the server generates `crypto.randomBytes(16).toString('hex')` at start-up and persists it.
 - Generate one yourself: `openssl rand -hex 16`.
-- Env (`SECURITY_TOKEN`, then `TOKEN`) overrides `config.json`; surrounding quotes are stripped.
+- Env (`SECURITY_TOKEN`, then `TOKEN`) overrides `config.json` at runtime; surrounding quotes are stripped. Env values are never written to `config.json` (`server/src/core/configSources.ts`); a file token identical to the env token is removed from the file at start (left over from servers before #409).
 - Rotation: [operations/server-runbook §3](../operations/server-runbook.md#3-rotating-the-master-token).
 
 ## 4. HTTPS for phones
