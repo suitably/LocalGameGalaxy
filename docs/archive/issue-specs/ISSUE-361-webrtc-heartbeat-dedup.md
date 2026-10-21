@@ -1,3 +1,5 @@
+> **Closed 2026-10-21 (not planned).** The premise was wrong: the jscpd clone is the tracker-URL filter, not heartbeat logic. See D9 in [cleanup plan](../../reports/2026-10-21-cleanup-plan.md).
+
 ## Context & Problem
 
 `jscpd` flags duplicate channel health/heartbeat logic between WebRTC host and client implementations:

@@ -7,6 +7,8 @@ verified:
   method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
+> **Archived 2026-10-21 as duplicate of #359** ([spec](../../tasks/ISSUE-359-decompose-party-lobby.md)).
+
 ## Summary
 
 `src/features/party/PartyLobby.tsx` (623 lines) is a God Component combining:
