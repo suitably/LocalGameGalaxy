@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Tabletop holder layout extracted (claude-code)
+
+- #414: no doc described the holder layout math; `CHANGELOG.md` updated.
+- **Code changed:** `src/games/tabletop/logic/{holderLayout,tabletopReducer}.ts`, new `__tests__/holderLayout.test.ts`.
+
 ## 2026-10-21 — Melodiq download job split (claude-code)
 
 - #413: `docs/tech/song-pipeline.md` §1 names the new helper modules.
