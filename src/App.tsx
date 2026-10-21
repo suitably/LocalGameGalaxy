@@ -1,15 +1,21 @@
-import { Suspense, useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
 import { App as CapacitorApp } from '@capacitor/app';
 import { MainLayout } from './components/Layout/MainLayout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { gameRegistry } from './lib/gameRegistry';
-import { Hub } from './features/hub/Hub';
-import { Settings } from './features/settings/Settings';
-import { PartyLobby } from './features/party/PartyLobby';
 import { useServerUrlAutoConnect } from './hooks/useServerUrlAutoConnect';
 import { hasGitHubPAT } from './lib/github';
+
+// Route-level code splitting: the hub, settings and party lobby load on first visit.
+const Hub = lazy(() => import('./features/hub/Hub').then((m) => ({ default: m.Hub })));
+const Settings = lazy(() =>
+  import('./features/settings/Settings').then((m) => ({ default: m.Settings })),
+);
+const PartyLobby = lazy(() =>
+  import('./features/party/PartyLobby').then((m) => ({ default: m.PartyLobby })),
+);
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -41,9 +47,13 @@ function AppRoutes() {
   useEffect(() => {
     const handleBackButton = () => {
       // If a modal, dialog or drawer is currently open, close it first via Escape
-      const openModal = document.querySelector('dialog[open], .MuiDialog-root, .MuiModal-root:not([aria-hidden="true"])');
+      const openModal = document.querySelector(
+        'dialog[open], .MuiDialog-root, .MuiModal-root:not([aria-hidden="true"])',
+      );
       if (openModal) {
-        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }));
+        window.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }),
+        );
         return;
       }
 
@@ -53,81 +63,84 @@ function AppRoutes() {
         navigate(-1);
       }
     };
-    
+
     const listener = CapacitorApp.addListener('backButton', handleBackButton);
     return () => {
-      listener.then(l => l.remove());
+      listener.then((l) => l.remove());
     };
   }, [navigate]);
 
   return (
     <Routes>
       <Route path="/" element={<MainLayout />}>
-        <Route index element={
-          <Suspense fallback={<LoadingFallback />}>
-            <Hub />
-          </Suspense>
-        } />
-        <Route path="party" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <PartyLobby />
-          </Suspense>
-        } />
-        <Route path="settings" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <Settings />
-          </Suspense>
-        } />
+        <Route
+          index
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <Hub />
+            </Suspense>
+          }
+        />
+        <Route
+          path="party"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <PartyLobby />
+            </Suspense>
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <Settings />
+            </Suspense>
+          }
+        />
         <Route path="feedback" element={<FeedbackRedirect />} />
-        
+
         {/* Dynamic Game Routes registered via GameRegistry (OCP) */}
-        {gameRegistry.getGames().map(game => (
+        {gameRegistry.getGames().map((game) => (
           <Route
             key={game.id}
             path={game.route}
             element={
               <ErrorBoundary componentName={game.id}>
-                <Suspense fallback={<LoadingFallback />}>
-                  {game.component}
-                </Suspense>
+                <Suspense fallback={<LoadingFallback />}>{game.component}</Suspense>
               </ErrorBoundary>
             }
           />
         ))}
 
         {/* Dynamic Game Nested Routes (e.g. Melodiq Queue) */}
-        {gameRegistry.getGames().flatMap(game => 
-          (game.nestedRoutes || []).map(nr => (
+        {gameRegistry.getGames().flatMap((game) =>
+          (game.nestedRoutes || []).map((nr) => (
             <Route
               key={`${game.id}-${nr.path}`}
               path={nr.path}
               element={
                 <ErrorBoundary componentName={`${game.id} - ${nr.path}`}>
-                  <Suspense fallback={<LoadingFallback />}>
-                    {nr.component}
-                  </Suspense>
+                  <Suspense fallback={<LoadingFallback />}>{nr.component}</Suspense>
                 </ErrorBoundary>
               }
             />
-          ))
+          )),
         )}
       </Route>
 
       {/* Dynamic Standalone Routes (e.g. Melodiq TV Mode) */}
-      {gameRegistry.getGames().flatMap(game => 
-        (game.standaloneRoutes || []).map(sr => (
+      {gameRegistry.getGames().flatMap((game) =>
+        (game.standaloneRoutes || []).map((sr) => (
           <Route
             key={`${game.id}-${sr.path}`}
             path={sr.path}
             element={
               <ErrorBoundary componentName={`${game.id} - Standalone`}>
-                <Suspense fallback={<LoadingFallback />}>
-                  {sr.component}
-                </Suspense>
+                <Suspense fallback={<LoadingFallback />}>{sr.component}</Suspense>
               </ErrorBoundary>
             }
           />
-        ))
+        )),
       )}
     </Routes>
   );

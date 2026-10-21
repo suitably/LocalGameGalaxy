@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Lazy routes, Melodiq TV timer cleanup (claude-code)
+
+- #427: no doc described the route loading or the TV poll; `CHANGELOG.md` updated.
+- **Code changed:** `src/App.tsx`, `src/games/melodiq/hooks/useTVMode.ts`, `useQueue.ts` (comment only); preceded by a formatting-only commit.
+
 ## 2026-10-21 — Component budget lock-in, Q9 resolved (claude-code)
 
 - #425: Q9 removed from `open-questions.md`; `coding-conventions.md`, `workflows/ci-cd-pipelines.md`, `architecture.md` and AGENTS.md §4 describe the lock-in and the single 250-line limit.
