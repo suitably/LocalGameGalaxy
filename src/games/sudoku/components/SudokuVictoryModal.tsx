@@ -74,12 +74,17 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ textAlign: 'center', fontWeight: 800, pb: 1 }}>
-        {isWon ? t('sudoku.victory.title', 'Gelöst! 🎉') : t('sudoku.game_over.title', 'Game Over 😔')}
+        {isWon
+          ? t('sudoku.victory.title', 'Gelöst! 🎉')
+          : t('sudoku.game_over.title', 'Game Over 😔')}
       </DialogTitle>
 
       <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
         <Box sx={{ textAlign: 'center', my: 2 }}>
-          <Typography variant="h3" sx={{ fontWeight: 800, color: isWon ? '#4ade80' : '#ef4444', mb: 1 }}>
+          <Typography
+            variant="h3"
+            sx={{ fontWeight: 800, color: isWon ? '#4ade80' : '#ef4444', mb: 1 }}
+          >
             {formatTime(timeElapsed)}
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -95,17 +100,29 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
 
         <Stack spacing={1} sx={{ p: 2, bgcolor: 'rgba(255, 255, 255, 0.04)', borderRadius: 2 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Typography variant="body2" color="text.secondary">{t('sudoku.mistakes', 'Fehler')}:</Typography>
-            <Typography variant="body2" sx={{ fontWeight: 700 }}>{mistakes}</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t('sudoku.mistakes', 'Fehler')}:
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 700 }}>
+              {mistakes}
+            </Typography>
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Typography variant="body2" color="text.secondary">{t('sudoku.hints', 'Hinweise')}:</Typography>
-            <Typography variant="body2" sx={{ fontWeight: 700 }}>{hintsUsed}</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t('sudoku.hints', 'Hinweise')}:
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 700 }}>
+              {hintsUsed}
+            </Typography>
           </Box>
           {bestTime !== null && (
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography variant="body2" color="text.secondary">{t('sudoku.best_time', 'Bestzeit')}:</Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700, color: '#60a5fa' }}>{formatTime(bestTime)}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {t('sudoku.best_time', 'Bestzeit')}:
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 700, color: '#60a5fa' }}>
+                {formatTime(bestTime)}
+              </Typography>
             </Box>
           )}
         </Stack>

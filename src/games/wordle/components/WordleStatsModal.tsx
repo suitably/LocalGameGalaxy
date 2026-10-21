@@ -77,17 +77,28 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
         {gameStatus === 'won'
           ? t('wordle.modal.title_won', 'Gewonnen! 🎉')
           : gameStatus === 'lost'
-          ? t('wordle.modal.title_lost', 'Schade! 😔')
-          : t('wordle.modal.title_stats', 'Statistiken 📊')}
+            ? t('wordle.modal.title_lost', 'Schade! 😔')
+            : t('wordle.modal.title_stats', 'Statistiken 📊')}
       </DialogTitle>
 
       <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
         {gameStatus !== 'playing' && (
-          <Box sx={{ textAlign: 'center', my: 1.5, p: 1.5, bgcolor: 'rgba(255, 255, 255, 0.05)', borderRadius: 2 }}>
+          <Box
+            sx={{
+              textAlign: 'center',
+              my: 1.5,
+              p: 1.5,
+              bgcolor: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: 2,
+            }}
+          >
             <Typography variant="body2" color="text.secondary">
               {t('wordle.modal.target_was', 'Das gesuchte Wort war:')}
             </Typography>
-            <Typography variant="h5" sx={{ fontWeight: 800, color: '#90caf9', letterSpacing: 2, mt: 0.5 }}>
+            <Typography
+              variant="h5"
+              sx={{ fontWeight: 800, color: '#90caf9', letterSpacing: 2, mt: 0.5 }}
+            >
               {targetWord}
             </Typography>
           </Box>
@@ -96,20 +107,36 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
         {/* Top Numbers Grid */}
         <Stack direction="row" spacing={1} justifyContent="space-between" sx={{ my: 2 }}>
           <Box sx={{ textAlign: 'center', flex: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 800 }}>{stats.played}</Typography>
-            <Typography variant="caption" color="text.secondary">{t('wordle.stats.played', 'Gespielt')}</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+              {stats.played}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {t('wordle.stats.played', 'Gespielt')}
+            </Typography>
           </Box>
           <Box sx={{ textAlign: 'center', flex: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 800 }}>{winRate}%</Typography>
-            <Typography variant="caption" color="text.secondary">{t('wordle.stats.win_rate', 'Gewonnen')}</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+              {winRate}%
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {t('wordle.stats.win_rate', 'Gewonnen')}
+            </Typography>
           </Box>
           <Box sx={{ textAlign: 'center', flex: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 800 }}>{stats.currentStreak}</Typography>
-            <Typography variant="caption" color="text.secondary">{t('wordle.stats.current_streak', 'Serie')}</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+              {stats.currentStreak}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {t('wordle.stats.current_streak', 'Serie')}
+            </Typography>
           </Box>
           <Box sx={{ textAlign: 'center', flex: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 800 }}>{stats.maxStreak}</Typography>
-            <Typography variant="caption" color="text.secondary">{t('wordle.stats.max_streak', 'Rekord')}</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+              {stats.maxStreak}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {t('wordle.stats.max_streak', 'Rekord')}
+            </Typography>
           </Box>
         </Stack>
 
