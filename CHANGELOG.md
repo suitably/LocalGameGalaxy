@@ -8,6 +8,8 @@
 
 ### Changed
 
+- **Melodiq**: local and phone latency calibration share one panel (`LatencyCalibratorPanel.tsx`) and one beep detector (`components/hooks/detectBeep.ts`); the phone calibrator's labels are now translated (#426).
+- **Knister / Qwixx**: both dice rollers use the shared `src/components/games/useDiceRollAnimation.ts` instead of two copies of the roll timer (#426).
 - **Melodiq**: `useSessionPlayers` is split into pure roster rules (`gameplay/logic/sessionRoster.ts`, tested) and focused hooks (`useSessionOverrideSync`, `usePeerRosterSync`, `usePeerSessionMessages`, `useBroadcastSongInfo`). Phone messages are now received via `manager.on('message')` instead of overwriting `manager.onMessage`, so other listeners are no longer replaced; storage is read via `storage.getJson` and the hooks are typed without `any` (#418).
 - **Tabletop**: holder layout (hand, stack, fan, grid) moved from `tabletopReducer.ts` into `src/games/tabletop/logic/holderLayout.ts` with named constants and characterisation tests; the hand re-layout write-back exists once instead of four times (#414).
 - **Melodiq server**: the song download job is split into steps; yt-dlp lookup/install/spawn lives in `services/ytdlp.ts` (one install path instead of two copies, shared with `routes/usdb.ts`) and UltraStar `.txt` header handling in `services/ultrastarTxt.ts`, with tests (#413).

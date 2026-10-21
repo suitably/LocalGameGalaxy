@@ -105,7 +105,7 @@ Other shared building blocks outside `src/modules/` (check these before writing 
 | Building block         | Path                                                                  | Provides                                                                       |
 | ---------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | Confirm dialog         | `src/components/common/ConfirmDialog.tsx`                             | MUI confirmation modal (replaces `confirm()`)                                  |
-| 3D dice                | `src/components/games/Die3D.tsx`                                      | animated die                                                                   |
+| 3D dice                | `src/components/games/Die3D.tsx`, `useDiceRollAnimation.ts`           | animated die; roll delay before values are revealed                            |
 | Header & titles        | `src/context/TitleContext.tsx`, `src/context/HeaderLayoutContext.tsx` | `usePageTitle`, `useHeaderLayout` — actions, menu items, safe hub exit (§3.4)  |
 | Push                   | `src/components/push/`, `src/lib/push/pushClient.ts`                  | permission banner, settings, Web Push / ntfy client (§3.3)                     |
 | Storage                | `src/lib/storage.ts`                                                  | key/value storage with memory fallback, `STORAGE_KEYS` (§3.5)                  |
