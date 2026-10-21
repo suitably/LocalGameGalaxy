@@ -1,6 +1,12 @@
 import { partyMailbox } from './partyMailbox';
-import { ensureUniquePlayerName } from '../../../lib/disambiguateName';
 import { storage, sessionStorageSafe, STORAGE_KEYS, STORAGE_PREFIXES } from '../../../lib/storage';
+import {
+  addPresencePlayer,
+  mergeIncomingState,
+  resolveHostId,
+  upsertHost,
+  upsertJoiningPlayer,
+} from './partyRoster';
 
 export interface PartyPlayer {
   id: string;
@@ -33,19 +39,6 @@ export interface PartyPresenceMessage {
 
 export type PartySyncEnvelope = PartyPresenceMessage | PartyRoomState;
 
-const PLAYER_COLORS = [
-  '#f44336',
-  '#e91e63',
-  '#9c27b0',
-  '#3f51b5',
-  '#2196f3',
-  '#00bcd4',
-  '#009688',
-  '#4caf50',
-  '#ff9800',
-  '#795548',
-];
-
 class UniversalPartyManager {
   private currentRoomId: string | null = null;
   private currentRoomState: PartyRoomState | null = null;
@@ -60,7 +53,9 @@ class UniversalPartyManager {
 
   public getMyPlayerId(): string {
     if (!this.myPlayerId) {
-      this.myPlayerId = sessionStorageSafe.get(STORAGE_KEYS.PARTY_MY_PLAYER_ID) || `p_${Math.random().toString(36).substring(2, 9)}`;
+      this.myPlayerId =
+        sessionStorageSafe.get(STORAGE_KEYS.PARTY_MY_PLAYER_ID) ||
+        `p_${Math.random().toString(36).substring(2, 9)}`;
       sessionStorageSafe.set(STORAGE_KEYS.PARTY_MY_PLAYER_ID, this.myPlayerId);
     }
     return this.myPlayerId;
@@ -89,7 +84,10 @@ class UniversalPartyManager {
   }
 
   public setHostRoomCode(code: string): string {
-    const cleaned = code.toUpperCase().trim().replace(/[^A-Z0-9_-]/g, '');
+    const cleaned = code
+      .toUpperCase()
+      .trim()
+      .replace(/[^A-Z0-9_-]/g, '');
     if (cleaned) {
       storage.set(STORAGE_KEYS.HOST_ROOM_CODE, cleaned);
       return cleaned;
@@ -97,8 +95,13 @@ class UniversalPartyManager {
     return this.getSavedHostRoomCode();
   }
 
-  public createParty(hostName: string, preferredRoomId?: string): { roomId: string; hostId: string; state: PartyRoomState } {
-    const roomId = preferredRoomId ? this.setHostRoomCode(preferredRoomId) : this.getSavedHostRoomCode();
+  public createParty(
+    hostName: string,
+    preferredRoomId?: string,
+  ): { roomId: string; hostId: string; state: PartyRoomState } {
+    const roomId = preferredRoomId
+      ? this.setHostRoomCode(preferredRoomId)
+      : this.getSavedHostRoomCode();
     const hostId = this.getMyPlayerId();
 
     sessionStorageSafe.set(`${STORAGE_PREFIXES.PARTY_HOST_ID}${roomId}`, hostId);
@@ -107,29 +110,20 @@ class UniversalPartyManager {
     if (this.currentRoomState && this.currentRoomState.roomId === roomId) {
       existingPlayers = this.currentRoomState.players;
     } else {
-      const parsed = storage.getJson<PartyRoomState | null>(`${STORAGE_PREFIXES.PARTY_STATE}${roomId}`, null);
+      const parsed = storage.getJson<PartyRoomState | null>(
+        `${STORAGE_PREFIXES.PARTY_STATE}${roomId}`,
+        null,
+      );
       if (parsed && Array.isArray(parsed.players)) {
         existingPlayers = parsed.players;
       }
     }
 
-    const uniqueHostName = ensureUniquePlayerName(hostName || 'Host', existingPlayers, hostId);
-    const hostPlayer: PartyPlayer = {
-      id: hostId,
-      name: uniqueHostName,
-      avatarColor: PLAYER_COLORS[0],
-      isHost: true,
-      score: 0,
-      joinedAt: Date.now(),
-    };
-
-    const hostIndex = existingPlayers.findIndex((p) => p.id === hostId);
-    let newPlayers = [...existingPlayers];
-    if (hostIndex >= 0) {
-      newPlayers[hostIndex] = { ...newPlayers[hostIndex], name: uniqueHostName, isHost: true };
-    } else {
-      newPlayers = [hostPlayer, ...existingPlayers];
-    }
+    const { players: newPlayers, host: hostPlayer } = upsertHost(existingPlayers, {
+      hostId,
+      name: hostName,
+      now: Date.now(),
+    });
 
     const state: PartyRoomState = {
       roomId,
@@ -152,19 +146,26 @@ class UniversalPartyManager {
   public joinParty(roomId: string, playerName: string): PartyRoomState {
     const pId = this.getMyPlayerId();
     const normalizedRoomId = roomId.toUpperCase().trim();
-    const isRoomCreator = Boolean(sessionStorageSafe.get(`${STORAGE_PREFIXES.PARTY_HOST_ID}${normalizedRoomId}`));
+    const isRoomCreator = Boolean(
+      sessionStorageSafe.get(`${STORAGE_PREFIXES.PARTY_HOST_ID}${normalizedRoomId}`),
+    );
 
     let state = this.currentRoomState;
     if (!state || state.roomId !== normalizedRoomId) {
-      const saved = storage.getJson<PartyRoomState | null>(`${STORAGE_PREFIXES.PARTY_STATE}${normalizedRoomId}`, null);
+      const saved = storage.getJson<PartyRoomState | null>(
+        `${STORAGE_PREFIXES.PARTY_STATE}${normalizedRoomId}`,
+        null,
+      );
       if (saved) {
         state = saved;
       }
     }
 
-    const knownHostId = isRoomCreator
-      ? pId
-      : (state?.hostId || state?.players.find((p) => p.isHost)?.id || '');
+    const knownHostId = state
+      ? resolveHostId({ isRoomCreator, myId: pId, incoming: state })
+      : isRoomCreator
+        ? pId
+        : '';
 
     if (!state || state.roomId !== normalizedRoomId) {
       state = {
@@ -177,23 +178,12 @@ class UniversalPartyManager {
       };
     }
 
-    const uniqueName = ensureUniquePlayerName(playerName || 'Spieler', state.players, pId);
-    const existingIndex = state.players.findIndex((p) => p.id === pId);
-    const playerEntry: PartyPlayer = {
-      id: pId,
-      name: uniqueName,
-      avatarColor: PLAYER_COLORS[(existingIndex >= 0 ? existingIndex : state.players.length) % PLAYER_COLORS.length],
-      isHost: isRoomCreator || (knownHostId === pId),
-      score: existingIndex >= 0 ? state.players[existingIndex].score : 0,
-      joinedAt: Date.now(),
-    };
-
-    const newPlayers = [...state.players];
-    if (existingIndex >= 0) {
-      newPlayers[existingIndex] = playerEntry;
-    } else {
-      newPlayers.push(playerEntry);
-    }
+    const { players: newPlayers, player: playerEntry } = upsertJoiningPlayer(state.players, {
+      playerId: pId,
+      name: playerName,
+      isHost: isRoomCreator || knownHostId === pId,
+      now: Date.now(),
+    });
 
     const updatedState: PartyRoomState = {
       ...state,
@@ -215,7 +205,11 @@ class UniversalPartyManager {
     return this.joinParty(roomId, newName);
   }
 
-  public launchGame(roomId: string, gameType: PartyGameType, gameId?: string): PartyRoomState | null {
+  public launchGame(
+    roomId: string,
+    gameType: PartyGameType,
+    gameId?: string,
+  ): PartyRoomState | null {
     if (!this.currentRoomState || this.currentRoomState.roomId !== roomId) {
       return null;
     }
@@ -225,7 +219,7 @@ class UniversalPartyManager {
       status: 'in_game',
       activeGame: gameType,
       gameId: gameId || null,
-      tabletopGameId: gameType === 'tabletop' ? (gameId || null) : null,
+      tabletopGameId: gameType === 'tabletop' ? gameId || null : null,
       updatedAt: Date.now(),
     };
 
@@ -278,17 +272,9 @@ class UniversalPartyManager {
 
       // Handle presence pings
       if (incoming.type === 'PARTY_PRESENCE' && incoming.player) {
-        const p = incoming.player;
         if (this.currentRoomState && this.currentRoomState.roomId === roomId) {
-          const exists = this.currentRoomState.players.some((pl) => pl.id === p.id);
-          if (!exists) {
-            const uniqueName = ensureUniquePlayerName(p.name, this.currentRoomState.players, p.id);
-            const resolvedPlayer: PartyPlayer = { ...p, name: uniqueName };
-            const updated = {
-              ...this.currentRoomState,
-              players: [...this.currentRoomState.players, resolvedPlayer],
-              updatedAt: Date.now(),
-            };
+          const updated = addPresencePlayer(this.currentRoomState, incoming.player, Date.now());
+          if (updated) {
             this.currentRoomState = updated;
             this.notifyListeners();
             if (this.isHost(roomId)) {
@@ -310,51 +296,16 @@ class UniversalPartyManager {
 
   private handleIncomingState(incomingState: PartyRoomState, roomId: string): void {
     const myId = this.getMyPlayerId();
-    const isRoomCreator = Boolean(sessionStorageSafe.get(`${STORAGE_PREFIXES.PARTY_HOST_ID}${roomId}`));
+    const isRoomCreator = Boolean(
+      sessionStorageSafe.get(`${STORAGE_PREFIXES.PARTY_HOST_ID}${roomId}`),
+    );
 
-    if (this.currentRoomState && this.currentRoomState.roomId === roomId) {
-      const mergedPlayersMap = new Map<string, PartyPlayer>();
-      
-      // Preserve all locally known players
-      this.currentRoomState.players.forEach((p) => mergedPlayersMap.set(p.id, p));
-      // Merge incoming players
-      incomingState.players.forEach((p) => {
-        const existing = mergedPlayersMap.get(p.id);
-        mergedPlayersMap.set(p.id, {
-          ...p,
-          score: existing ? Math.max(existing.score, p.score || 0) : p.score || 0,
-        });
-      });
-
-      const resolvedHostId = isRoomCreator
-        ? myId
-        : (incomingState.hostId || this.currentRoomState.hostId || incomingState.players.find((p) => p.isHost)?.id || this.currentRoomState.players.find((p) => p.isHost)?.id || '');
-
-      const mergedPlayers = Array.from(mergedPlayersMap.values()).map((p) => ({
-        ...p,
-        isHost: p.id === resolvedHostId || Boolean(p.isHost && !resolvedHostId),
-      }));
-
-      this.currentRoomState = {
-        ...incomingState,
-        hostId: resolvedHostId,
-        players: mergedPlayers,
-        updatedAt: Date.now(),
-      };
-    } else {
-      const resolvedHostId = isRoomCreator
-        ? myId
-        : (incomingState.hostId || incomingState.players.find((p) => p.isHost)?.id || '');
-
-      this.currentRoomState = {
-        ...incomingState,
-        hostId: resolvedHostId,
-        players: incomingState.players.map((p) => ({
-          ...p,
-          isHost: p.id === resolvedHostId || Boolean(p.isHost && !resolvedHostId),
-        })),
-      };
-    }
+    const current = this.currentRoomState?.roomId === roomId ? this.currentRoomState : null;
+    this.currentRoomState = mergeIncomingState(current, incomingState, {
+      myId,
+      isRoomCreator,
+      now: Date.now(),
+    });
 
     storage.setJson(`${STORAGE_PREFIXES.PARTY_STATE}${roomId}`, this.currentRoomState);
     this.notifyListeners();

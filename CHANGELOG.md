@@ -14,6 +14,7 @@
 
 ### Refactored
 
+- **Party lobby**: roster rules (host resolution, roster/score merge, presence join, host and player upsert) moved from `UniversalPartyManager` into pure functions in `src/features/party/logic/partyRoster.ts` with tests; host resolution exists once instead of in two branches (#415).
 - **WebRTC (Melodiq)**: the `identify` handling (name/hue/deviceId, replacing an earlier peer of the same device, `onPeerUpdated`) existed twice in `WebRTCHostManager` — once per signaling path. It is now one `applyIdentity()` with the pure `findStalePeersByDevice()` in `src/lib/webrtc/peerRegistry.ts` (with tests) (#412).
 - **Dead code**: removed `src/games/melodiq/MelodiqSettings.tsx` and `components/SettingsFeedbackForm.tsx` (no importer; the settings route uses `MelodiqSettingsCategory`) (#423).
 - **Werewolf tests**: the scripts `logic/tests/verify_*.ts` never ran; their Easter Bunny, Hunter and Guardian scenarios are now Vitest tests in `logic/roleScenarios.test.ts` (#424).

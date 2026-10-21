@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Party roster rules extracted (claude-code)
+
+- #415: no doc described the roster rules; `CHANGELOG.md` updated.
+- **Code changed:** new `src/features/party/logic/partyRoster.ts` (+ tests), `universalPartyManager.ts` uses it.
+
 ## 2026-10-21 — WebRTC host identity dedup (claude-code)
 
 - #412: no doc described the duplicated identity handling; `CHANGELOG.md` updated.
