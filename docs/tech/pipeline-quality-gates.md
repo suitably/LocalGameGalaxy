@@ -8,7 +8,7 @@ The following deterministic tools have been evaluated and integrated into our pi
 
 ### Code Quality & Types
 
-- **ESLint (`npm run lint`)**: Enforces code style, prevents common errors, and ensures React best practices are followed.
+- **ESLint (`npm run lint`)**: Enforces code style, prevents common errors, and ensures React best practices are followed. Errors fail the lint step; warnings are held by a per-file ratchet (`npm run check:lint-budget`, see [coding-conventions](coding-conventions.md#eslint-warning-budget)) so they can only decrease.
 - **TypeScript Compiler (`tsc -b`)**: Provides strict static typing (`strict: true` in `tsconfig.app.json`, which includes `noImplicitAny` — explicit `any` is still allowed by the compiler and only warned by ESLint), preventing runtime type errors and ensuring contract compliance between modules.
 - **Prettier**: Ensures consistent code formatting across the entire codebase.
 

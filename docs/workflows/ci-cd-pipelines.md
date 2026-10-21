@@ -83,7 +83,7 @@ flowchart LR
    - Enforces zero cross-game imports (`src/games/<A>` cannot import from `src/games/<B>`).
    - Forbids raw `localStorage` / `sessionStorage` (mandates `src/lib/storage.ts`).
    - Forbids native blocking dialogs (`window.confirm()`, `window.prompt()`, `alert()`).
-   - Does **not** check `any` (ESLint only warns — [open-questions Q3](../open-questions.md#q3--no-any-is-documented-as-enforced-but-is-not)) and does not check inline `BroadcastChannel`.
+   - Does **not** check `any` (that is the ESLint [warning budget](../tech/coding-conventions.md#eslint-warning-budget)) and does not check inline `BroadcastChannel`.
    - Also fails on tracked server media; warns (does not fail) on `.tsx` files over 300 lines.
 2. **Component Size Budget Gate (`check:budget`)**:
    - Enforces max 250 lines per `.tsx` component file.
@@ -156,9 +156,10 @@ The project divides developer validation by cost into tiered stages to ensure ra
 2. **Pre-Push Hook (`.husky/pre-push`)** (< 2 min):
    - Runs component size budget check (`npm run check:budget`).
    - Runs code duplication scan (`npm run check:duplicates`).
+   - Runs the per-file ESLint warning budget (`npm run check:lint-budget`).
    - Runs unit test suite (`npm test`).
 3. **Local Suite Shortcut (`npm run quality-gates`)**:
-   - Runs the full local test and lint suite (`check:hygiene && check:architecture:diff && check:budget && check:duplicates && lint && test`).
+   - Runs the full local test and lint suite (`check:hygiene && check:architecture:diff && check:budget && check:duplicates && lint && check:lint-budget && test`).
 4. **CI Server Quality Gates (`ci.yml`)**:
    - Executes deterministic prechecks, full validation, companion server tests, and Cloudflare deployment on push/PR.
 

@@ -2,6 +2,12 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — ESLint warning budget, Q3 resolved (claude-code)
+
+- New gate `check:lint-budget` (#421): per-file warning ratchet with `scripts/lint-warning-baselines.json`; documented in `tech/coding-conventions.md#eslint-warning-budget`, `tech/pipeline-quality-gates.md`, `workflows/ci-cd-pipelines.md`, AGENTS.md.
+- Q3 (`any` not enforced) resolved by the maintainer's choice of a ratchet; item removed, links in `architecture.md`, `tasks/index.md`, `ci-cd-pipelines.md` repointed.
+- **Code and CI configuration outside `docs/` changed** (`scripts/`, `package.json`, `.husky/pre-push`, `ci.yml`).
+
 ## 2026-10-21 — Issue cleanup (claude-code)
 
 - GitHub: closed 12 Jules audit issues (#350–#401, #386 as completed via #405), #361 (wrong premise), #247, #244 (answered), #347 (duplicate of #356); status comment on #342.

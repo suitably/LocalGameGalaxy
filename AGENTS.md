@@ -36,7 +36,7 @@ The full rule set with what enforces each rule lives in [`docs/tech/coding-conve
 - **Component budget:** new `.tsx` files ≤ 250 lines (aim < 160 for orchestrators); files in `scripts/legacy-component-baselines.json` must never grow, and are removed from it once ≤ 250. Decompose into a `use<Feature>State.ts` hook, focused sub-components and a co-located `types.ts`. _(check:budget fails)_
 - **Pure game logic** in `logic/*.ts` with Vitest tests; components hold no game rules.
 - **Discriminated unions** instead of contradictory boolean flags.
-- **No `any`** in new or changed code — use generics, interfaces or `unknown` with guards. _(ESLint only warns; existing debt: Q3)_
+- **No `any`** in new or changed code — use generics, interfaces or `unknown` with guards. _(ESLint warning; `check:lint-budget` fails if a file gains warnings)_
 - **No inline `BroadcastChannel`** in games — use `useMultiChannelSync()`. _(review only; Melodiq still violates it: Q4)_
 - **No hardcoded UI strings** (§6).
 - **Header:** integrate with `GlobalHeader` via `TitleContext` / `HeaderLayoutContext` (`usePageTitle`, `useHeaderLayout`); `LayoutContext` is the backward-compatible composite. No second top bar, no floating hub-exit buttons.
@@ -85,13 +85,14 @@ npm run check:budget            # 250-line budget + legacy ratchet
 npm run check:duplicates        # jscpd
 npm run check:docs              # doc-sync gate: core changes in src/games|modules|lib need CHANGELOG/docs/tech/AGENTS/README/locales
 npm run lint                    # ESLint, 0 errors
+npm run check:lint-budget       # per-file warning ratchet (lower baselines with -- --update)
 npm test                        # Vitest
 npm run build                   # tsc -b && vite build
-npm run quality-gates           # hygiene + architecture:diff + budget + duplicates + lint + test
+npm run quality-gates           # hygiene + architecture:diff + budget + duplicates + lint + lint-budget + test
 cd server && npm run build && npm test   # when server/ changed (tests run against dist/)
 ```
 
-Hooks: pre-commit = `lint-staged` + `check:hygiene` + `check:architecture:diff`; pre-push = `check:budget` + `check:duplicates` + `npm test`.
+Hooks: pre-commit = `lint-staged` + `check:hygiene` + `check:architecture:diff`; pre-push = `check:budget` + `check:duplicates` + `check:lint-budget` + `npm test`.
 
 ## 9. Keeping the knowledge bundle correct (OKF v0.2)
 

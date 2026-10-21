@@ -1,1 +1,1 @@
-npm run check:budget && npm run check:duplicates && npm test
+npm run check:budget && npm run check:duplicates && npm run check:lint-budget && npm test

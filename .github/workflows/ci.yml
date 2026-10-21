@@ -94,6 +94,9 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
+      - name: ESLint warning budget (per-file ratchet)
+        run: npm run check:lint-budget
+
       - name: Production Security Audit (advisory, high severity)
         continue-on-error: true
         run: npm run check:security
