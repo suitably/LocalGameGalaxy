@@ -1,7 +1,11 @@
 /**
  * Tabletop IndexedDB Storage Repository [ID: GAME-TABLETOP-STORAGE]
  */
-import { requestToPromise, runWithStore, cursorCollect } from '../../../modules/async-game/idbHelper';
+import {
+  requestToPromise,
+  runWithStore,
+  cursorCollect,
+} from '../../../modules/async-game/idbHelper';
 import type { TabletopGameDefinition, TabletopGameSummary } from './types';
 
 const DB_NAME = 'galaxy_tabletop_db';
@@ -65,29 +69,31 @@ export async function listTabletopGames(): Promise<TabletopGameSummary[]> {
     const cursorReq = store.openCursor();
     const fullGames = await cursorCollect<TabletopGameDefinition>(cursorReq);
 
-    return fullGames.map((g) => {
-      let cardCount = 0;
-      let widgetCount = 0;
-      for (const w of Object.values(g.widgets || {})) {
-        widgetCount++;
-        if (w.type === 'card') cardCount++;
-        else if (w.type === 'deck') cardCount += w.cardIds?.length || 0;
-      }
+    return fullGames
+      .map((g) => {
+        let cardCount = 0;
+        let widgetCount = 0;
+        for (const w of Object.values(g.widgets || {})) {
+          widgetCount++;
+          if (w.type === 'card') cardCount++;
+          else if (w.type === 'deck') cardCount += w.cardIds?.length || 0;
+        }
 
-      return {
-        id: g.id,
-        name: g.name,
-        description: g.description,
-        author: g.author,
-        version: g.version || '1.0.0',
-        minPlayers: g.minPlayers ?? 1,
-        maxPlayers: g.maxPlayers ?? 8,
-        supportedModes: g.supportedModes || ['party_multi_device', 'local_pass_and_play', 'solo'],
-        cardCount,
-        widgetCount,
-        updatedAt: g.updatedAt || 0,
-      };
-    }).sort((a, b) => b.updatedAt - a.updatedAt);
+        return {
+          id: g.id,
+          name: g.name,
+          description: g.description,
+          author: g.author,
+          version: g.version || '1.0.0',
+          minPlayers: g.minPlayers ?? 1,
+          maxPlayers: g.maxPlayers ?? 8,
+          supportedModes: g.supportedModes || ['party_multi_device', 'local_pass_and_play', 'solo'],
+          cardCount,
+          widgetCount,
+          updatedAt: g.updatedAt || 0,
+        };
+      })
+      .sort((a, b) => b.updatedAt - a.updatedAt);
   });
 }
 
