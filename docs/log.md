@@ -2,6 +2,13 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Leaner agent context (claude-code)
+
+- `AGENTS.md`: reuse catalog (§5) moved into `tech/architecture.md` §3.2, OKF editing rules (§9) moved to new `workflows/knowledge-base-maintenance.md`, Capacitor section (§7) shortened to a pointer to `tech/styling.md`; §1 now asks for targeted doc reads (one doc, grep `game-catalog.md`) instead of reading index, open questions and catalog up front. File shrank from ~13 KB to ~8 KB; it is loaded into every Claude Code session via `CLAUDE.md`.
+- `CLAUDE.md`: session start no longer reads `index.md` and `open-questions.md` unconditionally; gate output hint.
+- Incoming anchors fixed in `tech/coding-conventions.md` and `CONTRIBUTING.md`; `index.md` and `workflows/index.md` list the new doc.
+- **Configuration outside `docs/` changed:** new `.claude/settings.json` (deny `Read` on secrets — `config.json`, `.env*`, keystores, VAPID keys — and generated/media folders), `.gitignore` ignores `.claude/settings.local.json`. No application code changed.
+
 ## 2026-10-21 — Issue cleanup (claude-code)
 
 - GitHub: closed 12 Jules audit issues (#350–#401, #386 as completed via #405), #361 (wrong premise), #247, #244 (answered), #347 (duplicate of #356); status comment on #342.

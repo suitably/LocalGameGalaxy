@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-18
+  at: 2026-10-21
   method: 'read against src/lib/gameRegistry.tsx, src/modules/*, src/context/*, src/lib/storage.ts, server/src/{index,config}.ts, server/src/core/*, server/src/plugins/*, signaling/src/index.js'
 sources:
   - 'src/lib/gameRegistry.tsx'
@@ -99,6 +99,19 @@ The full per-game table (route, size, storage, sync, i18n source, shared modules
 | `sharing`           | `ShareSessionLinksDialog`, `EditSessionDialog`, `parseGameUrlParams`, `cleanWindowUrlQuery`, `useGameJoinUrl`                                        | guessart, storyteller, wordle, garticphone          |
 | `async-game`        | `createIdbStoreOperations`, `runWithStore`, `createOpenDatabase` (raw IndexedDB helpers)                                                             | guessart, storyteller, tabletop                     |
 | `audio`             | `MicrophoneManager`, `AudioUtils` (autocorrelation pitch, RMS gate, MIDI mapping)                                                                    | melodiq, melodiq-notes                              |
+
+Other shared building blocks outside `src/modules/` (check these before writing a new one — this is the reuse catalog [AGENTS.md](../../AGENTS.md) points to):
+
+| Building block         | Path                                                                  | Provides                                                                       |
+| ---------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Confirm dialog         | `src/components/common/ConfirmDialog.tsx`                             | MUI confirmation modal (replaces `confirm()`)                                  |
+| 3D dice                | `src/components/games/Die3D.tsx`                                      | animated die                                                                   |
+| Header & titles        | `src/context/TitleContext.tsx`, `src/context/HeaderLayoutContext.tsx` | `usePageTitle`, `useHeaderLayout` — actions, menu items, safe hub exit (§3.4)  |
+| Push                   | `src/components/push/`, `src/lib/push/pushClient.ts`                  | permission banner, settings, Web Push / ntfy client (§3.3)                     |
+| Storage                | `src/lib/storage.ts`                                                  | key/value storage with memory fallback, `STORAGE_KEYS` (§3.5)                  |
+| Wake lock, orientation | `src/hooks/useWakeLock.ts`, `src/hooks/useScreenOrientation.ts`       | keep screen on, lock orientation                                               |
+| GitHub publishing      | `src/lib/github.ts`                                                   | `createGitHubPR` (REST via `fetch`)                                            |
+| WebRTC                 | `src/lib/webrtc/`                                                     | `WebRTCHostManager`, `useWebRTCClient`, `WebRTCHostContext`, `trackerLogic.ts` |
 
 ### 3.3 Notifications (Web Push + ntfy)
 

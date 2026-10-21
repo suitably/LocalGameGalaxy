@@ -6,9 +6,9 @@ The knowledge base is [`docs/`](docs/index.md) (Open Knowledge Format v0.2). Sta
 
 ## 1. Before you act
 
-1. Read [`docs/index.md`](docs/index.md), then the doc for your area. For anything game-specific read [`docs/tech/game-catalog.md`](docs/tech/game-catalog.md) first.
-2. Check [`docs/open-questions.md`](docs/open-questions.md) — your topic may have a known contradiction or a pending maintainer decision. Do not silently "fix" an item marked _(user)_.
-3. **Verify, don't trust.** Every doc carries `verified.at`. Code wins over docs; if they disagree, fix the doc in the same change or add an open question. Quick checks are in §9.
+1. For changes, find your area in [`docs/index.md`](docs/index.md) and read **only** that doc. For a game, grep its row in [`docs/tech/game-catalog.md`](docs/tech/game-catalog.md) (`grep -n -i "<game>" docs/tech/game-catalog.md` returns its line from every table) instead of reading the whole file. Pure questions and trivial fixes need no doc reading.
+2. Before changing behaviour, grep [`docs/open-questions.md`](docs/open-questions.md) for your topic — it may have a known contradiction or a pending maintainer decision. Do not silently "fix" an item marked _(user)_.
+3. **Verify, don't trust.** Every doc carries `verified.at`. Code wins over docs; if they disagree, fix the doc in the same change or add an open question. Quick checks are in §10.
 4. Read the target file and its neighbouring tests before editing. Check open PRs for overlapping work (`gh pr list`).
 
 ## 2. Environment and workflow
@@ -18,7 +18,7 @@ The knowledge base is [`docs/`](docs/index.md) (Open Knowledge Format v0.2). Sta
 - Branches `feature/…`, `bugfix/…`, `docs/…`, `refactor/…`, `chore/…`; commits in Conventional Commits ([CONTRIBUTING.md](CONTRIBUTING.md)). The PR title prefix matters: `chore|refactor|style|test|docs|perf:` bypasses the doc-sync gate.
 - Husky runs gates on commit and push. Do not bypass them with `--no-verify`.
 - Do not edit generated or local-only paths: `dist/`, `dev-dist/`, `server/dist/`, `node_modules/`, `android/app/build/`, `android/local.properties`, `server/music/`.
-- **Secrets — do not read, print or commit:** any `config.json` (server token, USDB password, GitHub token), `.env*`, keystores (`*.jks`, `*.keystore`, `*.p12`), `android/app/release.jks`. Use `server/config.example.json` for examples.
+- **Secrets — do not read, print or commit:** any `config.json` (server token, USDB password, GitHub token), `.env*`, keystores (`*.jks`, `*.keystore`, `*.p12`), `android/app/release.jks`. Use `server/config.example.json` for examples. For Claude Code these reads (plus generated folders) are blocked in `.claude/settings.json`.
 
 ## 3. Scope control and incremental delivery
 
@@ -46,22 +46,7 @@ The full rule set with what enforces each rule lives in [`docs/tech/coding-conve
 
 ## 5. Reuse catalog
 
-| Module                 | Path                                                      | Provides                                                                                                      |
-| :--------------------- | :-------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------ |
-| Player management      | `src/modules/player-management`                           | `PlayerManagerCard`, `useLobbyPlayers`, `playerLogic.ts` — lobby lists, add/remove, min/max, persistence      |
-| Sync & mailbox         | `src/modules/sync`                                        | `MqttMailboxService<T>` (HiveMQ → EMQX, LZString, dedup), `useMultiChannelSync` (BroadcastChannel + MQTT)     |
-| Drawing                | `src/modules/drawing`                                     | `DrawingCanvas`, `ExcalidrawViewer`, `ExcalidrawLazy`, `excalidrawScene.ts`                                   |
-| Sharing                | `src/modules/sharing`                                     | `ShareSessionLinksDialog`, `EditSessionDialog`, `useGameJoinUrl`, `parseGameUrlParams`, `cleanWindowUrlQuery` |
-| Async game IDB         | `src/modules/async-game`                                  | `createOpenDatabase`, `createIdbStoreOperations`, `runWithStore`, `cursorCollect`                             |
-| Audio                  | `src/modules/audio`                                       | `MicrophoneManager`, `AudioUtils` — pitch detection, RMS gate, MIDI mapping                                   |
-| Confirm dialog         | `src/components/common/ConfirmDialog.tsx`                 | MUI confirmation modal                                                                                        |
-| 3D dice                | `src/components/games/Die3D.tsx`                          | animated die                                                                                                  |
-| Header & titles        | `src/context/TitleContext.tsx`, `HeaderLayoutContext.tsx` | `usePageTitle`, `useHeaderLayout`, actions, menu items, safe hub exit                                         |
-| Push                   | `src/components/push/`, `src/lib/push/pushClient.ts`      | permission banner, settings, Web Push / ntfy client                                                           |
-| Storage                | `src/lib/storage.ts`                                      | key/value storage with memory fallback, `STORAGE_KEYS`                                                        |
-| Wake lock, orientation | `src/hooks/useWakeLock.ts`, `useScreenOrientation.ts`     | keep screen on, lock orientation                                                                              |
-| GitHub publishing      | `src/lib/github.ts`                                       | `createGitHubPR` (REST via `fetch`)                                                                           |
-| WebRTC                 | `src/lib/webrtc`                                          | `WebRTCHostManager`, `useWebRTCClient`, `WebRTCHostContext`, tracker logic                                    |
+Before building anything shared (player rosters, sync, dice, dialogs, header actions, storage, push, WebRTC, wake lock), check the tables in [`docs/tech/architecture.md` §3.2](docs/tech/architecture.md#32-shared-modules-srcmodules). Extend what is listed there; never build a second implementation.
 
 ## 6. i18n
 
@@ -70,10 +55,7 @@ The full rule set with what enforces each rule lives in [`docs/tech/coding-conve
 
 ## 7. Capacitor (Android) UI
 
-- Safe areas: `var(--safe-area-inset-top)` from `capacitor-plugin-safe-area` on root containers and full-screen overlays; fallback `env(safe-area-inset-top, 0px)`.
-- Touch: `user-select: none`, `-webkit-touch-callout: none` (except inputs), `-webkit-tap-highlight-color: transparent`, `overscroll-behavior-y: contain`.
-- Back button: `App.addListener('backButton', …)` — close modals / navigate before exiting.
-- After web changes that must reach the app: `npm run build && npx cap sync android`.
+Safe areas, touch CSS and theme rules: [`docs/tech/styling.md`](docs/tech/styling.md). Back button: `App.addListener('backButton', …)` — close modals / navigate before exiting. After web changes that must reach the app: `npm run build && npx cap sync android`.
 
 ## 8. Verification
 
@@ -95,41 +77,12 @@ Hooks: pre-commit = `lint-staged` + `check:hygiene` + `check:architecture:diff`;
 
 ## 9. Keeping the knowledge bundle correct (OKF v0.2)
 
-Format: one concept per markdown file, YAML front matter, progressive disclosure through `index.md` files ([spec](docs/references/external-sources.md#okf)).
+Before editing `docs/`, read [`docs/workflows/knowledge-base-maintenance.md`](docs/workflows/knowledge-base-maintenance.md) (front matter, links, lifecycle). The non-negotiables:
 
-**Front matter for concept docs** (everything except `index.md` files, `log.md`, `open-questions.md`):
-
-```yaml
----
-type: Reference | Howto | Report | ADR | Task
-title: '…'
-description: 'One sentence — agents use it to decide whether to open the file.'
-tags: […]
-status: stable | draft | deprecated
-generated:
-  at: 2026-10-18T15:00:00+02:00 # last meaningful content edit
-  by: claude-code # tool/agent name, no model ids
-verified:
-  at: 2026-10-18 # last time claims were checked against the code
-  method: 'what you read or ran'
-sources:
-  - 'src/… or URL'
----
-```
-
-Rules:
-
-- Only the root `docs/index.md` carries `okf_version`. Directory `index.md` files have no front matter.
-- **Relative markdown links** with `.md` (`[text](../tech/persistence.md#2-indexeddb-databases)`). Never `file:///…` or absolute home paths.
-- **One topic, one home.** Link to the owning doc instead of copying facts — duplicated facts drift (the 2026-10-18 audit found 149 broken references).
-- Document what the code **does**, not what it should do. Name real files and symbols; check that they exist (`grep -rn <symbol> src server/src`) before writing them down.
-- Mark uncertainty: `**Unverified:**`, `**Inference:**`.
-- Contradiction you cannot resolve → add it to [`docs/open-questions.md`](docs/open-questions.md); resolved → move the answer into the owning doc, delete the item, note it in [`docs/log.md`](docs/log.md).
-- Every change to the bundle → an entry at the top of [`docs/log.md`](docs/log.md) (`## YYYY-MM-DD — summary (agent)`; say whether code outside `docs/` changed).
-- One-off investigations, audits, evaluations → `docs/reports/YYYY-MM-DD-topic.md`, never updated later except for corrections.
-- Finished task specs and retired setups → `status: deprecated`, move to `docs/archive/`, fix incoming links. Open task specs live in `docs/tasks/` and mirror GitHub issues.
-- New file → add it to its directory `index.md` and, if top-level relevant, to the table in `docs/index.md`.
-- Architecture, data model, storage key, sync message, server route or game changes → update the owning doc (`architecture.md`, `game-catalog.md`, `persistence.md`, `sync-protocol.md`, …) in the same PR.
+- Code wins over docs. Name only files and symbols you confirmed with `grep`; mark guesses `**Unverified:**`.
+- One topic, one home — link, don't copy.
+- Architecture, data model, storage key, sync message, server route or game changes → update the owning doc in the same PR.
+- Every change to `docs/` → entry at the top of [`docs/log.md`](docs/log.md). Unresolvable contradiction → [`docs/open-questions.md`](docs/open-questions.md).
 - Write docs in **English**.
 
 ## 10. Quick facts (read-only)
