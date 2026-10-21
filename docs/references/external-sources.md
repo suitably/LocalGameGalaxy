@@ -66,5 +66,4 @@ These are public services without an SLA. Game state sent over MQTT is readable 
 | Cloudflare Workers static assets (`nexumia`)                                                                             | `wrangler.jsonc`, `ci.yml` job `deploy-cloudflare`          |
 | Docker Hub `<DOCKERHUB_USERNAME>/nexumia-server` and `/melodiq-server` (targets `base`, `full`)                          | `docker-publish.yml`                                        |
 | Docker Hub `nexumia/galaxy-signaling` (consumed by compose files; **Unverified:** no workflow in this repo publishes it) | `server/docker-compose.yml`, `signaling/docker-compose.yml` |
-| [Google Jules](https://jules.google.com/)                                                                                | `jules-start.yml`, `jules-audit.yml`                        |
 | GitLab mirror `Xilance/localgamegalaxy` (SAST, secret detection)                                                         | `.gitlab-ci.yml`                                            |

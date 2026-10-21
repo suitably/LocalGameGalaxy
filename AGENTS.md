@@ -1,6 +1,6 @@
 # AGENTS.md — operating rules for agents in LocalGameGalaxy
 
-You are working in `suitably/LocalGameGalaxy` (product name **Nexumia**): an offline-first React 19 / Vite PWA with 15 local party games, an optional Hono companion server (`server/`) and a signaling tracker (`signaling/`). Other agents (Jules, Copilot, Claude Code) read this file too — `.github/copilot-instructions.md` and `CLAUDE.md` point here.
+You are working in `suitably/LocalGameGalaxy` (product name **Nexumia**): an offline-first React 19 / Vite PWA with 15 local party games, an optional Hono companion server (`server/`) and a signaling tracker (`signaling/`). Other agents (Copilot, Claude Code) read this file too — `.github/copilot-instructions.md` and `CLAUDE.md` point here.
 
 The knowledge base is [`docs/`](docs/index.md) (Open Knowledge Format v0.2). Start there.
 
@@ -9,7 +9,7 @@ The knowledge base is [`docs/`](docs/index.md) (Open Knowledge Format v0.2). Sta
 1. Read [`docs/index.md`](docs/index.md), then the doc for your area. For anything game-specific read [`docs/tech/game-catalog.md`](docs/tech/game-catalog.md) first.
 2. Check [`docs/open-questions.md`](docs/open-questions.md) — your topic may have a known contradiction or a pending maintainer decision. Do not silently "fix" an item marked _(user)_.
 3. **Verify, don't trust.** Every doc carries `verified.at`. Code wins over docs; if they disagree, fix the doc in the same change or add an open question. Quick checks are in §9.
-4. Read the target file and its neighbouring tests before editing. Check open PRs for overlapping work (`gh pr list`) — many branches are opened by Jules and stacked on each other.
+4. Read the target file and its neighbouring tests before editing. Check open PRs for overlapping work (`gh pr list`).
 
 ## 2. Environment and workflow
 

@@ -1,14 +1,14 @@
 ---
 type: Reference
 title: 'CI/CD pipelines'
-description: 'All seven GitHub Actions workflows (CI gate + Cloudflare deploy, preview cleanup, gated release, push relay, Docker images, Jules start/audit), the local Husky hooks, repository secrets, branch protection and the GitLab mirror.'
-tags: [ci, cd, github-actions, gitlab, release, cloudflare, docker, jules]
+description: 'All five GitHub Actions workflows (CI gate + Cloudflare deploy, preview cleanup, gated release, push relay, Docker images), the local Husky hooks, repository secrets, branch protection and the GitLab mirror.'
+tags: [ci, cd, github-actions, gitlab, release, cloudflare, docker]
 status: stable
 generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-18
+  at: 2026-10-21
   method: 'read .github/workflows/*.yml, .github/rulesets/main.json, .husky/*, .gitlab-ci.yml, .jscpd.json, scripts/check-*.mjs'
 sources:
   - '.github/workflows/'
@@ -17,7 +17,7 @@ sources:
   - 'merged from: previous version of 2026-09-27'
 ---
 
-# CI/CD & Multi-Agent Pipelines Architecture
+# CI/CD Pipelines Architecture
 
 This document serves as the Single Source of Truth (SSoT) for all continuous integration, automated deployment, and autonomous multi-agent pipelines in LocalGameGalaxy.
 
@@ -39,15 +39,10 @@ flowchart TD
         DockerPublish["Docker Hub Publishing<br/>(docker-publish.yml)"]
     end
 
-    subgraph Autonomous["Tier 3: Multi-Agent Cloud Ecosystem"]
-        JulesPlan["Jules Streaming Pipe<br/>(jules-start.yml, jules-audit.yml)"]
-    end
-
     CodePush["Git Push / PR to main"] --> CI
     RelayCode["Push to server/cloudflare-push-relay/**"] --> CF_Relay
     TagPush["Git Tag v*"] --> Release
     Release -.->|Reusable Workflow Call| DockerPublish
-    IssueActivity["Issue comment /jules"] --> JulesPlan
 ```
 
 ### Complete Pipeline Inventory
@@ -59,8 +54,6 @@ flowchart TD
 | [`.github/workflows/release.yml`](../../.github/workflows/release.yml)                     | **Release (Consolidated & Gated)** | `push` tags (`v*`), `workflow_dispatch`                                 | Gated draft release, signed Android APK, server binaries (Linux/Win/macOS), Docker publish, and auto-undraft                                                |
 | [`.github/workflows/deploy-push-relay.yml`](../../.github/workflows/deploy-push-relay.yml) | **Deploy Cloudflare Push Relay**   | `push` (main on `server/cloudflare-push-relay/**`), `workflow_dispatch` | Deploys serverless Web Push & ntfy relay worker to Cloudflare                                                                                               |
 | [`.github/workflows/docker-publish.yml`](../../.github/workflows/docker-publish.yml)       | **Build and Push Docker Images**   | `push` (main on `server/**`), `workflow_call`, `workflow_dispatch`      | Multi-target build: `base` and `full` (with `audio-separator` + `whisper-timestamped`) to Docker Hub as `<user>/nexumia-server` and `<user>/melodiq-server` |
-| [`.github/workflows/jules-start.yml`](../../.github/workflows/jules-start.yml)             | **Jules Start & Stream**           | `issue_comment` (`/jules`), `workflow_dispatch`                         | Dispatches session & streams progress live to issue until PR delivery                                                                                       |
-| [`.github/workflows/jules-audit.yml`](../../.github/workflows/jules-audit.yml)             | **Jules Scheduled Audit**          | `schedule` (cron daily), `workflow_dispatch`                            | Runs scheduled repository audit agents defined in `.github/agents/*.md`                                                                                     |
 
 ---
 
@@ -171,9 +164,9 @@ The project divides developer validation by cost into tiered stages to ensure ra
 
 ---
 
-## 3. Jules Streaming Pipeline
+## 3. Jules Streaming Pipeline (removed)
 
-See [jules-pipeline-workflow.md](jules-pipeline-workflow.md). Comment `/jules` on an issue → `jules-start.yml` dispatches the task to Jules and keeps the runner active in a live polling stream, posting progress back to the issue until a PR is opened or the session completes.
+Removed on 2026-10-21; see [archive/jules-pipeline-workflow.md](../archive/jules-pipeline-workflow.md).
 
 ---
 
@@ -181,18 +174,17 @@ See [jules-pipeline-workflow.md](jules-pipeline-workflow.md). Comment `/jules` o
 
 The following secrets are used across repository pipelines. Configure them under **GitHub Repository Settings $\rightarrow$ Secrets and variables $\rightarrow$ Actions**:
 
-| Secret Name                         | Consumed By                          | Description                                                                           | Mandatory?                                 |
-| :---------------------------------- | :----------------------------------- | :------------------------------------------------------------------------------------ | :----------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`              | `ci.yml`, `deploy-push-relay.yml`    | API token with Cloudflare Pages & Workers deployment permissions                      | Required for web preview/prod & push relay |
-| `CLOUDFLARE_ACCOUNT_ID`             | `ci.yml`, `deploy-push-relay.yml`    | Cloudflare Account Identifier                                                         | Required for Cloudflare deployment         |
-| `DOCKERHUB_USERNAME`                | `docker-publish.yml`                 | Docker Hub account username                                                           | Required for Docker Hub image publishing   |
-| `DOCKERHUB_TOKEN`                   | `docker-publish.yml`                 | Docker Hub personal access token                                                      | Required for Docker Hub image publishing   |
-| `ANDROID_KEYSTORE_BASE64`           | `release.yml`                        | Base64-encoded release `.jks` Android signing keystore                                | Optional (falls back to debug if absent)   |
-| `ANDROID_KEYSTORE_PASSWORD`         | `release.yml`                        | Keystore password for Android release signing                                         | Optional                                   |
-| `ANDROID_KEY_ALIAS`                 | `release.yml`                        | Key alias in Android keystore (defaults to `nexumia`)                                 | Optional                                   |
-| `ANDROID_KEY_PASSWORD`              | `release.yml`                        | Key password for Android release signing                                              | Optional                                   |
-| `JULES_API_KEY` / `JULES_API_KEY_*` | `jules-start.yml`, `jules-audit.yml` | Primary Google Jules REST API key (from [jules.google.com](https://jules.google.com)) | Required for Jules agent                   |
-| `GITHUB_TOKEN`                      | All workflows                        | Automatically provided by GitHub Actions (`secrets.GITHUB_TOKEN`)                     | Automatic                                  |
+| Secret Name                 | Consumed By                       | Description                                                       | Mandatory?                                 |
+| :-------------------------- | :-------------------------------- | :---------------------------------------------------------------- | :----------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`      | `ci.yml`, `deploy-push-relay.yml` | API token with Cloudflare Pages & Workers deployment permissions  | Required for web preview/prod & push relay |
+| `CLOUDFLARE_ACCOUNT_ID`     | `ci.yml`, `deploy-push-relay.yml` | Cloudflare Account Identifier                                     | Required for Cloudflare deployment         |
+| `DOCKERHUB_USERNAME`        | `docker-publish.yml`              | Docker Hub account username                                       | Required for Docker Hub image publishing   |
+| `DOCKERHUB_TOKEN`           | `docker-publish.yml`              | Docker Hub personal access token                                  | Required for Docker Hub image publishing   |
+| `ANDROID_KEYSTORE_BASE64`   | `release.yml`                     | Base64-encoded release `.jks` Android signing keystore            | Optional (falls back to debug if absent)   |
+| `ANDROID_KEYSTORE_PASSWORD` | `release.yml`                     | Keystore password for Android release signing                     | Optional                                   |
+| `ANDROID_KEY_ALIAS`         | `release.yml`                     | Key alias in Android keystore (defaults to `nexumia`)             | Optional                                   |
+| `ANDROID_KEY_PASSWORD`      | `release.yml`                     | Key password for Android release signing                          | Optional                                   |
+| `GITHUB_TOKEN`              | All workflows                     | Automatically provided by GitHub Actions (`secrets.GITHUB_TOKEN`) | Automatic                                  |
 
 ---
 
@@ -210,9 +202,7 @@ The `main` branch is protected via a repository ruleset (`.github/rulesets/main.
 
 ## 6. Slash Commands
 
-| Command  | Action                                                                             |
-| :------- | :--------------------------------------------------------------------------------- |
-| `/jules` | Start a Jules session with the issue title + body (OWNER/MEMBER/COLLABORATOR only) |
+None. The `/jules` command was removed on 2026-10-21.
 
 ---
 
