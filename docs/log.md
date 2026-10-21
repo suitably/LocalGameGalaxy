@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — GuessArt transitions, slice 1 (claude-code)
+
+- #416: no doc described the engine internals; `CHANGELOG.md` updated.
+- **Code changed:** new `src/games/guessart/logic/transitions.ts` (+ tests), `engine.ts` `submitGuess`.
+
 ## 2026-10-21 — Lazy routes, Melodiq TV timer cleanup (claude-code)
 
 - #427: no doc described the route loading or the TV poll; `CHANGELOG.md` updated.
