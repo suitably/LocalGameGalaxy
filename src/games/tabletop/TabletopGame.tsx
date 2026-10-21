@@ -15,7 +15,7 @@ import {
 } from './logic/tabletopStorage';
 import { parsePcioFile } from './logic/pcioParser';
 import { storage } from '../../lib/storage';
-import { TabletopSurface } from './components/surface/TabletopSurface';
+import { TabletopEditor } from './components/editor/TabletopEditor';
 import { HandDockStrip } from './components/surface/HandDockStrip';
 import { TabletopControllerView } from './components/controller/TabletopControllerView';
 import { TabletopLobbyView } from './components/views/TabletopLobbyView';
@@ -186,7 +186,7 @@ export function TabletopGame() {
           Zurück zur Party-Lobby
         </Button>
         <RestartGameButton onRestart={restartGame} />
-        <TabletopSurface state={gameState} dispatch={syncedDispatch} isTvMode={true} />
+        <TabletopEditor state={gameState} dispatch={syncedDispatch} isTvMode={true} />
       </Box>
     );
   }
@@ -217,7 +217,7 @@ export function TabletopGame() {
       <Box display="flex" flexDirection="column" width="100%" height="100%" overflow="hidden">
         <Box flex={1} position="relative" minHeight={0}>
           <RestartGameButton onRestart={restartGame} />
-          <TabletopSurface state={gameState} dispatch={syncedDispatch} />
+          <TabletopEditor state={gameState} dispatch={syncedDispatch} />
         </Box>
         <HandDockStrip state={gameState} dispatch={syncedDispatch} />
       </Box>

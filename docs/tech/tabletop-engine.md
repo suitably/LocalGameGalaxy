@@ -43,10 +43,14 @@ Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`.
 - `logic/widgetEdits.ts` — pure `patchWidgets` (never `id`/`type`), `addWidget`, `deleteWidgets` (a deck takes its cards; deleted widgets leave holders and decks), `cloneWidget`, `updateTable`.
 - `logic/editHistory.ts` — `recordChange(history, before, after)` stores the forward delta and its inverse (`diffGame(after, before)`); `undoStep` / `redoStep` return the delta to dispatch as `APPLY_EDIT_DELTA`. Limit 100 entries.
 
-## 3. Sync
+## 3. Editor UI
+
+`components/editor/` (mounted by `TabletopGame` for the TV host and local play): `TabletopEditor` wraps the surface, `EditorToolbar` (edit mode, undo/redo, add widget from `logic/widgetTemplates.ts`, table settings), `WidgetInspector` + `InspectorFields` (common and per-type fields, duplicate, delete), `WidgetJsonEditor` (raw JSON, parsed by `parseWidgetPatch`), `TableSettingsDialog`. State lives in `useTabletopEditor` (selection, history recorded while edit mode is on; Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y, Delete). Selection works through `data-widget-id` on board widgets and holders, so the surface itself is unchanged.
+
+## 4. Sync
 
 Host-authoritative over `useMultiChannelSync`, see [sync-protocol](sync-protocol.md): non-host devices send `INTENT`s (every action except `LOAD_GAME`, `APPLY_REMOTE_DELTA`, `ANIMATE_CARD_TO_TABLE`, `FINISH_ANIMATION`), the host broadcasts `STATE_DELTA` (`logic/stateDelta.ts`) with a sequence number, gaps and joins get a `STATE_SNAPSHOT`. Random results are decided on the host.
 
-## 4. Storage
+## 5. Storage
 
 `galaxy_tabletop_db` v3 (see [persistence](persistence.md)): `custom_games` for imported/edited definitions, `sessions` for running games. `useTabletopAutosave` saves 1 s after a change on the host or in local play; `TabletopGame` resumes a saved session first, `RestartGameButton` deletes it.

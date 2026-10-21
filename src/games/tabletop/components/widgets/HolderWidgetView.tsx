@@ -21,6 +21,7 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({ widget, isHo
   if (widget.image) {
     return (
       <Box
+        data-widget-id={widget.id}
         sx={{
           position: 'absolute',
           left: widget.x,
@@ -58,6 +59,7 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({ widget, isHo
 
   return (
     <Box
+      data-widget-id={widget.id}
       sx={{
         position: 'absolute',
         left: widget.x,

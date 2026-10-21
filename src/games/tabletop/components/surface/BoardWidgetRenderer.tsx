@@ -34,7 +34,12 @@ export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
   dispatch,
 }) => {
   return (
-    <Box onContextMenu={onContextMenu} sx={{ display: 'contents' }}>
+    <Box
+      data-widget-id={w.id}
+      data-widget-wrapper
+      onContextMenu={onContextMenu}
+      sx={{ display: 'contents' }}
+    >
       {(() => {
         switch (w.type) {
           case 'card':

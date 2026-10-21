@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Tabletop editor UI (claude-code)
+
+- #449 slice 5: `docs/tech/tabletop-engine.md` §3 describes the editor components.
+- **Code changed:** `src/games/tabletop/components/editor/*`, `logic/widgetTemplates.ts`, `logic/widgetEdits.ts` (`parseWidgetPatch`), `TabletopGame.tsx`, `data-widget-id` on `BoardWidgetRenderer`/`HolderWidgetView`, locales, tests; preceded by a formatting-only commit.
+
 ## 2026-10-21 — Tabletop engine doc, edit actions, undo history (claude-code)
 
 - #449 slices 3–4: new `docs/tech/tabletop-engine.md` (listed in `docs/tech/index.md`).
