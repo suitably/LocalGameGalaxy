@@ -123,4 +123,4 @@ For deeper technical information, please consult the `docs/` Open Knowledge Bund
 
 ## 7. Working with AI agents
 
-Agents (Claude Code, Jules, Copilot) follow [AGENTS.md](AGENTS.md); Claude Code loads it via [CLAUDE.md](CLAUDE.md). Both point into the `docs/` bundle and describe how to keep it in sync with the code.
+Agents (Claude Code, Copilot) follow [AGENTS.md](AGENTS.md); Claude Code loads it via [CLAUDE.md](CLAUDE.md). Both point into the `docs/` bundle and describe how to keep it in sync with the code.

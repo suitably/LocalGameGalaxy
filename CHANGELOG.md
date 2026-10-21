@@ -12,6 +12,8 @@
 
 ### Refactored
 
+- **CI**: Removed the Google Jules integration (`/jules` issue command, daily Jules audit workflow, `scripts/pipeline/jules-*.cjs`, `.github/agents/`, `.github/lenses/`, `.pipeline-memory/`). The `JULES_API_KEY*` repository secrets are no longer used.
+- **CI**: Removed the Google AI agent factory (`scripts/agent-factory/`) and the optional Gemini Flash waiver in the doc-sync gate (`GEMINI_API_KEY` no longer used).
 - **Architecture & Code Quality Audit**: Ratcheted down component budget baselines in `scripts/legacy-component-baselines.json`, removing deleted (`ServerAdminPanel`) and graduated (`SetupDockerTab`) components while tightening limits on shrunk components.
 - **Duplication & DRY**: Extracted `FeedbackForm` into `src/components/feedback/FeedbackForm.tsx` and refactored `FeedbackDialog` and `SettingsFeedbackForm` to reuse it, eliminating duplicate feedback form UI code (Fixes #403).
 - **Code Quality**: Deduplicated multiple areas of the codebase to adhere to DRY principles, including extracting a shared `shuffle` utility, optimizing component logic in `Qwixx` and `Melodiq`, and extracting the `removeFromHolderAndUpdateHand` function in `TabletopReducer`.

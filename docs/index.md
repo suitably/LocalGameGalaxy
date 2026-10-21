@@ -37,7 +37,6 @@ This bundle describes **one code base**: the GitHub repository `suitably/LocalGa
 | Hosting, Docker images, Android APK, server binaries                         | [tech/deployment.md](tech/deployment.md)                                                                               |
 | Local dev setup problems                                                     | [tech/onboarding-faq.md](tech/onboarding-faq.md)                                                                       |
 | CI workflows, release pipeline, secrets, branch protection                   | [workflows/ci-cd-pipelines.md](workflows/ci-cd-pipelines.md)                                                           |
-| `/jules` issue agent                                                         | [workflows/jules-pipeline-workflow.md](workflows/jules-pipeline-workflow.md)                                           |
 | Run the server via Docker Compose locally                                    | [workflows/dev-compose-workflow.md](workflows/dev-compose-workflow.md)                                                 |
 | Operate the server, rotate tokens, release Android, troubleshoot             | [operations/index.md](operations/index.md)                                                                             |
 | Why Dexie, BitTorrent signaling, Capacitor, audio-separator                  | [adr/index.md](adr/index.md)                                                                                           |
@@ -60,7 +59,7 @@ This bundle describes **one code base**: the GitHub repository `suitably/LocalGa
 ## Sections
 
 - [Technical architecture](tech/index.md) — how the code works _right now_. One topic, one file.
-- [Workflows](workflows/index.md) — CI/CD, Jules, local compose, SOLID workflow.
+- [Workflows](workflows/index.md) — CI/CD, local compose, SOLID workflow.
 - [Operations](operations/index.md) — runbooks for server, tracker, Android release, incidents.
 - [ADRs](adr/index.md) — accepted architecture decisions.
 - [Tasks](tasks/index.md) — open task specs that mirror GitHub issues.

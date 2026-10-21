@@ -48,54 +48,6 @@ function getCodeDiffStats(diffTarget, files, cwd) {
   }
 }
 
-async function checkWithGemini(diffTarget, files, cwd, apiKey) {
-  if (!apiKey || !diffTarget || files.length === 0) return null;
-  try {
-    const diffText = execFileSync('git', ['diff', '-U2', `${diffTarget}...HEAD`, '--', ...files], {
-      cwd,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    });
-    if (!diffText.trim()) return null;
-
-    const snippet = diffText.slice(0, 3500);
-    const prompt = `You are an automated code and documentation reviewer for a web game platform.
-A pull request modifies game or shared logic without updating CHANGELOG.md or docs.
-Analyze this git diff: does this change alter gameplay rules, public features, or system architecture in a way that strictly requires end-user documentation or a changelog entry?
-If it is an isolated bugfix, internal technical fix, or minor adjustment where omitting documentation is acceptable, return requiresDocs: false.
-
-Diff snippet:
-\`\`\`diff
-${snippet}
-\`\`\`
-
-Respond strictly with valid JSON without markdown wrapping:
-{"requiresDocs": boolean, "reason": "concise explanation in 1 sentence"}`;
-
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 0.1 },
-        }),
-        signal: AbortSignal.timeout(5000),
-      },
-    );
-
-    if (!res.ok) return null;
-    const data = await res.json();
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return typeof parsed.requiresDocs === 'boolean' ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
 let diffResult;
 try {
   diffResult = getChangedFiles({ cwd: ROOT_DIR });
@@ -174,23 +126,6 @@ if (matchedCodeFiles.length > 0 && matchedDocFiles.length === 0) {
       `✔ Doc-sync gate passed: Minor bugfix detected (${diffStats.total} lines changed across ${matchedCodeFiles.length} file(s), PR type 'fix'). Mandatory doc sync waived.\n`,
     );
     process.exit(0);
-  }
-
-  // 4. Optional AI Semantic Evaluation via Gemini Flash (Google AI Studio Free Tier / Key)
-  const geminiKey = process.env.GEMINI_API_KEY;
-  if (geminiKey) {
-    console.log('🤖 Performing AI semantic review with Gemini Flash...');
-    const aiDecision = await checkWithGemini(diffTarget, matchedCodeFiles, ROOT_DIR, geminiKey);
-    if (aiDecision) {
-      if (!aiDecision.requiresDocs) {
-        console.log(`✔ Doc-sync gate passed via AI semantic review: ${aiDecision.reason}\n`);
-        process.exit(0);
-      } else {
-        console.log(
-          `ℹ AI review indicated doc/changelog update is recommended: ${aiDecision.reason}`,
-        );
-      }
-    }
   }
 
   console.error('\n❌ [Doc-Sync & Changelog Gate Violation]');

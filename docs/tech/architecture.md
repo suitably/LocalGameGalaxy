@@ -57,7 +57,7 @@ server/              # optional companion server (separate npm package, Hono)
 ├── src/plugins/     # melodiq/, relay/, tabletop/
 └── cloudflare-push-relay/   # separate Cloudflare Worker for Web Push + ntfy fan-out
 signaling/           # standalone BitTorrent WebSocket tracker (port 8000)
-scripts/             # quality gates (check-*.mjs/js), scaffold-game.mjs, pipeline/, agent-factory/ (deprecated)
+scripts/             # quality gates (check-*.mjs/js), scaffold-game.mjs, pipeline/
 public/locales/      # de/en translation.json
 android/             # Capacitor Android project
 ```

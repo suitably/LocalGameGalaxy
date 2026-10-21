@@ -19,15 +19,15 @@ sources:
 
 ## 1. Inventory
 
-| Secret                                               | Where it lives                                                                                      | Never commit                                                                           |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| Server master token                                  | `config.json` → `token`, or env `SECURITY_TOKEN` / `TOKEN`                                          | `config.json` is git-ignored                                                           |
-| Server API keys                                      | `config.json` → `apiKeys[]` (created via `POST /api/config/apikeys`)                                | same                                                                                   |
-| USDB login                                           | `config.json` → `usdbUsername`, `usdbPassword`                                                      | same                                                                                   |
-| GitHub token for server-side publishing              | `config.json` → `githubToken`                                                                       | same                                                                                   |
-| Browser-side helper token                            | `STORAGE_KEYS.HELPER_TOKEN` (localStorage)                                                          | —                                                                                      |
-| GitHub PAT for in-app PR publishing                  | `STORAGE_KEYS.GITHUB_TOKEN` (localStorage; see the security note in `src/lib/github.ts`)            | —                                                                                      |
-| Android keystore, Cloudflare, Docker Hub, Jules keys | GitHub Actions secrets ([ci-cd §4](../workflows/ci-cd-pipelines.md#4-repository-secrets-reference)) | `*.jks`, `*.keystore`, `*.p12`, `keystore.properties` are blocked by the hygiene check |
+| Secret                                   | Where it lives                                                                                      | Never commit                                                                           |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| Server master token                      | `config.json` → `token`, or env `SECURITY_TOKEN` / `TOKEN`                                          | `config.json` is git-ignored                                                           |
+| Server API keys                          | `config.json` → `apiKeys[]` (created via `POST /api/config/apikeys`)                                | same                                                                                   |
+| USDB login                               | `config.json` → `usdbUsername`, `usdbPassword`                                                      | same                                                                                   |
+| GitHub token for server-side publishing  | `config.json` → `githubToken`                                                                       | same                                                                                   |
+| Browser-side helper token                | `STORAGE_KEYS.HELPER_TOKEN` (localStorage)                                                          | —                                                                                      |
+| GitHub PAT for in-app PR publishing      | `STORAGE_KEYS.GITHUB_TOKEN` (localStorage; see the security note in `src/lib/github.ts`)            | —                                                                                      |
+| Android keystore, Cloudflare, Docker Hub | GitHub Actions secrets ([ci-cd §4](../workflows/ci-cd-pipelines.md#4-repository-secrets-reference)) | `*.jks`, `*.keystore`, `*.p12`, `keystore.properties` are blocked by the hygiene check |
 
 `scripts/check-repo-hygiene.mjs` also scans tracked text files (outside `docs/` and `*.example.*`) for secret patterns.
 

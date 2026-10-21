@@ -1,10 +1,10 @@
 ---
 type: Autonomous Workflow
 title: Google Jules Streaming Pipeline
-description: Comment /jules on an issue; Jules runs and streams activity live to issue comments until PR completion.
+description: Retired 2026-10-21. Comment /jules on an issue; Jules runs and streams activity live to issue comments until PR completion.
 resource: .github/workflows/jules-start.yml
 tags: [jules, ai-agent, automation, workflow]
-status: stable
+status: deprecated
 generated:
   at: 2026-10-06T16:00:00Z
   by: previous-agent
@@ -14,6 +14,8 @@ verified:
 ---
 
 # Google Jules Streaming Pipeline
+
+> **Retired 2026-10-21.** The Jules workflows (`jules-start.yml`, `jules-audit.yml`), `scripts/pipeline/jules-*.cjs`, `.github/agents/`, `.github/lenses/` and `.pipeline-memory/` were removed. Kept for reference only; nothing below exists in the repo any more.
 
 ```mermaid
 flowchart LR
