@@ -75,7 +75,6 @@ jobs:
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
           PR_TITLE: ${{ github.event.pull_request.title }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: npm run check:docs
 
   lint:

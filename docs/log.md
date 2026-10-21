@@ -2,6 +2,12 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Google AI tooling removed (claude-code)
+
+- Removed `scripts/agent-factory/` (Google AI Pro / `agy` worker pool); `tech/agent-factory.md` moved to `archive/`.
+- Removed the optional Gemini Flash waiver from `scripts/check-docs-sync.mjs` and `GEMINI_API_KEY` from `ci.yml`; `ci-cd-pipelines.md` updated.
+- **Code and CI configuration outside `docs/` changed.**
+
 ## 2026-10-21 — Jules pipeline removed (claude-code)
 
 - Removed `.github/workflows/jules-start.yml`, `jules-audit.yml`, `scripts/pipeline/jules-*.cjs`, `.github/agents/` (Jules audit prompts), `.github/lenses/` (RepoLens lens copies only those prompts used) and `.pipeline-memory/`.

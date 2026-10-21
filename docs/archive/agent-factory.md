@@ -4,7 +4,7 @@ title: LocalGameGalaxy Agent Factory
 description: Autonomous development pipeline pooling multiple AI accounts with strict quality gates against code duplication.
 resource: scripts/
 tags: [agent-factory, automation, quality-gates, ci]
-status: draft
+status: deprecated
 generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
@@ -14,6 +14,8 @@ verified:
 ---
 
 # 🏭 LocalGameGalaxy Agent Factory
+
+> **Retired 2026-10-21.** `scripts/agent-factory/orchestrator.mjs` (worker pool of Google AI Pro accounts around the `agy` CLI) was removed. `scripts/scaffold-game.mjs` still exists and is described in [scripts/README.md](../../scripts/README.md).
 
 Die **Agent Factory** ist eine autonome Entwicklungs-Pipeline, die mehrere **Google AI Pro Accounts** parallel als Worker-Pool bündelt und durch **strikte Qualitäts-Schranken (Quality Gates)** Code-Duplikate und Architektur-Wildwuchs verhindert.
 

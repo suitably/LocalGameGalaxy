@@ -93,7 +93,7 @@ flowchart LR
    - Fails when total duplication exceeds the 2.5 % threshold; clones are counted from 12 lines / 60 tokens (`minLines`, `minTokens`). Ignores tests, `server/`, `public/`, JSON.
 4. **Documentation & Translation Sync Gate (`check:docs`)**:
    - Executed on PRs. If core logic in `src/games/`, `src/modules/`, or `src/lib/` is modified, the PR must also update at least one of: `CHANGELOG.md`, `docs/tech/`, `AGENTS.md`, `README.md`, or `public/locales/`.
-   - Bypassed by `[skip docs]` / `[skip changelog]` in PR title or body, by PR titles starting with `chore|refactor|style|test|docs|perf`, and for `fix:` PRs touching ≤ 3 core files / ≤ 50 lines. With `GEMINI_API_KEY` set, an optional Gemini Flash review can waive it.
+   - Bypassed by `[skip docs]` / `[skip changelog]` in PR title or body, by PR titles starting with `chore|refactor|style|test|docs|perf`, and for `fix:` PRs touching ≤ 3 core files / ≤ 50 lines.
 5. **ESLint (`npm run lint`)**: Zero errors allowed.
 6. **Vitest (`npm test`)**: All unit tests must pass.
 7. **Production Build (`npm run build`)**: `tsc -b && vite build` verifies zero TypeScript compiler errors and produces production bundles.

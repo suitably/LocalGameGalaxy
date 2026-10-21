@@ -26,7 +26,6 @@ How the code works **right now**. One topic, one file. Start with the architectu
 - [Styling](styling.md) — MUI theme, safe areas, Capacitor touch CSS.
 - [Testing guide](testing-guide.md) — Vitest, `node --test`, environment, mocks.
 - [Pipeline quality gates](pipeline-quality-gates.md) — rationale for the deterministic tools.
-- [Agent factory](agent-factory.md) — `scripts/agent-factory/orchestrator.mjs` worker pool around the `agy` CLI, and `scripts/scaffold-game.mjs`.
 
 ## Server, security, deployment
 
