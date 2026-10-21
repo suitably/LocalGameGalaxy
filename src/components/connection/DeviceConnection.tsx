@@ -7,6 +7,7 @@ import { useDeviceConnectionSettings } from './useDeviceConnectionSettings';
 import { DeviceQRCodeCard } from './DeviceQRCodeCard';
 import { ConnectedPeersList } from './ConnectedPeersList';
 import { DeviceTrackerSettings } from './DeviceTrackerSettings';
+import { StunServerSettings } from './StunServerSettings';
 import type { DeviceConnectionProps } from './types';
 
 export * from './types';
@@ -156,6 +157,9 @@ export const DeviceConnection = <T extends RemotePeerBase = RemotePeerBase>({
               removeTrackerUrl={removeTrackerUrl}
               restoreDefaultTrackers={restoreDefaultTrackers}
             />
+            <Box sx={{ mt: 3 }}>
+              <StunServerSettings />
+            </Box>
           </Box>
         </Box>
       </Paper>

@@ -7,6 +7,7 @@ import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';
 import { useTranslation } from 'react-i18next';
 import { useSignalingTrackerState } from './useSignalingTrackerState';
 import { DeviceTrackerSettings } from '../../../../components/connection/DeviceTrackerSettings';
+import { StunServerSettings } from '../../../../components/connection/StunServerSettings';
 import { settingsCardSx } from '../../settingsStyles';
 
 export const SignalingSettingsCard: React.FC = () => {
@@ -108,6 +109,9 @@ export const SignalingSettingsCard: React.FC = () => {
             removeTrackerUrl={removeTrackerUrl}
             restoreDefaultTrackers={restoreDefaultTrackers}
           />
+          <Box sx={{ mt: 3 }}>
+            <StunServerSettings />
+          </Box>
         </Box>
       </Box>
     </Paper>

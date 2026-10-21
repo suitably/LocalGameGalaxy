@@ -129,4 +129,4 @@ All four peer constructions (tracker client and data peer in `WebRTCHostManager.
 - **Persistence**: `STORAGE_KEYS.WEBRTC_STUN_CUSTOM_URLS` (`galaxy_stun_custom_urls`) and `WEBRTC_STUN_PREFERENCES` (`galaxy_stun_preferences`, explicit on/off per URL). Malformed stored values are ignored.
 - **All disabled** → empty `iceServers`: only host candidates, so connections work on the same LAN only.
 - No TURN server is configured.
-- Settings UI: not yet available.
+- **Settings UI**: `src/components/connection/StunServerSettings.tsx` (state in `useStunServerSettings.ts`, edits via `addCustomStunUrl` / `removeCustomStunUrl`) below the tracker list in `DeviceConnection.tsx` and `SignalingSettingsCard.tsx`. Both lists render through the shared `ServerUrlList.tsx`. Changes apply to new peer connections.

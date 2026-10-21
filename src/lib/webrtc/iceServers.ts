@@ -86,3 +86,34 @@ export function saveStunSettings(settings: StunSettings): void {
 export function getIceServers(): RTCIceServer[] {
   return toIceServers(buildStunServers(loadStunSettings()));
 }
+
+export type AddStunResult = 'added' | 'invalid' | 'duplicate';
+
+/** Settings with a custom STUN URL added (enabled), or why it was rejected. */
+export function addCustomStunUrl(
+  settings: StunSettings,
+  url: string,
+): { result: AddStunResult; settings: StunSettings } {
+  const trimmed = url.trim();
+  if (!isValidStunUrl(trimmed)) return { result: 'invalid', settings };
+  if (buildStunServers(settings).some((s) => s.url === trimmed)) {
+    return { result: 'duplicate', settings };
+  }
+  return {
+    result: 'added',
+    settings: {
+      customUrls: [...settings.customUrls, trimmed],
+      preferences: { ...settings.preferences, [trimmed]: true },
+    },
+  };
+}
+
+/** Settings without the custom STUN URL and its preference. */
+export function removeCustomStunUrl(settings: StunSettings, url: string): StunSettings {
+  return {
+    customUrls: settings.customUrls.filter((u) => u !== url),
+    preferences: Object.fromEntries(
+      Object.entries(settings.preferences).filter(([key]) => key !== url),
+    ),
+  };
+}

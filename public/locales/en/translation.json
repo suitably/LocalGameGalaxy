@@ -1123,6 +1123,17 @@
     "add_button": "Add",
     "remove_tooltip": "Remove tracker"
   },
+  "stun": {
+    "title": "STUN servers (this device)",
+    "type_default": "Built-in",
+    "type_custom": "Custom",
+    "remove_tooltip": "Remove STUN server",
+    "placeholder": "stun:stun.example.com:3478",
+    "invalid_url": "Enter a URL like stun:host:port or stuns:host:port.",
+    "duplicate_url": "This STUN server is already in the list.",
+    "no_servers_warning": "⚠️ No STUN server enabled. Phones can then only connect on the same network.",
+    "hint": "STUN helps phones find a route to this device. Each device keeps its own list; changes apply to new connections."
+  },
   "github": {
     "title": "GitHub Integration",
     "desc": "Connect directly to GitHub for feedback and content publishing. Create a Personal Access Token (PAT) with \"repo\" scope on github.com/settings/tokens.",

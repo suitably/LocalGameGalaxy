@@ -2,6 +2,7 @@
 
 ### Added
 
+- **WebRTC**: STUN servers can be chosen per device in the connection and server settings, next to the tracker list: toggle built-in servers (Google stays off by default), add or remove custom `stun:`/`stuns:` URLs, with a warning when all are off. Tracker and STUN lists share one `ServerUrlList` component (#422).
 - **Testing & Edge-Case Audit**: Added comprehensive unit tests for Kniffel scoring (`kniffelScoring.ts`) and game reducer (`kniffelReducer.ts`), Darts game rules, countdown modes, double-out evaluation, and bust logic (`useDartsGame.ts`), and Imposter database repository & seeder (`imposterRepository.ts`, `dbSeeder.ts`) (Fixes #386).
 - **Sync & Resilience Tests**: Extended `MqttMailboxService` and `MultiChannelSyncCoordinator` test suites with coverage for listener error isolation, LZString payload compression, and dynamic channel re-subscription edge cases (Fixes #386).
 

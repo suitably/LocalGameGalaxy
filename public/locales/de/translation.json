@@ -1123,6 +1123,17 @@
     "add_button": "Hinzufügen",
     "remove_tooltip": "Tracker entfernen"
   },
+  "stun": {
+    "title": "STUN-Server (dieses Gerät)",
+    "type_default": "Vorgegeben",
+    "type_custom": "Eigener",
+    "remove_tooltip": "STUN-Server entfernen",
+    "placeholder": "stun:stun.example.com:3478",
+    "invalid_url": "Gib eine URL wie stun:host:port oder stuns:host:port ein.",
+    "duplicate_url": "Dieser STUN-Server ist schon in der Liste.",
+    "no_servers_warning": "⚠️ Kein STUN-Server aktiv. Handys können sich dann nur im selben Netzwerk verbinden.",
+    "hint": "STUN hilft Handys, einen Weg zu diesem Gerät zu finden. Jedes Gerät hat seine eigene Liste; Änderungen gelten für neue Verbindungen."
+  },
   "github": {
     "title": "GitHub-Integration",
     "desc": "Verbinde dich direkt mit GitHub für Feedback und das Veröffentlichen von Inhalten. Erstelle ein Personal Access Token (PAT) mit 'repo'-Berechtigung auf github.com/settings/tokens.",

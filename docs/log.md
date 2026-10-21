@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — STUN settings UI (claude-code)
+
+- #422: `docs/tech/webrtc-signaling.md` §6 describes the new settings UI.
+- **Code changed:** `src/components/connection/{ServerUrlList,StunServerSettings,DeviceTrackerSettings,DeviceConnection}.tsx`, `useStunServerSettings.ts`, `SignalingSettingsCard.tsx`, `src/lib/webrtc/iceServers.ts` (+ test), locales; preceded by a formatting-only commit.
+
 ## 2026-10-21 — Melodiq session players split (claude-code)
 
 - #418: no doc described `useSessionPlayers`; `CHANGELOG.md` updated.
