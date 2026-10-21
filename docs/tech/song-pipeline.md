@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-18
+  at: 2026-10-21
   method: 'read server/src/plugins/melodiq/{services/download.ts,services/separator.ts,services/usdb.ts,routes/*.ts}, server/src/scripts/align_lyrics.py'
 sources:
   - 'server/src/plugins/melodiq/services/download.ts'
@@ -21,6 +21,8 @@ sources:
 Runs only when the companion server is used. Everything is **job-based**: the client starts a job, then polls its status. There is no SSE stream.
 
 ## 1. Download job (`services/download.ts`)
+
+yt-dlp lookup, install and spawning live in `services/ytdlp.ts`; `.txt` header parsing and rewriting in `services/ultrastarTxt.ts`.
 
 Started by `POST /api/usdb/download`; poll `GET /api/usdb/status/:jobId`; list `GET /api/usdb/jobs`; cancel/clear `DELETE /api/usdb/jobs/:jobId?`.
 

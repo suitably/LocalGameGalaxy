@@ -7,7 +7,7 @@ import {
   clearDownloadJobs,
   type DownloadJobRequest,
 } from '../services/queueManager';
-import { ensureYtDlp, spawnYtDlp } from '../services/download';
+import { ensureYtDlp, spawnYtDlp } from '../services/ytdlp';
 import type { HonoEnv } from '../../../core/types';
 
 export const usdbRouter = new Hono<HonoEnv>();
@@ -55,7 +55,17 @@ usdbRouter.get('/api/usdb/search', async (c) => {
       }
     }
 
-    if (!title && !artist && !edition && !language && !genre && !year && !creator && golden !== '1' && sc !== '1') {
+    if (
+      !title &&
+      !artist &&
+      !edition &&
+      !language &&
+      !genre &&
+      !year &&
+      !creator &&
+      golden !== '1' &&
+      sc !== '1'
+    ) {
       return c.json([]);
     }
 
@@ -84,7 +94,8 @@ usdbRouter.get('/api/usdb/search', async (c) => {
 // POST /api/usdb/download — Start download job
 usdbRouter.post('/api/usdb/download', async (c) => {
   try {
-    const body = (await c.req.json().catch(() => ({}))) as DownloadJobRequest | DownloadJobRequest[];
+    const body = (await c.req.json().catch(() => ({}))) as
+      DownloadJobRequest | DownloadJobRequest[];
     const jobIds = addDownloadJobs(body);
     if (jobIds.length === 0) {
       return c.json({ error: 'No valid jobs provided' }, 400);
@@ -146,7 +157,11 @@ usdbRouter.get('/api/youtube/search', async (c) => {
     const ytBin = await ensureYtDlp(mockJob);
 
     const searchLimit = parseInt(c.req.query('limit') || '5', 10) || 5;
-    const ytOut = await spawnYtDlp(ytBin, ['--dump-json', '--no-playlist', `ytsearch${searchLimit}:${query}`]);
+    const ytOut = await spawnYtDlp(ytBin, [
+      '--dump-json',
+      '--no-playlist',
+      `ytsearch${searchLimit}:${query}`,
+    ]);
 
     const lines = ytOut.split('\n').filter((l) => l.trim() !== '');
     const results: YouTubeSearchResult[] = [];

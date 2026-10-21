@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Melodiq download job split (claude-code)
+
+- #413: `docs/tech/song-pipeline.md` §1 names the new helper modules.
+- **Code changed:** `server/src/plugins/melodiq/services/{download,ytdlp,ultrastarTxt}.ts`, `routes/usdb.ts`, `server/test/ultrastar_txt.test.js`.
+
 ## 2026-10-21 — GuessArt transitions, slice 1 (claude-code)
 
 - #416: no doc described the engine internals; `CHANGELOG.md` updated.
