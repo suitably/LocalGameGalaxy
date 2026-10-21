@@ -41,9 +41,13 @@ function AppRoutes() {
   useEffect(() => {
     const handleBackButton = () => {
       // If a modal, dialog or drawer is currently open, close it first via Escape
-      const openModal = document.querySelector('dialog[open], .MuiDialog-root, .MuiModal-root:not([aria-hidden="true"])');
+      const openModal = document.querySelector(
+        'dialog[open], .MuiDialog-root, .MuiModal-root:not([aria-hidden="true"])',
+      );
       if (openModal) {
-        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }));
+        window.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }),
+        );
         return;
       }
 
@@ -53,81 +57,84 @@ function AppRoutes() {
         navigate(-1);
       }
     };
-    
+
     const listener = CapacitorApp.addListener('backButton', handleBackButton);
     return () => {
-      listener.then(l => l.remove());
+      listener.then((l) => l.remove());
     };
   }, [navigate]);
 
   return (
     <Routes>
       <Route path="/" element={<MainLayout />}>
-        <Route index element={
-          <Suspense fallback={<LoadingFallback />}>
-            <Hub />
-          </Suspense>
-        } />
-        <Route path="party" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <PartyLobby />
-          </Suspense>
-        } />
-        <Route path="settings" element={
-          <Suspense fallback={<LoadingFallback />}>
-            <Settings />
-          </Suspense>
-        } />
+        <Route
+          index
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <Hub />
+            </Suspense>
+          }
+        />
+        <Route
+          path="party"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <PartyLobby />
+            </Suspense>
+          }
+        />
+        <Route
+          path="settings"
+          element={
+            <Suspense fallback={<LoadingFallback />}>
+              <Settings />
+            </Suspense>
+          }
+        />
         <Route path="feedback" element={<FeedbackRedirect />} />
-        
+
         {/* Dynamic Game Routes registered via GameRegistry (OCP) */}
-        {gameRegistry.getGames().map(game => (
+        {gameRegistry.getGames().map((game) => (
           <Route
             key={game.id}
             path={game.route}
             element={
               <ErrorBoundary componentName={game.id}>
-                <Suspense fallback={<LoadingFallback />}>
-                  {game.component}
-                </Suspense>
+                <Suspense fallback={<LoadingFallback />}>{game.component}</Suspense>
               </ErrorBoundary>
             }
           />
         ))}
 
         {/* Dynamic Game Nested Routes (e.g. Melodiq Queue) */}
-        {gameRegistry.getGames().flatMap(game => 
-          (game.nestedRoutes || []).map(nr => (
+        {gameRegistry.getGames().flatMap((game) =>
+          (game.nestedRoutes || []).map((nr) => (
             <Route
               key={`${game.id}-${nr.path}`}
               path={nr.path}
               element={
                 <ErrorBoundary componentName={`${game.id} - ${nr.path}`}>
-                  <Suspense fallback={<LoadingFallback />}>
-                    {nr.component}
-                  </Suspense>
+                  <Suspense fallback={<LoadingFallback />}>{nr.component}</Suspense>
                 </ErrorBoundary>
               }
             />
-          ))
+          )),
         )}
       </Route>
 
       {/* Dynamic Standalone Routes (e.g. Melodiq TV Mode) */}
-      {gameRegistry.getGames().flatMap(game => 
-        (game.standaloneRoutes || []).map(sr => (
+      {gameRegistry.getGames().flatMap((game) =>
+        (game.standaloneRoutes || []).map((sr) => (
           <Route
             key={`${game.id}-${sr.path}`}
             path={sr.path}
             element={
               <ErrorBoundary componentName={`${game.id} - Standalone`}>
-                <Suspense fallback={<LoadingFallback />}>
-                  {sr.component}
-                </Suspense>
+                <Suspense fallback={<LoadingFallback />}>{sr.component}</Suspense>
               </ErrorBoundary>
             }
           />
-        ))
+        )),
       )}
     </Routes>
   );
