@@ -68,8 +68,18 @@ export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
             return (
               <CounterWidgetView
                 widget={w as CounterWidget}
-                onIncrement={() => dispatch({ type: 'UPDATE_COUNTER', payload: { counterId: w.id, delta: w.step || 1 } })}
-                onDecrement={() => dispatch({ type: 'UPDATE_COUNTER', payload: { counterId: w.id, delta: -(w.step || 1) } })}
+                onIncrement={() =>
+                  dispatch({
+                    type: 'UPDATE_COUNTER',
+                    payload: { counterId: w.id, delta: w.step || 1 },
+                  })
+                }
+                onDecrement={() =>
+                  dispatch({
+                    type: 'UPDATE_COUNTER',
+                    payload: { counterId: w.id, delta: -(w.step || 1) },
+                  })
+                }
               />
             );
           case 'die':

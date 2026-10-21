@@ -8,10 +8,7 @@ interface HolderWidgetViewProps {
   isHovered?: boolean;
 }
 
-export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({
-  widget,
-  isHovered,
-}) => {
+export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({ widget, isHovered }) => {
   const { t } = useTranslation();
   const isHand = Boolean(widget.isHand);
   const childCount = widget.childIds?.length || 0;
@@ -53,7 +50,11 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({
 
   const isTransparent = widget.customCss?.includes('transparent') || false;
   const showText = !widget.hasPileChild && !isTransparent;
-  const showDropPrompt = !isHand && childCount === 0 && !widget.hasPileChild && (!widget.label || widget.label === 'Ablage');
+  const showDropPrompt =
+    !isHand &&
+    childCount === 0 &&
+    !widget.hasPileChild &&
+    (!widget.label || widget.label === 'Ablage');
 
   return (
     <Box
@@ -70,32 +71,32 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({
         border: isCheckerboard
           ? '8px solid #3e2723'
           : widget.clipPath
-          ? 'none'
-          : widget.hasPileChild || isTransparent
-          ? '1px solid rgba(0,0,0,0.3)'
-          : '2px dashed',
+            ? 'none'
+            : widget.hasPileChild || isTransparent
+              ? '1px solid rgba(0,0,0,0.3)'
+              : '2px dashed',
         borderColor: isHovered
           ? 'primary.main'
           : isCheckerboard
-          ? '#3e2723'
-          : widget.hasPileChild || isTransparent
-          ? 'rgba(0,0,0,0.25)'
-          : isHand
-          ? 'rgba(255, 255, 255, 0.25)'
-          : 'rgba(255, 255, 255, 0.4)',
+            ? '#3e2723'
+            : widget.hasPileChild || isTransparent
+              ? 'rgba(0,0,0,0.25)'
+              : isHand
+                ? 'rgba(255, 255, 255, 0.25)'
+                : 'rgba(255, 255, 255, 0.4)',
         bgcolor: isHovered
           ? widget.clipPath
             ? 'rgba(76, 175, 80, 0.35)'
             : 'rgba(25, 118, 210, 0.15)'
           : isCheckerboard
-          ? '#5d4037'
-          : widget.hasPileChild
-          ? 'rgba(0, 0, 0, 0.2)'
-          : isTransparent
-          ? 'rgba(255, 255, 255, 0.02)'
-          : isHand
-          ? 'rgba(0, 0, 0, 0.25)'
-          : 'rgba(0, 0, 0, 0.15)',
+            ? '#5d4037'
+            : widget.hasPileChild
+              ? 'rgba(0, 0, 0, 0.2)'
+              : isTransparent
+                ? 'rgba(255, 255, 255, 0.02)'
+                : isHand
+                  ? 'rgba(0, 0, 0, 0.25)'
+                  : 'rgba(0, 0, 0, 0.15)',
         filter: widget.clipPath && isHovered ? 'drop-shadow(0 0 10px #4caf50)' : undefined,
         boxShadow: isCheckerboard ? '0 12px 28px rgba(0,0,0,0.6)' : 'none',
         p: isCheckerboard ? 0 : 1,
@@ -129,7 +130,14 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({
               }}
             >
               {col === 0 && (
-                <Typography sx={{ fontSize: '0.65rem', color: isDark ? '#d7ccc8' : '#4e342e', fontWeight: 700, lineHeight: 1 }}>
+                <Typography
+                  sx={{
+                    fontSize: '0.65rem',
+                    color: isDark ? '#d7ccc8' : '#4e342e',
+                    fontWeight: 700,
+                    lineHeight: 1,
+                  }}
+                >
                   {8 - row}
                 </Typography>
               )}
@@ -185,7 +193,10 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({
           )}
 
           {showDropPrompt && (
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>
+            <Typography
+              variant="caption"
+              sx={{ color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}
+            >
               {t('games.tabletop.dropHere')}
             </Typography>
           )}
