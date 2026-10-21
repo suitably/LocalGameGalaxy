@@ -2,6 +2,16 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Compose generator matches the real containers (claude-code)
+
+- #342: `docs/tech/deployment.md` describes the generated compose file and why the standalone tracker stays.
+- **Code changed:** `src/features/settings/components/server/{composeYamlGenerator.ts,ComposeGeneratorPanel.tsx}` (+ test), `server/docker-compose.yml`; preceded by a formatting-only commit.
+
+## 2026-10-21 — Melodiq Notes soundfont fields shared (claude-code)
+
+- #426 (sound settings): no doc described these fields; `CHANGELOG.md` updated.
+- **Code changed:** `src/games/melodiq-notes/components/{SoundfontProviderFields,SoundSettingsSection}.tsx`, `src/features/settings/components/MelodiqNotesSettingsCategory.tsx`; preceded by a formatting-only commit.
+
 ## 2026-10-21 — Melodiq Notes dialog frame (claude-code)
 
 - #426 (Melodiq Notes dialogs): no doc described the dialogs; `CHANGELOG.md` updated.
