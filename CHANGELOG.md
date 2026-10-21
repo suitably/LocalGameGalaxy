@@ -14,6 +14,7 @@
 
 ### Refactored
 
+- **WebRTC (Melodiq)**: the `identify` handling (name/hue/deviceId, replacing an earlier peer of the same device, `onPeerUpdated`) existed twice in `WebRTCHostManager` — once per signaling path. It is now one `applyIdentity()` with the pure `findStalePeersByDevice()` in `src/lib/webrtc/peerRegistry.ts` (with tests) (#412).
 - **Dead code**: removed `src/games/melodiq/MelodiqSettings.tsx` and `components/SettingsFeedbackForm.tsx` (no importer; the settings route uses `MelodiqSettingsCategory`) (#423).
 - **Werewolf tests**: the scripts `logic/tests/verify_*.ts` never ran; their Easter Bunny, Hunter and Guardian scenarios are now Vitest tests in `logic/roleScenarios.test.ts` (#424).
 - **WebRTC (Melodiq)**: tracker info hash, peer id, NDJSON decoding and the tracker URL filter are shared by host and client via `src/lib/webrtc/trackerProtocol.ts` (with tests) instead of four hand-written copies. A malformed line in a data-channel chunk no longer drops the rest of that chunk on the host; the client now also de-duplicates tracker URLs (#411).

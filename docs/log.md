@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — WebRTC host identity dedup (claude-code)
+
+- #412: no doc described the duplicated identity handling; `CHANGELOG.md` updated.
+- **Code changed:** `src/lib/webrtc/WebRTCHostManager.ts`, new `src/lib/webrtc/peerRegistry.ts` (+ tests).
+
 ## 2026-10-21 — Dead Melodiq settings page, werewolf scenario tests (claude-code)
 
 - #423 / #424: no doc referenced the removed files; `CHANGELOG.md` updated.

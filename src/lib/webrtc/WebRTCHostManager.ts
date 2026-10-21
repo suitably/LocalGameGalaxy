@@ -7,6 +7,7 @@ import {
   generatePeerId as createPeerId,
   stringToInfoHash as partyIdToInfoHash,
 } from './trackerProtocol';
+import { findStalePeersByDevice, type PeerIdentity } from './peerRegistry';
 
 /**
  * Base type for a remote peer entry stored in the peers Map.
@@ -235,47 +236,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
                   (trackerPeer as any)._currentConnectionId === parsedData.connectionId,
               );
               if (remotePeer) {
-                console.log(
-                  '[WebRTCHostManager] Received identity from phone (tracker):',
-                  parsedData.name,
-                  parsedData.hue,
-                  parsedData.deviceId,
-                );
-                remotePeer.name = parsedData.name || remotePeer.name;
-                remotePeer.hue = parsedData.hue;
-                remotePeer.deviceId = parsedData.deviceId;
-
-                // Deduplicate by deviceId
-                if (parsedData.deviceId) {
-                  const stalePeerIds: string[] = [];
-                  for (const [existingPeerId, existingPeer] of this.peers.entries()) {
-                    if (
-                      existingPeerId !== remotePeer.peerId &&
-                      existingPeer.deviceId === parsedData.deviceId
-                    ) {
-                      stalePeerIds.push(existingPeerId);
-                    }
-                  }
-                  for (const stalePeerId of stalePeerIds) {
-                    const stalePeer = this.peers.get(stalePeerId);
-                    if (stalePeer) {
-                      console.log(
-                        `[WebRTCHostManager] Replacing stale peer ${stalePeerId} with ${remotePeer.peerId} for deviceId ${parsedData.deviceId}`,
-                      );
-                      stalePeer.peer.destroy();
-                      this.peers.delete(stalePeerId);
-                      this.callbacks?.onPeerRemoved?.(stalePeerId, stalePeer);
-                    }
-                  }
-                }
-
-                this.callbacks?.onPeerUpdated?.(
-                  remotePeer.peerId,
-                  remotePeer.name,
-                  remotePeer.hue,
-                  remotePeer.connectionId,
-                  remotePeer.deviceId,
-                );
+                this.applyIdentity(remotePeer, parsedData, 'tracker');
               } else {
                 console.warn(
                   '[WebRTCHostManager] Received identity for unknown or mismatched peer:',
@@ -412,47 +373,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
           const msg = message;
 
           if (msg.type === 'identify') {
-            console.log(
-              '[WebRTCHostManager] Received identity (WebRTC):',
-              msg.name,
-              msg.hue,
-              msg.deviceId,
-            );
-            remotePeer.name = msg.name || remotePeer.name;
-            remotePeer.hue = msg.hue;
-            remotePeer.deviceId = msg.deviceId;
-
-            // Deduplicate by deviceId
-            if (msg.deviceId) {
-              const stalePeerIds: string[] = [];
-              for (const [existingPeerId, existingPeer] of this.peers.entries()) {
-                if (
-                  existingPeerId !== remotePeer.peerId &&
-                  existingPeer.deviceId === msg.deviceId
-                ) {
-                  stalePeerIds.push(existingPeerId);
-                }
-              }
-              for (const stalePeerId of stalePeerIds) {
-                const stalePeer = this.peers.get(stalePeerId);
-                if (stalePeer) {
-                  console.log(
-                    `[WebRTCHostManager] Replacing stale peer ${stalePeerId} with ${remotePeer.peerId} for deviceId ${msg.deviceId}`,
-                  );
-                  stalePeer.peer.destroy();
-                  this.peers.delete(stalePeerId);
-                  this.callbacks?.onPeerRemoved?.(stalePeerId, stalePeer);
-                }
-              }
-            }
-
-            this.callbacks?.onPeerUpdated?.(
-              remotePeer.peerId,
-              remotePeer.name,
-              remotePeer.hue,
-              remotePeer.connectionId,
-              remotePeer.deviceId,
-            );
+            this.applyIdentity(remotePeer, msg, 'WebRTC');
           } else {
             // Pass to subclass handles or generic listeners
             if (!this.handleCustomWebRTCMessage(msg, remotePeer)) {
@@ -547,6 +468,45 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
         }
       }
     });
+  }
+
+  /**
+   * Applies an `identify` message (from the tracker or the data channel) to a peer: stores
+   * name/hue/deviceId, replaces earlier peers of the same device and notifies `onPeerUpdated`.
+   */
+  private applyIdentity(remotePeer: T, identity: PeerIdentity, source: 'tracker' | 'WebRTC'): void {
+    console.log(
+      `[WebRTCHostManager] Received identity (${source}):`,
+      identity.name,
+      identity.hue,
+      identity.deviceId,
+    );
+    remotePeer.name = identity.name || remotePeer.name;
+    remotePeer.hue = identity.hue;
+    remotePeer.deviceId = identity.deviceId;
+
+    for (const stalePeerId of findStalePeersByDevice(
+      this.peers,
+      remotePeer.peerId,
+      identity.deviceId,
+    )) {
+      const stalePeer = this.peers.get(stalePeerId);
+      if (!stalePeer) continue;
+      console.log(
+        `[WebRTCHostManager] Replacing stale peer ${stalePeerId} with ${remotePeer.peerId} for deviceId ${identity.deviceId}`,
+      );
+      stalePeer.peer.destroy();
+      this.peers.delete(stalePeerId);
+      this.callbacks?.onPeerRemoved?.(stalePeerId, stalePeer);
+    }
+
+    this.callbacks?.onPeerUpdated?.(
+      remotePeer.peerId,
+      remotePeer.name,
+      remotePeer.hue,
+      remotePeer.connectionId,
+      remotePeer.deviceId,
+    );
   }
 
   /** Kept as protected hooks so subclasses can override; defaults live in `trackerProtocol.ts`. */
