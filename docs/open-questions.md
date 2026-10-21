@@ -38,6 +38,7 @@ Resolve: replace local constants with the registry entries (same string values, 
 
 - `scripts/legacy-component-baselines.json` lists `src/components/connection/ServerAdminPanel.tsx`, which no longer exists.
 - `SetupDockerTab.tsx` (194 lines) and `KniffelBoard.tsx` (250) are at or under the limit and should graduate out of the baseline (PR #392 removes one entry).
+- The ratchet never lowers a baseline when a file shrinks, so shrunk files can grow back (e.g. `LyricsDisplay.tsx` baseline 508, actual 370 on 2026-10-21; full list in [cleanup plan §2](reports/2026-10-21-cleanup-plan.md#2-ratchet-bookkeeping-is-leaking-extends-q9)).
 - `check-architecture.mjs` warns at **300** lines while `check-component-budget.js` enforces **250** — two different numbers for one rule.
 
 ## Q10 — Node version drift
