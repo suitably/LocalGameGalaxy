@@ -1,10 +1,23 @@
 /**
  * Reducer for state transitions in Tabletop games [ID: GAME-TABLETOP-REDUCER]
  */
-import type { TabletopGameDefinition, TabletopWidget, CardWidget, DeckWidget, HolderWidget, CounterWidget, DieWidget, SeatWidget, GridSnapDef, HiddenZone, BagWidget } from './types';
+import type {
+  TabletopGameDefinition,
+  TabletopWidget,
+  CardWidget,
+  DeckWidget,
+  HolderWidget,
+  CounterWidget,
+  DieWidget,
+  SeatWidget,
+  GridSnapDef,
+  HiddenZone,
+  BagWidget,
+} from './types';
 import { calculateHandLayout } from './handLayout';
 import { snapToGridCoords } from './gridLogic';
 import { isBoardSnapTarget } from './boardFilter';
+import { isHandHolder, isHandHolderWidget, normalizeHandHolders } from './handHolder';
 
 export interface FlyingCardAnimation {
   id: string;
@@ -24,8 +37,24 @@ export type TabletopAction =
   | { type: 'MOVE_WIDGET'; payload: { id: string; x: number; y: number; zIndex?: number } }
   | { type: 'FLIP_CARD'; payload: { cardId: string } }
   | { type: 'SHUFFLE_DECK'; payload: { deckId: string; newCardIds?: string[] } }
-  | { type: 'DRAW_CARD'; payload: { deckId: string; cardId?: string; targetHolderId?: string; position?: { x: number; y: number } } }
-  | { type: 'DRAW_FROM_BAG'; payload: { bagId: string; position?: { x: number; y: number }; spawnedId?: string; targetHolderId?: string } }
+  | {
+      type: 'DRAW_CARD';
+      payload: {
+        deckId: string;
+        cardId?: string;
+        targetHolderId?: string;
+        position?: { x: number; y: number };
+      };
+    }
+  | {
+      type: 'DRAW_FROM_BAG';
+      payload: {
+        bagId: string;
+        position?: { x: number; y: number };
+        spawnedId?: string;
+        targetHolderId?: string;
+      };
+    }
   | { type: 'SNAP_TO_HOLDER'; payload: { widgetId: string; holderId: string } }
   | { type: 'RETURN_CARD_TO_DECK'; payload: { cardId: string; deckId: string } }
   | { type: 'UPDATE_COUNTER'; payload: { counterId: string; delta: number } }
@@ -34,7 +63,10 @@ export type TabletopAction =
   | { type: 'ANIMATE_CARD_TO_TABLE'; payload: { cardId: string; targetHolderId: string } }
   | { type: 'FINISH_ANIMATION'; payload: { animationId: string } }
   | { type: 'SELECT_SEAT'; payload: { seatId: string; playerName?: string } }
-  | { type: 'TAKE_PIECE_FROM_SUPPLY'; payload: { pieceId: string; targetPosition?: { x: number; y: number } } }
+  | {
+      type: 'TAKE_PIECE_FROM_SUPPLY';
+      payload: { pieceId: string; targetPosition?: { x: number; y: number } };
+    }
   | { type: 'PLAY_CARD_FROM_HAND'; payload: { cardId: string; position: { x: number; y: number } } }
   | { type: 'SCALE_WIDGETS'; payload: { widgetIds: string[]; factor: number } }
   | { type: 'RESET_WIDGET_SCALE'; payload: { widgetIds: string[] } }
@@ -55,9 +87,11 @@ function removeFromHolderAndUpdateHand(widgets: Record<string, TabletopWidget>, 
           childIds: nextChildIds,
         };
         widgets[wId] = updatedH;
-        const isHand = updatedH.isHand || updatedH.id.toLowerCase() === 'hand' || updatedH.id.toLowerCase().includes('hand');
+        const isHand = isHandHolder(updatedH);
         if (isHand) {
-          const remainingCards = nextChildIds.map((id) => widgets[id] as CardWidget).filter(Boolean);
+          const remainingCards = nextChildIds
+            .map((id) => widgets[id] as CardWidget)
+            .filter(Boolean);
           const layout = calculateHandLayout(updatedH, remainingCards);
           for (const [cId, pos] of Object.entries(layout)) {
             const w = widgets[cId];
@@ -77,11 +111,14 @@ function removeFromHolderAndUpdateHand(widgets: Record<string, TabletopWidget>, 
   }
 }
 
-export function tabletopReducer(state: TabletopGameState, action: TabletopAction): TabletopGameState {
+export function tabletopReducer(
+  state: TabletopGameState,
+  action: TabletopAction,
+): TabletopGameState {
   switch (action.type) {
     case 'LOAD_GAME':
       return {
-        game: action.payload,
+        game: normalizeHandHolders(action.payload),
         flyingCards: [],
       };
 
@@ -109,14 +146,22 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
             const updatedH = { ...h, childIds: nextChildIds };
             widgets[wId] = updatedH;
 
-            const isHand = updatedH.isHand || (updatedH.id || '').toLowerCase().includes('hand');
+            const isHand = isHandHolder(updatedH);
             if (isHand) {
-              const remainingCards = nextChildIds.map((id) => widgets[id] as CardWidget).filter(Boolean);
+              const remainingCards = nextChildIds
+                .map((id) => widgets[id] as CardWidget)
+                .filter(Boolean);
               const layout = calculateHandLayout(updatedH, remainingCards);
               for (const [cId, pos] of Object.entries(layout)) {
                 const cw = widgets[cId];
                 if (cw && cw.type === 'card') {
-                  widgets[cId] = { ...cw, x: pos.x, y: pos.y, zIndex: pos.zIndex, stackCount: pos.stackCount };
+                  widgets[cId] = {
+                    ...cw,
+                    x: pos.x,
+                    y: pos.y,
+                    zIndex: pos.zIndex,
+                    stackCount: pos.stackCount,
+                  };
                 }
               }
             }
@@ -169,8 +214,13 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
 
     case 'ROTATE_CARD': {
       const widget = state.game.widgets[action.payload.cardId];
-      if (!widget || (widget.type !== 'card' && widget.type !== 'token' && widget.type !== 'holder')) return state;
-      const currentRot = typeof (widget as CardWidget).rotation === 'number' ? (widget as CardWidget).rotation : 0;
+      if (
+        !widget ||
+        (widget.type !== 'card' && widget.type !== 'token' && widget.type !== 'holder')
+      )
+        return state;
+      const currentRot =
+        typeof (widget as CardWidget).rotation === 'number' ? (widget as CardWidget).rotation : 0;
       const delta = action.payload.deltaDegrees ?? action.payload.angle ?? 60;
       const nextRot = (currentRot + delta) % 360;
 
@@ -194,9 +244,7 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       if (!widget || widget.type !== 'deck') return state;
       const deck = widget as DeckWidget;
 
-      const newIds = action.payload.newCardIds
-        ? [...action.payload.newCardIds]
-        : [...deck.cardIds];
+      const newIds = action.payload.newCardIds ? [...action.payload.newCardIds] : [...deck.cardIds];
 
       for (let i = newIds.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -282,8 +330,8 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
         nextX = holder.x + 10 + childIndex * spread;
         nextY = holder.y + 10;
       } else {
-        const handHolder = Object.values(widgets).find(
-          (w) => w.type === 'holder' && (w.id.toLowerCase() === 'hand' || w.id.toLowerCase().includes('hand') || (w as HolderWidget).isHand)
+        const handHolder = Object.values(widgets).find((w) =>
+          isHandHolderWidget(w as HolderWidget),
         ) as HolderWidget | undefined;
         if (handHolder) {
           const updatedChildIds = [...handHolder.childIds, drawnCardId];
@@ -367,7 +415,9 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
 
       if (bag.isInfinite && bag.templateWidget) {
         const template = bag.templateWidget;
-        const spawnedId = action.payload.spawnedId || `tok_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
+        const spawnedId =
+          action.payload.spawnedId ||
+          `tok_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
 
         let nextX = bag.x + bag.width + 16;
         let nextY = bag.y;
@@ -461,9 +511,7 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       const widgets = { ...state.game.widgets };
       removeFromHolderAndUpdateHand(widgets, cardId);
 
-      const newCardIds = deck.cardIds.includes(cardId)
-        ? deck.cardIds
-        : [...deck.cardIds, cardId];
+      const newCardIds = deck.cardIds.includes(cardId) ? deck.cardIds : [...deck.cardIds, cardId];
 
       widgets[deck.id] = {
         ...deck,
@@ -512,7 +560,7 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
         targetDeckId = targetWidget.id;
       } else if (targetWidget.type === 'holder' && (targetWidget as HolderWidget).hasPileChild) {
         const pileChild = Object.values(widgets).find(
-          (w) => w.type === 'deck' && w.parent === targetWidget.id
+          (w) => w.type === 'deck' && w.parent === targetWidget.id,
         );
         if (pileChild) targetDeckId = pileChild.id;
       }
@@ -582,7 +630,7 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       // Move widget coordinates to holder
       if (widgets[widgetId]) {
         const updatedHolder = widgets[holderId] as HolderWidget;
-        const isHand = updatedHolder.isHand || updatedHolder.id.toLowerCase() === 'hand' || updatedHolder.id.toLowerCase().includes('hand');
+        const isHand = isHandHolder(updatedHolder);
 
         if (isHand) {
           const handCards = updatedHolder.childIds
@@ -606,8 +654,10 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
           const childIndex = updatedHolder.childIds.indexOf(widgetId);
           const childW = widgets[widgetId]?.width || 80;
           const childH = widgets[widgetId]?.height || 120;
-          let childX = updatedHolder.x + Math.max(0, Math.round((updatedHolder.width - childW) / 2));
-          let childY = updatedHolder.y + Math.max(0, Math.round((updatedHolder.height - childH) / 2));
+          let childX =
+            updatedHolder.x + Math.max(0, Math.round((updatedHolder.width - childW) / 2));
+          let childY =
+            updatedHolder.y + Math.max(0, Math.round((updatedHolder.height - childH) / 2));
           switch (updatedHolder.layout) {
             case 'stack':
               childX += childIndex * 2;
@@ -618,9 +668,10 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
               const cardW = 80;
               const maxSpread = cardW + 16;
               const availableWidth = Math.max(0, updatedHolder.width - cardW - 32);
-              const spread = totalCards > 1
-                ? Math.min(maxSpread, Math.max(36, availableWidth / (totalCards - 1)))
-                : maxSpread;
+              const spread =
+                totalCards > 1
+                  ? Math.min(maxSpread, Math.max(36, availableWidth / (totalCards - 1)))
+                  : maxSpread;
 
               updatedHolder.childIds.forEach((cId, idx) => {
                 if (widgets[cId]) {
@@ -669,10 +720,7 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       const counter = counterWidget as CounterWidget;
 
       const newVal = counter.value + action.payload.delta;
-      const clamped = Math.min(
-        counter.max ?? Infinity,
-        Math.max(counter.min ?? -Infinity, newVal)
-      );
+      const clamped = Math.min(counter.max ?? Infinity, Math.max(counter.min ?? -Infinity, newVal));
 
       return {
         ...state,
@@ -694,7 +742,7 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       if (!dieWidget || dieWidget.type !== 'die') return state;
       const die = dieWidget as DieWidget;
 
-      const value = action.payload.value ?? (Math.floor(Math.random() * die.sides) + 1);
+      const value = action.payload.value ?? Math.floor(Math.random() * die.sides) + 1;
 
       return {
         ...state,
@@ -724,7 +772,10 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       // Also snap to holder immediately in state
       return tabletopReducer(
         { ...state, flyingCards: [...state.flyingCards, flying] },
-        { type: 'SNAP_TO_HOLDER', payload: { widgetId: action.payload.cardId, holderId: action.payload.targetHolderId } }
+        {
+          type: 'SNAP_TO_HOLDER',
+          payload: { widgetId: action.payload.cardId, holderId: action.payload.targetHolderId },
+        },
       );
     }
 
@@ -775,7 +826,11 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       }
 
       const updatedWidgets = { ...state.game.widgets };
-      if (piece.parent && updatedWidgets[piece.parent] && updatedWidgets[piece.parent].type === 'holder') {
+      if (
+        piece.parent &&
+        updatedWidgets[piece.parent] &&
+        updatedWidgets[piece.parent].type === 'holder'
+      ) {
         const parentHolder = updatedWidgets[piece.parent] as HolderWidget;
         updatedWidgets[piece.parent] = {
           ...parentHolder,
@@ -801,11 +856,14 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       if (targetHolderId) {
         return tabletopReducer(
           { ...state, game: { ...state.game, widgets: updatedWidgets } },
-          { type: 'SNAP_TO_HOLDER', payload: { widgetId: pieceId, holderId: targetHolderId } }
+          { type: 'SNAP_TO_HOLDER', payload: { widgetId: pieceId, holderId: targetHolderId } },
         );
       }
 
-      const maxZ = Math.max(10, ...Object.values(updatedWidgets).map((w) => (typeof w.zIndex === 'number' ? w.zIndex : 0)));
+      const maxZ = Math.max(
+        10,
+        ...Object.values(updatedWidgets).map((w) => (typeof w.zIndex === 'number' ? w.zIndex : 0)),
+      );
       const previousParent = piece.parent || piece.supplyHolderId;
 
       updatedWidgets[pieceId] = {
@@ -864,11 +922,14 @@ export function tabletopReducer(state: TabletopGameState, action: TabletopAction
       if (targetId) {
         return tabletopReducer(
           { ...state, game: { ...state.game, widgets } },
-          { type: 'SNAP_TO_HOLDER', payload: { widgetId: cardId, holderId: targetId } }
+          { type: 'SNAP_TO_HOLDER', payload: { widgetId: cardId, holderId: targetId } },
         );
       }
 
-      const maxZ = Math.max(10, ...Object.values(widgets).map((w) => (typeof w.zIndex === 'number' ? w.zIndex : 0)));
+      const maxZ = Math.max(
+        10,
+        ...Object.values(widgets).map((w) => (typeof w.zIndex === 'number' ? w.zIndex : 0)),
+      );
 
       widgets[cardId] = {
         ...card,

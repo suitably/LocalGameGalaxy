@@ -2,6 +2,7 @@
  * Tabletop seat and player logic [ID: LOGIC-TABLETOP-SEAT]
  */
 import type { TabletopWidget, SeatWidget, TokenWidget, HolderWidget, CardWidget } from './types';
+import { isHandHolderWidget } from './handHolder';
 
 export const DEFAULT_SEAT_COLORS: Record<number, string> = {
   1: '#dc2626', // Red
@@ -31,10 +32,14 @@ export function resolveSeatColor(seat: SeatWidget): string {
   }
   const idLower = (seat.id || '').toLowerCase();
   const labelLower = (seat.label || '').toLowerCase();
-  if (idLower.includes('white') || labelLower.includes('white') || idLower.includes('weiß')) return '#f8fafc';
-  if (idLower.includes('black') || labelLower.includes('black') || idLower.includes('schwarz')) return '#1e293b';
-  if (idLower.includes('red') || labelLower.includes('red') || idLower.includes('rot')) return '#dc2626';
-  if (idLower.includes('blue') || labelLower.includes('blue') || idLower.includes('blau')) return '#2563eb';
+  if (idLower.includes('white') || labelLower.includes('white') || idLower.includes('weiß'))
+    return '#f8fafc';
+  if (idLower.includes('black') || labelLower.includes('black') || idLower.includes('schwarz'))
+    return '#1e293b';
+  if (idLower.includes('red') || labelLower.includes('red') || idLower.includes('rot'))
+    return '#dc2626';
+  if (idLower.includes('blue') || labelLower.includes('blue') || idLower.includes('blau'))
+    return '#2563eb';
   if (idLower.includes('orange')) return '#ea580c';
   if (idLower.includes('green') || labelLower.includes('grün')) return '#16a34a';
 
@@ -56,7 +61,9 @@ export function getPlayerSupplyPieces(
   const playerHolders = Object.values(widgets).filter(
     (w): w is HolderWidget =>
       w.type === 'holder' &&
-      (w.id.toLowerCase().startsWith(playerPrefix) || w.ownerSeat === seatIndex - 1 || w.ownerSeat === seatIndex),
+      (w.id.toLowerCase().startsWith(playerPrefix) ||
+        w.ownerSeat === seatIndex - 1 ||
+        w.ownerSeat === seatIndex),
   );
 
   const holderChildIds = new Set<string>();
@@ -70,7 +77,8 @@ export function getPlayerSupplyPieces(
   for (const w of Object.values(widgets)) {
     if (w.type !== 'token') continue;
     const isChild = holderChildIds.has(w.id);
-    const parentMatches = typeof w.parent === 'string' && w.parent.toLowerCase().startsWith(playerPrefix);
+    const parentMatches =
+      typeof w.parent === 'string' && w.parent.toLowerCase().startsWith(playerPrefix);
     const ownerMatches = w.ownerSeat === seatIndex - 1 || w.ownerSeat === seatIndex;
 
     if ((isChild || parentMatches || ownerMatches) && w.parent) {
@@ -116,8 +124,10 @@ export function getPlayerStats(
   const handHolders = Object.values(widgets).filter(
     (w): w is HolderWidget =>
       w.type === 'holder' &&
-      (w.isHand || w.id.toLowerCase().includes('hand')) &&
-      (w.ownerSeat === seatIndex - 1 || w.ownerSeat === seatIndex || w.id.toLowerCase().includes(playerPrefix)),
+      isHandHolderWidget(w) &&
+      (w.ownerSeat === seatIndex - 1 ||
+        w.ownerSeat === seatIndex ||
+        w.id.toLowerCase().includes(playerPrefix)),
   );
 
   if (handHolders.length > 0) {

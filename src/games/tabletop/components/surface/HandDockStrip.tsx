@@ -5,13 +5,14 @@ import React, { useState, useMemo } from 'react';
 import { Box, Typography, Chip } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { TabletopGameState, TabletopAction } from '../../logic/tabletopReducer';
-import type { CardWidget, HolderWidget, SeatWidget } from '../../logic/types';
-import { isActionCard } from '../../logic/handLayout';
+import type { CardWidget, SeatWidget } from '../../logic/types';
+import { groupHandCards } from '../../logic/handLayout';
 import { getSeatWidgets, getPlayerSupplyPieces } from '../../logic/seatLogic';
 import { useDockDragDrop } from '../../hooks/useDockDragDrop';
 import { DockDragOverlay } from './DockDragOverlay';
 import { HandCardItem, CARD_W, CARD_H } from './HandCardItem';
 import { SupplyPieceItem } from './SupplyPieceItem';
+import { findPlayerHandHolder } from '../../logic/boardFilter';
 
 interface HandDockStripProps {
   state: TabletopGameState;
@@ -22,11 +23,12 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
   const { t } = useTranslation();
   const [dockTab, setDockTab] = useState<'cards' | 'supplies'>('cards');
 
-  const { draggingItem, pointerPos, grabOffset, boardScale, startCardDrag, startPieceDrag } = useDockDragDrop({
-    tableWidth: state.game.table.width,
-    tableHeight: state.game.table.height,
-    dispatch,
-  });
+  const { draggingItem, pointerPos, grabOffset, boardScale, startCardDrag, startPieceDrag } =
+    useDockDragDrop({
+      tableWidth: state.game.table.width,
+      tableHeight: state.game.table.height,
+      dispatch,
+    });
 
   const seats = useMemo(() => getSeatWidgets(state.game.widgets), [state.game.widgets]);
   const activeSeat = useMemo(() => {
@@ -36,16 +38,10 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
     return seats[0];
   }, [seats, state.currentSeatId, state.game.widgets]);
 
-  const handHolder = useMemo(() => {
-    const seatIdx = activeSeat?.index;
-    const seatPrefix = seatIdx ? `player ${seatIdx}` : '';
-    const holders = Object.values(state.game.widgets).filter((w): w is HolderWidget => w.type === 'holder' && Boolean((w as HolderWidget).isHand || w.id.toLowerCase().includes('hand')));
-    if (seatIdx) {
-      const match = holders.find((h) => h.ownerSeat === seatIdx - 1 || h.ownerSeat === seatIdx || h.id.toLowerCase().includes(seatPrefix));
-      if (match) return match;
-    }
-    return holders[0];
-  }, [activeSeat, state.game.widgets]);
+  const handHolder = useMemo(
+    () => findPlayerHandHolder(state.game.widgets, activeSeat?.index || undefined),
+    [activeSeat, state.game.widgets],
+  );
 
   const supplyPieces = useMemo(() => {
     if (!activeSeat) return {};
@@ -62,20 +58,7 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
       .filter((w): w is CardWidget => Boolean(w && w.type === 'card'));
   }, [handHolder, state.game.widgets]);
 
-  const groups = useMemo(() => {
-    const map = new Map<string, CardWidget[]>();
-    for (const card of handCards) {
-      const key = card.cardType || card.label || card.deckId || 'card';
-      const arr = map.get(key) || [];
-      arr.push(card);
-      map.set(key, arr);
-    }
-    return Array.from(map.entries()).map(([key, cards]) => ({
-      key,
-      isAction: isActionCard(cards[0]),
-      cards,
-    }));
-  }, [handCards]);
+  const groups = useMemo(() => groupHandCards(handCards), [handCards]);
 
   if (!handHolder && !hasSupplyPieces) return null;
   const showSupplies = dockTab === 'supplies' && hasSupplyPieces;
@@ -96,7 +79,12 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
         userSelect: 'none',
       }}
     >
-      <DockDragOverlay item={draggingItem} pointerPos={pointerPos} grabOffset={grabOffset} scale={boardScale} />
+      <DockDragOverlay
+        item={draggingItem}
+        pointerPos={pointerPos}
+        grabOffset={grabOffset}
+        scale={boardScale}
+      />
 
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
         {hasSupplyPieces ? (
@@ -119,7 +107,10 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
             />
           </Box>
         ) : (
-          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, letterSpacing: 0.5 }}>
+          <Typography
+            variant="caption"
+            sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, letterSpacing: 0.5 }}
+          >
             {t('games.tabletop.yourHand', 'Deine Hand')} ({handCards.length})
           </Typography>
         )}
@@ -151,7 +142,10 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
         </Box>
       ) : handCards.length === 0 ? (
         <Box display="flex" alignItems="center" justifyContent="center" flex={1}>
-          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}>
+          <Typography
+            variant="caption"
+            sx={{ color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}
+          >
             {t('games.tabletop.handEmpty', 'Keine Karten auf der Hand')}
           </Typography>
         </Box>
@@ -186,9 +180,16 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
                     >
                       <HandCardItem
                         card={c}
-                        onReturnToDeck={(cId, dId) => dispatch({ type: 'RETURN_CARD_TO_DECK', payload: { cardId: cId, deckId: dId } })}
+                        onReturnToDeck={(cId, dId) =>
+                          dispatch({
+                            type: 'RETURN_CARD_TO_DECK',
+                            payload: { cardId: cId, deckId: dId },
+                          })
+                        }
                         onPointerDown={(e) =>
-                          startCardDrag(e, c, () => dispatch({ type: 'FLIP_CARD', payload: { cardId: c.id } }))
+                          startCardDrag(e, c, () =>
+                            dispatch({ type: 'FLIP_CARD', payload: { cardId: c.id } }),
+                          )
                         }
                       />
                     </Box>
@@ -221,9 +222,16 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
                   <HandCardItem
                     card={topCard}
                     count={count}
-                    onReturnToDeck={(cId, dId) => dispatch({ type: 'RETURN_CARD_TO_DECK', payload: { cardId: cId, deckId: dId } })}
+                    onReturnToDeck={(cId, dId) =>
+                      dispatch({
+                        type: 'RETURN_CARD_TO_DECK',
+                        payload: { cardId: cId, deckId: dId },
+                      })
+                    }
                     onPointerDown={(e) =>
-                      startCardDrag(e, topCard, () => dispatch({ type: 'FLIP_CARD', payload: { cardId: topCard.id } }))
+                      startCardDrag(e, topCard, () =>
+                        dispatch({ type: 'FLIP_CARD', payload: { cardId: topCard.id } }),
+                      )
                     }
                   />
                 </Box>
