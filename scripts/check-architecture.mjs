@@ -10,7 +10,7 @@
  * 1. [CRITICAL] No Cross-Game Imports (src/games/<A> importing from src/games/<B>)
  * 2. [CRITICAL] No raw localStorage/sessionStorage outside src/lib/storage.ts
  * 3. [CRITICAL] No native window.confirm, window.prompt, window.alert
- * 4. [WARNING/ERROR] Component line budget (max 300 lines per .tsx file)
+ * 4. [WARNING] Component line budget (max 250 lines per .tsx file, same limit as check:budget, which enforces it)
  *
  * Usage:
  *   node scripts/check-architecture.mjs           # Full audit with summary
@@ -32,6 +32,8 @@ const GAMES_DIR = path.join(SRC_DIR, 'games');
 const BASELINE_FILE = path.join(__dirname, 'architecture-baseline.json');
 
 const isStrict = process.argv.includes('--strict');
+/** Same limit as MAX_LINES in check-component-budget.js. */
+const COMPONENT_MAX_LINES = 250;
 const isDiff = process.argv.includes('--diff');
 
 let baselineEntries = [];
@@ -196,14 +198,14 @@ for (const filePath of allFiles) {
     }
   }
 
-  // Check 4: Large components (>300 lines for React UI .tsx files)
+  // Check 4: Large components (> COMPONENT_MAX_LINES for React UI .tsx files; enforced by check:budget)
   if (filePath.endsWith('.tsx') && !relativePath.includes('test')) {
     const nonCommentLines = lines.filter((l) => {
       const t = l.trim();
       return t.length > 0 && !t.startsWith('//') && !t.startsWith('*') && !t.startsWith('/*');
     }).length;
 
-    if (nonCommentLines > 300) {
+    if (nonCommentLines > COMPONENT_MAX_LINES) {
       violations.largeComponents.push({
         file: relativePath,
         lines: lines.length,
@@ -315,10 +317,10 @@ if (violations.trackedServerMedia.length > 0) {
 // Report Large Components
 if (violations.largeComponents.length > 0) {
   console.log(
-    `${YELLOW}${BOLD}⚠ Components Exceeding 300 Lines (${violations.largeComponents.length})${RESET}`,
+    `${YELLOW}${BOLD}⚠ Components Exceeding ${COMPONENT_MAX_LINES} Lines (${violations.largeComponents.length})${RESET}`,
   );
   console.log(
-    `  Rule: Keep components small (< 250-300 lines) to satisfy SRP (docs/tech/coding-conventions.md §1).`,
+    `  Rule: Keep components at most ${COMPONENT_MAX_LINES} lines (docs/tech/coding-conventions.md §1); \`npm run check:budget\` enforces it.`,
   );
   const sorted = [...violations.largeComponents].sort((a, b) => b.lines - a.lines);
   for (const v of sorted.slice(0, 10)) {

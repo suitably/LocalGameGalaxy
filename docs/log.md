@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Component budget lock-in, Q9 resolved (claude-code)
+
+- #425: Q9 removed from `open-questions.md`; `coding-conventions.md`, `workflows/ci-cd-pipelines.md`, `architecture.md` and AGENTS.md §4 describe the lock-in and the single 250-line limit.
+- **Code changed:** `scripts/check-component-budget.js`, `scripts/check-architecture.mjs`.
+
 ## 2026-10-21 — PartyLobby logic extracted (claude-code)
 
 - #417: `tech/persistence.md` lists `PARTY_PLAYER_NAME` (`guessart_player_name`), previously an unregistered raw key in three files.

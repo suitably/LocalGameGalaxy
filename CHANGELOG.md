@@ -14,6 +14,7 @@
 
 ### Refactored
 
+- **Quality gates**: `check:budget` now also fails when a baseline is higher than the file, a graduated file is still listed, or a listed file was deleted; `npm run check:budget -- --update` lowers/removes such entries. `check:architecture` warns at the same 250-line limit instead of 300 (#425, resolves Q9).
 - **Party lobby**: player name (`logic/playerName.ts`, key now registered as `STORAGE_KEYS.PARTY_PLAYER_NAME`), routes and share link (`logic/partyRoutes.ts`, with tests) and the lobby state (`hooks/usePartyLobbyController.ts`) moved out of `PartyLobby.tsx` (615 → 539 lines). Joining/creating the room no longer runs inside a `useState` initializer, and the auto-navigation into a running game uses the updated roster for the tabletop seat instead of the previous render's (#417).
 - **Party lobby**: roster rules (host resolution, roster/score merge, presence join, host and player upsert) moved from `UniversalPartyManager` into pure functions in `src/features/party/logic/partyRoster.ts` with tests; host resolution exists once instead of in two branches (#415).
 - **WebRTC (Melodiq)**: the `identify` handling (name/hue/deviceId, replacing an earlier peer of the same device, `onPeerUpdated`) existed twice in `WebRTCHostManager` — once per signaling path. It is now one `applyIdentity()` with the pure `findStalePeersByDevice()` in `src/lib/webrtc/peerRegistry.ts` (with tests) (#412).
