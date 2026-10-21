@@ -4,7 +4,7 @@ import { LocalStoryEngine } from '../logic/engine';
 import { deleteStoryGame } from '../logic/repository';
 import { DEFAULT_MODIFIER_SETTINGS } from '../logic/modifiers';
 import { playerAssignment } from '../logic/playerAssignment';
-import { useLobbyPlayers } from '../../../modules/player-management';
+import { localPlayerIdsForDevice, useLobbyPlayers } from '../../../modules/player-management';
 import type { LobbyPlayerItem } from '../../../modules/player-management';
 import type { StoryGameRecord, StoryModifierSettings } from '../types';
 
@@ -89,14 +89,10 @@ export const useStorytellerLobby = () => {
       modifiers: options.modifiers,
     });
 
-    // Save local player IDs on this device: Only players who are not remote are stored as local players
-    const localPlayers = record.players.filter((p, index) => {
-      const lobbyMatch = lobbyPlayers[index];
-      return lobbyMatch ? !lobbyMatch.isRemote : !p.isRemote;
-    });
+    // Only non-remote players are stored as local players of this device
     playerAssignment.setLocalPlayerIds(
       record.id,
-      localPlayers.length > 0 ? localPlayers.map((p) => p.id) : [record.players[0].id],
+      localPlayerIdsForDevice(record.players, lobbyPlayers),
     );
 
     await loadActiveGames();

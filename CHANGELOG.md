@@ -8,6 +8,7 @@
 
 ### Changed
 
+- **GuessArt / Storyteller**: which lobby players are local to the creating device is decided by `localPlayerIdsForDevice` in `src/modules/player-management/playerLogic.ts` (tested) instead of two copies (#426).
 - **Sudoku / Wordle**: the result dialogs share via `useShareOrCopy` (`src/modules/sharing`) instead of two copies of the share-or-clipboard code; the "copied" timer is now cleared on unmount (#426).
 - **Melodiq**: local and phone latency calibration share one panel (`LatencyCalibratorPanel.tsx`) and one beep detector (`components/hooks/detectBeep.ts`); the phone calibrator's labels are now translated (#426).
 - **Knister / Qwixx**: both dice rollers use the shared `src/components/games/useDiceRollAnimation.ts` instead of two copies of the roll timer (#426).

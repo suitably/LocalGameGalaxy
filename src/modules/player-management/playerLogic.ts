@@ -67,3 +67,19 @@ export const togglePlayerRemoteInLobby = (
     p.name.trim().toLowerCase() === target ? { ...p, isRemote: !p.isRemote } : p,
   );
 };
+
+/**
+ * Ids of the players that sit at this device after a game was created from the lobby.
+ * Lobby entries map to game players by index; remote entries are excluded. Falls back to the
+ * first player so the creating device always controls someone.
+ */
+export const localPlayerIdsForDevice = (
+  gamePlayers: { id: string; isRemote?: boolean }[],
+  lobbyPlayers: LobbyPlayerItem[],
+): string[] => {
+  const local = gamePlayers.filter((p, index) => {
+    const lobbyMatch = lobbyPlayers[index];
+    return lobbyMatch ? !lobbyMatch.isRemote : !p.isRemote;
+  });
+  return local.length > 0 ? local.map((p) => p.id) : [gamePlayers[0].id];
+};

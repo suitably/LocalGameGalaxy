@@ -3,7 +3,7 @@ import { LocalGameEngine } from '../logic/engine';
 import { playerAssignment } from '../logic/playerAssignment';
 import { guessArtMailbox } from '../logic/guessArtMailbox';
 import { guessArtNotificationService } from '../logic/notificationService';
-import { useLobbyPlayers } from '../../../modules/player-management';
+import { localPlayerIdsForDevice, useLobbyPlayers } from '../../../modules/player-management';
 import type { LobbyPlayerItem } from '../../../modules/player-management';
 import type { GuessArtGameRecord } from '../logic/types';
 
@@ -104,14 +104,10 @@ export const useGuessArtLobby = () => {
         manualWordMode: options.manualWordMode,
       });
 
-      // Save local player IDs on this device: Only players who are not remote are stored as local players
-      const localPlayers = record.players.filter((p, index) => {
-        const lobbyMatch = lobbyPlayers[index];
-        return lobbyMatch ? !lobbyMatch.isRemote : !p.isRemote;
-      });
+      // Only non-remote players are stored as local players of this device
       playerAssignment.setLocalPlayerIds(
         record.id,
-        localPlayers.length > 0 ? localPlayers.map((p) => p.id) : [record.players[0].id],
+        localPlayerIdsForDevice(record.players, lobbyPlayers),
       );
 
       await loadActiveGames();
