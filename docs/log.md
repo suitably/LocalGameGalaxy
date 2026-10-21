@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Melodiq latency calibrator dedup (claude-code)
+
+- #426 (latency calibrator): no doc described the calibrator UI; `CHANGELOG.md` updated.
+- **Code changed:** `src/games/melodiq/components/{LatencyCalibrator,RemoteLatencyCalibrator,LatencyCalibratorPanel}.tsx`, `components/hooks/detectBeep.ts`.
+
 ## 2026-10-21 — Shared dice roll animation (claude-code)
 
 - #426 (dice rollers): `docs/tech/architecture.md` §3.2 lists `useDiceRollAnimation`.

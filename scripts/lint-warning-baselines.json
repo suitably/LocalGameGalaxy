@@ -69,7 +69,6 @@
   "src/games/melodiq/components/PlaybackManager.tsx": 15,
   "src/games/melodiq/components/QueueList.tsx": 1,
   "src/games/melodiq/components/QueueParticipantDialog.tsx": 8,
-  "src/games/melodiq/components/RemoteLatencyCalibrator.tsx": 1,
   "src/games/melodiq/components/SongActionDialogs.tsx": 1,
   "src/games/melodiq/components/SongCard.tsx": 1,
   "src/games/melodiq/components/YouTubeSearchDialog.tsx": 4,
