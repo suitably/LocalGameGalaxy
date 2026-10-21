@@ -3,12 +3,13 @@
 /**
  * Component Size & God Component Prevention Checker
  * Enforces Single Responsibility Principle (SRP) and file size budgets.
- * 
+ *
  * Rules:
  * 1. Hard limit: Max 250 lines per component (.tsx).
  * 2. Warning: Components > 200 lines should consider extracting hooks/sub-components.
  * 3. Ratchet: Existing legacy components in legacy-component-baselines.json must not GROW.
- * 4. Graduation: When a legacy component shrinks <= 250 lines, it is flagged to be removed from the baseline.
+ * 4. Lock-in: a baseline above the current size, a graduated file (<= 250 lines) still listed, or an
+ *    entry for a deleted file fails the check. `--update` rewrites the baseline file (only lowers/removes).
  */
 
 import fs from 'fs';
@@ -49,6 +50,9 @@ function findTsxFiles(dir) {
 }
 
 const allFiles = findTsxFiles(SRC_DIR);
+const UPDATE_MODE = process.argv.includes('--update');
+const stale = [];
+const seen = new Set();
 const errors = [];
 const warnings = [];
 const graduated = [];
@@ -63,6 +67,10 @@ for (const filePath of allFiles) {
   const baselineLimit = baselines[relPath];
 
   if (baselineLimit !== undefined) {
+    seen.add(relPath);
+    if (lineCount <= MAX_LINES || lineCount < baselineLimit) {
+      stale.push({ file: relPath, lines: lineCount, was: baselineLimit });
+    }
     // Legacy component tracked in baseline
     if (lineCount <= MAX_LINES) {
       graduated.push({ file: relPath, lines: lineCount, was: baselineLimit });
@@ -71,7 +79,7 @@ for (const filePath of allFiles) {
       errors.push({
         file: relPath,
         lines: lineCount,
-        message: `Legacy component grew from ${baselineLimit} to ${lineCount} lines (+${lineCount - baselineLimit}). God components must not expand!`
+        message: `Legacy component grew from ${baselineLimit} to ${lineCount} lines (+${lineCount - baselineLimit}). God components must not expand!`,
       });
       legacyCount++;
     } else {
@@ -83,19 +91,52 @@ for (const filePath of allFiles) {
       errors.push({
         file: relPath,
         lines: lineCount,
-        message: `Exceeds max component limit of ${MAX_LINES} lines (${lineCount} lines). Decompose into custom hooks and sub-components.`
+        message: `Exceeds max component limit of ${MAX_LINES} lines (${lineCount} lines). Decompose into custom hooks and sub-components.`,
       });
     } else if (lineCount > WARN_LINES) {
       warnings.push({
         file: relPath,
         lines: lineCount,
-        message: `Approaching limit (${lineCount}/${MAX_LINES} lines). Consider extracting hooks or sub-components.`
+        message: `Approaching limit (${lineCount}/${MAX_LINES} lines). Consider extracting hooks or sub-components.`,
       });
       passCount++;
     } else {
       passCount++;
     }
   }
+}
+
+for (const relPath of Object.keys(baselines)) {
+  if (!seen.has(relPath)) stale.push({ file: relPath, lines: null, was: baselines[relPath] });
+}
+
+if (UPDATE_MODE) {
+  if (errors.length > 0) {
+    for (const item of errors) console.log(`   ⛔ ${item.file}: ${item.message}`);
+    console.log('\n❌ Baselines are never raised. Fix the violations above first.\n');
+    process.exit(1);
+  }
+  const next = {};
+  for (const [relPath, limit] of Object.entries(baselines)) {
+    const item = stale.find((s) => s.file === relPath);
+    if (!item) next[relPath] = limit;
+    else if (item.lines !== null && item.lines > MAX_LINES) next[relPath] = item.lines;
+  }
+  fs.writeFileSync(BASELINE_FILE, `${JSON.stringify(next, null, 2)}\n`);
+  console.log(
+    `✔ Updated ${stale.length} baseline entr${stale.length === 1 ? 'y' : 'ies'} in scripts/legacy-component-baselines.json`,
+  );
+  process.exit(0);
+}
+
+for (const item of stale) {
+  const message =
+    item.lines === null
+      ? `File no longer exists — remove it from the baseline.`
+      : item.lines <= MAX_LINES
+        ? `Graduated (${item.lines} lines <= ${MAX_LINES}) — remove it from the baseline.`
+        : `Shrank from ${item.was} to ${item.lines} lines — lower the baseline to lock in progress.`;
+  errors.push({ file: item.file, lines: item.lines, message });
 }
 
 console.log('\n🔍 --- Component Budget & Anti-God-Component Report ---');
@@ -107,7 +148,9 @@ console.log(`⏳ Legacy tracked components (> ${MAX_LINES} lines): ${legacyCount
 if (graduated.length > 0) {
   console.log('\n🎉 Graduated Components (Decomposed <= 250 lines!):');
   for (const item of graduated) {
-    console.log(`   ✨ ${item.file}: now ${item.lines} lines (was ${item.was}). Can be removed from baseline!`);
+    console.log(
+      `   ✨ ${item.file}: now ${item.lines} lines (was ${item.was}). Remove it from the baseline.`,
+    );
   }
 }
 
@@ -123,7 +166,15 @@ if (errors.length > 0) {
   for (const item of errors) {
     console.log(`   ⛔ ${item.file}: ${item.message}`);
   }
-  console.log('\n💡 Resolution: Extract state/effects into custom hooks and DOM sections into co-located sub-components.\n');
+  console.log(
+    '\n💡 Resolution: Extract state/effects into custom hooks and DOM sections into co-located sub-components.',
+  );
+  if (stale.length > 0) {
+    console.log(
+      '💡 Stale baselines: run `npm run check:budget -- --update` and commit scripts/legacy-component-baselines.json.',
+    );
+  }
+  console.log('');
   process.exit(1);
 } else {
   console.log('\n✨ All components meet the architectural budget!\n');

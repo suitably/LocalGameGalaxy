@@ -29,13 +29,6 @@ Resolve: run the scaffolder in a scratch branch; either align it with the existi
 Rule: every key is registered in `STORAGE_KEYS`. Reality: qwixx, knister, kniffel, guessart, storyteller and cards define local key strings (list in [game-catalog §2](tech/game-catalog.md#2-persistence)). Several registered keys are therefore **never referenced**: `CARDS_LOBBY_PLAYERS`, `QWIXX_MY_SHEET`, `QWIXX_SHOW_DICE`, `KNISTER_CURRENT_GAME`, `KNISTER_SHOW_DICE`, `EXCALIDRAW_DRAWING`. The architecture check only catches raw `localStorage.` calls, not unregistered keys.
 Resolve: replace local constants with the registry entries (same string values, so no data migration), add the missing ones (kniffel, guessart, storyteller), drop unused entries.
 
-## Q9 — Component budget bookkeeping is stale
-
-- `scripts/legacy-component-baselines.json` lists `src/components/connection/ServerAdminPanel.tsx`, which no longer exists.
-- `SetupDockerTab.tsx` (194 lines) and `KniffelBoard.tsx` (250) are at or under the limit and should graduate out of the baseline (PR #392 removes one entry).
-- The ratchet never lowers a baseline when a file shrinks, so shrunk files can grow back (e.g. `LyricsDisplay.tsx` baseline 508, actual 370 on 2026-10-21; full list in [cleanup plan §2](reports/2026-10-21-cleanup-plan.md#2-ratchet-bookkeeping-is-leaking-extends-q9)).
-- `check-architecture.mjs` warns at **300** lines while `check-component-budget.js` enforces **250** — two different numbers for one rule.
-
 ## Q10 — Node version drift
 
 `.nvmrc` = 24, root `package.json` `engines.node >=24`, CI uses `.nvmrc`. But `server/Dockerfile` builds on `node:20-slim` and README "Prerequisites" says Node 20.

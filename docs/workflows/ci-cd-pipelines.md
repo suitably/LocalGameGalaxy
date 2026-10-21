@@ -84,10 +84,11 @@ flowchart LR
    - Forbids raw `localStorage` / `sessionStorage` (mandates `src/lib/storage.ts`).
    - Forbids native blocking dialogs (`window.confirm()`, `window.prompt()`, `alert()`).
    - Does **not** check `any` (that is the ESLint [warning budget](../tech/coding-conventions.md#eslint-warning-budget)) and does not check inline `BroadcastChannel`.
-   - Also fails on tracked server media; warns (does not fail) on `.tsx` files over 300 lines.
+   - Also fails on tracked server media; warns (does not fail) on `.tsx` files over 250 non-comment lines (the limit `check:budget` enforces).
 2. **Component Size Budget Gate (`check:budget`)**:
    - Enforces max 250 lines per `.tsx` component file.
    - Ratchet mechanism: Legacy components exceeding budget are tracked in `scripts/legacy-component-baselines.json`. Any edit must decrease or preserve line count; never expand a God component.
+   - Lock-in: a baseline above the current size, a graduated file (≤ 250 lines) still listed, or an entry for a deleted file also fails. `npm run check:budget -- --update` lowers/removes such entries (never raises).
 3. **Duplicate Code Scan (`check:duplicates`)**:
    - Uses `jscpd` with `.jscpd.json` configuration.
    - Fails when total duplication exceeds the 2.5 % threshold; clones are counted from 12 lines / 60 tokens (`minLines`, `minTokens`). Ignores tests, `server/`, `public/`, JSON.

@@ -33,7 +33,7 @@ The full rule set with what enforces each rule lives in [`docs/tech/coding-conve
 - **No cross-game imports** (`src/games/<A>` → `src/games/<B>`). Shared code goes to `src/modules/`, `src/components/` or `src/lib/`. _(check:architecture fails)_
 - **Storage only via `src/lib/storage.ts`** (`storage`, `sessionStorageSafe`) with keys registered in `STORAGE_KEYS` / `STORAGE_PREFIXES`. Never `localStorage.` / `sessionStorage.` directly. _(check:architecture fails on raw access; unregistered keys are a known gap — Q8)_
 - **No native dialogs** (`confirm`, `prompt`, `alert`). Use [`ConfirmDialog`](src/components/common/ConfirmDialog.tsx) or MUI `<Dialog>`. _(ESLint + check:architecture fail)_
-- **Component budget:** new `.tsx` files ≤ 250 lines (aim < 160 for orchestrators); files in `scripts/legacy-component-baselines.json` must never grow, and are removed from it once ≤ 250. Decompose into a `use<Feature>State.ts` hook, focused sub-components and a co-located `types.ts`. _(check:budget fails)_
+- **Component budget:** new `.tsx` files ≤ 250 lines (aim < 160 for orchestrators); files in `scripts/legacy-component-baselines.json` must never grow; when one shrinks, lock it in with `npm run check:budget -- --update` (fails otherwise). Decompose into a `use<Feature>State.ts` hook, focused sub-components and a co-located `types.ts`. _(check:budget fails)_
 - **Pure game logic** in `logic/*.ts` with Vitest tests; components hold no game rules.
 - **Discriminated unions** instead of contradictory boolean flags.
 - **No `any`** in new or changed code — use generics, interfaces or `unknown` with guards. _(ESLint warning; `check:lint-budget` fails if a file gains warnings)_
