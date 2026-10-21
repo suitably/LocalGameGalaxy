@@ -74,9 +74,15 @@ export function TabletopGame() {
           const token = storage.getHelperToken();
           const headers: Record<string, string> = {};
           if (token) headers['Authorization'] = `Bearer ${token}`;
-          const sRes = await fetch(`${baseUrl}/api/tabletop/games/${encodeURIComponent(gameId)}/raw`, { headers });
+          const sRes = await fetch(
+            `${baseUrl}/api/tabletop/games/${encodeURIComponent(gameId)}/raw`,
+            { headers },
+          );
           if (sRes.ok) {
-            const data = (await sRes.json()) as { rawJson: string; assetMap: Record<string, string> };
+            const data = (await sRes.json()) as {
+              rawJson: string;
+              assetMap: Record<string, string>;
+            };
             const parsed = await parsePcioFile(data.rawJson, { assetFiles: data.assetMap });
             dispatch({ type: 'LOAD_GAME', payload: parsed });
             return;
@@ -114,9 +120,22 @@ export function TabletopGame() {
 
   if (error) {
     return (
-      <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100%" p={3}>
-        <Typography color="error" variant="h6" gutterBottom>{error}</Typography>
-        <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => navigate('/games/tabletop')}>
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        height="100%"
+        p={3}
+      >
+        <Typography color="error" variant="h6" gutterBottom>
+          {error}
+        </Typography>
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate('/games/tabletop')}
+        >
           Zurück zur Übersicht
         </Button>
       </Box>
@@ -153,7 +172,12 @@ export function TabletopGame() {
         dispatch={dispatch}
         mySeat={seat}
         onFlickCardToTable={(cardId, targetHolderId) => {
-          broadcastAction({ type: 'FLICK_CARD_TO_TABLE', cardId, targetHolderId, senderSeat: seat });
+          broadcastAction({
+            type: 'FLICK_CARD_TO_TABLE',
+            cardId,
+            targetHolderId,
+            senderSeat: seat,
+          });
           dispatch({ type: 'ANIMATE_CARD_TO_TABLE', payload: { cardId, targetHolderId } });
         }}
       />
