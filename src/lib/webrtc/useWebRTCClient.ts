@@ -2,6 +2,12 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import SimplePeer from 'simple-peer';
 import Client from 'bittorrent-tracker';
 import { getIceServers } from './iceServers';
+import {
+  decodeNdjsonChunk,
+  filterTrackerUrlsForPage,
+  generatePeerId,
+  stringToInfoHash,
+} from './trackerProtocol';
 
 const MAX_CANDIDATES = 4;
 const CONNECTION_TIMEOUT_MS = 6000;
@@ -101,27 +107,6 @@ export function useWebRTCClient(
     pendingPeerCandidatesRef.current = [];
   }, []);
 
-  const stringToInfoHash = (str: string): Uint8Array => {
-    const hash = new Uint8Array(20);
-    const encoder = new TextEncoder();
-    const strBuf = encoder.encode(str);
-    for (let i = 0; i < 20; i++) {
-      hash[i] = strBuf[i % strBuf.length];
-    }
-    return hash;
-  };
-
-  const generatePeerId = (): string => {
-    const array = new Uint8Array(10);
-    crypto.getRandomValues(array);
-    return (
-      '01234567890123456789' +
-      Array.from(array)
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join('')
-    );
-  };
-
   const processNextPendingPeer = useCallback((trackerPeerId: string) => {
     handledTrackerPeersRef.current.delete(trackerPeerId); // allow retry just in case it was cleaned up
     initiatedTrackersRef.current.delete(trackerPeerId);
@@ -197,14 +182,9 @@ export function useWebRTCClient(
 
           const onData = (data: Uint8Array | string) => {
             try {
-              const str = typeof data === 'string' ? data : new TextDecoder().decode(data);
-              const parts = str.split('\n');
-
-              for (const part of parts) {
-                if (!part.trim()) continue;
-
+              for (const message of decodeNdjsonChunk(data)) {
                 try {
-                  const parsed = JSON.parse(part);
+                  const parsed = message;
 
                   if (parsed.connectionId === connectionId && parsed.signal) {
                     const signal = parsed.signal;
@@ -357,12 +337,9 @@ export function useWebRTCClient(
 
       const onTrackerDiscoveryData = (data: Uint8Array | string) => {
         try {
-          const str = typeof data === 'string' ? data : new TextDecoder().decode(data);
-          const parts = str.split('\n');
-          for (const part of parts) {
-            if (!part.trim()) continue;
+          for (const message of decodeNdjsonChunk(data)) {
             try {
-              const parsed = JSON.parse(part);
+              const parsed = message;
               // If peer identifies as Host with matching partyId
               if (parsed.type === 'host_hello' && parsed.partyId === partyId) {
                 if (
@@ -408,22 +385,7 @@ export function useWebRTCClient(
       const infoHash = stringToInfoHash(partyId);
       const peerId = generatePeerId();
 
-      const isSecure = window.location.protocol === 'https:';
-      const validTrackers = trackerUrls
-        .map((url) => {
-          if (isSecure && url.startsWith('ws:')) {
-            return url.replace('ws:', 'wss:');
-          }
-          return url;
-        })
-        .filter((url) => {
-          if (url.includes('localhost') || url.includes('127.0.0.1') || url.includes(':8000')) {
-            return (
-              window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            );
-          }
-          return true;
-        });
+      const validTrackers = filterTrackerUrlsForPage(trackerUrls);
 
       const trackerClient = new Client({
         infoHash,

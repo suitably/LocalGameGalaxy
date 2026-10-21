@@ -14,6 +14,7 @@
 
 ### Refactored
 
+- **WebRTC (Melodiq)**: tracker info hash, peer id, NDJSON decoding and the tracker URL filter are shared by host and client via `src/lib/webrtc/trackerProtocol.ts` (with tests) instead of four hand-written copies. A malformed line in a data-channel chunk no longer drops the rest of that chunk on the host; the client now also de-duplicates tracker URLs (#411).
 - **Quality gates**: New per-file ESLint warning ratchet `npm run check:lint-budget` (baseline `scripts/lint-warning-baselines.json`, 516 warnings in 157 files). `lint-staged` no longer rejects files with pre-existing warnings; warnings can only decrease (#421).
 - **CI**: Removed the Google Jules integration (`/jules` issue command, daily Jules audit workflow, `scripts/pipeline/jules-*.cjs`, `.github/agents/`, `.github/lenses/`, `.pipeline-memory/`). The `JULES_API_KEY*` repository secrets are no longer used.
 - **CI**: Removed the Google AI agent factory (`scripts/agent-factory/`) and the optional Gemini Flash waiver in the doc-sync gate (`GEMINI_API_KEY` no longer used).

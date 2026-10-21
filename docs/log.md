@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — WebRTC tracker protocol module (claude-code)
+
+- #411: `tech/webrtc-signaling.md` §1 points to `src/lib/webrtc/trackerProtocol.ts` and documents the NDJSON decoding and tracker URL filter.
+- **Code changed:** new `src/lib/webrtc/trackerProtocol.ts` (+ tests); `WebRTCHostManager.ts`, `useWebRTCClient.ts` use it (preceded by a formatting-only commit).
+
 ## 2026-10-21 — Tabletop hand rule (claude-code)
 
 - #410: no doc owned the hand-holder rule; it is documented in the header of `src/games/tabletop/logic/handHolder.ts` and in `CHANGELOG.md`.

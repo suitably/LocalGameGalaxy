@@ -1,6 +1,12 @@
 import SimplePeer from 'simple-peer';
 import Client from 'bittorrent-tracker';
 import { getIceServers } from './iceServers';
+import {
+  decodeNdjsonChunk,
+  filterTrackerUrlsForPage,
+  generatePeerId as createPeerId,
+  stringToInfoHash as partyIdToInfoHash,
+} from './trackerProtocol';
 
 /**
  * Base type for a remote peer entry stored in the peers Map.
@@ -154,25 +160,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
     console.log('[WebRTCHostManager] InfoHash (Hex):', infoHashHex);
     const peerId = this.generatePeerId();
 
-    const isSecure = window.location.protocol === 'https:';
-
-    const validTrackers = this.trackerUrls
-      .map((url) => {
-        if (isSecure && url.startsWith('ws:')) {
-          return url.replace('ws:', 'wss:');
-        }
-        return url;
-      })
-      .filter((url) => {
-        if (url.includes('localhost') || url.includes('127.0.0.1') || url.includes(':8000')) {
-          return (
-            window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-          );
-        }
-        return true;
-      });
-
-    const finalTrackers = Array.from(new Set(validTrackers));
+    const finalTrackers = filterTrackerUrlsForPage(this.trackerUrls);
     console.log('[WebRTCHostManager] Using trackers:', finalTrackers);
 
     if (finalTrackers.length === 0) {
@@ -228,13 +216,12 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
 
     const onData = (data: Uint8Array | string) => {
       try {
-        const str = typeof data === 'string' ? data : new TextDecoder().decode(data);
-        const parts = str.split('\n');
-        for (const part of parts) {
-          if (!part.trim()) continue;
-
+        const messages = decodeNdjsonChunk(data, (line, e) =>
+          console.error('[WebRTCHostManager] Failed to parse individual signal chunk:', line, e),
+        );
+        for (const message of messages) {
           try {
-            const parsedData = JSON.parse(part);
+            const parsedData = message;
 
             if (parsedData.type === 'client_probe') {
               sendHostHello();
@@ -307,7 +294,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
               this.handleWrappedSignal(trackerPeer, parsedData);
             }
           } catch (e) {
-            console.error('[WebRTCHostManager] Failed to parse individual signal chunk:', part, e);
+            console.error('[WebRTCHostManager] Failed to handle signal message:', message, e);
           }
         }
       } catch (e) {
@@ -421,11 +408,8 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
 
     dataPeer.on('data', (data: Uint8Array | string) => {
       try {
-        const str = typeof data === 'string' ? data : new TextDecoder().decode(data);
-        const parts = str.split('\n');
-        for (const part of parts) {
-          if (!part.trim()) continue;
-          const msg = JSON.parse(part);
+        for (const message of decodeNdjsonChunk(data)) {
+          const msg = message;
 
           if (msg.type === 'identify') {
             console.log(
@@ -565,24 +549,12 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
     });
   }
 
+  /** Kept as protected hooks so subclasses can override; defaults live in `trackerProtocol.ts`. */
   protected stringToInfoHash(str: string): Uint8Array {
-    const hash = new Uint8Array(20);
-    const encoder = new TextEncoder();
-    const strBuf = encoder.encode(str);
-    for (let i = 0; i < 20; i++) {
-      hash[i] = strBuf[i % strBuf.length];
-    }
-    return hash;
+    return partyIdToInfoHash(str);
   }
 
   protected generatePeerId(): string {
-    const array = new Uint8Array(10);
-    crypto.getRandomValues(array);
-    return (
-      '01234567890123456789' +
-      Array.from(array)
-        .map((b) => b.toString(16).padStart(2, '0'))
-        .join('')
-    );
+    return createPeerId();
   }
 }

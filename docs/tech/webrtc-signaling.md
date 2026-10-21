@@ -25,7 +25,7 @@ LocalGameGalaxy operates in a local-network environment but supports internet-ba
 
 ### Announce InfoHash Mapping
 
-Rather than exchanging hashes of torrent files, the game maps the active **Room ID / Party ID** to a unique 20-byte InfoHash:
+Rather than exchanging hashes of torrent files, the game maps the active **Room ID / Party ID** to a unique 20-byte InfoHash. Host and client share one implementation in `src/lib/webrtc/trackerProtocol.ts` (`stringToInfoHash`, `generatePeerId`):
 
 ```typescript
 const stringToInfoHash = (partyId: string): Uint8Array => {
@@ -40,6 +40,11 @@ const stringToInfoHash = (partyId: string): Uint8Array => {
 ```
 
 Both the **Host** and **Phone Clients** announce themselves to the WebSocket tracker (`announce` URLs) under this shared InfoHash. The tracker server then returns a list of connected peers sharing the same InfoHash.
+
+### Wire format and tracker URL filter (`trackerProtocol.ts`)
+
+- Messages on the tracker and data channels are newline-delimited JSON. `decodeNdjsonChunk(data)` decodes one received chunk: blank lines and non-object values are skipped, malformed lines are reported but do not abort the rest of the chunk. Partial lines are **not** buffered across chunks.
+- `filterTrackerUrls(urls, { isSecure, hostname })`: on https pages `ws:` is upgraded to `wss:`; local trackers (`localhost`, `127.0.0.1`, port `8000`) are only used when the page itself runs on localhost; duplicates are removed. Host and client both call `filterTrackerUrlsForPage()`.
 
 ---
 
