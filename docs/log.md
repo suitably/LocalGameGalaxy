@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Dead Melodiq settings page, werewolf scenario tests (claude-code)
+
+- #423 / #424: no doc referenced the removed files; `CHANGELOG.md` updated.
+- **Code changed:** deleted `src/games/melodiq/MelodiqSettings.tsx`, `components/SettingsFeedbackForm.tsx`, `src/games/werewolf/logic/tests/verify_*.ts`; new `src/games/werewolf/logic/roleScenarios.test.ts`.
+
 ## 2026-10-21 — WebRTC tracker protocol module (claude-code)
 
 - #411: `tech/webrtc-signaling.md` §1 points to `src/lib/webrtc/trackerProtocol.ts` and documents the NDJSON decoding and tracker URL filter.
