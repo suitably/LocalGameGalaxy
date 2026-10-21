@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Tabletop VTT plan report (claude-code)
+
+- New `docs/reports/2026-10-21-tabletop-vtt-plan.md`, listed in `docs/reports/index.md`.
+- No code changed.
+
 ## 2026-10-21 — Compose generator matches the real containers (claude-code)
 
 - #342: `docs/tech/deployment.md` describes the generated compose file and why the standalone tracker stays.
