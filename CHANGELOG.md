@@ -2,6 +2,7 @@
 
 ### Added
 
+- **Tabletop**: editor building blocks — `PATCH_WIDGETS`, `ADD_WIDGET`, `DELETE_WIDGETS`, `UPDATE_TABLE` actions (`logic/widgetEdits.ts`) and undo/redo history on game deltas (`logic/editHistory.ts`, `APPLY_EDIT_DELTA`); `tabletopReducer.ts` split into deck, bag, piece, view and edit sub-reducers (945 → 364 lines) (#449).
 - **Tabletop**: running games are autosaved (host or local play) and resume after a reload; a restart button with confirmation starts the game from its definition again (`galaxy_tabletop_db` v3, store `sessions`) (#449).
 - **WebRTC**: STUN servers can be chosen per device in the connection and server settings, next to the tracker list: toggle built-in servers (Google stays off by default), add or remove custom `stun:`/`stuns:` URLs, with a warning when all are off. Tracker and STUN lists share one `ServerUrlList` component (#422).
 - **Testing & Edge-Case Audit**: Added comprehensive unit tests for Kniffel scoring (`kniffelScoring.ts`) and game reducer (`kniffelReducer.ts`), Darts game rules, countdown modes, double-out evaluation, and bust logic (`useDartsGame.ts`), and Imposter database repository & seeder (`imposterRepository.ts`, `dbSeeder.ts`) (Fixes #386).

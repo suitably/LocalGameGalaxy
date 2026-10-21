@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Tabletop engine doc, edit actions, undo history (claude-code)
+
+- #449 slices 3–4: new `docs/tech/tabletop-engine.md` (listed in `docs/tech/index.md`).
+- **Code changed:** `src/games/tabletop/logic/{tabletopReducer,widgetEdits,editHistory}.ts`, `logic/reducers/*`, tests.
+
 ## 2026-10-21 — Tabletop autosave/resume (claude-code)
 
 - #449 slice 2: `docs/tech/persistence.md` and `game-catalog.md` list the new `sessions` store.
