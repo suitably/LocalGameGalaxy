@@ -9,8 +9,8 @@ generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
 verified:
-  at: 2026-10-18
-  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
+  at: 2026-10-21
+  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; §6 checked against src/lib/webrtc/iceServers.ts on 2026-10-21'
 ---
 
 # WebRTC Signaling & Connection Architecture
@@ -111,3 +111,17 @@ The signaling infrastructure manages multiple trackers with distinct classificat
 - **No Backend Configured**: Free public trackers are **enabled by default** to ensure out-of-the-box phone connectivity without setup hurdles.
 - **Backend Configured**: When a self-hosted signaling microservice or companion server is present, the self-hosted tracker is enabled by default, while free public trackers remain listed in the UI but are **deactivated by default**. This ensures local/private signaling takes precedence without leaking data to public trackers, while avoiding accidental tracker removal. Users can explicitly reactivate individual public fallback trackers at any time via the UI toggle switch.
 - **Preferences Persistence**: Explicit user overrides per tracker URL are persisted in `${gameId}_tracker_preferences` via `storage.ts`.
+
+---
+
+## 6. ICE / STUN Servers
+
+All four peer constructions (tracker client and data peer in `WebRTCHostManager.ts` and `useWebRTCClient.ts`) take `iceServers: getIceServers()` from `src/lib/webrtc/iceServers.ts`.
+
+- **Per device, not per party.** STUN only tells a device its own public address; host and phones may use different servers. Only the tracker (§5) has to be shared.
+- **Built-in list** (`DEFAULT_STUN_SERVERS`): `stun:stun.cloudflare.com:3478` and `stun:global.stun.twilio.com:3478` enabled, `stun:stun.l.google.com:19302` listed but **disabled by default**.
+- **Custom servers**: `stun:`/`stuns:` URLs (`isValidStunUrl`), enabled when added.
+- **Persistence**: `STORAGE_KEYS.WEBRTC_STUN_CUSTOM_URLS` (`galaxy_stun_custom_urls`) and `WEBRTC_STUN_PREFERENCES` (`galaxy_stun_preferences`, explicit on/off per URL). Malformed stored values are ignored.
+- **All disabled** → empty `iceServers`: only host candidates, so connections work on the same LAN only.
+- No TURN server is configured.
+- Settings UI: not yet available.

@@ -1,5 +1,6 @@
 import SimplePeer from 'simple-peer';
 import Client from 'bittorrent-tracker';
+import { getIceServers } from './iceServers';
 
 /**
  * Base type for a remote peer entry stored in the peers Map.
@@ -165,10 +166,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
             announce: finalTrackers,
             port: 0,
             rtcConfig: {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:global.stun.twilio.com:3478' },
-                ],
+                iceServers: getIceServers(),
             },
         } as any);
 
@@ -334,10 +332,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
             initiator: false,
             trickle: true,
             config: {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:global.stun.twilio.com:3478' },
-                ],
+                iceServers: getIceServers(),
             },
         });
 

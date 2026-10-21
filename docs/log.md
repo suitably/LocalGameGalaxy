@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — STUN server selection (claude-code)
+
+- `tech/webrtc-signaling.md` §6 (ICE / STUN servers), `tech/persistence.md` (two new keys), `operations/troubleshooting.md` STUN hint.
+- **Code changed:** `src/lib/webrtc/iceServers.ts` (+ tests), `storage.ts` keys, call sites in `WebRTCHostManager.ts` and `useWebRTCClient.ts`.
+
 ## 2026-10-21 — Google AI tooling removed (claude-code)
 
 - Removed `scripts/agent-factory/` (Google AI Pro / `agy` worker pool); `tech/agent-factory.md` moved to `archive/`.
