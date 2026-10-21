@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   DEFAULT_STUN_SERVERS,
+  addCustomStunUrl,
+  removeCustomStunUrl,
   buildStunServers,
   getIceServers,
   isValidStunUrl,
@@ -111,5 +113,32 @@ describe('WebRTC STUN server selection', () => {
 
     storage.set(STORAGE_KEYS.WEBRTC_STUN_PREFERENCES, 'not json');
     expect(loadStunSettings().preferences).toEqual({});
+  });
+});
+
+describe('custom STUN URL edits (#422)', () => {
+  const empty = { customUrls: [], preferences: {} };
+
+  it('adds a valid URL enabled and rejects invalid or duplicate ones', () => {
+    const added = addCustomStunUrl(empty, ' stun:my.host:3478 ');
+    expect(added.result).toBe('added');
+    expect(added.settings).toEqual({
+      customUrls: ['stun:my.host:3478'],
+      preferences: { 'stun:my.host:3478': true },
+    });
+    expect(addCustomStunUrl(empty, 'https://x').result).toBe('invalid');
+    expect(addCustomStunUrl(added.settings, 'stun:my.host:3478').result).toBe('duplicate');
+    expect(addCustomStunUrl(empty, DEFAULT_STUN_SERVERS[0].url).result).toBe('duplicate');
+  });
+
+  it('removes a custom URL together with its preference', () => {
+    const settings = {
+      customUrls: ['stun:a', 'stun:b'],
+      preferences: { 'stun:a': false, 'stun:b': true },
+    };
+    expect(removeCustomStunUrl(settings, 'stun:a')).toEqual({
+      customUrls: ['stun:b'],
+      preferences: { 'stun:b': true },
+    });
   });
 });
