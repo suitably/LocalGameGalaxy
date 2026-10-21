@@ -74,9 +74,15 @@ export function TabletopGame() {
           const token = storage.getHelperToken();
           const headers: Record<string, string> = {};
           if (token) headers['Authorization'] = `Bearer ${token}`;
-          const sRes = await fetch(`${baseUrl}/api/tabletop/games/${encodeURIComponent(gameId)}/raw`, { headers });
+          const sRes = await fetch(
+            `${baseUrl}/api/tabletop/games/${encodeURIComponent(gameId)}/raw`,
+            { headers },
+          );
           if (sRes.ok) {
-            const data = (await sRes.json()) as { rawJson: string; assetMap: Record<string, string> };
+            const data = (await sRes.json()) as {
+              rawJson: string;
+              assetMap: Record<string, string>;
+            };
             const parsed = await parsePcioFile(data.rawJson, { assetFiles: data.assetMap });
             dispatch({ type: 'LOAD_GAME', payload: parsed });
             return;
@@ -96,7 +102,7 @@ export function TabletopGame() {
 
   // Sync setup
   const isHost = role === 'tv';
-  const { broadcastAction } = useTabletopSync({
+  const { broadcastAction, syncedDispatch } = useTabletopSync({
     roomId,
     isHost,
     game: gameState.game,
@@ -114,9 +120,22 @@ export function TabletopGame() {
 
   if (error) {
     return (
-      <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100%" p={3}>
-        <Typography color="error" variant="h6" gutterBottom>{error}</Typography>
-        <Button variant="outlined" startIcon={<ArrowBackIcon />} onClick={() => navigate('/games/tabletop')}>
+      <Box
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        justifyContent="center"
+        height="100%"
+        p={3}
+      >
+        <Typography color="error" variant="h6" gutterBottom>
+          {error}
+        </Typography>
+        <Button
+          variant="outlined"
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate('/games/tabletop')}
+        >
           Zurück zur Übersicht
         </Button>
       </Box>
@@ -140,7 +159,7 @@ export function TabletopGame() {
         >
           Zurück zur Party-Lobby
         </Button>
-        <TabletopSurface state={gameState} dispatch={dispatch} isTvMode={true} />
+        <TabletopSurface state={gameState} dispatch={syncedDispatch} isTvMode={true} />
       </Box>
     );
   }
@@ -150,10 +169,15 @@ export function TabletopGame() {
     return (
       <TabletopControllerView
         state={gameState}
-        dispatch={dispatch}
+        dispatch={syncedDispatch}
         mySeat={seat}
         onFlickCardToTable={(cardId, targetHolderId) => {
-          broadcastAction({ type: 'FLICK_CARD_TO_TABLE', cardId, targetHolderId, senderSeat: seat });
+          broadcastAction({
+            type: 'FLICK_CARD_TO_TABLE',
+            cardId,
+            targetHolderId,
+            senderSeat: seat,
+          });
           dispatch({ type: 'ANIMATE_CARD_TO_TABLE', payload: { cardId, targetHolderId } });
         }}
       />
@@ -165,9 +189,9 @@ export function TabletopGame() {
     return (
       <Box display="flex" flexDirection="column" width="100%" height="100%" overflow="hidden">
         <Box flex={1} position="relative" minHeight={0}>
-          <TabletopSurface state={gameState} dispatch={dispatch} />
+          <TabletopSurface state={gameState} dispatch={syncedDispatch} />
         </Box>
-        <HandDockStrip state={gameState} dispatch={dispatch} />
+        <HandDockStrip state={gameState} dispatch={syncedDispatch} />
       </Box>
     );
   }
