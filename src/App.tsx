@@ -1,15 +1,21 @@
-import { Suspense, useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { CircularProgress, Box } from '@mui/material';
 import { App as CapacitorApp } from '@capacitor/app';
 import { MainLayout } from './components/Layout/MainLayout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { gameRegistry } from './lib/gameRegistry';
-import { Hub } from './features/hub/Hub';
-import { Settings } from './features/settings/Settings';
-import { PartyLobby } from './features/party/PartyLobby';
 import { useServerUrlAutoConnect } from './hooks/useServerUrlAutoConnect';
 import { hasGitHubPAT } from './lib/github';
+
+// Route-level code splitting: the hub, settings and party lobby load on first visit.
+const Hub = lazy(() => import('./features/hub/Hub').then((m) => ({ default: m.Hub })));
+const Settings = lazy(() =>
+  import('./features/settings/Settings').then((m) => ({ default: m.Settings })),
+);
+const PartyLobby = lazy(() =>
+  import('./features/party/PartyLobby').then((m) => ({ default: m.PartyLobby })),
+);
 
 // Loading fallback component
 const LoadingFallback = () => (

@@ -55,6 +55,11 @@ interface QueueContextValue {
 
 const QueueContext = createContext<QueueContextValue | null>(null);
 
+/**
+ * One BroadcastChannel per tab for the host queue, created lazily and kept for the page's lifetime
+ * on purpose: `setQueue`/`setNowPlaying` post through it from outside the provider's render cycle,
+ * and the browser closes it when the page unloads. Not closed on provider unmount (#427).
+ */
 let queueBroadcastChannel: BroadcastChannel | null = null;
 
 const getBroadcastChannel = (): BroadcastChannel | null => {

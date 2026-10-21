@@ -88,6 +88,13 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
   const channelRef = useRef<BroadcastChannel | null>(null);
   const presentationConnectionRef = useRef<PresentationConnection | null>(null);
   const tvWindowRef = useRef<Window | null>(null);
+  /** Polls whether the popup TV window was closed; cleared on close, disconnect and unmount. */
+  const tvWindowPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stopTvWindowPoll = useCallback(() => {
+    if (tvWindowPollRef.current) clearInterval(tvWindowPollRef.current);
+    tvWindowPollRef.current = null;
+  }, []);
+  useEffect(() => stopTvWindowPoll, [stopTvWindowPoll]);
 
   // Forward ref to sendMessage so handlers defined prior can use it
   const sendMessageRef = useRef<(type: string, payload?: any) => void>(() => {});
@@ -271,9 +278,10 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
     );
     tvWindowRef.current = win;
 
-    const interval = setInterval(() => {
+    stopTvWindowPoll();
+    tvWindowPollRef.current = setInterval(() => {
       if (win?.closed) {
-        clearInterval(interval);
+        stopTvWindowPoll();
         // Only mark disconnected if NO presentation needs connection either
         if (
           !presentationConnectionRef.current ||
@@ -284,7 +292,7 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
         tvWindowRef.current = null;
       }
     }, 1000);
-  }, [getLatestSessionInfo]);
+  }, [getLatestSessionInfo, stopTvWindowPoll]);
 
   const playSongOnTV = useCallback(
     (songId: string, songData?: any, currentTime?: number) => {
@@ -325,6 +333,7 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
   );
 
   const disconnectTV = useCallback(() => {
+    stopTvWindowPoll();
     // 1. Close Window if open
     if (tvWindowRef.current) {
       tvWindowRef.current.close();
@@ -338,7 +347,7 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
     }
 
     setIsTVConnected(false);
-  }, []);
+  }, [stopTvWindowPoll]);
 
   return {
     isTVConnected,
