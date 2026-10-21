@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Melodiq session players split (claude-code)
+
+- #418: no doc described `useSessionPlayers`; `CHANGELOG.md` updated.
+- **Code changed:** `src/games/melodiq/gameplay/hooks/{useSessionPlayers,useSessionOverrideSync,usePeerRosterSync,usePeerSessionMessages,useBroadcastSongInfo}.ts`, new `gameplay/logic/sessionRoster.ts` + test.
+
 ## 2026-10-21 — Tabletop holder layout extracted (claude-code)
 
 - #414: no doc described the holder layout math; `CHANGELOG.md` updated.

@@ -7,6 +7,7 @@
 
 ### Changed
 
+- **Melodiq**: `useSessionPlayers` is split into pure roster rules (`gameplay/logic/sessionRoster.ts`, tested) and focused hooks (`useSessionOverrideSync`, `usePeerRosterSync`, `usePeerSessionMessages`, `useBroadcastSongInfo`). Phone messages are now received via `manager.on('message')` instead of overwriting `manager.onMessage`, so other listeners are no longer replaced; storage is read via `storage.getJson` and the hooks are typed without `any` (#418).
 - **Tabletop**: holder layout (hand, stack, fan, grid) moved from `tabletopReducer.ts` into `src/games/tabletop/logic/holderLayout.ts` with named constants and characterisation tests; the hand re-layout write-back exists once instead of four times (#414).
 - **Melodiq server**: the song download job is split into steps; yt-dlp lookup/install/spawn lives in `services/ytdlp.ts` (one install path instead of two copies, shared with `routes/usdb.ts`) and UltraStar `.txt` header handling in `services/ultrastarTxt.ts`, with tests (#413).
 - **Performance**: `Hub`, `Settings` and `PartyLobby` are lazy-loaded routes (own chunks). Melodiq TV mode clears its popup-window poll on disconnect and unmount instead of only when the window closes; the host queue's BroadcastChannel is documented as page-lifetime (#427, salvaged from the closed #402 without its Sudoku/sync regressions).
