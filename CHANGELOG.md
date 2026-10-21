@@ -7,6 +7,7 @@
 
 ### Changed
 
+- **WebRTC (Melodiq)**: STUN servers are now resolved per device from `src/lib/webrtc/iceServers.ts` instead of four hardcoded lists. Defaults are Cloudflare and Twilio; Google's STUN server stays selectable but is disabled by default. Custom STUN URLs and per-server toggles are stored in `galaxy_stun_custom_urls` / `galaxy_stun_preferences`.
 - Fixed missing i18n keys for guessart, tabletop and party translations.
 - Refactored any to unknown in melodiqFetch.
 

@@ -34,21 +34,21 @@ The only file allowed to touch `localStorage` / `sessionStorage` (enforced by `n
 
 ### `STORAGE_KEYS` groups (91 keys)
 
-| Group                   | Examples (value in parentheses)                                                                                                                                    |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Companion helper        | `HELPER_URL` (`melodiq_helper_url`), `HELPER_TOKEN`, `HELPER_ACTIVE`, `SIGNALING_URL` (`galaxy_signaling_url`)                                                     |
-| Melodiq client/session  | `CLIENT_PROFILE`, `PROFILES`, `ACTIVE_SESSION`, `CURRENT_SONG_PARTICIPANTS`, `MELODIQ_TRACKER_*`, `MELODIQ_MIC_*`, `MELODIQ_PARTY_ID`, `MELODIQ_HOST_BASE_URL`     |
-| Melodiq queue           | `NOW_PLAYING`, `QUEUE`, `SONG_HISTORY`                                                                                                                             |
-| Melodiq legacy profiles | `MELODIQ_P1_*`, `MELODIQ_P2_*` (migration only)                                                                                                                    |
-| Melodiq settings        | `MELODIQ_SHOW_*`, `MELODIQ_*_VOLUME`, `MELODIQ_LYRICS_*`, `MELODIQ_AUDIO_PLAYBACK_MODE`, `MELODIQ_MIC_LATENCY`, …                                                  |
-| Melodiq Notes           | `MELODIQ_NOTES_SOUND_CONFIG`, `_VIEW_MODE`, `_SHEET_RENDER_MODE`                                                                                                   |
-| Werewolf                | `WEREWOLF_STATE` (`werewolf-game-state`), `WEREWOLF_SETUP_PLAYERS`, `WEREWOLF_CUSTOM_ROLES` (`werewolf-custom-roles`), `WEREWOLF_SETTINGS`, `WEREWOLF_TTS_ENABLED` |
-| Imposter                | `IMPOSTER_SETTINGS`, `IMPOSTER_SETUP_PLAYERS`, `IMPOSTER_SEEN_INFO`                                                                                                |
-| GitHub publishing       | `GITHUB_TOKEN` (`nexumia_github_token`, a PAT — see `src/lib/github.ts` security note), `GITHUB_OWNER`, `GITHUB_REPO`                                              |
-| Notifications           | `PUSH_RELAY_URL`, `NOTIFICATION_METHOD`, `NTFY_SERVER_URL`, `NTFY_TOPIC`                                                                                           |
-| Small games             | `DARTS_GAME_STATE`, `SUDOKU_STATE`, `SUDOKU_STATS`, `WORDLE_STATS`, `CARDS_LOBBY_PLAYERS`, `KNISTER_*`, `QWIXX_*`                                                  |
-| Party / Gartic          | `GARTIC_STATE_PREFIX`, `GARTIC_HOST_PREFIX`, `PARTY_MY_PLAYER_ID`, `HOST_ROOM_CODE`                                                                                |
-| App                     | `SHARE_WEBAPP_URL`, `PWA_BANNER_DISMISSED`, `LANGUAGE` (`lgg_language`), `LANGUAGE_LEGACY` (`language`), `EXCALIDRAW_LIBRARY`, `EXCALIDRAW_DRAWING`                |
+| Group                   | Examples (value in parentheses)                                                                                                                                                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Companion helper        | `HELPER_URL` (`melodiq_helper_url`), `HELPER_TOKEN`, `HELPER_ACTIVE`, `SIGNALING_URL` (`galaxy_signaling_url`), `WEBRTC_STUN_CUSTOM_URLS`, `WEBRTC_STUN_PREFERENCES` ([webrtc-signaling §6](webrtc-signaling.md#6-ice--stun-servers)) |
+| Melodiq client/session  | `CLIENT_PROFILE`, `PROFILES`, `ACTIVE_SESSION`, `CURRENT_SONG_PARTICIPANTS`, `MELODIQ_TRACKER_*`, `MELODIQ_MIC_*`, `MELODIQ_PARTY_ID`, `MELODIQ_HOST_BASE_URL`                                                                        |
+| Melodiq queue           | `NOW_PLAYING`, `QUEUE`, `SONG_HISTORY`                                                                                                                                                                                                |
+| Melodiq legacy profiles | `MELODIQ_P1_*`, `MELODIQ_P2_*` (migration only)                                                                                                                                                                                       |
+| Melodiq settings        | `MELODIQ_SHOW_*`, `MELODIQ_*_VOLUME`, `MELODIQ_LYRICS_*`, `MELODIQ_AUDIO_PLAYBACK_MODE`, `MELODIQ_MIC_LATENCY`, …                                                                                                                     |
+| Melodiq Notes           | `MELODIQ_NOTES_SOUND_CONFIG`, `_VIEW_MODE`, `_SHEET_RENDER_MODE`                                                                                                                                                                      |
+| Werewolf                | `WEREWOLF_STATE` (`werewolf-game-state`), `WEREWOLF_SETUP_PLAYERS`, `WEREWOLF_CUSTOM_ROLES` (`werewolf-custom-roles`), `WEREWOLF_SETTINGS`, `WEREWOLF_TTS_ENABLED`                                                                    |
+| Imposter                | `IMPOSTER_SETTINGS`, `IMPOSTER_SETUP_PLAYERS`, `IMPOSTER_SEEN_INFO`                                                                                                                                                                   |
+| GitHub publishing       | `GITHUB_TOKEN` (`nexumia_github_token`, a PAT — see `src/lib/github.ts` security note), `GITHUB_OWNER`, `GITHUB_REPO`                                                                                                                 |
+| Notifications           | `PUSH_RELAY_URL`, `NOTIFICATION_METHOD`, `NTFY_SERVER_URL`, `NTFY_TOPIC`                                                                                                                                                              |
+| Small games             | `DARTS_GAME_STATE`, `SUDOKU_STATE`, `SUDOKU_STATS`, `WORDLE_STATS`, `CARDS_LOBBY_PLAYERS`, `KNISTER_*`, `QWIXX_*`                                                                                                                     |
+| Party / Gartic          | `GARTIC_STATE_PREFIX`, `GARTIC_HOST_PREFIX`, `PARTY_MY_PLAYER_ID`, `HOST_ROOM_CODE`                                                                                                                                                   |
+| App                     | `SHARE_WEBAPP_URL`, `PWA_BANNER_DISMISSED`, `LANGUAGE` (`lgg_language`), `LANGUAGE_LEGACY` (`language`), `EXCALIDRAW_LIBRARY`, `EXCALIDRAW_DRAWING`                                                                                   |
 
 Read the file for the full list — this table is a map, not a copy.
 

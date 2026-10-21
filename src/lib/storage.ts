@@ -9,6 +9,8 @@ export const STORAGE_KEYS = {
     HELPER_TOKEN: 'melodiq_helper_token',
     HELPER_ACTIVE: 'melodiq_enable_helper',
     SIGNALING_URL: 'galaxy_signaling_url',
+    WEBRTC_STUN_CUSTOM_URLS: 'galaxy_stun_custom_urls',
+    WEBRTC_STUN_PREFERENCES: 'galaxy_stun_preferences',
     
     // Client connection states
     CLIENT_PROFILE: 'melodiq_client_profile',

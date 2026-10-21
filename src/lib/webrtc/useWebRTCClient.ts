@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import SimplePeer from 'simple-peer';
 import Client from 'bittorrent-tracker';
+import { getIceServers } from './iceServers';
 
 const MAX_CANDIDATES = 4;
 const CONNECTION_TIMEOUT_MS = 6000;
@@ -145,10 +146,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
                     trickle: true,
                     stream: mediaStreamRef.current || undefined,
                     config: {
-                        iceServers: [
-                            { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:global.stun.twilio.com:3478' },
-                        ],
+                        iceServers: getIceServers(),
                     },
                 });
 
@@ -395,10 +393,7 @@ export function useWebRTCClient(partyId: string | null, trackerUrls: string[], o
                 announce: validTrackers,
                 port: 0,
                 rtcConfig: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:global.stun.twilio.com:3478' },
-                    ],
+                    iceServers: getIceServers(),
                 },
                 numWant: 4,
             } as any);

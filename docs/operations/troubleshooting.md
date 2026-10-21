@@ -99,7 +99,7 @@ The TV/Host QR code displays, but the phone client hangs at "Connecting..." or s
    sudo ufw allow 8000/tcp
    sudo ufw allow 5173/tcp
    ```
-2. **Configure STUN Servers**: In firewalled LAN networks, ensure the WebRTC manager configuration includes local STUN servers if Google's public STUN is blocked.
+2. **Configure STUN Servers**: The built-in STUN servers (Cloudflare, Twilio; Google selectable, off by default) are listed in [webrtc-signaling §6](../tech/webrtc-signaling.md#6-ice--stun-servers). In firewalled networks, enable a reachable one or add your own STUN URL.
 
 ---
 
