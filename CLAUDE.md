@@ -4,9 +4,10 @@
 
 ## Session start
 
-1. `docs/index.md` is the map of the knowledge base. Open the doc for your area before touching code; for game work start with `docs/tech/game-catalog.md`.
-2. Read `docs/open-questions.md` — known bugs and pending decisions.
-3. Check overlapping work: `git status`, `gh pr list`. Do not commit to `main`.
+Keep context small — load docs on demand, not up front.
+
+1. Questions and trivial fixes: go straight to the code. For changes, follow AGENTS.md §1 (one doc for your area, grep instead of whole-file reads).
+2. Check overlapping work: `git status`, open PRs. Do not commit to `main`.
 
 ## Commands
 
@@ -19,7 +20,7 @@
 | Server tests               | `cd server && npm run build && npm test`                                     |
 | One test file              | `npx vitest run src/path/to/file.test.ts`                                    |
 
-Run gates only after code changes, not while researching.
+Run gates only after code changes, not while researching. Prefer the narrowest check (one test file, `check:architecture:diff`) and pipe long output through `tail -40`; run the full gate once before committing.
 
 ## Working rules for Claude
 
