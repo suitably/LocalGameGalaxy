@@ -8,6 +8,7 @@
 
 ### Changed
 
+- **Tabletop sync**: moves, draws, rolls, counters and all other table actions from phones now reach the host and every device. Phones send their actions as intents; the host (TV) applies them and broadcasts only the changed widgets with a sequence number, and a device that misses an update fetches a fresh snapshot. Before, only "return to lobby" and card flicks were sent and devices drifted apart (#449).
 - **Self-hosting**: the compose generator in the server settings no longer emits the non-existent `tabletop-companion` and `galaxy-push-relay` images; it creates one companion container with `PLUGINS` for the selected games next to the signaling tracker. `server/docker-compose.yml` drops the commented tabletop container (#342).
 - **Melodiq Notes**: the soundfont provider select and custom URL field are one component (`SoundfontProviderFields.tsx`) used by the in-game sound settings and the settings page; the settings page looks the same (#426).
 - **Melodiq Notes**: the mixer, song-select and sound-settings dialogs share `NotesDialogFrame.tsx` (frame, title, close button) instead of three copies (#426).

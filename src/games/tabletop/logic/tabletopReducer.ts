@@ -15,6 +15,7 @@ import type {
   BagWidget,
 } from './types';
 import { applyLayout, layoutHand, layoutHolderChildren } from './holderLayout';
+import { applyGameDelta, type GameDelta } from './stateDelta';
 import { snapToGridCoords } from './gridLogic';
 import { isBoardSnapTarget } from './boardFilter';
 import { isHandHolder, isHandHolderWidget, normalizeHandHolders } from './handHolder';
@@ -56,6 +57,7 @@ export type TabletopAction =
       };
     }
   | { type: 'SNAP_TO_HOLDER'; payload: { widgetId: string; holderId: string } }
+  | { type: 'APPLY_REMOTE_DELTA'; payload: GameDelta }
   | { type: 'RETURN_CARD_TO_DECK'; payload: { cardId: string; deckId: string } }
   | { type: 'UPDATE_COUNTER'; payload: { counterId: string; delta: number } }
   | { type: 'ROLL_DIE'; payload: { dieId: string; value?: number } }
@@ -99,6 +101,9 @@ export function tabletopReducer(
         game: normalizeHandHolders(action.payload),
         flyingCards: [],
       };
+
+    case 'APPLY_REMOTE_DELTA':
+      return { ...state, game: applyGameDelta(state.game, action.payload) };
 
     case 'MOVE_WIDGET': {
       const widget = state.game.widgets[action.payload.id];

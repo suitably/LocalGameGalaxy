@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Tabletop host-authoritative sync (claude-code)
+
+- #449 slice 1: `docs/tech/sync-protocol.md` describes the tabletop intent/delta/snapshot flow.
+- **Code changed:** `src/games/tabletop/{TabletopGame.tsx,hooks/useTabletopSync.ts,logic/syncProtocol.ts,logic/stateDelta.ts,logic/tabletopReducer.ts}` + tests; preceded by a formatting-only commit.
+
 ## 2026-10-21 — Tabletop VTT plan report (claude-code)
 
 - New `docs/reports/2026-10-21-tabletop-vtt-plan.md`, listed in `docs/reports/index.md`.

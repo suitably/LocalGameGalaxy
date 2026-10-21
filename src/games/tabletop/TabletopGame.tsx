@@ -102,7 +102,7 @@ export function TabletopGame() {
 
   // Sync setup
   const isHost = role === 'tv';
-  const { broadcastAction } = useTabletopSync({
+  const { broadcastAction, syncedDispatch } = useTabletopSync({
     roomId,
     isHost,
     game: gameState.game,
@@ -159,7 +159,7 @@ export function TabletopGame() {
         >
           Zurück zur Party-Lobby
         </Button>
-        <TabletopSurface state={gameState} dispatch={dispatch} isTvMode={true} />
+        <TabletopSurface state={gameState} dispatch={syncedDispatch} isTvMode={true} />
       </Box>
     );
   }
@@ -169,7 +169,7 @@ export function TabletopGame() {
     return (
       <TabletopControllerView
         state={gameState}
-        dispatch={dispatch}
+        dispatch={syncedDispatch}
         mySeat={seat}
         onFlickCardToTable={(cardId, targetHolderId) => {
           broadcastAction({
@@ -189,9 +189,9 @@ export function TabletopGame() {
     return (
       <Box display="flex" flexDirection="column" width="100%" height="100%" overflow="hidden">
         <Box flex={1} position="relative" minHeight={0}>
-          <TabletopSurface state={gameState} dispatch={dispatch} />
+          <TabletopSurface state={gameState} dispatch={syncedDispatch} />
         </Box>
-        <HandDockStrip state={gameState} dispatch={dispatch} />
+        <HandDockStrip state={gameState} dispatch={syncedDispatch} />
       </Box>
     );
   }
