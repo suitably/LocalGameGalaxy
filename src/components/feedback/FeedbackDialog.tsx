@@ -1,22 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Typography, TextField, Button, CircularProgress, Alert, IconButton, Dialog } from '@mui/material';
+import { Box, Typography, Button, Alert, IconButton, Dialog } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SettingsIcon from '@mui/icons-material/Settings';
 import VpnKeyRoundedIcon from '@mui/icons-material/VpnKeyRounded';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { hasGitHubPAT, submitFeedback } from '../../lib/github';
+import { hasGitHubPAT } from '../../lib/github';
+import { FeedbackForm } from './FeedbackForm';
 
 export const FeedbackDialog: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [open, setOpen] = useState(false);
-
-    const [feedbackTitle, setFeedbackTitle] = useState('');
-    const [feedbackBody, setFeedbackBody] = useState('');
-    const [submitting, setSubmitting] = useState(false);
     const [hasGithubConfig, setHasGithubConfig] = useState(true);
-    const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string; url?: string } | null>(null);
 
     const checkConfig = useCallback(() => {
         setHasGithubConfig(hasGitHubPAT());
@@ -29,7 +25,6 @@ export const FeedbackDialog: React.FC = () => {
                 navigate('/settings?tab=general&sub=feedback&missing_pat=1');
                 return;
             }
-            setStatus(null);
             checkConfig();
             setOpen(true);
         };
@@ -39,41 +34,6 @@ export const FeedbackDialog: React.FC = () => {
 
     const handleClose = () => {
         setOpen(false);
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!feedbackTitle.trim() || !feedbackBody.trim()) return;
-
-        setSubmitting(true);
-        setStatus(null);
-
-        try {
-            const result = await submitFeedback(feedbackTitle.trim(), feedbackBody.trim());
-
-            if (result.success) {
-                setStatus({
-                    type: 'success',
-                    message: t('settings.submit_success', 'Feedback successfully submitted!'),
-                    url: result.issueUrl,
-                });
-                setFeedbackTitle('');
-                setFeedbackBody('');
-            } else {
-                setStatus({
-                    type: 'error',
-                    message: t('settings.submit_error', 'Failed to submit feedback: {{error}}', { error: result.error }),
-                });
-            }
-        } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : 'Unknown error';
-            setStatus({
-                type: 'error',
-                message: t('settings.submit_error', 'Failed to submit feedback: {{error}}', { error: message }),
-            });
-        } finally {
-            setSubmitting(false);
-        }
     };
 
     if (!open || !hasGitHubPAT()) {
@@ -151,73 +111,11 @@ export const FeedbackDialog: React.FC = () => {
                     </Alert>
                 )}
 
-                <form onSubmit={handleSubmit}>
-                    <TextField
-                        fullWidth
-                        label={t('settings.issue_title', 'Title')}
-                        value={feedbackTitle}
-                        onChange={e => setFeedbackTitle(e.target.value)}
-                        disabled={submitting}
-                        required
-                        variant="outlined"
-                        size="small"
-                        sx={{ mb: 2 }}
-                    />
-                    <TextField
-                        fullWidth
-                        label={t('settings.issue_body', 'Description')}
-                        value={feedbackBody}
-                        onChange={e => setFeedbackBody(e.target.value)}
-                        disabled={submitting}
-                        required
-                        multiline
-                        rows={4}
-                        variant="outlined"
-                        size="small"
-                        sx={{ mb: 3 }}
-                    />
-
-                    {status && (
-                        <Alert
-                            severity={status.type}
-                            sx={{ mb: 2, bgcolor: status.type === 'success' ? 'rgba(46,125,50,0.2)' : 'rgba(211,47,47,0.2)', color: '#fff', border: `1px solid ${status.type === 'success' ? '#2e7d32' : '#d32f2f'}` }}
-                            onClose={() => setStatus(null)}
-                        >
-                            <Typography variant="body2">{status.message}</Typography>
-                            {status.url && (
-                                <Button
-                                    size="small"
-                                    href={status.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    sx={{ mt: 1, color: '#90caf9' }}
-                                >
-                                    {t('settings.view_issue', 'View on GitHub')}
-                                </Button>
-                            )}
-                        </Alert>
-                    )}
-
-                    <Box sx={{ display: 'flex', gap: 1.5 }}>
-                        <Button
-                            variant="outlined"
-                            onClick={handleClose}
-                            fullWidth
-                            sx={{ borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)' }}
-                        >
-                            {t('common.close', 'Close')}
-                        </Button>
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            fullWidth
-                            disabled={submitting || !feedbackTitle.trim() || !feedbackBody.trim() || !hasGithubConfig}
-                            startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : null}
-                        >
-                            {submitting ? t('settings.submitting', 'Submitting...') : t('settings.submit', 'Submit')}
-                        </Button>
-                    </Box>
-                </form>
+                <FeedbackForm
+                    onClose={handleClose}
+                    showCloseButton
+                    disabled={!hasGithubConfig}
+                />
             </Box>
         </Dialog>
     );
