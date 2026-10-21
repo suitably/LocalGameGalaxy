@@ -2,6 +2,12 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-21 — Cleanup plan report (claude-code)
+
+- Added `reports/2026-10-21-cleanup-plan.md` from jscpd, budget, architecture and ESLint runs.
+- Q9 extended: baselines are never lowered when a file shrinks.
+- **No code changed.**
+
 ## 2026-10-18 — PR cleanup: #384 and #394 on main (claude-code)
 
 - #384 merged; specs for #353, #354, #355, #357, #358 moved to `archive/issue-specs/`, Q15 resolved. #358 closed (parity baseline empty), PR #364 closed as superseded.

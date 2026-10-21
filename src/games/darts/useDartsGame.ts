@@ -55,13 +55,97 @@ export interface GameSettings {
 
 const STORAGE_KEY = STORAGE_KEYS.DARTS_GAME_STATE;
 
-interface PersistedState {
+export interface PersistedState {
   settings: GameSettings;
   players: Player[];
   turns: Turn[];
   currentPlayerIndex: number;
   currentTurnThrows: DartThrow[];
   winner: string | null;
+}
+
+export function calculateStartingScore(mode: GameMode): number {
+  if (mode === '301') return 301;
+  if (mode === '501') return 501;
+  return 0; // count_up
+}
+
+export function calculatePlayerScore(
+  mode: GameMode,
+  turns: Turn[],
+  currentTurnThrows: DartThrow[],
+  currentPlayerId: string | null,
+  targetPlayerId: string
+): number {
+  const isCountDown = mode === '301' || mode === '501';
+  let score = isCountDown ? calculateStartingScore(mode) : 0;
+
+  for (const turn of turns) {
+    if (turn.playerId === targetPlayerId) {
+      if (isCountDown) {
+        if (!turn.busted) score -= turn.throws.reduce((acc, t) => acc + t.score, 0);
+      } else {
+        score += turn.throws.reduce((acc, t) => acc + t.score, 0);
+      }
+    }
+  }
+
+  // Apply current turn throws
+  if (targetPlayerId === currentPlayerId) {
+    if (isCountDown) {
+      score -= currentTurnThrows.reduce((acc, t) => acc + t.score, 0);
+    } else {
+      score += currentTurnThrows.reduce((acc, t) => acc + t.score, 0);
+    }
+  }
+
+  return score;
+}
+
+export function evaluateThrow(
+  currentScore: number,
+  throwData: DartThrow,
+  settings: GameSettings
+): { newScore: number; isBusted: boolean; isWinner: boolean } {
+  const isCountDown = settings.mode === '301' || settings.mode === '501';
+  const newScore = isCountDown ? currentScore - throwData.score : currentScore + throwData.score;
+
+  let isBusted = false;
+  let isWinner = false;
+
+  if (isCountDown) {
+    if (newScore < 0 || (newScore === 1 && settings.doubleOut)) {
+      isBusted = true;
+    } else if (newScore === 0) {
+      if (settings.doubleOut && throwData.multiplier !== 2 && throwData.value !== 50) {
+        isBusted = true;
+      } else {
+        isWinner = true;
+      }
+    }
+  }
+
+  return { newScore, isBusted, isWinner };
+}
+
+export function parseDartsState(raw: unknown): PersistedState | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const parsed = raw as Partial<PersistedState>;
+  if (!parsed.settings || !Array.isArray(parsed.players) || parsed.players.length === 0) {
+    return null;
+  }
+  return {
+    settings: {
+      mode: parsed.settings.mode ?? '501',
+      doubleOut: parsed.settings.doubleOut ?? true,
+    },
+    players: parsed.players,
+    turns: Array.isArray(parsed.turns) ? parsed.turns : [],
+    currentPlayerIndex:
+      typeof parsed.currentPlayerIndex === 'number' ? parsed.currentPlayerIndex : 0,
+    currentTurnThrows: Array.isArray(parsed.currentTurnThrows) ? parsed.currentTurnThrows : [],
+    winner: parsed.winner ?? null,
+  };
 }
 
 export function useDartsGame() {
@@ -77,9 +161,9 @@ export function useDartsGame() {
 
   // Load state from storage on mount
   useEffect(() => {
-    const savedState = storage.get(STORAGE_KEY as unknown as string) as unknown as string | null;
-    if (savedState) {
-      const parsed = JSON.parse(savedState) as PersistedState;
+    const raw = storage.getJson<unknown>(STORAGE_KEY, null);
+    const parsed = parseDartsState(raw);
+    if (parsed) {
       setSettings(parsed.settings);
       setPlayers(parsed.players);
       setTurns(parsed.turns);
@@ -99,42 +183,21 @@ export function useDartsGame() {
       currentTurnThrows,
       winner,
     };
-    storage.set(STORAGE_KEY as unknown as string, JSON.stringify(stateToSave));
+    storage.setJson(STORAGE_KEY, stateToSave);
   }, [settings, players, turns, currentPlayerIndex, currentTurnThrows, winner]);
-
-  const getStartingScore = (mode: GameMode) => {
-    if (mode === '301') return 301;
-    if (mode === '501') return 501;
-    return 0; // count up
-  };
 
   const getPlayerScore = useCallback(
     (playerId: string) => {
-      const isCountDown = settings.mode === '301' || settings.mode === '501';
-      let score = isCountDown ? getStartingScore(settings.mode) : 0;
-
-      for (const turn of turns) {
-        if (turn.playerId === playerId) {
-          if (isCountDown) {
-            if (!turn.busted) score -= turn.throws.reduce((acc, t) => acc + t.score, 0);
-          } else {
-            score += turn.throws.reduce((acc, t) => acc + t.score, 0);
-          }
-        }
-      }
-
-      // Apply current turn throws
-      if (playerId === players[currentPlayerIndex]?.id) {
-        if (isCountDown) {
-          score -= currentTurnThrows.reduce((acc, t) => acc + t.score, 0);
-        } else {
-          score += currentTurnThrows.reduce((acc, t) => acc + t.score, 0);
-        }
-      }
-
-      return score;
+      const currentPlayerId = players[currentPlayerIndex]?.id ?? null;
+      return calculatePlayerScore(
+        settings.mode,
+        turns,
+        currentTurnThrows,
+        currentPlayerId,
+        playerId
+      );
     },
-    [turns, currentTurnThrows, currentPlayerIndex, players, settings.mode],
+    [turns, currentTurnThrows, currentPlayerIndex, players, settings.mode]
   );
 
   const addThrow = useCallback(
@@ -144,25 +207,9 @@ export function useDartsGame() {
       const currentPlayer = players[currentPlayerIndex];
       const isCountDown = settings.mode === '301' || settings.mode === '501';
       const currentScore = getPlayerScore(currentPlayer.id);
-      const newScore = isCountDown
-        ? currentScore - throwData.score
-        : currentScore + throwData.score;
+      const { newScore, isBusted, isWinner } = evaluateThrow(currentScore, throwData, settings);
 
       const updatedThrows = [...currentTurnThrows, throwData];
-      let isBusted = false;
-      let isWinner = false;
-
-      if (isCountDown) {
-        if (newScore < 0 || (newScore === 1 && settings.doubleOut)) {
-          isBusted = true;
-        } else if (newScore === 0) {
-          if (settings.doubleOut && throwData.multiplier !== 2 && throwData.value !== 50) {
-            isBusted = true;
-          } else {
-            isWinner = true;
-          }
-        }
-      }
 
       if (isBusted || isWinner || updatedThrows.length === 3) {
         // End turn
@@ -191,7 +238,7 @@ export function useDartsGame() {
         setCurrentTurnThrows(updatedThrows);
       }
     },
-    [currentTurnThrows, currentPlayerIndex, players, settings, getPlayerScore, winner],
+    [currentTurnThrows, currentPlayerIndex, players, settings, getPlayerScore, winner]
   );
 
   const undoThrow = useCallback(() => {
@@ -228,7 +275,7 @@ export function useDartsGame() {
         return { ...prev, ...newSettings };
       });
     },
-    [resetGame],
+    [resetGame]
   );
 
   const updatePlayers = useCallback(
@@ -241,7 +288,7 @@ export function useDartsGame() {
         return newPlayers;
       });
     },
-    [resetGame],
+    [resetGame]
   );
 
   return {

@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Added
+
+- **Testing & Edge-Case Audit**: Added comprehensive unit tests for Kniffel scoring (`kniffelScoring.ts`) and game reducer (`kniffelReducer.ts`), Darts game rules, countdown modes, double-out evaluation, and bust logic (`useDartsGame.ts`), and Imposter database repository & seeder (`imposterRepository.ts`, `dbSeeder.ts`) (Fixes #386).
+- **Sync & Resilience Tests**: Extended `MqttMailboxService` and `MultiChannelSyncCoordinator` test suites with coverage for listener error isolation, LZString payload compression, and dynamic channel re-subscription edge cases (Fixes #386).
+
 ### Changed
 
 - Fixed missing i18n keys for guessart, tabletop and party translations.
@@ -14,6 +19,7 @@
 
 ### Fixed
 
+- **Darts**: Hardened `useDartsGame` persistence against corrupted JSON storage values by using `storage.getJson` with safe structure validation and fallbacks to prevent UI crashes on mount (Fixes #386).
 - **Release**: `release.yml` called `npm run package` in `server/`, which no longer existed, so server binaries and the release publish step failed. `server/` now bundles with esbuild and packages Node 24 binaries for Linux, Windows and macOS with `@yao-pkg/pkg`; the release archives also ship `scripts/align_lyrics.py`.
 - **Melodiq TV**: Fixed an issue where clicking the Cast button would open a new window instead of initiating a stream to the TV because of dynamic query string mismatches.
 
