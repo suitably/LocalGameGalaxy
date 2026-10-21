@@ -51,12 +51,7 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
   };
 
   const renderDie = (key: string, val: number | undefined) => (
-    <Die3D
-      key={key}
-      value={val || '?'}
-      color="white"
-      isRolling={animating}
-    />
+    <Die3D key={key} value={val || '?'} color="white" isRolling={animating} />
   );
 
   return (
@@ -76,10 +71,26 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
         WebkitTapHighlightColor: 'transparent',
       }}
     >
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 2,
+        }}
+      >
         {/* Dice Row + Sum Info */}
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-          <Box sx={{ display: 'flex', gap: 1, p: 0.5, bgcolor: 'rgba(255, 255, 255, 0.08)', borderRadius: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 1,
+              p: 0.5,
+              bgcolor: 'rgba(255, 255, 255, 0.08)',
+              borderRadius: 2,
+            }}
+          >
             {renderDie('d1', currentRoll?.die1)}
             {renderDie('d2', currentRoll?.die2)}
           </Box>
@@ -89,7 +100,12 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
           </Typography>
 
           <Box sx={{ textAlign: 'center', minWidth: 44 }}>
-            <Typography variant="caption" color="text.secondary" display="block" sx={{ fontWeight: 700, fontSize: '0.65rem' }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              display="block"
+              sx={{ fontWeight: 700, fontSize: '0.65rem' }}
+            >
               {t('games.knister.sum', 'SUMME')}
             </Typography>
             <Typography
@@ -133,18 +149,33 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
             {animating
               ? t('games.knister.rolling', 'Würfeln...')
               : currentRoll !== null
-              ? t('games.knister.place_number_prompt', 'Eintragen!')
-              : rollCount >= 25
-              ? t('games.knister.game_over', 'Beendet')
-              : t('games.knister.roll_dice', 'Würfeln')}
+                ? t('games.knister.place_number_prompt', 'Eintragen!')
+                : rollCount >= 25
+                  ? t('games.knister.game_over', 'Beendet')
+                  : t('games.knister.roll_dice', 'Würfeln')}
           </Button>
         </Box>
       </Box>
 
       {/* Roll History */}
       {rollHistory.length > 0 && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, overflowX: 'auto', maxWidth: '100%', mt: 1.5, pt: 1, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <Typography variant="caption" color="text.secondary" sx={{ mr: 0.5, flexShrink: 0, fontWeight: 700 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.8,
+            overflowX: 'auto',
+            maxWidth: '100%',
+            mt: 1.5,
+            pt: 1,
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ mr: 0.5, flexShrink: 0, fontWeight: 700 }}
+          >
             {t('games.knister.history', 'Verlauf')}:
           </Typography>
           {rollHistory.slice(0, 10).map((h, idx) => (
