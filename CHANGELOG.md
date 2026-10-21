@@ -8,6 +8,7 @@
 
 ### Changed
 
+- **Sudoku / Wordle**: the result dialogs share via `useShareOrCopy` (`src/modules/sharing`) instead of two copies of the share-or-clipboard code; the "copied" timer is now cleared on unmount (#426).
 - **Melodiq**: local and phone latency calibration share one panel (`LatencyCalibratorPanel.tsx`) and one beep detector (`components/hooks/detectBeep.ts`); the phone calibrator's labels are now translated (#426).
 - **Knister / Qwixx**: both dice rollers use the shared `src/components/games/useDiceRollAnimation.ts` instead of two copies of the roll timer (#426).
 - **Melodiq**: `useSessionPlayers` is split into pure roster rules (`gameplay/logic/sessionRoster.ts`, tested) and focused hooks (`useSessionOverrideSync`, `usePeerRosterSync`, `usePeerSessionMessages`, `useBroadcastSongInfo`). Phone messages are now received via `manager.on('message')` instead of overwriting `manager.onMessage`, so other listeners are no longer replaced; storage is read via `storage.getJson` and the hooks are typed without `any` (#418).

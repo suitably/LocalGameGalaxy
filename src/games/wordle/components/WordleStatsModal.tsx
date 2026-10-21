@@ -2,7 +2,7 @@
  * WordleStatsModal.tsx - Statistics, Win/Loss Summary and Emoji Sharing
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -19,6 +19,7 @@ import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import { useTranslation } from 'react-i18next';
+import { useShareOrCopy } from '../../../modules/sharing/useShareOrCopy';
 import { wordleEngine } from '../logic/wordleEngine';
 import type { EvaluatedLetter, WordleGameMode, WordleStats } from '../logic/types';
 
@@ -46,30 +47,16 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
   onPlayAgain,
 }) => {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
+  const { copied, share } = useShareOrCopy();
 
   const winRate = stats.played > 0 ? Math.round((stats.wins / stats.played) * 100) : 0;
   const maxGuessCount = Math.max(1, ...Object.values(stats.guessDistribution));
 
-  const handleShare = async () => {
-    const text = wordleEngine.generateShareGrid(evaluations, gameStatus === 'won', mode, dateKey);
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Wordle Result',
-          text,
-        });
-        return;
-      } catch {
-        // Fallback to clipboard
-      }
-    }
-
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-  };
+  const handleShare = () =>
+    share(
+      'Wordle Result',
+      wordleEngine.generateShareGrid(evaluations, gameStatus === 'won', mode, dateKey),
+    );
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>

@@ -2,7 +2,7 @@
  * SudokuVictoryModal.tsx - Game Over & Victory Dialog
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -18,6 +18,7 @@ import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import { useTranslation } from 'react-i18next';
+import { useShareOrCopy } from '../../../modules/sharing/useShareOrCopy';
 import type { SudokuDifficulty } from '../logic/types';
 
 interface SudokuVictoryModalProps {
@@ -50,26 +51,15 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
   onNewGame,
 }) => {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
+  const { copied, share } = useShareOrCopy();
 
   const isNewBest = isWon && bestTime !== null && timeElapsed <= bestTime;
 
-  const handleShare = async () => {
-    const text = `🔢 Sudoku (${t(`sudoku.difficulty.${difficulty}`)}) gelöst in ${formatTime(timeElapsed)}!\nFehler: ${mistakes}, Hinweise: ${hintsUsed}\n\nhttps://localgamegalaxy.app/#/games/sudoku`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: 'Sudoku Result', text });
-        return;
-      } catch {
-        // Fallback
-      }
-    }
-
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-  };
+  const handleShare = () =>
+    share(
+      'Sudoku Result',
+      `🔢 Sudoku (${t(`sudoku.difficulty.${difficulty}`)}) gelöst in ${formatTime(timeElapsed)}!\nFehler: ${mistakes}, Hinweise: ${hintsUsed}\n\nhttps://localgamegalaxy.app/#/games/sudoku`,
+    );
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
