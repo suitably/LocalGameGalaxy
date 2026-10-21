@@ -2,6 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import type { ApiKey, ServerConfigData } from './core/types';
+import {
+  applyEnvOverrides,
+  readEnvOverrides,
+  stripLeakedEnvValues,
+  type EnvOverrides,
+} from './core/configSources';
 
 const defaultConfig: ServerConfigData = {
   directories: [],
@@ -21,6 +27,10 @@ const defaultConfig: ServerConfigData = {
 
 export class ConfigManager {
   private activeConfigFile: string = path.join(process.cwd(), 'config.json');
+  /** What config.json holds. Setters mutate this; `saveConfig()` writes only this. */
+  private fileConfig: ServerConfigData = { ...defaultConfig };
+  private envOverrides: EnvOverrides = readEnvOverrides({});
+  /** Runtime view (`fileConfig` + env overrides). Getters read this. */
   private currentConfig: ServerConfigData = { ...defaultConfig };
 
   constructor() {
@@ -28,7 +38,9 @@ export class ConfigManager {
   }
 
   public loadConfig(): void {
-    const explicitConfigPath = process.env.CONFIG_PATH ? path.resolve(process.env.CONFIG_PATH) : null;
+    const explicitConfigPath = process.env.CONFIG_PATH
+      ? path.resolve(process.env.CONFIG_PATH)
+      : null;
 
     const searchPaths = [
       ...(explicitConfigPath ? [path.dirname(explicitConfigPath)] : []),
@@ -78,16 +90,16 @@ export class ConfigManager {
       try {
         const fileContent = fs.readFileSync(foundConfig, 'utf-8');
         const savedConfig = JSON.parse(fileContent) as Partial<ServerConfigData>;
-        this.currentConfig = { ...defaultConfig, ...savedConfig };
+        this.fileConfig = { ...defaultConfig, ...savedConfig };
 
-        if (!Array.isArray(this.currentConfig.directories)) {
-          this.currentConfig.directories = [...defaultConfig.directories];
+        if (!Array.isArray(this.fileConfig.directories)) {
+          this.fileConfig.directories = [...defaultConfig.directories];
         }
-        if (!Array.isArray(this.currentConfig.tabletopDirectories)) {
-          this.currentConfig.tabletopDirectories = [...defaultConfig.tabletopDirectories];
+        if (!Array.isArray(this.fileConfig.tabletopDirectories)) {
+          this.fileConfig.tabletopDirectories = [...defaultConfig.tabletopDirectories];
         }
-        if (!Array.isArray(this.currentConfig.apiKeys)) {
-          this.currentConfig.apiKeys = [...defaultConfig.apiKeys];
+        if (!Array.isArray(this.fileConfig.apiKeys)) {
+          this.fileConfig.apiKeys = [...defaultConfig.apiKeys];
         }
       } catch (e) {
         console.error(`[Config] Failed to parse config at ${foundConfig}:`, e);
@@ -104,76 +116,41 @@ export class ConfigManager {
       console.log(`[Config] Using configuration location: ${this.activeConfigFile}`);
     }
 
-    // 1. Environment Variable Overrides
-    if (process.env.PORT) {
-      const parsedPort = parseInt(process.env.PORT, 10);
-      if (!Number.isNaN(parsedPort) && parsedPort > 0) {
-        this.currentConfig.port = parsedPort;
-      }
-    }
-
-    const envToken = process.env.SECURITY_TOKEN || process.env.TOKEN;
-    if (envToken && typeof envToken === 'string' && envToken.trim()) {
-      this.currentConfig.token = envToken.trim().replace(/^["']|["']$/g, '');
-    }
-
-    // 2. Music Directory Discovery & Overrides
-    const candidateDirs: string[] = [];
-    if (process.env.MUSIC_DIR) {
-      candidateDirs.push(
-        ...process.env.MUSIC_DIR.split(',')
-          .map((d) => d.trim())
-          .filter(Boolean)
-      );
-    }
-    if (process.env.DIRECTORIES) {
-      candidateDirs.push(
-        ...process.env.DIRECTORIES.split(',')
-          .map((d) => d.trim())
-          .filter(Boolean)
-      );
-    }
-
-    // Standard container & local music directories
-    const standardMusicLocations = ['/app/music', path.join(process.cwd(), 'music')];
-    for (const loc of standardMusicLocations) {
+    // Env overrides apply at runtime only and are never persisted (#409).
+    const discoveredMusicDirs = ['/app/music', path.join(process.cwd(), 'music')].filter((loc) => {
       try {
-        if (fs.existsSync(loc) && fs.statSync(loc).isDirectory()) {
-          candidateDirs.push(loc);
-        }
+        return fs.existsSync(loc) && fs.statSync(loc).isDirectory();
       } catch {
-        // Ignore stat errors
+        return false;
       }
+    });
+    this.envOverrides = readEnvOverrides(process.env, discoveredMusicDirs);
+
+    const { config: cleaned, dropped } = stripLeakedEnvValues(
+      this.fileConfig,
+      this.envOverrides,
+      defaultConfig.port,
+    );
+    this.fileConfig = cleaned;
+    this.refreshEffectiveConfig();
+    if (dropped.length > 0) {
+      console.warn(
+        `[Config] Removed values from ${this.activeConfigFile} that duplicate environment overrides: ${dropped.join(', ')}`,
+      );
     }
 
-    for (const dir of candidateDirs) {
-      const resolved = path.resolve(dir);
-      if (!this.currentConfig.directories.some((d) => path.resolve(d) === resolved)) {
-        this.currentConfig.directories.push(dir);
-      }
-    }
-
-    if (this.currentConfig.directories.length > 0 && !this.currentConfig.downloadDir) {
-      this.currentConfig.downloadDir = this.currentConfig.directories[0];
-    }
-
-    // 2b. Tabletop Directory Discovery & Overrides
-    if (process.env.TABLETOP_DIR) {
-      process.env.TABLETOP_DIR.split(',')
-        .map((d) => d.trim())
-        .filter(Boolean)
-        .forEach((dir) => {
-          if (!this.currentConfig.tabletopDirectories.includes(dir)) {
-            this.currentConfig.tabletopDirectories.push(dir);
-          }
-        });
-    }
-
-    // 3. Generate token if still missing
+    // Generate a token if neither the file nor the environment provides one; only this one is persisted.
     if (!this.currentConfig.token) {
-      this.currentConfig.token = crypto.randomBytes(16).toString('hex');
+      this.fileConfig.token = crypto.randomBytes(16).toString('hex');
+      this.refreshEffectiveConfig();
+      this.saveConfig();
+    } else if (dropped.length > 0) {
       this.saveConfig();
     }
+  }
+
+  private refreshEffectiveConfig(): void {
+    this.currentConfig = applyEnvOverrides(this.fileConfig, this.envOverrides);
   }
 
   public saveConfig(): void {
@@ -189,7 +166,7 @@ export class ConfigManager {
           fs.mkdirSync(parentDir, { recursive: true });
         }
       }
-      fs.writeFileSync(this.activeConfigFile, JSON.stringify(this.currentConfig, null, 2), 'utf-8');
+      fs.writeFileSync(this.activeConfigFile, JSON.stringify(this.fileConfig, null, 2), 'utf-8');
       console.log('[Config] Saved config to', this.activeConfigFile);
     } catch (e: unknown) {
       const err = e as { code?: string };
@@ -206,7 +183,8 @@ export class ConfigManager {
   }
 
   set port(value: number) {
-    this.currentConfig.port = value;
+    this.fileConfig.port = value;
+    this.refreshEffectiveConfig();
     this.saveConfig();
   }
 
@@ -219,23 +197,32 @@ export class ConfigManager {
   }
 
   set token(value: string | null) {
-    this.currentConfig.token = value;
+    this.fileConfig.token = value;
+    this.refreshEffectiveConfig();
     this.saveConfig();
   }
 
   public addDirectory(dirPath: string): void {
-    if (!this.currentConfig.directories.includes(dirPath)) {
-      this.currentConfig.directories.push(dirPath);
+    if (!this.fileConfig.directories.includes(dirPath)) {
+      this.fileConfig.directories.push(dirPath);
+      this.refreshEffectiveConfig();
       this.saveConfig();
     }
   }
 
   public removeDirectory(dirPath: string): void {
-    this.currentConfig.directories = this.currentConfig.directories.filter((d) => d !== dirPath);
-    if (this.currentConfig.downloadDir === dirPath) {
-      this.currentConfig.downloadDir = this.currentConfig.directories[0] || null;
-      console.log(`[Config] downloadDir was removed. Falling back to: ${this.currentConfig.downloadDir}`);
+    this.fileConfig.directories = this.fileConfig.directories.filter((d) => d !== dirPath);
+    const downloadDirRemoved = this.currentConfig.downloadDir === dirPath;
+    if (this.fileConfig.downloadDir === dirPath) {
+      this.fileConfig.downloadDir = null;
     }
+    this.refreshEffectiveConfig();
+    if (downloadDirRemoved) {
+      console.log(
+        `[Config] downloadDir was removed. Falling back to: ${this.currentConfig.downloadDir}`,
+      );
+    }
+    this.refreshEffectiveConfig();
     this.saveConfig();
   }
 
@@ -244,21 +231,24 @@ export class ConfigManager {
   }
 
   set tabletopDirectories(value: string[]) {
-    this.currentConfig.tabletopDirectories = value;
+    this.fileConfig.tabletopDirectories = value;
+    this.refreshEffectiveConfig();
     this.saveConfig();
   }
 
   public addTabletopDirectory(dirPath: string): void {
-    if (!this.currentConfig.tabletopDirectories.includes(dirPath)) {
-      this.currentConfig.tabletopDirectories.push(dirPath);
+    if (!this.fileConfig.tabletopDirectories.includes(dirPath)) {
+      this.fileConfig.tabletopDirectories.push(dirPath);
+      this.refreshEffectiveConfig();
       this.saveConfig();
     }
   }
 
   public removeTabletopDirectory(dirPath: string): void {
-    this.currentConfig.tabletopDirectories = this.currentConfig.tabletopDirectories.filter(
-      (d) => d !== dirPath
+    this.fileConfig.tabletopDirectories = this.fileConfig.tabletopDirectories.filter(
+      (d) => d !== dirPath,
     );
+    this.refreshEffectiveConfig();
     this.saveConfig();
   }
 
@@ -267,7 +257,8 @@ export class ConfigManager {
   }
 
   set downloadDir(value: string | null) {
-    this.currentConfig.downloadDir = value;
+    this.fileConfig.downloadDir = value;
+    this.refreshEffectiveConfig();
     this.saveConfig();
   }
 
@@ -280,8 +271,9 @@ export class ConfigManager {
   }
 
   public setUsdbCredentials(username?: string | null, password?: string | null): void {
-    this.currentConfig.usdbUsername = username || null;
-    this.currentConfig.usdbPassword = password || null;
+    this.fileConfig.usdbUsername = username || null;
+    this.fileConfig.usdbPassword = password || null;
+    this.refreshEffectiveConfig();
     this.saveConfig();
   }
 
@@ -290,7 +282,8 @@ export class ConfigManager {
   }
 
   set defaultDownloadMode(value: 'stream' | 'mp4' | 'none') {
-    this.currentConfig.defaultDownloadMode = value;
+    this.fileConfig.defaultDownloadMode = value;
+    this.refreshEffectiveConfig();
     this.saveConfig();
   }
 
@@ -299,7 +292,8 @@ export class ConfigManager {
   }
 
   set autoVocalSeparation(value: boolean) {
-    this.currentConfig.autoVocalSeparation = value;
+    this.fileConfig.autoVocalSeparation = value;
+    this.refreshEffectiveConfig();
     this.saveConfig();
   }
 
@@ -307,9 +301,13 @@ export class ConfigManager {
     return this.currentConfig.apiKeys || [];
   }
 
-  public createApiKey(name?: string, allowManagement?: boolean, allowSongDeletion?: boolean): ApiKey {
-    if (!this.currentConfig.apiKeys) {
-      this.currentConfig.apiKeys = [];
+  public createApiKey(
+    name?: string,
+    allowManagement?: boolean,
+    allowSongDeletion?: boolean,
+  ): ApiKey {
+    if (!this.fileConfig.apiKeys) {
+      this.fileConfig.apiKeys = [];
     }
     const token = crypto.randomBytes(16).toString('hex');
     const id = crypto.randomBytes(8).toString('hex');
@@ -321,38 +319,42 @@ export class ConfigManager {
       allowSongDeletion: allowSongDeletion === true,
       createdAt: new Date().toISOString(),
     };
-    this.currentConfig.apiKeys.push(keyObj);
+    this.fileConfig.apiKeys.push(keyObj);
+    this.refreshEffectiveConfig();
     this.saveConfig();
     return keyObj;
   }
 
   public updateApiKey(
     id: string,
-    updates: Partial<Pick<ApiKey, 'name' | 'allowManagement' | 'allowSongDeletion'>>
+    updates: Partial<Pick<ApiKey, 'name' | 'allowManagement' | 'allowSongDeletion'>>,
   ): ApiKey | false {
-    if (!this.currentConfig.apiKeys) return false;
-    const keyIndex = this.currentConfig.apiKeys.findIndex((k) => k.id === id);
+    if (!this.fileConfig.apiKeys) return false;
+    const keyIndex = this.fileConfig.apiKeys.findIndex((k) => k.id === id);
     if (keyIndex !== -1) {
       if (updates.name !== undefined) {
-        this.currentConfig.apiKeys[keyIndex].name = updates.name || this.currentConfig.apiKeys[keyIndex].name;
+        this.fileConfig.apiKeys[keyIndex].name =
+          updates.name || this.fileConfig.apiKeys[keyIndex].name;
       }
       if (updates.allowManagement !== undefined) {
-        this.currentConfig.apiKeys[keyIndex].allowManagement = updates.allowManagement === true;
+        this.fileConfig.apiKeys[keyIndex].allowManagement = updates.allowManagement === true;
       }
       if (updates.allowSongDeletion !== undefined) {
-        this.currentConfig.apiKeys[keyIndex].allowSongDeletion = updates.allowSongDeletion === true;
+        this.fileConfig.apiKeys[keyIndex].allowSongDeletion = updates.allowSongDeletion === true;
       }
+      this.refreshEffectiveConfig();
       this.saveConfig();
-      return this.currentConfig.apiKeys[keyIndex];
+      return this.fileConfig.apiKeys[keyIndex];
     }
     return false;
   }
 
   public deleteApiKey(id: string): boolean {
-    if (!this.currentConfig.apiKeys) return false;
-    const initialLength = this.currentConfig.apiKeys.length;
-    this.currentConfig.apiKeys = this.currentConfig.apiKeys.filter((k) => k.id !== id);
-    if (this.currentConfig.apiKeys.length !== initialLength) {
+    if (!this.fileConfig.apiKeys) return false;
+    const initialLength = this.fileConfig.apiKeys.length;
+    this.fileConfig.apiKeys = this.fileConfig.apiKeys.filter((k) => k.id !== id);
+    if (this.fileConfig.apiKeys.length !== initialLength) {
+      this.refreshEffectiveConfig();
       this.saveConfig();
       return true;
     }
@@ -364,7 +366,8 @@ export class ConfigManager {
   }
 
   set githubOwner(value: string) {
-    this.currentConfig.githubOwner = value || 'suitably';
+    this.fileConfig.githubOwner = value || 'suitably';
+    this.refreshEffectiveConfig();
     this.saveConfig();
   }
 
@@ -373,7 +376,8 @@ export class ConfigManager {
   }
 
   set githubRepo(value: string) {
-    this.currentConfig.githubRepo = value || 'LocalGameGalaxy';
+    this.fileConfig.githubRepo = value || 'LocalGameGalaxy';
+    this.refreshEffectiveConfig();
     this.saveConfig();
   }
 
@@ -382,7 +386,8 @@ export class ConfigManager {
   }
 
   set githubToken(value: string | null) {
-    this.currentConfig.githubToken = value || null;
+    this.fileConfig.githubToken = value || null;
+    this.refreshEffectiveConfig();
     this.saveConfig();
   }
 }

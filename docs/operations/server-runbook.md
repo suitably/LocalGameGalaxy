@@ -56,6 +56,8 @@ Restarts drop WebRTC/WebSocket clients for a moment; phones reconnect automatica
 
 To force a fresh random token, clear `token` in `config.json` and unset `SECURITY_TOKEN`; the server generates and saves a new one at start.
 
+Env values (`SECURITY_TOKEN`, `PORT`, `MUSIC_DIR`, …) are never written to `config.json`. After removing the env var the server falls back to the file value. Servers before #409 did persist them: on the first start with the fix, file values identical to the current env value are removed and logged (`[Config] Removed values … that duplicate environment overrides`). If you already removed the env var, check `config.json` for an old token and clear it.
+
 ### API keys
 
 `GET/POST /api/config/apikeys`, `PUT/DELETE /api/config/apikeys/:id` (master token or key with `allowManagement`). Revoke a key by deleting it; no restart needed.
