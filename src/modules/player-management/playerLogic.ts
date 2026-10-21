@@ -36,9 +36,7 @@ export const addPlayerToLobby = (
     return { success: false, reason: 'max_reached', players };
   }
 
-  const isDuplicate = players.some(
-    (p) => p.name.trim().toLowerCase() === trimmed.toLowerCase(),
-  );
+  const isDuplicate = players.some((p) => p.name.trim().toLowerCase() === trimmed.toLowerCase());
   if (isDuplicate) {
     return { success: false, reason: 'duplicate', players };
   }
