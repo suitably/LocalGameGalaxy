@@ -134,6 +134,7 @@ export function TabletopGame() {
     game: gameState.game,
     dispatch,
     onReturnToLobby: returnToLobby,
+    seat,
   });
 
   if (loading) {

@@ -56,6 +56,10 @@ Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`.
 
 Host-authoritative over `useMultiChannelSync`, see [sync-protocol](sync-protocol.md): non-host devices send `INTENT`s (every action except `LOAD_GAME`, `APPLY_REMOTE_DELTA`, `ANIMATE_CARD_TO_TABLE`, `FINISH_ANIMATION`), the host broadcasts `STATE_DELTA` (`logic/stateDelta.ts`) with a sequence number, gaps and joins get a `STATE_SNAPSHOT`. Random results are decided on the host.
 
+### Private hands
+
+Cards in a hand holder with an `ownerSeat` are private (`logic/handPrivacy.ts`). The host redacts them in every outgoing snapshot and delta (front replaced by the back, no label) and seals the real faces per seat (`logic/privateHandChannel.ts`, `logic/sealCrypto.ts`): each phone sends an ECDH P-256 public key with `REQUEST_SNAPSHOT` (`seat`, `publicKey`); the host derives an AES-GCM key per seat and sends its own public key in `STATE_SNAPSHOT` (`hostKey`, `sealed`). Only that seat's device can restore its cards. Limits: no device authentication (a participant could claim another seat), and without WebCrypto (plain-HTTP LAN origins) data passes unredacted as before.
+
 ## 6. Storage
 
 `galaxy_tabletop_db` v3 (see [persistence](persistence.md)): `custom_games` for imported/edited definitions, `sessions` for running games. `useTabletopAutosave` saves 1 s after a change on the host or in local play; `TabletopGame` resumes a saved session first, `RestartGameButton` deletes it.
