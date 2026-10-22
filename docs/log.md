@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Storyteller on player seats (claude-code)
+
+- #467 slice 8: `docs/tech/data-models.md` "Player seats" and `sync-protocol.md` §5 cover Storyteller and the shared seat helpers; `architecture.md` §3.2 lists them under `player-management`.
+- **Code changed:** new `src/modules/player-management/{seatedAssignment.ts,useSeatUpkeep.ts}` (+ `seatActions.test.ts`), `src/modules/sharing/{SeatStatusChip,SharePlayerActions}.tsx`, `src/games/storyteller/{hooks/useStoryJoinLink.ts,hooks/useStorySeats.ts,logic/storyTurnNotify.ts}`; `StorytellerGame.tsx` (407 → 263 lines), Storyteller `engine.ts`, `repository.ts`, `playerAssignment.ts`, `types.ts`, `useStorytellerLobby.ts`, `ShareStoryLinksDialog.tsx`; GuessArt `playerAssignment.ts`, `engine.ts`, `useGuessArtSeats.ts`, `useGuessArtJoinLink.ts`, `SharePlayerLinksDialog.tsx`; `src/modules/sharing/{ShareSessionLinksDialog.tsx,useSessionSharing.ts}`; `src/lib/utils/turnAssignment.ts` (+ test); locales; budget baselines.
+
 ## 2026-10-22 — Spieltisch lobby and mode picker (claude-code)
 
 - #467 slice 3: `docs/tech/tabletop-engine.md` gains "Spieltisch (lobby)"; `game-catalog.md` §1 says the dice games are listed on the Spieltisch instead of the hub.

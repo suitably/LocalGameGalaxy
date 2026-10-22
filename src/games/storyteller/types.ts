@@ -1,3 +1,5 @@
+import type { PlayerSeat } from '../../modules/player-management';
+
 export interface StoryPlayer {
   id: string;
   name: string;
@@ -5,6 +7,8 @@ export interface StoryPlayer {
   relayUrl?: string;
   ntfyTopic?: string;
   notificationMethod?: 'auto' | 'webpush' | 'ntfy' | 'both';
+  /** Which device plays this player (`modules/player-management/playerSeats.ts`). */
+  seat?: PlayerSeat;
 }
 
 export interface BlindModeSettings {

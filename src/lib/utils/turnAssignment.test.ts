@@ -1,10 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  createPlayerAssignment,
-  isGameBaseSnapshotNewer,
-  mergePlayerProfiles,
-  hasPlayerChannelUpdates,
-} from './turnAssignment';
+import { createPlayerAssignment, isGameBaseSnapshotNewer } from './turnAssignment';
 import { storage } from '../storage';
 
 describe('turnAssignment', () => {
@@ -63,42 +58,6 @@ describe('turnAssignment', () => {
       const snap = { name: 'A', players: [], updatedAt: new Date(1000).toISOString() };
       const exist = { name: 'A', players: [], updatedAt: new Date(2000).toISOString() };
       expect(isGameBaseSnapshotNewer(snap, exist)).toBe(null);
-    });
-  });
-
-  describe('mergePlayerProfiles', () => {
-    it('merges player profiles preferring local settings', () => {
-      const snapshotPlayers = [{ id: 'p1', name: 'Snap', ntfyTopic: 'snap_t' }];
-      const existingPlayers = [{ id: 'p1', name: 'Exist', ntfyTopic: 'exist_t' }];
-      const isLocal = () => true; // local
-      const merged = mergePlayerProfiles(snapshotPlayers, existingPlayers, 'game1', isLocal);
-      expect(merged[0].ntfyTopic).toBe('exist_t');
-      expect(merged[0].name).toBe('Snap'); // snapshot updates name
-    });
-
-    it('merges player profiles preferring remote settings if not local', () => {
-      const snapshotPlayers = [{ id: 'p1', name: 'Snap', ntfyTopic: 'snap_t' }];
-      const existingPlayers = [{ id: 'p1', name: 'Exist', ntfyTopic: 'exist_t' }];
-      const isLocal = () => false; // not local
-      const merged = mergePlayerProfiles(snapshotPlayers, existingPlayers, 'game1', isLocal);
-      expect(merged[0].ntfyTopic).toBe('snap_t');
-      expect(merged[0].name).toBe('Snap');
-    });
-  });
-
-  describe('hasPlayerChannelUpdates', () => {
-    it('returns true if remote player updated channel', () => {
-      const snapshotPlayers = [{ id: 'p1', ntfyTopic: 'new_t' }];
-      const existingPlayers = [{ id: 'p1', ntfyTopic: 'old_t' }];
-      const isLocal = () => false;
-      expect(hasPlayerChannelUpdates(snapshotPlayers, existingPlayers, 'g', isLocal)).toBe(true);
-    });
-
-    it('returns false if local player has different channel in snapshot', () => {
-      const snapshotPlayers = [{ id: 'p1', ntfyTopic: 'new_t' }];
-      const existingPlayers = [{ id: 'p1', ntfyTopic: 'old_t' }];
-      const isLocal = () => true;
-      expect(hasPlayerChannelUpdates(snapshotPlayers, existingPlayers, 'g', isLocal)).toBe(false);
     });
   });
 });
