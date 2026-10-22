@@ -118,6 +118,47 @@ export const InspectorFields: React.FC<InspectorFieldsProps> = ({ widget, onPatc
           {bool('isHand')}
         </>
       )}
+      {widget.type === 'label' && (
+        <>
+          <TextField
+            size="small"
+            multiline
+            label={label('text')}
+            value={widget.text}
+            onChange={(e) => onPatch({ text: e.target.value } as WidgetPatch)}
+          />
+          {num('fontSize')}
+          {text('color')}
+        </>
+      )}
+      {widget.type === 'timer' && (
+        <TextField
+          size="small"
+          type="number"
+          label={label('duration_seconds')}
+          helperText={label('duration_hint')}
+          value={Math.round(widget.durationMs / 1000)}
+          onChange={(e) =>
+            onPatch({ durationMs: Math.max(0, Number(e.target.value) || 0) * 1000 } as WidgetPatch)
+          }
+        />
+      )}
+      {widget.type === 'spinner' && (
+        <TextField
+          size="small"
+          label={label('options')}
+          helperText={label('options_hint')}
+          value={widget.options.join(', ')}
+          onChange={(e) =>
+            onPatch({
+              options: e.target.value
+                .split(',')
+                .map((o) => o.trim())
+                .filter(Boolean),
+            } as WidgetPatch)
+          }
+        />
+      )}
       {widget.type === 'card' && (
         <TextField
           size="small"

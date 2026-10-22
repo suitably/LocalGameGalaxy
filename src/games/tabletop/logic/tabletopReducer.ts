@@ -22,6 +22,7 @@ import { bagReducer } from './reducers/bagReducer';
 import { pieceReducer } from './reducers/pieceReducer';
 import { viewReducer } from './reducers/viewReducer';
 import { editReducer } from './reducers/editReducer';
+import { tableToolReducer } from './reducers/tableToolReducer';
 import type { WidgetPatch } from './widgetEdits';
 
 export interface FlyingCardAnimation {
@@ -67,6 +68,9 @@ export type TabletopAction =
   | { type: 'PATCH_WIDGETS'; payload: { patches: Record<string, WidgetPatch> } }
   | { type: 'ADD_WIDGET'; payload: { widget: TabletopWidget } }
   | { type: 'ADD_WIDGETS'; payload: { widgets: TabletopWidget[] } }
+  | { type: 'TOGGLE_TIMER'; payload: { timerId: string; now: number } }
+  | { type: 'RESET_TIMER'; payload: { timerId: string } }
+  | { type: 'SPIN_SPINNER'; payload: { spinnerId: string; index?: number } }
   | { type: 'DELETE_WIDGETS'; payload: { ids: string[] } }
   | { type: 'UPDATE_TABLE'; payload: { changes: Partial<TabletopTableConfig> } }
   | { type: 'RETURN_CARD_TO_DECK'; payload: { cardId: string; deckId: string } }
@@ -406,6 +410,11 @@ export function tabletopReducer(
     case 'DELETE_WIDGETS':
     case 'UPDATE_TABLE':
       return editReducer(state, action);
+
+    case 'TOGGLE_TIMER':
+    case 'RESET_TIMER':
+    case 'SPIN_SPINNER':
+      return tableToolReducer(state, action);
 
     default:
       return state;

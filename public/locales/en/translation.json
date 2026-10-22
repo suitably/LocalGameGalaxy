@@ -847,7 +847,16 @@
         "deck_back": "Back image URL (optional)",
         "deck_width": "Card width",
         "deck_height": "Card height",
-        "deck_create": "Create deck ({{count}} cards)"
+        "deck_create": "Create deck ({{count}} cards)",
+        "kind_label": "Text",
+        "kind_timer": "Timer",
+        "kind_spinner": "Spinner",
+        "text": "Text",
+        "fontSize": "Font size",
+        "duration_seconds": "Duration (seconds)",
+        "duration_hint": "0 = stopwatch",
+        "options": "Options",
+        "options_hint": "Separated by commas"
       },
       "workshop": {
         "error_invalid_input": "Not a valid Steam Workshop URL or ID.",

@@ -66,11 +66,13 @@ export function useTabletopEditor(
     dispatch({ type: 'PATCH_WIDGETS', payload: { patches: { [id]: changes } } });
 
   const addWidget = (kind: NewWidgetKind) => {
+    // Cascade new widgets so several additions do not land on top of each other.
+    const offset = (Object.keys(game.widgets).length % 8) * 60;
     const widget = createWidget(
       kind,
       newId(kind),
-      game.table.width / 2,
-      game.table.height / 2,
+      game.table.width / 2 + offset,
+      game.table.height / 2 + offset,
       topZIndex(game),
     );
     dispatch({ type: 'ADD_WIDGET', payload: { widget } });
