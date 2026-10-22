@@ -110,7 +110,18 @@ export interface ParsedSong {
 
 ```typescript
 // src/games/tabletop/logic/types.ts
-export type WidgetType = 'card' | 'deck' | 'holder' | 'token' | 'die' | 'counter' | 'seat' | 'bag';
+export type WidgetType =
+  | 'card'
+  | 'deck'
+  | 'holder'
+  | 'token'
+  | 'die'
+  | 'counter'
+  | 'seat'
+  | 'bag'
+  | 'label'
+  | 'timer'
+  | 'spinner';
 
 export interface TabletopGameDefinition extends TabletopGameMetadata {
   version: string;

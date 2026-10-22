@@ -5,6 +5,9 @@ import React from 'react';
 import { Box } from '@mui/material';
 import type {
   BagWidget,
+  LabelWidget,
+  SpinnerWidget,
+  TimerWidget,
   TabletopWidget,
   CardWidget,
   DeckWidget,
@@ -19,6 +22,9 @@ import { TokenWidgetView } from '../widgets/TokenWidgetView';
 import { CounterWidgetView } from '../widgets/CounterWidgetView';
 import { DieWidgetView } from '../widgets/DieWidgetView';
 import { BagWidgetView } from '../widgets/BagWidgetView';
+import { LabelWidgetView } from '../widgets/LabelWidgetView';
+import { TimerWidgetView } from '../widgets/TimerWidgetView';
+import { SpinnerWidgetView } from '../widgets/SpinnerWidgetView';
 
 interface BoardWidgetRendererProps {
   widget: TabletopWidget;
@@ -105,6 +111,35 @@ export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
                 isDragging={isDragging}
                 onPointerDown={onPointerDown}
                 onDraw={() => dispatch({ type: 'DRAW_FROM_BAG', payload: { bagId: w.id } })}
+              />
+            );
+          case 'label':
+            return (
+              <LabelWidgetView
+                widget={w as LabelWidget}
+                isDragging={isDragging}
+                onPointerDown={onPointerDown}
+              />
+            );
+          case 'timer':
+            return (
+              <TimerWidgetView
+                widget={w as TimerWidget}
+                isDragging={isDragging}
+                onPointerDown={onPointerDown}
+                onToggle={() =>
+                  dispatch({ type: 'TOGGLE_TIMER', payload: { timerId: w.id, now: Date.now() } })
+                }
+                onReset={() => dispatch({ type: 'RESET_TIMER', payload: { timerId: w.id } })}
+              />
+            );
+          case 'spinner':
+            return (
+              <SpinnerWidgetView
+                widget={w as SpinnerWidget}
+                isDragging={isDragging}
+                onPointerDown={onPointerDown}
+                onSpin={() => dispatch({ type: 'SPIN_SPINNER', payload: { spinnerId: w.id } })}
               />
             );
           default:

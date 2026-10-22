@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Tabletop label, timer, spinner widgets (claude-code)
+
+- #449 slice 9: `docs/tech/tabletop-engine.md` lists `tableToolReducer.ts`; `docs/tech/data-models.md` `WidgetType` updated.
+- **Code changed:** `src/games/tabletop/logic/{types,tableTools,widgetTemplates,tabletopReducer}.ts`, `logic/reducers/tableToolReducer.ts`, `components/widgets/{Label,Timer,Spinner}WidgetView.tsx`, `BoardWidgetRenderer.tsx`, `components/editor/{InspectorFields.tsx,useTabletopEditor.ts}`, locales, test.
+
 ## 2026-10-22 — Tabletop deck builder (claude-code)
 
 - #449 slice 6: `docs/tech/tabletop-engine.md` §3 names `DeckBuilderDialog` and `deckBuilder.ts`.

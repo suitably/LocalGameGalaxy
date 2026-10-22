@@ -6,12 +6,25 @@ import type {
   CounterWidget,
   DieWidget,
   HolderWidget,
+  LabelWidget,
+  SpinnerWidget,
+  TimerWidget,
   TabletopGameDefinition,
   TabletopWidget,
   TokenWidget,
 } from './types';
 
-export const NEW_WIDGET_KINDS = ['token', 'card', 'holder', 'hand', 'counter', 'die'] as const;
+export const NEW_WIDGET_KINDS = [
+  'token',
+  'card',
+  'holder',
+  'hand',
+  'counter',
+  'die',
+  'label',
+  'timer',
+  'spinner',
+] as const;
 export type NewWidgetKind = (typeof NEW_WIDGET_KINDS)[number];
 
 /** One above the highest zIndex on the table, so new widgets appear on top. */
@@ -61,5 +74,16 @@ export function createWidget(
       return { ...at(120, 60), type: 'counter', value: 0, step: 1 } as CounterWidget;
     case 'die':
       return { ...at(60, 60), type: 'die', currentValue: 1, sides: 6 } as DieWidget;
+    case 'label':
+      return { ...at(240, 60), type: 'label', text: 'Text', fontSize: 28 } as LabelWidget;
+    case 'timer':
+      return { ...at(170, 56), type: 'timer', durationMs: 60_000, elapsedMs: 0 } as TimerWidget;
+    case 'spinner':
+      return {
+        ...at(200, 200),
+        type: 'spinner',
+        options: ['1', '2', '3', '4', '5', '6'],
+        angle: 0,
+      } as SpinnerWidget;
   }
 }

@@ -12,7 +12,10 @@ export type WidgetType =
   | 'die'
   | 'counter'
   | 'seat'
-  | 'bag';
+  | 'bag'
+  | 'label'
+  | 'timer'
+  | 'spinner';
 
 /** A single renderable object within a card face template */
 export interface FaceObject {
@@ -176,6 +179,30 @@ export interface BagWidget extends BaseWidget {
   previewLabel?: string; // Label of contained token/item
 }
 
+/** Free text on the table. */
+export interface LabelWidget extends BaseWidget {
+  type: 'label';
+  text: string;
+  fontSize?: number;
+  color?: string;
+}
+
+/** Countdown (`durationMs` > 0) or stopwatch; time runs while `runningSince` is set. */
+export interface TimerWidget extends BaseWidget {
+  type: 'timer';
+  durationMs: number;
+  elapsedMs: number;
+  runningSince?: number;
+}
+
+/** Wheel with options; `value` is the index of the last result. */
+export interface SpinnerWidget extends BaseWidget {
+  type: 'spinner';
+  options: string[];
+  value?: number;
+  angle: number;
+}
+
 export type TabletopWidget =
   | CardWidget
   | DeckWidget
@@ -184,7 +211,10 @@ export type TabletopWidget =
   | CounterWidget
   | DieWidget
   | SeatWidget
-  | BagWidget;
+  | BagWidget
+  | LabelWidget
+  | TimerWidget
+  | SpinnerWidget;
 
 export interface TabletopTableConfig {
   width: number;

@@ -847,7 +847,16 @@
         "deck_back": "Rückseiten-URL (optional)",
         "deck_width": "Kartenbreite",
         "deck_height": "Kartenhöhe",
-        "deck_create": "Stapel erstellen ({{count}} Karten)"
+        "deck_create": "Stapel erstellen ({{count}} Karten)",
+        "kind_label": "Text",
+        "kind_timer": "Timer",
+        "kind_spinner": "Glücksrad",
+        "text": "Text",
+        "fontSize": "Schriftgröße",
+        "duration_seconds": "Dauer (Sekunden)",
+        "duration_hint": "0 = Stoppuhr",
+        "options": "Optionen",
+        "options_hint": "Durch Kommas getrennt"
       },
       "workshop": {
         "error_invalid_input": "Keine gültige Steam-Workshop-URL oder -ID.",
