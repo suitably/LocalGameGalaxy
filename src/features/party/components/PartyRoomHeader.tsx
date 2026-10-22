@@ -5,6 +5,7 @@ import React from 'react';
 import { Box, Button, Chip, IconButton, Tooltip, Typography } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +14,7 @@ import type { PartyLobbyController } from '../hooks/usePartyLobbyController';
 export const PartyRoomHeader: React.FC<{ lobby: PartyLobbyController }> = ({ lobby }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { roomId, setShowQr, setEditRoomOpen, setCustomRoomInput, amIHost } = lobby;
+  const { roomId, setShowQr, setEditRoomOpen, setCustomRoomInput, amIHost, leaveParty } = lobby;
   return (
     <>
       {/* Header */}
@@ -65,6 +66,13 @@ export const PartyRoomHeader: React.FC<{ lobby: PartyLobbyController }> = ({ lob
               {t('party.shareLobby', 'Lobby teilen')}
             </Button>
           </Tooltip>
+          {!amIHost && (
+            <Tooltip title={t('party.leave', 'Party verlassen')}>
+              <IconButton size="small" color="error" onClick={leaveParty}>
+                <LogoutRoundedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       </Box>
     </>

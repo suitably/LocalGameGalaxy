@@ -1552,7 +1552,12 @@
     "pending_game_waiting": "Warte auf Mitspieler – sie treten über den QR-Code unten bei.",
     "pending_game_ready": "{{count}} Mitspieler bereit.",
     "pending_game_start": "Jetzt starten",
-    "pending_game_other": "Anderes Spiel"
+    "pending_game_other": "Anderes Spiel",
+    "leave": "Party verlassen",
+    "removePlayer": "Aus der Party entfernen",
+    "removedByHost": "Der Host hat dich aus der Party entfernt.",
+    "rejoin": "Wieder beitreten",
+    "backToHub": "Zur Übersicht"
   },
   "gartic": {
     "waitingHeader": "Warte auf die anderen Spieler...",
