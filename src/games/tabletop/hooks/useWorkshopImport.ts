@@ -17,13 +17,7 @@ import type { TabletopGameDefinition } from '../logic/types';
 import type { TTSSaveFile } from '../logic/ttsTypes';
 
 export type WorkshopImportStatus =
-  | 'idle'
-  | 'loading_meta'
-  | 'meta_loaded'
-  | 'downloading'
-  | 'parsing'
-  | 'success'
-  | 'error';
+  'idle' | 'loading_meta' | 'meta_loaded' | 'downloading' | 'parsing' | 'success' | 'error';
 
 export interface WorkshopImportState {
   status: WorkshopImportStatus;
@@ -63,7 +57,9 @@ export function useWorkshopImport() {
     setState((s) => ({ ...s, status: 'loading_meta', error: null, meta: null, game: null }));
 
     try {
-      const baseUrl = storage.isHelperActive() ? storage.getHelperUrl().replace(/\/$/, '') : undefined;
+      const baseUrl = storage.isHelperActive()
+        ? storage.getHelperUrl().replace(/\/$/, '')
+        : undefined;
       const token = storage.isHelperActive() ? storage.getHelperToken() : undefined;
       const meta = await fetchWorkshopDetails(workshopId, baseUrl, token);
       setState((s) => ({ ...s, status: 'meta_loaded', meta }));
