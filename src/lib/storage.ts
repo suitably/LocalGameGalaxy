@@ -3,6 +3,10 @@
  * Provides unified, type-safe access to localStorage and app preference configurations.
  */
 
+import * as companion from './companion/companionSettings';
+import * as signaling from './webrtc/signalingSettings';
+import * as push from './push/pushSettings';
+
 export const STORAGE_KEYS = {
   // Companion helper configuration
   HELPER_URL: 'melodiq_helper_url',
@@ -236,136 +240,50 @@ export const storage = {
     return matching;
   },
 
-  // Companion Helper Config Accessors
-  getHelperUrl(): string {
-    return this.get(STORAGE_KEYS.HELPER_URL, 'http://localhost:3000');
-  },
-
-  setHelperUrl(url: string): void {
-    this.set(STORAGE_KEYS.HELPER_URL, url);
-  },
-
-  getHelperToken(): string {
-    return this.get(STORAGE_KEYS.HELPER_TOKEN, '');
-  },
-
-  setHelperToken(token: string): void {
-    this.set(STORAGE_KEYS.HELPER_TOKEN, token);
-  },
-
-  isHelperActive(): boolean {
-    const val = this.get(STORAGE_KEYS.HELPER_ACTIVE);
-    return val !== 'false';
-  },
-
-  setHelperActive(active: boolean): void {
-    this.set(STORAGE_KEYS.HELPER_ACTIVE, active ? 'true' : 'false');
-  },
-
-  // WebRTC Signaling Tracker Accessors
-  getSignalingUrl(): string {
-    const custom = this.get(STORAGE_KEYS.SIGNALING_URL);
-    if (custom) return custom;
-    if (this.isHelperActive()) {
-      try {
-        const helper = this.getHelperUrl();
-        const parsed = new URL(
-          helper ||
-            (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'),
-        );
-        const wsProto = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
-        return `${wsProto}//${parsed.hostname}:8000`;
-      } catch {
-        return 'ws://localhost:8000';
-      }
-    }
-    return '';
-  },
-
-  setSignalingUrl(url: string): void {
-    this.set(STORAGE_KEYS.SIGNALING_URL, url);
-  },
-
-  getDisabledTrackerUrls(gameId = 'melodiq'): string[] {
-    const key = `${gameId}_disabled_tracker_urls`;
-    const val = this.get(key);
-    if (!val) return [];
-    try {
-      return JSON.parse(val);
-    } catch {
-      return [];
-    }
-  },
-
-  setDisabledTrackerUrls(urls: string[], gameId = 'melodiq'): void {
-    const key = `${gameId}_disabled_tracker_urls`;
-    this.set(key, JSON.stringify(urls));
-  },
-
-  // Push Relay Config Accessors (for async games like GuessArt)
-  getPushRelayUrl(): string {
-    return this.get(STORAGE_KEYS.PUSH_RELAY_URL, '');
-  },
-
-  setPushRelayUrl(url: string): void {
-    this.set(STORAGE_KEYS.PUSH_RELAY_URL, url.trim().replace(/\/$/, ''));
-  },
-
-  getNotificationMethod(): 'auto' | 'webpush' | 'ntfy' | 'both' {
-    const val = this.get(STORAGE_KEYS.NOTIFICATION_METHOD, 'auto');
-    if (val === 'webpush' || val === 'ntfy' || val === 'both') {
-      return val;
-    }
-    return 'auto';
-  },
-
-  setNotificationMethod(method: 'auto' | 'webpush' | 'ntfy' | 'both'): void {
-    this.set(STORAGE_KEYS.NOTIFICATION_METHOD, method);
-  },
-
-  getNtfyServerUrl(): string {
-    return this.get(STORAGE_KEYS.NTFY_SERVER_URL, 'https://ntfy.sh');
-  },
-
-  setNtfyServerUrl(url: string): void {
-    const clean = url.trim().replace(/\/$/, '');
-    this.set(STORAGE_KEYS.NTFY_SERVER_URL, clean || 'https://ntfy.sh');
-  },
-
-  getUserNtfyTopic(): string {
-    let topic = this.get(STORAGE_KEYS.NTFY_TOPIC);
-    if (!topic) {
-      topic = generateUserNtfyTopic();
-      this.set(STORAGE_KEYS.NTFY_TOPIC, topic);
-    }
-    return topic;
-  },
-
-  setUserNtfyTopic(topic: string): void {
-    const clean = topic
-      .trim()
-      .replace(/[^a-zA-Z0-9_-]/g, '_')
-      .slice(0, 64);
-    this.set(STORAGE_KEYS.NTFY_TOPIC, clean || generateUserNtfyTopic());
-  },
-
-  regenerateUserNtfyTopic(): string {
-    const topic = generateUserNtfyTopic();
-    this.set(STORAGE_KEYS.NTFY_TOPIC, topic);
-    return topic;
-  },
+  // Feature settings moved to their owners (#419); thin delegates kept for existing call sites.
+  /** @deprecated Use `getHelperUrl` from `lib/companion/companionSettings`. */
+  getHelperUrl: () => companion.getHelperUrl(),
+  /** @deprecated Use `setHelperUrl` from `lib/companion/companionSettings`. */
+  setHelperUrl: (url: string) => companion.setHelperUrl(url),
+  /** @deprecated Use `getHelperToken` from `lib/companion/companionSettings`. */
+  getHelperToken: () => companion.getHelperToken(),
+  /** @deprecated Use `setHelperToken` from `lib/companion/companionSettings`. */
+  setHelperToken: (token: string) => companion.setHelperToken(token),
+  /** @deprecated Use `isHelperActive` from `lib/companion/companionSettings`. */
+  isHelperActive: () => companion.isHelperActive(),
+  /** @deprecated Use `setHelperActive` from `lib/companion/companionSettings`. */
+  setHelperActive: (active: boolean) => companion.setHelperActive(active),
+  /** @deprecated Use `getSignalingUrl` from `lib/webrtc/signalingSettings`. */
+  getSignalingUrl: () => signaling.getSignalingUrl(),
+  /** @deprecated Use `setSignalingUrl` from `lib/webrtc/signalingSettings`. */
+  setSignalingUrl: (url: string) => signaling.setSignalingUrl(url),
+  /** @deprecated Use `getDisabledTrackerUrls` from `lib/webrtc/signalingSettings`. */
+  getDisabledTrackerUrls: (gameId?: string) => signaling.getDisabledTrackerUrls(gameId),
+  /** @deprecated Use `setDisabledTrackerUrls` from `lib/webrtc/signalingSettings`. */
+  setDisabledTrackerUrls: (urls: string[], gameId?: string) =>
+    signaling.setDisabledTrackerUrls(urls, gameId),
+  /** @deprecated Use `getPushRelayUrl` from `lib/push/pushSettings`. */
+  getPushRelayUrl: () => push.getPushRelayUrl(),
+  /** @deprecated Use `setPushRelayUrl` from `lib/push/pushSettings`. */
+  setPushRelayUrl: (url: string) => push.setPushRelayUrl(url),
+  /** @deprecated Use `getNotificationMethod` from `lib/push/pushSettings`. */
+  getNotificationMethod: () => push.getNotificationMethod(),
+  /** @deprecated Use `setNotificationMethod` from `lib/push/pushSettings`. */
+  setNotificationMethod: (method: push.NotificationMethod) => push.setNotificationMethod(method),
+  /** @deprecated Use `getNtfyServerUrl` from `lib/push/pushSettings`. */
+  getNtfyServerUrl: () => push.getNtfyServerUrl(),
+  /** @deprecated Use `setNtfyServerUrl` from `lib/push/pushSettings`. */
+  setNtfyServerUrl: (url: string) => push.setNtfyServerUrl(url),
+  /** @deprecated Use `getUserNtfyTopic` from `lib/push/pushSettings`. */
+  getUserNtfyTopic: () => push.getUserNtfyTopic(),
+  /** @deprecated Use `setUserNtfyTopic` from `lib/push/pushSettings`. */
+  setUserNtfyTopic: (topic: string) => push.setUserNtfyTopic(topic),
+  /** @deprecated Use `regenerateUserNtfyTopic` from `lib/push/pushSettings`. */
+  regenerateUserNtfyTopic: () => push.regenerateUserNtfyTopic(),
 };
 
-export function generateUserNtfyTopic(): string {
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-    const bytes = new Uint8Array(8);
-    crypto.getRandomValues(bytes);
-    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-    return `lgg-user-${hex}`;
-  }
-  const rand = Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
-  return `lgg-user-${rand.slice(0, 16)}`;
-}
+/** @deprecated Import from `lib/push/pushSettings`. */
+export { generateUserNtfyTopic } from './push/pushSettings';
 
 const sessionMemoryFallback = new Map<string, string>();
 
