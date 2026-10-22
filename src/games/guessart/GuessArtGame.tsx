@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
@@ -6,6 +6,8 @@ import { useWakeLock } from '../../hooks/useWakeLock';
 import { useGuessArtLobby } from './hooks/useGuessArtLobby';
 import { useGuessArtUrlParam } from './hooks/useGuessArtUrlParam';
 import { useGuessArtGame } from './hooks/useGuessArtGame';
+import { useGuessArtJoinLink } from './hooks/useGuessArtJoinLink';
+import { useGuessArtTurnSeat } from './hooks/useGuessArtTurnSeat';
 import { useHeaderLayout } from '../../context/HeaderLayoutContext';
 import { GameSetup } from './components/GameSetup';
 import { GuessArtHeader } from './components/GuessArtHeader';
@@ -20,15 +22,14 @@ import { GameInfoDialog } from './components/GameInfoDialog';
 import { RoundHistoryDialog } from './components/RoundHistoryDialog';
 import { EditGameDialog } from './components/EditGameDialog';
 import { CatalogueEditorDialog } from './components/catalogue/CatalogueEditorDialog';
-import { useGameJoinUrl, cleanWindowUrlQuery } from '../../modules/sharing';
+import { cleanWindowUrlQuery } from '../../modules/sharing';
+import { PlayerJoinedSnackbar } from '../../modules/player-management/PlayerJoinedSnackbar';
 import { storage } from '../../lib/storage';
 import { playerAssignment } from './logic/playerAssignment';
-import { gameRelayStorage } from '../../lib/push/gameRelayStorage';
 import { guessArtNotificationService } from './logic/notificationService';
 import { guessArtMailbox } from './logic/guessArtMailbox';
 import { LocalGameEngine } from './logic/engine';
-import { getTurnPlayers } from './logic/turnUtils';
-import type { GameSnapshot, GuessArtGameRecord, GuessArtRound } from './logic/types';
+import type { GuessArtGameRecord, GuessArtRound } from './logic/types';
 
 const STORAGE_KEY_SEEN_INFO = 'guessart_seen_info';
 export const GuessArtGame: React.FC = () => {
@@ -71,62 +72,6 @@ export const GuessArtGame: React.FC = () => {
     loadActiveGames,
   } = useGuessArtLobby();
 
-  const [localPlayersVersion, setLocalPlayersVersion] = useState<number>(0);
-  const triggerLocalUpdate = useCallback(() => setLocalPlayersVersion((v) => v + 1), []);
-
-  useGameJoinUrl<GameSnapshot>({
-    defaultHashPath: '#/games/guessart',
-    onSnapshotLoaded: async (snapshot, params) => {
-      if (!snapshot || !snapshot.game) return;
-      const targetPlayerId = params.get('player') || params.get('playerId');
-      const relayParam = params.get('gameRelay') || params.get('relay');
-
-      const imported = await LocalGameEngine.importSnapshot(snapshot, language);
-      if (targetPlayerId) {
-        playerAssignment.addLocalPlayerId(imported.game.id, targetPlayerId);
-        const ownRelay = storage.getPushRelayUrl();
-        const prefMethod = storage.getNotificationMethod();
-        const updatedPlayers = imported.game.players.map((p) =>
-          p.id === targetPlayerId
-            ? {
-                ...p,
-                relayUrl: ownRelay || p.relayUrl || relayParam || undefined,
-                notificationMethod: prefMethod,
-                ntfyTopic: storage.getUserNtfyTopic() || p.ntfyTopic,
-              }
-            : p,
-        );
-        imported.game.players = updatedPlayers;
-        await LocalGameEngine.updateGameDetails(imported.game.id, { players: updatedPlayers }).catch(() => {});
-        // Broadcast updated player presence (including ntfyTopic & relayUrl) via MQTT mailbox
-        guessArtMailbox.publish(imported.game.id, {
-          game: { ...imported.game, players: updatedPlayers },
-          round: imported.round,
-        }).catch(() => {});
-      }
-      if (relayParam) {
-        gameRelayStorage.setGameRelay(imported.game.id, relayParam);
-      }
-      triggerLocalUpdate();
-      await loadActiveGames();
-      setActiveGameId(imported.game.id);
-    },
-    onDirectGameId: async (urlGameId, params) => {
-      const targetPlayerId = params.get('player') || params.get('playerId');
-      const relayParam = params.get('gameRelay') || params.get('relay');
-
-      if (targetPlayerId) {
-        playerAssignment.addLocalPlayerId(urlGameId, targetPlayerId);
-      }
-      if (relayParam) {
-        gameRelayStorage.setGameRelay(urlGameId, relayParam);
-      }
-      triggerLocalUpdate();
-      await loadActiveGames();
-      setActiveGameId(urlGameId);
-    },
-  });
-
   // Request browser notifications for async turn handoffs
   useEffect(() => {
     guessArtNotificationService.requestPermission().catch(() => {});
@@ -142,16 +87,53 @@ export const GuessArtGame: React.FC = () => {
     requestHint,
     updateGameDetails: updateGameDetailsActive,
     refresh,
+    joinedNames,
+    clearJoined,
   } = useGuessArtGame(activeGameId, language);
+  const {
+    isCurrentTurnLocal,
+    isCurrentDrawerLocal,
+    isCurrentGuesserLocal,
+    isHost,
+    isTemporaryTurn,
+    localPlayerIds,
+    triggerLocalUpdate,
+    handleToggleLocalRemote,
+  } = useGuessArtTurnSeat(game, round, refresh);
+
+  // After a share or "play here": reload, so the share dialog never works on a stale player list.
+  const handlePlayersChanged = useCallback(async () => {
+    triggerLocalUpdate();
+    if (shareDialogGame) {
+      const snap = await LocalGameEngine.getGameSnapshot(shareDialogGame.id, language).catch(
+        () => null,
+      );
+      if (snap) setShareDialogGame(snap.game);
+    }
+    await (activeGameId ? refresh() : loadActiveGames());
+  }, [triggerLocalUpdate, shareDialogGame, language, activeGameId, refresh, loadActiveGames]);
+
+  useGuessArtJoinLink(language, async (gameId) => {
+    triggerLocalUpdate();
+    await loadActiveGames();
+    setActiveGameId(gameId);
+  });
 
   useWakeLock(Boolean(activeGameId));
 
-  const handleStartGame = async (options: { name?: string; language: string; manualWordMode: boolean }) => {
+  const handleStartGame = async (options: {
+    name?: string;
+    language: string;
+    manualWordMode: boolean;
+  }) => {
     const record = await createGame(options);
     setActiveGameId(record.id);
   };
 
-  const handleSaveGameDetails = async (payload: { name?: string; players?: { id: string; name: string }[] }) => {
+  const handleSaveGameDetails = async (payload: {
+    name?: string;
+    players?: { id: string; name: string }[];
+  }) => {
     if (activeGameId) {
       await updateGameDetailsActive(payload);
     } else if (editGameRecord) {
@@ -209,7 +191,9 @@ export const GuessArtGame: React.FC = () => {
     const currentRoundNum = round?.roundNumber || 1;
     const currentWord = round?.word || guess;
     const originalWord =
-      (round?.translations && round?.wordLanguageCode && round.translations[round.wordLanguageCode]?.canonical) ||
+      (round?.translations &&
+        round?.wordLanguageCode &&
+        round.translations[round.wordLanguageCode]?.canonical) ||
       round?.word;
     const originalLang = round?.wordLanguageCode;
     const currentGuessesCount = (round?.guesses.length || 0) + 1;
@@ -219,7 +203,9 @@ export const GuessArtGame: React.FC = () => {
     const currentGuesserName =
       game && round
         ? round.guesserName ||
-          game.players[(game.players.findIndex((p) => p.id === round.drawnById) + 1) % game.players.length]?.name
+          game.players[
+            (game.players.findIndex((p) => p.id === round.drawnById) + 1) % game.players.length
+          ]?.name
         : undefined;
 
     const result = await submitGuess(guess);
@@ -242,53 +228,8 @@ export const GuessArtGame: React.FC = () => {
     await refresh();
   };
 
-  const historyPlayers = game?.players || activeGames.find((g) => g.id === historyGameId)?.players || [];
-
-  // Determine if current device draws or guesses in this round
-  const { drawer: activeDrawer, guesser: activeGuesser } = getTurnPlayers(game, round);
-
-  const hasRemotePlayers = useMemo(() => {
-    return game ? game.players.some((p) => p.isRemote) : false;
-  }, [game]);
-
-  const isCurrentDrawerLocal = useMemo(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    localPlayersVersion;
-    if (!game || !activeDrawer) return false;
-    return playerAssignment.isPlayerLocal(game.id, activeDrawer.id, !hasRemotePlayers);
-  }, [game, activeDrawer, localPlayersVersion, hasRemotePlayers]);
-
-  const isCurrentGuesserLocal = useMemo(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    localPlayersVersion;
-    if (!game || !activeGuesser) return false;
-    return playerAssignment.isPlayerLocal(game.id, activeGuesser.id, !hasRemotePlayers);
-  }, [game, activeGuesser, localPlayersVersion, hasRemotePlayers]);
-
-  const isDrawing = round?.status === 'selecting' || round?.status === 'drawing';
-  const isCurrentTurnLocal = isDrawing ? isCurrentDrawerLocal : isCurrentGuesserLocal;
-  const activeTurnPlayerId = isDrawing
-    ? (round?.drawnById || (game && activeDrawer ? activeDrawer.id : null))
-    : (game && activeGuesser ? activeGuesser.id : null);
-
-  const isHost = useMemo(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    localPlayersVersion;
-    if (!game || !game.players[0]) return true;
-    return playerAssignment.isPlayerLocal(game.id, game.players[0].id, false);
-  }, [game, localPlayersVersion]);
-
-  const handleToggleLocalRemote = useCallback(async () => {
-    if (!game || !activeTurnPlayerId || !isHost) return;
-    if (isCurrentTurnLocal) {
-      playerAssignment.releaseTemporaryClaims(game.id, activeTurnPlayerId);
-      playerAssignment.removeLocalPlayerId(game.id, activeTurnPlayerId);
-    } else {
-      playerAssignment.claimTurnTemporary(game.id, activeTurnPlayerId);
-    }
-    triggerLocalUpdate();
-    await refresh();
-  }, [game, activeTurnPlayerId, isHost, isCurrentTurnLocal, triggerLocalUpdate, refresh]);
+  const historyPlayers =
+    game?.players || activeGames.find((g) => g.id === historyGameId)?.players || [];
 
   const { setHeaderHidden } = useHeaderLayout();
 
@@ -332,11 +273,11 @@ export const GuessArtGame: React.FC = () => {
           onClose={() => setEditDialogOpen(false)}
           game={editGameRecord}
           isHost={
-            editGameRecord && editGameRecord.players[0]
-              ? playerAssignment.isPlayerLocal(editGameRecord.id, editGameRecord.players[0].id, false)
+            editGameRecord?.players[0]
+              ? playerAssignment.isLocal(editGameRecord, editGameRecord.players[0].id)
               : true
           }
-          localPlayerIds={editGameRecord ? playerAssignment.getLocalPlayerIds(editGameRecord.id) : []}
+          localPlayerIds={editGameRecord ? playerAssignment.localPlayerIds(editGameRecord) : []}
           onSave={handleSaveGameDetails}
         />
         <RoundHistoryDialog
@@ -351,7 +292,7 @@ export const GuessArtGame: React.FC = () => {
             setShareDialogOpen(false);
             triggerLocalUpdate();
           }}
-          onPlayerChanged={triggerLocalUpdate}
+          onPlayerChanged={handlePlayersChanged}
           game={shareDialogGame}
           round={shareDialogRound}
         />
@@ -361,7 +302,15 @@ export const GuessArtGame: React.FC = () => {
 
   // Active Game Session View
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', overflow: 'hidden' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        overflow: 'hidden',
+      }}
+    >
       {round && (
         <GuessArtHeader
           game={game}
@@ -373,16 +322,25 @@ export const GuessArtGame: React.FC = () => {
           isCurrentTurnLocal={isCurrentTurnLocal}
           canToggleLocalRemote={isHost}
           onToggleLocalRemote={handleToggleLocalRemote}
-          isTemporaryTurn={activeTurnPlayerId ? playerAssignment.isTurnClaimedTemporarily(game.id, activeTurnPlayerId) : false}
+          isTemporaryTurn={isTemporaryTurn}
         />
       )}
 
-      <Box sx={{ flexGrow: 1, minHeight: 0, display: 'flex', flexDirection: 'column', p: { xs: 0.5, sm: 1.5 } }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          p: { xs: 0.5, sm: 1.5 },
+        }}
+      >
         {gameLoading && !round ? (
           <Box display="flex" justifyContent="center" alignItems="center" height="100%">
             <CircularProgress />
           </Box>
-        ) : (round?.status === 'selecting' || round?.status === 'drawing') && !isCurrentDrawerLocal ? (
+        ) : (round?.status === 'selecting' || round?.status === 'drawing') &&
+          !isCurrentDrawerLocal ? (
           <WaitingForDrawerView
             game={game}
             round={round}
@@ -446,6 +404,7 @@ export const GuessArtGame: React.FC = () => {
         onNextRound={handleNextRound}
       />
 
+      <PlayerJoinedSnackbar names={joinedNames} onClose={clearJoined} />
       <GameInfoDialog open={infoOpen} onClose={handleCloseInfo} />
       <RoundHistoryDialog
         open={historyOpen}
@@ -458,7 +417,7 @@ export const GuessArtGame: React.FC = () => {
         onClose={() => setEditDialogOpen(false)}
         game={editGameRecord || game}
         isHost={isHost}
-        localPlayerIds={playerAssignment.getLocalPlayerIds(game?.id || activeGameId || '')}
+        localPlayerIds={localPlayerIds}
         onSave={handleSaveGameDetails}
       />
       <CatalogueEditorDialog
@@ -471,7 +430,7 @@ export const GuessArtGame: React.FC = () => {
           setShareDialogOpen(false);
           triggerLocalUpdate();
         }}
-        onPlayerChanged={triggerLocalUpdate}
+        onPlayerChanged={handlePlayersChanged}
         game={shareDialogGame}
         round={shareDialogRound}
       />

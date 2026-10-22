@@ -3,12 +3,11 @@ import { LocalGameEngine } from '../logic/engine';
 import { guessArtMailbox } from '../logic/guessArtMailbox';
 import { parseGameUrlParams } from '../../../modules/sharing';
 import { gameRelayStorage } from '../../../lib/push/gameRelayStorage';
-import { pushClient } from '../../../lib/push/pushClient';
-import { storage } from '../../../lib/storage';
 import { playerAssignment } from '../logic/playerAssignment';
 import { getTurnPlayers } from '../logic/turnUtils';
 import { guessArtNotificationService } from '../logic/notificationService';
-import { buildTurnNotificationMessage, localNotificationPresenter } from '../../../lib/notifications';
+import { sendTurnPush } from '../logic/turnPush';
+import { useGuessArtSeats } from './useGuessArtSeats';
 import type {
   GameSnapshot,
   GuessArtGameRecord,
@@ -32,12 +31,12 @@ export interface UseGuessArtGameResult {
     name?: string;
     players?: { id: string; name: string }[];
   }) => Promise<void>;
+  /** Names of players who just joined from another device (cleared by `clearJoined`). */
+  joinedNames: string[];
+  clearJoined: () => void;
 }
 
-export const useGuessArtGame = (
-  gameId: string | null,
-  language: string,
-): UseGuessArtGameResult => {
+export const useGuessArtGame = (gameId: string | null, language: string): UseGuessArtGameResult => {
   const [game, setGame] = useState<GuessArtGameRecord | null>(null);
   const [round, setRound] = useState<GuessArtRound | null>(null);
   const [loading, setLoading] = useState<boolean>(Boolean(gameId));
@@ -82,68 +81,12 @@ export const useGuessArtGame = (
     loadSnapshot();
   }, [loadSnapshot]);
 
-  // 2. Auto-Register Web Push for active local players in this game
-  const localPlayerIdsKey = game
-    ? game.players
-        .filter((p) => playerAssignment.isPlayerLocal(game.id, p.id, false))
-        .map((p) => p.id)
-        .join(',')
-    : '';
-
-  useEffect(() => {
-    if (!localPlayerIdsKey || !gameId) return;
-    const ids = localPlayerIdsKey.split(',').filter(Boolean);
-    const ownRelay = storage.getPushRelayUrl();
-    for (const id of ids) {
-      // Never register push subscription on relay for a temporarily claimed player
-      if (playerAssignment.isTurnClaimedTemporarily(gameId, id)) {
-        continue;
-      }
-      pushClient.registerForGamePush(gameId, id, ownRelay || undefined);
-    }
-  }, [localPlayerIdsKey, gameId]);
-
-  // Ensure all local players in this game have their personal ntfyTopic & relayUrl attached to the game record
-  useEffect(() => {
-    if (!game || !gameId) return;
-    const userNtfyTopic = storage.getUserNtfyTopic();
-    const ownRelay = storage.getPushRelayUrl();
-    const prefMethod = storage.getNotificationMethod();
-
-    let needsUpdate = false;
-    const updatedPlayers = game.players.map((p) => {
-      if (playerAssignment.isPlayerLocal(gameId, p.id, false)) {
-        if (
-          p.ntfyTopic &&
-          p.ntfyTopic !== userNtfyTopic &&
-          !playerAssignment.isTurnClaimedTemporarily(gameId, p.id)
-        ) {
-          // This player belongs to another device! Purge from local player IDs on this device
-          playerAssignment.removeLocalPlayerId(gameId, p.id);
-          return p;
-        }
-        // Attach this device's personal ntfyTopic and relay to all local players on this device
-        // so remote peers can notify whichever player on this device has the next turn.
-        const pTopic = userNtfyTopic || p.ntfyTopic;
-        const pRelay = ownRelay || p.relayUrl;
-        const pMethod = prefMethod || p.notificationMethod;
-        if (p.ntfyTopic !== pTopic || p.relayUrl !== pRelay || p.notificationMethod !== pMethod) {
-          needsUpdate = true;
-          return { ...p, ntfyTopic: pTopic, relayUrl: pRelay, notificationMethod: pMethod };
-        }
-      }
-      return p;
-    });
-
-    if (needsUpdate) {
-      LocalGameEngine.updateGameDetails(gameId, { players: updatedPlayers })
-        .then((snap) => {
-          setGame(snap.game);
-          guessArtMailbox.publish(gameId, snap).catch(() => {});
-        })
-        .catch((e) => console.warn('[useGuessArtGame] Failed to sync local player notification channels:', e));
-    }
-  }, [game, gameId]);
+  // 2. This device's seats: push registration, channels, "joined" notices
+  const applySnapshot = useCallback((snap: GameSnapshot) => {
+    setGame(snap.game);
+    setRound(snap.round);
+  }, []);
+  const { joinedNames, noteJoined, clearJoined } = useGuessArtSeats(game, applySnapshot);
 
   // Subscribe to ephemeral mailbox and track active screen game
   useEffect(() => {
@@ -154,49 +97,43 @@ export const useGuessArtGame = (
 
     guessArtNotificationService.setActiveScreenGameId(gameId);
 
-    const unsubListener = guessArtMailbox.subscribe(gameId, async (remoteSnapshot, snapshotGameId, timestamp) => {
-      if (snapshotGameId === gameId) {
-        try {
-          const importResult = await LocalGameEngine.importSnapshot(remoteSnapshot, language);
-          if (importResult.updated) {
-            const isHistorical = timestamp ? Date.now() - timestamp > 30000 : false;
-            const isInitialGameStart =
-              !importResult.round ||
-              (importResult.round.roundNumber === 1 &&
-                (importResult.round.status === 'selecting' ||
-                  (importResult.round.status === 'drawing' && !importResult.round.word)));
+    const unsubListener = guessArtMailbox.subscribe(
+      gameId,
+      async (remoteSnapshot, snapshotGameId, timestamp) => {
+        if (snapshotGameId === gameId) {
+          try {
+            const importResult = await LocalGameEngine.importSnapshot(remoteSnapshot, language);
+            if (importResult.updated) {
+              const isHistorical = timestamp ? Date.now() - timestamp > 30000 : false;
+              const isInitialGameStart =
+                !importResult.round ||
+                (importResult.round.roundNumber === 1 &&
+                  (importResult.round.status === 'selecting' ||
+                    (importResult.round.status === 'drawing' && !importResult.round.word)));
 
-            if (!isHistorical) {
-              await guessArtNotificationService.notifyTurnIfEligible({
-                game: importResult.game,
-                round: importResult.round,
-                isRemoteEvent: true,
-                isInitialGameStart,
-                activeGameScreenId: gameId,
-                isDocumentVisible: typeof document !== 'undefined' ? document.visibilityState === 'visible' : true,
-              });
+              if (!isHistorical) {
+                await guessArtNotificationService.notifyTurnIfEligible({
+                  game: importResult.game,
+                  round: importResult.round,
+                  isRemoteEvent: true,
+                  isInitialGameStart,
+                  activeGameScreenId: gameId,
+                  isDocumentVisible:
+                    typeof document !== 'undefined' ? document.visibilityState === 'visible' : true,
+                });
+              }
             }
-          }
 
-          // Automatically purge any player that has been explicitly claimed by another device (different ntfyTopic),
-          // UNLESS the player is currently claimed temporarily on this device!
-          const ownTopic = storage.getUserNtfyTopic();
-          for (const p of remoteSnapshot.game.players) {
-            if (
-              p.ntfyTopic &&
-              p.ntfyTopic !== ownTopic &&
-              !playerAssignment.isTurnClaimedTemporarily(gameId, p.id)
-            ) {
-              playerAssignment.removeLocalPlayerId(gameId, p.id);
-            }
+            noteJoined(importResult.joined);
+            // Show the merged state (own seats and channels kept), not the raw incoming one.
+            setGame(importResult.game);
+            setRound(importResult.round);
+          } catch (err) {
+            console.warn('[useGuessArtGame] Error processing incoming snapshot:', err);
           }
-          setGame(remoteSnapshot.game);
-          setRound(remoteSnapshot.round);
-        } catch (err) {
-          console.warn('[useGuessArtGame] Error processing incoming snapshot:', err);
         }
-      }
-    });
+      },
+    );
 
     // Re-sync from local database when user returns to the tab/app
     const handleVisibility = () => {
@@ -225,96 +162,6 @@ export const useGuessArtGame = (
       }
     },
     [gameId, language],
-  );
-
-  const sendTurnPush = useCallback(
-    async (params: {
-      snap: GameSnapshot;
-      targetPlayerId: string;
-      actionType: 'draw' | 'guess';
-      actorName?: string;
-    }) => {
-      if (!gameId) return;
-      const { snap, targetPlayerId, actionType, actorName } = params;
-
-      const targetPlayer = snap.game?.players.find((p) => p.id === targetPlayerId);
-      if (!targetPlayer) {
-        console.warn(`[useGuessArtGame] Target player ${targetPlayerId} not found in game snapshot`);
-        return;
-      }
-
-      const effectiveRelay = gameRelayStorage.getEffectiveRelay(gameId, targetPlayer.relayUrl);
-
-      const message = buildTurnNotificationMessage({
-        gameType: 'guessart',
-        gameName: snap.game?.name,
-        gameId,
-        actionType,
-        actorName,
-        targetPlayerName: targetPlayer.name,
-        targetPlayerId: targetPlayer.id,
-        relayUrl: effectiveRelay || undefined,
-      });
-
-      // If the target player is playing locally on this device, do not send a remote push across the internet
-      if (playerAssignment.isPlayerLocal(gameId, targetPlayerId, false)) {
-        console.log(`[useGuessArtGame] Suppressing remote turn push: player ${targetPlayerId} is local on this device`);
-        if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
-          localNotificationPresenter
-            .showNotification({
-              title: message.title,
-              body: message.body,
-              tag: message.tag,
-              icon: message.icon,
-              url: message.url,
-              data: { url: message.url },
-            })
-            .catch(() => {});
-        }
-        return;
-      }
-
-      // Never send push notifications if the target player's topic matches this device's own topic!
-      const ownNtfyTopic = storage.getUserNtfyTopic();
-      if (targetPlayer.ntfyTopic && ownNtfyTopic && targetPlayer.ntfyTopic === ownNtfyTopic) {
-        console.log(`[useGuessArtGame] Suppressing turn push: targetPlayer ${targetPlayerId} shares this device ntfyTopic`);
-        return;
-      }
-
-      const localPlayerIds = playerAssignment.getLocalPlayerIds(gameId);
-      const senderPlayerId =
-        actionType === 'guess'
-          ? snap.round?.drawnById || localPlayerIds[0]
-          : snap.round?.guesserId || localPlayerIds[0];
-
-      if (senderPlayerId && senderPlayerId === targetPlayerId) {
-        console.log(`[useGuessArtGame] Suppressing turn push: sender ${senderPlayerId} is target`);
-        return;
-      }
-
-      console.log(
-        `[useGuessArtGame] Dispatching ${actionType} push to ${targetPlayer.name} (${targetPlayer.id}) via topic ${targetPlayer.ntfyTopic || 'auto'} and relay ${effectiveRelay || 'none'}`,
-      );
-
-      try {
-        await pushClient.sendGamePushNotification({
-          gameId,
-          senderPlayerId,
-          targetPlayerId: targetPlayer.id,
-          targetRelayUrl: effectiveRelay || undefined,
-          ntfyTopic: targetPlayer.ntfyTopic,
-          title: message.title,
-          body: message.body,
-          url: message.url,
-          tag: message.tag,
-          icon: message.icon,
-          action: actionType,
-        });
-      } catch (e) {
-        console.warn('[useGuessArtGame] Failed to send turn push notification:', e);
-      }
-    },
-    [gameId],
   );
 
   const selectWord = useCallback(
@@ -354,29 +201,26 @@ export const useGuessArtGame = (
         // If this drawer was claimed temporarily for this turn, release claim and restore to remote!
         const drawerId = result.round?.drawnById || round?.drawnById;
         const wasTemporaryClaim = drawerId
-          ? playerAssignment.isTurnClaimedTemporarily(gameId, drawerId) || Boolean(round?.temporaryClaim)
+          ? playerAssignment.isTurnClaimedTemporarily(gameId, drawerId) ||
+            Boolean(round?.temporaryClaim)
           : Boolean(round?.temporaryClaim);
 
         if (drawerId && wasTemporaryClaim) {
           playerAssignment.releaseTemporaryClaims(gameId, drawerId);
         }
 
-        // If this turn was completed under a temporary claim ("lass mich hier spielen"),
-        // no notifications are sent ("in diesem Fall soll keiner eine Benachrichtigung erhalten").
-        if (!wasTemporaryClaim) {
-          let guesserId = result.round?.guesserId;
-          if (!guesserId && result.game && result.round) {
-            guesserId = getTurnPlayers(result.game, result.round).guesser?.id;
-          }
-          const drawerName = result.round?.drawnByName;
-          if (guesserId) {
-            await sendTurnPush({
-              snap: result,
-              targetPlayerId: guesserId,
-              actionType: 'guess',
-              actorName: drawerName,
-            });
-          }
+        let guesserId = result.round?.guesserId;
+        if (!guesserId && result.game && result.round) {
+          guesserId = getTurnPlayers(result.game, result.round).guesser?.id;
+        }
+        if (guesserId) {
+          await sendTurnPush({
+            snap: result,
+            actorId: drawerId,
+            targetPlayerId: guesserId,
+            actionType: 'guess',
+            temporaryClaim: wasTemporaryClaim,
+          });
         }
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to submit drawing'));
@@ -385,7 +229,7 @@ export const useGuessArtGame = (
         setLoading(false);
       }
     },
-    [gameId, language, publishSnapshot, sendTurnPush, round?.drawnById, round?.temporaryClaim],
+    [gameId, language, publishSnapshot, round?.drawnById, round?.temporaryClaim],
   );
 
   const submitGuess = useCallback(
@@ -397,7 +241,8 @@ export const useGuessArtGame = (
         const activeGuesserId =
           round?.guesserId || (game && round ? getTurnPlayers(game, round).guesser?.id : undefined);
         const isGuesserClaimedTemporarily = activeGuesserId
-          ? playerAssignment.isTurnClaimedTemporarily(gameId, activeGuesserId) || Boolean(round?.temporaryClaim)
+          ? playerAssignment.isTurnClaimedTemporarily(gameId, activeGuesserId) ||
+            Boolean(round?.temporaryClaim)
           : Boolean(round?.temporaryClaim);
 
         const result = await LocalGameEngine.submitGuess(
@@ -414,25 +259,16 @@ export const useGuessArtGame = (
         await publishSnapshot(snap);
 
         if (result.correct) {
-          // Word was correctly guessed! Round is won!
-          // Note: A turn consists of guessing, selecting a word, and drawing.
-          // Therefore, the temporary claim remains active so the local device can pick a word and draw!
-          // The temporary claim will be released when submitDrawing finishes.
-
-          // Notify the next drawer ONLY if this turn is NOT being played locally under a temporary claim!
-          // If claimed temporarily, no one should receive a notification.
+          // Word guessed: the next drawer is told. A "play here" claim stays active for this
+          // device's whole turn (guess, then pick and draw) and is released by submitDrawing.
           const nextDrawerId = result.round?.drawnById;
-          const guesserPlayer =
-            result.game.players.find((p) => playerAssignment.isPlayerLocal(gameId, p.id, false)) ||
-            result.game.players.find((p) => p.id !== nextDrawerId);
-          const guesserName = guesserPlayer?.name;
-
-          if (nextDrawerId && !isGuesserClaimedTemporarily) {
+          if (nextDrawerId) {
             await sendTurnPush({
               snap,
+              actorId: activeGuesserId,
               targetPlayerId: nextDrawerId,
               actionType: 'draw',
-              actorName: guesserName,
+              temporaryClaim: isGuesserClaimedTemporarily,
             });
           }
         }
@@ -444,7 +280,7 @@ export const useGuessArtGame = (
         throw err;
       }
     },
-    [gameId, language, publishSnapshot, sendTurnPush, game?.players, round?.drawnById, round?.guesserId, round?.roundNumber, round?.temporaryClaim],
+    [gameId, language, publishSnapshot, game, round],
   );
 
   const requestHint = useCallback(async () => {
@@ -492,5 +328,7 @@ export const useGuessArtGame = (
     submitGuess,
     requestHint,
     updateGameDetails,
+    joinedNames,
+    clearJoined,
   };
 };

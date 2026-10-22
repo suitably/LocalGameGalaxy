@@ -188,4 +188,4 @@ export interface PlayerSeat {
 export type SeatStatus = 'local' | 'invited' | 'remote' | 'unknown'; // unknown = record without seats
 ```
 
-Lifecycle: `seatAllOnDevice` (new game, all local) → `invitePlayer` (link/QR shared) → `takeSeat(…, { remote: true })` on the device that opens the link; `takeSeat(…, { remote: false })` takes a player back. `adoptLegacySeats` converts records from before seats. **Not wired into GuessArt/Storyteller yet** — they still use the per-device lists in `playerAssignment.ts`.
+Lifecycle: `seatAllOnDevice` (new game, all local) → `invitePlayer` (link/QR shared) → `takeSeat(…, { remote: true })` on the device that opens the link; `takeSeat(…, { remote: false })` takes a player back. `adoptLegacySeats` converts records from before seats. Device-bound wrappers (`seatNewGame`, `inviteSeat`, `joinSeat`, `reclaimSeat`, `refreshOwnSeats`) live in `seatActions.ts`. **GuessArt** uses seats (`playerAssignment.isLocal(game, id)`; the per-device lists in `playerAssignment.ts` are only read for records without seats). **Storyteller** still uses its per-device lists.

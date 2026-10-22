@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { LocalGameEngine } from '../logic/engine';
-import { playerAssignment } from '../logic/playerAssignment';
 import { guessArtMailbox } from '../logic/guessArtMailbox';
 import { guessArtNotificationService } from '../logic/notificationService';
-import { localPlayerIdsForDevice, useLobbyPlayers } from '../../../modules/player-management';
+import { useLobbyPlayers } from '../../../modules/player-management';
 import type { LobbyPlayerItem } from '../../../modules/player-management';
 import type { GuessArtGameRecord } from '../logic/types';
 
@@ -22,7 +21,7 @@ export const useGuessArtLobby = () => {
     storageKey: STORAGE_KEY_GUESSART_PLAYERS,
     defaultPlayers: [
       { name: 'Player 1', isRemote: false },
-      { name: 'Player 2', isRemote: true },
+      { name: 'Player 2', isRemote: false },
     ],
     legacyStorageKeys: ['guessart_lobby_players'],
     minPlayers: 2,
@@ -103,12 +102,6 @@ export const useGuessArtLobby = () => {
         language: options.language,
         manualWordMode: options.manualWordMode,
       });
-
-      // Only non-remote players are stored as local players of this device
-      playerAssignment.setLocalPlayerIds(
-        record.id,
-        localPlayerIdsForDevice(record.players, lobbyPlayers),
-      );
 
       await loadActiveGames();
       return record;

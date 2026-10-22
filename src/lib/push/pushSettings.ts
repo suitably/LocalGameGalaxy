@@ -69,3 +69,16 @@ export function regenerateUserNtfyTopic(): string {
   storage.set(STORAGE_KEYS.NTFY_TOPIC, topic);
   return topic;
 }
+
+/** How other devices reach this one for turn notifications (`fallbackRelay`: relay from a join link). */
+export function getDeviceChannels(fallbackRelay?: string): {
+  ntfyTopic: string;
+  relayUrl?: string;
+  notificationMethod: NotificationMethod;
+} {
+  return {
+    ntfyTopic: getUserNtfyTopic(),
+    relayUrl: getPushRelayUrl() || fallbackRelay || undefined,
+    notificationMethod: getNotificationMethod(),
+  };
+}

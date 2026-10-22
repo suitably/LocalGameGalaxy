@@ -8,9 +8,9 @@ import {
   putItem,
   withStore,
 } from './db';
-import type { GameOptions, GuessArtGameRecord, GuessArtRound } from './types';
+import type { GameOptions, GuessArtGameRecord, GuessArtRound, PlayerIdentity } from './types';
+import { seatNewGame } from '../../../modules/player-management';
 import { generateUUID } from '../../../lib/uuid';
-import { storage } from '../../../lib/storage';
 
 const generateId = (prefix = 'local'): string => {
   const random = generateUUID().replace(/-/g, '').slice(0, 12);
@@ -61,21 +61,13 @@ export const createLocalGame = async ({
 
   const timestamp = nowISO();
   const id = generateId('local');
-  const ownRelay = storage.getPushRelayUrl();
-  const prefMethod = storage.getNotificationMethod();
-  const userNtfyTopic = storage.getUserNtfyTopic();
-  const normalizedPlayers = players.map((p, index) => {
-    const pName = typeof p === 'string' ? p.trim() : p.name.trim();
-    const isRemote = typeof p === 'string' ? false : Boolean(p.isRemote);
-    return {
+  // Every player starts on this device; sharing a player's link makes them remote.
+  const normalizedPlayers: PlayerIdentity[] = seatNewGame(
+    players.map((p, index) => ({
       id: generateId(`player${index + 1}`),
-      name: pName,
-      isRemote,
-      relayUrl: !isRemote && index === 0 ? ownRelay || undefined : undefined,
-      notificationMethod: !isRemote && index === 0 ? prefMethod : undefined,
-      ntfyTopic: !isRemote && index === 0 ? userNtfyTopic : undefined,
-    };
-  });
+      name: typeof p === 'string' ? p.trim() : p.name.trim(),
+    })),
+  );
 
   const record: GuessArtGameRecord = {
     id,
@@ -157,20 +149,25 @@ export const getRoundByNumber = async (
   roundNumber: number,
 ): Promise<GuessArtRound | null> => {
   const compositeKey = [gameId, roundNumber];
-  const round = await withStore(STORE_ROUNDS, 'readonly', (store) =>
-    new Promise<GuessArtRound | null>((resolve, reject) => {
-      const index = store.index('byRoundNumber');
-      const request = index.get(compositeKey);
-      request.onerror = () => reject(request.error || new Error('IndexedDB get round failed'));
-      request.onsuccess = () => resolve((request.result as GuessArtRound) ?? null);
-    }),
+  const round = await withStore(
+    STORE_ROUNDS,
+    'readonly',
+    (store) =>
+      new Promise<GuessArtRound | null>((resolve, reject) => {
+        const index = store.index('byRoundNumber');
+        const request = index.get(compositeKey);
+        request.onerror = () => reject(request.error || new Error('IndexedDB get round failed'));
+        request.onsuccess = () => resolve((request.result as GuessArtRound) ?? null);
+      }),
   );
   if (round) {
     return round;
   }
   // Robust fallback for cross-browser index key handling:
   const allRounds = await fetchRoundsForGame(gameId);
-  return allRounds.find((r) => r.roundNumber === roundNumber) || allRounds[allRounds.length - 1] || null;
+  return (
+    allRounds.find((r) => r.roundNumber === roundNumber) || allRounds[allRounds.length - 1] || null
+  );
 };
 
 export const upsertRound = async (round: GuessArtRound): Promise<GuessArtRound> => {

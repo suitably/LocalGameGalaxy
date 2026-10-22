@@ -28,7 +28,6 @@ import type {
   HintResult,
   SelectWordPayload,
 } from './types';
-import { playerAssignment } from './playerAssignment';
 import {
   advanceAfterCorrectGuess,
   applyGuess,
@@ -36,11 +35,14 @@ import {
   applyWordSelection,
   createEmptyRound,
 } from './transitions';
+import { isGameBaseSnapshotNewer } from '../../../lib/utils/turnAssignment';
+import { getDeviceId } from '../../../lib/deviceIdentity';
 import {
-  isGameBaseSnapshotNewer,
-  mergePlayerProfiles,
-  hasPlayerChannelUpdates,
-} from '../../../lib/utils/turnAssignment';
+  mergeSeatedPlayers,
+  mergeSeatsInto,
+  newlyJoinedPlayers,
+  seatsDiffer,
+} from '../../../modules/player-management';
 
 const DEFAULT_SCENE = JSON.stringify({ elements: [], appState: {}, files: {} });
 
@@ -161,7 +163,9 @@ export const isSnapshotNewer = (
     return true;
   }
 
-  const baseResult = isGameBaseSnapshotNewer(snapshot.game, existingGame);
+  const baseResult = isGameBaseSnapshotNewer(snapshot.game, existingGame, {
+    comparePlayers: false,
+  });
   if (baseResult !== null) {
     return baseResult;
   }
@@ -234,7 +238,13 @@ export const LocalGameEngine = {
   async importSnapshot(
     snapshot: GameSnapshot,
     language?: string,
-  ): Promise<{ game: GuessArtGameRecord; round: GuessArtRound | null; updated: boolean }> {
+  ): Promise<{
+    game: GuessArtGameRecord;
+    round: GuessArtRound | null;
+    updated: boolean;
+    /** Players another device took a seat for with this snapshot (for a "joined" notice). */
+    joined?: PlayerIdentity[];
+  }> {
     if (!snapshot || !snapshot.game) {
       throw new Error('Invalid game snapshot');
     }
@@ -256,47 +266,32 @@ export const LocalGameEngine = {
     }
 
     const existingRound = await getRoundByNumber(existing.id, existing.roundNumber);
+    const deviceId = getDeviceId();
     if (isSnapshotNewer(snapshot, existing, existingRound)) {
-      const mergedPlayers = mergePlayerProfiles(
-        snapshot.game.players,
-        existing.players,
-        existing.id,
-        playerAssignment.isPlayerLocal.bind(playerAssignment),
-      );
+      // Game and round come from the newer snapshot; each player's seat from whichever side changed it last.
+      const mergedPlayers = mergeSeatedPlayers(snapshot.game.players, existing.players, deviceId);
       await upsertGame({ ...snapshot.game, players: mergedPlayers });
       if (snapshot.round) {
         await upsertRound(snapshot.round);
       }
       const loaded = await this.getGameSnapshot(snapshot.game.id, language);
-      return { game: loaded.game, round: loaded.round, updated: true };
+      return {
+        game: loaded.game,
+        round: loaded.round,
+        updated: true,
+        joined: newlyJoinedPlayers(existing.players, mergedPlayers, deviceId),
+      };
     }
 
-    // Even if game round/status is not newer, merge player channel updates (e.g. Remote just joined and announced ntfyTopic)
-    const hasUpdates = hasPlayerChannelUpdates(
-      snapshot.game.players || [],
-      existing.players || [],
-      existing.id,
-      playerAssignment.isPlayerLocal.bind(playerAssignment),
-    );
-
-    if (hasUpdates) {
-      const mergedPlayers = existing.players.map((existingP) => {
-        const incomingP = snapshot.game.players?.find((p) => p.id === existingP.id);
-        if (!incomingP) return existingP;
-        const isExistingLocal = playerAssignment.isPlayerLocal(existing.id, existingP.id, false);
-        if (isExistingLocal) return existingP;
-        return {
-          ...existingP,
-          ntfyTopic: incomingP.ntfyTopic || existingP.ntfyTopic,
-          relayUrl: incomingP.relayUrl || existingP.relayUrl,
-          notificationMethod: incomingP.notificationMethod || existingP.notificationMethod,
-        };
-      });
-      const updatedGame = await updateLocalGame(existing.id, { players: mergedPlayers });
+    // An older snapshot may still carry a newer seat (a player joined or was invited).
+    const seatedPlayers = mergeSeatsInto(existing.players, snapshot.game.players || [], deviceId);
+    if (seatsDiffer(seatedPlayers, existing.players)) {
+      const updatedGame = await updateLocalGame(existing.id, { players: seatedPlayers });
       return {
         game: updatedGame,
         round: toRoundPayload(existingRound, updatedGame, language),
         updated: true,
+        joined: newlyJoinedPlayers(existing.players, seatedPlayers, deviceId),
       };
     }
 

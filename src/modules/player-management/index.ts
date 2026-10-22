@@ -3,3 +3,4 @@ export * from './playerLogic';
 export * from './useLobbyPlayers';
 export * from './PlayerManagerCard';
 export * from './playerSeats';
+export * from './seatActions';

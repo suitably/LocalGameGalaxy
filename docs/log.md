@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — GuessArt on player seats (claude-code)
+
+- `docs/tech/data-models.md` "Player seats" and `sync-protocol.md` §5 say GuessArt uses seats, `turnDelivery` and the seat merge in `importSnapshot` (#416 last slice).
+- **Code changed:** `src/games/guessart/{GuessArtGame.tsx,hooks/useGuessArt{Game,Lobby,UrlParam,Seats,TurnSeat,JoinLink}.ts,logic/{engine,repository,playerAssignment,notificationService,turnPush,types}.ts,components/{ActiveGamesList,SharePlayerLinksDialog,WaitingForDrawerView}.tsx}`, `src/modules/player-management/{seatActions.ts,PlayerJoinedSnackbar.tsx,playerSeats.ts}`, `src/modules/sharing/useSessionSharing.ts`, `src/lib/push/pushSettings.ts`, `src/lib/utils/turnAssignment.ts`, locales, tests; preceded by a formatting-only commit.
+
 ## 2026-10-22 — Player seats model (claude-code)
 
 - `docs/tech/data-models.md` gains "Player seats (async games)"; `sync-protocol.md` §5 names `turnDelivery.ts`; `persistence.md` lists `DEVICE_ID` and the corrected key count (95).

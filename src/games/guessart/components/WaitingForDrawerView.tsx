@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  Box,
-  CircularProgress,
-  IconButton,
-  Paper,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Box, CircularProgress, IconButton, Paper, Tooltip, Typography } from '@mui/material';
 import BrushRoundedIcon from '@mui/icons-material/BrushRounded';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
 import TransferWithinAStationRoundedIcon from '@mui/icons-material/TransferWithinAStationRounded';
@@ -36,9 +29,7 @@ export const WaitingForDrawerView: React.FC<WaitingForDrawerViewProps> = ({
   const drawerName = drawer?.name || round.drawnByName || 'Spieler 1';
   const guesserName = guesser?.name || round.guesserName || 'Spieler 2';
 
-  const isLocalGuesser = guesser
-    ? playerAssignment.isPlayerLocal(game.id, guesser.id)
-    : false;
+  const isLocalGuesser = guesser ? playerAssignment.isLocal(game, guesser.id) : false;
 
   const handleClaim = () => {
     playerAssignment.claimTurnTemporary(game.id, round.drawnById);
@@ -89,23 +80,23 @@ export const WaitingForDrawerView: React.FC<WaitingForDrawerViewProps> = ({
         </Box>
 
         <Typography variant="h5" fontWeight={800} gutterBottom>
-          {t('guessart.waitingForDrawerTitle', { name: drawerName, defaultValue: `${drawerName} zeichnet gerade...` })}
+          {t('guessart.waitingForDrawerTitle', {
+            name: drawerName,
+            defaultValue: `${drawerName} zeichnet gerade...`,
+          })}
         </Typography>
 
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           {isLocalGuesser
-            ? t(
-                'guessart.waitingForDrawerDescLocalGuesser',
-                { name: drawerName, defaultValue: `Sobald ${drawerName} fertig gezeichnet hat, startet hier direkt deine Raterunde!` },
-              )
-            : t(
-                'guessart.waitingForDrawerDescSpectator',
-                {
-                  drawer: drawerName,
-                  guesser: guesserName,
-                  defaultValue: `${drawerName} zeichnet gerade für ${guesserName}. Sobald die Zeichnung fertig ist, geht es weiter.`,
-                },
-              )}
+            ? t('guessart.waitingForDrawerDescLocalGuesser', {
+                name: drawerName,
+                defaultValue: `Sobald ${drawerName} fertig gezeichnet hat, startet hier direkt deine Raterunde!`,
+              })
+            : t('guessart.waitingForDrawerDescSpectator', {
+                drawer: drawerName,
+                guesser: guesserName,
+                defaultValue: `${drawerName} zeichnet gerade für ${guesserName}. Sobald die Zeichnung fertig ist, geht es weiter.`,
+              })}
         </Typography>
 
         <Box display="flex" justifyContent="center" my={2}>
@@ -124,7 +115,12 @@ export const WaitingForDrawerView: React.FC<WaitingForDrawerViewProps> = ({
                   color="primary"
                   onClick={onOpenShareLinks}
                   aria-label={t('guessart.shareLinksTitle', 'Mitspieler-Links')}
-                  sx={{ bgcolor: 'action.hover', border: '1px solid', borderColor: 'divider', p: 1.2 }}
+                  sx={{
+                    bgcolor: 'action.hover',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    p: 1.2,
+                  }}
                 >
                   <ShareRoundedIcon />
                 </IconButton>
@@ -145,7 +141,12 @@ export const WaitingForDrawerView: React.FC<WaitingForDrawerViewProps> = ({
                     name: drawerName,
                     defaultValue: `Hier als ${drawerName} zeichnen`,
                   })}
-                  sx={{ bgcolor: 'action.hover', border: '1px solid', borderColor: 'divider', p: 1.2 }}
+                  sx={{
+                    bgcolor: 'action.hover',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    p: 1.2,
+                  }}
                 >
                   <TransferWithinAStationRoundedIcon />
                 </IconButton>

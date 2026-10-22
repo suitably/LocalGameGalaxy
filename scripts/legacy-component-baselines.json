@@ -7,7 +7,7 @@
   "src/games/cards/components/SchwimmenGameView.tsx": 510,
   "src/games/melodiq/gameplay/LyricsDisplay.tsx": 370,
   "src/games/melodiq/components/SongActionDialogs.tsx": 414,
-  "src/games/guessart/GuessArtGame.tsx": 481,
+  "src/games/guessart/GuessArtGame.tsx": 440,
   "src/games/guessart/components/catalogue/WordEditorTab.tsx": 455,
   "src/games/werewolf/components/NightPhase.tsx": 411,
   "src/games/storyteller/StorytellerGame.tsx": 408,

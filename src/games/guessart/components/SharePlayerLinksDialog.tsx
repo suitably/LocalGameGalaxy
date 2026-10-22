@@ -51,14 +51,15 @@ export const SharePlayerLinksDialog: React.FC<SharePlayerLinksDialogProps> = ({
       round: activeRound || round || null,
     }),
     onPlayerChanged,
-    removeLocalPlayerId: playerAssignment.removeLocalPlayerId.bind(playerAssignment),
-    addLocalPlayerId: playerAssignment.addLocalPlayerId.bind(playerAssignment),
     updateGameDetails: LocalGameEngine.updateGameDetails.bind(LocalGameEngine),
     publishSync: guessArtMailbox.publish.bind(guessArtMailbox),
   });
 
   const isPlayerLocal = useMemo(
-    () => createIsPlayerLocalHelper(game, playerAssignment.isPlayerLocal.bind(playerAssignment)),
+    () =>
+      createIsPlayerLocalHelper(game, (_id, playerId) =>
+        game ? playerAssignment.isLocal(game, playerId) : true,
+      ),
     [game],
   );
 

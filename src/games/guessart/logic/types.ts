@@ -1,3 +1,5 @@
+import type { PlayerSeat } from '../../../modules/player-management';
+
 export type GameStatus = 'selecting' | 'drawing' | 'guessing' | 'completed';
 
 export interface PlayerIdentity {
@@ -7,6 +9,8 @@ export interface PlayerIdentity {
   relayUrl?: string;
   ntfyTopic?: string;
   notificationMethod?: 'auto' | 'webpush' | 'ntfy' | 'both';
+  /** Which device plays this player (`modules/player-management/playerSeats.ts`). */
+  seat?: PlayerSeat;
 }
 
 export interface WordTranslationEntry {
