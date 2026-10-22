@@ -4,7 +4,8 @@ import fg from 'fast-glob';
 import * as mm from 'music-metadata';
 import { serverConfig } from '../../../config';
 import { generateId } from '../../../utils/helpers';
-import type { Song } from '../../../core/types';
+import type { Song, SongScore } from '../../../core/types';
+import { findScoreFiles } from './scoreFiles';
 
 let SONG_CACHE: Song[] = [];
 let IS_SCANNING = false;
@@ -70,7 +71,7 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
     }
 
     const urlMatch = decoded.match(
-      /(?:youtube(?:-nocookie)?\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+      /(?:youtube(?:-nocookie)?\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
     );
     if (urlMatch) return urlMatch[1];
 
@@ -122,18 +123,28 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
     getServeUrl(headers['BACKGROUND']),
   ]);
 
-  if (!instrumentalPath && audioPath && (headers['MP3'] || '').toLowerCase().includes('instrumental')) {
+  if (
+    !instrumentalPath &&
+    audioPath &&
+    (headers['MP3'] || '').toLowerCase().includes('instrumental')
+  ) {
     instrumentalPath = audioPath;
   }
 
+  let scores: SongScore[] = [];
   try {
     const dirFiles = await fs.promises.readdir(dir);
+    scores = await findScoreFiles(dir, dirFiles);
     if (!vocalsPath) {
-      const vFile = dirFiles.find((f) => f.toLowerCase().endsWith('.mp3') && f.toLowerCase().includes('vocals'));
+      const vFile = dirFiles.find(
+        (f) => f.toLowerCase().endsWith('.mp3') && f.toLowerCase().includes('vocals'),
+      );
       if (vFile) vocalsPath = path.resolve(dir, vFile);
     }
     if (!instrumentalPath) {
-      const iFile = dirFiles.find((f) => f.toLowerCase().endsWith('.mp3') && f.toLowerCase().includes('instrumental'));
+      const iFile = dirFiles.find(
+        (f) => f.toLowerCase().endsWith('.mp3') && f.toLowerCase().includes('instrumental'),
+      );
       if (iFile) instrumentalPath = path.resolve(dir, iFile);
     }
     if (!originalAudioPath) {
@@ -168,7 +179,10 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
   const durationAudioTarget = originalAudioPath || audioPath || instrumentalPath;
   if (durationAudioTarget) {
     try {
-      const metadata = await mm.parseFile(durationAudioTarget, { duration: true, skipCovers: true });
+      const metadata = await mm.parseFile(durationAudioTarget, {
+        duration: true,
+        skipCovers: true,
+      });
       if (metadata.format.duration) {
         duration = metadata.format.duration;
       }
@@ -203,7 +217,9 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
     txtPath,
     txtContent: content,
     duration,
-    searchString: `${headers['TITLE']} ${headers['ARTIST']} ${headers['GENRE']} ${headers['LANGUAGE']}`.toLowerCase(),
+    scores,
+    searchString:
+      `${headers['TITLE']} ${headers['ARTIST']} ${headers['GENRE']} ${headers['LANGUAGE']}`.toLowerCase(),
   };
 }
 
@@ -216,7 +232,9 @@ export async function addOrUpdateSongInCache(txtPath: string): Promise<Song | nu
     if (!song) return null;
     SONG_CACHE = SONG_CACHE.filter((s) => s.id !== song.id && s.txtPath !== song.txtPath);
     SONG_CACHE.push(song);
-    console.log(`[Scanner] Instantly indexed song: ${song.artist} - ${song.title} (${SONG_CACHE.length} songs in cache)`);
+    console.log(
+      `[Scanner] Instantly indexed song: ${song.artist} - ${song.title} (${SONG_CACHE.length} songs in cache)`,
+    );
     return song;
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
@@ -279,7 +297,9 @@ export const scanSongs = async (): Promise<void> => {
 
   SONG_CACHE = newSongs;
   IS_SCANNING = false;
-  console.log(`[Scanner] Finished. Cached ${newSongs.length} songs in ${(Date.now() - startTime) / 1000}s.`);
+  console.log(
+    `[Scanner] Finished. Cached ${newSongs.length} songs in ${(Date.now() - startTime) / 1000}s.`,
+  );
 
   if (SCAN_REQUESTED_WHILE_BUSY) {
     SCAN_REQUESTED_WHILE_BUSY = false;

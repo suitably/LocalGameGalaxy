@@ -35,6 +35,12 @@ const toClientSong = (s: Song, token: string): ClientSong => {
     hasSeparation: Boolean(s.hasSeparation),
     cover: secureUrl(s.cover),
     background: secureUrl(s.background),
+    scores: (s.scores ?? []).map((f) => ({
+      file: f.file,
+      // the version parameter defeats the week-long media cache when a score is replaced
+      url: `${secureUrl(f.path)}&v=${Math.round(f.mtimeMs)}`,
+      hasMarks: Boolean(f.marksPath),
+    })),
   };
 };
 

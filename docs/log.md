@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Sheet music in song folders (claude-code)
+
+- `docs/tech/song-pipeline.md` §4: score files and bar marks in song folders, new `/api/songs/:id/scores…` endpoints; folder layout updated.
+- **Code changed:** `server/src/plugins/melodiq/{services/scoreFiles.ts,routes/scores.ts}` (new), `services/scanner.ts`, `routes/{songs,media}.ts`, `index.ts`, `server/src/core/types.ts`; test `server/test/song_scores.test.js`.
+
 ## 2026-10-22 — Music score module (claude-code)
 
 - `docs/tech/architecture.md` §3.2 lists `modules/music-score`.

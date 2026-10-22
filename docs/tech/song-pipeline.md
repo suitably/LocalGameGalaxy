@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-21
+  at: 2026-10-22
   method: 'read server/src/plugins/melodiq/{services/download.ts,services/separator.ts,services/usdb.ts,routes/*.ts}, server/src/scripts/align_lyrics.py'
 sources:
   - 'server/src/plugins/melodiq/services/download.ts'
@@ -64,7 +64,20 @@ ADR-0004 still describes Demucs; see [open-questions Q13](../open-questions.md#q
 
 Auth for all of these: [server-security.md](server-security.md). Client side: `src/games/melodiq/api/` and the settings UI under `src/features/settings/components/server/`.
 
-## 4. Song folder layout
+## 4. Sheet music for Melodiq Notes
+
+A song folder may also hold sheet music: `.mxl`, `.musicxml`, `.mid`/`.midi`, and `.xml` when the file is MusicXML (sniffed for `<score-partwise>`/`<score-timewise>`). The scanner lists them as `Song.scores` (`services/scoreFiles.ts`); the client receives `{ file, url, hasMarks }` per score, where `url` is a `/media` URL with a `v=<mtime>` parameter so replaced files are not served from cache.
+
+| Endpoint                                | Purpose                                                                                                       |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `POST /api/songs/:id/scores`            | upload a score (multipart field `file`, max 20 MB; `replace=1` overwrites, otherwise a numbered name is used) |
+| `GET /api/songs/:id/scores/:file/marks` | bar marks aligning the score with the recording (`no-store`)                                                  |
+| `PUT /api/songs/:id/scores/:file/marks` | store bar marks `{ marks: [{ beat, sec }], offsetSec?, audio? }` (strictly increasing) as `<file>.marks.json` |
+| `DELETE /api/songs/:id/scores/:file`    | remove score and marks (master token or API key with `allowSongDeletion`)                                     |
+
+The server does not search or download sheet music: users fetch MusicXML themselves (for example from musescore.com with their own account) and upload it or drop it into the folder. Alignment runs in the client (`src/modules/music-score`), the server only stores the result.
+
+## 5. Song folder layout
 
 No fixed file names — whatever the `.txt` headers reference:
 
@@ -75,5 +88,7 @@ No fixed file names — whatever the `.txt` headers reference:
 ├── <… Vocals …>.mp3           # stem (optional)
 ├── <… Instrumental …>.mp3     # stem (optional)
 ├── <video>.mp4                # optional (or stream URL in the .txt)
-└── <cover>.jpg|png            # optional
+├── <cover>.jpg|png            # optional
+├── <score>.mxl|musicxml|mid   # optional sheet music (Melodiq Notes)
+└── <score>.marks.json         # optional bar marks for that score
 ```
