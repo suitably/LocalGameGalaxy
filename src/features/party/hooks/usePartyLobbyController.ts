@@ -17,6 +17,7 @@ import {
   buildPartyShareUrl,
   getGameRoute as resolveGameRoute,
   resolveLobbyEntry,
+  resolvePendingLaunch,
 } from '../logic/partyRoutes';
 
 export function usePartyLobbyController(initialRoomId?: string) {
@@ -26,6 +27,10 @@ export function usePartyLobbyController(initialRoomId?: string) {
 
   // Which room to open is decided purely here; joining/creating happens in the effect below.
   const [entry] = useState(() => resolveLobbyEntry(initialRoomId));
+  // A game picked on the Spieltisch: the host starts it once everybody has joined.
+  const [pendingLaunch, setPendingLaunch] = useState(() =>
+    entry.kind === 'create' ? resolvePendingLaunch() : null,
+  );
   const [roomId, setRoomId] = useState<string>(() =>
     entry.kind === 'join' ? entry.roomId : universalPartyManager.getSavedHostRoomCode(),
   );
@@ -153,6 +158,12 @@ export function usePartyLobbyController(initialRoomId?: string) {
     navigate(getGameRoute(gameType, tabletopGameId));
   };
 
+  const startPendingGame = () => {
+    if (!pendingLaunch) return;
+    setPendingLaunch(null);
+    handleLaunchGame(pendingLaunch.gameType, pendingLaunch.gameId);
+  };
+
   const handleReturnToLobby = () => {
     universalPartyManager.returnToLobby(roomId);
   };
@@ -190,6 +201,9 @@ export function usePartyLobbyController(initialRoomId?: string) {
     shareUrl,
     players,
     amIHost,
+    pendingLaunch,
+    startPendingGame,
+    clearPendingLaunch: () => setPendingLaunch(null),
   };
 }
 

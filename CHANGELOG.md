@@ -21,6 +21,7 @@
 
 ### Changed
 
+- **Spieltisch**: the tabletop lobby is now the place for all table games — card and board games, the dice games (Kniffel, Knister, Qwixx; moved out of the hub) and imported games. Tapping a game asks "Ein Gerät für alle" or "Jeder am eigenen Gerät" (games with one mode open directly); the latter opens the party lobby with the game already chosen and a "Jetzt starten" button for the host, instead of dropping the choice. Texts are translated (de/en) (#467).
 - **GuessArt players**: all players start local on the creating device; sharing a player's link or QR code marks them remote (invited), opening the link takes the seat on that phone, and the host sees "… joined" (also as a notification when the app is in the background). Whether a player is local now comes from the seat in the synced game, not from per-device lists or the ntfy topic — regenerating the ntfy topic no longer drops your own players. Turn notifications follow one rule (`turnDelivery.ts`) (#416).
 - **GuessArt**: word selection and hint rules are pure transitions (`buildRoundTranslations`, `applyWordSelection`, `applyHint` in `logic/transitions.ts`, tested); the engine only loads and saves. The duplicated translation normalisation is one helper now (#416).
 - **Storage**: companion, signaling and push settings moved out of `src/lib/storage.ts` into `lib/companion/companionSettings.ts`, `lib/webrtc/signalingSettings.ts` and `lib/push/pushSettings.ts`; `storage.*` keeps `@deprecated` delegates, behaviour unchanged (#419).

@@ -24,7 +24,7 @@ Numbers below are a snapshot (2026-10-18). Re-derive them before relying on them
 
 ## 1. Registry and size
 
-Registry order = hub order.
+Registry order = hub order. The dice games in `DICE_GAMES` (`src/games/tabletop/logic/tableCatalog.ts`: qwixx, knister, kniffel) are filtered out of the hub (`Hub.tsx`) and listed on the Spieltisch (tabletop lobby) instead; their registry entries and routes stay.
 
 | id              | Route                              | Category         | Folder                                   | LOC (non-test) | Test files |
 | --------------- | ---------------------------------- | ---------------- | ---------------------------------------- | -------------- | ---------- |

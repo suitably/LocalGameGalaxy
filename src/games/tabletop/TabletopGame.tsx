@@ -228,10 +228,5 @@ export function TabletopGame() {
   }
 
   // 4. Default: Lobby View
-  return (
-    <TabletopLobbyView
-      onStartLocalGame={(id) => navigate(`/games/tabletop?local=1&gameId=${id}`)}
-      onStartPartyGame={(_id) => navigate(`/party`)}
-    />
-  );
+  return <TabletopLobbyView onOpen={(route) => navigate(route)} />;
 }
