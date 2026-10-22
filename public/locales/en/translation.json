@@ -880,7 +880,11 @@
         "error_download_failed": "Download from Steam failed (HTTP {{status}}).",
         "error_download_blocked": "The browser was not allowed to load the mod file from Steam. Upload the mod file (.json) from Documents/My Games/Tabletop Simulator/Mods/Workshop instead, or connect the companion server.",
         "error_invalid_file": "The downloaded file is not a Tabletop Simulator save.",
-        "error_no_download_url": "This mod has no download URL on Steam."
+        "error_no_download_url": "This mod has no download URL on Steam.",
+        "error_companion_insecure_blocked": "The companion server ({{url}}) uses HTTP while this page uses HTTPS, so the browser blocks the connection. Open the app through the server address or give the server an HTTPS address (e.g. a Cloudflare tunnel).",
+        "error_companion_unreachable": "The companion server at {{url}} cannot be reached. Is it running, and is the address in the server settings right?",
+        "error_companion_unauthorized": "The companion server ({{url}}) refuses access (HTTP {{status}}). Check the token in the server settings.",
+        "error_companion_http": "The companion server ({{url}}) answers with HTTP {{status}}. Is the tabletop plugin enabled (PLUGINS)?"
       }
     }
   },

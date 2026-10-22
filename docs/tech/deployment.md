@@ -39,7 +39,7 @@ npm run build      # tsc -b && vite build → dist/
 npm run preview    # serve dist/ locally
 ```
 
-- `wrangler.jsonc`: worker `nexumia`, assets from `./dist`, `not_found_handling: "single-page-application"` (deep links fall back to `index.html`).
+- `wrangler.jsonc`: worker `nexumia`, assets from `./dist`, `not_found_handling: "single-page-application"` (deep links fall back to `index.html`). Only `/api/steam/*` runs worker code first (`run_worker_first`): `cloudflare/worker.ts` proxies Steam's `GetPublishedFileDetails` (only a numeric Workshop id is forwarded) and `GET /api/steam/file?url=` downloads from Steam's user-content CDN (allow-listed hosts, 60 MB limit), so Workshop import works without a companion server. No storage, no secrets; everything else is plain static assets.
 - `vite-plugin-pwa` generates the service worker; `public/sw-push.js` adds push handling.
 - `dist/` can be served by any static host; the companion server does **not** serve it.
 

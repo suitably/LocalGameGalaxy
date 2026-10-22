@@ -48,11 +48,6 @@ Resolve _(user)_: consolidate into one `[Unreleased]` section before the next re
 
 ADR-0004 says "Demucs via PyTorch". `server/src/plugins/melodiq/services/separator.ts` runs `audio-separator[cpu]` with model `UVR-MDX-NET-Inst_HQ_3.onnx` and aligns lyrics with `whisper-timestamped` (`server/src/scripts/align_lyrics.py`). The ADR now carries a note; a superseding ADR is a maintainer decision.
 
-## Q14 — Steam Workshop import without the companion server
-
-**[user]** The browser loads Workshop metadata through `/api/steam`, which only the Vite dev server provides (`vite.config.ts` proxy); production is static Cloudflare assets (`wrangler.jsonc`, no Worker) and Steam's Web API sends no CORS headers. So Workshop import by ID/URL works only with the companion server; the error now says so (`metadata_unavailable`). Found while debugging item 2500271578 ([plan 2026-10-22 §4](reports/2026-10-22-table-session-plan.md#4-imports-found-on-the-way)).
-Resolve: either add a Worker to the deploy that proxies only `GetPublishedFileDetails` and downloads from `*.steamusercontent.com` (size-limited), or keep the import companion-only and show the upload hint before the user tries.
-
 ## Q15 — VirtualTabletop routines on import
 
 **[user]** VirtualTabletop games rely on routines (14 580 in its library); our button routines express about 1.2 % of them, so imported buttons do nothing. Options: translate the trivial subset and list the rest in an import report, or build a sandboxed interpreter for VTT's routine language (the scripting-scope question from the [2026-10-21 plan](reports/2026-10-21-tabletop-vtt-plan.md), slice 9).

@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Steam proxy worker on the Cloudflare deploy (claude-code)
+
+- Q14 resolved (maintainer expected the import to work on Cloudflare without a companion): `docs/tech/deployment.md` describes the `/api/steam/*` worker, `tabletop-engine.md` §7 the metadata path and companion diagnostics; Q14 removed from `open-questions.md`.
+- **Code/config changed:** new `cloudflare/worker.ts` (+ test), `wrangler.jsonc` (`main`, `assets.binding`, `run_worker_first`), `src/games/tabletop/logic/steamWorkshopApi.ts` (companion diagnostics, download fallback via `/api/steam/file`), `hooks/useWorkshopImport.ts`, locales, tests.
+
 ## 2026-10-22 — Table session plan: mode names (claude-code)
 
 - `docs/reports/2026-10-22-table-session-plan.md` §2/§3: modes renamed to "Ein Gerät für alle" / "Jeder am eigenen Gerät" (the device is usually a phone in both); a shared table screen is optional.

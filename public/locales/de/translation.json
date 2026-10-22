@@ -880,7 +880,11 @@
         "error_download_failed": "Download von Steam fehlgeschlagen (HTTP {{status}}).",
         "error_download_blocked": "Der Browser durfte die Mod-Datei nicht von Steam laden. Lade stattdessen die Mod-Datei (.json) aus Dokumente/My Games/Tabletop Simulator/Mods/Workshop hoch oder verbinde den Companion-Server.",
         "error_invalid_file": "Die heruntergeladene Datei ist kein Tabletop-Simulator-Spielstand.",
-        "error_no_download_url": "Für diesen Mod gibt es bei Steam keine Download-URL."
+        "error_no_download_url": "Für diesen Mod gibt es bei Steam keine Download-URL.",
+        "error_companion_insecure_blocked": "Der Companion-Server ({{url}}) läuft über HTTP, diese Seite über HTTPS – der Browser blockiert die Verbindung. Öffne die App über die Adresse des Servers oder gib dem Server eine HTTPS-Adresse (z. B. Cloudflare-Tunnel).",
+        "error_companion_unreachable": "Der Companion-Server unter {{url}} ist nicht erreichbar. Läuft er, und stimmt die Adresse in den Server-Einstellungen?",
+        "error_companion_unauthorized": "Der Companion-Server ({{url}}) lehnt den Zugriff ab (HTTP {{status}}). Prüfe den Token in den Server-Einstellungen.",
+        "error_companion_http": "Der Companion-Server ({{url}}) antwortet mit HTTP {{status}}. Ist das Tabletop-Plugin aktiv (PLUGINS)?"
       }
     }
   },
