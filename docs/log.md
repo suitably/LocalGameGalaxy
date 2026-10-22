@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Table session plan: mode names (claude-code)
+
+- `docs/reports/2026-10-22-table-session-plan.md` §2/§3: modes renamed to "Ein Gerät für alle" / "Jeder am eigenen Gerät" (the device is usually a phone in both); a shared table screen is optional.
+- No code changed.
+
 ## 2026-10-22 — VirtualTabletop import quick wins (claude-code)
 
 - `docs/tech/tabletop-engine.md` gains §7 "Import" (TTS and VirtualTabletop paths, what is not imported yet).
