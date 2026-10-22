@@ -856,7 +856,8 @@
         "duration_seconds": "Dauer (Sekunden)",
         "duration_hint": "0 = Stoppuhr",
         "options": "Optionen",
-        "options_hint": "Durch Kommas getrennt"
+        "options_hint": "Durch Kommas getrennt",
+        "upload_image": "Bild hochladen (auf 512 px verkleinert)"
       },
       "workshop": {
         "error_invalid_input": "Keine gültige Steam-Workshop-URL oder -ID.",
