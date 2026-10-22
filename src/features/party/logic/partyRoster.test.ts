@@ -2,11 +2,13 @@ import { describe, it, expect } from 'vitest';
 import {
   PLAYER_COLORS,
   addPresencePlayer,
+  assignSlots,
   colorForSlot,
   markHost,
   mergeIncomingState,
   mergeRoster,
   resolveHostId,
+  seatOf,
   upsertHost,
   upsertJoiningPlayer,
 } from './partyRoster';
@@ -180,5 +182,46 @@ describe('partyRoster (#415)', () => {
     });
     expect(fresh.players).toHaveLength(3);
     expect(fresh.player).toMatchObject({ name: 'Spieler', score: 0, avatarColor: colorForSlot(2) });
+  });
+});
+
+describe('party seats (slots)', () => {
+  const pl = (id: string, joinedAt: number, slot?: number): PartyPlayer => ({
+    id,
+    name: id,
+    avatarColor: '#000',
+    isHost: false,
+    score: 0,
+    joinedAt,
+    slot,
+  });
+
+  it('gives new players the lowest free slot in join order and keeps existing ones', () => {
+    const slots = assignSlots([pl('late', 30), pl('host', 10, 0), pl('mid', 20)]).map((p) => [
+      p.id,
+      p.slot,
+    ]);
+    expect(slots).toEqual([
+      ['late', 2],
+      ['host', 0],
+      ['mid', 1],
+    ]);
+  });
+
+  it('fills a gap without moving anybody', () => {
+    const out = assignSlots([pl('a', 1, 0), pl('c', 3, 2), pl('new', 4)]);
+    expect(out.map((p) => p.slot)).toEqual([0, 2, 1]);
+  });
+
+  it('keeps a known slot when another device sends the player without one', () => {
+    const merged = mergeRoster([pl('a', 1, 3)], [pl('a', 1)]);
+    expect(merged[0].slot).toBe(3);
+  });
+
+  it('uses the slot as seat, independent of roster order', () => {
+    const players = [pl('b', 2, 1), pl('a', 1, 0)];
+    expect(seatOf(players, 'a')).toBe(0);
+    expect(seatOf(players, 'b')).toBe(1);
+    expect(seatOf([pl('x', 1), pl('y', 2)], 'y')).toBe(1);
   });
 });

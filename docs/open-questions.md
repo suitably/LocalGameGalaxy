@@ -6,7 +6,7 @@ Found by the [2026-10-18 docs-vs-code audit](reports/2026-10-18-docs-vs-code-aud
 
 ## Q4 — Melodiq uses inline `BroadcastChannel`
 
-The anti-pattern matrix forbids inline `BroadcastChannel` sync in games, but Melodiq creates channels directly in `hooks/useTVMode.ts`, `hooks/useTVReceiver.ts`, `hooks/SettingsContext.tsx`, `gameplay/hooks/useSessionEnd.ts` (channel `melodiq_tv_control`) and `hooks/useQueue.ts` (queue sync). The party lobby does the same in `src/features/party/logic/universalPartyManager.ts` (`party_bc_<roomId>`) — outside `src/games`, so the rule's wording does not cover it. `check-architecture.mjs` does not check this rule.
+The anti-pattern matrix forbids inline `BroadcastChannel` sync in games, but Melodiq creates channels directly in `hooks/useTVMode.ts`, `hooks/useTVReceiver.ts`, `hooks/SettingsContext.tsx`, `gameplay/hooks/useSessionEnd.ts` (channel `melodiq_tv_control`) and `hooks/useQueue.ts` (queue sync). `check-architecture.mjs` does not check this rule.
 Resolve: migrate to `useMultiChannelSync` or document Melodiq TV sync as an explicit exception.
 
 ## Q5 — Root `config.example.json` is obsolete

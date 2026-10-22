@@ -66,6 +66,7 @@
 
 ### Fixed
 
+- **Party mode**: a phone's tabletop seat is now a slot the host assigns once (`assignSlots`), not the player's position in the roster list, which differed between devices and could put two phones on the same hand. The party lobby syncs through the shared `MultiChannelSyncCoordinator` instead of its own BroadcastChannel, ignores its own presence pings, and `/party` is routed once (registry) instead of twice (#467).
 - **Tabletop**: seat 1 no longer gets the hand of seat 0 when both hands match the seat by index (`findPlayerHandHolder` prefers an exact owner); choosing a seat no longer renames its player to "Player".
 - **Tabletop Workshop import**: without the companion server, a failing Steam lookup now always shows the "upload the .json or connect the companion server" hint (also when the host answers 405/501 or the request fails), the download uses HTTPS, and a blocked download or a file that is not a TTS save get their own translated messages instead of "Failed to fetch" or a raw TypeError.
 - **GuessArt**: opening a shared player link now opens the game on the phone instead of the lobby, and no longer hangs when the MQTT broker is unreachable.

@@ -1,7 +1,9 @@
 import { partyMailbox } from './partyMailbox';
 import { storage, sessionStorageSafe, STORAGE_KEYS, STORAGE_PREFIXES } from '../../../lib/storage';
+import { MultiChannelSyncCoordinator } from '../../../modules/sync';
 import {
   addPresencePlayer,
+  assignSlots,
   mergeIncomingState,
   resolveHostId,
   upsertHost,
@@ -15,6 +17,8 @@ export interface PartyPlayer {
   isHost: boolean;
   score: number;
   joinedAt: number;
+  /** Stable seat number assigned by the host (`assignSlots`); tabletop seat of this player. */
+  slot?: number;
 }
 
 export type PartyGameType = 'guessart' | 'garticphone' | 'tabletop';
@@ -45,7 +49,9 @@ class UniversalPartyManager {
   private updateListeners: ((state: PartyRoomState) => void)[] = [];
   private myPlayerId: string | null = null;
   private presenceInterval: ReturnType<typeof setInterval> | null = null;
-  private localChannel: BroadcastChannel | null = null;
+  /** BroadcastChannel (other tabs) + MQTT (other devices) for the current room. */
+  private sync: MultiChannelSyncCoordinator<PartySyncEnvelope> | null = null;
+  private syncChannelId: string | null = null;
 
   public getRoomId(): string | null {
     return this.currentRoomState?.roomId || this.currentRoomId;
@@ -246,52 +252,47 @@ class UniversalPartyManager {
     return updatedState;
   }
 
-  public subscribeToParty(roomId: string): void {
-    const topic = `party_${roomId}`;
+  /** MQTT channel of a room (topic `lgg/party/party_<room>`, kept for older clients). */
+  private channelOf(roomId: string): string {
+    return `party_${roomId}`;
+  }
 
-    // Setup local fast BroadcastChannel
-    if (!this.localChannel || this.localChannel.name !== `party_bc_${roomId}`) {
-      try {
-        if (this.localChannel) {
-          this.localChannel.close();
+  public subscribeToParty(roomId: string): void {
+    const channelId = this.channelOf(roomId);
+    if (this.sync && this.syncChannelId === channelId) return;
+    this.sync?.stop();
+    this.syncChannelId = channelId;
+    this.sync = new MultiChannelSyncCoordinator<PartySyncEnvelope>({
+      channelId,
+      broadcastPrefix: 'galaxy',
+      mailbox: partyMailbox,
+      onMessage: (incoming) => this.handleEnvelope(incoming, roomId),
+    });
+    this.sync.start();
+  }
+
+  private handleEnvelope(incoming: PartySyncEnvelope, roomId: string): void {
+    if (!incoming || incoming.roomId !== roomId) return;
+
+    if (incoming.type === 'PARTY_PRESENCE') {
+      // Own pings come back over BroadcastChannel; only other players' pings matter.
+      if (!incoming.player || incoming.player.id === this.getMyPlayerId()) return;
+      if (this.currentRoomState && this.currentRoomState.roomId === roomId) {
+        const updated = addPresencePlayer(this.currentRoomState, incoming.player, Date.now());
+        if (updated) {
+          this.currentRoomState = updated;
+          this.notifyListeners();
+          if (this.isHost(roomId)) this.publishPartyState(updated);
+        } else if (this.isHost(roomId)) {
+          // Immediate answer from the host so a joining device gets the full list right away
+          this.publishPartyState(this.currentRoomState);
         }
-        this.localChannel = new BroadcastChannel(`party_bc_${roomId}`);
-        this.localChannel.onmessage = (event) => {
-          if (event.data?.type === 'PARTY_STATE_SYNC' && event.data.state) {
-            this.handleIncomingState(event.data.state, roomId);
-          }
-        };
-      } catch {
-        // ignore
       }
+      return;
     }
 
-    // MQTT subscription
-    partyMailbox.subscribe(topic, async (incoming: PartySyncEnvelope) => {
-      if (!incoming || incoming.roomId !== roomId) return;
-
-      // Handle presence pings
-      if (incoming.type === 'PARTY_PRESENCE' && incoming.player) {
-        if (this.currentRoomState && this.currentRoomState.roomId === roomId) {
-          const updated = addPresencePlayer(this.currentRoomState, incoming.player, Date.now());
-          if (updated) {
-            this.currentRoomState = updated;
-            this.notifyListeners();
-            if (this.isHost(roomId)) {
-              this.publishPartyState(updated);
-            }
-          } else if (this.isHost(roomId)) {
-            // Immediate response from Host so remote client gets the full list right away
-            this.publishPartyState(this.currentRoomState);
-          }
-        }
-        return;
-      }
-
-      const incomingState = incoming as PartyRoomState;
-      if (!incomingState.players || !Array.isArray(incomingState.players)) return;
-      this.handleIncomingState(incomingState, roomId);
-    });
+    if (!Array.isArray(incoming.players)) return;
+    this.handleIncomingState(incoming, roomId);
   }
 
   private handleIncomingState(incomingState: PartyRoomState, roomId: string): void {
@@ -312,18 +313,14 @@ class UniversalPartyManager {
   }
 
   public publishPartyState(state: PartyRoomState): void {
-    const topic = `party_${state.roomId}`;
-    storage.setJson(`${STORAGE_PREFIXES.PARTY_STATE}${state.roomId}`, state);
-
-    try {
-      if (this.localChannel) {
-        this.localChannel.postMessage({ type: 'PARTY_STATE_SYNC', state });
-      }
-    } catch {
-      // ignore
-    }
-
-    partyMailbox.publish(topic, state);
+    // The host owns seat numbers: every state it sends carries a slot for each player.
+    const published = this.isHost(state.roomId)
+      ? { ...state, players: assignSlots(state.players) }
+      : state;
+    if (this.currentRoomState?.roomId === published.roomId) this.currentRoomState = published;
+    storage.setJson(`${STORAGE_PREFIXES.PARTY_STATE}${published.roomId}`, published);
+    this.subscribeToParty(published.roomId);
+    this.sync?.publish(published);
     this.notifyListeners();
   }
 
@@ -333,12 +330,8 @@ class UniversalPartyManager {
     }
 
     const sendPing = () => {
-      try {
-        const topic = `party_${roomId}`;
-        partyMailbox.publish(topic, { type: 'PARTY_PRESENCE', roomId, player });
-      } catch {
-        // ignore
-      }
+      this.subscribeToParty(roomId);
+      this.sync?.publish({ type: 'PARTY_PRESENCE', roomId, player });
     };
 
     // Send immediately and recurring every 3 seconds for snappy updates
@@ -367,10 +360,6 @@ class UniversalPartyManager {
       clearInterval(this.presenceInterval);
       this.presenceInterval = null;
     }
-    if (this.localChannel) {
-      this.localChannel.close();
-      this.localChannel = null;
-    }
     if (this.currentRoomState && this.currentRoomState.roomId === roomId) {
       const myId = this.getMyPlayerId();
       const updatedPlayers = this.currentRoomState.players.filter((p) => p.id !== myId);
@@ -382,6 +371,9 @@ class UniversalPartyManager {
       this.currentRoomState = updatedState;
       this.publishPartyState(updatedState);
     }
+    this.sync?.stop();
+    this.sync = null;
+    this.syncChannelId = null;
   }
 }
 

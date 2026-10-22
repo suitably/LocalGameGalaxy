@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Party seats and transport (claude-code)
+
+- #467 slice 2 (first part): `docs/tech/sync-protocol.md` §3 lists the party manager as a `MultiChannelSyncCoordinator` user; `game-catalog.md` party row updated; Q4 no longer names the party lobby.
+- **Code changed:** `src/features/party/logic/{partyRoster,universalPartyManager}.ts` (+ test), `hooks/usePartyLobbyController.ts`, `src/App.tsx` (duplicate `/party` route removed).
+
 ## 2026-10-22 — Steam proxy worker on the Cloudflare deploy (claude-code)
 
 - Q14 resolved (maintainer expected the import to work on Cloudflare without a companion): `docs/tech/deployment.md` describes the `/api/steam/*` worker, `tabletop-engine.md` §7 the metadata path and companion diagnostics; Q14 removed from `open-questions.md`.
