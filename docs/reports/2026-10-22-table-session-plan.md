@@ -38,9 +38,10 @@ Goal from the maintainer: open a session once, everybody joins, then play any ta
 
 - **One session layer** (`src/modules/session/`): a room with a host device, a roster of **stable seat ids** (`seat_<id>`, name, colour, `deviceId | null` from `lib/deviceIdentity.ts`), the active game and the mode. Host-authoritative like tabletop (intents in, state out, snapshot on join), transport `useMultiChannelSync` (BroadcastChannel + MQTT). Replaces `universalPartyManager`; GuessArt/Storyteller keep their async links (they are multi-day games) but use the same seats model.
 - **"Spieltisch" in the hub**: one entry for all table games — tabletop games (cards, board games, Liar's Dice …) and the dice games (Kniffel, Knister, Qwixx). The dice games keep their own UIs (score sheets); they are not rebuilt as widgets. Picking a game asks for the mode:
-  - **Auf diesem Gerät** (local): players are added on the spot; turn changes use the handover below.
-  - **Mit Handys** (session): QR code / link, players join with their phone; the host device (TV/tablet) shows the table, each phone shows its own hand or sheet.
-- **Pass-and-play handover** (`src/modules/pass-and-play/`): a "Spieler wechseln" button opens a bottom sheet with the players, the next one preselected (one tap to confirm); a full-screen cover "Gerät an Anna geben — zum Aufdecken tippen" hides every private element (hands, hidden zones, own sheet) until the chosen player taps. Two taps per turn change in total. Games say what is private; the cover is shared.
+  - **Ein Gerät für alle** (shared device, usually a phone passed around): players are added on the spot; turn changes use the handover below.
+  - **Jeder am eigenen Gerät** (session): QR code / link, everybody joins with their own device and sees their own hand or sheet; the opening device plays too. A shared screen (TV/tablet) for the table is optional, not required.
+  - The names describe whether the device is shared, not what kind of device it is: in both modes the device is usually a phone (maintainer note 2026-10-22).
+- **Pass-and-play handover** (`src/modules/pass-and-play/`, built in #469): the "<name> fertig" button immediately covers the screen for the next player ("Gib das Gerät an Anna"); someone else can be picked on the cover; the cover hides every private element (hands, hidden zones, own sheet) until that player taps to reveal. Two taps per turn change. Games say what is private; the cover is shared.
 - **Mobile first**: thumb-reachable bottom bars, 44 px touch targets, `100dvh`, safe areas (`docs/tech/styling.md`), no hover-only actions, portrait layouts for every table view.
 
 ## 3. Slices
@@ -49,9 +50,9 @@ Each slice is one PR (logic + tests first, UI last, components ≤ 250 lines).
 
 1. **Pass-and-play handover** — `modules/pass-and-play` (pure turn-order helpers + `HandoverCover` + `PlayerSwitchSheet`), used by tabletop `?local=1` (hide `HandDockStrip` and owner-only hidden zones while covered). _(needs nothing else; biggest local win)_
 2. **Session core** — pure session/roster reducer with stable seat ids, host election, join/leave/rename, active game; tests. Then `useSession` on `useMultiChannelSync`; `universalPartyManager` becomes a thin adapter; tabletop phones get `seat=<seatId>` instead of the roster index; one `/party` route; player name under a party key.
-3. **Spieltisch hub + mode picker** — registry category `table` for tabletop and the dice games, one start screen with "Auf diesem Gerät" / "Mit Handys", the tabletop lobby's party button keeps the chosen game.
+3. **Spieltisch hub + mode picker** — registry category `table` for tabletop and the dice games, one start screen with "Ein Gerät für alle" / "Jeder am eigenen Gerät", the tabletop lobby's party button keeps the chosen game.
 4. **Dice games local** — Kniffel and Knister switch players through the shared sheet; Qwixx gets a local multi-sheet mode.
-5. **Dice games with phones** — each phone keeps its own sheet, the host shows the scoreboard and the dice; per-game sync messages on the session channel.
+5. **Dice games, everyone on their own device** — each device keeps its own sheet and the shared scoreboard and dice (also on an optional table screen); per-game sync messages on the session channel.
 6. **Gartic Phone** — register the route and move its sync to the session channel (MQTT), or drop it from the picker until it is.
 7. **Mobile pass** over session lobby, tabletop controller, dice games (Playwright screenshots at 390 × 844).
 8. **Storyteller on player seats** (as GuessArt in #466) and the share dialog's invited/joined status.
