@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { TabletopTableConfig } from '../../logic/types';
+import { ImageUploadButton } from './ImageUploadButton';
 
 interface TableSettingsDialogProps {
   open: boolean;
@@ -59,12 +60,16 @@ export const TableSettingsDialog: React.FC<TableSettingsDialogProps> = ({
             value={table.backgroundColor || '#1e3d2f'}
             onChange={(e) => onChange({ backgroundColor: e.target.value })}
           />
-          <TextField
-            size="small"
-            label={t('games.tabletop.editor.background_image')}
-            value={table.backgroundImageUrl || ''}
-            onChange={(e) => onChange({ backgroundImageUrl: e.target.value || undefined })}
-          />
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            <TextField
+              size="small"
+              fullWidth
+              label={t('games.tabletop.editor.background_image')}
+              value={table.backgroundImageUrl || ''}
+              onChange={(e) => onChange({ backgroundImageUrl: e.target.value || undefined })}
+            />
+            <ImageUploadButton onImage={(url) => onChange({ backgroundImageUrl: url })} />
+          </Stack>
         </Stack>
       </DialogContent>
       <DialogActions>

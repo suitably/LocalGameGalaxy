@@ -6,6 +6,7 @@ import { FormControlLabel, MenuItem, Stack, Switch, TextField } from '@mui/mater
 import { useTranslation } from 'react-i18next';
 import type { TabletopWidget } from '../../logic/types';
 import type { WidgetPatch } from '../../logic/widgetEdits';
+import { ImageUploadButton } from './ImageUploadButton';
 
 interface InspectorFieldsProps {
   widget: TabletopWidget;
@@ -73,7 +74,10 @@ export const InspectorFields: React.FC<InspectorFieldsProps> = ({ widget, onPatc
         {num('zIndex')}
         {num('rotation')}
       </Stack>
-      {text('image')}
+      <Stack direction="row" spacing={0.5} alignItems="center">
+        {text('image')}
+        <ImageUploadButton onImage={(image) => onPatch({ image })} />
+      </Stack>
       <TextField
         select
         size="small"
