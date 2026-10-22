@@ -8,6 +8,9 @@ import * as signaling from './webrtc/signalingSettings';
 import * as push from './push/pushSettings';
 
 export const STORAGE_KEYS = {
+  // This device's stable id (player seats, src/lib/deviceIdentity.ts)
+  DEVICE_ID: 'lgg_device_id',
+
   // Companion helper configuration
   HELPER_URL: 'melodiq_helper_url',
   HELPER_TOKEN: 'melodiq_helper_token',

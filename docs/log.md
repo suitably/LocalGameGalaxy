@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Player seats model (claude-code)
+
+- `docs/tech/data-models.md` gains "Player seats (async games)"; `sync-protocol.md` §5 names `turnDelivery.ts`; `persistence.md` lists `DEVICE_ID` and the corrected key count (95).
+- **Code changed:** new `src/modules/player-management/playerSeats.ts`, `src/lib/deviceIdentity.ts`, `src/lib/notifications/turnDelivery.ts` (+ tests); `STORAGE_KEYS.DEVICE_ID`.
+
 ## 2026-10-22 — GuessArt word selection and hint transitions (claude-code)
 
 - #416 slices 2–3: no doc describes the engine internals; `CHANGELOG.md` updated.

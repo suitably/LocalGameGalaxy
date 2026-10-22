@@ -8,11 +8,12 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-18
+  at: 2026-10-22
   method: 'excerpts copied from the listed files; export lists via grep'
 sources:
   - 'src/lib/gameRegistry.tsx'
   - 'src/modules/player-management/types.ts'
+  - 'src/modules/player-management/playerSeats.ts'
   - 'src/modules/sync/MqttMailboxService.ts'
   - 'src/games/*/types.ts, src/games/*/logic/types.ts'
 ---
@@ -172,3 +173,19 @@ export interface LobbyPlayerItem {
   isRemote?: boolean;
 }
 ```
+
+### Player seats (async games)
+
+`src/modules/player-management/playerSeats.ts` says which device plays which player, derived only from the synced record and this device's id (`getDeviceId()` in `src/lib/deviceIdentity.ts`, key `STORAGE_KEYS.DEVICE_ID`):
+
+```typescript
+export interface PlayerSeat {
+  deviceId: string | null; // null = invitation shared, not yet opened
+  invitedAt?: string;
+  joinedAt?: string;
+  updatedAt: string; // newer seat wins in mergeSeatedPlayers
+}
+export type SeatStatus = 'local' | 'invited' | 'remote' | 'unknown'; // unknown = record without seats
+```
+
+Lifecycle: `seatAllOnDevice` (new game, all local) → `invitePlayer` (link/QR shared) → `takeSeat(…, { remote: true })` on the device that opens the link; `takeSeat(…, { remote: false })` takes a player back. `adoptLegacySeats` converts records from before seats. **Not wired into GuessArt/Storyteller yet** — they still use the per-device lists in `playerAssignment.ts`.
