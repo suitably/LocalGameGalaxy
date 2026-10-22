@@ -43,6 +43,8 @@ export interface TTSCustomImage {
   ImageSecondaryURL?: string;
   ImageScalar?: number;
   WidthScale?: number;
+  /** Custom_Tile: Type 0 box, 1 hex, 2 circle, 3 rounded. */
+  CustomTile?: { Type?: number; Thickness?: number; Stackable?: boolean };
 }
 
 /** Custom 3D mesh */

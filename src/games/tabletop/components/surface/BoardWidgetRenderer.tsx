@@ -4,6 +4,7 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import type {
+  BagWidget,
   TabletopWidget,
   CardWidget,
   DeckWidget,
@@ -17,6 +18,7 @@ import { DeckWidgetView } from '../widgets/DeckWidgetView';
 import { TokenWidgetView } from '../widgets/TokenWidgetView';
 import { CounterWidgetView } from '../widgets/CounterWidgetView';
 import { DieWidgetView } from '../widgets/DieWidgetView';
+import { BagWidgetView } from '../widgets/BagWidgetView';
 
 interface BoardWidgetRendererProps {
   widget: TabletopWidget;
@@ -94,6 +96,15 @@ export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
                 isDragging={isDragging}
                 onPointerDown={onPointerDown}
                 onRoll={() => dispatch({ type: 'ROLL_DIE', payload: { dieId: w.id } })}
+              />
+            );
+          case 'bag':
+            return (
+              <BagWidgetView
+                widget={w as BagWidget}
+                isDragging={isDragging}
+                onPointerDown={onPointerDown}
+                onDraw={() => dispatch({ type: 'DRAW_FROM_BAG', payload: { bagId: w.id } })}
               />
             );
           default:

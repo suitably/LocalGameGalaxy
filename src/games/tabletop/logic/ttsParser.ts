@@ -4,6 +4,7 @@
  * Converts TTS save file JSON (3D ObjectStates) into the Galaxy
  * TabletopGameDefinition (2D widget-based) format.
  */
+import { convertBag, convertFogOfWar, tileShape } from './ttsContainers';
 import type {
   TTSSaveFile,
   TTSObjectState,
@@ -18,6 +19,7 @@ import {
   type TabletopWidget,
   type CardWidget,
   type DeckWidget,
+  type HiddenZone,
   type DieWidget,
   type TokenWidget,
   type HolderWidget,
@@ -558,6 +560,16 @@ export function parseTtsSaveFile(
 
   // Track HandTrigger seat assignment
   let handSeatCounter = 0;
+  const hiddenZones: Record<string, HiddenZone> = {};
+
+  /** Objects inside bags: cards, dice and tiles keep their kind, the rest become tokens. */
+  const convertChild = (child: TTSObjectState, p: { x: number; y: number; zIndex: number }) => {
+    if (child.Name === 'Card') return convertCard(child, p, globalDecks);
+    const sides = parseDieSides(child.Name);
+    if (sides !== null) return convertDie(child, p, sides);
+    if (child.Name === 'Custom_Tile') return { ...convertToken(child, p), ...tileShape(child) };
+    return convertToken(child, p);
+  };
 
   // Process all top-level objects
   for (const obj of save.ObjectStates) {
@@ -618,33 +630,29 @@ export function parseTtsSaveFile(
       continue;
     }
 
-    // Infinite_Bag / Bag → DeckWidget (supply pile)
+    // Bag / Infinite_Bag → BagWidget (finite contents or infinite template)
     if (name === 'Infinite_Bag' || name === 'Bag') {
-      const bagId = nextId('bag');
-      const childIds: string[] = [];
-      if (obj.ContainedObjects) {
-        for (const child of obj.ContainedObjects) {
-          const tok = convertToken(child, { x: pos.x, y: pos.y, zIndex: pos.zIndex + 1 });
-          tok.movable = true;
-          tok.pinned = false;
-          widgets[tok.id] = tok;
-          childIds.push(tok.id);
-        }
-      }
-      widgets[bagId] = {
-        id: bagId,
-        type: 'deck',
-        x: pos.x,
-        y: pos.y,
-        width: 60,
-        height: 60,
-        zIndex: pos.zIndex,
-        label: obj.Nickname || 'Vorrat',
-        cardIds: childIds,
-        backContent: { type: 'text', value: '🎒', color: ttsColorToHex(obj.ColorDiffuse) },
-        movable: !obj.Locked,
-        pinned: Boolean(obj.Locked),
-      } as DeckWidget;
+      const bag = convertBag(obj, pos, ttsColorToHex(obj.ColorDiffuse), convertChild, widgets);
+      widgets[bag.id] = bag;
+      continue;
+    }
+
+    // FogOfWarTrigger → hidden zone for the seat of its fog colour
+    if (name === 'FogOfWarTrigger') {
+      const zone = convertFogOfWar(
+        obj,
+        pos,
+        TTS_SCALE,
+        obj.FogColor ? FOG_COLOR_SEAT[obj.FogColor] : undefined,
+        ttsColorToHex(obj.ColorDiffuse),
+      );
+      hiddenZones[zone.id] = zone;
+      continue;
+    }
+
+    // Custom_Tile → token with the tile's shape (box, hex, circle, rounded)
+    if (name === 'Custom_Tile') {
+      widgets[obj.GUID] = { ...convertToken(obj, pos), ...tileShape(obj) };
       continue;
     }
 
@@ -717,6 +725,7 @@ export function parseTtsSaveFile(
     },
     widgets,
     ruleText,
+    ...(Object.keys(hiddenZones).length > 0 ? { hiddenZones } : {}),
   });
 }
 
