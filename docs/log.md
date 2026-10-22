@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Spieltisch lobby and mode picker (claude-code)
+
+- #467 slice 3: `docs/tech/tabletop-engine.md` gains "Spieltisch (lobby)"; `game-catalog.md` §1 says the dice games are listed on the Spieltisch instead of the hub.
+- **Code changed:** new `src/games/tabletop/logic/tableCatalog.ts` (+ test), `components/views/{PlayModeSheet,TableGameCard}.tsx`, `src/features/party/components/PartyPendingGame.tsx`; `TabletopLobbyView.tsx` rewritten, `TabletopGame.tsx`, `src/features/party/{PartyLobby.tsx,hooks/usePartyLobbyController.ts,logic/partyRoutes.ts}`, `src/features/hub/Hub.tsx` (dice games filtered out, dice chip removed), locales.
+
 ## 2026-10-22 — Party seats and transport (claude-code)
 
 - #467 slice 2 (first part): `docs/tech/sync-protocol.md` §3 lists the party manager as a `MultiChannelSyncCoordinator` user; `game-catalog.md` party row updated; Q4 no longer names the party lobby.

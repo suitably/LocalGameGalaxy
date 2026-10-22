@@ -56,6 +56,10 @@ Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`.
 
 In local play (`?local=1`) `TabletopGame` mounts `components/views/TabletopPassAndPlay.tsx` on top of the editor: a "switch player" button covers the screen for the next seat (`modules/pass-and-play`), the cover can be pointed at another seat, and only the reveal dispatches `SELECT_SEAT` — so the hand dock and seat-only hidden zones never show the previous player's content to the next one. The seat chips (`PlayerSeatSelector`) are hidden in this mode (`hideSeatSelector`). Games with hand holders but no seat widgets (the built-in card deck, Liar's Dice) get one seat per hand owner (`seatsForHands` in `logic/seatLogic.ts`: `index` = `ownerSeat`, `hand` = the holder), added once with `ADD_WIDGETS`; `findPlayerHandHolder` prefers an exact `ownerSeat` match over the `index - 1` fallback.
 
+### Spieltisch (lobby)
+
+`components/views/TabletopLobbyView.tsx` is the entry for all table games: the built-in tabletop games, the dice games (Kniffel, Knister, Qwixx; `Hub.tsx` hides them from the hub) and imported games, from `logic/tableCatalog.ts`. A game with one supported mode opens directly; otherwise `PlayModeSheet` asks: **Ein Gerät für alle** (`?local=1`, pass and play) or **Jeder am eigenen Gerät** (`/party?launch=tabletop&gameId=…`: the party lobby shows the chosen game, `PartyPendingGame`, and the host starts it once players have joined). Dice games are one-device only until they sync (#467 slice 5).
+
 ## 5. Sync
 
 Host-authoritative over `useMultiChannelSync`, see [sync-protocol](sync-protocol.md): non-host devices send `INTENT`s (every action except `LOAD_GAME`, `APPLY_REMOTE_DELTA`, `ANIMATE_CARD_TO_TABLE`, `FINISH_ANIMATION`), the host broadcasts `STATE_DELTA` (`logic/stateDelta.ts`) with a sequence number, gaps and joins get a `STATE_SNAPSHOT`. Random results are decided on the host.

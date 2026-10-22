@@ -16,6 +16,14 @@ export function resolveLobbyEntry(
   return fromUrl ? { kind: 'join', roomId: fromUrl.toUpperCase().trim() } : { kind: 'create' };
 }
 
+/** A game chosen before the lobby opened (`/party?launch=tabletop&gameId=…` from the Spieltisch). */
+export function resolvePendingLaunch(
+  params: URLSearchParams = parseGameUrlParams(),
+): { gameType: 'tabletop'; gameId: string } | null {
+  const gameId = params.get('gameId');
+  return params.get('launch') === 'tabletop' && gameId ? { gameType: 'tabletop', gameId } : null;
+}
+
 /** Route of the active party game; tabletop opens as TV for the host and as a seat for players. */
 export function getGameRoute({
   gameType,
