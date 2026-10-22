@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Device settings out of storage.ts (claude-code)
+
+- #419: `docs/tech/persistence.md` names the new owners of the companion, signaling and push accessors; `verified` bumped.
+- **Code changed:** `src/lib/storage.ts` (delegates), new `src/lib/companion/companionSettings.ts`, `src/lib/webrtc/signalingSettings.ts` (+ test), `src/lib/push/pushSettings.ts`.
+
 ## 2026-10-22 — PartyLobby split into sections (claude-code)
 
 - #359: `docs/tasks/ISSUE-359-decompose-party-lobby.md` acceptance boxes ticked, `docs/tasks/index.md` row marked done.

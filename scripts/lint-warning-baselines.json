@@ -138,7 +138,7 @@
   "src/hooks/useWakeLock.ts": 3,
   "src/lib/gameRegistry.tsx": 17,
   "src/lib/storage.test.ts": 1,
-  "src/lib/storage.ts": 4,
+  "src/lib/storage.ts": 3,
   "src/lib/utils/turnAssignment.ts": 9,
   "src/lib/webrtc/useWebRTCClient.ts": 35,
   "src/lib/webrtc/WebRTCHostContext.tsx": 9,

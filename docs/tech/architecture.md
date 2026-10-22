@@ -48,7 +48,7 @@ src/
 ├── features/        # hub/, party/ (Universal Party lobby), settings/
 ├── games/           # 15 game folders — one self-contained domain each (see game-catalog)
 ├── hooks/           # useWakeLock, useScreenOrientation, usePWAInstall, useServerUrlAutoConnect
-├── lib/             # storage.ts, gameRegistry.tsx, github.ts, push/, notifications/, webrtc/, utils/, uuid.ts, disambiguateName.ts
+├── lib/             # storage.ts, gameRegistry.tsx, github.ts, companion/, push/, notifications/, webrtc/, utils/, uuid.ts, disambiguateName.ts
 ├── modules/         # shared cross-game modules (§3.2)
 └── types/
 server/              # optional companion server (separate npm package, Hono)
