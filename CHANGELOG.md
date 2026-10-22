@@ -17,6 +17,7 @@
 
 ### Changed
 
+- **Tabletop privacy**: cards in a player's hand no longer travel readable to every device. The host sends them face-down and encrypts the real faces per seat (ECDH + AES-GCM over WebCrypto); only that seat's phone can restore them (#449).
 - **Tabletop presentation**: widgets glide to new positions (moves from other devices, holder layouts, undo) and cards flip with a short animation; both respect "reduce motion" (#449).
 - **Tabletop Workshop import**: errors are translated (de/en) and carry a code (`WorkshopError`); without the companion server the import now explains that Steam details need the server and points to uploading the mod `.json` instead of failing with an HTML parse error (#449).
 - **Tabletop TTS import**: `Bag` / `Infinite_Bag` become real bags (new `BagWidgetView`, tap to draw; finite bags keep their contents hidden, infinite bags clone their first object), `Custom_Tile` keeps its shape (box, hex, circle, rounded), `FogOfWarTrigger` becomes a hidden zone for its seat. Before, bags were imported as card decks and the bag logic was unused (#449).

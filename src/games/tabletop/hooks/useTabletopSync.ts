@@ -15,6 +15,7 @@ import {
   type TabletopSyncAction,
 } from '../logic/syncProtocol';
 import { diffGame } from '../logic/stateDelta';
+import { PrivateHandChannel } from '../logic/privateHandChannel';
 import type { TabletopGameDefinition } from '../logic/types';
 import type { TabletopAction } from '../logic/tabletopReducer';
 
@@ -24,6 +25,8 @@ interface UseTabletopSyncOptions {
   game: TabletopGameDefinition;
   dispatch: React.Dispatch<TabletopAction>;
   onReturnToLobby?: () => void;
+  /** Seat of this device (phones); its private hand is sealed for it. */
+  seat?: number | null;
 }
 
 export function useTabletopSync({
@@ -32,12 +35,21 @@ export function useTabletopSync({
   game,
   dispatch,
   onReturnToLobby,
+  seat = null,
 }: UseTabletopSyncOptions) {
   const [senderId] = useState(() => `tt_${generateUUID().slice(0, 8)}`);
   const gameRef = useRef(game);
   /** Host: last broadcast sequence number. Others: last applied one (`null` = no snapshot yet). */
   const seqRef = useRef<number | null>(isHost ? 0 : null);
   const lastSentGameRef = useRef(game);
+  const [hands] = useState(() => new PrivateHandChannel());
+  /** Sealing is async; one queue keeps sends and applies in sequence order. */
+  const queueRef = useRef<Promise<void>>(Promise.resolve());
+  const enqueue = useCallback((task: () => Promise<void>) => {
+    queueRef.current = queueRef.current
+      .then(task)
+      .catch((err) => console.warn('[Tabletop] Sync step failed:', err));
+  }, []);
 
   const mailbox = useMemo(
     () => new MqttMailboxService<TabletopSyncEnvelope>({ topicPrefix: 'lgg/tabletop' }),
@@ -57,25 +69,33 @@ export function useTabletopSync({
           break;
         case 'STATE_DELTA':
           if (isHost) break;
-          switch (classifyDelta(seqRef.current, action.seq)) {
-            case 'apply':
-              dispatch({ type: 'APPLY_REMOTE_DELTA', payload: action.delta });
-              seqRef.current = action.seq;
-              break;
-            case 'resync':
-              send({ type: 'REQUEST_SNAPSHOT' });
-              break;
-          }
+          enqueue(async () => {
+            const verdict = classifyDelta(seqRef.current, action.seq);
+            if (verdict === 'resync') send({ type: 'REQUEST_SNAPSHOT' });
+            if (verdict !== 'apply') return;
+            const widgets = await hands.open(action.delta.widgets, action.sealed, seat);
+            dispatch({ type: 'APPLY_REMOTE_DELTA', payload: { ...action.delta, widgets } });
+            seqRef.current = action.seq;
+          });
           break;
         case 'STATE_SNAPSHOT':
           if (isHost) break;
-          dispatch({ type: 'LOAD_GAME', payload: action.state });
-          seqRef.current = action.seq;
+          enqueue(async () => {
+            await hands.acceptHostKey(action.hostKey);
+            const widgets = await hands.open(action.state.widgets, action.sealed, seat);
+            dispatch({ type: 'LOAD_GAME', payload: { ...action.state, widgets } });
+            seqRef.current = action.seq;
+          });
           break;
         case 'REQUEST_SNAPSHOT':
-          if (isHost) {
-            send({ type: 'STATE_SNAPSHOT', state: gameRef.current, seq: seqRef.current ?? 0 });
-          }
+          if (!isHost) break;
+          enqueue(async () => {
+            if (typeof action.seat === 'number' && action.publicKey) {
+              await hands.registerSeat(action.seat, action.publicKey);
+            }
+            const out = await hands.outgoingSnapshot(gameRef.current);
+            send({ type: 'STATE_SNAPSHOT', ...out, seq: seqRef.current ?? 0 });
+          });
           break;
         case 'FLICK_CARD_TO_TABLE':
           dispatch({
@@ -88,7 +108,7 @@ export function useTabletopSync({
           break;
       }
     },
-    [senderId, isHost, dispatch, onReturnToLobby],
+    [senderId, isHost, dispatch, onReturnToLobby, enqueue, hands, seat],
   );
 
   const { publish } = useMultiChannelSync<TabletopSyncEnvelope>({
@@ -120,19 +140,30 @@ export function useTabletopSync({
     const seq = (seqRef.current ?? 0) + 1;
     if (prev.id !== game.id) {
       seqRef.current = seq;
-      broadcastAction({ type: 'STATE_SNAPSHOT', state: game, seq });
+      enqueue(async () => {
+        broadcastAction({ type: 'STATE_SNAPSHOT', ...(await hands.outgoingSnapshot(game)), seq });
+      });
       return;
     }
     const delta = diffGame(prev, game);
     if (!delta) return;
     seqRef.current = seq;
-    broadcastAction({ type: 'STATE_DELTA', delta, seq });
-  }, [game, isHost, roomId, broadcastAction]);
+    enqueue(async () => {
+      broadcastAction({ type: 'STATE_DELTA', ...(await hands.outgoingDelta(delta, game)), seq });
+    });
+  }, [game, isHost, roomId, broadcastAction, enqueue, hands]);
 
   // When joining as non-host, request snapshot from host
   useEffect(() => {
-    if (roomId && !isHost) broadcastAction({ type: 'REQUEST_SNAPSHOT' });
-  }, [roomId, isHost, broadcastAction]);
+    if (!roomId || isHost) return;
+    enqueue(async () => {
+      const publicKey = seat !== null ? await hands.publicKey() : undefined;
+      broadcastAction({
+        type: 'REQUEST_SNAPSHOT',
+        ...(publicKey ? { seat: seat!, publicKey } : {}),
+      });
+    });
+  }, [roomId, isHost, broadcastAction, enqueue, hands, seat]);
 
   /** Dispatch for UI components: applies locally and, on non-host devices, sends the intent. */
   const syncedDispatch = useCallback<React.Dispatch<TabletopAction>>(

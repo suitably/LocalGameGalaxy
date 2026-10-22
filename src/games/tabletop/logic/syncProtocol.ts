@@ -8,11 +8,19 @@
 import type { TabletopGameDefinition } from './types';
 import type { TabletopAction } from './tabletopReducer';
 import type { GameDelta } from './stateDelta';
+import type { SealedSecrets } from './privateHandChannel';
 
 export type TabletopSyncAction =
-  | { type: 'REQUEST_SNAPSHOT' }
-  | { type: 'STATE_SNAPSHOT'; state: TabletopGameDefinition; seq: number }
-  | { type: 'STATE_DELTA'; delta: GameDelta; seq: number }
+  /** `seat` + `publicKey` let the host seal that seat's private hand for this device. */
+  | { type: 'REQUEST_SNAPSHOT'; seat?: number; publicKey?: JsonWebKey }
+  | {
+      type: 'STATE_SNAPSHOT';
+      state: TabletopGameDefinition;
+      seq: number;
+      hostKey?: JsonWebKey;
+      sealed?: SealedSecrets;
+    }
+  | { type: 'STATE_DELTA'; delta: GameDelta; seq: number; sealed?: SealedSecrets }
   | { type: 'INTENT'; action: TabletopAction }
   | { type: 'FLICK_CARD_TO_TABLE'; cardId: string; targetHolderId: string; senderSeat?: number }
   | { type: 'RETURN_TO_LOBBY' };
