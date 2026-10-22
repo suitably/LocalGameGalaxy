@@ -383,7 +383,7 @@ export function tabletopReducer(
             ...state.game.widgets,
             [seatId]: {
               ...seat,
-              player: playerName || seat.player || 'Player',
+              player: playerName || seat.player,
             },
           },
         },

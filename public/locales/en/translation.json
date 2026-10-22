@@ -916,7 +916,14 @@
     "cancel": "Cancel",
     "all": "All",
     "planned": "Planned",
-    "playerJoined": "{{names}} joined"
+    "playerJoined": "{{names}} joined",
+    "passAndPlay": {
+      "switch": "Switch player",
+      "switchFrom": "{{name}} done",
+      "coverTitle": "Hand the device to {{name}}",
+      "reveal": "I'm {{name}} – reveal",
+      "otherPlayer": "Someone else's turn?"
+    }
   },
   "settings": {
     "title": "Settings",

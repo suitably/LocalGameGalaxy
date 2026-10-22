@@ -2,6 +2,7 @@
 
 ### Added
 
+- **Tabletop pass and play**: in local play a "<name> done" button covers the table for the next player ("Hand the device to …", other players selectable on the cover); the hand and seat-only zones change only when that player taps to reveal. Games with private hands but no seats (built-in card deck, Liar's Dice) get one seat per hand, and the seat chips are hidden in this mode. Shared module `src/modules/pass-and-play` for other games (#467).
 - **Player seats**: pure model for which device plays which player in async games (`modules/player-management/playerSeats.ts`), a stable device id (`lib/deviceIdentity.ts`) and one turn-notification rule (`lib/notifications/turnDelivery.ts`), with tests; GuessArt and Storyteller move to it next.
 - **Tabletop**: button widget with a declarative routine (shuffle, draw, roll, flip, move, set, counter, timer, spin, next state) — validated JSON, no code; edited in the inspector, runs as one synced action on the host (#449).
 - **Tabletop TTS import**: object `States` become switchable looks (`states`, `NEXT_STATE`); double-click a token or use the inspector button to switch (#449).
@@ -63,6 +64,7 @@
 
 ### Fixed
 
+- **Tabletop**: seat 1 no longer gets the hand of seat 0 when both hands match the seat by index (`findPlayerHandHolder` prefers an exact owner); choosing a seat no longer renames its player to "Player".
 - **Tabletop Workshop import**: without the companion server, a failing Steam lookup now always shows the "upload the .json or connect the companion server" hint (also when the host answers 405/501 or the request fails), the download uses HTTPS, and a blocked download or a file that is not a TTS save get their own translated messages instead of "Failed to fetch" or a raw TypeError.
 - **GuessArt**: opening a shared player link now opens the game on the phone instead of the lobby, and no longer hangs when the MQTT broker is unreachable.
 - **Companion server**: environment overrides (`SECURITY_TOKEN`/`TOKEN`, `PORT`, `MUSIC_DIR`, `DIRECTORIES`, `TABLETOP_DIR`, auto-discovered `/app/music`) were written into `config.json` whenever a setting changed, so removing the env var left the old token, port and directories active. They now apply at runtime only; identical leftovers are removed from `config.json` at start (#409).

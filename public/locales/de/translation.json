@@ -916,7 +916,14 @@
     "cancel": "Abbrechen",
     "all": "Alle",
     "planned": "Geplant",
-    "playerJoined": "{{names}} ist beigetreten"
+    "playerJoined": "{{names}} ist beigetreten",
+    "passAndPlay": {
+      "switch": "Spieler wechseln",
+      "switchFrom": "{{name}} fertig",
+      "coverTitle": "Gib das Gerät an {{name}}",
+      "reveal": "Ich bin {{name}} – aufdecken",
+      "otherPlayer": "Jemand anderes ist dran?"
+    }
   },
   "settings": {
     "title": "Einstellungen",

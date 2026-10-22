@@ -22,6 +22,7 @@ import { TabletopLobbyView } from './components/views/TabletopLobbyView';
 import { useTabletopSync } from './hooks/useTabletopSync';
 import { usePartyLobbyReturn } from './hooks/usePartyLobbyReturn';
 import { useTabletopAutosave } from './hooks/useTabletopAutosave';
+import { TabletopPassAndPlay } from './components/views/TabletopPassAndPlay';
 import { RestartGameButton } from './components/views/RestartGameButton';
 
 export function TabletopGame() {
@@ -218,7 +219,8 @@ export function TabletopGame() {
       <Box display="flex" flexDirection="column" width="100%" height="100%" overflow="hidden">
         <Box flex={1} position="relative" minHeight={0}>
           <RestartGameButton onRestart={restartGame} />
-          <TabletopEditor state={gameState} dispatch={syncedDispatch} />
+          <TabletopEditor state={gameState} dispatch={syncedDispatch} hideSeatSelector />
+          <TabletopPassAndPlay state={gameState} dispatch={syncedDispatch} />
         </Box>
         <HandDockStrip state={gameState} dispatch={syncedDispatch} />
       </Box>
