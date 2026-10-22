@@ -2,6 +2,7 @@
 
 ### Added
 
+- **Player seats**: pure model for which device plays which player in async games (`modules/player-management/playerSeats.ts`), a stable device id (`lib/deviceIdentity.ts`) and one turn-notification rule (`lib/notifications/turnDelivery.ts`), with tests; GuessArt and Storyteller move to it next.
 - **Tabletop**: button widget with a declarative routine (shuffle, draw, roll, flip, move, set, counter, timer, spin, next state) — validated JSON, no code; edited in the inspector, runs as one synced action on the host (#449).
 - **Tabletop TTS import**: object `States` become switchable looks (`states`, `NEXT_STATE`); double-click a token or use the inspector button to switch (#449).
 - **Tabletop editor**: upload images for widgets and the table background; they are scaled to 512 px and stored in the game as WebP data URLs, no server needed (#449).
