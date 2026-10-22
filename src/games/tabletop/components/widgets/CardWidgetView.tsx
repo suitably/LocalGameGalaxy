@@ -69,7 +69,10 @@ export const CardWidgetView: React.FC<CardWidgetViewProps> = ({
         opacity: isDragging ? 0.35 : 1,
       }}
     >
-      <CardFaceContent card={widget} isFaceUp={isFaceUp} />
+      {/* Re-mounting on flip replays the flip animation from TableMotionStyles. */}
+      <Box key={String(isFaceUp)} data-card-flip="" sx={{ width: '100%', height: '100%' }}>
+        <CardFaceContent card={widget} isFaceUp={isFaceUp} />
+      </Box>
 
       {widget.stackCount && widget.stackCount > 1 ? (
         <Box

@@ -13,6 +13,7 @@
 
 ### Changed
 
+- **Tabletop presentation**: widgets glide to new positions (moves from other devices, holder layouts, undo) and cards flip with a short animation; both respect "reduce motion" (#449).
 - **Tabletop Workshop import**: errors are translated (de/en) and carry a code (`WorkshopError`); without the companion server the import now explains that Steam details need the server and points to uploading the mod `.json` instead of failing with an HTML parse error (#449).
 - **Tabletop TTS import**: `Bag` / `Infinite_Bag` become real bags (new `BagWidgetView`, tap to draw; finite bags keep their contents hidden, infinite bags clone their first object), `Custom_Tile` keeps its shape (box, hex, circle, rounded), `FogOfWarTrigger` becomes a hidden zone for its seat. Before, bags were imported as card decks and the bag logic was unused (#449).
 - **Tabletop sync**: moves, draws, rolls, counters and all other table actions from phones now reach the host and every device. Phones send their actions as intents; the host (TV) applies them and broadcasts only the changed widgets with a sequence number, and a device that misses an update fetches a fresh snapshot. Before, only "return to lobby" and card flicks were sent and devices drifted apart (#449).

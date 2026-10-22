@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Tabletop motion and flip animations (claude-code)
+
+- #449 slice 7: `docs/tech/tabletop-engine.md` §3 names `TableMotionStyles`.
+- **Code changed:** `src/games/tabletop/components/{surface/TableMotionStyles.tsx,widgets/CardWidgetView.tsx,editor/TabletopEditor.tsx}`; preceded by a formatting-only commit.
+
 ## 2026-10-22 — Tabletop label, timer, spinner widgets (claude-code)
 
 - #449 slice 9: `docs/tech/tabletop-engine.md` lists `tableToolReducer.ts`; `docs/tech/data-models.md` `WidgetType` updated.

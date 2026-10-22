@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { Box } from '@mui/material';
 import type { TabletopAction, TabletopGameState } from '../../logic/tabletopReducer';
 import { TabletopSurface } from '../surface/TabletopSurface';
+import { TableMotionStyles } from '../surface/TableMotionStyles';
 import { EditorToolbar } from './EditorToolbar';
 import { WidgetInspector } from './WidgetInspector';
 import { TableSettingsDialog } from './TableSettingsDialog';
@@ -33,6 +34,7 @@ export const TabletopEditor: React.FC<TabletopEditorProps> = ({ state, dispatch,
 
   return (
     <>
+      <TableMotionStyles />
       <Box
         sx={{ width: '100%', height: '100%' }}
         onPointerDownCapture={(e) => {
