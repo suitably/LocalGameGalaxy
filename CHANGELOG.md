@@ -11,6 +11,7 @@
 
 ### Changed
 
+- **Tabletop Workshop import**: errors are translated (de/en) and carry a code (`WorkshopError`); without the companion server the import now explains that Steam details need the server and points to uploading the mod `.json` instead of failing with an HTML parse error (#449).
 - **Tabletop TTS import**: `Bag` / `Infinite_Bag` become real bags (new `BagWidgetView`, tap to draw; finite bags keep their contents hidden, infinite bags clone their first object), `Custom_Tile` keeps its shape (box, hex, circle, rounded), `FogOfWarTrigger` becomes a hidden zone for its seat. Before, bags were imported as card decks and the bag logic was unused (#449).
 - **Tabletop sync**: moves, draws, rolls, counters and all other table actions from phones now reach the host and every device. Phones send their actions as intents; the host (TV) applies them and broadcasts only the changed widgets with a sequence number, and a device that misses an update fetches a fresh snapshot. Before, only "return to lobby" and card flicks were sent and devices drifted apart (#449).
 - **Self-hosting**: the compose generator in the server settings no longer emits the non-existent `tabletop-companion` and `galaxy-push-relay` images; it creates one companion container with `PLUGINS` for the selected games next to the signaling tracker. `server/docker-compose.yml` drops the commented tabletop container (#342).

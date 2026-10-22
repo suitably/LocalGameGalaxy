@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Workshop import errors (claude-code)
+
+- #449 slice 8 (part 2): no doc covers these messages; `CHANGELOG.md` updated.
+- **Code changed:** `src/games/tabletop/logic/steamWorkshopApi.ts`, `hooks/useWorkshopImport.ts`, locales, test; preceded by a formatting-only commit.
+
 ## 2026-10-22 — TTS bags, tiles, fog of war (claude-code)
 
 - #449 slice 8 (part 1): no doc lists the TTS object mapping beyond the plan report; `CHANGELOG.md` updated.

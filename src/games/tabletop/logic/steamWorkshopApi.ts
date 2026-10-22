@@ -6,6 +6,27 @@
  */
 import { BSON } from 'bson';
 
+export type WorkshopErrorCode =
+  | 'invalid_input'
+  | 'not_found'
+  | 'metadata_unavailable'
+  | 'http'
+  | 'download_failed'
+  | 'no_download_url';
+
+/** Import failure with a code the UI translates (`games.tabletop.workshop.error_<code>`). */
+export class WorkshopError extends Error {
+  readonly code: WorkshopErrorCode;
+  readonly status?: number;
+
+  constructor(code: WorkshopErrorCode, status?: number) {
+    super(status ? `${code} (HTTP ${status})` : code);
+    this.name = 'WorkshopError';
+    this.code = code;
+    this.status = status;
+  }
+}
+
 /** Parsed workshop item metadata */
 export interface WorkshopItemDetails {
   id: string;
@@ -81,15 +102,18 @@ async function querySteamDirect(workshopId: string): Promise<WorkshopItemDetails
     body: form.toString(),
   });
 
-  if (!res.ok) {
-    throw new Error(`Steam API Fehler: HTTP ${res.status}`);
-  }
+  // The `/api/steam` proxy only exists in the dev server; a static build answers with HTML.
+  if (res.status === 404) throw new WorkshopError('metadata_unavailable');
+  if (!res.ok) throw new WorkshopError('http', res.status);
 
-  const data = (await res.json()) as SteamApiResponse;
-  const item = data.response?.publishedfiledetails?.[0];
-  if (!item || item.result !== 1) {
-    throw new Error('Workshop-Mod nicht gefunden oder nicht öffentlich zugänglich');
+  let data: SteamApiResponse;
+  try {
+    data = (await res.json()) as SteamApiResponse;
+  } catch {
+    throw new WorkshopError('metadata_unavailable');
   }
+  const item = data.response?.publishedfiledetails?.[0];
+  if (!item || item.result !== 1) throw new WorkshopError('not_found');
 
   return {
     id: item.publishedfileid,
@@ -156,13 +180,9 @@ export async function downloadWorkshopMod(
   );
 
   if (!res.ok) {
-    if (res.status === 404) {
-      throw new Error('Workshop-Mod nicht gefunden');
-    }
-    if (res.status === 502) {
-      throw new Error('Download von Steam fehlgeschlagen — file_url nicht verfügbar');
-    }
-    throw new Error(`Server-Fehler beim Download: HTTP ${res.status}`);
+    if (res.status === 404) throw new WorkshopError('not_found');
+    if (res.status === 502) throw new WorkshopError('no_download_url');
+    throw new WorkshopError('http', res.status);
   }
 
   return (await res.json()) as { id: string; rawJson: string; assetMap: Record<string, string> };
@@ -201,7 +221,7 @@ export function decodeModBuffer(buffer: ArrayBuffer): unknown {
 export async function downloadWorkshopModDirect(fileUrl: string): Promise<unknown> {
   const res = await fetch(fileUrl);
   if (!res.ok) {
-    throw new Error(`Download von Steam fehlgeschlagen: HTTP ${res.status}`);
+    throw new WorkshopError('download_failed', res.status);
   }
   const buffer = await res.arrayBuffer();
   return decodeModBuffer(buffer);
