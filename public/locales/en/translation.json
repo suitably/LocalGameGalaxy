@@ -933,7 +933,9 @@
       "coverTitle": "Hand the device to {{name}}",
       "reveal": "I'm {{name}} – reveal",
       "otherPlayer": "Someone else's turn?"
-    }
+    },
+    "seatInvited": "Invited – link not opened yet",
+    "seatJoined": "Joined"
   },
   "settings": {
     "title": "Settings",

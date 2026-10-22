@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { StoryEntry, StoryGameRecord, StoryGameSnapshot } from '../types';
 import { playerAssignment } from '../logic/playerAssignment';
@@ -7,7 +7,6 @@ import { storytellerMailboxService } from '../logic/mailboxService';
 import { ShareSessionLinksDialog, type SessionPlayerItem } from '../../../modules/sharing';
 import {
   useSessionSharing,
-  createIsPlayerLocalHelper,
   buildShareSessionDialogProps,
 } from '../../../modules/sharing/useSessionSharing';
 
@@ -36,17 +35,12 @@ export const ShareStoryLinksDialog: React.FC<ShareStoryLinksDialogProps> = ({
       entries,
     }),
     onPlayerChanged,
-    removeLocalPlayerId: playerAssignment.removeLocalPlayerId.bind(playerAssignment),
-    addLocalPlayerId: playerAssignment.addLocalPlayerId.bind(playerAssignment),
     updateGameDetails: LocalStoryEngine.updateGameDetails.bind(LocalStoryEngine),
     publishSync: (gameId, snapshot) =>
       storytellerMailboxService.publish(gameId, { type: 'STORY_SYNC', snapshot }),
   });
 
-  const isPlayerLocal = useMemo(
-    () => createIsPlayerLocalHelper(game, playerAssignment.isPlayerLocal.bind(playerAssignment)),
-    [game],
-  );
+  const isPlayerLocal = (playerId: string) => !game || playerAssignment.isLocal(game, playerId);
 
   const sharedProps = buildShareSessionDialogProps(
     game,

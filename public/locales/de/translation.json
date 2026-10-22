@@ -933,7 +933,9 @@
       "coverTitle": "Gib das Gerät an {{name}}",
       "reveal": "Ich bin {{name}} – aufdecken",
       "otherPlayer": "Jemand anderes ist dran?"
-    }
+    },
+    "seatInvited": "Eingeladen – Link noch nicht geöffnet",
+    "seatJoined": "Beigetreten"
   },
   "settings": {
     "title": "Einstellungen",
