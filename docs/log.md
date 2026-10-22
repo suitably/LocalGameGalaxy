@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Tabletop resize/rotate handles (claude-code)
+
+- #449: `docs/tech/tabletop-engine.md` §3 describes `SelectionHandles`.
+- **Code changed:** `src/games/tabletop/components/editor/{SelectionHandles,TabletopEditor}.tsx`, `logic/handleMath.ts`, test.
+
 ## 2026-10-22 — Tabletop motion and flip animations (claude-code)
 
 - #449 slice 7: `docs/tech/tabletop-engine.md` §3 names `TableMotionStyles`.

@@ -14,6 +14,7 @@ import { WidgetInspector } from './WidgetInspector';
 import { TableSettingsDialog } from './TableSettingsDialog';
 import { DeckBuilderDialog } from './DeckBuilderDialog';
 import { useTabletopEditor } from './useTabletopEditor';
+import { SelectionHandles } from './SelectionHandles';
 
 interface TabletopEditorProps {
   state: TabletopGameState;
@@ -46,6 +47,13 @@ export const TabletopEditor: React.FC<TabletopEditorProps> = ({ state, dispatch,
         <TabletopSurface state={state} dispatch={dispatch} isTvMode={isTvMode} />
       </Box>
       {editor.editMode && editor.selectedId && <style>{selectionCss(editor.selectedId)}</style>}
+      {editor.editMode && editor.selected && (
+        <SelectionHandles
+          key={editor.selected.id}
+          widget={editor.selected}
+          onCommit={(p) => editor.selectedId && editor.patch(editor.selectedId, p)}
+        />
+      )}
       <EditorToolbar
         editor={editor}
         onOpenTableSettings={() => setTableOpen(true)}
