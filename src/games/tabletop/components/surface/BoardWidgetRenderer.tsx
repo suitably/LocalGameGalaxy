@@ -34,7 +34,12 @@ export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
   dispatch,
 }) => {
   return (
-    <Box onContextMenu={onContextMenu} sx={{ display: 'contents' }}>
+    <Box
+      data-widget-id={w.id}
+      data-widget-wrapper
+      onContextMenu={onContextMenu}
+      sx={{ display: 'contents' }}
+    >
       {(() => {
         switch (w.type) {
           case 'card':
@@ -68,8 +73,18 @@ export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
             return (
               <CounterWidgetView
                 widget={w as CounterWidget}
-                onIncrement={() => dispatch({ type: 'UPDATE_COUNTER', payload: { counterId: w.id, delta: w.step || 1 } })}
-                onDecrement={() => dispatch({ type: 'UPDATE_COUNTER', payload: { counterId: w.id, delta: -(w.step || 1) } })}
+                onIncrement={() =>
+                  dispatch({
+                    type: 'UPDATE_COUNTER',
+                    payload: { counterId: w.id, delta: w.step || 1 },
+                  })
+                }
+                onDecrement={() =>
+                  dispatch({
+                    type: 'UPDATE_COUNTER',
+                    payload: { counterId: w.id, delta: -(w.step || 1) },
+                  })
+                }
               />
             );
           case 'die':

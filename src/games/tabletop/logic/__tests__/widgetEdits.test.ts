@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { tabletopReducer, type TabletopGameState } from '../tabletopReducer';
-import { cloneWidget } from '../widgetEdits';
+import { cloneWidget, parseWidgetPatch } from '../widgetEdits';
 import { EMPTY_HISTORY, recordChange, redoStep, undoStep } from '../editHistory';
 import type { DeckWidget, HolderWidget, TabletopWidget } from '../types';
 
@@ -128,5 +128,14 @@ describe('editHistory (#449)', () => {
     const h = undoStep(recordChange(EMPTY_HISTORY, a, b))!.history;
     expect(recordChange(h, a, c).future).toEqual([]);
     expect(recordChange(recordChange(EMPTY_HISTORY, a, b, 1), b, c, 1).past).toHaveLength(1);
+  });
+});
+
+describe('parseWidgetPatch (#449)', () => {
+  it('accepts JSON objects only', () => {
+    expect(parseWidgetPatch('{"x": 5}')).toEqual({ x: 5 });
+    expect(parseWidgetPatch('[1]')).toBeNull();
+    expect(parseWidgetPatch('nope')).toBeNull();
+    expect(parseWidgetPatch('null')).toBeNull();
   });
 });

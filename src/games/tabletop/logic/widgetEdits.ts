@@ -91,3 +91,14 @@ export function updateTable(
 ): TabletopGameDefinition {
   return { ...game, table: { ...game.table, ...changes } };
 }
+
+/** Parses editor JSON into a patch; `null` unless it is a JSON object. */
+export function parseWidgetPatch(text: string): WidgetPatch | null {
+  try {
+    const value: unknown = JSON.parse(text);
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+    return value as WidgetPatch;
+  } catch {
+    return null;
+  }
+}
