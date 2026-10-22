@@ -2,6 +2,7 @@
 
 ### Added
 
+- **Tabletop editor**: deck builder — create a card deck from a list of image URLs or a spritesheet (columns, rows, count) with optional back image and card size (`logic/deckBuilder.ts`, `ADD_WIDGETS`) (#449).
 - **Tabletop editor**: edit mode on the TV and in local play — add tokens, cards, card areas, player hands, counters and dice; select a widget on the table or from a list; edit position, size, layer, rotation, image, owner seat, pinned and type-specific fields; duplicate, delete, raw JSON; table size and background; undo/redo (also Ctrl+Z / Ctrl+Shift+Z) (#449).
 - **Tabletop**: editor building blocks — `PATCH_WIDGETS`, `ADD_WIDGET`, `DELETE_WIDGETS`, `UPDATE_TABLE` actions (`logic/widgetEdits.ts`) and undo/redo history on game deltas (`logic/editHistory.ts`, `APPLY_EDIT_DELTA`); `tabletopReducer.ts` split into deck, bag, piece, view and edit sub-reducers (945 → 364 lines) (#449).
 - **Tabletop**: running games are autosaved (host or local play) and resume after a reload; a restart button with confirmation starts the game from its definition again (`galaxy_tabletop_db` v3, store `sessions`) (#449).
@@ -11,6 +12,7 @@
 
 ### Changed
 
+- **Tabletop Workshop import**: errors are translated (de/en) and carry a code (`WorkshopError`); without the companion server the import now explains that Steam details need the server and points to uploading the mod `.json` instead of failing with an HTML parse error (#449).
 - **Tabletop TTS import**: `Bag` / `Infinite_Bag` become real bags (new `BagWidgetView`, tap to draw; finite bags keep their contents hidden, infinite bags clone their first object), `Custom_Tile` keeps its shape (box, hex, circle, rounded), `FogOfWarTrigger` becomes a hidden zone for its seat. Before, bags were imported as card decks and the bag logic was unused (#449).
 - **Tabletop sync**: moves, draws, rolls, counters and all other table actions from phones now reach the host and every device. Phones send their actions as intents; the host (TV) applies them and broadcasts only the changed widgets with a sequence number, and a device that misses an update fetches a fresh snapshot. Before, only "return to lobby" and card flicks were sent and devices drifted apart (#449).
 - **Self-hosting**: the compose generator in the server settings no longer emits the non-existent `tabletop-companion` and `galaxy-push-relay` images; it creates one companion container with `PLUGINS` for the selected games next to the signaling tracker. `server/docker-compose.yml` drops the commented tabletop container (#342).

@@ -11,6 +11,7 @@ import { TabletopSurface } from '../surface/TabletopSurface';
 import { EditorToolbar } from './EditorToolbar';
 import { WidgetInspector } from './WidgetInspector';
 import { TableSettingsDialog } from './TableSettingsDialog';
+import { DeckBuilderDialog } from './DeckBuilderDialog';
 import { useTabletopEditor } from './useTabletopEditor';
 
 interface TabletopEditorProps {
@@ -28,6 +29,7 @@ const selectionCss = (id: string) => {
 export const TabletopEditor: React.FC<TabletopEditorProps> = ({ state, dispatch, isTvMode }) => {
   const editor = useTabletopEditor(state, dispatch);
   const [tableOpen, setTableOpen] = useState(false);
+  const [deckOpen, setDeckOpen] = useState(false);
 
   return (
     <>
@@ -42,13 +44,25 @@ export const TabletopEditor: React.FC<TabletopEditorProps> = ({ state, dispatch,
         <TabletopSurface state={state} dispatch={dispatch} isTvMode={isTvMode} />
       </Box>
       {editor.editMode && editor.selectedId && <style>{selectionCss(editor.selectedId)}</style>}
-      <EditorToolbar editor={editor} onOpenTableSettings={() => setTableOpen(true)} />
+      <EditorToolbar
+        editor={editor}
+        onOpenTableSettings={() => setTableOpen(true)}
+        onOpenDeckBuilder={() => setDeckOpen(true)}
+      />
       {editor.editMode && <WidgetInspector game={state.game} editor={editor} />}
       <TableSettingsDialog
         open={tableOpen}
         table={state.game.table}
         onChange={editor.updateTable}
         onClose={() => setTableOpen(false)}
+      />
+      <DeckBuilderDialog
+        open={deckOpen}
+        onClose={() => setDeckOpen(false)}
+        onCreate={(draft) => {
+          editor.addDeck(draft);
+          setDeckOpen(false);
+        }}
       />
     </>
   );

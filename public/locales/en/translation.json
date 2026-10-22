@@ -832,7 +832,30 @@
         "kind_holder": "Card area",
         "kind_hand": "Player hand",
         "kind_counter": "Counter",
-        "kind_die": "Die"
+        "kind_die": "Die",
+        "kind_deck": "Card deck…",
+        "deck_title": "New card deck",
+        "deck_name": "Name",
+        "deck_from_list": "Image URLs",
+        "deck_from_sheet": "Spritesheet",
+        "deck_urls": "Card images",
+        "deck_urls_hint": "One image URL per line, one card each.",
+        "deck_sheet_url": "Spritesheet URL",
+        "deck_cols": "Columns",
+        "deck_rows": "Rows",
+        "deck_count": "Cards",
+        "deck_back": "Back image URL (optional)",
+        "deck_width": "Card width",
+        "deck_height": "Card height",
+        "deck_create": "Create deck ({{count}} cards)"
+      },
+      "workshop": {
+        "error_invalid_input": "Not a valid Steam Workshop URL or ID.",
+        "error_not_found": "Workshop mod not found or not public.",
+        "error_metadata_unavailable": "Steam details cannot be loaded without the companion server. Upload the mod file (.json) from Documents/My Games/Tabletop Simulator/Mods/Workshop instead, or connect the companion server.",
+        "error_http": "Steam or server error (HTTP {{status}}).",
+        "error_download_failed": "Download from Steam failed (HTTP {{status}}).",
+        "error_no_download_url": "This mod has no download URL on Steam."
       }
     }
   },

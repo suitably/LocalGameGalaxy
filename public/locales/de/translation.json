@@ -832,7 +832,30 @@
         "kind_holder": "Kartenablage",
         "kind_hand": "Spielerhand",
         "kind_counter": "Zähler",
-        "kind_die": "Würfel"
+        "kind_die": "Würfel",
+        "kind_deck": "Kartenstapel…",
+        "deck_title": "Neuer Kartenstapel",
+        "deck_name": "Name",
+        "deck_from_list": "Bild-URLs",
+        "deck_from_sheet": "Spritesheet",
+        "deck_urls": "Kartenbilder",
+        "deck_urls_hint": "Eine Bild-URL pro Zeile, je eine Karte.",
+        "deck_sheet_url": "Spritesheet-URL",
+        "deck_cols": "Spalten",
+        "deck_rows": "Zeilen",
+        "deck_count": "Karten",
+        "deck_back": "Rückseiten-URL (optional)",
+        "deck_width": "Kartenbreite",
+        "deck_height": "Kartenhöhe",
+        "deck_create": "Stapel erstellen ({{count}} Karten)"
+      },
+      "workshop": {
+        "error_invalid_input": "Keine gültige Steam-Workshop-URL oder -ID.",
+        "error_not_found": "Workshop-Mod nicht gefunden oder nicht öffentlich.",
+        "error_metadata_unavailable": "Ohne Companion-Server lassen sich die Steam-Daten nicht laden. Lade stattdessen die Mod-Datei (.json) aus Dokumente/My Games/Tabletop Simulator/Mods/Workshop hoch oder verbinde den Companion-Server.",
+        "error_http": "Fehler bei Steam oder dem Server (HTTP {{status}}).",
+        "error_download_failed": "Download von Steam fehlgeschlagen (HTTP {{status}}).",
+        "error_no_download_url": "Für diesen Mod gibt es bei Steam keine Download-URL."
       }
     }
   },

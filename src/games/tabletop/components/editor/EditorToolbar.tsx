@@ -16,9 +16,14 @@ import type { TabletopEditorApi } from './useTabletopEditor';
 interface EditorToolbarProps {
   editor: TabletopEditorApi;
   onOpenTableSettings: () => void;
+  onOpenDeckBuilder: () => void;
 }
 
-export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, onOpenTableSettings }) => {
+export const EditorToolbar: React.FC<EditorToolbarProps> = ({
+  editor,
+  onOpenTableSettings,
+  onOpenDeckBuilder,
+}) => {
   const { t } = useTranslation();
   const [addAnchor, setAddAnchor] = useState<HTMLElement | null>(null);
 
@@ -85,6 +90,14 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, onOpenTabl
             {t(`games.tabletop.editor.kind_${kind}`)}
           </MenuItem>
         ))}
+        <MenuItem
+          onClick={() => {
+            onOpenDeckBuilder();
+            setAddAnchor(null);
+          }}
+        >
+          {t('games.tabletop.editor.kind_deck')}
+        </MenuItem>
       </Menu>
     </Paper>
   );

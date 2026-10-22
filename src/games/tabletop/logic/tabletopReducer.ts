@@ -66,6 +66,7 @@ export type TabletopAction =
   | { type: 'APPLY_EDIT_DELTA'; payload: GameDelta }
   | { type: 'PATCH_WIDGETS'; payload: { patches: Record<string, WidgetPatch> } }
   | { type: 'ADD_WIDGET'; payload: { widget: TabletopWidget } }
+  | { type: 'ADD_WIDGETS'; payload: { widgets: TabletopWidget[] } }
   | { type: 'DELETE_WIDGETS'; payload: { ids: string[] } }
   | { type: 'UPDATE_TABLE'; payload: { changes: Partial<TabletopTableConfig> } }
   | { type: 'RETURN_CARD_TO_DECK'; payload: { cardId: string; deckId: string } }
@@ -401,6 +402,7 @@ export function tabletopReducer(
 
     case 'PATCH_WIDGETS':
     case 'ADD_WIDGET':
+    case 'ADD_WIDGETS':
     case 'DELETE_WIDGETS':
     case 'UPDATE_TABLE':
       return editReducer(state, action);

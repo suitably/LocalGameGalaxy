@@ -34,13 +34,17 @@ export function patchWidgets(
   return changed ? { ...game, widgets } : game;
 }
 
-/** Adds a widget; an existing id is left as it is. */
-export function addWidget(
+/** Adds widgets; ids that already exist are left as they are. */
+export function addWidgets(
   game: TabletopGameDefinition,
-  widget: TabletopWidget,
+  added: TabletopWidget[],
 ): TabletopGameDefinition {
-  if (game.widgets[widget.id]) return game;
-  return { ...game, widgets: { ...game.widgets, [widget.id]: widget } };
+  const fresh = added.filter((w) => !game.widgets[w.id]);
+  if (fresh.length === 0) return game;
+  return {
+    ...game,
+    widgets: { ...game.widgets, ...Object.fromEntries(fresh.map((w) => [w.id, w])) },
+  };
 }
 
 /** Deleting a deck also deletes its cards; deleted widgets leave their holders and decks. */
