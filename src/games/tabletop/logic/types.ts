@@ -49,6 +49,17 @@ export interface GridSnapDef {
   maxY?: number;
 }
 
+/** Look of one alternative state (TTS `States`); switched with `NEXT_STATE`. */
+export interface WidgetStateFace {
+  label?: string;
+  image?: string;
+  color?: string;
+  width?: number;
+  height?: number;
+  clipPath?: string;
+  frontContent?: CardContent;
+}
+
 export interface BaseWidget {
   id: string;
   type: WidgetType;
@@ -66,6 +77,9 @@ export interface BaseWidget {
   image?: string;
   parent?: string;
   supplyHolderId?: string;
+  /** Alternative looks; index 0 is the imported state. */
+  states?: WidgetStateFace[];
+  stateIndex?: number;
   display?: boolean;
   movable?: boolean;
   grid?: GridSnapDef[];

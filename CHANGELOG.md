@@ -2,6 +2,7 @@
 
 ### Added
 
+- **Tabletop TTS import**: object `States` become switchable looks (`states`, `NEXT_STATE`); double-click a token or use the inspector button to switch (#449).
 - **Tabletop editor**: upload images for widgets and the table background; they are scaled to 512 px and stored in the game as WebP data URLs, no server needed (#449).
 - **Tabletop editor**: resize and rotate handles on the selected widget (Shift keeps proportions, rotation snaps to 15°, Alt rotates freely); one undo step per drag (#449).
 - **Tabletop**: new widget types — text label, timer (countdown or stopwatch, start/pause/reset) and spinner wheel (result decided by the host); addable and editable in the editor; new widgets are placed slightly offset so they do not stack (#449).

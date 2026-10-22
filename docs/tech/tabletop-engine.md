@@ -27,15 +27,15 @@ Roadmap and comparison with VirtualTabletop: [2026-10-21 plan](../reports/2026-1
 
 `logic/tabletopReducer.ts` holds the action union (`TabletopAction`) and the table actions (move, flip, rotate, snap to holder, counters, dice, animation, seats). Groups live in `logic/reducers/`:
 
-| File                  | Actions                                                                        |
-| --------------------- | ------------------------------------------------------------------------------ |
-| `deckReducer.ts`      | `SHUFFLE_DECK`, `DRAW_CARD`, `RETURN_CARD_TO_DECK`                             |
-| `bagReducer.ts`       | `DRAW_FROM_BAG`                                                                |
-| `pieceReducer.ts`     | `TAKE_PIECE_FROM_SUPPLY`, `PLAY_CARD_FROM_HAND`                                |
-| `viewReducer.ts`      | `SCALE_WIDGETS`, `RESET_WIDGET_SCALE`, `SET_WIDGET_SHOW_ALWAYS`, hidden zones  |
-| `tableToolReducer.ts` | `TOGGLE_TIMER`, `RESET_TIMER`, `SPIN_SPINNER` (rules in `logic/tableTools.ts`) |
-| `editReducer.ts`      | `PATCH_WIDGETS`, `ADD_WIDGET`, `DELETE_WIDGETS`, `UPDATE_TABLE`                |
-| `holderMembership.ts` | helper `removeFromHolderAndUpdateHand`                                         |
+| File                  | Actions                                                                                      |
+| --------------------- | -------------------------------------------------------------------------------------------- |
+| `deckReducer.ts`      | `SHUFFLE_DECK`, `DRAW_CARD`, `RETURN_CARD_TO_DECK`                                           |
+| `bagReducer.ts`       | `DRAW_FROM_BAG`                                                                              |
+| `pieceReducer.ts`     | `TAKE_PIECE_FROM_SUPPLY`, `PLAY_CARD_FROM_HAND`                                              |
+| `viewReducer.ts`      | `SCALE_WIDGETS`, `RESET_WIDGET_SCALE`, `SET_WIDGET_SHOW_ALWAYS`, hidden zones                |
+| `tableToolReducer.ts` | `TOGGLE_TIMER`, `RESET_TIMER`, `SPIN_SPINNER`, `NEXT_STATE` (rules in `logic/tableTools.ts`) |
+| `editReducer.ts`      | `PATCH_WIDGETS`, `ADD_WIDGET`, `DELETE_WIDGETS`, `UPDATE_TABLE`                              |
+| `holderMembership.ts` | helper `removeFromHolderAndUpdateHand`                                                       |
 
 Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`.
 

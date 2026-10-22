@@ -71,6 +71,7 @@ export type TabletopAction =
   | { type: 'TOGGLE_TIMER'; payload: { timerId: string; now: number } }
   | { type: 'RESET_TIMER'; payload: { timerId: string } }
   | { type: 'SPIN_SPINNER'; payload: { spinnerId: string; index?: number } }
+  | { type: 'NEXT_STATE'; payload: { widgetId: string } }
   | { type: 'DELETE_WIDGETS'; payload: { ids: string[] } }
   | { type: 'UPDATE_TABLE'; payload: { changes: Partial<TabletopTableConfig> } }
   | { type: 'RETURN_CARD_TO_DECK'; payload: { cardId: string; deckId: string } }
@@ -414,6 +415,7 @@ export function tabletopReducer(
     case 'TOGGLE_TIMER':
     case 'RESET_TIMER':
     case 'SPIN_SPINNER':
+    case 'NEXT_STATE':
       return tableToolReducer(state, action);
 
     default:

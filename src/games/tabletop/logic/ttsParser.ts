@@ -4,7 +4,7 @@
  * Converts TTS save file JSON (3D ObjectStates) into the Galaxy
  * TabletopGameDefinition (2D widget-based) format.
  */
-import { convertBag, convertFogOfWar, tileShape } from './ttsContainers';
+import { attachStates, convertBag, convertFogOfWar, tileShape } from './ttsContainers';
 import type {
   TTSSaveFile,
   TTSObjectState,
@@ -679,6 +679,15 @@ export function parseTtsSaveFile(
     // Default fallback: generic token for any unrecognized object
     if (!name.startsWith('Notecard') && !name.startsWith('Tablet')) {
       widgets[obj.GUID] = convertToken(obj, pos);
+    }
+  }
+
+  // TTS States → switchable looks on the converted widget
+  for (const obj of save.ObjectStates) {
+    const w = widgets[obj.GUID];
+    if (w && obj.States) {
+      const pos = projectPosition(obj, bounds, margin);
+      widgets[obj.GUID] = attachStates(w, obj, (state) => convertChild(state, pos));
     }
   }
 

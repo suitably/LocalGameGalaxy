@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parseTtsSaveFile } from '../ttsParser';
 import { tileShape } from '../ttsContainers';
-import { tabletopReducer } from '../tabletopReducer';
+import { tabletopReducer, type TabletopGameState } from '../tabletopReducer';
 import { HEX_CLIP_PATH, type BagWidget, type TokenWidget } from '../types';
 import type { TTSObjectState, TTSSaveFile } from '../ttsTypes';
 
@@ -83,5 +83,44 @@ describe('TTS bags, tiles and fog (#449)', () => {
     const zone = game.hiddenZones?.fog_fog1;
     expect(zone).toBeDefined();
     expect(typeof zone?.ownerSeat).toBe('number');
+  });
+});
+
+describe('TTS States (#449)', () => {
+  it('imports States as switchable looks and NEXT_STATE cycles through them', () => {
+    const img = (url: string) => ({ CustomImage: { ImageURL: url } });
+    const game = parseTtsSaveFile(
+      save([
+        obj('s1', 'Custom_Token', {
+          Nickname: 'Front',
+          ...img('https://a/1.png'),
+          States: {
+            '3': obj('x3', 'Custom_Token', { Nickname: 'Three', ...img('https://a/3.png') }),
+            '2': obj('x2', 'Custom_Token', { Nickname: 'Two', ...img('https://a/2.png') }),
+          },
+        }),
+      ]),
+    );
+    const w = game.widgets.s1;
+    expect(w.states?.map((s) => s.label)).toEqual(['Front', 'Two', 'Three']);
+    expect(w.stateIndex).toBe(0);
+
+    let state: TabletopGameState = { game, flyingCards: [] };
+    state = tabletopReducer(state, { type: 'NEXT_STATE', payload: { widgetId: 's1' } });
+    expect(state.game.widgets.s1).toMatchObject({
+      label: 'Two',
+      image: 'https://a/2.png',
+      stateIndex: 1,
+      id: 's1',
+    });
+    state = tabletopReducer(state, { type: 'NEXT_STATE', payload: { widgetId: 's1' } });
+    state = tabletopReducer(state, { type: 'NEXT_STATE', payload: { widgetId: 's1' } });
+    expect(state.game.widgets.s1).toMatchObject({ label: 'Front', stateIndex: 0 });
+  });
+
+  it('NEXT_STATE leaves widgets without states unchanged', () => {
+    const game = parseTtsSaveFile(save([obj('t', 'Custom_Token')]));
+    const s: TabletopGameState = { game, flyingCards: [] };
+    expect(tabletopReducer(s, { type: 'NEXT_STATE', payload: { widgetId: 't' } })).toBe(s);
   });
 });

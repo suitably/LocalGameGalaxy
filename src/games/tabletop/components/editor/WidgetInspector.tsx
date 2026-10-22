@@ -16,6 +16,7 @@ import {
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DataObjectIcon from '@mui/icons-material/DataObject';
+import LayersIcon from '@mui/icons-material/Layers';
 import { useTranslation } from 'react-i18next';
 import type { TabletopGameDefinition } from '../../logic/types';
 import { InspectorFields } from './InspectorFields';
@@ -91,6 +92,14 @@ export const WidgetInspector: React.FC<WidgetInspectorProps> = ({ game, editor }
             >
               {t('games.tabletop.editor.delete')}
             </Button>
+            {(selected.states?.length ?? 0) > 1 && (
+              <Button size="small" startIcon={<LayersIcon />} onClick={editor.nextStateSelected}>
+                {t('games.tabletop.editor.next_state', {
+                  current: (selected.stateIndex ?? 0) + 1,
+                  total: selected.states?.length,
+                })}
+              </Button>
+            )}
             <Button
               size="small"
               startIcon={<DataObjectIcon />}

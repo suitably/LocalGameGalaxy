@@ -857,7 +857,8 @@
         "duration_hint": "0 = stopwatch",
         "options": "Options",
         "options_hint": "Separated by commas",
-        "upload_image": "Upload image (scaled to 512 px)"
+        "upload_image": "Upload image (scaled to 512 px)",
+        "next_state": "State {{current}}/{{total}} → next"
       },
       "workshop": {
         "error_invalid_input": "Not a valid Steam Workshop URL or ID.",

@@ -7,11 +7,13 @@ interface TokenWidgetViewProps {
   widget: TokenWidget;
   isDragging?: boolean;
   onPointerDown?: (e: React.PointerEvent) => void;
+  onDoubleClick?: () => void;
 }
 
 export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
   widget,
   isDragging,
+  onDoubleClick,
   onPointerDown,
 }) => {
   const isCircle = widget.shape === 'circle' || !widget.shape;
@@ -49,6 +51,7 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
     return (
       <Box
         onPointerDown={onPointerDown}
+        onDoubleClick={onDoubleClick}
         sx={{
           position: 'absolute',
           left: widget.x,
@@ -99,6 +102,7 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
     return (
       <Box
         onPointerDown={onPointerDown}
+        onDoubleClick={onDoubleClick}
         sx={{
           position: 'absolute',
           left: widget.x,
@@ -153,6 +157,7 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
   return (
     <Box
       onPointerDown={onPointerDown}
+      onDoubleClick={onDoubleClick}
       sx={{
         position: 'absolute',
         left: widget.x,

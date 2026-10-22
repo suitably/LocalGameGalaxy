@@ -75,6 +75,7 @@ export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
                 widget={w as TokenWidget}
                 isDragging={isDragging}
                 onPointerDown={onPointerDown}
+                onDoubleClick={() => dispatch({ type: 'NEXT_STATE', payload: { widgetId: w.id } })}
               />
             );
           case 'counter':

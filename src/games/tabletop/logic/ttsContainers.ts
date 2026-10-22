@@ -12,6 +12,7 @@ import {
   type TokenWidget,
 } from './types';
 import type { TTSObjectState } from './ttsTypes';
+import { stateFaceOf } from './tableTools';
 
 type Pos = { x: number; y: number; zIndex: number };
 
@@ -107,4 +108,20 @@ export function convertFogOfWar(
     ownerSeat,
     label: obj.Nickname || undefined,
   };
+}
+
+/**
+ * Adds TTS `States` to an imported widget: the current look first, then the other states in
+ * state-number order. Each state is converted like a top-level object and reduced to its look.
+ */
+export function attachStates(
+  widget: TabletopWidget,
+  obj: TTSObjectState,
+  convertState: (state: TTSObjectState) => TabletopWidget,
+): TabletopWidget {
+  const others = Object.entries(obj.States ?? {})
+    .sort(([a], [b]) => Number(a) - Number(b))
+    .map(([, state]) => stateFaceOf(convertState(state)));
+  if (others.length === 0) return widget;
+  return { ...widget, states: [stateFaceOf(widget), ...others], stateIndex: 0 };
 }
