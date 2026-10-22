@@ -20,7 +20,10 @@ export const createPlayerAssignment = (storagePrefix: string) => {
 
     removeLocalPlayerId(gameId: string, playerId: string): void {
       const current = this.getLocalPlayerIds(gameId);
-      this.setLocalPlayerIds(gameId, current.filter((id) => id !== playerId));
+      this.setLocalPlayerIds(
+        gameId,
+        current.filter((id) => id !== playerId),
+      );
     },
 
     isPlayerLocal(gameId: string, playerId: string, fallbackAllLocal = false): boolean {
@@ -105,7 +108,8 @@ export const hasPlayerChannelUpdates = (
     return (
       (incomingP.ntfyTopic && incomingP.ntfyTopic !== existingP.ntfyTopic) ||
       (incomingP.relayUrl && incomingP.relayUrl !== existingP.relayUrl) ||
-      (incomingP.notificationMethod && incomingP.notificationMethod !== existingP.notificationMethod)
+      (incomingP.notificationMethod &&
+        incomingP.notificationMethod !== existingP.notificationMethod)
     );
   });
 };

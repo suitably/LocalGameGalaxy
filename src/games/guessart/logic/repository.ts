@@ -157,20 +157,25 @@ export const getRoundByNumber = async (
   roundNumber: number,
 ): Promise<GuessArtRound | null> => {
   const compositeKey = [gameId, roundNumber];
-  const round = await withStore(STORE_ROUNDS, 'readonly', (store) =>
-    new Promise<GuessArtRound | null>((resolve, reject) => {
-      const index = store.index('byRoundNumber');
-      const request = index.get(compositeKey);
-      request.onerror = () => reject(request.error || new Error('IndexedDB get round failed'));
-      request.onsuccess = () => resolve((request.result as GuessArtRound) ?? null);
-    }),
+  const round = await withStore(
+    STORE_ROUNDS,
+    'readonly',
+    (store) =>
+      new Promise<GuessArtRound | null>((resolve, reject) => {
+        const index = store.index('byRoundNumber');
+        const request = index.get(compositeKey);
+        request.onerror = () => reject(request.error || new Error('IndexedDB get round failed'));
+        request.onsuccess = () => resolve((request.result as GuessArtRound) ?? null);
+      }),
   );
   if (round) {
     return round;
   }
   // Robust fallback for cross-browser index key handling:
   const allRounds = await fetchRoundsForGame(gameId);
-  return allRounds.find((r) => r.roundNumber === roundNumber) || allRounds[allRounds.length - 1] || null;
+  return (
+    allRounds.find((r) => r.roundNumber === roundNumber) || allRounds[allRounds.length - 1] || null
+  );
 };
 
 export const upsertRound = async (round: GuessArtRound): Promise<GuessArtRound> => {

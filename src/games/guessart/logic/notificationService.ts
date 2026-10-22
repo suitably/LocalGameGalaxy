@@ -1,6 +1,9 @@
 import { playerAssignment } from './playerAssignment';
 import { getTurnPlayers } from './turnUtils';
-import { buildTurnNotificationMessage, localNotificationPresenter } from '../../../lib/notifications';
+import {
+  buildTurnNotificationMessage,
+  localNotificationPresenter,
+} from '../../../lib/notifications';
 import type { GuessArtGameRecord, GuessArtRound } from './types';
 
 export interface ShouldNotifyParams {
@@ -73,7 +76,9 @@ class GuessArtNotificationService {
       isRemoteEvent,
       isInitialGameStart = false,
       activeGameScreenId = null,
-      isDocumentVisible = typeof document !== 'undefined' ? document.visibilityState === 'visible' : true,
+      isDocumentVisible = typeof document !== 'undefined'
+        ? document.visibilityState === 'visible'
+        : true,
     } = params;
 
     if (!game || !round) {
@@ -106,7 +111,11 @@ class GuessArtNotificationService {
     const { drawer: activeDrawerObj, guesser: activeGuesserObj } = getTurnPlayers(game, round);
 
     const activePlayer = isSelecting ? activeDrawerObj : isGuessing ? activeGuesserObj : null;
-    const actionType: 'draw' | 'guess' | undefined = isSelecting ? 'draw' : isGuessing ? 'guess' : undefined;
+    const actionType: 'draw' | 'guess' | undefined = isSelecting
+      ? 'draw'
+      : isGuessing
+        ? 'guess'
+        : undefined;
 
     if (!activePlayer || !actionType) {
       return { shouldNotify: false, reason: 'no_active_player' };
@@ -119,7 +128,10 @@ class GuessArtNotificationService {
 
     // If the turn or round was played under a temporary claim ("lass mich hier spielen"),
     // no notifications should be sent to anyone:
-    if (round.temporaryClaim || playerAssignment.isTurnClaimedTemporarily(game.id, activePlayer.id)) {
+    if (
+      round.temporaryClaim ||
+      playerAssignment.isTurnClaimedTemporarily(game.id, activePlayer.id)
+    ) {
       return { shouldNotify: false, reason: 'turn_claimed_temporarily' };
     }
 
@@ -130,7 +142,9 @@ class GuessArtNotificationService {
     }
 
     // If ALL players in the game are local (pass & play on same device), do not send notifications
-    const allPlayersLocal = game.players.length > 0 && game.players.every((p) => playerAssignment.isPlayerLocal(game.id, p.id, false));
+    const allPlayersLocal =
+      game.players.length > 0 &&
+      game.players.every((p) => playerAssignment.isPlayerLocal(game.id, p.id, false));
     if (allPlayersLocal) {
       return { shouldNotify: false, reason: 'all_players_local_pass_and_play' };
     }
@@ -148,8 +162,12 @@ class GuessArtNotificationService {
 
     const actorName =
       actionType === 'guess'
-        ? (round.drawnById ? game.players.find((p) => p.id === round.drawnById)?.name : activeDrawerObj?.name)
-        : (round.guesserId ? game.players.find((p) => p.id === round.guesserId)?.name : undefined);
+        ? round.drawnById
+          ? game.players.find((p) => p.id === round.drawnById)?.name
+          : activeDrawerObj?.name
+        : round.guesserId
+          ? game.players.find((p) => p.id === round.guesserId)?.name
+          : undefined;
 
     return {
       shouldNotify: true,

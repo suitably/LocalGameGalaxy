@@ -97,12 +97,16 @@ export const GuessArtGame: React.FC = () => {
             : p,
         );
         imported.game.players = updatedPlayers;
-        await LocalGameEngine.updateGameDetails(imported.game.id, { players: updatedPlayers }).catch(() => {});
-        // Broadcast updated player presence (including ntfyTopic & relayUrl) via MQTT mailbox
-        guessArtMailbox.publish(imported.game.id, {
-          game: { ...imported.game, players: updatedPlayers },
-          round: imported.round,
+        await LocalGameEngine.updateGameDetails(imported.game.id, {
+          players: updatedPlayers,
         }).catch(() => {});
+        // Broadcast updated player presence (including ntfyTopic & relayUrl) via MQTT mailbox
+        guessArtMailbox
+          .publish(imported.game.id, {
+            game: { ...imported.game, players: updatedPlayers },
+            round: imported.round,
+          })
+          .catch(() => {});
       }
       if (relayParam) {
         gameRelayStorage.setGameRelay(imported.game.id, relayParam);
@@ -146,12 +150,19 @@ export const GuessArtGame: React.FC = () => {
 
   useWakeLock(Boolean(activeGameId));
 
-  const handleStartGame = async (options: { name?: string; language: string; manualWordMode: boolean }) => {
+  const handleStartGame = async (options: {
+    name?: string;
+    language: string;
+    manualWordMode: boolean;
+  }) => {
     const record = await createGame(options);
     setActiveGameId(record.id);
   };
 
-  const handleSaveGameDetails = async (payload: { name?: string; players?: { id: string; name: string }[] }) => {
+  const handleSaveGameDetails = async (payload: {
+    name?: string;
+    players?: { id: string; name: string }[];
+  }) => {
     if (activeGameId) {
       await updateGameDetailsActive(payload);
     } else if (editGameRecord) {
@@ -209,7 +220,9 @@ export const GuessArtGame: React.FC = () => {
     const currentRoundNum = round?.roundNumber || 1;
     const currentWord = round?.word || guess;
     const originalWord =
-      (round?.translations && round?.wordLanguageCode && round.translations[round.wordLanguageCode]?.canonical) ||
+      (round?.translations &&
+        round?.wordLanguageCode &&
+        round.translations[round.wordLanguageCode]?.canonical) ||
       round?.word;
     const originalLang = round?.wordLanguageCode;
     const currentGuessesCount = (round?.guesses.length || 0) + 1;
@@ -219,7 +232,9 @@ export const GuessArtGame: React.FC = () => {
     const currentGuesserName =
       game && round
         ? round.guesserName ||
-          game.players[(game.players.findIndex((p) => p.id === round.drawnById) + 1) % game.players.length]?.name
+          game.players[
+            (game.players.findIndex((p) => p.id === round.drawnById) + 1) % game.players.length
+          ]?.name
         : undefined;
 
     const result = await submitGuess(guess);
@@ -242,7 +257,8 @@ export const GuessArtGame: React.FC = () => {
     await refresh();
   };
 
-  const historyPlayers = game?.players || activeGames.find((g) => g.id === historyGameId)?.players || [];
+  const historyPlayers =
+    game?.players || activeGames.find((g) => g.id === historyGameId)?.players || [];
 
   // Determine if current device draws or guesses in this round
   const { drawer: activeDrawer, guesser: activeGuesser } = getTurnPlayers(game, round);
@@ -268,8 +284,10 @@ export const GuessArtGame: React.FC = () => {
   const isDrawing = round?.status === 'selecting' || round?.status === 'drawing';
   const isCurrentTurnLocal = isDrawing ? isCurrentDrawerLocal : isCurrentGuesserLocal;
   const activeTurnPlayerId = isDrawing
-    ? (round?.drawnById || (game && activeDrawer ? activeDrawer.id : null))
-    : (game && activeGuesser ? activeGuesser.id : null);
+    ? round?.drawnById || (game && activeDrawer ? activeDrawer.id : null)
+    : game && activeGuesser
+      ? activeGuesser.id
+      : null;
 
   const isHost = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-expressions
@@ -333,10 +351,16 @@ export const GuessArtGame: React.FC = () => {
           game={editGameRecord}
           isHost={
             editGameRecord && editGameRecord.players[0]
-              ? playerAssignment.isPlayerLocal(editGameRecord.id, editGameRecord.players[0].id, false)
+              ? playerAssignment.isPlayerLocal(
+                  editGameRecord.id,
+                  editGameRecord.players[0].id,
+                  false,
+                )
               : true
           }
-          localPlayerIds={editGameRecord ? playerAssignment.getLocalPlayerIds(editGameRecord.id) : []}
+          localPlayerIds={
+            editGameRecord ? playerAssignment.getLocalPlayerIds(editGameRecord.id) : []
+          }
           onSave={handleSaveGameDetails}
         />
         <RoundHistoryDialog
@@ -361,7 +385,15 @@ export const GuessArtGame: React.FC = () => {
 
   // Active Game Session View
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', overflow: 'hidden' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        overflow: 'hidden',
+      }}
+    >
       {round && (
         <GuessArtHeader
           game={game}
@@ -373,16 +405,29 @@ export const GuessArtGame: React.FC = () => {
           isCurrentTurnLocal={isCurrentTurnLocal}
           canToggleLocalRemote={isHost}
           onToggleLocalRemote={handleToggleLocalRemote}
-          isTemporaryTurn={activeTurnPlayerId ? playerAssignment.isTurnClaimedTemporarily(game.id, activeTurnPlayerId) : false}
+          isTemporaryTurn={
+            activeTurnPlayerId
+              ? playerAssignment.isTurnClaimedTemporarily(game.id, activeTurnPlayerId)
+              : false
+          }
         />
       )}
 
-      <Box sx={{ flexGrow: 1, minHeight: 0, display: 'flex', flexDirection: 'column', p: { xs: 0.5, sm: 1.5 } }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          p: { xs: 0.5, sm: 1.5 },
+        }}
+      >
         {gameLoading && !round ? (
           <Box display="flex" justifyContent="center" alignItems="center" height="100%">
             <CircularProgress />
           </Box>
-        ) : (round?.status === 'selecting' || round?.status === 'drawing') && !isCurrentDrawerLocal ? (
+        ) : (round?.status === 'selecting' || round?.status === 'drawing') &&
+          !isCurrentDrawerLocal ? (
           <WaitingForDrawerView
             game={game}
             round={round}

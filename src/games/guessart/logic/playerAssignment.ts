@@ -45,7 +45,10 @@ export const playerAssignment = {
     if (playerId) {
       if (temps.includes(playerId)) {
         this.removeLocalPlayerId(gameId, playerId);
-        storage.setJson(`${TEMP_STORAGE_PREFIX}${gameId}`, temps.filter((id) => id !== playerId));
+        storage.setJson(
+          `${TEMP_STORAGE_PREFIX}${gameId}`,
+          temps.filter((id) => id !== playerId),
+        );
         pushClient.unsubscribeFromGamePush(gameId, playerId).catch(() => {});
       }
     } else {

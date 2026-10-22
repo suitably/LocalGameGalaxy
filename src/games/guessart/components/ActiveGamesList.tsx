@@ -71,11 +71,13 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
         const dateStr = new Date(game.updatedAt).toLocaleDateString();
         const isDrawing = game.status === 'drawing' || game.status === 'selecting';
 
-        const drawerIdx = game.status === 'guessing'
-          ? (game.currentPlayerIndex - 1 + game.players.length) % (game.players.length || 1)
-          : game.currentPlayerIndex % (game.players.length || 1);
+        const drawerIdx =
+          game.status === 'guessing'
+            ? (game.currentPlayerIndex - 1 + game.players.length) % (game.players.length || 1)
+            : game.currentPlayerIndex % (game.players.length || 1);
         const drawerName = game.players[drawerIdx]?.name || 'Spieler 1';
-        const guesserName = game.players[(drawerIdx + 1) % (game.players.length || 1)]?.name || 'Spieler 2';
+        const guesserName =
+          game.players[(drawerIdx + 1) % (game.players.length || 1)]?.name || 'Spieler 2';
         const isGameHost = game.players[0]
           ? playerAssignment.isPlayerLocal(game.id, game.players[0].id, false)
           : false;
@@ -95,13 +97,22 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
                 onClick={() => onResumeGame(game.id)}
                 sx={{ flexGrow: 1, p: 0.5, borderRadius: 1 }}
               >
-                <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={0.5}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  flexWrap="wrap"
+                  gap={0.5}
+                >
                   <Box display="flex" alignItems="center" gap={1}>
                     <Typography variant="subtitle1" fontWeight={700}>
                       {drawerName} vs. {guesserName}
                     </Typography>
                     <Chip
-                      label={t('guessart.roundHeader', { round: game.roundNumber, defaultValue: `Runde ${game.roundNumber}` })}
+                      label={t('guessart.roundHeader', {
+                        round: game.roundNumber,
+                        defaultValue: `Runde ${game.roundNumber}`,
+                      })}
                       size="small"
                       variant="outlined"
                       sx={{ fontSize: '0.75rem', height: 20 }}
@@ -116,8 +127,18 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
                     )}
                   </Box>
                   <Chip
-                    icon={isDrawing ? <BrushRoundedIcon sx={{ fontSize: '0.9rem !important' }} /> : <PsychologyRoundedIcon sx={{ fontSize: '0.9rem !important' }} />}
-                    label={isDrawing ? t('guessart.statusDrawing', 'Zeichnen') : t('guessart.statusGuessing', 'Raten')}
+                    icon={
+                      isDrawing ? (
+                        <BrushRoundedIcon sx={{ fontSize: '0.9rem !important' }} />
+                      ) : (
+                        <PsychologyRoundedIcon sx={{ fontSize: '0.9rem !important' }} />
+                      )
+                    }
+                    label={
+                      isDrawing
+                        ? t('guessart.statusDrawing', 'Zeichnen')
+                        : t('guessart.statusGuessing', 'Raten')
+                    }
                     size="small"
                     color={isDrawing ? 'primary' : 'secondary'}
                     sx={{ fontWeight: 700, fontSize: '0.75rem' }}
@@ -133,7 +154,9 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
 
               <Box display="flex" alignItems="center" gap={0.5} ml={1}>
                 {isGameHost && (
-                  <Tooltip title={t('guessart.sharePlayerLinks', 'Mitspieler-Links teilen (Async)')}>
+                  <Tooltip
+                    title={t('guessart.sharePlayerLinks', 'Mitspieler-Links teilen (Async)')}
+                  >
                     <IconButton
                       color="default"
                       size="small"
