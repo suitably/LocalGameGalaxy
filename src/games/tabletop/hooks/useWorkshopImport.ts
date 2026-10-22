@@ -16,7 +16,6 @@ import {
 } from '../logic/steamWorkshopApi';
 import type { WorkshopItemDetails } from '../logic/steamWorkshopApi';
 import type { TabletopGameDefinition } from '../logic/types';
-import type { TTSSaveFile } from '../logic/ttsTypes';
 
 export type WorkshopImportStatus =
   'idle' | 'loading_meta' | 'meta_loaded' | 'downloading' | 'parsing' | 'success' | 'error';
@@ -122,7 +121,7 @@ export function useWorkshopImport() {
         setState((s) => ({ ...s, status: 'downloading' }));
         const decoded = await downloadWorkshopModDirect(state.meta.fileUrl);
         setState((s) => ({ ...s, status: 'parsing' }));
-        game = parseTtsSaveFile(decoded as TTSSaveFile, { defaultName: state.meta.title });
+        game = parseTtsSaveFile(decoded, { defaultName: state.meta.title });
       }
 
       if (!game) {

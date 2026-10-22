@@ -63,6 +63,7 @@
 
 ### Fixed
 
+- **Tabletop Workshop import**: without the companion server, a failing Steam lookup now always shows the "upload the .json or connect the companion server" hint (also when the host answers 405/501 or the request fails), the download uses HTTPS, and a blocked download or a file that is not a TTS save get their own translated messages instead of "Failed to fetch" or a raw TypeError.
 - **GuessArt**: opening a shared player link now opens the game on the phone instead of the lobby, and no longer hangs when the MQTT broker is unreachable.
 - **Companion server**: environment overrides (`SECURITY_TOKEN`/`TOKEN`, `PORT`, `MUSIC_DIR`, `DIRECTORIES`, `TABLETOP_DIR`, auto-discovered `/app/music`) were written into `config.json` whenever a setting changed, so removing the env var left the old token, port and directories active. They now apply at runtime only; identical leftovers are removed from `config.json` at start (#409).
 - **Darts**: Hardened `useDartsGame` persistence against corrupted JSON storage values by using `storage.getJson` with safe structure validation and fallbacks to prevent UI crashes on mount (Fixes #386).

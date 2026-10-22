@@ -5,6 +5,8 @@
  * from the Steam Web API and downloading mods directly or via companion server.
  */
 import { BSON } from 'bson';
+import { isTtsSaveFile, sanitizeTtsUrl } from './ttsParser';
+import type { TTSSaveFile } from './ttsTypes';
 
 export type WorkshopErrorCode =
   | 'invalid_input'
@@ -12,6 +14,8 @@ export type WorkshopErrorCode =
   | 'metadata_unavailable'
   | 'http'
   | 'download_failed'
+  | 'download_blocked'
+  | 'invalid_file'
   | 'no_download_url';
 
 /** Import failure with a code the UI translates (`games.tabletop.workshop.error_<code>`). */
@@ -86,6 +90,9 @@ export function isValidWorkshopInput(input: string): boolean {
   return extractWorkshopId(input) !== null;
 }
 
+/** Statuses a static host returns when the `/api/steam` dev proxy does not exist. */
+const NO_PROXY_STATUSES = new Set([404, 405, 501]);
+
 /**
  * Direct call via Vite dev proxy or local proxy endpoint.
  */
@@ -94,16 +101,24 @@ async function querySteamDirect(workshopId: string): Promise<WorkshopItemDetails
   form.append('itemcount', '1');
   form.append('publishedfileids[0]', workshopId);
 
-  const res = await fetch('/api/steam/ISteamRemoteStorage/GetPublishedFileDetails/v1/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: form.toString(),
-  });
+  let res: Response;
+  try {
+    res = await fetch('/api/steam/ISteamRemoteStorage/GetPublishedFileDetails/v1/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: form.toString(),
+    });
+  } catch {
+    // Network error: no proxy reachable (offline, Capacitor app, blocked request).
+    throw new WorkshopError('metadata_unavailable');
+  }
 
-  // The `/api/steam` proxy only exists in the dev server; a static build answers with HTML.
-  if (res.status === 404) throw new WorkshopError('metadata_unavailable');
+  // The `/api/steam` proxy only exists in the dev server. A static host answers 404, an SPA
+  // fallback with HTML, and hosts that serve files only (Cloudflare assets, GitHub Pages)
+  // refuse the POST with 405 or 501.
+  if (NO_PROXY_STATUSES.has(res.status)) throw new WorkshopError('metadata_unavailable');
   if (!res.ok) throw new WorkshopError('http', res.status);
 
   let data: SteamApiResponse;
@@ -216,13 +231,27 @@ export function decodeModBuffer(buffer: ArrayBuffer): unknown {
 }
 
 /**
- * Downloads mod data directly in the browser from Steam CDN (cors-enabled).
+ * Downloads mod data directly in the browser from Steam CDN (cors-enabled) and checks that it
+ * is a TTS save. Legacy `http://cloud-N.steamusercontent.com` URLs are rewritten to the HTTPS
+ * CDN, which an HTTPS page may fetch (no mixed content).
  */
-export async function downloadWorkshopModDirect(fileUrl: string): Promise<unknown> {
-  const res = await fetch(fileUrl);
+export async function downloadWorkshopModDirect(fileUrl: string): Promise<TTSSaveFile> {
+  let res: Response;
+  try {
+    res = await fetch(sanitizeTtsUrl(fileUrl));
+  } catch {
+    // CORS refusal, mixed content or offline: the browser hides the reason.
+    throw new WorkshopError('download_blocked');
+  }
   if (!res.ok) {
     throw new WorkshopError('download_failed', res.status);
   }
-  const buffer = await res.arrayBuffer();
-  return decodeModBuffer(buffer);
+  let decoded: unknown;
+  try {
+    decoded = decodeModBuffer(await res.arrayBuffer());
+  } catch {
+    throw new WorkshopError('invalid_file');
+  }
+  if (!isTtsSaveFile(decoded)) throw new WorkshopError('invalid_file');
+  return decoded;
 }

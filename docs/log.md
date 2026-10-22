@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Workshop import error messages (claude-code)
+
+- No doc change: `docs/tech/tabletop-engine.md` does not list the WorkshopError codes; the new codes `download_blocked` and `invalid_file` are in `steamWorkshopApi.ts` and the locales.
+- **Code changed:** `src/games/tabletop/logic/steamWorkshopApi.ts` (+ test), `hooks/useWorkshopImport.ts`, locales.
+
 ## 2026-10-22 — GuessArt on player seats (claude-code)
 
 - `docs/tech/data-models.md` "Player seats" and `sync-protocol.md` §5 say GuessArt uses seats, `turnDelivery` and the seat merge in `importSnapshot` (#416 last slice).

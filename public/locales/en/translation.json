@@ -878,6 +878,8 @@
         "error_metadata_unavailable": "Steam details cannot be loaded without the companion server. Upload the mod file (.json) from Documents/My Games/Tabletop Simulator/Mods/Workshop instead, or connect the companion server.",
         "error_http": "Steam or server error (HTTP {{status}}).",
         "error_download_failed": "Download from Steam failed (HTTP {{status}}).",
+        "error_download_blocked": "The browser was not allowed to load the mod file from Steam. Upload the mod file (.json) from Documents/My Games/Tabletop Simulator/Mods/Workshop instead, or connect the companion server.",
+        "error_invalid_file": "The downloaded file is not a Tabletop Simulator save.",
         "error_no_download_url": "This mod has no download URL on Steam."
       }
     }
