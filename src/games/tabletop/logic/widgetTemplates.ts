@@ -2,6 +2,7 @@
  * Starting values for widgets created in the editor [ID: LOGIC-TABLETOP-WIDGET-TEMPLATES]
  */
 import type {
+  ButtonWidget,
   CardWidget,
   CounterWidget,
   DieWidget,
@@ -24,6 +25,7 @@ export const NEW_WIDGET_KINDS = [
   'label',
   'timer',
   'spinner',
+  'button',
 ] as const;
 export type NewWidgetKind = (typeof NEW_WIDGET_KINDS)[number];
 
@@ -85,5 +87,7 @@ export function createWidget(
         options: ['1', '2', '3', '4', '5', '6'],
         angle: 0,
       } as SpinnerWidget;
+    case 'button':
+      return { ...at(160, 56), type: 'button', text: 'Button', routine: [] } as ButtonWidget;
   }
 }

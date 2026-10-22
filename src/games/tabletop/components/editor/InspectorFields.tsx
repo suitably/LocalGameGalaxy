@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import type { TabletopWidget } from '../../logic/types';
 import type { WidgetPatch } from '../../logic/widgetEdits';
 import { ImageUploadButton } from './ImageUploadButton';
+import { RoutineEditor } from './RoutineEditor';
 
 interface InspectorFieldsProps {
   widget: TabletopWidget;
@@ -162,6 +163,17 @@ export const InspectorFields: React.FC<InspectorFieldsProps> = ({ widget, onPatc
             } as WidgetPatch)
           }
         />
+      )}
+      {widget.type === 'button' && (
+        <>
+          {text('text')}
+          {text('color')}
+          <RoutineEditor
+            key={widget.id}
+            widget={widget}
+            onSave={(routine) => onPatch({ routine } as WidgetPatch)}
+          />
+        </>
       )}
       {widget.type === 'card' && (
         <TextField

@@ -5,6 +5,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 import type {
   BagWidget,
+  ButtonWidget,
   LabelWidget,
   SpinnerWidget,
   TimerWidget,
@@ -25,6 +26,7 @@ import { BagWidgetView } from '../widgets/BagWidgetView';
 import { LabelWidgetView } from '../widgets/LabelWidgetView';
 import { TimerWidgetView } from '../widgets/TimerWidgetView';
 import { SpinnerWidgetView } from '../widgets/SpinnerWidgetView';
+import { ButtonWidgetView } from '../widgets/ButtonWidgetView';
 
 interface BoardWidgetRendererProps {
   widget: TabletopWidget;
@@ -141,6 +143,17 @@ export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
                 isDragging={isDragging}
                 onPointerDown={onPointerDown}
                 onSpin={() => dispatch({ type: 'SPIN_SPINNER', payload: { spinnerId: w.id } })}
+              />
+            );
+          case 'button':
+            return (
+              <ButtonWidgetView
+                widget={w as ButtonWidget}
+                isDragging={isDragging}
+                onPointerDown={onPointerDown}
+                onRun={() =>
+                  dispatch({ type: 'RUN_ROUTINE', payload: { buttonId: w.id, now: Date.now() } })
+                }
               />
             );
           default:

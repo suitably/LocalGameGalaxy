@@ -2,6 +2,7 @@
 
 ### Added
 
+- **Tabletop**: button widget with a declarative routine (shuffle, draw, roll, flip, move, set, counter, timer, spin, next state) — validated JSON, no code; edited in the inspector, runs as one synced action on the host (#449).
 - **Tabletop TTS import**: object `States` become switchable looks (`states`, `NEXT_STATE`); double-click a token or use the inspector button to switch (#449).
 - **Tabletop editor**: upload images for widgets and the table background; they are scaled to 512 px and stored in the game as WebP data URLs, no server needed (#449).
 - **Tabletop editor**: resize and rotate handles on the selected widget (Shift keeps proportions, rotation snaps to 15°, Alt rotates freely); one undo step per drag (#449).

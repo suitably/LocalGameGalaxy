@@ -15,7 +15,8 @@ export type WidgetType =
   | 'bag'
   | 'label'
   | 'timer'
-  | 'spinner';
+  | 'spinner'
+  | 'button';
 
 /** A single renderable object within a card face template */
 export interface FaceObject {
@@ -217,6 +218,27 @@ export interface SpinnerWidget extends BaseWidget {
   angle: number;
 }
 
+/** One step of a button routine; see `logic/routines.ts` for limits and validation. */
+export type RoutineStep =
+  | { op: 'SHUFFLE'; deck: string }
+  | { op: 'DRAW'; deck: string; count?: number; to?: string }
+  | { op: 'ROLL'; dice: string[] }
+  | { op: 'FLIP'; cards: string[] }
+  | { op: 'MOVE'; widget: string; x: number; y: number }
+  | { op: 'SET'; widget: string; props: Record<string, unknown> }
+  | { op: 'COUNTER'; counter: string; delta: number }
+  | { op: 'TIMER'; timer: string; action: 'toggle' | 'reset' }
+  | { op: 'SPIN'; spinner: string }
+  | { op: 'NEXT_STATE'; widget: string };
+
+/** Clickable button that runs a fixed list of table actions (no code). */
+export interface ButtonWidget extends BaseWidget {
+  type: 'button';
+  text: string;
+  color?: string;
+  routine: RoutineStep[];
+}
+
 export type TabletopWidget =
   | CardWidget
   | DeckWidget
@@ -228,7 +250,8 @@ export type TabletopWidget =
   | BagWidget
   | LabelWidget
   | TimerWidget
-  | SpinnerWidget;
+  | SpinnerWidget
+  | ButtonWidget;
 
 export interface TabletopTableConfig {
   width: number;

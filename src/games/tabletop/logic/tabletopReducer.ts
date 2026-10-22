@@ -12,6 +12,7 @@ import type {
   HiddenZone,
   TabletopTableConfig,
   TabletopWidget,
+  ButtonWidget,
 } from './types';
 import { applyLayout, layoutHolderChildren } from './holderLayout';
 import { applyGameDelta, type GameDelta } from './stateDelta';
@@ -23,6 +24,7 @@ import { pieceReducer } from './reducers/pieceReducer';
 import { viewReducer } from './reducers/viewReducer';
 import { editReducer } from './reducers/editReducer';
 import { tableToolReducer } from './reducers/tableToolReducer';
+import { routineToActions } from './routines';
 import type { WidgetPatch } from './widgetEdits';
 
 export interface FlyingCardAnimation {
@@ -72,6 +74,7 @@ export type TabletopAction =
   | { type: 'RESET_TIMER'; payload: { timerId: string } }
   | { type: 'SPIN_SPINNER'; payload: { spinnerId: string; index?: number } }
   | { type: 'NEXT_STATE'; payload: { widgetId: string } }
+  | { type: 'RUN_ROUTINE'; payload: { buttonId: string; now: number } }
   | { type: 'DELETE_WIDGETS'; payload: { ids: string[] } }
   | { type: 'UPDATE_TABLE'; payload: { changes: Partial<TabletopTableConfig> } }
   | { type: 'RETURN_CARD_TO_DECK'; payload: { cardId: string; deckId: string } }
@@ -417,6 +420,16 @@ export function tabletopReducer(
     case 'SPIN_SPINNER':
     case 'NEXT_STATE':
       return tableToolReducer(state, action);
+
+    case 'RUN_ROUTINE': {
+      // The routine's steps are ordinary actions, applied in order on the device that owns state.
+      const button = state.game.widgets[action.payload.buttonId];
+      if (!button || button.type !== 'button') return state;
+      return routineToActions((button as ButtonWidget).routine, action.payload.now).reduce(
+        tabletopReducer,
+        state,
+      );
+    }
 
     default:
       return state;
