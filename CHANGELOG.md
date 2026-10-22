@@ -17,6 +17,7 @@
 
 ### Changed
 
+- **GuessArt**: word selection and hint rules are pure transitions (`buildRoundTranslations`, `applyWordSelection`, `applyHint` in `logic/transitions.ts`, tested); the engine only loads and saves. The duplicated translation normalisation is one helper now (#416).
 - **Storage**: companion, signaling and push settings moved out of `src/lib/storage.ts` into `lib/companion/companionSettings.ts`, `lib/webrtc/signalingSettings.ts` and `lib/push/pushSettings.ts`; `storage.*` keeps `@deprecated` delegates, behaviour unchanged (#419).
 - **Party lobby**: `PartyLobby.tsx` split into section components (`PartyActiveGameBanner`, `PartyRoomHeader`, `PartyServerInfoCard`, `PartyShareCard`, `PartyPlayerRoster`, `PartyGameSelection`); 539 → 96 lines, budget baseline removed (#359).
 - **Tabletop privacy**: cards in a player's hand no longer travel readable to every device. The host sends them face-down and encrypts the real faces per seat (ECDH + AES-GCM over WebCrypto); only that seat's phone can restore them (#449).
