@@ -145,8 +145,12 @@ export function useWorkshopImport() {
       setState((s) => ({ ...s, status: 'parsing', error: null }));
 
       try {
-        const text = await file.text();
-        const game = await parsePcioFile(text, { defaultName: file.name.replace(/\.json$/i, '') });
+        // A TTS/VTT JSON file is text; .vtt/.pcio/.zip archives carry their images along.
+        const isJson = /\.json$/i.test(file.name);
+        const source = isJson ? await file.text() : await file.arrayBuffer();
+        const game = await parsePcioFile(source, {
+          defaultName: file.name.replace(/\.(json|vtt|pcio|zip)$/i, ''),
+        });
         await saveTabletopGame(game);
         setState((s) => ({ ...s, status: 'success', game }));
       } catch (err) {

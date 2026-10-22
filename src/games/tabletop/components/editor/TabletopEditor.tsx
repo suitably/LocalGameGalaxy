@@ -20,6 +20,8 @@ interface TabletopEditorProps {
   state: TabletopGameState;
   dispatch: React.Dispatch<TabletopAction>;
   isTvMode?: boolean;
+  /** Pass and play: seat chips hidden, seats change through the handover. */
+  hideSeatSelector?: boolean;
 }
 
 /** Outlines the selected widget; board widgets sit in a `display: contents` wrapper. */
@@ -28,7 +30,12 @@ const selectionCss = (id: string) => {
   return `${sel}[data-widget-wrapper] > *, ${sel}:not([data-widget-wrapper]) { outline: 3px solid #ffb300; outline-offset: 2px; }`;
 };
 
-export const TabletopEditor: React.FC<TabletopEditorProps> = ({ state, dispatch, isTvMode }) => {
+export const TabletopEditor: React.FC<TabletopEditorProps> = ({
+  state,
+  dispatch,
+  isTvMode,
+  hideSeatSelector,
+}) => {
   const editor = useTabletopEditor(state, dispatch);
   const [tableOpen, setTableOpen] = useState(false);
   const [deckOpen, setDeckOpen] = useState(false);
@@ -44,7 +51,12 @@ export const TabletopEditor: React.FC<TabletopEditorProps> = ({ state, dispatch,
           if (el) editor.setSelectedId(el.getAttribute('data-widget-id'));
         }}
       >
-        <TabletopSurface state={state} dispatch={dispatch} isTvMode={isTvMode} />
+        <TabletopSurface
+          state={state}
+          dispatch={dispatch}
+          isTvMode={isTvMode}
+          hideSeatSelector={hideSeatSelector}
+        />
       </Box>
       {editor.editMode && editor.selectedId && <style>{selectionCss(editor.selectedId)}</style>}
       {editor.editMode && editor.selected && (

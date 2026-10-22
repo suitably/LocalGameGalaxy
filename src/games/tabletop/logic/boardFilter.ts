@@ -71,20 +71,15 @@ export function findPlayerHandHolder(
 ): HolderWidget | undefined {
   const hasSeat = typeof seatIdx === 'number';
   const seatPrefix = hasSeat ? `player ${seatIdx}` : '';
+  const hands = Object.values(widgets).filter(
+    (w): w is HolderWidget => w.type === 'holder' && isHandHolder(w as HolderWidget),
+  );
+  // An exact owner match wins, so seat 1 does not get the hand of owner 0 by object order.
   return (
     (hasSeat
-      ? Object.values(widgets).find(
-          (w): w is HolderWidget =>
-            w.type === 'holder' &&
-            isHandHolder(w as HolderWidget) &&
-            (w.id.toLowerCase().includes(seatPrefix) ||
-              w.ownerSeat === seatIdx ||
-              w.ownerSeat === seatIdx - 1),
-        )
-      : undefined) ||
-    Object.values(widgets).find(
-      (w): w is HolderWidget => w.type === 'holder' && isHandHolder(w as HolderWidget),
-    )
+      ? hands.find((w) => w.ownerSeat === seatIdx) ||
+        hands.find((w) => w.id.toLowerCase().includes(seatPrefix) || w.ownerSeat === seatIdx - 1)
+      : undefined) || hands[0]
   );
 }
 

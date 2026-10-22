@@ -165,3 +165,38 @@ export function getPlayerStats(
     isTurn: Boolean(seat.turn),
   };
 }
+
+/**
+ * Seats for games that only define private hands (`ownerSeat` on hand holders) and no seat
+ * widgets, so pass and play can switch between them. One seat per owner, `index` = `ownerSeat`
+ * and `hand` = the holder; nothing is returned once the game has seats.
+ */
+export function seatsForHands(widgets: Record<string, TabletopWidget>): SeatWidget[] {
+  if (getSeatWidgets(widgets).length > 0) return [];
+  const byOwner = new Map<number, HolderWidget>();
+  for (const w of Object.values(widgets)) {
+    if (
+      w.type === 'holder' &&
+      isHandHolderWidget(w) &&
+      typeof w.ownerSeat === 'number' &&
+      !byOwner.has(w.ownerSeat)
+    ) {
+      byOwner.set(w.ownerSeat, w as HolderWidget);
+    }
+  }
+  return [...byOwner.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([ownerSeat, hand]) => ({
+      id: `seat_auto_${ownerSeat}`,
+      type: 'seat' as const,
+      index: ownerSeat,
+      color: DEFAULT_SEAT_COLORS[ownerSeat + 1] || '#dc2626',
+      label: hand.label || `Spieler ${ownerSeat + 1}`,
+      hand: hand.id,
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+      zIndex: 0,
+    }));
+}

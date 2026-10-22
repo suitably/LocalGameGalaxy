@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { Box } from '@mui/material';
 import { TabletopToolbar } from './TabletopToolbar';
 import { RulesDialog } from './RulesDialog';
@@ -17,21 +17,27 @@ import { WidgetContextMenu, type WidgetContextMenuPosition } from './WidgetConte
 import { createDefaultHiddenZone } from '../../logic/hiddenZoneLogic';
 import { getSeatWidgets } from '../../logic/seatLogic';
 import { filterBoardHolders, filterBoardWidgets } from '../../logic/boardFilter';
-import { PlayerSeatSelector } from './PlayerSeatSelector';
-import { PlayerOverviewHud } from './PlayerOverviewHud';
+import { SurfaceSeatControls } from './SurfaceSeatControls';
+import { useFitToScreen } from '../../hooks/useFitToScreen';
 import { BoardDragOverlay } from './BoardDragOverlay';
 
 interface TabletopSurfaceProps {
   state: TabletopGameState;
   dispatch: React.Dispatch<TabletopAction>;
   isTvMode?: boolean;
+  /** Pass and play: seats change only through the handover cover. */
+  hideSeatSelector?: boolean;
 }
 
-export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatch, isTvMode = false }) => {
+export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
+  state,
+  dispatch,
+  isTvMode = false,
+  hideSeatSelector = false,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [rulesOpen, setRulesOpen] = useState(false);
-  const [hudOpen, setHudOpen] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState<WidgetContextMenuPosition | null>(null);
 
   const selection = useTabletopSelection({ dispatch });
@@ -45,51 +51,48 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
   }, [seats, state.currentSeatId, state.game.widgets]);
 
   const {
-    transform, setTransform, activeDragId, isDraggingActive, dragPointer, grabOffset,
-    handlePointerDownWidget, handleStartPan,
-    zoomIn, zoomOut, hoveredTargetId,
+    transform,
+    setTransform,
+    activeDragId,
+    isDraggingActive,
+    dragPointer,
+    grabOffset,
+    handlePointerDownWidget,
+    handleStartPan,
+    zoomIn,
+    zoomOut,
+    hoveredTargetId,
   } = useTabletopEngine({
     tableWidth: game.table.width,
     tableHeight: game.table.height,
     widgets: game.widgets,
     currentSeatIndex: activeSeat?.index,
     onMoveWidget: (id, x, y) => dispatch({ type: 'MOVE_WIDGET', payload: { id, x, y } }),
-    onSnapToHolder: (widgetId, holderId) => dispatch({ type: 'SNAP_TO_HOLDER', payload: { widgetId, holderId } }),
+    onSnapToHolder: (widgetId, holderId) =>
+      dispatch({ type: 'SNAP_TO_HOLDER', payload: { widgetId, holderId } }),
     onDoubleClickWidget: (cardId) => dispatch({ type: 'FLIP_CARD', payload: { cardId } }),
-    onDrawCardAt: (deckId, x, y, cardId) => dispatch({ type: 'DRAW_CARD', payload: { deckId, position: { x, y }, cardId } }),
+    onDrawCardAt: (deckId, x, y, cardId) =>
+      dispatch({ type: 'DRAW_CARD', payload: { deckId, position: { x, y }, cardId } }),
   });
 
-  const visibleIds = useViewportCulling(game.widgets, transform, containerSize.width, containerSize.height);
+  const visibleIds = useViewportCulling(
+    game.widgets,
+    transform,
+    containerSize.width,
+    containerSize.height,
+  );
 
   const boardHolders = useMemo(
     () => filterBoardHolders(game.widgets, visibleIds, isTvMode),
-    [game.widgets, visibleIds, isTvMode]
+    [game.widgets, visibleIds, isTvMode],
   );
 
   const boardWidgets = useMemo(
     () => filterBoardWidgets(game.widgets, visibleIds, isTvMode),
-    [game.widgets, visibleIds, isTvMode]
+    [game.widgets, visibleIds, isTvMode],
   );
 
-  const fitToScreen = useCallback(() => {
-    if (containerRef.current) {
-      const { clientWidth, clientHeight } = containerRef.current;
-      if (clientWidth <= 0 || clientHeight <= 0) return;
-      setContainerSize({ width: clientWidth, height: clientHeight });
-      const scaleX = clientWidth / game.table.width;
-      const scaleY = clientHeight / game.table.height;
-      const fitScale = Math.min(scaleX, scaleY) * 0.95;
-      const offsetX = (clientWidth - game.table.width * fitScale) / 2;
-      const offsetY = (clientHeight - game.table.height * fitScale) / 2;
-      setTransform({ x: Math.round(offsetX), y: Math.round(offsetY), scale: fitScale });
-    }
-  }, [game.table.width, game.table.height, setTransform]);
-
-  useEffect(() => {
-    fitToScreen();
-    window.addEventListener('resize', fitToScreen);
-    return () => window.removeEventListener('resize', fitToScreen);
-  }, [fitToScreen]);
+  const fitToScreen = useFitToScreen(containerRef, game.table, setTransform, setContainerSize);
 
   const onPointerDownBoardWidget = (e: React.PointerEvent, w: TabletopWidget) => {
     if (selection.handleWidgetClick(w.id, e.shiftKey)) {
@@ -132,7 +135,9 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
           transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
           transformOrigin: '0 0',
           bgcolor: game.table.backgroundColor || '#1e3d2f',
-          backgroundImage: game.table.backgroundImageUrl ? `url(${game.table.backgroundImageUrl})` : undefined,
+          backgroundImage: game.table.backgroundImageUrl
+            ? `url(${game.table.backgroundImageUrl})`
+            : undefined,
           backgroundSize: 'cover',
           boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
           borderRadius: 4,
@@ -158,7 +163,10 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
           />
         ))}
 
-        <SelectionHighlightLayer selectedWidgetIds={selection.selectedWidgetIds} widgets={game.widgets} />
+        <SelectionHighlightLayer
+          selectedWidgetIds={selection.selectedWidgetIds}
+          widgets={game.widgets}
+        />
 
         <HiddenZoneLayer
           hiddenZones={game.hiddenZones}
@@ -172,7 +180,9 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
           widgets={game.widgets}
           tableWidth={game.table.width}
           tableHeight={game.table.height}
-          onFinishAnimation={(id) => dispatch({ type: 'FINISH_ANIMATION', payload: { animationId: id } })}
+          onFinishAnimation={(id) =>
+            dispatch({ type: 'FINISH_ANIMATION', payload: { animationId: id } })
+          }
         />
       </Box>
 
@@ -184,14 +194,13 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
         onClearSelection={selection.clearSelection}
       />
 
-      {!isTvMode && seats.length > 0 && (
-        <PlayerSeatSelector
-          seats={seats}
-          currentSeatId={state.currentSeatId}
-          onSelectSeat={(seatId) => dispatch({ type: 'SELECT_SEAT', payload: { seatId } })}
-          onToggleHud={() => setHudOpen(true)}
-        />
-      )}
+      <SurfaceSeatControls
+        seats={seats}
+        widgets={game.widgets}
+        currentSeatId={state.currentSeatId}
+        dispatch={dispatch}
+        hideSelector={isTvMode || hideSeatSelector}
+      />
 
       {!isTvMode && (
         <TabletopToolbar
@@ -208,16 +217,6 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
 
       <RulesDialog open={rulesOpen} onClose={() => setRulesOpen(false)} ruleText={game.ruleText} />
 
-      {seats.length > 0 && (
-        <PlayerOverviewHud
-          open={hudOpen}
-          onClose={() => setHudOpen(false)}
-          seats={seats}
-          widgets={game.widgets}
-          currentSeatId={state.currentSeatId}
-        />
-      )}
-
       <BoardDragOverlay
         widget={activeDragId && isDraggingActive ? game.widgets[activeDragId] : null}
         pointerPos={dragPointer}
@@ -228,12 +227,20 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({ state, dispatc
       <WidgetContextMenu
         position={contextMenuPos}
         widget={contextMenuPos ? game.widgets[contextMenuPos.widgetId] : undefined}
-        isSelected={contextMenuPos ? selection.selectedWidgetIds.includes(contextMenuPos.widgetId) : false}
+        isSelected={
+          contextMenuPos ? selection.selectedWidgetIds.includes(contextMenuPos.widgetId) : false
+        }
         onClose={() => setContextMenuPos(null)}
         onToggleSelect={(id) => selection.handleWidgetClick(id, true)}
-        onToggleShowAlways={(id, cur) => dispatch({ type: 'SET_WIDGET_SHOW_ALWAYS', payload: { widgetId: id, showAlways: !cur } })}
-        onScaleWidget={(id, factor) => dispatch({ type: 'SCALE_WIDGETS', payload: { widgetIds: [id], factor } })}
-        onResetWidgetScale={(id) => dispatch({ type: 'RESET_WIDGET_SCALE', payload: { widgetIds: [id] } })}
+        onToggleShowAlways={(id, cur) =>
+          dispatch({ type: 'SET_WIDGET_SHOW_ALWAYS', payload: { widgetId: id, showAlways: !cur } })
+        }
+        onScaleWidget={(id, factor) =>
+          dispatch({ type: 'SCALE_WIDGETS', payload: { widgetIds: [id], factor } })
+        }
+        onResetWidgetScale={(id) =>
+          dispatch({ type: 'RESET_WIDGET_SCALE', payload: { widgetIds: [id] } })
+        }
       />
     </Box>
   );

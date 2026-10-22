@@ -34,16 +34,8 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
   const { t } = useTranslation();
   const [url, setUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const {
-    status,
-    meta,
-    game,
-    error,
-    loadMeta,
-    importViaServer,
-    importFromFile,
-    reset,
-  } = useWorkshopImport();
+  const { status, meta, game, error, loadMeta, importViaServer, importFromFile, reset } =
+    useWorkshopImport();
 
   const handleClose = () => {
     reset();
@@ -66,9 +58,7 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        {t('games.tabletop.import_workshop', 'Steam Workshop importieren')}
-      </DialogTitle>
+      <DialogTitle>{t('games.tabletop.import_workshop', 'Steam Workshop importieren')}</DialogTitle>
 
       <DialogContent dividers>
         <Stack spacing={2.5}>
@@ -102,12 +92,12 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
                 onClick={() => fileInputRef.current?.click()}
                 startIcon={<UploadFileIcon />}
               >
-                {t('games.tabletop.workshop_upload_manual', 'JSON hochladen')}
+                {t('games.tabletop.workshop_upload_manual', 'Datei hochladen (.json, .vtt, .pcio)')}
               </Button>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".json"
+                accept=".json,.vtt,.pcio,.zip"
                 style={{ display: 'none' }}
                 onChange={handleFileUpload}
               />
@@ -146,9 +136,10 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
           {error && <Alert severity="error">{error}</Alert>}
 
           {/* Meta Preview */}
-          {meta && (status === 'meta_loaded' || status === 'downloading' || status === 'parsing') && (
-            <WorkshopMetaPreview meta={meta} />
-          )}
+          {meta &&
+            (status === 'meta_loaded' || status === 'downloading' || status === 'parsing') && (
+              <WorkshopMetaPreview meta={meta} />
+            )}
 
           {/* Import Button */}
           {status === 'meta_loaded' && meta?.fileUrl && (
