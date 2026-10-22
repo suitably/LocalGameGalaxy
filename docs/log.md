@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Melodiq Notes stage (claude-code)
+
+- `docs/tech/game-catalog.md`: melodiq-notes size and shared modules (`lib/companion`, `modules/music-score`); `docs/tech/architecture.md` §3.2: `music-score` is used by melodiq-notes.
+- **Code changed:** new `src/games/melodiq-notes/stage/*` (engine, canvas renderers, components, tests), `MelodiqNotesGame.tsx` rewritten, legacy OSMD view and its hooks removed; `src/lib/companion/songScoresApi.ts`; locales `games.melodiq_notes.stage.*`.
+
 ## 2026-10-22 — Sheet music in song folders (claude-code)
 
 - `docs/tech/song-pipeline.md` §4: score files and bar marks in song folders, new `/api/songs/:id/scores…` endpoints; folder layout updated.

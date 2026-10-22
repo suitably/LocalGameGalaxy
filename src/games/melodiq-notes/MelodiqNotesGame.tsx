@@ -1,192 +1,180 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { Paper, Box } from '@mui/material';
+import { Box, Button, Paper, Stack, Typography, useMediaQuery } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { GameLayout } from '../../components/Layout/GameLayout';
-import { useMelodiqNotesState } from './hooks/useMelodiqNotesState';
-import { useStemAudioPlayer } from './hooks/useStemAudioPlayer';
-import { InstrumentSelectorBar } from './components/InstrumentSelectorBar';
-import { SheetMusicViewer, type SheetMusicViewerRef } from './SheetMusicViewer';
-import { ModernNoteHighway } from './components/ModernNoteHighway';
-import { NoteStatusBar } from './components/NoteStatusBar';
-import { PlaybackControlsBar } from './components/PlaybackControlsBar';
-import { EnsembleMixerDialog } from './components/EnsembleMixerDialog';
-import { MelodiqNotesSettingsDialog } from './components/MelodiqNotesSettingsDialog';
-import { SongSelectDialog } from './components/SongSelectDialog';
-
+import { bpmAt } from '../../modules/music-score';
+import { DEMO_SONGS } from './demoSongs';
 import { useMelodiqNotesHeader } from './hooks/useMelodiqNotesHeader';
+import { SoundSettingsDialog } from './components/SoundSettingsDialog';
+import { useStage, useStageTexts } from './stage/useStage';
+import { useStageSong } from './stage/useStageSong';
+import { useStageInput } from './stage/useStageInput';
+import { useFullscreen } from './stage/useFullscreen';
+import { StageCanvas } from './stage/components/StageCanvas';
+import { StageOverlay } from './stage/components/StageOverlay';
+import { StageToolbar } from './stage/components/StageToolbar';
+import { SectionStrip } from './stage/components/SectionStrip';
+import { TrackList } from './stage/components/TrackList';
+import { RecordingBar } from './stage/components/RecordingBar';
+import { SongPicker } from './stage/components/SongPicker';
+import { InputSourcePicker } from './stage/components/InputSourcePicker';
+import type { StageDisplay } from './stage/render/stageRenderer';
 
-/** Keeps OSMD mounted (it owns the cursor) without showing it. */
-const OFFSCREEN_SX = {
-  position: 'fixed',
-  top: -99999,
-  left: -99999,
-  width: 1000,
-  height: 600,
-  overflow: 'hidden',
-  visibility: 'hidden',
-  pointerEvents: 'none',
-} as const;
+const noop = () => {};
 
+/** Melodiq Notes: learn and play songs on keyboard, guitar, bass, drums, ukulele or voice, alone or as a band. */
 export const MelodiqNotesGame: React.FC = () => {
-  const viewerRef = useRef<SheetMusicViewerRef>(null);
-  const { song, library, mixer, view, input, playback, stats, dialogs, reloadSoundConfig } =
-    useMelodiqNotesState({ viewerRef });
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const { setIsMixerOpen, setIsSongSelectOpen } = dialogs;
+  const { t } = useTranslation();
+  const k = (key: string, opts?: Record<string, unknown>) =>
+    t(`games.melodiq_notes.stage.${key}`, opts);
+  const { engine, unlockAudio } = useStage();
+  const texts = useStageTexts();
+  const songState = useStageSong(engine, {
+    title: DEMO_SONGS[0].title,
+    xml: DEMO_SONGS[0].xmlContent,
+  });
+  const input = useStageInput(engine);
+  const [display, setDisplay] = useState<StageDisplay>('instrument');
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const fullscreen = useFullscreen(stageRef);
+  const portrait = useMediaQuery('(orientation: portrait)');
 
-  // Stable callbacks: the header hook pushes them into context from an effect,
-  // so a new identity per render would loop forever.
-  const openMixer = useCallback(() => setIsMixerOpen(true), [setIsMixerOpen]);
-  const openSongSelect = useCallback(() => setIsSongSelectOpen(true), [setIsSongSelectOpen]);
-  const openSettings = useCallback(() => setIsSettingsOpen(true), []);
-
+  const openPicker = useCallback(() => setPickerOpen(true), []);
+  const openSettings = useCallback(() => setSettingsOpen(true), []);
+  const song = engine.song;
   useMelodiqNotesHeader({
-    currentTitle: song.title,
-    currentArtist: song.artist,
-    effectiveBpm: song.effectiveBpm,
-    partsCount: song.parts.length,
-    onOpenSongSelect: openSongSelect,
-    onOpenMixer: openMixer,
+    currentTitle: song?.title ?? null,
+    currentArtist: song?.artist ?? null,
+    effectiveBpm: song ? Math.round(bpmAt(song.tempoMap, 0) * engine.speed) : 0,
+    partsCount: 0,
+    onOpenSongSelect: openPicker,
+    onOpenMixer: noop,
     onOpenSettings: openSettings,
   });
 
-  useStemAudioPlayer({
-    stems: song.stems,
-    speedPercent: playback.speedPercent,
-    syncOffsetMs: song.syncOffsetMs,
-    isPlaying: playback.isPlaying,
-  });
+  const start = useCallback(() => {
+    unlockAudio();
+    engine.start();
+  }, [engine, unlockAudio]);
+  const togglePause = useCallback(() => {
+    if (engine.state === 'playing') engine.pause();
+    else start();
+  }, [engine, start]);
+  const practise = useCallback(
+    (section: number) => {
+      engine.setLoop(section);
+      engine.setSpeed(0.75);
+      start();
+    },
+    [engine, start],
+  );
 
+  const rotate = fullscreen.active && portrait && engine.players.length > 1;
   return (
     <GameLayout maxWidth="lg" disablePadding>
-      <Paper
-        elevation={3}
-        sx={{
-          p: { xs: 1.5, sm: 3 },
-          borderRadius: 3.5,
-          background:
-            'linear-gradient(135deg, rgba(26, 26, 42, 0.95) 0%, rgba(15, 15, 26, 0.95) 100%)',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.45)',
-        }}
-      >
-        {/* 1. Note Accuracy & Score HUD Bar */}
-        <NoteStatusBar
-          targetNotes={playback.targetNotes}
-          playedPitches={input.playedPitches}
-          isCurrentNoteHit={stats.isCurrentNoteHit}
-          score={stats.score}
-          hitCount={stats.hitCount}
+      <Stack spacing={1.5} sx={{ p: { xs: 1, sm: 2 } }}>
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+          <Button variant="outlined" size="small" onClick={openPicker}>
+            {k('song_pick')}
+          </Button>
+          <Typography variant="body2" color="text.secondary" noWrap sx={{ minWidth: 0 }}>
+            {song
+              ? `${song.artist ? `${song.artist} · ` : ''}${k('song_meta', { bars: song.measureStarts.length, parts: song.parts.length })}`
+              : ''}
+          </Typography>
+          <Box sx={{ ml: 'auto' }}>
+            <InputSourcePicker
+              value={input.source}
+              midiCount={input.midiDevices.length}
+              onChange={input.choose}
+            />
+          </Box>
+        </Stack>
+        <StageToolbar
+          engine={engine}
+          display={display}
+          onDisplay={setDisplay}
+          onTogglePause={togglePause}
+          onFullscreen={() => void fullscreen.enter()}
         />
-
-        {/* 2. Track Selector Bar (only shown if multi-track) */}
-        {song.parts.length > 1 && (
-          <InstrumentSelectorBar
-            parts={song.parts}
-            selectedPartId={mixer.selectedPartId}
-            mixerChannels={mixer.mixerChannels}
-            soloInstrumentInSheet={mixer.soloInstrumentInSheet}
-            onSelectPart={mixer.setSelectedPartId}
-            onToggleSoloSheet={mixer.setSoloInstrumentInSheet}
-            onOpenMixer={openMixer}
-          />
-        )}
-
-        {/* 3. Main Stage: the sheet viewer always drives the cursor; in modern mode it is rendered off-screen */}
-        <Box sx={view.viewMode === 'classic' ? { display: 'block' } : OFFSCREEN_SX}>
-          <SheetMusicViewer
-            ref={viewerRef}
-            xmlContent={song.xmlContent}
-            selectedPartId={mixer.selectedPartId}
-            soloInstrumentInSheet={mixer.soloInstrumentInSheet}
-            renderMode={view.sheetRenderMode}
-            onRenderModeChange={view.setSheetRenderMode}
-            isCurrentNoteHit={stats.isCurrentNoteHit}
-            onNotesChanged={playback.handleNotesChanged}
-            onSongEnd={playback.handleSongEnd}
-            onBpmDetected={song.handleBpmDetected}
-          />
-        </Box>
-
-        {view.viewMode === 'modern' && (
-          <ModernNoteHighway
-            tracks={song.timelineTracks}
-            selectedPartId={mixer.selectedPartId}
-            subMode={view.modernSubMode}
-            currentBeats={playback.currentBeats}
-            targetNotes={playback.targetNotes}
-            playedPitches={input.playedPitches}
-            isCurrentNoteHit={stats.isCurrentNoteHit}
-            isPlaying={playback.isPlaying}
-            effectiveBpm={song.effectiveBpm}
-            onSubModeChange={view.setModernSubMode}
-          />
-        )}
-
-        {/* 4. Docked Playback Controls Bar (Play, Reset, Speed Popover & Settings) */}
-        <PlaybackControlsBar
-          isPlaying={playback.isPlaying}
-          speedPercent={playback.speedPercent}
-          effectiveBpm={song.effectiveBpm}
-          onTogglePlay={() => playback.setIsPlaying(!playback.isPlaying)}
-          onReset={playback.handleReset}
-          onSpeedPercentChange={playback.setSpeedPercent}
-        />
-      </Paper>
-
-      {/* Modal Dialogs */}
-      <SongSelectDialog
-        open={dialogs.isSongSelectOpen}
-        onClose={() => dialogs.setIsSongSelectOpen(false)}
-        selectedSong={song.source.kind === 'demo' ? song.source.song : null}
-        selectedLocalSong={song.source.kind === 'library' ? song.source.song : null}
-        librarySongs={library.librarySongs}
-        storedFolders={library.storedFolders}
-        isSyncing={library.isSyncing}
-        supportsDirectoryPicker={library.supportsDirectoryPicker}
-        onSongChange={song.handleSongChange}
-        onLocalSongSelect={song.handleLocalSongSelect}
-        onFileUpload={song.handleFileUpload}
-        onSyncFolder={library.handleSyncFolder}
-        onResyncFolders={library.handleResyncFolders}
-        onFolderFileInput={library.handleFolderFileInput}
-        onRemoveFolder={library.handleRemoveFolder}
-      />
-
-      <EnsembleMixerDialog
-        open={dialogs.isMixerOpen}
-        onClose={() => dialogs.setIsMixerOpen(false)}
-        parts={song.parts}
-        channels={mixer.mixerChannels}
-        selectedPartId={mixer.selectedPartId}
-        mutePlayerPart={mixer.mutePlayerPart}
-        masterVolume={mixer.masterVolume}
-        onChannelChange={mixer.handleChannelChange}
-        onMasterVolumeChange={mixer.setMasterVolume}
-        onToggleMutePlayerPart={mixer.setMutePlayerPart}
-      />
-
-      <MelodiqNotesSettingsDialog
-        open={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        viewMode={view.viewMode}
-        onViewModeChange={view.handleViewModeChange}
-        sheetRenderMode={view.sheetRenderMode}
-        onSheetRenderModeChange={view.setSheetRenderMode}
-        playMode={playback.playMode}
-        onPlayModeChange={playback.setPlayMode}
-        inputSource={input.inputSource}
-        onInputSourceChange={input.setInputSource}
-        midiDevices={input.midiDevices}
-        selectedDeviceId={input.selectedDeviceId}
-        onSelectDeviceId={input.setSelectedDeviceId}
-        isMicActive={input.isMicActive}
-        micPitch={input.micPitch}
-        onToggleMicrophone={input.toggleMicrophone}
-        partsCount={song.parts.length}
-        onOpenMixer={openMixer}
-        onSoundConfigChanged={reloadSoundConfig}
-      />
+        <Paper
+          ref={stageRef}
+          variant="outlined"
+          sx={{
+            position: fullscreen.covering ? 'fixed' : 'relative',
+            inset: fullscreen.covering ? 0 : undefined,
+            zIndex: fullscreen.covering ? 1300 : undefined,
+            height: fullscreen.active ? '100dvh' : 'clamp(340px, 62dvh, 600px)',
+            borderRadius: fullscreen.active ? 0 : 3,
+            overflow: 'hidden',
+            bgcolor: 'background.default',
+          }}
+        >
+          <StageCanvas
+            engine={engine}
+            display={display}
+            texts={texts}
+            onGesture={unlockAudio}
+            onTogglePause={togglePause}
+          >
+            <StageOverlay engine={engine} onStart={start} onPractise={practise} />
+            {rotate && (
+              <Typography
+                variant="caption"
+                sx={{
+                  position: 'absolute',
+                  bottom: 64,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  bgcolor: 'background.paper',
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: 2,
+                }}
+              >
+                {k('rotate_hint')}
+              </Typography>
+            )}
+            {fullscreen.active && (
+              <Stack
+                direction="row"
+                spacing={0.5}
+                sx={{
+                  position: 'absolute',
+                  bottom: 8,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  bgcolor: 'background.paper',
+                  borderRadius: 2,
+                  p: 0.5,
+                  opacity: 0.6,
+                  '&:hover': { opacity: 1 },
+                }}
+              >
+                <Button size="small" onClick={togglePause}>
+                  {engine.state === 'playing' ? k('pause') : k('resume')}
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() => setDisplay(display === 'notation' ? 'instrument' : 'notation')}
+                >
+                  {display === 'notation' ? k('view_instrument') : k('view_notation')}
+                </Button>
+                <Button size="small" onClick={fullscreen.exit}>
+                  {k('exit_fullscreen')}
+                </Button>
+              </Stack>
+            )}
+          </StageCanvas>
+        </Paper>
+        <SectionStrip engine={engine} />
+        <RecordingBar state={songState} />
+        <TrackList engine={engine} />
+      </Stack>
+      <SongPicker open={pickerOpen} onClose={() => setPickerOpen(false)} state={songState} />
+      <SoundSettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </GameLayout>
   );
 };
