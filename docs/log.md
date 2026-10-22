@@ -2,6 +2,16 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Tabletop button routines (claude-code)
+
+- #449: `docs/tech/tabletop-engine.md` gains §3 "Button routines" (later sections renumbered); `data-models.md` `WidgetType` updated.
+- **Code changed:** `src/games/tabletop/logic/{types,routines,tabletopReducer,widgetTemplates}.ts`, `components/widgets/ButtonWidgetView.tsx`, `components/surface/BoardWidgetRenderer.tsx`, `components/editor/{RoutineEditor,InspectorFields}.tsx`, locales, test.
+
+## 2026-10-22 — TTS States (claude-code)
+
+- #449: `docs/tech/tabletop-engine.md` lists `NEXT_STATE`.
+- **Code changed:** `src/games/tabletop/logic/{types,ttsTypes,tableTools,ttsContainers,ttsParser,tabletopReducer}.ts`, `logic/reducers/tableToolReducer.ts`, `components/{widgets/TokenWidgetView,surface/BoardWidgetRenderer,editor/WidgetInspector,editor/useTabletopEditor}`, locales, test; preceded by a formatting-only commit.
+
 ## 2026-10-22 — Tabletop image upload (claude-code)
 
 - #449: `docs/tech/tabletop-engine.md` §3 describes `ImageUploadButton` and its size limit.

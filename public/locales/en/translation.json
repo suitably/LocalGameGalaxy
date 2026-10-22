@@ -857,7 +857,20 @@
         "duration_hint": "0 = stopwatch",
         "options": "Options",
         "options_hint": "Separated by commas",
-        "upload_image": "Upload image (scaled to 512 px)"
+        "upload_image": "Upload image (scaled to 512 px)",
+        "next_state": "State {{current}}/{{total}} → next",
+        "kind_button": "Button",
+        "routine": "Routine (JSON)",
+        "routine_save": "Save routine",
+        "routine_help": "A list of steps, e.g. [{\"op\":\"SHUFFLE\",\"deck\":\"deck_id\"},{\"op\":\"DRAW\",\"deck\":\"deck_id\",\"count\":5,\"to\":\"hand_id\"}]. Steps: SHUFFLE, DRAW, ROLL, FLIP, MOVE, SET, COUNTER, TIMER, SPIN, NEXT_STATE. Widget ids are shown in the list above.",
+        "routine_error_invalid_json": "Not valid JSON.",
+        "routine_error_not_array": "The routine must be a list [ … ].",
+        "routine_error_too_many_steps": "At most 50 steps.",
+        "routine_error_not_object": "Step {{step}} is not an object.",
+        "routine_error_unknown_op": "Step {{step}}: unknown \"op\".",
+        "routine_error_missing_field": "Step {{step}}: a required field is missing or wrong.",
+        "routine_error_bad_count": "Step {{step}}: count must be 1–60.",
+        "routine_error_forbidden_prop": "Step {{step}}: id, type and routine cannot be set."
       },
       "workshop": {
         "error_invalid_input": "Not a valid Steam Workshop URL or ID.",

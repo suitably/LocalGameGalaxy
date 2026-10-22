@@ -3,7 +3,7 @@
  *
  * Times are passed in (`now`), so the host's reducer stays deterministic for a given action.
  */
-import type { SpinnerWidget, TimerWidget } from './types';
+import type { SpinnerWidget, TabletopWidget, TimerWidget, WidgetStateFace } from './types';
 
 /** Milliseconds counted so far, including the running stretch. */
 export function timerElapsed(timer: TimerWidget, now: number): number {
@@ -45,4 +45,26 @@ export function spinTo(spinner: SpinnerWidget, index: number): SpinnerWidget {
   const target = 360 - (i * slice + slice / 2);
   const base = spinner.angle - (spinner.angle % 360) + 3 * 360;
   return { ...spinner, value: i, angle: base + target };
+}
+
+/** The fields of a widget that make up one state's look. */
+export function stateFaceOf(w: TabletopWidget): WidgetStateFace {
+  const face: WidgetStateFace = {
+    label: w.label,
+    image: w.image,
+    width: w.width,
+    height: w.height,
+  };
+  if (w.clipPath) face.clipPath = w.clipPath;
+  if ('color' in w && typeof w.color === 'string') face.color = w.color;
+  if (w.type === 'card') face.frontContent = w.frontContent;
+  return face;
+}
+
+/** Switches to the next state (wrapping); unchanged when there is nothing to switch to. */
+export function nextState<W extends TabletopWidget>(w: W): W {
+  const states = w.states;
+  if (!states || states.length < 2) return w;
+  const index = ((w.stateIndex ?? 0) + 1) % states.length;
+  return { ...w, ...states[index], stateIndex: index };
 }

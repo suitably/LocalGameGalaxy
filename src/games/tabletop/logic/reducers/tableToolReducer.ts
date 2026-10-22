@@ -3,11 +3,11 @@
  */
 import type { TabletopAction, TabletopGameState } from '../tabletopReducer';
 import type { SpinnerWidget, TabletopWidget, TimerWidget } from '../types';
-import { resetTimer, spinTo, toggleTimer } from '../tableTools';
+import { nextState, resetTimer, spinTo, toggleTimer } from '../tableTools';
 
 export type TableToolAction = Extract<
   TabletopAction,
-  { type: 'TOGGLE_TIMER' | 'RESET_TIMER' | 'SPIN_SPINNER' }
+  { type: 'TOGGLE_TIMER' | 'RESET_TIMER' | 'SPIN_SPINNER' | 'NEXT_STATE' }
 >;
 
 const withWidget = (state: TabletopGameState, widget: TabletopWidget): TabletopGameState => ({
@@ -29,6 +29,12 @@ export function tableToolReducer(
         state,
         action.type === 'TOGGLE_TIMER' ? toggleTimer(timer, action.payload.now) : resetTimer(timer),
       );
+    }
+    case 'NEXT_STATE': {
+      const w = state.game.widgets[action.payload.widgetId];
+      if (!w) return state;
+      const next = nextState(w);
+      return next === w ? state : withWidget(state, next);
     }
     case 'SPIN_SPINNER': {
       const w = state.game.widgets[action.payload.spinnerId];

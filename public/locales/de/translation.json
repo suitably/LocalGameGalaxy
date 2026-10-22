@@ -857,7 +857,20 @@
         "duration_hint": "0 = Stoppuhr",
         "options": "Optionen",
         "options_hint": "Durch Kommas getrennt",
-        "upload_image": "Bild hochladen (auf 512 px verkleinert)"
+        "upload_image": "Bild hochladen (auf 512 px verkleinert)",
+        "next_state": "Zustand {{current}}/{{total}} → weiter",
+        "kind_button": "Knopf",
+        "routine": "Ablauf (JSON)",
+        "routine_save": "Ablauf speichern",
+        "routine_help": "Eine Liste von Schritten, z. B. [{\"op\":\"SHUFFLE\",\"deck\":\"deck_id\"},{\"op\":\"DRAW\",\"deck\":\"deck_id\",\"count\":5,\"to\":\"hand_id\"}]. Schritte: SHUFFLE, DRAW, ROLL, FLIP, MOVE, SET, COUNTER, TIMER, SPIN, NEXT_STATE. Die Element-IDs stehen in der Liste oben.",
+        "routine_error_invalid_json": "Kein gültiges JSON.",
+        "routine_error_not_array": "Der Ablauf muss eine Liste [ … ] sein.",
+        "routine_error_too_many_steps": "Höchstens 50 Schritte.",
+        "routine_error_not_object": "Schritt {{step}} ist kein Objekt.",
+        "routine_error_unknown_op": "Schritt {{step}}: unbekanntes „op“.",
+        "routine_error_missing_field": "Schritt {{step}}: ein Pflichtfeld fehlt oder ist falsch.",
+        "routine_error_bad_count": "Schritt {{step}}: count muss 1–60 sein.",
+        "routine_error_forbidden_prop": "Schritt {{step}}: id, type und routine lassen sich nicht setzen."
       },
       "workshop": {
         "error_invalid_input": "Keine gültige Steam-Workshop-URL oder -ID.",

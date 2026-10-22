@@ -110,6 +110,10 @@ export function useTabletopEditor(
     setSelectedId(null);
   };
 
+  const nextStateSelected = () => {
+    if (selectedId) dispatch({ type: 'NEXT_STATE', payload: { widgetId: selectedId } });
+  };
+
   const updateTable = (changes: Partial<TabletopTableConfig>) =>
     dispatch({ type: 'UPDATE_TABLE', payload: { changes } });
 
@@ -156,6 +160,7 @@ export function useTabletopEditor(
     addWidget,
     addDeck,
     duplicateSelected,
+    nextStateSelected,
     deleteSelected,
     updateTable,
   };

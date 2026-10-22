@@ -27,15 +27,15 @@ Roadmap and comparison with VirtualTabletop: [2026-10-21 plan](../reports/2026-1
 
 `logic/tabletopReducer.ts` holds the action union (`TabletopAction`) and the table actions (move, flip, rotate, snap to holder, counters, dice, animation, seats). Groups live in `logic/reducers/`:
 
-| File                  | Actions                                                                        |
-| --------------------- | ------------------------------------------------------------------------------ |
-| `deckReducer.ts`      | `SHUFFLE_DECK`, `DRAW_CARD`, `RETURN_CARD_TO_DECK`                             |
-| `bagReducer.ts`       | `DRAW_FROM_BAG`                                                                |
-| `pieceReducer.ts`     | `TAKE_PIECE_FROM_SUPPLY`, `PLAY_CARD_FROM_HAND`                                |
-| `viewReducer.ts`      | `SCALE_WIDGETS`, `RESET_WIDGET_SCALE`, `SET_WIDGET_SHOW_ALWAYS`, hidden zones  |
-| `tableToolReducer.ts` | `TOGGLE_TIMER`, `RESET_TIMER`, `SPIN_SPINNER` (rules in `logic/tableTools.ts`) |
-| `editReducer.ts`      | `PATCH_WIDGETS`, `ADD_WIDGET`, `DELETE_WIDGETS`, `UPDATE_TABLE`                |
-| `holderMembership.ts` | helper `removeFromHolderAndUpdateHand`                                         |
+| File                  | Actions                                                                                      |
+| --------------------- | -------------------------------------------------------------------------------------------- |
+| `deckReducer.ts`      | `SHUFFLE_DECK`, `DRAW_CARD`, `RETURN_CARD_TO_DECK`                                           |
+| `bagReducer.ts`       | `DRAW_FROM_BAG`                                                                              |
+| `pieceReducer.ts`     | `TAKE_PIECE_FROM_SUPPLY`, `PLAY_CARD_FROM_HAND`                                              |
+| `viewReducer.ts`      | `SCALE_WIDGETS`, `RESET_WIDGET_SCALE`, `SET_WIDGET_SHOW_ALWAYS`, hidden zones                |
+| `tableToolReducer.ts` | `TOGGLE_TIMER`, `RESET_TIMER`, `SPIN_SPINNER`, `NEXT_STATE` (rules in `logic/tableTools.ts`) |
+| `editReducer.ts`      | `PATCH_WIDGETS`, `ADD_WIDGET`, `DELETE_WIDGETS`, `UPDATE_TABLE`                              |
+| `holderMembership.ts` | helper `removeFromHolderAndUpdateHand`                                                       |
 
 Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`.
 
@@ -44,14 +44,18 @@ Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`.
 - `logic/widgetEdits.ts` — pure `patchWidgets` (never `id`/`type`), `addWidget`, `deleteWidgets` (a deck takes its cards; deleted widgets leave holders and decks), `cloneWidget`, `updateTable`.
 - `logic/editHistory.ts` — `recordChange(history, before, after)` stores the forward delta and its inverse (`diffGame(after, before)`); `undoStep` / `redoStep` return the delta to dispatch as `APPLY_EDIT_DELTA`. Limit 100 entries.
 
-## 3. Editor UI
+## 3. Button routines
+
+`ButtonWidget.routine` is a JSON list of steps from a fixed vocabulary (`SHUFFLE`, `DRAW`, `ROLL`, `FLIP`, `MOVE`, `SET`, `COUNTER`, `TIMER`, `SPIN`, `NEXT_STATE`) — no expressions, no code. `logic/routines.ts` validates them (`parseRoutine`: unknown ops, missing fields, `SET` on `id`/`type`/`routine`, max 50 steps, max 60 draws) and maps them to ordinary actions (`routineToActions`). `RUN_ROUTINE` applies them in order, so a routine syncs as one intent, runs its random steps on the host and is undoable like any other edit. Edited in the inspector with `RoutineEditor`.
+
+## 4. Editor UI
 
 `components/editor/` (mounted by `TabletopGame` for the TV host and local play): `TabletopEditor` wraps the surface, `EditorToolbar` (edit mode, undo/redo, add widget from `logic/widgetTemplates.ts`, table settings), `WidgetInspector` + `InspectorFields` (common and per-type fields, duplicate, delete), `WidgetJsonEditor` (raw JSON, parsed by `parseWidgetPatch`), `TableSettingsDialog`, `DeckBuilderDialog` (deck from image URLs or a spritesheet via `logic/deckBuilder.ts`, added with `ADD_WIDGETS`). State lives in `useTabletopEditor` (selection, history recorded while edit mode is on; Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y, Delete). `ImageUploadButton` (inspector image, table background) stores uploaded images as WebP data URLs scaled to 512 px (`logic/imageUpload.ts`) — frontend-only, but every image travels with the game state through sync, so keep them few and small. `SelectionHandles` (portal into the table canvas) resizes (Shift keeps the aspect ratio) and rotates (15° steps, Alt for free) the selected widget and commits one `PATCH_WIDGETS` on release (`logic/handleMath.ts`). `TableMotionStyles` (mounted by `TabletopEditor`) animates position changes of board widgets and replays a flip on cards (`data-card-flip`), respecting reduced motion. Selection works through `data-widget-id` on board widgets and holders, so the surface itself is unchanged.
 
-## 4. Sync
+## 5. Sync
 
 Host-authoritative over `useMultiChannelSync`, see [sync-protocol](sync-protocol.md): non-host devices send `INTENT`s (every action except `LOAD_GAME`, `APPLY_REMOTE_DELTA`, `ANIMATE_CARD_TO_TABLE`, `FINISH_ANIMATION`), the host broadcasts `STATE_DELTA` (`logic/stateDelta.ts`) with a sequence number, gaps and joins get a `STATE_SNAPSHOT`. Random results are decided on the host.
 
-## 5. Storage
+## 6. Storage
 
 `galaxy_tabletop_db` v3 (see [persistence](persistence.md)): `custom_games` for imported/edited definitions, `sessions` for running games. `useTabletopAutosave` saves 1 s after a change on the host or in local play; `TabletopGame` resumes a saved session first, `RestartGameButton` deletes it.

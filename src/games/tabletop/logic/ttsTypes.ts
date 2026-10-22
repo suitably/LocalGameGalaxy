@@ -86,6 +86,8 @@ export interface TTSObjectState {
   CustomDeck?: Record<string, TTSCustomDeckEntry>;
   /** Nested objects (cards in a deck, items in a bag) */
   ContainedObjects?: TTSObjectState[];
+  /** Alternative states keyed by state number (the current one is the object itself). */
+  States?: Record<string, TTSObjectState>;
 
   /** Custom visuals */
   CustomImage?: TTSCustomImage;
