@@ -21,9 +21,19 @@ export const CardWidgetView: React.FC<CardWidgetViewProps> = ({
   const isFaceUp = widget.faceUp;
   const hasClipPath = Boolean(widget.clipPath);
   const showFaceObjects = Boolean(widget.faceObjects && widget.faceObjects.length > 0 && isFaceUp);
-  const showBackFaceObjects = Boolean(widget.backFaceObjects && widget.backFaceObjects.length > 0 && !isFaceUp);
-  const showFallbackObjects = Boolean(isFaceUp && !showFaceObjects && widget.backFaceObjects && widget.backFaceObjects.length > 0);
-  const isUnstyledContainer = Boolean(showFaceObjects || showBackFaceObjects || showFallbackObjects || hasClipPath || widget.isTransparent);
+  const showBackFaceObjects = Boolean(
+    widget.backFaceObjects && widget.backFaceObjects.length > 0 && !isFaceUp,
+  );
+  const showFallbackObjects = Boolean(
+    isFaceUp && !showFaceObjects && widget.backFaceObjects && widget.backFaceObjects.length > 0,
+  );
+  const isUnstyledContainer = Boolean(
+    showFaceObjects ||
+    showBackFaceObjects ||
+    showFallbackObjects ||
+    hasClipPath ||
+    widget.isTransparent,
+  );
 
   return (
     <Box
@@ -49,9 +59,13 @@ export const CardWidgetView: React.FC<CardWidgetViewProps> = ({
         transition: isDragging ? 'none' : 'box-shadow 0.2s, transform 0.2s',
         transform: `rotate(${widget.rotation || 0}deg) ${isDragging ? 'scale(1.05)' : ''}`,
         border: isUnstyledContainer ? 'none' : '1.5px solid rgba(0,0,0,0.18)',
-        overflow: showFaceObjects || showBackFaceObjects || showFallbackObjects ? 'visible' : 'hidden',
+        overflow:
+          showFaceObjects || showBackFaceObjects || showFallbackObjects ? 'visible' : 'hidden',
         bgcolor: isUnstyledContainer ? 'transparent' : '#fff',
-        clipPath: showFaceObjects || showBackFaceObjects || showFallbackObjects ? undefined : widget.clipPath,
+        clipPath:
+          showFaceObjects || showBackFaceObjects || showFallbackObjects
+            ? undefined
+            : widget.clipPath,
         opacity: isDragging ? 0.35 : 1,
       }}
     >
@@ -84,4 +98,3 @@ export const CardWidgetView: React.FC<CardWidgetViewProps> = ({
     </Box>
   );
 };
-
