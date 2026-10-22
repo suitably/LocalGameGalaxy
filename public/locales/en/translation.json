@@ -832,7 +832,22 @@
         "kind_holder": "Card area",
         "kind_hand": "Player hand",
         "kind_counter": "Counter",
-        "kind_die": "Die"
+        "kind_die": "Die",
+        "kind_deck": "Card deck…",
+        "deck_title": "New card deck",
+        "deck_name": "Name",
+        "deck_from_list": "Image URLs",
+        "deck_from_sheet": "Spritesheet",
+        "deck_urls": "Card images",
+        "deck_urls_hint": "One image URL per line, one card each.",
+        "deck_sheet_url": "Spritesheet URL",
+        "deck_cols": "Columns",
+        "deck_rows": "Rows",
+        "deck_count": "Cards",
+        "deck_back": "Back image URL (optional)",
+        "deck_width": "Card width",
+        "deck_height": "Card height",
+        "deck_create": "Create deck ({{count}} cards)"
       },
       "workshop": {
         "error_invalid_input": "Not a valid Steam Workshop URL or ID.",

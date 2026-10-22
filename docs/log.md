@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — Tabletop deck builder (claude-code)
+
+- #449 slice 6: `docs/tech/tabletop-engine.md` §3 names `DeckBuilderDialog` and `deckBuilder.ts`.
+- **Code changed:** `src/games/tabletop/logic/{deckBuilder,widgetEdits,tabletopReducer}.ts`, `logic/reducers/editReducer.ts`, `components/editor/*`, locales, test.
+
 ## 2026-10-22 — Workshop import errors (claude-code)
 
 - #449 slice 8 (part 2): no doc covers these messages; `CHANGELOG.md` updated.

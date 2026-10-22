@@ -2,6 +2,7 @@
 
 ### Added
 
+- **Tabletop editor**: deck builder — create a card deck from a list of image URLs or a spritesheet (columns, rows, count) with optional back image and card size (`logic/deckBuilder.ts`, `ADD_WIDGETS`) (#449).
 - **Tabletop editor**: edit mode on the TV and in local play — add tokens, cards, card areas, player hands, counters and dice; select a widget on the table or from a list; edit position, size, layer, rotation, image, owner seat, pinned and type-specific fields; duplicate, delete, raw JSON; table size and background; undo/redo (also Ctrl+Z / Ctrl+Shift+Z) (#449).
 - **Tabletop**: editor building blocks — `PATCH_WIDGETS`, `ADD_WIDGET`, `DELETE_WIDGETS`, `UPDATE_TABLE` actions (`logic/widgetEdits.ts`) and undo/redo history on game deltas (`logic/editHistory.ts`, `APPLY_EDIT_DELTA`); `tabletopReducer.ts` split into deck, bag, piece, view and edit sub-reducers (945 → 364 lines) (#449).
 - **Tabletop**: running games are autosaved (host or local play) and resume after a reload; a restart button with confirmation starts the game from its definition again (`galaxy_tabletop_db` v3, store `sessions`) (#449).

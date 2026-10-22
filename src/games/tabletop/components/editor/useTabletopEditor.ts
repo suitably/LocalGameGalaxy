@@ -17,6 +17,7 @@ import {
 } from '../../logic/editHistory';
 import { cloneWidget, type WidgetPatch } from '../../logic/widgetEdits';
 import { createWidget, topZIndex, type NewWidgetKind } from '../../logic/widgetTemplates';
+import { buildDeck, type DeckDraft } from '../../logic/deckBuilder';
 
 const newId = (prefix: string) => `${prefix}_${generateUUID().slice(0, 8)}`;
 
@@ -74,6 +75,23 @@ export function useTabletopEditor(
     );
     dispatch({ type: 'ADD_WIDGET', payload: { widget } });
     setSelectedId(widget.id);
+  };
+
+  const addDeck = (draft: DeckDraft) => {
+    const deckId = newId('deck');
+    const widgets = buildDeck({
+      deckId,
+      x: Math.round(game.table.width / 2 - draft.width / 2),
+      y: Math.round(game.table.height / 2 - draft.height / 2),
+      zIndex: topZIndex(game),
+      width: draft.width,
+      height: draft.height,
+      label: draft.label || undefined,
+      backImage: draft.backImage || undefined,
+      faces: draft.faces,
+    });
+    dispatch({ type: 'ADD_WIDGETS', payload: { widgets } });
+    setSelectedId(deckId);
   };
 
   const duplicateSelected = () => {
@@ -134,6 +152,7 @@ export function useTabletopEditor(
     redo,
     patch,
     addWidget,
+    addDeck,
     duplicateSelected,
     deleteSelected,
     updateTable,
