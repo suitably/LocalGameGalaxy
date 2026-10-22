@@ -27,7 +27,7 @@ import { LocalLibraryPanel } from './LocalLibraryPanel';
 interface SongSelectDialogProps {
   open: boolean;
   onClose: () => void;
-  selectedSong: DemoSong;
+  selectedSong: DemoSong | null;
   selectedLocalSong: StoredSheetMusic | null;
   librarySongs: StoredSheetMusic[];
   storedFolders: StoredFolderHandle[];
@@ -99,7 +99,7 @@ export const SongSelectDialog: React.FC<SongSelectDialogProps> = ({
           {DEMO_SONGS.map((song) => (
             <ListItemButton
               key={song.id}
-              selected={!selectedLocalSong && selectedSong.id === song.id}
+              selected={selectedSong?.id === song.id}
               onClick={() => {
                 onSongChange(song);
                 onClose();

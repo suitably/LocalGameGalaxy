@@ -20,6 +20,7 @@
 
 ### Changed
 
+- **Melodiq Notes**: the 502-line `useMelodiqNotesState` hook is split into focused hooks (`useSongSource`, `useSongLibrary`, `useMixerState`, `useViewPreferences`, `usePlayerInput`, `useMicPitch`, `usePlaybackEngine`) and pure, tested logic (`logic/songSource.ts`, `logic/playbackTiming.ts`, `logic/ensembleMix.ts`); it now returns state grouped by concern. The loaded song is one `SongSource` union (demo / library / upload), so an uploaded file no longer plays the previous demo's stems or shows its artist, and the demo list no longer highlights a demo while another song is loaded.
 - **GuessArt players**: all players start local on the creating device; sharing a player's link or QR code marks them remote (invited), opening the link takes the seat on that phone, and the host sees "… joined" (also as a notification when the app is in the background). Whether a player is local now comes from the seat in the synced game, not from per-device lists or the ntfy topic — regenerating the ntfy topic no longer drops your own players. Turn notifications follow one rule (`turnDelivery.ts`) (#416).
 - **GuessArt**: word selection and hint rules are pure transitions (`buildRoundTranslations`, `applyWordSelection`, `applyHint` in `logic/transitions.ts`, tested); the engine only loads and saves. The duplicated translation normalisation is one helper now (#416).
 - **Storage**: companion, signaling and push settings moved out of `src/lib/storage.ts` into `lib/companion/companionSettings.ts`, `lib/webrtc/signalingSettings.ts` and `lib/push/pushSettings.ts`; `storage.*` keeps `@deprecated` delegates, behaviour unchanged (#419).
@@ -65,6 +66,7 @@
 
 ### Fixed
 
+- **Melodiq Notes**: the game no longer freezes on open — header callbacks were recreated on every render and looped through `HeaderLayoutContext` ("Maximum update depth exceeded"); a superseded OSMD load no longer renders into a cleared instance ("load() needs to be called before render()").
 - **Tabletop**: seat 1 no longer gets the hand of seat 0 when both hands match the seat by index (`findPlayerHandHolder` prefers an exact owner); choosing a seat no longer renames its player to "Player".
 - **Tabletop Workshop import**: without the companion server, a failing Steam lookup now always shows the "upload the .json or connect the companion server" hint (also when the host answers 405/501 or the request fails), the download uses HTTPS, and a blocked download or a file that is not a TTS save get their own translated messages instead of "Failed to fetch" or a raw TypeError.
 - **GuessArt**: opening a shared player link now opens the game on the phone instead of the lobby, and no longer hangs when the MQTT broker is unreachable.
