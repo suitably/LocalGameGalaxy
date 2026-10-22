@@ -17,6 +17,7 @@
 
 ### Changed
 
+- **Party lobby**: `PartyLobby.tsx` split into section components (`PartyActiveGameBanner`, `PartyRoomHeader`, `PartyServerInfoCard`, `PartyShareCard`, `PartyPlayerRoster`, `PartyGameSelection`); 539 → 96 lines, budget baseline removed (#359).
 - **Tabletop privacy**: cards in a player's hand no longer travel readable to every device. The host sends them face-down and encrypts the real faces per seat (ECDH + AES-GCM over WebCrypto); only that seat's phone can restore them (#449).
 - **Tabletop presentation**: widgets glide to new positions (moves from other devices, holder layouts, undo) and cards flip with a short animation; both respect "reduce motion" (#449).
 - **Tabletop Workshop import**: errors are translated (de/en) and carry a code (`WorkshopError`); without the companion server the import now explains that Steam details need the server and points to uploading the mod `.json` instead of failing with an HTML parse error (#449).

@@ -191,3 +191,5 @@ export function usePartyLobbyController(initialRoomId?: string) {
     amIHost,
   };
 }
+
+export type PartyLobbyController = ReturnType<typeof usePartyLobbyController>;

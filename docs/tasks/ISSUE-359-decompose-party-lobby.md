@@ -37,8 +37,8 @@ Per `AGENTS.md` (Section 3.1), components must strictly remain under 250 lines (
 
 ## Acceptance Criteria
 
-- [ ] `PartyLobby.tsx` is under 200 lines.
-- [ ] `npm run check:budget` passes cleanly.
+- [x] `PartyLobby.tsx` is under 200 lines (96 after the 2026-10-22 split).
+- [x] `npm run check:budget` passes cleanly (baseline entry removed).
 - [ ] Party creation, player joining, QR sharing, and game launching all work smoothly.
 - [ ] Zero usage of `any`.
 - [ ] All user-facing strings use `t('key')`.
