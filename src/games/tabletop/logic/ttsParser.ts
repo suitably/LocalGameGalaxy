@@ -4,7 +4,14 @@
  * Converts TTS save file JSON (3D ObjectStates) into the Galaxy
  * TabletopGameDefinition (2D widget-based) format.
  */
-import type { TTSSaveFile, TTSObjectState, TTSCustomDeckEntry, TTSSnapPoint, TTSVector3 } from './ttsTypes';
+import { convertBag, convertFogOfWar, tileShape } from './ttsContainers';
+import type {
+  TTSSaveFile,
+  TTSObjectState,
+  TTSCustomDeckEntry,
+  TTSSnapPoint,
+  TTSVector3,
+} from './ttsTypes';
 import {
   HEX_CLIP_PATH,
   CIRCLE_CLIP_PATH,
@@ -12,6 +19,7 @@ import {
   type TabletopWidget,
   type CardWidget,
   type DeckWidget,
+  type HiddenZone,
   type DieWidget,
   type TokenWidget,
   type HolderWidget,
@@ -32,7 +40,11 @@ const DIE_SIZE = 80;
 
 export { HEX_CLIP_PATH, CIRCLE_CLIP_PATH };
 
-export function getCardShapeAndSize(deck?: TTSCustomDeckEntry): { width: number; height: number; clipPath?: string } {
+export function getCardShapeAndSize(deck?: TTSCustomDeckEntry): {
+  width: number;
+  height: number;
+  clipPath?: string;
+} {
   if (deck?.Type === 2 || deck?.Type === 3) {
     // Hex cards: TTS hex base is ~1.15 aspect ratio
     return { width: 210, height: 182, clipPath: HEX_CLIP_PATH };
@@ -68,9 +80,17 @@ function ttsColorToHex(c?: { r: number; g: number; b: number }): string {
 // ─── HandTrigger seat mapping by FogColor ────────────────────────────
 
 const FOG_COLOR_SEAT: Record<string, number> = {
-  White: 0, Brown: 1, Red: 2, Orange: 3,
-  Yellow: 4, Green: 5, Teal: 6, Blue: 7,
-  Purple: 8, Pink: 9, Black: 10,
+  White: 0,
+  Brown: 1,
+  Red: 2,
+  Orange: 3,
+  Yellow: 4,
+  Green: 5,
+  Teal: 6,
+  Blue: 7,
+  Purple: 8,
+  Pink: 9,
+  Black: 10,
 };
 
 // ─── Die name → sides ────────────────────────────────────────────────
@@ -83,13 +103,17 @@ function parseDieSides(name: string): number | null {
 // ─── 3D → 2D coordinate projection ──────────────────────────────────
 
 interface BoundingBox {
-  minX: number; maxX: number;
-  minZ: number; maxZ: number;
+  minX: number;
+  maxX: number;
+  minZ: number;
+  maxZ: number;
 }
 
 function computeBounds(objects: TTSObjectState[]): BoundingBox {
-  let minX = Infinity, maxX = -Infinity;
-  let minZ = Infinity, maxZ = -Infinity;
+  let minX = Infinity,
+    maxX = -Infinity;
+  let minZ = Infinity,
+    maxZ = -Infinity;
 
   for (const obj of objects) {
     const { posX, posZ } = obj.Transform;
@@ -110,8 +134,14 @@ function computeBounds(objects: TTSObjectState[]): BoundingBox {
   }
 
   // Fallback for single-object or empty scenes
-  if (!isFinite(minX)) { minX = 0; maxX = 10; }
-  if (!isFinite(minZ)) { minZ = 0; maxZ = 10; }
+  if (!isFinite(minX)) {
+    minX = 0;
+    maxX = 10;
+  }
+  if (!isFinite(minZ)) {
+    minZ = 0;
+    maxZ = 10;
+  }
 
   return { minX, maxX, minZ, maxZ };
 }
@@ -256,7 +286,9 @@ function nextId(prefix: string): string {
   return `${prefix}_${++widgetIdCounter}`;
 }
 
-function sanitizeCustomDecks(decks?: Record<string, TTSCustomDeckEntry>): Record<string, TTSCustomDeckEntry> {
+function sanitizeCustomDecks(
+  decks?: Record<string, TTSCustomDeckEntry>,
+): Record<string, TTSCustomDeckEntry> {
   if (!decks) return {};
   const res: Record<string, TTSCustomDeckEntry> = {};
   for (const [k, d] of Object.entries(decks)) {
@@ -280,7 +312,8 @@ function convertCard(
   return {
     id: obj.GUID,
     type: 'card',
-    x: pos.x, y: pos.y,
+    x: pos.x,
+    y: pos.y,
     width: shapeInfo.width,
     height: shapeInfo.height,
     clipPath: shapeInfo.clipPath,
@@ -309,17 +342,28 @@ function convertDeck(
   let deckIndex: string | undefined = Object.keys(objDecks)[0];
   if (!deckIndex && obj.DeckIDs && obj.DeckIDs.length > 0) {
     deckIndex = String(Math.floor(obj.DeckIDs[0] / 100));
-  } else if (!deckIndex && obj.ContainedObjects && obj.ContainedObjects.length > 0 && obj.ContainedObjects[0].CardID) {
+  } else if (
+    !deckIndex &&
+    obj.ContainedObjects &&
+    obj.ContainedObjects.length > 0 &&
+    obj.ContainedObjects[0].CardID
+  ) {
     deckIndex = String(Math.floor(obj.ContainedObjects[0].CardID / 100));
   }
-  const thisDeck = (deckIndex ? mergedDecks[deckIndex] : undefined) || Object.values(mergedDecks)[0];
+  const thisDeck =
+    (deckIndex ? mergedDecks[deckIndex] : undefined) || Object.values(mergedDecks)[0];
   const shapeInfo = getCardShapeAndSize(thisDeck);
   const cardIds: string[] = [];
 
   // Create cards from ContainedObjects
   if (obj.ContainedObjects && obj.ContainedObjects.length > 0) {
     for (const child of obj.ContainedObjects) {
-      const card = convertCard(child, { x: pos.x, y: pos.y, zIndex: pos.zIndex + 1 }, mergedDecks, deckId);
+      const card = convertCard(
+        child,
+        { x: pos.x, y: pos.y, zIndex: pos.zIndex + 1 },
+        mergedDecks,
+        deckId,
+      );
       card.inPile = true;
       card.pileId = deckId;
       card.faceUp = false;
@@ -336,7 +380,8 @@ function convertDeck(
       const card: CardWidget = {
         id: cId,
         type: 'card',
-        x: pos.x, y: pos.y,
+        x: pos.x,
+        y: pos.y,
         width: cardShape.width,
         height: cardShape.height,
         clipPath: cardShape.clipPath,
@@ -365,7 +410,8 @@ function convertDeck(
   return {
     id: deckId,
     type: 'deck',
-    x: pos.x, y: pos.y,
+    x: pos.x,
+    y: pos.y,
     width: shapeInfo.width,
     height: shapeInfo.height,
     clipPath: shapeInfo.clipPath,
@@ -388,8 +434,10 @@ function convertDie(
   return {
     id: obj.GUID,
     type: 'die',
-    x: pos.x, y: pos.y,
-    width: DIE_SIZE, height: DIE_SIZE,
+    x: pos.x,
+    y: pos.y,
+    width: DIE_SIZE,
+    height: DIE_SIZE,
     zIndex: pos.zIndex,
     label: obj.Nickname || `W${sides}`,
     currentValue: typeof obj.Value === 'number' ? obj.Value : 1,
@@ -447,8 +495,10 @@ function convertToken(
   return {
     id: obj.GUID,
     type: 'token',
-    x: pos.x, y: pos.y,
-    width: size, height: size,
+    x: pos.x,
+    y: pos.y,
+    width: size,
+    height: size,
     zIndex: pos.zIndex,
     label,
     color: ttsColorToHex(obj.ColorDiffuse),
@@ -467,8 +517,10 @@ function convertHandTrigger(
   return {
     id: obj.GUID,
     type: 'holder',
-    x: pos.x, y: pos.y,
-    width: 340, height: 200,
+    x: pos.x,
+    y: pos.y,
+    width: 340,
+    height: 200,
     zIndex: pos.zIndex + 1000,
     label: `Hand ${seatIndex + 1}`,
     dropTargetTypes: ['card'],
@@ -508,6 +560,16 @@ export function parseTtsSaveFile(
 
   // Track HandTrigger seat assignment
   let handSeatCounter = 0;
+  const hiddenZones: Record<string, HiddenZone> = {};
+
+  /** Objects inside bags: cards, dice and tiles keep their kind, the rest become tokens. */
+  const convertChild = (child: TTSObjectState, p: { x: number; y: number; zIndex: number }) => {
+    if (child.Name === 'Card') return convertCard(child, p, globalDecks);
+    const sides = parseDieSides(child.Name);
+    if (sides !== null) return convertDie(child, p, sides);
+    if (child.Name === 'Custom_Tile') return { ...convertToken(child, p), ...tileShape(child) };
+    return convertToken(child, p);
+  };
 
   // Process all top-level objects
   for (const obj of save.ObjectStates) {
@@ -538,9 +600,10 @@ export function parseTtsSaveFile(
 
     // HandTrigger → player hand
     if (name === 'HandTrigger') {
-      const seat = obj.FogColor && FOG_COLOR_SEAT[obj.FogColor] !== undefined
-        ? FOG_COLOR_SEAT[obj.FogColor]
-        : handSeatCounter;
+      const seat =
+        obj.FogColor && FOG_COLOR_SEAT[obj.FogColor] !== undefined
+          ? FOG_COLOR_SEAT[obj.FogColor]
+          : handSeatCounter;
       handSeatCounter = Math.max(handSeatCounter, seat + 1);
       const hand = convertHandTrigger(obj, pos, seat);
       widgets[hand.id] = hand;
@@ -567,31 +630,29 @@ export function parseTtsSaveFile(
       continue;
     }
 
-    // Infinite_Bag / Bag → DeckWidget (supply pile)
+    // Bag / Infinite_Bag → BagWidget (finite contents or infinite template)
     if (name === 'Infinite_Bag' || name === 'Bag') {
-      const bagId = nextId('bag');
-      const childIds: string[] = [];
-      if (obj.ContainedObjects) {
-        for (const child of obj.ContainedObjects) {
-          const tok = convertToken(child, { x: pos.x, y: pos.y, zIndex: pos.zIndex + 1 });
-          tok.movable = true;
-          tok.pinned = false;
-          widgets[tok.id] = tok;
-          childIds.push(tok.id);
-        }
-      }
-      widgets[bagId] = {
-        id: bagId,
-        type: 'deck',
-        x: pos.x, y: pos.y,
-        width: 60, height: 60,
-        zIndex: pos.zIndex,
-        label: obj.Nickname || 'Vorrat',
-        cardIds: childIds,
-        backContent: { type: 'text', value: '🎒', color: ttsColorToHex(obj.ColorDiffuse) },
-        movable: !obj.Locked,
-        pinned: Boolean(obj.Locked),
-      } as DeckWidget;
+      const bag = convertBag(obj, pos, ttsColorToHex(obj.ColorDiffuse), convertChild, widgets);
+      widgets[bag.id] = bag;
+      continue;
+    }
+
+    // FogOfWarTrigger → hidden zone for the seat of its fog colour
+    if (name === 'FogOfWarTrigger') {
+      const zone = convertFogOfWar(
+        obj,
+        pos,
+        TTS_SCALE,
+        obj.FogColor ? FOG_COLOR_SEAT[obj.FogColor] : undefined,
+        ttsColorToHex(obj.ColorDiffuse),
+      );
+      hiddenZones[zone.id] = zone;
+      continue;
+    }
+
+    // Custom_Tile → token with the tile's shape (box, hex, circle, rounded)
+    if (name === 'Custom_Tile') {
+      widgets[obj.GUID] = { ...convertToken(obj, pos), ...tileShape(obj) };
       continue;
     }
 
@@ -664,6 +725,7 @@ export function parseTtsSaveFile(
     },
     widgets,
     ruleText,
+    ...(Object.keys(hiddenZones).length > 0 ? { hiddenZones } : {}),
   });
 }
 
@@ -677,9 +739,18 @@ export function parseTtsSaveFile(
 export function sanitizeTtsUrl(url?: string): string {
   if (!url) return '';
   return url
-    .replace(/^https?:\/\/cloud-\d+\.steamusercontent\.com\//i, 'https://steamusercontent-a.akamaihd.net/')
-    .replace(/^http:\/\/steamusercontent-a\.akamaihd\.net\//i, 'https://steamusercontent-a.akamaihd.net/')
-    .replace(/^http:\/\/steamuserimages-a\.akamaihd\.net\//i, 'https://steamuserimages-a.akamaihd.net/');
+    .replace(
+      /^https?:\/\/cloud-\d+\.steamusercontent\.com\//i,
+      'https://steamusercontent-a.akamaihd.net/',
+    )
+    .replace(
+      /^http:\/\/steamusercontent-a\.akamaihd\.net\//i,
+      'https://steamusercontent-a.akamaihd.net/',
+    )
+    .replace(
+      /^http:\/\/steamuserimages-a\.akamaihd\.net\//i,
+      'https://steamuserimages-a.akamaihd.net/',
+    );
 }
 
 /** Recursively collects all CustomDeck entries from the object tree */

@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — TTS bags, tiles, fog of war (claude-code)
+
+- #449 slice 8 (part 1): no doc lists the TTS object mapping beyond the plan report; `CHANGELOG.md` updated.
+- **Code changed:** `src/games/tabletop/logic/{ttsParser,ttsContainers,ttsTypes}.ts`, `components/widgets/BagWidgetView.tsx`, `components/surface/BoardWidgetRenderer.tsx`, test; preceded by a formatting-only commit.
+
 ## 2026-10-22 — Tabletop editor UI (claude-code)
 
 - #449 slice 5: `docs/tech/tabletop-engine.md` §3 describes the editor components.
