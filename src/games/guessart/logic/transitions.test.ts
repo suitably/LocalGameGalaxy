@@ -2,6 +2,9 @@ import { describe, it, expect } from 'vitest';
 import {
   advanceAfterCorrectGuess,
   applyGuess,
+  applyHint,
+  applyWordSelection,
+  buildRoundTranslations,
   createEmptyRound,
   EMPTY_CANVAS_SCENE,
 } from './transitions';
@@ -113,5 +116,65 @@ describe('guessart transitions (#416)', () => {
       hintLevel: 0,
       canvasData: EMPTY_CANVAS_SCENE,
     });
+  });
+});
+
+describe('word selection and hints (#416)', () => {
+  const lexicon = [
+    {
+      id: 7,
+      word: 'Elefant',
+      translations: { en: { canonical: 'elephant', synonyms: ['', 'jumbo'] } },
+    },
+  ];
+
+  it('builds translations from the payload, the word itself and the lexicon', () => {
+    const t = buildRoundTranslations({ word: ' Elefant ', wordId: '7' } as never, 'de', lexicon);
+    expect(t.de.canonical).toBe('Elefant');
+    expect(t.en).toEqual({ canonical: 'elephant', synonyms: ['jumbo'], forms: [], gendered: [] });
+  });
+
+  it('payload translations win over the lexicon and invalid entries are skipped', () => {
+    const t = buildRoundTranslations(
+      { word: 'Elefant', translations: { 'en-US': { canonical: ' tusker ' }, xx: null } } as never,
+      'de',
+      lexicon,
+    );
+    expect(t.en.canonical).toBe('tusker');
+    expect(Object.keys(t).sort()).toEqual(['de', 'en']);
+  });
+
+  it('applyWordSelection starts drawing with a fresh mask; wrong phase throws', () => {
+    const r = applyWordSelection(
+      game({ status: 'selecting' }),
+      round({ status: 'selecting' }),
+      { word: 'Hund' } as never,
+      'de',
+      [],
+    );
+    expect(r).toMatchObject({
+      status: 'drawing',
+      word: 'Hund',
+      hintLevel: 0,
+      wordLength: 4,
+      wordDifficulty: 3,
+    });
+    expect(() =>
+      applyWordSelection(game(), round(), { word: 'Hund' } as never, 'de', []),
+    ).toThrow();
+  });
+
+  it('applyHint goes structure → letters → exhausted; wrong phase throws', () => {
+    const translations = { de: { canonical: 'Elefant', synonyms: [], forms: [], gendered: [] } };
+    const first = applyHint(game(), round({ translations }), 'de');
+    expect(first.exhausted).toBe(false);
+    if (first.exhausted) return;
+    expect(first.hint).toMatchObject({ type: 'structure', level: 1, letters: [] });
+    const second = applyHint(game(), first.round, 'de');
+    if (second.exhausted) throw new Error('unexpected');
+    expect(second.hint.type).toBe('letters');
+    expect(second.round.hintLetters.length).toBeGreaterThan(0);
+    expect(applyHint(game(), second.round, 'de')).toEqual({ exhausted: true });
+    expect(() => applyHint(game({ status: 'drawing' }), round(), 'de')).toThrow();
   });
 });

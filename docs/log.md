@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — GuessArt word selection and hint transitions (claude-code)
+
+- #416 slices 2–3: no doc describes the engine internals; `CHANGELOG.md` updated.
+- **Code changed:** `src/games/guessart/logic/{engine,transitions}.ts`, `transitions.test.ts`.
+
 ## 2026-10-22 — Device settings out of storage.ts (claude-code)
 
 - #419: `docs/tech/persistence.md` names the new owners of the companion, signaling and push accessors; `verified` bumped.

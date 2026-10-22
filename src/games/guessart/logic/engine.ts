@@ -27,10 +27,15 @@ import type {
   GuessArtRound,
   HintResult,
   SelectWordPayload,
-  WordTranslationEntry,
 } from './types';
 import { playerAssignment } from './playerAssignment';
-import { advanceAfterCorrectGuess, applyGuess, createEmptyRound } from './transitions';
+import {
+  advanceAfterCorrectGuess,
+  applyGuess,
+  applyHint,
+  applyWordSelection,
+  createEmptyRound,
+} from './transitions';
 import {
   isGameBaseSnapshotNewer,
   mergePlayerProfiles,
@@ -315,84 +320,16 @@ export const LocalGameEngine = {
     if (!game) {
       throw new Error('Local game not found');
     }
-    if (game.status !== 'selecting') {
-      throw new Error('Word selection only allowed during selecting phase');
-    }
     const round = await getRoundByNumber(gameId, game.roundNumber);
     if (!round) {
       throw new Error('Active round missing');
     }
-
     const normalizedLanguage = shortLanguageCode(
       payload.languageCode || language || game.options.language,
     );
-    const translations: Record<string, WordTranslationEntry> = {};
-    const entries = payload.translations || {};
-
-    Object.entries(entries).forEach(([code, entry]) => {
-      if (!entry || typeof entry !== 'object') {
-        return;
-      }
-      const key = shortLanguageCode(code) || normalizeLanguageCode(code);
-      if (!key) {
-        return;
-      }
-      translations[key] = {
-        canonical: (entry.canonical || '').trim(),
-        synonyms: Array.isArray(entry.synonyms) ? entry.synonyms.filter(Boolean) : [],
-        forms: Array.isArray(entry.forms) ? entry.forms.filter(Boolean) : [],
-        gendered: Array.isArray(entry.gendered) ? entry.gendered.filter(Boolean) : [],
-      };
-    });
-
-    if (!translations[normalizedLanguage] && payload.word) {
-      translations[normalizedLanguage || 'und'] = {
-        canonical: payload.word.trim(),
-        synonyms: [],
-        forms: [],
-        gendered: [],
-      };
-    }
-
-    // Enrich missing translations from DEFAULT_WORDS (e.g. for manual words or incomplete bundles)
-    const wordId = payload.wordId ? String(payload.wordId) : null;
-    const match = DEFAULT_WORDS.find(
-      (w) =>
-        (wordId && String(w.id) === wordId) ||
-        w.word.toLowerCase() === payload.word.trim().toLowerCase() ||
-        Object.values(w.translations || {}).some(
-          (t) => t.canonical.toLowerCase() === payload.word.trim().toLowerCase(),
-        ),
+    const updatedRound = await upsertRound(
+      applyWordSelection(game, round, payload, normalizedLanguage, DEFAULT_WORDS),
     );
-    if (match?.translations) {
-      Object.entries(match.translations).forEach(([code, entry]) => {
-        const key = shortLanguageCode(code) || normalizeLanguageCode(code);
-        if (key && !translations[key] && entry?.canonical) {
-          translations[key] = {
-            canonical: entry.canonical.trim(),
-            synonyms: Array.isArray(entry.synonyms) ? entry.synonyms.filter(Boolean) : [],
-            forms: Array.isArray(entry.forms) ? entry.forms.filter(Boolean) : [],
-            gendered: Array.isArray(entry.gendered) ? entry.gendered.filter(Boolean) : [],
-          };
-        }
-      });
-    }
-
-    const updatedRound = await upsertRound({
-      ...round,
-      status: 'drawing',
-      word: payload.word.trim(),
-      wordId: payload.wordId || null,
-      wordCategoryId: payload.categoryId || null,
-      wordLanguageCode: normalizedLanguage || game.options.language,
-      wordDifficulty: payload.difficulty || 3,
-      translations,
-      hintLevel: 0,
-      hintRequested: false,
-      hintLetters: [],
-      wordMask: buildWordMask(payload.word),
-      wordLength: payload.word ? buildWordMask(payload.word).length : 0,
-    });
 
     const updatedGame = await updateLocalGame(gameId, {
       status: 'drawing',
@@ -490,51 +427,18 @@ export const LocalGameEngine = {
     if (!game) {
       throw new Error('Local game not found');
     }
-    if (game.status !== 'guessing') {
-      throw new Error('Hints only available during guessing phase');
-    }
 
     const round = await getRoundByNumber(gameId, game.roundNumber);
     if (!round) {
       throw new Error('Active round missing');
     }
 
-    const nextLevel = Math.min((round.hintLevel || 0) + 1, 2);
-    if (nextLevel === round.hintLevel && round.hintRequested) {
+    const result = applyHint(game, round, language);
+    if (result.exhausted) {
       return { game, round: toRoundPayload(round, game, language), exhausted: true };
     }
-
-    const artifacts = resolveHintArtifacts(
-      round.translations || {},
-      language || game.options.language,
-      round.wordLanguageCode,
-      round.word,
-    );
-
-    if (!artifacts) {
-      throw new Error('No hint data available');
-    }
-
-    const updatedRound = await upsertRound({
-      ...round,
-      hintLevel: nextLevel,
-      hintRequested: true,
-      wordMask: artifacts.mask,
-      wordLength: artifacts.length,
-      hintLetters: nextLevel >= 2 ? artifacts.letters : [],
-    });
-
-    return {
-      game,
-      round: toRoundPayload(updatedRound, game, language),
-      hint: {
-        type: nextLevel === 1 ? 'structure' : 'letters',
-        structure: artifacts.mask,
-        letters: nextLevel >= 2 ? artifacts.letters : [],
-        level: nextLevel,
-        wordLength: artifacts.length,
-      },
-    };
+    const updatedRound = await upsertRound(result.round);
+    return { game, round: toRoundPayload(updatedRound, game, language), hint: result.hint };
   },
 
   async deleteGame(gameId: string): Promise<boolean> {
