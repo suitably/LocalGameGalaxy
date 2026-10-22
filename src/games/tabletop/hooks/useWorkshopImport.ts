@@ -3,7 +3,7 @@
  */
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { storage } from '../../../lib/storage';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { parsePcioFile } from '../logic/pcioParser';
 import { parseTtsSaveFile } from '../logic/ttsParser';
 import { saveTabletopGame } from '../logic/tabletopStorage';
@@ -33,7 +33,12 @@ export function useWorkshopImport() {
   const errorText = useCallback(
     (err: unknown): string =>
       err instanceof WorkshopError
-        ? t(`games.tabletop.workshop.error_${err.code}`, { status: err.status ?? '' })
+        ? err.companion
+          ? t(`games.tabletop.workshop.error_companion_${err.companion.reason}`, {
+              url: err.companion.url,
+              status: err.companion.status ?? '',
+            })
+          : t(`games.tabletop.workshop.error_${err.code}`, { status: err.status ?? '' })
         : err instanceof Error
           ? err.message
           : String(err),
@@ -77,7 +82,9 @@ export function useWorkshopImport() {
           ? storage.getHelperUrl().replace(/\/$/, '')
           : undefined;
         const token = storage.isHelperActive() ? storage.getHelperToken() : undefined;
-        const meta = await fetchWorkshopDetails(workshopId, baseUrl, token);
+        // An unreachable server at the default address means "no companion", not an error.
+        const configured = Boolean(storage.get(STORAGE_KEYS.HELPER_URL));
+        const meta = await fetchWorkshopDetails(workshopId, baseUrl, token, configured);
         setState((s) => ({ ...s, status: 'meta_loaded', meta }));
       } catch (err) {
         setState((s) => ({
