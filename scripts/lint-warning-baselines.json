@@ -35,7 +35,7 @@
   "src/games/guessart/components/RoundHistoryDialog.tsx": 3,
   "src/games/guessart/components/RoundSuccessModal.tsx": 1,
   "src/games/guessart/GuessArtGame.tsx": 2,
-  "src/games/guessart/hooks/useGuessArtGame.ts": 4,
+  "src/games/guessart/hooks/useGuessArtGame.ts": 3,
   "src/games/guessart/hooks/useGuessArtHints.ts": 2,
   "src/games/guessart/hooks/useGuessArtLobby.ts": 1,
   "src/games/guessart/hooks/useGuessArtUrlParam.ts": 1,

@@ -29,7 +29,7 @@ export const WaitingForDrawerView: React.FC<WaitingForDrawerViewProps> = ({
   const drawerName = drawer?.name || round.drawnByName || 'Spieler 1';
   const guesserName = guesser?.name || round.guesserName || 'Spieler 2';
 
-  const isLocalGuesser = guesser ? playerAssignment.isPlayerLocal(game.id, guesser.id) : false;
+  const isLocalGuesser = guesser ? playerAssignment.isLocal(game, guesser.id) : false;
 
   const handleClaim = () => {
     playerAssignment.claimTurnTemporary(game.id, round.drawnById);

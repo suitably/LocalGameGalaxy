@@ -21,7 +21,10 @@ export const useGuessArtUrlParam = () => {
       const params = new URLSearchParams(window.location.search);
       const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
       const gameId = params.get('gameId') || hashParams.get('gameId');
-      if (gameId) {
+      // A link with game data is opened by the join flow once the game is imported;
+      // loading it here first would fail and not be retried.
+      const hasSnapshot = params.has('data') || hashParams.has('data');
+      if (gameId && !hasSnapshot) {
         setActiveGameIdState(gameId);
       }
     }

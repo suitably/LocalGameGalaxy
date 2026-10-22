@@ -46,9 +46,7 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
 
   const handleShareClick = (game: GuessArtGameRecord, e: React.MouseEvent) => {
     e.stopPropagation();
-    const isGameHost = game.players[0]
-      ? playerAssignment.isPlayerLocal(game.id, game.players[0].id, false)
-      : false;
+    const isGameHost = game.players[0] ? playerAssignment.isLocal(game, game.players[0].id) : false;
     if (!isGameHost) return;
     if (onOpenShareLinks) {
       onOpenShareLinks(game);
@@ -79,7 +77,7 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
         const guesserName =
           game.players[(drawerIdx + 1) % (game.players.length || 1)]?.name || 'Spieler 2';
         const isGameHost = game.players[0]
-          ? playerAssignment.isPlayerLocal(game.id, game.players[0].id, false)
+          ? playerAssignment.isLocal(game, game.players[0].id)
           : false;
 
         return (

@@ -913,7 +913,8 @@
     "confirm": "Confirm",
     "cancel": "Cancel",
     "all": "All",
-    "planned": "Planned"
+    "planned": "Planned",
+    "playerJoined": "{{names}} joined"
   },
   "settings": {
     "title": "Settings",

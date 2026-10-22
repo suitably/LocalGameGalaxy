@@ -1,14 +1,16 @@
 import { useCallback } from 'react';
 import LZString from 'lz-string';
 import { gameRelayStorage } from '../../lib/push/gameRelayStorage';
+import { inviteSeat, reclaimSeat } from '../player-management/seatActions';
 
 export interface UseSessionSharingOptions<TGame, TSnapshot> {
   game: (TGame & { id: string; players: any[] }) | null;
   basePath: string; // e.g., '/games/guessart'
   buildSnapshot: (updatedPlayers: any[]) => TSnapshot;
   onPlayerChanged?: () => void;
-  removeLocalPlayerId: (gameId: string, playerId: string) => void;
-  addLocalPlayerId: (gameId: string, playerId: string) => void;
+  /** Legacy per-device lists (games not on player seats yet). */
+  removeLocalPlayerId?: (gameId: string, playerId: string) => void;
+  addLocalPlayerId?: (gameId: string, playerId: string) => void;
   updateGameDetails: (gameId: string, details: { players: any[] }) => Promise<{ game: any }>;
   publishSync: (gameId: string, snapshot: TSnapshot) => Promise<any> | void;
 }
@@ -26,12 +28,10 @@ export function useSessionSharing<TGame, TSnapshot>({
   const buildPlayerLink = useCallback(
     (playerId: string) => {
       if (!game) return '';
-      const updatedPlayers = game.players.map((p) =>
-        p.id === playerId ? { ...p, isRemote: true } : p,
-      );
-      const snapshot = buildSnapshot(updatedPlayers);
+      // The link carries the player as invited, so the opening device takes the seat.
+      const snapshot = buildSnapshot(inviteSeat(game.players, playerId));
       const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(snapshot));
-      const playerObj = updatedPlayers.find((p) => p.id === playerId);
+      const playerObj = game.players.find((p) => p.id === playerId);
       const relay = gameRelayStorage.getEffectiveRelay(game.id, playerObj?.relayUrl);
       let link = `${window.location.origin}${window.location.pathname}#${basePath}?gameId=${game.id}&player=${playerId}&data=${compressed}`;
       if (relay) {
@@ -48,12 +48,17 @@ export function useSessionSharing<TGame, TSnapshot>({
       if (isRemote && isHost) return;
 
       if (isRemote) {
-        removeLocalPlayerId(game.id, playerId);
+        removeLocalPlayerId?.(game.id, playerId);
       } else {
-        addLocalPlayerId(game.id, playerId);
+        addLocalPlayerId?.(game.id, playerId);
       }
 
-      const updatedPlayers = game.players.map((p) => (p.id === playerId ? { ...p, isRemote } : p));
+      // Sharing invites the player; "play here" takes the seat back on this device.
+      const updatedPlayers = isRemote
+        ? inviteSeat(game.players, playerId)
+        : reclaimSeat(game.players, playerId);
+      // Sharing an already invited player again (copy after QR) changes nothing.
+      if (updatedPlayers.every((p, i) => p === game.players[i])) return;
 
       try {
         const { game: updatedGame } = await updateGameDetails(game.id, { players: updatedPlayers });

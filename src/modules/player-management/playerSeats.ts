@@ -211,3 +211,28 @@ export function attachDeviceChannels<T extends SeatedPlayer>(
   });
   return { players: next, changed };
 }
+
+/**
+ * Applies the seat and channel fields of `incoming` to the stored list, keeping everything else
+ * as stored. For snapshots that are not newer as a whole but may carry a join or invitation.
+ */
+export function mergeSeatsInto<T extends SeatedPlayer>(
+  existing: T[],
+  incoming: SeatedPlayer[],
+  deviceId: string,
+): T[] {
+  return existing.map((exP) => {
+    const inP = incoming.find((p) => p.id === exP.id);
+    if (!inP) return exP;
+    const merged = mergeSeatedPlayers([{ ...exP, ...inP } as T], [exP], deviceId)[0];
+    // Only the seat-owned fields may change here.
+    return {
+      ...exP,
+      seat: merged.seat,
+      isRemote: merged.isRemote,
+      ntfyTopic: merged.ntfyTopic,
+      relayUrl: merged.relayUrl,
+      notificationMethod: merged.notificationMethod,
+    };
+  });
+}

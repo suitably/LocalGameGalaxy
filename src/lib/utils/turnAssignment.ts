@@ -36,9 +36,18 @@ export const createPlayerAssignment = (storagePrefix: string) => {
   };
 };
 
-export const isGameBaseSnapshotNewer = (snapshotGame: any, existingGame: any): boolean | null => {
+/**
+ * `comparePlayers: false` for games with player seats: seats and channels are merged on their
+ * own (`mergeSeatsInto`), so differing channels must not make a whole snapshot count as newer.
+ */
+export const isGameBaseSnapshotNewer = (
+  snapshotGame: any,
+  existingGame: any,
+  options: { comparePlayers?: boolean } = {},
+): boolean | null => {
   if (snapshotGame.name !== existingGame.name) return true;
   if (
+    options.comparePlayers !== false &&
     snapshotGame.players &&
     existingGame.players &&
     JSON.stringify(

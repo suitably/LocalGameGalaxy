@@ -913,7 +913,8 @@
     "confirm": "Bestätigen",
     "cancel": "Abbrechen",
     "all": "Alle",
-    "planned": "Geplant"
+    "planned": "Geplant",
+    "playerJoined": "{{names}} ist beigetreten"
   },
   "settings": {
     "title": "Einstellungen",

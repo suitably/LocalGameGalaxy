@@ -5,6 +5,7 @@ import {
   invitePlayer,
   isPlayerOnDevice,
   mergeSeatedPlayers,
+  mergeSeatsInto,
   newlyJoinedPlayers,
   seatAllOnDevice,
   seatStatus,
@@ -101,5 +102,29 @@ describe('player seats', () => {
     expect(attachDeviceChannels(result.players, HOST, { ntfyTopic: 'host' }).changed).toBe(false);
     expect(seatsDiffer(players, result.players)).toBe(true);
     expect(seatsDiffer(players, players)).toBe(false);
+  });
+});
+
+describe('mergeSeatsInto', () => {
+  it('takes a newer seat from an otherwise older snapshot and keeps the rest', () => {
+    const stored = invitePlayer(seatAllOnDevice(base, HOST, T0), 'b', T1).map((p) => ({
+      ...p,
+      name: p.name + '!',
+    }));
+    const fromPhone = takeSeat(
+      invitePlayer(seatAllOnDevice(base, HOST, T0), 'b', T1),
+      'b',
+      PHONE,
+      T2,
+      {
+        remote: true,
+        channels: { ntfyTopic: 'phone' },
+      },
+    );
+    const merged = mergeSeatsInto(stored, fromPhone, HOST);
+    expect(merged[1].seat?.deviceId).toBe(PHONE);
+    expect(merged[1].ntfyTopic).toBe('phone');
+    expect(merged.map((p) => p.name)).toEqual(['Anna!', 'Ben!']);
+    expect(mergeSeatsInto(merged, stored, HOST)[1].seat?.deviceId).toBe(PHONE);
   });
 });

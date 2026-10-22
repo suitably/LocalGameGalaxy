@@ -2,7 +2,9 @@ import { playerAssignment } from './playerAssignment';
 import { getTurnPlayers } from './turnUtils';
 import {
   buildTurnNotificationMessage,
+  deliveryForIncomingMove,
   localNotificationPresenter,
+  type TurnDelivery,
 } from '../../../lib/notifications';
 import type { GuessArtGameRecord, GuessArtRound } from './types';
 
@@ -23,6 +25,15 @@ export interface TurnNotificationDecision {
   actorName?: string;
   actionType?: 'draw' | 'guess';
 }
+
+/** Reasons kept stable for logs and tests. */
+const NONE_REASONS: Record<Extract<TurnDelivery, { kind: 'none' }>['reason'], string> = {
+  same_player: 'drawing_drawn_by_same_player',
+  temporary_claim: 'turn_claimed_temporarily',
+  pass_and_play: 'all_players_local_pass_and_play',
+  visible: 'already_visible_in_foreground',
+  not_on_this_device: 'turn_not_for_local_player',
+};
 
 class GuessArtNotificationService {
   private notifiedTurnKeys: Set<string> = new Set();
@@ -126,38 +137,24 @@ class GuessArtNotificationService {
       return { shouldNotify: false, reason: 'drawing_not_submitted_yet' };
     }
 
-    // If the turn or round was played under a temporary claim ("lass mich hier spielen"),
-    // no notifications should be sent to anyone:
-    if (
-      round.temporaryClaim ||
-      playerAssignment.isTurnClaimedTemporarily(game.id, activePlayer.id)
-    ) {
-      return { shouldNotify: false, reason: 'turn_claimed_temporarily' };
-    }
-
-    // Check if the active player is local to this device
-    const isTurnLocal = playerAssignment.isPlayerLocal(game.id, activePlayer.id, false);
-    if (!isTurnLocal) {
-      return { shouldNotify: false, reason: 'turn_not_for_local_player' };
-    }
-
-    // If ALL players in the game are local (pass & play on same device), do not send notifications
-    const allPlayersLocal =
-      game.players.length > 0 &&
-      game.players.every((p) => playerAssignment.isPlayerLocal(game.id, p.id, false));
-    if (allPlayersLocal) {
-      return { shouldNotify: false, reason: 'all_players_local_pass_and_play' };
-    }
-
     // Never notify a player to guess their own drawing!
     if (actionType === 'guess' && round.drawnById && activePlayer.id === round.drawnById) {
       return { shouldNotify: false, reason: 'drawing_drawn_by_same_player' };
     }
 
-    // If the game is already in active foreground on this screen and the document is visible,
-    // the UI updates live in real-time, so suppress redundant OS popup.
-    if (activeGameScreenId === game.id && isDocumentVisible) {
-      return { shouldNotify: false, reason: 'already_visible_in_foreground' };
+    const delivery = deliveryForIncomingMove({
+      targetIsLocal: playerAssignment.isLocal(game, activePlayer.id),
+      allPlayersLocal:
+        game.players.length > 0 && game.players.every((p) => playerAssignment.isLocal(game, p.id)),
+      targetIsActor: false,
+      // A turn played with "play here" for a remote player is not announced to anyone.
+      temporaryClaim:
+        Boolean(round.temporaryClaim) ||
+        playerAssignment.isTurnClaimedTemporarily(game.id, activePlayer.id),
+      appVisible: activeGameScreenId === game.id && isDocumentVisible,
+    });
+    if (delivery.kind === 'none') {
+      return { shouldNotify: false, reason: NONE_REASONS[delivery.reason] };
     }
 
     const actorName =

@@ -141,7 +141,7 @@ Host-internal events (`PLAYBACK_STARTED`, `SONG_ENDED`, `TV_READY`) are also dis
 | `/notify`           | POST   | `{gameId, senderPlayerId, title, body, url, action, targetPlayerId, ntfyTopic}` → fan-out to Web Push and ntfy |
 
 - Subscriptions live in KV binding `PUSH_KV` if configured — the binding is **commented out** in `wrangler.toml`, so without dashboard configuration the relay uses in-memory storage that is lost on cold start.
-- Who is told about a turn: `src/lib/notifications/turnDelivery.ts` — `deliveryAfterOwnMove` (push the next player's device, notify here, or nothing) and `deliveryForIncomingMove` (notify on the receiving device). Pure; not wired into the games yet.
+- Who is told about a turn: `src/lib/notifications/turnDelivery.ts` — `deliveryAfterOwnMove` (push the next player's device, notify here, or nothing) and `deliveryForIncomingMove` (notify on the receiving device). Pure; GuessArt uses it (`logic/turnPush.ts`, `logic/notificationService.ts`), Storyteller not yet. GuessArt's `importSnapshot` takes game and round from the newer snapshot and each player's seat and channels from whichever side changed the seat last (`mergeSeatedPlayers` / `mergeSeatsInto`), so an old link payload cannot undo a join.
 - Service worker `public/sw-push.js`: payload `{title, body, icon, tag, url}`; defaults title `LocalGameGalaxy`, body `Du bist an der Reihe!`, tag `lgg-game-turn`; click opens/focuses `url`.
 
 ## 6. Storage keys involved
