@@ -28,7 +28,8 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
 
   useEffect(() => {
     if (!widget.image || !widget.color) return;
-    const isSvg = widget.image.startsWith('data:image/svg+xml') || widget.image.toLowerCase().includes('.svg');
+    const isSvg =
+      widget.image.startsWith('data:image/svg+xml') || widget.image.toLowerCase().includes('.svg');
     if (!isSvg) return;
 
     let cancelled = false;
@@ -61,7 +62,11 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          transform: rot ? `rotate(${rot}deg) ${isDragging ? 'scale(1.15)' : ''}` : isDragging ? 'scale(1.15)' : undefined,
+          transform: rot
+            ? `rotate(${rot}deg) ${isDragging ? 'scale(1.15)' : ''}`
+            : isDragging
+              ? 'scale(1.15)'
+              : undefined,
           filter: isDragging
             ? 'drop-shadow(0 6px 10px rgba(0,0,0,0.5))'
             : isBoard
@@ -183,7 +188,11 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
         }}
       >
         {widget.label && (
-          <Typography variant="caption" fontWeight={900} sx={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
+          <Typography
+            variant="caption"
+            fontWeight={900}
+            sx={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}
+          >
             {widget.label}
           </Typography>
         )}
