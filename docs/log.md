@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — PartyLobby split into sections (claude-code)
+
+- #359: `docs/tasks/ISSUE-359-decompose-party-lobby.md` acceptance boxes ticked, `docs/tasks/index.md` row marked done.
+- **Code changed:** `src/features/party/PartyLobby.tsx`, new `components/Party{ActiveGameBanner,RoomHeader,ServerInfoCard,ShareCard,PlayerRoster,GameSelection}.tsx`, `hooks/usePartyLobbyController.ts` (exports `PartyLobbyController`), `scripts/legacy-component-baselines.json`.
+
 ## 2026-10-22 — Tabletop private hands (claude-code)
 
 - #449: `docs/tech/tabletop-engine.md` §5 "Private hands", link from `sync-protocol.md`.
