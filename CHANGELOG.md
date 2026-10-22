@@ -2,6 +2,7 @@
 
 ### Added
 
+- **Tabletop VirtualTabletop import**: `.vtt`, `.pcio` and `.zip` files can be uploaded (with their images); labels, buttons, spinners and timers keep their type instead of becoming plain tokens, dice use their faces (d8 stays d8), multi-face pieces become switchable looks, and the game name, rules and player range come from `_meta` (which no longer appears as a widget). All 579 variants of VirtualTabletop's library still import without errors (#467).
 - **Tabletop pass and play**: in local play a "<name> done" button covers the table for the next player ("Hand the device to …", other players selectable on the cover); the hand and seat-only zones change only when that player taps to reveal. Games with private hands but no seats (built-in card deck, Liar's Dice) get one seat per hand, and the seat chips are hidden in this mode. Shared module `src/modules/pass-and-play` for other games (#467).
 - **Player seats**: pure model for which device plays which player in async games (`modules/player-management/playerSeats.ts`), a stable device id (`lib/deviceIdentity.ts`) and one turn-notification rule (`lib/notifications/turnDelivery.ts`), with tests; GuessArt and Storyteller move to it next.
 - **Tabletop**: button widget with a declarative routine (shuffle, draw, roll, flip, move, set, counter, timer, spin, next state) — validated JSON, no code; edited in the inspector, runs as one synced action on the host (#449).

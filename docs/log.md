@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-22 — VirtualTabletop import quick wins (claude-code)
+
+- `docs/tech/tabletop-engine.md` gains §7 "Import" (TTS and VirtualTabletop paths, what is not imported yet).
+- **Code changed:** new `src/games/tabletop/logic/vttWidgets.ts` (+ test `vttImport.test.ts`), `logic/{pcioParser,pcioNormalizer}.ts`, `hooks/useWorkshopImport.ts`, `components/manager/ImportWorkshopDialog.tsx`, locales.
+
 ## 2026-10-22 — Tabletop pass and play (claude-code)
 
 - #467 slice 1: `docs/tech/tabletop-engine.md` gains "Pass and play (local)"; `architecture.md` §3.2 lists `modules/pass-and-play`.

@@ -67,3 +67,8 @@ Cards in a hand holder with an `ownerSeat` are private (`logic/handPrivacy.ts`).
 ## 6. Storage
 
 `galaxy_tabletop_db` v3 (see [persistence](persistence.md)): `custom_games` for imported/edited definitions, `sessions` for running games. `useTabletopAutosave` saves 1 s after a change on the host or in local play; `TabletopGame` resumes a saved session first, `RestartGameButton` deletes it.
+
+## 7. Import
+
+- **Tabletop Simulator** (Workshop ID/URL or the mod's `.json`): `logic/steamWorkshopApi.ts` (metadata needs the companion server or the dev proxy, see [open-questions Q14](../open-questions.md)), `ttsParser.ts`, `ttsContainers.ts`.
+- **VirtualTabletop / playingcards.io** (`.json`, `.vtt`, `.pcio`, `.zip` via the import dialog; archives bring their images): `logic/pcioParser.ts` (`pickStateJson` takes the first variant `0.json`, `readVttMeta` reads name, rules and player range from `_meta`), `pcioNormalizer.ts`, `vttWidgets.ts` (label, button, spinner, timer and dice keep their type; basic widgets with several `faces` become `states`). Not imported yet: routines (buttons arrive without one, [Q15](../open-questions.md)), per-seat hands and `onlyVisibleForSeat`, VTT's built-in `/i/…` images, other variants. Gaps and effort: [2026-10-22 plan §4](../reports/2026-10-22-table-session-plan.md#4-imports-found-on-the-way).

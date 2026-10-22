@@ -686,7 +686,7 @@
       "import_workshop": "Import Steam Workshop",
       "workshop_url_label": "Steam Workshop URL or ID",
       "workshop_load_info": "Load Mod Info",
-      "workshop_upload_manual": "Upload JSON",
+      "workshop_upload_manual": "Upload file (.json, .vtt, .pcio)",
       "workshop_no_server": "No server connected — you can upload TTS JSON files manually.",
       "workshop_loading_meta": "Loading mod information...",
       "workshop_downloading": "Downloading mod...",

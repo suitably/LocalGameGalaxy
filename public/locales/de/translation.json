@@ -686,7 +686,7 @@
       "import_workshop": "Steam Workshop importieren",
       "workshop_url_label": "Steam Workshop URL oder ID",
       "workshop_load_info": "Mod-Info laden",
-      "workshop_upload_manual": "JSON hochladen",
+      "workshop_upload_manual": "Datei hochladen (.json, .vtt, .pcio)",
       "workshop_no_server": "Kein Server verbunden — du kannst TTS-JSON-Dateien manuell hochladen.",
       "workshop_loading_meta": "Lade Mod-Informationen...",
       "workshop_downloading": "Mod wird heruntergeladen...",
