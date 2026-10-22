@@ -878,6 +878,8 @@
         "error_metadata_unavailable": "Ohne Companion-Server lassen sich die Steam-Daten nicht laden. Lade stattdessen die Mod-Datei (.json) aus Dokumente/My Games/Tabletop Simulator/Mods/Workshop hoch oder verbinde den Companion-Server.",
         "error_http": "Fehler bei Steam oder dem Server (HTTP {{status}}).",
         "error_download_failed": "Download von Steam fehlgeschlagen (HTTP {{status}}).",
+        "error_download_blocked": "Der Browser durfte die Mod-Datei nicht von Steam laden. Lade stattdessen die Mod-Datei (.json) aus Dokumente/My Games/Tabletop Simulator/Mods/Workshop hoch oder verbinde den Companion-Server.",
+        "error_invalid_file": "Die heruntergeladene Datei ist kein Tabletop-Simulator-Spielstand.",
         "error_no_download_url": "Für diesen Mod gibt es bei Steam keine Download-URL."
       }
     }
