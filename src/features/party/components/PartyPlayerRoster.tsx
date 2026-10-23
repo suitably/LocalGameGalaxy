@@ -5,13 +5,14 @@ import React from 'react';
 import { Box, Chip, Tooltip, Typography, Avatar, CircularProgress } from '@mui/material';
 import StarsRoundedIcon from '@mui/icons-material/StarsRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import PersonRemoveRoundedIcon from '@mui/icons-material/PersonRemoveRounded';
 import { useTranslation } from 'react-i18next';
 import { universalPartyManager } from '../logic/universalPartyManager';
 import type { PartyLobbyController } from '../hooks/usePartyLobbyController';
 
 export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ lobby }) => {
   const { t } = useTranslation();
-  const { setEditNameOpen, setEditNameInput, players } = lobby;
+  const { setEditNameOpen, setEditNameInput, players, amIHost, removePlayer } = lobby;
   return (
     <>
       {/* Connected Players Roster */}
@@ -50,12 +51,18 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
                         setEditNameInput(p.name);
                         setEditNameOpen(true);
                       }
-                    : undefined
+                    : amIHost
+                      ? () => removePlayer(p.id)
+                      : undefined
                 }
                 deleteIcon={
                   isMe ? (
                     <Tooltip title={t('party.editNameTooltip', 'Namen ändern')}>
                       <EditRoundedIcon fontSize="small" sx={{ color: 'primary.main' }} />
+                    </Tooltip>
+                  ) : amIHost ? (
+                    <Tooltip title={t('party.removePlayer', 'Aus der Party entfernen')}>
+                      <PersonRemoveRoundedIcon fontSize="small" />
                     </Tooltip>
                   ) : undefined
                 }
