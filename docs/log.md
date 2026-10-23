@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-23 — Couch brand mark and app icons (claude-code)
+
+- `DESIGN.md` §8: brand architecture — couch master mark, five areas as couch in piece colour plus name labels, app icon rules; sources in `design/brand/`, explorations in `design/logo-drafts/` and `design/brand-approaches/`.
+- **Code/config changed:** `public/nexumia-icon.svg`, `public/pwa/*.png` (were one 640×640 JPEG under four PNG names; now real PNGs in the declared sizes), Android `mipmap-*/ic_launcher*.png`, `drawable*/splash.png`, `values/ic_launcher_background.xml` (`#FFFFFF` → `#17141C`). Manifest `theme_color`/`background_color` still `#121212` until DESIGN.md §10 step 1.
+
 ## 2026-10-23 — DESIGN.md visual system (claude-code)
 
 - New root `DESIGN.md`: target visual system (colors for dark + light, piece palette, Bricolage Grotesque + Figtree, spacing, radius, components, logo brief, migration order). Not implemented yet.

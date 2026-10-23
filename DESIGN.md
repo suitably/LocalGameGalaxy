@@ -166,14 +166,46 @@ All interactive parts show **focus-visible** as a 3px `accent` ring with 2px off
 - **Illustrations:** flat shapes from the piece palette with the ink colour as outline, no gradients or 3D renders. Only for empty states, onboarding and game covers.
 - **Photos:** none in the UI. Album art (Melodiq) is shown in `radius.sm` frames.
 
-## 8. Logo and brand mark (brief, to be designed)
+## 8. Logo and brand architecture
 
-The current `public/nexumia-icon.svg` (indigo/pink/cyan orbits with glow) is replaced. Brief for the new mark:
+One umbrella brand, **Nexumia**, whose mark is a **couch** ("games on the couch"). Areas of the platform are not separate brands: they reuse the couch in their own colour and carry a name label. Sources live in [`design/brand/`](design/brand/) (overview: `design/brand/uebersicht.png`).
 
-- A simple geometric mark built from game parts (e.g. a die face, tokens around a table, a play-button made of pips), readable at 16px as favicon and at 512px as app icon.
-- Sun yellow `#FFC233` on ink `#17141C`; a one-colour version (ink on paper) must work.
-- Word mark "Nexumia" in Bricolage Grotesque 800, tracking −0.02em.
-- Android adaptive icon: mark on `bg.canvas`, safe zone respected.
+### 8.1 Master mark
+
+| File (`design/brand/`)   | Use                                                                                     |
+| ------------------------ | --------------------------------------------------------------------------------------- |
+| `nexumia-mark.svg`       | Couch in `primary` with `primary.edge` underneath; 48px and up (header, splash, store). |
+| `nexumia-mark-small.svg` | Simplified: thicker cuts, no seam, no edge; 32px and below.                             |
+| `nexumia-mark-mono.svg`  | Ink on paper; print, light surfaces, one-colour use.                                    |
+| `nexumia-app-icon.svg`   | Large mark on an ink tile (PWA, Android launcher).                                      |
+| `nexumia-favicon.svg`    | Small mark on an ink tile; copied to `public/nexumia-icon.svg`.                         |
+
+The cuts between the couch parts are drawn in ink, so the colour marks sit on dark surfaces (`bg.canvas`/`bg.surface` dark); on light surfaces use the mono mark. Clear space around the mark: ¼ of its width. Never recolour the master mark, add effects or put it on piece colours.
+
+**Word mark:** "Nexumia" in Bricolage Grotesque 800, tracking −0.02em, set to the right of the mark at about 55 % of the mark's height. It is still live text; outlined paths follow once the font is in the bundle (§3.1).
+
+### 8.2 Areas
+
+Each area is the couch in its piece colour with the area symbol on the (taller) backrest: `design/brand/area-<id>.svg`. Area symbols are drawn on the same 64 grid and also appear alone in labels.
+
+| Area   | File              | Colour         | Symbol           | `GameCategory` values                  |
+| ------ | ----------------- | -------------- | ---------------- | -------------------------------------- |
+| Musik  | `area-music.svg`  | `piece.blue`   | Note             | `music`                                |
+| Würfel | `area-dice.svg`   | `piece.red`    | Die (three pips) | `dice`                                 |
+| Karten | `area-cards.svg`  | `piece.green`  | Two fanned cards | `cards`                                |
+| Party  | `area-party.svg`  | `piece.pink`   | Speech bubble    | `party`, `drawing`, `social_deduction` |
+| Rätsel | `area-puzzle.svg` | `piece.purple` | 2×2 tiles        | `puzzle`                               |
+
+The category mapping is a proposal; the hub still filters by the `GameCategory` values in `src/lib/gameRegistry.tsx`.
+
+- **Area lock-up** (hub section headers, area pages): area couch + small "Nexumia" caption above the area name in the display face.
+- **Area label** (filters, chips, game cards): pill in the piece colour, ink symbol (20px) + ink area name, 600–700 weight. Labels are UI, not logos: no couch inside.
+- Area icons are used at 48px and above; below that use the label.
+- Piece colours used for areas are still player colours in games (§2.3). Inside a game, colour means player; in the hub, colour means area.
+
+### 8.3 App icons
+
+Generated from `design/brand/nexumia-mark.svg`: `public/pwa/*.png` (any: mark on rounded ink tile; maskable: mark at 62 % on full-bleed ink), Android `mipmap-*/ic_launcher*.png` (foreground mark inside the 72dp safe zone, background `ic_launcher_background` = `#17141C`) and `drawable*/splash.png` (mark centred on ink).
 
 ## 9. Light and dark mode
 
@@ -188,6 +220,6 @@ Order (each step its own PR):
 3. **Mode setting:** storage key via `src/lib/storage.ts`, toggle in settings.
 4. **Hub:** replace `colorStart`/`colorEnd` gradients in `src/lib/gameRegistry.tsx` with one piece-colour token per game.
 5. **Games, one PR per game:** replace hard-coded hex values (Qwixx, cards, tabletop seats, Wordle, Sudoku, Storyteller, Melodiq …) with tokens.
-6. **Logo** (§8) and app icons.
+6. ~~Logo and app icons~~ — done (§8). Remaining: word mark as paths, area icons in the hub.
 
 Until a screen is migrated it may keep its old colours, but changed lines must use tokens.
