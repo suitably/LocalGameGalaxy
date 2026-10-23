@@ -4,20 +4,10 @@
  * No storage, timers or transport — `UniversalPartyManager` does the I/O and calls these.
  */
 import { ensureUniquePlayerName } from '../../../lib/disambiguateName';
+import { PIECE_ORDER, piecePalette } from '../../../themeTokens';
 import type { PartyPlayer, PartyRoomState } from './universalPartyManager';
 
-export const PLAYER_COLORS = [
-  '#f44336',
-  '#e91e63',
-  '#9c27b0',
-  '#3f51b5',
-  '#2196f3',
-  '#00bcd4',
-  '#009688',
-  '#4caf50',
-  '#ff9800',
-  '#795548',
-] as const;
+export const PLAYER_COLORS: readonly string[] = PIECE_ORDER.map((c) => piecePalette[c]);
 
 export const colorForSlot = (index: number): string => PLAYER_COLORS[index % PLAYER_COLORS.length];
 

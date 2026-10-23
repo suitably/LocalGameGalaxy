@@ -70,6 +70,28 @@ export const piecePalette = {
 } as const;
 
 export type PiecePalette = typeof piecePalette;
+export type PieceColor = Exclude<keyof PiecePalette, 'contrastText'>;
+
+/** Seat order (DESIGN.md §2.3): seat 1 = red, 2 = orange, … */
+export const PIECE_ORDER: readonly PieceColor[] = [
+  'red',
+  'orange',
+  'yellow',
+  'green',
+  'teal',
+  'blue',
+  'purple',
+  'pink',
+];
+
+/** Piece colour for a zero-based player slot; wraps after eight players. */
+export const pieceColorForSlot = (index: number): string =>
+  piecePalette[
+    PIECE_ORDER[((index % PIECE_ORDER.length) + PIECE_ORDER.length) % PIECE_ORDER.length]
+  ];
+
+/** White and black game pieces (chess, checkers …), which the palette deliberately leaves out. */
+export const pieceNeutrals = { white: '#F7F3EE', black: '#2C2733' } as const;
 
 export const fontFamilies = {
   display: '"Bricolage Grotesque Variable", "Figtree Variable", system-ui, sans-serif',
