@@ -40,9 +40,6 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
           sx={{
             fontWeight: 900,
             fontSize: { xs: '1.8rem', sm: '2.5rem' },
-            background: 'linear-gradient(90deg, #00acc1, #ab47bc)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
             mb: 1,
           }}
         >
@@ -76,9 +73,12 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
               key={g.id}
               sx={{
                 borderRadius: 3,
-                bgcolor: isSelected ? 'rgba(0, 172, 193, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+                bgcolor: (theme) =>
+                  isSelected
+                    ? alpha(theme.palette.piece.green, 0.12)
+                    : theme.palette.background.paper,
                 border: '2px solid',
-                borderColor: isSelected ? '#00acc1' : 'rgba(255, 255, 255, 0.08)',
+                borderColor: isSelected ? 'piece.green' : 'divider',
                 transition: 'all 0.2s ease',
               }}
             >
@@ -129,8 +129,6 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
           fontWeight: 800,
           fontSize: '1.1rem',
           borderRadius: 50,
-          background: 'linear-gradient(90deg, #00acc1, #ab47bc)',
-          boxShadow: (theme) => `0 4px 20px ${alpha(theme.palette.secondary.main, 0.4)}`,
         }}
       >
         {t('games.cards.start_session', 'Runde starten')} ({selectedGame.name})

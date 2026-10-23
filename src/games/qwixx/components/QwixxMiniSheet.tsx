@@ -1,4 +1,5 @@
 import React from 'react';
+import { pieceNeutrals, piecePalette } from '../../../themeTokens';
 import { alpha, Box, Paper } from '@mui/material';
 import type { QwixxSheetType, RowColor, SheetRowDefinition } from '../logic/types';
 import { getSheetDefinition, getSheetRows } from '../logic/sheetDefinitions';
@@ -10,11 +11,11 @@ interface QwixxMiniSheetProps {
   height?: number | string;
 }
 
-const ROW_COLORS: Record<RowColor, { bg: string; border: string }> = {
-  red: { bg: '#d32f2f', border: '#ef5350' },
-  yellow: { bg: '#fbc02d', border: '#ffee58' },
-  green: { bg: '#388e3c', border: '#66bb6a' },
-  blue: { bg: '#1976d2', border: '#42a5f5' },
+const ROW_COLORS: Record<RowColor, { bg: string }> = {
+  red: { bg: piecePalette.red },
+  yellow: { bg: piecePalette.yellow },
+  green: { bg: piecePalette.green },
+  blue: { bg: piecePalette.blue },
 };
 
 export const QwixxMiniSheet: React.FC<QwixxMiniSheetProps> = ({
@@ -48,7 +49,7 @@ export const QwixxMiniSheet: React.FC<QwixxMiniSheetProps> = ({
               gap: 0.3,
               p: 0.4,
               borderRadius: 1,
-              bgcolor: ROW_COLORS[rowDef.defaultColor]?.bg || '#388e3c',
+              bgcolor: ROW_COLORS[rowDef.defaultColor]?.bg || piecePalette.green,
               alignItems: 'center',
             }}
           >
@@ -59,13 +60,10 @@ export const QwixxMiniSheet: React.FC<QwixxMiniSheetProps> = ({
                   flex: 1,
                   height: 12,
                   borderRadius: 0.5,
-                  bgcolor: cell.color ? ROW_COLORS[cell.color]?.bg : 'rgba(255, 255, 255, 0.85)',
+                  bgcolor: cell.color ? ROW_COLORS[cell.color]?.bg : pieceNeutrals.white,
                   opacity: cell.color && cell.color !== rowDef.defaultColor ? 0.95 : 0.85,
-                  border: cell.isStair
-                    ? '1.5px solid #ffd700'
-                    : cell.isDouble
-                      ? '1.5px solid #ffffff'
-                      : 'none',
+                  border: cell.isStair || cell.isDouble ? '1.5px solid' : 'none',
+                  borderColor: cell.isStair ? 'primary.main' : 'text.primary',
                 }}
               />
             ))}
@@ -90,8 +88,13 @@ export const QwixxMiniSheet: React.FC<QwixxMiniSheetProps> = ({
                   gap: 0.3,
                   p: 0.3,
                   borderRadius: 1,
-                  bgcolor: index === 1 ? 'rgba(255, 213, 79, 0.25)' : 'rgba(129, 199, 132, 0.25)',
-                  border: index === 1 ? '1px dashed #ffd54f' : '1px dashed #81c784',
+                  bgcolor: (theme) =>
+                    alpha(
+                      index === 1 ? theme.palette.primary.main : theme.palette.success.main,
+                      0.25,
+                    ),
+                  border: '1px dashed',
+                  borderColor: index === 1 ? 'primary.main' : 'success.main',
                 }}
               >
                 {sheetDef.bonusRows[index === 1 ? 0 : 1].cells.map((_, idx) => (
@@ -101,7 +104,7 @@ export const QwixxMiniSheet: React.FC<QwixxMiniSheetProps> = ({
                       flex: 1,
                       height: 8,
                       borderRadius: 0.5,
-                      bgcolor: index === 1 ? '#ffd54f' : '#81c784',
+                      bgcolor: index === 1 ? 'primary.main' : 'success.main',
                     }}
                   />
                 ))}

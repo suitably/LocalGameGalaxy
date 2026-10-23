@@ -138,8 +138,8 @@ export const SudokuNumpad: React.FC<SudokuNumpadProps> = ({
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
-                bgcolor: isDone ? 'rgba(255, 255, 255, 0.04)' : '#1e293b',
-                color: isDone ? '#64748b' : '#60a5fa',
+                bgcolor: isDone ? 'background.default' : 'background.paper',
+                color: isDone ? 'text.disabled' : 'secondary.main',
                 border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
                 borderRadius: 1.5,
                 '&:hover': {
@@ -156,7 +156,7 @@ export const SudokuNumpad: React.FC<SudokuNumpadProps> = ({
               <Typography
                 sx={{
                   fontSize: '0.65rem',
-                  color: isDone ? '#475569' : '#94a3b8',
+                  color: isDone ? 'text.disabled' : 'text.secondary',
                   lineHeight: 1,
                   mt: 0.3,
                 }}

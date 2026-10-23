@@ -74,7 +74,7 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
         <Box sx={{ textAlign: 'center', my: 2 }}>
           <Typography
             variant="h3"
-            sx={{ fontWeight: 800, color: isWon ? '#4ade80' : '#ef4444', mb: 1 }}
+            sx={{ fontWeight: 800, color: isWon ? 'success.main' : 'error.main', mb: 1 }}
           >
             {formatTime(timeElapsed)}
           </Typography>

@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { alpha, Box, Typography } from '@mui/material';
+import { alpha, Box, Typography, useTheme } from '@mui/material';
 import type { SudokuGridData } from '../logic/types';
 
 interface SudokuGridProps {
@@ -19,6 +19,8 @@ export const SudokuGrid: React.FC<SudokuGridProps> = ({
   onSelectCell,
   isPaused = false,
 }) => {
+  const theme = useTheme();
+  const { palette } = theme;
   const selectedValue = selectedCell ? grid[selectedCell.row][selectedCell.col].value : 0;
 
   return (
@@ -72,18 +74,19 @@ export const SudokuGrid: React.FC<SudokuGridProps> = ({
           const isRelated = isSameRow || isSameCol || isSameBlock;
 
           // 3x3 block borders
-          const borderRight = cIdx % 3 === 2 && cIdx !== 8 ? '2px solid #60a5fa' : undefined;
-          const borderBottom = rIdx % 3 === 2 && rIdx !== 8 ? '2px solid #60a5fa' : undefined;
+          const blockBorder = `2px solid ${palette.text.disabled}`;
+          const borderRight = cIdx % 3 === 2 && cIdx !== 8 ? blockBorder : undefined;
+          const borderBottom = rIdx % 3 === 2 && rIdx !== 8 ? blockBorder : undefined;
 
-          let cellBg = '#1e293b';
+          let cellBg = palette.background.paper;
           if (cell.isError) {
-            cellBg = 'rgba(239, 68, 68, 0.35)';
+            cellBg = alpha(palette.error.main, 0.35);
           } else if (isSelected) {
-            cellBg = '#2563eb';
+            cellBg = palette.secondary.main;
           } else if (isSameNumber) {
-            cellBg = 'rgba(96, 165, 250, 0.35)';
+            cellBg = alpha(palette.secondary.main, 0.3);
           } else if (isRelated) {
-            cellBg = 'rgba(51, 65, 85, 0.7)';
+            cellBg = palette.action.hover;
           }
 
           return (
@@ -110,12 +113,12 @@ export const SudokuGrid: React.FC<SudokuGridProps> = ({
                     fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' },
                     fontWeight: cell.isInitial ? 800 : 600,
                     color: cell.isError
-                      ? '#ef4444'
+                      ? 'error.main'
                       : isSelected
-                        ? '#ffffff'
+                        ? 'secondary.contrastText'
                         : cell.isInitial
-                          ? '#ffffff'
-                          : '#60a5fa',
+                          ? 'text.primary'
+                          : 'secondary.main',
                   }}
                 >
                   {cell.value}
@@ -138,7 +141,7 @@ export const SudokuGrid: React.FC<SudokuGridProps> = ({
                         fontSize: { xs: '0.55rem', sm: '0.65rem' },
                         fontWeight: 700,
                         textAlign: 'center',
-                        color: isSelected ? '#ffffff' : '#94a3b8',
+                        color: isSelected ? 'secondary.contrastText' : 'text.secondary',
                         visibility: cell.notes.includes(noteNum) ? 'visible' : 'hidden',
                       }}
                     >

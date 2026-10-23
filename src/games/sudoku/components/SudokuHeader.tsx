@@ -83,9 +83,6 @@ export const SudokuHeader: React.FC<SudokuHeaderProps> = ({
           sx={{
             fontWeight: 800,
             letterSpacing: 2,
-            background: 'linear-gradient(90deg, #60a5fa, #a78bfa)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
           }}
         >
           SUDOKU
@@ -137,7 +134,7 @@ export const SudokuHeader: React.FC<SudokuHeaderProps> = ({
           {t('sudoku.mistakes', 'Fehler')}:{' '}
           <Box
             component="span"
-            sx={{ color: mistakes > 0 ? '#ef4444' : '#ffffff', fontWeight: 800 }}
+            sx={{ color: mistakes > 0 ? 'error.main' : 'text.primary', fontWeight: 800 }}
           >
             {mistakes}/{maxMistakes}
           </Box>
