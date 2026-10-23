@@ -64,4 +64,14 @@ describe('resolvePendingLaunch (Spieltisch → party lobby)', () => {
     expect(resolvePendingLaunch(new URLSearchParams('room=ABC'))).toBeNull();
     expect(resolvePendingLaunch(new URLSearchParams('launch=tabletop'))).toBeNull();
   });
+
+  it('reads a dice game played in the room, and routes everyone to it', () => {
+    expect(resolvePendingLaunch(new URLSearchParams('launch=knister'))).toEqual({
+      gameType: 'knister',
+    });
+    expect(resolvePendingLaunch(new URLSearchParams('launch=sudoku'))).toBeNull();
+    expect(getGameRoute({ gameType: 'knister', roomId: 'R1', isHost: true, seat: 0 })).toBe(
+      '/games/knister?room=R1',
+    );
+  });
 });
