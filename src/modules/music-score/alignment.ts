@@ -7,7 +7,8 @@ import type { BarMark, ScoreSong } from './types';
 const HOP_SEC = 0.1;
 const CHROMA_FFT = 4096;
 const SILENT_COST = 0.35;
-const FIT_RADIUS = 8;
+/** Frames (±6 s) of the warp path fitted per bar: the DTW path of a dense mix jitters, a band's tempo does not. */
+const FIT_RADIUS = 60;
 
 export type AlignProgress = (
   stage: 'analyse' | 'match' | 'refine',

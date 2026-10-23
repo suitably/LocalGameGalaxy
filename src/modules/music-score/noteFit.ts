@@ -9,10 +9,11 @@ const LOW_MAX_HZ = 150;
 const MID_MAX_HZ = 2000;
 const HIGH_MIN_HZ = 2500;
 /** How far (in frames) a bar mark may move from the coarse alignment. */
-const MAX_SHIFT = 40;
+const MAX_SHIFT = 60;
 /** How far (in frames) the shift may change from one bar mark to the next. */
 const MAX_SHIFT_STEP = 20;
-const SHIFT_STEP_COST = 0.1;
+/** Cost of a tempo change between neighbouring bars, per 100 % change (10 % costs 2, about two clear hits). */
+const TEMPO_CHANGE_COST = 20;
 const SHIFT_COST = 0.002;
 const NORM_RADIUS = 200;
 const NORM_BLOCK = 50;
@@ -105,9 +106,11 @@ function noteEvents(song: ScoreSong): NoteEvent[] {
 }
 
 /**
- * Shifts every bar mark (up to ±0.4 s) so the score's attacks land on onsets in
- * the recording. One shift per mark, chosen jointly for the whole song (Viterbi),
- * so the tempo between neighbouring marks only changes smoothly.
+ * Shifts every bar mark (up to ±0.6 s) so the score's attacks land on onsets in
+ * the recording. The shifts are chosen jointly for the whole song (Viterbi over
+ * pairs of neighbouring shifts), and a change of tempo from one bar to the next
+ * costs: a band speeds up or slows down gradually, so a fit that makes one bar
+ * 30 % faster and the next 30 % slower to catch an off-beat hit loses.
  */
 export async function fitMarksToNotes(
   song: ScoreSong,
@@ -122,10 +125,17 @@ export async function fitMarksToNotes(
     const env = bands[band];
     return Math.max(env[k - 1] ?? 0, env[k] ?? 0, env[k + 1] ?? 0);
   };
-  const states = 2 * MAX_SHIFT + 1;
+  const shifts = 2 * MAX_SHIFT + 1;
+  const steps = 2 * MAX_SHIFT_STEP + 1;
   const shiftSec = (s: number) => (s - MAX_SHIFT) * HOP_SEC;
-  let score = new Float64Array(states).map((_, s) => -SHIFT_COST * Math.abs(s - MAX_SHIFT));
-  const back: Int16Array[] = [];
+  const prior = (s: number) => SHIFT_COST * Math.abs(s - MAX_SHIFT);
+  // state = (shift at the segment start a, shift at its end b), stored at a * steps + (b - a + MAX_SHIFT_STEP)
+  const pairs = shifts * steps;
+  const bOf = (p: number) => Math.floor(p / steps) + (p % steps) - MAX_SHIFT_STEP;
+  const secPerBeat = new Float64Array(pairs);
+  let score = new Float64Array(pairs);
+  let lastSecPerBeat = new Float64Array(pairs);
+  const back: Int32Array[] = [];
   let first = 0;
   for (let k = 0; k + 1 < marks.length; k++) {
     const from = marks[k];
@@ -133,17 +143,15 @@ export async function fitMarksToNotes(
     while (first < events.length && events[first].beat < from.beat) first++;
     let end = first;
     while (end < events.length && events[end].beat < to.beat) end++;
-    const next = new Float64Array(states).fill(-Infinity);
-    const prev = new Int16Array(states);
-    for (let b = 0; b < states; b++) {
-      const toSec = to.sec + shiftSec(b);
-      for (
-        let a = Math.max(0, b - MAX_SHIFT_STEP);
-        a <= Math.min(states - 1, b + MAX_SHIFT_STEP);
-        a++
-      ) {
-        const fromSec = from.sec + shiftSec(a);
-        if (toSec - fromSec < 0.1 || score[a] === -Infinity) continue;
+    const next = new Float64Array(pairs).fill(-Infinity);
+    const prev = new Int32Array(pairs).fill(-1);
+    for (let a = 0; a < shifts; a++) {
+      const fromSec = from.sec + shiftSec(a);
+      for (let d = -MAX_SHIFT_STEP; d <= MAX_SHIFT_STEP; d++) {
+        const b = a + d;
+        const p = a * steps + d + MAX_SHIFT_STEP;
+        const toSec = to.sec + shiftSec(b);
+        if (b < 0 || b >= shifts || toSec - fromSec < 0.1) continue;
         let fit = 0;
         for (let i = first; i < end; i++) {
           const e = events[i];
@@ -153,24 +161,42 @@ export async function fitMarksToNotes(
             e.weight[1] * strength(1, sec) +
             e.weight[2] * strength(2, sec);
         }
-        const total =
-          score[a] + fit - SHIFT_STEP_COST * Math.abs(b - a) - SHIFT_COST * Math.abs(b - MAX_SHIFT);
-        if (total > next[b]) {
-          next[b] = total;
-          prev[b] = a;
+        const spb = (toSec - fromSec) / (to.beat - from.beat);
+        secPerBeat[p] = spb;
+        if (k === 0) {
+          next[p] = fit - prior(a) - prior(b);
+          continue;
         }
+        // the previous segment ended at shift a: its pairs are (c, a) for c within one step of a
+        for (
+          let c = Math.max(0, a - MAX_SHIFT_STEP);
+          c <= Math.min(shifts - 1, a + MAX_SHIFT_STEP);
+          c++
+        ) {
+          const q = c * steps + (a - c) + MAX_SHIFT_STEP;
+          if (score[q] === -Infinity) continue;
+          const total = score[q] - TEMPO_CHANGE_COST * Math.abs(spb / lastSecPerBeat[q] - 1);
+          if (total > next[p]) {
+            next[p] = total;
+            prev[p] = q;
+          }
+        }
+        next[p] += fit - prior(b);
       }
     }
     back.push(prev);
     score = next;
+    lastSecPerBeat = secPerBeat.slice();
     if (onProgress && k % 10 === 0) await onProgress('refine', k / marks.length);
   }
   let best = 0;
-  for (let s = 1; s < states; s++) if (score[s] > score[best]) best = s;
-  const out = marks.map((m) => ({ ...m }));
-  for (let k = marks.length - 1; k >= 0; k--) {
-    out[k].sec = Math.max(0, marks[k].sec + shiftSec(best));
-    if (k > 0) best = back[k - 1][best];
+  for (let p = 1; p < pairs; p++) if (score[p] > score[best]) best = p;
+  if (score[best] === -Infinity) return marks;
+  const chosen = new Int32Array(marks.length);
+  for (let k = marks.length - 2; k >= 0; k--) {
+    chosen[k + 1] = bOf(best);
+    chosen[k] = Math.floor(best / steps);
+    best = back[k][best];
   }
-  return out;
+  return marks.map((m, k) => ({ beat: m.beat, sec: Math.max(0, m.sec + shiftSec(chosen[k])) }));
 }
