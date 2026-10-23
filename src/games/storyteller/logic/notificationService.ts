@@ -1,6 +1,9 @@
 import { pushClient } from '../../../lib/push/pushClient';
 import { gameRelayStorage } from '../../../lib/push/gameRelayStorage';
-import { buildTurnNotificationMessage, localNotificationPresenter } from '../../../lib/notifications';
+import {
+  buildTurnNotificationMessage,
+  localNotificationPresenter,
+} from '../../../lib/notifications';
 import type { StoryGameRecord, StoryPlayer } from '../types';
 
 class StorytellerNotificationService {
@@ -50,6 +53,8 @@ class StorytellerNotificationService {
       targetPlayerId: nextPlayer.id,
       targetRelayUrl: effectiveRelay || undefined,
       ntfyTopic: nextPlayer.ntfyTopic,
+      webPush: nextPlayer.webPush,
+      targetMethod: nextPlayer.notificationMethod,
       title: message.title,
       body: message.body,
       url: message.url,

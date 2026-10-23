@@ -24,26 +24,26 @@ Numbers below are a snapshot (2026-10-18). Re-derive them before relying on them
 
 ## 1. Registry and size
 
-Registry order = hub order. The dice games in `DICE_GAMES` (`src/games/tabletop/logic/tableCatalog.ts`: qwixx, knister, kniffel) are filtered out of the hub (`Hub.tsx`) and listed on the Spieltisch (tabletop lobby) instead; their registry entries and routes stay.
+Registry order = hub order. The dice games in `DICE_GAMES` (`src/games/tabletop/logic/tableCatalog.ts`: qwixx, knister, kniffel) are filtered out of the hub (`Hub.tsx`) and listed on the Spieltisch; Knister can also be played with everyone on their own device (`?room=`, `KnisterEntry` → `KnisterRoomGame`, rules in `logic/knisterRoom.ts`: one roll for everyone, the next roll once all placed it) (tabletop lobby) instead; their registry entries and routes stay.
 
-| id              | Route                              | Category         | Folder                                   | LOC (non-test) | Test files |
-| --------------- | ---------------------------------- | ---------------- | ---------------------------------------- | -------------- | ---------- |
-| `darts`         | `games/darts`                      | party            | `src/games/darts`                        | 824            | 0          |
-| `qwixx`         | `games/qwixx`                      | dice             | `src/games/qwixx`                        | 3 936          | 1          |
-| `knister`       | `games/knister`                    | dice             | `src/games/knister`                      | 1 876          | 2          |
-| `kniffel`       | `games/kniffel`                    | dice             | `src/games/kniffel`                      | 1 134          | 0          |
-| `guessart`      | `games/guessart`                   | drawing          | `src/games/guessart`                     | 8 144          | 5          |
-| `storyteller`   | `games/storyteller`                | party            | `src/games/storyteller`                  | 2 972          | 3          |
-| `cards`         | `games/cards`                      | cards            | `src/games/cards`                        | 2 045          | 1          |
-| `melodiq`       | `games/melodiq`                    | music            | `src/games/melodiq`                      | 18 585         | 9          |
-| `melodiq-notes` | `games/melodiq-notes`              | music            | `src/games/melodiq-notes`                | 6 530          | 3          |
-| `werewolf`      | `games/werewolf`                   | social_deduction | `src/games/werewolf`                     | 4 166          | 2          |
-| `imposter`      | `games/imposter`                   | social_deduction | `src/games/imposter`                     | 1 594          | 0          |
-| `party`         | `party`                            | party            | `src/features/party` (not a game folder) | —              | 1          |
-| `wordle`        | `games/wordle`                     | puzzle           | `src/games/wordle`                       | 1 786          | 2          |
-| `sudoku`        | `games/sudoku`                     | puzzle           | `src/games/sudoku`                       | 1 305          | 1          |
-| `tabletop`      | `games/tabletop`                   | cards            | `src/games/tabletop`                     | 11 463         | 12         |
-| _(garticphone)_ | launched from the Party lobby only | —                | `src/games/garticphone`                  | 1 839          | 1          |
+| id              | Route                                                                                                      | Category         | Folder                                   | LOC (non-test) | Test files |
+| --------------- | ---------------------------------------------------------------------------------------------------------- | ---------------- | ---------------------------------------- | -------------- | ---------- |
+| `darts`         | `games/darts`                                                                                              | party            | `src/games/darts`                        | 824            | 0          |
+| `qwixx`         | `games/qwixx`                                                                                              | dice             | `src/games/qwixx`                        | 3 936          | 1          |
+| `knister`       | `games/knister`                                                                                            | dice             | `src/games/knister`                      | 1 876          | 2          |
+| `kniffel`       | `games/kniffel`                                                                                            | dice             | `src/games/kniffel`                      | 1 134          | 0          |
+| `guessart`      | `games/guessart`                                                                                           | drawing          | `src/games/guessart`                     | 8 144          | 5          |
+| `storyteller`   | `games/storyteller`                                                                                        | party            | `src/games/storyteller`                  | 2 972          | 3          |
+| `cards`         | `games/cards`                                                                                              | cards            | `src/games/cards`                        | 2 045          | 1          |
+| `melodiq`       | `games/melodiq`                                                                                            | music            | `src/games/melodiq`                      | 18 585         | 9          |
+| `melodiq-notes` | `games/melodiq-notes`                                                                                      | music            | `src/games/melodiq-notes`                | 6 530          | 3          |
+| `werewolf`      | `games/werewolf`                                                                                           | social_deduction | `src/games/werewolf`                     | 4 166          | 2          |
+| `imposter`      | `games/imposter`                                                                                           | social_deduction | `src/games/imposter`                     | 1 594          | 0          |
+| `party`         | `party`                                                                                                    | party            | `src/features/party` (not a game folder) | —              | 1          |
+| `wordle`        | `games/wordle`                                                                                             | puzzle           | `src/games/wordle`                       | 1 786          | 2          |
+| `sudoku`        | `games/sudoku`                                                                                             | puzzle           | `src/games/sudoku`                       | 1 305          | 1          |
+| `tabletop`      | `games/tabletop`                                                                                           | cards            | `src/games/tabletop`                     | 11 463         | 12         |
+| _(garticphone)_ | launched from the Party lobby only; route `games/garticphone` is registered in `src/App.tsx` (no hub card) | —                | `src/games/garticphone`                  | 1 839          | 1          |
 
 Melodiq also registers standalone routes (`MelodiqQueue`, `MelodiqTV`) via `standaloneRoutes`. **Unverified:** whether PR #387 (tests for Kniffel, Darts, Imposter) has landed when you read this.
 

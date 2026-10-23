@@ -5,6 +5,7 @@ import { EditPlayerNameDialog, EditRoomCodeDialog } from './components/PartySett
 import { PartyActiveGameBanner } from './components/PartyActiveGameBanner';
 import { PartyPendingGame } from './components/PartyPendingGame';
 import { PartyRoomHeader } from './components/PartyRoomHeader';
+import { PartyRemovedNotice } from './components/PartyRemovedNotice';
 import { PartyServerInfoCard } from './components/PartyServerInfoCard';
 import { PartyShareCard } from './components/PartyShareCard';
 import { PartyPlayerRoster } from './components/PartyPlayerRoster';
@@ -55,21 +56,27 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
             borderColor: 'divider',
           }}
         >
-          <PartyActiveGameBanner lobby={lobby} />
+          {lobby.removed ? (
+            <PartyRemovedNotice lobby={lobby} />
+          ) : (
+            <>
+              <PartyActiveGameBanner lobby={lobby} />
 
-          <PartyRoomHeader lobby={lobby} />
+              <PartyRoomHeader lobby={lobby} />
 
-          <PartyPendingGame lobby={lobby} />
+              <PartyPendingGame lobby={lobby} />
 
-          <PartyServerInfoCard lobby={lobby} />
+              <PartyServerInfoCard lobby={lobby} />
 
-          <PartyShareCard lobby={lobby} />
+              <PartyShareCard lobby={lobby} />
 
-          <PartyPlayerRoster lobby={lobby} />
+              <PartyPlayerRoster lobby={lobby} />
 
-          <Divider sx={{ my: 3 }} />
+              <Divider sx={{ my: 3 }} />
 
-          <PartyGameSelection lobby={lobby} />
+              <PartyGameSelection lobby={lobby} />
+            </>
+          )}
         </Paper>
 
         <EditPlayerNameDialog

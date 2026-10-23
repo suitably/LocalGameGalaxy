@@ -8,8 +8,8 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-21
-  method: 'read src/modules/sync/*.ts, src/lib/webrtc/*, src/games/melodiq/{PhoneClientEngine.tsx,hooks/useTVMode.ts,hooks/useTVReceiver.ts,hooks/useMelodiqGlobalEvents.tsx}, public/sw-push.js, server/cloudflare-push-relay/worker.ts'
+  at: 2026-10-23
+  method: 'read src/modules/sync/*.ts, src/lib/webrtc/*, src/games/melodiq/{PhoneClientEngine.tsx,hooks/useTVMode.ts,hooks/useTVReceiver.ts,hooks/useMelodiqGlobalEvents.tsx}, public/sw-push.js, server/cloudflare-push-relay/worker.ts, cloudflare/webPushSend.ts, src/lib/push/siteWebPush.ts'
 sources:
   - 'src/modules/sync/MqttMailboxService.ts'
   - 'src/modules/sync/useMultiChannelSync.ts'
@@ -52,6 +52,7 @@ Topic = `<topicPrefix>/<channelId>`. Prefixes in use:
 | `lgg/storyteller/v1` | `src/games/storyteller/logic/mailboxService.ts` |
 | `lgg/tabletop`       | `src/games/tabletop/hooks/useTabletopSync.ts`   |
 | `lgg/party`          | `src/features/party/logic/partyMailbox.ts`      |
+| `lgg/room`           | `src/modules/room-game/useRoomReducer.ts`       |
 
 `channelId` is the game / room id chosen by the game.
 
@@ -90,6 +91,8 @@ useMultiChannelSync<T>({
 - `MultiChannelSyncCoordinator` opens the `BroadcastChannel` and MQTT subscription on start and closes both on stop/unmount; any option change restarts it.
 - `publish` posts to a fresh `BroadcastChannel` for the target channel and, if a mailbox is set, publishes via MQTT. There is **no built-in ordering or conflict resolution** — games reconcile snapshots themselves. Tabletop (`logic/syncProtocol.ts`) is host-authoritative: other devices send actions as `INTENT`, the host (TV) applies them and broadcasts `STATE_DELTA` (changed widgets/fields from `logic/stateDelta.ts`) with a sequence number; a device that misses one, or just joined, requests a `STATE_SNAPSHOT`. Random results (shuffle, rolls) are decided on the host only. Private hands are redacted and sealed per seat ([tabletop-engine §5](tabletop-engine.md#private-hands)).
 - Users: storyteller, tabletop, garticphone, party (the singleton `UniversalPartyManager` uses the class `MultiChannelSyncCoordinator`, channel `party_<room>`, broadcast prefix `galaxy`). Melodiq still opens `BroadcastChannel`s directly ([open-questions Q4](../open-questions.md#q4--melodiq-uses-inline-broadcastchannel)).
+- Games played in a party room (`src/modules/room-game`, first user Knister): messages `{kind: 'hello'|'action'|'state', from, …}` on channel `<game>_<room>`. The host (party host) applies a guest's action with the game's reducer if the game's `authorize` allows it (e.g. only on the sender's own sheet) and publishes `{kind: 'state', rev, state}`; guests keep the state with the highest `rev` and send `hello` every 2 s until the first state arrives. The state lives only in memory on the host: a host reload starts a new game.
+- Party roster merge (`src/features/party/logic/partyRoster.ts`): rosters are a union by player id; the copy with the newer `updatedAt` (join or rename) wins, so a stale state does not undo a rename. Leaving or being removed by the host writes `left[playerId] = time` into the room state (`removePlayer`); every merge drops a player whose departure is newer than their last join, and presence pings from before the departure are ignored. The host alone assigns `slot`s.
 
 ## 4. Melodiq WebRTC and TV messages
 
@@ -130,6 +133,7 @@ Host-internal events (`PLAYBACK_STARTED`, `SONG_ENDED`, `TV_READY`) are also dis
 ## 5. Web Push and ntfy
 
 - Client chooses `auto | webpush | ntfy | both` (`storage.getNotificationMethod()`); ntfy server default `https://ntfy.sh`, personal topic from `storage.getUserNtfyTopic()`.
+- **Site Web Push (default, no relay):** the app worker sends Web Push itself (`cloudflare/webPushSend.ts`): `GET /api/push/vapid-public-key` → `{publicKey}`, `POST /api/push/send` `{subscription, title, body, url?, tag?, icon?}` → one encrypted push (RFC 8291/8292). Nothing is stored: a device that has notification permission subscribes (`src/lib/push/siteWebPush.ts`, `ensureSiteWebPush`; key `STORAGE_KEYS.PUSH_SITE_SUBSCRIPTION`), the subscription travels as `webPush` on the players seated on that device (`PlayerChannels`, `getDeviceChannels`), and the moving device passes it with the turn message (`pushClient.sendGamePushNotification`). Only push-service endpoints (FCM, Mozilla, Windows, Apple) are accepted, text is limited to 300 characters and the click URL must be on the same site. When the site push arrives, ntfy is skipped unless the target chose `both`; a 410 (subscription gone) or any failure falls back to ntfy. iOS offers push only to the home-screen app (`needsHomeScreenInstall`, hint in `PushNotificationBanner`).
 - Relay endpoints (`server/cloudflare-push-relay/worker.ts`; each also under `/api/push/…`):
 
 | Path                | Method | Purpose                                                                                                        |
@@ -152,7 +156,7 @@ Host-internal events (`PLAYBACK_STARTED`, `SONG_ENDED`, `TV_READY`) are also dis
 | `STORAGE_KEYS.MELODIQ_PARTY_ID`, `STORAGE_PREFIXES.WEBRTC_PARTY_ID`                                                               | WebRTC party / info-hash id            |
 | `STORAGE_KEYS.MELODIQ_TRACKER_URLS`, `MELODIQ_DISABLED_TRACKER_URLS`, `MELODIQ_TRACKER_PREFERENCES`, prefix `WEBRTC_TRACKER_PREF` | tracker list and per-tracker overrides |
 | `STORAGE_KEYS.SIGNALING_URL`                                                                                                      | explicit self-hosted tracker URL       |
-| `STORAGE_KEYS.PUSH_RELAY_URL`, `NOTIFICATION_METHOD`, `NTFY_SERVER_URL`, `NTFY_TOPIC`                                             | notifications                          |
+| `STORAGE_KEYS.PUSH_RELAY_URL`, `PUSH_SITE_SUBSCRIPTION`, `NOTIFICATION_METHOD`, `NTFY_SERVER_URL`, `NTFY_TOPIC`                   | notifications                          |
 | `STORAGE_PREFIXES.GAME_RELAY` (`galaxy_game_relay_`)                                                                              | per-game relay URL from a share link   |
 | `STORAGE_PREFIXES.PARTY_STATE`, `PARTY_HOST_ID`, `STORAGE_KEYS.PARTY_MY_PLAYER_ID`, `HOST_ROOM_CODE`                              | party room                             |
 

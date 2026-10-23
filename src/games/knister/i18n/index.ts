@@ -14,7 +14,8 @@ export const initKnisterI18n = () => {
         games: {
           knister: {
             title: 'Knister',
-            description: 'Das beliebte 5x5 Würfel-Bingo! Bilde Paare, Straßen und Full Houses auf deinem Raster.',
+            description:
+              'Das beliebte 5x5 Würfel-Bingo! Bilde Paare, Straßen und Full Houses auf deinem Raster.',
             round: 'Wurf',
             sum: 'SUMME',
             roll_dice: 'Würfeln',
@@ -38,17 +39,26 @@ export const initKnisterI18n = () => {
             undo: 'Rückgängig',
             undo_tooltip: 'Letzten Eintrag rückgängig machen',
             legend_title: 'Knister Punkteübersicht',
-            diagonal_bonus_hint: 'Wichtig: Die beiden Diagonalen zählen jeweils DOPPELT (2x Punkte)!',
+            diagonal_bonus_hint:
+              'Wichtig: Die beiden Diagonalen zählen jeweils DOPPELT (2x Punkte)!',
             combination: 'Kombination',
             example: 'Beispiel',
             points: 'Punkte',
             show_legend: 'Punkteübersicht',
             new_game: 'Neues Spiel',
-            new_game_confirm: 'Möchtest du wirklich eine neue Runde starten? Der aktuelle Spielstand geht verloren.',
+            new_game_confirm:
+              'Möchtest du wirklich eine neue Runde starten? Der aktuelle Spielstand geht verloren.',
             new_high_score: 'Neuer Highscore!',
             high_score_label: 'Aktueller Highscore',
             play_again: 'Nochmal spielen',
             solo_mode: 'Einzelspieler',
+            room_connecting: 'Verbinde mit dem Host …',
+            room_not_in_game:
+              'Dieses Spiel lief schon, bevor du beigetreten bist. Warte auf die nächste Runde.',
+            room_place: 'Trage die {{sum}} auf deinem Blatt ein',
+            room_waiting: 'Warte auf: {{names}}',
+            room_roll: 'Alle haben eingetragen – würfeln!',
+            room_back: 'Zur Party',
             combos: {
               none: 'Nichts',
               pair: 'Zwilling (1 Paar)',
@@ -74,7 +84,8 @@ export const initKnisterI18n = () => {
         games: {
           knister: {
             title: 'Knister',
-            description: 'The popular 5x5 Dice Bingo! Form pairs, straights, and full houses on your grid.',
+            description:
+              'The popular 5x5 Dice Bingo! Form pairs, straights, and full houses on your grid.',
             round: 'Round',
             sum: 'SUM',
             roll_dice: 'Roll',
@@ -104,11 +115,18 @@ export const initKnisterI18n = () => {
             points: 'Points',
             show_legend: 'Score Guide',
             new_game: 'New Game',
-            new_game_confirm: 'Do you really want to start a new round? Current game progress will be lost.',
+            new_game_confirm:
+              'Do you really want to start a new round? Current game progress will be lost.',
             new_high_score: 'New High Score!',
             high_score_label: 'Current High Score',
             play_again: 'Play Again',
             solo_mode: 'Single Player',
+            room_connecting: 'Connecting to the host …',
+            room_not_in_game: 'This game started before you joined. Wait for the next round.',
+            room_place: 'Write the {{sum}} on your sheet',
+            room_waiting: 'Waiting for: {{names}}',
+            room_roll: 'Everyone has placed it – roll!',
+            room_back: 'Back to the party',
             combos: {
               none: 'Nothing',
               pair: 'One pair',

@@ -105,6 +105,8 @@ export const STORAGE_KEYS = {
 
   // Push notification relay for async games (GuessArt, etc.)
   PUSH_RELAY_URL: 'galaxy_push_relay_url',
+  /** This device's Web Push subscription with the site's own sender (`lib/push/siteWebPush.ts`). */
+  PUSH_SITE_SUBSCRIPTION: 'galaxy_push_site_subscription',
   NOTIFICATION_METHOD: 'galaxy_notification_method',
   NTFY_SERVER_URL: 'galaxy_ntfy_server_url',
   NTFY_TOPIC: 'galaxy_ntfy_topic',

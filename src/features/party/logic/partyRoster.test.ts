@@ -7,6 +7,7 @@ import {
   markHost,
   mergeIncomingState,
   mergeRoster,
+  removePlayer,
   resolveHostId,
   seatOf,
   upsertHost,
@@ -223,5 +224,52 @@ describe('party seats (slots)', () => {
     expect(seatOf(players, 'a')).toBe(0);
     expect(seatOf(players, 'b')).toBe(1);
     expect(seatOf([pl('x', 1), pl('y', 2)], 'y')).toBe(1);
+  });
+});
+
+const opts = { myId: 'h', isRoomCreator: true, now: 100 };
+
+describe('leaving, removing and renaming (#467)', () => {
+  it('a newer rename wins over a stale copy, in either order', () => {
+    const renamed = player('b', { name: 'Bea', updatedAt: 20 });
+    const stale = player('b', { name: 'b', updatedAt: 10, slot: 1 });
+    expect(mergeRoster([renamed], [stale])[0]).toMatchObject({ name: 'Bea', slot: 1 });
+    expect(mergeRoster([stale], [renamed])[0]).toMatchObject({ name: 'Bea', slot: 1 });
+  });
+
+  it('a removed player is not added back by a device that still lists them', () => {
+    const host = room({ players: [player('h'), player('b', { updatedAt: 5 })] });
+    const afterRemove = removePlayer(host, 'b', 10);
+    expect(afterRemove.players.map((p) => p.id)).toEqual(['h']);
+
+    const staleGuest = room({ players: [player('h'), player('b', { updatedAt: 5 })], left: {} });
+    const merged = mergeIncomingState(afterRemove, staleGuest, opts);
+    expect(merged.players.map((p) => p.id)).toEqual(['h']);
+    // …and the guest learns about the removal from the host's state.
+    expect(mergeIncomingState(staleGuest, afterRemove, opts).left).toEqual({ b: 10 });
+  });
+
+  it('a late presence ping does not bring a removed player back; a new join does', () => {
+    const state = removePlayer(room({ players: [player('h')] }), 'b', 10);
+    expect(addPresencePlayer(state, player('b', { updatedAt: 5 }), 11)).toBeNull();
+    const back = addPresencePlayer(state, player('b', { updatedAt: 12 }), 12);
+    expect(back?.players.map((p) => p.id)).toEqual(['h', 'b']);
+  });
+
+  it('a presence ping carries a rename to devices that list the player', () => {
+    const state = room({ players: [player('h'), player('b', { updatedAt: 5 })] });
+    const updated = addPresencePlayer(state, player('b', { name: 'Bea', updatedAt: 9 }), 9);
+    expect(updated?.players[1].name).toBe('Bea');
+    expect(addPresencePlayer(state, player('b', { name: 'Old', updatedAt: 1 }), 9)).toBeNull();
+  });
+
+  it('a rename keeps join time and slot', () => {
+    const { player: renamed } = upsertJoiningPlayer([player('b', { joinedAt: 3, slot: 2 })], {
+      playerId: 'b',
+      name: 'Bea',
+      isHost: false,
+      now: 50,
+    });
+    expect(renamed).toMatchObject({ name: 'Bea', joinedAt: 3, updatedAt: 50, slot: 2 });
   });
 });

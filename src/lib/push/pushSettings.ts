@@ -2,6 +2,7 @@
  * Push notification settings on this device: relay URL, method and ntfy topic [ID: LIB-PUSH-SETTINGS]
  */
 import { storage, STORAGE_KEYS } from '../storage';
+import type { StoredPushSubscription } from './pushTypes';
 
 export type NotificationMethod = 'auto' | 'webpush' | 'ntfy' | 'both';
 
@@ -75,10 +76,14 @@ export function getDeviceChannels(fallbackRelay?: string): {
   ntfyTopic: string;
   relayUrl?: string;
   notificationMethod: NotificationMethod;
+  webPush?: StoredPushSubscription;
 } {
   return {
     ntfyTopic: getUserNtfyTopic(),
     relayUrl: getPushRelayUrl() || fallbackRelay || undefined,
     notificationMethod: getNotificationMethod(),
+    webPush:
+      storage.getJson<StoredPushSubscription | null>(STORAGE_KEYS.PUSH_SITE_SUBSCRIPTION, null) ??
+      undefined,
   };
 }

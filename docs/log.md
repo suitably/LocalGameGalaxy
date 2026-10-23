@@ -27,6 +27,26 @@ Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)
 - `docs/tech/architecture.md` §3.2 lists `modules/music-score`.
 - **Code changed:** new `src/modules/music-score/*` (+ tests), `@xmldom/xmldom` added as dev dependency for DOM-free tests.
 
+## 2026-10-23 — Knister in the party room (claude-code)
+
+- #467 slice 5 (Knister): `architecture.md` §3.2 lists `modules/room-game`; `sync-protocol.md` adds topic `lgg/room` and the host/guest message rules; `game-catalog.md` §1 notes Knister's room mode.
+- **Code changed:** new `src/modules/room-game/*`, `src/games/knister/{KnisterEntry,KnisterRoomGame}.tsx`, `logic/knisterRoom.ts` (+ test), `src/features/party/{components/PartyPickerCard.tsx,hooks/usePartyRoomPlayers.ts}`; `PartyGamePickerModal.tsx` (split into cards), `PartyPendingGame.tsx`, `logic/{partyRoutes.ts,universalPartyManager.ts}`, `tableCatalog.ts`, knister i18n and index.
+
+## 2026-10-23 — Gartic Phone route (claude-code)
+
+- #467 slice 6: `docs/tech/game-catalog.md` §1 notes that the Gartic Phone route is registered in `src/App.tsx`.
+- **Code changed:** `src/App.tsx` (lazy route `games/garticphone`).
+
+## 2026-10-23 — Site Web Push sender (claude-code)
+
+- `docs/tech/sync-protocol.md` §5 describes the stateless site Web Push (`/api/push/*`, `webPush` on player seats, ntfy fallback); `deployment.md` names the worker route and the VAPID secrets; `data-models.md` "Player seats" lists the seat's channels; `persistence.md` and the sync-protocol key table gain `PUSH_SITE_SUBSCRIPTION`.
+- **Code changed:** new `cloudflare/{webPush.ts,webPushSend.ts}`, `src/lib/push/{siteWebPush.ts,cloudflareWebPush.test.ts}`, `scripts/generate-vapid-keys.mjs`; `cloudflare/worker.ts`, `wrangler.jsonc`, `src/lib/push/{pushClient.ts,pushSettings.ts,pushTypes.ts}`, `src/lib/storage.ts`, `src/modules/player-management/{playerSeats.ts,useSeatUpkeep.ts}`, `src/components/push/PushNotificationBanner.tsx`, GuessArt/Storyteller player types and turn senders, locales.
+
+## 2026-10-22 — Party leave, remove and rename (claude-code)
+
+- #467 slice 2 (rest): `docs/tech/sync-protocol.md` §3 describes the party roster merge (`updatedAt`, `left` departures, host-only slots).
+- **Code changed:** `src/features/party/logic/{partyRoster.ts,partyRoster.test.ts,universalPartyManager.ts}`, `hooks/usePartyLobbyController.ts`, `components/{PartyPlayerRoster,PartyRoomHeader,PartyRemovedNotice}.tsx`, `PartyLobby.tsx`, locales.
+
 ## 2026-10-22 — Storyteller on player seats (claude-code)
 
 - #467 slice 8: `docs/tech/data-models.md` "Player seats" and `sync-protocol.md` §5 cover Storyteller and the shared seat helpers; `architecture.md` §3.2 lists them under `player-management`.

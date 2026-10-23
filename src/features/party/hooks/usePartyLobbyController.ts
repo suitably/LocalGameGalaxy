@@ -61,6 +61,8 @@ export function usePartyLobbyController(initialRoomId?: string) {
   const isServerActive = storage.isHelperActive();
 
   const [pickerOpen, setPickerOpen] = useState<boolean>(false);
+  // The host took this device out of the room; it stays out until the player joins again.
+  const [removed, setRemoved] = useState<boolean>(false);
 
   const getGameRoute = (gameType: PartyGameType | null, tabletopGameId?: string | null) => {
     const myId = universalPartyManager.getMyPlayerId();
@@ -74,14 +76,20 @@ export function usePartyLobbyController(initialRoomId?: string) {
   };
 
   useEffect(() => {
+    if (removed) return;
     universalPartyManager.subscribeToParty(roomId);
     if (!universalPartyManager.isHost(roomId)) {
       universalPartyManager.joinParty(roomId, playerName);
     }
 
     const unsubscribe = universalPartyManager.onPartyUpdate((updated) => {
-      setRoomState(updated);
       const myId = universalPartyManager.getMyPlayerId();
+      if (updated.left?.[myId] && !updated.players.some((p) => p.id === myId)) {
+        universalPartyManager.leaveParty(roomId);
+        setRemoved(true);
+        return;
+      }
+      setRoomState(updated);
       const myPlayer = updated.players.find((p) => p.id === myId);
       if (myPlayer && myPlayer.name !== playerName) {
         setPlayerName(myPlayer.name);
@@ -109,7 +117,17 @@ export function usePartyLobbyController(initialRoomId?: string) {
     return () => {
       unsubscribe();
     };
-  }, [roomId, playerName, navigate]);
+  }, [roomId, playerName, navigate, removed]);
+
+  const leaveParty = () => {
+    universalPartyManager.leaveParty(roomId);
+    navigate('/');
+  };
+
+  const removePlayer = (playerId: string) => {
+    const updated = universalPartyManager.removeFromParty(roomId, playerId);
+    if (updated) setRoomState(updated);
+  };
 
   const handleSaveName = () => {
     if (!editNameInput.trim()) return;
@@ -203,6 +221,10 @@ export function usePartyLobbyController(initialRoomId?: string) {
     amIHost,
     pendingLaunch,
     startPendingGame,
+    removed,
+    rejoin: () => setRemoved(false),
+    leaveParty,
+    removePlayer,
     clearPendingLaunch: () => setPendingLaunch(null),
   };
 }

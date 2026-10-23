@@ -1,14 +1,16 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsActiveRounded';
 import NotificationsOffRoundedIcon from '@mui/icons-material/NotificationsOffRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded';
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
+import IosShareRoundedIcon from '@mui/icons-material/IosShareRounded';
 import { useTranslation } from 'react-i18next';
 import { storage } from '../../lib/storage';
 import { pushClient } from '../../lib/push/pushClient';
 import { localNotificationPresenter } from '../../lib/notifications';
+import { ensureSiteWebPush, needsHomeScreenInstall } from '../../lib/push/siteWebPush';
 
 type PushPermissionState = 'unsupported' | 'prompt' | 'granted' | 'denied';
 
@@ -27,6 +29,12 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
 }) => {
   const { t } = useTranslation();
   const [state, setState] = useState<PushPermissionState>(getPermissionState);
+  const [installFirst] = useState(needsHomeScreenInstall);
+
+  // Allowed earlier: make sure this device is also subscribed with the site's push sender.
+  useEffect(() => {
+    if (state === 'granted') ensureSiteWebPush().catch(() => {});
+  }, [state]);
 
   const handleEnable = useCallback(async () => {
     const result = await localNotificationPresenter.requestPermission();
@@ -36,7 +44,10 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
   const handleTestNotification = useCallback(async () => {
     await localNotificationPresenter.showNotification({
       title: t('guessart.notificationTitle', 'LocalGameGalaxy: Du bist dran!'),
-      body: t('guessart.pushTestBody', '🎉 Test erfolgreich! Push-Benachrichtigungen funktionieren einwandfrei.'),
+      body: t(
+        'guessart.pushTestBody',
+        '🎉 Test erfolgreich! Push-Benachrichtigungen funktionieren einwandfrei.',
+      ),
       icon: '/pwa/icon_full.png',
     });
   }, [t]);
@@ -46,7 +57,21 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
 
   return (
     <Stack spacing={1.5} sx={{ width: '100%' }}>
-      {state === 'unsupported' && (
+      {installFirst && (
+        <Alert
+          icon={<IosShareRoundedIcon />}
+          severity="info"
+          variant="outlined"
+          sx={{ borderRadius: 2 }}
+        >
+          {t(
+            'guessart.pushIosInstall',
+            'Auf dem iPhone kommen Benachrichtigungen nur in der installierten App: Teilen-Symbol → „Zum Home-Bildschirm“, dann von dort öffnen und hier aktivieren.',
+          )}
+        </Alert>
+      )}
+
+      {state === 'unsupported' && !installFirst && (
         <Alert
           icon={<NotificationsOffRoundedIcon />}
           severity="warning"
@@ -124,7 +149,8 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
         </Alert>
       )}
 
-      {showNtfyOption && (
+      {/* ntfy is the way for devices without browser push; with push on it lives in settings. */}
+      {showNtfyOption && state !== 'granted' && (
         <Alert
           icon={<ShieldRoundedIcon color="info" />}
           severity="info"

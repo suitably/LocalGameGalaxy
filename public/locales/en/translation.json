@@ -1633,7 +1633,8 @@
     "prFailedTitle": "Failed to create Pull Request",
     "helperServerHint": "Ensure the Helper Server is running and a GitHub Token is configured in server settings.",
     "githubErrorHint": "Ensure your GitHub Personal Access Token (PAT) in Settings is valid and has write permissions.",
-    "submitPrButton": "Create Pull Request on GitHub"
+    "submitPrButton": "Create Pull Request on GitHub",
+    "pushIosInstall": "On iPhone, notifications only work in the installed app: Share icon → “Add to Home Screen”, then open it from there and enable them here."
   },
   "party": {
     "hubBannerTitle": "Party Mode (Multiplayer Lobby)",
@@ -1694,7 +1695,12 @@
     "pending_game_waiting": "Waiting for players – they join with the QR code below.",
     "pending_game_ready": "{{count}} players ready.",
     "pending_game_start": "Start now",
-    "pending_game_other": "Other game"
+    "pending_game_other": "Other game",
+    "leave": "Leave party",
+    "removePlayer": "Remove from party",
+    "removedByHost": "The host removed you from the party.",
+    "rejoin": "Join again",
+    "backToHub": "Back to overview"
   },
   "gartic": {
     "waitingHeader": "Waiting for other players...",

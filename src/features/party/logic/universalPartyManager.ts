@@ -5,6 +5,7 @@ import {
   addPresencePlayer,
   assignSlots,
   mergeIncomingState,
+  removePlayer,
   resolveHostId,
   upsertHost,
   upsertJoiningPlayer,
@@ -17,11 +18,15 @@ export interface PartyPlayer {
   isHost: boolean;
   score: number;
   joinedAt: number;
+  /** Last join or rename of this entry; the newer copy wins when rosters merge. */
+  updatedAt?: number;
   /** Stable seat number assigned by the host (`assignSlots`); tabletop seat of this player. */
   slot?: number;
 }
 
-export type PartyGameType = 'guessart' | 'garticphone' | 'tabletop';
+/** Dice games played in the room, everyone on their own sheet (`modules/room-game`). */
+export type RoomDiceGame = 'knister';
+export type PartyGameType = 'guessart' | 'garticphone' | 'tabletop' | RoomDiceGame;
 
 export interface PartyRoomState {
   type?: undefined;
@@ -32,6 +37,8 @@ export interface PartyRoomState {
   gameId?: string | null;
   tabletopGameId?: string | null;
   players: PartyPlayer[];
+  /** Player id → when they left or were removed; keeps stale rosters from adding them back. */
+  left?: Record<string, number>;
   updatedAt: number;
 }
 
@@ -355,25 +362,30 @@ class UniversalPartyManager {
     }
   }
 
+  /** The host takes a player out of the room (e.g. a phone that went away). */
+  public removeFromParty(roomId: string, playerId: string): PartyRoomState | null {
+    if (this.currentRoomState?.roomId !== roomId || playerId === this.getMyPlayerId()) return null;
+    const updated = removePlayer(this.currentRoomState, playerId, Date.now());
+    this.publishPartyState(updated);
+    return updated;
+  }
+
+  /** This device leaves: the others drop it from their roster, and the room is forgotten here. */
   public leaveParty(roomId: string): void {
     if (this.presenceInterval) {
       clearInterval(this.presenceInterval);
       this.presenceInterval = null;
     }
-    if (this.currentRoomState && this.currentRoomState.roomId === roomId) {
-      const myId = this.getMyPlayerId();
-      const updatedPlayers = this.currentRoomState.players.filter((p) => p.id !== myId);
-      const updatedState = {
-        ...this.currentRoomState,
-        players: updatedPlayers,
-        updatedAt: Date.now(),
-      };
-      this.currentRoomState = updatedState;
-      this.publishPartyState(updatedState);
-    }
+    const current = this.currentRoomState?.roomId === roomId ? this.currentRoomState : null;
+    // Forget the room first: the farewell publish then notifies no listener (which could leave again).
+    this.currentRoomState = null;
+    this.currentRoomId = null;
+    if (current) this.publishPartyState(removePlayer(current, this.getMyPlayerId(), Date.now()));
     this.sync?.stop();
     this.sync = null;
     this.syncChannelId = null;
+    storage.remove(`${STORAGE_PREFIXES.PARTY_STATE}${roomId}`);
+    sessionStorageSafe.remove(`${STORAGE_PREFIXES.PARTY_HOST_ID}${roomId}`);
   }
 }
 

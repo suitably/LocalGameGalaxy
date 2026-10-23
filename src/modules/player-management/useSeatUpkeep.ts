@@ -1,7 +1,8 @@
 /**
  * Keeps this device's seats in an async game current [ID: MOD-PLAYER-SEAT-UPKEEP]
  *
- * - registers Web Push for the players played here (`pushPlayerIds`),
+ * - registers Web Push for the players played here (`pushPlayerIds`) and subscribes this device
+ *   with the site's sender when notifications are allowed (`siteWebPush.ts`),
  * - converts records from before seats (`legacyLocalIds`) and writes this device's
  *   notification channels onto its players, then calls `persist` (save + publish),
  * - collects players who joined from another device (`noteJoined`) for a short notice,
@@ -12,6 +13,7 @@ import i18n from '../../i18n';
 import { localNotificationPresenter } from '../../lib/notifications';
 import { pushClient } from '../../lib/push/pushClient';
 import { getPushRelayUrl } from '../../lib/push/pushSettings';
+import { ensureSiteWebPush, onSiteSubscription } from '../../lib/push/siteWebPush';
 import { refreshOwnSeats } from './seatActions';
 import type { SeatedPlayer } from './playerSeats';
 
@@ -27,6 +29,8 @@ export function useSeatUpkeep<P extends SeatedPlayer>({
   persist: (players: P[]) => Promise<void>;
 }) {
   const [joinedNames, setJoinedNames] = useState<string[]>([]);
+  // Bumped when this device gets a (new) push subscription, so its seats carry it.
+  const [pushEndpoint, setPushEndpoint] = useState<string | null>(null);
   const gameId = game?.id ?? null;
   const pushKey = pushPlayerIds.join(',');
   const legacyKey = legacyLocalIds.join(',');
@@ -38,6 +42,12 @@ export function useSeatUpkeep<P extends SeatedPlayer>({
   }, [gameId, pushKey]);
 
   useEffect(() => {
+    const off = onSiteSubscription((sub) => setPushEndpoint(sub.endpoint));
+    if (gameId) ensureSiteWebPush().catch(() => {});
+    return off;
+  }, [gameId]);
+
+  useEffect(() => {
     if (!game) return;
     const { players, changed } = refreshOwnSeats(
       game.players,
@@ -45,7 +55,7 @@ export function useSeatUpkeep<P extends SeatedPlayer>({
     );
     if (changed)
       persist(players).catch((e) => console.warn('[seats] Failed to save own seats:', e));
-  }, [game, legacyKey, persist]);
+  }, [game, legacyKey, persist, pushEndpoint]);
 
   const gameName = game?.name;
   const noteJoined = useCallback(

@@ -1,3 +1,4 @@
+import type { StoredPushSubscription } from '../../lib/push/pushTypes';
 import type { PlayerSeat } from '../../modules/player-management';
 
 export interface StoryPlayer {
@@ -7,6 +8,8 @@ export interface StoryPlayer {
   relayUrl?: string;
   ntfyTopic?: string;
   notificationMethod?: 'auto' | 'webpush' | 'ntfy' | 'both';
+  /** Web Push subscription of the device playing this player. */
+  webPush?: StoredPushSubscription;
   /** Which device plays this player (`modules/player-management/playerSeats.ts`). */
   seat?: PlayerSeat;
 }
