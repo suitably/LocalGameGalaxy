@@ -16,6 +16,7 @@ import {
 } from './common';
 import { drawDrums } from './drumsView';
 import { collectEffects, drawEffects, newEffects, type PlayerEffects } from './effects';
+import { fitHeaderSegments, HEADER_LEFT_X } from './headerFit';
 import { drawKeys } from './keysView';
 import { drawNotation } from './notationView';
 import { drawPitch } from './pitchView';
@@ -118,29 +119,46 @@ function drawHeader(
   g.beginPath();
   g.arc(12, HEADER_H / 2, 4.5, 0, Math.PI * 2);
   g.fill();
-  const who =
-    (several ? `${texts.player(p.no)} · ` : '') +
-    texts.instrument(p.instrument.kind) +
-    (several && focus ? ` · ${texts.keyboardFocus}` : '');
-  g.fillStyle = STAGE.ink;
-  g.font = `700 13px ${FONT_BODY}`;
-  g.fillText(who, 22, HEADER_H / 2);
-  if (w > 360) {
-    const name = p.part.name.length > 28 ? `${p.part.name.slice(0, 27)}…` : p.part.name;
-    g.fillStyle = STAGE.muted;
-    g.font = `500 12px ${FONT_BODY}`;
-    g.fillText(name, 30 + g.measureText(who).width * (13 / 12), HEADER_H / 2);
-  }
   const s = p.stats;
   const acc = s.judged ? `${Math.round(accuracy(s) * 100)} %` : '–';
-  const right =
-    w > 300
-      ? `${s.score.toLocaleString()}  ×${multiplier(s.combo)}  ${texts.combo} ${s.combo}  ${acc}`
-      : s.score.toLocaleString();
-  g.textAlign = 'right';
-  g.font = `700 13px ${FONT_MONO}`;
+  const score = s.score.toLocaleString();
+  const mult = `${score}  ×${multiplier(s.combo)}`;
+  const fonts = {
+    label: `700 13px ${FONT_BODY}`,
+    part: `500 12px ${FONT_BODY}`,
+    score: `700 13px ${FONT_MONO}`,
+  } as const;
+  const layout = fitHeaderSegments(
+    {
+      width: w,
+      player: several ? texts.player(p.no) : null,
+      instrument: texts.instrument(p.instrument.kind),
+      focusMarker: several && focus ? texts.keyboardFocus : null,
+      partName: p.part.name,
+      rightOptions: [
+        `${mult}  ${texts.combo} ${s.combo}  ${acc}`,
+        `${mult}  ${texts.combo} ${s.combo}`,
+        mult,
+        score,
+      ],
+    },
+    (text, role) => {
+      g.font = fonts[role];
+      return g.measureText(text).width;
+    },
+  );
   g.fillStyle = STAGE.ink;
-  g.fillText(right, w - 10, HEADER_H / 2);
+  g.font = fonts.label;
+  g.fillText(layout.label, HEADER_LEFT_X, HEADER_H / 2);
+  if (layout.part !== null) {
+    g.fillStyle = STAGE.muted;
+    g.font = fonts.part;
+    g.fillText(layout.part, layout.partX, HEADER_H / 2);
+  }
+  g.textAlign = 'right';
+  g.font = fonts.score;
+  g.fillStyle = STAGE.ink;
+  g.fillText(layout.right, layout.rightX, HEADER_H / 2);
   g.textAlign = 'left';
   g.textBaseline = 'alphabetic';
 }
