@@ -34,11 +34,7 @@ export const GameInfoDialog: React.FC<GameInfoDialogProps> = ({ open, onClose })
       maxWidth="sm"
       fullWidth
       PaperProps={{
-        sx: {
-          borderRadius: 3,
-          background: 'rgba(25, 25, 35, 0.95)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-        },
+        sx: {},
       }}
     >
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, pb: 1 }}>

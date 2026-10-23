@@ -51,8 +51,9 @@ export const StoryContextCard: React.FC<StoryContextCardProps> = ({
     <Card
       variant="outlined"
       sx={{
-        bgcolor: contextView.isBlind ? 'rgba(30, 41, 59, 0.6)' : 'rgba(15, 23, 42, 0.6)',
-        borderColor: contextView.isBlind ? 'rgba(244, 63, 94, 0.3)' : 'rgba(56, 189, 248, 0.25)',
+        bgcolor: 'background.default',
+        borderColor: (theme) =>
+          alpha(theme.palette[contextView.isBlind ? 'error' : 'secondary'].main, 0.3),
         borderRadius: 2,
         maxHeight: { xs: 180, sm: 220 },
         display: 'flex',
@@ -72,7 +73,7 @@ export const StoryContextCard: React.FC<StoryContextCardProps> = ({
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
           <Stack direction="row" spacing={1} alignItems="center">
             {contextView.isBlind ? (
-              <VisibilityOffRoundedIcon sx={{ color: '#f43f5e', fontSize: 20 }} />
+              <VisibilityOffRoundedIcon sx={{ color: 'error.main', fontSize: 20 }} />
             ) : (
               <HistoryEduRoundedIcon sx={{ color: 'secondary.main', fontSize: 20 }} />
             )}

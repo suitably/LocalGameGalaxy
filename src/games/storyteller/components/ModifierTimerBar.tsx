@@ -19,24 +19,17 @@ export const ModifierTimerBar: React.FC<ModifierTimerBarProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const color = isCritical ? '#ef4444' : isExpiringSoon ? '#f59e0b' : '#38bdf8';
+  const role = isCritical ? 'error' : isExpiringSoon ? 'warning' : 'secondary';
+  const color = `${role}.main`;
 
   return (
     <Box
       sx={{
         p: 1.25,
         borderRadius: 2,
-        bgcolor: isCritical
-          ? 'rgba(239, 68, 68, 0.15)'
-          : isExpiringSoon
-            ? 'rgba(245, 158, 11, 0.15)'
-            : 'rgba(56, 189, 248, 0.1)',
+        bgcolor: (theme) => alpha(theme.palette[role].main, 0.12),
         border: '1px solid',
-        borderColor: isCritical
-          ? 'rgba(239, 68, 68, 0.4)'
-          : isExpiringSoon
-            ? 'rgba(245, 158, 11, 0.4)'
-            : 'rgba(56, 189, 248, 0.25)',
+        borderColor: (theme) => alpha(theme.palette[role].main, 0.4),
         transition: 'all 0.3s ease',
       }}
     >

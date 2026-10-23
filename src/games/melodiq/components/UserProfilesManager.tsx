@@ -55,9 +55,6 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
             borderRadius: 50,
             px: 3,
             py: 1,
-            backgroundImage: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
-            boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
-            color: 'text.primary',
           }}
         >
           New User
@@ -136,7 +133,7 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
       >
-        <Box sx={{ p: 2, bgcolor: '#1a1a1a', minWidth: 200 }}>
+        <Box sx={{ p: 2, minWidth: 200 }}>
           <Typography variant="subtitle2" sx={{ mb: 1, textAlign: 'center' }}>
             Pick Color
           </Typography>

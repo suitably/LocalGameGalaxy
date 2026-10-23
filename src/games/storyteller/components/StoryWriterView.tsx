@@ -211,8 +211,6 @@ export const StoryWriterView: React.FC<StoryWriterViewProps> = ({
                 disabled={!text.trim() || !allRouletteWordsMet || submitting || loading}
                 startIcon={<SendRoundedIcon />}
                 sx={{
-                  bgcolor: '#0284c7',
-                  '&:hover': { bgcolor: '#0369a1' },
                   fontWeight: 600,
                   px: 2,
                 }}

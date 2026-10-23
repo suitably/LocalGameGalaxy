@@ -88,8 +88,7 @@ export const SessionTopControls: React.FC<SessionTopControlsProps> = ({
           sx={{
             width: '0%',
             height: '100%',
-            background: 'linear-gradient(90deg, #ff4081 0%, #7c4dff 100%)',
-            boxShadow: '0 0 10px currentColor',
+            bgcolor: 'primary.main',
             transition: 'width 0.1s linear',
           }}
         />

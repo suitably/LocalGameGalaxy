@@ -23,9 +23,9 @@ export const ModifierRouletteBar: React.FC<ModifierRouletteBarProps> = ({ evalua
       sx={{
         p: 1.5,
         borderRadius: 2,
-        bgcolor: isComplete ? 'rgba(34, 197, 94, 0.1)' : 'rgba(234, 179, 8, 0.1)',
+        bgcolor: (theme) => alpha(theme.palette[isComplete ? 'success' : 'primary'].main, 0.1),
         border: '1px solid',
-        borderColor: isComplete ? 'rgba(34, 197, 94, 0.3)' : 'rgba(234, 179, 8, 0.3)',
+        borderColor: (theme) => alpha(theme.palette[isComplete ? 'success' : 'primary'].main, 0.3),
       }}
     >
       <Box
@@ -39,7 +39,9 @@ export const ModifierRouletteBar: React.FC<ModifierRouletteBarProps> = ({ evalua
         }}
       >
         <Stack direction="row" spacing={1} alignItems="center">
-          <CasinoRoundedIcon sx={{ color: isComplete ? '#4ade80' : '#facc15', fontSize: 20 }} />
+          <CasinoRoundedIcon
+            sx={{ color: isComplete ? 'success.main' : 'primary.main', fontSize: 20 }}
+          />
           <Typography variant="caption" fontWeight={700} sx={{ color: 'text.primary' }}>
             {t('storyteller.wordRouletteTitle', 'Word Roulette (Pflichtwörter)')}
           </Typography>
@@ -48,7 +50,7 @@ export const ModifierRouletteBar: React.FC<ModifierRouletteBarProps> = ({ evalua
         <Typography
           variant="caption"
           fontWeight={600}
-          sx={{ color: isComplete ? '#4ade80' : '#facc15' }}
+          sx={{ color: isComplete ? 'success.main' : 'primary.main' }}
         >
           {matchedCount}/{evaluation.length} {t('storyteller.wordsMatched', 'eingebaut')}
         </Typography>
@@ -78,9 +80,10 @@ export const ModifierRouletteBar: React.FC<ModifierRouletteBarProps> = ({ evalua
             }
             sx={{
               fontWeight: 600,
-              bgcolor: matched ? '#22c55e' : 'rgba(255, 255, 255, 0.08)',
-              color: matched ? '#ffffff' : '#e2e8f0',
-              border: matched ? 'none' : '1px dashed rgba(255, 255, 255, 0.25)',
+              bgcolor: matched ? 'success.main' : 'action.selected',
+              color: matched ? 'success.contrastText' : 'text.primary',
+              border: matched ? 'none' : '1px dashed',
+              borderColor: 'text.disabled',
               transition: 'all 0.2s ease',
             }}
           />

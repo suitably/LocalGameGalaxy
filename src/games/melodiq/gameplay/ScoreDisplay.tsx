@@ -1,6 +1,7 @@
 import { useState, forwardRef, useImperativeHandle } from 'react';
 import { alpha, Box, Typography } from '@mui/material';
 import { keyframes } from '@emotion/react';
+import { piecePalette } from '../../../themeTokens';
 
 // --- Types ---
 export type RatingType = 'Perfect' | 'Good' | 'Okay' | 'Miss';
@@ -25,11 +26,11 @@ interface PlayerVisualState {
 // --- Rankings Logic ---
 // We can define ranks based on score thresholds (assuming max score ~1000 per song)
 const RANKS = [
-  { threshold: 0, title: 'Beginner', color: '#888' },
-  { threshold: 200, title: 'Wannabe', color: '#4caf50' }, // Green
-  { threshold: 500, title: 'Rising Star', color: '#2196f3' }, // Blue
-  { threshold: 800, title: 'Rockstar', color: '#9c27b0' }, // Purple
-  { threshold: 950, title: 'Legend', color: '#ffeb3b' }, // Gold
+  { threshold: 0, title: 'Beginner', color: piecePalette.teal },
+  { threshold: 200, title: 'Wannabe', color: piecePalette.green },
+  { threshold: 500, title: 'Rising Star', color: piecePalette.blue },
+  { threshold: 800, title: 'Rockstar', color: piecePalette.purple },
+  { threshold: 950, title: 'Legend', color: piecePalette.yellow },
 ];
 
 const getRank = (score: number) => {
@@ -88,10 +89,10 @@ const PlayerScoreDisplay = ({
             fontWeight: 900,
             color:
               state.lastRating === 'Perfect'
-                ? '#ffeb3b'
+                ? 'primary.main'
                 : state.lastRating === 'Good'
-                  ? '#4caf50'
-                  : '#fff',
+                  ? 'success.main'
+                  : 'text.primary',
             textShadow: '0 0 5px rgba(0,0,0,0.8)',
             animation: `${floatUp} 0.6s ease-out forwards`,
             whiteSpace: 'nowrap',

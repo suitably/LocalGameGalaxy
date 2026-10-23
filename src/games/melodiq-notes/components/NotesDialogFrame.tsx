@@ -35,12 +35,7 @@ export const NotesDialogFrame: React.FC<NotesDialogFrameProps> = ({
     maxWidth={maxWidth}
     fullWidth
     PaperProps={{
-      sx: {
-        bgcolor: '#1a1a2e',
-        backgroundImage: 'none',
-        borderRadius: 3,
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-      },
+      sx: {},
     }}
   >
     <DialogTitle

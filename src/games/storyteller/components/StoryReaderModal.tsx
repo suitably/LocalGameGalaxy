@@ -59,10 +59,6 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
       fullWidth
       PaperProps={{
         sx: {
-          bgcolor: '#0f172a',
-          backgroundImage: 'none',
-          color: '#f8fafc',
-          borderRadius: 3,
           maxHeight: '85vh',
         },
       }}
@@ -166,7 +162,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
           startIcon={copied ? <CheckRoundedIcon /> : <ContentCopyRoundedIcon />}
           sx={{
             borderColor: (theme) => alpha(theme.palette.text.primary, 0.2),
-            color: copied ? '#4ade80' : 'inherit',
+            color: copied ? 'success.main' : 'inherit',
           }}
         >
           {copied

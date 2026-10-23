@@ -71,7 +71,8 @@ export const PlayerSeatSelector: React.FC<PlayerSeatSelectorProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                border: isCurrent ? '2.5px solid #fff' : '1.5px solid rgba(255,255,255,0.3)',
+                border: isCurrent ? '2.5px solid' : '1.5px solid',
+                borderColor: isCurrent ? 'text.primary' : 'divider',
                 boxShadow: isCurrent
                   ? `0 0 10px ${color}, 0 2px 6px rgba(0,0,0,0.5)`
                   : '0 2px 4px rgba(0,0,0,0.4)',
@@ -84,13 +85,15 @@ export const PlayerSeatSelector: React.FC<PlayerSeatSelectorProps> = ({
               }}
             >
               {isCurrent ? (
-                <CheckIcon sx={{ fontSize: 16, color: color === '#f8fafc' ? '#000' : '#fff' }} />
+                <CheckIcon
+                  sx={{ fontSize: 16, color: (theme) => theme.palette.getContrastText(color) }}
+                />
               ) : (
                 <Typography
                   sx={{
                     fontSize: '0.65rem',
                     fontWeight: 900,
-                    color: color === '#f8fafc' ? '#000' : '#fff',
+                    color: (theme) => theme.palette.getContrastText(color),
                     lineHeight: 1,
                   }}
                 >

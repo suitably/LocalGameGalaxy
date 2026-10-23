@@ -129,11 +129,9 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
                 height: `${heightPercent}%`,
                 minHeight: 0,
                 position: 'relative',
-                borderRight: colIndex < colsInRow - 1 ? '1px solid rgba(255,255,255,0.2)' : 'none',
-                borderBottom:
-                  rowIndex < gridLayout.rows.length - 1
-                    ? '1px solid rgba(255,255,255,0.2)'
-                    : 'none',
+                borderRight: colIndex < colsInRow - 1 ? 1 : 0,
+                borderColor: 'divider',
+                borderBottom: rowIndex < gridLayout.rows.length - 1 ? 1 : 0,
               }}
             >
               <PitchVisualizer
@@ -186,7 +184,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
                             bgcolor:
                               player.trackIndex === tIdx
                                 ? `hsl(${player.config.hue}, 80%, 50%)`
-                                : 'rgba(255,255,255,0.1)',
+                                : 'action.hover',
                           },
                         }}
                         onClick={() => onSwitchTrack(allPlayers.indexOf(player), tIdx)}

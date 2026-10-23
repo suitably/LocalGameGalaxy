@@ -52,7 +52,8 @@ export const HandoverView: React.FC<HandoverViewProps> = ({
           sx={{
             p: 6,
             borderRadius: 3,
-            bgcolor: isImposter ? 'rgba(211, 47, 47, 0.85)' : 'rgba(56, 142, 60, 0.85)',
+            bgcolor: isImposter ? 'error.main' : 'success.main',
+            color: isImposter ? 'error.contrastText' : 'success.contrastText',
             border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.2)}`,
             boxShadow: 8,
           }}

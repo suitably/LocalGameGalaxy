@@ -111,7 +111,9 @@ export const StoryHeader: React.FC<StoryHeaderProps> = ({
 
           <Typography variant="caption" noWrap sx={{ color: 'text.secondary' }}>
             {t('storyteller.currentTurnOf', 'Am Zug: ')}
-            <strong style={{ color: '#38bdf8' }}>{activePlayer.name}</strong>
+            <Box component="strong" sx={{ color: 'secondary.main' }}>
+              {activePlayer.name}
+            </Box>
             {!isCurrentTurnLocal && ` (${t('storyteller.remotePlayer', 'Remote')})`}
           </Typography>
         </Box>
