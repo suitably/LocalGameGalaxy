@@ -8,8 +8,8 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-21
-  method: 'read src/modules/sync/*.ts, src/lib/webrtc/*, src/games/melodiq/{PhoneClientEngine.tsx,hooks/useTVMode.ts,hooks/useTVReceiver.ts,hooks/useMelodiqGlobalEvents.tsx}, public/sw-push.js, server/cloudflare-push-relay/worker.ts'
+  at: 2026-10-23
+  method: 'read src/modules/sync/*.ts, src/lib/webrtc/*, src/games/melodiq/{PhoneClientEngine.tsx,hooks/useTVMode.ts,hooks/useTVReceiver.ts,hooks/useMelodiqGlobalEvents.tsx}, public/sw-push.js, server/cloudflare-push-relay/worker.ts, cloudflare/webPushSend.ts, src/lib/push/siteWebPush.ts'
 sources:
   - 'src/modules/sync/MqttMailboxService.ts'
   - 'src/modules/sync/useMultiChannelSync.ts'
@@ -131,6 +131,7 @@ Host-internal events (`PLAYBACK_STARTED`, `SONG_ENDED`, `TV_READY`) are also dis
 ## 5. Web Push and ntfy
 
 - Client chooses `auto | webpush | ntfy | both` (`storage.getNotificationMethod()`); ntfy server default `https://ntfy.sh`, personal topic from `storage.getUserNtfyTopic()`.
+- **Site Web Push (default, no relay):** the app worker sends Web Push itself (`cloudflare/webPushSend.ts`): `GET /api/push/vapid-public-key` → `{publicKey}`, `POST /api/push/send` `{subscription, title, body, url?, tag?, icon?}` → one encrypted push (RFC 8291/8292). Nothing is stored: a device that has notification permission subscribes (`src/lib/push/siteWebPush.ts`, `ensureSiteWebPush`; key `STORAGE_KEYS.PUSH_SITE_SUBSCRIPTION`), the subscription travels as `webPush` on the players seated on that device (`PlayerChannels`, `getDeviceChannels`), and the moving device passes it with the turn message (`pushClient.sendGamePushNotification`). Only push-service endpoints (FCM, Mozilla, Windows, Apple) are accepted, text is limited to 300 characters and the click URL must be on the same site. When the site push arrives, ntfy is skipped unless the target chose `both`; a 410 (subscription gone) or any failure falls back to ntfy. iOS offers push only to the home-screen app (`needsHomeScreenInstall`, hint in `PushNotificationBanner`).
 - Relay endpoints (`server/cloudflare-push-relay/worker.ts`; each also under `/api/push/…`):
 
 | Path                | Method | Purpose                                                                                                        |
@@ -153,7 +154,7 @@ Host-internal events (`PLAYBACK_STARTED`, `SONG_ENDED`, `TV_READY`) are also dis
 | `STORAGE_KEYS.MELODIQ_PARTY_ID`, `STORAGE_PREFIXES.WEBRTC_PARTY_ID`                                                               | WebRTC party / info-hash id            |
 | `STORAGE_KEYS.MELODIQ_TRACKER_URLS`, `MELODIQ_DISABLED_TRACKER_URLS`, `MELODIQ_TRACKER_PREFERENCES`, prefix `WEBRTC_TRACKER_PREF` | tracker list and per-tracker overrides |
 | `STORAGE_KEYS.SIGNALING_URL`                                                                                                      | explicit self-hosted tracker URL       |
-| `STORAGE_KEYS.PUSH_RELAY_URL`, `NOTIFICATION_METHOD`, `NTFY_SERVER_URL`, `NTFY_TOPIC`                                             | notifications                          |
+| `STORAGE_KEYS.PUSH_RELAY_URL`, `PUSH_SITE_SUBSCRIPTION`, `NOTIFICATION_METHOD`, `NTFY_SERVER_URL`, `NTFY_TOPIC`                   | notifications                          |
 | `STORAGE_PREFIXES.GAME_RELAY` (`galaxy_game_relay_`)                                                                              | per-game relay URL from a share link   |
 | `STORAGE_PREFIXES.PARTY_STATE`, `PARTY_HOST_ID`, `STORAGE_KEYS.PARTY_MY_PLAYER_ID`, `HOST_ROOM_CODE`                              | party room                             |
 

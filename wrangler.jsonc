@@ -1,14 +1,15 @@
 {
     "name": "nexumia",
     "compatibility_date": "2026-01-19",
-    // Only /api/steam/* runs the worker (Steam Workshop proxy, see cloudflare/worker.ts);
+    // Only /api/steam/* (Steam Workshop proxy) and /api/push/* (Web Push sender, secrets
+    // VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY) run the worker, see cloudflare/worker.ts;
     // everything else is served straight from the static build.
     "main": "cloudflare/worker.ts",
     "assets": {
         "directory": "./dist",
         "binding": "ASSETS",
         "not_found_handling": "single-page-application",
-        "run_worker_first": ["/api/steam/*"]
+        "run_worker_first": ["/api/steam/*", "/api/push/*"]
     },
     "previews": {}
 }

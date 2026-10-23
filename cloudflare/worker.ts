@@ -1,8 +1,9 @@
 /**
  * Cloudflare Worker in front of the static app [ID: CF-APP-WORKER]
  *
- * Only `/api/steam/*` reaches this code (`run_worker_first` in wrangler.jsonc); every other
- * request is served from the static assets. It exists because Steam's Web API sends no CORS
+ * Only `/api/steam/*` and `/api/push/*` reach this code (`run_worker_first` in wrangler.jsonc);
+ * every other request is served from the static assets. `/api/push/*` is the stateless Web Push
+ * sender (`webPushSend.ts`). The Steam part exists because Steam's Web API sends no CORS
  * headers, so the browser cannot ask Steam for Workshop details itself:
  *
  * - POST /api/steam/ISteamRemoteStorage/GetPublishedFileDetails/v1/ → Steam Web API (same path
@@ -10,10 +11,11 @@
  * - GET /api/steam/file?url=… → a Workshop file from Steam's user-content CDN (allow-listed
  *   hosts, size-limited), for browsers that cannot fetch it directly.
  *
- * Nothing is stored; no secrets are needed.
+ * Nothing is stored. Web Push needs the secrets `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`.
  */
+import { handlePush, type PushEnv } from './webPushSend';
 
-interface Env {
+interface Env extends PushEnv {
   ASSETS: { fetch: (request: Request) => Promise<Response> };
 }
 
@@ -73,6 +75,13 @@ async function workshopFile(url: URL): Promise<Response> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname.startsWith('/api/push/')) {
+      try {
+        return await handlePush(request, env);
+      } catch {
+        return json(502, { error: 'push service unreachable' });
+      }
+    }
     try {
       if (url.pathname === STEAM_DETAILS_PATH && request.method === 'POST')
         return await workshopDetails(request);

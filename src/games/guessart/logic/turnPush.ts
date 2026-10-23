@@ -71,6 +71,8 @@ export async function sendTurnPush({
       targetPlayerId: target.id,
       targetRelayUrl: relayUrl,
       ntfyTopic: target.ntfyTopic,
+      webPush: target.webPush,
+      targetMethod: target.notificationMethod,
       title: message.title,
       body: message.body,
       url: message.url,

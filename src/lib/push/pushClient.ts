@@ -7,18 +7,12 @@
 
 import { gameRelayStorage } from './gameRelayStorage';
 import { storage } from '../storage';
-import type { NotificationMethod, PushNotificationPayload, StoredPushSubscription } from './pushTypes';
-
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
-}
+import type {
+  NotificationMethod,
+  PushNotificationPayload,
+  StoredPushSubscription,
+} from './pushTypes';
+import { sendSitePush, subscribeWithKey } from './siteWebPush';
 
 function sanitizeTopicPart(str: string): string {
   return str.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 32);
@@ -83,7 +77,9 @@ export const pushClient = {
    * Generates the app intent URI for opening the ntfy Android app directly.
    */
   getNtfyAppScheme(topicOrGameId?: string, playerId?: string, customServer?: string): string {
-    const server = (customServer || storage.getNtfyServerUrl()).replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const server = (customServer || storage.getNtfyServerUrl())
+      .replace(/^https?:\/\//, '')
+      .replace(/\/$/, '');
     if (!topicOrGameId) {
       return `ntfy://${server}/${storage.getUserNtfyTopic()}`;
     }
@@ -97,7 +93,9 @@ export const pushClient = {
    * Generates the app intent URI for opening the personal topic directly in the ntfy Android app.
    */
   getUserNtfyAppScheme(customServer?: string): string {
-    const server = (customServer || storage.getNtfyServerUrl()).replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const server = (customServer || storage.getNtfyServerUrl())
+      .replace(/^https?:\/\//, '')
+      .replace(/\/$/, '');
     return `ntfy://${server}/${storage.getUserNtfyTopic()}`;
   },
 
@@ -133,7 +131,11 @@ export const pushClient = {
   /**
    * Registers this device's PushSubscription or ntfy topic with the game's relay.
    */
-  async registerForGamePush(gameId: string, playerId: string, preferredRelayUrl?: string): Promise<boolean> {
+  async registerForGamePush(
+    gameId: string,
+    playerId: string,
+    preferredRelayUrl?: string,
+  ): Promise<boolean> {
     if (!gameId || !playerId) return false;
 
     const relayUrl = preferredRelayUrl || gameRelayStorage.getGameRelay(gameId);
@@ -153,7 +155,11 @@ export const pushClient = {
     }
 
     // Otherwise register Web Push (with ntfy as fallback/hybrid)
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+    if (
+      typeof window === 'undefined' ||
+      !('serviceWorker' in navigator) ||
+      !('PushManager' in window)
+    ) {
       await this.sendSubscribeToRelay(relayUrl, gameId, playerId, { method: 'ntfy', ntfyTopic });
       return false;
     }
@@ -177,30 +183,7 @@ export const pushClient = {
       if (!publicKey) return false;
 
       const registration = await navigator.serviceWorker.ready;
-      let subscription = await registration.pushManager.getSubscription();
-
-      if (subscription) {
-        const rawKey = subscription.options?.applicationServerKey;
-        const targetBytes = urlBase64ToUint8Array(publicKey);
-        let match = false;
-        if (rawKey) {
-          const rawBytes = new Uint8Array(rawKey);
-          if (rawBytes.length === targetBytes.length) {
-            match = rawBytes.every((val, idx) => val === targetBytes[idx]);
-          }
-        }
-        if (!match) {
-          await subscription.unsubscribe().catch(() => {});
-          subscription = null;
-        }
-      }
-
-      if (!subscription) {
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(publicKey) as unknown as ArrayBuffer,
-        });
-      }
+      const subscription = await subscribeWithKey(registration, publicKey);
 
       if (!subscription) return false;
 
@@ -222,7 +205,10 @@ export const pushClient = {
         ntfyTopic,
       });
     } catch (err) {
-      console.warn('[PushClient] Web Push subscription failed, falling back to ntfy registration:', err);
+      console.warn(
+        '[PushClient] Web Push subscription failed, falling back to ntfy registration:',
+        err,
+      );
       if (relayUrl) {
         await this.sendSubscribeToRelay(relayUrl, gameId, playerId, { method: 'ntfy', ntfyTopic });
       }
@@ -256,7 +242,11 @@ export const pushClient = {
     }
   },
 
-  async unsubscribeFromGamePush(gameId: string, playerId: string, customRelayUrl?: string): Promise<boolean> {
+  async unsubscribeFromGamePush(
+    gameId: string,
+    playerId: string,
+    customRelayUrl?: string,
+  ): Promise<boolean> {
     if (!gameId || !playerId) return false;
     const relayUrl = customRelayUrl || gameRelayStorage.getGameRelay(gameId);
     if (!relayUrl) return false;
@@ -280,15 +270,23 @@ export const pushClient = {
    */
   async sendGamePushNotification(payload: PushNotificationPayload): Promise<boolean> {
     // Never dispatch a turn notification if sender and target are the same player
-    if (payload.senderPlayerId && payload.targetPlayerId && payload.senderPlayerId === payload.targetPlayerId) {
-      console.log('[PushClient] Suppressing push notification to self (senderPlayerId === targetPlayerId)');
+    if (
+      payload.senderPlayerId &&
+      payload.targetPlayerId &&
+      payload.senderPlayerId === payload.targetPlayerId
+    ) {
+      console.log(
+        '[PushClient] Suppressing push notification to self (senderPlayerId === targetPlayerId)',
+      );
       return false;
     }
 
     // Never dispatch if target ntfyTopic matches this device's own personal topic!
     const ownUserTopic = storage.getUserNtfyTopic();
     if (payload.ntfyTopic && ownUserTopic && payload.ntfyTopic === ownUserTopic) {
-      console.log('[PushClient] Suppressing push notification to self (target ntfyTopic === own user topic)');
+      console.log(
+        '[PushClient] Suppressing push notification to self (target ntfyTopic === own user topic)',
+      );
       return false;
     }
 
@@ -299,12 +297,27 @@ export const pushClient = {
         ? this.getNtfyTopic(payload.gameId, payload.targetPlayerId)
         : undefined);
 
-    if (!relayUrl && !ntfyTopic) {
-      console.warn('[PushClient] No target relay or ntfy topic available for push notification; skipping.');
+    if (!relayUrl && !ntfyTopic && !payload.webPush) {
+      console.warn(
+        '[PushClient] No target relay or ntfy topic available for push notification; skipping.',
+      );
       return false;
     }
 
     const enrichedPayload: PushNotificationPayload = { ...payload, ntfyTopic };
+
+    // The target device's own browser push through this site's sender: no relay, no extra app.
+    // When it arrives, ntfy is only used as well if the target asked for both.
+    if (payload.webPush && payload.targetMethod !== 'ntfy') {
+      const sent = await sendSitePush(payload.webPush, {
+        title: payload.title,
+        body: payload.body,
+        url: payload.url,
+        tag: payload.tag,
+        icon: payload.icon,
+      });
+      if (sent === 'sent' && payload.targetMethod !== 'both') return true;
+    }
 
     let relaySuccess = false;
     if (relayUrl) {
