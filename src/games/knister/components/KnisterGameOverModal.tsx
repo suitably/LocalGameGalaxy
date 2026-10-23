@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  alpha,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -51,9 +52,10 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
       fullWidth
       PaperProps={{
         sx: {
-          bgcolor: 'rgba(22, 22, 35, 0.98)',
+          bgcolor: 'background.paper',
           borderRadius: 4,
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          border: 1,
+          borderColor: 'divider',
           boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
           textAlign: 'center',
           p: 2,
@@ -82,12 +84,13 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 p: 1.5,
-                bgcolor: idx === 0 ? 'rgba(255, 183, 77, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-                borderRadius: 2.5,
-                border:
+                bgcolor: (theme) =>
                   idx === 0
-                    ? '1px solid rgba(255, 183, 77, 0.4)'
-                    : '1px solid rgba(255, 255, 255, 0.06)',
+                    ? alpha(theme.palette.primary.main, 0.12)
+                    : theme.palette.background.default,
+                borderRadius: 2.5,
+                border: 1,
+                borderColor: idx === 0 ? 'primary.main' : 'divider',
               }}
             >
               <Box sx={{ textAlign: 'left' }}>

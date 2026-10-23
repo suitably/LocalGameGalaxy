@@ -97,9 +97,11 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
           severity={status.type}
           sx={{
             mb: 2,
-            bgcolor: status.type === 'success' ? 'rgba(46,125,50,0.2)' : 'rgba(211,47,47,0.2)',
+            bgcolor: (theme) =>
+              alpha(theme.palette[status.type === 'success' ? 'success' : 'error'].main, 0.2),
             color: 'text.primary',
-            border: `1px solid ${status.type === 'success' ? '#2e7d32' : '#d32f2f'}`,
+            border: 1,
+            borderColor: status.type === 'success' ? 'success.main' : 'error.main',
           }}
           onClose={() => setStatus(null)}
         >

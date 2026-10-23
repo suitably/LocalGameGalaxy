@@ -25,8 +25,7 @@ export const PartyActiveGameBanner: React.FC<{ lobby: PartyLobbyController }> = 
             borderRadius: 3,
             border: '2px solid',
             borderColor: 'primary.main',
-            background:
-              'linear-gradient(135deg, rgba(25, 118, 210, 0.12) 0%, rgba(156, 39, 176, 0.12) 100%)',
+            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
             display: 'flex',
             flexDirection: { xs: 'column', sm: 'row' },
             alignItems: { xs: 'flex-start', sm: 'center' },

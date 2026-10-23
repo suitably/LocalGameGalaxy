@@ -105,9 +105,9 @@ export const ServerUrlList: React.FC<ServerUrlListProps> = ({
               p: 1,
               px: 1.5,
               borderRadius: 2,
-              bgcolor: item.enabled ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.2)',
+              bgcolor: item.enabled ? 'background.paper' : 'background.default',
               border: '1px solid',
-              borderColor: item.enabled ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.04)',
+              borderColor: 'divider',
               opacity: item.enabled ? 1 : 0.6,
               transition: 'all 0.2s ease',
             }}
@@ -198,9 +198,6 @@ export const ServerUrlList: React.FC<ServerUrlListProps> = ({
               px: 4,
               py: 1,
               alignSelf: 'flex-start',
-              backgroundImage: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
-              boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
-              color: 'text.primary',
             }}
           >
             {labels.add}

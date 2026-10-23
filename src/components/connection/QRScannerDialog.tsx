@@ -123,13 +123,7 @@ export const QRScannerDialog: React.FC<QRScannerDialogProps> = ({ open, onClose,
       maxWidth="sm"
       fullWidth
       PaperProps={{
-        sx: {
-          bgcolor: '#1a1a2e',
-          backgroundImage:
-            'linear-gradient(135deg, rgba(144,202,249,0.05) 0%, rgba(244,143,177,0.05) 100%)',
-          border: '1px solid rgba(144,202,249,0.2)',
-          borderRadius: 3,
-        },
+        sx: {},
       }}
     >
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pb: 1 }}>
@@ -151,7 +145,7 @@ export const QRScannerDialog: React.FC<QRScannerDialogProps> = ({ open, onClose,
             width: '100%',
             borderRadius: 2,
             overflow: 'hidden',
-            bgcolor: '#000',
+            bgcolor: 'common.black',
             minHeight: 280,
             display: 'flex',
             alignItems: 'center',

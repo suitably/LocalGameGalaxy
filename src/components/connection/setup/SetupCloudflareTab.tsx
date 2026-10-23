@@ -50,8 +50,6 @@ export const SetupCloudflareTab: React.FC = () => {
             borderRadius: 50,
             px: 3,
             py: 1,
-            backgroundImage: 'linear-gradient(45deg, #F38020 30%, #FAAE40 90%)',
-            color: 'text.primary',
             textTransform: 'none',
             fontWeight: 'bold',
           }}

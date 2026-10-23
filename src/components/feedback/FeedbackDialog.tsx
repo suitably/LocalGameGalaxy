@@ -48,12 +48,8 @@ export const FeedbackDialog: React.FC = () => {
       fullWidth
       PaperProps={{
         sx: {
-          bgcolor: 'rgba(22, 22, 35, 0.97)',
-          border: '1px solid rgba(255,255,255,0.1)',
           borderRadius: 4,
           p: 3,
-          color: 'white',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
           backdropFilter: 'blur(12px)',
         },
       }}

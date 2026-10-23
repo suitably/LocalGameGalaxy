@@ -153,7 +153,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
                       borderRadius: 1,
                       bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
                       '& .MuiLinearProgress-bar': {
-                        bgcolor: isCurrentWinningRow ? '#2e7d32' : '#374151',
+                        bgcolor: isCurrentWinningRow ? 'success.main' : 'action.disabledBackground',
                         borderRadius: 1,
                       },
                     }}

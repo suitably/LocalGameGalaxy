@@ -125,7 +125,7 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
         {tabIndex === 0 &&
           grid([
             <PartyPickerCard
-              icon={<PhoneForwardedIcon sx={{ fontSize: 36, color: '#7c4dff' }} />}
+              icon={<PhoneForwardedIcon sx={{ fontSize: 36, color: 'piece.pink' }} />}
               title="Gartic Phone"
               desc={t(
                 'party.gartic_desc',
@@ -183,7 +183,7 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
             grid(
               customGames.map((g) => (
                 <PartyPickerCard
-                  icon={<StyleIcon sx={{ fontSize: 36, color: '#7c3aed' }} />}
+                  icon={<StyleIcon sx={{ fontSize: 36, color: 'piece.green' }} />}
                   title={g.name}
                   desc={t('party.custom_game_info', '{{min}}-{{max}} Spieler • {{cards}} Karten', {
                     min: g.minPlayers,

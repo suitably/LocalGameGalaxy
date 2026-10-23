@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  alpha,
   Alert,
   Box,
   Button,
@@ -76,7 +77,13 @@ export const GameSetup: React.FC<GameSetupProps> = ({
   return (
     <Stack spacing={3} sx={{ p: 2, maxWidth: 600, mx: 'auto', pb: 6 }}>
       {/* Top Banner / Info */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        flexWrap="wrap"
+        gap={1}
+      >
         <Typography variant="h5" fontWeight={800} color="primary.main">
           {t('games.guessart.title', 'GuessArt')}
         </Typography>
@@ -114,12 +121,22 @@ export const GameSetup: React.FC<GameSetupProps> = ({
           variant="outlined"
           sx={{
             borderRadius: 3,
-            background: 'linear-gradient(135deg, rgba(156, 39, 176, 0.12) 0%, rgba(233, 30, 99, 0.12) 100%)',
-            border: '1.5px solid rgba(156, 39, 176, 0.35)',
+            bgcolor: (theme) => alpha(theme.palette.piece.pink, 0.08),
+            border: 1,
+            borderColor: (theme) => alpha(theme.palette.piece.pink, 0.4),
             boxShadow: 2,
           }}
         >
-          <CardContent sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5 }}>
+          <CardContent
+            sx={{
+              p: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 1.5,
+            }}
+          >
             <Box display="flex" alignItems="center" gap={1.5}>
               <PhoneIphoneRoundedIcon sx={{ fontSize: 36, color: 'secondary.main' }} />
               <Box>
@@ -127,7 +144,10 @@ export const GameSetup: React.FC<GameSetupProps> = ({
                   Gartic Phone (Flüsterpost)
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {t('guessart.garticShortDesc', 'Live Multiplayer: Satz schreiben ➔ Zeichnen ➔ Raten ➔ Album-Show!')}
+                  {t(
+                    'guessart.garticShortDesc',
+                    'Live Multiplayer: Satz schreiben ➔ Zeichnen ➔ Raten ➔ Album-Show!',
+                  )}
                 </Typography>
               </Box>
             </Box>
@@ -197,7 +217,10 @@ export const GameSetup: React.FC<GameSetupProps> = ({
                   {t('guessart.manualWordMode', 'Manuelle Begriffseingabe')}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {t('guessart.manualWordModeDesc', 'Begriffe selbst tippen statt aus dem Katalog zu wählen.')}
+                  {t(
+                    'guessart.manualWordModeDesc',
+                    'Begriffe selbst tippen statt aus dem Katalog zu wählen.',
+                  )}
                 </Typography>
               </Box>
             }

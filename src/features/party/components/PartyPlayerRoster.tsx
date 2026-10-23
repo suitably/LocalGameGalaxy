@@ -2,7 +2,7 @@
  * Players in the room [ID: COMP-PARTY-PLAYER-ROSTER]
  */
 import React from 'react';
-import { Box, Chip, Tooltip, Typography, Avatar, CircularProgress } from '@mui/material';
+import { alpha, Box, Chip, Tooltip, Typography, Avatar, CircularProgress } from '@mui/material';
 import StarsRoundedIcon from '@mui/icons-material/StarsRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import PersonRemoveRoundedIcon from '@mui/icons-material/PersonRemoveRounded';
@@ -83,8 +83,11 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
                   borderRadius: 3,
                   borderColor: isMe ? 'primary.main' : p.isHost ? 'secondary.main' : 'divider',
                   borderWidth: isMe ? 2 : 1,
-                  bgcolor: isMe ? 'primary.main' + '18' : 'background.default',
-                  boxShadow: isMe ? '0 2px 10px rgba(25, 118, 210, 0.2)' : 'none',
+                  bgcolor: (theme) =>
+                    isMe
+                      ? alpha(theme.palette.primary.main, 0.1)
+                      : theme.palette.background.default,
+                  boxShadow: 'none',
                   cursor: isMe ? 'pointer' : 'default',
                   transition: 'all 0.2s ease',
                   '&:hover': isMe

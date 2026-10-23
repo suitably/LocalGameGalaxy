@@ -21,9 +21,13 @@ interface WordleHistoryModalProps {
 }
 
 const statusColors = {
-  correct: { bg: '#2e7d32', border: '#2e7d32', text: '#ffffff' },
-  present: { bg: '#f9a825', border: '#f9a825', text: '#ffffff' },
-  absent: { bg: '#374151', border: '#374151', text: '#9ca3af' },
+  correct: { bg: 'success.main', border: 'success.main', text: 'success.contrastText' },
+  present: { bg: 'warning.main', border: 'warning.main', text: 'warning.contrastText' },
+  absent: {
+    bg: 'action.disabledBackground',
+    border: 'action.disabledBackground',
+    text: 'text.secondary',
+  },
 };
 
 export const WordleHistoryModal: React.FC<WordleHistoryModalProps> = ({
@@ -79,18 +83,18 @@ export const WordleHistoryModal: React.FC<WordleHistoryModalProps> = ({
                       px: 1,
                       py: 0.5,
                       borderRadius: 1,
-                      bgcolor:
+                      bgcolor: (theme) =>
                         entry.status === 'won'
-                          ? 'rgba(46, 125, 50, 0.2)'
+                          ? alpha(theme.palette.success.main, 0.2)
                           : entry.status === 'lost'
-                            ? 'rgba(211, 47, 47, 0.2)'
-                            : 'rgba(255,255,255,0.1)',
+                            ? alpha(theme.palette.error.main, 0.2)
+                            : theme.palette.action.selected,
                       color:
                         entry.status === 'won'
-                          ? '#81c784'
+                          ? 'success.main'
                           : entry.status === 'lost'
-                            ? '#e57373'
-                            : '#e0e0e0',
+                            ? 'error.main'
+                            : 'text.primary',
                       fontWeight: 700,
                     }}
                   >

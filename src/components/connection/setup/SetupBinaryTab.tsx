@@ -73,8 +73,6 @@ export const SetupBinaryTab: React.FC<SetupBinaryTabProps> = ({ os, downloadConf
             sx={{
               borderRadius: 50,
               px: 3,
-              backgroundImage: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-              color: 'text.primary',
               textTransform: 'none',
             }}
           >

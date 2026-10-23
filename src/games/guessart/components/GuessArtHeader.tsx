@@ -179,7 +179,7 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
                 sx={{
                   p: { xs: 0.75, sm: 1 },
                   border: '1px solid',
-                  borderColor: isCurrentTurnLocal ? 'rgba(255, 255, 255, 0.15)' : 'secondary.main',
+                  borderColor: isCurrentTurnLocal ? 'divider' : 'secondary.main',
                   bgcolor: isCurrentTurnLocal ? 'transparent' : 'action.hover',
                 }}
               >

@@ -170,9 +170,10 @@ export const ComposeGeneratorPanel: React.FC = () => {
               sx: {
                 fontFamily: 'Consolas, Monaco, "Courier New", monospace',
                 fontSize: '0.8rem',
-                bgcolor: 'rgba(10, 12, 18, 0.85)',
+                bgcolor: 'background.default',
                 borderRadius: 2,
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                border: 1,
+                borderColor: 'divider',
                 '& textarea': {
                   whiteSpace: 'pre',
                   overflowX: 'auto',

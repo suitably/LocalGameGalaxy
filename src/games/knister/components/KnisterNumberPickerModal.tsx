@@ -50,10 +50,6 @@ export const KnisterNumberPickerModal: React.FC<KnisterNumberPickerModalProps> =
       fullWidth
       PaperProps={{
         sx: {
-          bgcolor: 'rgba(22, 22, 35, 0.96)',
-          backdropFilter: 'blur(16px)',
-          borderRadius: 4,
-          border: '1px solid rgba(255, 255, 255, 0.12)',
           p: 1.5,
           userSelect: 'none',
           WebkitTouchCallout: 'none',
@@ -114,10 +110,13 @@ export const KnisterNumberPickerModal: React.FC<KnisterNumberPickerModalProps> =
                   justifyContent: 'center',
                   fontWeight: 900,
                   fontSize: { xs: '1.4rem', sm: '1.6rem' },
-                  bgcolor: isSeven ? alpha('#ffa726', 0.2) : 'rgba(255, 255, 255, 0.08)',
-                  color: isSeven ? '#ffb74d' : '#fff',
+                  bgcolor: (theme) =>
+                    isSeven
+                      ? alpha(theme.palette.warning.main, 0.2)
+                      : theme.palette.background.default,
+                  color: isSeven ? 'warning.main' : 'text.primary',
                   border: '1.5px solid',
-                  borderColor: isSeven ? 'warning.main' : 'rgba(255, 255, 255, 0.15)',
+                  borderColor: isSeven ? 'warning.main' : 'divider',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
                   transition: 'all 0.15s ease',
                   '&:hover': {

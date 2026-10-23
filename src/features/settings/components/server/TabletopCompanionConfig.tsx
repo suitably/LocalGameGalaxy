@@ -60,7 +60,7 @@ export const TabletopCompanionConfig: React.FC = () => {
       {/* 1. Connection Info */}
       <Paper sx={settingsCardSx}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
-          <CasinoIcon sx={{ color: '#ce93d8', fontSize: 28 }} />
+          <CasinoIcon sx={{ color: 'piece.red', fontSize: 28 }} />
           <Box sx={{ flexGrow: 1 }}>
             <Typography variant="subtitle1" fontWeight={700}>
               {t('settings.companion_tabletop_url_title', 'Tabletop Server Connection')}
@@ -184,7 +184,7 @@ export const TabletopCompanionConfig: React.FC = () => {
                   border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
                 }}
               >
-                <FolderIcon sx={{ color: '#ce93d8', mr: 1.5, fontSize: 20 }} />
+                <FolderIcon sx={{ color: 'piece.red', mr: 1.5, fontSize: 20 }} />
                 <ListItemText
                   primary={dir}
                   primaryTypographyProps={{ variant: 'body2', fontFamily: 'monospace' }}
