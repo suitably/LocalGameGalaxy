@@ -14,6 +14,10 @@ const Hub = lazy(() => import('./features/hub/Hub').then((m) => ({ default: m.Hu
 const Settings = lazy(() =>
   import('./features/settings/Settings').then((m) => ({ default: m.Settings })),
 );
+// Gartic Phone has no hub card: the party lobby launches it for the whole room.
+const GarticPhoneGame = lazy(() =>
+  import('./games/garticphone').then((m) => ({ default: m.GarticPhoneGame })),
+);
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -88,6 +92,16 @@ function AppRoutes() {
           }
         />
         <Route path="feedback" element={<FeedbackRedirect />} />
+        <Route
+          path="games/garticphone"
+          element={
+            <ErrorBoundary componentName="garticphone">
+              <Suspense fallback={<LoadingFallback />}>
+                <GarticPhoneGame />
+              </Suspense>
+            </ErrorBoundary>
+          }
+        />
 
         {/* Dynamic Game Routes registered via GameRegistry (OCP) */}
         {gameRegistry.getGames().map((game) => (
