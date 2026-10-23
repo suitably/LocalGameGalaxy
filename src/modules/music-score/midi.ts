@@ -58,7 +58,8 @@ export function parseMidi(data: Uint8Array, fileName: string): ScoreSong {
 
   for (let t = 0; t < trackCount && p + 8 <= data.length; t++) {
     if (tag(p) !== 'MTrk') break;
-    const end = p + 8 + dv.getUint32(p + 4);
+    // a corrupt length must not send the reader far past the data
+    const end = Math.min(data.length, p + 8 + dv.getUint32(p + 4));
     p += 8;
     let tick = 0;
     let status = 0;
@@ -139,8 +140,8 @@ export function parseMidi(data: Uint8Array, fileName: string): ScoreSong {
   const tempoMap: TempoEvent[] = tempos
     .sort((a, b) => a.tick - b.tick)
     .map((x) => ({ beat: x.tick / ppq, bpm: Math.round(x.bpm * 100) / 100 }));
-  if (!tempoMap.length || tempoMap[0].beat > 0)
-    tempoMap.unshift({ beat: 0, bpm: tempoMap[0]?.bpm ?? 120 });
+  // MIDI plays at 120 bpm until the first tempo event
+  if (!tempoMap.length || tempoMap[0].beat > 0) tempoMap.unshift({ beat: 0, bpm: 120 });
 
   sigs.sort((a, b) => a.tick - b.tick);
   const endBeat = maxTick / ppq;

@@ -68,12 +68,12 @@ Auth for all of these: [server-security.md](server-security.md). Client side: `s
 
 A song folder may also hold sheet music: `.mxl`, `.musicxml`, `.mid`/`.midi`, and `.xml` when the file is MusicXML (sniffed for `<score-partwise>`/`<score-timewise>`). The scanner lists them as `Song.scores` (`services/scoreFiles.ts`); the client receives `{ file, url, hasMarks }` per score, where `url` is a `/media` URL with a `v=<mtime>` parameter so replaced files are not served from cache.
 
-| Endpoint                                | Purpose                                                                                                       |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `POST /api/songs/:id/scores`            | upload a score (multipart field `file`, max 20 MB; `replace=1` overwrites, otherwise a numbered name is used) |
-| `GET /api/songs/:id/scores/:file/marks` | bar marks aligning the score with the recording (`no-store`)                                                  |
-| `PUT /api/songs/:id/scores/:file/marks` | store bar marks `{ marks: [{ beat, sec }], offsetSec?, audio? }` (strictly increasing) as `<file>.marks.json` |
-| `DELETE /api/songs/:id/scores/:file`    | remove score and marks (master token or API key with `allowSongDeletion`)                                     |
+| Endpoint                                | Purpose                                                                                                                    |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/songs/:id/scores`            | upload a score (multipart field `file`, max 20 MB; never overwrites — an existing name gets a number, e.g. `name (2).mxl`) |
+| `GET /api/songs/:id/scores/:file/marks` | bar marks aligning the score with the recording (`no-store`)                                                               |
+| `PUT /api/songs/:id/scores/:file/marks` | store bar marks `{ marks: [{ beat, sec }], offsetSec?, audio? }` (strictly increasing) as `<file>.marks.json`              |
+| `DELETE /api/songs/:id/scores/:file`    | remove score and marks (master token or API key with `allowSongDeletion`)                                                  |
 
 The server does not search or download sheet music: users fetch MusicXML themselves (for example from musescore.com with their own account) and upload it or drop it into the folder. Alignment runs in the client (`src/modules/music-score`), the server only stores the result.
 

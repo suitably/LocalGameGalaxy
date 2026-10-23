@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-23 — Review fixes for Melodiq Notes stage (claude-code)
+
+- `docs/tech/song-pipeline.md` §4: score upload never overwrites (`replace=1` removed; it skipped the delete permission and left stale marks).
+- **Code changed:** `server/src/plugins/melodiq/routes/scores.ts` (+ test); `src/modules/music-score/{alignment,midi}.ts` (+ tests); `src/lib/companion/songScoresApi.ts`; Melodiq Notes stage (`StageEngine.setLoop`, key handling in dialogs, stale async results in `useStageSong`, picker errors); `dev-dist/` restored to `main`.
+
 ## 2026-10-23 — Recording alignment fix (claude-code)
 
 - `docs/tech/architecture.md` §3.2: `music-score` alignment now ends with `fitMarksToNotes` (band onsets, whole-song fit).

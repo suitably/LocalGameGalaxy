@@ -174,7 +174,10 @@ export function marksFromWarp(song: ScoreSong, audioAt: Float64Array): BarMark[]
     const den = cnt * sxx - sx * sx;
     const slope = den > 0 ? (cnt * sxy - sx * sy) / den : 0;
     const sec =
-      (sy - slope * sx) / cnt + slope * k + (beatToSec(song.tempoMap, beat) - k * HOP_SEC) * slope;
+      (sy - slope * sx) / cnt +
+      slope * k +
+      // slope is seconds per frame, so the offset into frame k is scaled to frames first
+      ((beatToSec(song.tempoMap, beat) - k * HOP_SEC) / HOP_SEC) * slope;
     return { beat, sec };
   });
   for (let k = 1; k < marks.length; k++) {

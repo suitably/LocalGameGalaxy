@@ -723,7 +723,8 @@
         "export_score": "Download score in the recording's tempo",
         "align_failed": "Alignment failed: {{error}}",
         "tab_library": "Library",
-        "song_meta": "{{bars}} bars · {{parts}} tracks"
+        "song_meta": "{{bars}} bars · {{parts}} tracks",
+        "action_error": "That did not work ({{error}})."
       }
     },
     "kniffel": {

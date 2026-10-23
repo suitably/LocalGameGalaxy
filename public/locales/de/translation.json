@@ -723,7 +723,8 @@
         "export_score": "Partitur im Tempo der Aufnahme herunterladen",
         "align_failed": "Abgleich fehlgeschlagen: {{error}}",
         "tab_library": "Bibliothek",
-        "song_meta": "{{bars}} Takte · {{parts}} Spuren"
+        "song_meta": "{{bars}} Takte · {{parts}} Spuren",
+        "action_error": "Das hat nicht geklappt ({{error}})."
       }
     },
     "kniffel": {

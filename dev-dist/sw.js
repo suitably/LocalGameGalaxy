@@ -66,12 +66,13 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-7e5eb42b'], function (workbox) {
+define(['./workbox-5a5d9309'], function (workbox) {
   'use strict';
 
   importScripts('/sw-push.js');
   self.skipWaiting();
   workbox.clientsClaim();
+
   /**
    * The precacheAndRoute() method efficiently caches and responds to
    * requests for URLs in the manifest.
@@ -85,7 +86,7 @@ define(['./workbox-7e5eb42b'], function (workbox) {
       },
       {
         url: '/index.html',
-        revision: '0.frqa7ockur',
+        revision: '0.haml09jhl68',
       },
     ],
     {},

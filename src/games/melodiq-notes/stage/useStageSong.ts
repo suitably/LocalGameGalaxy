@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   applyBarMarksToMusicXml,
   type AlignProgress,
@@ -64,9 +64,12 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
   const [offset, setOffset] = useState(0);
   const [align, setAlign] = useState<AlignState>({ kind: 'none' });
   const [saved, setSaved] = useState(false);
+  // bumped whenever the song or the recording changes; async results for an older one are dropped
+  const generation = useRef(0);
 
   const show = useCallback(
     (next: ScoreSong, nextXml: string | null, nextOrigin: SongOrigin) => {
+      generation.current++;
       engine.loadSong(next);
       setSong(next);
       setXml(nextXml);
@@ -87,24 +90,28 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     });
   }, []);
 
+  /** Runs a load; resolves to whether it worked (the error is kept for display otherwise). */
   const run = useCallback(async (task: () => Promise<void>) => {
     setLoading(true);
     try {
       await task();
+      return true;
     } catch (e) {
       setError(errorText(e));
+      return false;
     } finally {
       setLoading(false);
     }
   }, []);
 
   const loadExample = useCallback(
-    (title: string, xmlText: string) => {
-      const loaded = readMusicXmlText(xmlText, title);
-      show(loaded.song, loaded.xml, { kind: 'example', title });
-      replaceRecording(null);
-    },
-    [show, replaceRecording],
+    (title: string, xmlText: string) =>
+      run(async () => {
+        const loaded = readMusicXmlText(xmlText, title);
+        show(loaded.song, loaded.xml, { kind: 'example', title });
+        replaceRecording(null);
+      }),
+    [run, show, replaceRecording],
   );
 
   const loadFile = useCallback(
@@ -134,8 +141,9 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
         replaceRecording(
           audio ? { name: entry.title, url: companionUrl(audio), local: false } : null,
         );
+        const loadedAs = generation.current;
         const stored = score.hasMarks ? await getBarMarks(entry.id, score.file) : null;
-        if (stored) {
+        if (stored && loadedAs === generation.current) {
           setMarks(stored.marks);
           setOffset(stored.offsetSec);
           setAlign({ kind: 'done' });
@@ -147,6 +155,7 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
 
   const setRecordingFile = useCallback(
     (file: File) => {
+      generation.current++;
       replaceRecording({ name: file.name, url: URL.createObjectURL(file), local: true });
       setMarks(null);
       setOffset(0);
@@ -172,18 +181,21 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
 
   const alignNow = useCallback(async () => {
     if (!song || !recording) return;
+    const startedAs = generation.current;
+    const current = () => startedAs === generation.current;
     setAlign({ kind: 'running', stage: 'analyse', fraction: 0 });
     try {
       const data = await (await fetch(recording.url)).arrayBuffer();
-      const result = await alignRecordingInBrowser(data, song, (stage, fraction) =>
-        setAlign({ kind: 'running', stage, fraction }),
-      );
+      const result = await alignRecordingInBrowser(data, song, (stage, fraction) => {
+        if (current()) setAlign({ kind: 'running', stage, fraction });
+      });
+      if (!current()) return;
       setMarks(result);
       setOffset(0);
       setSaved(false);
       setAlign({ kind: 'done' });
     } catch (e) {
-      setAlign({ kind: 'failed', error: errorText(e) });
+      if (current()) setAlign({ kind: 'failed', error: errorText(e) });
     }
   }, [song, recording]);
 

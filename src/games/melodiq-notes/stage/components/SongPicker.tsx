@@ -30,6 +30,11 @@ export function SongPicker({ open, onClose, state }: SongPickerProps) {
     t(`games.melodiq_notes.stage.${key}`, opts);
   const [tab, setTab] = useState<PickerTab>('server');
   const fileRef = useRef<HTMLInputElement>(null);
+  // the picker stays open when loading fails, so the error below is seen
+  const closeIfLoaded = (load: Promise<boolean>) =>
+    void load.then((ok) => {
+      if (ok) onClose();
+    });
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>{k('song_pick')}</DialogTitle>
@@ -47,18 +52,12 @@ export function SongPicker({ open, onClose, state }: SongPickerProps) {
       <DialogContent sx={{ minHeight: 320 }}>
         {tab === 'server' && (
           <ServerSongList
-            onPlay={(song, score) => {
-              void state.loadServerScore(song, score);
-              onClose();
-            }}
+            onPlay={(song, score) => closeIfLoaded(state.loadServerScore(song, score))}
           />
         )}
         {tab === 'library' && (
           <LibraryTab
-            onPlay={(song) => {
-              state.loadExample(song.title, song.xmlContent);
-              onClose();
-            }}
+            onPlay={(song) => closeIfLoaded(state.loadExample(song.title, song.xmlContent))}
           />
         )}
         {tab === 'examples' && (
@@ -68,10 +67,7 @@ export function SongPicker({ open, onClose, state }: SongPickerProps) {
                 key={d.id}
                 variant="outlined"
                 sx={{ justifyContent: 'flex-start' }}
-                onClick={() => {
-                  state.loadExample(d.title, d.xmlContent);
-                  onClose();
-                }}
+                onClick={() => closeIfLoaded(state.loadExample(d.title, d.xmlContent))}
               >
                 {d.title} · {d.artist}
               </Button>
@@ -94,10 +90,7 @@ export function SongPicker({ open, onClose, state }: SongPickerProps) {
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 e.target.value = '';
-                if (f) {
-                  void state.loadFile(f);
-                  onClose();
-                }
+                if (f) closeIfLoaded(state.loadFile(f));
               }}
             />
           </Stack>

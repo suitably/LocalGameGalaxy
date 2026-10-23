@@ -63,16 +63,21 @@ test('Song scores: upload, marks, delete', async (t) => {
     assert.match(song.scores[0].url, /^\/media\?path=.*&v=\d+$/);
   });
 
-  await t.test('a second upload with the same name gets a numbered name', async () => {
-    const form = new FormData();
-    form.append('file', new File(['<score-partwise/>'], 'Nothing Else Matters.musicxml'));
-    const res = await app.request(`/api/songs/${songId()}/scores`, {
-      method: 'POST',
-      headers: auth,
-      body: form,
-    });
-    assert.strictEqual((await res.json()).file, 'Nothing Else Matters (2).musicxml');
-  });
+  await t.test(
+    'a second upload with the same name gets a numbered name and never overwrites',
+    async () => {
+      const form = new FormData();
+      form.append('file', new File(['<score-partwise/>'], 'Nothing Else Matters.musicxml'));
+      // older clients could ask to overwrite; that bypassed the delete permission, so it is ignored
+      form.append('replace', '1');
+      const res = await app.request(`/api/songs/${songId()}/scores`, {
+        method: 'POST',
+        headers: auth,
+        body: form,
+      });
+      assert.strictEqual((await res.json()).file, 'Nothing Else Matters (2).musicxml');
+    },
+  );
 
   await t.test('other file types are rejected', async () => {
     const form = new FormData();

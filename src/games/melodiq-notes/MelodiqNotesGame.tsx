@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { Box, Button, Paper, Stack, Typography, useMediaQuery } from '@mui/material';
+import { Alert, Box, Button, Paper, Stack, Typography, useMediaQuery } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { bpmAt } from '../../modules/music-score';
@@ -92,6 +92,11 @@ export const MelodiqNotesGame: React.FC = () => {
             />
           </Box>
         </Stack>
+        {songState.error && !pickerOpen && (
+          <Alert severity="error" onClose={songState.clearError}>
+            {k('action_error', { error: songState.error })}
+          </Alert>
+        )}
         <StageToolbar
           engine={engine}
           display={display}

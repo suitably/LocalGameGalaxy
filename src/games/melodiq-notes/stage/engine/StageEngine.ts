@@ -154,8 +154,12 @@ export class StageEngine {
 
   /** Loops a practice section (and the next one when sections are single bars); null ends the loop. */
   setLoop(section: number | null) {
-    if (section === null || this.mode === 'perform') this.loop = null;
-    else {
+    if (section === null || this.mode === 'perform') {
+      const had = this.loop;
+      this.loop = null;
+      // before the start, the playhead goes back to the count-in of bar 1
+      if (had && this.state === 'idle') this.reset();
+    } else {
       const s = this.sections[section];
       const end =
         this.sections[
@@ -163,8 +167,8 @@ export class StageEngine {
         ];
       this.loop = { from: s.from, to: end.to };
       if (this.mode === 'learn') this.setMode('practice');
-      if (this.state === 'playing' || this.state === 'paused') this.restartAt(this.loop.from);
-      else if (this.state === 'done') this.reset();
+      if (this.state === 'done') this.reset();
+      else this.restartAt(this.loop.from);
     }
     this.emit();
   }

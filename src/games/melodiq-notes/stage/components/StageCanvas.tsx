@@ -81,8 +81,17 @@ export function StageCanvas({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement | null)?.tagName ?? '';
-      if (e.metaKey || e.ctrlKey || e.altKey || ['INPUT', 'SELECT', 'TEXTAREA'].includes(tag))
+      const target = e.target instanceof Element ? e.target : null;
+      const tag = target?.tagName ?? '';
+      if (
+        e.defaultPrevented ||
+        e.metaKey ||
+        e.ctrlKey ||
+        e.altKey ||
+        ['INPUT', 'SELECT', 'TEXTAREA'].includes(tag) ||
+        // dialogs and menus (song picker, sound settings, selects) keep their keys
+        target?.closest('[role="dialog"], [role="presentation"], [role="menu"], [role="listbox"]')
+      )
         return;
       const down = e.type === 'keydown';
       if (down && e.code === 'Escape') return onTogglePause();

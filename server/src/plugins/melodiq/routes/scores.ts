@@ -48,8 +48,8 @@ scoresRouter.post('/api/songs/:id/scores', async (c) => {
     const name = safeScoreFileName(upload.name);
     if (!name)
       return c.json({ error: 'Only .mxl, .musicxml, .xml, .mid or .midi files are accepted' }, 400);
-    const replace = body['replace'] === '1';
-    const target = replace ? name : uniqueFileName(found.folder, name);
+    // never overwrites: replacing a score is a delete (with its permission check) plus an upload
+    const target = uniqueFileName(found.folder, name);
     await fs.promises.writeFile(
       path.join(found.folder, target),
       Buffer.from(await upload.arrayBuffer()),

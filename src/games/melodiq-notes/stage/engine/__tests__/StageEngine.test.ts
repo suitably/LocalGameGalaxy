@@ -130,6 +130,16 @@ describe('StageEngine', () => {
     expect(e.beat).toBeLessThan(12);
   });
 
+  it('starts at the chosen section when one is picked before the start', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    e.setLoop(1);
+    expect(e.beat).toBeLessThan(4);
+    expect(e.beat).toBeGreaterThan(0);
+    e.setLoop(null);
+    expect(e.beat).toBe(-4);
+  });
+
   it('follows the tempo of the recording, not the score', () => {
     const e = new StageEngine(fakeSound());
     e.loadSong(song());

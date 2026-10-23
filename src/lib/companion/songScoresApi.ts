@@ -49,7 +49,9 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 const scorePath = (songId: string, file: string) =>
   `/api/songs/${encodeURIComponent(songId)}/scores/${encodeURIComponent(file)}`;
 
-export const listCompanionSongs = () => request<CompanionSong[]>('/api/songs');
+/** Servers from before sheet-music support send songs without `scores`. */
+export const listCompanionSongs = async (): Promise<CompanionSong[]> =>
+  (await request<CompanionSong[]>('/api/songs')).map((s) => ({ ...s, scores: s.scores ?? [] }));
 
 export async function fetchCompanionFile(path: string): Promise<ArrayBuffer> {
   const res = await fetch(companionUrl(path));

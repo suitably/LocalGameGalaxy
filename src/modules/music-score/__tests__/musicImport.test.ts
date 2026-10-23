@@ -169,4 +169,39 @@ describe('parseMidi', () => {
   it('rejects other files', () => {
     expect(() => parseMidi(new Uint8Array([1, 2, 3, 4]), 'x.mid')).toThrow(ScoreImportError);
   });
+
+  it('plays at 120 bpm until the first tempo event', () => {
+    // 90 bpm (666667 µs per quarter) from beat 8
+    const late = [
+      ...vlq(0),
+      0x90,
+      60,
+      100,
+      ...vlq(8 * 480),
+      0xff,
+      0x51,
+      0x03,
+      0x0a,
+      0x2c,
+      0x2b,
+      ...vlq(480),
+      0x80,
+      60,
+      0,
+      ...vlq(0),
+      0xff,
+      0x2f,
+      0x00,
+    ];
+    expect(parseMidi(buildMidi(480, [late]), 'late.mid').tempoMap).toEqual([
+      { beat: 0, bpm: 120 },
+      { beat: 8, bpm: 90 },
+    ]);
+  });
+
+  it('stops at the end of the data when a track length is corrupt', () => {
+    const data = buildMidi(480, [[...vlq(0), 0x90, 60, 100, ...vlq(480), 0x80, 60, 0]]);
+    new DataView(data.buffer).setUint32(18, 0xfffffff0);
+    expect(parseMidi(data, 'broken.mid').parts[0].notes).toHaveLength(1);
+  });
 });
