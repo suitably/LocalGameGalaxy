@@ -196,7 +196,7 @@ Each area is the couch in its piece colour with the area symbol on the (taller) 
 | Party  | `area-party.svg`  | `piece.pink`   | Speech bubble    | `party`, `drawing`, `social_deduction` |
 | Rätsel | `area-puzzle.svg` | `piece.purple` | 2×2 tiles        | `puzzle`                               |
 
-The category mapping is a proposal; the hub still filters by the `GameCategory` values in `src/lib/gameRegistry.tsx`.
+The mapping lives in `src/lib/areas.ts`; the hub filters by area.
 
 - **Area lock-up** (hub section headers, area pages): area couch + small "Nexumia" caption above the area name in the display face.
 - **Area label** (filters, chips, game cards): pill in the piece colour, ink symbol (20px) + ink area name, 600–700 weight. Labels are UI, not logos: no couch inside.
@@ -218,8 +218,8 @@ Order (each step its own PR):
 1. ~~**Tokens in code**~~ — done for dark (`src/themeTokens.ts` holds dark, light and piece tokens; `src/theme.ts` builds a dark-only MUI theme, no `colorSchemes`/CSS variables yet, because MUI would follow the system mode and keep its own `localStorage` key). Original plan: rewrite `src/theme.ts` with MUI `colorSchemes` (`dark` + `light`) and CSS variables (`cssVariables: true`), the piece palette as a custom palette key, typography (§3), `shape.borderRadius: 4`, component overrides (§6). Update `index.css`, `index.html` and the PWA manifest in `vite.config.ts` to `bg.canvas`.
 2. ~~**Fonts**~~ — done: add both `@fontsource-variable` packages, import in `src/main.tsx`.
 3. **Mode setting:** storage key via `src/lib/storage.ts`, toggle in settings; then enable `colorSchemes` with `lightTokens`. Needs step 5 first for game screens, or light mode limited to hub/settings.
-4. **Hub:** replace `colorStart`/`colorEnd` gradients in `src/lib/gameRegistry.tsx` with one piece-colour token per game.
-5. **Games, one PR per game:** replace hard-coded hex values (Qwixx, cards, tabletop seats, Wordle, Sudoku, Storyteller, Melodiq …) with tokens.
+4. ~~**Hub**~~ — done: tiles and filter use the areas (`src/lib/areas.ts`, `src/features/hub/HubGameCard.tsx`, `HubAreaFilter.tsx`). The unused gradient fields in `src/lib/gameRegistry.tsx` go with suitably/LocalGameGalaxy#498.
+5. **Games, one PR per game:** replace hard-coded hex values (Qwixx, cards, tabletop seats, Wordle, Sudoku, Storyteller, Melodiq …) with tokens. Tracked in suitably/LocalGameGalaxy#490 (files that must be decomposed first: #491–#498; light mode: #499).
 6. ~~Logo, word mark and app icons~~ — done (§8). Remaining: area icons in the hub (with step 4).
 
 Until a screen is migrated it may keep its old colours, but changed lines must use tokens.

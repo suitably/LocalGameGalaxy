@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-23 — Hub areas (claude-code)
+
+- `DESIGN.md` §8.2/§10 step 4 done; migration tracked in issues #490–#499. `docs/tech/architecture.md` §3.1/§3.2: design tokens and areas listed; registry gradient fields unused.
+- **Code changed:** new `src/lib/areas.ts` (+ test), `src/components/brand/AreaSymbol.tsx`, `src/features/hub/{HubAreaFilter,HubGameCard}.tsx`; `Hub.tsx` filters by area (Party, Musik, Karten, Rätsel) instead of seven emoji categories, tiles are flat cards with an area-coloured icon plate.
+
 ## 2026-10-23 — Design tokens, fonts and word mark live (claude-code)
 
 - `DESIGN.md`: status, type table (actual `h3`/`h4`/`h6` sizes), §8 word mark as paths, §10 steps 1–2 done for dark. `docs/tech/styling.md` §1 and §6 describe the token file and the self-hosted fonts.
