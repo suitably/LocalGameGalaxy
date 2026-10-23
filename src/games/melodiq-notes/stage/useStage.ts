@@ -5,7 +5,12 @@ import { BrowserStageSound } from './engine/browserSound';
 import type { StageTexts } from './render/common';
 
 const MAX_FRAME_SEC = 0.05;
-const UI_REFRESH_MS = 100;
+/** How strongly the smooth frame clock is pulled towards the audio clock each frame. */
+const CLOCK_PULL = 0.05;
+/** Beyond this the audio clock jumped (suspended, tab in background): follow it at once. */
+const CLOCK_SNAP_SEC = 0.1;
+/** The progress bar moves smoothly enough at this rate; everything else is drawn on the canvas. */
+const PROGRESS_REFRESH_MS = 250;
 
 /** One engine and one audio context per mounted stage; the engine advances on the audio clock every frame. */
 export function useStage() {
@@ -17,16 +22,30 @@ export function useStage() {
     const sound = new BrowserStageSound();
     soundRef.current = sound;
     engine.attachSound(sound);
-    let last = sound.now();
+    // The audio clock advances in blocks (10–40 ms on many phones), which makes falling notes
+    // stutter. Time runs on the smooth frame clock instead and is pulled towards the audio clock.
+    let clock = sound.now();
+    let lastFrame = performance.now();
     let lastNotify = 0;
+    let lastBeat = engine.beat;
     let raf = 0;
     const loop = () => {
-      const now = sound.now();
-      engine.tick(Math.min(MAX_FRAME_SEC, Math.max(0, now - last)));
-      last = now;
-      if (engine.state === 'playing' && performance.now() - lastNotify > UI_REFRESH_MS) {
+      const frameNow = performance.now();
+      const audioNow = sound.now();
+      let next = clock + (frameNow - lastFrame) / 1000;
+      lastFrame = frameNow;
+      const drift = audioNow - next;
+      next = Math.abs(drift) > CLOCK_SNAP_SEC ? audioNow : next + drift * CLOCK_PULL;
+      engine.tick(Math.min(MAX_FRAME_SEC, Math.max(0, next - clock)));
+      clock = Math.max(clock, next);
+      if (
+        engine.state === 'playing' &&
+        engine.beat !== lastBeat &&
+        performance.now() - lastNotify > PROGRESS_REFRESH_MS
+      ) {
         lastNotify = performance.now();
-        engine.notify();
+        lastBeat = engine.beat;
+        engine.notifyLive();
       }
       raf = requestAnimationFrame(loop);
     };
@@ -46,17 +65,31 @@ export function useStage() {
   return { engine, version, unlockAudio };
 }
 
+/** Re-renders the calling component with the engine's live progress (see `StageEngine.subscribeLive`). */
+export function useStageLive(engine: StageEngine) {
+  return useSyncExternalStore(engine.subscribeLive, engine.getLiveVersion);
+}
+
+/** Remembers a label per key: the renderer asks for the same few labels every frame. */
+function cached<K, V>(make: (key: K) => V): (key: K) => V {
+  const seen = new Map<K, V>();
+  return (key) => {
+    if (!seen.has(key)) seen.set(key, make(key));
+    return seen.get(key) as V;
+  };
+}
+
 /** Localised words for the canvas renderer. */
 export function useStageTexts(): StageTexts {
   const { t, i18n } = useTranslation();
   return useMemo(
     () => ({
-      player: (no) => t('games.melodiq_notes.stage.player', { no }),
+      player: cached((no) => t('games.melodiq_notes.stage.player', { no })),
       keyboardFocus: t('games.melodiq_notes.stage.keyboard_focus'),
-      instrument: (kind) => t(`games.melodiq_notes.stage.instruments.${kind}`),
-      drum: (id) => t(`games.melodiq_notes.stage.drums.${id}`),
+      instrument: cached((kind) => t(`games.melodiq_notes.stage.instruments.${kind}`)),
+      drum: cached((id) => t(`games.melodiq_notes.stage.drums.${id}`)),
       nextGrip: t('games.melodiq_notes.stage.next_grip'),
-      fromFret: (fret) => t('games.melodiq_notes.stage.from_fret', { fret }),
+      fromFret: cached((fret) => t('games.melodiq_notes.stage.from_fret', { fret })),
       judgement: {
         perfect: t('games.melodiq_notes.stage.judgement.perfect'),
         good: t('games.melodiq_notes.stage.judgement.good'),

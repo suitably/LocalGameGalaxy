@@ -34,6 +34,23 @@ export function roundRect(g: Ctx, x: number, y: number, w: number, h: number, r:
   g.closePath();
 }
 
+/**
+ * Fills the current path with a soft halo around it. A translucent stroke costs
+ * one extra draw call; `shadowBlur` blurs every note and made frames drop.
+ */
+export function fillWithHalo(
+  g: CanvasRenderingContext2D,
+  color: string,
+  halo: number,
+  fill = color,
+) {
+  g.strokeStyle = withAlpha(color, 0.3);
+  g.lineWidth = halo;
+  g.stroke();
+  g.fillStyle = fill;
+  g.fill();
+}
+
 export function withAlpha(hex: string, a: number) {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;

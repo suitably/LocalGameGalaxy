@@ -1,7 +1,7 @@
 import { Button, Stack, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { StageEngine } from '../engine/StageEngine';
-import type { StageMode } from '../engine/types';
+import type { BandMode, StageMode } from '../engine/types';
 import type { StageDisplay } from '../render/stageRenderer';
 
 interface StageToolbarProps {
@@ -13,6 +13,7 @@ interface StageToolbarProps {
 }
 
 const SPEEDS = [0.5, 0.75, 1];
+const BAND_MODES: BandMode[] = ['all', 'others', 'none'];
 
 export function StageToolbar({
   engine,
@@ -63,14 +64,30 @@ export function StageToolbar({
         <ToggleButton value="instrument">{k('view_instrument')}</ToggleButton>
         <ToggleButton value="notation">{k('view_notation')}</ToggleButton>
       </ToggleButtonGroup>
-      <ToggleButton
-        size="small"
-        value="band"
-        selected={engine.band}
-        onChange={() => engine.setBand(!engine.band)}
-      >
-        {engine.band ? k('band_on') : k('band_off')}
-      </ToggleButton>
+      {engine.recording ? (
+        <ToggleButton
+          size="small"
+          value="recording"
+          selected={engine.recordingAudible}
+          onChange={() => engine.setRecordingAudible(!engine.recordingAudible)}
+        >
+          {engine.recordingAudible ? k('recording_on') : k('recording_off')}
+        </ToggleButton>
+      ) : (
+        <ToggleButtonGroup
+          size="small"
+          exclusive
+          value={engine.band}
+          aria-label={k('backing')}
+          onChange={(_, v: BandMode | null) => v && engine.setBand(v)}
+        >
+          {BAND_MODES.map((m) => (
+            <ToggleButton key={m} value={m}>
+              {k(`backing_${m}`)}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      )}
       <Stack direction="row" spacing={1} sx={{ ml: 'auto' }}>
         <Button
           size="small"

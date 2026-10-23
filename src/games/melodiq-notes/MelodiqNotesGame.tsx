@@ -14,7 +14,7 @@ import { StageCanvas } from './stage/components/StageCanvas';
 import { StageOverlay } from './stage/components/StageOverlay';
 import { StageToolbar } from './stage/components/StageToolbar';
 import { SectionStrip } from './stage/components/SectionStrip';
-import { TrackList } from './stage/components/TrackList';
+import { PlayerList } from './stage/components/PlayerList';
 import { RecordingBar } from './stage/components/RecordingBar';
 import { SongPicker } from './stage/components/SongPicker';
 import { InputSourcePicker } from './stage/components/InputSourcePicker';
@@ -176,7 +176,7 @@ export const MelodiqNotesGame: React.FC = () => {
         </Paper>
         <SectionStrip engine={engine} />
         <RecordingBar state={songState} />
-        <TrackList engine={engine} />
+        <PlayerList engine={engine} />
       </Stack>
       <SongPicker open={pickerOpen} onClose={() => setPickerOpen(false)} state={songState} />
       <SoundSettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />

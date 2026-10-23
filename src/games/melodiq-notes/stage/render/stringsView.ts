@@ -8,6 +8,7 @@ import {
   MISS_COLOR,
   roundRect,
   withAlpha,
+  fillWithHalo,
   barLabel,
 } from './common';
 import { stringGeometry } from './geometry';
@@ -78,13 +79,9 @@ export function drawStrings(v: ViewContext): HitPoint {
     g.fillStyle = withAlpha(c, 0.22);
     roundRect(g, x, y - r * 0.35, len, r * 0.7, r * 0.35);
     g.fill();
-    g.shadowColor = c;
-    g.shadowBlur = 10;
-    g.fillStyle = c;
     g.beginPath();
     g.arc(x + r, y, r, 0, Math.PI * 2);
-    g.fill();
-    g.shadowBlur = 0;
+    fillWithHalo(g, c, 5);
     g.fillStyle = '#0b0a15';
     g.font = `700 ${Math.round(r * 1.05)}px ${FONT_MONO}`;
     g.textAlign = 'center';
@@ -143,13 +140,9 @@ function drawFretboard(v: ViewContext, fbH: number, colors: string[]) {
     const fret = nx.fret ?? 0;
     const x = fret === 0 ? fx + 28 : fx + 40 + (fret - f0) * step - step / 2;
     const y = sTop + nx.lane * sGap;
-    g.shadowColor = colors[nx.lane];
-    g.shadowBlur = 12;
-    g.fillStyle = colors[nx.lane];
     g.beginPath();
     g.arc(x, y, Math.min(10, sGap * 0.5 + 3), 0, Math.PI * 2);
-    g.fill();
-    g.shadowBlur = 0;
+    fillWithHalo(g, colors[nx.lane], 6);
     g.fillStyle = '#0b0a15';
     g.font = `700 10px ${FONT_MONO}`;
     g.textAlign = 'center';

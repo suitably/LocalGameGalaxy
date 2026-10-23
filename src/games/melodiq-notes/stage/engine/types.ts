@@ -10,15 +10,17 @@ import type { PlayerStats } from '../logic/judging';
 
 export type StageMode = 'learn' | 'practice' | 'perform';
 export type PlayState = 'idle' | 'playing' | 'paused' | 'done';
-/** play: a person plays this part on this screen; band: it is heard; off: muted. */
-export type TrackRole = 'play' | 'band' | 'off';
-
-export interface TrackSetup {
+/** One person on this screen: the part they play and the instrument it is shown as. */
+export interface PlayerSeat {
+  partId: string;
   inst: InstrumentKind;
-  role: TrackRole;
-  /** Order of players on screen (lower first). */
-  rank: number;
 }
+
+/**
+ * What the synth plays besides the players when there is no recording:
+ * every part (the players' too, as a guide), only the parts nobody plays, or nothing.
+ */
+export type BandMode = 'all' | 'others' | 'none';
 
 export interface FxEvent {
   kind: Judgement | 'wrong';

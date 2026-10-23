@@ -8,6 +8,7 @@ import {
   MISS_COLOR,
   roundRect,
   withAlpha,
+  fillWithHalo,
   barLabel,
 } from './common';
 import { keyGeometry } from './geometry';
@@ -55,12 +56,8 @@ export function drawKeys(v: ViewContext): HitPoint {
     if (yb < 0 || yb - nh > geo.hitY) return;
     const c = n.judged === 'miss' ? MISS_COLOR : color;
     const done = !!n.judged && n.judged !== 'miss';
-    g.shadowColor = c;
-    g.shadowBlur = done ? 18 : 8;
-    g.fillStyle = withAlpha(c, done ? 1 : 0.88);
     roundRect(g, k.x + 1.5, yb - nh, k.w - 3, nh, Math.min(6, k.w / 3));
-    g.fill();
-    g.shadowBlur = 0;
+    fillWithHalo(g, c, done ? 8 : 4, withAlpha(c, done ? 1 : 0.88));
     if (nh > 20 && k.w > 16) {
       g.fillStyle = '#0b0a15';
       g.font = `700 ${Math.min(13, k.w * 0.55)}px ${FONT_BODY}`;

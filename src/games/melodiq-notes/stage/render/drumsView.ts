@@ -7,6 +7,7 @@ import {
   MISS_COLOR,
   roundRect,
   withAlpha,
+  fillWithHalo,
 } from './common';
 import { drumGeometry } from './geometry';
 import type { StageNote } from '../logic/charts';
@@ -63,9 +64,6 @@ export function drawDrums(v: ViewContext): HitPoint {
   for (const n of visible) {
     const q = persp((n.t - beat) / LOOK_BEATS);
     const c = n.judged === 'miss' ? MISS_COLOR : DRUM_LANE_META[n.lane].color;
-    g.shadowColor = c;
-    g.shadowBlur = 10 * q.s;
-    g.fillStyle = c;
     if (n.lane === 4)
       roundRect(g, cx - (width * q.s) / 2 + 6, q.y - 4 * q.s, width * q.s - 12, 8 * q.s, 4 * q.s);
     else {
@@ -73,8 +71,7 @@ export function drawDrums(v: ViewContext): HitPoint {
       const gh = 18 * q.s;
       roundRect(g, laneX(n.lane, q.s) - gw / 2, q.y - gh / 2, gw, gh, gh / 2);
     }
-    g.fill();
-    g.shadowBlur = 0;
+    fillWithHalo(g, c, 6 * q.s);
   }
 
   const rad = Math.min(width / 8 - 8, 40, h * 0.12);
