@@ -12,6 +12,7 @@ import {
   withAlpha,
   type Ctx,
   type StageTexts,
+  STAGE,
 } from './common';
 import { drawDrums } from './drumsView';
 import { collectEffects, drawEffects, newEffects, type PlayerEffects } from './effects';
@@ -37,11 +38,11 @@ export class StageRenderer {
     texts: StageTexts,
     dt: number,
   ) {
-    g.fillStyle = '#0b0a15';
+    g.fillStyle = STAGE.bgBottom;
     g.fillRect(0, 0, width, height);
     const song = engine.song;
     if (!song || !engine.players.length) {
-      g.fillStyle = '#9690c2';
+      g.fillStyle = STAGE.muted;
       g.font = `600 15px ${FONT_BODY}`;
       g.textAlign = 'center';
       g.fillText(texts.noPlayers, width / 2, height / 2);
@@ -108,7 +109,7 @@ function drawHeader(
   focus: boolean,
   texts: StageTexts,
 ) {
-  g.fillStyle = 'rgba(11,10,21,0.78)';
+  g.fillStyle = withAlpha(STAGE.bgBottom, 0.78);
   g.fillRect(0, 0, w, HEADER_H);
   g.fillStyle = focus ? p.instrument.color : withAlpha(p.instrument.color, 0.45);
   g.fillRect(0, HEADER_H - 2, w, 2);
@@ -121,12 +122,12 @@ function drawHeader(
     (several ? `${texts.player(p.no)} · ` : '') +
     texts.instrument(p.instrument.kind) +
     (several && focus ? ` · ${texts.keyboardFocus}` : '');
-  g.fillStyle = '#eeebff';
+  g.fillStyle = STAGE.ink;
   g.font = `700 13px ${FONT_BODY}`;
   g.fillText(who, 22, HEADER_H / 2);
   if (w > 360) {
     const name = p.part.name.length > 28 ? `${p.part.name.slice(0, 27)}…` : p.part.name;
-    g.fillStyle = '#9690c2';
+    g.fillStyle = STAGE.muted;
     g.font = `500 12px ${FONT_BODY}`;
     g.fillText(name, 30 + g.measureText(who).width * (13 / 12), HEADER_H / 2);
   }
@@ -138,7 +139,7 @@ function drawHeader(
       : s.score.toLocaleString();
   g.textAlign = 'right';
   g.font = `700 13px ${FONT_MONO}`;
-  g.fillStyle = '#eeebff';
+  g.fillStyle = STAGE.ink;
   g.fillText(right, w - 10, HEADER_H / 2);
   g.textAlign = 'left';
   g.textBaseline = 'alphabetic';
@@ -150,7 +151,7 @@ function drawCountIn(g: Ctx, engine: StageEngine, width: number, height: number)
   g.textAlign = 'center';
   g.globalAlpha = clamp(f * 1.4, 0, 1);
   g.font = `800 ${Math.round(Math.min(width, height) * 0.2)}px ${FONT_DISPLAY}`;
-  g.fillStyle = engine.focus?.instrument.color ?? '#eeebff';
+  g.fillStyle = engine.focus?.instrument.color ?? STAGE.ink;
   g.fillText(String(n), width / 2, height / 2 + Math.min(width, height) * 0.07);
   g.globalAlpha = 1;
   g.textAlign = 'left';

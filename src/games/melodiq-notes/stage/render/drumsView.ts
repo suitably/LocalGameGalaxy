@@ -8,6 +8,7 @@ import {
   roundRect,
   withAlpha,
   fillWithHalo,
+  STAGE,
 } from './common';
 import { drumGeometry } from './geometry';
 import type { StageNote } from '../logic/charts';
@@ -29,7 +30,7 @@ export function drawDrums(v: ViewContext): HitPoint {
 
   const far = persp(1);
   const near = persp(-0.15);
-  g.fillStyle = 'rgba(255,255,255,0.03)';
+  g.fillStyle = withAlpha(STAGE.ink, 0.03);
   g.beginPath();
   g.moveTo(cx - (width * far.s) / 2, far.y);
   g.lineTo(cx + (width * far.s) / 2, far.y);
@@ -38,7 +39,7 @@ export function drawDrums(v: ViewContext): HitPoint {
   g.closePath();
   g.fill();
   g.lineWidth = 1;
-  g.strokeStyle = 'rgba(255,255,255,0.08)';
+  g.strokeStyle = withAlpha(STAGE.ink, 0.08);
   for (let i = 0; i <= 4; i++) {
     const f = i / 4 - 0.5;
     g.beginPath();
@@ -46,7 +47,7 @@ export function drawDrums(v: ViewContext): HitPoint {
     g.lineTo(cx + f * width * near.s, near.y);
     g.stroke();
   }
-  g.strokeStyle = 'rgba(255,255,255,0.16)';
+  g.strokeStyle = withAlpha(STAGE.ink, 0.16);
   forBarLines(v.song, beat, beat + LOOK_BEATS, (b) => {
     const q = persp((b - beat) / LOOK_BEATS);
     g.beginPath();
@@ -88,12 +89,12 @@ export function drawDrums(v: ViewContext): HitPoint {
     g.fill();
     g.stroke();
     if (v.isFocus) {
-      g.fillStyle = '#eeebff';
+      g.fillStyle = STAGE.ink;
       g.font = `700 12px ${FONT_MONO}`;
       g.fillText(meta.key, x, hitY + 4);
     }
     if (h > 220) {
-      g.fillStyle = 'rgba(255,255,255,0.5)';
+      g.fillStyle = withAlpha(STAGE.ink, 0.5);
       g.font = `600 10px ${FONT_BODY}`;
       g.fillText(texts.drum(meta.id), x, hitY + rad * 0.42 + 13);
     }
@@ -105,7 +106,7 @@ export function drawDrums(v: ViewContext): HitPoint {
   roundRect(g, cx - width / 2 + 10, kickY, width - 20, 18, 9);
   g.fill();
   g.stroke();
-  g.fillStyle = '#eeebff';
+  g.fillStyle = STAGE.ink;
   g.font = `700 11px ${FONT_MONO}`;
   g.fillText(texts.drum('kick') + (v.isFocus ? ` · ${kick.key}` : ''), cx, kickY + 13);
   g.textAlign = 'left';
