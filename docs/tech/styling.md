@@ -1,7 +1,7 @@
 ---
 type: Styling Guide
 title: Styling, Theme & Multi-Device Layout Architecture
-description: MUI theming conventions, dark/light palette tokens, Capacitor safe area insets, and responsive layout guidelines.
+description: MUI theming conventions, palette tokens, Capacitor safe area insets, and responsive layout guidelines.
 resource: src/theme.ts
 tags: [styling, mui, theme, css, mobile, capacitor]
 status: stable
@@ -9,8 +9,8 @@ generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
 verified:
-  at: 2026-10-18
-  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
+  at: 2026-10-23
+  method: '2026-10-23: §1 and §6 checked against src/theme.ts, src/index.css, index.html and package.json'
 ---
 
 # Styling, Theme & Multi-Device Layout Architecture
@@ -22,7 +22,8 @@ verified:
 LocalGameGalaxy uses **Material UI (MUI) v7** for all UI components and theming.
 
 - The global theme is defined in `src/theme.ts`.
-- The app uses **dark mode** (hardcoded in `src/theme.ts`).
+- The app currently uses **dark mode only** (hardcoded in `src/theme.ts`). The target is dark + light; see [DESIGN.md](../../DESIGN.md) §9.
+- The visual system (colors, type, spacing, radius, components) is defined in [DESIGN.md](../../DESIGN.md). It is not implemented yet; migration order in DESIGN.md §10.
 - Theme tokens (colors, typography, spacing) are accessed via `theme.palette.*` — **never hardcode hex color values**.
 
 ---
@@ -107,4 +108,4 @@ body {
 
 ## 6. Typography
 
-The primary font is **Roboto** (configured in `src/theme.ts` as `"Roboto", "Helvetica", "Arial", sans-serif`).
+`src/theme.ts` declares **Roboto** (`"Roboto", "Helvetica", "Arial", sans-serif`), but no Roboto font is loaded (no `@fontsource` package, no font link), so devices show their fallback font. The target fonts (Bricolage Grotesque + Figtree, self-hosted) are defined in [DESIGN.md](../../DESIGN.md) §3.

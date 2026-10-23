@@ -2,6 +2,12 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-23 — DESIGN.md visual system (claude-code)
+
+- New root `DESIGN.md`: target visual system (colors for dark + light, piece palette, Bricolage Grotesque + Figtree, spacing, radius, components, logo brief, migration order). Not implemented yet.
+- `docs/tech/styling.md`: corrected — the theme is dark only (no light tokens exist) and Roboto is declared but never loaded; links to `DESIGN.md`. `AGENTS.md` §4 links `DESIGN.md`.
+- No code changed.
+
 ## 2026-10-23 — Review fixes for Melodiq Notes stage (claude-code)
 
 - `docs/tech/song-pipeline.md` §4: score upload never overwrites (`replace=1` removed; it skipped the delete permission and left stale marks).
