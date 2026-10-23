@@ -7,13 +7,15 @@ import { usdbRouter } from './routes/usdb';
 import { separatorRouter } from './routes/separator';
 import { configRouter } from './routes/config';
 import { playlistsRouter } from './routes/playlists';
+import { scoresRouter } from './routes/scores';
 import { scanSongs } from './services/scanner';
 
 export const melodiqPlugin: GalaxyPlugin = {
   id: 'melodiq',
   name: 'Melodiq Karaoke Media Server',
   version: '2.0.0',
-  description: 'Song library scanner, metadata reader, USDB downloads, stem separation, and audio streaming for Melodiq',
+  description:
+    'Song library scanner, metadata reader, USDB downloads, stem separation, and audio streaming for Melodiq',
 
   init(app: Hono<HonoEnv>, _config: ServerConfig) {
     // Root info endpoint (matches Express GET /)
@@ -22,7 +24,7 @@ export const melodiqPlugin: GalaxyPlugin = {
         name: 'MelodiQ Server',
         version: '2.0.0',
         status: 'running',
-      })
+      }),
     );
 
     // Mount Melodiq Auth Middleware
@@ -48,6 +50,7 @@ export const melodiqPlugin: GalaxyPlugin = {
 
     // Mount sub-routers
     app.route('/', songsRouter);
+    app.route('/', scoresRouter);
     app.route('/', mediaRouter);
     app.route('/', usdbRouter);
     app.route('/', separatorRouter);

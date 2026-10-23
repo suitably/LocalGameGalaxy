@@ -100,9 +100,25 @@ export interface Song {
   txtContent: string;
   duration: number;
   searchString: string;
+  /** Sheet music (MusicXML/MIDI) in the song folder, for Melodiq Notes. */
+  scores: SongScore[];
 }
 
-export type ClientSong = Song;
+export interface SongScore {
+  file: string;
+  path: string;
+  marksPath: string | null;
+  mtimeMs: number;
+}
+
+export interface ClientSongScore {
+  file: string;
+  /** Media URL of the score file. */
+  url: string | null;
+  hasMarks: boolean;
+}
+
+export type ClientSong = Omit<Song, 'scores'> & { scores: ClientSongScore[] };
 
 export interface DownloadJob {
   jobId: string;

@@ -2,6 +2,31 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-23 — Review fixes for Melodiq Notes stage (claude-code)
+
+- `docs/tech/song-pipeline.md` §4: score upload never overwrites (`replace=1` removed; it skipped the delete permission and left stale marks).
+- **Code changed:** `server/src/plugins/melodiq/routes/scores.ts` (+ test); `src/modules/music-score/{alignment,midi}.ts` (+ tests); `src/lib/companion/songScoresApi.ts`; Melodiq Notes stage (`StageEngine.setLoop`, key handling in dialogs, stale async results in `useStageSong`, picker errors); `dev-dist/` restored to `main`.
+
+## 2026-10-23 — Recording alignment fix (claude-code)
+
+- `docs/tech/architecture.md` §3.2: `music-score` alignment now ends with `fitMarksToNotes` (band onsets, whole-song fit).
+- **Code changed:** `src/modules/music-score/{dsp,alignment,onsets}.ts`, new `noteFit.ts` (+ test): analysis frames are placed per frame instead of with a rounded hop (the onset timeline drifted 0.14 s per minute); the Melodiq Notes stage clock follows the recording's tempo.
+
+## 2026-10-22 — Melodiq Notes stage (claude-code)
+
+- `docs/tech/game-catalog.md`: melodiq-notes size and shared modules (`lib/companion`, `modules/music-score`); `docs/tech/architecture.md` §3.2: `music-score` is used by melodiq-notes.
+- **Code changed:** new `src/games/melodiq-notes/stage/*` (engine, canvas renderers, components, tests), `MelodiqNotesGame.tsx` rewritten, legacy OSMD view and its hooks removed; `src/lib/companion/songScoresApi.ts`; locales `games.melodiq_notes.stage.*`.
+
+## 2026-10-22 — Sheet music in song folders (claude-code)
+
+- `docs/tech/song-pipeline.md` §4: score files and bar marks in song folders, new `/api/songs/:id/scores…` endpoints; folder layout updated.
+- **Code changed:** `server/src/plugins/melodiq/{services/scoreFiles.ts,routes/scores.ts}` (new), `services/scanner.ts`, `routes/{songs,media}.ts`, `index.ts`, `server/src/core/types.ts`; test `server/test/song_scores.test.js`.
+
+## 2026-10-22 — Music score module (claude-code)
+
+- `docs/tech/architecture.md` §3.2 lists `modules/music-score`.
+- **Code changed:** new `src/modules/music-score/*` (+ tests), `@xmldom/xmldom` added as dev dependency for DOM-free tests.
+
 ## 2026-10-23 — Knister in the party room (claude-code)
 
 - #467 slice 5 (Knister): `architecture.md` §3.2 lists `modules/room-game`; `sync-protocol.md` adds topic `lgg/room` and the host/guest message rules; `game-catalog.md` §1 notes Knister's room mode.

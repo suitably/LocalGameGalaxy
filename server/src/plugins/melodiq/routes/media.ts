@@ -22,6 +22,11 @@ const MIME_MAP: Record<string, string> = {
   '.webp': 'image/webp',
   '.svg': 'image/svg+xml',
   '.txt': 'text/plain; charset=utf-8',
+  '.mxl': 'application/vnd.recordare.musicxml',
+  '.musicxml': 'application/vnd.recordare.musicxml+xml',
+  '.xml': 'application/xml',
+  '.mid': 'audio/midi',
+  '.midi': 'audio/midi',
 };
 
 mediaRouter.get('/media', async (c) => {
