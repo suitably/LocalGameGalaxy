@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-23 — Remove unused opensheetmusicdisplay (claude-code)
+
+- `docs/references/external-sources.md`: dropped the OpenSheetMusicDisplay row (no longer imported since the Melodiq Notes stage rewrite).
+- **Code changed:** `opensheetmusicdisplay` removed from `package.json` / `package-lock.json`.
+
 ## 2026-10-23 — Hard-coded colour guard (claude-code)
 
 - `docs/tech/coding-conventions.md` §2 and §4, `AGENTS.md` §4, `scripts/README.md`: hard-coded hex and non-black `rgb()`/`rgba()` in `src/**/*.tsx` are now a gate (per-file count ratchet), no longer review only.

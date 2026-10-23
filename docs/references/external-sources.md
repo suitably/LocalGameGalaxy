@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-18
+  at: 2026-10-23
   method: 'versions from package.json / server/package.json; URLs and call sites grepped in code'
 sources:
   - 'package.json, server/package.json, signaling/package.json'
@@ -32,7 +32,6 @@ Spec summary: <https://specification.website/spec/agent-readiness/okf-bundle/>
 | [i18next](https://www.i18next.com/) / react-i18next                              | 25 / 16                | translations                                |
 | [Capacitor](https://capacitorjs.com/docs)                                        | 8.5                    | Android app (`android/`)                    |
 | [Excalidraw](https://docs.excalidraw.com/)                                       | 0.18                   | `src/modules/drawing`                       |
-| [OpenSheetMusicDisplay](https://opensheetmusicdisplay.org/)                      | 1.9                    | Melodiq Notes                               |
 | [Vitest](https://vitest.dev/)                                                    | 5                      | frontend tests                              |
 
 ## Sync infrastructure (public, third-party)
