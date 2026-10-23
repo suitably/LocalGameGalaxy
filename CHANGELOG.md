@@ -71,6 +71,7 @@
 
 ### Fixed
 
+- **Gartic Phone**: launching it from the party lobby opened an empty page because the game had no route; `games/garticphone` is now registered (`src/App.tsx`) and host and guests land in the game (#467).
 - **Melodiq Notes**: the game no longer freezes on open — header callbacks were recreated on every render and looped through `HeaderLayoutContext` ("Maximum update depth exceeded"); a superseded OSMD load no longer renders into a cleared instance ("load() needs to be called before render()").
 - **Share dialogs** (GuessArt, Storyteller): marking a player remote no longer waits for the MQTT broker before updating, so the dialog does not stall when the broker is unreachable. Storyteller's `importSnapshot` stored merged players but returned the unmerged ones.
 - **Party mode**: a phone's tabletop seat is now a slot the host assigns once (`assignSlots`), not the player's position in the roster list, which differed between devices and could put two phones on the same hand. The party lobby syncs through the shared `MultiChannelSyncCoordinator` instead of its own BroadcastChannel, ignores its own presence pings, and `/party` is routed once (registry) instead of twice (#467).

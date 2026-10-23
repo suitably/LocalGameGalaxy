@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-23 — Gartic Phone route (claude-code)
+
+- #467 slice 6: `docs/tech/game-catalog.md` §1 notes that the Gartic Phone route is registered in `src/App.tsx`.
+- **Code changed:** `src/App.tsx` (lazy route `games/garticphone`).
+
 ## 2026-10-23 — Site Web Push sender (claude-code)
 
 - `docs/tech/sync-protocol.md` §5 describes the stateless site Web Push (`/api/push/*`, `webPush` on player seats, ntfy fallback); `deployment.md` names the worker route and the VAPID secrets; `data-models.md` "Player seats" lists the seat's channels; `persistence.md` and the sync-protocol key table gain `PUSH_SITE_SUBSCRIPTION`.
