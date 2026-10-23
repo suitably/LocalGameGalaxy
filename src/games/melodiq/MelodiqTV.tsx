@@ -37,7 +37,7 @@ export const MelodiqTV: React.FC = () => {
           gap: 4,
         }}
       >
-        <CircularProgress size={100} thickness={4} sx={{ color: '#FE6B8B' }} />
+        <CircularProgress size={100} thickness={4} sx={{ color: 'primary.main' }} />
         <Typography variant="h3" fontWeight="bold">
           {t('melodiq.waiting_for_download')}
         </Typography>
@@ -92,16 +92,8 @@ export const MelodiqTV: React.FC = () => {
           p: 3,
         }}
       >
-        <GamepadIcon sx={{ fontSize: 80, color: isConnected ? '#4CAF50' : '#757575' }} />
-        <Typography
-          variant="h2"
-          fontWeight="bold"
-          sx={{
-            background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}
-        >
+        <GamepadIcon sx={{ fontSize: 80, color: isConnected ? 'success.main' : 'text.disabled' }} />
+        <Typography variant="h2" fontWeight="bold">
           Melodiq TV
         </Typography>
         <Typography variant="h5" color="text.secondary">

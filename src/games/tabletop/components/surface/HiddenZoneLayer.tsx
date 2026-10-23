@@ -67,10 +67,10 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
               zIndex: isOwner || isRevealed ? 4000 : 9000,
               bgcolor: isRevealed ? 'rgba(0, 0, 0, 0.1)' : isOwner ? `${zoneColor}33` : zoneColor,
               border: '2px dashed',
-              borderColor: isRevealed ? '#4caf50' : zoneColor,
+              borderColor: isRevealed ? 'success.main' : zoneColor,
               borderRadius: 2,
               boxShadow: isRevealed
-                ? '0 0 15px rgba(76, 175, 80, 0.4)'
+                ? 'none'
                 : isOwner
                   ? '0 0 15px rgba(0, 0, 0, 0.3)'
                   : '0 8px 30px rgba(0, 0, 0, 0.85)',

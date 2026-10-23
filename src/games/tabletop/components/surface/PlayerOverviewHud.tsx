@@ -44,12 +44,7 @@ export const PlayerOverviewHud: React.FC<PlayerOverviewHudProps> = ({
       maxWidth="md"
       fullWidth
       PaperProps={{
-        sx: {
-          bgcolor: '#18181b',
-          color: '#fff',
-          borderRadius: 3,
-          border: '1px solid rgba(255,255,255,0.15)',
-        },
+        sx: {},
       }}
     >
       <DialogTitle
@@ -95,9 +90,8 @@ export const PlayerOverviewHud: React.FC<PlayerOverviewHudProps> = ({
                 <Box
                   sx={{
                     bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
-                    border: isSelf
-                      ? `2px solid ${stats.color}`
-                      : '1px solid rgba(255,255,255,0.12)',
+                    border: isSelf ? `2px solid ${stats.color}` : 1,
+                    borderColor: isSelf ? undefined : 'divider',
                     borderRadius: 2.5,
                     p: 2,
                     display: 'flex',
