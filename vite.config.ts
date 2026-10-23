@@ -1,6 +1,6 @@
-import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
-import { nodePolyfills } from 'vite-plugin-node-polyfills'
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vite.dev/config/
@@ -32,8 +32,8 @@ export default defineConfig({
         name: 'Nexumia',
         short_name: 'Nexumia',
         description: 'Local multiplayer party game collection.',
-        theme_color: '#121212',
-        background_color: '#121212',
+        theme_color: '#17141C',
+        background_color: '#17141C',
         display: 'standalone',
         display_override: ['standalone', 'window-controls-overlay', 'minimal-ui'],
         start_url: '/',
@@ -46,38 +46,38 @@ export default defineConfig({
             src: '/pwa/android-chrome-192x192.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any'
+            purpose: 'any',
           },
           {
             src: '/pwa/android-chrome-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any'
+            purpose: 'any',
           },
           {
             src: '/pwa/maskable_icon.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'maskable'
+            purpose: 'maskable',
           },
           {
             src: '/pwa/icon_full.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any'
-          }
-        ]
+            purpose: 'any',
+          },
+        ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff,woff2}'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
         importScripts: ['/sw-push.js'],
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024 // 5 MB
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
       },
       devOptions: {
-        enabled: true
-      }
+        enabled: true,
+      },
     }),
     {
       name: 'sourcemap-fallback',
@@ -92,8 +92,8 @@ export default defineConfig({
             next();
           }
         });
-      }
-    }
+      },
+    },
   ],
   resolve: {
     dedupe: ['react', 'react-dom', '@emotion/react', '@emotion/styled', 'react-router-dom'],
@@ -110,7 +110,7 @@ export default defineConfig({
             '@mui/icons-material',
             '@mui/lab',
             '@emotion/react',
-            '@emotion/styled'
+            '@emotion/styled',
           ],
           // Split network libraries (Melodiq)
           'lib-network': ['bittorrent-tracker', 'simple-peer'],
@@ -131,4 +131,4 @@ export default defineConfig({
   test: {
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
   },
-})
+});

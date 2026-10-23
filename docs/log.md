@@ -2,6 +2,12 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-23 — Design tokens, fonts and word mark live (claude-code)
+
+- `DESIGN.md`: status, type table (actual `h3`/`h4`/`h6` sizes), §8 word mark as paths, §10 steps 1–2 done for dark. `docs/tech/styling.md` §1 and §6 describe the token file and the self-hosted fonts.
+- **Code changed:** new `src/themeTokens.ts`; `src/theme.ts` rebuilt from it (sun-yellow primary, lagoon secondary/info, warm neutrals, `palette.piece`, focus ring, button edge, radii); fonts `@fontsource-variable/{figtree,bricolage-grotesque}` imported in `src/main.tsx`; `index.css`, `index.html`, PWA manifest `#121212` → `#17141C`; hub banner and `src/assets/nexumia-*.svg` replaced with the couch lock-up; `app.title` is "Nexumia" in de/en.
+- Known: six game spots set white text on `primary` (Qwixx total, tabletop badges, Melodiq song tags) — unreadable on yellow (also poor on the old light blue); fixed with DESIGN.md §10 step 5.
+
 ## 2026-10-23 — Couch brand mark and app icons (claude-code)
 
 - `DESIGN.md` §8: brand architecture — couch master mark, five areas as couch in piece colour plus name labels, app icon rules; sources in `design/brand/`, explorations in `design/logo-drafts/` and `design/brand-approaches/`.

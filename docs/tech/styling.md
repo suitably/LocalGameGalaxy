@@ -22,8 +22,8 @@ verified:
 LocalGameGalaxy uses **Material UI (MUI) v7** for all UI components and theming.
 
 - The global theme is defined in `src/theme.ts`.
-- The app currently uses **dark mode only** (hardcoded in `src/theme.ts`). The target is dark + light; see [DESIGN.md](../../DESIGN.md) §9.
-- The visual system (colors, type, spacing, radius, components) is defined in [DESIGN.md](../../DESIGN.md). It is not implemented yet; migration order in DESIGN.md §10.
+- The app uses **dark mode only**: `src/theme.ts` builds a dark MUI theme from the tokens in `src/themeTokens.ts` (which also hold the light tokens and the `piece` palette, exposed as `theme.palette.piece`). The target is dark + light; see [DESIGN.md](../../DESIGN.md) §9.
+- The visual system (colors, type, spacing, radius, components) is defined in [DESIGN.md](../../DESIGN.md). Dark tokens, fonts and logo are implemented; the remaining migration order is in DESIGN.md §10.
 - Theme tokens (colors, typography, spacing) are accessed via `theme.palette.*` — **never hardcode hex color values**.
 
 ---
@@ -108,4 +108,4 @@ body {
 
 ## 6. Typography
 
-`src/theme.ts` declares **Roboto** (`"Roboto", "Helvetica", "Arial", sans-serif`), but no Roboto font is loaded (no `@fontsource` package, no font link), so devices show their fallback font. The target fonts (Bricolage Grotesque + Figtree, self-hosted) are defined in [DESIGN.md](../../DESIGN.md) §3.
+Fonts are self-hosted via `@fontsource-variable/figtree` (text, `theme.typography.fontFamily`) and `@fontsource-variable/bricolage-grotesque` (opsz axis; `h1`–`h4`), imported in `src/main.tsx` and precached by the service worker. Scale and rules: [DESIGN.md](../../DESIGN.md) §3.

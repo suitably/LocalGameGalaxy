@@ -7,6 +7,8 @@ import theme from './theme';
 import { TitleProvider } from './context/TitleContext';
 import { LayoutProvider } from './context/LayoutContext';
 import { SettingsProvider } from './games/melodiq';
+import '@fontsource-variable/bricolage-grotesque/opsz.css';
+import '@fontsource-variable/figtree';
 import './i18n';
 import './index.css';
 import { registerSW } from 'virtual:pwa-register';
@@ -30,7 +32,7 @@ const initSafeArea = async () => {
     for (const [key, value] of Object.entries(insets)) {
       document.documentElement.style.setProperty(`--safe-area-inset-${key}`, `${value}px`);
     }
-    SafeArea.addListener('safeAreaChanged', data => {
+    SafeArea.addListener('safeAreaChanged', (data) => {
       for (const [key, value] of Object.entries(data.insets)) {
         document.documentElement.style.setProperty(`--safe-area-inset-${key}`, `${value}px`);
       }

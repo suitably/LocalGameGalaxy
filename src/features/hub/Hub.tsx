@@ -95,12 +95,11 @@ export const Hub: React.FC = () => {
           alt="Nexumia"
           sx={{
             width: '100%',
-            maxWidth: { xs: 320, sm: 420, md: 520 },
+            maxWidth: { xs: 260, sm: 320, md: 380 },
             height: 'auto',
             mx: 'auto',
             display: 'block',
             mb: { xs: 1.5, sm: 2 },
-            filter: 'drop-shadow(0 4px 12px rgba(79, 70, 229, 0.2))',
           }}
         />
         <Typography

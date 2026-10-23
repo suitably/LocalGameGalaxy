@@ -1,6 +1,6 @@
 # DESIGN.md — Nexumia visual system
 
-Status: **target design, not yet implemented.** `src/theme.ts` still carries the old MUI-default palette (dark only, Roboto declared but never loaded). This file is the target every new or changed screen follows; the migration steps are in §10. Covers the whole product: hub, game screens, phone controllers, TV mode and the Android app.
+Status: **partly implemented.** Dark tokens, fonts, logo and app icons are live (`src/themeTokens.ts`, `src/theme.ts`); light mode and the games' hard-coded colours are not yet (§10). This file is the target every new or changed screen follows; the migration steps are in §10. Covers the whole product: hub, game screens, phone controllers, TV mode and the Android app.
 
 ## 1. Direction: "Game night on the couch"
 
@@ -80,22 +80,22 @@ Rules:
 
 Fallback stack: `"Figtree Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`. Fonts are bundled by Vite and precached by the service worker; no font CDN.
 
-Numbers that change (scores, timers, dice totals) use `font-variant-numeric: tabular-nums` so they don't jump.
+Numbers that change (scores, timers, dice totals) use `font-variant-numeric: tabular-nums` so they don't jump (both families ship `tnum`).
 
 ### 3.2 Scale
 
 Base 16px (`1rem`). Body text never below 16px; `caption` only for labels and metadata.
 
-| Token     | Size / line height | Weight                | Family  | MUI variant                            |
-| --------- | ------------------ | --------------------- | ------- | -------------------------------------- |
-| `display` | 3.5rem / 1.05      | 800                   | Display | (custom) hub hero, final scores        |
-| `h1`      | 2.5rem / 1.1       | 750                   | Display | `h1`                                   |
-| `h2`      | 2rem / 1.15        | 700                   | Display | `h2`                                   |
-| `h3`      | 1.5rem / 1.25      | 700                   | Display | `h3`, `h4`                             |
-| `title`   | 1.25rem / 1.3      | 650                   | Text    | `h5`, `h6`, dialog titles, card titles |
-| `body`    | 1rem / 1.5         | 400 (strong: 600)     | Text    | `body1`, `subtitle1` (600)             |
-| `small`   | 0.875rem / 1.45    | 400 / 600             | Text    | `body2`, `subtitle2`, `button` (600)   |
-| `caption` | 0.75rem / 1.35     | 600, +0.02em tracking | Text    | `caption`, `overline` (no uppercase)   |
+| Token     | Size / line height                  | Weight                | Family  | MUI variant                                    |
+| --------- | ----------------------------------- | --------------------- | ------- | ---------------------------------------------- |
+| `display` | 3.5rem / 1.05                       | 800                   | Display | none yet: `h1` with `sx` for hero/final scores |
+| `h1`      | 2.5rem / 1.1                        | 750                   | Display | `h1`                                           |
+| `h2`      | 2rem / 1.15                         | 700                   | Display | `h2`                                           |
+| `h3`      | 1.75rem / 1.2 (`h4`: 1.5rem / 1.25) | 700                   | Display | `h3`, `h4`                                     |
+| `title`   | 1.25rem / 1.3 (`h6`: 1.1rem)        | 650                   | Text    | `h5`, `h6`, dialog titles, card titles         |
+| `body`    | 1rem / 1.5                          | 400 (strong: 600)     | Text    | `body1`, `subtitle1` (600)                     |
+| `small`   | 0.875rem / 1.45                     | 400 / 600             | Text    | `body2`, `subtitle2`, `button` (600)           |
+| `caption` | 0.75rem / 1.35                      | 600, +0.02em tracking | Text    | `caption`, `overline` (no uppercase)           |
 
 Buttons use sentence case (no `textTransform`). Long text (rules, help) is capped at 68ch.
 
@@ -182,7 +182,7 @@ One umbrella brand, **Nexumia**, whose mark is a **couch** ("games on the couch"
 
 The cuts between the couch parts are drawn in ink, so the colour marks sit on dark surfaces (`bg.canvas`/`bg.surface` dark); on light surfaces use the mono mark. Clear space around the mark: ¼ of its width. Never recolour the master mark, add effects or put it on piece colours.
 
-**Word mark:** "Nexumia" in Bricolage Grotesque 800, tracking −0.02em, set to the right of the mark at about 55 % of the mark's height. It is still live text; outlined paths follow once the font is in the bundle (§3.1).
+**Word mark:** "Nexumia" in Bricolage Grotesque 800, tracking −0.02em, set to the right of the mark at about 55 % of the mark's height. Outlined as paths (no font needed): `nexumia-wordmark.svg` (light, on dark) and `nexumia-wordmark-ink.svg`; lock-ups `nexumia-lockup.svg` / `nexumia-lockup-ink.svg` (also `src/assets/nexumia-banner.svg`, used by the hub).
 
 ### 8.2 Areas
 
@@ -215,11 +215,11 @@ Both modes are first-class. Default follows the system (`prefers-color-scheme`);
 
 Order (each step its own PR):
 
-1. **Tokens in code:** rewrite `src/theme.ts` with MUI `colorSchemes` (`dark` + `light`) and CSS variables (`cssVariables: true`), the piece palette as a custom palette key, typography (§3), `shape.borderRadius: 4`, component overrides (§6). Update `index.css`, `index.html` and the PWA manifest in `vite.config.ts` to `bg.canvas`.
-2. **Fonts:** add both `@fontsource-variable` packages, import in `src/main.tsx`.
-3. **Mode setting:** storage key via `src/lib/storage.ts`, toggle in settings.
+1. ~~**Tokens in code**~~ — done for dark (`src/themeTokens.ts` holds dark, light and piece tokens; `src/theme.ts` builds a dark-only MUI theme, no `colorSchemes`/CSS variables yet, because MUI would follow the system mode and keep its own `localStorage` key). Original plan: rewrite `src/theme.ts` with MUI `colorSchemes` (`dark` + `light`) and CSS variables (`cssVariables: true`), the piece palette as a custom palette key, typography (§3), `shape.borderRadius: 4`, component overrides (§6). Update `index.css`, `index.html` and the PWA manifest in `vite.config.ts` to `bg.canvas`.
+2. ~~**Fonts**~~ — done: add both `@fontsource-variable` packages, import in `src/main.tsx`.
+3. **Mode setting:** storage key via `src/lib/storage.ts`, toggle in settings; then enable `colorSchemes` with `lightTokens`. Needs step 5 first for game screens, or light mode limited to hub/settings.
 4. **Hub:** replace `colorStart`/`colorEnd` gradients in `src/lib/gameRegistry.tsx` with one piece-colour token per game.
 5. **Games, one PR per game:** replace hard-coded hex values (Qwixx, cards, tabletop seats, Wordle, Sudoku, Storyteller, Melodiq …) with tokens.
-6. ~~Logo and app icons~~ — done (§8). Remaining: word mark as paths, area icons in the hub.
+6. ~~Logo, word mark and app icons~~ — done (§8). Remaining: area icons in the hub (with step 4).
 
 Until a screen is migrated it may keep its old colours, but changed lines must use tokens.
