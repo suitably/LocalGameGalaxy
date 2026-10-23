@@ -5,6 +5,7 @@
  */
 import React, { useState } from 'react';
 import {
+  alpha,
   Box,
   Button,
   Typography,
@@ -158,8 +159,8 @@ export const ServerUrlList: React.FC<ServerUrlListProps> = ({
           <Box
             sx={{
               p: 2,
-              bgcolor: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
+              bgcolor: (theme) => alpha(theme.palette.error.main, 0.1),
+              border: (theme) => `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
               borderRadius: 2,
             }}
           >
@@ -199,7 +200,7 @@ export const ServerUrlList: React.FC<ServerUrlListProps> = ({
               alignSelf: 'flex-start',
               backgroundImage: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
               boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
-              color: 'white',
+              color: 'text.primary',
             }}
           >
             {labels.add}

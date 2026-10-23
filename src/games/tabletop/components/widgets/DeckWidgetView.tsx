@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { alpha, Box, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { DeckWidget, CardWidget } from '../../logic/types';
 import { CardFaceContent } from './CardFaceContent';
@@ -23,7 +23,8 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
   const count = widget.cardIds?.length || 0;
   const isEmpty = count === 0;
 
-  const hasFront = widget.faceUp === true || (widget.activeFace !== undefined && widget.activeFace > 0);
+  const hasFront =
+    widget.faceUp === true || (widget.activeFace !== undefined && widget.activeFace > 0);
   const rot = widget.rotation || 0;
 
   return (
@@ -45,11 +46,11 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
         clipPath: widget.clipPath,
         boxShadow: widget.clipPath
           ? 'none'
-          : isDragging 
-          ? '0 10px 25px rgba(0,0,0,0.5)' 
-          : isEmpty
-          ? 1
-          : '1px 1px 0 rgba(255,255,255,0.8), 2px 2px 0 #1e3a8a, 3px 3px 0 rgba(255,255,255,0.8), 4px 4px 0 #1e3a8a, 6px 6px 14px rgba(0,0,0,0.45)',
+          : isDragging
+            ? '0 10px 25px rgba(0,0,0,0.5)'
+            : isEmpty
+              ? 1
+              : '1px 1px 0 rgba(255,255,255,0.8), 2px 2px 0 #1e3a8a, 3px 3px 0 rgba(255,255,255,0.8), 4px 4px 0 #1e3a8a, 6px 6px 14px rgba(0,0,0,0.45)',
         filter: widget.clipPath
           ? isDragging
             ? 'drop-shadow(0 8px 16px rgba(0,0,0,0.55))'
@@ -64,27 +65,39 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         transition: isDragging ? 'none' : 'transform 0.1s ease',
-        transform: isDragging ? `rotate(${rot}deg) scale(1.05)` : rot ? `rotate(${rot}deg)` : undefined,
+        transform: isDragging
+          ? `rotate(${rot}deg) scale(1.05)`
+          : rot
+            ? `rotate(${rot}deg)`
+            : undefined,
         overflow: 'hidden',
         '&:active': {
-          transform: isDragging ? `rotate(${rot}deg) scale(1.05)` : isEmpty ? (rot ? `rotate(${rot}deg)` : 'none') : `rotate(${rot}deg) scale(0.97)`,
+          transform: isDragging
+            ? `rotate(${rot}deg) scale(1.05)`
+            : isEmpty
+              ? rot
+                ? `rotate(${rot}deg)`
+                : 'none'
+              : `rotate(${rot}deg) scale(0.97)`,
         },
       }}
     >
       {!isEmpty ? (
         <Box position="relative" width="100%" height="100%" sx={{ clipPath: widget.clipPath }}>
           <CardFaceContent
-            card={{
-              ...widget,
-              type: 'card',
-              faceUp: hasFront,
-              clipPath: widget.clipPath,
-              frontContent: widget.frontContent || { type: 'text', value: '' },
-              backContent: widget.backContent || { type: 'text', value: '🂠', color: '#0d47a1' },
-              faceObjects: widget.faceObjects,
-              backFaceObjects: widget.backFaceObjects,
-              rotation: 0,
-            } as unknown as CardWidget}
+            card={
+              {
+                ...widget,
+                type: 'card',
+                faceUp: hasFront,
+                clipPath: widget.clipPath,
+                frontContent: widget.frontContent || { type: 'text', value: '' },
+                backContent: widget.backContent || { type: 'text', value: '🂠', color: '#0d47a1' },
+                faceObjects: widget.faceObjects,
+                backFaceObjects: widget.backFaceObjects,
+                rotation: 0,
+              } as unknown as CardWidget
+            }
             isFaceUp={hasFront}
           />
           <Box
@@ -100,8 +113,8 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
               px: 0.5,
               borderRadius: '50%',
               bgcolor: 'rgba(0, 0, 0, 0.8)',
-              color: '#fff',
-              border: '1.5px solid rgba(255, 255, 255, 0.6)',
+              color: 'text.primary',
+              border: (theme) => `1.5px solid ${alpha(theme.palette.text.primary, 0.6)}`,
               fontSize: '0.8rem',
               fontWeight: 800,
               boxShadow: 2,

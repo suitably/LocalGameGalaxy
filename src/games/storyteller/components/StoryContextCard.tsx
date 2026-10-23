@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Card, CardContent, Typography, Chip, Stack } from '@mui/material';
+import { alpha, Box, Card, CardContent, Typography, Chip, Stack } from '@mui/material';
 import VisibilityOffRoundedIcon from '@mui/icons-material/VisibilityOffRounded';
 import HistoryEduRoundedIcon from '@mui/icons-material/HistoryEduRounded';
 import AutoStoriesRoundedIcon from '@mui/icons-material/AutoStoriesRounded';
@@ -22,19 +22,19 @@ export const StoryContextCard: React.FC<StoryContextCardProps> = ({
       <Card
         variant="outlined"
         sx={{
-          bgcolor: 'rgba(255, 255, 255, 0.03)',
-          borderColor: 'rgba(255, 255, 255, 0.1)',
+          bgcolor: (theme) => alpha(theme.palette.text.primary, 0.03),
+          borderColor: (theme) => alpha(theme.palette.text.primary, 0.1),
           borderRadius: 2,
         }}
       >
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
           <Stack direction="row" spacing={1.5} alignItems="center">
-            <AutoStoriesRoundedIcon sx={{ color: '#38bdf8', fontSize: 28 }} />
+            <AutoStoriesRoundedIcon sx={{ color: 'secondary.main', fontSize: 28 }} />
             <Box>
-              <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#f8fafc' }}>
+              <Typography variant="subtitle2" fontWeight={700} sx={{ color: 'text.primary' }}>
                 {t('storyteller.prologueTitle', 'Kapitel 1: Der Anfang')}
               </Typography>
-              <Typography variant="body2" sx={{ color: '#94a3b8' }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 {t(
                   'storyteller.prologueHint',
                   'Du machst den ersten Schritt! Schreibe den Eröffnungssatz oder die Einleitung für eure gemeinsame Geschichte.',
@@ -74,9 +74,9 @@ export const StoryContextCard: React.FC<StoryContextCardProps> = ({
             {contextView.isBlind ? (
               <VisibilityOffRoundedIcon sx={{ color: '#f43f5e', fontSize: 20 }} />
             ) : (
-              <HistoryEduRoundedIcon sx={{ color: '#38bdf8', fontSize: 20 }} />
+              <HistoryEduRoundedIcon sx={{ color: 'secondary.main', fontSize: 20 }} />
             )}
-            <Typography variant="caption" fontWeight={700} sx={{ color: '#cbd5e1' }}>
+            <Typography variant="caption" fontWeight={700} sx={{ color: 'text.secondary' }}>
               {contextView.isBlind
                 ? t('storyteller.blindModeTitle', 'Blind-Modus (letzter Abschnitt)')
                 : t('storyteller.fullStoryContext', 'Bisherige Geschichte')}
@@ -90,8 +90,8 @@ export const StoryContextCard: React.FC<StoryContextCardProps> = ({
               sx={{
                 height: 20,
                 fontSize: '0.7rem',
-                bgcolor: 'rgba(255, 255, 255, 0.08)',
-                color: '#94a3b8',
+                bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
+                color: 'text.secondary',
               }}
             />
           )}
@@ -105,7 +105,7 @@ export const StoryContextCard: React.FC<StoryContextCardProps> = ({
             whiteSpace: 'pre-wrap',
             fontFamily: 'Georgia, serif',
             fontStyle: 'italic',
-            color: '#e2e8f0',
+            color: 'text.primary',
             fontSize: { xs: '0.9rem', sm: '0.95rem' },
             lineHeight: 1.6,
           }}

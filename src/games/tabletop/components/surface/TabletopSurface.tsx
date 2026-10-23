@@ -119,7 +119,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
         height: '100%',
         position: 'relative',
         overflow: 'hidden',
-        bgcolor: '#121212',
+        bgcolor: 'background.default',
         cursor: 'grab',
         touchAction: 'none',
       }}

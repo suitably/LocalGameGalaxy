@@ -4,6 +4,7 @@
 
 import React from 'react';
 import {
+  alpha,
   Box,
   Typography,
   IconButton,
@@ -63,7 +64,14 @@ export const SudokuHeader: React.FC<SudokuHeaderProps> = ({
   return (
     <Box sx={{ width: '100%', maxWidth: { xs: 360, sm: 440, md: 480 }, mx: 'auto', mb: 1.5 }}>
       {/* Navigation & Title Bar */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: onBack ? 'space-between' : 'flex-end', mb: 1 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: onBack ? 'space-between' : 'flex-end',
+          mb: 1,
+        }}
+      >
         {onBack && (
           <IconButton onClick={onBack} edge="start" aria-label={t('common.back', 'Zurück')}>
             <ArrowBackRoundedIcon />
@@ -120,24 +128,34 @@ export const SudokuHeader: React.FC<SudokuHeaderProps> = ({
         sx={{
           px: 1.5,
           py: 0.8,
-          bgcolor: 'rgba(255, 255, 255, 0.04)',
+          bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
           borderRadius: 2,
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
         }}
       >
-        <Typography variant="body2" sx={{ fontWeight: 600, color: '#94a3b8' }}>
+        <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
           {t('sudoku.mistakes', 'Fehler')}:{' '}
-          <Box component="span" sx={{ color: mistakes > 0 ? '#ef4444' : '#ffffff', fontWeight: 800 }}>
+          <Box
+            component="span"
+            sx={{ color: mistakes > 0 ? '#ef4444' : '#ffffff', fontWeight: 800 }}
+          >
             {mistakes}/{maxMistakes}
           </Box>
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Typography variant="body2" sx={{ fontWeight: 800, fontFamily: 'monospace', fontSize: '1.05rem' }}>
+          <Typography
+            variant="body2"
+            sx={{ fontWeight: 800, fontFamily: 'monospace', fontSize: '1.05rem' }}
+          >
             ⏱️ {formatTime(timeElapsed)}
           </Typography>
           <IconButton size="small" onClick={onTogglePause}>
-            {isPaused ? <PlayCircleOutlineRoundedIcon color="primary" /> : <PauseCircleOutlineRoundedIcon />}
+            {isPaused ? (
+              <PlayCircleOutlineRoundedIcon color="primary" />
+            ) : (
+              <PauseCircleOutlineRoundedIcon />
+            )}
           </IconButton>
         </Box>
       </Stack>

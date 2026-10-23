@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography } from '@mui/material';
+import { alpha, Box, Typography } from '@mui/material';
 import type { TokenWidget } from '../../logic/types';
 import { recolorSvgDataUri, fetchAndRecolorSvg } from '../../logic/svgColorUtils';
 
@@ -167,7 +167,7 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
         zIndex: widget.zIndex + (isDragging ? 100 : 0),
         borderRadius: isCircle ? '50%' : 1.5,
         bgcolor: widget.color || '#ffb300',
-        color: '#fff',
+        color: 'text.primary',
         boxShadow: isDragging ? 10 : 3,
         cursor: 'grab',
         touchAction: 'none',
@@ -175,7 +175,7 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        border: '3px solid rgba(255,255,255,0.8)',
+        border: (theme) => `3px solid ${alpha(theme.palette.text.primary, 0.8)}`,
         transition: isDragging ? 'none' : 'box-shadow 0.2s, transform 0.15s ease',
         transform: `rotate(${rot}deg) ${isDragging ? 'scale(1.15)' : ''}`,
       }}
@@ -185,7 +185,7 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
           width: '74%',
           height: '74%',
           borderRadius: isCircle ? '50%' : 1,
-          border: '1.5px solid rgba(255,255,255,0.35)',
+          border: (theme) => `1.5px solid ${alpha(theme.palette.text.primary, 0.35)}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

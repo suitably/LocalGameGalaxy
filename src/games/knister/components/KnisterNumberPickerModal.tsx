@@ -125,7 +125,7 @@ export const KnisterNumberPickerModal: React.FC<KnisterNumberPickerModalProps> =
                     color: 'warning.contrastText',
                     transform: 'scale(1.05)',
                     borderColor: 'warning.light',
-                    boxShadow: '0 0 16px rgba(255, 167, 38, 0.5)',
+                    boxShadow: (theme) => `0 0 16px ${alpha(theme.palette.warning.main, 0.5)}`,
                   },
                   '&:active': {
                     transform: 'scale(0.95)',
@@ -148,13 +148,13 @@ export const KnisterNumberPickerModal: React.FC<KnisterNumberPickerModalProps> =
               justifyContent: 'center',
               fontWeight: 700,
               fontSize: { xs: '0.9rem', sm: '1rem' },
-              bgcolor: 'rgba(255, 255, 255, 0.04)',
+              bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
               color: 'text.secondary',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
               transition: 'all 0.15s ease',
               '&:hover': {
-                bgcolor: 'rgba(255, 255, 255, 0.1)',
-                color: '#fff',
+                bgcolor: (theme) => alpha(theme.palette.text.primary, 0.1),
+                color: 'text.primary',
               },
               '&:active': {
                 transform: 'scale(0.95)',

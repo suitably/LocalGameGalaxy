@@ -69,7 +69,7 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
         'games.tabletop.standard_cards_desc',
         'Mau-Mau, Skat, Poker oder Rommé mit geteiltem Tisch und Smartphone-Handkarten.',
       ),
-      icon: <StyleIcon sx={{ fontSize: 36, color: '#1976d2' }} />,
+      icon: <StyleIcon sx={{ fontSize: 36, color: 'secondary.main' }} />,
     },
     {
       id: 'liars-dice',
@@ -78,13 +78,13 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
         'games.tabletop.liars_dice_desc',
         'Bluff-Würfelspiel mit 3D-Würfeln und verdeckten Bechern auf jedem Handy.',
       ),
-      icon: <CasinoIcon sx={{ fontSize: 36, color: '#f57c00' }} />,
+      icon: <CasinoIcon sx={{ fontSize: 36, color: 'warning.main' }} />,
     },
     {
       id: 'checkers',
       title: t('games.tabletop.checkers_title', 'Dame / Checkers'),
       desc: t('games.tabletop.checkers_desc', 'Klassisches Brettspiel auf 8x8 Spielfeld.'),
-      icon: <GridOnIcon sx={{ fontSize: 36, color: '#388e3c' }} />,
+      icon: <GridOnIcon sx={{ fontSize: 36, color: 'success.main' }} />,
     },
   ];
 
@@ -134,7 +134,7 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
               onClick={pick('garticphone')}
             />,
             <PartyPickerCard
-              icon={<DrawIcon sx={{ fontSize: 36, color: '#00bcd4' }} />}
+              icon={<DrawIcon sx={{ fontSize: 36, color: 'secondary.main' }} />}
               title="GuessArt"
               desc={t(
                 'party.guessart_desc',

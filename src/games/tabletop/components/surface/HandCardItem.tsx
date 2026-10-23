@@ -26,9 +26,13 @@ export const HandCardItem: React.FC<HandCardItemProps> = ({
 }) => {
   const { t } = useTranslation();
   const showFaceObjects = Boolean(card.faceObjects && card.faceObjects.length > 0);
-  const showBackFaceObjects = Boolean(!showFaceObjects && card.backFaceObjects && card.backFaceObjects.length > 0);
+  const showBackFaceObjects = Boolean(
+    !showFaceObjects && card.backFaceObjects && card.backFaceObjects.length > 0,
+  );
   const hasClipPath = Boolean(card.clipPath);
-  const isUnstyled = Boolean(showFaceObjects || showBackFaceObjects || hasClipPath || card.isTransparent);
+  const isUnstyled = Boolean(
+    showFaceObjects || showBackFaceObjects || hasClipPath || card.isTransparent,
+  );
   const scale = CARD_W / (card.width || 80);
 
   return (
@@ -83,7 +87,7 @@ export const HandCardItem: React.FC<HandCardItemProps> = ({
               left: 2,
               p: 0.3,
               bgcolor: 'rgba(0,0,0,0.65)',
-              color: '#fff',
+              color: 'text.primary',
               zIndex: 25,
               '&:hover': { bgcolor: 'rgba(0,0,0,0.9)' },
             }}
@@ -100,7 +104,7 @@ export const HandCardItem: React.FC<HandCardItemProps> = ({
             top: 4,
             right: 4,
             bgcolor: 'primary.main',
-            color: '#fff',
+            color: 'text.primary',
             borderRadius: '10px',
             px: 0.7,
             py: 0.1,

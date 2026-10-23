@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { alpha, Box, Typography } from '@mui/material';
 import type { SudokuGridData } from '../logic/types';
 
 interface SudokuGridProps {
@@ -30,8 +30,8 @@ export const SudokuGrid: React.FC<SudokuGridProps> = ({
         width: '100%',
         maxWidth: { xs: 360, sm: 440, md: 480 },
         aspectRatio: '1 / 1',
-        bgcolor: '#374151',
-        border: '3px solid #60a5fa',
+        bgcolor: 'background.paper',
+        border: (theme) => `3px solid ${theme.palette.secondary.main}`,
         borderRadius: 2,
         overflow: 'hidden',
         boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
@@ -44,7 +44,7 @@ export const SudokuGrid: React.FC<SudokuGridProps> = ({
           sx={{
             position: 'absolute',
             inset: 0,
-            bgcolor: 'rgba(18, 18, 18, 0.95)',
+            bgcolor: (theme) => alpha(theme.palette.background.default, 0.95),
             zIndex: 10,
             display: 'flex',
             alignItems: 'center',
@@ -52,7 +52,7 @@ export const SudokuGrid: React.FC<SudokuGridProps> = ({
             backdropFilter: 'blur(4px)',
           }}
         >
-          <Typography variant="h5" sx={{ fontWeight: 800, color: '#90caf9' }}>
+          <Typography variant="h5" sx={{ fontWeight: 800, color: 'secondary.main' }}>
             PAUSE ⏸️
           </Typography>
         </Box>
@@ -112,10 +112,10 @@ export const SudokuGrid: React.FC<SudokuGridProps> = ({
                     color: cell.isError
                       ? '#ef4444'
                       : isSelected
-                      ? '#ffffff'
-                      : cell.isInitial
-                      ? '#ffffff'
-                      : '#60a5fa',
+                        ? '#ffffff'
+                        : cell.isInitial
+                          ? '#ffffff'
+                          : '#60a5fa',
                   }}
                 >
                   {cell.value}
@@ -149,7 +149,7 @@ export const SudokuGrid: React.FC<SudokuGridProps> = ({
               ) : null}
             </Box>
           );
-        })
+        }),
       )}
     </Box>
   );

@@ -2,7 +2,7 @@
  * Hand Dock Strip for Tabletop Local Mode [ID: GAME-TABLETOP-HAND-DOCK]
  */
 import React, { useState, useMemo } from 'react';
-import { Box, Typography, Chip } from '@mui/material';
+import { alpha, Box, Typography, Chip } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { TabletopGameState, TabletopAction } from '../../logic/tabletopReducer';
 import type { CardWidget, SeatWidget } from '../../logic/types';
@@ -69,8 +69,8 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
         width: '100%',
         height: 156,
         flexShrink: 0,
-        bgcolor: '#18181b',
-        borderTop: '1px solid rgba(255,255,255,0.12)',
+        bgcolor: 'background.default',
+        borderTop: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.12)}`,
         display: 'flex',
         flexDirection: 'column',
         px: 2,
@@ -109,7 +109,7 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
         ) : (
           <Typography
             variant="caption"
-            sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600, letterSpacing: 0.5 }}
+            sx={{ color: 'text.secondary', fontWeight: 600, letterSpacing: 0.5 }}
           >
             {t('games.tabletop.yourHand', 'Deine Hand')} ({handCards.length})
           </Typography>
@@ -127,7 +127,10 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
             py: 0.5,
             px: 0.5,
             '&::-webkit-scrollbar': { height: 6 },
-            '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(255,255,255,0.2)', borderRadius: 3 },
+            '&::-webkit-scrollbar-thumb': {
+              bgcolor: (theme) => alpha(theme.palette.text.primary, 0.2),
+              borderRadius: 3,
+            },
           }}
         >
           {Object.entries(supplyPieces).map(([groupName, pieces]) => (
@@ -142,10 +145,7 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
         </Box>
       ) : handCards.length === 0 ? (
         <Box display="flex" alignItems="center" justifyContent="center" flex={1}>
-          <Typography
-            variant="caption"
-            sx={{ color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}
-          >
+          <Typography variant="caption" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>
             {t('games.tabletop.handEmpty', 'Keine Karten auf der Hand')}
           </Typography>
         </Box>
@@ -160,7 +160,10 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
             py: 0.5,
             px: 0.5,
             '&::-webkit-scrollbar': { height: 6 },
-            '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(255,255,255,0.2)', borderRadius: 3 },
+            '&::-webkit-scrollbar-thumb': {
+              bgcolor: (theme) => alpha(theme.palette.text.primary, 0.2),
+              borderRadius: 3,
+            },
           }}
         >
           {groups.map((group) => {
@@ -211,8 +214,8 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
                       width: CARD_W,
                       height: CARD_H,
                       borderRadius: 1.5,
-                      bgcolor: 'rgba(255,255,255,0.12)',
-                      border: '1px solid rgba(255,255,255,0.2)',
+                      bgcolor: (theme) => alpha(theme.palette.text.primary, 0.12),
+                      border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.2)}`,
                       zIndex: 1,
                       pointerEvents: 'none',
                     }}

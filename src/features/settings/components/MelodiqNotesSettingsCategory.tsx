@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  alpha,
   Box,
   Paper,
   Typography,
@@ -145,8 +146,8 @@ export const MelodiqNotesSettingsCategory: React.FC<MelodiqNotesSettingsCategory
                 variant="outlined"
                 sx={{
                   p: 2,
-                  bgcolor: 'rgba(255,255,255,0.02)',
-                  borderColor: 'rgba(255,255,255,0.08)',
+                  bgcolor: (theme) => alpha(theme.palette.text.primary, 0.02),
+                  borderColor: (theme) => alpha(theme.palette.text.primary, 0.08),
                 }}
               >
                 <Stack

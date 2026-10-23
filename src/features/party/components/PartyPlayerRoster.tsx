@@ -33,7 +33,9 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
               <Chip
                 key={p.id}
                 avatar={
-                  <Avatar sx={{ bgcolor: p.avatarColor, fontWeight: 'bold', color: '#fff' }}>
+                  <Avatar
+                    sx={{ bgcolor: p.avatarColor, fontWeight: 'bold', color: 'text.primary' }}
+                  >
                     {p.name.charAt(0).toUpperCase()}
                   </Avatar>
                 }

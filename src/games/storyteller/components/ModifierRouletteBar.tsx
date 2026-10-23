@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Chip, Stack, Typography } from '@mui/material';
+import { alpha, Box, Chip, Stack, Typography } from '@mui/material';
 import CasinoRoundedIcon from '@mui/icons-material/CasinoRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import RadioButtonUncheckedRoundedIcon from '@mui/icons-material/RadioButtonUncheckedRounded';
@@ -40,7 +40,7 @@ export const ModifierRouletteBar: React.FC<ModifierRouletteBarProps> = ({ evalua
       >
         <Stack direction="row" spacing={1} alignItems="center">
           <CasinoRoundedIcon sx={{ color: isComplete ? '#4ade80' : '#facc15', fontSize: 20 }} />
-          <Typography variant="caption" fontWeight={700} sx={{ color: '#f8fafc' }}>
+          <Typography variant="caption" fontWeight={700} sx={{ color: 'text.primary' }}>
             {t('storyteller.wordRouletteTitle', 'Word Roulette (Pflichtwörter)')}
           </Typography>
         </Stack>
@@ -61,10 +61,18 @@ export const ModifierRouletteBar: React.FC<ModifierRouletteBarProps> = ({ evalua
             label={word}
             icon={
               matched ? (
-                <CheckCircleRoundedIcon sx={{ fontSize: '1rem !important', color: '#fff !important' }} />
+                <CheckCircleRoundedIcon
+                  sx={{
+                    fontSize: '1rem !important',
+                    color: (theme) => `${theme.palette.text.primary} !important`,
+                  }}
+                />
               ) : (
                 <RadioButtonUncheckedRoundedIcon
-                  sx={{ fontSize: '1rem !important', color: 'rgba(255, 255, 255, 0.6) !important' }}
+                  sx={{
+                    fontSize: '1rem !important',
+                    color: (theme) => `${alpha(theme.palette.text.primary, 0.6)} !important`,
+                  }}
                 />
               )
             }

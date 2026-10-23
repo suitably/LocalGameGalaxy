@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Button,
-  Card,
-  CardActionArea,
-  Typography,
-} from '@mui/material';
+import { alpha, Box, Button, Card, CardActionArea, Typography } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useTranslation } from 'react-i18next';
 import type { CardGameDefinition } from '../logic/types';
@@ -123,7 +117,12 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
         size="large"
         fullWidth
         startIcon={<PlayArrowIcon />}
-        onClick={() => onStartGame(selectedGame, lobbyPlayers.map((p) => p.name))}
+        onClick={() =>
+          onStartGame(
+            selectedGame,
+            lobbyPlayers.map((p) => p.name),
+          )
+        }
         disabled={!hasMinPlayers}
         sx={{
           py: 1.5,
@@ -131,7 +130,7 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
           fontSize: '1.1rem',
           borderRadius: 50,
           background: 'linear-gradient(90deg, #00acc1, #ab47bc)',
-          boxShadow: '0 4px 20px rgba(0, 172, 193, 0.4)',
+          boxShadow: (theme) => `0 4px 20px ${alpha(theme.palette.secondary.main, 0.4)}`,
         }}
       >
         {t('games.cards.start_session', 'Runde starten')} ({selectedGame.name})

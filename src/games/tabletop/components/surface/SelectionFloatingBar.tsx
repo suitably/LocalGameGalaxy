@@ -2,7 +2,7 @@
  * Floating action bar for multi-selected widgets [ID: GAME-TABLETOP-SELECTION-BAR]
  */
 import React from 'react';
-import { Paper, Chip, IconButton, Tooltip, Divider } from '@mui/material';
+import { alpha, Paper, Chip, IconButton, Tooltip, Divider } from '@mui/material';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
@@ -46,7 +46,7 @@ export const SelectionFloatingBar: React.FC<SelectionFloatingBarProps> = ({
         alignItems: 'center',
         gap: 1,
         zIndex: 1100,
-        boxShadow: '0 8px 32px rgba(0, 229, 255, 0.25)',
+        boxShadow: (theme) => `0 8px 32px ${alpha(theme.palette.secondary.main, 0.25)}`,
       }}
     >
       <Chip

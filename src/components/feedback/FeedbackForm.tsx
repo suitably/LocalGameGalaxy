@@ -1,141 +1,156 @@
 import React, { useState } from 'react';
-import { TextField, Button, CircularProgress, Alert, Box } from '@mui/material';
+import { alpha, TextField, Button, CircularProgress, Alert, Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { submitFeedback } from '../../lib/github';
 
 export interface FeedbackFormProps {
-    onClose?: () => void;
-    showCloseButton?: boolean;
-    disabled?: boolean;
+  onClose?: () => void;
+  showCloseButton?: boolean;
+  disabled?: boolean;
 }
 
 export const FeedbackForm: React.FC<FeedbackFormProps> = ({
-    onClose,
-    showCloseButton = false,
-    disabled = false,
+  onClose,
+  showCloseButton = false,
+  disabled = false,
 }) => {
-    const { t } = useTranslation();
-    const [feedbackTitle, setFeedbackTitle] = useState('');
-    const [feedbackBody, setFeedbackBody] = useState('');
-    const [submitting, setSubmitting] = useState(false);
-    const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string; url?: string } | null>(null);
+  const { t } = useTranslation();
+  const [feedbackTitle, setFeedbackTitle] = useState('');
+  const [feedbackBody, setFeedbackBody] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [status, setStatus] = useState<{
+    type: 'success' | 'error';
+    message: string;
+    url?: string;
+  } | null>(null);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!feedbackTitle.trim() || !feedbackBody.trim()) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!feedbackTitle.trim() || !feedbackBody.trim()) return;
 
-        setSubmitting(true);
-        setStatus(null);
+    setSubmitting(true);
+    setStatus(null);
 
-        try {
-            const result = await submitFeedback(feedbackTitle.trim(), feedbackBody.trim());
+    try {
+      const result = await submitFeedback(feedbackTitle.trim(), feedbackBody.trim());
 
-            if (result.success) {
-                setStatus({
-                    type: 'success',
-                    message: t('settings.submit_success', 'Feedback successfully submitted!'),
-                    url: result.issueUrl,
-                });
-                setFeedbackTitle('');
-                setFeedbackBody('');
-            } else {
-                setStatus({
-                    type: 'error',
-                    message: t('settings.submit_error', 'Failed to submit feedback: {{error}}', { error: result.error }),
-                });
-            }
-        } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : 'Unknown error';
-            setStatus({
-                type: 'error',
-                message: t('settings.submit_error', 'Failed to submit feedback: {{error}}', { error: message }),
-            });
-        } finally {
-            setSubmitting(false);
-        }
-    };
+      if (result.success) {
+        setStatus({
+          type: 'success',
+          message: t('settings.submit_success', 'Feedback successfully submitted!'),
+          url: result.issueUrl,
+        });
+        setFeedbackTitle('');
+        setFeedbackBody('');
+      } else {
+        setStatus({
+          type: 'error',
+          message: t('settings.submit_error', 'Failed to submit feedback: {{error}}', {
+            error: result.error,
+          }),
+        });
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setStatus({
+        type: 'error',
+        message: t('settings.submit_error', 'Failed to submit feedback: {{error}}', {
+          error: message,
+        }),
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-    const isSubmitDisabled = disabled || submitting || !feedbackTitle.trim() || !feedbackBody.trim();
+  const isSubmitDisabled = disabled || submitting || !feedbackTitle.trim() || !feedbackBody.trim();
 
-    return (
-        <form onSubmit={handleSubmit}>
-            <TextField
-                fullWidth
-                label={t('settings.issue_title', 'Title')}
-                value={feedbackTitle}
-                onChange={(e) => setFeedbackTitle(e.target.value)}
-                disabled={disabled || submitting}
-                required
-                variant="outlined"
+  return (
+    <form onSubmit={handleSubmit}>
+      <TextField
+        fullWidth
+        label={t('settings.issue_title', 'Title')}
+        value={feedbackTitle}
+        onChange={(e) => setFeedbackTitle(e.target.value)}
+        disabled={disabled || submitting}
+        required
+        variant="outlined"
+        size="small"
+        sx={{ mb: 2 }}
+      />
+      <TextField
+        fullWidth
+        label={t('settings.issue_body', 'Description')}
+        value={feedbackBody}
+        onChange={(e) => setFeedbackBody(e.target.value)}
+        disabled={disabled || submitting}
+        required
+        multiline
+        rows={4}
+        variant="outlined"
+        size="small"
+        sx={{ mb: 3 }}
+      />
+
+      {status && (
+        <Alert
+          severity={status.type}
+          sx={{
+            mb: 2,
+            bgcolor: status.type === 'success' ? 'rgba(46,125,50,0.2)' : 'rgba(211,47,47,0.2)',
+            color: 'text.primary',
+            border: `1px solid ${status.type === 'success' ? '#2e7d32' : '#d32f2f'}`,
+          }}
+          onClose={() => setStatus(null)}
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span>{status.message}</span>
+            {status.url && (
+              <Button
                 size="small"
-                sx={{ mb: 2 }}
-            />
-            <TextField
-                fullWidth
-                label={t('settings.issue_body', 'Description')}
-                value={feedbackBody}
-                onChange={(e) => setFeedbackBody(e.target.value)}
-                disabled={disabled || submitting}
-                required
-                multiline
-                rows={4}
                 variant="outlined"
-                size="small"
-                sx={{ mb: 3 }}
-            />
-
-            {status && (
-                <Alert
-                    severity={status.type}
-                    sx={{
-                        mb: 2,
-                        bgcolor: status.type === 'success' ? 'rgba(46,125,50,0.2)' : 'rgba(211,47,47,0.2)',
-                        color: '#fff',
-                        border: `1px solid ${status.type === 'success' ? '#2e7d32' : '#d32f2f'}`,
-                    }}
-                    onClose={() => setStatus(null)}
-                >
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        <span>{status.message}</span>
-                        {status.url && (
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                color="inherit"
-                                href={status.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                sx={{ alignSelf: 'flex-start', borderColor: 'rgba(255,255,255,0.5)', '&:hover': { borderColor: '#fff' } }}
-                            >
-                                {t('settings.view_issue', 'View on GitHub')}
-                            </Button>
-                        )}
-                    </Box>
-                </Alert>
+                color="inherit"
+                href={status.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{
+                  alignSelf: 'flex-start',
+                  borderColor: (theme) => alpha(theme.palette.text.primary, 0.5),
+                  '&:hover': { borderColor: 'text.primary' },
+                }}
+              >
+                {t('settings.view_issue', 'View on GitHub')}
+              </Button>
             )}
+          </Box>
+        </Alert>
+      )}
 
-            <Box sx={{ display: 'flex', gap: 1.5 }}>
-                {showCloseButton && onClose && (
-                    <Button
-                        variant="outlined"
-                        onClick={onClose}
-                        fullWidth
-                        sx={{ borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)' }}
-                    >
-                        {t('common.close', 'Close')}
-                    </Button>
-                )}
-                <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    disabled={isSubmitDisabled}
-                    startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : null}
-                >
-                    {submitting ? t('settings.submitting', 'Submitting...') : t('settings.submit', 'Submit')}
-                </Button>
-            </Box>
-        </form>
-    );
+      <Box sx={{ display: 'flex', gap: 1.5 }}>
+        {showCloseButton && onClose && (
+          <Button
+            variant="outlined"
+            onClick={onClose}
+            fullWidth
+            sx={{
+              borderColor: (theme) => alpha(theme.palette.text.primary, 0.2),
+              color: 'text.secondary',
+            }}
+          >
+            {t('common.close', 'Close')}
+          </Button>
+        )}
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          fullWidth
+          disabled={isSubmitDisabled}
+          startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : null}
+        >
+          {submitting ? t('settings.submitting', 'Submitting...') : t('settings.submit', 'Submit')}
+        </Button>
+      </Box>
+    </form>
+  );
 };

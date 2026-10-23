@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { alpha, Box, Typography } from '@mui/material';
 import type { CardContent } from '../../logic/types';
 import { StandardSuitCardFace, parseCardText } from './StandardSuitCardFace';
 
@@ -13,7 +13,10 @@ interface PlayingCardFaceProps {
   clipPath?: string;
 }
 
-const renderSpriteSheetBox = (sheet: NonNullable<CardContent['spriteSheet']>, clipPath?: string) => {
+const renderSpriteSheetBox = (
+  sheet: NonNullable<CardContent['spriteSheet']>,
+  clipPath?: string,
+) => {
   const { url, col, row, numWidth, numHeight } = sheet;
   const posX = numWidth > 1 ? (col / (numWidth - 1)) * 100 : 0;
   const posY = numHeight > 1 ? (row / (numHeight - 1)) * 100 : 0;
@@ -86,8 +89,10 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
             justifyContent: 'center',
             position: 'relative',
             overflow: 'hidden',
-            backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.15) 15%, transparent 16%),
-              radial-gradient(circle, rgba(255,255,255,0.15) 15%, transparent 16%)`,
+            backgroundImage: (
+              theme,
+            ) => `radial-gradient(circle, ${alpha(theme.palette.text.primary, 0.15)} 15%, transparent 16%),
+              radial-gradient(circle, ${alpha(theme.palette.text.primary, 0.15)} 15%, transparent 16%)`,
             backgroundSize: '16px 16px',
             backgroundPosition: '0 0, 8px 8px',
           }}
@@ -97,12 +102,12 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
               width: 36,
               height: 48,
               borderRadius: '50%',
-              border: '2px solid rgba(255,255,255,0.7)',
+              border: (theme) => `2px solid ${alpha(theme.palette.text.primary, 0.7)}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               bgcolor: 'rgba(0,0,0,0.25)',
-              color: '#fff',
+              color: 'text.primary',
               fontSize: '1.2rem',
               fontWeight: 900,
             }}

@@ -2,7 +2,7 @@
  * Banner shown while a game is running in this room [ID: COMP-PARTY-ACTIVE-GAME-BANNER]
  */
 import React from 'react';
-import { Box, Button, Card, Chip, Typography } from '@mui/material';
+import { alpha, Box, Button, Card, Chip, Typography } from '@mui/material';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import PhoneIphoneRoundedIcon from '@mui/icons-material/PhoneIphoneRounded';
 import { useTranslation } from 'react-i18next';
@@ -45,7 +45,7 @@ export const PartyActiveGameBanner: React.FC<{ lobby: PartyLobbyController }> = 
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(25, 118, 210, 0.4)',
+                boxShadow: (theme) => `0 4px 12px ${alpha(theme.palette.secondary.main, 0.4)}`,
               }}
             >
               <PhoneIphoneRoundedIcon sx={{ fontSize: 28 }} />

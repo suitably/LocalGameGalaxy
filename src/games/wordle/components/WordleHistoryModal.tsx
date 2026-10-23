@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import {
+  alpha,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -8,7 +9,7 @@ import {
   Box,
   Typography,
   Stack,
-  } from '@mui/material';
+} from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useWordleHistory } from '../hooks/useWordleHistory';
 import type { EvaluatedLetter } from '../logic/types';
@@ -25,7 +26,11 @@ const statusColors = {
   absent: { bg: '#374151', border: '#374151', text: '#9ca3af' },
 };
 
-export const WordleHistoryModal: React.FC<WordleHistoryModalProps> = ({ open, onClose, language }) => {
+export const WordleHistoryModal: React.FC<WordleHistoryModalProps> = ({
+  open,
+  onClose,
+  language,
+}) => {
   const { t } = useTranslation();
   const { history, refreshHistory } = useWordleHistory(language);
 
@@ -49,8 +54,22 @@ export const WordleHistoryModal: React.FC<WordleHistoryModalProps> = ({ open, on
         ) : (
           <Stack spacing={3} sx={{ mt: 1 }}>
             {history.map((entry) => (
-              <Box key={entry.dateKey} sx={{ bgcolor: 'rgba(255,255,255,0.03)', p: 2, borderRadius: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+              <Box
+                key={entry.dateKey}
+                sx={{
+                  bgcolor: (theme) => alpha(theme.palette.text.primary, 0.03),
+                  p: 2,
+                  borderRadius: 2,
+                }}
+              >
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    mb: 1.5,
+                  }}
+                >
                   <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
                     {entry.dateKey}
                   </Typography>
@@ -60,18 +79,38 @@ export const WordleHistoryModal: React.FC<WordleHistoryModalProps> = ({ open, on
                       px: 1,
                       py: 0.5,
                       borderRadius: 1,
-                      bgcolor: entry.status === 'won' ? 'rgba(46, 125, 50, 0.2)' : entry.status === 'lost' ? 'rgba(211, 47, 47, 0.2)' : 'rgba(255,255,255,0.1)',
-                      color: entry.status === 'won' ? '#81c784' : entry.status === 'lost' ? '#e57373' : '#e0e0e0',
-                      fontWeight: 700
+                      bgcolor:
+                        entry.status === 'won'
+                          ? 'rgba(46, 125, 50, 0.2)'
+                          : entry.status === 'lost'
+                            ? 'rgba(211, 47, 47, 0.2)'
+                            : 'rgba(255,255,255,0.1)',
+                      color:
+                        entry.status === 'won'
+                          ? '#81c784'
+                          : entry.status === 'lost'
+                            ? '#e57373'
+                            : '#e0e0e0',
+                      fontWeight: 700,
                     }}
                   >
-                    {entry.status === 'won' ? t('wordle.status.won', 'Gewonnen') : entry.status === 'lost' ? t('wordle.status.lost', 'Verloren') : t('wordle.status.playing', 'Am Spielen')}
+                    {entry.status === 'won'
+                      ? t('wordle.status.won', 'Gewonnen')
+                      : entry.status === 'lost'
+                        ? t('wordle.status.lost', 'Verloren')
+                        : t('wordle.status.playing', 'Am Spielen')}
                   </Typography>
                 </Box>
 
                 {(entry.status === 'won' || entry.status === 'lost') && (
                   <Typography variant="body2" sx={{ mb: 1.5, color: 'text.secondary' }}>
-                    {t('wordle.history.target_word', 'Gesuchtes Wort:')} <Box component="span" sx={{ color: '#90caf9', fontWeight: 800, letterSpacing: 1 }}>{entry.targetWord}</Box>
+                    {t('wordle.history.target_word', 'Gesuchtes Wort:')}{' '}
+                    <Box
+                      component="span"
+                      sx={{ color: 'secondary.main', fontWeight: 800, letterSpacing: 1 }}
+                    >
+                      {entry.targetWord}
+                    </Box>
                   </Typography>
                 )}
 
@@ -80,9 +119,12 @@ export const WordleHistoryModal: React.FC<WordleHistoryModalProps> = ({ open, on
                     <Box key={rowIndex} sx={{ display: 'flex', gap: 0.5 }}>
                       {row.map((letter, colIndex) => {
                         // For backwards compatibility or corrupted data
-                        const status = letter.status === 'correct' || letter.status === 'present' || letter.status === 'absent'
-                          ? letter.status
-                          : 'absent';
+                        const status =
+                          letter.status === 'correct' ||
+                          letter.status === 'present' ||
+                          letter.status === 'absent'
+                            ? letter.status
+                            : 'absent';
                         const style = statusColors[status];
 
                         return (

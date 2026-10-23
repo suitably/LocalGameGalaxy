@@ -25,8 +25,8 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
       sx={{
         p: { xs: 1, sm: 1.5 },
         borderRadius: 3,
-        bgcolor: 'rgba(255, 255, 255, 0.04)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
+        border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
         backdropFilter: 'blur(8px)',
         width: '100%',
         maxWidth: 520,
@@ -36,9 +36,22 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
         WebkitTapHighlightColor: 'transparent',
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, px: 0.5 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          mb: 1,
+          px: 0.5,
+        }}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-          <TouchAppIcon sx={{ fontSize: '1.1rem', color: selectedNumber !== null ? 'warning.main' : 'text.secondary' }} />
+          <TouchAppIcon
+            sx={{
+              fontSize: '1.1rem',
+              color: selectedNumber !== null ? 'warning.main' : 'text.secondary',
+            }}
+          />
           <Typography
             variant="caption"
             sx={{
@@ -102,15 +115,15 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
                 bgcolor: isSelected
                   ? 'warning.main'
                   : isSeven
-                  ? alpha('#ffa726', 0.15)
-                  : 'rgba(255, 255, 255, 0.07)',
+                    ? alpha('#ffa726', 0.15)
+                    : 'rgba(255, 255, 255, 0.07)',
                 color: isSelected ? 'warning.contrastText' : isSeven ? 'warning.light' : '#fff',
                 border: '1.5px solid',
                 borderColor: isSelected
                   ? 'warning.light'
                   : isSeven
-                  ? alpha('#ffa726', 0.4)
-                  : 'rgba(255, 255, 255, 0.12)',
+                    ? alpha('#ffa726', 0.4)
+                    : 'rgba(255, 255, 255, 0.12)',
                 boxShadow: isSelected ? '0 0 12px rgba(255, 167, 38, 0.6)' : 'none',
                 transform: isSelected ? 'scale(1.08)' : 'none',
                 transition: 'all 0.15s ease',
