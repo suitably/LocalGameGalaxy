@@ -124,7 +124,6 @@ export const GameSetup: React.FC<GameSetupProps> = ({
             bgcolor: (theme) => alpha(theme.palette.piece.pink, 0.08),
             border: 1,
             borderColor: (theme) => alpha(theme.palette.piece.pink, 0.4),
-            boxShadow: 2,
           }}
         >
           <CardContent
