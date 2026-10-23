@@ -29,3 +29,4 @@ Run gates only after code changes, not while researching. Prefer the narrowest c
 - Keep changes to the requested scope; refactors, dependency bumps and formatting passes are separate PRs.
 - Secrets: never read or print any `config.json`, `.env*` or keystore.
 - Answer the user in German; write code, comments, commit messages and docs in English.
+- Keep answers short: no intro, no restating the question, no closing summary; bullets over prose. Keep conditions, caveats and reasons.

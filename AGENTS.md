@@ -1,42 +1,42 @@
 # AGENTS.md — operating rules for agents in LocalGameGalaxy
 
-You are working in `suitably/LocalGameGalaxy` (product name **Nexumia**): an offline-first React 19 / Vite PWA with 15 local party games, an optional Hono companion server (`server/`) and a signaling tracker (`signaling/`). Other agents (Copilot, Claude Code) read this file too — `.github/copilot-instructions.md` and `CLAUDE.md` point here.
+`suitably/LocalGameGalaxy` (product **Nexumia**): offline-first React 19 / Vite PWA, 15 local party games, optional Hono companion server (`server/`), signaling tracker (`signaling/`). Read by Copilot and Claude Code too (`.github/copilot-instructions.md` and `CLAUDE.md` point here).
 
-The knowledge base is [`docs/`](docs/index.md) (Open Knowledge Format v0.2). Start there.
+Knowledge base: [`docs/`](docs/index.md) (Open Knowledge Format v0.2).
 
 ## 1. Before you act
 
-1. For changes, find your area in [`docs/index.md`](docs/index.md) and read **only** that doc. For a game, grep its row in [`docs/tech/game-catalog.md`](docs/tech/game-catalog.md) (`grep -n -i "<game>" docs/tech/game-catalog.md` returns its line from every table) instead of reading the whole file. Pure questions and trivial fixes need no doc reading.
-2. Before changing behaviour, grep [`docs/open-questions.md`](docs/open-questions.md) for your topic — it may have a known contradiction or a pending maintainer decision. Do not silently "fix" an item marked _(user)_.
-3. **Verify, don't trust.** Every doc carries `verified.at`. Code wins over docs; if they disagree, fix the doc in the same change or add an open question. Quick checks are in §10.
+1. For changes, read **only** your area's doc from [`docs/index.md`](docs/index.md). For a game, grep its row in [`docs/tech/game-catalog.md`](docs/tech/game-catalog.md) (`grep -n -i "<game>" docs/tech/game-catalog.md` returns its line from every table) instead of reading the file. Questions and trivial fixes need no doc reading.
+2. Before changing behaviour, grep [`docs/open-questions.md`](docs/open-questions.md) for your topic (known contradictions, pending maintainer decisions). Never silently "fix" an item marked _(user)_.
+3. **Verify, don't trust.** Every doc carries `verified.at`. Code wins; if doc and code disagree, fix the doc in the same change or add an open question. Quick checks: §10.
 4. Read the target file and its neighbouring tests before editing. Check open PRs for overlapping work (`gh pr list`).
 
 ## 2. Environment and workflow
 
-- Node **24** (`.nvmrc`, `engines`). Three npm packages with their own lockfiles: root, `server/`, `signaling/` — run `npm ci` in the one you touch.
-- GitHub is primary; `main` is protected (PR required; required checks "Deterministic Prechecks (no install)" and "CI Quality Gate (Aggregator)"). GitLab (`gitlab` remote) is a mirror running the same `npm run ci:gates`.
-- Branches `feature/…`, `bugfix/…`, `docs/…`, `refactor/…`, `chore/…`; commits in Conventional Commits ([CONTRIBUTING.md](CONTRIBUTING.md)). The PR title prefix matters: `chore|refactor|style|test|docs|perf:` bypasses the doc-sync gate.
-- Husky runs gates on commit and push. Do not bypass them with `--no-verify`.
-- Do not edit generated or local-only paths: `dist/`, `dev-dist/`, `server/dist/`, `node_modules/`, `android/app/build/`, `android/local.properties`, `server/music/`.
-- **Secrets — do not read, print or commit:** any `config.json` (server token, USDB password, GitHub token), `.env*`, keystores (`*.jks`, `*.keystore`, `*.p12`), `android/app/release.jks`. Use `server/config.example.json` for examples. For Claude Code these reads (plus generated folders) are blocked in `.claude/settings.json`.
+- Node **24** (`.nvmrc`, `engines`). Three npm packages with own lockfiles: root, `server/`, `signaling/` — `npm ci` in the one you touch.
+- GitHub is primary; `main` is protected (PR required; required checks "Deterministic Prechecks (no install)" and "CI Quality Gate (Aggregator)"). GitLab (`gitlab` remote) mirrors it and runs the same `npm run ci:gates`.
+- Branches `feature/…`, `bugfix/…`, `docs/…`, `refactor/…`, `chore/…`; Conventional Commits ([CONTRIBUTING.md](CONTRIBUTING.md)). PR title prefix `chore|refactor|style|test|docs|perf:` bypasses the doc-sync gate.
+- Husky runs gates on commit and push. Never bypass with `--no-verify`.
+- Never edit generated or local-only paths: `dist/`, `dev-dist/`, `server/dist/`, `node_modules/`, `android/app/build/`, `android/local.properties`, `server/music/`.
+- **Secrets — never read, print or commit:** any `config.json` (server token, USDB password, GitHub token), `.env*`, keystores (`*.jks`, `*.keystore`, `*.p12`), `android/app/release.jks`. Use `server/config.example.json` for examples. Claude Code: these reads (plus generated folders) are blocked in `.claude/settings.json`.
 
 ## 3. Scope control and incremental delivery
 
-- **Bite-sized slices.** Do not implement several layers at once (storage + sync + logic + multi-screen UI). Order: (1) domain logic and types — pure functions + tests in `logic/`; (2) state and integration — `use<Feature>State.ts` hooks; (3) UI — components under 250 lines.
-- **Reuse audit first.** Search `src/modules/`, `src/components/`, `src/lib/`, `src/hooks/` (catalog in §5). Extend what exists; never build a second implementation of the same concept (player rosters, sync, dice, dialogs, latency calibration, song download).
-- **Verification gate.** Run §8 after code changes, not during research or planning.
+- **Small slices.** Never implement several layers at once (storage + sync + logic + multi-screen UI). Order: (1) domain logic and types — pure functions + tests in `logic/`; (2) state and integration — `use<Feature>State.ts` hooks; (3) UI — components under 250 lines.
+- **Reuse audit first.** Search `src/modules/`, `src/components/`, `src/lib/`, `src/hooks/` (catalog: §5). Extend what exists; never build a second implementation of a concept (player rosters, sync, dice, dialogs, latency calibration, song download).
+- **Verification:** run §8 after code changes, not during research or planning.
 
 ## 4. Code rules
 
-The full rule set with what enforces each rule lives in [`docs/tech/coding-conventions.md`](docs/tech/coding-conventions.md). The essentials:
+Full rule set and what enforces each rule: [`docs/tech/coding-conventions.md`](docs/tech/coding-conventions.md). Essentials:
 
 - **No cross-game imports** (`src/games/<A>` → `src/games/<B>`). Shared code goes to `src/modules/`, `src/components/` or `src/lib/`. _(check:architecture fails)_
-- **Storage only via `src/lib/storage.ts`** (`storage`, `sessionStorageSafe`) with keys registered in `STORAGE_KEYS` / `STORAGE_PREFIXES`. Never `localStorage.` / `sessionStorage.` directly. _(check:architecture fails on raw access; unregistered keys are a known gap — Q8)_
+- **Storage only via `src/lib/storage.ts`** (`storage`, `sessionStorageSafe`), keys registered in `STORAGE_KEYS` / `STORAGE_PREFIXES`. Never `localStorage.` / `sessionStorage.` directly. _(check:architecture fails on raw access; unregistered keys are a known gap — Q8)_
 - **No native dialogs** (`confirm`, `prompt`, `alert`). Use [`ConfirmDialog`](src/components/common/ConfirmDialog.tsx) or MUI `<Dialog>`. _(ESLint + check:architecture fail)_
-- **Component budget:** new `.tsx` files ≤ 250 lines (aim < 160 for orchestrators); files in `scripts/legacy-component-baselines.json` must never grow; when one shrinks, lock it in with `npm run check:budget -- --update` (fails otherwise). Decompose into a `use<Feature>State.ts` hook, focused sub-components and a co-located `types.ts`. _(check:budget fails)_
-- **Pure game logic** in `logic/*.ts` with Vitest tests; components hold no game rules.
-- **Discriminated unions** instead of contradictory boolean flags.
-- **No `any`** in new or changed code — use generics, interfaces or `unknown` with guards. _(ESLint warning; `check:lint-budget` fails if a file gains warnings)_
+- **Component budget:** new `.tsx` files ≤ 250 lines (orchestrators ideally < 160); files in `scripts/legacy-component-baselines.json` must never grow; when one shrinks, lock it in with `npm run check:budget -- --update` (fails otherwise). Split into a `use<Feature>State.ts` hook, focused sub-components and a co-located `types.ts`. _(check:budget fails)_
+- **Game logic** pure, in `logic/*.ts`, with Vitest tests; components hold no game rules.
+- **Discriminated unions**, not contradictory boolean flags.
+- **No `any`** in new or changed code — generics, interfaces or `unknown` with guards. _(ESLint warning; `check:lint-budget` fails if a file gains warnings)_
 - **No inline `BroadcastChannel`** in games — use `useMultiChannelSync()`. _(review only; Melodiq still violates it: Q4)_
 - **No hardcoded UI strings** (§6).
 - **Header:** integrate with `GlobalHeader` via `TitleContext` / `HeaderLayoutContext` (`usePageTitle`, `useHeaderLayout`); `LayoutContext` is the backward-compatible composite. No second top bar, no floating hub-exit buttons.
@@ -46,7 +46,7 @@ The full rule set with what enforces each rule lives in [`docs/tech/coding-conve
 
 ## 5. Reuse catalog
 
-Before building anything shared (player rosters, sync, dice, dialogs, header actions, storage, push, WebRTC, wake lock), check the tables in [`docs/tech/architecture.md` §3.2](docs/tech/architecture.md#32-shared-modules-srcmodules). Extend what is listed there; never build a second implementation.
+Before building anything shared (player rosters, sync, dice, dialogs, header actions, storage, push, WebRTC, wake lock), check [`docs/tech/architecture.md` §3.2](docs/tech/architecture.md#32-shared-modules-srcmodules). Extend what is listed; never build a second implementation.
 
 ## 6. i18n
 
@@ -55,11 +55,11 @@ Before building anything shared (player rosters, sync, dice, dialogs, header act
 
 ## 7. Capacitor (Android) UI
 
-Safe areas, touch CSS and theme rules: [`docs/tech/styling.md`](docs/tech/styling.md). Back button: `App.addListener('backButton', …)` — close modals / navigate before exiting. After web changes that must reach the app: `npm run build && npx cap sync android`.
+Safe areas, touch CSS, theme rules: [`docs/tech/styling.md`](docs/tech/styling.md). Back button: `App.addListener('backButton', …)` — close modals / navigate before exiting. Web changes that must reach the app: `npm run build && npx cap sync android`.
 
 ## 8. Verification
 
-Run **after code changes**, before you call a task done. Do not run gates during research or planning.
+Run **after code changes**, before calling a task done. Never during research or planning.
 
 ```bash
 npm run check:architecture:diff # boundaries on changed files (fails on new violations)
@@ -78,13 +78,13 @@ Hooks: pre-commit = `lint-staged` + `check:hygiene` + `check:architecture:diff`;
 
 ## 9. Keeping the knowledge bundle correct (OKF v0.2)
 
-Before editing `docs/`, read [`docs/workflows/knowledge-base-maintenance.md`](docs/workflows/knowledge-base-maintenance.md) (front matter, links, lifecycle). The non-negotiables:
+Before editing `docs/`, read [`docs/workflows/knowledge-base-maintenance.md`](docs/workflows/knowledge-base-maintenance.md) (front matter, links, lifecycle). Non-negotiables:
 
-- Code wins over docs. Name only files and symbols you confirmed with `grep`; mark guesses `**Unverified:**`.
+- Code wins over docs. Name only files and symbols confirmed with `grep`; mark guesses `**Unverified:**`.
 - One topic, one home — link, don't copy.
 - Architecture, data model, storage key, sync message, server route or game changes → update the owning doc in the same PR.
 - Every change to `docs/` → entry at the top of [`docs/log.md`](docs/log.md). Unresolvable contradiction → [`docs/open-questions.md`](docs/open-questions.md).
-- Write docs in **English**.
+- Docs in **English**.
 
 ## 10. Quick facts (read-only)
 

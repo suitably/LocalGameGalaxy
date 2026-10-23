@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-23 — Terser agent instructions (claude-code)
+
+- Outside `docs/`: `AGENTS.md` wording tightened (filler removed; rules, conditions and reasons unchanged); `CLAUDE.md` asks for short answers. No code changed.
+
 ## 2026-10-23 — Review fixes for Melodiq Notes stage (claude-code)
 
 - `docs/tech/song-pipeline.md` §4: score upload never overwrites (`replace=1` removed; it skipped the delete permission and left stale marks).
