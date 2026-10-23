@@ -16,6 +16,10 @@ export interface PushNotificationPayload {
   action?: 'draw' | 'guess' | 'turn' | 'game_start';
   ntfyTopic?: string;
   targetRelayUrl?: string;
+  /** The target device's subscription with the site's sender (`siteWebPush.ts`). */
+  webPush?: StoredPushSubscription;
+  /** Channel the target player chose (`notificationMethod` on their seat). */
+  targetMethod?: NotificationMethod;
 }
 
 export interface StoredPushSubscription {

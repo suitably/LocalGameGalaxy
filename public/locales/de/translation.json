@@ -1491,7 +1491,8 @@
     "timeTaken": "Benötigte Zeit",
     "hintsUsed": "Hinweise genutzt",
     "allGuesses": "Alle Versuche",
-    "catalogueTitle": "Katalog"
+    "catalogueTitle": "Katalog",
+    "pushIosInstall": "Auf dem iPhone kommen Benachrichtigungen nur in der installierten App: Teilen-Symbol → „Zum Home-Bildschirm“, dann von dort öffnen und hier aktivieren."
   },
   "party": {
     "hubBannerTitle": "Party-Modus (Mehrspieler-Lobby)",

@@ -9,6 +9,7 @@
  * - "play here again" takes it back.
  * When two snapshots meet, the seat with the newer `updatedAt` wins.
  */
+import type { StoredPushSubscription } from '../../lib/push/pushTypes';
 
 export interface PlayerSeat {
   /** Device that plays this player; `null` while an invitation is open. */
@@ -24,6 +25,8 @@ export interface PlayerChannels {
   ntfyTopic?: string;
   relayUrl?: string;
   notificationMethod?: 'auto' | 'webpush' | 'ntfy' | 'both';
+  /** Web Push subscription of the device playing this player (`lib/push/siteWebPush.ts`). */
+  webPush?: StoredPushSubscription;
 }
 
 export interface SeatedPlayer extends PlayerChannels {
@@ -111,6 +114,7 @@ const pickChannels = (from: PlayerChannels): PlayerChannels => ({
   ntfyTopic: from.ntfyTopic,
   relayUrl: from.relayUrl,
   notificationMethod: from.notificationMethod,
+  webPush: from.webPush,
 });
 
 /**
@@ -198,11 +202,13 @@ export function attachDeviceChannels<T extends SeatedPlayer>(
       ntfyTopic: channels.ntfyTopic || p.ntfyTopic,
       relayUrl: channels.relayUrl || p.relayUrl,
       notificationMethod: channels.notificationMethod || p.notificationMethod,
+      webPush: channels.webPush || p.webPush,
     };
     if (
       merged.ntfyTopic === p.ntfyTopic &&
       merged.relayUrl === p.relayUrl &&
-      merged.notificationMethod === p.notificationMethod
+      merged.notificationMethod === p.notificationMethod &&
+      merged.webPush?.endpoint === p.webPush?.endpoint
     ) {
       return p;
     }
