@@ -77,6 +77,7 @@
 
 ### Fixed
 
+- **Settings language**: the notifications tab and its description show English text in the English UI (the keys `settings.notifications_tab` / `settings.notifications_relay_desc` were missing, so the German fallback was shown) (#154).
 - **Melodiq lyrics**: the first syllable of a line is no longer swallowed — a finished line now makes way for the next one shortly before it starts instead of lingering into it (#441).
 - **Melodiq Notes**: with 3–4 players the panel header no longer draws player, part name and score on top of each other; it measures the text and drops the part name, keyboard marker and instrument, then accuracy/combo, before anything overlaps (#483).
 - **Melodiq Notes stage stutter**: the whole page no longer re-renders ten times a second while playing (only the progress strip and the learn-mode hint follow the song), notes are drawn with a halo instead of a canvas blur, canvas labels are not re-translated every frame, and the notes move on the smooth frame clock pulled towards the audio clock (phones advance the audio clock in 10–40 ms steps). Measured with the 10-track score and four players: JS for React/MUI per 8 s 1.95 s → ~0, frames over 33 ms 45 → 15.
