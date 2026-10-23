@@ -51,7 +51,10 @@ export function markHost(players: PartyPlayer[], hostId: string): PartyPlayer[] 
   return players.map((p) => ({ ...p, isHost: p.id === hostId || Boolean(p.isHost && !hostId) }));
 }
 
-/** Union of both rosters by id; incoming fields win, the score never decreases. */
+/**
+ * Union of both rosters by id; incoming fields win, the score never decreases and a known
+ * slot is kept when the incoming copy has none (only the host assigns slots).
+ */
 export function mergeRoster(local: PartyPlayer[], incoming: PartyPlayer[]): PartyPlayer[] {
   const merged = new Map<string, PartyPlayer>(local.map((p) => [p.id, p]));
   for (const p of incoming) {
@@ -59,9 +62,44 @@ export function mergeRoster(local: PartyPlayer[], incoming: PartyPlayer[]): Part
     merged.set(p.id, {
       ...p,
       score: existing ? Math.max(existing.score, p.score || 0) : p.score || 0,
+      slot: p.slot ?? existing?.slot,
     });
   }
   return Array.from(merged.values());
+}
+
+/**
+ * Gives every player a stable slot (0, 1, 2 …): kept once assigned, new players get the
+ * lowest free one in join order. The slot is the player's seat in tabletop games, so it must
+ * not depend on the roster order, which differs between devices. Run by the host only.
+ */
+export function assignSlots(players: PartyPlayer[]): PartyPlayer[] {
+  const taken = new Set<number>();
+  const keep = new Set<string>();
+  for (const p of players) {
+    if (typeof p.slot === 'number' && p.slot >= 0 && !taken.has(p.slot)) {
+      taken.add(p.slot);
+      keep.add(p.id);
+    }
+  }
+  if (keep.size === players.length) return players;
+  let next = 0;
+  const byJoin = [...players].sort((a, b) => a.joinedAt - b.joinedAt);
+  const slots = new Map<string, number>();
+  for (const p of byJoin) {
+    if (keep.has(p.id)) continue;
+    while (taken.has(next)) next++;
+    taken.add(next);
+    slots.set(p.id, next);
+  }
+  return players.map((p) => (slots.has(p.id) ? { ...p, slot: slots.get(p.id) } : p));
+}
+
+/** A player's seat in party games: the host-assigned slot, else the roster position. */
+export function seatOf(players: PartyPlayer[], playerId: string): number {
+  const index = players.findIndex((p) => p.id === playerId);
+  const slot = players[index]?.slot;
+  return typeof slot === 'number' ? slot : Math.max(0, index);
 }
 
 /**

@@ -12,10 +12,12 @@ import {
 } from '../logic/universalPartyManager';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { getOrCreatePlayerName, savePlayerName } from '../logic/playerName';
+import { seatOf } from '../logic/partyRoster';
 import {
   buildPartyShareUrl,
   getGameRoute as resolveGameRoute,
   resolveLobbyEntry,
+  resolvePendingLaunch,
 } from '../logic/partyRoutes';
 
 export function usePartyLobbyController(initialRoomId?: string) {
@@ -25,6 +27,10 @@ export function usePartyLobbyController(initialRoomId?: string) {
 
   // Which room to open is decided purely here; joining/creating happens in the effect below.
   const [entry] = useState(() => resolveLobbyEntry(initialRoomId));
+  // A game picked on the Spieltisch: the host starts it once everybody has joined.
+  const [pendingLaunch, setPendingLaunch] = useState(() =>
+    entry.kind === 'create' ? resolvePendingLaunch() : null,
+  );
   const [roomId, setRoomId] = useState<string>(() =>
     entry.kind === 'join' ? entry.roomId : universalPartyManager.getSavedHostRoomCode(),
   );
@@ -63,7 +69,7 @@ export function usePartyLobbyController(initialRoomId?: string) {
       tabletopGameId,
       roomId,
       isHost: universalPartyManager.isHost(roomId),
-      seat: roomState?.players.findIndex((p) => p.id === myId) ?? 0,
+      seat: seatOf(roomState?.players ?? [], myId),
     });
   };
 
@@ -87,14 +93,14 @@ export function usePartyLobbyController(initialRoomId?: string) {
         !universalPartyManager.isHost(roomId) &&
         updated.activeGame
       ) {
-        // Route from the updated roster, not the render-time state (seat index must be current).
+        // Route from the updated roster: the seat is the slot the host assigned.
         navigate(
           resolveGameRoute({
             gameType: updated.activeGame,
             tabletopGameId: updated.tabletopGameId,
             roomId,
             isHost: false,
-            seat: updated.players.findIndex((p) => p.id === myId),
+            seat: seatOf(updated.players, myId),
           }),
         );
       }
@@ -152,6 +158,12 @@ export function usePartyLobbyController(initialRoomId?: string) {
     navigate(getGameRoute(gameType, tabletopGameId));
   };
 
+  const startPendingGame = () => {
+    if (!pendingLaunch) return;
+    setPendingLaunch(null);
+    handleLaunchGame(pendingLaunch.gameType, pendingLaunch.gameId);
+  };
+
   const handleReturnToLobby = () => {
     universalPartyManager.returnToLobby(roomId);
   };
@@ -189,6 +201,9 @@ export function usePartyLobbyController(initialRoomId?: string) {
     shareUrl,
     players,
     amIHost,
+    pendingLaunch,
+    startPendingGame,
+    clearPendingLaunch: () => setPendingLaunch(null),
   };
 }
 

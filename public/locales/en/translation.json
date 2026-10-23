@@ -644,9 +644,9 @@
       "description": "Digital companion for tabletop card games: Life tracking (Schwimmen) and trick predictor (Oh Hell)."
     },
     "tabletop": {
-      "title": "Virtual Tabletop",
-      "description": "Play modular playing-card and tabletop games – with a shared TV/tablet table and private smartphone hand cards.",
-      "subtitle": "Play any card & board game with a shared table and smartphone controller hands.",
+      "title": "Game Table",
+      "description": "Card, board and dice games: one device passed around or everyone on their own phone, with hidden hands.",
+      "subtitle": "Card, board and dice games – one device for everyone or everyone on their own.",
       "manage_games": "Manage Games",
       "starter_games": "Classics & Templates",
       "custom_games": "Custom & Imported Games",
@@ -880,8 +880,18 @@
         "error_download_failed": "Download from Steam failed (HTTP {{status}}).",
         "error_download_blocked": "The browser was not allowed to load the mod file from Steam. Upload the mod file (.json) from Documents/My Games/Tabletop Simulator/Mods/Workshop instead, or connect the companion server.",
         "error_invalid_file": "The downloaded file is not a Tabletop Simulator save.",
-        "error_no_download_url": "This mod has no download URL on Steam."
-      }
+        "error_no_download_url": "This mod has no download URL on Steam.",
+        "error_companion_insecure_blocked": "The companion server ({{url}}) uses HTTP while this page uses HTTPS, so the browser blocks the connection. Open the app through the server address or give the server an HTTPS address (e.g. a Cloudflare tunnel).",
+        "error_companion_unreachable": "The companion server at {{url}} cannot be reached. Is it running, and is the address in the server settings right?",
+        "error_companion_unauthorized": "The companion server ({{url}}) refuses access (HTTP {{status}}). Check the token in the server settings.",
+        "error_companion_http": "The companion server ({{url}}) answers with HTTP {{status}}. Is the tabletop plugin enabled (PLUGINS)?"
+      },
+      "mode_shared_device": "One device for everyone",
+      "mode_shared_device_hint": "Pass it around – hands stay hidden when switching.",
+      "mode_own_devices": "Everyone on their own device",
+      "mode_own_devices_hint": "Open a session, players join with a QR code or link.",
+      "dice_games": "Dice games",
+      "custom_game_meta": "{{min}}–{{max}} players"
     }
   },
   "lobby": {
@@ -923,7 +933,9 @@
       "coverTitle": "Hand the device to {{name}}",
       "reveal": "I'm {{name}} – reveal",
       "otherPlayer": "Someone else's turn?"
-    }
+    },
+    "seatInvited": "Invited – link not opened yet",
+    "seatJoined": "Joined"
   },
   "settings": {
     "title": "Settings",
@@ -1535,7 +1547,12 @@
     "custom_game_info": "{{min}}-{{max}} Players • {{cards}} Cards",
     "party_ready": "Party Ready",
     "roomCodeLabel": "Room Code",
-    "moreGamesSoonTitle": "More Party Games"
+    "moreGamesSoonTitle": "More Party Games",
+    "pending_game_label": "Chosen game",
+    "pending_game_waiting": "Waiting for players – they join with the QR code below.",
+    "pending_game_ready": "{{count}} players ready.",
+    "pending_game_start": "Start now",
+    "pending_game_other": "Other game"
   },
   "gartic": {
     "waitingHeader": "Waiting for other players...",

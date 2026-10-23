@@ -8,13 +8,11 @@ import { gameRegistry } from './lib/gameRegistry';
 import { useServerUrlAutoConnect } from './hooks/useServerUrlAutoConnect';
 import { hasGitHubPAT } from './lib/github';
 
-// Route-level code splitting: the hub, settings and party lobby load on first visit.
+// Route-level code splitting: the hub and settings load on first visit (the party lobby is a
+// registry entry like the games, see gameRegistry.tsx).
 const Hub = lazy(() => import('./features/hub/Hub').then((m) => ({ default: m.Hub })));
 const Settings = lazy(() =>
   import('./features/settings/Settings').then((m) => ({ default: m.Settings })),
-);
-const PartyLobby = lazy(() =>
-  import('./features/party/PartyLobby').then((m) => ({ default: m.PartyLobby })),
 );
 
 // Loading fallback component
@@ -78,14 +76,6 @@ function AppRoutes() {
           element={
             <Suspense fallback={<LoadingFallback />}>
               <Hub />
-            </Suspense>
-          }
-        />
-        <Route
-          path="party"
-          element={
-            <Suspense fallback={<LoadingFallback />}>
-              <PartyLobby />
             </Suspense>
           }
         />

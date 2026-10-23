@@ -5,7 +5,7 @@
  * so the inviting device sees that the player joined.
  */
 import { gameRelayStorage } from '../../../lib/push/gameRelayStorage';
-import { isLocalPlayer, joinSeat } from '../../../modules/player-management';
+import { joinSeatFromLink } from '../../../modules/player-management';
 import { useGameJoinUrl } from '../../../modules/sharing';
 import { LocalGameEngine } from '../logic/engine';
 import { guessArtMailbox } from '../logic/guessArtMailbox';
@@ -22,14 +22,9 @@ async function takeSeatHere(
   language: string,
 ) {
   const { game } = await LocalGameEngine.getGameSnapshot(gameId, language);
-  const player = game.players.find((p) => p.id === playerId);
-  // Opening the same link again on this device is not a new join.
-  if (!player || (player.seat && isLocalPlayer(player))) return;
-  const snap = await LocalGameEngine.updateGameDetails(
-    gameId,
-    { players: joinSeat(game.players, playerId, relay) },
-    language,
-  );
+  const players = joinSeatFromLink(game.players, playerId, relay);
+  if (!players) return;
+  const snap = await LocalGameEngine.updateGameDetails(gameId, { players }, language);
   // Not awaited: without a reachable broker the publish waits, the join must not.
   guessArtMailbox.publish(gameId, snap).catch(() => {});
 }

@@ -24,7 +24,7 @@ Numbers below are a snapshot (2026-10-18). Re-derive them before relying on them
 
 ## 1. Registry and size
 
-Registry order = hub order.
+Registry order = hub order. The dice games in `DICE_GAMES` (`src/games/tabletop/logic/tableCatalog.ts`: qwixx, knister, kniffel) are filtered out of the hub (`Hub.tsx`) and listed on the Spieltisch (tabletop lobby) instead; their registry entries and routes stay.
 
 | id              | Route                              | Category         | Folder                                   | LOC (non-test) | Test files |
 | --------------- | ---------------------------------- | ---------------- | ---------------------------------------- | -------------- | ---------- |
@@ -74,15 +74,15 @@ Game-local key constants bypass the `STORAGE_KEYS` registry rule — see [open-q
 
 ## 3. Sync and multi-device
 
-| Game        | Mechanism                                                                                       | Where                                                                                                                                                      |
-| ----------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| guessart    | `MqttMailboxService` (topic prefix `lgg/ga`)                                                    | `logic/guessArtMailbox.ts`                                                                                                                                 |
-| storyteller | `useMultiChannelSync` + `MqttMailboxService` (`lgg/storyteller/v1`), Web Push / ntfy            | `StorytellerGame.tsx`, `logic/mailboxService.ts`                                                                                                           |
-| tabletop    | `useMultiChannelSync` + `MqttMailboxService` (`lgg/tabletop`)                                   | `hooks/useTabletopSync.ts`                                                                                                                                 |
-| party       | `MqttMailboxService` (`lgg/party`) + own `BroadcastChannel` `party_bc_<roomId>`                 | `src/features/party/logic/partyMailbox.ts`, `universalPartyManager.ts`                                                                                     |
-| garticphone | `useMultiChannelSync` (via the party room)                                                      | `hooks/useGarticSync.ts`                                                                                                                                   |
-| melodiq     | WebRTC (`src/lib/webrtc`) host ↔ phones, **plus direct `new BroadcastChannel`** for TV/tab sync | `hooks/useTVMode.ts`, `hooks/useTVReceiver.ts`, `hooks/SettingsContext.tsx`, `gameplay/hooks/useSessionEnd.ts` (`melodiq_tv_control`), `hooks/useQueue.ts` |
-| all others  | single device, pass-and-play                                                                    | —                                                                                                                                                          |
+| Game        | Mechanism                                                                                                                                  | Where                                                                                                                                                      |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| guessart    | `MqttMailboxService` (topic prefix `lgg/ga`)                                                                                               | `logic/guessArtMailbox.ts`                                                                                                                                 |
+| storyteller | `useMultiChannelSync` + `MqttMailboxService` (`lgg/storyteller/v1`), Web Push / ntfy                                                       | `StorytellerGame.tsx`, `logic/mailboxService.ts`                                                                                                           |
+| tabletop    | `useMultiChannelSync` + `MqttMailboxService` (`lgg/tabletop`)                                                                              | `hooks/useTabletopSync.ts`                                                                                                                                 |
+| party       | `MultiChannelSyncCoordinator` (BroadcastChannel `galaxy_party_<roomId>` + MQTT `lgg/party`); seats are host-assigned slots (`assignSlots`) | `src/features/party/logic/partyMailbox.ts`, `universalPartyManager.ts`                                                                                     |
+| garticphone | `useMultiChannelSync` (via the party room)                                                                                                 | `hooks/useGarticSync.ts`                                                                                                                                   |
+| melodiq     | WebRTC (`src/lib/webrtc`) host ↔ phones, **plus direct `new BroadcastChannel`** for TV/tab sync                                            | `hooks/useTVMode.ts`, `hooks/useTVReceiver.ts`, `hooks/SettingsContext.tsx`, `gameplay/hooks/useSessionEnd.ts` (`melodiq_tv_control`), `hooks/useQueue.ts` |
+| all others  | single device, pass-and-play                                                                                                               | —                                                                                                                                                          |
 
 Melodiq's direct `BroadcastChannel` use contradicts the "Inline BroadcastChannel Sync" rule — see [open-questions Q4](../open-questions.md#q4--melodiq-uses-inline-broadcastchannel). Protocol details: [sync-protocol.md](sync-protocol.md).
 

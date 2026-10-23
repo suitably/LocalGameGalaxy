@@ -644,9 +644,9 @@
       "description": "Digitale Punkte-, Lebens- (Schwimmen) und Stichverwaltung (Oh Hell) für Kartenspiele am Tisch."
     },
     "tabletop": {
-      "title": "Virtueller Spieltisch",
-      "description": "Beliebige Karten- & Brettspiele modular spielen – mit geteiltem TV/Tablet-Tisch und privater Smartphone-Handkartenansicht.",
-      "subtitle": "Beliebige Karten- & Brettspiele mit geteiltem Tisch und Smartphone-Handkarten spielen.",
+      "title": "Spieltisch",
+      "description": "Karten-, Brett- und Würfelspiele: ein Gerät reihum oder jeder am eigenen Handy, mit verdeckten Handkarten.",
+      "subtitle": "Karten-, Brett- und Würfelspiele – auf einem Gerät für alle oder jeder am eigenen.",
       "manage_games": "Spiele verwalten",
       "starter_games": "Klassiker & Vorlagen",
       "custom_games": "Eigene & Importierte Spiele",
@@ -880,8 +880,18 @@
         "error_download_failed": "Download von Steam fehlgeschlagen (HTTP {{status}}).",
         "error_download_blocked": "Der Browser durfte die Mod-Datei nicht von Steam laden. Lade stattdessen die Mod-Datei (.json) aus Dokumente/My Games/Tabletop Simulator/Mods/Workshop hoch oder verbinde den Companion-Server.",
         "error_invalid_file": "Die heruntergeladene Datei ist kein Tabletop-Simulator-Spielstand.",
-        "error_no_download_url": "Für diesen Mod gibt es bei Steam keine Download-URL."
-      }
+        "error_no_download_url": "Für diesen Mod gibt es bei Steam keine Download-URL.",
+        "error_companion_insecure_blocked": "Der Companion-Server ({{url}}) läuft über HTTP, diese Seite über HTTPS – der Browser blockiert die Verbindung. Öffne die App über die Adresse des Servers oder gib dem Server eine HTTPS-Adresse (z. B. Cloudflare-Tunnel).",
+        "error_companion_unreachable": "Der Companion-Server unter {{url}} ist nicht erreichbar. Läuft er, und stimmt die Adresse in den Server-Einstellungen?",
+        "error_companion_unauthorized": "Der Companion-Server ({{url}}) lehnt den Zugriff ab (HTTP {{status}}). Prüfe den Token in den Server-Einstellungen.",
+        "error_companion_http": "Der Companion-Server ({{url}}) antwortet mit HTTP {{status}}. Ist das Tabletop-Plugin aktiv (PLUGINS)?"
+      },
+      "mode_shared_device": "Ein Gerät für alle",
+      "mode_shared_device_hint": "Reihum weitergeben – Handkarten bleiben beim Wechsel verdeckt.",
+      "mode_own_devices": "Jeder am eigenen Gerät",
+      "mode_own_devices_hint": "Session öffnen, Mitspieler treten per QR-Code oder Link bei.",
+      "dice_games": "Würfelspiele",
+      "custom_game_meta": "{{min}}–{{max}} Spieler"
     }
   },
   "lobby": {
@@ -923,7 +933,9 @@
       "coverTitle": "Gib das Gerät an {{name}}",
       "reveal": "Ich bin {{name}} – aufdecken",
       "otherPlayer": "Jemand anderes ist dran?"
-    }
+    },
+    "seatInvited": "Eingeladen – Link noch nicht geöffnet",
+    "seatJoined": "Beigetreten"
   },
   "settings": {
     "title": "Einstellungen",
@@ -1535,7 +1547,12 @@
     "guessart_desc": "Montagsmaler mit Pass-and-Play oder Peer-Synchronisation.",
     "no_custom_tabletop": "Noch keine eigenen Party-fähigen Tabletop-Spiele importiert.",
     "custom_game_info": "{{min}}-{{max}} Spieler • {{cards}} Karten",
-    "party_ready": "Party bereit"
+    "party_ready": "Party bereit",
+    "pending_game_label": "Gewähltes Spiel",
+    "pending_game_waiting": "Warte auf Mitspieler – sie treten über den QR-Code unten bei.",
+    "pending_game_ready": "{{count}} Mitspieler bereit.",
+    "pending_game_start": "Jetzt starten",
+    "pending_game_other": "Anderes Spiel"
   },
   "gartic": {
     "waitingHeader": "Warte auf die anderen Spieler...",

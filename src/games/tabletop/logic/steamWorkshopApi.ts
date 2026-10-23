@@ -16,19 +16,72 @@ export type WorkshopErrorCode =
   | 'download_failed'
   | 'download_blocked'
   | 'invalid_file'
-  | 'no_download_url';
+  | 'no_download_url'
+  | 'companion_failed';
+
+/** Why the companion server could not answer; shown instead of the generic hint. */
+export interface CompanionFailure {
+  url: string;
+  reason: 'insecure_blocked' | 'unreachable' | 'unauthorized' | 'http';
+  status?: number;
+}
 
 /** Import failure with a code the UI translates (`games.tabletop.workshop.error_<code>`). */
 export class WorkshopError extends Error {
   readonly code: WorkshopErrorCode;
   readonly status?: number;
+  readonly companion?: CompanionFailure;
 
-  constructor(code: WorkshopErrorCode, status?: number) {
+  constructor(code: WorkshopErrorCode, status?: number, companion?: CompanionFailure) {
     super(status ? `${code} (HTTP ${status})` : code);
     this.name = 'WorkshopError';
     this.code = code;
     this.status = status;
+    this.companion = companion;
   }
+}
+
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+/**
+ * An HTTPS page may not call an HTTP server (mixed content); browsers only exempt loopback
+ * addresses. Such a request fails without any response, so it is detected up front.
+ */
+export function isBlockedMixedContent(
+  serverUrl: string,
+  pageProtocol = typeof window !== 'undefined' ? window.location.protocol : 'http:',
+): boolean {
+  try {
+    const { protocol, hostname } = new URL(serverUrl);
+    return (
+      pageProtocol === 'https:' &&
+      protocol === 'http:' &&
+      !LOOPBACK_HOSTS.has(hostname) &&
+      !hostname.endsWith('.localhost')
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** Calls the companion server; returns the response or why it failed. */
+export async function callCompanion(
+  url: string,
+  serverBaseUrl: string,
+  token?: string,
+): Promise<{ ok: true; res: Response } | { ok: false; failure: CompanionFailure }> {
+  if (isBlockedMixedContent(serverBaseUrl)) {
+    return { ok: false, failure: { url: serverBaseUrl, reason: 'insecure_blocked' } };
+  }
+  let res: Response;
+  try {
+    res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  } catch {
+    return { ok: false, failure: { url: serverBaseUrl, reason: 'unreachable' } };
+  }
+  if (res.ok) return { ok: true, res };
+  const reason = res.status === 401 || res.status === 403 ? 'unauthorized' : 'http';
+  return { ok: false, failure: { url: serverBaseUrl, reason, status: res.status } };
 }
 
 /** Parsed workshop item metadata */
@@ -152,28 +205,29 @@ export async function fetchWorkshopDetails(
   workshopId: string,
   serverBaseUrl?: string,
   token?: string,
+  /** The user entered a server address (an unreachable default address is not reported). */
+  companionConfigured = true,
 ): Promise<WorkshopItemDetails> {
+  let failure: CompanionFailure | undefined;
   if (serverBaseUrl) {
-    try {
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const res = await fetch(
-        `${serverBaseUrl}/api/tabletop/workshop/${encodeURIComponent(workshopId)}/meta`,
-        { headers },
-      );
-
-      if (res.ok) {
-        return (await res.json()) as WorkshopItemDetails;
-      }
-    } catch {
-      // Fall through to direct proxy on network or CORS errors
-    }
+    const result = await callCompanion(
+      `${serverBaseUrl}/api/tabletop/workshop/${encodeURIComponent(workshopId)}/meta`,
+      serverBaseUrl,
+      token,
+    );
+    if (result.ok) return (await result.res.json()) as WorkshopItemDetails;
+    if (companionConfigured || result.failure.reason !== 'unreachable') failure = result.failure;
   }
 
-  return querySteamDirect(workshopId);
+  try {
+    return await querySteamDirect(workshopId);
+  } catch (err) {
+    // Without a dev proxy the browser cannot reach Steam: say why the companion did not help.
+    if (failure && err instanceof WorkshopError && err.code === 'metadata_unavailable') {
+      throw new WorkshopError('companion_failed', failure.status, failure);
+    }
+    throw err;
+  }
 }
 
 /**
@@ -236,12 +290,19 @@ export function decodeModBuffer(buffer: ArrayBuffer): unknown {
  * CDN, which an HTTPS page may fetch (no mixed content).
  */
 export async function downloadWorkshopModDirect(fileUrl: string): Promise<TTSSaveFile> {
+  const url = sanitizeTtsUrl(fileUrl);
   let res: Response;
   try {
-    res = await fetch(sanitizeTtsUrl(fileUrl));
+    res = await fetch(url);
   } catch {
-    // CORS refusal, mixed content or offline: the browser hides the reason.
-    throw new WorkshopError('download_blocked');
+    // CORS refusal or offline (the browser hides which): retry through the deploy's
+    // `/api/steam/file` proxy (cloudflare/worker.ts), which does not exist in every setup.
+    try {
+      res = await fetch(`/api/steam/file?url=${encodeURIComponent(url)}`);
+    } catch {
+      throw new WorkshopError('download_blocked');
+    }
+    if (res.status === 404 || res.status === 405) throw new WorkshopError('download_blocked');
   }
   if (!res.ok) {
     throw new WorkshopError('download_failed', res.status);

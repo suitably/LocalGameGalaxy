@@ -11,7 +11,11 @@ import {
   attachDeviceChannels,
   invitePlayer,
   isPlayerOnDevice,
+  mergeSeatedPlayers,
+  mergeSeatsInto,
+  newlyJoinedPlayers,
   seatAllOnDevice,
+  seatsDiffer,
   seatStatus,
   takeSeat,
   type SeatStatus,
@@ -78,4 +82,39 @@ export function isLocalPlayer(
 
 export function playerSeatStatus(player: SeatedPlayer): SeatStatus {
   return seatStatus(player, getDeviceId());
+}
+
+/**
+ * Players after importing a snapshot: from a newer snapshot all players with the newer seats,
+ * from an older one only seat changes (a join or invitation). `joined`: players another
+ * device took a seat for, for a "joined" notice.
+ */
+export function mergeSnapshotPlayers<T extends SeatedPlayer>(
+  existing: T[],
+  incoming: T[],
+  snapshotIsNewer: boolean,
+): { players: T[]; changed: boolean; joined: T[] } {
+  const deviceId = getDeviceId();
+  const players = snapshotIsNewer
+    ? mergeSeatedPlayers(incoming, existing, deviceId)
+    : mergeSeatsInto(existing, incoming, deviceId);
+  return {
+    players,
+    changed: snapshotIsNewer || seatsDiffer(players, existing),
+    joined: newlyJoinedPlayers(existing, players, deviceId),
+  };
+}
+
+/**
+ * Seats after opening a player's shared link on this device, or `null` when nothing changes
+ * (unknown player, or the seat is already here — opening the same link again is not a join).
+ */
+export function joinSeatFromLink<T extends SeatedPlayer>(
+  players: T[],
+  playerId: string,
+  linkRelay?: string,
+): T[] | null {
+  const player = players.find((p) => p.id === playerId);
+  if (!player || (player.seat && isPlayerOnDevice(player, getDeviceId()))) return null;
+  return joinSeat(players, playerId, linkRelay);
 }

@@ -89,7 +89,7 @@ useMultiChannelSync<T>({
 
 - `MultiChannelSyncCoordinator` opens the `BroadcastChannel` and MQTT subscription on start and closes both on stop/unmount; any option change restarts it.
 - `publish` posts to a fresh `BroadcastChannel` for the target channel and, if a mailbox is set, publishes via MQTT. There is **no built-in ordering or conflict resolution** — games reconcile snapshots themselves. Tabletop (`logic/syncProtocol.ts`) is host-authoritative: other devices send actions as `INTENT`, the host (TV) applies them and broadcasts `STATE_DELTA` (changed widgets/fields from `logic/stateDelta.ts`) with a sequence number; a device that misses one, or just joined, requests a `STATE_SNAPSHOT`. Random results (shuffle, rolls) are decided on the host only. Private hands are redacted and sealed per seat ([tabletop-engine §5](tabletop-engine.md#private-hands)).
-- Users: storyteller, tabletop, garticphone. Melodiq and the party manager still open `BroadcastChannel`s directly ([open-questions Q4](../open-questions.md#q4--melodiq-uses-inline-broadcastchannel)).
+- Users: storyteller, tabletop, garticphone, party (the singleton `UniversalPartyManager` uses the class `MultiChannelSyncCoordinator`, channel `party_<room>`, broadcast prefix `galaxy`). Melodiq still opens `BroadcastChannel`s directly ([open-questions Q4](../open-questions.md#q4--melodiq-uses-inline-broadcastchannel)).
 
 ## 4. Melodiq WebRTC and TV messages
 
@@ -141,7 +141,7 @@ Host-internal events (`PLAYBACK_STARTED`, `SONG_ENDED`, `TV_READY`) are also dis
 | `/notify`           | POST   | `{gameId, senderPlayerId, title, body, url, action, targetPlayerId, ntfyTopic}` → fan-out to Web Push and ntfy |
 
 - Subscriptions live in KV binding `PUSH_KV` if configured — the binding is **commented out** in `wrangler.toml`, so without dashboard configuration the relay uses in-memory storage that is lost on cold start.
-- Who is told about a turn: `src/lib/notifications/turnDelivery.ts` — `deliveryAfterOwnMove` (push the next player's device, notify here, or nothing) and `deliveryForIncomingMove` (notify on the receiving device). Pure; GuessArt uses it (`logic/turnPush.ts`, `logic/notificationService.ts`), Storyteller not yet. GuessArt's `importSnapshot` takes game and round from the newer snapshot and each player's seat and channels from whichever side changed the seat last (`mergeSeatedPlayers` / `mergeSeatsInto`), so an old link payload cannot undo a join.
+- Who is told about a turn: `src/lib/notifications/turnDelivery.ts` — `deliveryAfterOwnMove` (push the next player's device, notify here, or nothing) and `deliveryForIncomingMove` (notify on the receiving device). Pure; GuessArt (`logic/turnPush.ts`, `logic/notificationService.ts`) and Storyteller (`logic/storyTurnNotify.ts`) use it. Both games' `importSnapshot` take game content from the newer snapshot and each player's seat and channels from whichever side changed the seat last (`mergeSnapshotPlayers`), so an old link payload cannot undo a join.
 - Service worker `public/sw-push.js`: payload `{title, body, icon, tag, url}`; defaults title `LocalGameGalaxy`, body `Du bist an der Reihe!`, tag `lgg-game-turn`; click opens/focuses `url`.
 
 ## 6. Storage keys involved

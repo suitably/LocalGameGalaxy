@@ -8,29 +8,28 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
   List,
   ListItem,
   ListItemAvatar,
   ListItemText,
   Paper,
-  Tooltip,
   Typography,
 } from '@mui/material';
-import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
-import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
-import QrCodeRoundedIcon from '@mui/icons-material/QrCodeRounded';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
 import TransferWithinAStationRoundedIcon from '@mui/icons-material/TransferWithinAStationRounded';
 import { QRCodeSVG } from 'qrcode.react';
 import { useTranslation } from 'react-i18next';
 import { PushNotificationBanner } from '../../components/push/PushNotificationBanner';
+import type { PlayerSeat } from '../player-management';
+import { SeatStatusChip } from './SeatStatusChip';
+import { SharePlayerActions } from './SharePlayerActions';
 
 export interface SessionPlayerItem {
   id: string;
   name: string;
   isRemote?: boolean;
   relayUrl?: string;
+  seat?: PlayerSeat;
 }
 
 export interface ShareSessionLinksDialogProps {
@@ -157,45 +156,13 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
                         sx={{ fontWeight: 700 }}
                       />
                     ) : (
-                      <Box display="flex" alignItems="center" gap={0.5}>
-                        <Tooltip title={t('common.showQrCode', 'QR-Code anzeigen')}>
-                          <IconButton
-                            size="small"
-                            color={showQr ? 'primary' : 'default'}
-                            onClick={() => handleToggleQr(p.id)}
-                            aria-label={t('common.showQrCode', 'QR-Code anzeigen')}
-                            sx={{ bgcolor: 'action.hover' }}
-                          >
-                            <QrCodeRoundedIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-
-                        <Tooltip title={isCopied ? t('common.copied', 'Kopiert!') : t('common.copyLink', 'Link kopieren')}>
-                          <IconButton
-                            size="small"
-                            color={isCopied ? 'success' : 'primary'}
-                            onClick={() => handleCopyLink(p.id)}
-                            aria-label={t('common.copyLink', 'Link kopieren')}
-                            sx={{ bgcolor: 'action.hover' }}
-                          >
-                            {isCopied ? <CheckRoundedIcon fontSize="small" /> : <ContentCopyRoundedIcon fontSize="small" />}
-                          </IconButton>
-                        </Tooltip>
-
-                        {typeof navigator !== 'undefined' && 'share' in navigator && (
-                          <Tooltip title={t('common.share', 'Teilen')}>
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => handleNativeShare(p)}
-                              aria-label={t('common.share', 'Teilen')}
-                              sx={{ bgcolor: 'action.hover' }}
-                            >
-                              <ShareRoundedIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                      </Box>
+                      <SharePlayerActions
+                        isCopied={isCopied}
+                        showQr={showQr}
+                        onToggleQr={() => handleToggleQr(p.id)}
+                        onCopy={() => handleCopyLink(p.id)}
+                        onShare={() => handleNativeShare(p)}
+                      />
                     )
                   }
                 >
@@ -210,12 +177,7 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
                         <Typography variant="subtitle1" fontWeight={700}>
                           {p.name}
                         </Typography>
-                        <Chip
-                          size="small"
-                          label={isLocal ? t('common.localPlayer', 'Dieses Gerät') : t('common.remotePlayer', 'Remote Gerät')}
-                          color={isLocal ? 'default' : 'primary'}
-                          sx={{ height: 20, fontSize: '0.72rem', fontWeight: 600 }}
-                        />
+                        <SeatStatusChip player={p} isLocal={isLocal} />
                       </Box>
                     }
                     secondary={
@@ -226,7 +188,13 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
                           color="inherit"
                           startIcon={<TransferWithinAStationRoundedIcon fontSize="small" />}
                           onClick={() => onMarkPlayerLocal(p.id)}
-                          sx={{ textTransform: 'none', fontSize: '0.75rem', p: 0, mt: 0.5, color: 'text.secondary' }}
+                          sx={{
+                            textTransform: 'none',
+                            fontSize: '0.75rem',
+                            p: 0,
+                            mt: 0.5,
+                            color: 'text.secondary',
+                          }}
                         >
                           {t('common.playHereInsteadShort', 'Auf diesem Gerät spielen')}
                         </Button>

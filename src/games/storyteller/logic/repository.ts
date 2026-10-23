@@ -1,21 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
-import {
-  deleteByKey,
-  getAll,
-  getByKey,
-  putItem,
-  STORE_ENTRIES,
-  STORE_GAMES,
-} from './db';
+import { deleteByKey, getAll, getByKey, putItem, STORE_ENTRIES, STORE_GAMES } from './db';
 import { DEFAULT_MODIFIER_SETTINGS } from './modifiers';
 import { getRandomWords } from './storyLexicon';
-import type {
-  StoryEntry,
-  StoryGameRecord,
-  StoryModifierSettings,
-  StoryPlayer,
-} from '../types';
-import { storage } from '../../../lib/storage';
+import type { StoryEntry, StoryGameRecord, StoryModifierSettings, StoryPlayer } from '../types';
+import { seatNewGame } from '../../../modules/player-management';
 
 export const createStoryGame = async (payload: {
   name?: string;
@@ -29,22 +17,16 @@ export const createStoryGame = async (payload: {
     ? getRandomWords(language, modifiers.wordRoulette.wordsPerTurn)
     : undefined;
 
-  const ownRelay = storage.getPushRelayUrl();
-  const prefMethod = storage.getNotificationMethod();
-  const userNtfyTopic = storage.getUserNtfyTopic();
-  const players: StoryPlayer[] = (payload.players || []).map((p, index) => {
-    const isString = typeof p === 'string';
-    const isRemote = isString ? false : Boolean(p.isRemote);
-    const pName = isString ? p.trim() || `Spieler ${index + 1}` : p.name.trim() || `Spieler ${index + 1}`;
-    return {
-      id: `player_${index + 1}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      name: pName,
-      isRemote,
-      relayUrl: !isRemote && index === 0 ? ownRelay || undefined : undefined,
-      notificationMethod: !isRemote && index === 0 ? prefMethod : undefined,
-      ntfyTopic: !isRemote && index === 0 ? userNtfyTopic : undefined,
-    };
-  });
+  // Every player starts on this device; sharing a player's link makes them remote.
+  const players: StoryPlayer[] = seatNewGame(
+    (payload.players || []).map((p, index) => {
+      const pName = typeof p === 'string' ? p.trim() : p.name.trim();
+      return {
+        id: `player_${index + 1}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        name: pName || `Spieler ${index + 1}`,
+      };
+    }),
+  );
 
   const now = new Date().toISOString();
   const gameRecord: StoryGameRecord = {
@@ -78,9 +60,7 @@ export const getStoryGame = async (id: string): Promise<StoryGameRecord | null> 
 
 export const updateStoryGame = async (
   id: string,
-  updater:
-    | ((current: StoryGameRecord) => StoryGameRecord)
-    | Partial<StoryGameRecord>,
+  updater: ((current: StoryGameRecord) => StoryGameRecord) | Partial<StoryGameRecord>,
 ): Promise<StoryGameRecord> => {
   const current = await getStoryGame(id);
   if (!current) {

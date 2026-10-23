@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { useTranslation } from 'react-i18next';
 import type { GuessArtGameRecord, GuessArtRound } from '../logic/types';
@@ -8,7 +8,6 @@ import { guessArtMailbox } from '../logic/guessArtMailbox';
 import { ShareSessionLinksDialog, type SessionPlayerItem } from '../../../modules/sharing';
 import {
   useSessionSharing,
-  createIsPlayerLocalHelper,
   buildShareSessionDialogProps,
 } from '../../../modules/sharing/useSessionSharing';
 
@@ -55,13 +54,7 @@ export const SharePlayerLinksDialog: React.FC<SharePlayerLinksDialogProps> = ({
     publishSync: guessArtMailbox.publish.bind(guessArtMailbox),
   });
 
-  const isPlayerLocal = useMemo(
-    () =>
-      createIsPlayerLocalHelper(game, (_id, playerId) =>
-        game ? playerAssignment.isLocal(game, playerId) : true,
-      ),
-    [game],
-  );
+  const isPlayerLocal = (playerId: string) => !game || playerAssignment.isLocal(game, playerId);
 
   const sharedProps = buildShareSessionDialogProps(
     game,
