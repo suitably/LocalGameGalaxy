@@ -88,7 +88,7 @@ export const DICE_GAMES: TableGameEntry[] = [
     descKey: 'games.knister.description',
     icon: '🔢',
     color: '#e65100',
-    modes: ['shared_device'],
+    modes: ['shared_device', 'own_devices'],
   },
   {
     id: 'qwixx',
@@ -108,7 +108,9 @@ export function routeFor(
   entry: Pick<TableGameEntry, 'id' | 'kind' | 'route'>,
   mode: PlayMode,
 ): string {
-  if (entry.kind === 'route') return entry.route || '/';
+  if (entry.kind === 'route')
+    // Dice games with a room mode go through the party lobby; the host starts them there.
+    return mode === 'own_devices' ? `/party?launch=${entry.id}` : entry.route || '/';
   return mode === 'shared_device'
     ? `/games/tabletop?local=1&gameId=${encodeURIComponent(entry.id)}`
     : `/party?launch=tabletop&gameId=${encodeURIComponent(entry.id)}`;

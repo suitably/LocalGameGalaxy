@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-23 — Knister in the party room (claude-code)
+
+- #467 slice 5 (Knister): `architecture.md` §3.2 lists `modules/room-game`; `sync-protocol.md` adds topic `lgg/room` and the host/guest message rules; `game-catalog.md` §1 notes Knister's room mode.
+- **Code changed:** new `src/modules/room-game/*`, `src/games/knister/{KnisterEntry,KnisterRoomGame}.tsx`, `logic/knisterRoom.ts` (+ test), `src/features/party/{components/PartyPickerCard.tsx,hooks/usePartyRoomPlayers.ts}`; `PartyGamePickerModal.tsx` (split into cards), `PartyPendingGame.tsx`, `logic/{partyRoutes.ts,universalPartyManager.ts}`, `tableCatalog.ts`, knister i18n and index.
+
 ## 2026-10-23 — Gartic Phone route (claude-code)
 
 - #467 slice 6: `docs/tech/game-catalog.md` §1 notes that the Gartic Phone route is registered in `src/App.tsx`.

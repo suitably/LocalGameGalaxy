@@ -21,4 +21,10 @@ describe('table catalog', () => {
       '/games/qwixx',
     ]);
   });
+
+  it('starts a dice game with everyone on their own device through the party lobby', () => {
+    const knister = DICE_GAMES.find((g) => g.id === 'knister')!;
+    expect(knister.modes).toEqual(['shared_device', 'own_devices']);
+    expect(routeFor(knister, 'own_devices')).toBe('/party?launch=knister');
+  });
 });

@@ -5,15 +5,16 @@ import React from 'react';
 import { Box, Button, Card, Typography } from '@mui/material';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import { useTranslation } from 'react-i18next';
-import { TABLETOP_STARTERS } from '../../../games/tabletop/logic/tableCatalog';
+import { TABLETOP_STARTERS, DICE_GAMES } from '../../../games/tabletop/logic/tableCatalog';
 import type { PartyLobbyController } from '../hooks/usePartyLobbyController';
 
 export const PartyPendingGame: React.FC<{ lobby: PartyLobbyController }> = ({ lobby }) => {
   const { t } = useTranslation();
   const { pendingLaunch, amIHost, players, startPendingGame, clearPendingLaunch } = lobby;
   if (!pendingLaunch || !amIHost) return null;
-  const starter = TABLETOP_STARTERS.find((g) => g.id === pendingLaunch.gameId);
-  const title = starter ? t(starter.titleKey, starter.title) : pendingLaunch.gameId;
+  const id = pendingLaunch.gameId ?? pendingLaunch.gameType;
+  const starter = [...TABLETOP_STARTERS, ...DICE_GAMES].find((g) => g.id === id);
+  const title = starter ? t(starter.titleKey, starter.title) : id;
   const others = Math.max(0, players.length - 1);
 
   return (

@@ -8,11 +8,8 @@ import {
   Tabs,
   Tab,
   Box,
-  Card,
-  CardActionArea,
   Typography,
   Grid,
-  Chip,
   CircularProgress,
 } from '@mui/material';
 import DrawIcon from '@mui/icons-material/Draw';
@@ -24,11 +21,15 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import { useTranslation } from 'react-i18next';
 import { listTabletopGames } from '../../../games/tabletop/logic/tabletopStorage';
 import type { TabletopGameSummary } from '../../../games/tabletop/logic/types';
+import { DICE_GAMES } from '../../../games/tabletop/logic/tableCatalog';
+import type { PartyGameType } from '../logic/universalPartyManager';
+import { isRoomDiceGame } from '../logic/partyRoutes';
+import { PartyPickerCard } from './PartyPickerCard';
 
 interface PartyGamePickerModalProps {
   open: boolean;
   onClose: () => void;
-  onSelectGame: (gameType: 'garticphone' | 'guessart' | 'tabletop', tabletopGameId?: string) => void;
+  onSelectGame: (gameType: PartyGameType, tabletopGameId?: string) => void;
 }
 
 export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
@@ -64,13 +65,19 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
     {
       id: 'standard-cards',
       title: t('games.tabletop.standard_cards_title', 'Standard Kartendeck (52)'),
-      desc: t('games.tabletop.standard_cards_desc', 'Mau-Mau, Skat, Poker oder Rommé mit geteiltem Tisch und Smartphone-Handkarten.'),
+      desc: t(
+        'games.tabletop.standard_cards_desc',
+        'Mau-Mau, Skat, Poker oder Rommé mit geteiltem Tisch und Smartphone-Handkarten.',
+      ),
       icon: <StyleIcon sx={{ fontSize: 36, color: '#1976d2' }} />,
     },
     {
       id: 'liars-dice',
       title: t('games.tabletop.liars_dice_title', "Liar's Dice / Perudo"),
-      desc: t('games.tabletop.liars_dice_desc', 'Bluff-Würfelspiel mit 3D-Würfeln und verdeckten Bechern auf jedem Handy.'),
+      desc: t(
+        'games.tabletop.liars_dice_desc',
+        'Bluff-Würfelspiel mit 3D-Würfeln und verdeckten Bechern auf jedem Handy.',
+      ),
       icon: <CasinoIcon sx={{ fontSize: 36, color: '#f57c00' }} />,
     },
     {
@@ -80,6 +87,20 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
       icon: <GridOnIcon sx={{ fontSize: 36, color: '#388e3c' }} />,
     },
   ];
+
+  const pick = (gameType: PartyGameType, id?: string) => () => {
+    onSelectGame(gameType, id);
+    onClose();
+  };
+  const grid = (cards: React.ReactNode[]) => (
+    <Grid container spacing={2}>
+      {cards.map((card, i) => (
+        <Grid size={{ xs: 12 }} key={i}>
+          {card}
+        </Grid>
+      ))}
+    </Grid>
+  );
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -95,91 +116,86 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
           scrollButtons="auto"
         >
           <Tab label={t('party.tab_party', 'Party-Spiele')} />
-          <Tab label={t('party.tab_tabletop', 'Karten & Brett')} />
+          <Tab label={t('party.tab_tabletop', 'Karten, Brett & Würfel')} />
           <Tab label={t('party.tab_custom', 'Eigene Spiele')} />
         </Tabs>
       </Box>
 
       <DialogContent sx={{ p: 2.5 }}>
-        {tabIndex === 0 && (
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Card variant="outlined" sx={{ borderRadius: 3, '&:hover': { borderColor: 'primary.main' } }}>
-                <CardActionArea onClick={() => { onSelectGame('garticphone'); onClose(); }} sx={{ p: 2 }}>
-                  <PhoneForwardedIcon sx={{ fontSize: 40, color: '#7c4dff', mb: 1 }} />
-                  <Typography variant="h6" fontWeight={700}>Gartic Phone</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {t('party.gartic_desc', 'Stille Post mit Zeichnen und Raten auf allen Handys gleichzeitig.')}
-                  </Typography>
-                </CardActionArea>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Card variant="outlined" sx={{ borderRadius: 3, '&:hover': { borderColor: 'primary.main' } }}>
-                <CardActionArea onClick={() => { onSelectGame('guessart'); onClose(); }} sx={{ p: 2 }}>
-                  <DrawIcon sx={{ fontSize: 40, color: '#00bcd4', mb: 1 }} />
-                  <Typography variant="h6" fontWeight={700}>GuessArt</Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {t('party.guessart_desc', 'Montagsmaler mit Pass-and-Play oder Peer-Synchronisation.')}
-                  </Typography>
-                </CardActionArea>
-              </Card>
-            </Grid>
-          </Grid>
-        )}
+        {tabIndex === 0 &&
+          grid([
+            <PartyPickerCard
+              icon={<PhoneForwardedIcon sx={{ fontSize: 36, color: '#7c4dff' }} />}
+              title="Gartic Phone"
+              desc={t(
+                'party.gartic_desc',
+                'Stille Post mit Zeichnen und Raten auf allen Handys gleichzeitig.',
+              )}
+              onClick={pick('garticphone')}
+            />,
+            <PartyPickerCard
+              icon={<DrawIcon sx={{ fontSize: 36, color: '#00bcd4' }} />}
+              title="GuessArt"
+              desc={t(
+                'party.guessart_desc',
+                'Montagsmaler mit Pass-and-Play oder Peer-Synchronisation.',
+              )}
+              onClick={pick('guessart')}
+            />,
+          ])}
 
-        {tabIndex === 1 && (
-          <Grid container spacing={2}>
-            {BUILTIN_TABLETOP.map((g) => (
-              <Grid size={{ xs: 12 }} key={g.id}>
-                <Card variant="outlined" sx={{ borderRadius: 3, '&:hover': { borderColor: 'primary.main' } }}>
-                  <CardActionArea onClick={() => { onSelectGame('tabletop', g.id); onClose(); }} sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <Box>{g.icon}</Box>
-                    <Box flex={1}>
-                      <Typography variant="subtitle1" fontWeight={700}>{g.title}</Typography>
-                      <Typography variant="caption" color="text.secondary">{g.desc}</Typography>
-                    </Box>
-                  </CardActionArea>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        )}
+        {tabIndex === 1 &&
+          grid([
+            ...BUILTIN_TABLETOP.map((g) => (
+              <PartyPickerCard
+                icon={g.icon}
+                title={g.title}
+                desc={g.desc}
+                onClick={pick('tabletop', g.id)}
+              />
+            )),
+            ...DICE_GAMES.filter((g) => isRoomDiceGame(g.id)).map((g) => (
+              <PartyPickerCard
+                icon={g.icon}
+                title={t(g.titleKey, g.title)}
+                desc={g.descKey ? t(g.descKey, g.desc ?? '') : (g.desc ?? '')}
+                onClick={pick(g.id as PartyGameType)}
+              />
+            )),
+          ])}
 
-        {tabIndex === 2 && (
-          <Box>
-            {loadingCustom ? (
-              <Box display="flex" justifyContent="center" py={4}>
-                <CircularProgress size={32} />
-              </Box>
-            ) : customGames.length === 0 ? (
-              <Box textAlign="center" py={4}>
-                <FolderOpenIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
-                <Typography variant="body2" color="text.secondary">
-                  {t('party.no_custom_tabletop', 'Noch keine eigenen Party-fähigen Tabletop-Spiele importiert.')}
-                </Typography>
-              </Box>
-            ) : (
-              <Grid container spacing={2}>
-                {customGames.map((g) => (
-                  <Grid size={{ xs: 12 }} key={g.id}>
-                    <Card variant="outlined" sx={{ borderRadius: 3, '&:hover': { borderColor: 'primary.main' } }}>
-                      <CardActionArea onClick={() => { onSelectGame('tabletop', g.id); onClose(); }} sx={{ p: 2, display: 'flex', justifyContent: 'space-between' }}>
-                        <Box>
-                          <Typography variant="subtitle1" fontWeight={700}>{g.name}</Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {t('party.custom_game_info', '{{min}}-{{max}} Spieler • {{cards}} Karten', { min: g.minPlayers, max: g.maxPlayers, cards: g.cardCount })}
-                          </Typography>
-                        </Box>
-                        <Chip label={t('party.party_ready', 'Party bereit')} size="small" color="success" variant="outlined" />
-                      </CardActionArea>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            )}
-          </Box>
-        )}
+        {tabIndex === 2 &&
+          (loadingCustom ? (
+            <Box display="flex" justifyContent="center" py={4}>
+              <CircularProgress size={32} />
+            </Box>
+          ) : customGames.length === 0 ? (
+            <Box textAlign="center" py={4}>
+              <FolderOpenIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
+              <Typography variant="body2" color="text.secondary">
+                {t(
+                  'party.no_custom_tabletop',
+                  'Noch keine eigenen Party-fähigen Tabletop-Spiele importiert.',
+                )}
+              </Typography>
+            </Box>
+          ) : (
+            grid(
+              customGames.map((g) => (
+                <PartyPickerCard
+                  icon={<StyleIcon sx={{ fontSize: 36, color: '#7c3aed' }} />}
+                  title={g.name}
+                  desc={t('party.custom_game_info', '{{min}}-{{max}} Spieler • {{cards}} Karten', {
+                    min: g.minPlayers,
+                    max: g.maxPlayers,
+                    cards: g.cardCount,
+                  })}
+                  chip={t('party.party_ready', 'Party bereit')}
+                  onClick={pick('tabletop', g.id)}
+                />
+              )),
+            )
+          ))}
       </DialogContent>
 
       <DialogActions>
