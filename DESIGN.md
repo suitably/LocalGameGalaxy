@@ -68,6 +68,8 @@ Rules:
 - Colour is never the only signal: pair it with the player's name, initial, number or a shape (colour-blind players, glare on a TV).
 - Tints for large areas (a player's score column, a row background): the piece colour at 16 % opacity over `bg.surface`, text stays `text.primary`.
 - Game-specific needs that the palette cannot cover (e.g. Sudoku conflict highlights, Wordle letter states) map to roles first (`success`, `warning`, `error`, `accent`). Anything still missing is added here as a token, never inline.
+- In code: `theme.palette.piece.*` in components, `piecePalette`, `PIECE_ORDER`, `pieceColorForSlot()` and `pieceNeutrals` (white/black pieces) from `src/themeTokens.ts` in logic and canvas code.
+- **Exempt — table content:** what a game _depicts_ keeps realistic or user-defined colours: playing-card faces and suits, wood holders, table felt, imported Tabletop widget colours (`src/games/tabletop/logic/*` parsers), MusicXML colours, the karaoke lyric highlight on video, the hue picker. Exempt colours never style UI chrome (buttons, dialogs, navigation, selection).
 
 ## 3. Typography
 
@@ -219,7 +221,7 @@ Order (each step its own PR):
 2. ~~**Fonts**~~ — done: add both `@fontsource-variable` packages, import in `src/main.tsx`.
 3. **Mode setting:** storage key via `src/lib/storage.ts`, toggle in settings; then enable `colorSchemes` with `lightTokens`. Needs step 5 first for game screens, or light mode limited to hub/settings.
 4. ~~**Hub**~~ — done: tiles and filter use the areas (`src/lib/areas.ts`, `src/features/hub/HubGameCard.tsx`, `HubAreaFilter.tsx`). The unused gradient fields in `src/lib/gameRegistry.tsx` go with suitably/LocalGameGalaxy#498.
-5. **Games, one PR per game:** replace hard-coded hex values (Qwixx, cards, tabletop seats, Wordle, Sudoku, Storyteller, Melodiq …) with tokens. Tracked in suitably/LocalGameGalaxy#490 (files that must be decomposed first: #491–#498; light mode: #499).
+5. **Games:** done for every file that stays within its component budget (codemod for `sx` props, hand edits elsewhere, stage canvas via `STAGE` in `src/games/melodiq-notes/stage/render/common.ts`). The 35 files that must be decomposed first are tracked in suitably/LocalGameGalaxy#491–#498; light mode in #499; epic #490.
 6. ~~Logo, word mark and app icons~~ — done (§8). Remaining: area icons in the hub (with step 4).
 
 Until a screen is migrated it may keep its old colours, but changed lines must use tokens.

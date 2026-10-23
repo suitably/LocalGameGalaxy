@@ -4,6 +4,7 @@
 import React from 'react';
 import { alpha, Box } from '@mui/material';
 import type { SpinnerWidget } from '../../logic/types';
+import { PIECE_ORDER, piecePalette } from '../../../../themeTokens';
 
 interface SpinnerWidgetViewProps {
   widget: SpinnerWidget;
@@ -12,16 +13,7 @@ interface SpinnerWidgetViewProps {
   onSpin: () => void;
 }
 
-const SLICE_COLORS = [
-  '#ef5350',
-  '#42a5f5',
-  '#66bb6a',
-  '#ffca28',
-  '#ab47bc',
-  '#26a69a',
-  '#ffa726',
-  '#8d6e63',
-];
+const SLICE_COLORS = PIECE_ORDER.map((c) => piecePalette[c]);
 
 export const SpinnerWidgetView: React.FC<SpinnerWidgetViewProps> = ({
   widget,

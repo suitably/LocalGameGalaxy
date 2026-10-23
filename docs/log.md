@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-23 — Colour migration to design tokens (claude-code)
+
+- `DESIGN.md` §2.3 (piece helpers in code, exempt table content) and §10 step 5 status.
+- **Code changed:** ~140 components switched from hard-coded colours to theme roles (`sx` palette paths, `alpha(theme.palette.*)` overlays, text roles); player/seat/avatar/spinner/instrument colours from `piecePalette` (`PIECE_ORDER`, `pieceColorForSlot`, `pieceNeutrals` new in `src/themeTokens.ts`); dialogs use the theme surface instead of their own glass backgrounds; gradient buttons/headings removed; settings navigation flat (`src/features/settings/settingsStyles.ts`); Melodiq Notes stage canvas colours and fonts from tokens; `seatLogic.test.ts` expectations updated. 35 files over their line budget are left for #491–#498.
+
 ## 2026-10-23 — Hub areas (claude-code)
 
 - `DESIGN.md` §8.2/§10 step 4 done; migration tracked in issues #490–#499. `docs/tech/architecture.md` §3.1/§3.2: design tokens and areas listed; registry gradient fields unused.
