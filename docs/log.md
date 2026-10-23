@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-23 — One page title, in the header (claude-code)
+
+- `DESIGN.md` §6 header row: the page title lives only in `GlobalHeader`; content starts with section headings.
+- **Code changed:** repeated in-content titles removed from card games lobby, game table lobby, Sudoku header and GuessArt setup; the party lobby sets its title via `usePageTitle` (was "Nexumia") and drops its own back button and heading; `party.lobbyTitle` is "Party-Lobby"/"Party Lobby"; unused `games.cards.suite_title/suite_subtitle` removed. Storyteller, Knister and Qwixx titles are in budget-blocked files (#497, #492, #491).
+
 ## 2026-10-23 — Colour migration to design tokens (claude-code)
 
 - `DESIGN.md` §2.3 (piece helpers in code, exempt table content) and §10 step 5 status.

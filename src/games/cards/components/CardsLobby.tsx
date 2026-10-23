@@ -32,27 +32,6 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
 
   return (
     <Box sx={{ width: '100%', maxWidth: 720, mx: 'auto', py: { xs: 1.5, sm: 3 } }}>
-      {/* Title & Introduction */}
-      <Box sx={{ textAlign: 'center', mb: 4 }}>
-        <Typography
-          variant="h3"
-          component="h1"
-          sx={{
-            fontWeight: 900,
-            fontSize: { xs: '1.8rem', sm: '2.5rem' },
-            mb: 1,
-          }}
-        >
-          🃏 {t('games.cards.suite_title', 'Kartenspiele Companion')}
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          {t(
-            'games.cards.suite_subtitle',
-            'Digitale Punkte-, Lebens- und Stichverwaltung für deine echten Kartenspiele am Tisch.',
-          )}
-        </Typography>
-      </Box>
-
       {/* Select Card Game */}
       <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1.5 }}>
         1. {t('games.cards.select_game', 'Kartenspiel wählen:')}

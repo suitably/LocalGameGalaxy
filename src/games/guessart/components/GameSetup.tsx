@@ -77,16 +77,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
   return (
     <Stack spacing={3} sx={{ p: 2, maxWidth: 600, mx: 'auto', pb: 6 }}>
       {/* Top Banner / Info */}
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        flexWrap="wrap"
-        gap={1}
-      >
-        <Typography variant="h5" fontWeight={800} color="primary.main">
-          {t('games.guessart.title', 'GuessArt')}
-        </Typography>
+      <Box display="flex" justifyContent="flex-end" alignItems="center" flexWrap="wrap" gap={1}>
         <Box display="flex" alignItems="center" gap={1}>
           {onOpenCatalogue && (
             <Button

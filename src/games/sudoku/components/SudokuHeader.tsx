@@ -78,16 +78,6 @@ export const SudokuHeader: React.FC<SudokuHeaderProps> = ({
           </IconButton>
         )}
 
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: 800,
-            letterSpacing: 2,
-          }}
-        >
-          SUDOKU
-        </Typography>
-
         <Box sx={{ display: 'flex', gap: 0.5 }}>
           <Tooltip title={t('sudoku.stats.title', 'Statistiken')}>
             <IconButton onClick={onOpenStats}>

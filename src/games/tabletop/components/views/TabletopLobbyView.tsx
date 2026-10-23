@@ -102,9 +102,6 @@ export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) 
             mb={2.5}
           >
             <Box>
-              <Typography variant="h4" fontWeight={900} color="primary.main">
-                {t('games.tabletop.title', 'Spieltisch')}
-              </Typography>
               <Typography variant="body2" color="text.secondary">
                 {t(
                   'games.tabletop.subtitle',
