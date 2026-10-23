@@ -90,7 +90,7 @@ export async function handlePush(request: Request, env: PushEnv): Promise<Respon
     return json(503, { error: 'web push not configured' });
 
   if (url.pathname === '/api/push/vapid-public-key' && request.method === 'GET')
-    return new Response(JSON.stringify({ publicKey: env.VAPID_PUBLIC_KEY }), {
+    return new Response(JSON.stringify({ publicKey: env.VAPID_PUBLIC_KEY.trim() }), {
       headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' },
     });
 
@@ -105,14 +105,23 @@ export async function handlePush(request: Request, env: PushEnv): Promise<Respon
     }
     const send = parseSendRequest(parsed, url.origin);
     if (!send) return json(400, { error: 'invalid push request' });
-    const status = await sendWebPush(send.subscription, JSON.stringify(send.payload), {
-      publicKey: env.VAPID_PUBLIC_KEY,
-      privateKey: env.VAPID_PRIVATE_KEY,
-      subject: env.VAPID_SUBJECT || url.origin,
-    });
+    let result: { status: number; detail: string };
+    try {
+      result = await sendWebPush(send.subscription, JSON.stringify(send.payload), {
+        // Pasted secrets often carry a trailing newline or space.
+        publicKey: env.VAPID_PUBLIC_KEY.trim(),
+        privateKey: env.VAPID_PRIVATE_KEY.trim(),
+        subject: env.VAPID_SUBJECT?.trim() || url.origin,
+      });
+    } catch (err) {
+      // Signing or encryption failed here (e.g. the two keys do not belong together).
+      return json(502, { error: 'push not sent', reason: String((err as Error)?.message ?? err) });
+    }
+    const { status, detail } = result;
     // 404/410 from the push service: the subscription is gone; the sender falls back to ntfy.
     if (status === 404 || status === 410) return json(410, { error: 'subscription gone' });
-    if (status < 200 || status >= 300) return json(502, { error: 'push failed', status });
+    if (status < 200 || status >= 300)
+      return json(502, { error: 'push service refused', status, detail });
     return json(200, { ok: true });
   }
   return json(404, { error: 'not found' });

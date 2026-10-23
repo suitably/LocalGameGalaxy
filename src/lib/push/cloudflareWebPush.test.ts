@@ -188,4 +188,35 @@ describe('web push sender (cloudflare/webPushSend.ts)', () => {
     );
     expect(res.status).toBe(410);
   });
+
+  it('passes on why the push service refused, and why signing failed', async () => {
+    const vapid = await makeVapid();
+    const receiver = await makeReceiver();
+    const send = (env: { VAPID_PUBLIC_KEY: string; VAPID_PRIVATE_KEY: string }) =>
+      handlePush(
+        new Request(`${site}/api/push/send`, {
+          method: 'POST',
+          body: JSON.stringify({ ...valid, subscription: receiver.target }),
+        }),
+        env,
+      );
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('key does not match the subscription', { status: 403 })),
+    );
+    const refused = await send({
+      VAPID_PUBLIC_KEY: `${vapid.keys.publicKey}\n`,
+      VAPID_PRIVATE_KEY: ` ${vapid.keys.privateKey}`,
+    });
+    expect(refused.status).toBe(502);
+    expect(await refused.json()).toEqual({
+      error: 'push service refused',
+      status: 403,
+      detail: 'key does not match the subscription',
+    });
+
+    const broken = await send({ VAPID_PUBLIC_KEY: vapid.keys.publicKey, VAPID_PRIVATE_KEY: 'x' });
+    expect(broken.status).toBe(502);
+    expect(await broken.json()).toMatchObject({ error: 'push not sent' });
+  });
 });

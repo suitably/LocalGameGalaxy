@@ -136,12 +136,12 @@ export async function encryptForSubscription(target: PushTarget, payload: string
   return concat(salt, recordSize, new Uint8Array([senderKey.length]), senderKey, ciphertext);
 }
 
-/** Sends one encrypted notification; resolves to the push service's HTTP status. */
+/** Sends one encrypted notification; resolves to the push service's status and its reason. */
 export async function sendWebPush(
   target: PushTarget,
   payload: string,
   vapid: VapidKeys,
-): Promise<number> {
+): Promise<{ status: number; detail: string }> {
   const endpoint = new URL(target.endpoint);
   const res = await fetch(endpoint.toString(), {
     method: 'POST',
@@ -154,5 +154,8 @@ export async function sendWebPush(
     },
     body: await encryptForSubscription(target, payload),
   });
-  return res.status;
+  // Push services explain refusals in the body (e.g. FCM: "the key in the authorization
+  // header does not correspond to the sender ID"); passed on for diagnosis.
+  const detail = res.ok ? '' : (await res.text().catch(() => '')).slice(0, 300);
+  return { status: res.status, detail };
 }
