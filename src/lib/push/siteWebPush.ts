@@ -129,7 +129,9 @@ export async function sendSitePush(
       body: JSON.stringify({ subscription, ...payload }),
     });
     if (res.ok) return 'sent';
-    return res.status === 410 ? 'gone' : 'failed';
+    if (res.status === 410) return 'gone';
+    console.warn('[siteWebPush] Push not sent:', res.status, await res.text().catch(() => ''));
+    return 'failed';
   } catch {
     return 'failed';
   }

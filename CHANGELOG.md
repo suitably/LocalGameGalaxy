@@ -72,6 +72,7 @@
 
 ### Fixed
 
+- **Web Push sender**: a refused push now says why (the push service's status and reason, or why signing failed) instead of a bare 502, also in the sender's console; VAPID secrets pasted with a trailing newline or space work.
 - **Gartic Phone**: launching it from the party lobby opened an empty page because the game had no route; `games/garticphone` is now registered (`src/App.tsx`) and host and guests land in the game (#467).
 - **Melodiq Notes**: the game no longer freezes on open — header callbacks were recreated on every render and looped through `HeaderLayoutContext` ("Maximum update depth exceeded"); a superseded OSMD load no longer renders into a cleared instance ("load() needs to be called before render()").
 - **Share dialogs** (GuessArt, Storyteller): marking a player remote no longer waits for the MQTT broker before updating, so the dialog does not stall when the broker is unreachable. Storyteller's `importSnapshot` stored merged players but returned the unmerged ones.
