@@ -1,12 +1,14 @@
 import { Chip } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { StageEngine } from '../engine/StageEngine';
+import { useStageLive } from '../useStage';
 import { noteName } from '../logic/charts';
 import { DRUM_LANE_META } from '../logic/instruments';
 import { STRING_TUNINGS } from '../../../../modules/music-score';
 
 /** Learn mode: what the song is waiting for, and from whom. */
 export function WaitChip({ engine }: { engine: StageEngine }) {
+  useStageLive(engine);
   const { t } = useTranslation();
   const p = engine.waitingFor;
   if (!p || !p.pending.length) return null;

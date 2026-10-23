@@ -5,15 +5,16 @@ import { buildSections, sectionIndexAt, type Section } from '../logic/sections';
 import { advanceMisses, advanceSinging, resetRange, startAwaitedNote } from './advance';
 import { playLane, playPitch } from './input';
 import { syncRecording } from './transport';
-import { buildBandEvents, createPlayers, defaultSetups } from './players';
+import { buildBandEvents, createPlayers, defaultSeats, nextSeat } from './players';
 import type {
   BandEvent,
+  BandMode,
+  PlayerSeat,
   PlayState,
   StageMode,
   StagePlayer,
   StageRecording,
   StageSound,
-  TrackSetup,
 } from './types';
 
 const BAND_VOLUME = 0.45;
@@ -31,12 +32,14 @@ const SYNC_SNAP_BEATS = 0.5;
 export class StageEngine {
   song: ScoreSong | null = null;
   sections: Section[] = [];
-  setups: Record<string, TrackSetup> = {};
+  seats: PlayerSeat[] = [];
   players: StagePlayer[] = [];
   focus: StagePlayer | null = null;
   mode: StageMode = 'learn';
   speed = 1;
-  band = true;
+  band: BandMode = 'others';
+  /** With a recording, it replaces the band; this mutes it. */
+  recordingAudible = true;
   state: PlayState = 'idle';
   beat = 0;
   countIn = 4;
@@ -47,6 +50,8 @@ export class StageEngine {
   private bandIdx = 0;
   private listeners = new Set<() => void>();
   private version = 0;
+  private liveListeners = new Set<() => void>();
+  private liveVersion = 0;
 
   sound: StageSound;
 
@@ -65,48 +70,71 @@ export class StageEngine {
     return () => this.listeners.delete(fn);
   };
   getVersion = () => this.version;
-  /** Lets React re-read the state (the UI refreshes a few times per second while playing). */
-  notify() {
-    this.emit();
+
+  /**
+   * Progress while playing (position, section results, what learn mode waits for).
+   * Only the small views that show it subscribe, so the page itself re-renders on
+   * real changes (start, pause, song, players) and not several times per second.
+   */
+  subscribeLive = (fn: () => void) => {
+    this.liveListeners.add(fn);
+    return () => this.liveListeners.delete(fn);
+  };
+  getLiveVersion = () => this.liveVersion;
+  notifyLive() {
+    this.liveVersion++;
+    this.liveListeners.forEach((fn) => fn());
   }
 
   private emit() {
     this.version++;
     this.listeners.forEach((fn) => fn());
+    this.notifyLive();
   }
 
-  loadSong(song: ScoreSong, setups?: Record<string, TrackSetup>) {
+  loadSong(song: ScoreSong, seats?: PlayerSeat[]) {
     this.song = song;
     this.sections = buildSections(song);
-    this.setups = setups ?? defaultSetups(song);
+    this.seats = seats ?? defaultSeats(song);
     this.loop = null;
     this.reset();
   }
 
-  setTrack(partId: string, change: Partial<TrackSetup>) {
-    const prev = this.setups[partId];
-    if (!prev) return;
-    const rank = change.role === 'play' && prev.role !== 'play' ? Date.now() : prev.rank;
-    this.setups = { ...this.setups, [partId]: { ...prev, ...change, rank } };
+  /** Adds a player on a part nobody plays yet (up to four). */
+  addPlayer() {
+    const seat = this.song && nextSeat(this.song, this.seats);
+    if (!seat) return;
+    this.seats = [...this.seats, seat];
     this.reset();
   }
 
-  applyPreset(preset: 'solo' | 'band') {
-    if (!this.song) return;
-    this.setups = defaultSetups(this.song, preset);
+  removePlayer(index: number) {
+    if (this.seats.length <= 1) return;
+    this.seats = this.seats.filter((_, i) => i !== index);
     this.reset();
   }
 
-  /** Back to the count-in with fresh players; keeps song, setups and loop. */
+  /** Changes which part a player plays, or the instrument it is shown as. */
+  setSeat(index: number, change: Partial<PlayerSeat>) {
+    const seat = this.seats[index];
+    const part = change.partId && this.song?.parts.find((p) => p.id === change.partId);
+    if (!seat) return;
+    // a new part brings its own instrument unless one is chosen at the same time
+    const inst = change.inst ?? (part ? part.guess : seat.inst);
+    this.seats = this.seats.map((s, i) => (i === index ? { ...s, ...change, inst } : s));
+    this.reset();
+  }
+
+  /** Back to the count-in with fresh players; keeps song, seats and loop. */
   reset() {
     this.sound.stopAll();
     this.recording?.pause();
     this.state = 'idle';
     if (!this.song) return this.emit();
-    this.players = createPlayers(this.song, this.setups, this.sections.length);
+    this.players = createPlayers(this.song, this.seats, this.sections.length);
     this.focus = this.players[0] ?? null;
     this.countIn = Math.min(6, Math.max(2, this.song.measureLengths[0] ?? 4));
-    this.bandEvents = buildBandEvents(this.song, this.setups, this.players, this.countIn);
+    this.bandEvents = buildBandEvents(this.song, this.seats, this.band, this.countIn);
     this.bandIdx = 0;
     this.beat = -this.countIn;
     this.waitingFor = null;
@@ -129,8 +157,18 @@ export class StageEngine {
     this.emit();
   }
 
-  setBand(on: boolean) {
-    this.band = on;
+  /** What the synth plays; takes effect at once, also mid-song. */
+  setBand(mode: BandMode) {
+    this.band = mode;
+    if (this.song) {
+      this.bandEvents = buildBandEvents(this.song, this.seats, mode, this.countIn);
+      this.bandIdx = lowerBound(this.bandEvents, this.beat);
+    }
+    this.emit();
+  }
+
+  setRecordingAudible(on: boolean) {
+    this.recordingAudible = on;
     this.recording?.setVolume(on ? 1 : 0);
     this.emit();
   }
@@ -138,7 +176,7 @@ export class StageEngine {
   setRecording(recording: StageRecording | null) {
     this.recording?.pause();
     this.recording = recording;
-    recording?.setVolume(this.band ? 1 : 0);
+    recording?.setVolume(this.recordingAudible ? 1 : 0);
     this.emit();
   }
 
@@ -203,6 +241,7 @@ export class StageEngine {
     const song = this.song;
     if (!song || this.state !== 'playing') return;
     const before = this.beat;
+    const awaited = this.waitingFor?.pending[0];
     let next = this.beat + dt / this.secPerBeat(Math.max(0, this.beat));
     const rec = this.recording;
     if (rec?.isPlaying()) {
@@ -236,18 +275,18 @@ export class StageEngine {
     if (this.loop && this.beat >= this.loop.to) this.restartAt(this.loop.from);
     else if (!this.loop && this.beat >= song.end + 1) this.finish();
     syncRecording(this);
-    this.version++;
+    if (
+      this.waitingFor?.pending[0] !== awaited ||
+      this.sectionAt(Math.max(0, before)) !== this.sectionAt(Math.max(0, this.beat))
+    )
+      this.notifyLive();
   }
 
   private playBand(until: number) {
     while (this.bandIdx < this.bandEvents.length && this.bandEvents[this.bandIdx].t <= until) {
       const e = this.bandEvents[this.bandIdx++];
       if (e.kind === 'click') this.sound.click(!!e.accent);
-      else if (
-        !this.band ||
-        this.recording ||
-        (this.loop && (e.t < this.loop.from || e.t >= this.loop.to))
-      )
+      else if (this.recording || (this.loop && (e.t < this.loop.from || e.t >= this.loop.to)))
         continue;
       else if (e.kind === 'drum') this.sound.playDrum(e.lane ?? 1, BAND_VOLUME);
       else

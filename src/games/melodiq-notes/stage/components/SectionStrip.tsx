@@ -1,6 +1,7 @@
 import { Box, ButtonBase, Stack, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { StageEngine } from '../engine/StageEngine';
+import { useStageLive } from '../useStage';
 import { sectionScore } from '../logic/judging';
 import { useSectionName } from './useSectionName';
 
@@ -9,6 +10,7 @@ const scoreColor = (v: number) =>
 
 /** One cell per practice section, coloured by how sure the highlighted player was; tap to loop it. */
 export function SectionStrip({ engine }: { engine: StageEngine }) {
+  useStageLive(engine);
   const { t } = useTranslation();
   const sectionName = useSectionName(engine);
   const k = (key: string) => t(`games.melodiq_notes.stage.${key}`);

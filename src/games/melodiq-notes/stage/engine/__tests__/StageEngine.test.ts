@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createAudioMap, type ScoreSong } from '../../../../../modules/music-score';
 import { StageEngine } from '../StageEngine';
-import { defaultSetups } from '../players';
+import { buildBandEvents, nextSeat } from '../players';
 import { playerResults, weakestSection } from '../results';
 import type { StageRecording, StageSound } from '../types';
 
@@ -107,7 +107,9 @@ describe('StageEngine', () => {
 
   it('plays the whole song, finishes and reports results', () => {
     const e = new StageEngine(fakeSound());
-    e.loadSong(song(), defaultSetups(song(), 'band'));
+    e.loadSong(song());
+    e.addPlayer();
+    e.addPlayer();
     expect(e.players.map((p) => p.instrument.kind)).toEqual(['keyboard', 'drums', 'bass']);
     e.setMode('perform');
     e.start();
@@ -116,6 +118,46 @@ describe('StageEngine', () => {
     const results = playerResults(e.players);
     expect(results.every((r) => r.accuracy === 0)).toBe(true);
     expect(weakestSection(e.focus)).toBe(0);
+  });
+
+  it('adds players on free parts, up to the parts there are, and keeps at least one', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    expect(e.seats).toHaveLength(1);
+    e.addPlayer();
+    e.addPlayer();
+    e.addPlayer();
+    expect(e.seats.map((s) => s.partId)).toEqual(['piano', 'drums', 'bass']);
+    expect(nextSeat(song(), e.seats)).toBeNull();
+    e.setSeat(2, { partId: 'piano' });
+    expect(e.seats[2]).toEqual({ partId: 'piano', inst: 'keyboard' });
+    e.removePlayer(0);
+    e.removePlayer(0);
+    e.removePlayer(0);
+    expect(e.players.map((p) => p.part.id)).toEqual(['piano']);
+  });
+
+  it('band mode decides which parts the synth plays', () => {
+    const seats = [{ partId: 'piano', inst: 'keyboard' as const }];
+    const notes = (mode: 'all' | 'others' | 'none') =>
+      buildBandEvents(song(), seats, mode, 4).filter((ev) => ev.kind !== 'click').length;
+    expect(notes('all')).toBe(16 + 4 + 4);
+    expect(notes('others')).toBe(4 + 4);
+    expect(notes('none')).toBe(0);
+
+    const sound = fakeSound();
+    const e = new StageEngine(sound);
+    e.loadSong(song());
+    e.setMode('perform');
+    e.setBand('none');
+    e.start();
+    run(e, 4);
+    expect(sound.clicks).toBe(4);
+    expect(sound.notes).toHaveLength(0);
+    e.setBand('all');
+    run(e, 1);
+    // from now on the player's own part (piano, 60–64) is heard too
+    expect(sound.notes.some((m) => m >= 60)).toBe(true);
   });
 
   it('loops a practice section', () => {
