@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import {
+  alpha,
   Box,
   Paper,
   Typography,
@@ -95,9 +96,9 @@ export const ComposeGeneratorPanel: React.FC = () => {
           mb: 2.5,
           gap: 1,
           p: 1.5,
-          bgcolor: 'rgba(255, 255, 255, 0.03)',
+          bgcolor: (theme) => alpha(theme.palette.text.primary, 0.03),
           borderRadius: 2,
-          border: '1px solid rgba(255, 255, 255, 0.06)',
+          border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
         }}
       >
         {SERVICES.map((service) => (
@@ -169,9 +170,10 @@ export const ComposeGeneratorPanel: React.FC = () => {
               sx: {
                 fontFamily: 'Consolas, Monaco, "Courier New", monospace',
                 fontSize: '0.8rem',
-                bgcolor: 'rgba(10, 12, 18, 0.85)',
+                bgcolor: 'background.default',
                 borderRadius: 2,
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                border: 1,
+                borderColor: 'divider',
                 '& textarea': {
                   whiteSpace: 'pre',
                   overflowX: 'auto',

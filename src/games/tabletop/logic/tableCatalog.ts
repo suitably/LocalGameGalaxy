@@ -6,6 +6,7 @@
  * - `own_devices`: a party session that everyone joins with their own device.
  */
 import type { TabletopPlayMode } from './types';
+import { piecePalette } from '../../../themeTokens';
 
 export type PlayMode = 'shared_device' | 'own_devices';
 
@@ -40,7 +41,7 @@ export const TABLETOP_STARTERS: TableGameEntry[] = [
     title: 'Standard Kartendeck (52)',
     descKey: 'games.tabletop.standard_cards_desc',
     icon: '🃏',
-    color: '#1976d2',
+    color: piecePalette.blue,
     modes: ['shared_device', 'own_devices'],
   },
   {
@@ -50,7 +51,7 @@ export const TABLETOP_STARTERS: TableGameEntry[] = [
     title: "Liar's Dice / Perudo",
     descKey: 'games.tabletop.liars_dice_desc',
     icon: '🎲',
-    color: '#f57c00',
+    color: piecePalette.orange,
     // Cups are hands: pass and play keeps them hidden between players.
     modes: ['shared_device', 'own_devices'],
   },
@@ -61,7 +62,7 @@ export const TABLETOP_STARTERS: TableGameEntry[] = [
     title: 'Dame / Checkers',
     descKey: 'games.tabletop.checkers_desc',
     icon: '🏁',
-    color: '#388e3c',
+    color: piecePalette.green,
     modes: ['shared_device', 'own_devices'],
   },
 ];
@@ -76,7 +77,7 @@ export const DICE_GAMES: TableGameEntry[] = [
     title: 'Kniffel',
     descKey: 'games.kniffel.description',
     icon: '🎲',
-    color: '#b91c1c',
+    color: piecePalette.red,
     modes: ['shared_device'],
   },
   {
@@ -87,7 +88,7 @@ export const DICE_GAMES: TableGameEntry[] = [
     title: 'Knister',
     descKey: 'games.knister.description',
     icon: '🔢',
-    color: '#e65100',
+    color: piecePalette.orange,
     modes: ['shared_device', 'own_devices'],
   },
   {
@@ -98,7 +99,7 @@ export const DICE_GAMES: TableGameEntry[] = [
     title: 'Qwixx',
     descKey: 'games.qwixx.description',
     icon: '🎯',
-    color: '#f57c00',
+    color: piecePalette.orange,
     modes: ['shared_device'],
   },
 ];

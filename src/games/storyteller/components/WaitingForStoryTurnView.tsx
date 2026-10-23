@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  alpha,
   Box,
   Button,
   Card,
@@ -66,16 +67,18 @@ export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = (
         sx={{
           maxWidth: 440,
           width: '100%',
-          bgcolor: 'rgba(15, 23, 42, 0.7)',
-          borderColor: 'rgba(255, 255, 255, 0.1)',
+          bgcolor: (theme) => alpha(theme.palette.background.default, 0.7),
+          borderColor: (theme) => alpha(theme.palette.text.primary, 0.1),
           borderRadius: 3,
           textAlign: 'center',
           p: { xs: 2, sm: 3 },
         }}
       >
-        <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+        <CardContent
+          sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}
+        >
           <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-            <CircularProgress size={64} thickness={3} sx={{ color: '#38bdf8' }} />
+            <CircularProgress size={64} thickness={3} sx={{ color: 'secondary.main' }} />
             <Box
               sx={{
                 top: 0,
@@ -88,7 +91,7 @@ export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = (
                 justifyContent: 'center',
               }}
             >
-              <PhonelinkRingRoundedIcon sx={{ color: '#38bdf8', fontSize: 28 }} />
+              <PhonelinkRingRoundedIcon sx={{ color: 'secondary.main', fontSize: 28 }} />
             </Box>
           </Box>
 
@@ -102,10 +105,10 @@ export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = (
                 />
               </Box>
             )}
-            <Typography variant="h6" fontWeight={700} sx={{ color: '#f8fafc' }}>
+            <Typography variant="h6" fontWeight={700} sx={{ color: 'text.primary' }}>
               {t('storyteller.waitingTitle', 'Warten auf')} {activePlayer.name}...
             </Typography>
-            <Typography variant="body2" sx={{ color: '#94a3b8', mt: 0.5 }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
               {t(
                 'storyteller.waitingSubtitle',
                 'Dieser Spieler ist als Remote markiert. Sobald der Zug eingegangen ist, geht es hier automatisch weiter.',
@@ -139,7 +142,7 @@ export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = (
                 startIcon={copied ? <CheckRoundedIcon /> : <ShareRoundedIcon />}
                 onClick={handleCopyOrOpenShare}
                 sx={{
-                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                  borderColor: (theme) => alpha(theme.palette.text.primary, 0.2),
                   fontWeight: 600,
                 }}
               >
@@ -155,7 +158,7 @@ export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = (
               color="inherit"
               startIcon={<MenuBookRoundedIcon />}
               onClick={onOpenReader}
-              sx={{ color: '#94a3b8' }}
+              sx={{ color: 'text.secondary' }}
             >
               {t('storyteller.readStorySoFar', 'Bisherige Geschichte ansehen')}
             </Button>

@@ -1,4 +1,4 @@
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { alpha, Box, Button, Stack, Typography, type Theme } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { StageEngine } from '../engine/StageEngine';
 import { playerResults, weakestSection } from '../engine/results';
@@ -21,7 +21,7 @@ const veil = {
   textAlign: 'center',
   p: 2,
   overflow: 'auto',
-  bgcolor: 'rgba(11,10,21,0.82)',
+  bgcolor: (theme: Theme) => alpha(theme.palette.background.default, 0.85),
 } as const;
 
 /** Start card, pause card, results and the "play next" hint, layered over the canvas. */

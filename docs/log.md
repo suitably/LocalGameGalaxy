@@ -2,6 +2,38 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-23 — One page title, in the header (claude-code)
+
+- `DESIGN.md` §6 header row: the page title lives only in `GlobalHeader`; content starts with section headings.
+- **Code changed:** repeated in-content titles removed from card games lobby, game table lobby, Sudoku header and GuessArt setup; the party lobby sets its title via `usePageTitle` (was "Nexumia") and drops its own back button and heading; `party.lobbyTitle` is "Party-Lobby"/"Party Lobby"; unused `games.cards.suite_title/suite_subtitle` removed. Storyteller, Knister and Qwixx titles are in budget-blocked files (#497, #492, #491).
+
+## 2026-10-23 — Colour migration to design tokens (claude-code)
+
+- `DESIGN.md` §2.3 (piece helpers in code, exempt table content) and §10 step 5 status.
+- **Code changed:** ~140 components switched from hard-coded colours to theme roles (`sx` palette paths, `alpha(theme.palette.*)` overlays, text roles); player/seat/avatar/spinner/instrument colours from `piecePalette` (`PIECE_ORDER`, `pieceColorForSlot`, `pieceNeutrals` new in `src/themeTokens.ts`); dialogs use the theme surface instead of their own glass backgrounds; gradient buttons/headings removed; settings navigation flat (`src/features/settings/settingsStyles.ts`); Melodiq Notes stage canvas colours and fonts from tokens; `seatLogic.test.ts` expectations updated. 35 files over their line budget are left for #491–#498.
+
+## 2026-10-23 — Hub areas (claude-code)
+
+- `DESIGN.md` §8.2/§10 step 4 done; migration tracked in issues #490–#499. `docs/tech/architecture.md` §3.1/§3.2: design tokens and areas listed; registry gradient fields unused.
+- **Code changed:** new `src/lib/areas.ts` (+ test), `src/components/brand/AreaSymbol.tsx`, `src/features/hub/{HubAreaFilter,HubGameCard}.tsx`; `Hub.tsx` filters by area (Party, Musik, Karten, Rätsel) instead of seven emoji categories, tiles are flat cards with an area-coloured icon plate.
+
+## 2026-10-23 — Design tokens, fonts and word mark live (claude-code)
+
+- `DESIGN.md`: status, type table (actual `h3`/`h4`/`h6` sizes), §8 word mark as paths, §10 steps 1–2 done for dark. `docs/tech/styling.md` §1 and §6 describe the token file and the self-hosted fonts.
+- **Code changed:** new `src/themeTokens.ts`; `src/theme.ts` rebuilt from it (sun-yellow primary, lagoon secondary/info, warm neutrals, `palette.piece`, focus ring, button edge, radii); fonts `@fontsource-variable/{figtree,bricolage-grotesque}` imported in `src/main.tsx`; `index.css`, `index.html`, PWA manifest `#121212` → `#17141C`; hub banner and `src/assets/nexumia-*.svg` replaced with the couch lock-up; `app.title` is "Nexumia" in de/en.
+- Known: six game spots set white text on `primary` (Qwixx total, tabletop badges, Melodiq song tags) — unreadable on yellow (also poor on the old light blue); fixed with DESIGN.md §10 step 5.
+
+## 2026-10-23 — Couch brand mark and app icons (claude-code)
+
+- `DESIGN.md` §8: brand architecture — couch master mark, five areas as couch in piece colour plus name labels, app icon rules; sources in `design/brand/`, explorations in `design/logo-drafts/` and `design/brand-approaches/`.
+- **Code/config changed:** `public/nexumia-icon.svg`, `public/pwa/*.png` (were one 640×640 JPEG under four PNG names; now real PNGs in the declared sizes), Android `mipmap-*/ic_launcher*.png`, `drawable*/splash.png`, `values/ic_launcher_background.xml` (`#FFFFFF` → `#17141C`). Manifest `theme_color`/`background_color` still `#121212` until DESIGN.md §10 step 1.
+
+## 2026-10-23 — DESIGN.md visual system (claude-code)
+
+- New root `DESIGN.md`: target visual system (colors for dark + light, piece palette, Bricolage Grotesque + Figtree, spacing, radius, components, logo brief, migration order). Not implemented yet.
+- `docs/tech/styling.md`: corrected — the theme is dark only (no light tokens exist) and Roboto is declared but never loaded; links to `DESIGN.md`. `AGENTS.md` §4 links `DESIGN.md`.
+- No code changed.
+
 ## 2026-10-23 — Review fixes for Melodiq Notes stage (claude-code)
 
 - `docs/tech/song-pipeline.md` §4: score upload never overwrites (`replace=1` removed; it skipped the delete permission and left stale marks).

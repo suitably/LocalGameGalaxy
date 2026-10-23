@@ -19,6 +19,7 @@ import {
 } from '../../logic/tableCatalog';
 import { TableGameCard } from './TableGameCard';
 import { PlayModeSheet } from './PlayModeSheet';
+import { piecePalette } from '../../../../themeTokens';
 
 interface TabletopLobbyViewProps {
   /** Opens a route (local tabletop, party lobby with the game, or a dice game). */
@@ -52,7 +53,7 @@ export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) 
       max: g.maxPlayers,
     }),
     icon: '🧩',
-    color: '#7c3aed',
+    color: piecePalette.purple,
     modes: playModesOf(g.supportedModes),
   }));
 
@@ -101,9 +102,6 @@ export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) 
             mb={2.5}
           >
             <Box>
-              <Typography variant="h4" fontWeight={900} color="primary.main">
-                {t('games.tabletop.title', 'Spieltisch')}
-              </Typography>
               <Typography variant="body2" color="text.secondary">
                 {t(
                   'games.tabletop.subtitle',

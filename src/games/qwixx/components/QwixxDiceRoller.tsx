@@ -1,8 +1,8 @@
 import React from 'react';
-import { Box, Paper, Typography, Button } from '@mui/material';
+import { alpha, Box, Paper, Typography, Button } from '@mui/material';
 import CasinoIcon from '@mui/icons-material/Casino';
 import { useTranslation } from 'react-i18next';
-import { Die3D } from '../../../components/games/Die3D';
+import { Die3D, PRESET_DIE_COLORS } from '../../../components/games/Die3D';
 import { useDiceRollAnimation } from '../../../components/games/useDiceRollAnimation';
 import type { DiceValues } from '../logic/types';
 import type { DieKey } from '../logic/diceHighlight';
@@ -18,12 +18,12 @@ interface QwixxDiceRollerProps {
 }
 
 const DIE_COLORS = {
-  white1: { bg: '#ffffff', text: '#212121', border: '#e0e0e0' },
-  white2: { bg: '#ffffff', text: '#212121', border: '#e0e0e0' },
-  red: { bg: '#d32f2f', text: '#ffffff', border: '#b71c1c' },
-  yellow: { bg: '#fbc02d', text: '#212121', border: '#f57f17' },
-  green: { bg: '#388e3c', text: '#ffffff', border: '#1b5e20' },
-  blue: { bg: '#1976d2', text: '#ffffff', border: '#0d47a1' },
+  white1: PRESET_DIE_COLORS.white,
+  white2: PRESET_DIE_COLORS.white,
+  red: PRESET_DIE_COLORS.red,
+  yellow: PRESET_DIE_COLORS.yellow,
+  green: PRESET_DIE_COLORS.green,
+  blue: PRESET_DIE_COLORS.blue,
 };
 
 export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
@@ -72,7 +72,6 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
           width: { xs: 40, sm: 52 },
           height: { xs: 40, sm: 52 },
           borderRadius: 2,
-          border: `2px solid ${isSelected ? '#ffd54f' : c.border}`,
         }}
       />
     );
@@ -84,8 +83,8 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
       sx={{
         p: { xs: 1.5, sm: 2 },
         borderRadius: 3,
-        bgcolor: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
+        border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
         backdropFilter: 'blur(8px)',
         mb: 2,
       }}
@@ -108,7 +107,7 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
               display: 'flex',
               gap: 1,
               p: 0.5,
-              bgcolor: 'rgba(255, 255, 255, 0.08)',
+              bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
               borderRadius: 2,
             }}
           >

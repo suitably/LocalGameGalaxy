@@ -55,7 +55,7 @@ export const PartyShareCard: React.FC<{ lobby: PartyLobbyController }> = ({ lobb
 
         {showQr && (
           <Box display="flex" justifyContent="center" py={1.5}>
-            <Paper sx={{ p: 2, bgcolor: '#ffffff', borderRadius: 2 }}>
+            <Paper sx={{ p: 2, bgcolor: 'text.primary', borderRadius: 2 }}>
               <QRCodeSVG value={shareUrl} size={160} />
             </Paper>
           </Box>

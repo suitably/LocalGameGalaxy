@@ -10,6 +10,7 @@ import {
   withAlpha,
   fillWithHalo,
   barLabel,
+  STAGE,
 } from './common';
 import { keyGeometry } from './geometry';
 import { upcoming, type HitPoint, type ViewContext } from './view';
@@ -36,7 +37,7 @@ export function drawKeys(v: ViewContext): HitPoint {
   g.lineWidth = 1;
   forBarLines(v.song, beat, beat + LOOK_BEATS, (b, i) => {
     const y = geo.hitY - (b - beat) * ppb;
-    g.strokeStyle = 'rgba(255,255,255,0.09)';
+    g.strokeStyle = withAlpha(STAGE.ink, 0.09);
     g.beginPath();
     g.moveTo(0, y);
     g.lineTo(w, y);
@@ -59,7 +60,7 @@ export function drawKeys(v: ViewContext): HitPoint {
     roundRect(g, k.x + 1.5, yb - nh, k.w - 3, nh, Math.min(6, k.w / 3));
     fillWithHalo(g, c, done ? 8 : 4, withAlpha(c, done ? 1 : 0.88));
     if (nh > 20 && k.w > 16) {
-      g.fillStyle = '#0b0a15';
+      g.fillStyle = STAGE.bgBottom;
       g.font = `700 ${Math.min(13, k.w * 0.55)}px ${FONT_BODY}`;
       g.textAlign = 'center';
       g.fillText(pitchClassName(n.pitch), k.x + k.w / 2, yb - 7);
@@ -83,7 +84,7 @@ export function drawKeys(v: ViewContext): HitPoint {
     const k = geo.keys[m];
     const y = geo.hitY + 2;
     const kh = k.black ? geo.keyHeight * 0.62 : geo.keyHeight - 4;
-    g.fillStyle = p.pressed.has(m) ? color : k.black ? '#1a1830' : '#e9e7f5';
+    g.fillStyle = p.pressed.has(m) ? color : k.black ? STAGE.panel : STAGE.ink;
     roundRect(g, k.x + (k.black ? 0 : 1), y, k.w - (k.black ? 0 : 2), kh, k.black ? 3 : 5);
     g.fill();
     if (targets.has(m) && !p.pressed.has(m)) {
@@ -97,12 +98,12 @@ export function drawKeys(v: ViewContext): HitPoint {
     g.textAlign = 'center';
     const label = v.isFocus ? KEY_LABELS[m - p.octaveBase] : undefined;
     if (label) {
-      g.fillStyle = p.pressed.has(m) ? '#0b0a15' : 'rgba(30,26,60,0.6)';
+      g.fillStyle = p.pressed.has(m) ? STAGE.bgBottom : withAlpha(STAGE.panel, 0.6);
       g.font = `700 ${Math.min(11, k.w * 0.5)}px ${FONT_MONO}`;
       g.fillText(label, k.x + k.w / 2, y + kh - 8);
     }
     if (m % 12 === 0) {
-      g.fillStyle = 'rgba(30,26,60,0.45)';
+      g.fillStyle = withAlpha(STAGE.panel, 0.45);
       g.font = `600 9px ${FONT_BODY}`;
       g.fillText(noteName(m), k.x + k.w / 2, y + kh - 22);
     }

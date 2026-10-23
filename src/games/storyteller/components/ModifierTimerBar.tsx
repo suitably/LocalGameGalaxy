@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, LinearProgress, Stack, Typography } from '@mui/material';
+import { alpha, Box, LinearProgress, Stack, Typography } from '@mui/material';
 import TimerRoundedIcon from '@mui/icons-material/TimerRounded';
 import HourglassBottomRoundedIcon from '@mui/icons-material/HourglassBottomRounded';
 import { useTranslation } from 'react-i18next';
@@ -19,28 +19,23 @@ export const ModifierTimerBar: React.FC<ModifierTimerBarProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const color = isCritical ? '#ef4444' : isExpiringSoon ? '#f59e0b' : '#38bdf8';
+  const role = isCritical ? 'error' : isExpiringSoon ? 'warning' : 'secondary';
+  const color = `${role}.main`;
 
   return (
     <Box
       sx={{
         p: 1.25,
         borderRadius: 2,
-        bgcolor: isCritical
-          ? 'rgba(239, 68, 68, 0.15)'
-          : isExpiringSoon
-            ? 'rgba(245, 158, 11, 0.15)'
-            : 'rgba(56, 189, 248, 0.1)',
+        bgcolor: (theme) => alpha(theme.palette[role].main, 0.12),
         border: '1px solid',
-        borderColor: isCritical
-          ? 'rgba(239, 68, 68, 0.4)'
-          : isExpiringSoon
-            ? 'rgba(245, 158, 11, 0.4)'
-            : 'rgba(56, 189, 248, 0.25)',
+        borderColor: (theme) => alpha(theme.palette[role].main, 0.4),
         transition: 'all 0.3s ease',
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.75 }}>
+      <Box
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.75 }}
+      >
         <Stack direction="row" spacing={1} alignItems="center">
           {isCritical ? (
             <HourglassBottomRoundedIcon
@@ -57,7 +52,7 @@ export const ModifierTimerBar: React.FC<ModifierTimerBarProps> = ({
           ) : (
             <TimerRoundedIcon sx={{ color, fontSize: 20 }} />
           )}
-          <Typography variant="caption" fontWeight={700} sx={{ color: '#f8fafc' }}>
+          <Typography variant="caption" fontWeight={700} sx={{ color: 'text.primary' }}>
             {t('storyteller.timeAttackTitle', 'Time Attack')}
           </Typography>
         </Stack>
@@ -73,7 +68,7 @@ export const ModifierTimerBar: React.FC<ModifierTimerBarProps> = ({
         sx={{
           height: 6,
           borderRadius: 3,
-          bgcolor: 'rgba(255, 255, 255, 0.1)',
+          bgcolor: (theme) => alpha(theme.palette.text.primary, 0.1),
           '& .MuiLinearProgress-bar': {
             bgcolor: color,
             borderRadius: 3,

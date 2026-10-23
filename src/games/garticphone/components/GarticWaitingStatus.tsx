@@ -1,4 +1,5 @@
 import React from 'react';
+import { pieceColorForSlot } from '../../../themeTokens';
 import {
   Avatar,
   Box,
@@ -23,12 +24,12 @@ interface GarticWaitingStatusProps {
   myPlayerId: string;
 }
 
-const AVATAR_COLORS = ['#e91e63', '#2196f3', '#4caf50', '#ff9800', '#9c27b0', '#00bcd4', '#795548'];
-
 export const GarticWaitingStatus: React.FC<GarticWaitingStatusProps> = ({ state, myPlayerId }) => {
   const { t } = useTranslation();
 
-  const finishedCount = state.players.filter((p) => isPlayerFinishedCurrentRound(state, p.id)).length;
+  const finishedCount = state.players.filter((p) =>
+    isPlayerFinishedCurrentRound(state, p.id),
+  ).length;
   const totalCount = state.players.length;
 
   return (
@@ -57,7 +58,13 @@ export const GarticWaitingStatus: React.FC<GarticWaitingStatusProps> = ({ state,
       >
         <CardContent sx={{ p: { xs: 2.5, sm: 3 } }}>
           {/* Header */}
-          <Box display="flex" flexDirection="column" alignItems="center" textAlign="center" mb={2.5}>
+          <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            textAlign="center"
+            mb={2.5}
+          >
             <CircularProgress color="secondary" size={40} thickness={4.5} sx={{ mb: 1.5 }} />
             <Typography variant="h6" fontWeight={800} gutterBottom>
               {t('gartic.waitingHeader', 'Warte auf die anderen Spieler...')}
@@ -89,7 +96,11 @@ export const GarticWaitingStatus: React.FC<GarticWaitingStatusProps> = ({ state,
                     py: 1,
                     my: 0.75,
                     borderRadius: 2.5,
-                    bgcolor: isDone ? 'success.main' + '12' : isMe ? 'action.selected' : 'action.hover',
+                    bgcolor: isDone
+                      ? 'success.main' + '12'
+                      : isMe
+                        ? 'action.selected'
+                        : 'action.hover',
                     border: '1px solid',
                     borderColor: isDone ? 'success.main' : isMe ? 'primary.main' : 'divider',
                     transition: 'all 0.2s ease',
@@ -105,7 +116,12 @@ export const GarticWaitingStatus: React.FC<GarticWaitingStatusProps> = ({ state,
                       />
                     ) : (
                       <Chip
-                        icon={<HourglassTopRoundedIcon fontSize="small" sx={{ animation: 'spin 2s linear infinite' }} />}
+                        icon={
+                          <HourglassTopRoundedIcon
+                            fontSize="small"
+                            sx={{ animation: 'spin 2s linear infinite' }}
+                          />
+                        }
                         label={
                           state.roundIndex === 0
                             ? t('gartic.playerWriting', 'Schreibt...')
@@ -124,7 +140,8 @@ export const GarticWaitingStatus: React.FC<GarticWaitingStatusProps> = ({ state,
                   <ListItemAvatar>
                     <Avatar
                       sx={{
-                        bgcolor: AVATAR_COLORS[idx % AVATAR_COLORS.length],
+                        bgcolor: pieceColorForSlot(idx),
+                        color: 'piece.contrastText',
                         fontWeight: 800,
                         width: 36,
                         height: 36,
@@ -136,7 +153,12 @@ export const GarticWaitingStatus: React.FC<GarticWaitingStatusProps> = ({ state,
                   </ListItemAvatar>
                   <ListItemText
                     primary={
-                      <Typography fontWeight={700} variant="body2" noWrap sx={{ maxWidth: { xs: 130, sm: 190 } }}>
+                      <Typography
+                        fontWeight={700}
+                        variant="body2"
+                        noWrap
+                        sx={{ maxWidth: { xs: 130, sm: 190 } }}
+                      >
                         {player.name} {isMe && `(${t('common.you', 'Du')})`}
                       </Typography>
                     }

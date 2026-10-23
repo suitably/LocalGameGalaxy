@@ -28,14 +28,8 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [pendingFlickCardId, setPendingFlickCardId] = useState<string | null>(null);
 
-  const {
-    myHandCards,
-    publicDecks,
-    dropTargets,
-    publicDice,
-    myCounters,
-    topDiscardCard,
-  } = useDynamicControllerState(state.game, mySeat);
+  const { myHandCards, publicDecks, dropTargets, publicDice, myCounters, topDiscardCard } =
+    useDynamicControllerState(state.game, mySeat);
 
   const handleCardFlick = (cardId: string) => {
     if (dropTargets.length === 0) {
@@ -64,7 +58,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: '#121212',
+        bgcolor: 'background.default',
         overflow: 'hidden',
       }}
     >
@@ -101,8 +95,12 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
           exclusive
           onChange={(_, next) => next && setViewMode(next)}
         >
-          <ToggleButton value="hand"><PanToolIcon sx={{ mr: 0.5, fontSize: 18 }} /> {t('games.tabletop.view_hand', 'Hand')}</ToggleButton>
-          <ToggleButton value="board"><MapIcon sx={{ mr: 0.5, fontSize: 18 }} /> {t('games.tabletop.view_board', 'Tisch')}</ToggleButton>
+          <ToggleButton value="hand">
+            <PanToolIcon sx={{ mr: 0.5, fontSize: 18 }} /> {t('games.tabletop.view_hand', 'Hand')}
+          </ToggleButton>
+          <ToggleButton value="board">
+            <MapIcon sx={{ mr: 0.5, fontSize: 18 }} /> {t('games.tabletop.view_board', 'Tisch')}
+          </ToggleButton>
         </ToggleButtonGroup>
       </Paper>
 
@@ -148,7 +146,10 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
               </Box>
             ) : (
               <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                {t('games.tabletop.flick_hint', 'Wische eine Karte nach oben, um sie auf den TV zu werfen!')}
+                {t(
+                  'games.tabletop.flick_hint',
+                  'Wische eine Karte nach oben, um sie auf den TV zu werfen!',
+                )}
               </Typography>
             )}
 
@@ -163,7 +164,9 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
               onRollDice={(dieIds) => {
                 for (const dieId of dieIds) dispatch({ type: 'ROLL_DIE', payload: { dieId } });
               }}
-              onUpdateCounter={(counterId, delta) => dispatch({ type: 'UPDATE_COUNTER', payload: { counterId, delta } })}
+              onUpdateCounter={(counterId, delta) =>
+                dispatch({ type: 'UPDATE_COUNTER', payload: { counterId, delta } })
+              }
             />
           </Box>
         )}
@@ -181,7 +184,9 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
       <TargetSelectionDialog
         open={Boolean(pendingFlickCardId)}
         targets={dropTargets}
-        onSelectTarget={(targetId) => pendingFlickCardId && triggerPlay(pendingFlickCardId, targetId)}
+        onSelectTarget={(targetId) =>
+          pendingFlickCardId && triggerPlay(pendingFlickCardId, targetId)
+        }
         onClose={() => setPendingFlickCardId(null)}
       />
     </Box>

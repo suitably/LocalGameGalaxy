@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  alpha,
   AppBar,
   Box,
   IconButton,
@@ -70,9 +71,9 @@ export const StoryHeader: React.FC<StoryHeaderProps> = ({
       position="static"
       elevation={1}
       sx={{
-        bgcolor: '#18181b',
+        bgcolor: 'background.default',
         backgroundImage: 'none',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        borderBottom: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
         zIndex: 1100,
       }}
     >
@@ -85,7 +86,7 @@ export const StoryHeader: React.FC<StoryHeaderProps> = ({
 
         <Box sx={{ minWidth: 0, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ color: '#fff' }}>
+            <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ color: 'text.primary' }}>
               {game.name || t('games.storyteller.title', 'Geschichtenschreiber')}
             </Typography>
             {roomId && (
@@ -100,17 +101,19 @@ export const StoryHeader: React.FC<StoryHeaderProps> = ({
               size="small"
               label={`${t('storyteller.turnLabel', 'Zug')} ${game.turnNumber}`}
               sx={{
-                bgcolor: 'rgba(56, 189, 248, 0.15)',
-                color: '#38bdf8',
+                bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.15),
+                color: 'secondary.main',
                 fontWeight: 600,
                 height: 22,
               }}
             />
           </Box>
 
-          <Typography variant="caption" noWrap sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+          <Typography variant="caption" noWrap sx={{ color: 'text.secondary' }}>
             {t('storyteller.currentTurnOf', 'Am Zug: ')}
-            <strong style={{ color: '#38bdf8' }}>{activePlayer.name}</strong>
+            <Box component="strong" sx={{ color: 'secondary.main' }}>
+              {activePlayer.name}
+            </Box>
             {!isCurrentTurnLocal && ` (${t('storyteller.remotePlayer', 'Remote')})`}
           </Typography>
         </Box>
@@ -135,17 +138,13 @@ export const StoryHeader: React.FC<StoryHeaderProps> = ({
         {(onOpenShare || onShareTurn) && (
           <Tooltip title={copied ? t('common.copied', 'Kopiert!') : t('common.share', 'Teilen')}>
             <IconButton color="inherit" onClick={handleShare} size="small">
-              {copied ? <CheckRoundedIcon sx={{ color: '#4ade80' }} /> : <ShareRoundedIcon />}
+              {copied ? <CheckRoundedIcon sx={{ color: 'success.main' }} /> : <ShareRoundedIcon />}
             </IconButton>
           </Tooltip>
         )}
 
         {/* Overflow Menu */}
-        <IconButton
-          color="inherit"
-          size="small"
-          onClick={(e) => setMenuAnchorEl(e.currentTarget)}
-        >
+        <IconButton color="inherit" size="small" onClick={(e) => setMenuAnchorEl(e.currentTarget)}>
           <MoreVertRoundedIcon />
         </IconButton>
 

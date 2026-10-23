@@ -4,7 +4,7 @@
  * The caller decides how a beep is played and measured (`measureOneSample`).
  */
 import React from 'react';
-import { Box, Button, Typography, CircularProgress } from '@mui/material';
+import { alpha, Box, Button, Typography, CircularProgress } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { MicrophoneManager } from '../audio/MicrophoneManager';
 import { useLatencyCalibration } from './hooks/useLatencyCalibration';
@@ -36,7 +36,7 @@ export const LatencyCalibratorPanel: React.FC<LatencyCalibratorPanelProps> = ({
           sx={{
             width: '100%',
             height: 4,
-            bgcolor: 'rgba(255,255,255,0.1)',
+            bgcolor: (theme) => alpha(theme.palette.text.primary, 0.1),
             borderRadius: 2,
             overflow: 'hidden',
           }}
@@ -65,9 +65,6 @@ export const LatencyCalibratorPanel: React.FC<LatencyCalibratorPanelProps> = ({
             borderRadius: 50,
             px: 3,
             py: 1,
-            backgroundImage: running ? 'none' : 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
-            boxShadow: running ? 'none' : '0 3px 5px 2px rgba(255, 105, 135, .3)',
-            color: 'white',
           }}
         >
           {running

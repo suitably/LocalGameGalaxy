@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Button,
-  Card,
-  CardActionArea,
-  Typography,
-} from '@mui/material';
+import { alpha, Box, Button, Card, CardActionArea, Typography } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useTranslation } from 'react-i18next';
 import type { CardGameDefinition } from '../logic/types';
@@ -38,30 +32,6 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
 
   return (
     <Box sx={{ width: '100%', maxWidth: 720, mx: 'auto', py: { xs: 1.5, sm: 3 } }}>
-      {/* Title & Introduction */}
-      <Box sx={{ textAlign: 'center', mb: 4 }}>
-        <Typography
-          variant="h3"
-          component="h1"
-          sx={{
-            fontWeight: 900,
-            fontSize: { xs: '1.8rem', sm: '2.5rem' },
-            background: 'linear-gradient(90deg, #00acc1, #ab47bc)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            mb: 1,
-          }}
-        >
-          🃏 {t('games.cards.suite_title', 'Kartenspiele Companion')}
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          {t(
-            'games.cards.suite_subtitle',
-            'Digitale Punkte-, Lebens- und Stichverwaltung für deine echten Kartenspiele am Tisch.',
-          )}
-        </Typography>
-      </Box>
-
       {/* Select Card Game */}
       <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1.5 }}>
         1. {t('games.cards.select_game', 'Kartenspiel wählen:')}
@@ -82,9 +52,12 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
               key={g.id}
               sx={{
                 borderRadius: 3,
-                bgcolor: isSelected ? 'rgba(0, 172, 193, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+                bgcolor: (theme) =>
+                  isSelected
+                    ? alpha(theme.palette.piece.green, 0.12)
+                    : theme.palette.background.paper,
                 border: '2px solid',
-                borderColor: isSelected ? '#00acc1' : 'rgba(255, 255, 255, 0.08)',
+                borderColor: isSelected ? 'piece.green' : 'divider',
                 transition: 'all 0.2s ease',
               }}
             >
@@ -123,15 +96,18 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
         size="large"
         fullWidth
         startIcon={<PlayArrowIcon />}
-        onClick={() => onStartGame(selectedGame, lobbyPlayers.map((p) => p.name))}
+        onClick={() =>
+          onStartGame(
+            selectedGame,
+            lobbyPlayers.map((p) => p.name),
+          )
+        }
         disabled={!hasMinPlayers}
         sx={{
           py: 1.5,
           fontWeight: 800,
           fontSize: '1.1rem',
           borderRadius: 50,
-          background: 'linear-gradient(90deg, #00acc1, #ab47bc)',
-          boxShadow: '0 4px 20px rgba(0, 172, 193, 0.4)',
         }}
       >
         {t('games.cards.start_session', 'Runde starten')} ({selectedGame.name})

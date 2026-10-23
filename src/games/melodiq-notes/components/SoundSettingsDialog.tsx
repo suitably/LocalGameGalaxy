@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  alpha,
   DialogContent,
   DialogActions,
   Button,
@@ -70,7 +71,10 @@ export const SoundSettingsDialog: React.FC<SoundSettingsDialogProps> = ({
       maxWidth="xs"
       title={t('games.melodiq_notes.sound_settings', 'Sound-Einstellungen')}
     >
-      <DialogContent dividers sx={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+      <DialogContent
+        dividers
+        sx={{ borderColor: (theme) => alpha(theme.palette.text.primary, 0.08) }}
+      >
         <Stack spacing={2.5}>
           <FormControl fullWidth size="small">
             <InputLabel>{t('games.melodiq_notes.soundfont_provider')}</InputLabel>

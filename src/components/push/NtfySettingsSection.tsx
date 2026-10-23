@@ -93,11 +93,8 @@ export const NtfySettingsSection: React.FC = () => {
         </Typography>
       </Box>
 
-      <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.65)' }}>
-        {t(
-          'settings.ntfy_desc',
-          '100% Open-Source Push ohne Google Play Services oder FCM.',
-        )}
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+        {t('settings.ntfy_desc', '100% Open-Source Push ohne Google Play Services oder FCM.')}
       </Typography>
 
       <TextField
@@ -124,7 +121,12 @@ export const NtfySettingsSection: React.FC = () => {
           endAdornment: (
             <InputAdornment position="end">
               <Tooltip title={t('settings.ntfy_regenerate_topic', 'Neues Topic generieren')}>
-                <IconButton size="small" onClick={handleRegenerateTopic} edge="end" sx={{ mr: 0.5 }}>
+                <IconButton
+                  size="small"
+                  onClick={handleRegenerateTopic}
+                  edge="end"
+                  sx={{ mr: 0.5 }}
+                >
                   <RefreshRoundedIcon fontSize="small" />
                 </IconButton>
               </Tooltip>

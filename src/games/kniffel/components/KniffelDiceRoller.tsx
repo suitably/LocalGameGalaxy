@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Paper, Button } from '@mui/material';
+import { alpha, Box, Paper, Button } from '@mui/material';
 import CasinoIcon from '@mui/icons-material/Casino';
 import { useTranslation } from 'react-i18next';
 import { Die3D } from '../../../components/games/Die3D';
@@ -56,8 +56,8 @@ export const KniffelDiceRoller: React.FC<KniffelDiceRollerProps> = ({
       sx={{
         p: { xs: 1.5, sm: 2 },
         borderRadius: 3,
-        bgcolor: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
+        border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
         backdropFilter: 'blur(8px)',
         mb: 2,
         display: 'flex',

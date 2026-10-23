@@ -1,4 +1,5 @@
 import React from 'react';
+import { piecePalette } from '../../../themeTokens';
 import {
   Box,
   Button,
@@ -31,7 +32,7 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
   currentTotal,
   delta,
   onChange,
-  accentColor = '#ffa726',
+  accentColor = piecePalette.orange,
 }) => {
   const { t } = useTranslation();
 
@@ -62,9 +63,9 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
       sx={{
         p: { xs: 1.5, sm: 2 },
         borderRadius: 3,
-        bgcolor: delta !== 0 ? alpha(accentColor, 0.08) : 'rgba(255, 255, 255, 0.03)',
+        bgcolor: delta !== 0 ? alpha(accentColor, 0.08) : 'background.default',
         border: '1px solid',
-        borderColor: delta !== 0 ? alpha(accentColor, 0.4) : 'rgba(255, 255, 255, 0.08)',
+        borderColor: delta !== 0 ? alpha(accentColor, 0.4) : 'divider',
         transition: 'all 0.2s ease',
       }}
     >
@@ -96,20 +97,16 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
             sx={{
               fontWeight: 800,
               fontSize: '0.85rem',
-              bgcolor:
-                delta > 0
-                  ? alpha('#00e676', 0.2)
-                  : delta < 0
-                  ? alpha('#ff5252', 0.2)
-                  : 'rgba(255, 255, 255, 0.08)',
-              color: delta > 0 ? '#00e676' : delta < 0 ? '#ff5252' : 'text.secondary',
+              bgcolor: (theme) =>
+                delta === 0
+                  ? theme.palette.action.selected
+                  : alpha(theme.palette[delta > 0 ? 'success' : 'error'].main, 0.2),
+              color: delta > 0 ? 'success.main' : delta < 0 ? 'error.main' : 'text.secondary',
               border: '1px solid',
-              borderColor:
-                delta > 0
-                  ? alpha('#00e676', 0.4)
-                  : delta < 0
-                  ? alpha('#ff5252', 0.4)
-                  : 'transparent',
+              borderColor: (theme) =>
+                delta === 0
+                  ? 'transparent'
+                  : alpha(theme.palette[delta > 0 ? 'success' : 'error'].main, 0.4),
             }}
           />
           <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.secondary' }}>
@@ -131,8 +128,8 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
           size="small"
           onClick={() => handleStep(-1)}
           sx={{
-            bgcolor: 'rgba(255, 255, 255, 0.08)',
-            '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.15)' },
+            bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
+            '&:hover': { bgcolor: (theme) => alpha(theme.palette.text.primary, 0.15) },
             borderRadius: 2,
             p: 0.8,
           }}
@@ -161,8 +158,8 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
           size="small"
           onClick={() => handleStep(1)}
           sx={{
-            bgcolor: 'rgba(255, 255, 255, 0.08)',
-            '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.15)' },
+            bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
+            '&:hover': { bgcolor: (theme) => alpha(theme.palette.text.primary, 0.15) },
             borderRadius: 2,
             p: 0.8,
           }}
@@ -176,9 +173,9 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
               size="small"
               onClick={handleClear}
               sx={{
-                bgcolor: 'rgba(255, 255, 255, 0.05)',
+                bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
                 color: 'text.secondary',
-                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.12)' },
+                '&:hover': { bgcolor: (theme) => alpha(theme.palette.text.primary, 0.12) },
                 borderRadius: 2,
               }}
             >
@@ -204,14 +201,14 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
                 px: 1,
                 fontSize: '0.78rem',
                 fontWeight: 700,
-                color: '#00e676',
-                borderColor: alpha('#00e676', 0.3),
-                bgcolor: alpha('#00e676', 0.04),
+                color: 'success.main',
+                borderColor: (theme) => alpha(theme.palette.success.main, 0.3),
+                bgcolor: (theme) => alpha(theme.palette.success.main, 0.04),
                 borderRadius: 2,
                 textTransform: 'none',
                 '&:hover': {
-                  borderColor: '#00e676',
-                  bgcolor: alpha('#00e676', 0.15),
+                  borderColor: 'success.main',
+                  bgcolor: (theme) => alpha(theme.palette.success.main, 0.15),
                 },
               }}
             >
@@ -234,14 +231,14 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
                 px: 1,
                 fontSize: '0.78rem',
                 fontWeight: 700,
-                color: '#ff5252',
-                borderColor: alpha('#ff5252', 0.3),
-                bgcolor: alpha('#ff5252', 0.04),
+                color: 'error.main',
+                borderColor: (theme) => alpha(theme.palette.error.main, 0.3),
+                bgcolor: (theme) => alpha(theme.palette.error.main, 0.04),
                 borderRadius: 2,
                 textTransform: 'none',
                 '&:hover': {
-                  borderColor: '#ff5252',
-                  bgcolor: alpha('#ff5252', 0.15),
+                  borderColor: 'error.main',
+                  bgcolor: (theme) => alpha(theme.palette.error.main, 0.15),
                 },
               }}
             >

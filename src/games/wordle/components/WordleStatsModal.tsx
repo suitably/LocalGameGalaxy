@@ -4,6 +4,7 @@
 
 import React from 'react';
 import {
+  alpha,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -75,7 +76,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
               textAlign: 'center',
               my: 1.5,
               p: 1.5,
-              bgcolor: 'rgba(255, 255, 255, 0.05)',
+              bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
               borderRadius: 2,
             }}
           >
@@ -84,7 +85,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
             </Typography>
             <Typography
               variant="h5"
-              sx={{ fontWeight: 800, color: '#90caf9', letterSpacing: 2, mt: 0.5 }}
+              sx={{ fontWeight: 800, color: 'secondary.main', letterSpacing: 2, mt: 0.5 }}
             >
               {targetWord}
             </Typography>
@@ -150,9 +151,9 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
                     sx={{
                       height: 22,
                       borderRadius: 1,
-                      bgcolor: 'rgba(255, 255, 255, 0.08)',
+                      bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
                       '& .MuiLinearProgress-bar': {
-                        bgcolor: isCurrentWinningRow ? '#2e7d32' : '#374151',
+                        bgcolor: isCurrentWinningRow ? 'success.main' : 'action.disabledBackground',
                         borderRadius: 1,
                       },
                     }}
@@ -164,7 +165,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
                       right: 8,
                       top: 2,
                       fontWeight: 800,
-                      color: '#ffffff',
+                      color: 'text.primary',
                     }}
                   >
                     {count}

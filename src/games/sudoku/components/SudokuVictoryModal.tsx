@@ -4,6 +4,7 @@
 
 import React from 'react';
 import {
+  alpha,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -73,7 +74,7 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
         <Box sx={{ textAlign: 'center', my: 2 }}>
           <Typography
             variant="h3"
-            sx={{ fontWeight: 800, color: isWon ? '#4ade80' : '#ef4444', mb: 1 }}
+            sx={{ fontWeight: 800, color: isWon ? 'success.main' : 'error.main', mb: 1 }}
           >
             {formatTime(timeElapsed)}
           </Typography>
@@ -88,7 +89,14 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
           )}
         </Box>
 
-        <Stack spacing={1} sx={{ p: 2, bgcolor: 'rgba(255, 255, 255, 0.04)', borderRadius: 2 }}>
+        <Stack
+          spacing={1}
+          sx={{
+            p: 2,
+            bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
+            borderRadius: 2,
+          }}
+        >
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Typography variant="body2" color="text.secondary">
               {t('sudoku.mistakes', 'Fehler')}:
@@ -110,7 +118,7 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
               <Typography variant="body2" color="text.secondary">
                 {t('sudoku.best_time', 'Bestzeit')}:
               </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700, color: '#60a5fa' }}>
+              <Typography variant="body2" sx={{ fontWeight: 700, color: 'secondary.main' }}>
                 {formatTime(bestTime)}
               </Typography>
             </Box>

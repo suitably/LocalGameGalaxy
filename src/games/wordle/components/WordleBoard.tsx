@@ -14,11 +14,15 @@ interface WordleBoardProps {
 }
 
 const statusColors: Record<LetterStatus, { bg: string; border: string; text: string }> = {
-  correct: { bg: '#2e7d32', border: '#2e7d32', text: '#ffffff' }, // Green
-  present: { bg: '#f9a825', border: '#f9a825', text: '#ffffff' }, // Yellow
-  absent: { bg: '#374151', border: '#374151', text: '#9ca3af' },  // Gray
-  tbd: { bg: 'transparent', border: '#4b5563', text: '#ffffff' },
-  empty: { bg: 'transparent', border: 'rgba(255, 255, 255, 0.12)', text: '#ffffff' },
+  correct: { bg: 'success.main', border: 'success.main', text: 'success.contrastText' },
+  present: { bg: 'warning.main', border: 'warning.main', text: 'warning.contrastText' },
+  absent: {
+    bg: 'action.disabledBackground',
+    border: 'action.disabledBackground',
+    text: 'text.secondary',
+  },
+  tbd: { bg: 'transparent', border: 'text.disabled', text: 'text.primary' },
+  empty: { bg: 'transparent', border: 'divider', text: 'text.primary' },
 };
 
 export const WordleBoard: React.FC<WordleBoardProps> = ({
@@ -90,12 +94,14 @@ export const WordleBoard: React.FC<WordleBoardProps> = ({
                     textTransform: 'uppercase',
                     userSelect: 'none',
                     borderRadius: 1.5,
-                    border: `2px solid ${isFilled && tile.status === 'tbd' ? '#90caf9' : style.border}`,
+                    border: '2px solid',
+                    borderColor:
+                      isFilled && tile.status === 'tbd' ? 'secondary.main' : style.border,
                     bgcolor: style.bg,
                     color: style.text,
                     transform: isFilled && isCurrentRow ? 'scale(1.04)' : 'none',
                     transition: 'all 0.15s ease-in-out',
-                    boxShadow: tile.status === 'correct' ? '0 0 12px rgba(46, 125, 50, 0.4)' : 'none',
+                    boxShadow: 'none',
                   }}
                 >
                   {tile.char}

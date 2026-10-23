@@ -17,11 +17,11 @@ interface WordleKeyboardProps {
 }
 
 const keyBgColors: Record<LetterStatus, { bg: string; text: string }> = {
-  correct: { bg: '#2e7d32', text: '#ffffff' },
-  present: { bg: '#f9a825', text: '#ffffff' },
-  absent: { bg: '#374151', text: '#9ca3af' },
-  tbd: { bg: 'rgba(255, 255, 255, 0.08)', text: '#ffffff' },
-  empty: { bg: 'rgba(255, 255, 255, 0.08)', text: '#ffffff' },
+  correct: { bg: 'success.main', text: 'success.contrastText' },
+  present: { bg: 'warning.main', text: 'warning.contrastText' },
+  absent: { bg: 'action.disabledBackground', text: 'text.disabled' },
+  tbd: { bg: 'background.paper', text: 'text.primary' },
+  empty: { bg: 'background.paper', text: 'text.primary' },
 };
 
 export const WordleKeyboard: React.FC<WordleKeyboardProps> = ({
@@ -39,17 +39,7 @@ export const WordleKeyboard: React.FC<WordleKeyboardProps> = ({
       ? ['Q', 'W', 'E', 'R', 'T', 'Z', 'U', 'I', 'O', 'P']
       : ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
     ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-    [
-      'ENTER',
-      isGerman ? 'Y' : 'Z',
-      'X',
-      'C',
-      'V',
-      'B',
-      'N',
-      'M',
-      'DELETE',
-    ],
+    ['ENTER', isGerman ? 'Y' : 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'DELETE'],
   ];
 
   // Physical keyboard listener
@@ -121,13 +111,15 @@ export const WordleKeyboard: React.FC<WordleKeyboardProps> = ({
                   minWidth: isSpecial ? { xs: 54, sm: 66 } : { xs: 30, sm: 38 },
                   height: { xs: 50, sm: 54 },
                   p: 0,
-                  fontSize: isSpecial ? { xs: '0.75rem', sm: '0.85rem' } : { xs: '1.15rem', sm: '1.25rem' },
+                  fontSize: isSpecial
+                    ? { xs: '0.75rem', sm: '0.85rem' }
+                    : { xs: '1.15rem', sm: '1.25rem' },
                   fontWeight: 700,
-                  bgcolor: isSpecial ? 'rgba(255, 255, 255, 0.12)' : style.bg,
-                  color: isSpecial ? '#ffffff' : style.text,
+                  bgcolor: isSpecial ? 'action.selected' : style.bg,
+                  color: isSpecial ? 'text.primary' : style.text,
                   borderRadius: 1.5,
                   '&:hover': {
-                    bgcolor: isSpecial ? 'rgba(255, 255, 255, 0.2)' : style.bg,
+                    bgcolor: isSpecial ? 'action.focus' : style.bg,
                     filter: 'brightness(1.15)',
                   },
                   '&:active': {

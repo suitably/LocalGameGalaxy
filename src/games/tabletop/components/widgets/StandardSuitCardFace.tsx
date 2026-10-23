@@ -47,7 +47,7 @@ export const StandardSuitCardFace: React.FC<StandardSuitCardFaceProps> = ({
       sx={{
         width: '100%',
         height: '100%',
-        bgcolor: '#fff',
+        bgcolor: 'text.primary',
         p: 0.8,
         display: 'flex',
         flexDirection: 'column',
@@ -58,13 +58,19 @@ export const StandardSuitCardFace: React.FC<StandardSuitCardFaceProps> = ({
       }}
     >
       {/* Top-Left Index */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 22, lineHeight: 1 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          width: 22,
+          lineHeight: 1,
+        }}
+      >
         <Typography sx={{ fontSize: '0.95rem', fontWeight: 900, color, lineHeight: 1 }}>
           {rank}
         </Typography>
-        <Typography sx={{ fontSize: '0.85rem', color, lineHeight: 1 }}>
-          {suit}
-        </Typography>
+        <Typography sx={{ fontSize: '0.85rem', color, lineHeight: 1 }}>{suit}</Typography>
       </Box>
 
       {/* Center Graphic */}
@@ -81,22 +87,33 @@ export const StandardSuitCardFace: React.FC<StandardSuitCardFaceProps> = ({
         }}
       >
         {isAce ? (
-          <Typography sx={{ fontSize: '3rem', color, lineHeight: 1, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}>
+          <Typography
+            sx={{
+              fontSize: '3rem',
+              color,
+              lineHeight: 1,
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+            }}
+          >
             {suit}
           </Typography>
         ) : isCourt ? (
-          <Box sx={{ textAlign: 'center', border: `1.5px solid ${color}`, borderRadius: 1.5, px: 1, py: 0.2 }}>
+          <Box
+            sx={{
+              textAlign: 'center',
+              border: `1.5px solid ${color}`,
+              borderRadius: 1.5,
+              px: 1,
+              py: 0.2,
+            }}
+          >
             <Typography sx={{ fontSize: '1.6rem', fontWeight: 900, color, lineHeight: 1 }}>
               {rank}
             </Typography>
-            <Typography sx={{ fontSize: '1.2rem', color, lineHeight: 1 }}>
-              {suit}
-            </Typography>
+            <Typography sx={{ fontSize: '1.2rem', color, lineHeight: 1 }}>{suit}</Typography>
           </Box>
         ) : (
-          <Typography sx={{ fontSize: '2.2rem', color, lineHeight: 1 }}>
-            {suit}
-          </Typography>
+          <Typography sx={{ fontSize: '2.2rem', color, lineHeight: 1 }}>{suit}</Typography>
         )}
       </Box>
 
@@ -115,9 +132,7 @@ export const StandardSuitCardFace: React.FC<StandardSuitCardFaceProps> = ({
         <Typography sx={{ fontSize: '0.95rem', fontWeight: 900, color, lineHeight: 1 }}>
           {rank}
         </Typography>
-        <Typography sx={{ fontSize: '0.85rem', color, lineHeight: 1 }}>
-          {suit}
-        </Typography>
+        <Typography sx={{ fontSize: '0.85rem', color, lineHeight: 1 }}>{suit}</Typography>
       </Box>
     </Box>
   );

@@ -3,7 +3,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { Box, Button, IconButton, Stack, Typography, Tooltip } from '@mui/material';
+import { alpha, Box, Button, IconButton, Stack, Typography, Tooltip } from '@mui/material';
 import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
 import BackspaceOutlinedIcon from '@mui/icons-material/BackspaceOutlined';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
@@ -68,13 +68,21 @@ export const SudokuNumpad: React.FC<SudokuNumpadProps> = ({
       {/* Action Toolbar */}
       <Stack direction="row" justifyContent="space-around" sx={{ mb: 1.5 }}>
         <Tooltip title={t('sudoku.actions.undo', 'Rückgängig (Ctrl+Z)')}>
-          <IconButton onClick={onUndo} disabled={disabled} sx={{ bgcolor: 'rgba(255, 255, 255, 0.08)' }}>
+          <IconButton
+            onClick={onUndo}
+            disabled={disabled}
+            sx={{ bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08) }}
+          >
             <UndoRoundedIcon />
           </IconButton>
         </Tooltip>
 
         <Tooltip title={t('sudoku.actions.erase', 'Löschen (Entf)')}>
-          <IconButton onClick={onErase} disabled={disabled} sx={{ bgcolor: 'rgba(255, 255, 255, 0.08)' }}>
+          <IconButton
+            onClick={onErase}
+            disabled={disabled}
+            sx={{ bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08) }}
+          >
             <BackspaceOutlinedIcon />
           </IconButton>
         </Tooltip>
@@ -94,7 +102,11 @@ export const SudokuNumpad: React.FC<SudokuNumpadProps> = ({
         </Tooltip>
 
         <Tooltip title={t('sudoku.actions.hint', 'Hinweis (H)')}>
-          <IconButton onClick={onHint} disabled={disabled} sx={{ bgcolor: 'rgba(255, 255, 255, 0.08)' }}>
+          <IconButton
+            onClick={onHint}
+            disabled={disabled}
+            sx={{ bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08) }}
+          >
             <LightbulbOutlinedIcon color="warning" />
           </IconButton>
         </Tooltip>
@@ -126,20 +138,29 @@ export const SudokuNumpad: React.FC<SudokuNumpadProps> = ({
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
-                bgcolor: isDone ? 'rgba(255, 255, 255, 0.04)' : '#1e293b',
-                color: isDone ? '#64748b' : '#60a5fa',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                bgcolor: isDone ? 'background.default' : 'background.paper',
+                color: isDone ? 'text.disabled' : 'secondary.main',
+                border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
                 borderRadius: 1.5,
                 '&:hover': {
-                  bgcolor: '#2563eb',
-                  color: '#ffffff',
+                  bgcolor: 'secondary.main',
+                  color: 'secondary.contrastText',
                 },
               }}
             >
-              <Typography sx={{ fontSize: { xs: '1.2rem', sm: '1.4rem' }, fontWeight: 800, lineHeight: 1 }}>
+              <Typography
+                sx={{ fontSize: { xs: '1.2rem', sm: '1.4rem' }, fontWeight: 800, lineHeight: 1 }}
+              >
                 {num}
               </Typography>
-              <Typography sx={{ fontSize: '0.65rem', color: isDone ? '#475569' : '#94a3b8', lineHeight: 1, mt: 0.3 }}>
+              <Typography
+                sx={{
+                  fontSize: '0.65rem',
+                  color: isDone ? 'text.disabled' : 'text.secondary',
+                  lineHeight: 1,
+                  mt: 0.3,
+                }}
+              >
                 {remaining}
               </Typography>
             </Button>

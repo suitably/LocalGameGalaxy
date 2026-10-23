@@ -2,7 +2,7 @@
  * Games that can be launched in the room [ID: COMP-PARTY-GAME-SELECTION]
  */
 import React from 'react';
-import { Box, Button, Card, Chip, Typography } from '@mui/material';
+import { alpha, Box, Button, Card, Chip, Typography } from '@mui/material';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import { useTranslation } from 'react-i18next';
 import type { PartyLobbyController } from '../hooks/usePartyLobbyController';
@@ -51,7 +51,7 @@ export const PartyGameSelection: React.FC<{ lobby: PartyLobbyController }> = ({ 
               transition: 'transform 0.2s, box-shadow 0.2s',
               '&:hover': {
                 transform: 'translateY(-2px)',
-                boxShadow: '0 6px 20px rgba(25, 118, 210, 0.15)',
+                boxShadow: (theme) => `0 6px 20px ${alpha(theme.palette.secondary.main, 0.15)}`,
               },
             }}
           >
@@ -84,7 +84,7 @@ export const PartyGameSelection: React.FC<{ lobby: PartyLobbyController }> = ({ 
                   fontWeight: 800,
                   borderRadius: 2.5,
                   py: 1.2,
-                  boxShadow: '0 4px 14px rgba(25, 118, 210, 0.35)',
+                  boxShadow: (theme) => `0 4px 14px ${alpha(theme.palette.secondary.main, 0.35)}`,
                 }}
               >
                 Spiel wählen & starten

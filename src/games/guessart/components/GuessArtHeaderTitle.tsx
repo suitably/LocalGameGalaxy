@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Chip, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { alpha, Box, Chip, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material';
 import BrushRoundedIcon from '@mui/icons-material/BrushRounded';
 import PsychologyRoundedIcon from '@mui/icons-material/PsychologyRounded';
 import LockRoundedIcon from '@mui/icons-material/LockRounded';
@@ -30,11 +30,20 @@ export const GuessArtHeaderTitle: React.FC<GuessArtHeaderTitleProps> = ({
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const isMediumUp = useMediaQuery(theme.breakpoints.up('md'));
 
-  const isLocalDrawingActive = isDrawing && isCurrentTurnLocal && round.status === 'drawing' && Boolean(round.word);
+  const isLocalDrawingActive =
+    isDrawing && isCurrentTurnLocal && round.status === 'drawing' && Boolean(round.word);
 
   if (isLocalDrawingActive && round.word) {
     return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.8, sm: 1.5 }, minWidth: 0, flexWrap: 'nowrap' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: { xs: 0.8, sm: 1.5 },
+          minWidth: 0,
+          flexWrap: 'nowrap',
+        }}
+      >
         <Box
           sx={{
             display: 'inline-flex',
@@ -84,20 +93,26 @@ export const GuessArtHeaderTitle: React.FC<GuessArtHeaderTitleProps> = ({
         </Box>
 
         <Chip
-          label={t('guessart.roundHeader', { round: round.roundNumber, defaultValue: `Runde ${round.roundNumber}` })}
+          label={t('guessart.roundHeader', {
+            round: round.roundNumber,
+            defaultValue: `Runde ${round.roundNumber}`,
+          })}
           size="small"
           variant="outlined"
           sx={{
             fontSize: '0.75rem',
             height: { xs: 22, sm: 24 },
-            borderColor: 'rgba(255, 255, 255, 0.2)',
+            borderColor: (theme) => alpha(theme.palette.text.primary, 0.2),
             display: { xs: 'none', xs_plus: 'inline-flex', sm: 'inline-flex' },
             flexShrink: 0,
           }}
         />
 
         {isMediumUp && (
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600, flexShrink: 0 }}>
+          <Typography
+            variant="caption"
+            sx={{ color: 'text.secondary', fontWeight: 600, flexShrink: 0 }}
+          >
             ({currentDrawer} vs. {currentGuesser})
           </Typography>
         )}
@@ -126,7 +141,10 @@ export const GuessArtHeaderTitle: React.FC<GuessArtHeaderTitleProps> = ({
         label={
           isSmallScreen
             ? `R${round.roundNumber}`
-            : t('guessart.roundHeader', { round: round.roundNumber, defaultValue: `Runde ${round.roundNumber}` })
+            : t('guessart.roundHeader', {
+                round: round.roundNumber,
+                defaultValue: `Runde ${round.roundNumber}`,
+              })
         }
         size="small"
         variant="outlined"
@@ -143,15 +161,27 @@ export const GuessArtHeaderTitle: React.FC<GuessArtHeaderTitleProps> = ({
       )}
 
       <Chip
-        icon={isDrawing ? <BrushRoundedIcon fontSize="small" /> : <PsychologyRoundedIcon fontSize="small" />}
+        icon={
+          isDrawing ? (
+            <BrushRoundedIcon fontSize="small" />
+          ) : (
+            <PsychologyRoundedIcon fontSize="small" />
+          )
+        }
         label={
           isDrawing
             ? isSmallScreen
               ? currentDrawer
-              : t('guessart.drawerLabel', { name: currentDrawer, defaultValue: `Zeichnet: ${currentDrawer}` })
+              : t('guessart.drawerLabel', {
+                  name: currentDrawer,
+                  defaultValue: `Zeichnet: ${currentDrawer}`,
+                })
             : isSmallScreen
               ? currentGuesser
-              : t('guessart.guesserLabel', { name: currentGuesser, defaultValue: `Rät: ${currentGuesser}` })
+              : t('guessart.guesserLabel', {
+                  name: currentGuesser,
+                  defaultValue: `Rät: ${currentGuesser}`,
+                })
         }
         color={isDrawing ? 'primary' : 'secondary'}
         size="small"

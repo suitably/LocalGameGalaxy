@@ -1,13 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { alpha, Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
 import { useTranslation } from 'react-i18next';
@@ -82,7 +74,9 @@ export const StoryWriterView: React.FC<StoryWriterViewProps> = ({
       handleSend();
     } else {
       // If nothing entered, provide a narrative fallback turn
-      onSubmitTurn(t('storyteller.timeoutFallback', '...und plötzlich geschah eine unerwartete Wendung!')).then(() => {
+      onSubmitTurn(
+        t('storyteller.timeoutFallback', '...und plötzlich geschah eine unerwartete Wendung!'),
+      ).then(() => {
         setText('');
       });
     }
@@ -130,8 +124,8 @@ export const StoryWriterView: React.FC<StoryWriterViewProps> = ({
       <Card
         variant="outlined"
         sx={{
-          bgcolor: 'rgba(255, 255, 255, 0.02)',
-          borderColor: 'rgba(255, 255, 255, 0.12)',
+          bgcolor: (theme) => alpha(theme.palette.text.primary, 0.02),
+          borderColor: (theme) => alpha(theme.palette.text.primary, 0.12),
           borderRadius: 2,
           flexGrow: 1,
           display: 'flex',
@@ -148,7 +142,7 @@ export const StoryWriterView: React.FC<StoryWriterViewProps> = ({
             flexGrow: 1,
           }}
         >
-          <Typography variant="caption" fontWeight={600} sx={{ color: '#94a3b8', mb: 1 }}>
+          <Typography variant="caption" fontWeight={600} sx={{ color: 'text.secondary', mb: 1 }}>
             {t('storyteller.authorInputTitle', 'Dein Textabschnitt')}: {activePlayer.name}
           </Typography>
 
@@ -168,14 +162,14 @@ export const StoryWriterView: React.FC<StoryWriterViewProps> = ({
             sx={{
               flexGrow: 1,
               '& .MuiOutlinedInput-root': {
-                bgcolor: 'rgba(15, 23, 42, 0.4)',
-                color: '#f8fafc',
+                bgcolor: (theme) => alpha(theme.palette.background.default, 0.4),
+                color: 'text.primary',
                 fontSize: { xs: '0.95rem', sm: '1rem' },
                 lineHeight: 1.6,
                 fontFamily: 'Georgia, serif',
-                '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.15)' },
-                '&:hover fieldset': { borderColor: '#38bdf8' },
-                '&.Mui-focused fieldset': { borderColor: '#38bdf8' },
+                '& fieldset': { borderColor: (theme) => alpha(theme.palette.text.primary, 0.15) },
+                '&:hover fieldset': { borderColor: 'secondary.main' },
+                '&.Mui-focused fieldset': { borderColor: 'secondary.main' },
               },
             }}
           />
@@ -190,7 +184,7 @@ export const StoryWriterView: React.FC<StoryWriterViewProps> = ({
               gap: 1,
             }}
           >
-            <Typography variant="caption" sx={{ color: '#64748b' }}>
+            <Typography variant="caption" sx={{ color: 'text.disabled' }}>
               {wordsCount} {t('storyteller.words', 'Wörter')} | {text.length}{' '}
               {t('storyteller.characters', 'Zeichen')}
             </Typography>
@@ -204,7 +198,7 @@ export const StoryWriterView: React.FC<StoryWriterViewProps> = ({
                   onClick={onFinishStory}
                   disabled={submitting || loading}
                   startIcon={<CheckCircleOutlineRoundedIcon />}
-                  sx={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}
+                  sx={{ borderColor: (theme) => alpha(theme.palette.text.primary, 0.2) }}
                 >
                   {t('storyteller.finishStory', 'Geschichte beenden')}
                 </Button>
@@ -217,8 +211,6 @@ export const StoryWriterView: React.FC<StoryWriterViewProps> = ({
                 disabled={!text.trim() || !allRouletteWordsMet || submitting || loading}
                 startIcon={<SendRoundedIcon />}
                 sx={{
-                  bgcolor: '#0284c7',
-                  '&:hover': { bgcolor: '#0369a1' },
                   fontWeight: 600,
                   px: 2,
                 }}

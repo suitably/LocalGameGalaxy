@@ -64,7 +64,9 @@ export const NotificationSettings: React.FC = () => {
 
       let res = await fetch(primaryUrl, { signal: controller.signal }).catch(() => null);
       if (!res || !res.ok) {
-        res = await fetch(`${cleanUrl}/vapid-public-key`, { signal: controller.signal }).catch(() => null);
+        res = await fetch(`${cleanUrl}/vapid-public-key`, { signal: controller.signal }).catch(
+          () => null,
+        );
       }
       clearTimeout(timeoutId);
 
@@ -97,7 +99,7 @@ export const NotificationSettings: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-      <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
         {t(
           'settings.notifications_desc',
           'Push-Benachrichtigungen informieren dich, wenn du in einem Spiel (z.B. GuessArt, Geschichtenschreiber) an der Reihe bist.',
@@ -118,9 +120,7 @@ export const NotificationSettings: React.FC = () => {
           <MenuItem value="auto">
             {t('settings.method_auto', '🟢 Automatisch (Web-Push mit ntfy Fallback)')}
           </MenuItem>
-          <MenuItem value="ntfy">
-            {t('settings.method_ntfy', '🛡️ Google-frei via ntfy')}
-          </MenuItem>
+          <MenuItem value="ntfy">{t('settings.method_ntfy', '🛡️ Google-frei via ntfy')}</MenuItem>
           <MenuItem value="webpush">
             {t('settings.method_webpush', '🌐 Nur Browser-Push (Chrome / Firefox / Safari)')}
           </MenuItem>
@@ -138,12 +138,20 @@ export const NotificationSettings: React.FC = () => {
 
       {/* Push Relay URL section */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: 1 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 1,
+          }}
+        >
           <Typography variant="subtitle2" fontWeight={700}>
             {t('settings.relay_title', 'Push-Relay Server (Cloudflare Worker)')}
           </Typography>
         </Box>
-        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.55)' }}>
+        <Typography variant="body2" sx={{ color: 'text.disabled' }}>
           {t(
             'settings.relay_desc',
             'URL deines Cloudflare Workers, der Benachrichtigungen an Mitspieler weiterleitet. Unterstützt automatisch Web-Push und ntfy.',

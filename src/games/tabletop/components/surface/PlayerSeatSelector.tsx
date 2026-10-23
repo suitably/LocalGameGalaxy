@@ -2,7 +2,7 @@
  * Floating TTS-style player seat selector [ID: GAME-TABLETOP-SEAT-SELECTOR]
  */
 import React from 'react';
-import { Box, Tooltip, IconButton, Typography } from '@mui/material';
+import { alpha, Box, Tooltip, IconButton, Typography } from '@mui/material';
 import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize';
 import CheckIcon from '@mui/icons-material/Check';
 import { useTranslation } from 'react-i18next';
@@ -36,9 +36,9 @@ export const PlayerSeatSelector: React.FC<PlayerSeatSelectorProps> = ({
         display: 'flex',
         alignItems: 'center',
         gap: 1,
-        bgcolor: 'rgba(24, 24, 27, 0.88)',
+        bgcolor: (theme) => alpha(theme.palette.background.default, 0.88),
         backdropFilter: 'blur(8px)',
-        border: '1px solid rgba(255, 255, 255, 0.18)',
+        border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.18)}`,
         borderRadius: 3,
         px: 1.2,
         py: 0.6,
@@ -46,7 +46,7 @@ export const PlayerSeatSelector: React.FC<PlayerSeatSelectorProps> = ({
         userSelect: 'none',
       }}
     >
-      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 700, mr: 0.5 }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, mr: 0.5 }}>
         {t('games.tabletop.seat', 'Sitz')}:
       </Typography>
 
@@ -71,24 +71,29 @@ export const PlayerSeatSelector: React.FC<PlayerSeatSelectorProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                border: isCurrent ? '2.5px solid #fff' : '1.5px solid rgba(255,255,255,0.3)',
-                boxShadow: isCurrent ? `0 0 10px ${color}, 0 2px 6px rgba(0,0,0,0.5)` : '0 2px 4px rgba(0,0,0,0.4)',
+                border: isCurrent ? '2.5px solid' : '1.5px solid',
+                borderColor: isCurrent ? 'text.primary' : 'divider',
+                boxShadow: isCurrent
+                  ? `0 0 10px ${color}, 0 2px 6px rgba(0,0,0,0.5)`
+                  : '0 2px 4px rgba(0,0,0,0.4)',
                 transform: isCurrent ? 'scale(1.15)' : 'scale(1)',
                 transition: 'transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease',
                 '&:hover': {
                   transform: 'scale(1.2)',
-                  borderColor: '#fff',
+                  borderColor: 'text.primary',
                 },
               }}
             >
               {isCurrent ? (
-                <CheckIcon sx={{ fontSize: 16, color: color === '#f8fafc' ? '#000' : '#fff' }} />
+                <CheckIcon
+                  sx={{ fontSize: 16, color: (theme) => theme.palette.getContrastText(color) }}
+                />
               ) : (
                 <Typography
                   sx={{
                     fontSize: '0.65rem',
                     fontWeight: 900,
-                    color: color === '#f8fafc' ? '#000' : '#fff',
+                    color: (theme) => theme.palette.getContrastText(color),
                     lineHeight: 1,
                   }}
                 >
@@ -107,9 +112,12 @@ export const PlayerSeatSelector: React.FC<PlayerSeatSelectorProps> = ({
             onClick={onToggleHud}
             sx={{
               ml: 0.5,
-              color: 'rgba(255,255,255,0.85)',
+              color: 'text.secondary',
               p: 0.5,
-              '&:hover': { bgcolor: 'rgba(255,255,255,0.15)', color: '#fff' },
+              '&:hover': {
+                bgcolor: (theme) => alpha(theme.palette.text.primary, 0.15),
+                color: 'text.primary',
+              },
             }}
           >
             <DashboardCustomizeIcon sx={{ fontSize: 18 }} />

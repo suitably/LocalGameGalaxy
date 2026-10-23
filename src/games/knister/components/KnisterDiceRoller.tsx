@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Paper, Typography, Button, Chip } from '@mui/material';
+import { alpha, Box, Paper, Typography, Button, Chip } from '@mui/material';
 import CasinoIcon from '@mui/icons-material/Casino';
 import { useTranslation } from 'react-i18next';
 import { Die3D } from '../../../components/games/Die3D';
@@ -45,8 +45,8 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
       sx={{
         p: { xs: 1.5, sm: 2 },
         borderRadius: 3,
-        bgcolor: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
+        border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
         backdropFilter: 'blur(8px)',
         mb: 2,
         width: '100%',
@@ -72,7 +72,7 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
               display: 'flex',
               gap: 1,
               p: 0.5,
-              bgcolor: 'rgba(255, 255, 255, 0.08)',
+              bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
               borderRadius: 2,
             }}
           >
@@ -153,7 +153,7 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
             maxWidth: '100%',
             mt: 1.5,
             pt: 1,
-            borderTop: '1px solid rgba(255,255,255,0.06)',
+            borderTop: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
           }}
         >
           <Typography

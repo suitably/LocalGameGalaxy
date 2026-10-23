@@ -5,7 +5,7 @@
  * actions, so they sync to phones like any other change.
  */
 import React, { useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import type { TabletopAction, TabletopGameState } from '../../logic/tabletopReducer';
 import { TabletopSurface } from '../surface/TabletopSurface';
 import { TableMotionStyles } from '../surface/TableMotionStyles';
@@ -25,9 +25,9 @@ interface TabletopEditorProps {
 }
 
 /** Outlines the selected widget; board widgets sit in a `display: contents` wrapper. */
-const selectionCss = (id: string) => {
+const selectionCss = (id: string, color: string) => {
   const sel = `[data-widget-id="${CSS.escape(id)}"]`;
-  return `${sel}[data-widget-wrapper] > *, ${sel}:not([data-widget-wrapper]) { outline: 3px solid #ffb300; outline-offset: 2px; }`;
+  return `${sel}[data-widget-wrapper] > *, ${sel}:not([data-widget-wrapper]) { outline: 3px solid ${color}; outline-offset: 2px; }`;
 };
 
 export const TabletopEditor: React.FC<TabletopEditorProps> = ({
@@ -37,6 +37,7 @@ export const TabletopEditor: React.FC<TabletopEditorProps> = ({
   hideSeatSelector,
 }) => {
   const editor = useTabletopEditor(state, dispatch);
+  const theme = useTheme();
   const [tableOpen, setTableOpen] = useState(false);
   const [deckOpen, setDeckOpen] = useState(false);
 
@@ -58,7 +59,9 @@ export const TabletopEditor: React.FC<TabletopEditorProps> = ({
           hideSeatSelector={hideSeatSelector}
         />
       </Box>
-      {editor.editMode && editor.selectedId && <style>{selectionCss(editor.selectedId)}</style>}
+      {editor.editMode && editor.selectedId && (
+        <style>{selectionCss(editor.selectedId, theme.palette.secondary.main)}</style>
+      )}
       {editor.editMode && editor.selected && (
         <SelectionHandles
           key={editor.selected.id}
