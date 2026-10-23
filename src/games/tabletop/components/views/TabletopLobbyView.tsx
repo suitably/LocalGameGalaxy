@@ -1,212 +1,147 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Container,
-  Paper,
-  Typography,
-  Button,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
-} from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import GroupsIcon from '@mui/icons-material/Groups';
-import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
+/**
+ * The Spieltisch: card, board and dice games, played on one device or everyone on their own [ID: GAME-TABLETOP-LOBBY]
+ */
+import React, { useEffect, useState } from 'react';
+import { Box, Button, Container, Grid, Paper, Typography } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useTranslation } from 'react-i18next';
 import { GameManagerDialog } from '../manager/GameManagerDialog';
 import { PublishTabletopGameDialog } from '../publisher/PublishTabletopGameDialog';
 import type { TabletopGameDefinition, TabletopGameSummary } from '../../logic/types';
 import { listTabletopGames } from '../../logic/tabletopStorage';
+import {
+  DICE_GAMES,
+  TABLETOP_STARTERS,
+  playModesOf,
+  routeFor,
+  type PlayMode,
+  type TableGameEntry,
+} from '../../logic/tableCatalog';
+import { TableGameCard } from './TableGameCard';
+import { PlayModeSheet } from './PlayModeSheet';
 
 interface TabletopLobbyViewProps {
-  onStartLocalGame: (gameId: string) => void;
-  onStartPartyGame: (gameId: string) => void;
+  /** Opens a route (local tabletop, party lobby with the game, or a dice game). */
+  onOpen: (route: string) => void;
 }
 
-export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({
-  onStartLocalGame,
-  onStartPartyGame,
-}) => {
+export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) => {
   const { t } = useTranslation();
   const [managerOpen, setManagerOpen] = useState(false);
   const [publishGame, setPublishGame] = useState<TabletopGameDefinition | null>(null);
   const [installedGames, setInstalledGames] = useState<TabletopGameSummary[]>([]);
-
-  const BUILTIN_STARTERS = [
-    {
-      id: 'standard-cards',
-      name: 'Standard Kartendeck (52)',
-      desc: 'Mau-Mau, Skat, Poker oder Rommé mit geteiltem Tisch und Smartphone-Handkarten.',
-      modes: ['party_multi_device', 'local_pass_and_play'],
-      icon: '🃏',
-      color: '#1976d2',
-    },
-    {
-      id: 'liars-dice',
-      name: 'Liar\'s Dice / Perudo',
-      desc: 'Bluff-Würfelspiel mit 3D-Würfeln und verdeckten Bechern auf jedem Smartphone.',
-      modes: ['party_multi_device'],
-      icon: '🎲',
-      color: '#f57c00',
-    },
-    {
-      id: 'checkers',
-      name: 'Dame / Checkers',
-      desc: 'Klassisches Brettspiel für zwei Spieler auf einem 8x8 Schachbrett.',
-      modes: ['local_pass_and_play', 'party_multi_device'],
-      icon: '🏁',
-      color: '#388e3c',
-    },
-  ];
+  const [choosing, setChoosing] = useState<TableGameEntry | null>(null);
 
   useEffect(() => {
-    listTabletopGames().then(setInstalledGames).catch(() => {});
+    listTabletopGames()
+      .then(setInstalledGames)
+      .catch(() => {});
   }, [managerOpen]);
 
+  const titleOf = (g: TableGameEntry) => t(g.titleKey, g.title);
+  // One mode: open straight away (fewest taps); two: ask how to play.
+  const play = (g: TableGameEntry) =>
+    g.modes.length === 1 ? onOpen(routeFor(g, g.modes[0])) : setChoosing(g);
+  const custom: TableGameEntry[] = installedGames.map((g) => ({
+    id: g.id,
+    kind: 'tabletop',
+    titleKey: '',
+    title: g.name,
+    desc: t('games.tabletop.custom_game_meta', '{{min}}–{{max}} Spieler', {
+      min: g.minPlayers,
+      max: g.maxPlayers,
+    }),
+    icon: '🧩',
+    color: '#7c3aed',
+    modes: playModesOf(g.supportedModes),
+  }));
+
+  const section = (title: string, games: TableGameEntry[]) =>
+    games.length > 0 && (
+      <Box mb={3}>
+        <Typography variant="h6" fontWeight={800} sx={{ mb: 1.5 }}>
+          {title}
+        </Typography>
+        <Grid container spacing={1.5}>
+          {games.map((g) => (
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={g.id}>
+              <TableGameCard
+                title={g.titleKey ? titleOf(g) : g.title}
+                desc={g.descKey ? t(g.descKey, g.desc ?? '') : g.desc}
+                icon={g.icon}
+                color={g.color}
+                modes={g.modes}
+                onPlay={() => play(g)}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+    );
+
+  const byId = (id: string) => ({ id, kind: 'tabletop' as const });
   return (
-    <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: { xs: 2, sm: 3 } }}>
+    <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: { xs: 1.5, sm: 3 } }}>
       <Container maxWidth="md" disableGutters>
         <Paper
           elevation={3}
           sx={{
-            p: { xs: 2.5, sm: 4 },
+            p: { xs: 2, sm: 4 },
             borderRadius: 3.5,
-            bgcolor: 'background.paper',
             border: '1px solid',
             borderColor: 'divider',
           }}
         >
-          {/* Header */}
-          <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2} mb={3}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            flexWrap="wrap"
+            gap={1.5}
+            mb={2.5}
+          >
             <Box>
               <Typography variant="h4" fontWeight={900} color="primary.main">
-                {t('games.tabletop.title', 'Virtueller Spieltisch')}
+                {t('games.tabletop.title', 'Spieltisch')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {t('games.tabletop.subtitle', 'Beliebige Karten- & Brettspiele mit geteiltem Tisch und Smartphone-Handkarten spielen.')}
+                {t(
+                  'games.tabletop.subtitle',
+                  'Karten-, Brett- und Würfelspiele – auf einem Gerät für alle oder jeder am eigenen.',
+                )}
               </Typography>
             </Box>
-
-            <Box display="flex" gap={1}>
-              <Button
-                variant="outlined"
-                startIcon={<SettingsIcon />}
-                onClick={() => setManagerOpen(true)}
-              >
-                {t('games.tabletop.manage_games', 'Spiele verwalten')}
-              </Button>
-            </Box>
+            <Button
+              variant="outlined"
+              startIcon={<SettingsIcon />}
+              onClick={() => setManagerOpen(true)}
+            >
+              {t('games.tabletop.manage_games', 'Spiele verwalten')}
+            </Button>
           </Box>
 
-          {/* Starter Games Grid */}
-          <Typography variant="h6" fontWeight={800} sx={{ mb: 2 }}>
-            {t('games.tabletop.starter_games', 'Klassiker')}
-          </Typography>
-          <Grid container spacing={2.5} sx={{ mb: 4 }}>
-            {BUILTIN_STARTERS.map((game) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={game.id}>
-                <Card
-                  variant="outlined"
-                  sx={{
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    borderRadius: 3,
-                    borderTop: '4px solid',
-                    borderTopColor: game.color,
-                  }}
-                >
-                  <CardContent sx={{ flex: 1 }}>
-                    <Box display="flex" alignItems="center" gap={1} mb={1}>
-                      <Typography variant="h5">{game.icon}</Typography>
-                      <Typography variant="subtitle1" fontWeight={700}>
-                        {game.name}
-                      </Typography>
-                    </Box>
-                    <Typography variant="caption" color="text.secondary">
-                      {game.desc}
-                    </Typography>
-                  </CardContent>
-                  <CardActions sx={{ p: 2, pt: 0, gap: 1 }}>
-                    {game.modes.includes('local_pass_and_play') && (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<PhoneIphoneIcon />}
-                        onClick={() => onStartLocalGame(game.id)}
-                      >
-                        Lokal
-                      </Button>
-                    )}
-                    {game.modes.includes('party_multi_device') && (
-                      <Button
-                        size="small"
-                        variant="contained"
-                        startIcon={<GroupsIcon />}
-                        onClick={() => onStartPartyGame(game.id)}
-                      >
-                        Party
-                      </Button>
-                    )}
-                  </CardActions>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-
-          {/* Custom Games Section */}
-          {installedGames.length > 0 && (
-            <Box>
-              <Typography variant="h6" fontWeight={800} sx={{ mb: 2 }}>
-                {t('games.tabletop.custom_games', 'Eigene & Importierte Spiele')} ({installedGames.length})
-              </Typography>
-              <Grid container spacing={2}>
-                {installedGames.map((game) => (
-                  <Grid size={{ xs: 12, sm: 6 }} key={game.id}>
-                    <Card variant="outlined" sx={{ borderRadius: 3 }}>
-                      <CardContent>
-                        <Typography variant="subtitle1" fontWeight={700}>{game.name}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {game.minPlayers}-{game.maxPlayers} Spieler • {game.cardCount} Karten
-                        </Typography>
-                      </CardContent>
-                      <CardActions sx={{ px: 2, pb: 2 }}>
-                        <Button
-                          size="small"
-                          variant="contained"
-                          startIcon={<PlayArrowIcon />}
-                          onClick={() => onStartLocalGame(game.id)}
-                        >
-                          Starten
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          startIcon={<GroupsIcon />}
-                          onClick={() => onStartPartyGame(game.id)}
-                        >
-                          Party
-                        </Button>
-                      </CardActions>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
-          )}
+          {section(t('games.tabletop.starter_games', 'Klassiker'), TABLETOP_STARTERS)}
+          {section(t('games.tabletop.dice_games', 'Würfelspiele'), DICE_GAMES)}
+          {section(t('games.tabletop.custom_games', 'Eigene & Importierte Spiele'), custom)}
         </Paper>
       </Container>
+
+      <PlayModeSheet
+        gameTitle={choosing ? (choosing.titleKey ? titleOf(choosing) : choosing.title) : null}
+        onClose={() => setChoosing(null)}
+        onChoose={(mode: PlayMode) => {
+          if (choosing) onOpen(routeFor(choosing, mode));
+          setChoosing(null);
+        }}
+      />
 
       <GameManagerDialog
         open={managerOpen}
         onClose={() => setManagerOpen(false)}
-        onPlayParty={onStartPartyGame}
-        onPlayLocal={onStartLocalGame}
+        onPlayParty={(id) => onOpen(routeFor(byId(id), 'own_devices'))}
+        onPlayLocal={(id) => onOpen(routeFor(byId(id), 'shared_device'))}
         onPublish={setPublishGame}
       />
-
       <PublishTabletopGameDialog
         open={Boolean(publishGame)}
         game={publishGame}

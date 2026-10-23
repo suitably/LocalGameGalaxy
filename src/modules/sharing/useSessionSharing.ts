@@ -66,7 +66,8 @@ export function useSessionSharing<TGame, TSnapshot>({
         if ((snapshot as any).game) {
           (snapshot as any).game.updatedAt = updatedGame.updatedAt;
         }
-        await publishSync(game.id, snapshot);
+        // Not awaited: without a reachable broker the publish waits, the dialog must not.
+        Promise.resolve(publishSync(game.id, snapshot)).catch(() => {});
       } catch (e) {
         console.warn(
           `[useSessionSharing] Failed to mark player ${isRemote ? 'remote' : 'local'} in db:`,

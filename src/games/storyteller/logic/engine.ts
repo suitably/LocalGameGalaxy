@@ -17,8 +17,8 @@ import type {
   StoryGameSnapshot,
   StoryModifierSettings,
 } from '../types';
-import { playerAssignment } from './playerAssignment';
-import { isGameBaseSnapshotNewer, mergePlayerProfiles, hasPlayerChannelUpdates } from '../../../lib/utils/turnAssignment';
+import { isGameBaseSnapshotNewer } from '../../../lib/utils/turnAssignment';
+import { mergeSnapshotPlayers } from '../../../modules/player-management';
 
 export const isStorySnapshotNewer = (
   snapshot: StoryGameSnapshot,
@@ -35,7 +35,9 @@ export const isStorySnapshotNewer = (
     return true;
   }
 
-  const baseResult = isGameBaseSnapshotNewer(snapshot.game, existingGame);
+  const baseResult = isGameBaseSnapshotNewer(snapshot.game, existingGame, {
+    comparePlayers: false,
+  });
   if (baseResult !== null) {
     return baseResult;
   }
@@ -195,9 +197,13 @@ export const LocalStoryEngine = {
     return { game: updatedGame, entries };
   },
 
-  async importSnapshot(
-    snapshot: StoryGameSnapshot,
-  ): Promise<{ game: StoryGameRecord; entries: StoryEntry[]; updated: boolean }> {
+  async importSnapshot(snapshot: StoryGameSnapshot): Promise<{
+    game: StoryGameRecord;
+    entries: StoryEntry[];
+    updated: boolean;
+    /** Players another device took a seat for with this snapshot. */
+    joined?: StoryPlayer[];
+  }> {
     if (!snapshot || !snapshot.game) {
       throw new Error('Invalid story snapshot');
     }
@@ -213,49 +219,25 @@ export const LocalStoryEngine = {
 
     const existingEntries = await fetchEntriesForGame(existing.id);
 
-    if (isStorySnapshotNewer(snapshot, existing, existingEntries)) {
-      const mergedPlayers = mergePlayerProfiles(
-        snapshot.game.players || [],
-        existing.players || [],
-        existing.id,
-        playerAssignment.isPlayerLocal.bind(playerAssignment),
-      );
-      await upsertGame({ ...snapshot.game, players: mergedPlayers });
+    const isNewer = isStorySnapshotNewer(snapshot, existing, existingEntries);
+    // Story entries come from a newer snapshot; each player's seat from whichever side changed it last.
+    const merged = mergeSnapshotPlayers(
+      existing.players || [],
+      snapshot.game.players || [],
+      isNewer,
+    );
+    if (isNewer) {
+      const game = { ...snapshot.game, players: merged.players };
+      await upsertGame(game);
       for (const entry of snapshot.entries || []) {
         await upsertEntry(entry);
       }
-      return { game: snapshot.game, entries: snapshot.entries || [], updated: true };
+      return { game, entries: snapshot.entries || [], updated: true, joined: merged.joined };
     }
-
-    // Even if story entries are not newer, merge player channel updates
-    const incomingPlayersById = new Map((snapshot.game.players || []).map((p) => [p.id, p]));
-
-    const hasUpdates = hasPlayerChannelUpdates(
-      snapshot.game.players || [],
-      existing.players || [],
-      existing.id,
-      playerAssignment.isPlayerLocal.bind(playerAssignment),
-    );
-
-    if (hasUpdates) {
-      const mergedPlayers = existing.players.map((existingP) => {
-        const incomingP = incomingPlayersById.get(existingP.id);
-        if (!incomingP) return existingP;
-        const isExistingLocal = playerAssignment.isPlayerLocal(existing.id, existingP.id, false);
-        if (isExistingLocal) return existingP;
-        return {
-          ...existingP,
-          ntfyTopic: incomingP.ntfyTopic || existingP.ntfyTopic,
-          relayUrl: incomingP.relayUrl || existingP.relayUrl,
-          notificationMethod: incomingP.notificationMethod || existingP.notificationMethod,
-        };
-      });
-      const updatedGame = await updateStoryGame(existing.id, { players: mergedPlayers });
-      return {
-        game: updatedGame,
-        entries: existingEntries,
-        updated: true,
-      };
+    if (merged.changed) {
+      // An older snapshot may still carry a newer seat (a player joined or was invited).
+      const updatedGame = await updateStoryGame(existing.id, { players: merged.players });
+      return { game: updatedGame, entries: existingEntries, updated: true, joined: merged.joined };
     }
 
     return {

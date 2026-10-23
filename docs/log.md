@@ -17,6 +17,26 @@ Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)
 - `docs/tech/architecture.md` §3.2 lists `modules/music-score`.
 - **Code changed:** new `src/modules/music-score/*` (+ tests), `@xmldom/xmldom` added as dev dependency for DOM-free tests.
 
+## 2026-10-22 — Storyteller on player seats (claude-code)
+
+- #467 slice 8: `docs/tech/data-models.md` "Player seats" and `sync-protocol.md` §5 cover Storyteller and the shared seat helpers; `architecture.md` §3.2 lists them under `player-management`.
+- **Code changed:** new `src/modules/player-management/{seatedAssignment.ts,useSeatUpkeep.ts}` (+ `seatActions.test.ts`), `src/modules/sharing/{SeatStatusChip,SharePlayerActions}.tsx`, `src/games/storyteller/{hooks/useStoryJoinLink.ts,hooks/useStorySeats.ts,logic/storyTurnNotify.ts}`; `StorytellerGame.tsx` (407 → 263 lines), Storyteller `engine.ts`, `repository.ts`, `playerAssignment.ts`, `types.ts`, `useStorytellerLobby.ts`, `ShareStoryLinksDialog.tsx`; GuessArt `playerAssignment.ts`, `engine.ts`, `useGuessArtSeats.ts`, `useGuessArtJoinLink.ts`, `SharePlayerLinksDialog.tsx`; `src/modules/sharing/{ShareSessionLinksDialog.tsx,useSessionSharing.ts}`; `src/lib/utils/turnAssignment.ts` (+ test); locales; budget baselines.
+
+## 2026-10-22 — Spieltisch lobby and mode picker (claude-code)
+
+- #467 slice 3: `docs/tech/tabletop-engine.md` gains "Spieltisch (lobby)"; `game-catalog.md` §1 says the dice games are listed on the Spieltisch instead of the hub.
+- **Code changed:** new `src/games/tabletop/logic/tableCatalog.ts` (+ test), `components/views/{PlayModeSheet,TableGameCard}.tsx`, `src/features/party/components/PartyPendingGame.tsx`; `TabletopLobbyView.tsx` rewritten, `TabletopGame.tsx`, `src/features/party/{PartyLobby.tsx,hooks/usePartyLobbyController.ts,logic/partyRoutes.ts}`, `src/features/hub/Hub.tsx` (dice games filtered out, dice chip removed), locales.
+
+## 2026-10-22 — Party seats and transport (claude-code)
+
+- #467 slice 2 (first part): `docs/tech/sync-protocol.md` §3 lists the party manager as a `MultiChannelSyncCoordinator` user; `game-catalog.md` party row updated; Q4 no longer names the party lobby.
+- **Code changed:** `src/features/party/logic/{partyRoster,universalPartyManager}.ts` (+ test), `hooks/usePartyLobbyController.ts`, `src/App.tsx` (duplicate `/party` route removed).
+
+## 2026-10-22 — Steam proxy worker on the Cloudflare deploy (claude-code)
+
+- Q14 resolved (maintainer expected the import to work on Cloudflare without a companion): `docs/tech/deployment.md` describes the `/api/steam/*` worker, `tabletop-engine.md` §7 the metadata path and companion diagnostics; Q14 removed from `open-questions.md`.
+- **Code/config changed:** new `cloudflare/worker.ts` (+ test), `wrangler.jsonc` (`main`, `assets.binding`, `run_worker_first`), `src/games/tabletop/logic/steamWorkshopApi.ts` (companion diagnostics, download fallback via `/api/steam/file`), `hooks/useWorkshopImport.ts`, locales, tests.
+
 ## 2026-10-22 — Table session plan: mode names (claude-code)
 
 - `docs/reports/2026-10-22-table-session-plan.md` §2/§3: modes renamed to "Ein Gerät für alle" / "Jeder am eigenen Gerät" (the device is usually a phone in both); a shared table screen is optional.

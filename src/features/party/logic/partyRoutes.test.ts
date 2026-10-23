@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { buildPartyShareUrl, getGameRoute, resolveLobbyEntry } from './partyRoutes';
+import {
+  buildPartyShareUrl,
+  getGameRoute,
+  resolveLobbyEntry,
+  resolvePendingLaunch,
+} from './partyRoutes';
 
 describe('partyRoutes (#417)', () => {
   it('resolveLobbyEntry prefers the prop, then the room URL parameter, else creates', () => {
@@ -45,5 +50,18 @@ describe('partyRoutes (#417)', () => {
     expect(buildPartyShareUrl({ ...base, relayUrl: 'https://my.host:3000' })).toBe(
       'https://nexumia.de/#/party?room=R1&gameRelay=https%3A%2F%2Fmy.host%3A3000',
     );
+  });
+});
+
+describe('resolvePendingLaunch (Spieltisch → party lobby)', () => {
+  it('reads a tabletop game chosen before the lobby opened', () => {
+    expect(
+      resolvePendingLaunch(new URLSearchParams('launch=tabletop&gameId=standard-cards')),
+    ).toEqual({
+      gameType: 'tabletop',
+      gameId: 'standard-cards',
+    });
+    expect(resolvePendingLaunch(new URLSearchParams('room=ABC'))).toBeNull();
+    expect(resolvePendingLaunch(new URLSearchParams('launch=tabletop'))).toBeNull();
   });
 });

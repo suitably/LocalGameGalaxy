@@ -6,7 +6,7 @@ Found by the [2026-10-18 docs-vs-code audit](reports/2026-10-18-docs-vs-code-aud
 
 ## Q4 — Melodiq uses inline `BroadcastChannel`
 
-The anti-pattern matrix forbids inline `BroadcastChannel` sync in games, but Melodiq creates channels directly in `hooks/useTVMode.ts`, `hooks/useTVReceiver.ts`, `hooks/SettingsContext.tsx`, `gameplay/hooks/useSessionEnd.ts` (channel `melodiq_tv_control`) and `hooks/useQueue.ts` (queue sync). The party lobby does the same in `src/features/party/logic/universalPartyManager.ts` (`party_bc_<roomId>`) — outside `src/games`, so the rule's wording does not cover it. `check-architecture.mjs` does not check this rule.
+The anti-pattern matrix forbids inline `BroadcastChannel` sync in games, but Melodiq creates channels directly in `hooks/useTVMode.ts`, `hooks/useTVReceiver.ts`, `hooks/SettingsContext.tsx`, `gameplay/hooks/useSessionEnd.ts` (channel `melodiq_tv_control`) and `hooks/useQueue.ts` (queue sync). `check-architecture.mjs` does not check this rule.
 Resolve: migrate to `useMultiChannelSync` or document Melodiq TV sync as an explicit exception.
 
 ## Q5 — Root `config.example.json` is obsolete
@@ -47,11 +47,6 @@ Resolve _(user)_: consolidate into one `[Unreleased]` section before the next re
 ## Q13 — ADR-0004 no longer matches the separation stack
 
 ADR-0004 says "Demucs via PyTorch". `server/src/plugins/melodiq/services/separator.ts` runs `audio-separator[cpu]` with model `UVR-MDX-NET-Inst_HQ_3.onnx` and aligns lyrics with `whisper-timestamped` (`server/src/scripts/align_lyrics.py`). The ADR now carries a note; a superseding ADR is a maintainer decision.
-
-## Q14 — Steam Workshop import without the companion server
-
-**[user]** The browser loads Workshop metadata through `/api/steam`, which only the Vite dev server provides (`vite.config.ts` proxy); production is static Cloudflare assets (`wrangler.jsonc`, no Worker) and Steam's Web API sends no CORS headers. So Workshop import by ID/URL works only with the companion server; the error now says so (`metadata_unavailable`). Found while debugging item 2500271578 ([plan 2026-10-22 §4](reports/2026-10-22-table-session-plan.md#4-imports-found-on-the-way)).
-Resolve: either add a Worker to the deploy that proxies only `GetPublishedFileDetails` and downloads from `*.steamusercontent.com` (size-limited), or keep the import companion-only and show the upload hint before the user tries.
 
 ## Q15 — VirtualTabletop routines on import
 
