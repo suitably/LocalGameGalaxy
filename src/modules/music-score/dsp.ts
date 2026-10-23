@@ -1,6 +1,18 @@
 /** Sample rate the recording must be resampled to before alignment (OfflineAudioContext in the browser). */
 export const ALIGN_SAMPLE_RATE = 11025;
 
+/**
+ * Sample index at the centre of analysis frame `frame` for a hop of `hopSec`.
+ * Rounded per frame, not per hop: a hop rounded once (110 samples for 10 ms)
+ * would drift from the frame's nominal time by 0.2 % (0.7 s after five minutes).
+ */
+export const frameCentre = (frame: number, hopSec: number) =>
+  Math.round(frame * hopSec * ALIGN_SAMPLE_RATE);
+
+/** Number of frames with a hop of `hopSec` that cover `sampleCount` samples. */
+export const frameCount = (sampleCount: number, hopSec: number) =>
+  Math.max(1, Math.floor(sampleCount / (hopSec * ALIGN_SAMPLE_RATE)) + 1);
+
 /** In-place radix-2 complex FFT; length must be a power of two. */
 export function fft(re: Float64Array, im: Float64Array): void {
   const n = re.length;

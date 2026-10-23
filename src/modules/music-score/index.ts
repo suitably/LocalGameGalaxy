@@ -7,4 +7,5 @@ export * from './midi';
 export * from './tempoExport';
 export * from './dsp';
 export * from './onsets';
+export * from './noteFit';
 export * from './alignment';

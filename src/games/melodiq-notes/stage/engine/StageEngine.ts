@@ -184,8 +184,14 @@ export class StageEngine {
     this.emit();
   }
 
-  secPerBeat = (beat: number) =>
-    this.song ? 60 / bpmAt(this.song.tempoMap, beat) / this.speed : 0.5;
+  /** Real seconds per beat at `beat`: the recording's tempo when one is attached, else the score's. */
+  secPerBeat = (beat: number) => {
+    if (!this.song) return 0.5;
+    const map = this.recording?.map;
+    const from = Math.max(0, beat - 0.5);
+    const recorded = map ? map.secAt(from + 1) - map.secAt(from) : 0;
+    return (recorded > 0 ? recorded : 60 / bpmAt(this.song.tempoMap, beat)) / this.speed;
+  };
   sectionAt = (beat: number) => sectionIndexAt(this.sections, beat);
 
   /** Advances the song by `dt` seconds of real time. */

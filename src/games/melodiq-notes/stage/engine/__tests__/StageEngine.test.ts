@@ -130,6 +130,30 @@ describe('StageEngine', () => {
     expect(e.beat).toBeLessThan(12);
   });
 
+  it('follows the tempo of the recording, not the score', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    // the recording plays the 120 bpm score at 100 bpm: 0.6 s per beat
+    const marks = [0, 4, 8, 12, 16].map((beat) => ({ beat, sec: beat * 0.6 }));
+    let now = 0;
+    e.setRecording({
+      map: createAudioMap(song(), marks, 0),
+      duration: 30,
+      time: () => now,
+      isPlaying: () => false,
+      play: vi.fn(),
+      pause: vi.fn(),
+      setRate: vi.fn(),
+      setVolume: vi.fn(),
+    });
+    expect(e.secPerBeat(6)).toBeCloseTo(0.6);
+    e.setMode('perform');
+    e.start();
+    run(e, 2.4 + 3); // count-in, then 3 s = 5 beats
+    now = 3;
+    expect(e.beat).toBeCloseTo(5, 1);
+  });
+
   it('starts the recording after the count-in at the mapped position', () => {
     const e = new StageEngine(fakeSound());
     e.loadSong(song());

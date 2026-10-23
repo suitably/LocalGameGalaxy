@@ -1,5 +1,6 @@
-import { ALIGN_SAMPLE_RATE, fft, hann } from './dsp';
-import { onsetEnvelope, refineMarksWithNotes, refineMarksWithOnsets } from './onsets';
+import { ALIGN_SAMPLE_RATE, fft, frameCentre, frameCount, hann } from './dsp';
+import { fitMarksToNotes, onsetBands } from './noteFit';
+import { onsetEnvelope, refineMarksWithOnsets } from './onsets';
 import { beatToSec } from './timing';
 import type { BarMark, ScoreSong } from './types';
 
@@ -28,9 +29,8 @@ function normaliseRows(m: Float32Array, rows: number): Uint8Array {
 /** Pitch-class profile (chroma) of the recording, one row of 12 per 0.1 s. */
 export async function audioChroma(samples: Float32Array, onProgress?: AlignProgress) {
   const sr = ALIGN_SAMPLE_RATE;
-  const hop = Math.round(sr * HOP_SEC);
   // Frame f is centred on f * HOP_SEC so frame times line up with the score grid.
-  const frames = Math.max(1, Math.floor(samples.length / hop) + 1);
+  const frames = frameCount(samples.length, HOP_SEC);
   const half = CHROMA_FFT / 2;
   const win = hann(CHROMA_FFT);
   const pcOfBin = new Int8Array(CHROMA_FFT / 2).fill(-1);
@@ -43,8 +43,9 @@ export async function audioChroma(samples: Float32Array, onProgress?: AlignProgr
   const re = new Float64Array(CHROMA_FFT);
   const im = new Float64Array(CHROMA_FFT);
   for (let f = 0; f < frames; f++) {
+    const centre = frameCentre(f, HOP_SEC);
     for (let i = 0; i < CHROMA_FFT; i++) {
-      re[i] = (samples[f * hop + i - half] ?? 0) * win[i];
+      re[i] = (samples[centre + i - half] ?? 0) * win[i];
       im[i] = 0;
     }
     fft(re, im);
@@ -203,5 +204,5 @@ export async function alignRecording(
   if (onProgress) await onProgress('refine', 0);
   const onsets = onsetEnvelope(samples);
   const started = refineMarksWithOnsets(coarse.slice(0, 1), onsets).concat(coarse.slice(1));
-  return refineMarksWithNotes(song, started, onsets);
+  return fitMarksToNotes(song, started, onsetBands(samples), onProgress);
 }

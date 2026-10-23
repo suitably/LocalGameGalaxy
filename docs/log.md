@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-23 — Recording alignment fix (claude-code)
+
+- `docs/tech/architecture.md` §3.2: `music-score` alignment now ends with `fitMarksToNotes` (band onsets, whole-song fit).
+- **Code changed:** `src/modules/music-score/{dsp,alignment,onsets}.ts`, new `noteFit.ts` (+ test): analysis frames are placed per frame instead of with a rounded hop (the onset timeline drifted 0.14 s per minute); the Melodiq Notes stage clock follows the recording's tempo.
+
 ## 2026-10-22 — Melodiq Notes stage (claude-code)
 
 - `docs/tech/game-catalog.md`: melodiq-notes size and shared modules (`lib/companion`, `modules/music-score`); `docs/tech/architecture.md` §3.2: `music-score` is used by melodiq-notes.
