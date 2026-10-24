@@ -3,6 +3,7 @@ import {
   alignRecording,
   createAudioMap,
   type AlignProgress,
+  type AlignResult,
   type BarMark,
   type ScoreSong,
 } from '../../../../modules/music-score';
@@ -60,7 +61,7 @@ export async function alignRecordingInBrowser(
   data: ArrayBuffer,
   song: ScoreSong,
   onProgress?: AlignProgress,
-): Promise<BarMark[]> {
+): Promise<AlignResult> {
   const Ctx = window.AudioContext || window.webkitAudioContext;
   const ctx = new Ctx();
   try {

@@ -2,7 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   applyBarMarksToMusicXml,
   type AlignProgress,
+  type AlignResult,
   type BarMark,
+  nearestBar,
+  pinBar,
   type ScoreSong,
 } from '../../../modules/music-score';
 import {
@@ -38,7 +41,8 @@ export interface RecordingSource {
 export type AlignState =
   | { kind: 'none' }
   | { kind: 'running'; stage: Parameters<AlignProgress>[0]; fraction: number }
-  | { kind: 'done' }
+  /** `tuning` is known only right after aligning, not for marks loaded from the server. */
+  | { kind: 'done'; tuning?: AlignResult['tuning'] }
   | { kind: 'failed'; error: string };
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -61,9 +65,15 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState<RecordingSource | null>(null);
   const [marks, setMarks] = useState<BarMark[] | null>(null);
+  // bars placed by hand (indices into marks); cleared whenever the marks are replaced
+  const [pins, setPins] = useState<number[]>([]);
   const [offset, setOffset] = useState(0);
   const [align, setAlign] = useState<AlignState>({ kind: 'none' });
   const [saved, setSaved] = useState(false);
+  const replaceMarks = useCallback((next: BarMark[] | null) => {
+    setMarks(next);
+    setPins([]);
+  }, []);
   // bumped whenever the song or the recording changes; async results for an older one are dropped
   const generation = useRef(0);
 
@@ -75,12 +85,12 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
       setXml(nextXml);
       setOrigin(nextOrigin);
       setError(null);
-      setMarks(null);
+      replaceMarks(null);
       setOffset(0);
       setAlign({ kind: 'none' });
       setSaved(false);
     },
-    [engine],
+    [engine, replaceMarks],
   );
 
   const replaceRecording = useCallback((next: RecordingSource | null) => {
@@ -144,25 +154,25 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
         const loadedAs = generation.current;
         const stored = score.hasMarks ? await getBarMarks(entry.id, score.file) : null;
         if (stored && loadedAs === generation.current) {
-          setMarks(stored.marks);
+          replaceMarks(stored.marks);
           setOffset(stored.offsetSec);
           setAlign({ kind: 'done' });
           setSaved(true);
         }
       }),
-    [run, show, replaceRecording],
+    [run, show, replaceRecording, replaceMarks],
   );
 
   const setRecordingFile = useCallback(
     (file: File) => {
       generation.current++;
       replaceRecording({ name: file.name, url: URL.createObjectURL(file), local: true });
-      setMarks(null);
+      replaceMarks(null);
       setOffset(0);
       setAlign({ kind: 'none' });
       setSaved(false);
     },
-    [replaceRecording],
+    [replaceRecording, replaceMarks],
   );
 
   // the engine follows song, recording and its mapping
@@ -190,14 +200,14 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
         if (current()) setAlign({ kind: 'running', stage, fraction });
       });
       if (!current()) return;
-      setMarks(result);
+      replaceMarks(result.marks);
       setOffset(0);
       setSaved(false);
-      setAlign({ kind: 'done' });
+      setAlign({ kind: 'done', tuning: result.tuning });
     } catch (e) {
       if (current()) setAlign({ kind: 'failed', error: errorText(e) });
     }
-  }, [song, recording]);
+  }, [song, recording, replaceMarks]);
 
   const saveMarks = useCallback(async () => {
     if (origin?.kind !== 'server' || !marks) return;
@@ -224,6 +234,18 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     );
   }, [song, xml, marks, offset]);
 
+  /** Moves the bar line nearest to what the recording plays now onto this moment and pins it. */
+  const pinBarNow = useCallback(() => {
+    const now = engine.recording?.time();
+    if (!marks || now === undefined) return;
+    const sec = now - offset;
+    const next = pinBar(marks, pins, nearestBar(marks, sec), sec);
+    if (!next) return;
+    setMarks(next.marks);
+    setPins(next.pins);
+    setSaved(false);
+  }, [engine, marks, pins, offset]);
+
   const nudge = useCallback((deltaSec: number) => {
     setOffset((o) => Math.round((o + deltaSec) * 100) / 100);
     setSaved(false);
@@ -236,6 +258,7 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     loading,
     recording,
     marks,
+    pins,
     offset,
     align,
     saved,
@@ -248,6 +271,7 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     saveMarks,
     exportScore,
     nudge,
+    pinBarNow,
     clearError: () => setError(null),
   };
 }

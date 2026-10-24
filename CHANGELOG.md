@@ -28,6 +28,8 @@
 
 ### Changed
 
+- **Melodiq Notes score alignment** follows guitar parts and transposed recordings: the recording's tuning is measured and the score is tried up to two semitones up or down (a band tuned to E♭, a score in another key); tones are matched to onsets of their own pitch classes instead of any mid-range attack, so a snare hit no longer pulls a guitar bar; the coarse match also uses attacks and prefers a steady tempo; onset timing is corrected for the analysis window (about 12 ms early before). The recording bar shows a detected shift. `node scripts/align-eval.mjs <score> <audio>` runs the alignment on real files.
+- **Melodiq Notes: fix a bar by hand**: "Bar line here" in the recording bar moves the bar line nearest to the playing position onto that moment; bars up to the next hand-set bar are stretched along, without one the change fades out over four bars. Saved with the marks as before.
 - **GuessArt and Gartic Phone leftover polish** (#503 #504 #506 #507 #508): the round-success dialog, word editor, round history and album reveal are split into smaller components; language flags and the album emoji/arrow became Rounded icons and DE/EN labels.
 - **Leftover polish pass** (#503 #504 #506 #507 #508): `ModernScoreAdjuster`, `SongActionDialogs`, `QueueParticipantDialog`, `QwixxSheetSelector` and `ServerDirectoryManager` are split into smaller components/hooks and use Rounded icons, theme colours, `transitionOf` and `scoreText`.
 - **Werewolf**: setup, night phase and role editor are split into focused components and a `useWerewolfSetup` hook (night-order rules moved to `logic/nightRoles.ts` with tests); built-in role icons are Rounded MUI icons instead of emoji (`RoleIcon`), cards use outlines instead of elevation, narrator and role-info buttons got labels (#503 #504 #506 #508).
@@ -100,6 +102,7 @@
 
 ### Fixed
 
+- **Melodiq Notes tab view**: guitar, bass and ukulele note heads were drawn one radius to the right of their time, so they reached the hit line about a tenth of a beat after the note sounded (around 100 ms in slow songs); they are now centred on their time like drums, keys and notation.
 - **Settings language**: the notifications tab and its description show English text in the English UI (the keys `settings.notifications_tab` / `settings.notifications_relay_desc` were missing, so the German fallback was shown) (#154).
 - **Melodiq lyrics**: the first syllable of a line is no longer swallowed — a finished line now makes way for the next one shortly before it starts instead of lingering into it (#441).
 - **Melodiq Notes**: with 3–4 players the panel header no longer draws player, part name and score on top of each other; it measures the text and drops the part name, keyboard marker and instrument, then accuracy/combo, before anything overlaps (#483).
