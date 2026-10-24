@@ -70,7 +70,7 @@ export const CompanionPluginsSection: React.FC<CompanionPluginsSectionProps> = (
                   <Chip
                     label={t('common.planned', 'Geplant')}
                     size="small"
-                    sx={{ height: 20, fontSize: '0.7rem' }}
+                    sx={{ height: 20, fontSize: '0.75rem' }}
                   />
                 )}
               </Box>

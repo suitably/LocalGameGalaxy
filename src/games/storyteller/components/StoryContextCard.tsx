@@ -90,7 +90,7 @@ export const StoryContextCard: React.FC<StoryContextCardProps> = ({
               label={`${t('storyteller.by', 'von')} ${contextView.precedingAuthorName}`}
               sx={{
                 height: 20,
-                fontSize: '0.7rem',
+                fontSize: '0.75rem',
                 bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
                 color: 'text.secondary',
               }}

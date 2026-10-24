@@ -134,7 +134,7 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({ widget, isHo
               {col === 0 && (
                 <Typography
                   sx={{
-                    fontSize: '0.65rem',
+                    fontSize: '0.75rem',
                     color: isDark ? '#d7ccc8' : '#4e342e',
                     fontWeight: 700,
                     lineHeight: 1,

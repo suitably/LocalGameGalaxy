@@ -62,7 +62,7 @@ export const SavedStoriesCard: React.FC<SavedStoriesCardProps> = ({
                           : `${t('storyteller.turnLabel', 'Zug')} ${g.turnNumber}`
                       }
                       color={g.status === 'completed' ? 'success' : 'info'}
-                      sx={{ height: 20, fontSize: '0.7rem' }}
+                      sx={{ height: 20, fontSize: '0.75rem' }}
                     />
                   </Stack>
                 }

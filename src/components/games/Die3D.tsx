@@ -55,7 +55,7 @@ export const Die3D: React.FC<Die3DProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: { xs: '1.25rem', sm: '1.6rem' },
-        fontWeight: '900',
+        fontWeight: 800,
         // tactile edge (DESIGN.md §5); selection uses the accent ring
         boxShadow: (theme) =>
           isSelected

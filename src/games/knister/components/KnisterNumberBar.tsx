@@ -58,7 +58,7 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
               textTransform: 'uppercase',
               letterSpacing: 0.5,
               color: selectedNumber !== null ? 'warning.main' : 'text.secondary',
-              fontSize: { xs: '0.7rem', sm: '0.75rem' },
+              fontSize: { xs: '0.75rem', sm: '0.75rem' },
             }}
           >
             {selectedNumber !== null
@@ -109,7 +109,7 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontWeight: 900,
+                fontWeight: 800,
                 fontSize: { xs: '0.9rem', sm: '1.15rem' },
                 bgcolor: (theme) =>
                   isSelected

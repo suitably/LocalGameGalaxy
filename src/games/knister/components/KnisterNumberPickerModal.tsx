@@ -108,7 +108,7 @@ export const KnisterNumberPickerModal: React.FC<KnisterNumberPickerModalProps> =
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontWeight: 900,
+                  fontWeight: 800,
                   fontSize: { xs: '1.4rem', sm: '1.6rem' },
                   bgcolor: (theme) =>
                     isSeven

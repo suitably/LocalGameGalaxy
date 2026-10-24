@@ -20,6 +20,7 @@ import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
 import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
 import { useTranslation } from 'react-i18next';
 import type { SudokuDifficulty } from '../logic/types';
+import { scoreText } from '../../../themeTokens';
 
 interface SudokuHeaderProps {
   difficulty: SudokuDifficulty;
@@ -131,10 +132,7 @@ export const SudokuHeader: React.FC<SudokuHeaderProps> = ({
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <Typography
-            variant="body2"
-            sx={{ fontWeight: 800, fontFamily: 'monospace', fontSize: '1.05rem' }}
-          >
+          <Typography variant="body2" sx={{ ...scoreText, fontWeight: 800, fontSize: '1.05rem' }}>
             {formatTime(timeElapsed)}
           </Typography>
           <IconButton size="small" onClick={onTogglePause}>

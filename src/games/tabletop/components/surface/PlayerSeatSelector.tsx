@@ -88,8 +88,8 @@ export const PlayerSeatSelector: React.FC<PlayerSeatSelectorProps> = ({
               ) : (
                 <Typography
                   sx={{
-                    fontSize: '0.65rem',
-                    fontWeight: 900,
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
                     color: (theme) => theme.palette.getContrastText(color),
                     lineHeight: 1,
                   }}

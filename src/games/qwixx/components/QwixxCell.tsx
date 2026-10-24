@@ -72,7 +72,7 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
           borderRadius: 2,
           bgcolor: isCrossed ? tone.buttonCrossed : tone.button,
           color: isCrossed ? 'common.white' : tone.ink,
-          fontWeight: 900,
+          fontWeight: 800,
           fontSize: { xs: '0.85rem', sm: '1.1rem', md: '1.25rem' },
           fontVariantNumeric: 'tabular-nums',
           position: 'relative',
@@ -92,7 +92,7 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
             <Typography
               sx={{
                 fontSize: { xs: '0.95rem', sm: '1.3rem', md: '1.5rem' },
-                fontWeight: 900,
+                fontWeight: 800,
                 color: 'primary.main',
                 letterSpacing: -1,
                 lineHeight: 1,

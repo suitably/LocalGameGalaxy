@@ -108,7 +108,7 @@ export const HandCardItem: React.FC<HandCardItemProps> = ({
             borderRadius: 3,
             px: 0.7,
             py: 0.1,
-            fontSize: '0.72rem',
+            fontSize: '0.75rem',
             fontWeight: 800,
             zIndex: 20,
             pointerEvents: 'none',

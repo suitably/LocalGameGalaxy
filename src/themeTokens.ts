@@ -97,3 +97,9 @@ export const fontFamilies = {
   display: '"Bricolage Grotesque Variable", "Figtree Variable", system-ui, sans-serif',
   text: '"Figtree Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
 } as const;
+
+/** Scores, timers, dice sums: display face with tabular figures so they don't jump (DESIGN.md §3.1). */
+export const scoreText = {
+  fontFamily: fontFamilies.display,
+  fontVariantNumeric: 'tabular-nums',
+} as const;

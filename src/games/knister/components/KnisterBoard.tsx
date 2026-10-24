@@ -127,7 +127,7 @@ export const KnisterBoard: React.FC<KnisterBoardProps> = ({
                 fontFamily: fontFamilies.display,
                 fontVariantNumeric: 'tabular-nums',
                 fontWeight: 800,
-                fontSize: { xs: '0.7rem', sm: '0.8rem' },
+                fontSize: { xs: '0.75rem', sm: '0.8rem' },
               }}
             />
           </Box>

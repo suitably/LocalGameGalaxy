@@ -1,7 +1,7 @@
 import { useState, forwardRef, useImperativeHandle } from 'react';
 import { alpha, Box, Typography } from '@mui/material';
 import { keyframes } from '@emotion/react';
-import { piecePalette } from '../../../themeTokens';
+import { piecePalette, scoreText } from '../../../themeTokens';
 
 // --- Types ---
 export type RatingType = 'Perfect' | 'Good' | 'Okay' | 'Miss';
@@ -86,7 +86,7 @@ const PlayerScoreDisplay = ({
             position: 'absolute',
             top: -24, // Above the score
             right: 0,
-            fontWeight: 900,
+            fontWeight: 800,
             color:
               state.lastRating === 'Perfect'
                 ? 'primary.main'
@@ -123,7 +123,8 @@ const PlayerScoreDisplay = ({
             <Typography
               variant="subtitle1"
               sx={{
-                fontWeight: 900,
+                ...scoreText,
+                fontWeight: 800,
                 color: 'text.primary',
                 textShadow: '0 0 4px rgba(0,0,0,0.8)',
                 lineHeight: 1,
@@ -156,7 +157,7 @@ const PlayerScoreDisplay = ({
             <Typography
               variant="caption"
               sx={{
-                fontSize: '0.6rem',
+                fontSize: '0.75rem',
                 color: rank.color,
                 fontWeight: 'bold',
                 textShadow: '0 0 2px black',

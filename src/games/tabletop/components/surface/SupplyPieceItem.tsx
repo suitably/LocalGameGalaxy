@@ -61,7 +61,7 @@ export const SupplyPieceItem: React.FC<SupplyPieceItemProps> = ({
             borderRadius: 3,
             px: 0.6,
             py: 0.1,
-            fontSize: '0.7rem',
+            fontSize: '0.75rem',
             fontWeight: 800,
             zIndex: 10,
           }}

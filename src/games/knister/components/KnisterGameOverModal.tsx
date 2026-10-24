@@ -106,7 +106,7 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
 
               <Typography
                 variant="h5"
-                sx={{ fontWeight: 900, color: idx === 0 ? 'warning.light' : 'text.primary' }}
+                sx={{ fontWeight: 800, color: idx === 0 ? 'warning.light' : 'text.primary' }}
               >
                 {scores.totalScore}P
               </Typography>

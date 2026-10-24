@@ -103,7 +103,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
               size="small"
               sx={{
                 height: 16,
-                fontSize: '0.6rem',
+                fontSize: '0.75rem',
                 bgcolor: (theme) => alpha(theme.palette.text.primary, 0.12),
                 color: 'text.secondary',
                 flexShrink: 0,
@@ -171,7 +171,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
               badgeContent={queueLength}
               color="primary"
               max={99}
-              sx={{ '& .MuiBadge-badge': { fontSize: '0.65rem', minWidth: 16, height: 16 } }}
+              sx={{ '& .MuiBadge-badge': { fontSize: '0.75rem', minWidth: 16, height: 16 } }}
             >
               <QueueMusicIcon fontSize="small" />
             </Badge>

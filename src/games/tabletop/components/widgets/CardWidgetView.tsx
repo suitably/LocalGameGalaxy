@@ -85,7 +85,7 @@ export const CardWidgetView: React.FC<CardWidgetViewProps> = ({
             borderRadius: '10px',
             px: 0.8,
             py: 0.2,
-            fontSize: '0.72rem',
+            fontSize: '0.75rem',
             fontWeight: 800,
             lineHeight: 1.2,
             boxShadow: '0 2px 4px rgba(0,0,0,0.35)',

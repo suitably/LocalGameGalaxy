@@ -88,16 +88,16 @@ Numbers that change (scores, timers, dice totals) use `font-variant-numeric: tab
 
 Base 16px (`1rem`). Body text never below 16px; `caption` only for labels and metadata.
 
-| Token     | Size / line height                  | Weight                | Family  | MUI variant                                    |
-| --------- | ----------------------------------- | --------------------- | ------- | ---------------------------------------------- |
-| `display` | 3.5rem / 1.05                       | 800                   | Display | none yet: `h1` with `sx` for hero/final scores |
-| `h1`      | 2.5rem / 1.1                        | 750                   | Display | `h1`                                           |
-| `h2`      | 2rem / 1.15                         | 700                   | Display | `h2`                                           |
-| `h3`      | 1.75rem / 1.2 (`h4`: 1.5rem / 1.25) | 700                   | Display | `h3`, `h4`                                     |
-| `title`   | 1.25rem / 1.3 (`h6`: 1.1rem)        | 650                   | Text    | `h5`, `h6`, dialog titles, card titles         |
-| `body`    | 1rem / 1.5                          | 400 (strong: 600)     | Text    | `body1`, `subtitle1` (600)                     |
-| `small`   | 0.875rem / 1.45                     | 400 / 600             | Text    | `body2`, `subtitle2`, `button` (600)           |
-| `caption` | 0.75rem / 1.35                      | 600, +0.02em tracking | Text    | `caption`, `overline` (no uppercase)           |
+| Token     | Size / line height                  | Weight                | Family  | MUI variant                                           |
+| --------- | ----------------------------------- | --------------------- | ------- | ----------------------------------------------------- |
+| `display` | 3.5rem / 1.05                       | 800                   | Display | `display`; `scoreText` (`themeTokens.ts`) for numbers |
+| `h1`      | 2.5rem / 1.1                        | 750                   | Display | `h1`                                                  |
+| `h2`      | 2rem / 1.15                         | 700                   | Display | `h2`                                                  |
+| `h3`      | 1.75rem / 1.2 (`h4`: 1.5rem / 1.25) | 700                   | Display | `h3`, `h4`                                            |
+| `title`   | 1.25rem / 1.3 (`h6`: 1.1rem)        | 650                   | Text    | `h5`, `h6`, dialog titles, card titles                |
+| `body`    | 1rem / 1.5                          | 400 (strong: 600)     | Text    | `body1`, `subtitle1` (600)                            |
+| `small`   | 0.875rem / 1.45                     | 400 / 600             | Text    | `body2`, `subtitle2`, `button` (600)                  |
+| `caption` | 0.75rem / 1.35                      | 600, +0.02em tracking | Text    | `caption`, `overline` (no uppercase)                  |
 
 Buttons use sentence case (no `textTransform`). Long text (rules, help) is capped at 68ch.
 

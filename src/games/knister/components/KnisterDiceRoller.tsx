@@ -88,7 +88,7 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
               variant="caption"
               color="text.secondary"
               display="block"
-              sx={{ fontWeight: 700, fontSize: '0.65rem' }}
+              sx={{ fontWeight: 700, fontSize: '0.75rem' }}
             >
               {t('games.knister.sum', 'SUMME')}
             </Typography>

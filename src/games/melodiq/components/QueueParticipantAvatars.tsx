@@ -22,7 +22,7 @@ export const QueueParticipantAvatars: React.FC<QueueParticipantAvatarsProps> = (
         sx={{
           width: size,
           height: size,
-          fontSize: size < 24 ? '0.65rem' : '0.7rem',
+          fontSize: size < 24 ? '0.75rem' : '0.75rem',
           bgcolor: `hsl(${p.hue || 0}, 80%, 40%)`,
           color: 'common.white',
           border: 2,

@@ -74,7 +74,7 @@ export function useMelodiqNotesHeader({
                 label={`${effectiveBpm} BPM`}
                 size="small"
                 variant="outlined"
-                sx={{ height: 18, fontSize: '0.65rem', color: 'text.secondary', flexShrink: 0 }}
+                sx={{ height: 18, fontSize: '0.75rem', color: 'text.secondary', flexShrink: 0 }}
               />
             ) : null}
           </Stack>

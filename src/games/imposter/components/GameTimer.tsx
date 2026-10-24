@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import PauseIcon from '@mui/icons-material/PauseRounded';
 import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
 import StopIcon from '@mui/icons-material/StopRounded';
+import { scoreText } from '../../../themeTokens';
 
 interface GameTimerProps {
   timerLength: number; // in seconds
@@ -66,7 +67,12 @@ export const GameTimer: React.FC<GameTimerProps> = ({ timerLength, onTimeUp, onE
         </Typography>
         <Typography
           variant="h1"
-          sx={{ my: 4, fontWeight: 'bold', color: timeLeft < 30 ? 'error.main' : 'text.primary' }}
+          sx={{
+            ...scoreText,
+            my: 4,
+            fontWeight: 800,
+            color: timeLeft < 30 ? 'error.main' : 'text.primary',
+          }}
         >
           {formatTime(timeLeft)}
         </Typography>

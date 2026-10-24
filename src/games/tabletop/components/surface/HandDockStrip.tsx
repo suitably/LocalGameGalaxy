@@ -95,7 +95,7 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
               color={!showSupplies ? 'primary' : 'default'}
               onClick={() => setDockTab('cards')}
               label={`${t('games.tabletop.cards', 'Karten')} (${handCards.length})`}
-              sx={{ height: 22, fontSize: '0.72rem', fontWeight: 700 }}
+              sx={{ height: 22, fontSize: '0.75rem', fontWeight: 700 }}
             />
             <Chip
               size="small"
@@ -103,7 +103,7 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
               color={showSupplies ? 'primary' : 'default'}
               onClick={() => setDockTab('supplies')}
               label={`${t('games.tabletop.reserve', 'Vorrat')} (${totalSupplyCount})`}
-              sx={{ height: 22, fontSize: '0.72rem', fontWeight: 700 }}
+              sx={{ height: 22, fontSize: '0.75rem', fontWeight: 700 }}
             />
           </Box>
         ) : (
