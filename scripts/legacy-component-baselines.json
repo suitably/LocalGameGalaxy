@@ -1,7 +1,6 @@
 {
   "src/games/melodiq/MelodiqGame.tsx": 544,
   "src/games/guessart/GuessArtGame.tsx": 440,
-  "src/games/guessart/components/catalogue/WordEditorTab.tsx": 455,
   "src/games/storyteller/StorytellerGame.tsx": 280,
   "src/games/melodiq/components/PlaybackManager.tsx": 373,
   "src/games/guessart/components/RoundHistoryDialog.tsx": 363,
