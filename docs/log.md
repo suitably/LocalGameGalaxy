@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Several contributors (claude-code)
+
+- `docs/workflows/multi-agent-token-strategy.md` §6a: claim issues before work, triage once, rights, models, log conflicts.
+- Outside `docs/`: `/issue` checks assignees, open PRs and branches for `#N` and assigns the issue; `/triage` skips triaged issues unless `--force`. No app code changed.
+
 ## 2026-10-24 — /triage skill (claude-code)
 
 - `docs/workflows/multi-agent-token-strategy.md` §6: triage every issue before work (labels `model:sonnet|opus`, `needs-decision`, `manual`, `tracking`; questions as issue comment), pick the session model from the label.

@@ -10,8 +10,9 @@ Follow [docs/workflows/multi-agent-token-strategy.md](../../../docs/workflows/mu
 
 The first word of the arguments is the issue number `N`; anything after it is the user's decisions or notes for this issue.
 
-## 0. Resume or start
+## 0. Claim, resume or start
 
+- **Claim check (several contributors work with Claude):** in one turn read the issue's assignees, search open PRs for `#N` (`search_pull_requests` with `repo:suitably/LocalGameGalaxy is:open N`) and `git ls-remote --heads origin | grep -i "N"`. Assigned to someone else, or an open PR / branch for `#N` by someone else → stop and tell the user who works on it. Otherwise assign the issue to yourself (`issue_write` `update` with `assignees`, keep existing labels untouched by omitting `labels`).
 - `ls docs/tasks/ISSUE-N-*.md` (and `git log --oneline -5`, `git status`).
 - Spec exists → read it, continue at the first unchecked item of its Progress list (delegated mode).
 - No spec → step 1.

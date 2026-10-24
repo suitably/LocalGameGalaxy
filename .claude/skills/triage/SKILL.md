@@ -1,7 +1,7 @@
 ---
 name: triage
 description: Rate GitHub issues of suitably/LocalGameGalaxy before work starts — which session model fits (Sonnet / Opus), which decisions the maintainer must make first, size and dependencies — and record it as labels plus one issue comment. Use after creating an issue ("/triage 541") or for all untriaged open issues ("/triage").
-argument-hint: [issue-number ...]
+argument-hint: [issue-number ...] [--force]
 ---
 
 # /triage $ARGUMENTS
@@ -12,6 +12,7 @@ Run this in a **Sonnet** session. It only reads code and writes labels/comments 
 
 - Numbers in the arguments → those issues.
 - No arguments → all open issues without any of the labels below (`list_issues` with `state: OPEN`, fields `number,title,body,labels,comments`).
+- **Skip already triaged issues** (another contributor's Claude may have done it): an issue that has a `model:*`, `manual` or `tracking` label or a `**Triage:**` comment is left alone. Re-triage only with `--force` in the arguments; then edit the existing triage comment instead of adding a second one.
 
 ## 2. Check the code (cheap)
 

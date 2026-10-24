@@ -86,6 +86,16 @@ Entry point: **`/issue <number> [decisions]`** ([`.claude/skills/issue/SKILL.md`
 - **Session model:** routine tickets may run on Sonnet (`/model`), which costs half of Opus per token; keep Opus for design-heavy work. **Unverified:** quality impact not measured yet.
 - **Context grew large or was compacted** → write the state into the spec ("slice 1 done, commit abc"), then continue in a new session from the spec.
 
+## 6a. Several contributors
+
+The agents, skills and `.claude/settings.json` live in the repository, so every contributor's Claude Code uses them after merge.
+
+- **Claim before work:** `/issue N` stops when `#N` is assigned to someone else or has an open PR or branch, and otherwise assigns the issue to the caller. One issue, one owner — the owner's session alone edits its spec in `docs/tasks/`.
+- **Triage once:** `/triage` skips issues that already carry a triage label or comment; `--force` re-triages and edits the existing comment.
+- **Rights:** labelling and assigning need triage rights on the repository; from a fork, `/triage` cannot label.
+- **Models:** the labels name the model class; a contributor whose plan lacks Opus uses the strongest available model. **Unverified:** how Claude Code handles an agent whose pinned model is not available on the plan.
+- **`docs/log.md`:** every PR adds an entry at the top, so parallel PRs conflict there; resolve by keeping both entries.
+
 ## 7. Measuring
 
 Results:
