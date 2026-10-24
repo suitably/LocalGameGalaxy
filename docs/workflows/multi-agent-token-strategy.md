@@ -9,12 +9,13 @@ generated:
   by: claude-code
 verified:
   at: 2026-10-24
-  method: 'Checked .claude/agents/*.md, AGENTS.md §3 and §8, docs/tasks/ layout; example symbols grepped in src/games/tabletop.'
+  method: 'Ran scripts/token-usage.mjs on this session; checked .claude/agents/*.md, AGENTS.md §3 and §8, docs/tasks/ layout; example symbols grepped in src/games/tabletop.'
 sources:
   - '.claude/agents/scout.md'
   - '.claude/agents/slice-implementer.md'
   - '.claude/agents/gate-runner.md'
   - 'AGENTS.md'
+  - 'scripts/token-usage.mjs'
 ---
 
 # Multi-agent workflow for lower token use
@@ -75,6 +76,18 @@ Never use `subagent_type: "fork"` for reading: a fork inherits the full main con
 - Passing chat history to subagents in the prompt instead of a spec path.
 - Long untruncated command output in the main session (pipe through `tail -40`, CLAUDE.md).
 
-## 6. Measuring
+## 6. Sessions
 
-**Unverified:** no baseline exists yet. Compare `/cost` (CLI) or the session usage for one delegated task against a similar inline one, and record the numbers in the PR description. Adjust the thresholds in §3 when the numbers say so.
+- **One session per ticket.** A new ticket never continues an old session: the old context would be re-sent on every turn. Start with the spec path, e.g. "Implement `docs/tasks/ISSUE-539-…md`, decisions §3: …".
+- **Stay in that session for all slices** of the ticket; subagents start cold anyway.
+- **Context grew large or was compacted** → write the state into the spec ("slice 1 done, commit abc"), then continue in a new session from the spec.
+
+## 7. Measuring
+
+`npm run tokens` ([`scripts/token-usage.mjs`](../../scripts/token-usage.mjs)) sums the local transcript of a session (`~/.claude/projects/<project>/<session>.jsonl` plus `<session>/subagents/`) per source and model: calls, input, cache write, cache read, output, largest prompt, estimated list-price cost. `--list` shows sessions, `--json` gives machine-readable output.
+
+- Cloud containers are discarded with the session — run it **before the session ends** and paste the table into the PR description.
+- Compare **estimated cost per completed ticket**, not raw token sums (Haiku tokens cost a fraction of Opus tokens), together with: number of main-session calls, largest prompt (`max ctx`), gates green on the first gate-runner run, rework rounds.
+- Baseline: one ticket of similar size done inline, one delegated. After 3–4 tickets, adjust the thresholds in §3.
+
+First data point (2026-10-24, the session that wrote this doc and scouted #539): main session (Opus) 28 calls, 2.92 M cache-read tokens, ≈ $2.02; scout (Haiku) 10 calls, 0.51 M cache-read tokens, ≈ $0.02, returning about 40 lines to the main context. **Unverified:** what the same mapping would have cost inline — no comparison run yet.

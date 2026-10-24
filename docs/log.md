@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Token usage measurement (claude-code)
+
+- `docs/workflows/multi-agent-token-strategy.md`: new §6 Sessions (one session per ticket), §7 Measuring with `npm run tokens` and the first data point.
+- **Code changed:** new `scripts/token-usage.mjs`, npm script `tokens`, entry in `scripts/README.md`.
+
 ## 2026-10-24 — Multi-agent token workflow (claude-code)
 
 - New `docs/workflows/multi-agent-token-strategy.md`: roles, delegate-or-not rule, flow, anti-patterns.
@@ -11,6 +16,7 @@ Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)
 ## 2026-10-23 — Terser agent instructions (claude-code)
 
 - Outside `docs/`: `AGENTS.md` wording tightened (filler removed; rules, conditions and reasons unchanged); `CLAUDE.md` asks for short answers. No code changed.
+
 ## 2026-10-24 — Signaling image published (claude-code)
 
 - `docs/tech/deployment.md` §1: the signaling image is now built by `docker-publish.yml` (was **Unverified**; compose files pointed at an image nobody published).

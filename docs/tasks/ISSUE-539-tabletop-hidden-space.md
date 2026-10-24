@@ -90,3 +90,5 @@ Each slice = one `slice-implementer` run; prompt: "Implement slice N of `docs/ta
 | Slices 1–3       | slice-implementer | sonnet  | 3 × ≤ 15-line report                       |
 | Review           | orchestrator      | session | `git diff --stat` + logic diff             |
 | Gates            | gate-runner       | haiku   | ≤ 20 lines                                 |
+
+Before the session ends: `npm run tokens` and paste the table into the PR description ([workflow §7](../workflows/multi-agent-token-strategy.md#7-measuring)).
