@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Game Scaffolding Tool for LocalGameGalaxy
- * 
+ *
  * Enforces the Single Source of Truth architecture and prevents AI agent semantic drift.
  * Usage:
  *   node scripts/scaffold-game.mjs --id=<gameId> --title="<Game Title>" [--category=<category>] [--icon=<icon>]
@@ -34,19 +34,23 @@ const iconName = args.icon || 'SportsEsports';
 
 if (!gameId || !gameTitle) {
   console.error('❌ Error: Missing mandatory arguments.');
-  console.log('Usage: node scripts/scaffold-game.mjs --id=<id> --title="<Title>" [--category=<cat>]');
+  console.log(
+    'Usage: node scripts/scaffold-game.mjs --id=<id> --title="<Title>" [--category=<cat>]',
+  );
   process.exit(1);
 }
 
 // Sanitize gameId
 if (!/^[a-z0-9-]+$/.test(gameId)) {
-  console.error('❌ Error: game id must be lower-case alphanumeric with dashes (e.g. "yatzy" or "battleship").');
+  console.error(
+    '❌ Error: game id must be lower-case alphanumeric with dashes (e.g. "yatzy" or "battleship").',
+  );
   process.exit(1);
 }
 
 const capitalized = gameId
   .split('-')
-  .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+  .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
   .join('');
 
 const targetDir = path.join(ROOT_DIR, 'src', 'games', gameId);
@@ -238,7 +242,7 @@ const lazyImport = `const ${capitalized}Game = lazy(() => import('../games/${gam
 if (!registryContent.includes(`${capitalized}Game = lazy`)) {
   registryContent = registryContent.replace(
     'class GameRegistry {',
-    `${lazyImport}class GameRegistry {`
+    `${lazyImport}class GameRegistry {`,
   );
 
   // Insert entry into games array
@@ -248,16 +252,13 @@ if (!registryContent.includes(`${capitalized}Game = lazy`)) {
             titleKey: 'games.${gameId}.title',
             descriptionKey: 'games.${gameId}.description',
             icon: <${iconName}Icon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#6366f1',
-            colorEnd: '#4f46e5',
-            hoverColor: '#4f46e5',
             category: '${category}' as any,
             component: <${capitalized}Game />
         },
 `;
   registryContent = registryContent.replace(
     'private games: GameDefinition[] = [',
-    `private games: GameDefinition[] = [\n${registryEntry}`
+    `private games: GameDefinition[] = [\n${registryEntry}`,
   );
   fs.writeFileSync(registryPath, registryContent);
   console.log(`✔ Registered in src/lib/gameRegistry.tsx`);

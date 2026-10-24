@@ -12,6 +12,5 @@
   "src/games/tabletop/components/surface/DockDragOverlay.tsx": 1,
   "src/games/tabletop/components/surface/HandCardItem.tsx": 2,
   "src/games/tabletop/components/surface/HiddenZoneLayer.tsx": 1,
-  "src/games/tabletop/components/surface/TabletopSurface.tsx": 1,
-  "src/lib/gameRegistry.tsx": 45
+  "src/games/tabletop/components/surface/TabletopSurface.tsx": 1
 }

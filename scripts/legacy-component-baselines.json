@@ -21,6 +21,5 @@
   "src/games/guessart/components/EditGameDialog.tsx": 279,
   "src/games/guessart/components/WordSelector.tsx": 269,
   "src/games/guessart/components/catalogue/CatalogueEditorDialog.tsx": 268,
-  "src/games/cards/components/ModernScoreAdjuster.tsx": 253,
-  "src/lib/gameRegistry.tsx": 282
+  "src/games/cards/components/ModernScoreAdjuster.tsx": 253
 }

@@ -1,4 +1,4 @@
-import React, { lazy } from 'react';
+import React, { lazy, type ComponentType } from 'react';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';
@@ -15,267 +15,228 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import PianoIcon from '@mui/icons-material/Piano';
 import { SongsProvider } from '../games/melodiq';
 
-export type GameCategory = 'all' | 'dice' | 'drawing' | 'music' | 'social_deduction' | 'cards' | 'party' | 'puzzle';
+export type GameCategory =
+  'all' | 'dice' | 'drawing' | 'music' | 'social_deduction' | 'cards' | 'party' | 'puzzle';
 
 export interface GameRouteDefinition {
-    path: string;
-    component: React.ReactNode;
+  path: string;
+  component: React.ReactNode;
 }
 
 export interface GameDefinition {
-    id: string;
-    route: string;
-    titleKey: string;
-    descriptionKey: string;
-    icon: React.ReactNode;
-    colorStart: string;
-    colorEnd: string;
-    hoverColor: string;
-    component: React.ReactNode;
-    category: GameCategory;
-    hasSettings?: boolean;
-    nestedRoutes?: GameRouteDefinition[];
-    standaloneRoutes?: GameRouteDefinition[];
+  id: string;
+  route: string;
+  titleKey: string;
+  descriptionKey: string;
+  icon: React.ReactNode;
+  component: React.ReactNode;
+  category: GameCategory;
+  hasSettings?: boolean;
+  nestedRoutes?: GameRouteDefinition[];
+  standaloneRoutes?: GameRouteDefinition[];
 }
 
-const WerewolfGame = lazy(() => import('../games/werewolf').then(m => ({ default: m.WerewolfGame })));
-const ImposterGame = lazy(() => import('../games/imposter').then(m => ({ default: m.ImposterGame })));
-const MelodiqGame = lazy(() => import('../games/melodiq').then(m => ({ default: m.MelodiqGame })));
-const MelodiqNotesGame = lazy(() => import('../games/melodiq-notes').then(m => ({ default: m.MelodiqNotesGame })));
-const MelodiqQueue = lazy(() => import('../games/melodiq').then(m => ({ default: m.MelodiqQueue })));
-const MelodiqTV = lazy(() => import('../games/melodiq').then(m => ({ default: m.MelodiqTV })));
-const QwixxGame = lazy(() => import('../games/qwixx').then(m => ({ default: m.QwixxGame })));
-const KnisterGame = lazy(() => import('../games/knister').then(m => ({ default: m.KnisterGame })));
-const GuessArtGame = lazy(() => import('../games/guessart').then(m => ({ default: m.GuessArtGame })));
-const StorytellerGame = lazy(() => import('../games/storyteller').then(m => ({ default: m.StorytellerGame })));
-const CardsGame = lazy(() => import('../games/cards').then(m => ({ default: m.CardsGame })));
-const WordleGame = lazy(() => import('../games/wordle').then(m => ({ default: m.WordleGame })));
-const SudokuGame = lazy(() => import('../games/sudoku').then(m => ({ default: m.SudokuGame })));
-const PartyLobby = lazy(() => import('../features/party/PartyLobby').then(m => ({ default: m.PartyLobby })));
-const TabletopGame = lazy(() => import('../games/tabletop').then(m => ({ default: m.TabletopGame })));
-const KniffelGame = lazy(() => import('../games/kniffel').then(m => ({ default: m.KniffelGame })));
-const DartsGame = lazy(() => import('../games/darts').then(m => ({ default: m.DartsGame })));
+/** Maps a named export of a lazily imported module to the `default` export `lazy` expects. */
+const pick =
+  <K extends string>(name: K) =>
+  (mod: Record<K, ComponentType>) => ({ default: mod[name] });
+
+const WerewolfGame = lazy(() => import('../games/werewolf').then(pick('WerewolfGame')));
+const ImposterGame = lazy(() => import('../games/imposter').then(pick('ImposterGame')));
+const MelodiqGame = lazy(() => import('../games/melodiq').then(pick('MelodiqGame')));
+const MelodiqNotesGame = lazy(() =>
+  import('../games/melodiq-notes').then(pick('MelodiqNotesGame')),
+);
+const MelodiqQueue = lazy(() => import('../games/melodiq').then(pick('MelodiqQueue')));
+const MelodiqTV = lazy(() => import('../games/melodiq').then(pick('MelodiqTV')));
+const QwixxGame = lazy(() => import('../games/qwixx').then(pick('QwixxGame')));
+const KnisterGame = lazy(() => import('../games/knister').then(pick('KnisterGame')));
+const GuessArtGame = lazy(() => import('../games/guessart').then(pick('GuessArtGame')));
+const StorytellerGame = lazy(() => import('../games/storyteller').then(pick('StorytellerGame')));
+const CardsGame = lazy(() => import('../games/cards').then(pick('CardsGame')));
+const WordleGame = lazy(() => import('../games/wordle').then(pick('WordleGame')));
+const SudokuGame = lazy(() => import('../games/sudoku').then(pick('SudokuGame')));
+const PartyLobby = lazy(() => import('../features/party/PartyLobby').then(pick('PartyLobby')));
+const TabletopGame = lazy(() => import('../games/tabletop').then(pick('TabletopGame')));
+const KniffelGame = lazy(() => import('../games/kniffel').then(pick('KniffelGame')));
+const DartsGame = lazy(() => import('../games/darts').then(pick('DartsGame')));
 
 class GameRegistry {
-    private games: GameDefinition[] = [
+  private games: GameDefinition[] = [
+    {
+      id: 'darts',
+      route: 'games/darts',
+      titleKey: 'games.darts.title',
+      descriptionKey: 'games.darts.description',
+      icon: <AdsClickIcon sx={{ fontSize: 72, mb: 2 }} />,
+      category: 'party',
+      hasSettings: true,
+      component: <DartsGame />,
+    },
+    {
+      id: 'qwixx',
+      route: 'games/qwixx',
+      titleKey: 'games.qwixx.title',
+      descriptionKey: 'games.qwixx.description',
+      icon: <CasinoIcon sx={{ fontSize: 72, mb: 2 }} />,
+      category: 'dice',
+      component: <QwixxGame />,
+    },
+    {
+      id: 'knister',
+      route: 'games/knister',
+      titleKey: 'games.knister.title',
+      descriptionKey: 'games.knister.description',
+      icon: <GridViewIcon sx={{ fontSize: 72, mb: 2 }} />,
+      category: 'dice',
+      component: <KnisterGame />,
+    },
+    {
+      id: 'kniffel',
+      route: 'games/kniffel',
+      titleKey: 'games.kniffel.title',
+      descriptionKey: 'games.kniffel.description',
+      icon: <CasinoIcon sx={{ fontSize: 72, mb: 2 }} />,
+      category: 'dice',
+      component: <KniffelGame />,
+    },
+    {
+      id: 'guessart',
+      route: 'games/guessart',
+      titleKey: 'games.guessart.title',
+      descriptionKey: 'games.guessart.description',
+      icon: <PaletteIcon sx={{ fontSize: 72, mb: 2 }} />,
+      category: 'drawing',
+      component: <GuessArtGame />,
+    },
+    {
+      id: 'storyteller',
+      route: 'games/storyteller',
+      titleKey: 'games.storyteller.title',
+      descriptionKey: 'games.storyteller.description',
+      icon: <AutoStoriesIcon sx={{ fontSize: 72, mb: 2 }} />,
+      category: 'party',
+      component: <StorytellerGame />,
+    },
+    {
+      id: 'cards',
+      route: 'games/cards',
+      titleKey: 'games.cards.title',
+      descriptionKey: 'games.cards.description',
+      icon: <StyleIcon sx={{ fontSize: 72, mb: 2 }} />,
+      category: 'cards',
+      component: <CardsGame />,
+    },
+    {
+      id: 'melodiq',
+      route: 'games/melodiq',
+      titleKey: 'games.melodiq.title',
+      descriptionKey: 'games.melodiq.description',
+      icon: <GraphicEqIcon sx={{ fontSize: 72, mb: 2 }} />,
+      category: 'music',
+      component: <MelodiqGame />,
+      hasSettings: true,
+      nestedRoutes: [
         {
-            id: 'darts',
-            route: 'games/darts',
-            titleKey: 'games.darts.title',
-            descriptionKey: 'games.darts.description',
-            icon: <AdsClickIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#ef4444',
-            colorEnd: '#b91c1c',
-            hoverColor: '#b91c1c',
-            category: 'party',
-            hasSettings: true,
-            component: <DartsGame />
+          path: 'games/melodiq/queue',
+          component: (
+            <SongsProvider>
+              <MelodiqQueue />
+            </SongsProvider>
+          ),
         },
+      ],
+      standaloneRoutes: [
         {
-            id: 'qwixx',
-            route: 'games/qwixx',
-            titleKey: 'games.qwixx.title',
-            descriptionKey: 'games.qwixx.description',
-            icon: <CasinoIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#ffb74d',
-            colorEnd: '#f57c00',
-            hoverColor: '#f57c00',
-            category: 'dice',
-            component: <QwixxGame />
+          path: '/games/melodiq/tv',
+          component: <MelodiqTV />,
         },
-        {
-            id: 'knister',
-            route: 'games/knister',
-            titleKey: 'games.knister.title',
-            descriptionKey: 'games.knister.description',
-            icon: <GridViewIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#ffa726',
-            colorEnd: '#e65100',
-            hoverColor: '#e65100',
-            category: 'dice',
-            component: <KnisterGame />
-        },
-        {
-            id: 'kniffel',
-            route: 'games/kniffel',
-            titleKey: 'games.kniffel.title',
-            descriptionKey: 'games.kniffel.description',
-            icon: <CasinoIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#ef4444',
-            colorEnd: '#991b1b',
-            hoverColor: '#991b1b',
-            category: 'dice',
-            component: <KniffelGame />
-        },
-        {
-            id: 'guessart',
-            route: 'games/guessart',
-            titleKey: 'games.guessart.title',
-            descriptionKey: 'games.guessart.description',
-            icon: <PaletteIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#80deea',
-            colorEnd: '#00838f',
-            hoverColor: '#00838f',
-            category: 'drawing',
-            component: <GuessArtGame />
-        },
-        {
-            id: 'storyteller',
-            route: 'games/storyteller',
-            titleKey: 'games.storyteller.title',
-            descriptionKey: 'games.storyteller.description',
-            icon: <AutoStoriesIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#38bdf8',
-            colorEnd: '#0284c7',
-            hoverColor: '#0284c7',
-            category: 'party',
-            component: <StorytellerGame />
-        },
-        {
-            id: 'cards',
-            route: 'games/cards',
-            titleKey: 'games.cards.title',
-            descriptionKey: 'games.cards.description',
-            icon: <StyleIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#4dd0e1',
-            colorEnd: '#00838f',
-            hoverColor: '#00838f',
-            category: 'cards',
-            component: <CardsGame />
-        },
-        {
-            id: 'melodiq',
-            route: 'games/melodiq',
-            titleKey: 'games.melodiq.title',
-            descriptionKey: 'games.melodiq.description',
-            icon: <GraphicEqIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#90caf9',
-            colorEnd: '#1e88e5',
-            hoverColor: '#1e88e5',
-            category: 'music',
-            component: <MelodiqGame />,
-            hasSettings: true,
-            nestedRoutes: [
-                {
-                    path: 'games/melodiq/queue',
-                    component: (
-                        <SongsProvider>
-                            <MelodiqQueue />
-                        </SongsProvider>
-                    )
-                }
-            ],
-            standaloneRoutes: [
-                {
-                    path: '/games/melodiq/tv',
-                    component: <MelodiqTV />
-                }
-            ]
-        },
-        {
-            id: 'melodiq-notes',
-            route: 'games/melodiq-notes',
-            titleKey: 'games.melodiq_notes.title',
-            descriptionKey: 'games.melodiq_notes.description',
-            icon: <PianoIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#a855f7',
-            colorEnd: '#6b21a8',
-            hoverColor: '#6b21a8',
-            category: 'music',
-            component: <MelodiqNotesGame />
-        },
-        {
-            id: 'werewolf',
-            route: 'games/werewolf',
-            titleKey: 'games.werewolf.title',
-            descriptionKey: 'games.werewolf.description',
-            icon: <SportsEsportsIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#f48fb1',
-            colorEnd: '#c2185b',
-            hoverColor: '#c2185b',
-            category: 'social_deduction',
-            component: <WerewolfGame />
-        },
-        {
-            id: 'imposter',
-            route: 'games/imposter',
-            titleKey: 'games.imposter.title',
-            descriptionKey: 'games.imposter.description',
-            icon: <PersonSearchIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#a5d6a7',
-            colorEnd: '#2e7d32',
-            hoverColor: '#2e7d32',
-            category: 'social_deduction',
-            component: <ImposterGame />
-        },
-        {
-            id: 'party',
-            route: 'party',
-            titleKey: 'games.party.title',
-            descriptionKey: 'games.party.description',
-            icon: <CelebrationIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#ce93d8',
-            colorEnd: '#7b1fa2',
-            hoverColor: '#7b1fa2',
-            category: 'party',
-            component: <PartyLobby />
-        },
-        {
-            id: 'wordle',
-            route: 'games/wordle',
-            titleKey: 'games.wordle.title',
-            descriptionKey: 'games.wordle.description',
-            icon: <AbcIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#81c784',
-            colorEnd: '#2e7d32',
-            hoverColor: '#2e7d32',
-            category: 'puzzle',
-            component: <WordleGame />
-        },
-        {
-            id: 'sudoku',
-            route: 'games/sudoku',
-            titleKey: 'games.sudoku.title',
-            descriptionKey: 'games.sudoku.description',
-            icon: <Grid4x4Icon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#90caf9',
-            colorEnd: '#1976d2',
-            hoverColor: '#1976d2',
-            category: 'puzzle',
-            component: <SudokuGame />
-        },
-        {
-            id: 'tabletop',
-            route: 'games/tabletop',
-            titleKey: 'games.tabletop.title',
-            descriptionKey: 'games.tabletop.description',
-            icon: <TableBarIcon sx={{ fontSize: 72, mb: 2 }} />,
-            colorStart: '#f59e0b',
-            colorEnd: '#b45309',
-            hoverColor: '#b45309',
-            category: 'cards',
-            component: <TabletopGame />
-        }
-    ];
+      ],
+    },
+    {
+      id: 'melodiq-notes',
+      route: 'games/melodiq-notes',
+      titleKey: 'games.melodiq_notes.title',
+      descriptionKey: 'games.melodiq_notes.description',
+      icon: <PianoIcon sx={{ fontSize: 72, mb: 2 }} />,
+      category: 'music',
+      component: <MelodiqNotesGame />,
+    },
+    {
+      id: 'werewolf',
+      route: 'games/werewolf',
+      titleKey: 'games.werewolf.title',
+      descriptionKey: 'games.werewolf.description',
+      icon: <SportsEsportsIcon sx={{ fontSize: 72, mb: 2 }} />,
+      category: 'social_deduction',
+      component: <WerewolfGame />,
+    },
+    {
+      id: 'imposter',
+      route: 'games/imposter',
+      titleKey: 'games.imposter.title',
+      descriptionKey: 'games.imposter.description',
+      icon: <PersonSearchIcon sx={{ fontSize: 72, mb: 2 }} />,
+      category: 'social_deduction',
+      component: <ImposterGame />,
+    },
+    {
+      id: 'party',
+      route: 'party',
+      titleKey: 'games.party.title',
+      descriptionKey: 'games.party.description',
+      icon: <CelebrationIcon sx={{ fontSize: 72, mb: 2 }} />,
+      category: 'party',
+      component: <PartyLobby />,
+    },
+    {
+      id: 'wordle',
+      route: 'games/wordle',
+      titleKey: 'games.wordle.title',
+      descriptionKey: 'games.wordle.description',
+      icon: <AbcIcon sx={{ fontSize: 72, mb: 2 }} />,
+      category: 'puzzle',
+      component: <WordleGame />,
+    },
+    {
+      id: 'sudoku',
+      route: 'games/sudoku',
+      titleKey: 'games.sudoku.title',
+      descriptionKey: 'games.sudoku.description',
+      icon: <Grid4x4Icon sx={{ fontSize: 72, mb: 2 }} />,
+      category: 'puzzle',
+      component: <SudokuGame />,
+    },
+    {
+      id: 'tabletop',
+      route: 'games/tabletop',
+      titleKey: 'games.tabletop.title',
+      descriptionKey: 'games.tabletop.description',
+      icon: <TableBarIcon sx={{ fontSize: 72, mb: 2 }} />,
+      category: 'cards',
+      component: <TabletopGame />,
+    },
+  ];
 
-    getGames(): GameDefinition[] {
-        return this.games;
-    }
+  getGames(): GameDefinition[] {
+    return this.games;
+  }
 
-    getGamesByCategory(category: GameCategory): GameDefinition[] {
-        if (category === 'all') return this.games;
-        return this.games.filter(g => g.category === category);
-    }
+  getGamesByCategory(category: GameCategory): GameDefinition[] {
+    if (category === 'all') return this.games;
+    return this.games.filter((g) => g.category === category);
+  }
 
-    findGameByPath(pathname: string): GameDefinition | undefined {
-        const clean = pathname.replace(/^\//, '');
-        return this.games.find(g => {
-            if (clean.startsWith(g.route)) return true;
-            if (g.nestedRoutes?.some(nr => clean.startsWith(nr.path.replace(/^\//, '')))) return true;
-            if (g.standaloneRoutes?.some(sr => clean.startsWith(sr.path.replace(/^\//, '')))) return true;
-            return false;
-        });
-    }
+  findGameByPath(pathname: string): GameDefinition | undefined {
+    const clean = pathname.replace(/^\//, '');
+    return this.games.find((g) => {
+      if (clean.startsWith(g.route)) return true;
+      if (g.nestedRoutes?.some((nr) => clean.startsWith(nr.path.replace(/^\//, '')))) return true;
+      if (g.standaloneRoutes?.some((sr) => clean.startsWith(sr.path.replace(/^\//, ''))))
+        return true;
+      return false;
+    });
+  }
 }
 
 export const gameRegistry = new GameRegistry();

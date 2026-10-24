@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Game registry colour fields removed (claude-code)
+
+- `docs/tech/data-models.md`, `docs/tech/architecture.md`: `GameDefinition` no longer has `colorStart`/`colorEnd`/`hoverColor`.
+- **Code changed:** `src/lib/gameRegistry.tsx` and `scripts/scaffold-game.mjs` (#498).
+
 ## 2026-10-24 — Melodiq gameplay files split (claude-code)
 
 - `docs/tech/sync-protocol.md`: phone-side message handling now lives in `hooks/usePhoneClientMessages.ts` and `hooks/usePhoneMicStreaming.ts` (was `PhoneClientEngine.tsx`).
