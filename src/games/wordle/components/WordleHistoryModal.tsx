@@ -13,22 +13,13 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useWordleHistory } from '../hooks/useWordleHistory';
 import type { EvaluatedLetter } from '../logic/types';
+import { statusLabelKey, tileStyle } from './tileStyles';
 
 interface WordleHistoryModalProps {
   open: boolean;
   onClose: () => void;
   language: string;
 }
-
-const statusColors = {
-  correct: { bg: 'success.main', border: 'success.main', text: 'success.contrastText' },
-  present: { bg: 'warning.main', border: 'warning.main', text: 'warning.contrastText' },
-  absent: {
-    bg: 'action.disabledBackground',
-    border: 'action.disabledBackground',
-    text: 'text.secondary',
-  },
-};
 
 export const WordleHistoryModal: React.FC<WordleHistoryModalProps> = ({
   open,
@@ -129,11 +120,13 @@ export const WordleHistoryModal: React.FC<WordleHistoryModalProps> = ({
                           letter.status === 'absent'
                             ? letter.status
                             : 'absent';
-                        const style = statusColors[status];
+                        const style = tileStyle(status);
 
                         return (
                           <Box
                             key={colIndex}
+                            role="img"
+                            aria-label={`${letter.char}: ${t(statusLabelKey(status))}`}
                             sx={{
                               width: 28,
                               height: 28,
@@ -143,8 +136,8 @@ export const WordleHistoryModal: React.FC<WordleHistoryModalProps> = ({
                               fontSize: '0.9rem',
                               fontWeight: 800,
                               borderRadius: 1,
-                              bgcolor: style.bg,
-                              color: style.text,
+                              border: '2px solid',
+                              ...style,
                             }}
                           >
                             {letter.char}

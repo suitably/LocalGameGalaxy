@@ -74,7 +74,7 @@ export const WordleDuelModal: React.FC<WordleDuelModalProps> = ({ open, onClose 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ textAlign: 'center', fontWeight: 800 }}>
-        {t('wordle.duel.title', 'Freund herausfordern ⚔️')}
+        {t('wordle.duel.title', 'Freund herausfordern')}
       </DialogTitle>
 
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

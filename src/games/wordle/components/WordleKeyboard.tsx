@@ -5,7 +5,9 @@
 import React, { useEffect } from 'react';
 import { Box, Button } from '@mui/material';
 import BackspaceOutlinedIcon from '@mui/icons-material/BackspaceOutlined';
+import { useTranslation } from 'react-i18next';
 import type { LetterStatus } from '../logic/types';
+import { statusLabelKey, tileStyle } from './tileStyles';
 
 interface WordleKeyboardProps {
   onChar: (char: string) => void;
@@ -16,14 +18,6 @@ interface WordleKeyboardProps {
   disabled?: boolean;
 }
 
-const keyBgColors: Record<LetterStatus, { bg: string; text: string }> = {
-  correct: { bg: 'success.main', text: 'success.contrastText' },
-  present: { bg: 'warning.main', text: 'warning.contrastText' },
-  absent: { bg: 'action.disabledBackground', text: 'text.disabled' },
-  tbd: { bg: 'background.paper', text: 'text.primary' },
-  empty: { bg: 'background.paper', text: 'text.primary' },
-};
-
 export const WordleKeyboard: React.FC<WordleKeyboardProps> = ({
   onChar,
   onDelete,
@@ -32,6 +26,7 @@ export const WordleKeyboard: React.FC<WordleKeyboardProps> = ({
   language = 'de',
   disabled = false,
 }) => {
+  const { t } = useTranslation();
   const isGerman = language.startsWith('de');
 
   const rows = [
@@ -95,13 +90,20 @@ export const WordleKeyboard: React.FC<WordleKeyboardProps> = ({
         >
           {row.map((key) => {
             const isSpecial = key === 'ENTER' || key === 'DELETE';
-            const status = isSpecial ? 'empty' : keyStatuses[key] || 'empty';
-            const style = keyBgColors[status];
+            const status: LetterStatus = isSpecial ? 'empty' : keyStatuses[key] || 'empty';
+            const style = tileStyle(status === 'empty' ? 'tbd' : status);
 
             return (
               <Button
                 key={key}
                 disabled={disabled}
+                aria-label={
+                  isSpecial
+                    ? key === 'ENTER'
+                      ? t('wordle.key_enter', 'Enter')
+                      : t('wordle.key_delete', 'Delete')
+                    : `${key}: ${t(statusLabelKey(status))}`
+                }
                 onClick={() => {
                   if (key === 'ENTER') onEnter();
                   else if (key === 'DELETE') onDelete();
@@ -115,12 +117,18 @@ export const WordleKeyboard: React.FC<WordleKeyboardProps> = ({
                     ? { xs: '0.75rem', sm: '0.85rem' }
                     : { xs: '1.15rem', sm: '1.25rem' },
                   fontWeight: 700,
-                  bgcolor: isSpecial ? 'action.selected' : style.bg,
-                  color: isSpecial ? 'text.primary' : style.text,
+                  ...(isSpecial
+                    ? { bgcolor: 'action.selected', color: 'text.primary' }
+                    : {
+                        ...style,
+                        bgcolor: status === 'empty' ? 'background.paper' : style.bgcolor,
+                        border: '2px solid',
+                        borderColor: status === 'empty' ? 'divider' : style.borderColor,
+                        borderStyle: style.borderStyle ?? 'solid',
+                      }),
                   borderRadius: 1.5,
                   '&:hover': {
-                    bgcolor: isSpecial ? 'action.focus' : style.bg,
-                    filter: 'brightness(1.15)',
+                    bgcolor: isSpecial || status === 'empty' ? 'action.hover' : style.bgcolor,
                   },
                   '&:active': {
                     transform: 'scale(0.95)',
