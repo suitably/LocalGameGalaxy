@@ -26,6 +26,7 @@
 - **Sync & Resilience Tests**: Extended `MqttMailboxService` and `MultiChannelSyncCoordinator` test suites with coverage for listener error isolation, LZString payload compression, and dynamic channel re-subscription edge cases (Fixes #386).
 
 ### Changed
+- Cards: decomposed the Schwimmen, Oh Hell and score-sheet views into shared presenters (`components/common/`), a `useSchwimmenState` hook and tested `logic/cardPlayers.ts`; re-coloured with piece/background tokens, removed gradients and emoji icons (#494, #360).
 
 - **Wordle**: decomposed (`WordleGame.tsx` 247 → 141 lines, new `useWordleScreen`, `WordleToast`, `WordleHelpDialog`, shared `tileStyles`); letter states use theme roles (correct → success, present → warning, absent → raised) with non-colour cues (underline / dashed ring) and an `aria-label` per tile and key; emoji removed from UI labels (#493).
 - **Melodiq Notes players and backing**: one player by default; "Add player" adds up to four, each row picks its part and how it is shown and can be removed. The backing is one global choice without a recording — everything (the players' parts too), backing only, or silent — and switches mid-song; with a recording there is just recording on/off. Replaces per-track roles and the solo/band presets.

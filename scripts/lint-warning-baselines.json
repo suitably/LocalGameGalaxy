@@ -24,8 +24,6 @@
   "src/features/settings/components/GeneralSettings.tsx": 1,
   "src/features/settings/components/server/useSignalingTrackerState.ts": 2,
   "src/features/settings/components/SettingsHeaderNav.tsx": 1,
-  "src/games/cards/components/OhHellGameView.tsx": 1,
-  "src/games/cards/components/SchwimmenGameView.tsx": 1,
   "src/games/darts/components/DartsSettings.tsx": 1,
   "src/games/darts/useDartsGame.ts": 1,
   "src/games/guessart/components/catalogue/CatalogueEditorDialog.tsx": 1,
