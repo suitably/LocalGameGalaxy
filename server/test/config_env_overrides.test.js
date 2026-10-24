@@ -73,6 +73,7 @@ test('configSources pure helpers', async (t) => {
       token: 'abc',
       directories: ['/m1', '/m2', '/m3', '/app/music'],
       tabletopDirectories: ['/t1'],
+      notesDir: null,
     });
   });
 

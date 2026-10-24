@@ -15,6 +15,23 @@ export const setGameCache = (val: TabletopGameEntry[]): void => {
 };
 export const isScanning = (): boolean => IS_SCANNING;
 
+/** Games saved from the client go to `<first tabletop directory>/saved/<name>/game.json`. */
+export const SAVED_FOLDER = 'saved';
+export const savedGamesRoot = (): string => path.join(serverConfig.tabletopSaveRoot, SAVED_FOLDER);
+
+/** Only saved games may be overwritten or deleted; the rest of the library stays read-only. */
+export const isSavedGame = (entry: TabletopGameEntry): boolean =>
+  path.resolve(entry.jsonPath).startsWith(path.resolve(savedGamesRoot()) + path.sep);
+
+/** Puts one game into the cache right away (after a save), replacing an entry with the same id. */
+export const upsertGameInCache = (entry: TabletopGameEntry): void => {
+  GAME_CACHE = [...GAME_CACHE.filter((g) => g.id !== entry.id), entry];
+};
+
+export const removeGameFromCache = (id: string): void => {
+  GAME_CACHE = GAME_CACHE.filter((g) => g.id !== id);
+};
+
 /**
  * Parses minimal game metadata from a JSON file.
  */
@@ -76,7 +93,7 @@ export async function parseGameFile(jsonPath: string): Promise<TabletopGameEntry
   } else if (typeof parsed.SaveName === 'string' && Array.isArray(parsed.ObjectStates)) {
     format = 'tts-workshop';
     parsed.name = parsed.SaveName; // so fallback logic uses it
-    
+
     const countObjects = (objs: unknown[]): { w: number; c: number } => {
       let w = 0;
       let c = 0;
@@ -85,7 +102,7 @@ export async function parseGameFile(jsonPath: string): Promise<TabletopGameEntry
         w++;
         const record = obj as Record<string, unknown>;
         const objName = record.Name as string | undefined;
-        
+
         if (objName === 'Card' || objName === 'Deck' || objName === 'DeckCustom') {
           const deckIds = record.DeckIDs;
           const contained = record.ContainedObjects;
@@ -97,7 +114,7 @@ export async function parseGameFile(jsonPath: string): Promise<TabletopGameEntry
             c++;
           }
         }
-        
+
         if (Array.isArray(record.ContainedObjects)) {
           const nested = countObjects(record.ContainedObjects);
           w += nested.w;
@@ -118,7 +135,7 @@ export async function parseGameFile(jsonPath: string): Promise<TabletopGameEntry
         typeof v === 'object' &&
         ('type' in (v as Record<string, unknown>) ||
           'cardTypes' in (v as Record<string, unknown>) ||
-          'deck' in (v as Record<string, unknown>))
+          'deck' in (v as Record<string, unknown>)),
     );
 
     if (isFlat) {
@@ -229,7 +246,7 @@ export const scanGames = async (): Promise<void> => {
   GAME_CACHE = newGames;
   IS_SCANNING = false;
   console.log(
-    `[TabletopScanner] Finished. Cached ${newGames.length} games in ${(Date.now() - startTime) / 1000}s.`
+    `[TabletopScanner] Finished. Cached ${newGames.length} games in ${(Date.now() - startTime) / 1000}s.`,
   );
 
   if (SCAN_REQUESTED_WHILE_BUSY) {

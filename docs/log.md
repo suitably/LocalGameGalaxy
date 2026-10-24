@@ -2,6 +2,14 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Companion server: Notes plugin, saved tabletop games, configurable compose, ARM64 binaries (claude-code)
+
+- `docs/tech/architecture.md` §3.6: `notes` plugin, tabletop save routes, `NOTES_DIR`, auto-discovered data folders.
+- `docs/tech/server-security.md`: auth and deletion rules for the new routes.
+- `docs/tech/deployment.md`: Node 24 image, one volume per plugin, configurable compose generator, ARM64 release job.
+- `docs/open-questions.md`: Q10 (Node version drift) resolved and removed.
+- **Code changed:** `server/src/plugins/notes/`, `server/src/plugins/tabletop/routes/library.ts`, `server/src/utils/{scoreFiles,fileStream}.ts`, `server/Dockerfile`, `server/docker-compose*.yml`, compose generator in `src/features/settings/components/server/`, `STORAGE_KEYS.COMPOSE_GENERATOR`, `.github/workflows/release.yml`, `server/release-scripts/quick-install.sh`.
+
 ## 2026-10-24 — Motion tokens and reduced motion (claude-code)
 
 - `docs/tech/architecture.md`: hooks list gains `usePrefersReducedMotion`.

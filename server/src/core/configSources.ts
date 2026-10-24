@@ -10,6 +10,7 @@ export interface EnvOverrides {
   token: string | null;
   directories: string[];
   tabletopDirectories: string[];
+  notesDir: string | null;
 }
 
 type Env = Record<string, string | undefined>;
@@ -25,8 +26,13 @@ export function parseEnvList(value: string | undefined): string[] {
 /**
  * @param env usually `process.env`
  * @param discoveredMusicDirs existing standard mounts such as `/app/music`
+ * @param discoveredTabletopDirs existing standard mounts such as `/app/tabletop`
  */
-export function readEnvOverrides(env: Env, discoveredMusicDirs: string[] = []): EnvOverrides {
+export function readEnvOverrides(
+  env: Env,
+  discoveredMusicDirs: string[] = [],
+  discoveredTabletopDirs: string[] = [],
+): EnvOverrides {
   const parsedPort = env.PORT ? parseInt(env.PORT, 10) : NaN;
   const rawToken = (env.SECURITY_TOKEN || env.TOKEN || '').trim();
 
@@ -38,7 +44,8 @@ export function readEnvOverrides(env: Env, discoveredMusicDirs: string[] = []): 
       ...parseEnvList(env.DIRECTORIES),
       ...discoveredMusicDirs,
     ],
-    tabletopDirectories: parseEnvList(env.TABLETOP_DIR),
+    tabletopDirectories: [...parseEnvList(env.TABLETOP_DIR), ...discoveredTabletopDirs],
+    notesDir: (env.NOTES_DIR || '').trim() || null,
   };
 }
 
@@ -64,6 +71,7 @@ export function applyEnvOverrides(
     token: overrides.token ?? fileConfig.token,
     directories,
     tabletopDirectories: mergeDirs(fileConfig.tabletopDirectories, overrides.tabletopDirectories),
+    notesDir: overrides.notesDir ?? fileConfig.notesDir ?? null,
     downloadDir: fileConfig.downloadDir || directories[0] || null,
   };
 }

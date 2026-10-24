@@ -18,7 +18,13 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     OS="macos"
 fi
 
-ARCHIVE="nexumia-server-${OS}.tar.gz"
+# Apple Silicon and ARM boards (Raspberry Pi) get their own build
+case "$(uname -m)" in
+    arm64|aarch64) ARCH_SUFFIX="-arm64" ;;
+    *) ARCH_SUFFIX="" ;;
+esac
+
+ARCHIVE="nexumia-server-${OS}${ARCH_SUFFIX}.tar.gz"
 DOWNLOAD_URL="https://github.com/${REPO}/releases/latest/download/${ARCHIVE}"
 
 echo "⬇️  Downloading latest ${OS} server binary from GitHub..."
@@ -49,7 +55,8 @@ CFG
     echo "🔑 Generated fresh security token in config.json: ${TOKEN}"
 fi
 
-mkdir -p music
+# one data folder per plugin: songs, Tabletop games, Melodiq Notes library
+mkdir -p music tabletop notes
 chmod +x nexumia-server-* start-server.* 2>/dev/null || true
 
 echo "✅ Installation completed successfully!"

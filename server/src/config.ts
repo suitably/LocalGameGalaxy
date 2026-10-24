@@ -12,6 +12,7 @@ import {
 const defaultConfig: ServerConfigData = {
   directories: [],
   tabletopDirectories: [],
+  notesDir: null,
   port: 3000,
   token: null,
   downloadDir: null,
@@ -24,6 +25,22 @@ const defaultConfig: ServerConfigData = {
   githubRepo: 'LocalGameGalaxy',
   githubToken: null,
 };
+
+const isDirectory = (loc: string): boolean => {
+  try {
+    return fs.existsSync(loc) && fs.statSync(loc).isDirectory();
+  } catch {
+    return false;
+  }
+};
+
+/** Standard data folders that exist: the Docker mount `/app/<name>` and `<cwd>/<name>` (binaries). */
+const existingDataDirs = (name: string): string[] =>
+  [path.join('/app', name), path.join(process.cwd(), name)].filter(isDirectory);
+
+/** Where a data folder lives when nothing is configured: the Docker mount if present, else next to the binary. */
+export const defaultDataDir = (name: string): string =>
+  existingDataDirs(name)[0] ?? path.resolve(name);
 
 export class ConfigManager {
   private activeConfigFile: string = path.join(process.cwd(), 'config.json');
@@ -117,14 +134,11 @@ export class ConfigManager {
     }
 
     // Env overrides apply at runtime only and are never persisted (#409).
-    const discoveredMusicDirs = ['/app/music', path.join(process.cwd(), 'music')].filter((loc) => {
-      try {
-        return fs.existsSync(loc) && fs.statSync(loc).isDirectory();
-      } catch {
-        return false;
-      }
-    });
-    this.envOverrides = readEnvOverrides(process.env, discoveredMusicDirs);
+    this.envOverrides = readEnvOverrides(
+      process.env,
+      existingDataDirs('music'),
+      existingDataDirs('tabletop'),
+    );
 
     const { config: cleaned, dropped } = stripLeakedEnvValues(
       this.fileConfig,
@@ -250,6 +264,16 @@ export class ConfigManager {
     );
     this.refreshEffectiveConfig();
     this.saveConfig();
+  }
+
+  /** Melodiq Notes library folder (NOTES_DIR, config `notesDir`, or the default data folder `notes`). */
+  get notesDir(): string {
+    return this.currentConfig.notesDir || defaultDataDir('notes');
+  }
+
+  /** Folder that games saved from the client go to (first tabletop directory, else `tabletop`). */
+  get tabletopSaveRoot(): string {
+    return this.tabletopDirectories[0] ?? defaultDataDir('tabletop');
   }
 
   get downloadDir(): string | null {

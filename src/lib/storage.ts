@@ -15,6 +15,8 @@ export const STORAGE_KEYS = {
   HELPER_URL: 'melodiq_helper_url',
   HELPER_TOKEN: 'melodiq_helper_token',
   HELPER_ACTIVE: 'melodiq_enable_helper',
+  /** Docker compose generator choices in Settings → Server. */
+  COMPOSE_GENERATOR: 'galaxy_compose_generator',
   SIGNALING_URL: 'galaxy_signaling_url',
   WEBRTC_STUN_CUSTOM_URLS: 'galaxy_stun_custom_urls',
   WEBRTC_STUN_PREFERENCES: 'galaxy_stun_preferences',

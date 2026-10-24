@@ -78,22 +78,31 @@ export async function findScoreFiles(dir: string, dirFiles: string[]): Promise<S
   return out;
 }
 
-/** File name to store an upload under: no directories, a score extension, safe characters only. */
-export function safeScoreFileName(original: string): string | null {
+/** Upload name reduced to a plain file name: no directories, safe characters only. */
+export function cleanUploadName(original: string): string {
   const base = path.basename(original.replace(/\\/g, '/')).normalize('NFC');
-  const cleaned = base
+  return base
     .replace(/[^\p{L}\p{N} ._()&,'-]/gu, '_')
     .replace(/^\.+/, '')
     .trim()
     .slice(-120);
+}
+
+/** File name to store an upload under: no directories, a score extension, safe characters only. */
+export function safeScoreFileName(original: string): string | null {
+  const cleaned = cleanUploadName(original);
   return cleaned && isScoreFileName(cleaned) ? cleaned : null;
 }
 
 /** Picks `name`, or `name (2)`, `name (3)` … when the folder already has a file of that name. */
-export function uniqueFileName(dir: string, name: string): string {
+export function uniqueFileName(
+  dir: string,
+  name: string,
+  extensions: string[] = SCORE_EXTENSIONS,
+): string {
   if (!fs.existsSync(path.join(dir, name))) return name;
   const lower = name.toLowerCase();
-  const ext = SCORE_EXTENSIONS.find((e) => lower.endsWith(e)) ?? path.extname(name);
+  const ext = extensions.find((e) => lower.endsWith(e)) ?? path.extname(name);
   const stem = name.slice(0, name.length - ext.length);
   for (let i = 2; i < 1000; i++) {
     const candidate = `${stem} (${i})${ext}`;

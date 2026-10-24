@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-21
+  at: 2026-10-24
   method: 'read wrangler.jsonc, capacitor.config.ts, android/app/build.gradle, server/Dockerfile, server/docker-compose*.yml, .github/workflows/{ci,release,docker-publish,deploy-push-relay}.yml, server/package.json'
 sources:
   - 'wrangler.jsonc'
@@ -68,7 +68,7 @@ Env: see [architecture §3.6](architecture.md#36-companion-server-server-optiona
 
 ### 4b. Docker
 
-`server/Dockerfile` stages: `builder` (tsc), `base` (`node:20-slim` + ffmpeg, python3, `yt-dlp`; port 3000), `full` (`base` + CPU PyTorch, `audio-separator`, `whisper-timestamped` for separation/alignment).
+`server/Dockerfile` stages: `builder` (tsc), `base` (`node:24-slim` + ffmpeg, python3, `yt-dlp`; port 3000), `full` (`base` + CPU PyTorch, `audio-separator`, `whisper-timestamped` for separation/alignment). One volume per plugin: `/app/config`, `/app/music` + `/app/models` (melodiq), `/app/tabletop` (tabletop, saved games in `saved/`), `/app/notes` (notes); `PLUGINS` defaults to all four.
 
 | Compose file                       | Purpose                                                                                                                             |
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
@@ -77,9 +77,9 @@ Env: see [architecture §3.6](architecture.md#36-companion-server-server-optiona
 | `server/docker-compose.ai.yml`     | `nexumia/melodiq-server:ai` image variant                                                                                           |
 | `server/docker-compose.tunnel.yml` | server + Cloudflare tunnel                                                                                                          |
 
-The Settings UI can generate a compose file (`src/features/settings/components/server/composeYamlGenerator.ts`): the signaling tracker plus one companion container (`nexumia/melodiq-server`) whose `PLUGINS` follow the selected games, and an optional Cloudflare quick tunnel. There are no separate tabletop or push containers: tabletop is a server plugin, push runs via ntfy or the Cloudflare worker. The standalone tracker stays because the companion server has no WebSocket tracker of its own (#342).
+The Settings UI can generate a compose file (`src/features/settings/components/server/composeYamlGenerator.ts`, state in `useComposeGenerator.ts`, choices kept in `STORAGE_KEYS.COMPOSE_GENERATOR`): the signaling tracker (optional, own port) plus one companion container (`nexumia/melodiq-server`, `:full` when the AI image is chosen) whose `PLUGINS` and volumes follow the selected games (Melodiq, Melodiq Notes, Tabletop), with host folders, server port and an optional pre-set token, and an optional Cloudflare quick tunnel. It downloads the file and can point this device at `http://localhost:<port>` with that token. There are no separate tabletop or push containers: tabletop is a server plugin, push runs via ntfy or the Cloudflare worker. The standalone tracker stays because the companion server has no WebSocket tracker of its own (#342).
 
-Node version drift (`node:20-slim` vs Node 24 elsewhere): [open-questions Q10](../open-questions.md#q10--node-version-drift).
+The Dockerfile uses Node 24 like the rest of the repo (was Q10).
 
 ### 4c. Standalone binaries
 
@@ -89,7 +89,7 @@ npm run bundle     # esbuild src/index.ts → dist/nexumia-server.cjs (CJS bundl
 npm run package    # bundle + @yao-pkg/pkg → dist/nexumia-server-{linux,win.exe,macos} (node24-*-x64)
 ```
 
-`release.yml` → `build-server-binaries` runs `npm run package` and packs each binary with its launcher from `server/release-scripts/` (`start-server.sh` + `NexumiaServer.desktop`, `start-server.bat`, `start-server.command`) and `scripts/align_lyrics.py`. The launchers `cd` into their folder, so the binary finds `config.json` and `scripts/` there. Separation/alignment still need Python and `ffmpeg` on the host.
+`release.yml` → `build-server-binaries` runs `npm run package` (x64) and packs each binary with its launcher from `server/release-scripts/` (`start-server.sh` + `NexumiaServer.desktop`, `start-server.bat`, `start-server.command`) and `scripts/align_lyrics.py`. The launchers `cd` into their folder, so the binary finds `config.json`, `scripts/` and the empty data folders `music/`, `tabletop/`, `notes/` there. `build-server-binaries-arm64` builds `nexumia-server-{linux,macos}-arm64.tar.gz` natively on `ubuntu-24.04-arm` and `macos-latest` (pkg cannot cross-compile bytecode); the binary keeps the x64 file name so the launchers work unchanged. `quick-install.sh` picks the ARM archive from `uname -m`; the setup dialog's binary tab links it for macOS and Linux. **Unverified:** the ARM jobs have not run yet. Separation/alignment still need Python and `ffmpeg` on the host.
 
 Restored in PR #394 (the `package` script had been removed on 2026-09-13). Only the Linux binary was smoke-tested.
 

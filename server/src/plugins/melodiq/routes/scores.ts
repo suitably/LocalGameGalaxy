@@ -9,7 +9,7 @@ import {
   parseMarksBody,
   safeScoreFileName,
   uniqueFileName,
-} from '../services/scoreFiles';
+} from '../../../utils/scoreFiles';
 import type { HonoEnv, Song, SongScore } from '../../../core/types';
 
 export const scoresRouter = new Hono<HonoEnv>();

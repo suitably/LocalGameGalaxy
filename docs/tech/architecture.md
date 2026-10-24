@@ -54,7 +54,7 @@ src/
 server/              # optional companion server (separate npm package, Hono)
 ├── src/index.ts     # Node entry; src/worker.ts = Workers entry
 ├── src/core/        # app.ts (CORS, PNA, /health, /api/info), pluginLoader.ts, tunnel.ts, types.ts
-├── src/plugins/     # melodiq/, relay/, tabletop/
+├── src/plugins/     # melodiq/, notes/, relay/, tabletop/
 └── cloudflare-push-relay/   # separate Cloudflare Worker for Web Push + ntfy fan-out
 signaling/           # standalone BitTorrent WebSocket tracker (port 8000)
 scripts/             # quality gates (check-*.mjs/js), scaffold-game.mjs, pipeline/
@@ -142,12 +142,13 @@ UI layout state is split to avoid app-wide re-renders (`src/context/`):
 ### 3.6 Companion server (`server/`, optional)
 
 - **Hono** on `@hono/node-server` (`server/src/index.ts`); a Workers entry exists in `server/src/worker.ts`.
-- Plugins loaded from env `PLUGINS` (default `relay,melodiq,tabletop`):
+- Plugins loaded from env `PLUGINS` (default `relay,melodiq,tabletop,notes`):
   - `melodiq` — song scan of configured directories, HTTP 206 media streaming (`/media`), USDB search/download jobs, `yt-dlp`, stem separation and lyric alignment jobs, playlists, config/API-key management. Auth middleware `core/auth.ts` (`requireAuth`, `requireMasterToken`, `getRequestToken`).
   - `relay` — in-memory HTTP room relay (`/api/relay/rooms/*`, rooms expire after 4 h idle). It is **not** the WebRTC tracker.
-  - `tabletop` — tabletop asset folders, game listing, workshop import, image proxy; all routes require a token.
+  - `tabletop` — tabletop asset folders, game listing, workshop import, image proxy; `POST/PUT/DELETE /api/tabletop/games[/:id]` save games from the client to `<first tabletop dir>/saved/<name>/game.json` (only those are writable; listing entries carry `saved`). All routes require a token.
+  - `notes` — Melodiq Notes library in `NOTES_DIR` (default data folder `notes`): one folder per piece with `piece.json`, scores (MusicXML/MIDI), recordings and `<score>.marks.json`; `/api/notes/pieces*` and `/notes/media/:id/:file` (range streaming). Shares `server/src/utils/scoreFiles.ts` with the Melodiq score routes.
 - Core: CORS + Private Network Access header + `/health` + `/api/info` (`core/app.ts`); optional Cloudflare Quick Tunnel (`core/tunnel.ts`, `ENABLE_TUNNEL=true` or `--tunnel`).
-- Config: `config.json` found via `CONFIG_PATH`, `/app/config`, cwd or next to the executable; env overrides `PORT`, `SECURITY_TOKEN`/`TOKEN`, `MUSIC_DIR`, `DIRECTORIES`, `TABLETOP_DIR`, `MODELS_DIR`, `ALLOWED_ORIGINS`. Token auto-generated if empty. Details: [server-security](server-security.md), [secrets-management](secrets-management.md).
+- Config: `config.json` found via `CONFIG_PATH`, `/app/config`, cwd or next to the executable; env overrides `PORT`, `SECURITY_TOKEN`/`TOKEN`, `MUSIC_DIR`, `DIRECTORIES`, `TABLETOP_DIR`, `NOTES_DIR`, `MODELS_DIR`, `ALLOWED_ORIGINS`. Existing data folders `/app/{music,tabletop}` (Docker) or `<cwd>/{music,tabletop}` (binaries) are picked up automatically; `notes` and the tabletop save folder fall back to the same places. Token auto-generated if empty. Details: [server-security](server-security.md), [secrets-management](secrets-management.md).
 - Plain HTTP only; TLS comes from the tunnel or a reverse proxy.
 
 ### 3.7 Signaling tracker (`signaling/`)

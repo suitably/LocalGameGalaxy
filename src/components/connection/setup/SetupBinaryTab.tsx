@@ -23,6 +23,12 @@ const ARCHIVE_NAMES: Record<DetectedOS, string> = {
   linux: 'nexumia-server-linux.tar.gz',
 };
 
+/** Native ARM64 builds (Apple Silicon, Raspberry Pi); Windows only has x64. */
+const ARM64_ARCHIVE_NAMES: Partial<Record<DetectedOS, string>> = {
+  mac: 'nexumia-server-macos-arm64.tar.gz',
+  linux: 'nexumia-server-linux-arm64.tar.gz',
+};
+
 const SCRIPT_NAMES: Record<DetectedOS, string> = {
   win: 'start-server.bat',
   mac: 'start-server.command',
@@ -35,7 +41,9 @@ export const SetupBinaryTab: React.FC<SetupBinaryTabProps> = ({ os, downloadConf
   const archiveName = ARCHIVE_NAMES[os];
   const scriptName = SCRIPT_NAMES[os];
 
-  const downloadUrl = `https://github.com/suitably/LocalGameGalaxy/releases/latest/download/${archiveName}`;
+  const releaseUrl = 'https://github.com/suitably/LocalGameGalaxy/releases/latest/download';
+  const downloadUrl = `${releaseUrl}/${archiveName}`;
+  const arm64Archive = ARM64_ARCHIVE_NAMES[os];
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
@@ -81,6 +89,22 @@ export const SetupBinaryTab: React.FC<SetupBinaryTabProps> = ({ os, downloadConf
               defaultValue: `Download Server Package (${osName})`,
             })}
           </Button>
+          {arm64Archive && (
+            <Button
+              variant="outlined"
+              startIcon={<DownloadIcon />}
+              href={`${releaseUrl}/${arm64Archive}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{ borderRadius: 999, px: 2.5, textTransform: 'none' }}
+            >
+              {t(
+                os === 'mac'
+                  ? 'server.setup.download_binary_apple_silicon'
+                  : 'server.setup.download_binary_arm64',
+              )}
+            </Button>
+          )}
           <Button
             variant="outlined"
             startIcon={<SettingsIcon />}

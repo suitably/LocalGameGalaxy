@@ -29,6 +29,8 @@ export interface ServerConfig {
 export interface ServerConfigData {
   directories: string[];
   tabletopDirectories: string[];
+  /** Melodiq Notes library (scores, recordings, bar marks); null = default data folder. */
+  notesDir: string | null;
   port: number;
   token: string | null;
   downloadDir: string | null;
@@ -55,7 +57,10 @@ export interface TabletopGameEntry {
   updatedAt: number;
 }
 
-export type ClientTabletopGameEntry = Omit<TabletopGameEntry, 'jsonPath' | 'assetsDir'>;
+export type ClientTabletopGameEntry = Omit<TabletopGameEntry, 'jsonPath' | 'assetsDir'> & {
+  /** Saved via the API, so it can be overwritten and deleted. */
+  saved: boolean;
+};
 
 export interface TabletopRawResponse {
   id: string;
