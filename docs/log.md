@@ -2,6 +2,9 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-23 — Terser agent instructions (claude-code)
+
+- Outside `docs/`: `AGENTS.md` wording tightened (filler removed; rules, conditions and reasons unchanged); `CLAUDE.md` asks for short answers. No code changed.
 ## 2026-10-24 — Signaling image published (claude-code)
 
 - `docs/tech/deployment.md` §1: the signaling image is now built by `docker-publish.yml` (was **Unverified**; compose files pointed at an image nobody published).
