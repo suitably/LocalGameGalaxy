@@ -21,12 +21,12 @@ services:
   # 2. Game Companion Services (Modular Plugins)
   # ══════════════════════════════════════════════════════════════════
 
-  # Companion server: one container, plugins relay + melodiq + tabletop + notes (PLUGINS, default all).
+  # Nexumia server (formerly melodiq-server): one container, plugins relay + melodiq + tabletop + notes (PLUGINS, default all).
   # Each plugin keeps its data in its own folder; drop a plugin from PLUGINS and its volume line.
   # Push notifications need no container (ntfy or server/cloudflare-push-relay worker).
-  melodiq:
-    image: nexumia/melodiq-server:latest
-    container_name: melodiq-server
+  nexumia-server:
+    image: nexumia/nexumia-server:latest
+    container_name: nexumia-server
     restart: unless-stopped
     ports:
       - '3000:3000'
@@ -54,13 +54,13 @@ services:
       start_period: 60s
       retries: 3
 
-  # Optional Cloudflare Quick Tunnel for MelodiQ (docker compose --profile tunnel up -d)
-  melodiq-tunnel:
+  # Optional Cloudflare Quick Tunnel for the Nexumia server (docker compose --profile tunnel up -d)
+  nexumia-tunnel:
     image: cloudflare/cloudflared:latest
-    container_name: melodiq-tunnel
+    container_name: nexumia-tunnel
     restart: unless-stopped
     profiles:
       - tunnel
-    command: tunnel --no-autoupdate --url http://melodiq:3000
+    command: tunnel --no-autoupdate --url http://nexumia-server:3000
     depends_on:
-      - melodiq
+      - nexumia-server

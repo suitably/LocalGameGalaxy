@@ -27,7 +27,7 @@ export const MelodiqServerMovedNotice: React.FC = () => {
         <Typography variant="body2" color="text.secondary">
           {t(
             'melodiq.server.moved_desc',
-            'Der MelodiQ Companion Server befindet sich jetzt zentral im neuen Server-Tab.',
+            'Der Nexumia Companion Server befindet sich jetzt zentral im neuen Server-Tab.',
           )}
         </Typography>
       </Box>

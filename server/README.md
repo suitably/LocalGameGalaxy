@@ -1,16 +1,18 @@
-# MelodiQ Server (One-Click Docker & Companion Backend)
+# Nexumia Server (One-Click Docker & Companion Backend)
 
-High-performance Hono companion server for **MelodiQ** (karaoke streaming, USDB downloads, automated stem separation with UVR MDX-Net, AI lyrics alignment with Whisper).
+> **Renamed from "MelodiQ Server" (#530).** The Docker image `nexumia/nexumia-server` replaces `nexumia/melodiq-server`; the old name is a deprecated alias that is still published for existing users. Use `nexumia-server` in compose files. Folder `server/`, API routes and storage keys are unchanged.
+
+High-performance Hono companion server (Nexumia server) for **MelodiQ** (karaoke streaming, USDB downloads, automated stem separation with UVR MDX-Net, AI lyrics alignment with Whisper).
 
 WebRTC signaling is handled by the companion **galaxy-signaling** microservice on port `8000`, orchestrated together via Docker Compose.
 
-> 💡 **Note**: Party games (**GuessArt**, **Gartic Phone**, **Werewolf**, **Qwixx**) run completely serverless peer-to-peer via MQTT/WebSockets and do **not** require the MelodiQ media server. For WebRTC microphone audio and screen mirroring in offline or private networks, only the lightweight `signaling` service (port 8000) is required.
+> 💡 **Note**: Party games (**GuessArt**, **Gartic Phone**, **Werewolf**, **Qwixx**) run completely serverless peer-to-peer via MQTT/WebSockets and do **not** require the Nexumia server (MelodiQ plugin). For WebRTC microphone audio and screen mirroring in offline or private networks, only the lightweight `signaling` service (port 8000) is required.
 
 ---
 
 ## 1. Quick Start
 
-Run the entire companion stack (MelodiQ Media Server + WebRTC Signaling) with a single command:
+Run the entire companion stack (Nexumia server with the MelodiQ media plugin + WebRTC Signaling) with a single command:
 
 ```bash
 # 1. Create your local folders (one per plugin)
@@ -25,7 +27,7 @@ curl http://localhost:8000/health
 docker compose logs -f
 ```
 
-- **MelodiQ Media Server**: `http://localhost:3000`
+- **Nexumia server** (MelodiQ media): `http://localhost:3000`
 - **WebRTC Signaling Server**: `ws://localhost:8000` (Health: `http://localhost:8000/health`)
 
 ---
@@ -149,7 +151,7 @@ The Docker image includes full pre-installed AI audio and video processing tools
 
 ## 6. Development & Local Image Build
 
-If you want to build and run the Docker image from local sources instead of pulling `nexumia/melodiq-server:latest`:
+If you want to build and run the Docker image from local sources instead of pulling `nexumia/nexumia-server:latest`:
 
 ```bash
 # Build & start with local Dockerfile and mounted source directories

@@ -9,7 +9,7 @@ generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
 verified:
-  at: 2026-10-18
+  at: 2026-10-24
   method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
@@ -47,8 +47,8 @@ Apply CPU and RAM limits in `docker-compose.yml` to prevent host starvation:
 
 ```yaml
 services:
-  melodiq-server:
-    image: nexumia/melodiq-server:latest
+  nexumia-server:
+    image: nexumia/nexumia-server:latest
     deploy:
       resources:
         limits:

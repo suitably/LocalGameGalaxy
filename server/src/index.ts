@@ -25,7 +25,7 @@ async function main(): Promise<void> {
   const server = serve({ fetch: app.fetch, port }, async (info) => {
     const localIp = getLocalIp();
     console.log(`\n======================================================`);
-    console.log(`🚀 LOCAL GAME GALAXY / MELODIQ RUNNING (HONO)`);
+    console.log(`🚀 NEXUMIA SERVER RUNNING (HONO)`);
     console.log(`======================================================`);
     console.log(`📍 Local URL:       http://localhost:${info.port}`);
     console.log(`🌐 Network Access:  http://${localIp}:${info.port}`);

@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-21
+  at: 2026-10-24
   method: 'read .github/workflows/*.yml, .github/rulesets/main.json, .husky/*, .gitlab-ci.yml, .jscpd.json, scripts/check-*.mjs'
 sources:
   - '.github/workflows/'
@@ -47,13 +47,13 @@ flowchart TD
 
 ### Complete Pipeline Inventory
 
-| Workflow File                                                                              | Pipeline Name                      | Trigger(s)                                                              | Target / Output                                                                                                                                             |
-| :----------------------------------------------------------------------------------------- | :--------------------------------- | :---------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)                               | **CI Quality Gate**                | `push` (main), `pull_request` (main)                                    | 7 Quality Gates + Cloudflare Production / Preview Deploy                                                                                                    |
-| [`.github/workflows/cleanup-preview.yml`](../../.github/workflows/cleanup-preview.yml)     | **Cleanup Cloudflare Preview**     | `pull_request` (`closed`), `workflow_dispatch`                          | Deletes obsolete preview branches & environments from Cloudflare                                                                                            |
-| [`.github/workflows/release.yml`](../../.github/workflows/release.yml)                     | **Release (Consolidated & Gated)** | `push` tags (`v*`), `workflow_dispatch`                                 | Gated draft release, signed Android APK, server binaries (Linux/Win/macOS), Docker publish, and auto-undraft                                                |
-| [`.github/workflows/deploy-push-relay.yml`](../../.github/workflows/deploy-push-relay.yml) | **Deploy Cloudflare Push Relay**   | `push` (main on `server/cloudflare-push-relay/**`), `workflow_dispatch` | Deploys serverless Web Push & ntfy relay worker to Cloudflare                                                                                               |
-| [`.github/workflows/docker-publish.yml`](../../.github/workflows/docker-publish.yml)       | **Build and Push Docker Images**   | `push` (main on `server/**`), `workflow_call`, `workflow_dispatch`      | Multi-target build: `base` and `full` (with `audio-separator` + `whisper-timestamped`) to Docker Hub as `<user>/nexumia-server` and `<user>/melodiq-server` |
+| Workflow File                                                                              | Pipeline Name                      | Trigger(s)                                                              | Target / Output                                                                                                                                                                |
+| :----------------------------------------------------------------------------------------- | :--------------------------------- | :---------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)                               | **CI Quality Gate**                | `push` (main), `pull_request` (main)                                    | 7 Quality Gates + Cloudflare Production / Preview Deploy                                                                                                                       |
+| [`.github/workflows/cleanup-preview.yml`](../../.github/workflows/cleanup-preview.yml)     | **Cleanup Cloudflare Preview**     | `pull_request` (`closed`), `workflow_dispatch`                          | Deletes obsolete preview branches & environments from Cloudflare                                                                                                               |
+| [`.github/workflows/release.yml`](../../.github/workflows/release.yml)                     | **Release (Consolidated & Gated)** | `push` tags (`v*`), `workflow_dispatch`                                 | Gated draft release, signed Android APK, server binaries (Linux/Win/macOS), Docker publish, and auto-undraft                                                                   |
+| [`.github/workflows/deploy-push-relay.yml`](../../.github/workflows/deploy-push-relay.yml) | **Deploy Cloudflare Push Relay**   | `push` (main on `server/cloudflare-push-relay/**`), `workflow_dispatch` | Deploys serverless Web Push & ntfy relay worker to Cloudflare                                                                                                                  |
+| [`.github/workflows/docker-publish.yml`](../../.github/workflows/docker-publish.yml)       | **Build and Push Docker Images**   | `push` (main on `server/**`), `workflow_call`, `workflow_dispatch`      | Multi-target build: `base` and `full` (with `audio-separator` + `whisper-timestamped`) to Docker Hub as `nexumia/nexumia-server` and deprecated alias `nexumia/melodiq-server` |
 
 ---
 

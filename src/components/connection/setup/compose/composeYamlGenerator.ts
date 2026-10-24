@@ -133,7 +133,7 @@ function companionService(options: ComposeGeneratorOptions): string[] {
     '',
     '  # Companion server: one container, one plugin per game',
     '  companion:',
-    `    image: nexumia/melodiq-server:${image}`,
+    `    image: nexumia/nexumia-server:${image}`,
     '    container_name: galaxy-companion',
     '    restart: unless-stopped',
     '    ports:',

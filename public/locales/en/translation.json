@@ -450,7 +450,7 @@
       "queue_empty_desc": "No songs in the queue yet.",
       "server": {
         "moved_title": "Server & AI settings have been moved",
-        "moved_desc": "The MelodiQ Companion Server is now located centrally in the new Server tab."
+        "moved_desc": "The Nexumia Companion Server is now located centrally in the new Server tab."
       },
       "helper": {
         "title": "Helper Server Connection",
@@ -678,10 +678,10 @@
         "input_mic": "Microphone",
         "midi_none": "No MIDI device found",
         "song_pick": "Choose song",
-        "tab_server": "Melodiq server",
+        "tab_server": "Nexumia server",
         "tab_examples": "Examples",
         "tab_file": "File",
-        "server_off": "No Melodiq server connected. Connect it in Settings to play songs from your library.",
+        "server_off": "No Nexumia server connected. Connect it in Settings to play songs from your library.",
         "server_error": "Server unreachable: {{error}}",
         "search": "Search songs",
         "no_scores": "No sheet music yet",
