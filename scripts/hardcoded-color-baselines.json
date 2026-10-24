@@ -1,5 +1,4 @@
 {
-  "src/components/Layout/GlobalHeader.tsx": 2,
   "src/features/settings/components/SettingsHeaderNav.tsx": 22,
   "src/games/melodiq/components/UserProfilesManager.tsx": 7,
   "src/games/melodiq/gameplay/LyricsLineView.tsx": 4,

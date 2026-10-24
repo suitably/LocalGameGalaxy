@@ -27,6 +27,7 @@
 
 ### Changed
 
+- **App header**: burger menu and home/back navigation moved into their own component and hook; the bar uses theme colours (#498).
 - **Server connection settings**: the connection card, setup wizard and UltraStar DB credentials are split into smaller components and hooks; gradient button, blurred dialog and hard-coded colours replaced by theme colours (#498).
 - **Game registry**: dropped the unused per-game gradient colours (the hub colours games by area); lazy game imports share one helper (#498).
 - **Melodiq library, history and settings**: song cards, search bar, playlists, history drawer and the Melodiq settings page are split into smaller components and use theme colours (no hard-coded white/rgba overlays, local-song tag in primary with contrast text); "Undo session" and "Reset defaults" are now translated (#495).
