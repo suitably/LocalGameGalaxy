@@ -6,7 +6,7 @@ import { FlyingCardsLayer } from './FlyingCardsLayer';
 import type { TabletopGameState, TabletopAction } from '../../logic/tabletopReducer';
 import type { TabletopWidget, SeatWidget } from '../../logic/types';
 import { useTabletopEngine } from '../../hooks/useTabletopEngine';
-import { useViewportCulling } from '../../hooks/useViewportCulling';
+import { useBoardLayers } from '../../hooks/useBoardLayers';
 import { useTabletopSelection } from '../../hooks/useTabletopSelection';
 import { HolderWidgetView } from '../widgets/HolderWidgetView';
 import { BoardWidgetRenderer } from './BoardWidgetRenderer';
@@ -16,7 +16,6 @@ import { HiddenZoneLayer } from './HiddenZoneLayer';
 import { WidgetContextMenu, type WidgetContextMenuPosition } from './WidgetContextMenu';
 import { createDefaultHiddenZone } from '../../logic/hiddenZoneLogic';
 import { getSeatWidgets } from '../../logic/seatLogic';
-import { filterBoardHolders, filterBoardWidgets } from '../../logic/boardFilter';
 import { SurfaceSeatControls } from './SurfaceSeatControls';
 import { useFitToScreen } from '../../hooks/useFitToScreen';
 import { BoardDragOverlay } from './BoardDragOverlay';
@@ -27,6 +26,8 @@ interface TabletopSurfaceProps {
   isTvMode?: boolean;
   /** Pass and play: seats change only through the handover cover. */
   hideSeatSelector?: boolean;
+  /** Edit mode of the surrounding editor (hidden zones become movable). */
+  editMode?: boolean;
 }
 
 export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
@@ -34,6 +35,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
   dispatch,
   isTvMode = false,
   hideSeatSelector = false,
+  editMode = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
@@ -75,21 +77,12 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
       dispatch({ type: 'DRAW_CARD', payload: { deckId, position: { x, y }, cardId } }),
   });
 
-  const visibleIds = useViewportCulling(
-    game.widgets,
+  const { boardHolders, boardWidgets } = useBoardLayers(
+    game,
     transform,
-    containerSize.width,
-    containerSize.height,
-  );
-
-  const boardHolders = useMemo(
-    () => filterBoardHolders(game.widgets, visibleIds, isTvMode),
-    [game.widgets, visibleIds, isTvMode],
-  );
-
-  const boardWidgets = useMemo(
-    () => filterBoardWidgets(game.widgets, visibleIds, isTvMode),
-    [game.widgets, visibleIds, isTvMode],
+    containerSize,
+    isTvMode,
+    activeSeat?.index,
   );
 
   const fitToScreen = useFitToScreen(containerRef, game.table, setTransform, setContainerSize);
@@ -171,8 +164,9 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
         <HiddenZoneLayer
           hiddenZones={game.hiddenZones}
           currentSeatIndex={activeSeat?.index}
-          onToggleReveal={(id) => dispatch({ type: 'TOGGLE_ZONE_REVEAL', payload: { id } })}
-          onRemoveZone={(id) => dispatch({ type: 'REMOVE_HIDDEN_ZONE', payload: { id } })}
+          editMode={editMode}
+          scale={transform.scale}
+          dispatch={dispatch}
         />
 
         <FlyingCardsLayer

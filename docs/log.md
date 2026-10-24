@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Tabletop hidden zones movable (claude-code)
+
+- `docs/tech/tabletop-engine.md`: new §4.1 Hidden zones (visibility button, contents not rendered for other seats, move/resize in edit mode with contents, `SET_HIDDEN_ZONE_RECT`).
+- **Code changed:** `src/games/tabletop` hidden zones (#539).
+
 ## 2026-10-24 — /issue skill (claude-code)
 
 - `docs/workflows/multi-agent-token-strategy.md` §6: `/issue <number>` runs the workflow and resumes from the spec's Progress list; `ISSUE-539` spec gains §7 Progress.

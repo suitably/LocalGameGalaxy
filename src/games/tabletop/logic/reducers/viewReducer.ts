@@ -2,6 +2,7 @@
  * Widget scale, show-always and hidden zones [ID: LOGIC-TABLETOP-VIEW-REDUCER]
  */
 import type { TabletopAction, TabletopGameState } from '../tabletopReducer';
+import { setZoneRectWithContents } from '../hiddenZoneLogic';
 
 export type ViewAction = Extract<
   TabletopAction,
@@ -12,6 +13,7 @@ export type ViewAction = Extract<
       | 'SET_WIDGET_SHOW_ALWAYS'
       | 'ADD_HIDDEN_ZONE'
       | 'UPDATE_HIDDEN_ZONE'
+      | 'SET_HIDDEN_ZONE_RECT'
       | 'REMOVE_HIDDEN_ZONE'
       | 'TOGGLE_ZONE_REVEAL';
   }
@@ -110,6 +112,11 @@ export function viewReducer(state: TabletopGameState, action: ViewAction): Table
           hiddenZones,
         },
       };
+    }
+
+    case 'SET_HIDDEN_ZONE_RECT': {
+      const game = setZoneRectWithContents(state.game, action.payload.id, action.payload.rect);
+      return game === state.game ? state : { ...state, game };
     }
 
     case 'REMOVE_HIDDEN_ZONE': {

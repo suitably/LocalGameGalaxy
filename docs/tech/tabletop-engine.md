@@ -9,7 +9,7 @@ generated:
   by: claude-code
 verified:
   at: 2026-10-24
-  method: 'Read src/games/tabletop/logic/{tabletopReducer,widgetEdits,editHistory,stateDelta,syncProtocol,tabletopStorage,tabletopServerApi,serverGameSnapshot}.ts, hooks/useGameManager.ts, logic/reducers/*, hooks/{useTabletopSync,useTabletopAutosave}.ts and their tests.'
+  method: 'Read src/games/tabletop/logic/hiddenZoneLogic.ts, components/surface/{HiddenZoneLayer,HiddenZoneBox}.tsx, hooks/useBoardLayers.ts; Read src/games/tabletop/logic/{tabletopReducer,widgetEdits,editHistory,stateDelta,syncProtocol,tabletopStorage,tabletopServerApi,serverGameSnapshot}.ts, hooks/useGameManager.ts, logic/reducers/*, hooks/{useTabletopSync,useTabletopAutosave}.ts and their tests.'
 sources:
   - 'src/games/tabletop/logic/tabletopReducer.ts'
   - 'src/games/tabletop/logic/reducers/'
@@ -32,7 +32,7 @@ Roadmap and comparison with VirtualTabletop: [2026-10-21 plan](../reports/2026-1
 | `deckReducer.ts`      | `SHUFFLE_DECK`, `DRAW_CARD`, `RETURN_CARD_TO_DECK`                                           |
 | `bagReducer.ts`       | `DRAW_FROM_BAG`                                                                              |
 | `pieceReducer.ts`     | `TAKE_PIECE_FROM_SUPPLY`, `PLAY_CARD_FROM_HAND`                                              |
-| `viewReducer.ts`      | `SCALE_WIDGETS`, `RESET_WIDGET_SCALE`, `SET_WIDGET_SHOW_ALWAYS`, hidden zones                |
+| `viewReducer.ts`      | `SCALE_WIDGETS`, `RESET_WIDGET_SCALE`, `SET_WIDGET_SHOW_ALWAYS`, hidden zones (§4.1)         |
 | `tableToolReducer.ts` | `TOGGLE_TIMER`, `RESET_TIMER`, `SPIN_SPINNER`, `NEXT_STATE` (rules in `logic/tableTools.ts`) |
 | `editReducer.ts`      | `PATCH_WIDGETS`, `ADD_WIDGET`, `DELETE_WIDGETS`, `UPDATE_TABLE`                              |
 | `holderMembership.ts` | helper `removeFromHolderAndUpdateHand`                                                       |
@@ -51,6 +51,10 @@ Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`.
 ## 4. Editor UI
 
 `components/editor/` (mounted by `TabletopGame` for the TV host and local play): `TabletopEditor` wraps the surface, `EditorToolbar` (edit mode, undo/redo, add widget from `logic/widgetTemplates.ts`, table settings), `WidgetInspector` + `InspectorFields` (common and per-type fields, duplicate, delete), `WidgetJsonEditor` (raw JSON, parsed by `parseWidgetPatch`), `TableSettingsDialog`, `DeckBuilderDialog` (deck from image URLs or a spritesheet via `logic/deckBuilder.ts`, added with `ADD_WIDGETS`). State lives in `useTabletopEditor` (selection, history recorded while edit mode is on; Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y, Delete). `ImageUploadButton` (inspector image, table background) stores uploaded images as WebP data URLs scaled to 512 px (`logic/imageUpload.ts`) — frontend-only, but every image travels with the game state through sync, so keep them few and small. `SelectionHandles` (portal into the table canvas) resizes (Shift keeps the aspect ratio) and rotates (15° steps, Alt for free) the selected widget and commits one `PATCH_WIDGETS` on release (`logic/handleMath.ts`). `TableMotionStyles` (mounted by `TabletopEditor`) animates position changes of board widgets and replays a flip on cards (`data-card-flip`), respecting reduced motion. Selection works through `data-widget-id` on board widgets and holders, so the surface itself is unchanged.
+
+### 4.1 Hidden zones
+
+`HiddenZone` (`logic/types.ts`) is a rectangle with an optional `ownerSeat` and a `revealed` flag; rules in `logic/hiddenZoneLogic.ts`. `HiddenZoneLayer` renders one `HiddenZoneBox` per zone. The owner (active seat = `ownerSeat`) sees a tinted, click-through overlay whose label chip carries the visibility button (`TOGGLE_ZONE_REVEAL`; off = only the owner, on = everyone) and its state; other seats see an opaque overlay. Widgets for which `isWidgetHiddenForViewer` is true are not rendered on the canvas (`hooks/useBoardLayers.ts` → `filterVisibleForViewer`); sync still carries them, so this is a rendering rule, not a secret. In edit mode the owner (or anyone, for a zone without owner) moves the zone by its chip and resizes it by the corner handle; release commits one `SET_HIDDEN_ZONE_RECT`, and `setZoneRectWithContents` clamps it to the table and shifts the unlocked widgets inside it (centre inside the old rectangle; locked = `pinned` or `movable === false`) by the same offset, so one undo reverts zone and contents.
 
 ### Pass and play (local)
 

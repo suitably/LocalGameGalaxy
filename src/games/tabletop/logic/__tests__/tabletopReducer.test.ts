@@ -253,7 +253,7 @@ describe('tabletopReducer card handling', () => {
             type: 'holder',
             childIds: ['roadA'],
           } as unknown as HolderWidget,
-          'roadA': {
+          roadA: {
             id: 'roadA',
             type: 'token',
             parent: 'Player 1 - Roads',
@@ -567,6 +567,12 @@ describe('tabletopReducer card handling', () => {
       payload: { id: 'hz_1' },
     });
     expect(revealedZone.game.hiddenZones?.hz_1.revealed).toBe(true);
+
+    const movedZone = tabletopReducer(revealedZone, {
+      type: 'SET_HIDDEN_ZONE_RECT',
+      payload: { id: 'hz_1', rect: { x: 80, y: 60, width: 250, height: 220 } },
+    });
+    expect(movedZone.game.hiddenZones?.hz_1).toMatchObject({ x: 80, y: 60, width: 250 });
 
     const removedZone = tabletopReducer(revealedZone, {
       type: 'REMOVE_HIDDEN_ZONE',

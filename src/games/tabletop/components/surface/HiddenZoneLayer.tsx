@@ -2,25 +2,31 @@
  * Layer rendering Hidden Zones (Fog of War) over the table [ID: GAME-TABLETOP-HIDDEN-ZONE-LAYER]
  */
 import React, { useState } from 'react';
-import { alpha, Box, Typography, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
+import { Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOffRounded';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineRounded';
 import type { HiddenZone } from '../../logic/types';
+import type { TabletopAction } from '../../logic/tabletopReducer';
+import { HiddenZoneBox } from './HiddenZoneBox';
 import { useTranslation } from 'react-i18next';
 
 interface HiddenZoneLayerProps {
   hiddenZones?: Record<string, HiddenZone>;
   currentSeatIndex?: number;
-  onToggleReveal: (zoneId: string) => void;
-  onRemoveZone: (zoneId: string) => void;
+  /** Edit mode: owners move and resize their zones. */
+  editMode?: boolean;
+  /** Current table zoom, to turn pointer movement into table units. */
+  scale: number;
+  dispatch: React.Dispatch<TabletopAction>;
 }
 
 export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
   hiddenZones,
   currentSeatIndex,
-  onToggleReveal,
-  onRemoveZone,
+  editMode = false,
+  scale,
+  dispatch,
 }) => {
   const { t } = useTranslation();
   const [menuAnchor, setMenuAnchor] = useState<{
@@ -50,73 +56,21 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
           zone.ownerSeat !== undefined &&
           currentSeatIndex !== undefined &&
           zone.ownerSeat === currentSeatIndex;
-
-        const isRevealed = Boolean(zone.revealed);
-        const zoneColor = zone.color || '#212121';
-
         return (
-          <Box
+          <HiddenZoneBox
             key={zone.id}
+            zone={zone}
+            isOwner={isOwner}
+            editable={editMode && (isOwner || zone.ownerSeat === undefined)}
+            scale={scale}
+            onToggleReveal={() =>
+              dispatch({ type: 'TOGGLE_ZONE_REVEAL', payload: { id: zone.id } })
+            }
+            onCommitRect={(rect) =>
+              dispatch({ type: 'SET_HIDDEN_ZONE_RECT', payload: { id: zone.id, rect } })
+            }
             onContextMenu={(e) => handleContextMenu(e, zone.id)}
-            sx={{
-              position: 'absolute',
-              left: zone.x,
-              top: zone.y,
-              width: zone.width,
-              height: zone.height,
-              zIndex: isOwner || isRevealed ? 4000 : 9000,
-              bgcolor: isRevealed ? 'rgba(0, 0, 0, 0.1)' : isOwner ? `${zoneColor}33` : zoneColor,
-              border: '2px dashed',
-              borderColor: isRevealed ? 'success.main' : zoneColor,
-              borderRadius: 2,
-              boxShadow: isRevealed ? 'none' : isOwner ? 'none' : '0 8px 30px rgba(0, 0, 0, 0.85)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              pointerEvents: 'auto',
-              cursor: 'context-menu',
-              userSelect: 'none',
-              transition: 'background-color 0.2s, border-color 0.2s',
-            }}
-          >
-            <Box
-              sx={{
-                bgcolor: 'rgba(0,0,0,0.7)',
-                color: 'text.primary',
-                px: 1.5,
-                py: 0.5,
-                borderRadius: 2,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.75,
-                border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.2)}`,
-              }}
-            >
-              {isRevealed ? (
-                <>
-                  <VisibilityIcon fontSize="small" sx={{ color: 'success.main' }} />
-                  <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-                    {zone.label || t('games.tabletop.zoneRevealed', 'Aufgedeckt')}
-                  </Typography>
-                </>
-              ) : isOwner ? (
-                <>
-                  <VisibilityIcon fontSize="small" sx={{ color: 'secondary.main' }} />
-                  <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-                    {zone.label || t('games.tabletop.zoneOwnerView', 'Verdeckt (Deine Sicht)')}
-                  </Typography>
-                </>
-              ) : (
-                <>
-                  <VisibilityOffIcon fontSize="small" sx={{ color: 'warning.main' }} />
-                  <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-                    {zone.label || t('games.tabletop.zoneHidden', 'Verdeckter Bereich')}
-                  </Typography>
-                </>
-              )}
-            </Box>
-          </Box>
+          />
         );
       })}
 
@@ -131,7 +85,8 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
         {activeZone && (
           <MenuItem
             onClick={() => {
-              if (activeZone) onToggleReveal(activeZone.id);
+              if (activeZone)
+                dispatch({ type: 'TOGGLE_ZONE_REVEAL', payload: { id: activeZone.id } });
               setMenuAnchor(null);
             }}
           >
@@ -152,7 +107,8 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
         {activeZone && (
           <MenuItem
             onClick={() => {
-              if (activeZone) onRemoveZone(activeZone.id);
+              if (activeZone)
+                dispatch({ type: 'REMOVE_HIDDEN_ZONE', payload: { id: activeZone.id } });
               setMenuAnchor(null);
             }}
             sx={{ color: 'error.main' }}

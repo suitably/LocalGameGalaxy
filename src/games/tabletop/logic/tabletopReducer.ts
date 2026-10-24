@@ -26,6 +26,7 @@ import { editReducer } from './reducers/editReducer';
 import { tableToolReducer } from './reducers/tableToolReducer';
 import { routineToActions } from './routines';
 import type { WidgetPatch } from './widgetEdits';
+import type { ZoneRect } from './hiddenZoneLogic';
 
 export interface FlyingCardAnimation {
   id: string;
@@ -94,6 +95,7 @@ export type TabletopAction =
   | { type: 'SET_WIDGET_SHOW_ALWAYS'; payload: { widgetId: string; showAlways: boolean } }
   | { type: 'ADD_HIDDEN_ZONE'; payload: { zone: HiddenZone } }
   | { type: 'UPDATE_HIDDEN_ZONE'; payload: { id: string; changes: Partial<HiddenZone> } }
+  | { type: 'SET_HIDDEN_ZONE_RECT'; payload: { id: string; rect: ZoneRect } }
   | { type: 'REMOVE_HIDDEN_ZONE'; payload: { id: string } }
   | { type: 'TOGGLE_ZONE_REVEAL'; payload: { id: string } };
 
@@ -404,6 +406,7 @@ export function tabletopReducer(
     case 'SET_WIDGET_SHOW_ALWAYS':
     case 'ADD_HIDDEN_ZONE':
     case 'UPDATE_HIDDEN_ZONE':
+    case 'SET_HIDDEN_ZONE_RECT':
     case 'REMOVE_HIDDEN_ZONE':
     case 'TOGGLE_ZONE_REVEAL':
       return viewReducer(state, action);
