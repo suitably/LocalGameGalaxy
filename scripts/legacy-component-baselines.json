@@ -3,6 +3,5 @@
   "src/games/guessart/GuessArtGame.tsx": 440,
   "src/games/melodiq/components/PlaybackManager.tsx": 373,
   "src/lib/webrtc/WebRTCHostContext.tsx": 347,
-  "src/games/guessart/components/GuessArtHeader.tsx": 320,
-  "src/games/storyteller/StorytellerGame.tsx": 280
+  "src/games/guessart/components/GuessArtHeader.tsx": 320
 }
