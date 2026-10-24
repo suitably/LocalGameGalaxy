@@ -122,6 +122,7 @@
         "werewolves_label": "Werwölfe:",
         "select_victim": "Opfer auswählen:",
         "skip_to_morning": "Zum Morgen springen",
+        "finished_acting": "{{name}} hat seinen Zug beendet.",
         "night_label": "Nacht {{round}}",
         "day_label": "Tag {{round}}",
         "night_summary_label": "Nacht-Zusammenfassung (Nur für Erzähler)"
@@ -158,6 +159,8 @@
         "add_players_hint": "Füge mindestens 3 Spieler hinzu.",
         "select_roles_hint": "Wähle die Rollen für das Spiel:",
         "num_werewolves": "Anzahl der Werwölfe",
+        "role_info": "Rolleninfo",
+        "toggle_narrator": "Erzählerstimme",
         "too_many_roles": "Zu viele Rollen für die Anzahl der Spieler ausgewählt!",
         "too_many_werewolf_roles": "Zu viele spezielle Werwolf-Rollen für die Gesamtzahl der Werwölfe ausgewählt!",
         "witch": {

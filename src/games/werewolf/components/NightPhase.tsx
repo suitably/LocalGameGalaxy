@@ -1,410 +1,162 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Box, Typography, Button, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Paper } from '@mui/material';
-import type { Player, NightAction, Role, RoleDefinition } from '../logic/types';
-import { isWerewolf } from '../logic/utils';
-import { DEFAULT_ROLES } from '../logic/defaultRoles';
+import { Box, Typography, Button, IconButton } from '@mui/material';
+import InfoIcon from '@mui/icons-material/InfoRounded';
+import VolumeUpIcon from '@mui/icons-material/VolumeUpRounded';
+import VolumeOffIcon from '@mui/icons-material/VolumeOffRounded';
 import { useTranslation } from 'react-i18next';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import { WitchView } from './roles/WitchView';
-import { SeerView } from './roles/SeerView';
-import { CupidView } from './roles/CupidView';
-import { DetectiveView } from './roles/DetectiveView';
-import { GuardianView } from './roles/GuardianView';
-import { BlackWerewolfView } from './roles/BlackWerewolfView';
-import { WhiteWerewolfView } from './roles/WhiteWerewolfView';
-import { BlackCatView } from './roles/BlackCatView';
-import { EasterBunnyView } from './roles/EasterBunnyView';
-import { WolfdogView } from './roles/WolfdogView';
-import { RipperView } from './roles/RipperView';
-import { SurvivorView } from './roles/SurvivorView';
-import { PyromaniacView } from './roles/PyromaniacView';
-import { ThiefView } from './roles/ThiefView';
-import { MatratzeView } from './roles/MatratzeView';
-import { PlayerSelectionView } from './PlayerSelectionView';
-import InfoIcon from '@mui/icons-material/Info';
-import CloseIcon from '@mui/icons-material/Close';
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import type { Player, NightAction, Role, RoleDefinition } from '../logic/types';
+import { getNightRolesToAct } from '../logic/nightRoles';
 import { useTTS } from '../hooks/useTTS';
+import { CustomRoleNight } from './night/CustomRoleNight';
+import { StandardRoleNight } from './night/StandardRoleNight';
+import { RoleInfoDialog } from './night/RoleInfoDialog';
+import { RoleIcon } from './RoleIcon';
 
 interface NightPhaseProps {
-    players: Player[];
-    customRoles: RoleDefinition[];
-    round: number;
-    nightActionLog: string[];
-    onNextPhase: () => void;
-    onNightAction: (action: NightAction, role: Role) => void;
+  players: Player[];
+  customRoles: RoleDefinition[];
+  round: number;
+  nightActionLog: string[];
+  onNextPhase: () => void;
+  onNightAction: (action: NightAction, role: Role) => void;
 }
 
-const NIGHT_ROLE_ORDER: Role[] = [
-    'CUPID', 'THIEF', 'WOLFDOG', 'GUARDIAN', 'DORFMATRATZE', 'WEREWOLF', 'BLACK_WEREWOLF',
-    'WHITE_WEREWOLF', 'WITCH', 'SEER', 'DETECTIVE', 'BLACK_CAT', 'EASTER_BUNNY',
-    'PYROMANIAC', 'RIPPER', 'SURVIVOR'
-];
+export const NightPhase: React.FC<NightPhaseProps> = ({
+  players,
+  customRoles = [],
+  round,
+  nightActionLog,
+  onNextPhase,
+  onNightAction,
+}) => {
+  const { t } = useTranslation();
+  const { speak, enabled: ttsEnabled, setEnabled: setTtsEnabled } = useTTS();
+  const [currentRoleIndex, setCurrentRoleIndex] = useState(0);
+  const [isMorningComing, setIsMorningComing] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
-export const NightPhase: React.FC<NightPhaseProps> = ({ players, customRoles = [], round, nightActionLog, onNextPhase, onNightAction }) => {
-    const { t } = useTranslation();
-    const { speak, enabled: ttsEnabled, setEnabled: setTtsEnabled } = useTTS();
-    const [currentRoleIndex, setCurrentRoleIndex] = useState(0);
-    const [isMorningComing, setIsMorningComing] = useState(false);
-    const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const rolesToAct = useMemo(
+    () => getNightRolesToAct(players, customRoles, round, nightActionLog),
+    [players, customRoles, round, nightActionLog],
+  );
+  const activeRole = rolesToAct[currentRoleIndex];
+  const activeCustomRole = customRoles.find((cr) => cr.id === activeRole);
 
-    // States for custom multi-ability / multi-target roles
-    const [selectedAbilityIndex, setSelectedAbilityIndex] = useState<number | null>(null);
-    const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
-    const [completedAbilities, setCompletedAbilities] = useState<number[]>([]);
+  const nextRole = () => setCurrentRoleIndex((prev) => prev + 1);
 
-    useEffect(() => {
-        setSelectedAbilityIndex(null);
-        setSelectedTargets([]);
-        setCompletedAbilities([]);
-    }, [currentRoleIndex]);
+  // Automatically trigger morning when all roles have acted
+  useEffect(() => {
+    if (!isMorningComing && rolesToAct.length > 0 && currentRoleIndex >= rolesToAct.length) {
+      setIsMorningComing(true);
+    }
+  }, [currentRoleIndex, rolesToAct.length, isMorningComing]);
 
-    const rolesToAct = useMemo(() => {
-        const standardRoles = NIGHT_ROLE_ORDER.filter(role => {
-            // Check if anyone with this role is alive
-            const exists = players.some(p => p.role === role);
-            if (!exists && role !== 'WEREWOLF' && role !== 'BLACK_WEREWOLF') return false;
-
-            // Special conditions: roles that only act on the very first night
-            if (role === 'THIEF' && round > 1) return false;
-            if (role === 'CUPID' && round > 1) return false;
-            if (role === 'WOLFDOG' && round > 1) return false;
-
-            const alive = players.some(p => p.role === role && p.isAlive);
-            if (role === 'WEREWOLF') {
-                const allRoles = [...DEFAULT_ROLES, ...customRoles];
-                return players.some(p => isWerewolf(p, allRoles) && p.isAlive);
-            }
-
-            if (role === 'BLACK_WEREWOLF') {
-                const blackWolf = players.find(p => p.role === 'BLACK_WEREWOLF' && p.isAlive);
-                // Black wolf acts only if they have their power AND there is a victim to infect
-                return !!blackWolf && blackWolf.powerState.hasInfected === true && nightActionLog.length > 0;
-            }
-
-            return alive;
-        });
-
-        const activeCustomRoles = customRoles.filter(cr => {
-            const hasRole = players.some(p => p.role === cr.id && p.isAlive);
-            if (!hasRole) return false;
-
-            // Check abilities for timing
-            return cr.abilities.some(ability => {
-                if (ability.timing === 'FIRST_NIGHT' && round > 1) return false;
-                if (ability.timing === 'ROUND_NUMBER' && ability.roundNumber !== round) return false;
-                return true;
-            });
-        }).map(cr => cr.id as Role);
-
-        return [...standardRoles, ...activeCustomRoles];
-    }, [players, customRoles, round, nightActionLog]);
-
-    const activeRole = rolesToAct[currentRoleIndex];
-
-    const nextRole = () => {
-        setCurrentRoleIndex(prev => prev + 1);
-    };
-
-    // Automatically trigger morning when all roles have acted
-    useEffect(() => {
-        if (!isMorningComing && rolesToAct.length > 0 && currentRoleIndex >= rolesToAct.length) {
-            setIsMorningComing(true);
-        }
-    }, [currentRoleIndex, rolesToAct.length, isMorningComing]);
-
-    // Handle phase transition timer whenever morning starts
-    useEffect(() => {
-        if (isMorningComing) {
-            const timer = setTimeout(onNextPhase, 2000);
-            return () => clearTimeout(timer);
-        }
-    }, [isMorningComing, onNextPhase]);
-
-    const handleAction = (action: NightAction) => {
-        onNightAction(action, activeRole || 'WEREWOLF');
-        nextRole();
-    };
-
-    const handleAbilityAction = (action: NightAction) => {
-        onNightAction(action, activeRole || 'WEREWOLF');
-        setCompletedAbilities(prev => [...prev, selectedAbilityIndex!]);
-        setSelectedAbilityIndex(null);
-        setSelectedTargets([]);
-    };
-
-    const getDescription = () => {
-        if (!activeRole) return '';
-        const customRole = customRoles.find(cr => cr.id === activeRole);
-        if (customRole) return customRole.description;
-        return t(`games.werewolf.role_descriptions.${activeRole}`);
-    };
-
-    const getRoleName = () => {
-        if (!activeRole) return '';
-        const customRole = customRoles.find(cr => cr.id === activeRole);
-        if (customRole) return customRole.name;
-        return t(`games.werewolf.roles.${activeRole}`);
-    };
-
-    // Narrate active role instructions when turn transitions
-    useEffect(() => {
-        if (isMorningComing) {
-            speak(t('games.werewolf.narrator.morning_coming'));
-            return;
-        }
-        if (activeRole) {
-            const roleName = getRoleName();
-            const customRole = customRoles.find(cr => cr.id === activeRole);
-            const customText = customRole?.narratorText;
-            const textToSpeak = customText || `${roleName}. ${getDescription()}`;
-            speak(textToSpeak);
-        }
-    }, [activeRole, isMorningComing, speak, t]);
-
+  // Handle phase transition timer whenever morning starts
+  useEffect(() => {
     if (isMorningComing) {
-        return (
-            <Box sx={{ textAlign: 'center', mt: 10 }}>
-                <Typography variant="h5">{t('games.werewolf.narrator.morning_coming')}</Typography>
-                <Typography variant="h1" sx={{ mt: 2 }}>🌅</Typography>
-            </Box>
-        );
+      const timer = setTimeout(onNextPhase, 2000);
+      return () => clearTimeout(timer);
     }
+  }, [isMorningComing, onNextPhase]);
 
-    if (!activeRole) {
-        return (
-            <Box textAlign="center" mt={10}>
-                <Button variant="contained" onClick={() => setIsMorningComing(true)}>{t('games.werewolf.narrator.skip_to_morning')}</Button>
-            </Box>
-        );
+  const getDescription = () => {
+    if (!activeRole) return '';
+    return activeCustomRole
+      ? activeCustomRole.description
+      : t(`games.werewolf.role_descriptions.${activeRole}`);
+  };
+
+  const getRoleName = () => {
+    if (!activeRole) return '';
+    return activeCustomRole ? activeCustomRole.name : t(`games.werewolf.roles.${activeRole}`);
+  };
+
+  // Narrate active role instructions when turn transitions
+  useEffect(() => {
+    if (isMorningComing) {
+      speak(t('games.werewolf.narrator.morning_coming'));
+      return;
     }
+    if (activeRole) {
+      speak(activeCustomRole?.narratorText || `${getRoleName()}. ${getDescription()}`);
+    }
+  }, [activeRole, isMorningComing, speak, t]);
 
-    const renderContent = () => {
-        // Render appropriate view based on activeRole
-        const alivePlayers = players.filter(p => p.isAlive);
-        const rolePlayer = players.find(p => p.role === activeRole && p.isAlive);
-
-        // Check if there is a custom definition/override for this role
-        const activeCustomRole = customRoles.find(cr => cr.id === activeRole);
-
-        // If it's a custom role or an overridden standard role, use generic handling
-        // UNLESS it's a standard role but with NO changes to abilities?
-        // Actually, if the user edited it, they probably want the generic behavior (e.g. they changed Seer to Kill).
-        // The only risk is if they kept standard abilities but the generic view is inferior.
-        // For MVP, if it is in customRoles, we assume it's "customized" enough to warrant generic view.
-        // Helper to get custom text if available
-        const getInstruction = () => {
-            if (activeCustomRole?.narratorText) return activeCustomRole.narratorText;
-            return undefined;
-        };
-
-        const customInstruction = getInstruction();
-
-        if (activeCustomRole) {
-            const abilities = activeCustomRole.abilities || [];
-            const activeAbilities = abilities.filter(ability => {
-                if (ability.timing === 'FIRST_NIGHT' && round > 1) return false;
-                if (ability.timing === 'ROUND_NUMBER' && ability.roundNumber !== round) return false;
-                return true;
-            });
-
-            if (activeAbilities.length === 0) {
-                return (
-                    <Box textAlign="center" mt={10}>
-                        <Button variant="outlined" onClick={nextRole}>
-                            {t('common.skip')} {activeCustomRole.name}
-                        </Button>
-                    </Box>
-                );
-            }
-
-            // Render Ability Selector if no ability is currently selected
-            if (selectedAbilityIndex === null) {
-                const remainingAbilities = activeAbilities.filter((_, idx) => !completedAbilities.includes(idx));
-                if (remainingAbilities.length === 0) {
-                    return (
-                        <Box textAlign="center" mt={10}>
-                            <Typography variant="h5" gutterBottom>{activeCustomRole.name} has finished acting.</Typography>
-                            <Button variant="contained" color="primary" onClick={nextRole}>
-                                {t('common.finish_turn', 'Finish Turn')}
-                            </Button>
-                        </Box>
-                    );
-                }
-
-                return (
-                    <Box maxWidth="sm" mx="auto" textAlign="center" mt={4}>
-                        <Typography variant="h1" sx={{ mb: 2 }}>{activeCustomRole.icon}</Typography>
-                        <Typography variant="h4" gutterBottom>{activeCustomRole.name}</Typography>
-                        <Typography variant="body1" color="text.secondary" gutterBottom>{activeCustomRole.description}</Typography>
-                        
-                        <Paper sx={{ p: 4, mt: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            <Typography variant="h6" gutterBottom>{t('games.werewolf.narrator.choose_ability', 'Choose an ability to execute:')}</Typography>
-                            {activeAbilities.map((ability, idx) => {
-                                const isUsed = completedAbilities.includes(idx);
-                                return (
-                                    <Button
-                                        key={idx}
-                                        variant={isUsed ? "outlined" : "contained"}
-                                        disabled={isUsed}
-                                        onClick={() => setSelectedAbilityIndex(idx)}
-                                        sx={{ py: 1.5 }}
-                                    >
-                                        {t('games.werewolf.ability_btn', {
-                                            type: ability.type,
-                                            count: ability.targetCount || 1,
-                                            status: isUsed ? ` - ${t('common.used')}` : ''
-                                        })}
-                                    </Button>
-                                );
-                            })}
-                        </Paper>
-                        <Button variant="outlined" color="secondary" onClick={nextRole} sx={{ mt: 3 }} fullWidth>
-                            {t('common.skip')} / {t('common.done', 'Done')}
-                        </Button>
-                    </Box>
-                );
-            }
-
-            const ability = activeAbilities[selectedAbilityIndex];
-            const targetCount = ability.targetCount || 1;
-            const currentTargetNum = selectedTargets.length + 1;
-            
-            const instructionText = customInstruction || 
-                (t(`games.werewolf.editor.ability_instruction_${ability.type.toLowerCase()}`, { count: targetCount }) + 
-                (targetCount > 1 ? ` (${t('common.target', 'Target')} ${currentTargetNum}/${targetCount})` : ''));
-
-            return (
-                <PlayerSelectionView
-                    icon={<Typography variant="h1">{activeCustomRole.icon}</Typography>}
-                    title={`${activeCustomRole.name} - ${ability.type}`}
-                    subtitle={activeCustomRole.description}
-                    instruction={instructionText}
-                    players={players.filter(p => p.isAlive && !selectedTargets.includes(p.id))}
-                    onSelect={(id) => {
-                        if (targetCount <= 1) {
-                            handleAbilityAction({ type: ability.type as any, targetId: id });
-                        } else {
-                            const newTargets = [...selectedTargets, id];
-                            if (newTargets.length === targetCount) {
-                                newTargets.forEach(targetId => {
-                                    onNightAction({ type: ability.type as any, targetId }, activeRole || activeCustomRole.id);
-                                });
-                                setCompletedAbilities(prev => [...prev, selectedAbilityIndex!]);
-                                setSelectedAbilityIndex(null);
-                                setSelectedTargets([]);
-                            } else {
-                                setSelectedTargets(newTargets);
-                            }
-                        }
-                    }}
-                    onSkip={() => {
-                        setSelectedAbilityIndex(null);
-                        setSelectedTargets([]);
-                    }}
-                    skipLabel={t('common.back')}
-                    buttonColor="primary"
-                />
-            );
-        }
-
-        switch (activeRole) {
-            case 'WEREWOLF': {
-                // Standard Werewolf turn
-                const allRoles = [...DEFAULT_ROLES, ...customRoles];
-                const werewolves = alivePlayers.filter(p => isWerewolf(p, allRoles));
-                const extraContent = (
-                    <Box sx={{ mb: 3 }}>
-                        <Typography variant="subtitle2" color="text.secondary">{t('games.werewolf.narrator.werewolves_label')}</Typography>
-                        <Typography variant="body1" fontWeight="bold">
-                            {werewolves.map(w => w.name).join(', ')}
-                        </Typography>
-                    </Box>
-                );
-
-                return (
-                    <PlayerSelectionView
-                        icon={<DarkModeIcon sx={{ fontSize: 60, color: 'secondary.main' }} />}
-                        title={t('games.werewolf.narrator.dashboard_title', { round: round + 1 })}
-                        subtitle={t('games.werewolf.narrator.wait_for_werewolves')}
-                        instruction={t('games.werewolf.narrator.select_victim')}
-                        players={alivePlayers}
-                        onSelect={(id) => handleAction({ type: 'KILL', targetId: id })}
-                        onSkip={nextRole}
-                        skipLabel={t('common.skip')}
-                        buttonColor="error"
-                        extraContent={extraContent}
-                    />
-                );
-            }
-            case 'BLACK_WEREWOLF': {
-                const blackWolf = players.find(p => p.role === 'BLACK_WEREWOLF' && p.isAlive);
-                const victimId = nightActionLog[0];
-                const victim = players.find(p => p.id === victimId);
-
-                if (!blackWolf || !victim) {
-                    return <Box textAlign="center" mt={10}><Button variant="outlined" onClick={nextRole}>{t('common.skip')}</Button></Box>;
-                }
-
-                return (
-                    <BlackWerewolfView
-                        players={players}
-                        victim={victim}
-                        onAction={handleAction}
-                        onSkip={nextRole}
-                        powerState={blackWolf.powerState}
-                        instruction={customInstruction}
-                    />
-                );
-            }
-            case 'WITCH': return <WitchView players={players} onAction={handleAction} onSkip={nextRole} powerState={rolePlayer?.powerState} instruction={customInstruction} />;
-            case 'SEER': return <SeerView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
-            case 'CUPID': return <CupidView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
-            case 'DETECTIVE': return <DetectiveView players={players} customRoles={customRoles} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
-            case 'GUARDIAN': return <GuardianView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
-            case 'WHITE_WEREWOLF': return <WhiteWerewolfView players={players} customRoles={customRoles} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
-            case 'EASTER_BUNNY': return <EasterBunnyView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
-            case 'WOLFDOG': return <WolfdogView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
-            case 'RIPPER': return <RipperView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
-            case 'SURVIVOR': return <SurvivorView players={players} onAction={handleAction} onSkip={nextRole} powerState={rolePlayer?.powerState} instruction={customInstruction} />;
-            case 'PYROMANIAC': return <PyromaniacView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
-            case 'THIEF': return <ThiefView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
-            case 'BLACK_CAT': return <BlackCatView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
-            case 'DORFMATRATZE': return <MatratzeView players={players} onAction={handleAction} onSkip={nextRole} instruction={customInstruction} />;
-            default: return <Box textAlign="center" mt={10}><Button variant="outlined" onClick={nextRole}>{t('common.skip')} {activeRole}</Button></Box>;
-        }
-    };
-
+  if (isMorningComing) {
     return (
-        <Box sx={{ position: 'relative' }}>
-            <Box sx={{ position: 'absolute', top: -48, right: 0, zIndex: 10, display: 'flex', gap: 1 }}>
-                <IconButton onClick={() => setTtsEnabled(!ttsEnabled)} color={ttsEnabled ? 'primary' : 'default'} size="small">
-                    {ttsEnabled ? <VolumeUpIcon /> : <VolumeOffIcon />}
-                </IconButton>
-                <IconButton onClick={() => setIsInfoOpen(true)} color="info" size="small">
-                    <InfoIcon />
-                </IconButton>
-            </Box>
-
-            {renderContent()}
-
-            <Dialog open={isInfoOpen} onClose={() => setIsInfoOpen(false)} maxWidth="xs">
-                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    {getRoleName()}
-                    <IconButton onClick={() => setIsInfoOpen(false)} size="small">
-                        <CloseIcon />
-                    </IconButton>
-                </DialogTitle>
-                <DialogContent>
-                    <Typography variant="body1">
-                        {getDescription()}
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setIsInfoOpen(false)}>{t('common.close', 'Close')}</Button>
-                </DialogActions>
-            </Dialog>
+      <Box sx={{ textAlign: 'center', mt: 10 }}>
+        <Typography variant="h5">{t('games.werewolf.narrator.morning_coming')}</Typography>
+        <Box sx={{ mt: 2, fontSize: '4rem' }}>
+          <RoleIcon icon="MORNING" fontSize="inherit" />
         </Box>
+      </Box>
     );
+  }
+
+  if (!activeRole) {
+    return (
+      <Box textAlign="center" mt={10}>
+        <Button variant="contained" onClick={() => setIsMorningComing(true)}>
+          {t('games.werewolf.narrator.skip_to_morning')}
+        </Button>
+      </Box>
+    );
+  }
+
+  // A custom definition (also an override of a built-in role) uses the generic ability flow.
+  const content = activeCustomRole ? (
+    <CustomRoleNight
+      key={currentRoleIndex}
+      role={activeCustomRole}
+      players={players}
+      round={round}
+      onNightAction={onNightAction}
+      onNext={nextRole}
+    />
+  ) : (
+    <StandardRoleNight
+      role={activeRole}
+      players={players}
+      customRoles={customRoles}
+      round={round}
+      nightActionLog={nightActionLog}
+      onAction={(action) => {
+        onNightAction(action, activeRole);
+        nextRole();
+      }}
+      onSkip={nextRole}
+    />
+  );
+
+  return (
+    <Box sx={{ position: 'relative' }}>
+      <Box sx={{ position: 'absolute', top: -48, right: 0, zIndex: 10, display: 'flex', gap: 1 }}>
+        <IconButton
+          onClick={() => setTtsEnabled(!ttsEnabled)}
+          color={ttsEnabled ? 'primary' : 'default'}
+          size="small"
+          aria-label={t('games.werewolf.ui.toggle_narrator', 'Narrator voice')}
+        >
+          {ttsEnabled ? <VolumeUpIcon /> : <VolumeOffIcon />}
+        </IconButton>
+        <IconButton
+          onClick={() => setIsInfoOpen(true)}
+          color="info"
+          size="small"
+          aria-label={t('games.werewolf.ui.role_info', 'Role info')}
+        >
+          <InfoIcon />
+        </IconButton>
+      </Box>
+
+      {content}
+
+      <RoleInfoDialog
+        open={isInfoOpen}
+        title={getRoleName()}
+        description={getDescription()}
+        onClose={() => setIsInfoOpen(false)}
+      />
+    </Box>
+  );
 };

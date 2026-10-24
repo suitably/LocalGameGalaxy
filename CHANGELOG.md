@@ -28,6 +28,7 @@
 
 ### Changed
 
+- **Werewolf**: setup, night phase and role editor are split into focused components and a `useWerewolfSetup` hook (night-order rules moved to `logic/nightRoles.ts` with tests); built-in role icons are Rounded MUI icons instead of emoji (`RoleIcon`), cards use outlines instead of elevation, narrator and role-info buttons got labels (#503 #504 #506 #508).
 - **Typography rules (#508)**: new `display` typography variant (3.5rem, weight 800) and shared `scoreText` helper (display face + tabular numbers) used for Darts, Sudoku, Imposter, tabletop and Melodiq timers/scores; text below 0.75rem raised to the caption size and weight 900 reduced to 800.
 
 - **Radius scale and flat surfaces**: border radii use the DESIGN.md steps only (8/12/20 px, circle, pill) and cards and panels no longer carry elevation shadows; dialogs, menus and other overlays keep the theme shadow (#506).

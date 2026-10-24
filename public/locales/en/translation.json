@@ -122,6 +122,7 @@
         "werewolves_label": "Werewolves:",
         "select_victim": "Select Victim:",
         "skip_to_morning": "Skip to Morning",
+        "finished_acting": "{{name}} has finished acting.",
         "night_label": "Night {{round}}",
         "day_label": "Day {{round}}",
         "night_summary_label": "Night Summary (Narrator only)"
@@ -158,6 +159,8 @@
         "add_players_hint": "Add at least 3 players to start.",
         "select_roles_hint": "Select roles to include:",
         "num_werewolves": "Number of Werewolves",
+        "role_info": "Role info",
+        "toggle_narrator": "Narrator voice",
         "too_many_roles": "Too many roles selected for the number of players!",
         "too_many_werewolf_roles": "Too many special werewolf roles selected for the total number of werewolves!",
         "witch": {
