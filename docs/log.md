@@ -2,6 +2,12 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Melodiq gameplay files split (claude-code)
+
+- `docs/tech/sync-protocol.md`: phone-side message handling now lives in `hooks/usePhoneClientMessages.ts` and `hooks/usePhoneMicStreaming.ts` (was `PhoneClientEngine.tsx`).
+- `docs/tech/melodiq-architecture.md`: names the new `lyrics/`, `pitch/` and `scoreboard/` folders.
+- **Code changed:** Melodiq ScoreBoard, LyricsDisplay, PitchVisualizer and PhoneClientEngine decomposed and re-coloured (#496).
+
 ## 2026-10-24 — Qwixx state hook (claude-code)
 
 - `docs/tech/game-catalog.md`: the local Qwixx storage constants now live in `useQwixxState.ts` (was `QwixxGame.tsx`).

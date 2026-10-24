@@ -1,14 +1,14 @@
 import { piecePalette, type PieceColor } from '../../../themeTokens';
 
-/** Approximate hue (degrees) of every piece colour, used to map stored profile hues onto the palette. */
+/** Anchor hue (degrees) per piece colour; blue and purple sit where the preset profile hues (240, 270) are. */
 const PIECE_HUES: ReadonlyArray<readonly [PieceColor, number]> = [
   ['red', 0],
   ['orange', 24],
   ['yellow', 51],
   ['green', 139],
   ['teal', 174],
-  ['blue', 215],
-  ['purple', 258],
+  ['blue', 240],
+  ['purple', 285],
   ['pink', 330],
 ];
 

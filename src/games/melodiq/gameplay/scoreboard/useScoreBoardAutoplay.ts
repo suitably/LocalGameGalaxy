@@ -17,7 +17,7 @@ export const useScoreBoardAutoplay = ({
   isPassive,
   onExit,
 }: AutoplayOptions) => {
-  const [countdown, setCountdown] = useState<number | null>(null);
+  const [elapsed, setElapsed] = useState(0);
   const [canceled, setCanceled] = useState(false);
 
   const onExitRef = useRef(onExit);
@@ -25,32 +25,29 @@ export const useScoreBoardAutoplay = ({
     onExitRef.current = onExit;
   }, [onExit]);
 
+  const delay = playerCount === 0 ? noPlayersDelay : withPlayersDelay;
+  const active = !isPassive && !canceled && !!delay && delay > 0;
+
   useEffect(() => {
-    if (isPassive || canceled) return;
+    if (!active || !delay) return;
 
-    const delay = playerCount === 0 ? noPlayersDelay : withPlayersDelay;
-    if (!delay || delay <= 0) return;
-
-    setCountdown(delay);
+    let seconds = 0;
     const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev === null) return null;
-        if (prev <= 1) {
-          clearInterval(timer);
-          onExitRef.current(false);
-          return 0;
-        }
-        return prev - 1;
-      });
+      seconds += 1;
+      setElapsed(seconds);
+      if (seconds >= delay) {
+        clearInterval(timer);
+        onExitRef.current(false);
+      }
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [playerCount, noPlayersDelay, withPlayersDelay, isPassive, canceled]);
+    return () => {
+      clearInterval(timer);
+      setElapsed(0);
+    };
+  }, [active, delay]);
 
-  const cancel = useCallback(() => {
-    setCanceled(true);
-    setCountdown(null);
-  }, []);
+  const cancel = useCallback(() => setCanceled(true), []);
 
-  return { countdown, cancel };
+  return { countdown: active && delay ? Math.max(0, delay - elapsed) : null, cancel };
 };
