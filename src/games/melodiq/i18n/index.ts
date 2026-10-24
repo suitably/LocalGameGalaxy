@@ -3,6 +3,14 @@ import i18n from '../../../i18n';
 export const melodiqResources = {
   en: {
     melodiq: {
+      queue_drawer: {
+        now_playing: 'Now Playing',
+        clear: 'Clear',
+        up_next_one: 'Up Next · {{count}} song',
+        up_next_other: 'Up Next · {{count}} songs',
+        empty: 'Queue is empty',
+        empty_hint: 'Long-press a song to add it to the queue',
+      },
       setup: {
         title: 'Session Setup',
         intro: 'Select who is playing today. Use the arrows to reorder priority/position.',
@@ -284,6 +292,14 @@ export const melodiqResources = {
   },
   de: {
     melodiq: {
+      queue_drawer: {
+        now_playing: 'Läuft gerade',
+        clear: 'Leeren',
+        up_next_one: 'Als Nächstes · {{count}} Song',
+        up_next_other: 'Als Nächstes · {{count}} Songs',
+        empty: 'Die Warteschlange ist leer',
+        empty_hint: 'Halte einen Song gedrückt, um ihn hinzuzufügen',
+      },
       setup: {
         title: 'Sitzung einrichten',
         intro: 'Wähle, wer heute mitspielt. Mit den Pfeilen änderst du die Reihenfolge.',
