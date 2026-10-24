@@ -1,413 +1,136 @@
-import React, { useState } from 'react';
-import { melodiqFetch } from '../api/melodiqFetch';
-import { Dialog, DialogTitle, DialogContent, List, ListItemButton, ListItemIcon, ListItemText, Divider, Typography } from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import AddToQueueIcon from '@mui/icons-material/AddToQueue';
-import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
-import QueueMusicIcon from '@mui/icons-material/QueueMusic';
-import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
-import SyncIcon from '@mui/icons-material/Sync';
-import MicIcon from '@mui/icons-material/Mic';
-import DialogActions from '@mui/material/DialogActions';
-import TextField from '@mui/material/TextField';
-import { Button } from '@mui/material';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-
 import { type SongMeta } from '../db';
-import { usePlaylists } from '../hooks/usePlaylists';
-import { useDownloads } from '../hooks/useDownloads';
+import { useSongActions } from '../hooks/useSongActions';
 import { YouTubeSearchDialog } from './YouTubeSearchDialog';
+import { SongActionMenu } from './SongActionMenu';
+import { SongPlaylistDialogs } from './SongPlaylistDialogs';
 import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
-import { storage, STORAGE_KEYS } from '../../../lib/storage';
 
 interface SongActionDialogsProps {
-    selectedSongForQueue: SongMeta | null;
-    queueDialogOpen: boolean;
-    setQueueDialogOpen: (open: boolean) => void;
-    
-    isTVConnected: boolean;
+  selectedSongForQueue: SongMeta | null;
+  queueDialogOpen: boolean;
+  setQueueDialogOpen: (open: boolean) => void;
 
-    handleSelectSong: (song: SongMeta, forcePlay?: boolean) => void;
-    addNext: (song: SongMeta) => void;
-    addToQueue: (song: SongMeta) => void;
-    refreshSongs: () => Promise<void>;
-    
-    setFeedbackMessage: (msg: string | null) => void;
-    isClient?: boolean;
-    clientRole?: string;
+  isTVConnected: boolean;
+
+  handleSelectSong: (song: SongMeta, forcePlay?: boolean) => void;
+  addNext: (song: SongMeta) => void;
+  addToQueue: (song: SongMeta) => void;
+  refreshSongs: () => Promise<void>;
+
+  setFeedbackMessage: (msg: string | null) => void;
+  isClient?: boolean;
+  clientRole?: string;
 }
 
 export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
-    selectedSongForQueue, queueDialogOpen, setQueueDialogOpen,
-    isTVConnected, handleSelectSong, addNext, addToQueue, refreshSongs,
-    setFeedbackMessage, isClient, clientRole
+  selectedSongForQueue: song,
+  queueDialogOpen,
+  setQueueDialogOpen,
+  isTVConnected,
+  handleSelectSong,
+  addNext,
+  addToQueue,
+  refreshSongs,
+  setFeedbackMessage,
+  isClient,
+  clientRole,
 }) => {
-    const { t } = useTranslation();
-    const { playlists, createPlaylist, addSongToPlaylist } = usePlaylists();
-    const { jobs } = useDownloads();
+  const { t } = useTranslation();
+  const a = useSongActions({
+    song,
+    handleSelectSong,
+    addNext,
+    addToQueue,
+    refreshSongs,
+    setFeedbackMessage,
+    setQueueDialogOpen,
+  });
 
-    const activeSepJob = jobs.find(j =>
-        j.songId === selectedSongForQueue?.id &&
-        (j.status === 'pending' || j.status === 'running')
-    );
-    const isSeparating = activeSepJob?.type === 'separate';
-    const isSyncing = activeSepJob?.type === 'full-sync';
-    const hasVocals = !!(selectedSongForQueue?.vocalsAudio || selectedSongForQueue?.hasSeparation);
-    const canSync = hasVocals && !isSeparating && !isSyncing;
-    
-    const [playlistDialogOpen, setPlaylistDialogOpen] = useState(false);
-    const [youTubeSearchDialogOpen, setYouTubeSearchDialogOpen] = useState(false);
-    
-    // MUI Dialog state
-    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-    const [confirmReSeparateOpen, setConfirmReSeparateOpen] = useState(false);
-    const [fullSyncConfirmOpen, setFullSyncConfirmOpen] = useState(false);
-    const [createPlaylistDialogOpen, setCreatePlaylistDialogOpen] = useState(false);
-    const [newPlaylistName, setNewPlaylistName] = useState('');
+  return (
+    <>
+      <SongActionMenu
+        open={queueDialogOpen}
+        onClose={() => setQueueDialogOpen(false)}
+        isClient={isClient}
+        clientRole={clientRole}
+        isTVConnected={isTVConnected}
+        isLocalSong={song?.source === 'local'}
+        hasVocals={a.hasVocals}
+        isSeparating={a.isSeparating}
+        isSyncing={a.isSyncing}
+        canSync={a.canSync}
+        separationProgress={a.activeSepJob?.progress || 0}
+        onQueueOption={a.handleQueueOption}
+        onAddToPlaylist={() => a.setPlaylistDialogOpen(true)}
+        onChangeVideo={() => {
+          setQueueDialogOpen(false);
+          a.setYouTubeSearchDialogOpen(true);
+        }}
+        onSeparateVocals={a.handleSeparateVocalsClick}
+        onFullSync={a.handleFullSync}
+        onDelete={a.handleDeleteSong}
+      />
 
-    const handleCreatePlaylistSubmit = async () => {
-        const trimmed = newPlaylistName.trim();
-        if (!trimmed) return;
-        await createPlaylist(trimmed);
-        setFeedbackMessage(t('melodiq.playlist_created', 'Playlist created!'));
-        setCreatePlaylistDialogOpen(false);
-        setNewPlaylistName('');
-    };
+      <YouTubeSearchDialog
+        open={a.youTubeSearchDialogOpen}
+        onClose={() => a.setYouTubeSearchDialogOpen(false)}
+        initialQuery={song ? `${song.artist} ${song.title}` : ''}
+        onSelectUrl={a.handleChangeVideoUrl}
+      />
 
-    const handleQueueOption = (action: 'play_now' | 'play_next' | 'add_end') => {
-        if (!selectedSongForQueue) return;
-        switch (action) {
-            case 'play_now':
-                handleSelectSong(selectedSongForQueue, true);
-                break;
-            case 'play_next':
-                addNext(selectedSongForQueue);
-                setFeedbackMessage(`Added to start of queue: ${selectedSongForQueue.title}`);
-                break;
-            case 'add_end':
-                addToQueue(selectedSongForQueue);
-                setFeedbackMessage(`Added to queue: ${selectedSongForQueue.title}`);
-                break;
-        }
-        setQueueDialogOpen(false);
-    };
+      <SongPlaylistDialogs
+        playlists={a.playlists}
+        selectOpen={a.playlistDialogOpen}
+        onCloseSelect={() => a.setPlaylistDialogOpen(false)}
+        onPick={a.handleAddToPlaylist}
+        createOpen={a.createPlaylistDialogOpen}
+        onOpenCreate={() => {
+          a.setNewPlaylistName('');
+          a.setCreatePlaylistDialogOpen(true);
+        }}
+        onCloseCreate={() => a.setCreatePlaylistDialogOpen(false)}
+        name={a.newPlaylistName}
+        onNameChange={a.setNewPlaylistName}
+        onSubmit={a.handleCreatePlaylistSubmit}
+      />
 
-    const handleAddToPlaylist = (playlistId: string) => {
-        if (selectedSongForQueue) {
-            addSongToPlaylist(playlistId, selectedSongForQueue.id);
-            setFeedbackMessage(`Added to playlist`);
-        }
-        setPlaylistDialogOpen(false);
-        setQueueDialogOpen(false);
-    };
+      <ConfirmDialog
+        open={a.confirmDeleteOpen}
+        title={t('melodiq.delete_song_title')}
+        message={t('melodiq.delete_song_confirm', { title: song?.title, artist: song?.artist })}
+        confirmColor="error"
+        confirmText={t('melodiq.delete_btn')}
+        onConfirm={a.executeDeleteSong}
+        onCancel={() => a.setConfirmDeleteOpen(false)}
+      />
 
-    const handleDeleteSong = () => {
-        if (!selectedSongForQueue) return;
-        setConfirmDeleteOpen(true);
-    };
+      <ConfirmDialog
+        open={a.confirmReSeparateOpen}
+        title={t('melodiq.re_separate_confirm_title', 'Gesangsspur erneut trennen?')}
+        message={t(
+          'melodiq.re_separate_confirm_desc',
+          'Für diesen Song existiert bereits eine getrennte Gesangsspur. Möchtest du die Vokaltrennung wirklich erneut starten?',
+        )}
+        confirmText={t('melodiq.re_separate_confirm_btn', 'Erneut starten')}
+        cancelText={t('common.cancel', 'Abbrechen')}
+        onConfirm={a.executeSeparateVocals}
+        onCancel={() => a.setConfirmReSeparateOpen(false)}
+      />
 
-    const executeDeleteSong = async () => {
-        if (!selectedSongForQueue) return;
-        try {
-            const songId = selectedSongForQueue.id;
-            const data = await melodiqFetch(`/api/songs/${songId}`, {
-                method: 'DELETE'
-            });
-            if (data) {
-                setFeedbackMessage('Song gelöscht');
-                try {
-                    storage.remove(STORAGE_KEYS.MELODIQ_META_CACHE);
-                    if (window.caches) {
-                        await window.caches.delete('melodiq-api-cache');
-                    }
-                } catch { /* ignore cache clean error */ }
-                await refreshSongs();
-            } else {
-                setFeedbackMessage('Fehler beim Löschen');
-            }
-        } catch (e) {
-            console.error('Failed to delete song', e);
-        }
-        setConfirmDeleteOpen(false);
-        setQueueDialogOpen(false);
-    };
-
-    const handleChangeVideoUrl = async (url: string, skipAudio: boolean) => {
-        if (!selectedSongForQueue) return;
-        setYouTubeSearchDialogOpen(false);
-        setQueueDialogOpen(false);
-
-        try {
-            const data = await melodiqFetch('/api/usdb/download', {
-                method: 'POST',
-                body: JSON.stringify([{
-                    usdbId: selectedSongForQueue.usdbId,
-                    artist: selectedSongForQueue.artist,
-                    title: selectedSongForQueue.title,
-                    videoMode: 'mp4',
-                    youtubeUrl: url,
-                    targetDir: selectedSongForQueue.txtPath ? selectedSongForQueue.txtPath.replace(/\/[^/]+$/, '') : undefined,
-                    safeName: selectedSongForQueue.txtPath ? selectedSongForQueue.txtPath.split('/').pop()?.replace('.txt', '') : undefined,
-                    skipAudio: skipAudio,
-                    audioFile: typeof selectedSongForQueue.audio === 'string' ? selectedSongForQueue.audio.split('/').pop()?.split('?')[0] : undefined
-                }])
-            });
-            if (data) {
-                setFeedbackMessage('Video-Download gestartet...');
-            } else {
-                setFeedbackMessage('Fehler beim Starten des Downloads');
-            }
-        } catch (e) {
-            console.error('Failed to change video', e);
-        }
-    };
-
-
-    const handleFullSync = () => {
-        if (!selectedSongForQueue) return;
-        setQueueDialogOpen(false);
-        setFullSyncConfirmOpen(true);
-    };
-
-    const confirmFullSync = async () => {
-        if (!selectedSongForQueue) return;
-        setFullSyncConfirmOpen(false);
-
-        try {
-            const data = await melodiqFetch('/api/separator/job', {
-                method: 'POST',
-                body: JSON.stringify([{
-                    songId: selectedSongForQueue.id,
-                    type: 'full-sync'
-                }])
-            });
-            if (data) {
-                setFeedbackMessage(t('melodiq.full_sync_started', 'KI Full-Sync (Whisper) im Hintergrund gestartet...'));
-            } else {
-                setFeedbackMessage(t('melodiq.sync_error', 'Fehler beim Starten des Syncs'));
-            }
-        } catch (e: unknown) {
-            console.error('Failed to start full-sync', e);
-            setFeedbackMessage(e instanceof Error ? e.message : 'Fehler beim Starten des Full-Syncs');
-        }
-    };
-
-    const handleSeparateVocalsClick = () => {
-        if (hasVocals) {
-            setConfirmReSeparateOpen(true);
-        } else {
-            executeSeparateVocals();
-        }
-    };
-
-    const executeSeparateVocals = async () => {
-        setConfirmReSeparateOpen(false);
-        if (!selectedSongForQueue) return;
-        try {
-            const data = await melodiqFetch('/api/separator/job', {
-                method: 'POST',
-                body: JSON.stringify([{
-                    songId: selectedSongForQueue.id,
-                    type: 'separate'
-                }])
-            });
-            if (data) {
-                setFeedbackMessage(t('melodiq.separate_vocals_started', 'Vokaltrennung im Hintergrund gestartet...'));
-            } else {
-                setFeedbackMessage(t('melodiq.separate_vocals_error', 'Fehler beim Starten der Vokaltrennung'));
-            }
-        } catch (e: unknown) {
-            console.error('Failed to start vocal separation', e);
-            setFeedbackMessage(e instanceof Error ? e.message : 'Fehler beim Starten der Vokaltrennung');
-        }
-    };
-
-    return (
-        <>
-            <Dialog open={queueDialogOpen} onClose={() => setQueueDialogOpen(false)}>
-                <DialogTitle>{t('melodiq.add_end')}</DialogTitle>
-                <DialogContent>
-                    <List>
-                        {(!isClient || clientRole === 'admin') && (
-                            <ListItemButton onClick={() => handleQueueOption('play_now')}>
-                                <ListItemIcon><PlayArrowIcon /></ListItemIcon>
-                                <ListItemText primary={t('melodiq.play_now')} secondary={isTVConnected ? t('melodiq.play_now_tv_desc') : t('melodiq.play_now_locally_desc')} />
-                            </ListItemButton>
-                        )}
-                        <ListItemButton onClick={() => handleQueueOption('play_next')}>
-                            <ListItemIcon><PlaylistPlayIcon /></ListItemIcon>
-                            <ListItemText primary={t('melodiq.play_next')} secondary={t('melodiq.play_next_desc')} />
-                        </ListItemButton>
-                        <ListItemButton onClick={() => handleQueueOption('add_end')}>
-                            <ListItemIcon><AddToQueueIcon /></ListItemIcon>
-                            <ListItemText primary={t('melodiq.add_end')} secondary={t('melodiq.add_end_desc')} />
-                        </ListItemButton>
-                        {!isClient && (
-                            <ListItemButton onClick={() => setPlaylistDialogOpen(true)}>
-                                <ListItemIcon><QueueMusicIcon /></ListItemIcon>
-                                <ListItemText primary={t('melodiq.add_to_playlist')} secondary={t('melodiq.add_to_playlist_desc')} />
-                            </ListItemButton>
-                        )}
-                        {(!isClient || clientRole === 'admin') && selectedSongForQueue?.source !== 'local' && (
-                            <>
-                                <Divider />
-                                <ListItemButton onClick={() => { setQueueDialogOpen(false); setYouTubeSearchDialogOpen(true); }}>
-                                    <ListItemIcon><VideoLibraryIcon /></ListItemIcon>
-                                    <ListItemText primary="Video/Audio ändern" secondary="Neues YouTube Video für diesen Song herunterladen" />
-                                </ListItemButton>
-                                <ListItemButton
-                                    onClick={handleSeparateVocalsClick}
-                                    disabled={isSeparating || isSyncing}
-                                >
-                                    <ListItemIcon><MicIcon color={hasVocals ? "action" : "primary"} /></ListItemIcon>
-                                    <ListItemText
-                                        primary={t('melodiq.separate_vocals_title', 'Gesangsspur trennen (UVR AI)')}
-                                        secondary={
-                                            isSeparating
-                                                ? `${t('melodiq.vocal_separation_running', 'Vokaltrennung läuft im Hintergrund...')} (${activeSepJob?.progress || 0}%)`
-                                                : hasVocals
-                                                    ? t('melodiq.vocals_already_separated', 'Gesangsspur vorhanden (kann erneut ausgeführt werden)')
-                                                    : t('melodiq.separate_vocals_desc', 'Audio mit KI in Gesang und Instrumental aufteilen')
-                                        }
-                                    />
-                                </ListItemButton>
-
-                                <ListItemButton
-                                    onClick={handleFullSync}
-                                    disabled={!canSync}
-                                >
-                                    <ListItemIcon><SyncIcon color={canSync ? "inherit" : "disabled"} /></ListItemIcon>
-                                    <ListItemText
-                                        primary={t('melodiq.full_sync_title', 'KI Full-Sync (Komplette Lyrics)')}
-                                        secondary={
-                                            isSeparating
-                                                ? t('melodiq.vocal_separation_running', 'Vokaltrennung läuft im Hintergrund...')
-                                                : isSyncing
-                                                    ? 'Sync-Prozess läuft bereits...'
-                                                    : !hasVocals
-                                                        ? t('melodiq.vocals_required_desc', 'Erfordert getrennte Gesangsspur (zuerst Gesang trennen)')
-                                                        : t('melodiq.full_sync_desc', 'Alle Wörter mit Whisper AI auf das Audio synchronisieren')
-                                        }
-                                    />
-                                </ListItemButton>
-                                <ListItemButton onClick={handleDeleteSong} sx={{ color: 'error.main' }}>
-                                    <ListItemIcon sx={{ color: 'error.main' }}><DeleteIcon /></ListItemIcon>
-                                    <ListItemText primary="Song löschen" secondary="Kompletten Song vom Server entfernen" />
-                                </ListItemButton>
-                            </>
-                        )}
-                    </List>
-                </DialogContent>
-            </Dialog>
-
-            <YouTubeSearchDialog
-                open={youTubeSearchDialogOpen}
-                onClose={() => setYouTubeSearchDialogOpen(false)}
-                initialQuery={selectedSongForQueue ? `${selectedSongForQueue.artist} ${selectedSongForQueue.title}` : ''}
-                onSelectUrl={handleChangeVideoUrl}
-            />
-
-            <Dialog open={playlistDialogOpen} onClose={() => setPlaylistDialogOpen(false)}>
-                <DialogTitle>{t('melodiq.select_playlist')}</DialogTitle>
-                <DialogContent>
-                    {playlists.length === 0 ? (
-                        <Typography sx={{ p: 2 }}>{t('melodiq.no_playlists')}</Typography>
-                    ) : (
-                        <List>
-                            {playlists.map(p => (
-                                <ListItemButton key={p.id} onClick={() => handleAddToPlaylist(p.id)}>
-                                    <ListItemIcon><QueueMusicIcon /></ListItemIcon>
-                                    <ListItemText primary={p.name} />
-                                </ListItemButton>
-                            ))}
-                        </List>
-                    )}
-                    <Divider />
-                    <List>
-                        <ListItemButton onClick={() => {
-                            setNewPlaylistName('');
-                            setCreatePlaylistDialogOpen(true);
-                        }}>
-                            <ListItemIcon><AddIcon /></ListItemIcon>
-                            <ListItemText primary={t('melodiq.create_playlist')} />
-                        </ListItemButton>
-                    </List>
-                </DialogContent>
-            </Dialog>
-
-            {/* MUI Dialog for Create Playlist */}
-            <Dialog
-                open={createPlaylistDialogOpen}
-                onClose={() => setCreatePlaylistDialogOpen(false)}
-                maxWidth="xs"
-                fullWidth
-            >
-                <DialogTitle>{t('melodiq.create_playlist', 'Create Playlist')}</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        autoFocus
-                        fullWidth
-                        margin="dense"
-                        label={t('melodiq.playlist_name', 'Playlist Name')}
-                        value={newPlaylistName}
-                        onChange={(e) => setNewPlaylistName(e.target.value)}
-                        onKeyDown={async (e) => {
-                            if (e.key === 'Enter' && newPlaylistName.trim()) {
-                                e.preventDefault();
-                                await handleCreatePlaylistSubmit();
-                            }
-                        }}
-                    />
-                </DialogContent>
-                <DialogActions sx={{ p: 2 }}>
-                    <Button onClick={() => setCreatePlaylistDialogOpen(false)} color="inherit">
-                        {t('common.cancel', 'Abbrechen')}
-                    </Button>
-                    <Button
-                        onClick={handleCreatePlaylistSubmit}
-                        variant="contained"
-                        color="primary"
-                        disabled={!newPlaylistName.trim()}
-                        sx={{ fontWeight: 700 }}
-                    >
-                        {t('common.save', 'Speichern')}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-
-
-            <ConfirmDialog
-                open={confirmDeleteOpen}
-                title="Song löschen"
-                message={`Wirklich "${selectedSongForQueue?.title}" von ${selectedSongForQueue?.artist} löschen?`}
-                confirmColor="error"
-                confirmText="Löschen"
-                onConfirm={executeDeleteSong}
-                onCancel={() => setConfirmDeleteOpen(false)}
-            />
-
-            <ConfirmDialog
-                open={confirmReSeparateOpen}
-                title={t('melodiq.re_separate_confirm_title', 'Gesangsspur erneut trennen?')}
-                message={t('melodiq.re_separate_confirm_desc', 'Für diesen Song existiert bereits eine getrennte Gesangsspur. Möchtest du die Vokaltrennung wirklich erneut starten?')}
-                confirmText={t('melodiq.re_separate_confirm_btn', 'Erneut starten')}
-                cancelText={t('common.cancel', 'Abbrechen')}
-                onConfirm={executeSeparateVocals}
-                onCancel={() => setConfirmReSeparateOpen(false)}
-            />
-
-            <ConfirmDialog
-                open={fullSyncConfirmOpen}
-                title={t('melodiq.full_sync_confirm_title', 'KI Full-Sync starten?')}
-                message={t('melodiq.full_sync_confirm_desc', 'Der komplette Liedtext wird mithilfe von Whisper AI Wort für Wort auf die Vokal-/Audiospur synchronisiert. Dies dauert je nach Songlänge 1–3 Minuten.')}
-                confirmText={t('melodiq.start_sync', 'Sync starten')}
-                cancelText={t('common.cancel', 'Abbrechen')}
-                onConfirm={confirmFullSync}
-                onCancel={() => setFullSyncConfirmOpen(false)}
-            />
-        </>
-    );
+      <ConfirmDialog
+        open={a.fullSyncConfirmOpen}
+        title={t('melodiq.full_sync_confirm_title', 'KI Full-Sync starten?')}
+        message={t(
+          'melodiq.full_sync_confirm_desc',
+          'Der komplette Liedtext wird mithilfe von Whisper AI Wort für Wort auf die Vokal-/Audiospur synchronisiert. Dies dauert je nach Songlänge 1–3 Minuten.',
+        )}
+        confirmText={t('melodiq.start_sync', 'Sync starten')}
+        cancelText={t('common.cancel', 'Abbrechen')}
+        onConfirm={a.confirmFullSync}
+        onCancel={() => a.setFullSyncConfirmOpen(false)}
+      />
+    </>
+  );
 };
