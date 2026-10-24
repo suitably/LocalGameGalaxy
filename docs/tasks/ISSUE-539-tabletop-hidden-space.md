@@ -41,11 +41,11 @@ Workflow: [multi-agent token strategy](../workflows/multi-agent-token-strategy.m
 | Sync and undo are generic game diffs, so zone actions already sync and are undoable in edit mode                                   | `logic/syncProtocol.ts:45`, `components/editor/useTabletopEditor.ts:36`  |
 | `TabletopSurface.tsx` is 247 / 250 lines — no new handler fits there                                                               | `check:budget`                                                           |
 
-## 3. Decisions needed from the maintainer (before slice 1)
+## 3. Decisions (maintainer, 2026-10-24)
 
-1. **Visibility model.** Today `revealed` is one boolean. Proposal: keep it (`false` = owner only, `true` = everyone) and show it as an eye toggle with a label. "Spectators" has no concept in tabletop yet — treat spectators as "everyone except seated players"? Or out of scope?
-2. **Fog of war.** `isWidgetHiddenForViewer` is never called, so contents may not be hidden from other players at all. Fix in this issue or separate bug?
-3. **Locked.** Use `pinned || movable === false` for "locked" when moving contained widgets?
+1. **Visibility model:** keep the `revealed` boolean (`false` = owner only, `true` = everyone), shown as an in-zone eye toggle with a state label. Spectators are out of scope.
+2. **Fog of war:** fix in this issue — widgets inside a non-revealed zone are obscured for every viewer except the zone owner, via the existing `isWidgetHiddenForViewer` (slice 4).
+3. **Locked:** a widget is locked when `pinned || movable === false`; locked widgets stay in place when their zone moves.
 
 ## 4. Slices
 
@@ -68,6 +68,12 @@ Each slice = one `slice-implementer` run; prompt: "Implement slice N of `docs/ta
 - `TabletopSurface.tsx` may only change the props it passes (0 net lines).
 - Strings in `public/locales/{de,en}/translation.json` (tabletop keeps its strings there — confirm with `grep -n "tabletop" public/locales/en/translation.json | head`).
 
+### Slice 4 — fog of war (after slice 1; parallel to slices 2–3 only if files are disjoint)
+
+- Wire `isWidgetHiddenForViewer` (`logic/hiddenZoneLogic.ts:44`) into widget rendering: for a viewer who is not the zone owner, a widget inside a non-revealed zone renders as an opaque placeholder (no face, label or value; no interaction beyond what the owner allows). Viewer seat = the local `currentSeatId` mapped to a seat index the same way `ownerSeat` is set.
+- Prefer a small pure helper (e.g. `getHiddenWidgetIds(game, viewerSeatIndex)` in `hiddenZoneLogic.ts`) plus a memo in an existing hook; keep `TabletopSurface.tsx` at net 0 lines (move code out if needed).
+- Tests: helper in `logic/__tests__/hiddenZoneLogic.test.ts` (owner sees, other seat obscured, revealed shows all, `showAlways` shows).
+
 ### Close (orchestrator)
 
 - gate-runner once; `docs/tech/tabletop-engine.md` (viewReducer row, new action), `docs/log.md`, CHANGELOG.
@@ -78,6 +84,7 @@ Each slice = one `slice-implementer` run; prompt: "Implement slice N of `docs/ta
 - [ ] Moving a zone moves contained widgets except pinned / `movable: false`; one undo step reverts both.
 - [ ] In-zone button toggles visibility and shows the current state, in `de` and `en`.
 - [ ] Changes sync to other devices (host-authoritative intent).
+- [ ] Other seats see widgets inside a non-revealed zone only as placeholders; the owner sees them; revealing shows them to everyone.
 - [ ] All gates pass; `TabletopSurface.tsx` stays ≤ 250 lines.
 
 ## 6. Token plan (example for the workflow)
@@ -96,10 +103,11 @@ Before the session ends: `npm run tokens` and paste the table into the PR descri
 ## 7. Progress
 
 - [x] scout
-- [ ] decisions (§3)
+- [x] decisions (§3)
 - [ ] slice 1 — logic
 - [ ] slice 2 — state hook
 - [ ] slice 3 — UI
+- [ ] slice 4 — fog of war
 - [ ] gates
 - [ ] docs
 - [ ] PR
