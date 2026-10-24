@@ -2,6 +2,12 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Tabletop hidden zones: move, resize, reveal toggle, fog of war (claude-code)
+
+- `docs/tech/tabletop-engine.md`: new "Hidden zones" section, viewReducer row names the zone actions.
+- `docs/tasks/ISSUE-539-tabletop-hidden-space.md` stable; `docs/open-questions.md` gains remaining zone leaks.
+- Outside `docs/`: tabletop code (#539), locales.
+
 ## 2026-10-24 — Several contributors (claude-code)
 
 - `docs/workflows/multi-agent-token-strategy.md` §6a: claim issues before work, triage once, rights, models, log conflicts.

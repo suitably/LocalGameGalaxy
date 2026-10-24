@@ -912,6 +912,8 @@
       "resetScaleItem": "Reset size",
       "zoneRevealed": "Revealed",
       "zoneOwnerView": "Hidden (Your View)",
+      "zoneOnlyYou": "Only you",
+      "zoneVisibleToAll": "Visible to all",
       "zoneHidden": "Hidden Zone",
       "revealZone": "Reveal (show to everyone)",
       "hideZone": "Hide again",
