@@ -2,6 +2,7 @@ import React from 'react';
 import { alpha, Box, Typography, Grid, Paper, Avatar } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import PersonIcon from '@mui/icons-material/PersonRounded';
+import { transitionOf } from '../../../lib/motion';
 
 interface VotingViewProps {
   players: { id: string; name: string; isKicked?: boolean }[];
@@ -32,7 +33,10 @@ export const VotingView: React.FC<VotingViewProps> = ({ players, onSelectPlayer 
                 flexDirection: 'column',
                 alignItems: 'center',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease',
+                transition: transitionOf(
+                  ['background-color', 'border-color', 'transform', 'box-shadow'],
+                  'standard',
+                ),
                 '&:hover': {
                   bgcolor: (theme) => alpha(theme.palette.success.main, 0.9),
                   transform: 'scale(1.05)',

@@ -4,6 +4,7 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import type { TabletopWidget } from '../../logic/types';
+import { transitionOf } from '../../../../lib/motion';
 
 interface SelectionHighlightLayerProps {
   selectedWidgetIds: string[];
@@ -36,7 +37,7 @@ export const SelectionHighlightLayer: React.FC<SelectionHighlightLayerProps> = (
               borderRadius: 2,
               pointerEvents: 'none',
               zIndex: (w.zIndex || 0) + 150,
-              transition: 'all 0.1s ease-out',
+              transition: transitionOf(['left', 'top', 'width', 'height']),
             }}
           />
         );

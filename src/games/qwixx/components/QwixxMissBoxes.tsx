@@ -3,6 +3,7 @@ import { Box, ButtonBase, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/CloseRounded';
 import { useTranslation } from 'react-i18next';
+import { transitionOf } from '../../../lib/motion';
 
 interface QwixxMissBoxesProps {
   misses: number;
@@ -54,7 +55,7 @@ export const QwixxMissBoxes: React.FC<QwixxMissBoxesProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'all 0.15s ease',
+                transition: transitionOf(['background-color', 'border-color']),
               }}
             >
               {isMissed ? <CloseIcon sx={{ fontSize: 20 }} /> : null}

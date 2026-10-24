@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/CloseRounded';
 import { useTranslation } from 'react-i18next';
+import { transitionOf } from '../../../lib/motion';
 
 interface TargetCell {
   row: number;
@@ -118,7 +119,13 @@ export const KnisterNumberPickerModal: React.FC<KnisterNumberPickerModalProps> =
                   border: '1.5px solid',
                   borderColor: isSeven ? 'warning.main' : 'divider',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
-                  transition: 'all 0.15s ease',
+                  transition: transitionOf([
+                    'background-color',
+                    'color',
+                    'border-color',
+                    'transform',
+                    'box-shadow',
+                  ]),
                   '&:hover': {
                     bgcolor: 'warning.main',
                     color: 'warning.contrastText',
@@ -149,7 +156,13 @@ export const KnisterNumberPickerModal: React.FC<KnisterNumberPickerModalProps> =
               bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
               color: 'text.secondary',
               border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
-              transition: 'all 0.15s ease',
+              transition: transitionOf([
+                'background-color',
+                'color',
+                'border-color',
+                'transform',
+                'box-shadow',
+              ]),
               '&:hover': {
                 bgcolor: (theme) => alpha(theme.palette.text.primary, 0.1),
                 color: 'text.primary',

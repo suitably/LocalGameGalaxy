@@ -18,6 +18,7 @@ import EditIcon from '@mui/icons-material/EditRounded';
 import type { QueueItem } from '../hooks/useQueue';
 import type { MelodiqParticipant } from '../types';
 import { QueueParticipantAvatars } from './QueueParticipantAvatars';
+import { transitionOf } from '../../../lib/motion';
 
 interface QueueDrawerItemProps {
   item: QueueItem;
@@ -71,7 +72,7 @@ export const QueueDrawerItem: React.FC<QueueDrawerItemProps> = ({
         px: 2.5,
         py: 1,
         cursor: draggable ? 'grab' : 'default',
-        transition: 'all 0.15s ease',
+        transition: transitionOf(['opacity', 'background-color', 'border-color']),
         opacity: isDragging ? 0.4 : 1,
         bgcolor: isDragOver ? (theme) => alpha(theme.palette.primary.main, 0.16) : 'transparent',
         borderTop: 2,

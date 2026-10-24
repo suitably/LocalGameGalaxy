@@ -7,6 +7,7 @@ import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlankRo
 import type { RowColor, SheetCell } from '../logic/types';
 import { QwixxCellBadge } from './QwixxCellBadges';
 import { getRowTone } from './rowTone';
+import { transitionOf } from '../../../lib/motion';
 
 interface QwixxCellProps {
   cell: SheetCell;
@@ -79,7 +80,14 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          transition: 'all 0.15s ease',
+          transition: transitionOf([
+            'background-color',
+            'color',
+            'transform',
+            'opacity',
+            'border-color',
+            'box-shadow',
+          ]),
           transform: isCrossed ? 'scale(0.96)' : isHighlighted ? 'scale(1.08)' : 'none',
           opacity: !isClickable ? 0.35 : 1,
           border: cellBorder(theme, cell, isHighlighted),
@@ -155,7 +163,7 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
             p: 0,
             mt: 0.2,
             opacity: isCrossed ? 1 : 0.25,
-            transition: 'all 0.15s ease',
+            transition: transitionOf(['opacity', 'color']),
             color: tone.ink,
           }}
         >

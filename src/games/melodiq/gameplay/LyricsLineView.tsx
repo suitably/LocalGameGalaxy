@@ -1,6 +1,7 @@
 import React from 'react';
 import { alpha, Box, Typography } from '@mui/material';
 import type { Note } from '../parser';
+import { transitionOf } from '../../../lib/motion';
 
 export interface LineGroup {
   notes: Note[];
@@ -59,7 +60,7 @@ export const LeadInIndicator: React.FC<LeadInIndicatorProps> = React.memo(
                     borderRadius: '50%',
                     bgcolor: isLit ? primaryColor : 'rgba(255,255,255,0.25)',
                     transform: isLit ? 'scale(1.2)' : 'scale(1.0)',
-                    transition: 'all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                    transition: transitionOf(['background-color', 'transform'], 'short', 'bounce'),
                   }}
                 />
               );

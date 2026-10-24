@@ -1,6 +1,7 @@
 import React from 'react';
 import { Paper, type SxProps, type Theme } from '@mui/material';
 import { pieceNeutrals, piecePalette } from '../../themeTokens';
+import { transitionOf } from '../../lib/motion';
 
 export interface DieColorConfig {
   bg: string;
@@ -62,7 +63,7 @@ export const Die3D: React.FC<Die3DProps> = ({
             ? `0 0 0 3px ${theme.palette.secondary.main}, 0 4px 0 rgba(0, 0, 0, 0.35)`
             : '0 4px 0 rgba(0, 0, 0, 0.35)',
         transform: isRolling ? 'rotate(-6deg) scale(1.08)' : isSelected ? 'scale(1.1)' : 'none',
-        transition: 'all 0.15s ease',
+        transition: transitionOf(['transform', 'box-shadow', 'background-color', 'border-color']),
         cursor: isClickable ? 'pointer' : 'default',
         userSelect: 'none',
         WebkitTouchCallout: 'none',

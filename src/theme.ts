@@ -1,6 +1,12 @@
 import type { CSSProperties } from 'react';
 import { createTheme, responsiveFontSizes } from '@mui/material/styles';
-import { darkTokens as t, fontFamilies, piecePalette, type PiecePalette } from './themeTokens';
+import {
+  darkTokens as t,
+  fontFamilies,
+  motion,
+  piecePalette,
+  type PiecePalette,
+} from './themeTokens';
 
 declare module '@mui/material/styles' {
   interface Palette {
@@ -42,6 +48,10 @@ const theme = createTheme({
     piece: piecePalette,
   },
   shape: { borderRadius: 4 },
+  transitions: {
+    duration: { short: motion.duration.short, standard: motion.duration.standard },
+    easing: { easeInOut: motion.easing.standard, easeOut: motion.easing.standard },
+  },
   typography: {
     fontFamily: fontFamilies.text,
     display: { ...display, fontSize: '3.5rem', lineHeight: 1.05, fontWeight: 800 },

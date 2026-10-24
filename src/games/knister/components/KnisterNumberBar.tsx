@@ -3,6 +3,7 @@ import { Box, Paper, Typography, ButtonBase, Tooltip, IconButton, alpha } from '
 import CloseIcon from '@mui/icons-material/CloseRounded';
 import TouchAppIcon from '@mui/icons-material/TouchAppRounded';
 import { useTranslation } from 'react-i18next';
+import { transitionOf } from '../../../lib/motion';
 
 const KNISTER_NUMBERS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
@@ -127,7 +128,13 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
                   isSelected || isSeven ? theme.palette.warning.main : theme.palette.divider,
                 boxShadow: 'none',
                 transform: isSelected ? 'scale(1.08)' : 'none',
-                transition: 'all 0.15s ease',
+                transition: transitionOf([
+                  'background-color',
+                  'color',
+                  'border-color',
+                  'transform',
+                  'box-shadow',
+                ]),
                 cursor: disabled ? 'default' : 'pointer',
                 '&:hover': !disabled
                   ? {

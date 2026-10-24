@@ -5,6 +5,7 @@ import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import RadioButtonUncheckedRoundedIcon from '@mui/icons-material/RadioButtonUncheckedRounded';
 import { useTranslation } from 'react-i18next';
 import type { WordRouletteWordCheck } from '../types';
+import { transitionOf } from '../../../lib/motion';
 
 interface ModifierRouletteBarProps {
   evaluation: WordRouletteWordCheck[];
@@ -84,7 +85,7 @@ export const ModifierRouletteBar: React.FC<ModifierRouletteBarProps> = ({ evalua
               color: matched ? 'success.contrastText' : 'text.primary',
               border: matched ? 'none' : '1px dashed',
               borderColor: 'text.disabled',
-              transition: 'all 0.2s ease',
+              transition: transitionOf(['background-color', 'color', 'border-color']),
             }}
           />
         ))}

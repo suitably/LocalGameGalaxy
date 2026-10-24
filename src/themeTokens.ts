@@ -103,3 +103,9 @@ export const scoreText = {
   fontFamily: fontFamilies.display,
   fontVariantNumeric: 'tabular-nums',
 } as const;
+
+/** Motion (DESIGN.md §6): 150 ms hover/press, 250 ms enter/exit, one bounce for celebrations. */
+export const motion = {
+  duration: { short: 150, standard: 250 },
+  easing: { standard: 'cubic-bezier(.2,.8,.2,1)', bounce: 'cubic-bezier(.34,1.56,.64,1)' },
+} as const;

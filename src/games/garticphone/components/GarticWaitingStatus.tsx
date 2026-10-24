@@ -18,6 +18,7 @@ import HourglassTopRoundedIcon from '@mui/icons-material/HourglassTopRounded';
 import { useTranslation } from 'react-i18next';
 import { isPlayerFinishedCurrentRound } from '../garticEngine';
 import type { GarticGameState } from '../types';
+import { transitionOf } from '../../../lib/motion';
 
 interface GarticWaitingStatusProps {
   state: GarticGameState;
@@ -103,7 +104,7 @@ export const GarticWaitingStatus: React.FC<GarticWaitingStatusProps> = ({ state,
                         : 'action.hover',
                     border: '1px solid',
                     borderColor: isDone ? 'success.main' : isMe ? 'primary.main' : 'divider',
-                    transition: 'all 0.2s ease',
+                    transition: transitionOf(['background-color', 'border-color']),
                   }}
                   secondaryAction={
                     isDone ? (

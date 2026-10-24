@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Box } from '@mui/material';
+import { usePrefersReducedMotion } from '../../../../hooks/usePrefersReducedMotion';
 import type { StageEngine } from '../engine/StageEngine';
 import { keyAction } from '../logic/keyboardInput';
 import {
@@ -35,10 +36,11 @@ export function StageCanvas({
 }: StageCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const size = useRef({ w: 0, h: 0 });
-  const live = useRef({ display, texts });
+  const reducedMotion = usePrefersReducedMotion();
+  const live = useRef({ display, texts, reducedMotion });
   useEffect(() => {
-    live.current = { display, texts };
-  }, [display, texts]);
+    live.current = { display, texts, reducedMotion };
+  }, [display, texts, reducedMotion]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -61,6 +63,7 @@ export function StageCanvas({
     const frame = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
+      renderer.reducedMotion = live.current.reducedMotion;
       renderer.draw(
         g,
         engine,

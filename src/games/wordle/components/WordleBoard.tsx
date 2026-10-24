@@ -7,6 +7,7 @@ import { Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { EvaluatedLetter, LetterStatus } from '../logic/types';
 import { statusLabelKey, tileStyle } from './tileStyles';
+import { transitionOf } from '../../../lib/motion';
 
 interface WordleBoardProps {
   guesses: string[];
@@ -92,7 +93,12 @@ export const WordleBoard: React.FC<WordleBoardProps> = ({
                     borderColor:
                       isFilled && tile.status === 'tbd' ? 'text.primary' : style.borderColor,
                     transform: isFilled && isCurrentRow ? 'scale(1.04)' : 'none',
-                    transition: 'all 0.15s ease-in-out',
+                    transition: transitionOf([
+                      'background-color',
+                      'border-color',
+                      'color',
+                      'transform',
+                    ]),
                   }}
                 >
                   {tile.char}

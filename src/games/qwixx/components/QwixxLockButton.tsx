@@ -5,6 +5,7 @@ import LockIcon from '@mui/icons-material/LockRounded';
 import LockOpenIcon from '@mui/icons-material/LockOpenRounded';
 import type { RowColor } from '../logic/types';
 import { getRowTone } from './rowTone';
+import { transitionOf } from '../../../lib/motion';
 
 interface QwixxLockButtonProps {
   color: RowColor;
@@ -39,7 +40,7 @@ export const QwixxLockButton: React.FC<QwixxLockButtonProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         border: isLocked ? `2px solid ${tone.ink}` : 'none',
-        transition: 'all 0.2s ease',
+        transition: transitionOf(['background-color', 'color', 'border-color']),
         animation: canLock ? 'qwixxLockPulse 1.5s infinite' : 'none',
         '@keyframes qwixxLockPulse': {
           '0%, 100%': { transform: 'scale(1)' },
