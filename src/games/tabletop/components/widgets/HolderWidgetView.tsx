@@ -2,6 +2,7 @@ import React from 'react';
 import { alpha, Box, Typography, Chip } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { HolderWidget } from '../../logic/types';
+import { transitionOf } from '../../../../lib/motion';
 
 interface HolderWidgetViewProps {
   widget: HolderWidget;
@@ -111,7 +112,7 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({ widget, isHo
         userSelect: 'none',
         pointerEvents: 'none',
         overflow: 'hidden',
-        transition: 'all 0.2s ease',
+        transition: transitionOf(['filter', 'box-shadow', 'background-color', 'opacity']),
       }}
     >
       {isCheckerboard ? (
@@ -134,7 +135,7 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({ widget, isHo
               {col === 0 && (
                 <Typography
                   sx={{
-                    fontSize: '0.65rem',
+                    fontSize: '0.75rem',
                     color: isDark ? '#d7ccc8' : '#4e342e',
                     fontWeight: 700,
                     lineHeight: 1,

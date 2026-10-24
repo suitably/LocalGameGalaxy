@@ -155,7 +155,7 @@ export const SudokuNumpad: React.FC<SudokuNumpadProps> = ({
               </Typography>
               <Typography
                 sx={{
-                  fontSize: '0.65rem',
+                  fontSize: '0.75rem',
                   color: isDone ? 'text.disabled' : 'text.secondary',
                   lineHeight: 1,
                   mt: 0.3,

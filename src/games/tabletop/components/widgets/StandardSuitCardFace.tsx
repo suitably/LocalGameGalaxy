@@ -67,7 +67,7 @@ export const StandardSuitCardFace: React.FC<StandardSuitCardFaceProps> = ({
           lineHeight: 1,
         }}
       >
-        <Typography sx={{ fontSize: '0.95rem', fontWeight: 900, color, lineHeight: 1 }}>
+        <Typography sx={{ fontSize: '0.95rem', fontWeight: 800, color, lineHeight: 1 }}>
           {rank}
         </Typography>
         <Typography sx={{ fontSize: '0.85rem', color, lineHeight: 1 }}>{suit}</Typography>
@@ -107,7 +107,7 @@ export const StandardSuitCardFace: React.FC<StandardSuitCardFaceProps> = ({
               py: 0.2,
             }}
           >
-            <Typography sx={{ fontSize: '1.6rem', fontWeight: 900, color, lineHeight: 1 }}>
+            <Typography sx={{ fontSize: '1.6rem', fontWeight: 800, color, lineHeight: 1 }}>
               {rank}
             </Typography>
             <Typography sx={{ fontSize: '1.2rem', color, lineHeight: 1 }}>{suit}</Typography>
@@ -129,7 +129,7 @@ export const StandardSuitCardFace: React.FC<StandardSuitCardFaceProps> = ({
           lineHeight: 1,
         }}
       >
-        <Typography sx={{ fontSize: '0.95rem', fontWeight: 900, color, lineHeight: 1 }}>
+        <Typography sx={{ fontSize: '0.95rem', fontWeight: 800, color, lineHeight: 1 }}>
           {rank}
         </Typography>
         <Typography sx={{ fontSize: '0.85rem', color, lineHeight: 1 }}>{suit}</Typography>

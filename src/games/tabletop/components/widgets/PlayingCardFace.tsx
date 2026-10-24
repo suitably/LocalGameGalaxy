@@ -109,7 +109,7 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
               bgcolor: 'rgba(0,0,0,0.25)',
               color: 'text.primary',
               fontSize: '1.2rem',
-              fontWeight: 900,
+              fontWeight: 800,
             }}
           >
             ★

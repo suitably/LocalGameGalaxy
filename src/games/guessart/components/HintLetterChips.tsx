@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Chip, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { transitionOf } from '../../../lib/motion';
 
 export interface LetterEntry {
   id: number;
@@ -13,10 +14,7 @@ interface HintLetterChipsProps {
   onLetterClick: (entry: LetterEntry) => void;
 }
 
-export const HintLetterChips: React.FC<HintLetterChipsProps> = ({
-  letters,
-  onLetterClick,
-}) => {
+export const HintLetterChips: React.FC<HintLetterChipsProps> = ({ letters, onLetterClick }) => {
   const { t } = useTranslation();
 
   if (!letters || letters.length === 0) {
@@ -54,7 +52,7 @@ export const HintLetterChips: React.FC<HintLetterChipsProps> = ({
               minWidth: 42,
               borderRadius: 2,
               opacity: entry.used ? 0.35 : 1,
-              transition: 'all 0.15s ease-in-out',
+              transition: transitionOf(['opacity', 'background-color', 'transform']),
             }}
           />
         ))}

@@ -3,6 +3,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
+import { scoreText } from '../../../../themeTokens';
 import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
 import PauseIcon from '@mui/icons-material/PauseRounded';
 import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
@@ -59,7 +60,7 @@ export const TimerWidgetView: React.FC<TimerWidgetViewProps> = ({
         userSelect: 'none',
       }}
     >
-      <Typography sx={{ fontFamily: 'monospace', fontSize: 22, fontWeight: 700 }}>
+      <Typography sx={{ ...scoreText, fontSize: 22, fontWeight: 700 }}>
         {formatTimer(shown)}
       </Typography>
       <Box>

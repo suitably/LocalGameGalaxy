@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Motion tokens and reduced motion (claude-code)
+
+- `docs/tech/architecture.md`: hooks list gains `usePrefersReducedMotion`.
+- **Code changed:** `motion` tokens in `src/themeTokens.ts`, theme transitions, `src/lib/motion.ts`, global reduced-motion CSS (#507).
+
 ## 2026-10-24 — Emoji removed from UI icons (claude-code)
 
 - `DESIGN.md` §7: note on Werewolf role icons (`RoleIcon`, Rounded MUI icons by role id).

@@ -1,5 +1,12 @@
+import type { CSSProperties } from 'react';
 import { createTheme, responsiveFontSizes } from '@mui/material/styles';
-import { darkTokens as t, fontFamilies, piecePalette, type PiecePalette } from './themeTokens';
+import {
+  darkTokens as t,
+  fontFamilies,
+  motion,
+  piecePalette,
+  type PiecePalette,
+} from './themeTokens';
 
 declare module '@mui/material/styles' {
   interface Palette {
@@ -7,6 +14,18 @@ declare module '@mui/material/styles' {
   }
   interface PaletteOptions {
     piece?: PiecePalette;
+  }
+  interface TypographyVariants {
+    display: CSSProperties;
+  }
+  interface TypographyVariantsOptions {
+    display?: CSSProperties;
+  }
+}
+
+declare module '@mui/material/Typography' {
+  interface TypographyPropsVariantOverrides {
+    display: true;
   }
 }
 
@@ -29,8 +48,13 @@ const theme = createTheme({
     piece: piecePalette,
   },
   shape: { borderRadius: 4 },
+  transitions: {
+    duration: { short: motion.duration.short, standard: motion.duration.standard },
+    easing: { easeInOut: motion.easing.standard, easeOut: motion.easing.standard },
+  },
   typography: {
     fontFamily: fontFamilies.text,
+    display: { ...display, fontSize: '3.5rem', lineHeight: 1.05, fontWeight: 800 },
     h1: { ...display, fontSize: '2.5rem', lineHeight: 1.1, fontWeight: 750 },
     h2: { ...display, fontSize: '2rem', lineHeight: 1.15, fontWeight: 700 },
     h3: { ...display, fontSize: '1.75rem', lineHeight: 1.2, fontWeight: 700 },
@@ -95,4 +119,21 @@ const theme = createTheme({
   },
 });
 
-export default responsiveFontSizes(theme);
+export default responsiveFontSizes(theme, {
+  variants: [
+    'display',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'subtitle1',
+    'subtitle2',
+    'body1',
+    'body2',
+    'caption',
+    'button',
+    'overline',
+  ],
+});

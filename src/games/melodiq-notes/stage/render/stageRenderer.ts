@@ -29,6 +29,8 @@ const IDLE_BEAT = -1.2;
 /** Renderer-side state that survives frames (effects per player). */
 export class StageRenderer {
   private effects = new WeakMap<StagePlayer, PlayerEffects>();
+  /** prefers-reduced-motion: no beat pulse on the panel backgrounds. */
+  reducedMotion = false;
 
   draw(
     g: Ctx,
@@ -53,7 +55,9 @@ export class StageRenderer {
     const rects = panelRects(engine.players.length, width, height);
     const beat = engine.state === 'idle' ? IDLE_BEAT : engine.beat;
     const pulse =
-      engine.state === 'playing' && beat >= 0 ? (1 - (beat - Math.floor(beat))) ** 3 : 0;
+      !this.reducedMotion && engine.state === 'playing' && beat >= 0
+        ? (1 - (beat - Math.floor(beat))) ** 3
+        : 0;
     engine.players.forEach((p, i) => {
       const r = rects[i];
       g.save();

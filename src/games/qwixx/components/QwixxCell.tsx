@@ -7,6 +7,7 @@ import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlankRo
 import type { RowColor, SheetCell } from '../logic/types';
 import { QwixxCellBadge } from './QwixxCellBadges';
 import { getRowTone } from './rowTone';
+import { transitionOf } from '../../../lib/motion';
 
 interface QwixxCellProps {
   cell: SheetCell;
@@ -72,14 +73,21 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
           borderRadius: 2,
           bgcolor: isCrossed ? tone.buttonCrossed : tone.button,
           color: isCrossed ? 'common.white' : tone.ink,
-          fontWeight: 900,
+          fontWeight: 800,
           fontSize: { xs: '0.85rem', sm: '1.1rem', md: '1.25rem' },
           fontVariantNumeric: 'tabular-nums',
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          transition: 'all 0.15s ease',
+          transition: transitionOf([
+            'background-color',
+            'color',
+            'transform',
+            'opacity',
+            'border-color',
+            'box-shadow',
+          ]),
           transform: isCrossed ? 'scale(0.96)' : isHighlighted ? 'scale(1.08)' : 'none',
           opacity: !isClickable ? 0.35 : 1,
           border: cellBorder(theme, cell, isHighlighted),
@@ -92,7 +100,7 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
             <Typography
               sx={{
                 fontSize: { xs: '0.95rem', sm: '1.3rem', md: '1.5rem' },
-                fontWeight: 900,
+                fontWeight: 800,
                 color: 'primary.main',
                 letterSpacing: -1,
                 lineHeight: 1,
@@ -155,7 +163,7 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
             p: 0,
             mt: 0.2,
             opacity: isCrossed ? 1 : 0.25,
-            transition: 'all 0.15s ease',
+            transition: transitionOf(['opacity', 'color']),
             color: tone.ink,
           }}
         >

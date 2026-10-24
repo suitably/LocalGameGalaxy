@@ -49,7 +49,7 @@ export const SongCardCorner: React.FC<SongCardStatusProps> = ({
         <AutoAwesomeIcon sx={{ fontSize: 16, color: 'secondary.main' }} />
         <Typography
           variant="caption"
-          sx={{ fontWeight: 700, fontSize: '0.7rem', fontVariantNumeric: 'tabular-nums' }}
+          sx={{ fontWeight: 700, fontSize: '0.75rem', fontVariantNumeric: 'tabular-nums' }}
         >
           {downloadProgress !== undefined && downloadProgress > 0 ? `${downloadProgress}%` : ''}
         </Typography>

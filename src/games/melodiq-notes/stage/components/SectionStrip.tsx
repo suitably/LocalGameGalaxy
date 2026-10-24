@@ -53,7 +53,7 @@ export function SectionStrip({ engine }: { engine: StageEngine }) {
                 overflow: 'hidden',
                 borderColor: inLoop ? 'primary.main' : 'divider',
                 bgcolor: 'background.paper',
-                fontSize: 11,
+                fontSize: '0.75rem',
                 fontFamily: 'monospace',
                 color: inLoop ? 'text.primary' : 'text.secondary',
               }}

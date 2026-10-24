@@ -102,166 +102,165 @@ export const CatalogueEditorDialog: React.FC<CatalogueEditorDialogProps> = ({
   return (
     <>
       <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 3,
-          height: '85vh',
-          display: 'flex',
-          flexDirection: 'column',
-        },
-      }}
-    >
-      <DialogTitle
-        sx={{
-          m: 0,
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
+        open={open}
+        onClose={onClose}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            height: '85vh',
+            display: 'flex',
+            flexDirection: 'column',
+          },
         }}
       >
-        <Box display="flex" alignItems="center" gap={1.5}>
-          <MenuBookRoundedIcon color="primary" fontSize="large" />
-          <Box>
-            <Typography variant="h6" fontWeight={800}>
-              {t('guessart.catalogueEditorTitle', 'Wortkatalog-Editor')}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {t('guessart.catalogueEditorSubtitle', 'Kategorien & Wörter lokal anpassen oder per GitHub PR veröffentlichen')}
-            </Typography>
-          </Box>
-        </Box>
-
-        <Box display="flex" alignItems="center" gap={1}>
-          <Tooltip title={t('guessart.resetToDefaults', 'Auf Standard zurücksetzen')}>
-            <Button
-              size="small"
-              color="error"
-              variant="text"
-              startIcon={<RestartAltRoundedIcon />}
-              onClick={handleReset}
-              disabled={loading}
-              sx={{ textTransform: 'none', fontWeight: 600, minWidth: { xs: 'auto', sm: 'auto' } }}
-            >
-              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                {t('guessart.resetToDefaults', 'Auf Standard zurücksetzen')}
-              </Box>
-            </Button>
-          </Tooltip>
-
-          <IconButton onClick={onClose} size="small" aria-label={t('common.close', 'Schließen')}>
-            <CloseRoundedIcon />
-          </IconButton>
-        </Box>
-      </DialogTitle>
-
-      <Box sx={{ borderBottom: '1px solid', borderColor: 'divider', px: { xs: 0.5, sm: 2 } }}>
-        <Tabs
-          value={tabIndex}
-          onChange={(_, val) => setTabIndex(val)}
-          indicatorColor="primary"
-          textColor="primary"
-          variant="scrollable"
-          scrollButtons="auto"
-          allowScrollButtonsMobile
+        <DialogTitle
           sx={{
-            minHeight: 44,
-            '& .MuiTab-root': {
-              minWidth: { xs: 48, sm: 120 },
-              px: { xs: 1, sm: 2 },
-              py: 0.8,
-              minHeight: 44,
-              textTransform: 'none',
-              fontWeight: 700,
-              fontSize: { xs: '0.78rem', sm: '0.875rem' },
-            },
+            m: 0,
+            p: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
           }}
         >
-          <Tab
-            icon={<CategoryRoundedIcon fontSize="small" />}
-            iconPosition="start"
-            label={
-              <Box component="span" display="flex" alignItems="center" gap={0.5}>
-                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                  {t('guessart.catalogueCategories', 'Kategorien')}
-                </Box>
-                <Box component="span">({categories.length})</Box>
-              </Box>
-            }
-          />
-          <Tab
-            icon={<AbcRoundedIcon fontSize="small" />}
-            iconPosition="start"
-            label={
-              <Box component="span" display="flex" alignItems="center" gap={0.5}>
-                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                  {t('guessart.catalogueWords', 'Wörter')}
-                </Box>
-                <Box component="span">({words.length})</Box>
-              </Box>
-            }
-          />
-          <Tab
-            icon={<GitHubIcon fontSize="small" />}
-            iconPosition="start"
-            label={
-              <Box component="span">
-                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                  {t('guessart.publishPrTab', 'Veröffentlichen (Git PR)')}
-                </Box>
-                <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-                  PR
-                </Box>
-              </Box>
-            }
-          />
-        </Tabs>
-      </Box>
-
-      <DialogContent sx={{ p: { xs: 1.5, sm: 3 }, flexGrow: 1, overflowY: 'auto' }}>
-        {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
-            <CircularProgress />
+          <Box display="flex" alignItems="center" gap={1.5}>
+            <MenuBookRoundedIcon color="primary" fontSize="large" />
+            <Box>
+              <Typography variant="h6" fontWeight={800}>
+                {t('guessart.catalogueEditorTitle', 'Wortkatalog-Editor')}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {t(
+                  'guessart.catalogueEditorSubtitle',
+                  'Kategorien & Wörter lokal anpassen oder per GitHub PR veröffentlichen',
+                )}
+              </Typography>
+            </Box>
           </Box>
-        ) : tabIndex === 0 ? (
-          <CategoryEditorTab
-            categories={categories}
-            words={words}
-            onChange={handleCategoriesChange}
-          />
-        ) : tabIndex === 1 ? (
-          <WordEditorTab
-            categories={categories}
-            words={words}
-            onChange={handleWordsChange}
-          />
-        ) : (
-          <PublishCatalogueTab
-            categories={categories}
-            words={words}
-            onClose={onClose}
-          />
-        )}
-      </DialogContent>
-    </Dialog>
 
-    <ConfirmDialog
-      open={confirmResetOpen}
-      title={t('guessart.resetToDefaults', 'Auf Standard zurücksetzen')}
-      message={t(
-        'guessart.confirmResetCatalogue',
-        'Wirklich auf den Standard-Katalog zurücksetzen? Eigene Änderungen gehen verloren.',
-      )}
-      confirmColor="error"
-      onConfirm={handleConfirmReset}
-      onCancel={() => setConfirmResetOpen(false)}
-    />
-  </>
-);
+          <Box display="flex" alignItems="center" gap={1}>
+            <Tooltip title={t('guessart.resetToDefaults', 'Auf Standard zurücksetzen')}>
+              <Button
+                size="small"
+                color="error"
+                variant="text"
+                startIcon={<RestartAltRoundedIcon />}
+                onClick={handleReset}
+                disabled={loading}
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  minWidth: { xs: 'auto', sm: 'auto' },
+                }}
+              >
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                  {t('guessart.resetToDefaults', 'Auf Standard zurücksetzen')}
+                </Box>
+              </Button>
+            </Tooltip>
+
+            <IconButton onClick={onClose} size="small" aria-label={t('common.close', 'Schließen')}>
+              <CloseRoundedIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+
+        <Box sx={{ borderBottom: '1px solid', borderColor: 'divider', px: { xs: 0.5, sm: 2 } }}>
+          <Tabs
+            value={tabIndex}
+            onChange={(_, val) => setTabIndex(val)}
+            indicatorColor="primary"
+            textColor="primary"
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+            sx={{
+              minHeight: 44,
+              '& .MuiTab-root': {
+                minWidth: { xs: 48, sm: 120 },
+                px: { xs: 1, sm: 2 },
+                py: 0.8,
+                minHeight: 44,
+                textTransform: 'none',
+                fontWeight: 700,
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              },
+            }}
+          >
+            <Tab
+              icon={<CategoryRoundedIcon fontSize="small" />}
+              iconPosition="start"
+              label={
+                <Box component="span" display="flex" alignItems="center" gap={0.5}>
+                  <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                    {t('guessart.catalogueCategories', 'Kategorien')}
+                  </Box>
+                  <Box component="span">({categories.length})</Box>
+                </Box>
+              }
+            />
+            <Tab
+              icon={<AbcRoundedIcon fontSize="small" />}
+              iconPosition="start"
+              label={
+                <Box component="span" display="flex" alignItems="center" gap={0.5}>
+                  <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                    {t('guessart.catalogueWords', 'Wörter')}
+                  </Box>
+                  <Box component="span">({words.length})</Box>
+                </Box>
+              }
+            />
+            <Tab
+              icon={<GitHubIcon fontSize="small" />}
+              iconPosition="start"
+              label={
+                <Box component="span">
+                  <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                    {t('guessart.publishPrTab', 'Veröffentlichen (Git PR)')}
+                  </Box>
+                  <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+                    PR
+                  </Box>
+                </Box>
+              }
+            />
+          </Tabs>
+        </Box>
+
+        <DialogContent sx={{ p: { xs: 1.5, sm: 3 }, flexGrow: 1, overflowY: 'auto' }}>
+          {loading ? (
+            <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+              <CircularProgress />
+            </Box>
+          ) : tabIndex === 0 ? (
+            <CategoryEditorTab
+              categories={categories}
+              words={words}
+              onChange={handleCategoriesChange}
+            />
+          ) : tabIndex === 1 ? (
+            <WordEditorTab categories={categories} words={words} onChange={handleWordsChange} />
+          ) : (
+            <PublishCatalogueTab categories={categories} words={words} onClose={onClose} />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={confirmResetOpen}
+        title={t('guessart.resetToDefaults', 'Auf Standard zurücksetzen')}
+        message={t(
+          'guessart.confirmResetCatalogue',
+          'Wirklich auf den Standard-Katalog zurücksetzen? Eigene Änderungen gehen verloren.',
+        )}
+        confirmColor="error"
+        onConfirm={handleConfirmReset}
+        onCancel={() => setConfirmResetOpen(false)}
+      />
+    </>
+  );
 };

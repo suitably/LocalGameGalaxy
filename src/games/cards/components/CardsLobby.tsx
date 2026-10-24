@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import type { CardGameDefinition } from '../logic/types';
 import { getAllCardGames } from '../logic/gamesCatalogue';
 import { PlayerManagerCard, useLobbyPlayers } from '../../../modules/player-management';
+import { transitionOf } from '../../../lib/motion';
 
 interface CardsLobbyProps {
   onStartGame: (game: CardGameDefinition, players: string[]) => void;
@@ -60,7 +61,7 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
                     : theme.palette.background.paper,
                 border: '2px solid',
                 borderColor: isSelected ? 'piece.green' : 'divider',
-                transition: 'all 0.2s ease',
+                transition: transitionOf(['background-color', 'border-color']),
               }}
             >
               <CardActionArea onClick={() => setSelectedGameId(g.id)} sx={{ p: 2, height: '100%' }}>

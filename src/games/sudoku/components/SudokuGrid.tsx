@@ -137,7 +137,7 @@ export const SudokuGrid: React.FC<SudokuGridProps> = ({
                     <Typography
                       key={noteNum}
                       sx={{
-                        fontSize: { xs: '0.55rem', sm: '0.65rem' },
+                        fontSize: { xs: '0.75rem', sm: '0.75rem' },
                         fontWeight: 700,
                         textAlign: 'center',
                         color: isSelected ? 'secondary.contrastText' : 'text.secondary',

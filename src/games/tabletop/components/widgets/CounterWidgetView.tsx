@@ -44,7 +44,7 @@ export const CounterWidgetView: React.FC<CounterWidgetViewProps> = ({
           {widget.value}
         </Typography>
         {widget.label && (
-          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
             {widget.label}
           </Typography>
         )}

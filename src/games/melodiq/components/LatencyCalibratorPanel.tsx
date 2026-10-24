@@ -50,7 +50,7 @@ export const LatencyCalibratorPanel: React.FC<LatencyCalibratorPanelProps> = ({
             }}
           />
         </Box>
-        <Typography variant="caption" sx={{ fontSize: '0.6rem', opacity: 0.7 }}>
+        <Typography variant="caption" sx={{ fontSize: '0.75rem', opacity: 0.7 }}>
           {t('melodiq.calibrator.mic_level', 'Mic Input Level')}
         </Typography>
       </Box>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Paper, type SxProps, type Theme } from '@mui/material';
 import { pieceNeutrals, piecePalette } from '../../themeTokens';
+import { transitionOf } from '../../lib/motion';
 
 export interface DieColorConfig {
   bg: string;
@@ -55,14 +56,14 @@ export const Die3D: React.FC<Die3DProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: { xs: '1.25rem', sm: '1.6rem' },
-        fontWeight: '900',
+        fontWeight: 800,
         // tactile edge (DESIGN.md §5); selection uses the accent ring
         boxShadow: (theme) =>
           isSelected
             ? `0 0 0 3px ${theme.palette.secondary.main}, 0 4px 0 rgba(0, 0, 0, 0.35)`
             : '0 4px 0 rgba(0, 0, 0, 0.35)',
         transform: isRolling ? 'rotate(-6deg) scale(1.08)' : isSelected ? 'scale(1.1)' : 'none',
-        transition: 'all 0.15s ease',
+        transition: transitionOf(['transform', 'box-shadow', 'background-color', 'border-color']),
         cursor: isClickable ? 'pointer' : 'default',
         userSelect: 'none',
         WebkitTouchCallout: 'none',

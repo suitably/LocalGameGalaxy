@@ -17,6 +17,7 @@ import {
   Switch,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/DeleteRounded';
+import { transitionOf } from '../../lib/motion';
 
 type ItemColor = 'success' | 'primary' | 'secondary' | 'info';
 
@@ -109,7 +110,7 @@ export const ServerUrlList: React.FC<ServerUrlListProps> = ({
               border: '1px solid',
               borderColor: 'divider',
               opacity: item.enabled ? 1 : 0.6,
-              transition: 'all 0.2s ease',
+              transition: transitionOf(['background-color', 'opacity']),
             }}
           >
             <Tooltip title={item.enabled ? labels.disable : labels.enable}>

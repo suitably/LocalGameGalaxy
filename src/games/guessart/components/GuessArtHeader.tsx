@@ -147,7 +147,7 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
                 variant="outlined"
                 sx={{
                   fontWeight: 700,
-                  fontSize: '0.72rem',
+                  fontSize: '0.75rem',
                   height: { xs: 24, sm: 26 },
                   borderColor: 'warning.main',
                   bgcolor: (theme) => alpha(theme.palette.warning.main, 0.08),

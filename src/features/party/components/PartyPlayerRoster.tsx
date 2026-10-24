@@ -9,6 +9,7 @@ import PersonRemoveRoundedIcon from '@mui/icons-material/PersonRemoveRounded';
 import { useTranslation } from 'react-i18next';
 import { universalPartyManager } from '../logic/universalPartyManager';
 import type { PartyLobbyController } from '../hooks/usePartyLobbyController';
+import { transitionOf } from '../../../lib/motion';
 
 export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ lobby }) => {
   const { t } = useTranslation();
@@ -89,7 +90,7 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
                       : theme.palette.background.default,
                   boxShadow: 'none',
                   cursor: isMe ? 'pointer' : 'default',
-                  transition: 'all 0.2s ease',
+                  transition: transitionOf(['background-color', 'border-color', 'box-shadow']),
                   '&:hover': isMe
                     ? {
                         bgcolor: 'primary.main' + '28',

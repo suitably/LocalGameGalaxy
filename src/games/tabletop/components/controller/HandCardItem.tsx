@@ -102,7 +102,7 @@ export const HandCardItem: React.FC<HandCardItemProps> = ({
           sx={{
             position: 'absolute',
             top: -24,
-            fontSize: '0.7rem',
+            fontSize: '0.75rem',
             fontWeight: 700,
             color: 'primary.main',
             bgcolor: 'background.paper',

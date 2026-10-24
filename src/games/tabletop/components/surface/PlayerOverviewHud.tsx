@@ -120,7 +120,7 @@ export const PlayerOverviewHud: React.FC<PlayerOverviewHudProps> = ({
                           label={t('games.tabletop.you', 'Du')}
                           sx={{
                             height: 18,
-                            fontSize: '0.65rem',
+                            fontSize: '0.75rem',
                             bgcolor: 'primary.main',
                             color: 'text.primary',
                           }}
@@ -133,7 +133,7 @@ export const PlayerOverviewHud: React.FC<PlayerOverviewHudProps> = ({
                         icon={<StarIcon sx={{ fontSize: '14px !important' }} />}
                         label={t('games.tabletop.activeTurn', 'Am Zug')}
                         color="warning"
-                        sx={{ height: 20, fontSize: '0.65rem' }}
+                        sx={{ height: 20, fontSize: '0.75rem' }}
                       />
                     )}
                   </Box>
@@ -181,7 +181,7 @@ export const PlayerOverviewHud: React.FC<PlayerOverviewHudProps> = ({
                             sx={{
                               bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
                               color: 'text.primary',
-                              fontSize: '0.72rem',
+                              fontSize: '0.75rem',
                             }}
                           />
                         ))}

@@ -128,7 +128,7 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
         <Typography
           sx={{
             fontSize: '1.2rem',
-            fontWeight: 900,
+            fontWeight: 800,
             lineHeight: 1,
             color: widget.textColor || '#3e2723',
           }}
@@ -139,7 +139,7 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
           <Typography
             sx={{
               fontSize: '1.1rem',
-              fontWeight: 900,
+              fontWeight: 800,
               lineHeight: 0.7,
               letterSpacing: 1,
               color: widget.textColor || '#3e2723',

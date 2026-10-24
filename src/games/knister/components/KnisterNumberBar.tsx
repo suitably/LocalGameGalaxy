@@ -3,6 +3,7 @@ import { Box, Paper, Typography, ButtonBase, Tooltip, IconButton, alpha } from '
 import CloseIcon from '@mui/icons-material/CloseRounded';
 import TouchAppIcon from '@mui/icons-material/TouchAppRounded';
 import { useTranslation } from 'react-i18next';
+import { transitionOf } from '../../../lib/motion';
 
 const KNISTER_NUMBERS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
@@ -58,7 +59,7 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
               textTransform: 'uppercase',
               letterSpacing: 0.5,
               color: selectedNumber !== null ? 'warning.main' : 'text.secondary',
-              fontSize: { xs: '0.7rem', sm: '0.75rem' },
+              fontSize: { xs: '0.75rem', sm: '0.75rem' },
             }}
           >
             {selectedNumber !== null
@@ -109,7 +110,7 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontWeight: 900,
+                fontWeight: 800,
                 fontSize: { xs: '0.9rem', sm: '1.15rem' },
                 bgcolor: (theme) =>
                   isSelected
@@ -127,7 +128,13 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
                   isSelected || isSeven ? theme.palette.warning.main : theme.palette.divider,
                 boxShadow: 'none',
                 transform: isSelected ? 'scale(1.08)' : 'none',
-                transition: 'all 0.15s ease',
+                transition: transitionOf([
+                  'background-color',
+                  'color',
+                  'border-color',
+                  'transform',
+                  'box-shadow',
+                ]),
                 cursor: disabled ? 'default' : 'pointer',
                 '&:hover': !disabled
                   ? {

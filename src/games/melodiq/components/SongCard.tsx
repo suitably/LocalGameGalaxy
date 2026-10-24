@@ -30,7 +30,7 @@ interface SongCardProps {
   activeJobType?: string;
 }
 
-const tagSx = { px: 0.5, borderRadius: 2, fontSize: '0.65rem' } as const;
+const tagSx = { px: 0.5, borderRadius: 2, fontSize: '0.75rem' } as const;
 
 /**
  * SongCard displays lightweight SongMeta for fast rendering.
@@ -132,7 +132,7 @@ export const SongCard: React.FC<SongCardProps> = ({
           <Typography
             variant="caption"
             color="text.disabled"
-            sx={{ fontSize: '0.7rem', fontVariantNumeric: 'tabular-nums' }}
+            sx={{ fontSize: '0.75rem', fontVariantNumeric: 'tabular-nums' }}
           >
             {song.duration ? formatDuration(song.duration) : '0:00'}
           </Typography>

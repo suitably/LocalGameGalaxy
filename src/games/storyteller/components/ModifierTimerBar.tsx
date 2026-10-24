@@ -3,6 +3,7 @@ import { alpha, Box, LinearProgress, Stack, Typography } from '@mui/material';
 import TimerRoundedIcon from '@mui/icons-material/TimerRounded';
 import HourglassBottomRoundedIcon from '@mui/icons-material/HourglassBottomRounded';
 import { useTranslation } from 'react-i18next';
+import { transitionOf } from '../../../lib/motion';
 
 interface ModifierTimerBarProps {
   timeLeft: number;
@@ -30,7 +31,7 @@ export const ModifierTimerBar: React.FC<ModifierTimerBarProps> = ({
         bgcolor: (theme) => alpha(theme.palette[role].main, 0.12),
         border: '1px solid',
         borderColor: (theme) => alpha(theme.palette[role].main, 0.4),
-        transition: 'all 0.3s ease',
+        transition: transitionOf(['background-color', 'border-color'], 'standard'),
       }}
     >
       <Box

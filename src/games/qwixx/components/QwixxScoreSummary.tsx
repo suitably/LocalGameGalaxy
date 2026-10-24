@@ -163,7 +163,7 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
               variant="h5"
               sx={{
                 color: 'primary.contrastText',
-                fontWeight: 900,
+                fontWeight: 800,
                 fontVariantNumeric: 'tabular-nums',
               }}
             >

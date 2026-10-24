@@ -2,6 +2,7 @@
 
 ### Added
 
+- **Motion tokens and reduced motion** (#507): theme transitions use 150 ms (hover/press) and 250 ms (enter/exit) with the DESIGN.md easing, `transition: all` is replaced by explicit properties (`transitionOf` in `src/lib/motion.ts`), `prefers-reduced-motion` shortens all CSS animations, and dice rolls and the Melodiq Notes beat pulse follow it via `usePrefersReducedMotion`.
 - **New look (Nexumia brand)**: couch logo and word mark, new app icons for browser, PWA and Android (the PWA icons were one JPEG under four PNG names), warm dark theme with sun-yellow primary, self-hosted fonts Figtree and Bricolage Grotesque (offline). Design rules in `DESIGN.md`. The hub groups games into areas (Party, Musik, Karten, Rätsel), player colours are the same eight piece colours in every game, and most screens use the theme colours instead of their own (remaining screens: #490).
 - **Companion server**: song folders can hold sheet music (`.mxl`, `.musicxml`, `.mid`) next to the UltraStar files; new endpoints to upload a score, store its bar marks (`<score>.marks.json`) and delete it. The song list reports the scores per song.
 - **Music score module** (`src/modules/music-score`): MusicXML (.musicxml/.mxl) and MIDI import into one shared song timeline (repeats and 1st/2nd endings written out, tempo changes, transposition, drums, lyrics, ties); string/fret assignment for guitar, bass and ukulele; automatic alignment of a recording to the score as one mark per bar (pitch-profile DTW, then one fit of the score's attacks to onsets in three frequency bands over the whole song — kick and bass low, tones mid, snare and cymbals high); export of the bar marks as per-bar tempos into the MusicXML so the score plays in time with the recording.
@@ -26,6 +27,8 @@
 - **Sync & Resilience Tests**: Extended `MqttMailboxService` and `MultiChannelSyncCoordinator` test suites with coverage for listener error isolation, LZString payload compression, and dynamic channel re-subscription edge cases (Fixes #386).
 
 ### Changed
+
+- **Typography rules (#508)**: new `display` typography variant (3.5rem, weight 800) and shared `scoreText` helper (display face + tabular numbers) used for Darts, Sudoku, Imposter, tabletop and Melodiq timers/scores; text below 0.75rem raised to the caption size and weight 900 reduced to 800.
 
 - **Radius scale and flat surfaces**: border radii use the DESIGN.md steps only (8/12/20 px, circle, pill) and cards and panels no longer carry elevation shadows; dialogs, menus and other overlays keep the theme shadow (#506).
 - **Flat surfaces**: removed the remaining gradients, glow shadows and glass blur from the install banner, feedback dialog, Melodiq scoring and lyrics dots, Knister number picker, Sudoku pause and Tabletop selection/seat/HUD highlights (#505). The lyrics bar over video keeps its blur for legibility.
