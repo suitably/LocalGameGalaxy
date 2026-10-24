@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Button, Typography, Paper } from '@mui/material';
-import UndoIcon from '@mui/icons-material/Undo';
-import RestoreIcon from '@mui/icons-material/Restore';
+import UndoIcon from '@mui/icons-material/UndoRounded';
+import RestoreIcon from '@mui/icons-material/RestoreRounded';
 import { useTranslation } from 'react-i18next';
 import { settingsCardSx } from '../settingsStyles';
 

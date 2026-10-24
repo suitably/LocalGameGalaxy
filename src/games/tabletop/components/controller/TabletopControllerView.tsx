@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Paper, Typography, ToggleButtonGroup, ToggleButton, Chip } from '@mui/material';
-import PanToolIcon from '@mui/icons-material/PanTool';
-import MapIcon from '@mui/icons-material/Map';
+import PanToolIcon from '@mui/icons-material/PanToolRounded';
+import MapIcon from '@mui/icons-material/MapRounded';
 import { useTranslation } from 'react-i18next';
 import type { TabletopGameState, TabletopAction } from '../../logic/tabletopReducer';
 import { useDynamicControllerState } from '../../hooks/useDynamicControllerState';

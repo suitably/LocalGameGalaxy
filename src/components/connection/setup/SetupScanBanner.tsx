@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Button, CircularProgress, Paper, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
+import RefreshIcon from '@mui/icons-material/RefreshRounded';
 import { useTranslation } from 'react-i18next';
 import type { ScanStatus } from './useServerAutoDetect';
 

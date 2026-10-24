@@ -1,7 +1,7 @@
 import React from 'react';
 import { alpha, Box, Typography, Paper, IconButton, Tooltip } from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
+import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
+import CheckIcon from '@mui/icons-material/CheckRounded';
 import { useTranslation } from 'react-i18next';
 
 interface DockerCommandCardProps {

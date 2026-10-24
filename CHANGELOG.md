@@ -27,6 +27,7 @@
 
 ### Changed
 
+- **Icons**: all `@mui/icons-material` imports use the Rounded variant (DESIGN.md §7); `*Outlined` icons map to their Rounded counterpart. Exceptions: the `GitHub` brand icon (no Rounded variant) and seven over-budget components that Prettier would push over their line budget (ServerDirectoryManager, QueueParticipantDialog, SongActionDialogs, QwixxSheetSelector, Werewolf GameSetup/NightPhase/RoleEditDialog) (#503).
 - **Drawing viewer**: the stroke replay logic is a tested pure module and the viewer file is half its former size (#498).
 - **Settings navigation**: the header tabs, drop-down, compact menu and sub-pills are generated from one table; theme colours replace the fixed blue; English defaults for all labels, missing Melodiq tab labels added to both languages (#498).
 - **App header**: burger menu and home/back navigation moved into their own component and hook; the bar uses theme colours (#498).

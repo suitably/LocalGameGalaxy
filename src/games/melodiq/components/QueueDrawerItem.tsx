@@ -9,12 +9,12 @@ import {
   Avatar,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import DeleteIcon from '@mui/icons-material/Delete';
-import DragHandleIcon from '@mui/icons-material/DragHandle';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import MicIcon from '@mui/icons-material/Mic';
-import MicOffIcon from '@mui/icons-material/MicOff';
-import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/DeleteRounded';
+import DragHandleIcon from '@mui/icons-material/DragHandleRounded';
+import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
+import MicIcon from '@mui/icons-material/MicRounded';
+import MicOffIcon from '@mui/icons-material/MicOffRounded';
+import EditIcon from '@mui/icons-material/EditRounded';
 import type { QueueItem } from '../hooks/useQueue';
 import type { MelodiqParticipant } from '../types';
 import { QueueParticipantAvatars } from './QueueParticipantAvatars';

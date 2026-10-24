@@ -9,11 +9,11 @@ import {
   FormControlLabel,
   Tooltip,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CloudSyncIcon from '@mui/icons-material/CloudSync';
-import CloudOffIcon from '@mui/icons-material/CloudOff';
-import AddIcon from '@mui/icons-material/Add';
-import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
+import ArrowBackIcon from '@mui/icons-material/ArrowBackRounded';
+import CloudSyncIcon from '@mui/icons-material/CloudSyncRounded';
+import CloudOffIcon from '@mui/icons-material/CloudOffRounded';
+import AddIcon from '@mui/icons-material/AddRounded';
+import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlayRounded';
 import { useTranslation } from 'react-i18next';
 import { usePlaylists } from '../hooks/usePlaylists';
 import { type Playlist } from '../db';

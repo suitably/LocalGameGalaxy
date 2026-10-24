@@ -12,13 +12,13 @@ import {
   Avatar,
   ListItemSecondaryAction,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import ArrowBackIcon from '@mui/icons-material/ArrowBackRounded';
+import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
+import PlaylistAddIcon from '@mui/icons-material/PlaylistAddRounded';
+import DeleteIcon from '@mui/icons-material/DeleteRounded';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownwardRounded';
+import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
 
 import { useTranslation } from 'react-i18next';
 import { usePlaylists } from '../hooks/usePlaylists';

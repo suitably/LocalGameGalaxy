@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, IconButton, Menu, MenuItem as MuiMenuItem } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
+import MenuIcon from '@mui/icons-material/MenuRounded';
 import type { MenuItem } from '../../context/HeaderLayoutContext';
 
 interface HeaderOverflowMenuProps {

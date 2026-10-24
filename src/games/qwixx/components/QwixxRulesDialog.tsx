@@ -13,11 +13,11 @@ import {
   ToggleButtonGroup,
   ToggleButton,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import InfoIcon from '@mui/icons-material/Info';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CloseIcon from '@mui/icons-material/CloseRounded';
+import InfoIcon from '@mui/icons-material/InfoRounded';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEventsRounded';
+import LightbulbIcon from '@mui/icons-material/LightbulbRounded';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlineRounded';
 import { useTranslation } from 'react-i18next';
 import type { QwixxSheetType } from '../logic/types';
 import { getSheetDefinition } from '../logic/sheetDefinitions';

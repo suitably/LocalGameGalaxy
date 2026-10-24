@@ -1,18 +1,18 @@
 import React, { lazy, type ComponentType } from 'react';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-import PersonSearchIcon from '@mui/icons-material/PersonSearch';
-import GraphicEqIcon from '@mui/icons-material/GraphicEq';
-import CasinoIcon from '@mui/icons-material/Casino';
-import PaletteIcon from '@mui/icons-material/Palette';
-import CelebrationIcon from '@mui/icons-material/Celebration';
-import GridViewIcon from '@mui/icons-material/GridView';
-import AbcIcon from '@mui/icons-material/Abc';
-import Grid4x4Icon from '@mui/icons-material/Grid4x4';
-import StyleIcon from '@mui/icons-material/Style';
-import TableBarIcon from '@mui/icons-material/TableBar';
-import AdsClickIcon from '@mui/icons-material/AdsClick';
-import AutoStoriesIcon from '@mui/icons-material/AutoStories';
-import PianoIcon from '@mui/icons-material/Piano';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsportsRounded';
+import PersonSearchIcon from '@mui/icons-material/PersonSearchRounded';
+import GraphicEqIcon from '@mui/icons-material/GraphicEqRounded';
+import CasinoIcon from '@mui/icons-material/CasinoRounded';
+import PaletteIcon from '@mui/icons-material/PaletteRounded';
+import CelebrationIcon from '@mui/icons-material/CelebrationRounded';
+import GridViewIcon from '@mui/icons-material/GridViewRounded';
+import AbcIcon from '@mui/icons-material/AbcRounded';
+import Grid4x4Icon from '@mui/icons-material/Grid4x4Rounded';
+import StyleIcon from '@mui/icons-material/StyleRounded';
+import TableBarIcon from '@mui/icons-material/TableBarRounded';
+import AdsClickIcon from '@mui/icons-material/AdsClickRounded';
+import AutoStoriesIcon from '@mui/icons-material/AutoStoriesRounded';
+import PianoIcon from '@mui/icons-material/PianoRounded';
 import { SongsProvider } from '../games/melodiq';
 
 export type GameCategory =

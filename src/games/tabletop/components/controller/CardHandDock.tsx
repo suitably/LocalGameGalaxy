@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, Button } from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
 import { useTranslation } from 'react-i18next';
 import type { CardWidget } from '../../logic/types';
 import { HandCardItem } from './HandCardItem';
@@ -57,7 +57,10 @@ export const CardHandDock: React.FC<CardHandDockProps> = ({
       {cards.length === 0 ? (
         <Box display="flex" justifyContent="center" alignItems="center" height={120}>
           <Typography variant="body2" color="text.secondary">
-            {t('games.tabletop.no_cards_in_hand', 'Keine Karten auf der Hand. Ziehe eine vom Stapel!')}
+            {t(
+              'games.tabletop.no_cards_in_hand',
+              'Keine Karten auf der Hand. Ziehe eine vom Stapel!',
+            )}
           </Typography>
         </Box>
       ) : (

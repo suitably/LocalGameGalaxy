@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { alpha, Box, Button, Typography, Paper } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlineRounded';
 
 interface HandoverViewProps {
   playerName: string;

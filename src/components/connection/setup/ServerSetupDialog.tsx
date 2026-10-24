@@ -1,8 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Dialog, DialogContent, DialogTitle, IconButton, Typography } from '@mui/material';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import CloseIcon from '@mui/icons-material/Close';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHighRounded';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import { ServerSetupWizard } from '../ServerSetupWizard';
 
 interface ServerSetupDialogProps {

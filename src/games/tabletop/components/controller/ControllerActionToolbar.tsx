@@ -1,9 +1,9 @@
 import React from 'react';
 import { Box, Button, Typography, IconButton, Paper } from '@mui/material';
-import CasinoIcon from '@mui/icons-material/Casino';
-import StyleIcon from '@mui/icons-material/Style';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
+import CasinoIcon from '@mui/icons-material/CasinoRounded';
+import StyleIcon from '@mui/icons-material/StyleRounded';
+import AddIcon from '@mui/icons-material/AddRounded';
+import RemoveIcon from '@mui/icons-material/RemoveRounded';
 import { useTranslation } from 'react-i18next';
 import type { DeckWidget, DieWidget, CounterWidget } from '../../logic/types';
 
@@ -27,7 +27,14 @@ export const ControllerActionToolbar: React.FC<ControllerActionToolbarProps> = (
   const { t } = useTranslation();
 
   return (
-    <Box display="flex" flexWrap="wrap" gap={1.5} alignItems="center" justifyContent="center" p={1.5}>
+    <Box
+      display="flex"
+      flexWrap="wrap"
+      gap={1.5}
+      alignItems="center"
+      justifyContent="center"
+      p={1.5}
+    >
       {/* Decks Draw Buttons */}
       {decks.map((deck) => (
         <Button
@@ -75,8 +82,14 @@ export const ControllerActionToolbar: React.FC<ControllerActionToolbarProps> = (
             <RemoveIcon fontSize="small" />
           </IconButton>
           <Box textAlign="center">
-            <Typography variant="body2" fontWeight={800}>{c.value}</Typography>
-            {c.label && <Typography variant="caption" color="text.secondary">{c.label}</Typography>}
+            <Typography variant="body2" fontWeight={800}>
+              {c.value}
+            </Typography>
+            {c.label && (
+              <Typography variant="caption" color="text.secondary">
+                {c.label}
+              </Typography>
+            )}
           </Box>
           <IconButton size="small" onClick={() => onUpdateCounter(c.id, c.step || 1)}>
             <AddIcon fontSize="small" />

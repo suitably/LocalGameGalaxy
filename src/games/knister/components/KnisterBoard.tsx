@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Box, Chip, Tooltip, Typography } from '@mui/material';
-import BoltIcon from '@mui/icons-material/Bolt';
+import BoltIcon from '@mui/icons-material/BoltRounded';
 import { useTranslation } from 'react-i18next';
 import { calculateBoardScores } from '../logic/knisterScoring';
 import type { KnisterGrid } from '../logic/types';

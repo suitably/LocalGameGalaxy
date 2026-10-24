@@ -10,7 +10,7 @@ import {
   IconButton,
   alpha,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import { useTranslation } from 'react-i18next';
 
 interface TargetCell {

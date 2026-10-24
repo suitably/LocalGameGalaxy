@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { alpha, Box, Stack, Typography, Chip } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
-import LibraryMusicIcon from '@mui/icons-material/LibraryMusic';
-import GraphicEqIcon from '@mui/icons-material/GraphicEq';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import SettingsIcon from '@mui/icons-material/SettingsRounded';
+import LibraryMusicIcon from '@mui/icons-material/LibraryMusicRounded';
+import GraphicEqIcon from '@mui/icons-material/GraphicEqRounded';
+import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle, useHeaderLayout } from '../../../context/LayoutContext';
 

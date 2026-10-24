@@ -9,10 +9,10 @@ import {
   Button,
   Typography,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import CloseIcon from '@mui/icons-material/Close';
-import PublicIcon from '@mui/icons-material/Public';
-import FilterListIcon from '@mui/icons-material/FilterList';
+import SearchIcon from '@mui/icons-material/SearchRounded';
+import CloseIcon from '@mui/icons-material/CloseRounded';
+import PublicIcon from '@mui/icons-material/PublicRounded';
+import FilterListIcon from '@mui/icons-material/FilterListRounded';
 import { useTranslation } from 'react-i18next';
 import { SortMenuButton, MultiFilterSelect } from './MelodiqSearchControls';
 import { type ActiveFilters, type SortOption } from '../hooks/useSearchFilters';

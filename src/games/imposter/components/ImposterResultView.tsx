@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Button, Paper, Typography } from '@mui/material';
-import ReplayIcon from '@mui/icons-material/Replay';
-import HomeIcon from '@mui/icons-material/Home';
+import ReplayIcon from '@mui/icons-material/ReplayRounded';
+import HomeIcon from '@mui/icons-material/HomeRounded';
 import { useTranslation } from 'react-i18next';
 import type { GameState } from '../logic/types';
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { alpha, Box, Typography, Grid, Snackbar, Alert } from '@mui/material';
-import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
+import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlayRounded';
 import { useTranslation } from 'react-i18next';
 import { useQueue } from '../hooks/useQueue';
 import { useSongs } from '../hooks/useSongs';
@@ -13,7 +13,7 @@ import { QueueList } from './QueueList';
 import { LocalSongsView } from './LocalSongsView';
 import { OnlineSongsView } from './OnlineSongsView';
 import { HistoryDrawer } from './HistoryDrawer';
-import HistoryIcon from '@mui/icons-material/History';
+import HistoryIcon from '@mui/icons-material/HistoryRounded';
 import { IconButton, Tooltip } from '@mui/material';
 
 export const MelodiqQueue: React.FC = () => {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { alpha, Box, Typography, Grid, Paper, Avatar } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import PersonIcon from '@mui/icons-material/Person';
+import PersonIcon from '@mui/icons-material/PersonRounded';
 
 interface VotingViewProps {
   players: { id: string; name: string; isKicked?: boolean }[];

@@ -3,9 +3,9 @@
  */
 import React, { useState } from 'react';
 import { alpha, Box, Typography, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOffRounded';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineRounded';
 import type { HiddenZone } from '../../logic/types';
 import { useTranslation } from 'react-i18next';
 

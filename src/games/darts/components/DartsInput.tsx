@@ -2,7 +2,7 @@ import { Box, Button, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDartsGame, type ThrowMultiplier, type ThrowValue } from '../useDartsGame';
-import BackspaceIcon from '@mui/icons-material/Backspace';
+import BackspaceIcon from '@mui/icons-material/BackspaceRounded';
 
 type DartsGameState = ReturnType<typeof useDartsGame>;
 

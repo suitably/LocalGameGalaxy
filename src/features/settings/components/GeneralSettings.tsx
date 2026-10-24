@@ -12,9 +12,9 @@ import {
   Alert,
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
-import FeedbackIcon from '@mui/icons-material/Feedback';
-import LanguageIcon from '@mui/icons-material/Language';
+import SettingsIcon from '@mui/icons-material/SettingsRounded';
+import FeedbackIcon from '@mui/icons-material/FeedbackRounded';
+import LanguageIcon from '@mui/icons-material/LanguageRounded';
 import VpnKeyRoundedIcon from '@mui/icons-material/VpnKeyRounded';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';

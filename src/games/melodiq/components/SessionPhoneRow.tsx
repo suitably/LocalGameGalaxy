@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Typography, MenuItem, Select, IconButton, Avatar } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import CloseIcon from '@mui/icons-material/Close';
-import SmartphoneIcon from '@mui/icons-material/Smartphone';
+import CloseIcon from '@mui/icons-material/CloseRounded';
+import SmartphoneIcon from '@mui/icons-material/SmartphoneRounded';
 import type { ClientRole } from '../types';
 import type { MicRemotePeer } from '../audio/WebRTCMicManager';
 

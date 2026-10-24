@@ -1,31 +1,39 @@
 import React from 'react';
-import PestControlRodentIcon from '@mui/icons-material/PestControlRodent';
+import PestControlRodentIcon from '@mui/icons-material/PestControlRodentRounded';
 import { useTranslation } from 'react-i18next';
 import { PlayerSelectionView } from '../PlayerSelectionView';
 import type { Player, NightAction, RoleDefinition } from '../../logic/types';
 import { isWerewolf } from '../../logic/utils';
 
 interface RoleViewProps {
-    players: Player[];
-    customRoles?: RoleDefinition[];
-    onAction: (action: NightAction) => void;
-    onSkip: () => void;
-    instruction?: string;
+  players: Player[];
+  customRoles?: RoleDefinition[];
+  onAction: (action: NightAction) => void;
+  onSkip: () => void;
+  instruction?: string;
 }
 
-export const WhiteWerewolfView: React.FC<RoleViewProps> = ({ players, customRoles, onAction, onSkip, instruction }) => {
-    const { t } = useTranslation();
-    return (
-        <PlayerSelectionView
-            title={t('games.werewolf.roles.WHITE_WEREWOLF')}
-            icon={<PestControlRodentIcon sx={{ fontSize: 60, color: 'grey.300' }} />}
-            instruction={instruction || t('games.werewolf.ui.white_werewolf.instruction')}
-            // White Werewolf can kill any other werewolf
-            players={players.filter(p => p.isAlive && isWerewolf(p, customRoles) && p.role !== 'WHITE_WEREWOLF')}
-            onSelect={(id) => onAction({ type: 'KILL', targetId: id })}
-            onSkip={onSkip}
-            skipLabel={t('common.skip')}
-            buttonColor="error"
-        />
-    );
+export const WhiteWerewolfView: React.FC<RoleViewProps> = ({
+  players,
+  customRoles,
+  onAction,
+  onSkip,
+  instruction,
+}) => {
+  const { t } = useTranslation();
+  return (
+    <PlayerSelectionView
+      title={t('games.werewolf.roles.WHITE_WEREWOLF')}
+      icon={<PestControlRodentIcon sx={{ fontSize: 60, color: 'grey.300' }} />}
+      instruction={instruction || t('games.werewolf.ui.white_werewolf.instruction')}
+      // White Werewolf can kill any other werewolf
+      players={players.filter(
+        (p) => p.isAlive && isWerewolf(p, customRoles) && p.role !== 'WHITE_WEREWOLF',
+      )}
+      onSelect={(id) => onAction({ type: 'KILL', targetId: id })}
+      onSkip={onSkip}
+      skipLabel={t('common.skip')}
+      buttonColor="error"
+    />
+  );
 };

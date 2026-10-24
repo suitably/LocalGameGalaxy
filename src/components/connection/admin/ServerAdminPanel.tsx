@@ -10,8 +10,8 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import AddIcon from '@mui/icons-material/AddRounded';
+import RefreshIcon from '@mui/icons-material/RefreshRounded';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { settingsCardSx } from '../../../features/settings/settingsStyles';
 import { useServerApiKeys, type ApiKey } from '../hooks/useServerApiKeys';

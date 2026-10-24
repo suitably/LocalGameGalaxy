@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Box, Button, Typography, Paper } from '@mui/material';
-import QueueMusicIcon from '@mui/icons-material/QueueMusic';
+import QueueMusicIcon from '@mui/icons-material/QueueMusicRounded';
 import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
 import {

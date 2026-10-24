@@ -17,8 +17,8 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useDartsGame } from '../useDartsGame';
 import { useState, useEffect } from 'react';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/DeleteRounded';
+import AddIcon from '@mui/icons-material/AddRounded';
 
 type DartsGameState = ReturnType<typeof useDartsGame>;
 

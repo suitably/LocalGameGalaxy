@@ -10,8 +10,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import RestoreIcon from '@mui/icons-material/Restore';
+import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
+import RestoreIcon from '@mui/icons-material/RestoreRounded';
 import { useTranslation } from 'react-i18next';
 import type { DbCategory } from '../logic/types';
 import { PlayerManagerCard } from '../../../modules/player-management';

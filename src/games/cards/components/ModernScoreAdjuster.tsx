@@ -11,9 +11,9 @@ import {
   Typography,
   alpha,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import AddIcon from '@mui/icons-material/AddRounded';
+import RemoveIcon from '@mui/icons-material/RemoveRounded';
+import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
 import { useTranslation } from 'react-i18next';
 
 interface ModernScoreAdjusterProps {

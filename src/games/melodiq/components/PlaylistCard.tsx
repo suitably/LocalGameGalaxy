@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Typography, Card, CardActionArea, IconButton } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
+import DeleteIcon from '@mui/icons-material/DeleteRounded';
+import EditIcon from '@mui/icons-material/EditRounded';
+import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlayRounded';
 import { useTranslation } from 'react-i18next';
 import { type Playlist } from '../db';
 

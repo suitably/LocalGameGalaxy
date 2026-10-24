@@ -1,7 +1,7 @@
 import React from 'react';
 import { alpha, Box, Typography, Button, Alert } from '@mui/material';
-import FolderOpenIcon from '@mui/icons-material/FolderOpen';
-import LockOpenIcon from '@mui/icons-material/LockOpen';
+import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
+import LockOpenIcon from '@mui/icons-material/LockOpenRounded';
 import { useTranslation } from 'react-i18next';
 import { useSongs } from '../hooks/useSongs';
 

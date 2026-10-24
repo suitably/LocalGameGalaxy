@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { alpha, Box, Typography, Button, Alert, IconButton, Dialog } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import SettingsIcon from '@mui/icons-material/Settings';
+import CloseIcon from '@mui/icons-material/CloseRounded';
+import SettingsIcon from '@mui/icons-material/SettingsRounded';
 import VpnKeyRoundedIcon from '@mui/icons-material/VpnKeyRounded';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';

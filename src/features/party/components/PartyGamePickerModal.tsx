@@ -12,12 +12,12 @@ import {
   Grid,
   CircularProgress,
 } from '@mui/material';
-import DrawIcon from '@mui/icons-material/Draw';
-import PhoneForwardedIcon from '@mui/icons-material/PhoneForwarded';
-import StyleIcon from '@mui/icons-material/Style';
-import CasinoIcon from '@mui/icons-material/Casino';
-import GridOnIcon from '@mui/icons-material/GridOn';
-import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import DrawIcon from '@mui/icons-material/DrawRounded';
+import PhoneForwardedIcon from '@mui/icons-material/PhoneForwardedRounded';
+import StyleIcon from '@mui/icons-material/StyleRounded';
+import CasinoIcon from '@mui/icons-material/CasinoRounded';
+import GridOnIcon from '@mui/icons-material/GridOnRounded';
+import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
 import { useTranslation } from 'react-i18next';
 import { listTabletopGames } from '../../../games/tabletop/logic/tabletopStorage';
 import type { TabletopGameSummary } from '../../../games/tabletop/logic/types';

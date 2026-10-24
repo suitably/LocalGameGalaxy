@@ -3,7 +3,7 @@
  */
 import React from 'react';
 import { Box, IconButton, Tooltip } from '@mui/material';
-import ReplyIcon from '@mui/icons-material/Reply';
+import ReplyIcon from '@mui/icons-material/ReplyRounded';
 import { useTranslation } from 'react-i18next';
 import type { CardWidget } from '../../logic/types';
 import { CardFaceContent } from '../widgets/CardFaceContent';

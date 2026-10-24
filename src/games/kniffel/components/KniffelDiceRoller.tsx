@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { alpha, Box, Paper, Button } from '@mui/material';
-import CasinoIcon from '@mui/icons-material/Casino';
+import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import { useTranslation } from 'react-i18next';
 import { Die3D } from '../../../components/games/Die3D';
 

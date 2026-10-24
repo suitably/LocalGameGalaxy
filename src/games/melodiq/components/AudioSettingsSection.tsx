@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography, Slider, Button } from '@mui/material';
-import SpeedIcon from '@mui/icons-material/Speed';
+import SpeedIcon from '@mui/icons-material/SpeedRounded';
 import { useTranslation } from 'react-i18next';
 import type { SettingsState } from '../hooks/SettingsContext';
 import { useDirectVolumeSliders } from '../hooks/useDirectVolumeSliders';

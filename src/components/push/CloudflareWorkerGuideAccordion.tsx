@@ -9,9 +9,9 @@ import {
   Typography,
 } from '@mui/material';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
 import CloudQueueRoundedIcon from '@mui/icons-material/CloudQueueRounded';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
 import LaunchRoundedIcon from '@mui/icons-material/LaunchRounded';
 import { useTranslation } from 'react-i18next';
 

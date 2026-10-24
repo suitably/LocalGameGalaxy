@@ -10,8 +10,8 @@ import {
   Box,
   Divider,
 } from '@mui/material';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import ReplayIcon from '@mui/icons-material/Replay';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEventsRounded';
+import ReplayIcon from '@mui/icons-material/ReplayRounded';
 import { useTranslation } from 'react-i18next';
 import { calculateBoardScores } from '../logic/knisterScoring';
 import type { KnisterPlayer } from '../logic/types';

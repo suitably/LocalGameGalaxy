@@ -3,12 +3,12 @@
  */
 import React from 'react';
 import { Paper, Tooltip, IconButton } from '@mui/material';
-import ZoomInIcon from '@mui/icons-material/ZoomIn';
-import ZoomOutIcon from '@mui/icons-material/ZoomOut';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-import HighlightAltIcon from '@mui/icons-material/HighlightAlt';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import ZoomInIcon from '@mui/icons-material/ZoomInRounded';
+import ZoomOutIcon from '@mui/icons-material/ZoomOutRounded';
+import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
+import MenuBookIcon from '@mui/icons-material/MenuBookRounded';
+import HighlightAltIcon from '@mui/icons-material/HighlightAltRounded';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOffRounded';
 import { Divider } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 
@@ -52,8 +52,18 @@ export const TabletopToolbar: React.FC<TabletopToolbarProps> = ({
       }}
     >
       {onToggleSelectionMode && (
-        <Tooltip title={isSelectionMode ? t('games.tabletop.selectionModeActive', 'Auswahl-Modus beenden') : t('games.tabletop.selectionMode', 'Mehrfachauswahl (Klick zum Auswählen)')}>
-          <IconButton size="small" onClick={onToggleSelectionMode} color={isSelectionMode ? 'primary' : 'default'}>
+        <Tooltip
+          title={
+            isSelectionMode
+              ? t('games.tabletop.selectionModeActive', 'Auswahl-Modus beenden')
+              : t('games.tabletop.selectionMode', 'Mehrfachauswahl (Klick zum Auswählen)')
+          }
+        >
+          <IconButton
+            size="small"
+            onClick={onToggleSelectionMode}
+            color={isSelectionMode ? 'primary' : 'default'}
+          >
             <HighlightAltIcon />
           </IconButton>
         </Tooltip>

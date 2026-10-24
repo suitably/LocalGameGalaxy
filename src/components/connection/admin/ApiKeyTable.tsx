@@ -13,10 +13,10 @@ import {
   Typography,
   Tooltip,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import QrCode2Icon from '@mui/icons-material/QrCode2';
+import DeleteIcon from '@mui/icons-material/DeleteRounded';
+import EditIcon from '@mui/icons-material/EditRounded';
+import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
+import QrCode2Icon from '@mui/icons-material/QrCode2Rounded';
 import type { ApiKey } from '../hooks/useServerApiKeys';
 
 interface Props {

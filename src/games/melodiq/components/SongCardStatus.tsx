@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Typography, LinearProgress } from '@mui/material';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownloadRounded';
+import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesomeRounded';
 import { useTranslation } from 'react-i18next';
 
 export interface SongCardStatusProps {

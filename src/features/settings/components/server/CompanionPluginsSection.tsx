@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { alpha, Box, Typography, Tabs, Tab, Chip } from '@mui/material';
-import ExtensionIcon from '@mui/icons-material/Extension';
+import ExtensionIcon from '@mui/icons-material/ExtensionRounded';
 import { useTranslation } from 'react-i18next';
 import { getCompanionPlugins } from './companionRegistry';
 

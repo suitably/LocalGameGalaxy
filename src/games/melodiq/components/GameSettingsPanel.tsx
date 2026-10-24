@@ -8,7 +8,7 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
 import type { SettingsState } from '../hooks/SettingsContext';
 import { CustomLayoutsEditor } from './CustomLayoutsEditor';
 import { AutoplaySettings } from './AutoplaySettings';
