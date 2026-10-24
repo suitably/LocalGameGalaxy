@@ -1,297 +1,181 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Button, Paper, Typography, FormControlLabel, Checkbox, Grid, Alert, Dialog, IconButton } from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import InfoIcon from '@mui/icons-material/Info';
-import type { Player, Role, RoleDefinition } from '../logic/types';
+import React, { useState } from 'react';
+import { Box, Button, Paper, Typography, Alert, Dialog, IconButton } from '@mui/material';
+import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
+import InfoIcon from '@mui/icons-material/InfoRounded';
+import SettingsIcon from '@mui/icons-material/SettingsRounded';
+import AddIcon from '@mui/icons-material/AddRounded';
+import RemoveIcon from '@mui/icons-material/RemoveRounded';
 import { useTranslation } from 'react-i18next';
-import SettingsIcon from '@mui/icons-material/Settings';
+import type { Player, Role, RoleDefinition } from '../logic/types';
 import { RoleEditor } from './RoleEditor';
+import { RoleIcon } from './RoleIcon';
+import { RoleSelectionGrid } from './setup/RoleSelectionGrid';
+import { RoleDescriptionDialog } from './setup/RoleDescriptionDialog';
 import { DEFAULT_ROLES } from '../logic/defaultRoles';
-import { isWerewolfRole } from '../logic/utils';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
+import { useWerewolfSetup } from '../hooks/useWerewolfSetup';
 import { PlayerManagerCard } from '../../../modules/player-management';
-import { storage, STORAGE_KEYS } from '../../../lib/storage';
-
-interface WerewolfSetupSettings {
-    enabledRoles?: Role[];
-    numWerewolves?: number;
-}
 
 interface GameSetupProps {
-    players: Player[];
-    customRoles: RoleDefinition[];
-    onAddPlayer: (name: string) => void;
-    onRemovePlayer: (id: string) => void;
-    onClearAllPlayers: () => void;
-    onStartGame: (roles: Role[]) => void;
-    onSaveCustomRoles: (roles: RoleDefinition[]) => void;
+  players: Player[];
+  customRoles: RoleDefinition[];
+  onAddPlayer: (name: string) => void;
+  onRemovePlayer: (id: string) => void;
+  onClearAllPlayers: () => void;
+  onStartGame: (roles: Role[]) => void;
+  onSaveCustomRoles: (roles: RoleDefinition[]) => void;
 }
 
-// Derived from DEFAULT_ROLES to avoid duplication, but exclude base WEREWOLF
-const SPECIAL_ROLES = DEFAULT_ROLES.filter(r => r.id !== 'WEREWOLF').map(r => r.id as Role);
+export const GameSetup: React.FC<GameSetupProps> = ({
+  players,
+  customRoles = [],
+  onAddPlayer,
+  onRemovePlayer,
+  onStartGame,
+  onSaveCustomRoles,
+}) => {
+  const { t } = useTranslation();
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [selectedRoleForDesc, setSelectedRoleForDesc] = useState<RoleDefinition | null>(null);
+  const {
+    enabledRoles,
+    numWerewolves,
+    setNumWerewolves,
+    toggleRole,
+    handleStart,
+    tooManyRoles,
+    tooManyWerewolves,
+  } = useWerewolfSetup(players, customRoles, onStartGame);
 
-export const GameSetup: React.FC<GameSetupProps> = ({ players, customRoles = [], onAddPlayer, onRemovePlayer, onStartGame, onSaveCustomRoles }) => {
-    const { t } = useTranslation();
+  return (
+    <Box maxWidth="sm" mx="auto">
+      <PlayerManagerCard
+        players={players.map((p) => ({ name: p.name }))}
+        onAddPlayer={onAddPlayer}
+        onRemovePlayer={(name, index) => {
+          const target =
+            typeof index === 'number' ? players[index] : players.find((p) => p.name === name);
+          if (target) onRemovePlayer(target.id);
+        }}
+        minPlayers={4}
+        maxPlayers={30}
+        sx={{ mb: 3 }}
+      />
 
-    // Load settings from storage
-    const [enabledRoles, setEnabledRoles] = useState<Role[]>(() => {
-        const parsed = storage.getJson<WerewolfSetupSettings | null>(STORAGE_KEYS.WEREWOLF_SETTINGS, null);
-        if (parsed?.enabledRoles) return parsed.enabledRoles;
-        return ['WITCH', 'SEER'];
-    });
-    const [numWerewolves, setNumWerewolves] = useState(() => {
-        const parsed = storage.getJson<WerewolfSetupSettings | null>(STORAGE_KEYS.WEREWOLF_SETTINGS, null);
-        return parsed?.numWerewolves ?? 1;
-    });
-    const [isEditorOpen, setIsEditorOpen] = useState(false);
-    const [selectedRoleForDesc, setSelectedRoleForDesc] = useState<RoleDefinition | null>(null);
-
-    // Save settings to storage whenever they change
-    useEffect(() => {
-        storage.setJson(STORAGE_KEYS.WEREWOLF_SETTINGS, {
-            enabledRoles,
-            numWerewolves
-        });
-    }, [enabledRoles, numWerewolves]);
-
-    const toggleRole = (role: Role) => {
-        setEnabledRoles(prev =>
-            prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]
-        );
-    };
-
-    const handleStart = () => {
-        const playerCount = players.length;
-        const allAvailableRoles = [...DEFAULT_ROLES, ...customRoles];
-        const selectedWerewolfRoles = enabledRoles.filter(roleId => isWerewolfRole(roleId, allAvailableRoles));
-
-        const roles: Role[] = [...enabledRoles];
-
-        // Add standard werewolves to reach the desired count
-        const wolvesToAdd = Math.max(0, numWerewolves - selectedWerewolfRoles.length);
-        for (let i = 0; i < wolvesToAdd; i++) {
-            roles.push('WEREWOLF');
-        }
-
-        // Fill remaining slots with Villagers
-        while (roles.length < playerCount) {
-            roles.push('VILLAGER');
-        }
-
-        const finalRoles = roles.slice(0, playerCount);
-        onStartGame(finalRoles);
-    };
-
-    const allAvailableRoles = [...DEFAULT_ROLES, ...customRoles];
-    const selectedWerewolfRolesCount = enabledRoles.filter(roleId => isWerewolfRole(roleId, allAvailableRoles)).length;
-    const tooManyWerewolves = selectedWerewolfRolesCount > numWerewolves;
-
-    // Total roles chosen so far (excluding villagers who are added automatically)
-    // base werewolves = numWerewolves - selectedWerewolfRolesCount (min 0)
-    const baseWerewolvesToAdd = Math.max(0, numWerewolves - selectedWerewolfRolesCount);
-    const totalRolesCount = enabledRoles.length + baseWerewolvesToAdd;
-    const tooManyRoles = totalRolesCount > players.length && players.length > 0;
-
-    return (
-        <Box maxWidth="sm" mx="auto">
-            <PlayerManagerCard
-                players={players.map(p => ({ name: p.name }))}
-                onAddPlayer={onAddPlayer}
-                onRemovePlayer={(name, index) => {
-                    const target = typeof index === 'number' ? players[index] : players.find(p => p.name === name);
-                    if (target) onRemovePlayer(target.id);
-                }}
-                minPlayers={4}
-                maxPlayers={30}
-                sx={{ mb: 3 }}
-            />
-
-            <Paper sx={{ p: 3, mb: 3 }}>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                    <Typography variant="h6">{t('games.werewolf.role_reveal')}</Typography>
-                    <Button
-                        startIcon={<SettingsIcon />}
-                        size="small"
-                        onClick={() => setIsEditorOpen(true)}
-                    >
-                        {t('games.werewolf.editor.title', 'Editor')}
-                    </Button>
-                </Box>
-                <Typography variant="body2" sx={{ mb: 2 }}>
-                    {t('games.werewolf.ui.select_roles_hint', 'Select roles to include:')}
-                </Typography>
-
-                {tooManyRoles && (
-                    <Alert severity="warning" sx={{ mb: 2 }}>
-                        {t('games.werewolf.ui.too_many_roles', 'Too many roles selected for the number of players!')}
-                    </Alert>
-                )}
-
-                {tooManyWerewolves && (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                        {t('games.werewolf.ui.too_many_werewolf_roles')}
-                    </Alert>
-                )}
-
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
-                    <Typography variant="body1" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
-                        🐺 {t('games.werewolf.ui.num_werewolves')}:
-                        <IconButton
-                            size="small"
-                            onClick={() => setSelectedRoleForDesc(DEFAULT_ROLES.find(r => r.id === 'WEREWOLF') || null)}
-                            sx={{ ml: 0.5, p: 0.5, color: 'text.secondary', opacity: 0.5 }}
-                        >
-                            <InfoIcon fontSize="inherit" />
-                        </IconButton>
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-                        <IconButton
-                            size="small"
-                            onClick={() => setNumWerewolves((prev: number) => Math.max(1, prev - 1))}
-                            disabled={numWerewolves <= 1}
-                        >
-                            <RemoveIcon />
-                        </IconButton>
-                        <Typography sx={{ mx: 2, minWidth: '1.5rem', textAlign: 'center' }}>
-                            {numWerewolves}
-                        </Typography>
-                        <IconButton
-                            size="small"
-                            onClick={() => setNumWerewolves((prev: number) => prev + 1)}
-                            disabled={numWerewolves >= players.length - 1 && players.length > 0}
-                        >
-                            <AddIcon />
-                        </IconButton>
-                    </Box>
-                </Box>
-
-                <Grid container spacing={1}>
-                    {SPECIAL_ROLES.map(role => {
-                        const customDef = customRoles.find(r => r.id === role);
-                        const defaultDef = DEFAULT_ROLES.find(r => r.id === role);
-
-                        // Use custom definition if exists, otherwise fall back to default
-                        const icon = customDef?.icon || defaultDef?.icon || '❓';
-                        const name = customDef?.name || t(`games.werewolf.roles.${role}`);
-
-                        const label = `${icon} ${name}`;
-
-                        return (
-                            <Grid size={{ xs: 6 }} key={role}>
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={enabledRoles.includes(role)}
-                                            onChange={() => toggleRole(role)}
-                                            size="small"
-                                        />
-                                    }
-                                    label={
-                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <Typography variant="body2">{label}</Typography>
-                                            <IconButton
-                                                size="small"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    setSelectedRoleForDesc(customDef || defaultDef || null);
-                                                }}
-                                                sx={{ ml: 0.5, p: 0.5, color: 'text.secondary', opacity: 0.5 }}
-                                            >
-                                                <InfoIcon fontSize="inherit" />
-                                            </IconButton>
-                                        </Box>
-                                    }
-                                />
-                            </Grid>
-                        );
-                    })}
-                    {customRoles.map(role => (
-                        <Grid size={{ xs: 6 }} key={role.id}>
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={enabledRoles.includes(role.id)}
-                                        onChange={() => toggleRole(role.id)}
-                                        size="small"
-                                    />
-                                }
-                                label={
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <Typography variant="body2">{role.icon} {role.name}</Typography>
-                                        <IconButton
-                                            size="small"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                setSelectedRoleForDesc(role);
-                                            }}
-                                            sx={{ ml: 0.5, p: 0.5, color: 'text.secondary', opacity: 0.5 }}
-                                        >
-                                            <InfoIcon fontSize="inherit" />
-                                        </IconButton>
-                                    </Box>
-                                }
-                            />
-                        </Grid>
-                    ))}
-                </Grid>
-            </Paper>
-
-            <Dialog open={isEditorOpen} onClose={() => setIsEditorOpen(false)} fullScreen>
-                <RoleEditor
-                    customRoles={customRoles}
-                    defaultRoles={DEFAULT_ROLES}
-                    onSaveRoles={(roles) => {
-                        // We need to separate pure custom roles from overridden defaults if we want to save them efficiently,
-                        // but for now, the requirement is to allow editing defaults.
-                        // The `onSaveCustomRoles` expects `RoleDefinition[]`.
-                        // Game logic should persist these overrides.
-                        onSaveCustomRoles(roles);
-                        setIsEditorOpen(false);
-                    }}
-                    onClose={() => setIsEditorOpen(false)}
-                />
-            </Dialog>
-
-            <Dialog
-                open={Boolean(selectedRoleForDesc)}
-                onClose={() => setSelectedRoleForDesc(null)}
-                maxWidth="xs"
-                fullWidth
-            >
-                {selectedRoleForDesc && (
-                    <Box sx={{ p: 3, textAlign: 'center' }}>
-                        <Typography variant="h3" gutterBottom>
-                            {selectedRoleForDesc.icon}
-                        </Typography>
-                        <Typography variant="h5" gutterBottom>
-                            {selectedRoleForDesc.isCustom ? selectedRoleForDesc.name : t(`games.werewolf.roles.${selectedRoleForDesc.id}`)}
-                        </Typography>
-                        <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', mb: 3 }}>
-                            {selectedRoleForDesc.isCustom ? selectedRoleForDesc.description : t(`games.werewolf.role_descriptions.${selectedRoleForDesc.id}`)}
-                        </Typography>
-                        <Button
-                            variant="outlined"
-                            fullWidth
-                            onClick={() => setSelectedRoleForDesc(null)}
-                        >
-                            {t('common.close')}
-                        </Button>
-                    </Box>
-                )}
-            </Dialog>
-
-            <Button
-                variant="contained"
-                size="large"
-                fullWidth
-                color="secondary"
-                disabled={players.length < 3 || tooManyRoles || tooManyWerewolves}
-                onClick={handleStart}
-                startIcon={<PlayArrowIcon />}
-            >
-                {t('common.start')}
-            </Button>
+      <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h6">{t('games.werewolf.role_reveal')}</Typography>
+          <Button startIcon={<SettingsIcon />} size="small" onClick={() => setIsEditorOpen(true)}>
+            {t('games.werewolf.editor.title', 'Editor')}
+          </Button>
         </Box>
-    );
+        <Typography variant="body2" sx={{ mb: 2 }}>
+          {t('games.werewolf.ui.select_roles_hint', 'Select roles to include:')}
+        </Typography>
+
+        {tooManyRoles && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            {t(
+              'games.werewolf.ui.too_many_roles',
+              'Too many roles selected for the number of players!',
+            )}
+          </Alert>
+        )}
+
+        {tooManyWerewolves && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {t('games.werewolf.ui.too_many_werewolf_roles')}
+          </Alert>
+        )}
+
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
+          <Typography
+            variant="body1"
+            sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}
+          >
+            <RoleIcon icon="WEREWOLF" fontSize="1.25rem" /> {t('games.werewolf.ui.num_werewolves')}:
+            <IconButton
+              size="small"
+              aria-label={t('games.werewolf.ui.role_info', 'Role info')}
+              onClick={() =>
+                setSelectedRoleForDesc(DEFAULT_ROLES.find((r) => r.id === 'WEREWOLF') || null)
+              }
+              sx={{ ml: 0.5, p: 0.5, color: 'text.secondary', opacity: 0.5 }}
+            >
+              <InfoIcon fontSize="inherit" />
+            </IconButton>
+          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 2,
+            }}
+          >
+            <IconButton
+              size="small"
+              onClick={() => setNumWerewolves((prev: number) => Math.max(1, prev - 1))}
+              disabled={numWerewolves <= 1}
+            >
+              <RemoveIcon />
+            </IconButton>
+            <Typography
+              sx={{
+                mx: 2,
+                minWidth: '1.5rem',
+                textAlign: 'center',
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {numWerewolves}
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={() => setNumWerewolves((prev: number) => prev + 1)}
+              disabled={numWerewolves >= players.length - 1 && players.length > 0}
+            >
+              <AddIcon />
+            </IconButton>
+          </Box>
+        </Box>
+
+        <RoleSelectionGrid
+          customRoles={customRoles}
+          enabledRoles={enabledRoles}
+          onToggle={toggleRole}
+          onShowInfo={setSelectedRoleForDesc}
+        />
+      </Paper>
+
+      <Dialog open={isEditorOpen} onClose={() => setIsEditorOpen(false)} fullScreen>
+        <RoleEditor
+          customRoles={customRoles}
+          defaultRoles={DEFAULT_ROLES}
+          onSaveRoles={(roles) => {
+            onSaveCustomRoles(roles);
+            setIsEditorOpen(false);
+          }}
+          onClose={() => setIsEditorOpen(false)}
+        />
+      </Dialog>
+
+      <RoleDescriptionDialog
+        role={selectedRoleForDesc}
+        onClose={() => setSelectedRoleForDesc(null)}
+      />
+
+      <Button
+        variant="contained"
+        size="large"
+        fullWidth
+        color="secondary"
+        disabled={players.length < 3 || tooManyRoles || tooManyWerewolves}
+        onClick={handleStart}
+        startIcon={<PlayArrowIcon />}
+      >
+        {t('common.start')}
+      </Button>
+    </Box>
+  );
 };

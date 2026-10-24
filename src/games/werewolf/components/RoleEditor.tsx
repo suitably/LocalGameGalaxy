@@ -171,7 +171,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
 
       <Box display="flex" flexDirection="column" gap={2}>
         {customRolesList.length > 0 && (
-          <Paper sx={{ mb: 2 }}>
+          <Paper variant="outlined" sx={{ mb: 2 }}>
             <Typography variant="h6" sx={{ p: 2, pb: 0 }}>
               {t('games.werewolf.ui.editor.custom_roles', 'Custom Roles')}
             </Typography>
@@ -179,7 +179,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
           </Paper>
         )}
 
-        <Accordion defaultExpanded={false}>
+        <Accordion defaultExpanded={false} variant="outlined" disableGutters>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">
               {t('games.werewolf.ui.editor.standard_roles', 'Standard Roles')} (
