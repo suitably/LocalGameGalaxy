@@ -2,6 +2,12 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Multi-agent token workflow (claude-code)
+
+- New `docs/workflows/multi-agent-token-strategy.md`: roles, delegate-or-not rule, flow, anti-patterns.
+- New task spec `docs/tasks/ISSUE-539-tabletop-hidden-space.md` as the worked example (scout brief, open decisions, three slices). Found: `isWidgetHiddenForViewer` has no non-test caller.
+- Outside `docs/`: new subagents `.claude/agents/{scout,slice-implementer,gate-runner}.md`; `CLAUDE.md` points to the workflow. No app code changed.
+
 ## 2026-10-23 — Terser agent instructions (claude-code)
 
 - Outside `docs/`: `AGENTS.md` wording tightened (filler removed; rules, conditions and reasons unchanged); `CLAUDE.md` asks for short answers. No code changed.
