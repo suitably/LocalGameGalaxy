@@ -912,6 +912,8 @@
       "resetScaleItem": "Größe zurücksetzen",
       "zoneRevealed": "Aufgedeckt",
       "zoneOwnerView": "Verdeckt (Deine Sicht)",
+      "zoneOnlyYou": "Nur du",
+      "zoneVisibleToAll": "Für alle sichtbar",
       "zoneHidden": "Verdeckter Bereich",
       "revealZone": "Aufdecken (für alle zeigen)",
       "hideZone": "Wieder verbergen",

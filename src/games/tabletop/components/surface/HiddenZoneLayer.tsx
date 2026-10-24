@@ -7,22 +7,36 @@ import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOffRounded';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineRounded';
 import type { HiddenZone } from '../../logic/types';
+import type { TabletopAction } from '../../logic/tabletopReducer';
 import { useTranslation } from 'react-i18next';
+import { useHiddenZoneEditing } from './useHiddenZoneEditing';
+import { ZoneResizeHandles, ZoneRevealToggle } from './HiddenZoneControls';
 
 interface HiddenZoneLayerProps {
   hiddenZones?: Record<string, HiddenZone>;
   currentSeatIndex?: number;
-  onToggleReveal: (zoneId: string) => void;
-  onRemoveZone: (zoneId: string) => void;
+  table: { width: number; height: number };
+  editMode: boolean;
+  dispatch: React.Dispatch<TabletopAction>;
 }
 
 export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
   hiddenZones,
   currentSeatIndex,
-  onToggleReveal,
-  onRemoveZone,
+  table,
+  editMode,
+  dispatch,
 }) => {
   const { t } = useTranslation();
+  const onToggleReveal = (id: string) => dispatch({ type: 'TOGGLE_ZONE_REVEAL', payload: { id } });
+  const onRemoveZone = (id: string) => dispatch({ type: 'REMOVE_HIDDEN_ZONE', payload: { id } });
+  const editing = useHiddenZoneEditing({
+    table,
+    editMode,
+    currentSeatIndex,
+    onMove: (id, dx, dy) => dispatch({ type: 'MOVE_HIDDEN_ZONE', payload: { id, dx, dy } }),
+    onResize: (id, rect) => dispatch({ type: 'RESIZE_HIDDEN_ZONE', payload: { id, ...rect } }),
+  });
   const [menuAnchor, setMenuAnchor] = useState<{
     mouseX: number;
     mouseY: number;
@@ -53,17 +67,20 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
 
         const isRevealed = Boolean(zone.revealed);
         const zoneColor = zone.color || '#212121';
+        const canEdit = editing.canEdit(zone);
+        const rect = editing.getRect(zone);
 
         return (
           <Box
             key={zone.id}
             onContextMenu={(e) => handleContextMenu(e, zone.id)}
+            onPointerDown={canEdit ? (e) => editing.onBodyPointerDown(e, zone) : undefined}
             sx={{
               position: 'absolute',
-              left: zone.x,
-              top: zone.y,
-              width: zone.width,
-              height: zone.height,
+              left: rect.x,
+              top: rect.y,
+              width: rect.width,
+              height: rect.height,
               zIndex: isOwner || isRevealed ? 4000 : 9000,
               bgcolor: isRevealed ? 'rgba(0, 0, 0, 0.1)' : isOwner ? `${zoneColor}33` : zoneColor,
               border: '2px dashed',
@@ -75,7 +92,8 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               pointerEvents: 'auto',
-              cursor: 'context-menu',
+              cursor: canEdit ? 'move' : 'context-menu',
+              touchAction: canEdit ? 'none' : undefined,
               userSelect: 'none',
               transition: 'background-color 0.2s, border-color 0.2s',
             }}
@@ -116,6 +134,14 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
                 </>
               )}
             </Box>
+            {isOwner && (
+              <ZoneRevealToggle revealed={isRevealed} onToggle={() => onToggleReveal(zone.id)} />
+            )}
+            {canEdit && (
+              <ZoneResizeHandles
+                onPointerDown={(e, c) => editing.onCornerPointerDown(e, zone, c)}
+              />
+            )}
           </Box>
         );
       })}

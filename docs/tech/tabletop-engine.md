@@ -27,15 +27,15 @@ Roadmap and comparison with VirtualTabletop: [2026-10-21 plan](../reports/2026-1
 
 `logic/tabletopReducer.ts` holds the action union (`TabletopAction`) and the table actions (move, flip, rotate, snap to holder, counters, dice, animation, seats). Groups live in `logic/reducers/`:
 
-| File                  | Actions                                                                                      |
-| --------------------- | -------------------------------------------------------------------------------------------- |
-| `deckReducer.ts`      | `SHUFFLE_DECK`, `DRAW_CARD`, `RETURN_CARD_TO_DECK`                                           |
-| `bagReducer.ts`       | `DRAW_FROM_BAG`                                                                              |
-| `pieceReducer.ts`     | `TAKE_PIECE_FROM_SUPPLY`, `PLAY_CARD_FROM_HAND`                                              |
-| `viewReducer.ts`      | `SCALE_WIDGETS`, `RESET_WIDGET_SCALE`, `SET_WIDGET_SHOW_ALWAYS`, hidden zones                |
-| `tableToolReducer.ts` | `TOGGLE_TIMER`, `RESET_TIMER`, `SPIN_SPINNER`, `NEXT_STATE` (rules in `logic/tableTools.ts`) |
-| `editReducer.ts`      | `PATCH_WIDGETS`, `ADD_WIDGET`, `DELETE_WIDGETS`, `UPDATE_TABLE`                              |
-| `holderMembership.ts` | helper `removeFromHolderAndUpdateHand`                                                       |
+| File                  | Actions                                                                                                                                        |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `deckReducer.ts`      | `SHUFFLE_DECK`, `DRAW_CARD`, `RETURN_CARD_TO_DECK`                                                                                             |
+| `bagReducer.ts`       | `DRAW_FROM_BAG`                                                                                                                                |
+| `pieceReducer.ts`     | `TAKE_PIECE_FROM_SUPPLY`, `PLAY_CARD_FROM_HAND`                                                                                                |
+| `viewReducer.ts`      | `SCALE_WIDGETS`, `RESET_WIDGET_SCALE`, `SET_WIDGET_SHOW_ALWAYS`, hidden zones (`MOVE_HIDDEN_ZONE`, `RESIZE_HIDDEN_ZONE`, `TOGGLE_ZONE_REVEAL`) |
+| `tableToolReducer.ts` | `TOGGLE_TIMER`, `RESET_TIMER`, `SPIN_SPINNER`, `NEXT_STATE` (rules in `logic/tableTools.ts`)                                                   |
+| `editReducer.ts`      | `PATCH_WIDGETS`, `ADD_WIDGET`, `DELETE_WIDGETS`, `UPDATE_TABLE`                                                                                |
+| `holderMembership.ts` | helper `removeFromHolderAndUpdateHand`                                                                                                         |
 
 Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`.
 
@@ -51,6 +51,10 @@ Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`.
 ## 4. Editor UI
 
 `components/editor/` (mounted by `TabletopGame` for the TV host and local play): `TabletopEditor` wraps the surface, `EditorToolbar` (edit mode, undo/redo, add widget from `logic/widgetTemplates.ts`, table settings), `WidgetInspector` + `InspectorFields` (common and per-type fields, duplicate, delete), `WidgetJsonEditor` (raw JSON, parsed by `parseWidgetPatch`), `TableSettingsDialog`, `DeckBuilderDialog` (deck from image URLs or a spritesheet via `logic/deckBuilder.ts`, added with `ADD_WIDGETS`). State lives in `useTabletopEditor` (selection, history recorded while edit mode is on; Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y, Delete). `ImageUploadButton` (inspector image, table background) stores uploaded images as WebP data URLs scaled to 512 px (`logic/imageUpload.ts`) — frontend-only, but every image travels with the game state through sync, so keep them few and small. `SelectionHandles` (portal into the table canvas) resizes (Shift keeps the aspect ratio) and rotates (15° steps, Alt for free) the selected widget and commits one `PATCH_WIDGETS` on release (`logic/handleMath.ts`). `TableMotionStyles` (mounted by `TabletopEditor`) animates position changes of board widgets and replays a flip on cards (`data-card-flip`), respecting reduced motion. Selection works through `data-widget-id` on board widgets and holders, so the surface itself is unchanged.
+
+### Hidden zones
+
+A hidden zone (`HiddenZone`, `logic/hiddenZoneLogic.ts`) belongs to one seat (`ownerSeat`). Other seats see widgets whose center lies inside a non-revealed zone only as an inert placeholder (`getHiddenWidgetIds` → `hooks/useObscuredWidgetIds.ts` → `BoardWidgetRenderer` `obscured`); the owner always sees them, `revealed: true` shows them to everyone, `showAlways` widgets are never obscured. In edit mode the owner drags and resizes the zone (`components/surface/useHiddenZoneEditing.ts`); `MOVE_HIDDEN_ZONE` moves contained widgets in the same reducer step (one undo step) except locked ones (`isWidgetLocked`: `pinned` or `movable === false`), and `RESIZE_HIDDEN_ZONE` clamps to `MIN_ZONE_SIZE` and the table. The in-zone eye toggle (`HiddenZoneControls.tsx`) dispatches `TOGGLE_ZONE_REVEAL`. Drag overlays, flying cards and multi-select do not check zones yet ([Q16](../open-questions.md)).
 
 ### Pass and play (local)
 

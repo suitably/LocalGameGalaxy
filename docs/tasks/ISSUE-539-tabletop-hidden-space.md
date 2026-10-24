@@ -3,7 +3,7 @@ type: Task
 title: 'Tabletop hidden space: move, resize, visibility toggle (#539)'
 description: 'Owner moves and resizes their hidden zone in edit mode like a widget (contained unlocked widgets move along) and toggles its visibility with an in-zone button; also the worked example for the multi-agent token workflow.'
 tags: [tabletop, hidden-zone, editor, task, agents]
-status: draft
+status: stable
 generated:
   at: 2026-10-24T18:00:00+02:00
   by: claude-code
@@ -106,8 +106,8 @@ Before the session ends: `npm run tokens` and paste the table into the PR descri
 - [x] decisions (§3)
 - [x] slice 1 — logic
 - [x] slice 2 — state hook
-- [ ] slice 3 — UI
+- [x] slice 3 — UI
 - [x] slice 4 — fog of war
-- [ ] gates
-- [ ] docs
+- [x] gates
+- [x] docs
 - [ ] PR

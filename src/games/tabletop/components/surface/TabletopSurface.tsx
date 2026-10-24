@@ -28,6 +28,7 @@ interface TabletopSurfaceProps {
   isTvMode?: boolean;
   /** Pass and play: seats change only through the handover cover. */
   hideSeatSelector?: boolean;
+  editMode?: boolean;
 }
 
 export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
@@ -35,6 +36,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
   dispatch,
   isTvMode = false,
   hideSeatSelector = false,
+  editMode = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
@@ -161,19 +163,17 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
             obscured={obscuredIds.has(w.id)}
           />
         ))}
-
         <SelectionHighlightLayer
           selectedWidgetIds={selection.selectedWidgetIds}
           widgets={game.widgets}
         />
-
         <HiddenZoneLayer
           hiddenZones={game.hiddenZones}
           currentSeatIndex={activeSeat?.index}
-          onToggleReveal={(id) => dispatch({ type: 'TOGGLE_ZONE_REVEAL', payload: { id } })}
-          onRemoveZone={(id) => dispatch({ type: 'REMOVE_HIDDEN_ZONE', payload: { id } })}
+          table={game.table}
+          editMode={editMode}
+          dispatch={dispatch}
         />
-
         <FlyingCardsLayer
           flyingCards={flyingCards}
           widgets={game.widgets}

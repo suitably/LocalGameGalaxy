@@ -47,6 +47,10 @@ ADR-0004 says "Demucs via PyTorch". `server/src/plugins/melodiq/services/separat
 
 **[user]** VirtualTabletop games rely on routines (14 580 in its library); our button routines express about 1.2 % of them, so imported buttons do nothing. Options: translate the trivial subset and list the rest in an import report, or build a sandboxed interpreter for VTT's routine language (the scripting-scope question from the [2026-10-21 plan](reports/2026-10-21-tabletop-vtt-plan.md), slice 9).
 
+## Q16 — Tabletop hidden-zone leaks outside the board
+
+Since #539 board widgets inside a non-revealed hidden zone render as placeholders for other seats, but `BoardDragOverlay`, `DockDragOverlay`, `FlyingCardsLayer` and select-all / shift-multiselect (`SelectionHighlightLayer`, `WidgetContextMenu`) do not check zones; sync still sends full widget data to every device. A device without a selected seat falls back to the first seat as viewer. Decide whether to close these gaps in a follow-up.
+
 ## Resolved 2026-10-18
 
 - Q15 issues #353–#361 vs branch state → #384 merged; #353, #354, #355, #357, #358 closed, specs moved to [archive/issue-specs](archive/index.md). Open: #356, #359, #360 ([tasks](tasks/index.md)); #361 closed 2026-10-21.
