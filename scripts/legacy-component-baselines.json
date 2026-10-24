@@ -3,7 +3,6 @@
   "src/games/melodiq/gameplay/PitchVisualizer.tsx": 569,
   "src/games/melodiq/components/GameSettingsPanel.tsx": 553,
   "src/features/settings/components/SettingsHeaderNav.tsx": 490,
-  "src/games/melodiq/gameplay/LyricsDisplay.tsx": 356,
   "src/games/melodiq/components/SongActionDialogs.tsx": 414,
   "src/games/guessart/GuessArtGame.tsx": 440,
   "src/games/guessart/components/catalogue/WordEditorTab.tsx": 455,
