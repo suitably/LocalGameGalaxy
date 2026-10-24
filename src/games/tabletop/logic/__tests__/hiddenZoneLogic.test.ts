@@ -7,6 +7,7 @@ import {
   moveZoneWithContents,
   resizeZone,
   isWidgetLocked,
+  getHiddenWidgetIds,
   MIN_ZONE_SIZE,
 } from '../hiddenZoneLogic';
 import type { TabletopWidget, HiddenZone } from '../types';
@@ -97,6 +98,31 @@ describe('hiddenZoneLogic', () => {
     expect(zone.revealed).toBe(false);
     expect(zone.width).toBeGreaterThan(0);
     expect(zone.height).toBeGreaterThan(0);
+  });
+
+  describe('getHiddenWidgetIds', () => {
+    const outside = { ...widgetInside, id: 'card_out', x: 900, y: 900 } as TabletopWidget;
+    const shown = { ...widgetInside, id: 'card_show', showAlways: true } as TabletopWidget;
+    const widgets = { card_1: widgetInside, card_out: outside, card_show: shown };
+    const zones = { zone_1: sampleZone };
+
+    it('obscures contained widgets for other seats only', () => {
+      expect([...getHiddenWidgetIds({ widgets, hiddenZones: zones }, 1)]).toEqual(['card_1']);
+      expect([...getHiddenWidgetIds({ widgets, hiddenZones: zones })]).toEqual(['card_1']);
+    });
+
+    it('shows everything to the zone owner', () => {
+      expect(getHiddenWidgetIds({ widgets, hiddenZones: zones }, 0).size).toBe(0);
+    });
+
+    it('shows everything when the zone is revealed', () => {
+      const revealed = { zone_1: { ...sampleZone, revealed: true } };
+      expect(getHiddenWidgetIds({ widgets, hiddenZones: revealed }, 1).size).toBe(0);
+    });
+
+    it('returns an empty set without zones', () => {
+      expect(getHiddenWidgetIds({ widgets }, 1).size).toBe(0);
+    });
   });
 });
 

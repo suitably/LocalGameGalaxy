@@ -8,6 +8,7 @@ import type { TabletopWidget, SeatWidget } from '../../logic/types';
 import { useTabletopEngine } from '../../hooks/useTabletopEngine';
 import { useViewportCulling } from '../../hooks/useViewportCulling';
 import { useTabletopSelection } from '../../hooks/useTabletopSelection';
+import { useObscuredWidgetIds } from '../../hooks/useObscuredWidgetIds';
 import { HolderWidgetView } from '../widgets/HolderWidgetView';
 import { BoardWidgetRenderer } from './BoardWidgetRenderer';
 import { SelectionHighlightLayer } from './SelectionHighlightLayer';
@@ -92,18 +93,15 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     [game.widgets, visibleIds, isTvMode],
   );
 
+  const obscuredIds = useObscuredWidgetIds(game, activeSeat?.index);
   const fitToScreen = useFitToScreen(containerRef, game.table, setTransform, setContainerSize);
 
   const onPointerDownBoardWidget = (e: React.PointerEvent, w: TabletopWidget) => {
-    if (selection.handleWidgetClick(w.id, e.shiftKey)) {
-      return;
-    }
-    handlePointerDownWidget(e, w);
+    if (!selection.handleWidgetClick(w.id, e.shiftKey)) handlePointerDownWidget(e, w);
   };
 
   const handleAddHiddenZone = () => {
-    const zoneId = `hz_${Date.now()}`;
-    const zone = createDefaultHiddenZone(zoneId, game.table.width, game.table.height, {
+    const zone = createDefaultHiddenZone(`hz_${Date.now()}`, game.table.width, game.table.height, {
       ownerSeat: activeSeat?.index,
       color: activeSeat?.color,
     });
@@ -160,6 +158,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
               setContextMenuPos({ mouseX: e.clientX, mouseY: e.clientY, widgetId: w.id });
             }}
             dispatch={dispatch}
+            obscured={obscuredIds.has(w.id)}
           />
         ))}
 

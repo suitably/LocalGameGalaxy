@@ -120,6 +120,22 @@ export function isWidgetHiddenForViewer(
 }
 
 /**
+ * Ids of all widgets obscured for the viewer seat (see `isWidgetHiddenForViewer`).
+ * Returns an empty set when no non-revealed zone exists.
+ */
+export function getHiddenWidgetIds(
+  game: Pick<TabletopGameDefinition, 'widgets' | 'hiddenZones'>,
+  viewerSeatIndex?: number,
+): Set<string> {
+  const ids = new Set<string>();
+  if (!game.hiddenZones) return ids;
+  for (const w of Object.values(game.widgets)) {
+    if (isWidgetHiddenForViewer(w, game.hiddenZones, viewerSeatIndex)) ids.add(w.id);
+  }
+  return ids;
+}
+
+/**
  * Generates a default hidden zone at an appropriate table coordinate.
  */
 export function createDefaultHiddenZone(

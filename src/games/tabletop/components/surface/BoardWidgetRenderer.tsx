@@ -34,6 +34,8 @@ interface BoardWidgetRendererProps {
   onPointerDown: (e: React.PointerEvent) => void;
   onContextMenu: (e: React.MouseEvent) => void;
   dispatch: React.Dispatch<TabletopAction>;
+  /** Inside a hidden zone the viewer may not see: render an inert placeholder only. */
+  obscured?: boolean;
 }
 
 export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
@@ -42,7 +44,29 @@ export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
   onPointerDown,
   onContextMenu,
   dispatch,
+  obscured = false,
 }) => {
+  if (obscured) {
+    return (
+      <Box
+        aria-hidden
+        sx={{
+          position: 'absolute',
+          left: w.x,
+          top: w.y,
+          width: w.width,
+          height: w.height,
+          zIndex: w.zIndex,
+          bgcolor: 'background.paper',
+          border: 1,
+          borderColor: 'divider',
+          borderRadius: 1,
+          opacity: 0.95,
+          userSelect: 'none',
+        }}
+      />
+    );
+  }
   return (
     <Box
       data-widget-id={w.id}
