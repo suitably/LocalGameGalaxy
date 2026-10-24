@@ -1,6 +1,7 @@
 /**
  * Widget scale, show-always and hidden zones [ID: LOGIC-TABLETOP-VIEW-REDUCER]
  */
+import { moveZoneWithContents, resizeZone } from '../hiddenZoneLogic';
 import type { TabletopAction, TabletopGameState } from '../tabletopReducer';
 
 export type ViewAction = Extract<
@@ -12,6 +13,8 @@ export type ViewAction = Extract<
       | 'SET_WIDGET_SHOW_ALWAYS'
       | 'ADD_HIDDEN_ZONE'
       | 'UPDATE_HIDDEN_ZONE'
+      | 'MOVE_HIDDEN_ZONE'
+      | 'RESIZE_HIDDEN_ZONE'
       | 'REMOVE_HIDDEN_ZONE'
       | 'TOGGLE_ZONE_REVEAL';
   }
@@ -109,6 +112,32 @@ export function viewReducer(state: TabletopGameState, action: ViewAction): Table
           ...state.game,
           hiddenZones,
         },
+      };
+    }
+
+    case 'MOVE_HIDDEN_ZONE': {
+      const { id, dx, dy } = action.payload;
+      const result = moveZoneWithContents(state.game, id, dx, dy);
+      if (!result) return state;
+      const widgets = { ...state.game.widgets };
+      for (const [wid, pos] of Object.entries(result.widgets)) {
+        widgets[wid] = { ...widgets[wid], ...pos };
+      }
+      const zone = { ...state.game.hiddenZones![id], ...result.zone };
+      return {
+        ...state,
+        game: { ...state.game, widgets, hiddenZones: { ...state.game.hiddenZones, [id]: zone } },
+      };
+    }
+
+    case 'RESIZE_HIDDEN_ZONE': {
+      const { id, ...rect } = action.payload;
+      const existing = state.game.hiddenZones?.[id];
+      if (!existing) return state;
+      const zone = { ...existing, ...resizeZone(state.game.table, rect) };
+      return {
+        ...state,
+        game: { ...state.game, hiddenZones: { ...state.game.hiddenZones, [id]: zone } },
       };
     }
 

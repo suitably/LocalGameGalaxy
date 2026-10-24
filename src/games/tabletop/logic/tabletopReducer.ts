@@ -95,6 +95,11 @@ export type TabletopAction =
   | { type: 'ADD_HIDDEN_ZONE'; payload: { zone: HiddenZone } }
   | { type: 'UPDATE_HIDDEN_ZONE'; payload: { id: string; changes: Partial<HiddenZone> } }
   | { type: 'REMOVE_HIDDEN_ZONE'; payload: { id: string } }
+  | { type: 'MOVE_HIDDEN_ZONE'; payload: { id: string; dx: number; dy: number } }
+  | {
+      type: 'RESIZE_HIDDEN_ZONE';
+      payload: { id: string; x: number; y: number; width: number; height: number };
+    }
   | { type: 'TOGGLE_ZONE_REVEAL'; payload: { id: string } };
 
 export function tabletopReducer(
@@ -404,6 +409,8 @@ export function tabletopReducer(
     case 'SET_WIDGET_SHOW_ALWAYS':
     case 'ADD_HIDDEN_ZONE':
     case 'UPDATE_HIDDEN_ZONE':
+    case 'MOVE_HIDDEN_ZONE':
+    case 'RESIZE_HIDDEN_ZONE':
     case 'REMOVE_HIDDEN_ZONE':
     case 'TOGGLE_ZONE_REVEAL':
       return viewReducer(state, action);

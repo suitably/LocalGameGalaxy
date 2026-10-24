@@ -2,6 +2,7 @@
 
 ### Added
 
+- **Tabletop: hidden zones** (#539): in edit mode the owner moves and resizes their hidden zone like a widget, and the widgets inside move along (pinned and non-movable ones stay). An eye button inside the zone shows and switches whether only the owner or everyone sees the contents. Other players now really see only placeholders for widgets inside a hidden zone.
 - **Tabletop: save games to the server**: the game manager also lists the games that only live in this browser, and "Save to server" moves them into the companion server's library so every device has them. Editing a saved server game overwrites it; editing a read-only one saves a copy. Images from local folders and the server's asset folders are embedded, so a stored game contains no token.
 - **Melodiq Notes: save to the Notes library**: "Save to Notes library" stores the open score (the original .mxl/.musicxml/.mid), a recording chosen on this device and the bar marks on the companion server; the song picker's new "Notes library" tab opens them again with their recording and marks, and can delete a piece.
 - **Companion server – Melodiq Notes library** (plugin `notes`, `NOTES_DIR`): pieces with sheet music (MusicXML/MIDI), recordings and bar marks are stored in their own folder per piece, independent of the karaoke library; endpoints `/api/notes/pieces*` (create, rename, upload, marks, delete) and `/notes/media/:id/:file` with range streaming.
