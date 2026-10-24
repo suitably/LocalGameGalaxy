@@ -8,9 +8,14 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOffRounded';
 import ZoomInIcon from '@mui/icons-material/ZoomInRounded';
 import ZoomOutIcon from '@mui/icons-material/ZoomOutRounded';
 import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
+import FlipToFrontIcon from '@mui/icons-material/FlipToFrontRounded';
+import FlipToBackIcon from '@mui/icons-material/FlipToBackRounded';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownwardRounded';
 import CheckBoxIcon from '@mui/icons-material/CheckBoxRounded';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
 import type { TabletopWidget } from '../../logic/types';
+import type { ZOrderOp } from '../../logic/zOrder';
 import { useTranslation } from 'react-i18next';
 
 export interface WidgetContextMenuPosition {
@@ -28,7 +33,15 @@ interface WidgetContextMenuProps {
   onToggleShowAlways?: (widgetId: string, current: boolean) => void;
   onScaleWidget?: (widgetId: string, factor: number) => void;
   onResetWidgetScale?: (widgetId: string) => void;
+  onZOrder?: (widgetId: string, op: ZOrderOp) => void;
 }
+
+const Z_ITEMS = [
+  { op: 'front', icon: FlipToFrontIcon, key: 'bringToFront', fallback: 'Bring to front' },
+  { op: 'forward', icon: ArrowUpwardIcon, key: 'bringForward', fallback: 'Bring forward' },
+  { op: 'backward', icon: ArrowDownwardIcon, key: 'sendBackward', fallback: 'Send backward' },
+  { op: 'back', icon: FlipToBackIcon, key: 'sendToBack', fallback: 'Send to back' },
+] as const;
 
 export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = ({
   position,
@@ -39,6 +52,7 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = ({
   onToggleShowAlways,
   onScaleWidget,
   onResetWidgetScale,
+  onZOrder,
 }) => {
   const { t } = useTranslation();
 
@@ -100,6 +114,24 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = ({
       )}
 
       <Divider sx={{ my: 0.5 }} />
+
+      {onZOrder &&
+        Z_ITEMS.map(({ op, icon: Icon, key, fallback }) => (
+          <MenuItem
+            key={op}
+            onClick={() => {
+              onZOrder(widget.id, op);
+              onClose();
+            }}
+          >
+            <ListItemIcon>
+              <Icon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{t(`games.tabletop.${key}`, fallback)}</ListItemText>
+          </MenuItem>
+        ))}
+
+      {onZOrder && <Divider sx={{ my: 0.5 }} />}
 
       {onScaleWidget && (
         <>

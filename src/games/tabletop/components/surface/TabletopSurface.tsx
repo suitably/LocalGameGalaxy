@@ -18,6 +18,7 @@ import { createDefaultHiddenZone } from '../../logic/hiddenZoneLogic';
 import { getSeatWidgets } from '../../logic/seatLogic';
 import { filterBoardHolders, filterBoardWidgets } from '../../logic/boardFilter';
 import { SurfaceSeatControls } from './SurfaceSeatControls';
+import { useZOrderShortcuts } from '../../hooks/useZOrderShortcuts';
 import { useFitToScreen } from '../../hooks/useFitToScreen';
 import { BoardDragOverlay } from './BoardDragOverlay';
 
@@ -41,6 +42,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
   const [contextMenuPos, setContextMenuPos] = useState<WidgetContextMenuPosition | null>(null);
 
   const selection = useTabletopSelection({ dispatch });
+  const reorderWidget = useZOrderShortcuts(selection.selectedWidgetIds, dispatch);
   const { game, flyingCards } = state;
   const seats = useMemo(() => getSeatWidgets(game.widgets), [game.widgets]);
   const activeSeat = useMemo(() => {
@@ -95,9 +97,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
   const fitToScreen = useFitToScreen(containerRef, game.table, setTransform, setContainerSize);
 
   const onPointerDownBoardWidget = (e: React.PointerEvent, w: TabletopWidget) => {
-    if (selection.handleWidgetClick(w.id, e.shiftKey)) {
-      return;
-    }
+    if (selection.handleWidgetClick(w.id, e.shiftKey)) return;
     handlePointerDownWidget(e, w);
   };
 
@@ -238,6 +238,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
         onScaleWidget={(id, factor) =>
           dispatch({ type: 'SCALE_WIDGETS', payload: { widgetIds: [id], factor } })
         }
+        onZOrder={reorderWidget}
         onResetWidgetScale={(id) =>
           dispatch({ type: 'RESET_WIDGET_SCALE', payload: { widgetIds: [id] } })
         }

@@ -9,7 +9,7 @@ generated:
   by: claude-code
 verified:
   at: 2026-10-24
-  method: 'Read src/games/tabletop/logic/{tabletopReducer,widgetEdits,editHistory,stateDelta,syncProtocol,tabletopStorage,tabletopServerApi,serverGameSnapshot}.ts, hooks/useGameManager.ts, logic/reducers/*, hooks/{useTabletopSync,useTabletopAutosave}.ts and their tests.'
+  method: 'Read logic/zOrder.ts, reducers/viewReducer.ts (z-order); src/games/tabletop/logic/{tabletopReducer,widgetEdits,editHistory,stateDelta,syncProtocol,tabletopStorage,tabletopServerApi,serverGameSnapshot}.ts, hooks/useGameManager.ts, logic/reducers/*, hooks/{useTabletopSync,useTabletopAutosave}.ts and their tests.'
 sources:
   - 'src/games/tabletop/logic/tabletopReducer.ts'
   - 'src/games/tabletop/logic/reducers/'
@@ -32,12 +32,16 @@ Roadmap and comparison with VirtualTabletop: [2026-10-21 plan](../reports/2026-1
 | `deckReducer.ts`      | `SHUFFLE_DECK`, `DRAW_CARD`, `RETURN_CARD_TO_DECK`                                           |
 | `bagReducer.ts`       | `DRAW_FROM_BAG`                                                                              |
 | `pieceReducer.ts`     | `TAKE_PIECE_FROM_SUPPLY`, `PLAY_CARD_FROM_HAND`                                              |
-| `viewReducer.ts`      | `SCALE_WIDGETS`, `RESET_WIDGET_SCALE`, `SET_WIDGET_SHOW_ALWAYS`, hidden zones                |
+| `viewReducer.ts`      | `SCALE_WIDGETS`, `RESET_WIDGET_SCALE`, `SET_WIDGET_SHOW_ALWAYS`, `SET_Z_ORDER`, hidden zones |
 | `tableToolReducer.ts` | `TOGGLE_TIMER`, `RESET_TIMER`, `SPIN_SPINNER`, `NEXT_STATE` (rules in `logic/tableTools.ts`) |
 | `editReducer.ts`      | `PATCH_WIDGETS`, `ADD_WIDGET`, `DELETE_WIDGETS`, `UPDATE_TABLE`                              |
 | `holderMembership.ts` | helper `removeFromHolderAndUpdateHand`                                                       |
 
 Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`.
+
+### Stacking order
+
+`logic/zOrder.ts` holds the pure rules on `zIndex` (widgets without a `parent` only). `MOVE_WIDGET` without an explicit `zIndex` puts the moved widget above all others (`raiseWidget`; the stack is renumbered to 1..n once it passes `Z_RENUMBER_LIMIT`, so it stays below hidden zones). `SET_Z_ORDER { widgetIds, op }` (`front`, `forward`, `backward`, `back`) comes from the widget context menu (`WidgetContextMenu`; a widget inside the selection moves the whole selection) and from Ctrl/Cmd+`]`/`[` (Shift: front/back, `hooks/useZOrderShortcuts.ts`, acts on the selection). Forward/backward pass the next overlapping widget (bounding boxes, rotation ignored); front/back go past all. An explicit send to back sticks until that widget is moved again. Only `zIndex` values change, so it syncs as an ordinary intent and delta. Not covered: editor-mode selection (`selectedId`) has no shortcut yet.
 
 ## 2. Editor operations and undo
 
