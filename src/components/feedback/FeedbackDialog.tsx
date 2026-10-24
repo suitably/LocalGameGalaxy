@@ -50,7 +50,6 @@ export const FeedbackDialog: React.FC = () => {
         sx: {
           borderRadius: 4,
           p: 3,
-          backdropFilter: 'blur(12px)',
         },
       }}
     >

@@ -96,7 +96,6 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
                   bgcolor: `hsl(${profile.hue}, 100%, 50%)`,
                   cursor: 'pointer',
                   border: '2px solid white',
-                  boxShadow: '0 0 4px rgba(0,0,0,0.3)',
                   transition: 'transform 0.2s',
                   '&:hover': { transform: 'scale(1.1)' },
                 }}

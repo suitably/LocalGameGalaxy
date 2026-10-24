@@ -2,7 +2,7 @@
  * Renders glowing outlines over multi-selected widgets [ID: GAME-TABLETOP-SELECTION-HIGHLIGHT]
  */
 import React from 'react';
-import { alpha, Box } from '@mui/material';
+import { Box } from '@mui/material';
 import type { TabletopWidget } from '../../logic/types';
 
 interface SelectionHighlightLayerProps {
@@ -34,7 +34,6 @@ export const SelectionHighlightLayer: React.FC<SelectionHighlightLayerProps> = (
               border: '2px solid',
               borderColor: 'secondary.main',
               borderRadius: 2,
-              boxShadow: (theme) => `0 0 14px ${alpha(theme.palette.secondary.main, 0.75)}`,
               pointerEvents: 'none',
               zIndex: (w.zIndex || 0) + 150,
               transition: 'all 0.1s ease-out',

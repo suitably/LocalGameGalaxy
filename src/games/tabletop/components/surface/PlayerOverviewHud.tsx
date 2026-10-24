@@ -97,7 +97,6 @@ export const PlayerOverviewHud: React.FC<PlayerOverviewHudProps> = ({
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 1.5,
-                    boxShadow: isSelf ? `0 0 16px ${stats.color}33` : 'none',
                   }}
                 >
                   {/* Header: Avatar, Name & Turn */}

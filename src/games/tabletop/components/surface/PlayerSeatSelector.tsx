@@ -37,7 +37,6 @@ export const PlayerSeatSelector: React.FC<PlayerSeatSelectorProps> = ({
         alignItems: 'center',
         gap: 1,
         bgcolor: (theme) => alpha(theme.palette.background.default, 0.88),
-        backdropFilter: 'blur(8px)',
         border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.18)}`,
         borderRadius: 3,
         px: 1.2,
@@ -73,9 +72,7 @@ export const PlayerSeatSelector: React.FC<PlayerSeatSelectorProps> = ({
                 cursor: 'pointer',
                 border: isCurrent ? '2.5px solid' : '1.5px solid',
                 borderColor: isCurrent ? 'text.primary' : 'divider',
-                boxShadow: isCurrent
-                  ? `0 0 10px ${color}, 0 2px 6px rgba(0,0,0,0.5)`
-                  : '0 2px 4px rgba(0,0,0,0.4)',
+                boxShadow: isCurrent ? 'none' : '0 2px 4px rgba(0,0,0,0.4)',
                 transform: isCurrent ? 'scale(1.15)' : 'scale(1)',
                 transition: 'transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease',
                 '&:hover': {

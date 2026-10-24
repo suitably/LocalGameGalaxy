@@ -51,7 +51,6 @@ export const SudokuGrid: React.FC<SudokuGridProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backdropFilter: 'blur(4px)',
           }}
         >
           <Typography variant="h5" sx={{ fontWeight: 800, color: 'secondary.main' }}>

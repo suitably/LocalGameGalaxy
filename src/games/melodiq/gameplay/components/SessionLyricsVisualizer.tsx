@@ -76,6 +76,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
             zIndex: 10,
             borderTop: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.12)}`,
             bgcolor: 'rgba(0,0,0,0.4)',
+            // Blur kept on purpose: the bar sits over the lyrics video and needs it for legibility.
             backdropFilter: 'blur(8px)',
             position: 'relative',
             display: 'flex',
@@ -207,6 +208,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
           zIndex: 10,
           borderTop: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.12)}`,
           bgcolor: 'rgba(0,0,0,0.4)',
+          // Blur kept on purpose: the bar sits over the lyrics video and needs it for legibility.
           backdropFilter: 'blur(8px)',
           position: 'relative',
           display: 'flex',

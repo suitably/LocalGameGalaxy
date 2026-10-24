@@ -150,7 +150,6 @@ const PlayerScoreDisplay = ({
                   width: `${progress}%`,
                   bgcolor: rank.color,
                   transition: 'width 0.3s ease-out',
-                  boxShadow: `0 0 5px ${rank.color}`,
                 }}
               />
             </Box>

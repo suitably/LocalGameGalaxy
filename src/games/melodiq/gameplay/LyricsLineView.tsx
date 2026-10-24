@@ -58,7 +58,6 @@ export const LeadInIndicator: React.FC<LeadInIndicatorProps> = React.memo(
                     height: `${0.65 * scale}rem`,
                     borderRadius: '50%',
                     bgcolor: isLit ? primaryColor : 'rgba(255,255,255,0.25)',
-                    boxShadow: isLit ? `0 0 12px ${primaryColor}, 0 0 4px #ffffff` : 'none',
                     transform: isLit ? 'scale(1.2)' : 'scale(1.0)',
                     transition: 'all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   }}
@@ -136,7 +135,6 @@ export const LyricsLine: React.FC<LyricsLineProps> = React.memo(
           const isActive = currentBeat >= note.start && currentBeat < noteEnd;
           const noteColor = isActive ? primaryColor : isPast ? '#ffffff' : 'rgba(255,255,255,0.72)';
           const baseShadow = '0 2px 6px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8)';
-          const activeGlow = `0 0 16px ${primaryColor}, 0 0 32px ${primaryColor}, 0 2px 6px rgba(0,0,0,0.9)`;
 
           return (
             <Box
@@ -145,7 +143,7 @@ export const LyricsLine: React.FC<LyricsLineProps> = React.memo(
               sx={{
                 display: 'inline-block',
                 color: noteColor,
-                textShadow: isActive ? activeGlow : baseShadow,
+                textShadow: baseShadow,
                 filter: enableZoom && isActive ? 'brightness(1.25)' : 'none',
                 transition:
                   'color 0.05s ease-out, text-shadow 0.05s ease-out, filter 0.05s ease-out',

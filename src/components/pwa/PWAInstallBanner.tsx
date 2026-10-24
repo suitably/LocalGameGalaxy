@@ -36,11 +36,7 @@ export const PWAInstallBanner: React.FC = () => {
           mb: 4,
           p: { xs: 2, sm: 2.5 },
           borderRadius: 3,
-          background: (theme) =>
-            `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.15)} 0%, ${alpha(
-              theme.palette.secondary.main,
-              0.15,
-            )} 100%)`,
+          bgcolor: 'background.paper',
           border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
           display: 'flex',
           flexDirection: { xs: 'column', sm: 'row' },

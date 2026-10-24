@@ -71,7 +71,6 @@ export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({
         borderRadius: 3,
         bgcolor: (theme) => alpha(theme.palette.text.primary, 0.06),
         border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.12)}`,
-        backdropFilter: 'blur(8px)',
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
         flexShrink: 0,
         ...sx,

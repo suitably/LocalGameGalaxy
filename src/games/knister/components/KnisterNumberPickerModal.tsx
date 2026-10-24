@@ -124,7 +124,6 @@ export const KnisterNumberPickerModal: React.FC<KnisterNumberPickerModalProps> =
                     color: 'warning.contrastText',
                     transform: 'scale(1.05)',
                     borderColor: 'warning.light',
-                    boxShadow: (theme) => `0 0 16px ${alpha(theme.palette.warning.main, 0.5)}`,
                   },
                   '&:active': {
                     transform: 'scale(0.95)',

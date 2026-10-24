@@ -1,6 +1,6 @@
 {
   "src/games/melodiq/components/UserProfilesManager.tsx": 7,
-  "src/games/melodiq/gameplay/LyricsLineView.tsx": 4,
+  "src/games/melodiq/gameplay/LyricsLineView.tsx": 3,
   "src/games/tabletop/components/controller/HandCardItem.tsx": 1,
   "src/games/tabletop/components/editor/TableSettingsDialog.tsx": 1,
   "src/games/tabletop/components/surface/BoardDragOverlay.tsx": 1,
