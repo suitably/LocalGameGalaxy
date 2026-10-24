@@ -2,6 +2,12 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Nexumia server rename and signaling image name (#530, claude-code)
+
+- Companion server is now called Nexumia server. Docker images `nexumia/nexumia-server` (compose service `nexumia-server`, container `nexumia-server`, tunnel `nexumia-tunnel`); `nexumia/melodiq-server` is a deprecated alias. Dev compose service/container `nexumia-server-dev`. Updated: `deployment.md`, `external-sources.md`, `ci-cd-pipelines.md`, `dev-compose-workflow.md`, `monitoring-scaling.md`, `troubleshooting.md`, `server-runbook.md`.
+- Signaling image: `docker-publish.yml` pushed to `${DOCKERHUB_USERNAME}/galaxy-signaling` while every compose file pulls `nexumia/galaxy-signaling`. Both publish targets now use the literal `nexumia` namespace. Open: [Q17](open-questions.md).
+- Outside `docs/`: UI strings (de/en) and the server plugin name now say Nexumia server; the download helper links the `nexumia-server-*` release files it always should have; `composeYamlGenerator` emits `nexumia/nexumia-server`; `server/package.json` description. Routes, storage keys and the `server/` folder are unchanged.
+
 ## 2026-10-24 — Tabletop hidden zones: move, resize, reveal toggle, fog of war (claude-code)
 
 - `docs/tech/tabletop-engine.md`: new "Hidden zones" section, viewReducer row names the zone actions.

@@ -73,7 +73,7 @@ export const ServerSetupWizard: React.FC<ServerSetupWizardProps> = ({ isDialog =
             <Typography variant="body2" color="text.secondary">
               {t(
                 'server.setup.subtitle',
-                'Wähle deine bevorzugte Methode, um deinen Melodiq Companion Server in Sekundenschnelle zu starten und zu verbinden.',
+                'Wähle deine bevorzugte Methode, um deinen Nexumia Companion Server in Sekundenschnelle zu starten und zu verbinden.',
               )}
             </Typography>
           </Box>

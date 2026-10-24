@@ -21,7 +21,7 @@ export const melodiqPlugin: GalaxyPlugin = {
     // Root info endpoint (matches Express GET /)
     app.get('/', (c) =>
       c.json({
-        name: 'MelodiQ Server',
+        name: 'Nexumia Server',
         version: '2.0.0',
         status: 'running',
       }),

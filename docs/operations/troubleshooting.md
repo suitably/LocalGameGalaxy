@@ -9,7 +9,7 @@ generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
 verified:
-  at: 2026-10-18
+  at: 2026-10-24
   method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
@@ -32,7 +32,7 @@ The React client UI loads, but actions (e.g. searching songs, fetching lists, or
 2. Inspect the failed HTTP request. Look at the `Access-Control-Allow-Origin` response header.
 3. The server does not log CORS rejections; a missing `Access-Control-Allow-Origin` header on the response is the signal. Check the environment of the server container:
    ```bash
-   docker compose exec melodiq-server printenv ALLOWED_ORIGINS
+   docker compose exec nexumia-server printenv ALLOWED_ORIGINS
    ```
 
 ### Mitigation Steps

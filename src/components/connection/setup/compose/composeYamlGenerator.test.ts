@@ -22,7 +22,7 @@ describe('generateComposeYaml (#342)', () => {
 
   it('runs one companion container with the selected plugins and their volumes', () => {
     const yaml = generateComposeYaml(opts({ melodiq: false, tabletop: true }));
-    expect(yaml.match(/nexumia\/melodiq-server/g)).toHaveLength(1);
+    expect(yaml.match(/nexumia\/nexumia-server/g)).toHaveLength(1);
     expect(yaml).toContain('PLUGINS=relay,tabletop');
     expect(yaml).toContain('"./tabletop:/app/tabletop"');
     expect(yaml).not.toContain('MUSIC_DIR');
@@ -55,10 +55,10 @@ describe('generateComposeYaml (#342)', () => {
     expect(yaml).toContain('"3100:3000"');
     expect(yaml).toContain('"8100:8000"');
     expect(yaml).toContain('SECURITY_TOKEN=abcrm');
-    expect(yaml).toContain('nexumia/melodiq-server:full');
+    expect(yaml).toContain('nexumia/nexumia-server:full');
     // the AI image only makes sense with Melodiq
     expect(generateComposeYaml(opts({ melodiq: false, tabletop: true, aiImage: true }))).toContain(
-      'nexumia/melodiq-server:latest',
+      'nexumia/nexumia-server:latest',
     );
   });
 

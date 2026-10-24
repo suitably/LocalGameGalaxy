@@ -51,6 +51,10 @@ ADR-0004 says "Demucs via PyTorch". `server/src/plugins/melodiq/services/separat
 
 Since #539 board widgets inside a non-revealed hidden zone render as placeholders for other seats, but `BoardDragOverlay`, `DockDragOverlay`, `FlyingCardsLayer` and select-all / shift-multiselect (`SelectionHighlightLayer`, `WidgetContextMenu`) do not check zones; sync still sends full widget data to every device. A device without a selected seat falls back to the first seat as viewer. Decide whether to close these gaps in a follow-up.
 
+## Q17 — Docker Hub namespace of the server and signaling images (#530)
+
+Compose files, README and [deployment](tech/deployment.md) pull `nexumia/galaxy-signaling`, `nexumia/nexumia-server` and the deprecated `nexumia/melodiq-server`. Until #530 the workflow pushed to `${DOCKERHUB_USERNAME}/…`, so the pulled name only existed if that secret was `nexumia`. The workflow now pushes to the literal `nexumia` namespace. **(user)** Confirm that the Docker Hub account behind `DOCKERHUB_USERNAME` owns the `nexumia` namespace, and decide when to stop publishing `melodiq-server`.
+
 ## Resolved 2026-10-18
 
 - Q15 issues #353–#361 vs branch state → #384 merged; #353, #354, #355, #357, #358 closed, specs moved to [archive/issue-specs](archive/index.md). Open: #356, #359, #360 ([tasks](tasks/index.md)); #361 closed 2026-10-21.

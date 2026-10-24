@@ -9,7 +9,7 @@ generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
 verified:
-  at: 2026-10-18
+  at: 2026-10-24
   method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
@@ -65,8 +65,8 @@ docker compose -f docker-compose.dev.yml down
 
 | Feature           | Production                             | Dev                          |
 | ----------------- | -------------------------------------- | ---------------------------- |
-| Image Source      | `nexumia/melodiq-server:latest` (Pull) | Local build via `Dockerfile` |
+| Image Source      | `nexumia/nexumia-server:latest` (Pull) | Local build via `Dockerfile` |
 | `restart` Policy  | `always`                               | `no`                         |
 | `ALLOWED_ORIGINS` | `https://nexumia.de,...`               | Empty (all origins allowed)  |
 | `NODE_ENV`        | `production`                           | `development`                |
-| Container Name    | `melodiq-server`                       | `melodiq-server-dev`         |
+| Container Name    | `nexumia-server`                       | `nexumia-server-dev`         |

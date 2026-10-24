@@ -172,14 +172,14 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
             variant="outlined"
             color="secondary"
             onClick={() => {
-              let filename = 'melodiq-server-win.zip';
+              let filename = 'nexumia-server-win.zip';
               if (navigator.userAgent.includes('Mac')) {
-                filename = 'melodiq-server-macos.tar.gz';
+                filename = 'nexumia-server-macos.tar.gz';
               } else if (
                 navigator.userAgent.includes('Linux') &&
                 !navigator.userAgent.includes('Android')
               ) {
-                filename = 'melodiq-server-linux.tar.gz';
+                filename = 'nexumia-server-linux.tar.gz';
               }
               window.location.href = `https://github.com/suitably/LocalGameGalaxy/releases/latest/download/${filename}`;
             }}

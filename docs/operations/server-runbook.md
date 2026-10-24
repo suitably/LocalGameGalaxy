@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-18
+  at: 2026-10-24
   method: 'read server/docker-compose*.yml, server/src/config.ts, server/src/core/app.ts, server/src/plugins/melodiq/routes/config.ts; commands not executed'
 sources:
   - 'server/docker-compose.yml'
@@ -36,7 +36,7 @@ Read [server-security §6](../tech/server-security.md#6-known-gaps) before expos
 ```bash
 cd server
 docker compose up -d                       # signaling + server (+ optional cloudflared)
-docker compose logs -f melodiq-server
+docker compose logs -f nexumia-server
 docker compose down
 docker compose pull && docker compose up -d   # update to the latest published image
 docker compose -f docker-compose.dev.yml up -d --build   # local build, see workflows/dev-compose-workflow.md
@@ -50,7 +50,7 @@ Restarts drop WebRTC/WebSocket clients for a moment; phones reconnect automatica
 
 1. Generate: `openssl rand -hex 16`.
 2. Set it — either `token` in `config.json`, or `SECURITY_TOKEN=<new>` in the compose file / environment (env wins).
-3. Restart: `docker compose restart melodiq-server` (or restart the Node process).
+3. Restart: `docker compose restart nexumia-server` (or restart the Node process).
 4. Verify: `curl -H "Authorization: Bearer <new>" http://localhost:3000/api/auth/me` → `200`; the old token → `401`.
 5. Re-pair clients (QR code / settings); until then they get `401`.
 
