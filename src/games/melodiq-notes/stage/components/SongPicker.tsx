@@ -15,6 +15,7 @@ import { DEMO_SONGS } from '../../demoSongs';
 import type { StageSongState } from '../useStageSong';
 import { ServerSongList } from './ServerSongList';
 import { LibraryTab } from './LibraryTab';
+import { NotesLibraryList } from './NotesLibraryList';
 
 interface SongPickerProps {
   open: boolean;
@@ -22,7 +23,7 @@ interface SongPickerProps {
   state: StageSongState;
 }
 
-type PickerTab = 'server' | 'library' | 'examples' | 'file';
+type PickerTab = 'notes' | 'server' | 'library' | 'examples' | 'file';
 
 export function SongPicker({ open, onClose, state }: SongPickerProps) {
   const { t } = useTranslation();
@@ -44,12 +45,18 @@ export function SongPicker({ open, onClose, state }: SongPickerProps) {
         variant="scrollable"
         sx={{ px: 2 }}
       >
+        <Tab value="notes" label={k('tab_notes')} />
         <Tab value="server" label={k('tab_server')} />
         <Tab value="library" label={k('tab_library')} />
         <Tab value="examples" label={k('tab_examples')} />
         <Tab value="file" label={k('tab_file')} />
       </Tabs>
       <DialogContent sx={{ minHeight: 320 }}>
+        {tab === 'notes' && (
+          <NotesLibraryList
+            onPlay={(piece, score) => closeIfLoaded(state.loadNotesPiece(piece, score))}
+          />
+        )}
         {tab === 'server' && (
           <ServerSongList
             onPlay={(song, score) => closeIfLoaded(state.loadServerScore(song, score))}

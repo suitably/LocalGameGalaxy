@@ -729,7 +729,15 @@
         "backing_others": "Backing only",
         "backing_none": "Silent",
         "recording_on": "Recording on",
-        "recording_off": "Recording off"
+        "recording_off": "Recording off",
+        "tab_notes": "Notes library",
+        "notes_server_error": "Notes library not reachable ({{error}}). Is the \"notes\" plugin active on the server?",
+        "notes_empty": "Nothing saved yet. Open a score and tap \"Save to Notes library\".",
+        "notes_recordings_one": "{{count}} recording",
+        "notes_recordings_other": "{{count}} recordings",
+        "notes_delete": "Delete piece",
+        "notes_delete_confirm": "Delete \"{{title}}\" with its scores, recordings and bar marks from the server?",
+        "save_to_library": "Save to Notes library"
       }
     },
     "kniffel": {
@@ -1038,7 +1046,14 @@
       "mode_own_devices": "Everyone on their own device",
       "mode_own_devices_hint": "Open a session, players join with a QR code or link.",
       "dice_games": "Dice games",
-      "custom_game_meta": "{{min}}–{{max}} players"
+      "custom_game_meta": "{{min}}–{{max}} players",
+      "save_to_server": "Save to server",
+      "local_games_title": "On this device ({{count}})",
+      "local_games_hint": "These games only live in this browser. Move them to the server so every device has them.",
+      "local_games_hint_offline": "These games only live in this browser. With a companion server you can save them there.",
+      "server_saved": "\"{{name}}\" is saved on the server.",
+      "server_saved_copy": "The original is read-only – \"{{name}}\" was saved on the server as a copy.",
+      "server_save_failed": "Saving on the server failed: {{error}}"
     }
   },
   "lobby": {

@@ -729,7 +729,15 @@
         "backing_others": "Nur Begleitung",
         "backing_none": "Stumm",
         "recording_on": "Aufnahme an",
-        "recording_off": "Aufnahme aus"
+        "recording_off": "Aufnahme aus",
+        "tab_notes": "Notes-Bibliothek",
+        "notes_server_error": "Notes-Bibliothek nicht erreichbar ({{error}}). Ist das Plugin „notes\" auf dem Server aktiv?",
+        "notes_empty": "Noch nichts gespeichert. Öffne Noten und tippe auf „In Notes-Bibliothek speichern\".",
+        "notes_recordings_one": "{{count}} Aufnahme",
+        "notes_recordings_other": "{{count}} Aufnahmen",
+        "notes_delete": "Stück löschen",
+        "notes_delete_confirm": "„{{title}}\" mit Noten, Aufnahmen und Taktmarken vom Server löschen?",
+        "save_to_library": "In Notes-Bibliothek speichern"
       }
     },
     "kniffel": {
@@ -1038,7 +1046,14 @@
       "mode_own_devices": "Jeder am eigenen Gerät",
       "mode_own_devices_hint": "Session öffnen, Mitspieler treten per QR-Code oder Link bei.",
       "dice_games": "Würfelspiele",
-      "custom_game_meta": "{{min}}–{{max}} Spieler"
+      "custom_game_meta": "{{min}}–{{max}} Spieler",
+      "save_to_server": "Auf Server speichern",
+      "local_games_title": "Auf diesem Gerät ({{count}})",
+      "local_games_hint": "Diese Spiele liegen nur in diesem Browser. Auf den Server verschoben, haben sie alle Geräte.",
+      "local_games_hint_offline": "Diese Spiele liegen nur in diesem Browser. Mit einem Companion-Server kannst du sie dort speichern.",
+      "server_saved": "„{{name}}\" ist auf dem Server gespeichert.",
+      "server_saved_copy": "Das Original ist schreibgeschützt – „{{name}}\" wurde als Kopie auf dem Server gespeichert.",
+      "server_save_failed": "Speichern auf dem Server fehlgeschlagen: {{error}}"
     }
   },
   "lobby": {

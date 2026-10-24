@@ -1,7 +1,10 @@
 /**
  * Sheet music and bar marks stored next to songs on the companion server [ID: LIB-COMPANION-SCORES]
  */
-import { getHelperToken, getHelperUrl, isHelperActive } from './companionSettings';
+import { getHelperUrl, isHelperActive } from './companionSettings';
+import { companionRequest as request, companionUrl } from './companionHttp';
+
+export { companionUrl };
 
 export interface CompanionScore {
   file: string;
@@ -29,22 +32,6 @@ export interface StoredBarMarks {
 }
 
 export const isCompanionEnabled = () => isHelperActive() && !!getHelperUrl();
-
-/** Absolute URL for a server path such as `/media?...`. */
-export function companionUrl(path: string): string {
-  if (/^https?:\/\//.test(path)) return path;
-  return `${getHelperUrl().replace(/\/$/, '')}${path}`;
-}
-
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const headers = new Headers(init.headers);
-  const token = getHelperToken();
-  if (token) headers.set('Authorization', `Bearer ${token}`);
-  const res = await fetch(companionUrl(path), { ...init, headers });
-  const body = await res.json().catch(() => null);
-  if (!res.ok) throw new Error((body as { error?: string } | null)?.error || `HTTP ${res.status}`);
-  return body as T;
-}
 
 const scorePath = (songId: string, file: string) =>
   `/api/songs/${encodeURIComponent(songId)}/scores/${encodeURIComponent(file)}`;

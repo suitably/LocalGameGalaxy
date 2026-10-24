@@ -2,6 +2,13 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Save to server in Tabletop and Melodiq Notes (claude-code)
+
+- `docs/tech/tabletop-engine.md` §6: game manager with device games, save-to-server, snapshot without tokens, native games load by server id.
+- `docs/tech/architecture.md` §3.6: Melodiq Notes client for the `notes` plugin.
+- `docs/tech/game-catalog.md`: tabletop now uses `lib/companion`.
+- **Code changed:** `src/lib/companion/{companionHttp,notesLibraryApi}.ts`, tabletop `logic/{tabletopServerApi,serverGameSnapshot}.ts`, `hooks/useGameManager.ts`, manager components; Melodiq Notes `stage/logic/notesLibrarySync.ts`, `useStageSong.ts`, `NotesLibraryList.tsx`.
+
 ## 2026-10-24 — Companion server: Notes plugin, saved tabletop games, configurable compose, ARM64 binaries (claude-code)
 
 - `docs/tech/architecture.md` §3.6: `notes` plugin, tabletop save routes, `NOTES_DIR`, auto-discovered data folders.
