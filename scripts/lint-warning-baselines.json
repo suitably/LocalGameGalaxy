@@ -127,7 +127,6 @@
   "src/lib/webrtc/WebRTCHostContext.tsx": 9,
   "src/lib/webrtc/WebRTCHostManager.ts": 43,
   "src/modules/drawing/ExcalidrawLazy.tsx": 4,
-  "src/modules/drawing/ExcalidrawViewer.tsx": 1,
   "src/modules/sharing/useSessionSharing.ts": 8,
   "src/modules/sync/MqttMailboxService.test.ts": 6,
   "src/modules/sync/useMultiChannelSync.test.ts": 1,

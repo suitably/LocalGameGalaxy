@@ -27,6 +27,7 @@
 
 ### Changed
 
+- **Drawing viewer**: the stroke replay logic is a tested pure module and the viewer file is half its former size (#498).
 - **Settings navigation**: the header tabs, drop-down, compact menu and sub-pills are generated from one table; theme colours replace the fixed blue; English defaults for all labels, missing Melodiq tab labels added to both languages (#498).
 - **App header**: burger menu and home/back navigation moved into their own component and hook; the bar uses theme colours (#498).
 - **Server connection settings**: the connection card, setup wizard and UltraStar DB credentials are split into smaller components and hooks; gradient button, blurred dialog and hard-coded colours replaced by theme colours (#498).
