@@ -161,7 +161,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
                   <Box
                     sx={{
                       bgcolor: 'rgba(0,0,0,0.6)',
-                      borderRadius: 1,
+                      borderRadius: 2,
                       p: 0.5,
                       display: 'flex',
                       gap: 0.5,

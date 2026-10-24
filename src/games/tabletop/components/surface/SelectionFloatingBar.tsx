@@ -30,13 +30,13 @@ export const SelectionFloatingBar: React.FC<SelectionFloatingBarProps> = ({
 
   return (
     <Paper
-      elevation={8}
+      elevation={0}
       sx={{
         position: 'absolute',
         top: 20,
         left: '50%',
         transform: 'translateX(-50%)',
-        borderRadius: 4,
+        borderRadius: 5,
         bgcolor: 'background.paper',
         border: '1px solid',
         borderColor: 'primary.main',

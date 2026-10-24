@@ -74,7 +74,7 @@ export const LocalLibrarySettings: React.FC = () => {
                   justifyContent: 'space-between',
                   bgcolor: (theme) => alpha(theme.palette.text.primary, 0.03),
                   p: 1.5,
-                  borderRadius: 1,
+                  borderRadius: 2,
                 }}
               >
                 <Box>

@@ -75,7 +75,7 @@ export function DartsScoreboard({ state }: Props) {
     >
       {/* Left Side: Active/Winner Player */}
       <Paper
-        elevation={4}
+        elevation={0}
         sx={{
           flex: { xs: 'none', md: 1 },
           p: { xs: 1.5, md: 3 },
@@ -121,7 +121,7 @@ export function DartsScoreboard({ state }: Props) {
       {/* Right Side: Other Players */}
       {otherPlayers.length > 0 && (
         <Paper
-          elevation={1}
+          elevation={0}
           sx={{
             flex: 1,
             display: 'flex',

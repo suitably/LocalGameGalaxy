@@ -63,7 +63,7 @@ export const DeviceConnection = <T extends RemotePeerBase = RemotePeerBase>({
           startIcon={<ArrowBackIcon />}
           onClick={onBack}
           variant="outlined"
-          sx={{ borderRadius: 50, px: 3, py: 1, borderColor: 'rgba(0,0,0,0.2)' }}
+          sx={{ borderRadius: 999, px: 3, py: 1, borderColor: 'rgba(0,0,0,0.2)' }}
         >
           {t('common.back', 'Back')}
         </Button>
@@ -122,7 +122,7 @@ export const DeviceConnection = <T extends RemotePeerBase = RemotePeerBase>({
                   InputProps={{ readOnly: true }}
                   sx={{ fontFamily: 'monospace' }}
                 />
-                <Button variant="outlined" onClick={regeneratePartyId} sx={{ borderRadius: 50 }}>
+                <Button variant="outlined" onClick={regeneratePartyId} sx={{ borderRadius: 999 }}>
                   {t('connection.regenerate', 'Regenerate')}
                 </Button>
               </Box>

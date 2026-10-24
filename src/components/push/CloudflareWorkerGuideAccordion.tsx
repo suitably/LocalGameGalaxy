@@ -105,7 +105,7 @@ npx wrangler deploy`;
             component="pre"
             sx={{
               p: 1.5,
-              borderRadius: 1.5,
+              borderRadius: 2,
               bgcolor: 'rgba(0, 0, 0, 0.4)',
               fontSize: '0.8rem',
               overflowX: 'auto',

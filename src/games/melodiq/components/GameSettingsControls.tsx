@@ -58,14 +58,14 @@ export function SettingToggleGroup<T extends string | number>({
         fullWidth
         sx={{
           ...selectedToggleSx,
-          ...(pill && { borderRadius: 50 }),
+          ...(pill && { borderRadius: 999 }),
         }}
       >
         {options.map((option) => (
           <ToggleButton
             key={option.value}
             value={option.value}
-            sx={pill ? { borderRadius: 50 } : undefined}
+            sx={pill ? { borderRadius: 999 } : undefined}
           >
             {option.label}
           </ToggleButton>

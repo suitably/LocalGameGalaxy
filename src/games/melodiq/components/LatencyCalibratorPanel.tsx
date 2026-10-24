@@ -30,7 +30,7 @@ export const LatencyCalibratorPanel: React.FC<LatencyCalibratorPanelProps> = ({
   const running = status === 'running';
 
   return (
-    <Box sx={{ mt: 2, p: 2, bgcolor: 'rgba(0,0,0,0.2)', borderRadius: 1 }}>
+    <Box sx={{ mt: 2, p: 2, bgcolor: 'rgba(0,0,0,0.2)', borderRadius: 2 }}>
       <Box sx={{ mb: 1 }}>
         <Box
           sx={{
@@ -62,7 +62,7 @@ export const LatencyCalibratorPanel: React.FC<LatencyCalibratorPanelProps> = ({
           onClick={startCalibration}
           disabled={running}
           sx={{
-            borderRadius: 50,
+            borderRadius: 999,
             px: 3,
             py: 1,
           }}

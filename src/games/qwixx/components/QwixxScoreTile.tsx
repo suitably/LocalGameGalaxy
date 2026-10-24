@@ -22,7 +22,7 @@ export const QwixxScoreTile: React.FC<QwixxScoreTileProps> = ({
   <Box
     sx={{
       p: 1,
-      borderRadius: 1.5,
+      borderRadius: 2,
       bgcolor: alpha(color, 0.16),
       border: `1px solid ${color}`,
       textAlign: 'center',

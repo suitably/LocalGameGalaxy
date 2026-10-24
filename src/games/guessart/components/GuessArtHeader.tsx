@@ -83,7 +83,7 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
   return (
     <AppBar
       position="static"
-      elevation={1}
+      elevation={0}
       sx={{
         bgcolor: 'background.default',
         backgroundImage: 'none',

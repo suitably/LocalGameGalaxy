@@ -58,7 +58,7 @@ export const GameTimer: React.FC<GameTimerProps> = ({ timerLength, onTimeUp, onE
           borderRadius: 3,
           bgcolor: (theme) => alpha(theme.palette.background.default, 0.7),
           border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
-          boxShadow: 6,
+          boxShadow: 0,
         }}
       >
         <Typography variant="h4" gutterBottom>

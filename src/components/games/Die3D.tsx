@@ -47,7 +47,7 @@ export const Die3D: React.FC<Die3DProps> = ({
       sx={{
         width: { xs: 44, sm: 52 },
         height: { xs: 44, sm: 52 },
-        borderRadius: 2.5,
+        borderRadius: 3,
         bgcolor: resolvedColor.bg,
         color: resolvedColor.text,
         border: `2px solid ${resolvedColor.border || 'transparent'}`,

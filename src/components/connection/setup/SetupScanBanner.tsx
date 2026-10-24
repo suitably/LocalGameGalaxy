@@ -66,7 +66,7 @@ export const SetupScanBanner: React.FC<SetupScanBannerProps> = ({
           startIcon={<RefreshIcon />}
           onClick={onRescan}
           disabled={scanStatus === 'checking'}
-          sx={{ borderRadius: 50, textTransform: 'none' }}
+          sx={{ borderRadius: 999, textTransform: 'none' }}
         >
           {t('server.setup.autodetect.rescan', 'Scan Again')}
         </Button>
@@ -77,7 +77,7 @@ export const SetupScanBanner: React.FC<SetupScanBannerProps> = ({
             variant="contained"
             color="success"
             onClick={onConnect}
-            sx={{ borderRadius: 50, textTransform: 'none', px: 2 }}
+            sx={{ borderRadius: 999, textTransform: 'none', px: 2 }}
           >
             {scanStatus === 'connected'
               ? t('server.setup.autodetect.connected_btn', 'Successfully Connected')

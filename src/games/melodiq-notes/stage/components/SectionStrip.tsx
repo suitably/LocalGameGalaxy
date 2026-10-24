@@ -48,7 +48,7 @@ export function SectionStrip({ engine }: { engine: StageEngine }) {
               sx={{
                 position: 'relative',
                 height: 28,
-                borderRadius: 1.5,
+                borderRadius: 2,
                 border: 1,
                 overflow: 'hidden',
                 borderColor: inLoop ? 'primary.main' : 'divider',
@@ -75,7 +75,7 @@ export function SectionStrip({ engine }: { engine: StageEngine }) {
             top: -3,
             bottom: -3,
             width: 2,
-            borderRadius: 1,
+            borderRadius: 2,
             bgcolor: 'text.primary',
             left: `calc(${progress * 100}% - 1px)`,
             pointerEvents: 'none',

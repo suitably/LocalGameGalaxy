@@ -41,7 +41,7 @@ export const QwixxCellBadge: React.FC<{ cell: SheetCell }> = ({ cell }) => {
         fontSize: { xs: '0.65rem', sm: '0.75rem', md: '0.8rem' },
         px: { xs: 0.45, sm: 0.65 },
         py: 0.15,
-        borderRadius: 1.2,
+        borderRadius: 2,
         border: `1.5px solid ${palette.piece.contrastText}`,
         lineHeight: 1,
         letterSpacing: 0.5,

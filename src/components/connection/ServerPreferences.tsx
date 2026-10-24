@@ -180,7 +180,7 @@ export const ServerPreferences: React.FC = () => {
           </Box>
 
           {/* Auto Vocal Separation */}
-          <Box sx={{ bgcolor: 'action.hover', p: 1.5, borderRadius: 1 }}>
+          <Box sx={{ bgcolor: 'action.hover', p: 1.5, borderRadius: 2 }}>
             <FormControlLabel
               control={
                 <Switch

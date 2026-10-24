@@ -65,7 +65,7 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
       <Button
         variant="outlined"
         onClick={onRefreshDevices}
-        sx={{ mb: 2, borderRadius: 50, px: 3 }}
+        sx={{ mb: 2, borderRadius: 999, px: 3 }}
         startIcon={<RefreshIcon />}
       >
         {t('melodiq.setup.refresh_devices', 'Refresh Devices')}
@@ -139,7 +139,7 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
               variant="outlined"
               startIcon={<FiberManualRecordIcon sx={{ color: `hsl(${p.hue}, 100%, 50%)` }} />}
               onClick={() => onToggleActivePlayer(p.id)}
-              sx={{ borderRadius: 50 }}
+              sx={{ borderRadius: 999 }}
             >
               {p.name}
             </Button>
@@ -151,7 +151,7 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
               color="secondary"
               startIcon={<SmartToyIcon />}
               onClick={() => onToggleActivePlayer(BOT_ID)}
-              sx={{ borderRadius: 50 }}
+              sx={{ borderRadius: 999 }}
             >
               {botLabel}
             </Button>

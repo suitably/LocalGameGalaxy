@@ -51,7 +51,7 @@ export const DownloadWaitScreen: React.FC<DownloadWaitScreenProps> = ({
         startIcon={<SkipNextIcon />}
         onClick={onSkipAndRequeue}
         sx={{
-          borderRadius: 4,
+          borderRadius: 5,
           px: 4,
           py: 1.25,
           borderWidth: 2,

@@ -126,7 +126,7 @@ export const WordleKeyboard: React.FC<WordleKeyboardProps> = ({
                         borderColor: status === 'empty' ? 'divider' : style.borderColor,
                         borderStyle: style.borderStyle ?? 'solid',
                       }),
-                  borderRadius: 1.5,
+                  borderRadius: 2,
                   '&:hover': {
                     bgcolor: isSpecial || status === 'empty' ? 'action.hover' : style.bgcolor,
                   },

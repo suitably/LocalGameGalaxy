@@ -37,7 +37,7 @@ export const TabletopToolbar: React.FC<TabletopToolbarProps> = ({
 
   return (
     <Paper
-      elevation={4}
+      elevation={0}
       sx={{
         position: 'absolute',
         bottom: 20,

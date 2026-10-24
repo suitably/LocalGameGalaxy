@@ -37,7 +37,7 @@ export const HubAreaFilter: React.FC<HubAreaFilterProps> = ({ areas, selected, o
           fontSize: { xs: '0.875rem', sm: '0.95rem' },
           height: 40,
           px: 0.5,
-          borderRadius: 50,
+          borderRadius: 999,
           border: 1,
           borderColor: isSelected ? fill : 'divider',
           bgcolor: isSelected ? fill : 'transparent',

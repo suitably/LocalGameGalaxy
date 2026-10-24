@@ -67,7 +67,7 @@ export const HandCardItem: React.FC<HandCardItemProps> = ({
         width: 80,
         height: 125,
         flexShrink: 0,
-        borderRadius: 2.5,
+        borderRadius: 3,
         bgcolor: 'text.primary',
         color: content.color || '#111',
         boxShadow: isSelected ? 8 : isDragging ? 6 : 3,
@@ -107,7 +107,7 @@ export const HandCardItem: React.FC<HandCardItemProps> = ({
             color: 'primary.main',
             bgcolor: 'background.paper',
             px: 1,
-            borderRadius: 1,
+            borderRadius: 2,
             boxShadow: 2,
           }}
         >

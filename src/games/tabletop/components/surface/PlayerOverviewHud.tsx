@@ -92,7 +92,7 @@ export const PlayerOverviewHud: React.FC<PlayerOverviewHudProps> = ({
                     bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
                     border: isSelf ? `2px solid ${stats.color}` : 1,
                     borderColor: isSelf ? undefined : 'divider',
-                    borderRadius: 2.5,
+                    borderRadius: 3,
                     p: 2,
                     display: 'flex',
                     flexDirection: 'column',
@@ -146,7 +146,7 @@ export const PlayerOverviewHud: React.FC<PlayerOverviewHudProps> = ({
                     bgcolor="rgba(0,0,0,0.3)"
                     px={1.2}
                     py={0.8}
-                    borderRadius={1.5}
+                    borderRadius={2}
                   >
                     <StyleIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>

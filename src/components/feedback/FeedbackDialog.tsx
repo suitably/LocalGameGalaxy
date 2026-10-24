@@ -48,7 +48,7 @@ export const FeedbackDialog: React.FC = () => {
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: 4,
+          borderRadius: 5,
           p: 3,
         },
       }}

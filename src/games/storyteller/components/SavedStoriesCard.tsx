@@ -41,7 +41,7 @@ export const SavedStoriesCard: React.FC<SavedStoriesCardProps> = ({
               key={g.id}
               sx={{
                 bgcolor: 'action.hover',
-                borderRadius: 1,
+                borderRadius: 2,
                 mb: 1,
                 cursor: 'pointer',
                 '&:hover': { bgcolor: 'action.selected' },

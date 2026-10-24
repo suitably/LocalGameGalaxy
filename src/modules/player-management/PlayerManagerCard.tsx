@@ -39,8 +39,7 @@ export const PlayerManagerCard: React.FC<PlayerManagerCardProps> = ({
       min: minPlayers,
       defaultValue: `Füge mindestens ${minPlayers} Spieler hinzu. Gespielt werden kann flexibel an einem Gerät oder mit eigenen Einladungslinks.`,
     });
-  const displayPlaceholder =
-    placeholder ?? t('lobby.playerNamePlaceholder', 'Name eingeben...');
+  const displayPlaceholder = placeholder ?? t('lobby.playerNamePlaceholder', 'Name eingeben...');
 
   const handleAdd = () => {
     const trimmed = newPlayerName.trim();
@@ -68,7 +67,7 @@ export const PlayerManagerCard: React.FC<PlayerManagerCardProps> = ({
   };
 
   return (
-    <Card variant={cardVariant} sx={{ borderRadius: 3, boxShadow: cardVariant === 'elevation' ? 3 : undefined, ...sx }}>
+    <Card variant={cardVariant} sx={{ borderRadius: 3, boxShadow: 0, ...sx }}>
       <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
         {/* Card Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
@@ -117,7 +116,13 @@ export const PlayerManagerCard: React.FC<PlayerManagerCardProps> = ({
         </Stack>
 
         {/* Player Chips */}
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ minHeight: 40, alignItems: 'center' }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          flexWrap="wrap"
+          useFlexGap
+          sx={{ minHeight: 40, alignItems: 'center' }}
+        >
           {players.map((player, idx) => (
             <Chip
               key={player.name}

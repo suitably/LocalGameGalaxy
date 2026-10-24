@@ -86,7 +86,7 @@ export const WordleBoard: React.FC<WordleBoardProps> = ({
                     fontWeight: 800,
                     textTransform: 'uppercase',
                     userSelect: 'none',
-                    borderRadius: 1.5,
+                    borderRadius: 2,
                     border: '2px solid',
                     ...style,
                     borderColor:

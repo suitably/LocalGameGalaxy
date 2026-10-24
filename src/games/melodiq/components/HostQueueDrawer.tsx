@@ -92,7 +92,7 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({
               color="error"
               onClick={clearQueue}
               startIcon={<DeleteSweepIcon />}
-              sx={{ borderRadius: 50, textTransform: 'none', mr: 1 }}
+              sx={{ borderRadius: 999, textTransform: 'none', mr: 1 }}
             >
               {t('melodiq.queue_drawer.clear', 'Clear')}
             </Button>

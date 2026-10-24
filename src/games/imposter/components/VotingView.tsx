@@ -22,7 +22,7 @@ export const VotingView: React.FC<VotingViewProps> = ({ players, onSelectPlayer 
         {alivePlayers.map((player) => (
           <Grid size={{ xs: 6 }} key={player.id}>
             <Paper
-              elevation={3}
+              elevation={0}
               sx={{
                 p: 3,
                 borderRadius: 3,
@@ -36,7 +36,7 @@ export const VotingView: React.FC<VotingViewProps> = ({ players, onSelectPlayer 
                 '&:hover': {
                   bgcolor: (theme) => alpha(theme.palette.success.main, 0.9),
                   transform: 'scale(1.05)',
-                  boxShadow: 8,
+                  boxShadow: 0,
                   borderColor: 'primary.main',
                 },
               }}

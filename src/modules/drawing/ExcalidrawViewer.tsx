@@ -166,7 +166,7 @@ export const ExcalidrawViewer: React.FC<ExcalidrawViewerProps> = ({
             top: 12,
             right: 12,
             zIndex: 10,
-            borderRadius: 8,
+            borderRadius: 5,
             textTransform: 'none',
             bgcolor: 'rgba(0,0,0,0.6)',
             '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' },

@@ -85,10 +85,10 @@ export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) 
     <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: { xs: 1.5, sm: 3 } }}>
       <Container maxWidth="md" disableGutters>
         <Paper
-          elevation={3}
+          elevation={0}
           sx={{
             p: { xs: 2, sm: 4 },
-            borderRadius: 3.5,
+            borderRadius: 3,
             border: '1px solid',
             borderColor: 'divider',
           }}

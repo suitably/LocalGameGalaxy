@@ -35,7 +35,7 @@ export const QrCodeDialog: React.FC<Props> = ({ open, onClose, dataUrl, keyName,
           })}
         </Typography>
         {dataUrl && (
-          <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, boxShadow: 3 }}>
+          <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, boxShadow: 0 }}>
             <img
               src={dataUrl}
               alt={t('server.admin.qr_alt', 'QR Code')}

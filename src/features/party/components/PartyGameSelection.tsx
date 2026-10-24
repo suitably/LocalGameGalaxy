@@ -82,7 +82,7 @@ export const PartyGameSelection: React.FC<{ lobby: PartyLobbyController }> = ({ 
                 startIcon={<PlayArrowRoundedIcon />}
                 sx={{
                   fontWeight: 800,
-                  borderRadius: 2.5,
+                  borderRadius: 3,
                   py: 1.2,
                   boxShadow: (theme) => `0 4px 14px ${alpha(theme.palette.secondary.main, 0.35)}`,
                 }}

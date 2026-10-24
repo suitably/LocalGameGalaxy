@@ -177,7 +177,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
       />
 
       {/* Game Options Card */}
-      <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+      <Card sx={{ borderRadius: 3, boxShadow: 0 }}>
         <CardContent sx={{ p: 3 }}>
           <Typography variant="h6" fontWeight={700} gutterBottom>
             {t('guessart.optionsTitle', 'Einstellungen')}
@@ -230,7 +230,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
           fontSize: '1.1rem',
           fontWeight: 800,
           borderRadius: 3,
-          boxShadow: 4,
+          boxShadow: 0,
         }}
       >
         {t('guessart.startGame', 'Spiel starten')}

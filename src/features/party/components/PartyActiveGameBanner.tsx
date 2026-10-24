@@ -18,7 +18,7 @@ export const PartyActiveGameBanner: React.FC<{ lobby: PartyLobbyController }> = 
       {/* Active Live Game Banner (when user returned to lobby while game is running) */}
       {roomState?.status === 'in_game' && (
         <Card
-          elevation={3}
+          elevation={0}
           sx={{
             p: 2.5,
             mb: 3,

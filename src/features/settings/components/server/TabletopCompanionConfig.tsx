@@ -179,7 +179,7 @@ export const TabletopCompanionConfig: React.FC = () => {
                 key={dir}
                 sx={{
                   bgcolor: (theme) => alpha(theme.palette.text.primary, 0.03),
-                  borderRadius: 1.5,
+                  borderRadius: 2,
                   mb: 0.75,
                   border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
                 }}

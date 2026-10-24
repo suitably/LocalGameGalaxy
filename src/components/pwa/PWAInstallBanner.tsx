@@ -31,7 +31,7 @@ export const PWAInstallBanner: React.FC = () => {
   return (
     <>
       <Paper
-        elevation={4}
+        elevation={0}
         sx={{
           mb: 4,
           p: { xs: 2, sm: 2.5 },

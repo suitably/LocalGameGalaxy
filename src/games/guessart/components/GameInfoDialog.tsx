@@ -21,7 +21,7 @@ export const GameInfoDialog: React.FC<GameInfoDialogProps> = ({ open, onClose })
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: 4,
+          borderRadius: 5,
           backgroundImage: 'none',
           bgcolor: 'background.paper',
         },

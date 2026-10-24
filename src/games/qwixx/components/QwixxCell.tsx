@@ -69,7 +69,7 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
         sx={{
           width: { xs: 26, sm: 36, md: 44 },
           height: { xs: 32, sm: 40, md: 48 },
-          borderRadius: 1.5,
+          borderRadius: 2,
           bgcolor: isCrossed ? tone.buttonCrossed : tone.button,
           color: isCrossed ? 'common.white' : tone.ink,
           fontWeight: 900,

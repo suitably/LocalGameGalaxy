@@ -25,7 +25,7 @@ export const HistorySessionItem: React.FC<HistorySessionItemProps> = ({
   selected,
   onToggle,
 }) => (
-  <Accordion sx={{ mb: 1, bgcolor: 'action.disabledBackground', borderRadius: 1 }}>
+  <Accordion sx={{ mb: 1, bgcolor: 'action.disabledBackground', borderRadius: 2 }}>
     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
       <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
         <Checkbox checked={selected} onClick={(e) => e.stopPropagation()} onChange={onToggle} />

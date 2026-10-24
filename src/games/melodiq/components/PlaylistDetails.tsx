@@ -69,7 +69,7 @@ export const PlaylistDetails: React.FC<PlaylistDetailsProps> = ({ playlist, onBa
           startIcon={<PlayArrowIcon />}
           onClick={handlePlayNow}
           disabled={playlistSongs.length === 0}
-          sx={{ borderRadius: 50, px: 3 }}
+          sx={{ borderRadius: 999, px: 3 }}
         >
           {t('melodiq.play_now')}
         </Button>
@@ -78,7 +78,7 @@ export const PlaylistDetails: React.FC<PlaylistDetailsProps> = ({ playlist, onBa
           startIcon={<PlaylistAddIcon />}
           onClick={handleAddToQueue}
           disabled={playlistSongs.length === 0}
-          sx={{ borderRadius: 50, px: 3 }}
+          sx={{ borderRadius: 999, px: 3 }}
         >
           {t('melodiq.add_to_queue')}
         </Button>

@@ -27,6 +27,7 @@
 
 ### Changed
 
+- **Radius scale and flat surfaces**: border radii use the DESIGN.md steps only (8/12/20 px, circle, pill) and cards and panels no longer carry elevation shadows; dialogs, menus and other overlays keep the theme shadow (#506).
 - **Flat surfaces**: removed the remaining gradients, glow shadows and glass blur from the install banner, feedback dialog, Melodiq scoring and lyrics dots, Knister number picker, Sudoku pause and Tabletop selection/seat/HUD highlights (#505). The lyrics bar over video keeps its blur for legibility.
 - **Icons**: decorative emoji removed from headings, buttons, menus and status texts in the hub party mode, push settings, Sudoku, Qwixx, Melodiq, Knister and connection screens (de and en). Werewolf winner and role screens, Spieltisch and Cards game tiles now use Rounded icons or area symbols (#504).
 - **Icons**: all `@mui/icons-material` imports use the Rounded variant (DESIGN.md §7); `*Outlined` icons map to their Rounded counterpart. Exceptions: the `GitHub` brand icon (no Rounded variant) and seven over-budget components that Prettier would push over their line budget (ServerDirectoryManager, QueueParticipantDialog, SongActionDialogs, QwixxSheetSelector, Werewolf GameSetup/NightPhase/RoleEditDialog) (#503).

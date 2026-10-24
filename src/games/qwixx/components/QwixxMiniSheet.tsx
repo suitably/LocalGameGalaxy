@@ -28,7 +28,7 @@ export const QwixxMiniSheet: React.FC<QwixxMiniSheetProps> = ({
 
   return (
     <Paper
-      elevation={2}
+      elevation={0}
       sx={{
         p: 1,
         borderRadius: 2,
@@ -48,7 +48,7 @@ export const QwixxMiniSheet: React.FC<QwixxMiniSheetProps> = ({
               display: 'flex',
               gap: 0.3,
               p: 0.4,
-              borderRadius: 1,
+              borderRadius: 2,
               bgcolor: ROW_COLORS[rowDef.defaultColor]?.bg || piecePalette.green,
               alignItems: 'center',
             }}
@@ -59,7 +59,7 @@ export const QwixxMiniSheet: React.FC<QwixxMiniSheetProps> = ({
                 sx={{
                   flex: 1,
                   height: 12,
-                  borderRadius: 0.5,
+                  borderRadius: 2,
                   bgcolor: cell.color ? ROW_COLORS[cell.color]?.bg : pieceNeutrals.white,
                   opacity: cell.color && cell.color !== rowDef.defaultColor ? 0.95 : 0.85,
                   border: cell.isStair || cell.isDouble ? '1.5px solid' : 'none',
@@ -87,7 +87,7 @@ export const QwixxMiniSheet: React.FC<QwixxMiniSheetProps> = ({
                   display: 'flex',
                   gap: 0.3,
                   p: 0.3,
-                  borderRadius: 1,
+                  borderRadius: 2,
                   bgcolor: (theme) =>
                     alpha(
                       index === 1 ? theme.palette.primary.main : theme.palette.success.main,
@@ -103,7 +103,7 @@ export const QwixxMiniSheet: React.FC<QwixxMiniSheetProps> = ({
                     sx={{
                       flex: 1,
                       height: 8,
-                      borderRadius: 0.5,
+                      borderRadius: 2,
                       bgcolor: index === 1 ? 'primary.main' : 'success.main',
                     }}
                   />

@@ -19,7 +19,7 @@ const LegendItem: React.FC<LegendItemProps> = ({ icon, title, description }) => 
       alignItems: 'flex-start',
       gap: 1,
       p: 0.75,
-      borderRadius: 1.5,
+      borderRadius: 2,
       bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
     }}
   >
@@ -77,7 +77,7 @@ export const QwixxBonusLegend: React.FC<{ shields?: number }> = ({ shields }) =>
       elevation={0}
       sx={{
         p: { xs: 1.25, sm: 1.5 },
-        borderRadius: 2.5,
+        borderRadius: 3,
         border: '1px solid',
         borderColor: 'divider',
         display: 'flex',

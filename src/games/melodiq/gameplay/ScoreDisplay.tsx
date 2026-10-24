@@ -140,7 +140,7 @@ const PlayerScoreDisplay = ({
                 height: 3,
                 width: '100%',
                 bgcolor: (theme) => alpha(theme.palette.text.primary, 0.2),
-                borderRadius: 1,
+                borderRadius: 2,
                 overflow: 'hidden',
               }}
             >

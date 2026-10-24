@@ -96,7 +96,7 @@ export const MultiFilterSelect: React.FC<MultiFilterSelectProps> = ({
         onChange(typeof next === 'string' ? next.split(',') : next);
       }}
       renderValue={(selected) => selected.join(', ')}
-      sx={{ borderRadius: 50 }}
+      sx={{ borderRadius: 999 }}
     >
       {options.map((option) => (
         <MenuItem key={option} value={option}>

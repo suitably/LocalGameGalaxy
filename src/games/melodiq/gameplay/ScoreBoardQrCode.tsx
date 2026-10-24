@@ -62,7 +62,7 @@ export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({
 
   return (
     <Paper
-      elevation={3}
+      elevation={0}
       sx={{
         display: 'flex',
         alignItems: 'center',
@@ -82,7 +82,7 @@ export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({
           p: 0.75,
           bgcolor: 'text.primary',
           borderRadius: 2,
-          boxShadow: 2,
+          boxShadow: 0,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -99,11 +99,11 @@ export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({
               display: 'block',
               width: qrSize,
               height: qrSize,
-              borderRadius: 4,
+              borderRadius: 5,
             }}
           />
         ) : (
-          <Box sx={{ width: qrSize, height: qrSize, bgcolor: 'text.primary', borderRadius: 1 }} />
+          <Box sx={{ width: qrSize, height: qrSize, bgcolor: 'text.primary', borderRadius: 2 }} />
         )}
       </Box>
 

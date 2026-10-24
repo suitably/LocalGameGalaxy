@@ -141,7 +141,7 @@ export const SudokuNumpad: React.FC<SudokuNumpadProps> = ({
                 bgcolor: isDone ? 'background.default' : 'background.paper',
                 color: isDone ? 'text.disabled' : 'secondary.main',
                 border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
-                borderRadius: 1.5,
+                borderRadius: 2,
                 '&:hover': {
                   bgcolor: 'secondary.main',
                   color: 'secondary.contrastText',

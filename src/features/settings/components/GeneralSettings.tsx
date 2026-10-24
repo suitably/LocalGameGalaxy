@@ -117,7 +117,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = () => {
             color: 'text.primary',
             border: (theme) => `1px solid ${alpha(theme.palette.warning.main, 0.4)}`,
             '& .MuiAlert-icon': { color: 'warning.main' },
-            borderRadius: 2.5,
+            borderRadius: 3,
           }}
         >
           <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>

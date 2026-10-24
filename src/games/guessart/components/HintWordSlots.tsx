@@ -78,7 +78,7 @@ export const HintWordSlots: React.FC<HintWordSlotsProps> = ({
             sx={{
               width: 38,
               height: 48,
-              borderRadius: 1.5,
+              borderRadius: 2,
               border: '2px solid',
               borderColor: guessChars[index] ? 'primary.main' : 'divider',
               bgcolor: guessChars[index] ? 'primary.main' : 'background.paper',

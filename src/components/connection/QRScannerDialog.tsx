@@ -184,7 +184,7 @@ export const QRScannerDialog: React.FC<QRScannerDialogProps> = ({ open, onClose,
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={handleClose} variant="outlined" sx={{ borderRadius: 50, px: 3 }}>
+        <Button onClick={handleClose} variant="outlined" sx={{ borderRadius: 999, px: 3 }}>
           Cancel
         </Button>
       </DialogActions>

@@ -39,7 +39,7 @@ export const WorkshopMetaPreview: React.FC<WorkshopMetaPreviewProps> = ({ meta }
           sx={{
             width: 100,
             height: 100,
-            borderRadius: 1.5,
+            borderRadius: 2,
             objectFit: 'cover',
             flexShrink: 0,
           }}
@@ -57,11 +57,7 @@ export const WorkshopMetaPreview: React.FC<WorkshopMetaPreviewProps> = ({ meta }
           {meta.description?.slice(0, 150)}
         </Typography>
         <Box display="flex" gap={0.5} flexWrap="wrap">
-          <Chip
-            size="small"
-            label={`${sizeMb} MB`}
-            variant="outlined"
-          />
+          <Chip size="small" label={`${sizeMb} MB`} variant="outlined" />
           <Chip
             size="small"
             label={t('games.tabletop.workshop_subs', '{{count}} Abos', {

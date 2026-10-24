@@ -44,7 +44,7 @@ export const WordleHelpDialog: React.FC<{ open: boolean; onClose: () => void }> 
                   height: 32,
                   flexShrink: 0,
                   border: '2px solid',
-                  borderRadius: 1,
+                  borderRadius: 2,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',

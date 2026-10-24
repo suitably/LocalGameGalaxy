@@ -47,7 +47,7 @@ export const MelodiqServerMovedNotice: React.FC = () => {
   );
 };
 
-const actionSx = { width: { xs: '100%', sm: 'auto' }, borderRadius: 50, px: 4, py: 1.5 } as const;
+const actionSx = { width: { xs: '100%', sm: 'auto' }, borderRadius: 999, px: 4, py: 1.5 } as const;
 
 interface MelodiqGameplayActionsProps {
   onUndo: () => void;

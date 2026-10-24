@@ -30,7 +30,7 @@ interface SongCardProps {
   activeJobType?: string;
 }
 
-const tagSx = { px: 0.5, borderRadius: 0.5, fontSize: '0.65rem' } as const;
+const tagSx = { px: 0.5, borderRadius: 2, fontSize: '0.65rem' } as const;
 
 /**
  * SongCard displays lightweight SongMeta for fast rendering.
