@@ -17,7 +17,6 @@
   "src/components/connection/ServerConnection.tsx": 317,
   "src/games/melodiq/hooks/useMelodiqGlobalEvents.tsx": 272,
   "src/games/garticphone/components/GarticAlbumReveal.tsx": 316,
-  "src/games/melodiq/components/SessionSetup.tsx": 315,
   "src/games/melodiq/hooks/SettingsContext.tsx": 314,
   "src/games/werewolf/components/GameSetup.tsx": 298,
   "src/games/guessart/components/catalogue/CategoryEditorTab.tsx": 281,
