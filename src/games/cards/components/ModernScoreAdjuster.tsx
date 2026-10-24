@@ -1,16 +1,9 @@
 import React from 'react';
-import { piecePalette } from '../../../themeTokens';
-import {
-  Box,
-  Button,
-  Chip,
-  IconButton,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-  alpha,
-} from '@mui/material';
+import { piecePalette, scoreText } from '../../../themeTokens';
+import { transitionOf } from '../../../lib/motion';
+import { ScoreQuickAmounts } from './ScoreQuickAmounts';
+import { Box, Chip, IconButton, Stack, TextField, Tooltip, Typography, alpha } from '@mui/material';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForwardRounded';
 import AddIcon from '@mui/icons-material/AddRounded';
 import RemoveIcon from '@mui/icons-material/RemoveRounded';
 import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
@@ -66,7 +59,7 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
         bgcolor: delta !== 0 ? alpha(accentColor, 0.08) : 'background.default',
         border: '1px solid',
         borderColor: delta !== 0 ? alpha(accentColor, 0.4) : 'divider',
-        transition: 'all 0.2s ease',
+        transition: transitionOf(['background-color', 'border-color'], 'standard'),
       }}
     >
       {/* Player Header & Live Result Preview */}
@@ -95,6 +88,7 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
             label={delta > 0 ? `+${delta}P` : `${delta}P`}
             size="small"
             sx={{
+              ...scoreText,
               fontWeight: 800,
               fontSize: '0.85rem',
               bgcolor: (theme) =>
@@ -109,15 +103,13 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
                   : alpha(theme.palette[delta > 0 ? 'success' : 'error'].main, 0.4),
             }}
           />
-          <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.secondary' }}>
-            ➔
-          </Typography>
+          <ArrowForwardIcon fontSize="small" sx={{ color: 'text.secondary' }} />
           <Chip
             label={`${nextTotal}P`}
             size="small"
             color="primary"
             variant="filled"
-            sx={{ fontWeight: 800, fontSize: '0.85rem' }}
+            sx={{ ...scoreText, fontWeight: 800, fontSize: '0.85rem' }}
           />
         </Box>
       </Box>
@@ -185,67 +177,9 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
         )}
       </Box>
 
-      {/* Quick Increment / Decrement Chips */}
       <Stack spacing={0.8}>
-        {/* Positive Adds */}
-        <Box sx={{ display: 'flex', gap: 0.8, overflowX: 'auto', pb: 0.2 }}>
-          {QUICK_POSITIVE.map((amt) => (
-            <Button
-              key={amt}
-              size="small"
-              variant="outlined"
-              onClick={() => handleStep(amt)}
-              sx={{
-                minWidth: 44,
-                py: 0.2,
-                px: 1,
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: 'success.main',
-                borderColor: (theme) => alpha(theme.palette.success.main, 0.3),
-                bgcolor: (theme) => alpha(theme.palette.success.main, 0.04),
-                borderRadius: 2,
-                textTransform: 'none',
-                '&:hover': {
-                  borderColor: 'success.main',
-                  bgcolor: (theme) => alpha(theme.palette.success.main, 0.15),
-                },
-              }}
-            >
-              +{amt}
-            </Button>
-          ))}
-        </Box>
-
-        {/* Negative Subtracts */}
-        <Box sx={{ display: 'flex', gap: 0.8, overflowX: 'auto', pb: 0.2 }}>
-          {QUICK_NEGATIVE.map((amt) => (
-            <Button
-              key={amt}
-              size="small"
-              variant="outlined"
-              onClick={() => handleStep(amt)}
-              sx={{
-                minWidth: 44,
-                py: 0.2,
-                px: 1,
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: 'error.main',
-                borderColor: (theme) => alpha(theme.palette.error.main, 0.3),
-                bgcolor: (theme) => alpha(theme.palette.error.main, 0.04),
-                borderRadius: 2,
-                textTransform: 'none',
-                '&:hover': {
-                  borderColor: 'error.main',
-                  bgcolor: (theme) => alpha(theme.palette.error.main, 0.15),
-                },
-              }}
-            >
-              {amt}
-            </Button>
-          ))}
-        </Box>
+        <ScoreQuickAmounts amounts={QUICK_POSITIVE} tone="success" onPick={handleStep} />
+        <ScoreQuickAmounts amounts={QUICK_NEGATIVE} tone="error" onPick={handleStep} />
       </Stack>
     </Box>
   );
