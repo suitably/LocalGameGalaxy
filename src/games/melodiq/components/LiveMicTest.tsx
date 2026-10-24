@@ -2,14 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { MicrophoneManager, type PitchResult } from '../audio/MicrophoneManager';
-
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-
-const getNoteName = (midiNote: number): string => {
-  const note = Math.round(midiNote);
-  const octave = Math.floor(note / 12) - 1;
-  return `${NOTE_NAMES[note % 12]}${octave}`;
-};
+import { getNoteName } from '../gameplay/logic/pitchLayout';
 
 /** Volume meter and detected note for the selected microphone. */
 export const LiveMicTest: React.FC<{ deviceId: string }> = ({ deviceId }) => {
