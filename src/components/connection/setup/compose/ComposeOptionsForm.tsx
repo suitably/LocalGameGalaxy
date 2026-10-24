@@ -2,14 +2,12 @@ import React from 'react';
 import {
   alpha,
   Box,
-  Button,
   Checkbox,
   FormControlLabel,
   FormGroup,
   TextField,
   Typography,
 } from '@mui/material';
-import KeyIcon from '@mui/icons-material/KeyRounded';
 import type { Theme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import type { ComposeHostPaths } from './composeYamlGenerator';
@@ -39,7 +37,7 @@ const sectionTitle = (text: string) => (
   </Typography>
 );
 
-/** The choices behind the generated compose file: services, ports, token and host folders. */
+/** The choices behind the generated compose file: services, ports and host folders. */
 export const ComposeOptionsForm: React.FC<{ state: ComposeGeneratorState }> = ({ state }) => {
   const { t } = useTranslation();
   const { options } = state;
@@ -99,26 +97,6 @@ export const ComposeOptionsForm: React.FC<{ state: ComposeGeneratorState }> = ({
             value={options.signalingPort}
             onChange={(e) => state.update({ signalingPort: Number(e.target.value) })}
           />
-        )}
-        {state.companion && (
-          <Box sx={{ display: 'flex', gap: 1, gridColumn: '1 / -1' }}>
-            <TextField
-              size="small"
-              fullWidth
-              label={t('settings.compose_token')}
-              helperText={t('settings.compose_token_hint')}
-              value={options.token}
-              onChange={(e) => state.update({ token: e.target.value })}
-            />
-            <Button
-              variant="outlined"
-              startIcon={<KeyIcon />}
-              onClick={state.generateToken}
-              sx={{ alignSelf: 'flex-start', whiteSpace: 'nowrap', textTransform: 'none' }}
-            >
-              {t('settings.compose_token_generate')}
-            </Button>
-          </Box>
         )}
       </Box>
 

@@ -1129,9 +1129,7 @@
     "companion_tabletop_desc": "Asset caching, TTS/PCIO deck conversion, and physics sync for tabletop simulations.",
     "companion_tabletop_planned_title": "Tabletop Companion Plugin (In Planning)",
     "companion_tabletop_planned_desc": "This interface will locally host and stream large 3D assets, custom card decks, and synchronized tabletop states in the future.",
-    "compose_generator": "Compose",
-    "compose_generator_title": "Docker Compose Generator",
-    "compose_generator_desc": "Pick services, ports and folders – the docker-compose.yml below updates right away.",
+    "compose_generator_desc": "Pick services, ports and folders – the docker-compose.yml below updates right away. The token above is used.",
     "compose_copy": "Copy to Clipboard",
     "compose_copied": "Copied!",
     "compose_services_title": "Services",
@@ -1226,9 +1224,6 @@
     "compose_connection_title": "Connection",
     "compose_port": "Server port",
     "compose_signaling_port": "Signaling port",
-    "compose_token": "Security token",
-    "compose_token_hint": "Leave empty: the server creates one and prints it in the container log.",
-    "compose_token_generate": "Generate token",
     "compose_folders_title": "Folders on your machine",
     "compose_path_config": "Configuration",
     "compose_path_music": "Song library",
@@ -1239,7 +1234,9 @@
     "compose_run_hint": "Save the file in an empty folder and run there:",
     "compose_apply": "Connect this device to localhost",
     "compose_applied": "Server URL and token saved. Start the containers and the app connects.",
-    "compose_applied_no_token": "Server URL saved. Enter the token from the container log under Server."
+    "server_setup_nav": "Setup",
+    "server_setup_title": "Set up a server",
+    "server_setup_desc": "Everything in one place: server app for Windows, macOS and Linux, Docker Compose with the games you want, Cloudflare or a terminal one-liner."
   },
   "server": {
     "title": "Nexumia Server Connection",
@@ -1257,7 +1254,7 @@
     "conn_failed": "Connection Failed. Check URL or Network.",
     "setup": {
       "title": "Automatic Server Setup",
-      "subtitle": "Companion server for Melodiq (karaoke song library & streaming). Party games operate serverless.",
+      "subtitle": "Choose how to start your companion server (Melodiq, Notes, Tabletop) – the token below applies to every option.",
       "collapse_show": "Show Server Setup Assistant",
       "collapse_hide": "Hide Setup Assistant",
       "copy": "Copy",
@@ -1280,17 +1277,6 @@
       "step_2_desc": "Double-click the startup launcher script:",
       "step_3_title": "3. Auto-Connect",
       "step_3_desc": "Once the server console window opens, the app will automatically connect to localhost:3000.",
-      "docker": {
-        "run_command": "Docker 1-Command Quickstart:",
-        "compose_file_title": "docker-compose.yml Configuration",
-        "copy_compose": "Copy YAML",
-        "download_compose": "Download docker-compose.yml",
-        "desc": "Run the server via Docker container. Includes your pre-configured Master Token and Port 3000.",
-        "profiles_title": "Included Docker Profiles:",
-        "profile_core": "Core Relay & Media (Lightweight, ~200MB)",
-        "profile_tunnel": "Cloudflare Quick Tunnel (Public HTTPS without router port-forwarding)",
-        "profile_ai": "Melodiq AI Worker (ONNX Vocal Separation & Whisper AI)"
-      },
       "cloudflare": {
         "title": "Free 24/7 Cloud Server",
         "desc": "Host your own relay server for free on Cloudflare Workers. Perfect for remote games with friends without keeping a PC running.",
@@ -1406,7 +1392,8 @@
       "auto_separation_desc": "Automatically isolate vocals and instrumental stems when downloading new songs (requires AI worker).",
       "saved": "Preferences updated successfully.",
       "error_save": "Failed to update preferences."
-    }
+    },
+    "setup_button": "Set up or adjust server"
   },
   "connection": {
     "default_title": "Connect Devices",

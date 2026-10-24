@@ -1,230 +1,96 @@
-import React, { useState } from 'react';
-import {
-  alpha,
-  Box,
-  Typography,
-  Paper,
-  ToggleButtonGroup,
-  ToggleButton,
-  FormControlLabel,
-  Switch,
-} from '@mui/material';
-import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
-import PsychologyIcon from '@mui/icons-material/PsychologyRounded';
-import PublicIcon from '@mui/icons-material/PublicRounded';
+import React from 'react';
+import { Alert, Box, Button, TextField, Typography } from '@mui/material';
+import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
+import CheckIcon from '@mui/icons-material/CheckRounded';
+import DownloadIcon from '@mui/icons-material/DownloadRounded';
+import LinkIcon from '@mui/icons-material/LinkRounded';
 import { useTranslation } from 'react-i18next';
-import { DockerCommandCard } from './DockerCommandCard';
-import { DockerComposeViewer } from './DockerComposeViewer';
+import { ComposeOptionsForm } from './compose/ComposeOptionsForm';
+import { useComposeGenerator } from './compose/useComposeGenerator';
 
-export type DockerEdition = 'standard' | 'ai';
-
-interface SetupDockerTabProps {
-  token: string;
-  downloadDockerCompose: (edition?: DockerEdition, includeTunnel?: boolean) => void;
-}
-
-export const SetupDockerTab: React.FC<SetupDockerTabProps> = ({ token, downloadDockerCompose }) => {
+/** Docker setup: pick services, ports and folders, get the compose file, connect this device. */
+export const SetupDockerTab: React.FC<{ token: string }> = ({ token }) => {
   const { t } = useTranslation();
-  const [copiedRun, setCopiedRun] = useState(false);
-  const [copiedCompose, setCopiedCompose] = useState(false);
-  const [edition, setEdition] = useState<DockerEdition>('standard');
-  const [includeTunnel, setIncludeTunnel] = useState<boolean>(false);
-
-  const handleEditionChange = (
-    _: React.MouseEvent<HTMLElement>,
-    newEdition: DockerEdition | null,
-  ) => {
-    if (newEdition) {
-      setEdition(newEdition);
-    }
-  };
-
-  const isAi = edition === 'ai';
-  const serverImage = isAi ? 'nexumia/melodiq-server:ai' : 'nexumia/melodiq-server:latest';
-  const composeFilename = isAi
-    ? includeTunnel
-      ? 'docker-compose.ai-tunnel.yml'
-      : 'docker-compose.ai.yml'
-    : includeTunnel
-      ? 'docker-compose.tunnel.yml'
-      : 'docker-compose.yml';
-
-  const dockerRunCmd = isAi
-    ? `docker run -d --name melodiq-server -p 3000:3000 -p 3001:3001 -e SECURITY_TOKEN="${token}" -v $(pwd)/music:/app/music -v $(pwd)/models:/app/models:z nexumia/melodiq-server:ai`
-    : `docker run -d --name melodiq-server -p 3000:3000 -p 3001:3001 -e SECURITY_TOKEN="${token}" -v $(pwd)/music:/app/music nexumia/melodiq-server:latest`;
-
-  const tunnelRunCmd = `docker run -d --name melodiq-tunnel --net=host cloudflare/cloudflared:latest tunnel --no-autoupdate --url http://localhost:3000`;
-
-  let dockerComposeYaml = `services:
-  # Melodiq Companion Server (${isAi ? 'AI Edition: Stems & Whisper' : 'Standard Lightweight ~200MB'})
-  melodiq-server:
-    image: ${serverImage}
-    container_name: melodiq-server
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-      - "3001:3001"
-    volumes:
-      - ./music:/app/music:ro${isAi ? '\n      - ./models:/app/models:z' : ''}
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - SECURITY_TOKEN=${token}
-      - MUSIC_DIR=/app/music
-      - ALLOWED_ORIGINS=*`;
-
-  if (includeTunnel) {
-    dockerComposeYaml += `
-
-  # Cloudflare Quick Tunnel (Public HTTPS without router port-forwarding)
-  melodiq-tunnel:
-    image: cloudflare/cloudflared:latest
-    container_name: melodiq-tunnel
-    restart: unless-stopped
-    command: tunnel --no-autoupdate --url http://melodiq-server:3000
-    depends_on:
-      - melodiq-server`;
-  }
-
-  const handleCopyRun = () => {
-    const fullCmd = includeTunnel
-      ? `${dockerRunCmd}\n\n# Cloudflare Tunnel starten:\n${tunnelRunCmd}`
-      : dockerRunCmd;
-    navigator.clipboard.writeText(fullCmd);
-    setCopiedRun(true);
-    setTimeout(() => setCopiedRun(false), 2500);
-  };
-
-  const handleCopyCompose = () => {
-    navigator.clipboard.writeText(dockerComposeYaml);
-    setCopiedCompose(true);
-    setTimeout(() => setCopiedCompose(false), 2500);
-  };
+  const state = useComposeGenerator(token);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-      <Typography variant="body2" color="text.secondary">
-        {t(
-          'server.setup.docker.desc',
-          'Wähle deine bevorzugte Server-Edition und optionale Funktionen aus:',
-        )}
+    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        {t('settings.compose_generator_desc')}
       </Typography>
 
-      {/* 1. Server Edition Selector (Standard vs AI) */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <ComposeOptionsForm state={state} />
+
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 1 }}>
         <Typography
           variant="caption"
-          sx={{
-            fontWeight: 'bold',
-            color: 'text.secondary',
-            textTransform: 'uppercase',
-            letterSpacing: 0.5,
-          }}
+          sx={{ fontFamily: 'monospace', color: 'text.secondary', flexGrow: 1 }}
         >
-          Server-Edition
+          docker-compose.yml
         </Typography>
-        <ToggleButtonGroup
-          value={edition}
-          exclusive
-          onChange={handleEditionChange}
-          aria-label="Server Edition"
-          sx={{
-            display: 'flex',
-            bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
-            p: 0.5,
-            borderRadius: 2,
-            '& .MuiToggleButton-root': {
-              flex: 1,
-              py: 1.2,
-              textTransform: 'none',
-              fontWeight: 'bold',
-              color: 'text.secondary',
-              border: 'none',
-              borderRadius: '8px !important',
-              gap: 1,
-              '&.Mui-selected': {
-                bgcolor: 'primary.main',
-                color: 'primary.contrastText',
-                '&:hover': {
-                  bgcolor: 'primary.dark',
-                },
-              },
-            },
-          }}
+        <Button
+          size="small"
+          variant={state.copied ? 'contained' : 'outlined'}
+          color={state.copied ? 'success' : 'primary'}
+          startIcon={state.copied ? <CheckIcon /> : <ContentCopyIcon />}
+          onClick={state.copy}
+          sx={{ textTransform: 'none', fontWeight: 600 }}
         >
-          <ToggleButton value="standard">
-            <MusicNoteIcon fontSize="small" />
-            Standard (~200MB, Leicht)
-          </ToggleButton>
-          <ToggleButton value="ai">
-            <PsychologyIcon fontSize="small" />
-            Mit KI (~2.5GB, Stems & Whisper)
-          </ToggleButton>
-        </ToggleButtonGroup>
+          {state.copied ? t('settings.compose_copied') : t('settings.compose_copy')}
+        </Button>
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<DownloadIcon />}
+          onClick={state.download}
+          sx={{ textTransform: 'none', fontWeight: 600 }}
+        >
+          {t('settings.compose_download')}
+        </Button>
       </Box>
 
-      {/* 2. Independent Cloudflare Tunnel Checkbox / Switch */}
-      <Paper
-        sx={{
-          p: 2,
-          bgcolor: (theme) => alpha(theme.palette.text.primary, 0.03),
-          borderRadius: 2,
-          border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
+      <TextField
+        multiline
+        fullWidth
+        rows={14}
+        value={state.yaml}
+        slotProps={{
+          input: {
+            readOnly: true,
+            sx: {
+              fontFamily: 'Consolas, Monaco, "Courier New", monospace',
+              fontSize: '0.8rem',
+              bgcolor: 'background.default',
+              borderRadius: 2,
+              '& textarea': { whiteSpace: 'pre', overflowX: 'auto' },
+            },
+          },
         }}
-      >
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            gap: 2,
-          }}
+      />
+
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 1.5 }}>
+        {t('settings.compose_run_hint')}
+      </Typography>
+      <Box component="pre" sx={{ m: 0, mb: 2, fontFamily: 'monospace', fontSize: '0.8rem' }}>
+        docker compose up -d
+      </Box>
+
+      {(state.companion || state.options.signaling) && (
+        <Button
+          variant="contained"
+          startIcon={state.applied ? <CheckIcon /> : <LinkIcon />}
+          color={state.applied ? 'success' : 'primary'}
+          onClick={state.applyToThisDevice}
+          sx={{ textTransform: 'none', borderRadius: 999, alignSelf: 'flex-start' }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-            <PublicIcon color={includeTunnel ? 'primary' : 'action'} sx={{ mt: 0.3 }} />
-            <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                Cloudflare Quick Tunnel einbinden
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Startet parallel einen Tunnel-Container für eine verschlüsselte HTTPS-Freigabe ohne
-                Router-Portweiterleitung oder feste IPv4.
-              </Typography>
-            </Box>
-          </Box>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={includeTunnel}
-                onChange={(e) => setIncludeTunnel(e.target.checked)}
-                color="primary"
-              />
-            }
-            label=""
-            sx={{ m: 0 }}
-          />
-        </Box>
-      </Paper>
-
-      {/* 3. Docker Run 1-Liner */}
-      <DockerCommandCard
-        dockerRunCmd={dockerRunCmd}
-        includeTunnel={includeTunnel}
-        tunnelRunCmd={tunnelRunCmd}
-        copiedRun={copiedRun}
-        onCopy={handleCopyRun}
-      />
-
-      {/* 4. Expandable Docker Compose File */}
-      <DockerComposeViewer
-        composeFilename={composeFilename}
-        dockerComposeYaml={dockerComposeYaml}
-        edition={edition}
-        includeTunnel={includeTunnel}
-        copiedCompose={copiedCompose}
-        onCopy={handleCopyCompose}
-        downloadDockerCompose={downloadDockerCompose}
-      />
+          {t('settings.compose_apply')}
+        </Button>
+      )}
+      {state.applied && (
+        <Alert severity="success" sx={{ mt: 1.5 }}>
+          {t('settings.compose_applied')}
+        </Alert>
+      )}
     </Box>
   );
 };

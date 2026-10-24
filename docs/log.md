@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Server setup in one place (claude-code)
+
+- `docs/tech/deployment.md` §4b: the setup wizard is the single place for server setup; its Docker tab is the compose generator; outdated compose files removed.
+- **Code changed:** compose generator moved to `src/components/connection/setup/compose/`, `SetupDockerTab.tsx` rebuilt on it, Settings → Server shows `ServerSetupCard` instead of a second generator; `DockerCommandCard.tsx`, `DockerComposeViewer.tsx`, `server/docker-compose.{ai,tunnel}.yml` deleted.
+
 ## 2026-10-24 — Save to server in Tabletop and Melodiq Notes (claude-code)
 
 - `docs/tech/tabletop-engine.md` §6: game manager with device games, save-to-server, snapshot without tokens, native games load by server id.
