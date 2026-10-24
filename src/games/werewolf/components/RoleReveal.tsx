@@ -4,6 +4,7 @@ import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOffRounded';
 import type { Player } from '../logic/types';
 import { useTranslation } from 'react-i18next';
+import { RoleIcon } from './RoleIcon';
 
 interface RoleRevealProps {
   players: Player[];
@@ -49,7 +50,7 @@ export const RoleReveal: React.FC<RoleRevealProps> = ({ players, onComplete }) =
         {!isRevealed ? (
           <Box>
             <Typography variant="h2" sx={{ fontSize: 60, mb: 2 }}>
-              🤫
+              <RoleIcon icon="SECRET" fontSize={60} />
             </Typography>
             <Typography>
               {t('games.werewolf.pass_device_instruction', { name: currentPlayer.name })}

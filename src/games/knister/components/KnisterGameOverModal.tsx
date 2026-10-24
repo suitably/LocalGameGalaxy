@@ -69,7 +69,7 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
         </Typography>
         {isNewHighScore && (
           <Typography variant="subtitle2" sx={{ color: 'success.main', fontWeight: 700, mt: 0.5 }}>
-            🎉 {t('games.knister.new_high_score', 'Neuer Highscore!')} 🎉
+            {t('games.knister.new_high_score', 'Neuer Highscore!')}
           </Typography>
         )}
       </DialogTitle>

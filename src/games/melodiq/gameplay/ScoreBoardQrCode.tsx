@@ -122,7 +122,7 @@ export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({
             mb: 0.5,
           }}
         >
-          📱 {t('melodiq.join_session', 'Join Session')}
+          {t('melodiq.join_session', 'Join Session')}
         </Typography>
         <Typography
           variant="caption"

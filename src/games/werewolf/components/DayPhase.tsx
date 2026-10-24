@@ -169,7 +169,7 @@ export const DayPhase: React.FC<DayPhaseProps> = ({
         </Typography>
         {killedPlayers.map((p) => (
           <Typography key={p.id} variant="body1" color="error">
-            💀 {p.name}
+            {p.name}
           </Typography>
         ))}
       </Paper>

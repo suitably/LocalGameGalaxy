@@ -65,9 +65,7 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ textAlign: 'center', fontWeight: 800, pb: 1 }}>
-        {isWon
-          ? t('sudoku.victory.title', 'Gelöst! 🎉')
-          : t('sudoku.game_over.title', 'Game Over 😔')}
+        {isWon ? t('sudoku.victory.title', 'Gelöst!') : t('sudoku.game_over.title', 'Game Over')}
       </DialogTitle>
 
       <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
@@ -84,7 +82,7 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
 
           {isNewBest && (
             <Alert severity="success" sx={{ mt: 2, py: 0.5 }}>
-              🏆 {t('sudoku.victory.new_record', 'Neue persönliche Bestzeit!')}
+              {t('sudoku.victory.new_record', 'Neue persönliche Bestzeit!')}
             </Alert>
           )}
         </Box>

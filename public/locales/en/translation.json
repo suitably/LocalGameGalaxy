@@ -374,7 +374,7 @@
     "garticphone": {
       "title": "Gartic Phone",
       "description": "The hilarious pass-the-message drawing game! Write sentence ➔ Draw ➔ Guess ➔ Draw ➔ Animated Album Show!",
-      "inviteHelp": "📱 Invite friends: Scan the QR code with other smartphones or share the link."
+      "inviteHelp": "Invite friends: Scan the QR code with other smartphones or share the link."
     },
     "party": {
       "title": "Party Mode",
@@ -1169,10 +1169,10 @@
     "relay_worker_copy": "Copy commands",
     "relay_worker_copied": "Commands copied!",
     "method_label": "Preferred Notification Channel",
-    "method_auto": "🟢 Automatic (Web Push with ntfy fallback)",
-    "method_ntfy": "🛡️ Google-free via ntfy",
-    "method_webpush": "🌐 Web Push Only (Chrome / Firefox / Safari)",
-    "method_both": "⚡ Both channels simultaneously (Maximum reliability)",
+    "method_auto": "Automatic (Web Push with ntfy fallback)",
+    "method_ntfy": "Google-free via ntfy",
+    "method_webpush": "Web Push Only (Chrome / Firefox / Safari)",
+    "method_both": "Both channels simultaneously (Maximum reliability)",
     "ntfy_title": "Google-free Notifications (ntfy)",
     "ntfy_desc": "100% open-source push without Google Play Services or FCM.",
     "ntfy_server_label": "ntfy Server URL",
@@ -1364,7 +1364,7 @@
     "default_description": "Connect your phone to use as a controller. Scan the QR code below.",
     "scan_to_join": "Scan QR to Join another Host",
     "scan_tooltip": "Open camera to scan another host's QR code and join as a client",
-    "devices_connected": "✅ {{count}} Device(s) Connected",
+    "devices_connected": "{{count}} Device(s) Connected",
     "waiting_for_connections": "Waiting for connections...",
     "details_title": "Connection Details",
     "host_base_url": "Host Base URL",
@@ -1386,7 +1386,7 @@
     "status_disabled": "Disabled",
     "toggle_enable": "Enable server",
     "toggle_disable": "Disable server",
-    "no_trackers_warning": "⚠️ No active signaling servers configured. Connection to mobile devices will not be possible. Please enable at least one server.",
+    "no_trackers_warning": "No active signaling servers configured. Connection to mobile devices will not be possible. Please enable at least one server.",
     "placeholder": "wss://tracker.example.com",
     "add_button": "Add",
     "remove_tooltip": "Remove tracker"
@@ -1399,7 +1399,7 @@
     "placeholder": "stun:stun.example.com:3478",
     "invalid_url": "Enter a URL like stun:host:port or stuns:host:port.",
     "duplicate_url": "This STUN server is already in the list.",
-    "no_servers_warning": "⚠️ No STUN server enabled. Phones can then only connect on the same network.",
+    "no_servers_warning": "No STUN server enabled. Phones can then only connect on the same network.",
     "hint": "STUN helps phones find a route to this device. Each device keeps its own list; changes apply to new connections."
   },
   "github": {
@@ -1676,7 +1676,7 @@
     "editNameTitle": "Change your name",
     "editNameDesc": "Customize your player name for the party lobby and all mini-games.",
     "nameInputLabel": "Your Name",
-    "liveGameActive": "🔴 Live Game Running",
+    "liveGameActive": "Live Game Running",
     "rejoinGameDesc": "The game is currently active. You can join or resume at any time.",
     "endGameForEveryone": "End Game for Everyone",
     "endGameBtn": "End Game",
@@ -1722,22 +1722,22 @@
     "phaseGuessing": "Guessing",
     "phaseReveal": "Album Show",
     "albumHeader": "Album",
-    "hostControlsShow": "🎬 The host controls the album show",
-    "inviteHelp": "📱 Invite friends: Scan the QR code with other smartphones or share the link."
+    "hostControlsShow": "The host controls the album show",
+    "inviteHelp": "Invite friends: Scan the QR code with other smartphones or share the link."
   },
   "wordle": {
     "mode": {
-      "daily": "Daily Challenge 📅",
-      "practice": "Practice 🎯"
+      "daily": "Daily Challenge",
+      "practice": "Practice"
     },
     "not_enough_letters": "Not enough letters!",
-    "congratulations": "Splendid! Word guessed! 🎉",
+    "congratulations": "Splendid! Word guessed!",
     "game_over": "Game over! Better luck next time.",
     "new_word": "New Word",
     "play_again": "Play Again",
-    "copied_to_clipboard": "Copied to clipboard! 📋",
+    "copied_to_clipboard": "Copied to clipboard!",
     "duel": {
-      "title": "Challenge a Friend ⚔️",
+      "title": "Challenge a Friend",
       "desc": "Choose any 5-letter word for your friend to guess!",
       "input_label": "Secret Word (5 letters)",
       "active_banner": "You are solving a challenge from a friend!",
@@ -1752,13 +1752,13 @@
       "distribution": "Guess Distribution"
     },
     "modal": {
-      "title_won": "Victory! 🎉",
-      "title_lost": "Game Over! 😔",
-      "title_stats": "Statistics 📊",
+      "title_won": "Victory!",
+      "title_lost": "Game Over!",
+      "title_stats": "Statistics",
       "target_was": "The word was:"
     },
     "help": {
-      "title": "How to Play 📖",
+      "title": "How to Play",
       "p1": "Guess the 5-letter word in 6 tries.",
       "p2": "After each guess, the color of the tiles will change:",
       "green": "Green: Letter is in the word and in the correct spot.",
@@ -1792,20 +1792,20 @@
     "notes_on": "Notes ON",
     "notes_off": "Notes",
     "victory": {
-      "title": "Solved! 🎉",
+      "title": "Solved!",
       "new_record": "New personal best time!"
     },
     "game_over": {
-      "title": "Game Over 😔"
+      "title": "Game Over"
     },
     "stats": {
-      "title": "Sudoku Statistics 📊",
+      "title": "Sudoku Statistics",
       "played": "Played",
       "completed": "Solved",
       "best_times": "Best Times"
     },
     "help": {
-      "title": "Sudoku Rules 📖",
+      "title": "Sudoku Rules",
       "p1": "Every row, column, and 3x3 box must contain the digits 1 through 9 exactly once.",
       "p2": "Use the pencil mode (Notes) to mark candidate numbers in empty cells.",
       "p3": "After 3 mistakes, the game is over. You can use hints and undo at any time."

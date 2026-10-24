@@ -52,7 +52,7 @@ export const PartyActiveGameBanner: React.FC<{ lobby: PartyLobbyController }> = 
             <Box>
               <Box display="flex" alignItems="center" gap={1}>
                 <Chip
-                  label={t('party.liveGameActive', '🔴 Live Spiel läuft')}
+                  label={t('party.liveGameActive', 'Live Spiel läuft')}
                   color="error"
                   size="small"
                   sx={{ fontWeight: 800, height: 22 }}

@@ -374,7 +374,7 @@
     "garticphone": {
       "title": "Gartic Phone",
       "description": "Das geniale Flüsterpost-Zeichenspiel! Satz schreiben ➔ Zeichnen ➔ Raten ➔ Zeichnen ➔ Animierte Album-Show!",
-      "inviteHelp": "📱 Freunde verbinden: Scanne den QR-Code mit weiteren Smartphones oder teile den Link."
+      "inviteHelp": "Freunde verbinden: Scanne den QR-Code mit weiteren Smartphones oder teile den Link."
     },
     "party": {
       "title": "Party-Modus",
@@ -1169,10 +1169,10 @@
     "relay_worker_copy": "Befehle kopieren",
     "relay_worker_copied": "Befehle kopiert!",
     "method_label": "Bevorzugter Benachrichtigungs-Kanal",
-    "method_auto": "🟢 Automatisch (Web-Push mit ntfy Fallback)",
-    "method_ntfy": "🛡️ Google-frei via ntfy",
-    "method_webpush": "🌐 Nur Browser-Push (Chrome / Firefox / Safari)",
-    "method_both": "⚡ Beide Kanäle parallel (Maximale Zuverlässigkeit)",
+    "method_auto": "Automatisch (Web-Push mit ntfy Fallback)",
+    "method_ntfy": "Google-frei via ntfy",
+    "method_webpush": "Nur Browser-Push (Chrome / Firefox / Safari)",
+    "method_both": "Beide Kanäle parallel (Maximale Zuverlässigkeit)",
     "ntfy_title": "Google-freie Benachrichtigungen (ntfy)",
     "ntfy_desc": "Speziell ohne Google Play Services oder FCM.",
     "ntfy_server_label": "ntfy Server URL",
@@ -1364,7 +1364,7 @@
     "default_description": "Verbinde dein Telefon, um es als Controller zu nutzen. Scanne den QR-Code unten.",
     "scan_to_join": "QR scannen, um anderem Host beizutreten",
     "scan_tooltip": "Kamera öffnen, um den QR-Code eines anderen Hosts zu scannen und als Client beizutreten",
-    "devices_connected": "✅ {{count}} Gerät(e) verbunden",
+    "devices_connected": "{{count}} Gerät(e) verbunden",
     "waiting_for_connections": "Warte auf Verbindungen...",
     "details_title": "Verbindungsdetails",
     "host_base_url": "Host Basis-URL",
@@ -1386,7 +1386,7 @@
     "status_disabled": "Deaktiviert",
     "toggle_enable": "Server aktivieren",
     "toggle_disable": "Server deaktivieren",
-    "no_trackers_warning": "⚠️ Keine Signaling-Server aktiv. Verbindung zu Mobilgeräten wird nicht möglich sein. Bitte mindestens einen Server aktivieren.",
+    "no_trackers_warning": "Keine Signaling-Server aktiv. Verbindung zu Mobilgeräten wird nicht möglich sein. Bitte mindestens einen Server aktivieren.",
     "placeholder": "wss://tracker.example.com",
     "add_button": "Hinzufügen",
     "remove_tooltip": "Tracker entfernen"
@@ -1399,7 +1399,7 @@
     "placeholder": "stun:stun.example.com:3478",
     "invalid_url": "Gib eine URL wie stun:host:port oder stuns:host:port ein.",
     "duplicate_url": "Dieser STUN-Server ist schon in der Liste.",
-    "no_servers_warning": "⚠️ Kein STUN-Server aktiv. Handys können sich dann nur im selben Netzwerk verbinden.",
+    "no_servers_warning": "Kein STUN-Server aktiv. Handys können sich dann nur im selben Netzwerk verbinden.",
     "hint": "STUN hilft Handys, einen Weg zu diesem Gerät zu finden. Jedes Gerät hat seine eigene Liste; Änderungen gelten für neue Verbindungen."
   },
   "github": {
@@ -1678,7 +1678,7 @@
     "editNameTitle": "Deinen Namen ändern",
     "editNameDesc": "Passe deinen Spielernamen für die Party-Lobby und alle Minispiele an.",
     "nameInputLabel": "Dein Name",
-    "liveGameActive": "🔴 Live Spiel läuft",
+    "liveGameActive": "Live Spiel läuft",
     "rejoinGameDesc": "Das Spiel läuft gerade. Du kannst jederzeit beitreten oder fortsetzen.",
     "endGameForEveryone": "Spiel für alle beenden",
     "endGameBtn": "Beenden",
@@ -1722,22 +1722,22 @@
     "phaseGuessing": "Raten",
     "phaseReveal": "Album-Show",
     "albumHeader": "Album",
-    "hostControlsShow": "🎬 Der Host steuert die Album-Show",
-    "inviteHelp": "📱 Freunde verbinden: Scanne den QR-Code mit weiteren Smartphones oder teile den Link."
+    "hostControlsShow": "Der Host steuert die Album-Show",
+    "inviteHelp": "Freunde verbinden: Scanne den QR-Code mit weiteren Smartphones oder teile den Link."
   },
   "wordle": {
     "mode": {
-      "daily": "Tagesrätsel 📅",
-      "practice": "Üben 🎯"
+      "daily": "Tagesrätsel",
+      "practice": "Üben"
     },
     "not_enough_letters": "Nicht genügend Buchstaben!",
-    "congratulations": "Hervorragend! Wort erraten! 🎉",
+    "congratulations": "Hervorragend! Wort erraten!",
     "game_over": "Leider nicht geschafft!",
     "new_word": "Neues Wort",
     "play_again": "Nochmal spielen",
-    "copied_to_clipboard": "In die Zwischenablage kopiert! 📋",
+    "copied_to_clipboard": "In die Zwischenablage kopiert!",
     "duel": {
-      "title": "Freund herausfordern ⚔️",
+      "title": "Freund herausfordern",
       "desc": "Wähle ein beliebiges 5-Buchstaben-Wort. Dein Freund muss es erraten!",
       "input_label": "Geheimes Wort (5 Buchstaben)",
       "active_banner": "Du spielst ein Duell-Wort eines Freundes!",
@@ -1752,13 +1752,13 @@
       "distribution": "Verteilung der Versuche"
     },
     "modal": {
-      "title_won": "Gewonnen! 🎉",
-      "title_lost": "Schade! 😔",
-      "title_stats": "Statistiken 📊",
+      "title_won": "Gewonnen!",
+      "title_lost": "Schade!",
+      "title_stats": "Statistiken",
       "target_was": "Das gesuchte Wort war:"
     },
     "help": {
-      "title": "Spielregeln 📖",
+      "title": "Spielregeln",
       "p1": "Errate das 5-Buchstaben-Wort in 6 Versuchen.",
       "p2": "Nach jedem Versuch färben sich die Kacheln:",
       "green": "Grün: Buchstabe ist an der richtigen Stelle.",
@@ -1792,20 +1792,20 @@
     "notes_on": "Notizen AN",
     "notes_off": "Notizen",
     "victory": {
-      "title": "Gelöst! 🎉",
+      "title": "Gelöst!",
       "new_record": "Neue persönliche Bestzeit!"
     },
     "game_over": {
-      "title": "Game Over 😔"
+      "title": "Game Over"
     },
     "stats": {
-      "title": "Sudoku Statistiken 📊",
+      "title": "Sudoku Statistiken",
       "played": "Gespielt",
       "completed": "Gelöst",
       "best_times": "Bestzeiten"
     },
     "help": {
-      "title": "Sudoku Regeln 📖",
+      "title": "Sudoku Regeln",
       "p1": "Jede Zeile, Spalte und jeder 3x3-Block muss die Zahlen von 1 bis 9 genau einmal enthalten.",
       "p2": "Nutze den Bleistift-Modus (Notizen), um mögliche Zahlenkandidaten in einer Zelle vorzumerken.",
       "p3": "Bei 3 Fehlern ist die Runde verloren. Du kannst jederzeit Hinweise oder die Rückgängig-Funktion nutzen."

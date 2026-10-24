@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { alpha, Box, Button, Card, CardActionArea, Typography } from '@mui/material';
+import { alpha, Box, Button, Card, CardActionArea, Typography, useTheme } from '@mui/material';
+import { AreaSymbol } from '../../../components/brand/AreaSymbol';
 import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
 import { useTranslation } from 'react-i18next';
 import type { CardGameDefinition } from '../logic/types';
@@ -12,6 +13,7 @@ interface CardsLobbyProps {
 
 export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
 
   const games = getAllCardGames();
   const [selectedGameId, setSelectedGameId] = useState<string>('schwimmen');
@@ -63,7 +65,12 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
             >
               <CardActionArea onClick={() => setSelectedGameId(g.id)} sx={{ p: 2, height: '100%' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                  <Typography variant="h4">{g.icon || '🃏'}</Typography>
+                  <AreaSymbol
+                    area="cards"
+                    color={theme.palette.piece.green}
+                    cut={theme.palette.background.paper}
+                    size={32}
+                  />
                   <Box>
                     <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
                       {g.nameKey ? t(g.nameKey, g.name) : g.name}

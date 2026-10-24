@@ -116,7 +116,7 @@ export const SetupBinaryTab: React.FC<SetupBinaryTabProps> = ({ os, downloadConf
             borderRadius: 1.5,
           }}
         >
-          📁 {scriptName}
+          {scriptName}
         </Paper>
       </Paper>
 

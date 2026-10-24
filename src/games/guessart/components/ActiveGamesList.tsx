@@ -143,7 +143,7 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
                   />
                 </Box>
                 <Typography variant="body2" color="text.secondary" noWrap sx={{ mt: 0.5 }}>
-                  👥 {playerNames}
+                  {playerNames}
                 </Typography>
                 <Typography variant="caption" color="text.disabled">
                   {dateStr}

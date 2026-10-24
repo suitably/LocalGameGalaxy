@@ -52,7 +52,7 @@ export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) 
       min: g.minPlayers,
       max: g.maxPlayers,
     }),
-    icon: '🧩',
+    icon: 'puzzle',
     color: piecePalette.purple,
     modes: playModesOf(g.supportedModes),
   }));

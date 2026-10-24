@@ -90,7 +90,7 @@ export const SchwimmenPlayerCard: React.FC<SchwimmenPlayerCardProps> = ({
             sx={{ fontWeight: 700, px: 1.5 }}
           >
             {isMarkedLoser
-              ? t('games.cards.schwimmen.marked_loser', 'Verliert Leben ✓')
+              ? t('games.cards.schwimmen.marked_loser', 'Verliert Leben')
               : t('games.cards.schwimmen.lose_life_btn', '-1 Leben')}
           </Button>
 

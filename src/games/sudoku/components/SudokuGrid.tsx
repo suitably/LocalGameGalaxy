@@ -55,7 +55,7 @@ export const SudokuGrid: React.FC<SudokuGridProps> = ({
           }}
         >
           <Typography variant="h5" sx={{ fontWeight: 800, color: 'secondary.main' }}>
-            PAUSE ⏸️
+            PAUSE
           </Typography>
         </Box>
       )}

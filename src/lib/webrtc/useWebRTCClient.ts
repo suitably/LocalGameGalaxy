@@ -223,7 +223,7 @@ export function useWebRTCClient(
             setIsConnected(true);
             peerRef.current = peer;
             setPeer(peer);
-            updateStatus('✅ Connected', 'status-connected');
+            updateStatus('Connected', 'status-connected');
 
             sendIdentity(peer, trackerPeer);
 

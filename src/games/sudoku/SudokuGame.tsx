@@ -109,7 +109,7 @@ export const SudokuGame: React.FC = () => {
         {/* Stats Modal */}
         <Dialog open={statsOpen} onClose={() => setStatsOpen(false)} maxWidth="xs" fullWidth>
           <DialogTitle sx={{ fontWeight: 800 }}>
-            {t('sudoku.stats.title', 'Sudoku Statistiken 📊')}
+            {t('sudoku.stats.title', 'Sudoku Statistiken')}
           </DialogTitle>
           <DialogContent>
             <Stack spacing={1.5} sx={{ my: 1 }}>
@@ -151,7 +151,7 @@ export const SudokuGame: React.FC = () => {
         {/* Help Dialog */}
         <Dialog open={helpOpen} onClose={() => setHelpOpen(false)} maxWidth="xs">
           <DialogTitle sx={{ fontWeight: 800 }}>
-            {t('sudoku.help.title', 'Sudoku Regeln 📖')}
+            {t('sudoku.help.title', 'Sudoku Regeln')}
           </DialogTitle>
           <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             <Typography variant="body2">

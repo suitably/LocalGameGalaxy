@@ -10,7 +10,6 @@ export interface CardGameDefinition {
   defaultLives?: number;
   minPlayers?: number;
   maxPlayers?: number;
-  icon?: string;
   color?: string;
   isCustom?: boolean;
   author?: string;
