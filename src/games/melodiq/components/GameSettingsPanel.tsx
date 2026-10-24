@@ -1,552 +1,170 @@
-import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-    Box, Typography, TextField, Switch, FormControlLabel, Slider, ToggleButton, ToggleButtonGroup, IconButton, Button,
-    Accordion, AccordionSummary, AccordionDetails, Select, MenuItem, InputLabel, FormControl
+  Box,
+  Typography,
+  Switch,
+  FormControlLabel,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import SpeedIcon from '@mui/icons-material/Speed';
 import type { SettingsState } from '../hooks/SettingsContext';
-import { LatencyCalibratorDialog } from './LatencyCalibratorDialog';
+import { CustomLayoutsEditor } from './CustomLayoutsEditor';
+import { AutoplaySettings } from './AutoplaySettings';
+import { AudioSettingsSection } from './AudioSettingsSection';
+import { LyricsSettingsSection } from './LyricsSettingsSection';
+import { FallbackBackgroundField } from './FallbackBackgroundField';
+import { SettingSlider, SettingSwitch, SettingToggleGroup } from './GameSettingsControls';
 
 interface GameSettingsPanelProps {
-    settings: SettingsState;
-    onUpdateSetting: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
+  settings: SettingsState;
+  onUpdateSetting: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
 }
 
 export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
-    settings,
-    onUpdateSetting
+  settings,
+  onUpdateSetting,
 }) => {
-    const { t } = useTranslation();
-    const [newPlayerCount, setNewPlayerCount] = useState('');
-    const [newLayoutStr, setNewLayoutStr] = useState('');
-    const [calibratorOpen, setCalibratorOpen] = useState(false);
+  const { t } = useTranslation();
+  const p = (key: string) => t(`melodiq.settings_panel.${key}`);
 
-    // Local slider states for 60fps non-blocking dragging without triggering full app tree re-renders
-    const [localSongVolume, setLocalSongVolume] = useState<number>(Math.round(settings.songVolume * 100));
-    const [localVocalsVolume, setLocalVocalsVolume] = useState<number>(Math.round((settings.vocalsVolume ?? 1.0) * 100));
-    const [localMasterVolume, setLocalMasterVolume] = useState<number>(Math.round(settings.masterVolume * 100));
+  return (
+    <Box>
+      <Typography variant="h6" gutterBottom>
+        {p('title')}
+      </Typography>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <CustomLayoutsEditor
+          layouts={settings.customLayouts}
+          onChange={(layouts) => onUpdateSetting('customLayouts', layouts)}
+        />
 
-    // Synchronize local slider values if settings change externally
-    const prevSettingsRef = useRef(settings);
-    useEffect(() => {
-        if (prevSettingsRef.current.songVolume !== settings.songVolume) {
-            setLocalSongVolume(Math.round(settings.songVolume * 100));
-        }
-        if (prevSettingsRef.current.vocalsVolume !== settings.vocalsVolume) {
-            setLocalVocalsVolume(Math.round((settings.vocalsVolume ?? 1.0) * 100));
-        }
-        if (prevSettingsRef.current.masterVolume !== settings.masterVolume) {
-            setLocalMasterVolume(Math.round(settings.masterVolume * 100));
-        }
-        prevSettingsRef.current = settings;
-    }, [settings.songVolume, settings.vocalsVolume, settings.masterVolume]);
+        <SettingToggleGroup
+          pill
+          title={p('default_view')}
+          ariaLabel="default view mode"
+          value={settings.defaultViewMode || 'list'}
+          options={[
+            { value: 'list', label: p('list_view') },
+            { value: 'grid', label: p('grid_view') },
+          ]}
+          onChange={(val) => onUpdateSetting('defaultViewMode', val)}
+          description={p('default_view_desc')}
+        />
 
-    const handleUpdateLayout = (playerCount: number, layout: string) => {
-        const updated = { ...settings.customLayouts, [playerCount]: layout };
-        onUpdateSetting('customLayouts', updated);
-    };
+        <AutoplaySettings
+          noPlayersDelay={settings.autoplayNoPlayersDelay}
+          withPlayersDelay={settings.autoplayWithPlayersDelay}
+          onNoPlayersDelayChange={(s) => onUpdateSetting('autoplayNoPlayersDelay', s)}
+          onWithPlayersDelayChange={(s) => onUpdateSetting('autoplayWithPlayersDelay', s)}
+        />
 
-    const handleDeleteLayout = (playerCount: number) => {
-        const updated = { ...settings.customLayouts };
-        delete updated[playerCount];
-        onUpdateSetting('customLayouts', updated);
-    };
+        <SettingToggleGroup
+          pill
+          title={p('default_click')}
+          ariaLabel="default click action"
+          value={settings.defaultSongClickAction}
+          options={[
+            { value: 'play_now', label: p('play_now') },
+            { value: 'play_next', label: p('play_next') },
+            { value: 'add_end', label: p('add_queue') },
+          ]}
+          onChange={(val) => onUpdateSetting('defaultSongClickAction', val)}
+          description={p('default_click_desc')}
+        />
 
-    const handleAddLayout = () => {
-        const count = parseInt(newPlayerCount);
-        if (!isNaN(count) && count > 0 && newLayoutStr.trim() !== '') {
-            handleUpdateLayout(count, newLayoutStr.trim());
-            setNewPlayerCount('');
-            setNewLayoutStr('');
-        }
-    };
+        <SettingToggleGroup
+          pill
+          title={p('card_size')}
+          ariaLabel="card size"
+          value={settings.cardSize}
+          options={[
+            { value: 'small', label: p('small') },
+            { value: 'medium', label: p('medium') },
+            { value: 'large', label: p('large') },
+            { value: 'custom', label: p('custom') },
+          ]}
+          onChange={(val) => onUpdateSetting('cardSize', val)}
+        />
+        {settings.cardSize === 'custom' && (
+          <SettingSlider
+            label={`${p('max_items')}: ${settings.customTarget}`}
+            description={p('max_items_desc')}
+            value={settings.customTarget}
+            onChange={(_, val) => onUpdateSetting('customTarget', val as number)}
+            min={1}
+            max={12}
+            step={1}
+            marks
+            valueLabelDisplay="auto"
+          />
+        )}
 
-    return (
-        <Box>
-            <Typography variant="h6" gutterBottom>{t('melodiq.settings_panel.title')}</Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                
-                <Box>
-                    <Typography variant="subtitle2" gutterBottom>{t('melodiq.settings_panel.custom_layouts')}</Typography>
-                    <Typography variant="caption" color="text.secondary" display="block" gutterBottom>
-                        {t('melodiq.settings_panel.custom_layouts_desc')}
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 1 }}>
-                        {Object.entries(settings.customLayouts || {}).map(([countStr, layout]) => {
-                            const count = parseInt(countStr);
-                            return (
-                                <Box key={count} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <Typography sx={{ width: 80 }}>{count} {t('melodiq.settings_panel.players')}:</Typography>
-                                    <TextField 
-                                        size="small" 
-                                        value={layout} 
-                                        onChange={(e) => handleUpdateLayout(count, e.target.value)}
-                                        sx={{ flex: 1 }}
-                                    />
-                                    <IconButton size="small" color="error" onClick={() => handleDeleteLayout(count)}>
-                                        <Typography variant="body2">✕</Typography>
-                                    </IconButton>
-                                </Box>
-                            );
-                        })}
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <TextField 
-                            size="small" 
-                            label={t('melodiq.settings_panel.players')} 
-                            type="number" 
-                            value={newPlayerCount} 
-                            onChange={(e) => setNewPlayerCount(e.target.value)} 
-                            sx={{ width: 120 }}
-                        />
-                        <TextField 
-                            size="small" 
-                            label={t('melodiq.settings_panel.layout_example')} 
-                            value={newLayoutStr} 
-                            onChange={(e) => setNewLayoutStr(e.target.value)} 
-                            sx={{ flex: 1 }}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleAddLayout();
-                                }
-                            }}
-                        />
-                        <Button variant="contained" size="small" onClick={handleAddLayout}>{t('melodiq.settings_panel.add')}</Button>
-                    </Box>
-                </Box>
+        <SettingSlider
+          label={`${p('golden_multiplier')}: ${settings.goldenNoteMultiplier}x`}
+          description={p('golden_multiplier_desc')}
+          value={settings.goldenNoteMultiplier}
+          onChange={(_, val) => onUpdateSetting('goldenNoteMultiplier', val as number)}
+          min={1.0}
+          max={5.0}
+          step={0.5}
+          marks
+          valueLabelDisplay="auto"
+        />
 
-                <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2" gutterBottom>{t('melodiq.settings_panel.default_view')}</Typography>
-                    <ToggleButtonGroup
-                        value={settings.defaultViewMode || 'list'}
-                        exclusive
-                        onChange={(_, newVal) => newVal && onUpdateSetting('defaultViewMode', newVal)}
-                        aria-label="default view mode"
-                        size="small"
-                        fullWidth
-                        sx={{
-                            borderRadius: 50,
-                            '& .MuiToggleButton-root': {
-                                borderRadius: 50,
-                                border: '1px solid rgba(255, 255, 255, 0.23)',
-                                '&.Mui-selected': {
-                                    bgcolor: 'rgba(255, 255, 255, 0.1)',
-                                    color: 'white',
-                                    borderColor: 'white'
-                                }
-                            }
-                        }}
-                    >
-                        <ToggleButton value="list">{t('melodiq.settings_panel.list_view')}</ToggleButton>
-                        <ToggleButton value="grid">{t('melodiq.settings_panel.grid_view')}</ToggleButton>
-                    </ToggleButtonGroup>
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                        {t('melodiq.settings_panel.default_view_desc')}
-                    </Typography>
-                </Box>
+        <LyricsSettingsSection settings={settings} onUpdateSetting={onUpdateSetting} />
 
-                <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2" gutterBottom>{t('melodiq.settings_panel.autoplay')}</Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-                        <FormControl size="small" fullWidth>
-                            <InputLabel>{t('melodiq.settings_panel.autoplay_no_singers')}</InputLabel>
-                            <Select
-                                value={settings.autoplayNoPlayersDelay}
-                                label="{t('melodiq.settings_panel.autoplay_no_singers')}"
-                                onChange={(e) => onUpdateSetting('autoplayNoPlayersDelay', e.target.value as number)}
-                                sx={{ borderRadius: 2 }}
-                            >
-                                <MenuItem value={0}>{t('melodiq.settings_panel.off_manual')}</MenuItem>
-                                <MenuItem value={5}>{t('melodiq.settings_panel.seconds', { count: 5 })}</MenuItem>
-                                <MenuItem value={10}>{t('melodiq.settings_panel.seconds', { count: 10 })}</MenuItem>
-                                <MenuItem value={15}>{t('melodiq.settings_panel.seconds', { count: 15 })}</MenuItem>
-                                <MenuItem value={30}>{t('melodiq.settings_panel.seconds', { count: 30 })}</MenuItem>
-                            </Select>
-                            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-                                {t('melodiq.settings_panel.autoplay_no_singers_desc')}
-                            </Typography>
-                        </FormControl>
+        <AudioSettingsSection settings={settings} onUpdateSetting={onUpdateSetting} />
 
-                        <FormControl size="small" fullWidth>
-                            <InputLabel>{t('melodiq.settings_panel.autoplay_singers')}</InputLabel>
-                            <Select
-                                value={settings.autoplayWithPlayersDelay}
-                                label="{t('melodiq.settings_panel.autoplay_singers')}"
-                                onChange={(e) => onUpdateSetting('autoplayWithPlayersDelay', e.target.value as number)}
-                                sx={{ borderRadius: 2 }}
-                            >
-                                <MenuItem value={0}>{t('melodiq.settings_panel.off_manual')}</MenuItem>
-                                <MenuItem value={10}>{t('melodiq.settings_panel.seconds', { count: 10 })}</MenuItem>
-                                <MenuItem value={20}>{t('melodiq.settings_panel.seconds', { count: 20 })}</MenuItem>
-                                <MenuItem value={30}>{t('melodiq.settings_panel.seconds', { count: 30 })}</MenuItem>
-                                <MenuItem value={60}>{t('melodiq.settings_panel.seconds', { count: 60 })}</MenuItem>
-                            </Select>
-                            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-                                {t('melodiq.settings_panel.autoplay_singers_desc')}
-                            </Typography>
-                        </FormControl>
-                    </Box>
-                </Box>
+        <SettingSwitch
+          checked={settings.hideBackgroundVideo}
+          onChange={(checked) => onUpdateSetting('hideBackgroundVideo', checked)}
+          label={t('melodiq.settings_panel.hide_video', 'Hide Background Video')}
+        />
 
-                <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2" gutterBottom>{t('melodiq.settings_panel.default_click')}</Typography>
-                    <ToggleButtonGroup
-                        value={settings.defaultSongClickAction}
-                        exclusive
-                        onChange={(_, newVal) => newVal && onUpdateSetting('defaultSongClickAction', newVal)}
-                        aria-label="default click action"
-                        size="small"
-                        fullWidth
-                        sx={{
-                            borderRadius: 50,
-                            '& .MuiToggleButton-root': {
-                                borderRadius: 50,
-                                border: '1px solid rgba(255, 255, 255, 0.23)',
-                                '&.Mui-selected': {
-                                    bgcolor: 'rgba(255, 255, 255, 0.1)',
-                                    color: 'white',
-                                    borderColor: 'white'
-                                }
-                            }
-                        }}
-                    >
-                        <ToggleButton value="play_now">{t('melodiq.settings_panel.play_now')}</ToggleButton>
-                        <ToggleButton value="play_next">{t('melodiq.settings_panel.play_next')}</ToggleButton>
-                        <ToggleButton value="add_end">{t('melodiq.settings_panel.add_queue')}</ToggleButton>
-                    </ToggleButtonGroup>
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                        {t('melodiq.settings_panel.default_click_desc')}
-                    </Typography>
-                </Box>
+        <FallbackBackgroundField
+          value={settings.fallbackBackgroundUrl || ''}
+          onChange={(url) => onUpdateSetting('fallbackBackgroundUrl', url)}
+        />
 
-                <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2" gutterBottom>{t('melodiq.settings_panel.card_size')}</Typography>
-                    <ToggleButtonGroup
-                        value={settings.cardSize}
-                        exclusive
-                        onChange={(_, newVal) => newVal && onUpdateSetting('cardSize', newVal)}
-                        aria-label="card size"
-                        size="small"
-                        fullWidth
-                        sx={{
-                            borderRadius: 50,
-                            '& .MuiToggleButton-root': {
-                                borderRadius: 50,
-                                border: '1px solid rgba(255, 255, 255, 0.23)',
-                                '&.Mui-selected': {
-                                    bgcolor: 'rgba(255, 255, 255, 0.1)',
-                                    color: 'white',
-                                    borderColor: 'white'
-                                }
-                            }
-                        }}
-                    >
-                        <ToggleButton value="small">{t('melodiq.settings_panel.small')}</ToggleButton>
-                        <ToggleButton value="medium">{t('melodiq.settings_panel.medium')}</ToggleButton>
-                        <ToggleButton value="large">{t('melodiq.settings_panel.large')}</ToggleButton>
-                        <ToggleButton value="custom">{t('melodiq.settings_panel.custom')}</ToggleButton>
-                    </ToggleButtonGroup>
+        <SettingSwitch
+          checked={settings.showNoteLabels}
+          onChange={(checked) => onUpdateSetting('showNoteLabels', checked)}
+          label={p('show_pitch')}
+        />
+        <SettingSwitch
+          checked={settings.showScoreboardQrCode}
+          onChange={(checked) => onUpdateSetting('showScoreboardQrCode', checked)}
+          label={t('melodiq.settings_panel.show_scoreboard_qr', 'Show QR Code on Score Screen')}
+        />
 
-                    {settings.cardSize === 'custom' && (
-                        <Box sx={{ mt: 2 }}>
-                            <Typography gutterBottom>{t('melodiq.settings_panel.max_items')}: {settings.customTarget}</Typography>
-                            <Slider
-                                value={settings.customTarget}
-                                onChange={(_, val) => onUpdateSetting('customTarget', val as number)}
-                                min={1}
-                                max={12}
-                                step={1}
-                                marks
-                                valueLabelDisplay="auto"
-                                sx={{ width: '100%' }}
-                            />
-                            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                                {t('melodiq.settings_panel.max_items_desc')}
-                            </Typography>
-                        </Box>
-                    )}
-                </Box>
-
-
-                <Box sx={{ mt: 2 }}>
-                    <Typography gutterBottom>{t('melodiq.settings_panel.golden_multiplier')}: {settings.goldenNoteMultiplier}x</Typography>
-                    <Slider
-                        value={settings.goldenNoteMultiplier}
-                        onChange={(_, val) => onUpdateSetting('goldenNoteMultiplier', val as number)}
-                        min={1.0}
-                        max={5.0}
-                        step={0.5}
-                        marks
-                        valueLabelDisplay="auto"
-                        sx={{ width: '100%' }}
-                    />
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                        {t('melodiq.settings_panel.golden_multiplier_desc')}
-                    </Typography>
-                </Box>
-
-                <Box sx={{ mt: 2 }}>
-                    <Typography gutterBottom>{t('melodiq.settings_panel.lyrics_scale', 'Lyrics Size')}: {Math.round((settings.lyricsScale ?? 1.0) * 100)}%</Typography>
-                    <Slider
-                        value={settings.lyricsScale ?? 1.0}
-                        onChange={(_, val) => onUpdateSetting('lyricsScale', val as number)}
-                        min={0.5}
-                        max={3.0}
-                        step={0.1}
-                        marks
-                        valueLabelDisplay="auto"
-                        sx={{ width: '100%' }}
-                    />
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                        {t('melodiq.settings_panel.lyrics_scale_desc', 'Adjust the size of the lyrics on the main screen.')}
-                    </Typography>
-                </Box>
-
-                <Box sx={{ mt: 2 }}>
-                    <FormControlLabel
-                        control={<Switch checked={settings.enableLyricsZoom ?? false} onChange={(e) => onUpdateSetting('enableLyricsZoom', e.target.checked)} />}
-                        label={t('melodiq.settings_panel.lyrics_zoom', 'Lyrics Zoom Animation')}
-                    />
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', ml: 4 }}>
-                        {t('melodiq.settings_panel.lyrics_zoom_desc', 'Zoom and glow active lyric syllables during singing. Disable for simple color highlighting.')}
-                    </Typography>
-                </Box>
-
-                <Box sx={{ mt: 2 }}>
-                    <Typography gutterBottom>{t('melodiq.settings_panel.lyrics_lines', 'Number of Lyrics Lines')}</Typography>
-                    <ToggleButtonGroup
-                        value={settings.lyricsLines ?? 2}
-                        exclusive
-                        onChange={(_, val) => { if (val !== null) onUpdateSetting('lyricsLines', val); }}
-                        size="small"
-                        fullWidth
-                        sx={{ mb: 1 }}
-                    >
-                        <ToggleButton value={0}>0</ToggleButton>
-                        <ToggleButton value={1}>1</ToggleButton>
-                        <ToggleButton value={2}>2</ToggleButton>
-                        <ToggleButton value={3}>3</ToggleButton>
-                    </ToggleButtonGroup>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
-                        {t('melodiq.settings_panel.lyrics_lines_desc', 'Choose how many lines of lyrics to display.')}
-                    </Typography>
-
-                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
-                        {t('melodiq.settings_panel.lyrics_position', 'Lyrics Position (No Singers)')}
-                    </Typography>
-                    <ToggleButtonGroup
-                        value={settings.lyricsPosition ?? 'bottom'}
-                        exclusive
-                        onChange={(_, val) => { if (val) onUpdateSetting('lyricsPosition', val); }}
-                        size="small"
-                        fullWidth
-                        sx={{ mb: 1 }}
-                    >
-                        <ToggleButton value="bottom">
-                            {t('melodiq.settings_panel.lyrics_position_bottom', 'Bottom')}
-                        </ToggleButton>
-                        <ToggleButton value="center">
-                            {t('melodiq.settings_panel.lyrics_position_center', 'Center')}
-                        </ToggleButton>
-                    </ToggleButtonGroup>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                        {t('melodiq.settings_panel.lyrics_position_desc', 'Choose whether lyrics appear at the bottom or in the center when no singers are active.')}
-                    </Typography>
-                </Box>
-
-                <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
-                        {t('melodiq.settings_panel.audio_playback_mode', 'Audio Playback Mode')}
-                    </Typography>
-                    <ToggleButtonGroup
-                        value={settings.audioPlaybackMode ?? 'separated'}
-                        exclusive
-                        onChange={(_, val) => { if (val) onUpdateSetting('audioPlaybackMode', val); }}
-                        size="small"
-                        fullWidth
-                        sx={{ mb: 1 }}
-                    >
-                        <ToggleButton value="separated">
-                            {t('melodiq.settings_panel.mode_separated', 'Separated Stems')}
-                        </ToggleButton>
-                        <ToggleButton value="original">
-                            {t('melodiq.settings_panel.mode_original', 'Original Audio')}
-                        </ToggleButton>
-                    </ToggleButtonGroup>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                        {(settings.audioPlaybackMode ?? 'separated') === 'separated'
-                            ? t('melodiq.settings_panel.mode_separated_desc', 'Plays separated instrumental and vocal stems when available. Allows independent vocal volume control.')
-                            : t('melodiq.settings_panel.mode_original_desc', 'Plays the untouched original audio track directly.')}
-                    </Typography>
-                </Box>
-
-                <Box sx={{ mt: 2 }}>
-                    <Typography gutterBottom>{t('melodiq.settings_panel.song_volume')}: {localSongVolume}%</Typography>
-                    <Slider
-                        value={localSongVolume}
-                        onChange={(_, val) => {
-                            const v = val as number;
-                            setLocalSongVolume(v);
-                            window.dispatchEvent(new CustomEvent('melodiq_direct_volume', { detail: { songVolume: v / 100 } }));
-                        }}
-                        onChangeCommitted={(_, val) => {
-                            onUpdateSetting('songVolume', (val as number) / 100);
-                        }}
-                        min={0}
-                        max={100}
-                        sx={{ width: '100%' }}
-                    />
-                </Box>
-
-                <Box sx={{ mt: 1, opacity: settings.audioPlaybackMode === 'original' ? 0.5 : 1 }}>
-                    <Typography gutterBottom>
-                        {t('melodiq.settings_panel.vocals_volume')}: {localVocalsVolume}%
-                        {settings.audioPlaybackMode === 'original' && ` (${t('melodiq.settings_panel.disabled_in_original_mode', 'Separated stems only')})`}
-                    </Typography>
-                    <Slider
-                        disabled={settings.audioPlaybackMode === 'original'}
-                        value={localVocalsVolume}
-                        onChange={(_, val) => {
-                            const v = val as number;
-                            setLocalVocalsVolume(v);
-                            window.dispatchEvent(new CustomEvent('melodiq_direct_volume', { detail: { vocalsVolume: v / 100 } }));
-                        }}
-                        onChangeCommitted={(_, val) => {
-                            onUpdateSetting('vocalsVolume', (val as number) / 100);
-                        }}
-                        min={0}
-                        max={100}
-                        sx={{ width: '100%' }}
-                    />
-                </Box>
-
-                <Box sx={{ mt: 1 }}>
-                    <Typography gutterBottom>{t('melodiq.settings_panel.master_volume')}: {localMasterVolume}%</Typography>
-                    <Slider
-                        value={localMasterVolume}
-                        onChange={(_, val) => {
-                            const v = val as number;
-                            setLocalMasterVolume(v);
-                            window.dispatchEvent(new CustomEvent('melodiq_direct_volume', { detail: { masterVolume: v / 100 } }));
-                        }}
-                        onChangeCommitted={(_, val) => {
-                            onUpdateSetting('masterVolume', (val as number) / 100);
-                        }}
-                        min={0}
-                        max={100}
-                        sx={{ width: '100%' }}
-                    />
-                </Box>
-
-                <Box sx={{ mt: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                        <Typography gutterBottom sx={{ mb: 0 }}>
-                            {t('melodiq.settings_panel.mic_latency', 'Microphone Latency Offset')}: {settings.micLatency ?? 0} ms
-                        </Typography>
-                        <Button
-                            size="small"
-                            variant="outlined"
-                            startIcon={<SpeedIcon />}
-                            onClick={() => setCalibratorOpen(true)}
-                        >
-                            {t('melodiq.settings_panel.calibrate', 'Calibrate')}
-                        </Button>
-                    </Box>
-                    <Slider
-                        value={settings.micLatency ?? 0}
-                        onChange={(_, val) => onUpdateSetting('micLatency', val as number)}
-                        min={-100}
-                        max={500}
-                        step={5}
-                        marks={[
-                            { value: 0, label: '0ms' },
-                            { value: 100, label: '100ms' },
-                            { value: 250, label: '250ms' },
-                            { value: 500, label: '500ms' }
-                        ]}
-                        valueLabelDisplay="auto"
-                        sx={{ width: '100%' }}
-                    />
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                        {t('melodiq.settings_panel.mic_latency_desc', 'Compensates for microphone and audio hardware delay to align pitch detection with note bars.')}
-                    </Typography>
-                </Box>
-
-                <FormControlLabel
-                    control={<Switch checked={settings.hideBackgroundVideo} onChange={(e) => onUpdateSetting('hideBackgroundVideo', e.target.checked)} />}
-                    label={t('melodiq.settings_panel.hide_video', 'Hide Background Video')}
-                />
-
-                <Box sx={{ mt: 1 }}>
-                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-                        <TextField
-                            size="small"
-                            fullWidth
-                            label={t('melodiq.settings_panel.fallback_background_url', 'Fallback Background URL')}
-                            value={settings.fallbackBackgroundUrl || ''}
-                            onChange={(e) => onUpdateSetting('fallbackBackgroundUrl', e.target.value)}
-                            placeholder="e.g. https://example.com/loop.mp4"
-                        />
-                        <Button variant="outlined" component="label" sx={{ height: 40, whiteSpace: 'nowrap' }}>
-                            {t('melodiq.settings_panel.browse', 'Browse...')}
-                            <input
-                                type="file"
-                                hidden
-                                accept="image/*,video/*"
-                                onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                        const url = URL.createObjectURL(file);
-                                        // We append the extension as a query param or hash so the player knows what it is
-                                        // But actually the file name works if we just use a fake hash for type hinting
-                                        const fakeHash = file.type.startsWith('video/') ? '#video.mp4' : '#image.jpg';
-                                        onUpdateSetting('fallbackBackgroundUrl', url + fakeHash);
-                                    }
-                                    e.target.value = '';
-                                }}
-                            />
-                        </Button>
-                    </Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                        {t('melodiq.settings_panel.fallback_background_desc', 'Shown when a song has no video. Use a web link or select a local file (local files may reset after reload).')}
-                    </Typography>
-                </Box>
-
-                <FormControlLabel
-                    control={<Switch checked={settings.showNoteLabels} onChange={(e) => onUpdateSetting('showNoteLabels', e.target.checked)} />}
-                    label={t('melodiq.settings_panel.show_pitch')}
-                />
-
-                <FormControlLabel
-                    control={<Switch checked={settings.showScoreboardQrCode} onChange={(e) => onUpdateSetting('showScoreboardQrCode', e.target.checked)} />}
-                    label={t('melodiq.settings_panel.show_scoreboard_qr', 'Show QR Code on Score Screen')}
-                />
-                <Accordion sx={{ mt: 2, bgcolor: 'rgba(255, 255, 255, 0.05)', '&:before': { display: 'none' } }}>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}>
-                        <Typography variant="subtitle2">{t('melodiq.settings_panel.dev_options')}</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails sx={{ display: 'flex', flexDirection: 'column' }}>
-                        <FormControlLabel
-                            control={<Switch checked={settings.showDebugOverlay} onChange={(e) => onUpdateSetting('showDebugOverlay', e.target.checked)} />}
-                            label={t('melodiq.settings_panel.show_debug')}
-                        />
-                        <FormControlLabel
-                            control={<Switch checked={settings.showDevSlider} onChange={(e) => onUpdateSetting('showDevSlider', e.target.checked)} />}
-                            label={t('melodiq.settings_panel.show_dev_slider')}
-                        />
-                        <FormControlLabel
-                            control={<Switch checked={settings.showVideoErrors} onChange={(e) => onUpdateSetting('showVideoErrors', e.target.checked)} />}
-                            label={t('melodiq.settings_panel.show_video_errors')}
-                        />
-                    </AccordionDetails>
-                </Accordion>
-            </Box>
-
-            <LatencyCalibratorDialog open={calibratorOpen} onClose={() => setCalibratorOpen(false)} />
-        </Box>
-    );
+        <Accordion sx={{ mt: 2, '&:before': { display: 'none' } }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="subtitle2">{p('dev_options')}</Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ display: 'flex', flexDirection: 'column' }}>
+            {(
+              [
+                ['showDebugOverlay', 'show_debug'],
+                ['showDevSlider', 'show_dev_slider'],
+                ['showVideoErrors', 'show_video_errors'],
+              ] as const
+            ).map(([key, labelKey]) => (
+              <FormControlLabel
+                key={key}
+                control={
+                  <Switch
+                    checked={settings[key]}
+                    onChange={(e) => onUpdateSetting(key, e.target.checked)}
+                  />
+                }
+                label={p(labelKey)}
+              />
+            ))}
+          </AccordionDetails>
+        </Accordion>
+      </Box>
+    </Box>
+  );
 };
