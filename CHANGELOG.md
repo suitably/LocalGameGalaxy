@@ -27,6 +27,7 @@
 
 ### Changed
 
+- **Settings navigation**: the header tabs, drop-down, compact menu and sub-pills are generated from one table; theme colours replace the fixed blue; English defaults for all labels, missing Melodiq tab labels added to both languages (#498).
 - **App header**: burger menu and home/back navigation moved into their own component and hook; the bar uses theme colours (#498).
 - **Server connection settings**: the connection card, setup wizard and UltraStar DB credentials are split into smaller components and hooks; gradient button, blurred dialog and hard-coded colours replaced by theme colours (#498).
 - **Game registry**: dropped the unused per-game gradient colours (the hub colours games by area); lazy game imports share one helper (#498).
