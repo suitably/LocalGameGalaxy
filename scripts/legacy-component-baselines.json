@@ -6,9 +6,5 @@
   "src/lib/webrtc/WebRTCHostContext.tsx": 347,
   "src/games/guessart/components/GuessArtHeader.tsx": 320,
   "src/games/melodiq/hooks/useMelodiqGlobalEvents.tsx": 272,
-  "src/games/melodiq/hooks/SettingsContext.tsx": 314,
-  "src/games/guessart/components/catalogue/CategoryEditorTab.tsx": 281,
-  "src/games/guessart/components/EditGameDialog.tsx": 279,
-  "src/games/guessart/components/WordSelector.tsx": 269,
-  "src/games/guessart/components/catalogue/CatalogueEditorDialog.tsx": 267
+  "src/games/melodiq/hooks/SettingsContext.tsx": 314
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Box,
   Button,
@@ -7,28 +7,19 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  Tab,
-  Tabs,
   Tooltip,
   Typography,
 } from '@mui/material';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded';
 import RestartAltRoundedIcon from '@mui/icons-material/RestartAltRounded';
-import CategoryRoundedIcon from '@mui/icons-material/CategoryRounded';
-import AbcRoundedIcon from '@mui/icons-material/AbcRounded';
-import GitHubIcon from '@mui/icons-material/GitHub';
 import { useTranslation } from 'react-i18next';
 import { CategoryEditorTab } from './CategoryEditorTab';
 import { WordEditorTab } from './WordEditorTab';
 import { PublishCatalogueTab } from './PublishCatalogueTab';
 import { ConfirmDialog } from '../../../../components/common/ConfirmDialog';
-import {
-  getMasterCatalogue,
-  resetMasterCatalogue,
-  saveMasterCatalogue,
-} from '../../logic/catalogueManager';
-import type { CategoryItem, WordItem } from '../../logic/types';
+import { CatalogueEditorTabs } from './CatalogueEditorTabs';
+import { useCatalogueEditor } from './useCatalogueEditor';
 
 interface CatalogueEditorDialogProps {
   open: boolean;
@@ -42,62 +33,8 @@ export const CatalogueEditorDialog: React.FC<CatalogueEditorDialogProps> = ({
   onCatalogueUpdated,
 }) => {
   const { t } = useTranslation();
-  const [tabIndex, setTabIndex] = useState<number>(0);
-  const [categories, setCategories] = useState<CategoryItem[]>([]);
-  const [words, setWords] = useState<WordItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [confirmResetOpen, setConfirmResetOpen] = useState<boolean>(false);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const master = await getMasterCatalogue();
-      setCategories(master.categories);
-      setWords(master.words);
-    } catch (err) {
-      console.error('Failed to load master catalogue', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (open) {
-      loadData();
-    }
-  }, [open]);
-
-  const handleCategoriesChange = async (newCats: CategoryItem[], newWords: WordItem[]) => {
-    setCategories(newCats);
-    setWords(newWords);
-    await saveMasterCatalogue(newCats, newWords);
-    onCatalogueUpdated?.();
-  };
-
-  const handleWordsChange = async (newWords: WordItem[]) => {
-    setWords(newWords);
-    await saveMasterCatalogue(categories, newWords);
-    onCatalogueUpdated?.();
-  };
-
-  const handleReset = () => {
-    setConfirmResetOpen(true);
-  };
-
-  const handleConfirmReset = async () => {
-    setConfirmResetOpen(false);
-    setLoading(true);
-    try {
-      const restored = await resetMasterCatalogue();
-      setCategories(restored.categories);
-      setWords(restored.words);
-      onCatalogueUpdated?.();
-    } catch (err) {
-      console.error('Failed to reset catalogue', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const editor = useCatalogueEditor(open, onCatalogueUpdated);
+  const { categories, words, loading, tabIndex } = editor;
 
   return (
     <>
@@ -148,7 +85,7 @@ export const CatalogueEditorDialog: React.FC<CatalogueEditorDialogProps> = ({
                 color="error"
                 variant="text"
                 startIcon={<RestartAltRoundedIcon />}
-                onClick={handleReset}
+                onClick={() => editor.setConfirmResetOpen(true)}
                 disabled={loading}
                 sx={{
                   textTransform: 'none',
@@ -168,68 +105,12 @@ export const CatalogueEditorDialog: React.FC<CatalogueEditorDialogProps> = ({
           </Box>
         </DialogTitle>
 
-        <Box sx={{ borderBottom: '1px solid', borderColor: 'divider', px: { xs: 0.5, sm: 2 } }}>
-          <Tabs
-            value={tabIndex}
-            onChange={(_, val) => setTabIndex(val)}
-            indicatorColor="primary"
-            textColor="primary"
-            variant="scrollable"
-            scrollButtons="auto"
-            allowScrollButtonsMobile
-            sx={{
-              minHeight: 44,
-              '& .MuiTab-root': {
-                minWidth: { xs: 48, sm: 120 },
-                px: { xs: 1, sm: 2 },
-                py: 0.8,
-                minHeight: 44,
-                textTransform: 'none',
-                fontWeight: 700,
-                fontSize: { xs: '0.75rem', sm: '0.875rem' },
-              },
-            }}
-          >
-            <Tab
-              icon={<CategoryRoundedIcon fontSize="small" />}
-              iconPosition="start"
-              label={
-                <Box component="span" display="flex" alignItems="center" gap={0.5}>
-                  <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                    {t('guessart.catalogueCategories', 'Kategorien')}
-                  </Box>
-                  <Box component="span">({categories.length})</Box>
-                </Box>
-              }
-            />
-            <Tab
-              icon={<AbcRoundedIcon fontSize="small" />}
-              iconPosition="start"
-              label={
-                <Box component="span" display="flex" alignItems="center" gap={0.5}>
-                  <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                    {t('guessart.catalogueWords', 'Wörter')}
-                  </Box>
-                  <Box component="span">({words.length})</Box>
-                </Box>
-              }
-            />
-            <Tab
-              icon={<GitHubIcon fontSize="small" />}
-              iconPosition="start"
-              label={
-                <Box component="span">
-                  <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                    {t('guessart.publishPrTab', 'Veröffentlichen (Git PR)')}
-                  </Box>
-                  <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-                    PR
-                  </Box>
-                </Box>
-              }
-            />
-          </Tabs>
-        </Box>
+        <CatalogueEditorTabs
+          value={tabIndex}
+          categoryCount={categories.length}
+          wordCount={words.length}
+          onChange={editor.setTabIndex}
+        />
 
         <DialogContent sx={{ p: { xs: 1.5, sm: 3 }, flexGrow: 1, overflowY: 'auto' }}>
           {loading ? (
@@ -240,10 +121,14 @@ export const CatalogueEditorDialog: React.FC<CatalogueEditorDialogProps> = ({
             <CategoryEditorTab
               categories={categories}
               words={words}
-              onChange={handleCategoriesChange}
+              onChange={editor.handleCategoriesChange}
             />
           ) : tabIndex === 1 ? (
-            <WordEditorTab categories={categories} words={words} onChange={handleWordsChange} />
+            <WordEditorTab
+              categories={categories}
+              words={words}
+              onChange={editor.handleWordsChange}
+            />
           ) : (
             <PublishCatalogueTab categories={categories} words={words} onClose={onClose} />
           )}
@@ -251,15 +136,15 @@ export const CatalogueEditorDialog: React.FC<CatalogueEditorDialogProps> = ({
       </Dialog>
 
       <ConfirmDialog
-        open={confirmResetOpen}
+        open={editor.confirmResetOpen}
         title={t('guessart.resetToDefaults', 'Auf Standard zurücksetzen')}
         message={t(
           'guessart.confirmResetCatalogue',
           'Wirklich auf den Standard-Katalog zurücksetzen? Eigene Änderungen gehen verloren.',
         )}
         confirmColor="error"
-        onConfirm={handleConfirmReset}
-        onCancel={() => setConfirmResetOpen(false)}
+        onConfirm={editor.handleConfirmReset}
+        onCancel={() => editor.setConfirmResetOpen(false)}
       />
     </>
   );

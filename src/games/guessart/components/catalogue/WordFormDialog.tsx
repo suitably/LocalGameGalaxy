@@ -2,9 +2,7 @@ import React from 'react';
 import {
   Alert,
   Box,
-  Button,
   Dialog,
-  DialogActions,
   DialogContent,
   DialogTitle,
   FormControl,
@@ -17,6 +15,7 @@ import {
 } from '@mui/material';
 import LanguageRoundedIcon from '@mui/icons-material/LanguageRounded';
 import { useTranslation } from 'react-i18next';
+import { FormDialogActions } from './FormDialogActions';
 import type { CategoryItem } from '../../logic/types';
 import type { WordFormValues } from '../../logic/wordEditing';
 
@@ -152,19 +151,7 @@ export const WordFormDialog: React.FC<WordFormDialogProps> = ({
           </Box>
         </Stack>
       </DialogContent>
-      <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
-        <Button onClick={onClose} color="inherit">
-          {t('common.cancel', 'Abbrechen')}
-        </Button>
-        <Button
-          onClick={onSave}
-          variant="contained"
-          color="primary"
-          sx={{ textTransform: 'none', fontWeight: 700 }}
-        >
-          {t('common.save', 'Speichern')}
-        </Button>
-      </DialogActions>
+      <FormDialogActions onClose={onClose} onSave={onSave} />
     </Dialog>
   );
 };
