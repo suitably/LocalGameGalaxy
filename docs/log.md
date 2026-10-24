@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Qwixx state hook (claude-code)
+
+- `docs/tech/game-catalog.md`: the local Qwixx storage constants now live in `useQwixxState.ts` (was `QwixxGame.tsx`).
+- **Code changed:** Qwixx decomposed and re-coloured (#491).
+
 ## 2026-10-23 — DESIGN.md §2 names the colour gate (claude-code)
 
 - `DESIGN.md` §2: hard-coded colours are no longer "review only"; points to the `check:architecture` ratchet. No code changed.
