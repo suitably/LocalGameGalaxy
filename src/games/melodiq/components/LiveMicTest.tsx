@@ -5,7 +5,7 @@ import { MicrophoneManager, type PitchResult } from '../audio/MicrophoneManager'
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
-export const getNoteName = (midiNote: number): string => {
+const getNoteName = (midiNote: number): string => {
   const note = Math.round(midiNote);
   const octave = Math.floor(note / 12) - 1;
   return `${NOTE_NAMES[note % 12]}${octave}`;
