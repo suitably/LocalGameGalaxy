@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — /triage skill (claude-code)
+
+- `docs/workflows/multi-agent-token-strategy.md` §6: triage every issue before work (labels `model:sonnet|opus`, `needs-decision`, `manual`, `tracking`; questions as issue comment), pick the session model from the label.
+- Outside `docs/`: new `.claude/skills/triage/SKILL.md`; `/issue` reads triage answers and stops when the session model or open decisions do not fit; `CLAUDE.md` names both. No app code changed.
+
 ## 2026-10-24 — Inline by default after A/B measurement (claude-code)
 
 - `docs/workflows/multi-agent-token-strategy.md`: §3/§4 rewritten — inline implementation with Haiku scout and gate-runner is the default, one Sonnet implementer only for large tickets; §7 records the #539 comparison (delegated ≥ $2.57 vs inline ≈ $1.98).

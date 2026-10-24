@@ -18,7 +18,8 @@ The first word of the arguments is the issue number `N`; anything after it is th
 
 ## 1. Triage (≤ 3 tool calls)
 
-- Read the issue and its comments (`gh issue view N --comments`, or the GitHub MCP tool `issue_read` with `get` and `get_comments` when `gh` is unavailable).
+- Read the issue, its labels and comments (`gh issue view N --comments`, or the GitHub MCP tool `issue_read` with `get` and `get_comments` when `gh` is unavailable). Answers to a `**Triage:**` comment are decisions — use them, do not ask again.
+- **Model guard:** no `model:*` label → classify with the rules of `.claude/skills/triage/SKILL.md` §3 first. Label `model:opus` but this session runs on a smaller model, or `needs-decision` without answers in the thread → stop before any further work and tell the user which model to start with (`/model …`) or which questions are open. `manual` / `tracking` → do not implement; say so.
 - `grep -n -i "<area>" docs/tech/game-catalog.md docs/open-questions.md` for the area.
 - Pick the mode (workflow §3): **trivial** (≤ 3 files, one grep finds them) → implement, go to step 5. **Inline** (default) → steps 2, 3, 4a, 5. **Delegated** (inline would exceed ~200k context, reading-heavy, or > 4 independent slices) → steps 2, 3, 4b, 5.
 

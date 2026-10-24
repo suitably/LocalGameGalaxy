@@ -77,6 +77,8 @@ Fewer main-session turns is the main lever: batch independent tool calls in one 
 
 ## 6. Sessions
 
+**Triage first:** `/triage <number>` right after creating an issue (or `/triage` for all untriaged ones) in a Sonnet session ([`.claude/skills/triage/SKILL.md`](../../.claude/skills/triage/SKILL.md)). It sets `model:sonnet` / `model:opus` / `needs-decision` / `manual` / `tracking` and posts open questions as an issue comment; answer them there. Then start the ticket session with the labelled model (`/model …` before `/issue N`; switching models mid-session invalidates the prompt cache). When unsure the triage picks Opus: a weak model on a hard ticket costs rework, the reverse only ~2× tokens.
+
 Entry point: **`/issue <number> [decisions]`** ([`.claude/skills/issue/SKILL.md`](../../.claude/skills/issue/SKILL.md)) runs this flow; on an issue that already has a spec it resumes at the first unchecked item of the spec's Progress list.
 
 - **One session per ticket.** A new ticket never continues an old session: the old context would be re-sent on every turn. Start with the spec path, e.g. "Implement `docs/tasks/ISSUE-539-…md`, decisions §3: …".
