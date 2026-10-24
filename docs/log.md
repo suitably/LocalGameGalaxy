@@ -2,6 +2,20 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-23 — DESIGN.md §2 names the colour gate (claude-code)
+
+- `DESIGN.md` §2: hard-coded colours are no longer "review only"; points to the `check:architecture` ratchet. No code changed.
+
+## 2026-10-23 — Remove unused opensheetmusicdisplay (claude-code)
+
+- `docs/references/external-sources.md`: dropped the OpenSheetMusicDisplay row (no longer imported since the Melodiq Notes stage rewrite).
+- **Code changed:** `opensheetmusicdisplay` removed from `package.json` / `package-lock.json`.
+
+## 2026-10-23 — Hard-coded colour guard (claude-code)
+
+- `docs/tech/coding-conventions.md` §2 and §4, `AGENTS.md` §4, `scripts/README.md`: hard-coded hex and non-black `rgb()`/`rgba()` in `src/**/*.tsx` are now a gate (per-file count ratchet), no longer review only.
+- **Code changed:** `scripts/check-architecture.mjs` (+ `--init-colors` / `--update-colors`), new `scripts/lib/hardcoded-colors.mjs` (+ test), new `scripts/hardcoded-color-baselines.json`.
+
 ## 2026-10-23 — One page title, in the header (claude-code)
 
 - `DESIGN.md` §6 header row: the page title lives only in `GlobalHeader`; content starts with section headings.

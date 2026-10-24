@@ -77,6 +77,9 @@
 
 ### Fixed
 
+- **Settings language**: the notifications tab and its description show English text in the English UI (the keys `settings.notifications_tab` / `settings.notifications_relay_desc` were missing, so the German fallback was shown) (#154).
+- **Melodiq lyrics**: the first syllable of a line is no longer swallowed — a finished line now makes way for the next one shortly before it starts instead of lingering into it (#441).
+- **Melodiq Notes**: with 3–4 players the panel header no longer draws player, part name and score on top of each other; it measures the text and drops the part name, keyboard marker and instrument, then accuracy/combo, before anything overlaps (#483).
 - **Melodiq Notes stage stutter**: the whole page no longer re-renders ten times a second while playing (only the progress strip and the learn-mode hint follow the song), notes are drawn with a halo instead of a canvas blur, canvas labels are not re-translated every frame, and the notes move on the smooth frame clock pulled towards the audio clock (phones advance the audio clock in 10–40 ms steps). Measured with the 10-track score and four players: JS for React/MUI per 8 s 1.95 s → ~0, frames over 33 ms 45 → 15.
 - **Recording alignment**: the coarse alignment is fitted over ±6 s instead of ±0.8 s and the fine fit penalises tempo jumps between neighbouring bars, so it no longer catches a beat an eighth off. On "Nothing Else Matters" 91 % of snare and cymbal hits are within 50 ms (was 62 %), 3 of 99 bars with drums off (was 28).
 - **Web Push sender**: a refused push now says why (the push service's status and reason, or why signing failed) instead of a bare 502, also in the sender's console; VAPID secrets pasted with a trailing newline or space work.

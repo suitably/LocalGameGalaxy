@@ -57,3 +57,6 @@ mock_library/
 
 # Claude Code personal settings
 .claude/settings.local.json
+
+# Agent worktrees (Claude Code)
+.claude/worktrees/

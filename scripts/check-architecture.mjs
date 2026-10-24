@@ -11,11 +11,16 @@
  * 2. [CRITICAL] No raw localStorage/sessionStorage outside src/lib/storage.ts
  * 3. [CRITICAL] No native window.confirm, window.prompt, window.alert
  * 4. [WARNING] Component line budget (max 250 lines per .tsx file, same limit as check:budget, which enforces it)
+ * 5. [CRITICAL] Tracked server media (server/music/)
+ * 6. [CRITICAL] Hard-coded colours (hex, non-black rgb/rgba) in src .tsx files: per-file count ratchet in
+ *    scripts/hardcoded-color-baselines.json (a file may only go down; --diff checks changed files only)
  *
  * Usage:
  *   node scripts/check-architecture.mjs           # Full audit with summary
  *   node scripts/check-architecture.mjs --strict  # Exits 1 if any violation found
  *   node scripts/check-architecture.mjs --diff    # Checks only files changed vs git HEAD
+ *   node scripts/check-architecture.mjs --update-colors  # Lower colour baselines (never raises them)
+ *   node scripts/check-architecture.mjs --init-colors    # Write colour baselines from the current tree
  */
 
 import fs from 'node:fs';
@@ -23,6 +28,8 @@ import path from 'node:path';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { getChangedFiles as getRepoChangedFiles } from './lib/changed-files.mjs';
+import { countHardcodedColors, isColorCheckedFile } from './lib/hardcoded-colors.mjs';
+import { compareToBaseline, lowerBaseline, sortCounts } from './lib/lint-budget.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,11 +37,17 @@ const ROOT_DIR = path.resolve(__dirname, '..');
 const SRC_DIR = path.join(ROOT_DIR, 'src');
 const GAMES_DIR = path.join(SRC_DIR, 'games');
 const BASELINE_FILE = path.join(__dirname, 'architecture-baseline.json');
+const COLOR_BASELINE_FILE = path.join(__dirname, 'hardcoded-color-baselines.json');
 
 const isStrict = process.argv.includes('--strict');
 /** Same limit as MAX_LINES in check-component-budget.js. */
 const COMPONENT_MAX_LINES = 250;
 const isDiff = process.argv.includes('--diff');
+const colorMode = process.argv.includes('--init-colors')
+  ? 'init'
+  : process.argv.includes('--update-colors')
+    ? 'update'
+    : 'check';
 
 let baselineEntries = [];
 if (fs.existsSync(BASELINE_FILE)) {
@@ -116,6 +129,10 @@ const violations = {
   largeComponents: [],
   trackedServerMedia: [],
 };
+/** Hard-coded colour count per checked file (only files with at least one). */
+const colorCounts = {};
+/** Files the colour rule looked at, so diff mode compares only those. */
+const colorScanned = new Set();
 
 // 1. Scan files
 for (const filePath of allFiles) {
@@ -196,6 +213,14 @@ for (const filePath of allFiles) {
         snippet: trimmed,
       });
     }
+  }
+
+  // Check 6: Hard-coded colours (count ratchet, evaluated after the scan)
+  const posixPath = relativePath.split(path.sep).join('/');
+  if (isColorCheckedFile(posixPath)) {
+    colorScanned.add(posixPath);
+    const colorCount = countHardcodedColors(content);
+    if (colorCount > 0) colorCounts[posixPath] = colorCount;
   }
 
   // Check 4: Large components (> COMPONENT_MAX_LINES for React UI .tsx files; enforced by check:budget)
@@ -334,6 +359,89 @@ if (violations.largeComponents.length > 0) {
   console.log('');
 } else {
   console.log(`${GREEN}✔ All components within line budget${RESET}`);
+}
+
+// Report Hard-coded Colours (per-file count ratchet)
+const writeColorBaseline = (counts) =>
+  fs.writeFileSync(COLOR_BASELINE_FILE, `${JSON.stringify(sortCounts(counts), null, 2)}\n`);
+const readColorBaseline = () =>
+  fs.existsSync(COLOR_BASELINE_FILE)
+    ? JSON.parse(fs.readFileSync(COLOR_BASELINE_FILE, 'utf-8'))
+    : {};
+
+if (colorMode === 'init' || colorMode === 'update') {
+  if (isDiff) {
+    console.error(`${RED}--init-colors / --update-colors need a full scan (no --diff).${RESET}`);
+    process.exit(1);
+  }
+  const fullBaseline = readColorBaseline();
+  const { increased: grown } = compareToBaseline(colorCounts, fullBaseline);
+  if (colorMode === 'update' && grown.length > 0) {
+    console.error(`${RED}Colour counts grew; fix them first (baselines are never raised).${RESET}`);
+    for (const g of grown) {
+      console.error(`  ${RED}•${RESET} ${g.file}: ${g.current} > ${g.baseline}`);
+    }
+    process.exit(1);
+  }
+  writeColorBaseline(colorMode === 'init' ? colorCounts : lowerBaseline(colorCounts, fullBaseline));
+  console.log(`${GREEN}✔ Wrote scripts/hardcoded-color-baselines.json${RESET}`);
+  process.exit(0);
+}
+
+const fullColorBaseline = readColorBaseline();
+// In diff mode only the changed (and checked) files take part in the comparison.
+const scopedBaseline = isDiff
+  ? Object.fromEntries(Object.entries(fullColorBaseline).filter(([f]) => colorScanned.has(f)))
+  : fullColorBaseline;
+const { increased: colorIncreased, stale: colorStale } = compareToBaseline(
+  colorCounts,
+  scopedBaseline,
+);
+const colorTotal = Object.values(colorCounts).reduce((sum, n) => sum + n, 0);
+let colorFailed = false;
+
+if (colorIncreased.length > 0) {
+  colorFailed = true;
+  console.log(
+    `${RED}${BOLD}✖ Hard-coded Colours Increased (${colorIncreased.length} file(s))${RESET}`,
+  );
+  console.log(
+    `  Rule: Use theme tokens (theme.palette.*, piece palette), not hex / rgb() literals (DESIGN.md §2, docs/tech/coding-conventions.md §2). Baselines are never raised.`,
+  );
+  for (const { file, baseline: allowed, current } of colorIncreased) {
+    console.log(`  ${RED}•${RESET} ${file}: ${current} colour literal(s), allowed ${allowed}`);
+  }
+  console.log('');
+} else {
+  console.log(
+    `${GREEN}✔ No new hard-coded colours (${colorTotal} existing literal(s) in ${Object.keys(colorCounts).length} file(s), none above baseline)${RESET}`,
+  );
+}
+
+if (colorStale.length > 0) {
+  if (isDiff) {
+    console.log(
+      `${YELLOW}ℹ ${colorStale.length} colour baseline(s) are higher than the current count - run \`npm run check:architecture -- --update-colors\`.${RESET}`,
+    );
+  } else {
+    colorFailed = true;
+    console.log(
+      `${YELLOW}${BOLD}✖ Hard-coded colours were removed - lock in the progress (${colorStale.length} file(s))${RESET}`,
+    );
+    for (const { file, baseline: allowed, current } of colorStale) {
+      console.log(
+        `  ${YELLOW}•${RESET} ${file}: ${current} colour literal(s), baseline ${allowed}`,
+      );
+    }
+    console.log(
+      `  Run \`npm run check:architecture -- --update-colors\` and commit scripts/hardcoded-color-baselines.json.\n`,
+    );
+  }
+}
+
+if (colorFailed) {
+  console.error(`${RED}${BOLD}✖ Architecture gate failed: hard-coded colour ratchet.${RESET}\n`);
+  process.exit(1);
 }
 
 // Summary and Exit Code

@@ -40,7 +40,7 @@ The full rule set with what enforces each rule lives in [`docs/tech/coding-conve
 - **No inline `BroadcastChannel`** in games — use `useMultiChannelSync()`. _(review only; Melodiq still violates it: Q4)_
 - **No hardcoded UI strings** (§6).
 - **Header:** integrate with `GlobalHeader` via `TitleContext` / `HeaderLayoutContext` (`usePageTitle`, `useHeaderLayout`); `LayoutContext` is the backward-compatible composite. No second top bar, no floating hub-exit buttons.
-- **CSS:** theme tokens (no hard-coded hex in components), Grid/Flexbox, `100dvh`. Visual system (colors, type, spacing, components): [`DESIGN.md`](DESIGN.md).
+- **CSS:** theme tokens (no hard-coded hex or non-black `rgb()`/`rgba()` in `.tsx`; per-file count ratchet in `scripts/hardcoded-color-baselines.json`, _check:architecture fails when a count rises_), Grid/Flexbox, `100dvh`. Visual system (colors, type, spacing, components): [`DESIGN.md`](DESIGN.md).
 - **Never commit media** under `server/music/` (songs, stems). _(check:architecture fails)_
 - **No copy-paste** blocks; `jscpd` fails above 2.5 % duplication (clones from 12 lines). _(check:duplicates)_
 

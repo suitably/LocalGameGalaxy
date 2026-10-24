@@ -3,6 +3,7 @@ import { LyricsLine, LeadInIndicator, type LineGroup } from './LyricsLineView';
 import { Box, Typography, useMediaQuery } from '@mui/material';
 import { type SongWithNotes } from './PitchVisualizer';
 import type { Note } from '../parser';
+import { selectActiveLineIndex } from './logic/lyricsLineSelection';
 
 export interface LyricsDisplayProps {
     song: SongWithNotes;
@@ -23,8 +24,6 @@ export interface LyricsLaneProps {
     lyricsLines?: number;
     bpm: number;
 }
-
-const LINGER_SECONDS = 0.8; // Duration the completed line stays visible before advancing to next line
 
 const LyricsLane: React.FC<LyricsLaneProps> = React.memo(({
     notes,
@@ -71,24 +70,11 @@ const LyricsLane: React.FC<LyricsLaneProps> = React.memo(({
     }, [notes]);
 
     const msPerBeat = 60000 / (bpm * 4);
-    const lingerBeats = (LINGER_SECONDS * 1000) / msPerBeat;
-
-    // Determine active line index:
-    // Line 0 is active from start until its endBeat + lingerBeats.
-    // Subsequent Line i is active immediately after Line i-1 reaches (endBeat + lingerBeats).
-    const activeLineIndex = useMemo(() => {
-        if (lines.length === 0) return -1;
-
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            const lineEndWithLinger = line.endBeat + lingerBeats;
-
-            if (currentBeat <= lineEndWithLinger) {
-                return i;
-            }
-        }
-        return -1; // Song lyrics complete
-    }, [lines, currentBeat, lingerBeats]);
+    // Active line lingers after its end but is replaced shortly before the next line starts.
+    const activeLineIndex = useMemo(
+        () => selectActiveLineIndex(lines, currentBeat, msPerBeat),
+        [lines, currentBeat, msPerBeat]
+    );
 
     const activeLine = activeLineIndex !== -1 ? lines[activeLineIndex] : null;
 

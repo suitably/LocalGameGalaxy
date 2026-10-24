@@ -17,7 +17,7 @@ Avoid: purple-to-blue gradients, gradient text, glassmorphism, neon glows, emoji
 
 ## 2. Color
 
-All colours are tokens; components use the token name, never a hex value (review only — no gate checks this yet). Text contrast ≥ 4.5:1 and large text / UI parts ≥ 3:1 were checked for every pairing listed here.
+All colours are tokens; components use the token name, never a hex value (`check:architecture` fails when a `.tsx` file gains hard-coded colours; see `docs/tech/coding-conventions.md`). Text contrast ≥ 4.5:1 and large text / UI parts ≥ 3:1 were checked for every pairing listed here.
 
 ### 2.1 Neutrals and roles
 
