@@ -1,10 +1,11 @@
-import { Button, LinearProgress, Stack, Typography } from '@mui/material';
+import { Button, LinearProgress, Stack, Tooltip, Typography } from '@mui/material';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { StageSongState } from '../useStageSong';
 
 const NUDGE_SEC = 0.05;
 const STAGES = ['analyse', 'match', 'refine'] as const;
+const signed = (n: number) => (n > 0 ? '+' : '−') + Math.abs(n);
 
 /** The recording behind the song: choose it, align it bar by bar, fine-tune, save the marks or export the score. */
 export function RecordingBar({ state }: { state: StageSongState }) {
@@ -12,7 +13,7 @@ export function RecordingBar({ state }: { state: StageSongState }) {
   const k = (key: string, opts?: Record<string, unknown>) =>
     t(`games.melodiq_notes.stage.${key}`, opts);
   const fileRef = useRef<HTMLInputElement>(null);
-  const { recording, align, marks, offset } = state;
+  const { recording, align, marks, offset, pins } = state;
   const running = align.kind === 'running';
   const progress = running
     ? ((STAGES.indexOf(align.stage) + align.fraction) / STAGES.length) * 100
@@ -25,9 +26,13 @@ export function RecordingBar({ state }: { state: StageSongState }) {
     info = k('aligned', { bars: marks.length - 1, start: (marks[0].sec + offset).toFixed(2) });
     const tuning = align.kind === 'done' ? align.tuning : undefined;
     if (tuning?.semitones)
-      info += ` · ${k('tuning_semitones', { shift: (tuning.semitones > 0 ? '+' : '−') + Math.abs(tuning.semitones) })}`;
+      info += ` · ${k('tuning_semitones', {
+        shift: signed(tuning.semitones),
+        count: Math.abs(tuning.semitones),
+      })}`;
     if (tuning && Math.abs(tuning.cents) >= 10)
-      info += ` · ${k('tuning_cents', { cents: (tuning.cents > 0 ? '+' : '−') + Math.abs(tuning.cents) })}`;
+      info += ` · ${k('tuning_cents', { cents: signed(tuning.cents) })}`;
+    if (pins.length) info += ` · ${k('pinned', { count: pins.length })}`;
   }
 
   return (
@@ -89,6 +94,13 @@ export function RecordingBar({ state }: { state: StageSongState }) {
             >
               +
             </Button>
+            {marks && (
+              <Tooltip title={k('pin_bar_hint')} describeChild>
+                <Button size="small" variant="outlined" onClick={state.pinBarNow}>
+                  {k('pin_bar')}
+                </Button>
+              </Tooltip>
+            )}
             {state.origin?.kind === 'server' && marks && (
               <Button
                 size="small"

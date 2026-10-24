@@ -6,6 +6,8 @@ Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)
 
 - `docs/tech/architecture.md` §3.2: `music-score` alignment now estimates the recording's tuning, tries semitone shifts, and fits tones to pitch-class onsets.
 - **Code changed:** `src/modules/music-score/{alignment,noteFit,onsets}.ts`, new `tuning.ts` and `chromaOnsets.ts` (+ synthetic band tests), Melodiq Notes recording bar shows the detected shift; new dev script `scripts/align-eval.mjs`.
+- `docs/tech/architecture.md` §3.2: `music-score` lists `pinBar` / `nearestBar`.
+- **Code changed:** new `src/modules/music-score/anchors.ts` (+ test); Melodiq Notes recording bar gets "Bar line here" (`useStageSong.pinBarNow`).
 
 ## 2026-10-24 — Motion tokens and reduced motion (claude-code)
 
