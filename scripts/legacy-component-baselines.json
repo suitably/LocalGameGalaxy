@@ -5,6 +5,5 @@
   "src/games/melodiq/components/PlaybackManager.tsx": 373,
   "src/lib/webrtc/WebRTCHostContext.tsx": 347,
   "src/games/guessart/components/GuessArtHeader.tsx": 320,
-  "src/games/melodiq/hooks/useMelodiqGlobalEvents.tsx": 272,
-  "src/games/melodiq/hooks/SettingsContext.tsx": 314
+  "src/games/melodiq/hooks/useMelodiqGlobalEvents.tsx": 272
 }

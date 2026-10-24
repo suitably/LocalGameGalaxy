@@ -1453,6 +1453,7 @@
     "backToCategories": "Back to Categories",
     "manualWordLabel": "Word to draw",
     "manualSynonymsLabel": "Synonyms / Alternate spellings (comma separated)",
+    "manualSynonymsExample": "e.g. bike, cycle",
     "manualWordRequired": "Please enter a word!",
     "startDrawing": "Start Drawing",
     "drawWordPrompt": "Draw:",

@@ -1453,6 +1453,7 @@
     "backToCategories": "Zurück zu den Kategorien",
     "manualWordLabel": "Zu zeichnendes Wort",
     "manualSynonymsLabel": "Synonyme / Alternative Schreibweisen (kommagetrennt)",
+    "manualSynonymsExample": "z.B. Rad, Drahtesel",
     "manualWordRequired": "Bitte gib ein Wort ein!",
     "startDrawing": "Zeichnen starten",
     "drawWordPrompt": "Zeichne:",
