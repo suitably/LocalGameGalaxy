@@ -102,6 +102,7 @@
 
 ### Fixed
 
+- **Melodiq Notes tab view**: guitar, bass and ukulele note heads were drawn one radius to the right of their time, so they reached the hit line about a tenth of a beat after the note sounded (around 100 ms in slow songs); they are now centred on their time like drums, keys and notation.
 - **Settings language**: the notifications tab and its description show English text in the English UI (the keys `settings.notifications_tab` / `settings.notifications_relay_desc` were missing, so the German fallback was shown) (#154).
 - **Melodiq lyrics**: the first syllable of a line is no longer swallowed — a finished line now makes way for the next one shortly before it starts instead of lingering into it (#441).
 - **Melodiq Notes**: with 3–4 players the panel header no longer draws player, part name and score on top of each other; it measures the text and drops the part name, keyboard marker and instrument, then accuracy/combo, before anything overlaps (#483).
