@@ -41,7 +41,6 @@
   "src/games/guessart/logic/engine.ts": 1,
   "src/games/guessart/logic/guessartNotification.test.ts": 1,
   "src/games/guessart/logic/lexicon.ts": 1,
-  "src/games/knister/KnisterGame.tsx": 1,
   "src/games/melodiq-notes/demoSongs.ts": 1,
   "src/games/melodiq-notes/useMidiInput.ts": 1,
   "src/games/melodiq/api/melodiqFetch.ts": 5,

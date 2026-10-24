@@ -27,6 +27,7 @@
 
 ### Changed
 
+- **Kniffel and Knister**: boards split into focused components and hooks; player columns use the piece-colour tints, scores use the display face with tabular figures, status colours follow the theme; removed the gradient, glow and blur effects and the duplicate Knister title (#492).
 - Cards: decomposed the Schwimmen, Oh Hell and score-sheet views into shared presenters (`components/common/`), a `useSchwimmenState` hook and tested `logic/cardPlayers.ts`; re-coloured with piece/background tokens, removed gradients and emoji icons (#494, #360).
 
 - **Qwixx**: score sheet split into focused components and a `useQwixxState` hook; rows use the piece palette, scores and totals the theme tokens; gradients, glows, blur and emoji icons removed (#491).
