@@ -110,7 +110,7 @@ export const RoundSuccessModal: React.FC<RoundSuccessModalProps> = ({
 
           {incorrectGuesses.length > 0 && (
             <RoundSuccessSynonyms
-              open={open}
+              key={`${open}-${language}-${word}`}
               word={word}
               language={language}
               incorrectGuesses={incorrectGuesses}

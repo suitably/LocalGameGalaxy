@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Alert, Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import DoneRoundedIcon from '@mui/icons-material/DoneRounded';
@@ -7,7 +7,6 @@ import { addSynonymToWord } from '../logic/catalogueManager';
 import { SynonymLanguageToggle } from './SynonymLanguageToggle';
 
 interface RoundSuccessSynonymsProps {
-  open: boolean;
   word: string;
   language: string;
   incorrectGuesses: string[];
@@ -15,7 +14,6 @@ interface RoundSuccessSynonymsProps {
 
 /** Lets the players store wrong guesses as synonyms of the solved word. */
 export const RoundSuccessSynonyms: React.FC<RoundSuccessSynonymsProps> = ({
-  open,
   word,
   language,
   incorrectGuesses,
@@ -24,12 +22,6 @@ export const RoundSuccessSynonyms: React.FC<RoundSuccessSynonymsProps> = ({
   const [selectedLang, setSelectedLang] = useState<string>(language);
   const [addedSynonyms, setAddedSynonyms] = useState<Set<string>>(new Set());
   const [feedback, setFeedback] = useState<string | null>(null);
-
-  useEffect(() => {
-    setSelectedLang(language);
-    setAddedSynonyms(new Set());
-    setFeedback(null);
-  }, [open, language, word]);
 
   const handleAddSynonym = async (guess: string) => {
     try {
