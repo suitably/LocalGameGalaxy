@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Signaling image published (claude-code)
+
+- `docs/tech/deployment.md` §1: the signaling image is now built by `docker-publish.yml` (was **Unverified**; compose files pointed at an image nobody published).
+- **Code changed:** `.github/workflows/docker-publish.yml` job `build-and-push-signaling`, trigger path `signaling/**`.
+
 ## 2026-10-24 — Server setup in one place (claude-code)
 
 - `docs/tech/deployment.md` §4b: the setup wizard is the single place for server setup; its Docker tab is the compose generator; outdated compose files removed.
