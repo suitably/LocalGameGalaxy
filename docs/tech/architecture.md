@@ -66,7 +66,7 @@ android/             # Capacitor Android project
 
 ### 3.1 Game modules (`src/games/*`)
 
-Each game is self-contained: entry component, internal state (reducer, hook or state machine), `logic/` with pure functions and tests. Games are registered by hand in `src/lib/gameRegistry.tsx` (lazy import, route, category, i18n keys; the `colorStart`/`colorEnd`/`hoverColor` fields are no longer read — the hub colours games by area, see `src/lib/areas.ts`). **Cross-game imports are forbidden** (`npm run check:architecture`).
+Each game is self-contained: entry component, internal state (reducer, hook or state machine), `logic/` with pure functions and tests. Games are registered by hand in `src/lib/gameRegistry.tsx` (lazy import, route, category, i18n keys; the hub colours games by area, see `src/lib/areas.ts`). **Cross-game imports are forbidden** (`npm run check:architecture`).
 
 The full per-game table (route, size, storage, sync, i18n source, shared modules, tests) is in **[game-catalog.md](game-catalog.md)**. Short characterisation:
 

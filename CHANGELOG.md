@@ -27,6 +27,14 @@
 
 ### Changed
 
+- **Drawing viewer**: the stroke replay logic is a tested pure module and the viewer file is half its former size (#498).
+- **Settings navigation**: the header tabs, drop-down, compact menu and sub-pills are generated from one table; theme colours replace the fixed blue; English defaults for all labels, missing Melodiq tab labels added to both languages (#498).
+- **App header**: burger menu and home/back navigation moved into their own component and hook; the bar uses theme colours (#498).
+- **Server connection settings**: the connection card, setup wizard and UltraStar DB credentials are split into smaller components and hooks; gradient button, blurred dialog and hard-coded colours replaced by theme colours (#498).
+- **Game registry**: dropped the unused per-game gradient colours (the hub colours games by area); lazy game imports share one helper (#498).
+- **Melodiq library, history and settings**: song cards, search bar, playlists, history drawer and the Melodiq settings page are split into smaller components and use theme colours (no hard-coded white/rgba overlays, local-song tag in primary with contrast text); "Undo session" and "Reset defaults" are now translated (#495).
+- **Melodiq**: score board, lyrics, pitch stage and phone client are split into small components, hooks and tested logic (`scoreBoardRanking`, `lyricsLines`, `pitchLayout`, `apiChunkBuffer`); singers are drawn in the eight piece colours (nearest to their profile hue) instead of free HSL colours, the canvas and score screens read theme colours, and gradients, glows and lift-on-hover are gone (#496).
+- **Storyteller, Gartic Phone, Imposter**: lobby, header and setup screens split into smaller components and hooks and recoloured with theme and piece colours (Party area pink for Storyteller, green/red role colours for the Imposter result); the in-content Storyteller title is gone (the page title lives in the header) (#497).
 - **Kniffel and Knister**: boards split into focused components and hooks; player columns use the piece-colour tints, scores use the display face with tabular figures, status colours follow the theme; removed the gradient, glow and blur effects and the duplicate Knister title (#492).
 - Cards: decomposed the Schwimmen, Oh Hell and score-sheet views into shared presenters (`components/common/`), a `useSchwimmenState` hook and tested `logic/cardPlayers.ts`; re-coloured with piece/background tokens, removed gradients and emoji icons (#494, #360).
 

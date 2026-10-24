@@ -1,17 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Paper,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Chip, IconButton, Tooltip, Typography } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import BrushRoundedIcon from '@mui/icons-material/BrushRounded';
 import PsychologyRoundedIcon from '@mui/icons-material/PsychologyRounded';
@@ -19,10 +7,8 @@ import CreateRoundedIcon from '@mui/icons-material/CreateRounded';
 import CelebrationRoundedIcon from '@mui/icons-material/CelebrationRounded';
 import StopCircleRoundedIcon from '@mui/icons-material/StopCircleRounded';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
-import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
-import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
-import { QRCodeSVG } from 'qrcode.react';
 import { useTranslation } from 'react-i18next';
+import { GarticEndGameDialog, GarticShareDialog } from './GarticHeaderDialogs';
 import type { GarticGameState } from '../types';
 
 interface GarticHeaderProps {
@@ -53,7 +39,6 @@ export const GarticHeader: React.FC<GarticHeaderProps> = ({
   const { t } = useTranslation();
   const [confirmEndOpen, setConfirmEndOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const isPrompt = phase === 'prompt';
   const isDrawing = phase === 'drawing';
@@ -75,20 +60,6 @@ export const GarticHeader: React.FC<GarticHeaderProps> = ({
       : isGuessing
         ? PsychologyRoundedIcon
         : CelebrationRoundedIcon;
-
-  const buildShareUrl = () => {
-    const isProd = window.location.hostname.includes('github.io');
-    const base = isProd
-      ? `${window.location.origin}${window.location.pathname}`
-      : `${window.location.protocol}//${window.location.hostname}:${window.location.port}${window.location.pathname}`;
-    return `${base}#/party?room=${roomId}`;
-  };
-
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(buildShareUrl());
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   return (
     <>
@@ -198,69 +169,15 @@ export const GarticHeader: React.FC<GarticHeaderProps> = ({
         </Box>
       </Box>
 
-      {/* Share Lobby Dialog */}
-      <Dialog open={shareOpen} onClose={() => setShareOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <ShareRoundedIcon color="primary" /> {t('party.shareLobby', 'Lobby teilen')}
-        </DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, pt: 1 }}>
-          <Typography variant="body2" color="text.secondary" textAlign="center">
-            {t('party.shareLobbyDesc', 'Teile diesen Link oder scanne den QR-Code, um weitere Freunde ins Spiel einzuladen:')}
-          </Typography>
-
-          <Paper sx={{ p: 2, bgcolor: '#ffffff', borderRadius: 2 }}>
-            <QRCodeSVG value={buildShareUrl()} size={180} />
-          </Paper>
-
-          <Chip
-            label={`${t('party.room', 'Raum')}: ${roomId}`}
-            color="primary"
-            variant="filled"
-            sx={{ fontWeight: 800, fontSize: '1rem', px: 1, py: 2 }}
-          />
-
-          <Button
-            fullWidth
-            variant="contained"
-            color={copied ? 'success' : 'primary'}
-            startIcon={copied ? <CheckRoundedIcon /> : <ContentCopyRoundedIcon />}
-            onClick={handleCopyLink}
-            sx={{ fontWeight: 800, py: 1.2, borderRadius: 2 }}
-          >
-            {copied ? t('common.copied', 'Link kopiert!') : t('common.copyLink', 'Link kopieren')}
-          </Button>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShareOpen(false)}>{t('common.close', 'Schließen')}</Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Confirm End Game Dialog */}
-      <Dialog open={confirmEndOpen} onClose={() => setConfirmEndOpen(false)}>
-        <DialogTitle sx={{ fontWeight: 800 }}>
-          {t('party.confirmEndTitle', 'Spiel wirklich beenden?')}
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary">
-            {t('party.confirmEndDesc', 'Das aktuelle Gartic Phone Spiel wird für alle verbundenen Spieler abgebrochen und alle kehren zur Party-Lobby zurück.')}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmEndOpen(false)}>
-            {t('common.cancel', 'Abbrechen')}
-          </Button>
-          <Button
-            color="error"
-            variant="contained"
-            onClick={() => {
-              setConfirmEndOpen(false);
-              onEndGame?.();
-            }}
-          >
-            {t('party.endGameBtn', 'Beenden')}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <GarticShareDialog open={shareOpen} roomId={roomId} onClose={() => setShareOpen(false)} />
+      <GarticEndGameDialog
+        open={confirmEndOpen}
+        onClose={() => setConfirmEndOpen(false)}
+        onConfirm={() => {
+          setConfirmEndOpen(false);
+          onEndGame?.();
+        }}
+      />
     </>
   );
 };

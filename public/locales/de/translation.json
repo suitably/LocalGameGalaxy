@@ -1144,6 +1144,9 @@
     "pwa_status_browser": "Die App läuft im Webbrowser. Installiere die App als PWA, um die Adress- und Suchleiste für ein natives Smartphone-Erlebnis auszublenden.",
     "notifications_tab": "Benachrichtigungen",
     "notifications_relay_desc": "Web Push und ntfy.sh Topic-Sync für globale Multiplayer-Benachrichtigungen",
+    "melodiq_microphones": "Mikrofone",
+    "melodiq_profiles": "Spieler-Profile",
+    "melodiq_gameplay": "Gameplay",
     "notifications_title": "Benachrichtigungen",
     "notifications_desc": "Push-Benachrichtigungen informieren dich, wenn du in einem Spiel (z.B. GuessArt) an der Reihe bist – auch wenn die App geschlossen ist.",
     "relay_title": "Push-Relay Server",
@@ -1326,6 +1329,7 @@
     },
     "usdb": {
       "title": "UltraStar DB Zugangsdaten",
+      "open_site": "UltraStar DB öffnen",
       "desc": "Zugangsdaten für USDB (usdb.animux.de), um Songtexte und Noten automatisch herunterzuladen.",
       "username": "USDB-Benutzername",
       "password": "Passwort",
