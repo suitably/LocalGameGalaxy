@@ -63,10 +63,10 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ textAlign: 'center', fontWeight: 800, pb: 1 }}>
         {gameStatus === 'won'
-          ? t('wordle.modal.title_won', 'Gewonnen! 🎉')
+          ? t('wordle.modal.title_won', 'Gewonnen!')
           : gameStatus === 'lost'
-            ? t('wordle.modal.title_lost', 'Schade! 😔')
-            : t('wordle.modal.title_stats', 'Statistiken 📊')}
+            ? t('wordle.modal.title_lost', 'Schade!')
+            : t('wordle.modal.title_stats', 'Statistiken')}
       </DialogTitle>
 
       <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
@@ -95,7 +95,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
         {/* Top Numbers Grid */}
         <Stack direction="row" spacing={1} justifyContent="space-between" sx={{ my: 2 }}>
           <Box sx={{ textAlign: 'center', flex: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
               {stats.played}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -103,7 +103,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center', flex: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
               {winRate}%
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -111,7 +111,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center', flex: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
               {stats.currentStreak}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -119,7 +119,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center', flex: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
               {stats.maxStreak}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -178,7 +178,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
 
         {copied && (
           <Alert severity="success" sx={{ mt: 2, py: 0.5 }}>
-            {t('wordle.copied_to_clipboard', 'In die Zwischenablage kopiert! 📋')}
+            {t('wordle.copied_to_clipboard', 'In die Zwischenablage kopiert!')}
           </Alert>
         )}
       </DialogContent>

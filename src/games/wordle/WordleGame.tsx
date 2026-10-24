@@ -2,85 +2,43 @@
  * WordleGame.tsx - Main Wordle Game View & Screen Coordinator
  */
 
-import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  ButtonGroup,
-  Alert,
-  Paper,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Stack,
-} from '@mui/material';
+import React from 'react';
+import { Alert, Box, Button, ButtonGroup } from '@mui/material';
 import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
-import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
 import { GameLayout } from '../../components/Layout/GameLayout';
-import { parseGameUrlParams } from '../../modules/sharing';
-import { useWordle } from './hooks/useWordle';
-import { wordleEngine } from './logic/wordleEngine';
+import { useWordleScreen } from './hooks/useWordleScreen';
 import { WordleBoard } from './components/WordleBoard';
 import { WordleKeyboard } from './components/WordleKeyboard';
 import { WordleStatsModal } from './components/WordleStatsModal';
 import { WordleDuelModal } from './components/WordleDuelModal';
 import { WordleHistoryModal } from './components/WordleHistoryModal';
+import { WordleHelpDialog } from './components/WordleHelpDialog';
+import { WordleToast } from './components/WordleToast';
 import { HeaderActionBar } from './components/HeaderActionBar';
-import type { WordleGameMode } from './logic/types';
-
-
 
 export const WordleGame: React.FC = () => {
-  const { t, i18n } = useTranslation();
-  const location = useLocation();
+  const { t } = useTranslation();
   usePageTitle(t('games.wordle.title', 'Wordle'));
-
-  const [statsOpen, setStatsOpen] = useState(false);
-  const [duelOpen, setDuelOpen] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
-
-  // Check URL parameters for duel challenge
-  const duelParam = parseGameUrlParams(location.search, location.hash).get('duel');
-
-  const customDuelWord = duelParam ? wordleEngine.decodeDuelWord(duelParam) : null;
-  const initialMode: WordleGameMode = customDuelWord ? 'duel' : 'daily';
 
   const {
     state,
     stats,
     keyStatuses,
-    justFinished,
+    language,
+    openDialog,
+    open,
+    close,
     addLetter,
     removeLetter,
     submitGuess,
     switchMode,
     startNewGame,
-    clearShake,
-  } = useWordle(i18n.language || 'de', initialMode, customDuelWord);
+  } = useWordleScreen();
 
-  // Automatically open stats modal only when the game has just finished in this session
-  useEffect(() => {
-    if (justFinished) {
-      const timer = setTimeout(() => {
-        setStatsOpen(true);
-      }, 1200);
-      return () => clearTimeout(timer);
-    }
-  }, [justFinished]);
-
-  // Clear shake animation after 600ms
-  useEffect(() => {
-    if (state.invalidWordShake) {
-      const timer = setTimeout(clearShake, 600);
-      return () => clearTimeout(timer);
-    }
-  }, [state.invalidWordShake, clearShake]);
+  const finished = state.status !== 'playing';
 
   return (
     <GameLayout maxWidth="sm" disablePadding>
@@ -93,154 +51,91 @@ export const WordleGame: React.FC = () => {
           py: { xs: 1.5, sm: 2.5 },
         }}
       >
-      {/* Header Action Bar */}
-      <HeaderActionBar
-        onHistory={() => setHistoryOpen(true)}
-        onDuel={() => setDuelOpen(true)}
-        onStats={() => setStatsOpen(true)}
-        onHelp={() => setHelpOpen(true)}
-      />
-
-      {/* Mode Selector */}
-      <ButtonGroup size="small" variant="outlined" sx={{ mb: 1.5 }}>
-        <Button
-          variant={state.mode === 'daily' ? 'contained' : 'outlined'}
-          color="success"
-          onClick={() => switchMode('daily')}
-        >
-          {t('wordle.mode.daily', 'Tagesrätsel 📅')}
-        </Button>
-        <Button
-          variant={state.mode === 'practice' ? 'contained' : 'outlined'}
-          color="success"
-          onClick={() => switchMode('practice')}
-        >
-          {t('wordle.mode.practice', 'Üben 🎯')}
-        </Button>
-      </ButtonGroup>
-
-      {/* Duel Banner */}
-      {state.mode === 'duel' && (
-        <Alert severity="info" sx={{ width: '100%', mb: 1.5, py: 0.2 }}>
-          {t('wordle.duel.active_banner', 'Du spielst ein Duell-Wort eines Freundes!')}
-        </Alert>
-      )}
-
-      {/* Notification Toast */}
-      {state.message && (
-        <Paper
-          elevation={4}
-          sx={{
-            px: 2,
-            py: 0.8,
-            mb: 1,
-            borderRadius: 2,
-            bgcolor: state.status === 'won' ? '#2e7d32' : state.status === 'lost' ? '#c62828' : 'rgba(255, 255, 255, 0.15)',
-            color: '#ffffff',
-            fontWeight: 700,
-            fontSize: '0.9rem',
-            animation: 'fadeIn 0.2s ease-out',
-          }}
-        >
-          {t(state.message)}
-        </Paper>
-      )}
-
-      {/* 6x5 Letter Board */}
-      <WordleBoard
-        guesses={state.guesses}
-        evaluations={state.evaluations}
-        currentInput={state.currentInput}
-        isShaking={state.invalidWordShake}
-      />
-
-      {/* Action / Play Again Button if finished in Practice mode */}
-      {state.status !== 'playing' && state.mode !== 'daily' && (
-        <Button
-          variant="contained"
-          color="success"
-          startIcon={<ReplayRoundedIcon />}
-          onClick={() => startNewGame('practice')}
-          sx={{ mb: 1, fontWeight: 700 }}
-        >
-          {t('wordle.new_word', 'Neues Wort')}
-        </Button>
-      )}
-
-      {/* Action / View Stats Button if finished in Daily mode */}
-      {state.status !== 'playing' && state.mode === 'daily' && (
-        <Button
-          variant="contained"
-          color="success"
-          startIcon={<BarChartRoundedIcon />}
-          onClick={() => setStatsOpen(true)}
-          sx={{ mb: 1, fontWeight: 700 }}
-        >
-          {t('wordle.stats.btn_tooltip', 'Statistiken')}
-        </Button>
-      )}
-
-      {/* On-Screen Touch Keyboard */}
-      <Box sx={{ mt: 'auto', width: '100%' }}>
-        <WordleKeyboard
-          onChar={addLetter}
-          onDelete={removeLetter}
-          onEnter={submitGuess}
-          keyStatuses={keyStatuses}
-          language={i18n.language}
-          disabled={state.status !== 'playing'}
+        <HeaderActionBar
+          onHistory={() => open('history')}
+          onDuel={() => open('duel')}
+          onStats={() => open('stats')}
+          onHelp={() => open('help')}
         />
+
+        <ButtonGroup size="small" variant="outlined" sx={{ mb: 1.5 }}>
+          <Button
+            variant={state.mode === 'daily' ? 'contained' : 'outlined'}
+            onClick={() => switchMode('daily')}
+          >
+            {t('wordle.mode.daily', 'Tagesrätsel')}
+          </Button>
+          <Button
+            variant={state.mode === 'practice' ? 'contained' : 'outlined'}
+            onClick={() => switchMode('practice')}
+          >
+            {t('wordle.mode.practice', 'Üben')}
+          </Button>
+        </ButtonGroup>
+
+        {state.mode === 'duel' && (
+          <Alert severity="info" sx={{ width: '100%', mb: 1.5, py: 0.2 }}>
+            {t('wordle.duel.active_banner', 'Du spielst ein Duell-Wort eines Freundes!')}
+          </Alert>
+        )}
+
+        {state.message && <WordleToast message={state.message} status={state.status} />}
+
+        <WordleBoard
+          guesses={state.guesses}
+          evaluations={state.evaluations}
+          currentInput={state.currentInput}
+          isShaking={state.invalidWordShake}
+        />
+
+        {finished && state.mode !== 'daily' && (
+          <Button
+            variant="contained"
+            startIcon={<ReplayRoundedIcon />}
+            onClick={() => startNewGame('practice')}
+            sx={{ mb: 1, fontWeight: 700 }}
+          >
+            {t('wordle.new_word', 'Neues Wort')}
+          </Button>
+        )}
+
+        {finished && state.mode === 'daily' && (
+          <Button
+            variant="contained"
+            startIcon={<BarChartRoundedIcon />}
+            onClick={() => open('stats')}
+            sx={{ mb: 1, fontWeight: 700 }}
+          >
+            {t('wordle.stats.btn_tooltip', 'Statistiken')}
+          </Button>
+        )}
+
+        <Box sx={{ mt: 'auto', width: '100%' }}>
+          <WordleKeyboard
+            onChar={addLetter}
+            onDelete={removeLetter}
+            onEnter={submitGuess}
+            keyStatuses={keyStatuses}
+            language={language}
+            disabled={finished}
+          />
+        </Box>
+
+        <WordleStatsModal
+          open={openDialog === 'stats'}
+          onClose={close}
+          stats={stats}
+          gameStatus={state.status}
+          targetWord={state.targetWord}
+          evaluations={state.evaluations}
+          mode={state.mode}
+          dateKey={state.dateKey}
+          onPlayAgain={state.mode !== 'daily' ? () => startNewGame('practice') : undefined}
+        />
+        <WordleDuelModal open={openDialog === 'duel'} onClose={close} />
+        <WordleHistoryModal open={openDialog === 'history'} onClose={close} language={language} />
+        <WordleHelpDialog open={openDialog === 'help'} onClose={close} />
       </Box>
-
-      {/* Stats Modal */}
-      <WordleStatsModal
-        open={statsOpen}
-        onClose={() => setStatsOpen(false)}
-        stats={stats}
-        gameStatus={state.status}
-        targetWord={state.targetWord}
-        evaluations={state.evaluations}
-        mode={state.mode}
-        dateKey={state.dateKey}
-        onPlayAgain={state.mode !== 'daily' ? () => startNewGame('practice') : undefined}
-      />
-
-      {/* Duel Creator Modal */}
-      <WordleDuelModal open={duelOpen} onClose={() => setDuelOpen(false)} />
-
-      {/* History Modal */}
-      <WordleHistoryModal open={historyOpen} onClose={() => setHistoryOpen(false)} language={i18n.language || 'de'} />
-
-      {/* How to play dialog */}
-      <Dialog open={helpOpen} onClose={() => setHelpOpen(false)} maxWidth="xs">
-        <DialogTitle sx={{ fontWeight: 800 }}>{t('wordle.help.title', 'Spielregeln 📖')}</DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-          <Typography variant="body2">
-            {t('wordle.help.p1', 'Errate das 5-Buchstaben-Wort in 6 Versuchen.')}
-          </Typography>
-          <Typography variant="body2">
-            {t('wordle.help.p2', 'Nach jedem Versuch färben sich die Kacheln:')}
-          </Typography>
-          <Stack spacing={1} sx={{ my: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Box sx={{ width: 32, height: 32, bgcolor: '#2e7d32', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>A</Box>
-              <Typography variant="body2">{t('wordle.help.green', 'Grün: Buchstabe ist an der richtigen Stelle.')}</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Box sx={{ width: 32, height: 32, bgcolor: '#f9a825', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>B</Box>
-              <Typography variant="body2">{t('wordle.help.yellow', 'Gelb: Buchstabe kommt im Wort vor, aber an anderer Stelle.')}</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Box sx={{ width: 32, height: 32, bgcolor: '#374151', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>C</Box>
-              <Typography variant="body2">{t('wordle.help.gray', 'Grau: Buchstabe kommt nicht im Wort vor.')}</Typography>
-            </Box>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setHelpOpen(false)}>{t('common.close', 'Verstanden')}</Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
     </GameLayout>
   );
 };

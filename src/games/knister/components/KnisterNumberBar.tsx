@@ -21,13 +21,12 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
 
   return (
     <Paper
-      elevation={3}
+      elevation={0}
       sx={{
         p: { xs: 1, sm: 1.5 },
         borderRadius: 3,
         bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
         border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
-        backdropFilter: 'blur(8px)',
         width: '100%',
         maxWidth: 520,
         mx: 'auto',

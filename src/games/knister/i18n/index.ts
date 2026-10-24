@@ -36,6 +36,8 @@ export const initKnisterI18n = () => {
             row: 'Zeile',
             col: 'Spalte',
             total_score: 'Gesamtpunkte',
+            diagonals_tooltip:
+              'Diagonalen (2x): Hauptdiagonale {{main}}P, Nebendiagonale {{anti}}P',
             undo: 'Rückgängig',
             undo_tooltip: 'Letzten Eintrag rückgängig machen',
             legend_title: 'Knister Punkteübersicht',
@@ -106,6 +108,7 @@ export const initKnisterI18n = () => {
             row: 'Row',
             col: 'Column',
             total_score: 'Total Score',
+            diagonals_tooltip: 'Diagonals (2x): main diagonal {{main}}P, anti-diagonal {{anti}}P',
             undo: 'Undo',
             undo_tooltip: 'Undo last entry',
             legend_title: 'Knister Scoring Guide',

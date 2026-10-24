@@ -46,12 +46,13 @@ export const initCardsI18n = () => {
               title: 'Schwimmen (31)',
               description:
                 '3 Leben + Schwimmring! Verlierer der Runde verlieren Leben. ⚡ Blitz (31) zieht allen anderen 1 Leben ab.',
-              hint: 'Markiere den Verlierer mit 💔 oder tippe bei 31 auf ⚡ Blitz.',
+              hint: 'Markiere den Verlierer mit „-1 Leben“ oder tippe bei 31 auf „Blitz“.',
               lose_life_btn: '-1 Leben',
               marked_loser: 'Verliert Leben ✓',
-              blitz_btn: '⚡ Blitz!',
+              blitz_btn: 'Blitz!',
               blitz_tooltip: 'Blitz! (31) - Alle anderen aktiven Spieler verlieren 1 Leben',
-              blitz_dialog_title: '⚡ Blitz / Feuer!',
+              blitz_dialog_title: 'Blitz / Feuer!',
+              blitz_history: 'Blitz von {{name}}! ({{others}} -1 Leben)',
               blitz_dialog_desc:
                 'hat 31 / Blitz! Alle anderen aktiven Spieler verlieren sofort 1 Leben.',
               confirm_blitz: 'Blitz ausführen',
@@ -119,12 +120,13 @@ export const initCardsI18n = () => {
               title: 'Schwimmen (31)',
               description:
                 '3 lives + swimming ring! Round losers lose a life. ⚡ Blitz (31) costs all other players 1 life.',
-              hint: 'Mark the round loser with 💔 or tap ⚡ Blitz on 31.',
+              hint: 'Mark the round loser with “-1 Life” or tap “Blitz” on 31.',
               lose_life_btn: '-1 Life',
               marked_loser: 'Loses Life ✓',
-              blitz_btn: '⚡ Blitz!',
+              blitz_btn: 'Blitz!',
               blitz_tooltip: 'Blitz! (31) - All other active players lose 1 life',
-              blitz_dialog_title: '⚡ Blitz / Feuer!',
+              blitz_dialog_title: 'Blitz / Fire!',
+              blitz_history: 'Blitz by {{name}}! ({{others}} -1 life)',
               blitz_dialog_desc:
                 'called 31 / Blitz! All other active players immediately lose 1 life.',
               confirm_blitz: 'Execute Blitz',

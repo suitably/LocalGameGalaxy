@@ -1,6 +1,6 @@
 import React from 'react';
 import { alpha, Box, Paper, Typography, Button } from '@mui/material';
-import CasinoIcon from '@mui/icons-material/Casino';
+import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import { useTranslation } from 'react-i18next';
 import { Die3D, PRESET_DIE_COLORS } from '../../../components/games/Die3D';
 import { useDiceRollAnimation } from '../../../components/games/useDiceRollAnimation';
@@ -85,7 +85,6 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
         borderRadius: 3,
         bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
         border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
-        backdropFilter: 'blur(8px)',
         mb: 2,
       }}
     >

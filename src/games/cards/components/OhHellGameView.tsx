@@ -1,29 +1,18 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-  Paper,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ReplayIcon from '@mui/icons-material/Replay';
-import HistoryIcon from '@mui/icons-material/History';
+import { Box, Button, Chip, Paper, Stack, TextField, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { processOhHellRound } from '../logic/ohHellEngine';
+import {
+  createCardPlayers,
+  formatSignedPoints,
+  sumCountInputs,
+  toCountMap,
+} from '../logic/cardPlayers';
 import type { CardPlayer } from '../logic/types';
+import { CardGameHeader } from './common/CardGameHeader';
+import { CardGameScoreSummary } from './common/CardGameScoreSummary';
+import { CardPlayerScoreRow } from './common/CardPlayerScoreRow';
+import { CardRoundTable, CardScoreHistoryDialog } from './common/CardScoreHistoryDialog';
 
 interface OhHellGameViewProps {
   initialPlayers: string[];
@@ -38,20 +27,7 @@ export const OhHellGameView: React.FC<OhHellGameViewProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const [players, setPlayers] = useState<CardPlayer[]>(() =>
-    initialPlayers.map((name, idx) => ({
-      id: `p${idx + 1}`,
-      name,
-      lives: 0,
-      isSwimming: false,
-      isEliminated: false,
-      score: 0,
-      roundScores: [],
-      bids: [],
-      tricksWon: [],
-    })),
-  );
-
+  const [players, setPlayers] = useState<CardPlayer[]>(() => createCardPlayers(initialPlayers));
   const [roundIdx, setRoundIdx] = useState(0);
   const [phase, setPhase] = useState<'bidding' | 'tricks'>('bidding');
   const [currentBids, setCurrentBids] = useState<Record<string, string>>({});
@@ -60,36 +36,13 @@ export const OhHellGameView: React.FC<OhHellGameViewProps> = ({
 
   const cardsThisRound = roundsSequence[roundIdx] || 1;
   const isLastRound = roundIdx >= roundsSequence.length - 1;
-
-  const totalBidsEntered = Object.values(currentBids).reduce(
-    (acc, val) => acc + (parseInt(val, 10) || 0),
-    0,
-  );
-
-  const handleBidChange = (playerId: string, val: string) => {
-    setCurrentBids((prev) => ({ ...prev, [playerId]: val }));
-  };
-
-  const handleTrickChange = (playerId: string, val: string) => {
-    setCurrentTricks((prev) => ({ ...prev, [playerId]: val }));
-  };
-
-  const handleAdvanceToTricks = () => {
-    setPhase('tricks');
-  };
+  const totalBidsEntered = sumCountInputs(currentBids);
+  const cardsLabel = t('games.cards.cards_count', 'Karten');
 
   const handleCompleteRound = () => {
-    const bidsMap: Record<string, number> = {};
-    const tricksMap: Record<string, number> = {};
-
-    players.forEach((p) => {
-      bidsMap[p.id] = parseInt(currentBids[p.id] || '0', 10);
-      tricksMap[p.id] = parseInt(currentTricks[p.id] || '0', 10);
-    });
-
     const result = processOhHellRound(players, {
-      bids: bidsMap,
-      tricks: tricksMap,
+      bids: toCountMap(players, currentBids),
+      tricks: toCountMap(players, currentTricks),
       cardsCount: cardsThisRound,
     });
 
@@ -97,88 +50,65 @@ export const OhHellGameView: React.FC<OhHellGameViewProps> = ({
     setCurrentBids({});
     setCurrentTricks({});
     setPhase('bidding');
-
-    if (!isLastRound) {
-      setRoundIdx((r) => r + 1);
-    } else {
-      setPhase('bidding');
-    }
+    if (!isLastRound) setRoundIdx((r) => r + 1);
   };
 
   const handleRestart = () => {
-    setPlayers(
-      initialPlayers.map((name, idx) => ({
-        id: `p${idx + 1}`,
-        name,
-        lives: 0,
-        isSwimming: false,
-        isEliminated: false,
-        score: 0,
-        roundScores: [],
-        bids: [],
-        tricksWon: [],
-      })),
-    );
+    setPlayers(createCardPlayers(initialPlayers));
     setRoundIdx(0);
     setPhase('bidding');
     setCurrentBids({});
     setCurrentTricks({});
   };
 
-  const rankedPlayers = [...players].sort((a, b) => b.score - a.score);
+  const countInput = (
+    label: string,
+    value: string | undefined,
+    onChange: (val: string) => void,
+  ) => (
+    <TextField
+      size="small"
+      type="number"
+      label={label}
+      value={value || ''}
+      onChange={(e) => onChange(e.target.value)}
+      sx={{ width: 120 }}
+      inputProps={{ min: '0', max: String(cardsThisRound) }}
+    />
+  );
 
   return (
     <Box sx={{ width: '100%', maxWidth: 750, mx: 'auto', py: { xs: 1, sm: 2 } }}>
-      {/* Header bar */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={onExit}
-          size="small"
-          sx={{ textTransform: 'none', color: 'text.secondary' }}
-        >
-          {t('common.back', 'Zurück')}
-        </Button>
+      <CardGameHeader
+        roundLabel={`${t('games.cards.round', 'Runde')} ${roundIdx + 1}/${roundsSequence.length} (${cardsThisRound} ${cardsLabel})`}
+        onExit={onExit}
+        onRestart={handleRestart}
+        onHistory={() => setHistoryOpen(true)}
+      />
 
-        <Typography variant="h6" sx={{ fontWeight: 800, color: '#ab47bc' }}>
-          🧙‍♂️ {t('games.cards.ohell.title', 'Oh Hell')} - {t('games.cards.round', 'Runde')} {roundIdx + 1}/
-          {roundsSequence.length} ({cardsThisRound} {t('games.cards.cards_count', 'Karten')})
-        </Typography>
+      <CardGameScoreSummary players={players} />
 
-        <Box sx={{ display: 'flex', gap: 0.5 }}>
-          <IconButton size="small" onClick={() => setHistoryOpen(true)}>
-            <HistoryIcon fontSize="small" />
-          </IconButton>
-          <IconButton size="small" onClick={handleRestart}>
-            <ReplayIcon fontSize="small" />
-          </IconButton>
-        </Box>
-      </Box>
-
-      {/* Leaderboard Chips */}
-      <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 1.5, mb: 2 }}>
-        {rankedPlayers.map((p, idx) => (
-          <Chip
-            key={p.id}
-            label={`${idx + 1}. ${p.name}: ${p.score}P`}
-            color={idx === 0 ? 'secondary' : 'default'}
-            variant={idx === 0 ? 'filled' : 'outlined'}
-            sx={{ fontWeight: 700 }}
-          />
-        ))}
-      </Box>
-
-      {/* Phase Indicator & Hook Warning */}
+      {/* Phase indicator and total-bids hint */}
       <Paper
+        elevation={0}
         sx={{
           p: 2,
           mb: 2,
           borderRadius: 3,
-          bgcolor: 'rgba(255, 255, 255, 0.04)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
+          bgcolor: 'background.paper',
+          border: '1px solid',
+          borderColor: 'divider',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 1,
+          }}
+        >
           <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'secondary.light' }}>
             {phase === 'bidding'
               ? `1. ${t('games.cards.phase_bidding', 'Stichansage (Vorhersage)')}`
@@ -186,86 +116,56 @@ export const OhHellGameView: React.FC<OhHellGameViewProps> = ({
           </Typography>
 
           <Chip
-            label={`${t('games.cards.total_bids', 'Gesamtansage')}: ${totalBidsEntered} / ${cardsThisRound} ${t('games.cards.cards_count', 'Karten')}`}
+            label={`${t('games.cards.total_bids', 'Gesamtansage')}: ${totalBidsEntered} / ${cardsThisRound} ${cardsLabel}`}
             size="small"
             color={totalBidsEntered === cardsThisRound ? 'warning' : 'info'}
             variant="outlined"
-            sx={{ fontWeight: 700 }}
+            sx={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}
           />
         </Box>
       </Paper>
 
-      {/* Input List */}
       <Stack spacing={1.5} sx={{ mb: 3 }}>
-        {players.map((p) => {
-          return (
-            <Paper
-              key={p.id}
-              elevation={1}
-              sx={{
-                p: { xs: 1.5, sm: 2 },
-                borderRadius: 3,
-                bgcolor: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: 1.5,
-              }}
-            >
-              <Box>
-                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                  {p.name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {t('games.cards.current_score', 'Punktestand')}: <strong>{p.score}P</strong>
-                </Typography>
-              </Box>
+        {players.map((p) => (
+          <CardPlayerScoreRow key={p.id}>
+            <Box>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                {p.name}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {t('games.cards.current_score', 'Punktestand')}: <strong>{p.score}P</strong>
+              </Typography>
+            </Box>
 
-              {phase === 'bidding' ? (
-                <TextField
+            {phase === 'bidding' ? (
+              countInput(t('games.cards.bid_label', 'Ansage'), currentBids[p.id], (val) =>
+                setCurrentBids((prev) => ({ ...prev, [p.id]: val })),
+              )
+            ) : (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Chip
+                  label={`${t('games.cards.bid_label', 'Ansage')}: ${currentBids[p.id] || 0}`}
                   size="small"
-                  type="number"
-                  label={t('games.cards.bid_label', 'Ansage')}
-                  value={currentBids[p.id] || ''}
-                  onChange={(e) => handleBidChange(p.id, e.target.value)}
-                  sx={{ width: 120 }}
-                  inputProps={{ min: '0', max: String(cardsThisRound) }}
+                  variant="outlined"
+                  sx={{ fontWeight: 600 }}
                 />
-              ) : (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                  <Chip
-                    label={`${t('games.cards.bid_label', 'Ansage')}: ${currentBids[p.id] || 0}`}
-                    size="small"
-                    variant="outlined"
-                    sx={{ fontWeight: 600 }}
-                  />
-                  <TextField
-                    size="small"
-                    type="number"
-                    label={t('games.cards.tricks_label', 'Stiche')}
-                    value={currentTricks[p.id] || ''}
-                    onChange={(e) => handleTrickChange(p.id, e.target.value)}
-                    sx={{ width: 120 }}
-                    inputProps={{ min: '0', max: String(cardsThisRound) }}
-                  />
-                </Box>
-              )}
-            </Paper>
-          );
-        })}
+                {countInput(t('games.cards.tricks_label', 'Stiche'), currentTricks[p.id], (val) =>
+                  setCurrentTricks((prev) => ({ ...prev, [p.id]: val })),
+                )}
+              </Box>
+            )}
+          </CardPlayerScoreRow>
+        ))}
       </Stack>
 
-      {/* Action Buttons */}
       {phase === 'bidding' ? (
         <Button
           variant="contained"
           color="secondary"
           size="large"
           fullWidth
-          onClick={handleAdvanceToTricks}
-          sx={{ py: 1.5, fontWeight: 800, borderRadius: 50 }}
+          onClick={() => setPhase('tricks')}
+          sx={{ py: 1.5 }}
         >
           {t('games.cards.continue_to_tricks', 'Ansagen fixieren & Runde spielen')}
         </Button>
@@ -276,63 +176,31 @@ export const OhHellGameView: React.FC<OhHellGameViewProps> = ({
           size="large"
           fullWidth
           onClick={handleCompleteRound}
-          sx={{
-            py: 1.5,
-            fontWeight: 800,
-            borderRadius: 50,
-            background: 'linear-gradient(90deg, #ab47bc, #7b1fa2)',
-          }}
+          sx={{ py: 1.5 }}
         >
           {t('games.cards.complete_round', 'Runde auswerten')}
         </Button>
       )}
 
-      {/* Full Score Sheet Table Dialog */}
-      <Dialog open={historyOpen} onClose={() => setHistoryOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ fontWeight: 800 }}>{t('games.cards.score_table', 'Punktetabelle')}</DialogTitle>
-        <DialogContent dividers sx={{ p: 0 }}>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 'bold' }}>{t('games.cards.round', 'Runde')}</TableCell>
-                <TableCell sx={{ fontWeight: 'bold' }}>{t('games.cards.cards_count', 'Karten')}</TableCell>
-                {players.map((p) => (
-                  <TableCell key={p.id} align="center" sx={{ fontWeight: 'bold' }}>
-                    {p.name}
-                  </TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {roundsSequence.slice(0, roundIdx + 1).map((cards, rNum) => (
-                <TableRow key={rNum}>
-                  <TableCell>{rNum + 1}</TableCell>
-                  <TableCell>{cards}</TableCell>
-                  {players.map((p) => {
-                    const bid = p.bids[rNum];
-                    const trick = p.tricksWon[rNum];
-                    const pts = p.roundScores[rNum];
-                    return (
-                      <TableCell key={p.id} align="center">
-                        {bid !== undefined && trick !== undefined ? (
-                          <span>
-                            {bid}/{trick} ({pts >= 0 ? `+${pts}` : pts}P)
-                          </span>
-                        ) : (
-                          '-'
-                        )}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setHistoryOpen(false)}>{t('common.close', 'Schließen')}</Button>
-        </DialogActions>
-      </Dialog>
+      <CardScoreHistoryDialog
+        open={historyOpen}
+        title={t('games.cards.score_table', 'Punktetabelle')}
+        maxWidth="md"
+        onClose={() => setHistoryOpen(false)}
+      >
+        <CardRoundTable
+          players={players}
+          roundCount={roundIdx + 1}
+          leadingHeaders={[cardsLabel]}
+          leadingCells={(rNum) => [roundsSequence[rNum]]}
+          renderScore={(p, rNum) => {
+            const bid = p.bids[rNum];
+            const trick = p.tricksWon[rNum];
+            if (bid === undefined || trick === undefined) return '-';
+            return `${bid}/${trick} (${formatSignedPoints(p.roundScores[rNum])}P)`;
+          }}
+        />
+      </CardScoreHistoryDialog>
     </Box>
   );
 };
