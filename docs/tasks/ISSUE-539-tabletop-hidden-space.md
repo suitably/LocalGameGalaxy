@@ -110,4 +110,4 @@ Before the session ends: `npm run tokens` and paste the table into the PR descri
 - [x] slice 4 — fog of war
 - [x] gates
 - [x] docs
-- [ ] PR
+- [x] PR
