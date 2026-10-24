@@ -88,7 +88,6 @@
   "src/games/melodiq/utils.ts": 1,
   "src/games/melodiq/utils/usdbNavigation.test.ts": 2,
   "src/games/qwixx/components/QwixxRulesDialog.tsx": 1,
-  "src/games/qwixx/components/QwixxSheetSelector.tsx": 1,
   "src/games/qwixx/i18n/index.ts": 1,
   "src/games/qwixx/logic/qwixxReducer.ts": 1,
   "src/games/qwixx/logic/sheetDefinitions.ts": 1,
