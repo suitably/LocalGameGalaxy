@@ -12,6 +12,41 @@ export type DeckAction = Extract<
   { type: 'SHUFFLE_DECK' | 'DRAW_CARD' | 'RETURN_CARD_TO_DECK' }
 >;
 
+/** Adds `card` to `deck` and marks it as a pile member (mutates the widget map). */
+export function placeCardInDeck(
+  widgets: Record<string, TabletopWidget>,
+  deck: DeckWidget,
+  card: CardWidget,
+  cardId: string,
+) {
+  const newCardIds = deck.cardIds.includes(cardId) ? deck.cardIds : [...deck.cardIds, cardId];
+
+  widgets[deck.id] = {
+    ...deck,
+    cardIds: newCardIds,
+    cardCount: newCardIds.length,
+    ...(deck.isPile
+      ? {
+          frontContent: card.frontContent,
+          backContent: card.backContent,
+          faceObjects: card.faceObjects,
+          backFaceObjects: card.backFaceObjects,
+        }
+      : {}),
+  };
+
+  widgets[cardId] = {
+    ...card,
+    inPile: true,
+    pileId: deck.id,
+    faceUp: deck.faceUp ?? false,
+    activeFace: deck.activeFace ?? 0,
+    x: deck.x,
+    y: deck.y,
+    zIndex: deck.zIndex,
+  };
+}
+
 export function deckReducer(state: TabletopGameState, action: DeckAction): TabletopGameState {
   switch (action.type) {
     case 'SHUFFLE_DECK': {
@@ -178,32 +213,7 @@ export function deckReducer(state: TabletopGameState, action: DeckAction): Table
       const widgets = { ...state.game.widgets };
       removeFromHolderAndUpdateHand(widgets, cardId);
 
-      const newCardIds = deck.cardIds.includes(cardId) ? deck.cardIds : [...deck.cardIds, cardId];
-
-      widgets[deck.id] = {
-        ...deck,
-        cardIds: newCardIds,
-        cardCount: newCardIds.length,
-        ...(deck.isPile && card
-          ? {
-              frontContent: card.frontContent,
-              backContent: card.backContent,
-              faceObjects: card.faceObjects,
-              backFaceObjects: card.backFaceObjects,
-            }
-          : {}),
-      };
-
-      widgets[cardId] = {
-        ...card,
-        inPile: true,
-        pileId: deck.id,
-        faceUp: deck.faceUp ?? false,
-        activeFace: deck.activeFace ?? 0,
-        x: deck.x,
-        y: deck.y,
-        zIndex: deck.zIndex,
-      };
+      placeCardInDeck(widgets, deck, card, cardId);
 
       return {
         ...state,

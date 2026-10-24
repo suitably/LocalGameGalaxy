@@ -18,7 +18,7 @@ import { applyLayout, layoutHolderChildren } from './holderLayout';
 import { applyGameDelta, type GameDelta } from './stateDelta';
 import { normalizeHandHolders } from './handHolder';
 import { removeFromHolderAndUpdateHand } from './reducers/holderMembership';
-import { deckReducer } from './reducers/deckReducer';
+import { deckReducer, placeCardInDeck } from './reducers/deckReducer';
 import { bagReducer } from './reducers/bagReducer';
 import { pieceReducer } from './reducers/pieceReducer';
 import { viewReducer } from './reducers/viewReducer';
@@ -231,32 +231,7 @@ export function tabletopReducer(
             }
           }
         }
-        const newCardIds = deck.cardIds.includes(widgetId)
-          ? deck.cardIds
-          : [...deck.cardIds, widgetId];
-        widgets[deck.id] = {
-          ...deck,
-          cardIds: newCardIds,
-          cardCount: newCardIds.length,
-          ...(deck.isPile
-            ? {
-                frontContent: card.frontContent,
-                backContent: card.backContent,
-                faceObjects: card.faceObjects,
-                backFaceObjects: card.backFaceObjects,
-              }
-            : {}),
-        };
-        widgets[widgetId] = {
-          ...card,
-          inPile: true,
-          pileId: deck.id,
-          faceUp: deck.faceUp ?? false,
-          activeFace: deck.activeFace ?? 0,
-          x: deck.x,
-          y: deck.y,
-          zIndex: deck.zIndex,
-        };
+        placeCardInDeck(widgets, deck, card, widgetId);
         return {
           ...state,
           game: {
