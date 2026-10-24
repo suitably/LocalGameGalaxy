@@ -253,7 +253,7 @@ describe('tabletopReducer card handling', () => {
             type: 'holder',
             childIds: ['roadA'],
           } as unknown as HolderWidget,
-          'roadA': {
+          roadA: {
             id: 'roadA',
             type: 'token',
             parent: 'Player 1 - Roads',
@@ -573,5 +573,71 @@ describe('tabletopReducer card handling', () => {
       payload: { id: 'hz_1' },
     });
     expect(removedZone.game.hiddenZones?.hz_1).toBeUndefined();
+  });
+});
+
+describe('tabletopReducer hidden zone move/resize', () => {
+  const widget = (id: string, x: number, y: number, extra: Record<string, unknown> = {}) =>
+    ({
+      id,
+      type: 'token',
+      x,
+      y,
+      width: 20,
+      height: 20,
+      zIndex: 1,
+      ...extra,
+    }) as unknown as TokenWidget;
+  const state = {
+    game: {
+      id: 'g',
+      name: 'g',
+      version: '1',
+      minPlayers: 1,
+      maxPlayers: 2,
+      supportedModes: ['local_pass_and_play'],
+      table: { width: 1000, height: 800 },
+      widgets: {
+        a: widget('a', 150, 150),
+        p: widget('p', 160, 160, { pinned: true }),
+        o: widget('o', 700, 700),
+      },
+      hiddenZones: {
+        z: { id: 'z', x: 100, y: 100, width: 200, height: 200, color: '#000', revealed: false },
+      },
+    },
+  } as unknown as TabletopGameState;
+
+  it('MOVE_HIDDEN_ZONE moves zone and unlocked contents in one step', () => {
+    const next = tabletopReducer(state, {
+      type: 'MOVE_HIDDEN_ZONE',
+      payload: { id: 'z', dx: 30, dy: 10 },
+    });
+    expect(next.game.hiddenZones?.z).toMatchObject({ x: 130, y: 110 });
+    expect(next.game.widgets.a).toMatchObject({ x: 180, y: 160 });
+    expect(next.game.widgets.p).toMatchObject({ x: 160, y: 160 });
+    expect(next.game.widgets.o).toMatchObject({ x: 700, y: 700 });
+  });
+
+  it('MOVE_HIDDEN_ZONE ignores unknown zones', () => {
+    expect(
+      tabletopReducer(state, { type: 'MOVE_HIDDEN_ZONE', payload: { id: 'x', dx: 1, dy: 1 } }),
+    ).toBe(state);
+  });
+
+  it('RESIZE_HIDDEN_ZONE clamps to minimum size', () => {
+    const next = tabletopReducer(state, {
+      type: 'RESIZE_HIDDEN_ZONE',
+      payload: { id: 'z', x: 100, y: 100, width: 10, height: 500 },
+    });
+    expect(next.game.hiddenZones?.z).toMatchObject({ width: 80, height: 500 });
+  });
+
+  it('UPDATE_HIDDEN_ZONE applies partial changes', () => {
+    const next = tabletopReducer(state, {
+      type: 'UPDATE_HIDDEN_ZONE',
+      payload: { id: 'z', changes: { label: 'L' } },
+    });
+    expect(next.game.hiddenZones?.z).toMatchObject({ label: 'L', x: 100 });
   });
 });

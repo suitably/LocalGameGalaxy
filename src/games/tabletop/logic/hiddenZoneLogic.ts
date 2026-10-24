@@ -1,7 +1,62 @@
 /**
  * Hidden Zone & Fog-of-War Domain Logic [ID: GAME-TABLETOP-HIDDEN-ZONE-LOGIC]
  */
-import type { TabletopWidget, HiddenZone } from './types';
+import type { TabletopWidget, HiddenZone, TabletopGameDefinition } from './types';
+
+export const MIN_ZONE_SIZE = 80;
+
+type Rect = { x: number; y: number; width: number; height: number };
+
+/** A widget is locked when pinned or explicitly not movable. */
+export function isWidgetLocked(widget: Pick<TabletopWidget, 'pinned' | 'movable'>): boolean {
+  return !!widget.pinned || widget.movable === false;
+}
+
+function clamp(v: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, v));
+}
+
+export interface ZoneMoveResult {
+  zone: Pick<HiddenZone, 'x' | 'y'>;
+  widgets: Record<string, { x: number; y: number }>;
+}
+
+/**
+ * Moves a zone by (dx, dy), clamped to the table, together with contained unlocked widgets.
+ * Returns null when the zone is unknown or nothing would move.
+ */
+export function moveZoneWithContents(
+  game: Pick<TabletopGameDefinition, 'table' | 'widgets' | 'hiddenZones'>,
+  zoneId: string,
+  dx: number,
+  dy: number,
+): ZoneMoveResult | null {
+  const zone = game.hiddenZones?.[zoneId];
+  if (!zone) return null;
+  const x = clamp(zone.x + dx, 0, Math.max(0, game.table.width - zone.width));
+  const y = clamp(zone.y + dy, 0, Math.max(0, game.table.height - zone.height));
+  const ex = x - zone.x;
+  const ey = y - zone.y;
+  if (ex === 0 && ey === 0) return null;
+  const widgets: ZoneMoveResult['widgets'] = {};
+  for (const w of Object.values(game.widgets)) {
+    if (isWidgetLocked(w) || !isWidgetInsideZone(w, zone)) continue;
+    widgets[w.id] = { x: w.x + ex, y: w.y + ey };
+  }
+  return { zone: { x, y }, widgets };
+}
+
+/** Clamps a requested zone rectangle to the minimum size and the table bounds. */
+export function resizeZone(table: { width: number; height: number }, rect: Rect): Rect {
+  const width = clamp(rect.width, MIN_ZONE_SIZE, Math.max(MIN_ZONE_SIZE, table.width));
+  const height = clamp(rect.height, MIN_ZONE_SIZE, Math.max(MIN_ZONE_SIZE, table.height));
+  return {
+    width,
+    height,
+    x: clamp(rect.x, 0, Math.max(0, table.width - width)),
+    y: clamp(rect.y, 0, Math.max(0, table.height - height)),
+  };
+}
 
 /**
  * Checks whether a widget's center point lies within a hidden zone.
@@ -12,12 +67,7 @@ export function isWidgetInsideZone(
 ): boolean {
   const cx = widget.x + widget.width / 2;
   const cy = widget.y + widget.height / 2;
-  return (
-    cx >= zone.x &&
-    cx <= zone.x + zone.width &&
-    cy >= zone.y &&
-    cy <= zone.y + zone.height
-  );
+  return cx >= zone.x && cx <= zone.x + zone.width && cy >= zone.y && cy <= zone.y + zone.height;
 }
 
 /**
@@ -54,7 +104,11 @@ export function isWidgetHiddenForViewer(
   for (const zone of Object.values(zones)) {
     if (zone.revealed) continue;
     // Owner can see through their own zone
-    if (zone.ownerSeat !== undefined && viewerSeatIndex !== undefined && zone.ownerSeat === viewerSeatIndex) {
+    if (
+      zone.ownerSeat !== undefined &&
+      viewerSeatIndex !== undefined &&
+      zone.ownerSeat === viewerSeatIndex
+    ) {
       continue;
     }
     if (isWidgetInsideZone(widget, zone)) {
@@ -94,6 +148,10 @@ export function createDefaultHiddenZone(
     color: options?.color || '#212121',
     ownerSeat: options?.ownerSeat,
     revealed: false,
-    label: options?.label || (options?.ownerSeat !== undefined ? `Verdeckt (Spieler ${options.ownerSeat + 1})` : 'Verdeckter Bereich'),
+    label:
+      options?.label ||
+      (options?.ownerSeat !== undefined
+        ? `Verdeckt (Spieler ${options.ownerSeat + 1})`
+        : 'Verdeckter Bereich'),
   };
 }

@@ -104,7 +104,7 @@ Before the session ends: `npm run tokens` and paste the table into the PR descri
 
 - [x] scout
 - [x] decisions (§3)
-- [ ] slice 1 — logic
+- [x] slice 1 — logic
 - [ ] slice 2 — state hook
 - [ ] slice 3 — UI
 - [ ] slice 4 — fog of war
