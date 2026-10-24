@@ -140,7 +140,7 @@ const PlayerScoreDisplay = ({
                 height: 3,
                 width: '100%',
                 bgcolor: (theme) => alpha(theme.palette.text.primary, 0.2),
-                borderRadius: 1,
+                borderRadius: 2,
                 overflow: 'hidden',
               }}
             >
@@ -150,7 +150,6 @@ const PlayerScoreDisplay = ({
                   width: `${progress}%`,
                   bgcolor: rank.color,
                   transition: 'width 0.3s ease-out',
-                  boxShadow: `0 0 5px ${rank.color}`,
                 }}
               />
             </Box>

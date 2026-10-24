@@ -115,7 +115,7 @@ export const ServerDirectoryBrowser: React.FC<ServerDirectoryBrowserProps> = ({
             mb: 2,
             p: 1.5,
             bgcolor: 'action.hover',
-            borderRadius: 1,
+            borderRadius: 2,
             display: 'flex',
             alignItems: 'center',
             gap: 1,

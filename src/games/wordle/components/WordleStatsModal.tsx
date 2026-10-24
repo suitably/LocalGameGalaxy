@@ -150,11 +150,11 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
                     value={Math.max(8, percentage)}
                     sx={{
                       height: 22,
-                      borderRadius: 1,
+                      borderRadius: 2,
                       bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
                       '& .MuiLinearProgress-bar': {
                         bgcolor: isCurrentWinningRow ? 'success.main' : 'action.disabledBackground',
-                        borderRadius: 1,
+                        borderRadius: 2,
                       },
                     }}
                   />

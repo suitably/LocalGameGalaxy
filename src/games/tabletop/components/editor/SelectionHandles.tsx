@@ -120,7 +120,7 @@ export const SelectionHandles: React.FC<SelectionHandlesProps> = ({ widget, onCo
           right: -HANDLE / 2,
           bottom: -HANDLE / 2,
           cursor: 'nwse-resize',
-          borderRadius: 1,
+          borderRadius: 2,
         }}
       />
       <Box

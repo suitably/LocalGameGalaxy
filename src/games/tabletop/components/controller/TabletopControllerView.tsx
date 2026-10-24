@@ -64,7 +64,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
     >
       {/* Top Header Status & Mode Switcher */}
       <Paper
-        elevation={2}
+        elevation={0}
         sx={{
           p: 1,
           px: 2,
@@ -131,7 +131,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                   bgcolor: 'background.paper',
-                  boxShadow: 6,
+                  boxShadow: 0,
                   border: '2px solid',
                   borderColor: 'primary.main',
                   mb: 2,

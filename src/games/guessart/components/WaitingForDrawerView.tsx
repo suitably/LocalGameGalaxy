@@ -50,10 +50,10 @@ export const WaitingForDrawerView: React.FC<WaitingForDrawerViewProps> = ({
       }}
     >
       <Paper
-        elevation={3}
+        elevation={0}
         sx={{
           p: { xs: 3, sm: 4 },
-          borderRadius: 3.5,
+          borderRadius: 3,
           maxWidth: 480,
           width: '100%',
           textAlign: 'center',
@@ -73,7 +73,7 @@ export const WaitingForDrawerView: React.FC<WaitingForDrawerViewProps> = ({
             justifyContent: 'center',
             mx: 'auto',
             mb: 2.5,
-            boxShadow: 2,
+            boxShadow: 0,
           }}
         >
           <BrushRoundedIcon sx={{ fontSize: 38 }} />

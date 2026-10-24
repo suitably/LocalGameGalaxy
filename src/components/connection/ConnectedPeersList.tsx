@@ -37,7 +37,7 @@ export const ConnectedPeersList = <T extends RemotePeerBase = RemotePeerBase>({
         variant="subtitle1"
         sx={{ color: 'success.main', display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}
       >
-        {t('connection.devices_connected', '✅ {{count}} Device(s) Connected', {
+        {t('connection.devices_connected', '{{count}} Device(s) Connected', {
           count: peers.length,
         })}
       </Typography>

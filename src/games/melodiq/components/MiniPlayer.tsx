@@ -49,7 +49,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
 
   return (
     <Card
-      elevation={8}
+      elevation={0}
       sx={{
         position: 'absolute',
         bottom: 0,

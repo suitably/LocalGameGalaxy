@@ -133,7 +133,7 @@ export const KnisterCombinationsLegend: React.FC<KnisterCombinationsLegendProps>
       </DialogContent>
 
       <DialogActions sx={{ p: 2 }}>
-        <Button onClick={onClose} variant="contained" fullWidth sx={{ borderRadius: 50 }}>
+        <Button onClick={onClose} variant="contained" fullWidth sx={{ borderRadius: 999 }}>
           {t('common.close', 'Schließen')}
         </Button>
       </DialogActions>

@@ -62,7 +62,7 @@ export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({
 
   return (
     <Paper
-      elevation={3}
+      elevation={0}
       sx={{
         display: 'flex',
         alignItems: 'center',
@@ -71,7 +71,6 @@ export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({
         borderRadius: 3,
         bgcolor: (theme) => alpha(theme.palette.text.primary, 0.06),
         border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.12)}`,
-        backdropFilter: 'blur(8px)',
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
         flexShrink: 0,
         ...sx,
@@ -83,7 +82,7 @@ export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({
           p: 0.75,
           bgcolor: 'text.primary',
           borderRadius: 2,
-          boxShadow: 2,
+          boxShadow: 0,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -100,11 +99,11 @@ export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({
               display: 'block',
               width: qrSize,
               height: qrSize,
-              borderRadius: 4,
+              borderRadius: 5,
             }}
           />
         ) : (
-          <Box sx={{ width: qrSize, height: qrSize, bgcolor: 'text.primary', borderRadius: 1 }} />
+          <Box sx={{ width: qrSize, height: qrSize, bgcolor: 'text.primary', borderRadius: 2 }} />
         )}
       </Box>
 
@@ -122,7 +121,7 @@ export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({
             mb: 0.5,
           }}
         >
-          📱 {t('melodiq.join_session', 'Join Session')}
+          {t('melodiq.join_session', 'Join Session')}
         </Typography>
         <Typography
           variant="caption"

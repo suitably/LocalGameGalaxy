@@ -156,7 +156,7 @@ export const SessionBackgroundMedia: React.FC<SessionBackgroundMediaProps> = ({
           }}
         >
           <Typography variant="h3" sx={{ color: 'text.primary', fontWeight: 'bold' }}>
-            🔇 Audio blocked
+            Audio blocked
           </Typography>
           <Typography variant="h5" sx={{ color: 'text.secondary' }}>
             Tap anywhere to start playback

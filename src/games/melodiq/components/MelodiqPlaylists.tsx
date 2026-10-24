@@ -101,7 +101,7 @@ export const MelodiqPlaylists: React.FC<MelodiqPlaylistsProps> = ({ onBack, onSe
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setCreateDialogOpen(true)}
-          sx={{ borderRadius: 50, px: 3 }}
+          sx={{ borderRadius: 999, px: 3 }}
         >
           {t('melodiq.create_playlist')}
         </Button>

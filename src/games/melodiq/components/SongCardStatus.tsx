@@ -23,7 +23,7 @@ const cornerSx = {
   alignItems: 'center',
   bgcolor: 'action.disabledBackground',
   p: 0.5,
-  borderRadius: 1,
+  borderRadius: 2,
 } as const;
 
 /** Corner icon overlay for a song card (download / AI job / downloaded / downloadable). */
@@ -45,7 +45,7 @@ export const SongCardCorner: React.FC<SongCardStatusProps> = ({
   }
   if (hasActiveJob && (activeJobType === 'full-sync' || activeJobType === 'separate')) {
     return (
-      <Box sx={{ ...cornerSx, gap: 0.5, px: 0.75, py: 0.25, borderRadius: 1.5, zIndex: 2 }}>
+      <Box sx={{ ...cornerSx, gap: 0.5, px: 0.75, py: 0.25, borderRadius: 2, zIndex: 2 }}>
         <AutoAwesomeIcon sx={{ fontSize: 16, color: 'secondary.main' }} />
         <Typography
           variant="caption"

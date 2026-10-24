@@ -51,7 +51,7 @@ export const CompanionPluginsSection: React.FC<CompanionPluginsSectionProps> = (
             textTransform: 'none',
             fontWeight: 600,
             minHeight: 40,
-            borderRadius: 1.5,
+            borderRadius: 2,
             px: 2,
             gap: 1,
           },

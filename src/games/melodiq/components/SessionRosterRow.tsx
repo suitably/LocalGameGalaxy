@@ -72,7 +72,7 @@ export const SessionRosterRow: React.FC<SessionRosterRowProps> = ({
         p: { xs: 1.5, md: 1 },
         border: 1,
         borderColor: 'divider',
-        borderRadius: 1,
+        borderRadius: 2,
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>

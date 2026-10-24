@@ -24,7 +24,7 @@ export const DeviceQRCodeCard: React.FC<DeviceQRCodeCardProps> = ({
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
       {qrCodeDataUrl && (
-        <Box sx={{ p: 2, bgcolor: 'text.primary', borderRadius: 2, boxShadow: 3 }}>
+        <Box sx={{ p: 2, bgcolor: 'text.primary', borderRadius: 2, boxShadow: 0 }}>
           <img
             src={qrCodeDataUrl}
             alt="QR Code"
@@ -45,7 +45,7 @@ export const DeviceQRCodeCard: React.FC<DeviceQRCodeCardProps> = ({
           startIcon={<QrCodeScannerIcon />}
           onClick={() => setScannerOpen(true)}
           sx={{
-            borderRadius: 50,
+            borderRadius: 999,
             px: 3,
             py: 1,
             borderColor: (theme) => alpha(theme.palette.secondary.main, 0.5),

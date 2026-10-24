@@ -140,7 +140,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
             : undefined,
           backgroundSize: 'cover',
           boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
-          borderRadius: 4,
+          borderRadius: 5,
           transition: isTvMode ? 'transform 0.3s ease' : 'none',
         }}
       >

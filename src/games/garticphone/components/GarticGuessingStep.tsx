@@ -44,7 +44,7 @@ export const GarticGuessingStep: React.FC<GarticGuessingStepProps> = ({
           bgcolor: 'background.paper',
           border: '1px solid',
           borderColor: 'divider',
-          borderRadius: 2.5,
+          borderRadius: 3,
           overflow: 'hidden',
           position: 'relative',
         }}
@@ -56,7 +56,7 @@ export const GarticGuessingStep: React.FC<GarticGuessingStepProps> = ({
 
       {/* Input Form */}
       <Paper
-        elevation={2}
+        elevation={0}
         component="form"
         onSubmit={handleSubmit}
         sx={{
@@ -64,7 +64,7 @@ export const GarticGuessingStep: React.FC<GarticGuessingStepProps> = ({
           p: 1.2,
           border: '1px solid',
           borderColor: 'divider',
-          borderRadius: 2.5,
+          borderRadius: 3,
           display: 'flex',
           gap: 1,
           alignItems: 'center',
@@ -75,7 +75,10 @@ export const GarticGuessingStep: React.FC<GarticGuessingStepProps> = ({
         <TextField
           size="small"
           fullWidth
-          placeholder={t('guessart.describeDrawingPlaceholder', 'Was stellt die Zeichnung dar? Beschreibe sie...')}
+          placeholder={t(
+            'guessart.describeDrawingPlaceholder',
+            'Was stellt die Zeichnung dar? Beschreibe sie...',
+          )}
           value={guess}
           onChange={(e) => setGuess(e.target.value.slice(0, MAX_GUESS_LENGTH))}
           variant="outlined"

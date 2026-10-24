@@ -84,7 +84,7 @@ export const SetupOneLinerTab: React.FC<SetupOneLinerTabProps> = ({ token }) => 
             overflowX: 'auto',
             whiteSpace: 'pre-wrap',
             wordBreak: 'break-all',
-            borderRadius: 1.5,
+            borderRadius: 2,
           }}
         >
           {activeCmd}

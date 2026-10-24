@@ -48,7 +48,11 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
               'Bitte stelle sicher, dass der Host verbunden ist und Songs bereitstellt.',
             )}
           </Typography>
-          <Button onClick={refreshSongs} variant="outlined" sx={{ borderRadius: 50, px: 3, py: 1 }}>
+          <Button
+            onClick={refreshSongs}
+            variant="outlined"
+            sx={{ borderRadius: 999, px: 3, py: 1 }}
+          >
             {t('melodiq.retry_connection', 'Erneut versuchen')}
           </Button>
         </Box>
@@ -78,7 +82,11 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
               'Der Host hat momentan keine Songs in der Bibliothek geladen.',
             )}
           </Typography>
-          <Button onClick={refreshSongs} variant="outlined" sx={{ borderRadius: 50, px: 3, py: 1 }}>
+          <Button
+            onClick={refreshSongs}
+            variant="outlined"
+            sx={{ borderRadius: 999, px: 3, py: 1 }}
+          >
             {t('melodiq.retry_connection', 'Erneut versuchen')}
           </Button>
         </Box>
@@ -132,7 +140,7 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
                 color="warning"
                 startIcon={<LockOpenIcon />}
                 onClick={localLibrary.requestFolderPermission}
-                sx={{ borderRadius: 50, px: 3, py: 1 }}
+                sx={{ borderRadius: 999, px: 3, py: 1 }}
               >
                 {t('melodiq.grant_folder_permission', 'Zugriff auf {{name}} erlauben', {
                   name: localLibrary.folderName,
@@ -144,7 +152,7 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
                 color="primary"
                 startIcon={<FolderOpenIcon />}
                 onClick={localLibrary.selectFolder}
-                sx={{ borderRadius: 50, px: 3, py: 1 }}
+                sx={{ borderRadius: 999, px: 3, py: 1 }}
               >
                 {t('melodiq.open_local_folder', 'Lokalen Ordner öffnen')}
               </Button>
@@ -175,11 +183,15 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
               }
               window.location.href = `https://github.com/suitably/LocalGameGalaxy/releases/latest/download/${filename}`;
             }}
-            sx={{ borderRadius: 50, px: 3, py: 1 }}
+            sx={{ borderRadius: 999, px: 3, py: 1 }}
           >
             {t('melodiq.download_helper')}
           </Button>
-          <Button onClick={refreshSongs} variant="outlined" sx={{ borderRadius: 50, px: 3, py: 1 }}>
+          <Button
+            onClick={refreshSongs}
+            variant="outlined"
+            sx={{ borderRadius: 999, px: 3, py: 1 }}
+          >
             {t('melodiq.retry_connection')}
           </Button>
         </Box>
@@ -217,7 +229,7 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
             color="primary"
             startIcon={<FolderOpenIcon />}
             onClick={localLibrary.selectFolder}
-            sx={{ borderRadius: 50, px: 3, py: 1 }}
+            sx={{ borderRadius: 999, px: 3, py: 1 }}
           >
             {t('melodiq.open_local_folder', 'Lokalen Ordner öffnen')}
           </Button>

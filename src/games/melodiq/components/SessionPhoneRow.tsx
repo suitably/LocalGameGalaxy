@@ -30,7 +30,7 @@ export const SessionPhoneRow: React.FC<SessionPhoneRowProps> = ({
         p: 1,
         border: 1,
         borderColor: 'divider',
-        borderRadius: 1,
+        borderRadius: 2,
         bgcolor: 'action.disabledBackground',
       }}
     >

@@ -88,7 +88,7 @@ export const ServerAdminPanel: React.FC = () => {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => setCreateOpen(true)}
-            sx={{ borderRadius: 50, px: 3 }}
+            sx={{ borderRadius: 999, px: 3 }}
           >
             {t('server.admin.create', 'Create Key')}
           </Button>

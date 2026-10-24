@@ -53,7 +53,7 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
       PaperProps={{
         sx: {
           bgcolor: 'background.paper',
-          borderRadius: 4,
+          borderRadius: 5,
           border: 1,
           borderColor: 'divider',
           boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
@@ -69,7 +69,7 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
         </Typography>
         {isNewHighScore && (
           <Typography variant="subtitle2" sx={{ color: 'success.main', fontWeight: 700, mt: 0.5 }}>
-            🎉 {t('games.knister.new_high_score', 'Neuer Highscore!')} 🎉
+            {t('games.knister.new_high_score', 'Neuer Highscore!')}
           </Typography>
         )}
       </DialogTitle>
@@ -88,7 +88,7 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
                   idx === 0
                     ? alpha(theme.palette.primary.main, 0.12)
                     : theme.palette.background.default,
-                borderRadius: 2.5,
+                borderRadius: 3,
                 border: 1,
                 borderColor: idx === 0 ? 'primary.main' : 'divider',
               }}
@@ -130,7 +130,7 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
           fullWidth
           startIcon={<ReplayIcon />}
           onClick={onNewGame}
-          sx={{ borderRadius: 50, fontWeight: 700 }}
+          sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {t('games.knister.play_again', 'Nochmal spielen')}
         </Button>

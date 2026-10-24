@@ -71,7 +71,7 @@ export const SetupBinaryTab: React.FC<SetupBinaryTabProps> = ({ os, downloadConf
             target="_blank"
             rel="noopener noreferrer"
             sx={{
-              borderRadius: 50,
+              borderRadius: 999,
               px: 3,
               textTransform: 'none',
             }}
@@ -85,7 +85,7 @@ export const SetupBinaryTab: React.FC<SetupBinaryTabProps> = ({ os, downloadConf
             variant="outlined"
             startIcon={<SettingsIcon />}
             onClick={downloadConfigFile}
-            sx={{ borderRadius: 50, px: 2.5, textTransform: 'none' }}
+            sx={{ borderRadius: 999, px: 2.5, textTransform: 'none' }}
           >
             {t('server.setup.download_config', 'Download Pre-configured config.json')}
           </Button>
@@ -113,10 +113,10 @@ export const SetupBinaryTab: React.FC<SetupBinaryTabProps> = ({ os, downloadConf
             fontFamily: 'monospace',
             fontSize: '0.9rem',
             color: 'primary.light',
-            borderRadius: 1.5,
+            borderRadius: 2,
           }}
         >
-          📁 {scriptName}
+          {scriptName}
         </Paper>
       </Paper>
 

@@ -213,7 +213,7 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
                       left: 3,
                       width: CARD_W,
                       height: CARD_H,
-                      borderRadius: 1.5,
+                      borderRadius: 2,
                       bgcolor: (theme) => alpha(theme.palette.text.primary, 0.12),
                       border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.2)}`,
                       zIndex: 1,

@@ -49,7 +49,7 @@ export const GarticWaitingStatus: React.FC<GarticWaitingStatusProps> = ({ state,
         sx={{
           width: '100%',
           maxWidth: 480,
-          borderRadius: 3.5,
+          borderRadius: 3,
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
           bgcolor: 'background.paper',
           border: '1.5px solid',
@@ -95,7 +95,7 @@ export const GarticWaitingStatus: React.FC<GarticWaitingStatusProps> = ({ state,
                     px: 1.5,
                     py: 1,
                     my: 0.75,
-                    borderRadius: 2.5,
+                    borderRadius: 3,
                     bgcolor: isDone
                       ? 'success.main' + '12'
                       : isMe

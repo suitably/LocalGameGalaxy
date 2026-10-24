@@ -54,7 +54,7 @@ export interface ServerUrlListProps {
 const chipSx = {
   height: 26,
   px: 0.5,
-  borderRadius: 1.5,
+  borderRadius: 2,
   fontSize: '0.75rem',
   whiteSpace: 'nowrap',
 } as const;
@@ -87,7 +87,7 @@ export const ServerUrlList: React.FC<ServerUrlListProps> = ({
           size="small"
           onClick={onRestoreDefaults}
           variant="outlined"
-          sx={{ borderRadius: 50 }}
+          sx={{ borderRadius: 999 }}
         >
           {labels.restoreDefaults}
         </Button>
@@ -194,7 +194,7 @@ export const ServerUrlList: React.FC<ServerUrlListProps> = ({
             variant="contained"
             onClick={handleAdd}
             sx={{
-              borderRadius: 50,
+              borderRadius: 999,
               px: 4,
               py: 1,
               alignSelf: 'flex-start',

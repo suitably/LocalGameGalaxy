@@ -23,7 +23,7 @@ export const PartyServerInfoCard: React.FC<{ lobby: PartyLobbyController }> = ({
             px: 2,
             py: 1.2,
             mb: 2,
-            borderRadius: 2.5,
+            borderRadius: 3,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',

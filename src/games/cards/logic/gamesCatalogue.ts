@@ -13,7 +13,6 @@ export const BUILT_IN_CARD_GAMES: CardGameDefinition[] = [
     defaultLives: 3,
     minPlayers: 2,
     maxPlayers: 9,
-    icon: '🏊',
     color: piecePalette.teal,
   },
   {
@@ -26,7 +25,6 @@ export const BUILT_IN_CARD_GAMES: CardGameDefinition[] = [
     trackerType: 'bids_and_tricks',
     minPlayers: 2,
     maxPlayers: 8,
-    icon: '🧙‍♂️',
     color: piecePalette.purple,
     scoringRules: {
       correctBidBonus: 20,
@@ -46,7 +44,6 @@ export const BUILT_IN_CARD_GAMES: CardGameDefinition[] = [
     trackerType: 'score_accumulator',
     minPlayers: 2,
     maxPlayers: 12,
-    icon: '🃏',
     color: piecePalette.orange,
   },
 ];

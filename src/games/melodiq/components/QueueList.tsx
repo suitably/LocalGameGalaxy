@@ -83,7 +83,7 @@ export const QueueList: React.FC<QueueListProps> = ({
             onClick={clearQueue}
             startIcon={<DeleteIcon />}
             variant="outlined"
-            sx={{ borderRadius: 50 }}
+            sx={{ borderRadius: 999 }}
           >
             {t('melodiq.clear_all')}
           </Button>
@@ -94,7 +94,7 @@ export const QueueList: React.FC<QueueListProps> = ({
         sx={{
           overflow: 'auto',
           bgcolor: 'background.paper',
-          borderRadius: 1,
+          borderRadius: 2,
           maxHeight: { xs: '30vh', md: 'none' },
           flexGrow: 1,
         }}

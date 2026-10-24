@@ -198,7 +198,7 @@ export const LatencyCalibratorDialog: React.FC<LatencyCalibratorDialogProps> = (
             <LinearProgress
               variant="determinate"
               value={progress}
-              sx={{ mt: 1, height: 8, borderRadius: 4 }}
+              sx={{ mt: 1, height: 8, borderRadius: 5 }}
             />
           </Box>
         )}

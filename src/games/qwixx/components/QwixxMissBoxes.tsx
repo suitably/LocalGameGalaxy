@@ -44,7 +44,7 @@ export const QwixxMissBoxes: React.FC<QwixxMissBoxesProps> = ({
               sx={{
                 width: { xs: 28, sm: 34 },
                 height: { xs: 28, sm: 34 },
-                borderRadius: 1.5,
+                borderRadius: 2,
                 border: '2px solid',
                 borderColor: isMissed ? 'error.main' : 'divider',
                 bgcolor: isMissed

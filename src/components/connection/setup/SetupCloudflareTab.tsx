@@ -47,7 +47,7 @@ export const SetupCloudflareTab: React.FC = () => {
           target="_blank"
           rel="noopener noreferrer"
           sx={{
-            borderRadius: 50,
+            borderRadius: 999,
             px: 3,
             py: 1,
             textTransform: 'none',
@@ -92,7 +92,7 @@ export const SetupCloudflareTab: React.FC = () => {
             fontFamily: 'monospace',
             fontSize: '0.85rem',
             color: 'primary.light',
-            borderRadius: 1.5,
+            borderRadius: 2,
           }}
         >
           {cliCmd}

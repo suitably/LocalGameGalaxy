@@ -165,6 +165,7 @@ All interactive parts show **focus-visible** as a 3px `accent` ring with 2px off
 
 - **Icons:** `@mui/icons-material`, **Rounded** variant only (matches the rounded shapes), 24px (20px in dense rows, 32px in TV mode). Icon colour follows the text colour of its context.
 - **No emoji as UI icons.** Emoji in user content (names, chat) is fine.
+- **Werewolf roles:** built-in role and winner icons come from `src/games/werewolf/components/RoleIcon.tsx` (Rounded MUI icons keyed by role id). Free text in a custom role's icon field is user content and is shown as typed.
 - **Illustrations:** flat shapes from the piece palette with the ink colour as outline, no gradients or 3D renders. Only for empty states, onboarding and game covers.
 - **Photos:** none in the UI. Album art (Melodiq) is shown in `radius.sm` frames.
 

@@ -25,12 +25,12 @@ export const qwixxTranslations = {
         select_sheet_subtitle:
           'Discover official editions, alternative layouts, and randomizer modes',
         select_preset: 'Sheet Layout:',
-        reroll_layout: '🎲 Re-roll Layout',
-        random_block_button: '🎲 Random Sheet',
+        reroll_layout: 'Re-roll Layout',
+        random_block_button: 'Random Sheet',
         random_pick_title: 'Pick a Random Sheet',
         random_pick_subtitle:
           'Let fate decide and jump right in with a random game mode and sheet layout!',
-        pick_random_block: '🎲 Play Random Sheet',
+        pick_random_block: 'Play Random Sheet',
         random_block_in_mode: 'Random',
         active_badge: 'Active',
         apply_sheet: 'Select Sheet',
@@ -242,12 +242,12 @@ export const qwixxTranslations = {
         select_sheet_subtitle:
           'Entdecke offizielle Editionen, alternative Layouts und den Zufallsgenerator',
         select_preset: 'Block-Layout:',
-        reroll_layout: '🎲 Neues Layout würfeln',
-        random_block_button: '🎲 Zufälliger Block',
+        reroll_layout: 'Neues Layout würfeln',
+        random_block_button: 'Zufälliger Block',
         random_pick_title: 'Zufälligen Block spielen',
         random_pick_subtitle:
           'Lass das Schicksal entscheiden und starte direkt mit einer zufälligen Edition und Anordnung!',
-        pick_random_block: '🎲 Zufälligen Block spielen',
+        pick_random_block: 'Zufälligen Block spielen',
         random_block_in_mode: 'Zufall',
         active_badge: 'Aktiv',
         apply_sheet: 'Block wählen',

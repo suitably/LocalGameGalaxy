@@ -69,7 +69,7 @@ export const DockerComposeViewer: React.FC<DockerComposeViewerProps> = ({
             startIcon={copiedCompose ? <CheckIcon /> : <ContentCopyIcon />}
             onClick={onCopy}
             color={copiedCompose ? 'success' : 'primary'}
-            sx={{ borderRadius: 50, textTransform: 'none' }}
+            sx={{ borderRadius: 999, textTransform: 'none' }}
           >
             {copiedCompose
               ? t('server.setup.copied', 'Kopiert!')
@@ -80,7 +80,7 @@ export const DockerComposeViewer: React.FC<DockerComposeViewerProps> = ({
             size="small"
             startIcon={<DownloadIcon />}
             onClick={() => downloadDockerCompose(edition, includeTunnel)}
-            sx={{ borderRadius: 50, textTransform: 'none' }}
+            sx={{ borderRadius: 999, textTransform: 'none' }}
           >
             Download {composeFilename}
           </Button>
@@ -95,7 +95,7 @@ export const DockerComposeViewer: React.FC<DockerComposeViewerProps> = ({
             overflowX: 'auto',
             whiteSpace: 'pre',
             color: 'success.main',
-            borderRadius: 1.5,
+            borderRadius: 2,
             maxHeight: 280,
             overflowY: 'auto',
             border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,

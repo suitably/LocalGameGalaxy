@@ -16,7 +16,7 @@ export const PartyGameSelection: React.FC<{ lobby: PartyLobbyController }> = ({ 
       <Box>
         <Box mb={2}>
           <Typography variant="h6" fontWeight={800} color="primary.main">
-            🎮 {t('party.categoryAvailableGames', 'Verfügbare Spielmodi')}
+            {t('party.categoryAvailableGames', 'Verfügbare Spielmodi')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             {amIHost
@@ -58,10 +58,10 @@ export const PartyGameSelection: React.FC<{ lobby: PartyLobbyController }> = ({ 
             <Box>
               <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
                 <Typography variant="h6" fontWeight={800} color="primary.main">
-                  🎮 Spielauswahl
+                  Spielauswahl
                 </Typography>
                 <Chip
-                  label="Party-Modus 🚀"
+                  label="Party-Modus"
                   color="primary"
                   size="small"
                   sx={{ fontWeight: 'bold' }}
@@ -82,7 +82,7 @@ export const PartyGameSelection: React.FC<{ lobby: PartyLobbyController }> = ({ 
                 startIcon={<PlayArrowRoundedIcon />}
                 sx={{
                   fontWeight: 800,
-                  borderRadius: 2.5,
+                  borderRadius: 3,
                   py: 1.2,
                   boxShadow: (theme) => `0 4px 14px ${alpha(theme.palette.secondary.main, 0.35)}`,
                 }}

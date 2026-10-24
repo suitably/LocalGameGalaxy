@@ -135,7 +135,7 @@ export const SudokuHeader: React.FC<SudokuHeaderProps> = ({
             variant="body2"
             sx={{ fontWeight: 800, fontFamily: 'monospace', fontSize: '1.05rem' }}
           >
-            ⏱️ {formatTime(timeElapsed)}
+            {formatTime(timeElapsed)}
           </Typography>
           <IconButton size="small" onClick={onTogglePause}>
             {isPaused ? (

@@ -73,7 +73,7 @@ export const WordleHistoryModal: React.FC<WordleHistoryModalProps> = ({
                     sx={{
                       px: 1,
                       py: 0.5,
-                      borderRadius: 1,
+                      borderRadius: 2,
                       bgcolor: (theme) =>
                         entry.status === 'won'
                           ? alpha(theme.palette.success.main, 0.2)
@@ -135,7 +135,7 @@ export const WordleHistoryModal: React.FC<WordleHistoryModalProps> = ({
                               justifyContent: 'center',
                               fontSize: '0.9rem',
                               fontWeight: 800,
-                              borderRadius: 1,
+                              borderRadius: 2,
                               border: '2px solid',
                               ...style,
                             }}

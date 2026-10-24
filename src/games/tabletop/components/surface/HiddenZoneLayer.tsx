@@ -69,11 +69,7 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
               border: '2px dashed',
               borderColor: isRevealed ? 'success.main' : zoneColor,
               borderRadius: 2,
-              boxShadow: isRevealed
-                ? 'none'
-                : isOwner
-                  ? '0 0 15px rgba(0, 0, 0, 0.3)'
-                  : '0 8px 30px rgba(0, 0, 0, 0.85)',
+              boxShadow: isRevealed ? 'none' : isOwner ? 'none' : '0 8px 30px rgba(0, 0, 0, 0.85)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',

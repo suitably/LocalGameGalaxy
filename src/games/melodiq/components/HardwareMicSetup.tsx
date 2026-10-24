@@ -60,7 +60,7 @@ const MicVolumeMeter: React.FC<{ deviceId: string }> = ({ deviceId }) => {
         value={volume}
         sx={{
           height: 8,
-          borderRadius: 4,
+          borderRadius: 5,
           bgcolor: (theme) => alpha(theme.palette.text.primary, 0.1),
           '& .MuiLinearProgress-bar': {
             transition: 'transform 0.05s linear', // Make it fast and snappy
@@ -145,7 +145,7 @@ export const HardwareMicSetup: React.FC = () => {
         Das erste Mikrofon in der Liste bekommt "Spieler 1", das zweite bekommt "Spieler 2", usw.
       </Typography>
 
-      <List sx={{ bgcolor: 'background.paper', borderRadius: 1 }}>
+      <List sx={{ bgcolor: 'background.paper', borderRadius: 2 }}>
         {devices.map((d, index) => {
           const isEnabled = enabledMics.includes(d.deviceId);
           const orderIndex = enabledMics.indexOf(d.deviceId);

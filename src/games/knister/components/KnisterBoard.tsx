@@ -143,7 +143,7 @@ export const KnisterBoard: React.FC<KnisterBoardProps> = ({
           bgcolor: 'action.hover',
           px: 3,
           py: 1,
-          borderRadius: 9999,
+          borderRadius: 999,
           border: 1,
           borderColor: 'divider',
         }}

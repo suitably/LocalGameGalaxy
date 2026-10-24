@@ -69,7 +69,7 @@ export const StoryHeader: React.FC<StoryHeaderProps> = ({
   return (
     <AppBar
       position="static"
-      elevation={1}
+      elevation={0}
       sx={{
         bgcolor: 'background.default',
         backgroundImage: 'none',

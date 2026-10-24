@@ -22,7 +22,7 @@ export const PartyShareCard: React.FC<{ lobby: PartyLobbyController }> = ({ lobb
           p: 2,
           mb: 3,
           bgcolor: 'action.hover',
-          borderRadius: 2.5,
+          borderRadius: 3,
           display: 'flex',
           flexDirection: 'column',
           gap: 1.5,

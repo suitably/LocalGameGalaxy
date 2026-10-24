@@ -31,7 +31,7 @@ export const HandoverView: React.FC<HandoverViewProps> = ({
             borderRadius: 3,
             bgcolor: (theme) => alpha(theme.palette.background.default, 0.7),
             border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
-            boxShadow: 6,
+            boxShadow: 0,
           }}
         >
           <Typography variant="h5" gutterBottom>
@@ -55,7 +55,7 @@ export const HandoverView: React.FC<HandoverViewProps> = ({
             bgcolor: isImposter ? 'error.main' : 'success.main',
             color: isImposter ? 'error.contrastText' : 'success.contrastText',
             border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.2)}`,
-            boxShadow: 8,
+            boxShadow: 0,
           }}
         >
           {isImposter ? (

@@ -29,7 +29,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
   return (
     <Paper
-      elevation={4}
+      elevation={0}
       sx={{
         position: 'absolute',
         top: 12,
@@ -39,7 +39,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         display: 'flex',
         alignItems: 'center',
         px: 0.5,
-        borderRadius: 6,
+        borderRadius: 5,
       }}
     >
       <Tooltip

@@ -81,7 +81,7 @@ export const KniffelGame: React.FC = () => {
               color="secondary"
               startIcon={<CasinoIcon />}
               onClick={() => setShowDice((prev) => !prev)}
-              sx={{ borderRadius: 50, fontWeight: 700, textTransform: 'none' }}
+              sx={{ borderRadius: 999, fontWeight: 700, textTransform: 'none' }}
             >
               {showDice
                 ? t('games.kniffel.hide_dice', 'Würfel')

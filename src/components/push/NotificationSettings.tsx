@@ -118,14 +118,14 @@ export const NotificationSettings: React.FC = () => {
           onChange={handleMethodChange}
         >
           <MenuItem value="auto">
-            {t('settings.method_auto', '🟢 Automatisch (Web-Push mit ntfy Fallback)')}
+            {t('settings.method_auto', 'Automatisch (Web-Push mit ntfy Fallback)')}
           </MenuItem>
-          <MenuItem value="ntfy">{t('settings.method_ntfy', '🛡️ Google-frei via ntfy')}</MenuItem>
+          <MenuItem value="ntfy">{t('settings.method_ntfy', 'Google-frei via ntfy')}</MenuItem>
           <MenuItem value="webpush">
-            {t('settings.method_webpush', '🌐 Nur Browser-Push (Chrome / Firefox / Safari)')}
+            {t('settings.method_webpush', 'Nur Browser-Push (Chrome / Firefox / Safari)')}
           </MenuItem>
           <MenuItem value="both">
-            {t('settings.method_both', '⚡ Beide Kanäle parallel (Maximale Zuverlässigkeit)')}
+            {t('settings.method_both', 'Beide Kanäle parallel (Maximale Zuverlässigkeit)')}
           </MenuItem>
         </Select>
       </FormControl>

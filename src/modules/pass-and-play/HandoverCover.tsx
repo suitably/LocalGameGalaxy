@@ -63,7 +63,7 @@ export const HandoverCover: React.FC<HandoverCoverProps> = ({
           bgcolor: player.color || 'primary.main',
           border: 3,
           borderColor: 'background.paper',
-          boxShadow: 4,
+          boxShadow: 0,
         }}
       />
       <Typography variant="h4" component="p" fontWeight={800} sx={{ wordBreak: 'break-word' }}>

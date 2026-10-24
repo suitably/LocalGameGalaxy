@@ -84,16 +84,16 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
           <Card
             key={game.id}
             sx={{
-              borderRadius: 2.5,
+              borderRadius: 3,
               border: '1px solid',
               borderColor: 'divider',
-              boxShadow: 1,
+              boxShadow: 0,
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', p: 1.5 }}>
               <CardActionArea
                 onClick={() => onResumeGame(game.id)}
-                sx={{ flexGrow: 1, p: 0.5, borderRadius: 1 }}
+                sx={{ flexGrow: 1, p: 0.5, borderRadius: 2 }}
               >
                 <Box
                   display="flex"
@@ -143,7 +143,7 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
                   />
                 </Box>
                 <Typography variant="body2" color="text.secondary" noWrap sx={{ mt: 0.5 }}>
-                  👥 {playerNames}
+                  {playerNames}
                 </Typography>
                 <Typography variant="caption" color="text.disabled">
                   {dateStr}

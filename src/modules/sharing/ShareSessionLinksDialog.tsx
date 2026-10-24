@@ -139,7 +139,7 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
                 sx={{
                   mb: 1.5,
                   p: 1.5,
-                  borderRadius: 2.5,
+                  borderRadius: 3,
                   bgcolor: 'background.paper',
                   borderColor: 'divider',
                 }}

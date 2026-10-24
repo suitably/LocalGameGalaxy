@@ -44,7 +44,7 @@ export const WidgetInspector: React.FC<WidgetInspectorProps> = ({ game, editor }
 
   return (
     <Paper
-      elevation={6}
+      elevation={0}
       sx={{
         position: 'absolute',
         top: 72,

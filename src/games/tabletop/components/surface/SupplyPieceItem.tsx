@@ -58,7 +58,7 @@ export const SupplyPieceItem: React.FC<SupplyPieceItemProps> = ({
             right: 4,
             bgcolor: 'primary.main',
             color: 'text.primary',
-            borderRadius: '10px',
+            borderRadius: 3,
             px: 0.6,
             py: 0.1,
             fontSize: '0.7rem',

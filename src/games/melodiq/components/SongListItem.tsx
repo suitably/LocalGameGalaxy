@@ -70,7 +70,7 @@ export const SongListItem: React.FC<SongListItemProps> = ({
           height: 48,
           flexShrink: 0,
           bgcolor: 'action.selected',
-          borderRadius: 1,
+          borderRadius: 2,
           overflow: 'hidden',
           display: 'flex',
           alignItems: 'center',
@@ -129,7 +129,7 @@ export const SongListItem: React.FC<SongListItemProps> = ({
               bgcolor: 'primary.dark',
               color: 'text.primary',
               px: 1,
-              borderRadius: 4,
+              borderRadius: 5,
               fontSize: '0.75rem',
             }}
           >
@@ -144,7 +144,7 @@ export const SongListItem: React.FC<SongListItemProps> = ({
         {song.year && (
           <Typography
             variant="body2"
-            sx={{ bgcolor: 'action.selected', px: 1, borderRadius: 4, fontSize: '0.75rem' }}
+            sx={{ bgcolor: 'action.selected', px: 1, borderRadius: 5, fontSize: '0.75rem' }}
           >
             {song.year}
           </Typography>

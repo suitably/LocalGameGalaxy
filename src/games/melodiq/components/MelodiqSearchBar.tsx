@@ -106,7 +106,7 @@ export const MelodiqSearchBar: React.FC<MelodiqSearchBarProps> = ({
           sx={{
             flexGrow: 1,
             '& .MuiOutlinedInput-root': {
-              borderRadius: 50,
+              borderRadius: 999,
               bgcolor: 'action.disabledBackground',
               height: 40,
             },
@@ -156,7 +156,7 @@ export const MelodiqSearchBar: React.FC<MelodiqSearchBarProps> = ({
               onClick={clearFilters}
               color="inherit"
               variant="outlined"
-              sx={{ borderRadius: 50 }}
+              sx={{ borderRadius: 999 }}
             >
               {t('melodiq.clear_filters')}
             </Button>

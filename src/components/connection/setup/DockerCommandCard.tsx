@@ -47,7 +47,7 @@ export const DockerCommandCard: React.FC<DockerCommandCardProps> = ({
           whiteSpace: 'pre-wrap',
           wordBreak: 'break-all',
           color: 'primary.light',
-          borderRadius: 1.5,
+          borderRadius: 2,
         }}
       >
         {dockerRunCmd}

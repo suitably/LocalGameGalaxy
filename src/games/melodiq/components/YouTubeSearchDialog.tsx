@@ -140,13 +140,13 @@ export const YouTubeSearchDialog: React.FC<YouTubeSearchDialogProps> = ({
             {error}
           </Typography>
         ) : results.length > 0 ? (
-          <List sx={{ width: '100%', bgcolor: 'background.paper', borderRadius: 1 }}>
+          <List sx={{ width: '100%', bgcolor: 'background.paper', borderRadius: 2 }}>
             {results.map((result) => (
               <ListItem key={result.id} disablePadding>
                 <ListItemButton
                   selected={selectedUrl === result.url}
                   onClick={() => setSelectedUrl(result.url)}
-                  sx={{ borderRadius: 1, mb: 0.5 }}
+                  sx={{ borderRadius: 2, mb: 0.5 }}
                 >
                   <ListItemAvatar>
                     <Avatar

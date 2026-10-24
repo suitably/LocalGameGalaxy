@@ -39,7 +39,7 @@ const ModifierOption: React.FC<ModifierOptionProps> = ({
   onChange,
   action,
 }) => (
-  <Box sx={{ p: 1.5, borderRadius: 1, bgcolor: 'action.hover' }}>
+  <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
     <Stack direction="row" justifyContent="space-between" alignItems="center">
       <FormControlLabel
         control={

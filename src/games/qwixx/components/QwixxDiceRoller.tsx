@@ -79,7 +79,7 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
 
   return (
     <Paper
-      elevation={3}
+      elevation={0}
       sx={{
         p: { xs: 1.5, sm: 2 },
         borderRadius: 3,

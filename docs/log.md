@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Emoji removed from UI icons (claude-code)
+
+- `DESIGN.md` §7: note on Werewolf role icons (`RoleIcon`, Rounded MUI icons by role id).
+- **Code changed:** decorative emoji removed from locale strings and components, Tabletop and Cards tiles use `AreaSymbol` (#504).
+
 ## 2026-10-24 — Game registry colour fields removed (claude-code)
 
 - `docs/tech/data-models.md`, `docs/tech/architecture.md`: `GameDefinition` no longer has `colorStart`/`colorEnd`/`hoverColor`.

@@ -115,7 +115,7 @@ export const ServerConnection: React.FC = () => {
               variant="contained"
               onClick={checkConnection}
               disabled={status === 'checking'}
-              sx={{ borderRadius: 50, px: 3, py: 1 }}
+              sx={{ borderRadius: 999, px: 3, py: 1 }}
             >
               {t('server.test', 'Test Connection')}
             </Button>
@@ -125,7 +125,7 @@ export const ServerConnection: React.FC = () => {
               color="primary"
               startIcon={<AutoFixHighIcon />}
               onClick={() => setSetupDialogOpen(true)}
-              sx={{ borderRadius: 50, px: 2.5 }}
+              sx={{ borderRadius: 999, px: 2.5 }}
             >
               {t('server.setup_button', 'Server einrichten oder anpassen')}
             </Button>
@@ -136,7 +136,7 @@ export const ServerConnection: React.FC = () => {
                 size="small"
                 startIcon={<ContentCopyIcon />}
                 onClick={copyConnectionUrl}
-                sx={{ borderRadius: 50 }}
+                sx={{ borderRadius: 999 }}
               >
                 {t('server.copy_link', 'Copy Connection Link')}
               </Button>

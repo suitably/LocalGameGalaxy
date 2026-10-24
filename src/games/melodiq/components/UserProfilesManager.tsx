@@ -52,7 +52,7 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
           variant="contained"
           onClick={onAddProfile}
           sx={{
-            borderRadius: 50,
+            borderRadius: 999,
             px: 3,
             py: 1,
           }}
@@ -96,7 +96,6 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
                   bgcolor: `hsl(${profile.hue}, 100%, 50%)`,
                   cursor: 'pointer',
                   border: '2px solid white',
-                  boxShadow: '0 0 4px rgba(0,0,0,0.3)',
                   transition: 'transform 0.2s',
                   '&:hover': { transform: 'scale(1.1)' },
                 }}
@@ -171,7 +170,7 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
                   background:
                     'linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #00f 83%, #f00 100%)',
                   height: 8,
-                  borderRadius: 4,
+                  borderRadius: 5,
                 },
                 '& .MuiSlider-thumb': {
                   height: 20,

@@ -24,6 +24,7 @@ import { useTranslation } from 'react-i18next';
 import { generateUUID } from '../../../lib/uuid';
 import type { RoleDefinition } from '../logic/types';
 import { RoleEditDialog } from './RoleEditDialog';
+import { RoleIcon } from './RoleIcon';
 
 interface RoleEditorProps {
   customRoles: RoleDefinition[];
@@ -60,7 +61,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
       id: generateUUID(),
       name: '',
       description: '',
-      icon: '👤',
+      icon: 'CUSTOM',
       alignment: 'VILLAGER',
       abilities: [],
       isCustom: true,
@@ -128,7 +129,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
           primary={
             <Box display="flex" alignItems="center" gap={1}>
               <Typography>
-                {role.icon} {displayName}
+                <RoleIcon icon={role.icon} /> {displayName}
               </Typography>
               {isModified && (
                 <Chip
