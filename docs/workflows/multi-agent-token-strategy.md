@@ -78,6 +78,8 @@ Never use `subagent_type: "fork"` for reading: a fork inherits the full main con
 
 ## 6. Sessions
 
+Entry point: **`/issue <number> [decisions]`** ([`.claude/skills/issue/SKILL.md`](../../.claude/skills/issue/SKILL.md)) runs this flow; on an issue that already has a spec it resumes at the first unchecked item of the spec's Progress list.
+
 - **One session per ticket.** A new ticket never continues an old session: the old context would be re-sent on every turn. Start with the spec path, e.g. "Implement `docs/tasks/ISSUE-539-…md`, decisions §3: …".
 - **Stay in that session for all slices** of the ticket; subagents start cold anyway.
 - **Context grew large or was compacted** → write the state into the spec ("slice 1 done, commit abc"), then continue in a new session from the spec.

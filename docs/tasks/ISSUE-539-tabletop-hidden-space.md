@@ -92,3 +92,14 @@ Each slice = one `slice-implementer` run; prompt: "Implement slice N of `docs/ta
 | Gates            | gate-runner       | haiku   | ≤ 20 lines                                 |
 
 Before the session ends: `npm run tokens` and paste the table into the PR description ([workflow §7](../workflows/multi-agent-token-strategy.md#7-measuring)).
+
+## 7. Progress
+
+- [x] scout
+- [ ] decisions (§3)
+- [ ] slice 1 — logic
+- [ ] slice 2 — state hook
+- [ ] slice 3 — UI
+- [ ] gates
+- [ ] docs
+- [ ] PR
