@@ -5,6 +5,7 @@
  */
 import React, { useState } from 'react';
 import {
+  alpha,
   Box,
   Button,
   Typography,
@@ -15,7 +16,8 @@ import {
   Tooltip,
   Switch,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteIcon from '@mui/icons-material/DeleteRounded';
+import { transitionOf } from '../../lib/motion';
 
 type ItemColor = 'success' | 'primary' | 'secondary' | 'info';
 
@@ -53,7 +55,7 @@ export interface ServerUrlListProps {
 const chipSx = {
   height: 26,
   px: 0.5,
-  borderRadius: 1.5,
+  borderRadius: 2,
   fontSize: '0.75rem',
   whiteSpace: 'nowrap',
 } as const;
@@ -86,7 +88,7 @@ export const ServerUrlList: React.FC<ServerUrlListProps> = ({
           size="small"
           onClick={onRestoreDefaults}
           variant="outlined"
-          sx={{ borderRadius: 50 }}
+          sx={{ borderRadius: 999 }}
         >
           {labels.restoreDefaults}
         </Button>
@@ -104,11 +106,11 @@ export const ServerUrlList: React.FC<ServerUrlListProps> = ({
               p: 1,
               px: 1.5,
               borderRadius: 2,
-              bgcolor: item.enabled ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.2)',
+              bgcolor: item.enabled ? 'background.paper' : 'background.default',
               border: '1px solid',
-              borderColor: item.enabled ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.04)',
+              borderColor: 'divider',
               opacity: item.enabled ? 1 : 0.6,
-              transition: 'all 0.2s ease',
+              transition: transitionOf(['background-color', 'opacity']),
             }}
           >
             <Tooltip title={item.enabled ? labels.disable : labels.enable}>
@@ -158,8 +160,8 @@ export const ServerUrlList: React.FC<ServerUrlListProps> = ({
           <Box
             sx={{
               p: 2,
-              bgcolor: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
+              bgcolor: (theme) => alpha(theme.palette.error.main, 0.1),
+              border: (theme) => `1px solid ${alpha(theme.palette.error.main, 0.3)}`,
               borderRadius: 2,
             }}
           >
@@ -193,13 +195,10 @@ export const ServerUrlList: React.FC<ServerUrlListProps> = ({
             variant="contained"
             onClick={handleAdd}
             sx={{
-              borderRadius: 50,
+              borderRadius: 999,
               px: 4,
               py: 1,
               alignSelf: 'flex-start',
-              backgroundImage: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
-              boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
-              color: 'white',
             }}
           >
             {labels.add}

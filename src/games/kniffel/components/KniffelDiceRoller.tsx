@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Paper, Button } from '@mui/material';
-import CasinoIcon from '@mui/icons-material/Casino';
+import { alpha, Box, Paper, Button } from '@mui/material';
+import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import { useTranslation } from 'react-i18next';
 import { Die3D } from '../../../components/games/Die3D';
 
@@ -52,13 +52,12 @@ export const KniffelDiceRoller: React.FC<KniffelDiceRollerProps> = ({
 
   return (
     <Paper
-      elevation={3}
+      elevation={0}
       sx={{
         p: { xs: 1.5, sm: 2 },
         borderRadius: 3,
-        bgcolor: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        backdropFilter: 'blur(8px)',
+        bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
+        border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
         mb: 2,
         display: 'flex',
         flexDirection: 'column',

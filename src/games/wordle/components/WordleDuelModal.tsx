@@ -33,7 +33,11 @@ export const WordleDuelModal: React.FC<WordleDuelModalProps> = ({ open, onClose 
   const [customWord, setCustomWord] = useState('');
   const [copied, setCopied] = useState(false);
 
-  const cleanWord = customWord.trim().toUpperCase().replace(/[^A-Z]/g, '').substring(0, 5);
+  const cleanWord = customWord
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z]/g, '')
+    .substring(0, 5);
   const isValid = cleanWord.length === 5;
 
   const duelLink = isValid
@@ -70,12 +74,15 @@ export const WordleDuelModal: React.FC<WordleDuelModalProps> = ({ open, onClose 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ textAlign: 'center', fontWeight: 800 }}>
-        {t('wordle.duel.title', 'Freund herausfordern ⚔️')}
+        {t('wordle.duel.title', 'Freund herausfordern')}
       </DialogTitle>
 
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Typography variant="body2" color="text.secondary" textAlign="center">
-          {t('wordle.duel.desc', 'Wähle ein beliebiges 5-Buchstaben-Wort. Dein Freund muss es erraten!')}
+          {t(
+            'wordle.duel.desc',
+            'Wähle ein beliebiges 5-Buchstaben-Wort. Dein Freund muss es erraten!',
+          )}
         </Typography>
 
         <TextField
@@ -83,15 +90,27 @@ export const WordleDuelModal: React.FC<WordleDuelModalProps> = ({ open, onClose 
           label={t('wordle.duel.input_label', 'Geheimes Wort (5 Buchstaben)')}
           value={cleanWord}
           onChange={(e) => setCustomWord(e.target.value)}
-          inputProps={{ maxLength: 5, style: { textTransform: 'uppercase', letterSpacing: 4, textAlign: 'center', fontWeight: 700 } }}
+          inputProps={{
+            maxLength: 5,
+            style: {
+              textTransform: 'uppercase',
+              letterSpacing: 4,
+              textAlign: 'center',
+              fontWeight: 700,
+            },
+          }}
           fullWidth
           error={cleanWord.length > 0 && cleanWord.length < 5}
-          helperText={cleanWord.length > 0 && cleanWord.length < 5 ? `${cleanWord.length}/5 Buchstaben` : ''}
+          helperText={
+            cleanWord.length > 0 && cleanWord.length < 5 ? `${cleanWord.length}/5 Buchstaben` : ''
+          }
         />
 
         {isValid && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5, mt: 1 }}>
-            <Box sx={{ p: 1.5, bgcolor: '#ffffff', borderRadius: 2 }}>
+          <Box
+            sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5, mt: 1 }}
+          >
+            <Box sx={{ p: 1.5, bgcolor: 'text.primary', borderRadius: 2 }}>
               <QRCodeSVG value={duelLink} size={150} />
             </Box>
 
@@ -103,7 +122,11 @@ export const WordleDuelModal: React.FC<WordleDuelModalProps> = ({ open, onClose 
                 readOnly: true,
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton onClick={handleCopy} edge="end" color={copied ? 'success' : 'primary'}>
+                    <IconButton
+                      onClick={handleCopy}
+                      edge="end"
+                      color={copied ? 'success' : 'primary'}
+                    >
                       {copied ? <CheckRoundedIcon /> : <ContentCopyRoundedIcon />}
                     </IconButton>
                   </InputAdornment>

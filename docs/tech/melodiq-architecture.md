@@ -41,7 +41,7 @@ Melodiq follows a strict separation of concerns, divided into domains:
 - `PlaybackManager.tsx`: Container component. Manages the audio elements and acts as the bridge between the UI and the actual gameplay session.
 - `MelodiqSession.tsx`: The core game loop container.
   - _Logic Hooks_: `usePlaybackControls.ts` (Play/Pause), `usePassiveSync.ts` (TV/Client sync), `useSessionEnd.ts` (Scoreboard transitions).
-  - _Presentational Components_: `LyricsDisplay.tsx`, `PitchVisualizer.tsx`, `ScoreBoard.tsx`.
+  - _Presentational Components_: `LyricsDisplay.tsx` (lanes in `lyrics/`), `PitchVisualizer.tsx` (canvas drawing in `pitch/`), `ScoreBoard.tsx` (parts in `scoreboard/`).
 
 ### 2.3 Network & Synchronization
 

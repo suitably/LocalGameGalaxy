@@ -1,8 +1,9 @@
 import React from 'react';
 import { Box, Paper, Typography, ButtonBase, Tooltip, IconButton, alpha } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import TouchAppIcon from '@mui/icons-material/TouchApp';
+import CloseIcon from '@mui/icons-material/CloseRounded';
+import TouchAppIcon from '@mui/icons-material/TouchAppRounded';
 import { useTranslation } from 'react-i18next';
+import { transitionOf } from '../../../lib/motion';
 
 const KNISTER_NUMBERS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
@@ -21,13 +22,12 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
 
   return (
     <Paper
-      elevation={3}
+      elevation={0}
       sx={{
         p: { xs: 1, sm: 1.5 },
         borderRadius: 3,
-        bgcolor: 'rgba(255, 255, 255, 0.04)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        backdropFilter: 'blur(8px)',
+        bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
+        border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
         width: '100%',
         maxWidth: 520,
         mx: 'auto',
@@ -36,9 +36,22 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
         WebkitTapHighlightColor: 'transparent',
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, px: 0.5 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          mb: 1,
+          px: 0.5,
+        }}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-          <TouchAppIcon sx={{ fontSize: '1.1rem', color: selectedNumber !== null ? 'warning.main' : 'text.secondary' }} />
+          <TouchAppIcon
+            sx={{
+              fontSize: '1.1rem',
+              color: selectedNumber !== null ? 'warning.main' : 'text.secondary',
+            }}
+          />
           <Typography
             variant="caption"
             sx={{
@@ -46,7 +59,7 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
               textTransform: 'uppercase',
               letterSpacing: 0.5,
               color: selectedNumber !== null ? 'warning.main' : 'text.secondary',
-              fontSize: { xs: '0.7rem', sm: '0.75rem' },
+              fontSize: { xs: '0.75rem', sm: '0.75rem' },
             }}
           >
             {selectedNumber !== null
@@ -97,27 +110,38 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontWeight: 900,
+                fontWeight: 800,
                 fontSize: { xs: '0.9rem', sm: '1.15rem' },
-                bgcolor: isSelected
-                  ? 'warning.main'
+                bgcolor: (theme) =>
+                  isSelected
+                    ? theme.palette.warning.main
+                    : isSeven
+                      ? alpha(theme.palette.warning.main, 0.15)
+                      : theme.palette.background.paper,
+                color: isSelected
+                  ? 'warning.contrastText'
                   : isSeven
-                  ? alpha('#ffa726', 0.15)
-                  : 'rgba(255, 255, 255, 0.07)',
-                color: isSelected ? 'warning.contrastText' : isSeven ? 'warning.light' : '#fff',
+                    ? 'warning.main'
+                    : 'text.primary',
                 border: '1.5px solid',
-                borderColor: isSelected
-                  ? 'warning.light'
-                  : isSeven
-                  ? alpha('#ffa726', 0.4)
-                  : 'rgba(255, 255, 255, 0.12)',
-                boxShadow: isSelected ? '0 0 12px rgba(255, 167, 38, 0.6)' : 'none',
+                borderColor: (theme) =>
+                  isSelected || isSeven ? theme.palette.warning.main : theme.palette.divider,
+                boxShadow: 'none',
                 transform: isSelected ? 'scale(1.08)' : 'none',
-                transition: 'all 0.15s ease',
+                transition: transitionOf([
+                  'background-color',
+                  'color',
+                  'border-color',
+                  'transform',
+                  'box-shadow',
+                ]),
                 cursor: disabled ? 'default' : 'pointer',
                 '&:hover': !disabled
                   ? {
-                      bgcolor: isSelected ? 'warning.main' : alpha('#ffa726', 0.25),
+                      bgcolor: (theme) =>
+                        isSelected
+                          ? theme.palette.warning.main
+                          : alpha(theme.palette.warning.main, 0.25),
                       borderColor: 'warning.main',
                       transform: 'scale(1.05)',
                     }

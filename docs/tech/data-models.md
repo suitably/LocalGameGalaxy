@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-22
+  at: 2026-10-24
   method: 'excerpts copied from the listed files; export lists via grep'
 sources:
   - 'src/lib/gameRegistry.tsx'
@@ -57,9 +57,6 @@ export interface GameDefinition {
   titleKey: string;
   descriptionKey: string;
   icon: React.ReactNode;
-  colorStart: string;
-  colorEnd: string;
-  hoverColor: string;
   component: React.ReactNode;
   category: GameCategory;
   hasSettings?: boolean;

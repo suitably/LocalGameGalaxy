@@ -2,11 +2,11 @@
  * Floating action bar for multi-selected widgets [ID: GAME-TABLETOP-SELECTION-BAR]
  */
 import React from 'react';
-import { Paper, Chip, IconButton, Tooltip, Divider } from '@mui/material';
-import ZoomInIcon from '@mui/icons-material/ZoomIn';
-import ZoomOutIcon from '@mui/icons-material/ZoomOut';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import CloseIcon from '@mui/icons-material/Close';
+import { alpha, Paper, Chip, IconButton, Tooltip, Divider } from '@mui/material';
+import ZoomInIcon from '@mui/icons-material/ZoomInRounded';
+import ZoomOutIcon from '@mui/icons-material/ZoomOutRounded';
+import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import { useTranslation } from 'react-i18next';
 
 interface SelectionFloatingBarProps {
@@ -30,13 +30,13 @@ export const SelectionFloatingBar: React.FC<SelectionFloatingBarProps> = ({
 
   return (
     <Paper
-      elevation={8}
+      elevation={0}
       sx={{
         position: 'absolute',
         top: 20,
         left: '50%',
         transform: 'translateX(-50%)',
-        borderRadius: 4,
+        borderRadius: 5,
         bgcolor: 'background.paper',
         border: '1px solid',
         borderColor: 'primary.main',
@@ -46,7 +46,7 @@ export const SelectionFloatingBar: React.FC<SelectionFloatingBarProps> = ({
         alignItems: 'center',
         gap: 1,
         zIndex: 1100,
-        boxShadow: '0 8px 32px rgba(0, 229, 255, 0.25)',
+        boxShadow: (theme) => `0 8px 32px ${alpha(theme.palette.secondary.main, 0.25)}`,
       }}
     >
       <Chip

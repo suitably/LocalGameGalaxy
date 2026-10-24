@@ -1,5 +1,7 @@
 import React from 'react';
 import { Paper, type SxProps, type Theme } from '@mui/material';
+import { pieceNeutrals, piecePalette } from '../../themeTokens';
+import { transitionOf } from '../../lib/motion';
 
 export interface DieColorConfig {
   bg: string;
@@ -8,11 +10,11 @@ export interface DieColorConfig {
 }
 
 export const PRESET_DIE_COLORS: Record<string, DieColorConfig> = {
-  white: { bg: '#ffffff', text: '#212121', border: '#e0e0e0' },
-  red: { bg: '#d32f2f', text: '#ffffff', border: '#b71c1c' },
-  yellow: { bg: '#fbc02d', text: '#212121', border: '#f57f17' },
-  green: { bg: '#388e3c', text: '#ffffff', border: '#1b5e20' },
-  blue: { bg: '#1976d2', text: '#ffffff', border: '#0d47a1' },
+  white: { bg: pieceNeutrals.white, text: piecePalette.contrastText },
+  red: { bg: piecePalette.red, text: piecePalette.contrastText },
+  yellow: { bg: piecePalette.yellow, text: piecePalette.contrastText },
+  green: { bg: piecePalette.green, text: piecePalette.contrastText },
+  blue: { bg: piecePalette.blue, text: piecePalette.contrastText },
 };
 
 export interface Die3DProps {
@@ -35,9 +37,7 @@ export const Die3D: React.FC<Die3DProps> = ({
   sx,
 }) => {
   const resolvedColor: DieColorConfig =
-    typeof color === 'string'
-      ? PRESET_DIE_COLORS[color] || PRESET_DIE_COLORS.white
-      : color;
+    typeof color === 'string' ? PRESET_DIE_COLORS[color] || PRESET_DIE_COLORS.white : color;
 
   const isClickable = Boolean(onClick && !disabled);
 
@@ -48,7 +48,7 @@ export const Die3D: React.FC<Die3DProps> = ({
       sx={{
         width: { xs: 44, sm: 52 },
         height: { xs: 44, sm: 52 },
-        borderRadius: 2.5,
+        borderRadius: 3,
         bgcolor: resolvedColor.bg,
         color: resolvedColor.text,
         border: `2px solid ${resolvedColor.border || 'transparent'}`,
@@ -56,14 +56,14 @@ export const Die3D: React.FC<Die3DProps> = ({
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: { xs: '1.25rem', sm: '1.6rem' },
-        fontWeight: '900',
-        boxShadow: isSelected ? '0 0 10px 2px rgba(255, 213, 79, 0.7)' : 3,
-        transform: isRolling
-          ? 'rotate(-6deg) scale(1.08)'
-          : isSelected
-          ? 'scale(1.1)'
-          : 'none',
-        transition: 'all 0.15s ease',
+        fontWeight: 800,
+        // tactile edge (DESIGN.md §5); selection uses the accent ring
+        boxShadow: (theme) =>
+          isSelected
+            ? `0 0 0 3px ${theme.palette.secondary.main}, 0 4px 0 rgba(0, 0, 0, 0.35)`
+            : '0 4px 0 rgba(0, 0, 0, 0.35)',
+        transform: isRolling ? 'rotate(-6deg) scale(1.08)' : isSelected ? 'scale(1.1)' : 'none',
+        transition: transitionOf(['transform', 'box-shadow', 'background-color', 'border-color']),
         cursor: isClickable ? 'pointer' : 'default',
         userSelect: 'none',
         WebkitTouchCallout: 'none',

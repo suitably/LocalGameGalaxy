@@ -3,7 +3,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Box, Button, Container, Grid, Paper, Typography } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
+import SettingsIcon from '@mui/icons-material/SettingsRounded';
 import { useTranslation } from 'react-i18next';
 import { GameManagerDialog } from '../manager/GameManagerDialog';
 import { PublishTabletopGameDialog } from '../publisher/PublishTabletopGameDialog';
@@ -19,6 +19,7 @@ import {
 } from '../../logic/tableCatalog';
 import { TableGameCard } from './TableGameCard';
 import { PlayModeSheet } from './PlayModeSheet';
+import { piecePalette } from '../../../../themeTokens';
 
 interface TabletopLobbyViewProps {
   /** Opens a route (local tabletop, party lobby with the game, or a dice game). */
@@ -51,8 +52,8 @@ export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) 
       min: g.minPlayers,
       max: g.maxPlayers,
     }),
-    icon: '🧩',
-    color: '#7c3aed',
+    icon: 'puzzle',
+    color: piecePalette.purple,
     modes: playModesOf(g.supportedModes),
   }));
 
@@ -84,10 +85,10 @@ export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) 
     <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: { xs: 1.5, sm: 3 } }}>
       <Container maxWidth="md" disableGutters>
         <Paper
-          elevation={3}
+          elevation={0}
           sx={{
             p: { xs: 2, sm: 4 },
-            borderRadius: 3.5,
+            borderRadius: 3,
             border: '1px solid',
             borderColor: 'divider',
           }}
@@ -101,9 +102,6 @@ export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) 
             mb={2.5}
           >
             <Box>
-              <Typography variant="h4" fontWeight={900} color="primary.main">
-                {t('games.tabletop.title', 'Spieltisch')}
-              </Typography>
               <Typography variant="body2" color="text.secondary">
                 {t(
                   'games.tabletop.subtitle',

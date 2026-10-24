@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import {
+  alpha,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -8,9 +9,9 @@ import {
   Typography,
 } from '@mui/material';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
 import CloudQueueRoundedIcon from '@mui/icons-material/CloudQueueRounded';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
 import LaunchRoundedIcon from '@mui/icons-material/LaunchRounded';
 import { useTranslation } from 'react-i18next';
 
@@ -45,7 +46,7 @@ npx wrangler deploy`;
       <Accordion
         variant="outlined"
         sx={{
-          bgcolor: 'rgba(255, 255, 255, 0.03)',
+          bgcolor: (theme) => alpha(theme.palette.text.primary, 0.03),
           borderRadius: 2,
           '&:before': { display: 'none' },
         }}
@@ -54,12 +55,15 @@ npx wrangler deploy`;
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CloudQueueRoundedIcon color="primary" fontSize="small" />
             <Typography variant="body2" fontWeight={600}>
-              {t('settings.relay_worker_guide_title', 'Eigenen Cloudflare Worker aufsetzen (24/7 kostenlos)')}
+              {t(
+                'settings.relay_worker_guide_title',
+                'Eigenen Cloudflare Worker aufsetzen (24/7 kostenlos)',
+              )}
             </Typography>
           </Box>
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             {t(
               'settings.relay_worker_guide_desc',
               'Der Cloudflare Worker läuft rund um die Uhr kostenlos in der Cloud und unterstützt sowohl Web-Push als auch Google-freies ntfy.',
@@ -79,7 +83,7 @@ npx wrangler deploy`;
             >
               {t('settings.relay_1click_deploy', '1-Klick Deploy auf Cloudflare')}
             </Button>
-            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {t(
                 'settings.relay_1click_deploy_note',
                 'Erfordert ein Cloudflare- und ein GitHub-Konto (Cloudflare forkt das Repository in dein GitHub-Profil).',
@@ -87,26 +91,26 @@ npx wrangler deploy`;
             </Typography>
           </Box>
 
-          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.65)', fontSize: '0.85rem' }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
             {t(
               'settings.relay_dashboard_note',
               "Ohne GitHub: Du kannst auf dash.cloudflare.com einfach einen Worker erstellen ('Create Worker' ➔ 'Quick Edit') und den Code aus server/cloudflare-push-relay hineinkopieren. Kein Git nötig.",
             )}
           </Typography>
 
-          <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)', mt: 1 }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', mt: 1 }}>
             {t('settings.relay_manual_title', 'Alternative: Manuelles CLI-Deployment im Terminal:')}
           </Typography>
           <Box
             component="pre"
             sx={{
               p: 1.5,
-              borderRadius: 1.5,
+              borderRadius: 2,
               bgcolor: 'rgba(0, 0, 0, 0.4)',
               fontSize: '0.8rem',
               overflowX: 'auto',
               m: 0,
-              color: '#81c784',
+              color: 'success.main',
             }}
           >
             {workerDeployCommands}

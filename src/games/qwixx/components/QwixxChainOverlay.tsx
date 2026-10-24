@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTheme } from '@mui/material/styles';
 
 interface ChainPairDef {
   chainId: string;
@@ -28,6 +29,7 @@ interface QwixxChainOverlayProps {
 }
 
 export const QwixxChainOverlay: React.FC<QwixxChainOverlayProps> = ({ containerRef }) => {
+  const theme = useTheme();
   const [lines, setLines] = useState<LineCoords[]>([]);
 
   useEffect(() => {
@@ -103,7 +105,7 @@ export const QwixxChainOverlay: React.FC<QwixxChainOverlayProps> = ({ containerR
           y1={line.y1}
           x2={line.x2}
           y2={line.y2}
-          stroke="#555555"
+          stroke={theme.palette.text.secondary}
           strokeWidth={2.8}
           strokeDasharray="4 3"
           strokeLinecap="round"

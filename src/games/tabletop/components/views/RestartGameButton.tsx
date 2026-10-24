@@ -3,7 +3,7 @@
  */
 import React, { useState } from 'react';
 import { IconButton, Tooltip } from '@mui/material';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
 import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '../../../../components/common/ConfirmDialog';
 

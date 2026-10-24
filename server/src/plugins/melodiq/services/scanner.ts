@@ -5,7 +5,7 @@ import * as mm from 'music-metadata';
 import { serverConfig } from '../../../config';
 import { generateId } from '../../../utils/helpers';
 import type { Song, SongScore } from '../../../core/types';
-import { findScoreFiles } from './scoreFiles';
+import { findScoreFiles } from '../../../utils/scoreFiles';
 
 let SONG_CACHE: Song[] = [];
 let IS_SCANNING = false;

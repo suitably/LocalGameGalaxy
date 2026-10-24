@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  alpha,
   Box,
   Paper,
   Typography,
@@ -11,10 +12,10 @@ import {
   Tooltip,
   Chip,
 } from '@mui/material';
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import VolumeUpIcon from '@mui/icons-material/VolumeUpRounded';
+import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
+import ArrowBackIcon from '@mui/icons-material/ArrowBackRounded';
+import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
 import { useTranslation } from 'react-i18next';
 import { SoundfontProviderFields } from '../../../games/melodiq-notes/components/SoundfontProviderFields';
 import {
@@ -145,8 +146,8 @@ export const MelodiqNotesSettingsCategory: React.FC<MelodiqNotesSettingsCategory
                 variant="outlined"
                 sx={{
                   p: 2,
-                  bgcolor: 'rgba(255,255,255,0.02)',
-                  borderColor: 'rgba(255,255,255,0.08)',
+                  bgcolor: (theme) => alpha(theme.palette.text.primary, 0.02),
+                  borderColor: (theme) => alpha(theme.palette.text.primary, 0.08),
                 }}
               >
                 <Stack

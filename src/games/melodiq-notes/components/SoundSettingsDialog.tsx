@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  alpha,
   DialogContent,
   DialogActions,
   Button,
@@ -12,8 +13,8 @@ import {
   InputLabel,
   TextField,
 } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import SettingsIcon from '@mui/icons-material/SettingsRounded';
+import VolumeUpIcon from '@mui/icons-material/VolumeUpRounded';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { NotesDialogFrame } from './NotesDialogFrame';
@@ -70,7 +71,10 @@ export const SoundSettingsDialog: React.FC<SoundSettingsDialogProps> = ({
       maxWidth="xs"
       title={t('games.melodiq_notes.sound_settings', 'Sound-Einstellungen')}
     >
-      <DialogContent dividers sx={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}>
+      <DialogContent
+        dividers
+        sx={{ borderColor: (theme) => alpha(theme.palette.text.primary, 0.08) }}
+      >
         <Stack spacing={2.5}>
           <FormControl fullWidth size="small">
             <InputLabel>{t('games.melodiq_notes.soundfont_provider')}</InputLabel>

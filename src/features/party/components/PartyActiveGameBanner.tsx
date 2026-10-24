@@ -2,7 +2,7 @@
  * Banner shown while a game is running in this room [ID: COMP-PARTY-ACTIVE-GAME-BANNER]
  */
 import React from 'react';
-import { Box, Button, Card, Chip, Typography } from '@mui/material';
+import { alpha, Box, Button, Card, Chip, Typography } from '@mui/material';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import PhoneIphoneRoundedIcon from '@mui/icons-material/PhoneIphoneRounded';
 import { useTranslation } from 'react-i18next';
@@ -18,15 +18,14 @@ export const PartyActiveGameBanner: React.FC<{ lobby: PartyLobbyController }> = 
       {/* Active Live Game Banner (when user returned to lobby while game is running) */}
       {roomState?.status === 'in_game' && (
         <Card
-          elevation={3}
+          elevation={0}
           sx={{
             p: 2.5,
             mb: 3,
             borderRadius: 3,
             border: '2px solid',
             borderColor: 'primary.main',
-            background:
-              'linear-gradient(135deg, rgba(25, 118, 210, 0.12) 0%, rgba(156, 39, 176, 0.12) 100%)',
+            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
             display: 'flex',
             flexDirection: { xs: 'column', sm: 'row' },
             alignItems: { xs: 'flex-start', sm: 'center' },
@@ -45,7 +44,7 @@ export const PartyActiveGameBanner: React.FC<{ lobby: PartyLobbyController }> = 
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(25, 118, 210, 0.4)',
+                boxShadow: (theme) => `0 4px 12px ${alpha(theme.palette.secondary.main, 0.4)}`,
               }}
             >
               <PhoneIphoneRoundedIcon sx={{ fontSize: 28 }} />
@@ -53,7 +52,7 @@ export const PartyActiveGameBanner: React.FC<{ lobby: PartyLobbyController }> = 
             <Box>
               <Box display="flex" alignItems="center" gap={1}>
                 <Chip
-                  label={t('party.liveGameActive', '🔴 Live Spiel läuft')}
+                  label={t('party.liveGameActive', 'Live Spiel läuft')}
                   color="error"
                   size="small"
                   sx={{ fontWeight: 800, height: 22 }}

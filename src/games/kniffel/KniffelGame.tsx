@@ -1,13 +1,13 @@
 import React, { useReducer, useEffect, useState } from 'react';
-import { Box, Typography, Button, IconButton, Tooltip } from '@mui/material';
-import ReplayIcon from '@mui/icons-material/Replay';
-import CasinoIcon from '@mui/icons-material/Casino';
+import { alpha, Box, Typography, Button, IconButton, Tooltip } from '@mui/material';
+import ReplayIcon from '@mui/icons-material/ReplayRounded';
+import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
 import { storage } from '../../lib/storage';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
-import UndoIcon from '@mui/icons-material/Undo';
+import UndoIcon from '@mui/icons-material/UndoRounded';
 
 import { kniffelReducer, INITIAL_KNIFFEL_STATE } from './logic/kniffelReducer';
 import { evaluatePossibleScores } from './logic/kniffelScoring';
@@ -33,7 +33,9 @@ export const KniffelGame: React.FC = () => {
     return initial;
   });
 
-  const [showDice, setShowDice] = useState<boolean>(() => storage.get(STORAGE_KEY_SHOW_DICE, 'true') === 'true');
+  const [showDice, setShowDice] = useState<boolean>(
+    () => storage.get(STORAGE_KEY_SHOW_DICE, 'true') === 'true',
+  );
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -61,7 +63,16 @@ export const KniffelGame: React.FC = () => {
   return (
     <GameLayout maxWidth="md">
       {/* Header controls */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          mb: 1.5,
+          flexWrap: 'wrap',
+          gap: 1,
+        }}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Tooltip title={t('games.kniffel.show_dice_tooltip', 'Virtuelle Würfel ein-/ausblenden')}>
             <Button
@@ -70,9 +81,11 @@ export const KniffelGame: React.FC = () => {
               color="secondary"
               startIcon={<CasinoIcon />}
               onClick={() => setShowDice((prev) => !prev)}
-              sx={{ borderRadius: 50, fontWeight: 700, textTransform: 'none' }}
+              sx={{ borderRadius: 999, fontWeight: 700, textTransform: 'none' }}
             >
-              {showDice ? t('games.kniffel.hide_dice', 'Würfel') : t('games.kniffel.show_dice', 'Würfel')}
+              {showDice
+                ? t('games.kniffel.hide_dice', 'Würfel')
+                : t('games.kniffel.show_dice', 'Würfel')}
             </Button>
           </Tooltip>
 
@@ -84,7 +97,7 @@ export const KniffelGame: React.FC = () => {
                 color="inherit"
                 size="small"
                 sx={{
-                  border: '1px solid rgba(255,255,255,0.15)',
+                  border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.15)}`,
                   '&.Mui-disabled': { opacity: 0.35 },
                 }}
               >
@@ -146,7 +159,10 @@ export const KniffelGame: React.FC = () => {
       <ConfirmDialog
         open={resetDialogOpen}
         title={t('games.kniffel.new_game', 'Neues Spiel')}
-        message={t('games.kniffel.new_game_confirm', 'Möchtest du wirklich eine neue Runde starten? Der aktuelle Spielstand geht verloren.')}
+        message={t(
+          'games.kniffel.new_game_confirm',
+          'Möchtest du wirklich eine neue Runde starten? Der aktuelle Spielstand geht verloren.',
+        )}
         confirmText={t('games.kniffel.new_game', 'Neustart')}
         onConfirm={() => {
           dispatch({ type: 'NEW_GAME' });

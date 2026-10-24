@@ -6,7 +6,9 @@ import { serverConfig } from './config';
 import { getLocalIp } from './utils/helpers';
 
 const port = serverConfig.port;
-const activePlugins = (process.env.PLUGINS || 'relay,melodiq,tabletop').split(',').map((s) => s.trim());
+const activePlugins = (process.env.PLUGINS || 'relay,melodiq,tabletop,notes')
+  .split(',')
+  .map((s) => s.trim());
 const enableTunnel = process.env.ENABLE_TUNNEL === 'true' || process.argv.includes('--tunnel');
 
 const config: ServerConfig = {
@@ -39,10 +41,14 @@ async function main(): Promise<void> {
         console.log(`👉 ${tunnelUrl}`);
         console.log(`======================================================\n`);
       } else {
-        console.log(`⚠️  Could not start Cloudflare tunnel. Run 'cloudflared' or check connection.`);
+        console.log(
+          `⚠️  Could not start Cloudflare tunnel. Run 'cloudflared' or check connection.`,
+        );
       }
     } else {
-      console.log(`💡 To enable zero-config public sharing, pass '--tunnel' or ENABLE_TUNNEL=true\n`);
+      console.log(
+        `💡 To enable zero-config public sharing, pass '--tunnel' or ENABLE_TUNNEL=true\n`,
+      );
     }
   });
 }

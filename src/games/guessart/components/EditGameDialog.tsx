@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Alert,
   Box,
@@ -18,7 +18,7 @@ import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import RestartAltRoundedIcon from '@mui/icons-material/RestartAltRounded';
 import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
 import { useTranslation } from 'react-i18next';
-import { gameNameOverride } from '../logic/gameNameOverride';
+import { type EditGamePayload, useEditGameState } from './useEditGameState';
 import type { GuessArtGameRecord } from '../logic/types';
 
 interface EditGameDialogProps {
@@ -27,15 +27,7 @@ interface EditGameDialogProps {
   game: GuessArtGameRecord | null;
   isHost?: boolean;
   localPlayerIds?: string[];
-  onSave: (payload: {
-    name?: string;
-    players: { id: string; name: string }[];
-  }) => Promise<void>;
-}
-
-interface EditablePlayer {
-  id: string;
-  name: string;
+  onSave: (payload: EditGamePayload) => Promise<void>;
 }
 
 export const EditGameDialog: React.FC<EditGameDialogProps> = ({
@@ -47,98 +39,10 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
   onSave,
 }) => {
   const { t } = useTranslation();
-  const [gameName, setGameName] = useState<string>('');
-  const [localAlias, setLocalAlias] = useState<string>('');
-  const [players, setPlayers] = useState<EditablePlayer[]>([]);
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [saving, setSaving] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (open && game) {
-      setGameName(game.name || '');
-      setLocalAlias(gameNameOverride.getAlias(game.id) || '');
-      setPlayers(
-        game.players.map((p) => ({
-          id: p.id,
-          name: p.name,
-        })),
-      );
-      setFeedback(null);
-      setSaving(false);
-    }
-  }, [open, game]);
-
-  const handlePlayerNameChange = (id: string, newName: string) => {
-    setPlayers((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, name: newName } : p)),
-    );
-    if (feedback) setFeedback(null);
-  };
-
-  const handleResetLocalAlias = () => {
-    if (game) {
-      gameNameOverride.removeAlias(game.id);
-      setLocalAlias('');
-    }
-  };
-
-  const handleSave = async () => {
-    if (!game) return;
-
-    const trimmedPlayers = players.map((p) => ({ ...p, name: p.name.trim() }));
-    if (trimmedPlayers.some((p) => !p.name)) {
-      setFeedback(t('guessart.playerEmptyError', 'Spielernamen dürfen nicht leer sein.'));
-      return;
-    }
-
-    const nameSet = new Set<string>();
-    for (const p of trimmedPlayers) {
-      const lower = p.name.toLowerCase();
-      if (nameSet.has(lower)) {
-        setFeedback(t('guessart.duplicatePlayerError', 'Spielernamen müssen eindeutig sein.'));
-        return;
-      }
-      nameSet.add(lower);
-    }
-
-    setSaving(true);
-    setFeedback(null);
-    try {
-      if (!isHost) {
-        if (localAlias.trim()) {
-          gameNameOverride.setAlias(game.id, localAlias.trim());
-        } else {
-          gameNameOverride.removeAlias(game.id);
-        }
-      }
-      await onSave({
-        name: isHost ? gameName.trim() : (game.name || ''),
-        players: trimmedPlayers,
-      });
-      onClose();
-    } catch (err) {
-      console.error('Failed to update game details', err);
-      setFeedback(
-        err instanceof Error
-          ? err.message
-          : t('guessart.genericError', 'Ein Fehler ist aufgetreten.'),
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
+  const form = useEditGameState({ open, game, isHost, localPlayerIds, onClose, onSave });
+  const { gameName, localAlias, players, editablePlayers, feedback, saving } = form;
 
   if (!game) return null;
-
-  const editablePlayers = isHost
-    ? players
-    : players.filter((p) =>
-        localPlayerIds && localPlayerIds.length > 0
-          ? localPlayerIds.includes(p.id)
-          : p.id !== game.players[0]?.id,
-      );
-
-  const hasCustomLocalAlias = Boolean(localAlias.trim() || gameNameOverride.getAlias(game.id));
 
   return (
     <Dialog
@@ -152,7 +56,9 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
         },
       }}
     >
-      <DialogTitle sx={{ m: 0, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <DialogTitle
+        sx={{ m: 0, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+      >
         <Box display="flex" alignItems="center" gap={1.2}>
           <EditRoundedIcon color="primary" />
           <Box>
@@ -163,8 +69,14 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {isHost
-                ? t('guessart.editGameSubtitle', 'Passe den Namen des Spiels und die Spielernamen an.')
-                : t('guessart.editProfileSubtitle', 'Passe deinen Spielernamen oder den lokalen Spielnamen an.')}
+                ? t(
+                    'guessart.editGameSubtitle',
+                    'Passe den Namen des Spiels und die Spielernamen an.',
+                  )
+                : t(
+                    'guessart.editProfileSubtitle',
+                    'Passe deinen Spielernamen oder den lokalen Spielnamen an.',
+                  )}
             </Typography>
           </Box>
         </Box>
@@ -181,7 +93,7 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
       <DialogContent dividers sx={{ p: { xs: 2, sm: 3 } }}>
         <Stack spacing={2.5}>
           {feedback && (
-            <Alert severity="warning" onClose={() => setFeedback(null)}>
+            <Alert severity="warning" onClose={() => form.setFeedback(null)}>
               {feedback}
             </Alert>
           )}
@@ -196,8 +108,11 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
                 size="small"
                 fullWidth
                 value={gameName}
-                onChange={(e) => setGameName(e.target.value)}
-                placeholder={t('guessart.gameNamePlaceholder', 'z.B. Spieleabend, WG-Runde (optional)')}
+                onChange={(e) => form.setGameName(e.target.value)}
+                placeholder={t(
+                  'guessart.gameNamePlaceholder',
+                  'z.B. Spieleabend, WG-Runde (optional)',
+                )}
               />
             </Box>
           ) : (
@@ -206,13 +121,13 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
                 <Typography variant="subtitle2" fontWeight={700}>
                   {t('guessart.localGameNameLabel', 'Spielname (lokal auf diesem Gerät)')}
                 </Typography>
-                {hasCustomLocalAlias && (
+                {form.hasCustomLocalAlias && (
                   <Button
                     size="small"
                     variant="text"
                     color="secondary"
                     startIcon={<RestartAltRoundedIcon fontSize="small" />}
-                    onClick={handleResetLocalAlias}
+                    onClick={form.resetLocalAlias}
                     sx={{ textTransform: 'none', py: 0, px: 1, fontSize: '0.75rem' }}
                   >
                     {t('guessart.resetLocalGameName', 'Auf Host-Namen zurücksetzen')}
@@ -223,8 +138,10 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
                 size="small"
                 fullWidth
                 value={localAlias}
-                onChange={(e) => setLocalAlias(e.target.value)}
-                placeholder={game.name || t('guessart.defaultHostGameName', 'Standardname vom Host')}
+                onChange={(e) => form.setLocalAlias(e.target.value)}
+                placeholder={
+                  game.name || t('guessart.defaultHostGameName', 'Standardname vom Host')
+                }
                 helperText={t('guessart.localGameNameHint', 'Wird nur auf diesem Gerät angezeigt')}
               />
             </Box>
@@ -246,11 +163,14 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
                   fullWidth
                   label={
                     isHost
-                      ? t('guessart.playerNumber', { number: index + 1, defaultValue: `Spieler ${index + 1}` })
+                      ? t('guessart.playerNumber', {
+                          number: index + 1,
+                          defaultValue: `Spieler ${index + 1}`,
+                        })
                       : t('guessart.yourName', 'Dein Spielername')
                   }
                   value={player.name}
-                  onChange={(e) => handlePlayerNameChange(player.id, e.target.value)}
+                  onChange={(e) => form.changePlayerName(player.id, e.target.value)}
                 />
               ))}
             </Stack>
@@ -263,7 +183,7 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
           {t('common.cancel', 'Abbrechen')}
         </Button>
         <Button
-          onClick={handleSave}
+          onClick={form.save}
           disabled={saving}
           variant="contained"
           color="primary"

@@ -1,18 +1,12 @@
 import React from 'react';
-import {
-  Box,
-  Button,
-  Chip,
-  IconButton,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-  alpha,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { piecePalette, scoreText } from '../../../themeTokens';
+import { transitionOf } from '../../../lib/motion';
+import { ScoreQuickAmounts } from './ScoreQuickAmounts';
+import { Box, Chip, IconButton, Stack, TextField, Tooltip, Typography, alpha } from '@mui/material';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForwardRounded';
+import AddIcon from '@mui/icons-material/AddRounded';
+import RemoveIcon from '@mui/icons-material/RemoveRounded';
+import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
 import { useTranslation } from 'react-i18next';
 
 interface ModernScoreAdjusterProps {
@@ -31,7 +25,7 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
   currentTotal,
   delta,
   onChange,
-  accentColor = '#ffa726',
+  accentColor = piecePalette.orange,
 }) => {
   const { t } = useTranslation();
 
@@ -62,10 +56,10 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
       sx={{
         p: { xs: 1.5, sm: 2 },
         borderRadius: 3,
-        bgcolor: delta !== 0 ? alpha(accentColor, 0.08) : 'rgba(255, 255, 255, 0.03)',
+        bgcolor: delta !== 0 ? alpha(accentColor, 0.08) : 'background.default',
         border: '1px solid',
-        borderColor: delta !== 0 ? alpha(accentColor, 0.4) : 'rgba(255, 255, 255, 0.08)',
-        transition: 'all 0.2s ease',
+        borderColor: delta !== 0 ? alpha(accentColor, 0.4) : 'divider',
+        transition: transitionOf(['background-color', 'border-color'], 'standard'),
       }}
     >
       {/* Player Header & Live Result Preview */}
@@ -94,33 +88,28 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
             label={delta > 0 ? `+${delta}P` : `${delta}P`}
             size="small"
             sx={{
+              ...scoreText,
               fontWeight: 800,
               fontSize: '0.85rem',
-              bgcolor:
-                delta > 0
-                  ? alpha('#00e676', 0.2)
-                  : delta < 0
-                  ? alpha('#ff5252', 0.2)
-                  : 'rgba(255, 255, 255, 0.08)',
-              color: delta > 0 ? '#00e676' : delta < 0 ? '#ff5252' : 'text.secondary',
+              bgcolor: (theme) =>
+                delta === 0
+                  ? theme.palette.action.selected
+                  : alpha(theme.palette[delta > 0 ? 'success' : 'error'].main, 0.2),
+              color: delta > 0 ? 'success.main' : delta < 0 ? 'error.main' : 'text.secondary',
               border: '1px solid',
-              borderColor:
-                delta > 0
-                  ? alpha('#00e676', 0.4)
-                  : delta < 0
-                  ? alpha('#ff5252', 0.4)
-                  : 'transparent',
+              borderColor: (theme) =>
+                delta === 0
+                  ? 'transparent'
+                  : alpha(theme.palette[delta > 0 ? 'success' : 'error'].main, 0.4),
             }}
           />
-          <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.secondary' }}>
-            ➔
-          </Typography>
+          <ArrowForwardIcon fontSize="small" sx={{ color: 'text.secondary' }} />
           <Chip
             label={`${nextTotal}P`}
             size="small"
             color="primary"
             variant="filled"
-            sx={{ fontWeight: 800, fontSize: '0.85rem' }}
+            sx={{ ...scoreText, fontWeight: 800, fontSize: '0.85rem' }}
           />
         </Box>
       </Box>
@@ -131,8 +120,8 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
           size="small"
           onClick={() => handleStep(-1)}
           sx={{
-            bgcolor: 'rgba(255, 255, 255, 0.08)',
-            '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.15)' },
+            bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
+            '&:hover': { bgcolor: (theme) => alpha(theme.palette.text.primary, 0.15) },
             borderRadius: 2,
             p: 0.8,
           }}
@@ -161,8 +150,8 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
           size="small"
           onClick={() => handleStep(1)}
           sx={{
-            bgcolor: 'rgba(255, 255, 255, 0.08)',
-            '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.15)' },
+            bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
+            '&:hover': { bgcolor: (theme) => alpha(theme.palette.text.primary, 0.15) },
             borderRadius: 2,
             p: 0.8,
           }}
@@ -176,9 +165,9 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
               size="small"
               onClick={handleClear}
               sx={{
-                bgcolor: 'rgba(255, 255, 255, 0.05)',
+                bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
                 color: 'text.secondary',
-                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.12)' },
+                '&:hover': { bgcolor: (theme) => alpha(theme.palette.text.primary, 0.12) },
                 borderRadius: 2,
               }}
             >
@@ -188,67 +177,9 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
         )}
       </Box>
 
-      {/* Quick Increment / Decrement Chips */}
       <Stack spacing={0.8}>
-        {/* Positive Adds */}
-        <Box sx={{ display: 'flex', gap: 0.8, overflowX: 'auto', pb: 0.2 }}>
-          {QUICK_POSITIVE.map((amt) => (
-            <Button
-              key={amt}
-              size="small"
-              variant="outlined"
-              onClick={() => handleStep(amt)}
-              sx={{
-                minWidth: 44,
-                py: 0.2,
-                px: 1,
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                color: '#00e676',
-                borderColor: alpha('#00e676', 0.3),
-                bgcolor: alpha('#00e676', 0.04),
-                borderRadius: 2,
-                textTransform: 'none',
-                '&:hover': {
-                  borderColor: '#00e676',
-                  bgcolor: alpha('#00e676', 0.15),
-                },
-              }}
-            >
-              +{amt}
-            </Button>
-          ))}
-        </Box>
-
-        {/* Negative Subtracts */}
-        <Box sx={{ display: 'flex', gap: 0.8, overflowX: 'auto', pb: 0.2 }}>
-          {QUICK_NEGATIVE.map((amt) => (
-            <Button
-              key={amt}
-              size="small"
-              variant="outlined"
-              onClick={() => handleStep(amt)}
-              sx={{
-                minWidth: 44,
-                py: 0.2,
-                px: 1,
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                color: '#ff5252',
-                borderColor: alpha('#ff5252', 0.3),
-                bgcolor: alpha('#ff5252', 0.04),
-                borderRadius: 2,
-                textTransform: 'none',
-                '&:hover': {
-                  borderColor: '#ff5252',
-                  bgcolor: alpha('#ff5252', 0.15),
-                },
-              }}
-            >
-              {amt}
-            </Button>
-          ))}
-        </Box>
+        <ScoreQuickAmounts amounts={QUICK_POSITIVE} tone="success" onPick={handleStep} />
+        <ScoreQuickAmounts amounts={QUICK_NEGATIVE} tone="error" onPick={handleStep} />
       </Stack>
     </Box>
   );

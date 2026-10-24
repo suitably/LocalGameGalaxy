@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Box, Button, Stack, Typography } from '@mui/material';
+import { alpha, Alert, Box, Button, Stack, Typography } from '@mui/material';
 import NotificationsActiveRoundedIcon from '@mui/icons-material/NotificationsActiveRounded';
 import NotificationsOffRoundedIcon from '@mui/icons-material/NotificationsOffRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
@@ -157,8 +157,8 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
           variant="outlined"
           sx={{
             borderRadius: 2,
-            bgcolor: 'rgba(2, 136, 209, 0.04)',
-            borderColor: 'rgba(2, 136, 209, 0.3)',
+            bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.04),
+            borderColor: (theme) => alpha(theme.palette.secondary.main, 0.3),
           }}
           action={
             <Button

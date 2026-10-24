@@ -1,4 +1,4 @@
-import { Chip } from '@mui/material';
+import { alpha, Chip } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { StageEngine } from '../engine/StageEngine';
 import { useStageLive } from '../useStage';
@@ -44,7 +44,7 @@ export function WaitChip({ engine }: { engine: StageEngine }) {
         left: '50%',
         transform: 'translateX(-50%)',
         maxWidth: 'calc(100% - 24px)',
-        bgcolor: 'rgba(15,13,30,0.85)',
+        bgcolor: (theme) => alpha(theme.palette.background.default, 0.85),
         border: 1,
         borderColor: p.instrument.color,
         color: 'text.primary',

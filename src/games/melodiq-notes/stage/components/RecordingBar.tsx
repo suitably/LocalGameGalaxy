@@ -1,18 +1,19 @@
-import { Button, LinearProgress, Stack, Typography } from '@mui/material';
+import { Button, LinearProgress, Stack, Tooltip, Typography } from '@mui/material';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { StageSongState } from '../useStageSong';
 
 const NUDGE_SEC = 0.05;
 const STAGES = ['analyse', 'match', 'refine'] as const;
+const signed = (n: number) => (n > 0 ? '+' : '−') + Math.abs(n);
 
-/** The recording behind the song: choose it, align it bar by bar, fine-tune, save the marks or export the score. */
+/** The recording behind the song: choose it, align it bar by bar, fine-tune, save it to the server or export the score. */
 export function RecordingBar({ state }: { state: StageSongState }) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
     t(`games.melodiq_notes.stage.${key}`, opts);
   const fileRef = useRef<HTMLInputElement>(null);
-  const { recording, align, marks, offset } = state;
+  const { recording, align, marks, offset, pins } = state;
   const running = align.kind === 'running';
   const progress = running
     ? ((STAGES.indexOf(align.stage) + align.fraction) / STAGES.length) * 100
@@ -21,8 +22,18 @@ export function RecordingBar({ state }: { state: StageSongState }) {
   if (running)
     info = k('aligning', { stage: k(`align_stage.${align.stage}`), percent: Math.round(progress) });
   else if (align.kind === 'failed') info = k('align_failed', { error: align.error });
-  else if (marks)
+  else if (marks) {
     info = k('aligned', { bars: marks.length - 1, start: (marks[0].sec + offset).toFixed(2) });
+    const tuning = align.kind === 'done' ? align.tuning : undefined;
+    if (tuning?.semitones)
+      info += ` · ${k('tuning_semitones', {
+        shift: signed(tuning.semitones),
+        count: Math.abs(tuning.semitones),
+      })}`;
+    if (tuning && Math.abs(tuning.cents) >= 10)
+      info += ` · ${k('tuning_cents', { cents: signed(tuning.cents) })}`;
+    if (pins.length) info += ` · ${k('pinned', { count: pins.length })}`;
+  }
 
   return (
     <Stack spacing={1}>
@@ -47,6 +58,20 @@ export function RecordingBar({ state }: { state: StageSongState }) {
             if (f) state.setRecordingFile(f);
           }}
         />
+        {state.canSaveToServer && (
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={state.saved || running}
+            onClick={() => void state.saveToServer()}
+          >
+            {state.saved
+              ? k('saved')
+              : state.origin?.kind === 'server'
+                ? k('save_marks')
+                : k('save_to_library')}
+          </Button>
+        )}
         {recording && (
           <>
             <Button
@@ -83,15 +108,12 @@ export function RecordingBar({ state }: { state: StageSongState }) {
             >
               +
             </Button>
-            {state.origin?.kind === 'server' && marks && (
-              <Button
-                size="small"
-                variant="outlined"
-                disabled={state.saved}
-                onClick={() => void state.saveMarks()}
-              >
-                {state.saved ? k('saved') : k('save_marks')}
-              </Button>
+            {marks && (
+              <Tooltip title={k('pin_bar_hint')} describeChild>
+                <Button size="small" variant="outlined" onClick={state.pinBarNow}>
+                  {k('pin_bar')}
+                </Button>
+              </Tooltip>
             )}
             {state.canExport && (
               <Button size="small" variant="text" onClick={state.exportScore}>

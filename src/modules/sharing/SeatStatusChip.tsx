@@ -25,7 +25,7 @@ export const SeatStatusChip: React.FC<{ player: SeatedPlayer; isLocal: boolean }
       size="small"
       label={label}
       color={color}
-      sx={{ height: 20, fontSize: '0.72rem', fontWeight: 600 }}
+      sx={{ height: 20, fontSize: '0.75rem', fontWeight: 600 }}
     />
   );
 };

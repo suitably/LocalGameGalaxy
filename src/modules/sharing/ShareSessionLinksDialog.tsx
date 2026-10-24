@@ -139,7 +139,7 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
                 sx={{
                   mb: 1.5,
                   p: 1.5,
-                  borderRadius: 2.5,
+                  borderRadius: 3,
                   bgcolor: 'background.paper',
                   borderColor: 'divider',
                 }}
@@ -205,7 +205,7 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
 
                 {showQr && (
                   <Box display="flex" flexDirection="column" alignItems="center" py={1.5} gap={1}>
-                    <Paper sx={{ p: 1.5, bgcolor: '#ffffff', borderRadius: 2 }}>
+                    <Paper sx={{ p: 1.5, bgcolor: 'text.primary', borderRadius: 2 }}>
                       <QRCodeSVG value={link} size={150} />
                     </Paper>
                     <Typography variant="caption" color="text.secondary">

@@ -59,7 +59,7 @@ describe('alignRecording', () => {
   it('finds every bar of a recording that is slower, drifts and starts late', async () => {
     const song = testSong();
     const { samples, truth } = render(song, 1.5, (b) => (b < 16 ? 1.08 : 0.95));
-    const marks = await alignRecording(song, samples);
+    const { marks } = await alignRecording(song, samples);
     expect(marks).toHaveLength(9);
     const errors = truth.slice(0, 8).map((sec, i) => Math.abs(marks[i].sec - sec));
     expect(Math.max(...errors)).toBeLessThan(0.05);

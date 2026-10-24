@@ -5,7 +5,9 @@
  * - `shared_device`: one device for everyone, passed around (pass and play);
  * - `own_devices`: a party session that everyone joins with their own device.
  */
+import type { AreaId } from '../../../lib/areas';
 import type { TabletopPlayMode } from './types';
+import { piecePalette } from '../../../themeTokens';
 
 export type PlayMode = 'shared_device' | 'own_devices';
 
@@ -18,7 +20,7 @@ export interface TableGameEntry {
   title: string;
   descKey?: string;
   desc?: string;
-  icon: string;
+  icon: AreaId;
   color: string;
   modes: PlayMode[];
 }
@@ -39,8 +41,8 @@ export const TABLETOP_STARTERS: TableGameEntry[] = [
     titleKey: 'games.tabletop.standard_cards_title',
     title: 'Standard Kartendeck (52)',
     descKey: 'games.tabletop.standard_cards_desc',
-    icon: '🃏',
-    color: '#1976d2',
+    icon: 'cards',
+    color: piecePalette.blue,
     modes: ['shared_device', 'own_devices'],
   },
   {
@@ -49,8 +51,8 @@ export const TABLETOP_STARTERS: TableGameEntry[] = [
     titleKey: 'games.tabletop.liars_dice_title',
     title: "Liar's Dice / Perudo",
     descKey: 'games.tabletop.liars_dice_desc',
-    icon: '🎲',
-    color: '#f57c00',
+    icon: 'dice',
+    color: piecePalette.orange,
     // Cups are hands: pass and play keeps them hidden between players.
     modes: ['shared_device', 'own_devices'],
   },
@@ -60,8 +62,8 @@ export const TABLETOP_STARTERS: TableGameEntry[] = [
     titleKey: 'games.tabletop.checkers_title',
     title: 'Dame / Checkers',
     descKey: 'games.tabletop.checkers_desc',
-    icon: '🏁',
-    color: '#388e3c',
+    icon: 'puzzle',
+    color: piecePalette.green,
     modes: ['shared_device', 'own_devices'],
   },
 ];
@@ -75,8 +77,8 @@ export const DICE_GAMES: TableGameEntry[] = [
     titleKey: 'games.kniffel.title',
     title: 'Kniffel',
     descKey: 'games.kniffel.description',
-    icon: '🎲',
-    color: '#b91c1c',
+    icon: 'dice',
+    color: piecePalette.red,
     modes: ['shared_device'],
   },
   {
@@ -86,8 +88,8 @@ export const DICE_GAMES: TableGameEntry[] = [
     titleKey: 'games.knister.title',
     title: 'Knister',
     descKey: 'games.knister.description',
-    icon: '🔢',
-    color: '#e65100',
+    icon: 'puzzle',
+    color: piecePalette.orange,
     modes: ['shared_device', 'own_devices'],
   },
   {
@@ -97,8 +99,8 @@ export const DICE_GAMES: TableGameEntry[] = [
     titleKey: 'games.qwixx.title',
     title: 'Qwixx',
     descKey: 'games.qwixx.description',
-    icon: '🎯',
-    color: '#f57c00',
+    icon: 'dice',
+    color: piecePalette.orange,
     modes: ['shared_device'],
   },
 ];

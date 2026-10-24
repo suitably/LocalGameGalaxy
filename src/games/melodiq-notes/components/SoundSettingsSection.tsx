@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Typography, Button, Stack, Tooltip } from '@mui/material';
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import GraphicEqIcon from '@mui/icons-material/GraphicEq';
+import VolumeUpIcon from '@mui/icons-material/VolumeUpRounded';
+import GraphicEqIcon from '@mui/icons-material/GraphicEqRounded';
 import { useTranslation } from 'react-i18next';
 import { SoundfontProviderFields } from './SoundfontProviderFields';
 import {

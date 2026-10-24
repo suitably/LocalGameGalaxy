@@ -2,7 +2,7 @@
  * Single supply piece item in HandDockStrip [ID: GAME-TABLETOP-SUPPLY-ITEM]
  */
 import React from 'react';
-import { Box, Typography, Tooltip } from '@mui/material';
+import { alpha, Box, Typography, Tooltip } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { TokenWidget } from '../../logic/types';
 import { TokenWidgetView } from '../widgets/TokenWidgetView';
@@ -30,8 +30,8 @@ export const SupplyPieceItem: React.FC<SupplyPieceItemProps> = ({
           width: 88,
           height: 108,
           flexShrink: 0,
-          bgcolor: 'rgba(255, 255, 255, 0.05)',
-          border: '1.5px solid rgba(255, 255, 255, 0.18)',
+          bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
+          border: (theme) => `1.5px solid ${alpha(theme.palette.text.primary, 0.18)}`,
           borderRadius: 2,
           position: 'relative',
           display: 'flex',
@@ -57,11 +57,11 @@ export const SupplyPieceItem: React.FC<SupplyPieceItemProps> = ({
             top: 4,
             right: 4,
             bgcolor: 'primary.main',
-            color: '#fff',
-            borderRadius: '10px',
+            color: 'text.primary',
+            borderRadius: 3,
             px: 0.6,
             py: 0.1,
-            fontSize: '0.7rem',
+            fontSize: '0.75rem',
             fontWeight: 800,
             zIndex: 10,
           }}
@@ -96,7 +96,7 @@ export const SupplyPieceItem: React.FC<SupplyPieceItemProps> = ({
           <Typography
             variant="caption"
             noWrap
-            sx={{ display: 'block', fontWeight: 700, color: 'rgba(255,255,255,0.9)', fontSize: '0.75rem' }}
+            sx={{ display: 'block', fontWeight: 700, color: 'text.secondary', fontSize: '0.75rem' }}
           >
             {groupName}
           </Typography>

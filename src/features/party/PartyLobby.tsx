@@ -47,10 +47,10 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
     >
       <Container maxWidth="md" disableGutters>
         <Paper
-          elevation={4}
+          elevation={0}
           sx={{
             p: { xs: 2, sm: 3.5 },
-            borderRadius: 3.5,
+            borderRadius: 3,
             bgcolor: 'background.paper',
             border: '1px solid',
             borderColor: 'divider',

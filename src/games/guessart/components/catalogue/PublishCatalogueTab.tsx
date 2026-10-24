@@ -14,13 +14,10 @@ import {
 import GitHubIcon from '@mui/icons-material/GitHub';
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoRounded';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import {
-  calculateCatalogueDiff,
-  publishCatalogueToGit,
-} from '../../logic/catalogueManager';
+import { calculateCatalogueDiff, publishCatalogueToGit } from '../../logic/catalogueManager';
 import type { CategoryItem, WordItem } from '../../logic/types';
 import { hasGitHubPAT } from '../../../../lib/github';
 
@@ -161,7 +158,10 @@ export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
           >
             <Typography variant="subtitle2" fontWeight={800}>
               {result.updated
-                ? t('guessart.prUpdatedSuccess', 'Bestehender Pull Request erfolgreich aktualisiert!')
+                ? t(
+                    'guessart.prUpdatedSuccess',
+                    'Bestehender Pull Request erfolgreich aktualisiert!',
+                  )
                 : t('guessart.prCreatedSuccess', 'Pull Request erfolgreich erstellt!')}{' '}
               #{result.prNumber}
             </Typography>

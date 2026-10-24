@@ -1,8 +1,8 @@
 import { useState, useEffect, useReducer } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Box, CircularProgress, Typography, Button } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import GroupsIcon from '@mui/icons-material/Groups';
+import ArrowBackIcon from '@mui/icons-material/ArrowBackRounded';
+import GroupsIcon from '@mui/icons-material/GroupsRounded';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
 import { tabletopReducer } from './logic/tabletopReducer';
@@ -13,7 +13,7 @@ import {
   getTabletopSession,
   sessionKey,
 } from './logic/tabletopStorage';
-import { parsePcioFile } from './logic/pcioParser';
+import { loadServerGame } from './logic/tabletopServerApi';
 import { storage } from '../../lib/storage';
 import { TabletopEditor } from './components/editor/TabletopEditor';
 import { HandDockStrip } from './components/surface/HandDockStrip';
@@ -90,23 +90,8 @@ export function TabletopGame() {
 
         // 3. Try BYOG server if active
         if (storage.isHelperActive()) {
-          const baseUrl = storage.getHelperUrl().replace(/\/$/, '');
-          const token = storage.getHelperToken();
-          const headers: Record<string, string> = {};
-          if (token) headers['Authorization'] = `Bearer ${token}`;
-          const sRes = await fetch(
-            `${baseUrl}/api/tabletop/games/${encodeURIComponent(gameId)}/raw`,
-            { headers },
-          );
-          if (sRes.ok) {
-            const data = (await sRes.json()) as {
-              rawJson: string;
-              assetMap: Record<string, string>;
-            };
-            const parsed = await parsePcioFile(data.rawJson, { assetFiles: data.assetMap });
-            dispatch({ type: 'LOAD_GAME', payload: parsed });
-            return;
-          }
+          dispatch({ type: 'LOAD_GAME', payload: await loadServerGame(gameId) });
+          return;
         }
 
         throw new Error(`Spiel "${gameId}" konnte nicht geladen werden.`);

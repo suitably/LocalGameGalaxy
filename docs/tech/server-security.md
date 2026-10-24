@@ -8,8 +8,8 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-18
-  method: 'read server/src/core/app.ts, server/src/plugins/melodiq/{index.ts,middleware/auth.ts}, server/src/plugins/tabletop/routes/*.ts, server/src/plugins/relay/index.ts, server/src/utils/helpers.ts'
+  at: 2026-10-24
+  method: 'read server/src/core/app.ts, server/src/plugins/melodiq/{index.ts,middleware/auth.ts}, server/src/plugins/tabletop/routes/*.ts, server/src/plugins/notes/**/*.ts, server/src/plugins/relay/index.ts, server/src/utils/helpers.ts'
 sources:
   - 'server/src/plugins/melodiq/middleware/auth.ts'
   - 'server/src/core/app.ts'
@@ -71,7 +71,8 @@ The token is stored in `config.json` and loaded at server startup via `server/sr
 
 - Reads `Authorization: Bearer <token>` or the `?token=` query parameter.
 - Applied by the `melodiq` plugin to: `/api/songs*`, `/api/status`, `/api/auth/me`, `/media`, `/api/usdb/*`, `/api/youtube/*`, `/api/separator/*`, `/api/config/*`, `/api/playlists*`, `/api/browse`, `/api/feedback` (`server/src/plugins/melodiq/index.ts`). Public: `/health`, `/api/info`.
-- Applied by the `tabletop` plugin to `/api/tabletop/*` and `/tabletop/media`; `/api/tabletop/config/*` additionally needs `requireMasterToken`. `/tabletop/proxy-image` checks its token itself.
+- Applied by the `tabletop` plugin to `/api/tabletop/*` and `/tabletop/media`; `/api/tabletop/config/*` additionally needs `requireMasterToken`. `/tabletop/proxy-image` checks its token itself. Saving games needs any valid token; only games under `saved/` can be overwritten, and deleting one needs `allowSongDeletion` (or the master token).
+- Applied by the `notes` plugin to `/api/notes/*` and `/notes/media/*`. Files are addressed by piece id and a file name the listing found, never by path. Deleting files or pieces needs `allowSongDeletion` (or the master token).
 - Matches against the master `config.token` (which grants full permissions) or a valid API key in `config.apiKeys`.
 - Returns `401 Unauthorized` if missing or mismatched.
 - Management routes in `routes/config.ts` additionally use `requireMasterToken` (master token or API key with `allowManagement: true`; else `403`). Song deletion checks `allowSongDeletion`.

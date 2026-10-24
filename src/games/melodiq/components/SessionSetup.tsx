@@ -1,314 +1,181 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-    Box, Button, Typography, FormControl, MenuItem, Select, Slider,
-    IconButton, Avatar, Popover, Divider, Switch, FormControlLabel
-} from '@mui/material';
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import VolumeOffIcon from '@mui/icons-material/VolumeOff';
-import CloseIcon from '@mui/icons-material/Close';
-import SettingsIcon from '@mui/icons-material/Settings';
-import RefreshIcon from '@mui/icons-material/Refresh';
+import { Box, Button, Typography } from '@mui/material';
+import RefreshIcon from '@mui/icons-material/RefreshRounded';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecordRounded';
+import SmartToyIcon from '@mui/icons-material/SmartToyRounded';
+import SmartphoneIcon from '@mui/icons-material/SmartphoneRounded';
 import type { UserProfile, ActivePlayer } from '../types';
-import { LatencyCalibrator } from './LatencyCalibrator';
 import { useWebRTC } from '../audio/WebRTCContext';
 import { useClientRoles } from '../hooks/useClientRoles';
-import type { ClientRole } from '../types';
+import { SessionRosterRow, BOT_ID } from './SessionRosterRow';
+import { SessionPhoneRow } from './SessionPhoneRow';
+import { PlayerSettingsPopover } from './PlayerSettingsPopover';
 
 interface SessionSetupProps {
-    profiles: UserProfile[];
-    activePlayers: ActivePlayer[];
-    devices: MediaDeviceInfo[];
-    loadingDevices: boolean;
-    onRefreshDevices: () => void;
-    onToggleActivePlayer: (profileId: string) => void;
-    onMoveActivePlayer: (index: number, direction: 'up' | 'down') => void;
-    onUpdateActivePlayerConfig: (profileId: string, updates: Partial<ActivePlayer>) => void;
+  profiles: UserProfile[];
+  activePlayers: ActivePlayer[];
+  devices: MediaDeviceInfo[];
+  loadingDevices: boolean;
+  onRefreshDevices: () => void;
+  onToggleActivePlayer: (profileId: string) => void;
+  onMoveActivePlayer: (index: number, direction: 'up' | 'down') => void;
+  onUpdateActivePlayerConfig: (profileId: string, updates: Partial<ActivePlayer>) => void;
 }
 
 export const SessionSetup: React.FC<SessionSetupProps> = ({
-    profiles,
-    activePlayers,
-    devices,
-    loadingDevices,
-    onRefreshDevices,
-    onToggleActivePlayer,
-    onMoveActivePlayer,
-    onUpdateActivePlayerConfig
+  profiles,
+  activePlayers,
+  devices,
+  loadingDevices,
+  onRefreshDevices,
+  onToggleActivePlayer,
+  onMoveActivePlayer,
+  onUpdateActivePlayerConfig,
 }) => {
-    const { t } = useTranslation();
-    const { peers: connectedPreviewPeers, activePeers, inactivePeers, togglePeerActive } = useWebRTC();
-    const { getRole, setRole } = useClientRoles();
+  const { t } = useTranslation();
+  const { peers, activePeers, inactivePeers, togglePeerActive } = useWebRTC();
+  const { getRole, setRole } = useClientRoles();
 
-    // Player Settings Popover
-    const [settingsAnchorEl, setSettingsAnchorEl] = useState<HTMLElement | null>(null);
-    const [settingsProfileId, setSettingsProfileId] = useState<string | null>(null);
+  const [settingsAnchorEl, setSettingsAnchorEl] = useState<HTMLElement | null>(null);
+  const [settingsProfileId, setSettingsProfileId] = useState<string | null>(null);
 
-    const handleSettingsClick = (event: React.MouseEvent<HTMLElement>, profileId: string) => {
-        setSettingsProfileId(profileId);
-        setSettingsAnchorEl(event.currentTarget);
-    };
+  const closeSettings = () => {
+    setSettingsAnchorEl(null);
+    setSettingsProfileId(null);
+  };
 
-    const handleSettingsClose = () => {
-        setSettingsAnchorEl(null);
-        setSettingsProfileId(null);
-    };
+  const botLabel = t('melodiq.setup.bot', 'Bot (Auto-Sing)');
+  const availableProfiles = profiles.filter(
+    (p) => !activePlayers.some((ap) => ap.profileId === p.id),
+  );
 
-    return (
-        <Box>
-            <Typography variant="h6" gutterBottom>Session Setup</Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Select who is playing today. Drag (Use arrows) to reorder priority/position.
-            </Typography>
+  return (
+    <Box>
+      <Typography variant="h6" gutterBottom>
+        {t('melodiq.setup.title', 'Session Setup')}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        {t(
+          'melodiq.setup.intro',
+          'Select who is playing today. Use the arrows to reorder priority/position.',
+        )}
+      </Typography>
 
+      <Button
+        variant="outlined"
+        onClick={onRefreshDevices}
+        sx={{ mb: 2, borderRadius: 999, px: 3 }}
+        startIcon={<RefreshIcon />}
+      >
+        {t('melodiq.setup.refresh_devices', 'Refresh Devices')}
+      </Button>
+
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {profiles.length === 0 && (
+          <Typography>{t('melodiq.setup.no_profiles', 'No profiles found.')}</Typography>
+        )}
+
+        <Typography variant="subtitle2">
+          {t('melodiq.setup.active_roster', 'Active Roster (Ordered)')}
+        </Typography>
+        {activePlayers.map((ap, index) => {
+          const isBot = ap.profileId === BOT_ID;
+          const profile = isBot
+            ? { id: BOT_ID, name: botLabel, hue: 0 }
+            : profiles.find((p) => p.id === ap.profileId);
+          if (!profile) return null;
+          return (
+            <SessionRosterRow
+              key={ap.profileId}
+              player={ap}
+              name={profile.name}
+              hue={profile.hue}
+              index={index}
+              count={activePlayers.length}
+              devices={devices}
+              loadingDevices={loadingDevices}
+              phones={peers}
+              onMove={(direction) => onMoveActivePlayer(index, direction)}
+              onUpdate={(updates) => onUpdateActivePlayerConfig(ap.profileId, updates)}
+              onOpenSettings={(e) => {
+                setSettingsProfileId(ap.profileId);
+                setSettingsAnchorEl(e.currentTarget);
+              }}
+              onRemove={() => onToggleActivePlayer(ap.profileId)}
+            />
+          );
+        })}
+
+        {activePeers.map((peer) => {
+          const roleKey = peer.deviceId || peer.peerId;
+          return (
+            <SessionPhoneRow
+              key={peer.peerId}
+              peer={peer}
+              role={getRole(roleKey)}
+              onRoleChange={(role) => setRole(roleKey, role)}
+              onRemove={() => togglePeerActive(peer.peerId)}
+            />
+          );
+        })}
+
+        <PlayerSettingsPopover
+          anchorEl={settingsAnchorEl}
+          player={activePlayers.find((ap) => ap.profileId === settingsProfileId)}
+          onClose={closeSettings}
+          onUpdate={(updates) => {
+            if (settingsProfileId) onUpdateActivePlayerConfig(settingsProfileId, updates);
+          }}
+        />
+
+        <Typography variant="subtitle2" sx={{ mt: 2 }}>
+          {t('melodiq.setup.available_profiles', 'Available Profiles')}
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          {availableProfiles.map((p) => (
             <Button
-                variant="outlined"
-                onClick={onRefreshDevices}
-                sx={{ mb: 2, borderRadius: 50, px: 3 }}
-                startIcon={<RefreshIcon />}
+              key={p.id}
+              variant="outlined"
+              startIcon={<FiberManualRecordIcon sx={{ color: `hsl(${p.hue}, 100%, 50%)` }} />}
+              onClick={() => onToggleActivePlayer(p.id)}
+              sx={{ borderRadius: 999 }}
             >
-                Refresh Devices
+              {p.name}
             </Button>
+          ))}
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {profiles.length === 0 && <Typography>No profiles found.</Typography>}
+          {!activePlayers.some((ap) => ap.profileId === BOT_ID) && (
+            <Button
+              variant="outlined"
+              color="secondary"
+              startIcon={<SmartToyIcon />}
+              onClick={() => onToggleActivePlayer(BOT_ID)}
+              sx={{ borderRadius: 999 }}
+            >
+              {botLabel}
+            </Button>
+          )}
 
-                {/* Active Roster */}
-                <Typography variant="subtitle2">Active Roster (Ordered)</Typography>
-                {activePlayers.map((ap, index) => {
-                    const isBot = ap.profileId === 'BOT';
-                    const profile = isBot
-                        ? { id: 'BOT', name: 'Bot (Auto-Sing)', hue: 0 }
-                        : profiles.find(p => p.id === ap.profileId);
+          {profiles.length === 0 && (
+            <Typography variant="caption">
+              {t('melodiq.setup.create_profiles', 'Create profiles above.')}
+            </Typography>
+          )}
 
-                    if (!profile) return null;
-                    return (
-                        <Box key={ap.profileId} sx={{
-                            display: 'flex',
-                            flexDirection: { xs: 'column', md: 'row' },
-                            alignItems: { xs: 'stretch', md: 'center' },
-                            gap: 2,
-                            p: { xs: 1.5, md: 1 },
-                            border: '1px solid rgba(255,255,255,0.2)',
-                            borderRadius: 1
-                        }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                                    <IconButton size="small" onClick={() => onMoveActivePlayer(index, 'up')} disabled={index === 0}>
-                                        <Typography variant="caption">▲</Typography>
-                                    </IconButton>
-                                    <IconButton size="small" onClick={() => onMoveActivePlayer(index, 'down')} disabled={index === activePlayers.length - 1}>
-                                        <Typography variant="caption">▼</Typography>
-                                    </IconButton>
-                                </Box>
-
-                                <Avatar sx={{ bgcolor: isBot ? '#FF4081' : `hsl(${profile.hue}, 100%, 50%)`, width: 32, height: 32 }}>
-                                    {isBot ? '🤖' : profile.name[0]}
-                                </Avatar>
-                                <Typography sx={{ flex: 1, fontWeight: 'bold' }}>{profile.name}</Typography>
-                            </Box>
-
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-
-                                <Button
-                                    size="small"
-                                    onClick={() => {
-                                        const newMuted = !(ap.muted ?? false);
-                                        onUpdateActivePlayerConfig(ap.profileId, { muted: newMuted });
-                                    }}
-                                    color={ap.muted ? "error" : "primary"}
-                                    sx={{ minWidth: 40 }}
-                                >
-                                    {ap.muted ? <VolumeOffIcon /> : <VolumeUpIcon />}
-                                </Button>
-
-                                <Slider
-                                    size="small"
-                                    value={typeof ap.volume === 'number' ? ap.volume * 100 : 80}
-                                    min={0}
-                                    max={100}
-                                    onChange={(_, val) => onUpdateActivePlayerConfig(ap.profileId, { volume: (val as number) / 100 })}
-                                    sx={{ width: 80, mx: 2 }}
-                                    disabled={ap.muted}
-                                />
-
-                                {!isBot && (
-                                    <FormControl sx={{ minWidth: 150 }} size="small">
-                                        <Select
-                                            value={loadingDevices ? 'loading' : (
-                                                ap.deviceId === 'BOT' || devices.some(d => d.deviceId === ap.deviceId) || connectedPreviewPeers.some(p => p.peerId === ap.deviceId)
-                                                    ? ap.deviceId : ''
-                                            )}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                const isPhone = connectedPreviewPeers.some(p => p.peerId === val);
-                                                onUpdateActivePlayerConfig(ap.profileId, { deviceId: val, isRemote: isPhone });
-                                            }}
-                                            disabled={loadingDevices}
-                                            displayEmpty
-                                            variant="standard"
-                                        >
-                                            <MenuItem value=""><em>No Device</em></MenuItem>
-                                            {loadingDevices && <MenuItem value="loading" disabled>{t('melodiq.loading')}</MenuItem>}
-                                            {devices.map(d => (
-                                                <MenuItem key={d.deviceId} value={d.deviceId}>{d.label || d.deviceId}</MenuItem>
-                                            ))}
-                                            <Divider />
-                                            {connectedPreviewPeers.length > 0 && <Divider />}
-                                            {connectedPreviewPeers.length > 0 && <MenuItem disabled><em>Phones</em></MenuItem>}
-                                            {connectedPreviewPeers.map(p => (
-                                                <MenuItem key={p.peerId} value={p.peerId}>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                        <Typography>📱 {p.name}</Typography>
-                                                        {p.hue && <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: `hsl(${p.hue}, 100%, 50%)` }} />}
-                                                    </Box>
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
-                                )}
-                                {isBot && <Typography variant="caption" sx={{ minWidth: 150, textAlign: 'center' }}>Auto-Sing Enabled</Typography>}
-
-                                {!isBot && (
-                                    <IconButton size="small" onClick={(e) => handleSettingsClick(e, ap.profileId)}>
-                                        <SettingsIcon fontSize="small" />
-                                    </IconButton>
-                                )}
-
-                                <IconButton color="error" onClick={() => onToggleActivePlayer(ap.profileId)}>
-                                    <CloseIcon />
-                                </IconButton>
-                            </Box>
-                        </Box>
-                    );
-                })}
-
-                {/* Active Phones in Roster */}
-                {activePeers.map((peer) => (
-                    <Box key={peer.peerId} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, border: '1px solid rgba(255,255,255,0.2)', borderRadius: 1, bgcolor: 'rgba(100,100,255,0.05)' }}>
-                        <Typography sx={{ width: 24, textAlign: 'center' }}>📱</Typography>
-                        <Avatar sx={{ bgcolor: peer.hue ? `hsl(${peer.hue}, 100%, 50%)` : 'grey', width: 32, height: 32 }}>{peer.name[0]}</Avatar>
-                        <Typography sx={{ flex: 1, fontWeight: 'bold' }}>{peer.name}</Typography>
-                        <Select
-                            size="small"
-                            value={getRole(peer.deviceId || peer.peerId)}
-                            onChange={(e) => {
-                                setRole(peer.deviceId || peer.peerId, e.target.value as ClientRole);
-                            }}
-                            sx={{ color: 'white', bgcolor: 'rgba(255,255,255,0.1)', height: 32, '& .MuiSelect-icon': { color: 'white' } }}
-                        >
-                            <MenuItem value="admin">Admin</MenuItem>
-                            <MenuItem value="queue_manager">Queue Manager</MenuItem>
-                            <MenuItem value="queue_contributor">Queue Contributor</MenuItem>
-                            <MenuItem value="singer">Singer</MenuItem>
-                        </Select>
-                        <IconButton color="error" onClick={() => togglePeerActive(peer.peerId)}>
-                            <CloseIcon />
-                        </IconButton>
-                    </Box>
-                ))}
-
-                {/* Player Settings Popover */}
-                <Popover
-                    open={Boolean(settingsAnchorEl)}
-                    anchorEl={settingsAnchorEl}
-                    onClose={handleSettingsClose}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-                    transformOrigin={{ vertical: 'top', horizontal: 'center' }}
-                >
-                    <Box sx={{ p: 2, minWidth: 250 }}>
-                        <Typography variant="subtitle2" gutterBottom>Player Settings</Typography>
-
-                        {(() => {
-                            const activeP = activePlayers.find(ap => ap.profileId === settingsProfileId);
-                            if (!activeP) return null;
-
-                            return (
-                                <Box>
-                                    <Typography variant="caption" gutterBottom>Latency Compensation: {activeP.latency || 0}ms</Typography>
-                                    <Slider
-                                        size="small"
-                                        value={activeP.latency || 0}
-                                        min={0}
-                                        max={500}
-                                        step={10}
-                                        onChange={(_, val) => onUpdateActivePlayerConfig(settingsProfileId!, { latency: val as number })}
-                                        valueLabelDisplay="auto"
-                                    />
-                                    <Typography variant="caption" color="text.secondary" display="block">
-                                        Compensates for input delay.
-                                    </Typography>
-
-                                    <Divider sx={{ my: 1 }} />
-                                    
-                                    <FormControlLabel
-                                        control={
-                                            <Switch 
-                                                size="small" 
-                                                checked={!!activeP.hidePitch} 
-                                                onChange={(e) => onUpdateActivePlayerConfig(settingsProfileId!, { hidePitch: e.target.checked })}
-                                            />
-                                        }
-                                        label={<Typography variant="body2">Hide Pitch Curve</Typography>}
-                                    />
-                                    <Typography variant="caption" color="text.secondary" display="block">
-                                        Blind Mode: Player sings and gets points, but their pitch curve is not shown on screen.
-                                    </Typography>
-
-                                    <Divider sx={{ my: 1 }} />
-                                    <LatencyCalibrator
-                                        deviceId={activeP.deviceId}
-                                        onComplete={(calibratedMs) => onUpdateActivePlayerConfig(settingsProfileId!, { latency: calibratedMs })}
-                                    />
-                                </Box>
-                            );
-                        })()}
-                    </Box>
-                </Popover>
-
-                {/* Available to Add */}
-                <Typography variant="subtitle2" sx={{ mt: 2 }}>Available Profiles</Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {profiles.filter(p => !activePlayers.some(ap => ap.profileId === p.id)).map(p => (
-                        <Button
-                            key={p.id}
-                            variant="outlined"
-                            startIcon={<Typography sx={{ color: `hsl(${p.hue}, 100%, 50%)` }}>●</Typography>}
-                            onClick={() => onToggleActivePlayer(p.id)}
-                            sx={{ borderRadius: 50 }}
-                        >
-                            {p.name}
-                        </Button>
-                    ))}
-
-                    {/* Add Bot Button */}
-                    {!activePlayers.some(ap => ap.profileId === 'BOT') && (
-                        <Button
-                            variant="outlined"
-                            startIcon={<Typography>🤖</Typography>}
-                            onClick={() => onToggleActivePlayer('BOT')}
-                            sx={{ borderRadius: 50, borderColor: '#FF4081', color: '#FF4081' }}
-                        >
-                            Bot (Auto-Sing)
-                        </Button>
-                    )}
-
-                    {profiles.length === 0 && <Typography variant="caption">Create profiles above.</Typography>}
-
-                    {/* Inactive Phones */}
-                    {inactivePeers.map(peer => (
-                        <Button
-                            key={peer.peerId}
-                            variant="outlined"
-                            startIcon={<Typography>📱</Typography>}
-                            onClick={() => togglePeerActive(peer.peerId)}
-                            sx={{ borderColor: peer.hue ? `hsl(${peer.hue}, 100%, 50%)` : undefined }}
-                        >
-                            {peer.name}
-                        </Button>
-                    ))}
-                </Box>
-            </Box>
+          {inactivePeers.map((peer) => (
+            <Button
+              key={peer.peerId}
+              variant="outlined"
+              startIcon={<SmartphoneIcon />}
+              onClick={() => togglePeerActive(peer.peerId)}
+              sx={{ borderColor: peer.hue ? `hsl(${peer.hue}, 100%, 50%)` : undefined }}
+            >
+              {peer.name}
+            </Button>
+          ))}
         </Box>
-    );
+      </Box>
+    </Box>
+  );
 };

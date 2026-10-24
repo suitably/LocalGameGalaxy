@@ -3,17 +3,12 @@
  */
 import type { TabletopWidget, SeatWidget, TokenWidget, HolderWidget, CardWidget } from './types';
 import { isHandHolderWidget } from './handHolder';
+import { PIECE_ORDER, pieceNeutrals, piecePalette } from '../../../themeTokens';
 
-export const DEFAULT_SEAT_COLORS: Record<number, string> = {
-  1: '#dc2626', // Red
-  2: '#2563eb', // Blue
-  3: '#f8fafc', // White
-  4: '#ea580c', // Orange
-  5: '#16a34a', // Green
-  6: '#854d0e', // Brown
-  7: '#9333ea', // Purple
-  8: '#eab308', // Yellow
-};
+/** Seat 1..8 in palette order (DESIGN.md §2.3). */
+export const DEFAULT_SEAT_COLORS: Record<number, string> = Object.fromEntries(
+  PIECE_ORDER.map((c, i) => [i + 1, piecePalette[c]]),
+);
 
 /**
  * Returns all seat widgets defined in the game, sorted by seat index.
@@ -33,17 +28,17 @@ export function resolveSeatColor(seat: SeatWidget): string {
   const idLower = (seat.id || '').toLowerCase();
   const labelLower = (seat.label || '').toLowerCase();
   if (idLower.includes('white') || labelLower.includes('white') || idLower.includes('weiß'))
-    return '#f8fafc';
+    return pieceNeutrals.white;
   if (idLower.includes('black') || labelLower.includes('black') || idLower.includes('schwarz'))
-    return '#1e293b';
+    return pieceNeutrals.black;
   if (idLower.includes('red') || labelLower.includes('red') || idLower.includes('rot'))
-    return '#dc2626';
+    return piecePalette.red;
   if (idLower.includes('blue') || labelLower.includes('blue') || idLower.includes('blau'))
-    return '#2563eb';
-  if (idLower.includes('orange')) return '#ea580c';
-  if (idLower.includes('green') || labelLower.includes('grün')) return '#16a34a';
+    return piecePalette.blue;
+  if (idLower.includes('orange')) return piecePalette.orange;
+  if (idLower.includes('green') || labelLower.includes('grün')) return piecePalette.green;
 
-  return DEFAULT_SEAT_COLORS[seat.index] || '#3b82f6';
+  return DEFAULT_SEAT_COLORS[seat.index] || piecePalette.blue;
 }
 
 /**

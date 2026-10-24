@@ -3,14 +3,19 @@ import type { GalaxyPlugin, ServerConfig, HonoEnv } from './types';
 import { relayPlugin } from '../plugins/relay';
 import { melodiqPlugin } from '../plugins/melodiq';
 import { tabletopPlugin } from '../plugins/tabletop';
+import { notesPlugin } from '../plugins/notes';
 
 const ALL_PLUGINS: Record<string, GalaxyPlugin> = {
   relay: relayPlugin,
   melodiq: melodiqPlugin,
   tabletop: tabletopPlugin,
+  notes: notesPlugin,
 };
 
-export async function loadPlugins(app: Hono<HonoEnv>, config: ServerConfig): Promise<GalaxyPlugin[]> {
+export async function loadPlugins(
+  app: Hono<HonoEnv>,
+  config: ServerConfig,
+): Promise<GalaxyPlugin[]> {
   const loaded: GalaxyPlugin[] = [];
 
   for (const pluginId of config.activePlugins) {

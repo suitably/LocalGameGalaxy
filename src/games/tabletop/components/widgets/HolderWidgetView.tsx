@@ -1,7 +1,8 @@
 import React from 'react';
-import { Box, Typography, Chip } from '@mui/material';
+import { alpha, Box, Typography, Chip } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { HolderWidget } from '../../logic/types';
+import { transitionOf } from '../../../../lib/motion';
 
 interface HolderWidgetViewProps {
   widget: HolderWidget;
@@ -111,7 +112,7 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({ widget, isHo
         userSelect: 'none',
         pointerEvents: 'none',
         overflow: 'hidden',
-        transition: 'all 0.2s ease',
+        transition: transitionOf(['filter', 'box-shadow', 'background-color', 'opacity']),
       }}
     >
       {isCheckerboard ? (
@@ -134,7 +135,7 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({ widget, isHo
               {col === 0 && (
                 <Typography
                   sx={{
-                    fontSize: '0.65rem',
+                    fontSize: '0.75rem',
                     color: isDark ? '#d7ccc8' : '#4e342e',
                     fontWeight: 700,
                     lineHeight: 1,
@@ -153,7 +154,7 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({ widget, isHo
               <Typography
                 variant="caption"
                 fontWeight={600}
-                sx={{ color: 'rgba(255, 255, 255, 0.85)', letterSpacing: 0.5 }}
+                sx={{ color: 'text.secondary', letterSpacing: 0.5 }}
               >
                 {widget.label || (isHand ? t('games.tabletop.hand') : t('games.tabletop.discard'))}
               </Typography>
@@ -165,8 +166,8 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({ widget, isHo
                   sx={{
                     height: 20,
                     fontSize: '0.75rem',
-                    bgcolor: 'rgba(255, 255, 255, 0.15)',
-                    color: '#fff',
+                    bgcolor: (theme) => alpha(theme.palette.text.primary, 0.15),
+                    color: 'text.primary',
                   }}
                 />
               )}
@@ -183,8 +184,8 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({ widget, isHo
                     width: 38,
                     height: 56,
                     borderRadius: 1,
-                    bgcolor: '#0d47a1',
-                    border: '1.5px solid rgba(255,255,255,0.6)',
+                    bgcolor: 'secondary.main',
+                    border: (theme) => `1.5px solid ${alpha(theme.palette.text.primary, 0.6)}`,
                     boxShadow: 2,
                     transform: `rotate(${(idx - Math.min(childCount, 8) / 2) * 5}deg)`,
                     ml: idx > 0 ? -2.5 : 0,
@@ -195,10 +196,7 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({ widget, isHo
           )}
 
           {showDropPrompt && (
-            <Typography
-              variant="caption"
-              sx={{ color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}
-            >
+            <Typography variant="caption" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>
               {t('games.tabletop.dropHere')}
             </Typography>
           )}

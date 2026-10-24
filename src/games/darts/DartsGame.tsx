@@ -8,8 +8,8 @@ import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { usePageTitle, useHeaderLayout } from '../../context/LayoutContext';
 import { useEffect } from 'react';
 import { useState } from 'react';
-import SettingsIcon from '@mui/icons-material/Settings';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import SettingsIcon from '@mui/icons-material/SettingsRounded';
+import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
 
 export function DartsGame() {
   const { t } = useTranslation();
@@ -35,7 +35,6 @@ export function DartsGame() {
     return () => setMenuItems([]);
   }, [t, setMenuItems]);
 
-
   return (
     <Box
       sx={{
@@ -48,8 +47,6 @@ export function DartsGame() {
         pb: 'env(safe-area-inset-bottom, 0px)',
       }}
     >
-
-
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <Box sx={{ flex: 1, overflowY: 'auto', minHeight: '30vh' }}>
           <DartsScoreboard state={gameState} />

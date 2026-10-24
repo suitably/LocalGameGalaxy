@@ -4,8 +4,10 @@ import {
   resolveSeatColor,
   getPlayerSupplyPieces,
   getPlayerStats,
+  DEFAULT_SEAT_COLORS,
 } from '../seatLogic';
 import type { SeatWidget, TokenWidget, HolderWidget, TabletopWidget } from '../types';
+import { pieceNeutrals } from '../../../../themeTokens';
 
 describe('seatLogic', () => {
   it('extracts and sorts seat widgets by index', () => {
@@ -27,10 +29,10 @@ describe('seatLogic', () => {
     const customSeat = { id: 'Seat 3', type: 'seat', index: 3, color: '#10b981' } as SeatWidget;
     const defaultSeat = { id: 'Player 4', type: 'seat', index: 4 } as SeatWidget;
 
-    expect(resolveSeatColor(whiteSeat)).toBe('#f8fafc');
-    expect(resolveSeatColor(blackSeat)).toBe('#1e293b');
+    expect(resolveSeatColor(whiteSeat)).toBe(pieceNeutrals.white);
+    expect(resolveSeatColor(blackSeat)).toBe(pieceNeutrals.black);
     expect(resolveSeatColor(customSeat)).toBe('#10b981');
-    expect(resolveSeatColor(defaultSeat)).toBe('#ea580c');
+    expect(resolveSeatColor(defaultSeat)).toBe(DEFAULT_SEAT_COLORS[4]);
   });
 
   it('finds player supply pieces for a given seat', () => {
@@ -47,7 +49,11 @@ describe('seatLogic', () => {
       } as HolderWidget,
       road_1: { id: 'road_1', type: 'token', parent: 'Player 1 - Roads' } as TokenWidget,
       road_2: { id: 'road_2', type: 'token', parent: 'Player 1 - Roads' } as TokenWidget,
-      settlement_1: { id: 'settlement_1', type: 'token', parent: 'Player 1 - Settlements' } as TokenWidget,
+      settlement_1: {
+        id: 'settlement_1',
+        type: 'token',
+        parent: 'Player 1 - Settlements',
+      } as TokenWidget,
       road_p2: { id: 'road_p2', type: 'token', parent: 'Player 2 - Roads' } as TokenWidget,
     };
 

@@ -11,7 +11,8 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useDartsGame } from '../useDartsGame';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import { scoreText } from '../../../themeTokens';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEventsRounded';
 
 type DartsGameState = ReturnType<typeof useDartsGame>;
 
@@ -75,7 +76,7 @@ export function DartsScoreboard({ state }: Props) {
     >
       {/* Left Side: Active/Winner Player */}
       <Paper
-        elevation={4}
+        elevation={0}
         sx={{
           flex: { xs: 'none', md: 1 },
           p: { xs: 1.5, md: 3 },
@@ -104,8 +105,9 @@ export function DartsScoreboard({ state }: Props) {
         <Typography
           variant="h1"
           sx={{
+            ...scoreText,
             my: { xs: 0.5, md: 2 },
-            fontWeight: 'bold',
+            fontWeight: 800,
             fontSize: { xs: '3.5rem', sm: '5rem', md: '6rem' },
             lineHeight: 1,
           }}
@@ -121,7 +123,7 @@ export function DartsScoreboard({ state }: Props) {
       {/* Right Side: Other Players */}
       {otherPlayers.length > 0 && (
         <Paper
-          elevation={1}
+          elevation={0}
           sx={{
             flex: 1,
             display: 'flex',
@@ -164,7 +166,7 @@ export function DartsScoreboard({ state }: Props) {
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
-                        <Typography fontWeight="bold">{score}</Typography>
+                        <Typography sx={{ ...scoreText, fontWeight: 700 }}>{score}</Typography>
                       </TableCell>
                       <TableCell align="right">
                         <Typography variant="body2" color="text.secondary" noWrap>

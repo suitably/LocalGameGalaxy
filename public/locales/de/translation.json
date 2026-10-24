@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "Lokale Spiele Galaxy",
+    "title": "Nexumia",
     "welcome": "Willkommen im Hub",
     "select_game": "Wähle ein Spiel, um mit deinen Freunden zu spielen.",
     "install_pwa": "App installieren",
@@ -122,6 +122,7 @@
         "werewolves_label": "Werwölfe:",
         "select_victim": "Opfer auswählen:",
         "skip_to_morning": "Zum Morgen springen",
+        "finished_acting": "{{name}} hat seinen Zug beendet.",
         "night_label": "Nacht {{round}}",
         "day_label": "Tag {{round}}",
         "night_summary_label": "Nacht-Zusammenfassung (Nur für Erzähler)"
@@ -158,6 +159,8 @@
         "add_players_hint": "Füge mindestens 3 Spieler hinzu.",
         "select_roles_hint": "Wähle die Rollen für das Spiel:",
         "num_werewolves": "Anzahl der Werwölfe",
+        "role_info": "Rolleninfo",
+        "toggle_narrator": "Erzählerstimme",
         "too_many_roles": "Zu viele Rollen für die Anzahl der Spieler ausgewählt!",
         "too_many_werewolf_roles": "Zu viele spezielle Werwolf-Rollen für die Gesamtzahl der Werwölfe ausgewählt!",
         "witch": {
@@ -374,7 +377,7 @@
     "garticphone": {
       "title": "Gartic Phone",
       "description": "Das geniale Flüsterpost-Zeichenspiel! Satz schreiben ➔ Zeichnen ➔ Raten ➔ Zeichnen ➔ Animierte Album-Show!",
-      "inviteHelp": "📱 Freunde verbinden: Scanne den QR-Code mit weiteren Smartphones oder teile den Link."
+      "inviteHelp": "Freunde verbinden: Scanne den QR-Code mit weiteren Smartphones oder teile den Link."
     },
     "party": {
       "title": "Party-Modus",
@@ -704,6 +707,12 @@
           "refine": "Feinabgleich"
         },
         "aligned": "{{bars}} Taktmarken · Takt 1 bei {{start}} s",
+        "tuning_semitones_one": "Aufnahme {{shift}} Halbton gegenüber den Noten",
+        "tuning_semitones_other": "Aufnahme {{shift}} Halbtöne gegenüber den Noten",
+        "tuning_cents": "Stimmung {{cents}} Cent",
+        "pinned": "{{count}} von Hand gesetzt",
+        "pin_bar": "Taktstrich hier",
+        "pin_bar_hint": "Beim Abspielen genau auf die Eins eines Takts tippen: der nächste Taktstrich springt dorthin, die Takte daneben ziehen mit.",
         "not_aligned": "Ohne Abgleich gilt nur ein Startpunkt; bei Live-Musik laufen Noten und Aufnahme dann auseinander.",
         "fine_tune": "Feinkorrektur",
         "earlier": "50 ms früher",
@@ -726,7 +735,15 @@
         "backing_others": "Nur Begleitung",
         "backing_none": "Stumm",
         "recording_on": "Aufnahme an",
-        "recording_off": "Aufnahme aus"
+        "recording_off": "Aufnahme aus",
+        "tab_notes": "Notes-Bibliothek",
+        "notes_server_error": "Notes-Bibliothek nicht erreichbar ({{error}}). Ist das Plugin „notes\" auf dem Server aktiv?",
+        "notes_empty": "Noch nichts gespeichert. Öffne Noten und tippe auf „In Notes-Bibliothek speichern\".",
+        "notes_recordings_one": "{{count}} Aufnahme",
+        "notes_recordings_other": "{{count}} Aufnahmen",
+        "notes_delete": "Stück löschen",
+        "notes_delete_confirm": "„{{title}}\" mit Noten, Aufnahmen und Taktmarken vom Server löschen?",
+        "save_to_library": "In Notes-Bibliothek speichern"
       }
     },
     "kniffel": {
@@ -1035,7 +1052,14 @@
       "mode_own_devices": "Jeder am eigenen Gerät",
       "mode_own_devices_hint": "Session öffnen, Mitspieler treten per QR-Code oder Link bei.",
       "dice_games": "Würfelspiele",
-      "custom_game_meta": "{{min}}–{{max}} Spieler"
+      "custom_game_meta": "{{min}}–{{max}} Spieler",
+      "save_to_server": "Auf Server speichern",
+      "local_games_title": "Auf diesem Gerät ({{count}})",
+      "local_games_hint": "Diese Spiele liegen nur in diesem Browser. Auf den Server verschoben, haben sie alle Geräte.",
+      "local_games_hint_offline": "Diese Spiele liegen nur in diesem Browser. Mit einem Companion-Server kannst du sie dort speichern.",
+      "server_saved": "„{{name}}\" ist auf dem Server gespeichert.",
+      "server_saved_copy": "Das Original ist schreibgeschützt – „{{name}}\" wurde als Kopie auf dem Server gespeichert.",
+      "server_save_failed": "Speichern auf dem Server fehlgeschlagen: {{error}}"
     }
   },
   "lobby": {
@@ -1105,12 +1129,10 @@
     "companion_tabletop_desc": "Asset-Caching, TTS/PCIO Deck-Konvertierung und Physics-Sync für Tabletop-Simulationen.",
     "companion_tabletop_planned_title": "Tabletop Companion Plugin (In Planung)",
     "companion_tabletop_planned_desc": "Diese Schnittstelle wird zukünftig große 3D-Assets, eigene Kartendecks und synchronisierte Tabletop-Zustände lokal hosten und streamen.",
-    "compose_generator": "Compose",
-    "compose_generator_title": "Docker Compose Generator",
-    "compose_generator_desc": "Wähle die gewünschten Services aus und erhalte eine fertige docker-compose.yml",
+    "compose_generator_desc": "Wähle Dienste, Ports und Ordner – die docker-compose.yml darunter passt sich sofort an. Der Token oben wird übernommen.",
     "compose_copy": "In die Zwischenablage kopieren",
     "compose_copied": "Kopiert!",
-    "compose_services_title": "Services auswählen",
+    "compose_services_title": "Dienste",
     "companion_tabletop_url_title": "Tabletop Server-Verbindung",
     "companion_tabletop_status_games": "{{count}} Spiele verfügbar",
     "companion_tabletop_status_scanning": "Wird gescannt...",
@@ -1142,6 +1164,11 @@
     "pwa_title": "App-Installation (PWA)",
     "pwa_status_standalone": "Die App läuft aktuell im installierten Vollbild-Modus (PWA).",
     "pwa_status_browser": "Die App läuft im Webbrowser. Installiere die App als PWA, um die Adress- und Suchleiste für ein natives Smartphone-Erlebnis auszublenden.",
+    "notifications_tab": "Benachrichtigungen",
+    "notifications_relay_desc": "Web Push und ntfy.sh Topic-Sync für globale Multiplayer-Benachrichtigungen",
+    "melodiq_microphones": "Mikrofone",
+    "melodiq_profiles": "Spieler-Profile",
+    "melodiq_gameplay": "Gameplay",
     "notifications_title": "Benachrichtigungen",
     "notifications_desc": "Push-Benachrichtigungen informieren dich, wenn du in einem Spiel (z.B. GuessArt) an der Reihe bist – auch wenn die App geschlossen ist.",
     "relay_title": "Push-Relay Server",
@@ -1164,10 +1191,10 @@
     "relay_worker_copy": "Befehle kopieren",
     "relay_worker_copied": "Befehle kopiert!",
     "method_label": "Bevorzugter Benachrichtigungs-Kanal",
-    "method_auto": "🟢 Automatisch (Web-Push mit ntfy Fallback)",
-    "method_ntfy": "🛡️ Google-frei via ntfy",
-    "method_webpush": "🌐 Nur Browser-Push (Chrome / Firefox / Safari)",
-    "method_both": "⚡ Beide Kanäle parallel (Maximale Zuverlässigkeit)",
+    "method_auto": "Automatisch (Web-Push mit ntfy Fallback)",
+    "method_ntfy": "Google-frei via ntfy",
+    "method_webpush": "Nur Browser-Push (Chrome / Firefox / Safari)",
+    "method_both": "Beide Kanäle parallel (Maximale Zuverlässigkeit)",
     "ntfy_title": "Google-freie Benachrichtigungen (ntfy)",
     "ntfy_desc": "Speziell ohne Google Play Services oder FCM.",
     "ntfy_server_label": "ntfy Server URL",
@@ -1187,7 +1214,29 @@
     "ntfy_subscribe_btn": "In ntfy abonnieren",
     "ntfy_badge_title": "100% Google-frei via ntfy",
     "ntfy_badge_desc": "Erhalte Pushs ohne Google Play Services direkt in deiner ntfy-App.",
-    "hostDeviceBadge": "Dein Gerät"
+    "hostDeviceBadge": "Dein Gerät",
+    "compose_service_melodiq": "MelodiQ (Karaoke-Songs)",
+    "compose_service_notes": "Melodiq Notes (Noten & Aufnahmen)",
+    "compose_service_tabletop": "Tabletop (Spiele speichern)",
+    "compose_service_signaling": "WebRTC-Signaling",
+    "compose_service_tunnel": "Cloudflare Tunnel (Internet-Freigabe)",
+    "compose_ai_image": "KI-Image (Stem-Trennung & Whisper, ca. 3 GB)",
+    "compose_connection_title": "Verbindung",
+    "compose_port": "Server-Port",
+    "compose_signaling_port": "Signaling-Port",
+    "compose_folders_title": "Ordner auf deinem Rechner",
+    "compose_path_config": "Konfiguration",
+    "compose_path_music": "Song-Bibliothek",
+    "compose_path_models": "KI-Modelle",
+    "compose_path_notes": "Notes-Bibliothek",
+    "compose_path_tabletop": "Tabletop-Spiele",
+    "compose_download": "Herunterladen",
+    "compose_run_hint": "Speichere die Datei in einem leeren Ordner und starte dort:",
+    "compose_apply": "Dieses Gerät mit localhost verbinden",
+    "compose_applied": "Server-URL und Token übernommen. Starte die Container, dann verbindet sich die App.",
+    "server_setup_nav": "Einrichten",
+    "server_setup_title": "Server einrichten",
+    "server_setup_desc": "Alles an einem Ort: Server-App für Windows, macOS und Linux, Docker Compose mit den gewünschten Spielen, Cloudflare oder Terminal-Einzeiler."
   },
   "server": {
     "title": "Nexumia Server Verbindung",
@@ -1205,7 +1254,7 @@
     "conn_failed": "Verbindung fehlgeschlagen. URL oder Netzwerk prüfen.",
     "setup": {
       "title": "Server automatisch aufsetzen",
-      "subtitle": "Begleit-Server für Melodiq (Song-Bibliothek & Streaming). Partyspiele laufen serverlos.",
+      "subtitle": "Wähle, wie du deinen Companion-Server (Melodiq, Notes, Tabletop) startest – der Token unten gilt für alle Wege.",
       "collapse_show": "Server Setup-Assistent anzeigen",
       "collapse_hide": "Setup-Assistent ausblenden",
       "copy": "Kopieren",
@@ -1228,17 +1277,6 @@
       "step_2_desc": "Doppelklicke auf das Startskript:",
       "step_3_title": "3. Automatisch verbinden",
       "step_3_desc": "Sobald das Serverfenster geöffnet ist, verbindet sich die App automatisch mit localhost:3000.",
-      "docker": {
-        "run_command": "Docker 1-Befehl Schnellstart:",
-        "compose_file_title": "docker-compose.yml Konfiguration",
-        "copy_compose": "YAML kopieren",
-        "download_compose": "docker-compose.yml herunterladen",
-        "desc": "Starte den Server via Docker Container. Enthält dein vorkonfiguriertes Master-Token und Port 3000.",
-        "profiles_title": "Enthaltene Docker-Profile:",
-        "profile_core": "Core Relay & Media (Leichtgewichtig, ~200MB)",
-        "profile_tunnel": "Cloudflare Quick Tunnel (Öffentliches HTTPS ohne Router-Portfreigabe)",
-        "profile_ai": "Melodiq KI Worker (ONNX Gesangstrennung & Whisper KI)"
-      },
       "cloudflare": {
         "title": "Kostenloser 24/7 Cloud-Server",
         "desc": "Hoste deinen eigenen Relay-Server kostenlos auf Cloudflare Workers. Perfekt für Online-Runden mit Freunden ohne laufenden Heim-PC.",
@@ -1257,7 +1295,9 @@
         "connect_btn": "Jetzt mit lokalem Server verbinden",
         "connected_btn": "Erfolgreich verbunden",
         "rescan": "Erneut prüfen"
-      }
+      },
+      "download_binary_apple_silicon": "Apple Silicon (M1–M4)",
+      "download_binary_arm64": "ARM64 (z. B. Raspberry Pi)"
     },
     "admin": {
       "title": "API-Key Verwaltung",
@@ -1324,6 +1364,7 @@
     },
     "usdb": {
       "title": "UltraStar DB Zugangsdaten",
+      "open_site": "UltraStar DB öffnen",
       "desc": "Zugangsdaten für USDB (usdb.animux.de), um Songtexte und Noten automatisch herunterzuladen.",
       "username": "USDB-Benutzername",
       "password": "Passwort",
@@ -1351,14 +1392,15 @@
       "auto_separation_desc": "Trennt Gesang und Instrumental-Spuren nach dem Download automatisch (erfordert KI-Worker).",
       "saved": "Einstellungen erfolgreich aktualisiert.",
       "error_save": "Fehler beim Aktualisieren der Einstellungen."
-    }
+    },
+    "setup_button": "Server einrichten oder anpassen"
   },
   "connection": {
     "default_title": "Geräte verbinden",
     "default_description": "Verbinde dein Telefon, um es als Controller zu nutzen. Scanne den QR-Code unten.",
     "scan_to_join": "QR scannen, um anderem Host beizutreten",
     "scan_tooltip": "Kamera öffnen, um den QR-Code eines anderen Hosts zu scannen und als Client beizutreten",
-    "devices_connected": "✅ {{count}} Gerät(e) verbunden",
+    "devices_connected": "{{count}} Gerät(e) verbunden",
     "waiting_for_connections": "Warte auf Verbindungen...",
     "details_title": "Verbindungsdetails",
     "host_base_url": "Host Basis-URL",
@@ -1380,7 +1422,7 @@
     "status_disabled": "Deaktiviert",
     "toggle_enable": "Server aktivieren",
     "toggle_disable": "Server deaktivieren",
-    "no_trackers_warning": "⚠️ Keine Signaling-Server aktiv. Verbindung zu Mobilgeräten wird nicht möglich sein. Bitte mindestens einen Server aktivieren.",
+    "no_trackers_warning": "Keine Signaling-Server aktiv. Verbindung zu Mobilgeräten wird nicht möglich sein. Bitte mindestens einen Server aktivieren.",
     "placeholder": "wss://tracker.example.com",
     "add_button": "Hinzufügen",
     "remove_tooltip": "Tracker entfernen"
@@ -1393,7 +1435,7 @@
     "placeholder": "stun:stun.example.com:3478",
     "invalid_url": "Gib eine URL wie stun:host:port oder stuns:host:port ein.",
     "duplicate_url": "Dieser STUN-Server ist schon in der Liste.",
-    "no_servers_warning": "⚠️ Kein STUN-Server aktiv. Handys können sich dann nur im selben Netzwerk verbinden.",
+    "no_servers_warning": "Kein STUN-Server aktiv. Handys können sich dann nur im selben Netzwerk verbinden.",
     "hint": "STUN hilft Handys, einen Weg zu diesem Gerät zu finden. Jedes Gerät hat seine eigene Liste; Änderungen gelten für neue Verbindungen."
   },
   "github": {
@@ -1444,6 +1486,7 @@
     "backToCategories": "Zurück zu den Kategorien",
     "manualWordLabel": "Zu zeichnendes Wort",
     "manualSynonymsLabel": "Synonyme / Alternative Schreibweisen (kommagetrennt)",
+    "manualSynonymsExample": "z.B. Rad, Drahtesel",
     "manualWordRequired": "Bitte gib ein Wort ein!",
     "startDrawing": "Zeichnen starten",
     "drawWordPrompt": "Zeichne:",
@@ -1515,7 +1558,7 @@
     "drew": "hat gezeichnet:",
     "steps": "Schritte",
     "newGarticGame": "Neues Spiel",
-    "nextAlbum": "Nächstes Album ➔",
+    "nextAlbum": "Nächstes Album",
     "revealNext": "Weiter aufdecken",
     "playerTurn": "Spieler: {{name}}",
     "waitingForOthers": "Warte auf die anderen Spieler...",
@@ -1582,6 +1625,10 @@
     "addCategoryTitle": "Neue Kategorie",
     "editCategoryTitle": "Kategorie bearbeiten",
     "categoryIdLabel": "Kategorie-ID (intern)",
+    "categoryIdExample": "z.B. cat_fantasy",
+    "categoryIdHint": "Eindeutiger Bezeichner (Kleinbuchstaben & Unterstriche)",
+    "categoryNameExampleDe": "z.B. Fabelwesen",
+    "categoryNameExampleEn": "z.B. Mythical Creatures",
     "categoryNameDe": "Name (Deutsch)",
     "categoryNameEn": "Name (Englisch)",
     "catIdRequired": "Kategorie-ID ist erforderlich.",
@@ -1602,6 +1649,11 @@
     "diffMedium": "Mittel",
     "diffHard": "Schwer",
     "germanWordSettings": "Deutsch",
+    "wordExampleDe": "z.B. Hund",
+    "wordExampleEn": "z.B. Dog",
+    "synonymsExampleDe": "z.B. Welpe, Vierbeiner, Köter",
+    "synonymsExampleEn": "z.B. Puppy, Hound, Canine",
+    "synonymsOptionalHint": "Optionale alternative richtige Antworten",
     "englishWordSettings": "Englisch",
     "canonicalWordDe": "Hauptbegriff (Deutsch)",
     "canonicalWordEn": "Hauptbegriff (Englisch)",
@@ -1642,7 +1694,7 @@
     "hubBannerTitle": "Party-Modus (Mehrspieler-Lobby)",
     "hubBannerSubtitle": "1 Raum für den ganzen Abend: Freunde verbinden & gemeinsam Gartic Phone spielen!",
     "openLobby": "Lobby öffnen ➔",
-    "lobbyTitle": "Galaxy Party-Lobby",
+    "lobbyTitle": "Party-Lobby",
     "room": "Party-Raum",
     "invitePrompt": "Freunde einladen: 1× scannen für den ganzen Abend!",
     "enterName": "Wie heißt du für diesen Spieleabend?",
@@ -1672,7 +1724,7 @@
     "editNameTitle": "Deinen Namen ändern",
     "editNameDesc": "Passe deinen Spielernamen für die Party-Lobby und alle Minispiele an.",
     "nameInputLabel": "Dein Name",
-    "liveGameActive": "🔴 Live Spiel läuft",
+    "liveGameActive": "Live Spiel läuft",
     "rejoinGameDesc": "Das Spiel läuft gerade. Du kannst jederzeit beitreten oder fortsetzen.",
     "endGameForEveryone": "Spiel für alle beenden",
     "endGameBtn": "Beenden",
@@ -1716,22 +1768,22 @@
     "phaseGuessing": "Raten",
     "phaseReveal": "Album-Show",
     "albumHeader": "Album",
-    "hostControlsShow": "🎬 Der Host steuert die Album-Show",
-    "inviteHelp": "📱 Freunde verbinden: Scanne den QR-Code mit weiteren Smartphones oder teile den Link."
+    "hostControlsShow": "Der Host steuert die Album-Show",
+    "inviteHelp": "Freunde verbinden: Scanne den QR-Code mit weiteren Smartphones oder teile den Link."
   },
   "wordle": {
     "mode": {
-      "daily": "Tagesrätsel 📅",
-      "practice": "Üben 🎯"
+      "daily": "Tagesrätsel",
+      "practice": "Üben"
     },
     "not_enough_letters": "Nicht genügend Buchstaben!",
-    "congratulations": "Hervorragend! Wort erraten! 🎉",
+    "congratulations": "Hervorragend! Wort erraten!",
     "game_over": "Leider nicht geschafft!",
     "new_word": "Neues Wort",
     "play_again": "Nochmal spielen",
-    "copied_to_clipboard": "In die Zwischenablage kopiert! 📋",
+    "copied_to_clipboard": "In die Zwischenablage kopiert!",
     "duel": {
-      "title": "Freund herausfordern ⚔️",
+      "title": "Freund herausfordern",
       "desc": "Wähle ein beliebiges 5-Buchstaben-Wort. Dein Freund muss es erraten!",
       "input_label": "Geheimes Wort (5 Buchstaben)",
       "active_banner": "Du spielst ein Duell-Wort eines Freundes!",
@@ -1746,13 +1798,13 @@
       "distribution": "Verteilung der Versuche"
     },
     "modal": {
-      "title_won": "Gewonnen! 🎉",
-      "title_lost": "Schade! 😔",
-      "title_stats": "Statistiken 📊",
+      "title_won": "Gewonnen!",
+      "title_lost": "Schade!",
+      "title_stats": "Statistiken",
       "target_was": "Das gesuchte Wort war:"
     },
     "help": {
-      "title": "Spielregeln 📖",
+      "title": "Spielregeln",
       "p1": "Errate das 5-Buchstaben-Wort in 6 Versuchen.",
       "p2": "Nach jedem Versuch färben sich die Kacheln:",
       "green": "Grün: Buchstabe ist an der richtigen Stelle.",
@@ -1786,20 +1838,20 @@
     "notes_on": "Notizen AN",
     "notes_off": "Notizen",
     "victory": {
-      "title": "Gelöst! 🎉",
+      "title": "Gelöst!",
       "new_record": "Neue persönliche Bestzeit!"
     },
     "game_over": {
-      "title": "Game Over 😔"
+      "title": "Game Over"
     },
     "stats": {
-      "title": "Sudoku Statistiken 📊",
+      "title": "Sudoku Statistiken",
       "played": "Gespielt",
       "completed": "Gelöst",
       "best_times": "Bestzeiten"
     },
     "help": {
-      "title": "Sudoku Regeln 📖",
+      "title": "Sudoku Regeln",
       "p1": "Jede Zeile, Spalte und jeder 3x3-Block muss die Zahlen von 1 bis 9 genau einmal enthalten.",
       "p2": "Nutze den Bleistift-Modus (Notizen), um mögliche Zahlenkandidaten in einer Zelle vorzumerken.",
       "p3": "Bei 3 Fehlern ist die Runde verloren. Du kannst jederzeit Hinweise oder die Rückgängig-Funktion nutzen."

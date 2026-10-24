@@ -8,8 +8,8 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-23
-  method: 'read src/modules/sync/*.ts, src/lib/webrtc/*, src/games/melodiq/{PhoneClientEngine.tsx,hooks/useTVMode.ts,hooks/useTVReceiver.ts,hooks/useMelodiqGlobalEvents.tsx}, public/sw-push.js, server/cloudflare-push-relay/worker.ts, cloudflare/webPushSend.ts, src/lib/push/siteWebPush.ts'
+  at: 2026-10-24
+  method: 'read src/modules/sync/*.ts, src/lib/webrtc/*, src/games/melodiq/{PhoneClientEngine.tsx,hooks/usePhoneClientMessages.ts,hooks/usePhoneMicStreaming.ts,hooks/useTVMode.ts,hooks/useTVReceiver.ts,hooks/useMelodiqGlobalEvents.tsx}, public/sw-push.js, server/cloudflare-push-relay/worker.ts, cloudflare/webPushSend.ts, src/lib/push/siteWebPush.ts'
 sources:
   - 'src/modules/sync/MqttMailboxService.ts'
   - 'src/modules/sync/useMultiChannelSync.ts'
@@ -111,15 +111,15 @@ Details and sequence diagram: [webrtc-signaling.md](webrtc-signaling.md).
 
 ### 4.2 Data channel (host ↔ phone)
 
-| Message                                                              | Direction                                          | Code                                                         |
-| -------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------ |
-| `session_sync`                                                       | host → phone                                       | `hooks/useMelodiqGlobalEvents.tsx` → `PhoneClientEngine.tsx` |
-| `helper_config`                                                      | host → phone (companion URL/token for passthrough) | same                                                         |
-| `game_state_update` `{state}`                                        | host → phone                                       | `PhoneClientEngine.tsx`                                      |
-| `api_request` `{reqId, path, options}`                               | phone → host (phone uses host's library)           | `api/melodiqFetch.ts`                                        |
-| `api_response` / `api_response_chunk` `{reqId, chunk, index, total}` | host → phone                                       | `PhoneClientEngine.tsx`                                      |
-| `pitch` `{frequency, note, volume}`                                  | phone → host (`-1` = silence)                      | `PhoneClientEngine.tsx`                                      |
-| `configure` `{config}`                                               | phone → host                                       | `useMelodiqGlobalEvents.tsx`                                 |
+| Message                                                              | Direction                                          | Code                                                                   |
+| -------------------------------------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------- |
+| `session_sync`                                                       | host → phone                                       | `hooks/useMelodiqGlobalEvents.tsx` → `hooks/usePhoneClientMessages.ts` |
+| `helper_config`                                                      | host → phone (companion URL/token for passthrough) | same                                                                   |
+| `game_state_update` `{state}`                                        | host → phone                                       | `hooks/usePhoneClientMessages.ts`                                      |
+| `api_request` `{reqId, path, options}`                               | phone → host (phone uses host's library)           | `api/melodiqFetch.ts`                                                  |
+| `api_response` / `api_response_chunk` `{reqId, chunk, index, total}` | host → phone                                       | `hooks/usePhoneClientMessages.ts`                                      |
+| `pitch` `{frequency, note, volume}`                                  | phone → host (`-1` = silence)                      | `hooks/usePhoneMicStreaming.ts`                                        |
+| `configure` `{config}`                                               | phone → host                                       | `useMelodiqGlobalEvents.tsx`                                           |
 
 ### 4.3 TV control (`melodiq_tv_control` / Presentation API)
 

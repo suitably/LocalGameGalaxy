@@ -4,6 +4,7 @@
 
 import React from 'react';
 import {
+  alpha,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -62,10 +63,10 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ textAlign: 'center', fontWeight: 800, pb: 1 }}>
         {gameStatus === 'won'
-          ? t('wordle.modal.title_won', 'Gewonnen! 🎉')
+          ? t('wordle.modal.title_won', 'Gewonnen!')
           : gameStatus === 'lost'
-            ? t('wordle.modal.title_lost', 'Schade! 😔')
-            : t('wordle.modal.title_stats', 'Statistiken 📊')}
+            ? t('wordle.modal.title_lost', 'Schade!')
+            : t('wordle.modal.title_stats', 'Statistiken')}
       </DialogTitle>
 
       <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
@@ -75,7 +76,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
               textAlign: 'center',
               my: 1.5,
               p: 1.5,
-              bgcolor: 'rgba(255, 255, 255, 0.05)',
+              bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
               borderRadius: 2,
             }}
           >
@@ -84,7 +85,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
             </Typography>
             <Typography
               variant="h5"
-              sx={{ fontWeight: 800, color: '#90caf9', letterSpacing: 2, mt: 0.5 }}
+              sx={{ fontWeight: 800, color: 'secondary.main', letterSpacing: 2, mt: 0.5 }}
             >
               {targetWord}
             </Typography>
@@ -94,7 +95,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
         {/* Top Numbers Grid */}
         <Stack direction="row" spacing={1} justifyContent="space-between" sx={{ my: 2 }}>
           <Box sx={{ textAlign: 'center', flex: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
               {stats.played}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -102,7 +103,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center', flex: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
               {winRate}%
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -110,7 +111,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center', flex: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
               {stats.currentStreak}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -118,7 +119,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center', flex: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
               {stats.maxStreak}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -149,11 +150,11 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
                     value={Math.max(8, percentage)}
                     sx={{
                       height: 22,
-                      borderRadius: 1,
-                      bgcolor: 'rgba(255, 255, 255, 0.08)',
+                      borderRadius: 2,
+                      bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
                       '& .MuiLinearProgress-bar': {
-                        bgcolor: isCurrentWinningRow ? '#2e7d32' : '#374151',
-                        borderRadius: 1,
+                        bgcolor: isCurrentWinningRow ? 'success.main' : 'action.disabledBackground',
+                        borderRadius: 2,
                       },
                     }}
                   />
@@ -164,7 +165,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
                       right: 8,
                       top: 2,
                       fontWeight: 800,
-                      color: '#ffffff',
+                      color: 'text.primary',
                     }}
                   >
                     {count}
@@ -177,7 +178,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
 
         {copied && (
           <Alert severity="success" sx={{ mt: 2, py: 0.5 }}>
-            {t('wordle.copied_to_clipboard', 'In die Zwischenablage kopiert! 📋')}
+            {t('wordle.copied_to_clipboard', 'In die Zwischenablage kopiert!')}
           </Alert>
         )}
       </DialogContent>

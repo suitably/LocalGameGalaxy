@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  alpha,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -9,8 +10,8 @@ import {
   Box,
   Divider,
 } from '@mui/material';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import ReplayIcon from '@mui/icons-material/Replay';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEventsRounded';
+import ReplayIcon from '@mui/icons-material/ReplayRounded';
 import { useTranslation } from 'react-i18next';
 import { calculateBoardScores } from '../logic/knisterScoring';
 import type { KnisterPlayer } from '../logic/types';
@@ -40,7 +41,8 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
     .sort((a, b) => b.scores.totalScore - a.scores.totalScore);
 
   const winner = rankedPlayers[0];
-  const isNewHighScore = winner && winner.scores.totalScore >= highScore && winner.scores.totalScore > 0;
+  const isNewHighScore =
+    winner && winner.scores.totalScore >= highScore && winner.scores.totalScore > 0;
 
   return (
     <Dialog
@@ -50,9 +52,10 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
       fullWidth
       PaperProps={{
         sx: {
-          bgcolor: 'rgba(22, 22, 35, 0.98)',
-          borderRadius: 4,
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          bgcolor: 'background.paper',
+          borderRadius: 5,
+          border: 1,
+          borderColor: 'divider',
           boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
           textAlign: 'center',
           p: 2,
@@ -60,13 +63,13 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
       }}
     >
       <DialogTitle>
-        <EmojiEventsIcon sx={{ fontSize: 56, color: '#ffb74d', mb: 1 }} />
+        <EmojiEventsIcon sx={{ fontSize: 56, color: 'warning.main', mb: 1 }} />
         <Typography variant="h5" sx={{ fontWeight: 800 }}>
           {t('games.knister.game_over_title', 'Spiel beendet!')}
         </Typography>
         {isNewHighScore && (
-          <Typography variant="subtitle2" sx={{ color: '#81c784', fontWeight: 700, mt: 0.5 }}>
-            🎉 {t('games.knister.new_high_score', 'Neuer Highscore!')} 🎉
+          <Typography variant="subtitle2" sx={{ color: 'success.main', fontWeight: 700, mt: 0.5 }}>
+            {t('games.knister.new_high_score', 'Neuer Highscore!')}
           </Typography>
         )}
       </DialogTitle>
@@ -81,9 +84,13 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 p: 1.5,
-                bgcolor: idx === 0 ? 'rgba(255, 183, 77, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-                borderRadius: 2.5,
-                border: idx === 0 ? '1px solid rgba(255, 183, 77, 0.4)' : '1px solid rgba(255, 255, 255, 0.06)',
+                bgcolor: (theme) =>
+                  idx === 0
+                    ? alpha(theme.palette.primary.main, 0.12)
+                    : theme.palette.background.default,
+                borderRadius: 3,
+                border: 1,
+                borderColor: idx === 0 ? 'primary.main' : 'divider',
               }}
             >
               <Box sx={{ textAlign: 'left' }}>
@@ -97,7 +104,10 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
                 </Typography>
               </Box>
 
-              <Typography variant="h5" sx={{ fontWeight: 900, color: idx === 0 ? 'warning.light' : 'text.primary' }}>
+              <Typography
+                variant="h5"
+                sx={{ fontWeight: 800, color: idx === 0 ? 'warning.light' : 'text.primary' }}
+              >
                 {scores.totalScore}P
               </Typography>
             </Box>
@@ -107,7 +117,8 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
         <Divider sx={{ my: 2 }} />
 
         <Typography variant="body2" color="text.secondary">
-          {t('games.knister.high_score_label', 'Aktueller Highscore')}: <strong>{highScore} Punkte</strong>
+          {t('games.knister.high_score_label', 'Aktueller Highscore')}:{' '}
+          <strong>{highScore} Punkte</strong>
         </Typography>
       </DialogContent>
 
@@ -119,7 +130,7 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
           fullWidth
           startIcon={<ReplayIcon />}
           onClick={onNewGame}
-          sx={{ borderRadius: 50, fontWeight: 700 }}
+          sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {t('games.knister.play_again', 'Nochmal spielen')}
         </Button>

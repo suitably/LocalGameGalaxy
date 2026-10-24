@@ -4,7 +4,10 @@
 
 import React from 'react';
 import { Box } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type { EvaluatedLetter, LetterStatus } from '../logic/types';
+import { statusLabelKey, tileStyle } from './tileStyles';
+import { transitionOf } from '../../../lib/motion';
 
 interface WordleBoardProps {
   guesses: string[];
@@ -13,20 +16,13 @@ interface WordleBoardProps {
   isShaking?: boolean;
 }
 
-const statusColors: Record<LetterStatus, { bg: string; border: string; text: string }> = {
-  correct: { bg: '#2e7d32', border: '#2e7d32', text: '#ffffff' }, // Green
-  present: { bg: '#f9a825', border: '#f9a825', text: '#ffffff' }, // Yellow
-  absent: { bg: '#374151', border: '#374151', text: '#9ca3af' },  // Gray
-  tbd: { bg: 'transparent', border: '#4b5563', text: '#ffffff' },
-  empty: { bg: 'transparent', border: 'rgba(255, 255, 255, 0.12)', text: '#ffffff' },
-};
-
 export const WordleBoard: React.FC<WordleBoardProps> = ({
   guesses,
   evaluations,
   currentInput,
   isShaking = false,
 }) => {
+  const { t } = useTranslation();
   const rows = Array.from({ length: 6 });
 
   return (
@@ -73,12 +69,14 @@ export const WordleBoard: React.FC<WordleBoardProps> = ({
             }}
           >
             {rowChars.map((tile, colIndex) => {
-              const style = statusColors[tile.status];
+              const style = tileStyle(tile.status);
               const isFilled = Boolean(tile.char);
 
               return (
                 <Box
                   key={colIndex}
+                  role="img"
+                  aria-label={`${tile.char || '-'}: ${t(statusLabelKey(tile.status))}`}
                   sx={{
                     width: { xs: 52, sm: 60, md: 64 },
                     height: { xs: 52, sm: 60, md: 64 },
@@ -89,13 +87,18 @@ export const WordleBoard: React.FC<WordleBoardProps> = ({
                     fontWeight: 800,
                     textTransform: 'uppercase',
                     userSelect: 'none',
-                    borderRadius: 1.5,
-                    border: `2px solid ${isFilled && tile.status === 'tbd' ? '#90caf9' : style.border}`,
-                    bgcolor: style.bg,
-                    color: style.text,
+                    borderRadius: 2,
+                    border: '2px solid',
+                    ...style,
+                    borderColor:
+                      isFilled && tile.status === 'tbd' ? 'text.primary' : style.borderColor,
                     transform: isFilled && isCurrentRow ? 'scale(1.04)' : 'none',
-                    transition: 'all 0.15s ease-in-out',
-                    boxShadow: tile.status === 'correct' ? '0 0 12px rgba(46, 125, 50, 0.4)' : 'none',
+                    transition: transitionOf([
+                      'background-color',
+                      'border-color',
+                      'color',
+                      'transform',
+                    ]),
                   }}
                 >
                   {tile.char}

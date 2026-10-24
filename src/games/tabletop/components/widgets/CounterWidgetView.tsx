@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, IconButton } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
+import AddIcon from '@mui/icons-material/AddRounded';
+import RemoveIcon from '@mui/icons-material/RemoveRounded';
 import type { CounterWidget } from '../../logic/types';
 
 interface CounterWidgetViewProps {
@@ -44,7 +44,7 @@ export const CounterWidgetView: React.FC<CounterWidgetViewProps> = ({
           {widget.value}
         </Typography>
         {widget.label && (
-          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
             {widget.label}
           </Typography>
         )}

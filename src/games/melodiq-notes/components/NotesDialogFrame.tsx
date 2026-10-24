@@ -10,7 +10,7 @@ import {
   type SxProps,
   type Theme,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 
 interface NotesDialogFrameProps {
   open: boolean;
@@ -35,12 +35,7 @@ export const NotesDialogFrame: React.FC<NotesDialogFrameProps> = ({
     maxWidth={maxWidth}
     fullWidth
     PaperProps={{
-      sx: {
-        bgcolor: '#1a1a2e',
-        backgroundImage: 'none',
-        borderRadius: 3,
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-      },
+      sx: {},
     }}
   >
     <DialogTitle

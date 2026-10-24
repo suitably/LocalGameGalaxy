@@ -12,9 +12,9 @@ import {
   Alert,
   Stack,
 } from '@mui/material';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownloadRounded';
+import UploadFileIcon from '@mui/icons-material/UploadFileRounded';
+import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
 import { useTranslation } from 'react-i18next';
 import { useWorkshopImport } from '../../hooks/useWorkshopImport';
 import { isValidWorkshopInput } from '../../logic/steamWorkshopApi';

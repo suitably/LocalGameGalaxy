@@ -1,6 +1,6 @@
 import React from 'react';
-import { Box, Paper, Typography, Button, Chip } from '@mui/material';
-import CasinoIcon from '@mui/icons-material/Casino';
+import { alpha, Box, Paper, Typography, Button, Chip } from '@mui/material';
+import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import { useTranslation } from 'react-i18next';
 import { Die3D } from '../../../components/games/Die3D';
 import { useDiceRollAnimation } from '../../../components/games/useDiceRollAnimation';
@@ -41,13 +41,12 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
 
   return (
     <Paper
-      elevation={3}
+      elevation={0}
       sx={{
         p: { xs: 1.5, sm: 2 },
         borderRadius: 3,
-        bgcolor: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        backdropFilter: 'blur(8px)',
+        bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
+        border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
         mb: 2,
         width: '100%',
         maxWidth: 520,
@@ -72,7 +71,7 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
               display: 'flex',
               gap: 1,
               p: 0.5,
-              bgcolor: 'rgba(255, 255, 255, 0.08)',
+              bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
               borderRadius: 2,
             }}
           >
@@ -89,7 +88,7 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
               variant="caption"
               color="text.secondary"
               display="block"
-              sx={{ fontWeight: 700, fontSize: '0.65rem' }}
+              sx={{ fontWeight: 700, fontSize: '0.75rem' }}
             >
               {t('games.knister.sum', 'SUMME')}
             </Typography>
@@ -153,7 +152,7 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
             maxWidth: '100%',
             mt: 1.5,
             pt: 1,
-            borderTop: '1px solid rgba(255,255,255,0.06)',
+            borderTop: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
           }}
         >
           <Typography

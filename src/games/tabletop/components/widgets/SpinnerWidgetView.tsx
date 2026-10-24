@@ -2,8 +2,9 @@
  * Wheel of options; tap to spin [ID: COMP-TABLETOP-SPINNER-VIEW]
  */
 import React from 'react';
-import { Box } from '@mui/material';
+import { alpha, Box } from '@mui/material';
 import type { SpinnerWidget } from '../../logic/types';
+import { PIECE_ORDER, piecePalette } from '../../../../themeTokens';
 
 interface SpinnerWidgetViewProps {
   widget: SpinnerWidget;
@@ -12,16 +13,7 @@ interface SpinnerWidgetViewProps {
   onSpin: () => void;
 }
 
-const SLICE_COLORS = [
-  '#ef5350',
-  '#42a5f5',
-  '#66bb6a',
-  '#ffca28',
-  '#ab47bc',
-  '#26a69a',
-  '#ffa726',
-  '#8d6e63',
-];
+const SLICE_COLORS = PIECE_ORDER.map((c) => piecePalette[c]);
 
 export const SpinnerWidgetView: React.FC<SpinnerWidgetViewProps> = ({
   widget,
@@ -61,7 +53,7 @@ export const SpinnerWidgetView: React.FC<SpinnerWidgetViewProps> = ({
           height: '100%',
           borderRadius: '50%',
           background: `conic-gradient(${gradient})`,
-          border: '3px solid rgba(255,255,255,0.8)',
+          border: (theme) => `3px solid ${alpha(theme.palette.text.primary, 0.8)}`,
           boxShadow: 4,
           transform: `rotate(${widget.angle}deg)`,
           transition: 'transform 2.5s cubic-bezier(0.17, 0.67, 0.21, 1)',
@@ -81,7 +73,7 @@ export const SpinnerWidgetView: React.FC<SpinnerWidgetViewProps> = ({
               pt: 1,
               fontSize: Math.max(10, size / 14),
               fontWeight: 700,
-              color: '#fff',
+              color: 'text.primary',
               textShadow: '0 1px 2px rgba(0,0,0,0.8)',
               whiteSpace: 'nowrap',
             }}

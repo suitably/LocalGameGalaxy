@@ -8,8 +8,8 @@ generated:
   at: 2026-10-21T23:45:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-21
-  method: 'Read src/games/tabletop/logic/{tabletopReducer,widgetEdits,editHistory,stateDelta,syncProtocol,tabletopStorage}.ts, logic/reducers/*, hooks/{useTabletopSync,useTabletopAutosave}.ts and their tests.'
+  at: 2026-10-24
+  method: 'Read src/games/tabletop/logic/{tabletopReducer,widgetEdits,editHistory,stateDelta,syncProtocol,tabletopStorage,tabletopServerApi,serverGameSnapshot}.ts, hooks/useGameManager.ts, logic/reducers/*, hooks/{useTabletopSync,useTabletopAutosave}.ts and their tests.'
 sources:
   - 'src/games/tabletop/logic/tabletopReducer.ts'
   - 'src/games/tabletop/logic/reducers/'
@@ -71,6 +71,8 @@ Cards in a hand holder with an `ownerSeat` are private (`logic/handPrivacy.ts`).
 ## 6. Storage
 
 `galaxy_tabletop_db` v3 (see [persistence](persistence.md)): `custom_games` for imported/edited definitions, `sessions` for running games. `useTabletopAutosave` saves 1 s after a change on the host or in local play; `TabletopGame` resumes a saved session first, `RestartGameButton` deletes it.
+
+With a companion server, the game manager (`hooks/useGameManager.ts`) lists the server's games and, below, the games only on this device. "Save to server" moves a device game into the server library (`logic/tabletopServerApi.ts` → `POST /api/tabletop/games`); editing a saved server game overwrites it (`PUT`), editing a read-only one saves a copy. Before upload `logic/serverGameSnapshot.ts` turns `blob:` and `/tabletop/media?…&token=` URLs into data URLs and unwraps `/tabletop/proxy-image`, so a stored `game.json` holds no token. Games in this app's own format load from the server as they are, keyed by the server id (`parseServerGame`); other formats go through the importer.
 
 ## 7. Import
 

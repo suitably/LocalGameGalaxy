@@ -1,14 +1,5 @@
 import React from 'react';
-import {
-  Box,
-  Button,
-  Chip,
-  IconButton,
-  Paper,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Chip, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
 import TransferWithinAStationRoundedIcon from '@mui/icons-material/TransferWithinAStationRounded';
 import PsychologyRoundedIcon from '@mui/icons-material/PsychologyRounded';
@@ -63,7 +54,7 @@ export const WaitingForGuesserView: React.FC<WaitingForGuesserViewProps> = ({
           flexGrow: 1,
           minHeight: 0,
           position: 'relative',
-          borderRadius: 2.5,
+          borderRadius: 3,
           overflow: 'hidden',
           border: '1px solid',
           borderColor: 'divider',
@@ -92,7 +83,13 @@ export const WaitingForGuesserView: React.FC<WaitingForGuesserViewProps> = ({
           </Typography>
           <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
             {round.guesses.map((g, idx) => (
-              <Chip key={idx} label={g} size="small" variant="outlined" sx={{ textDecoration: 'line-through' }} />
+              <Chip
+                key={idx}
+                label={g}
+                size="small"
+                variant="outlined"
+                sx={{ textDecoration: 'line-through' }}
+              />
             ))}
           </Stack>
         </Paper>
@@ -132,7 +129,12 @@ export const WaitingForGuesserView: React.FC<WaitingForGuesserViewProps> = ({
                   color="primary"
                   onClick={onOpenShareLinks}
                   aria-label={t('guessart.shareLinksTitle', 'Mitspieler-Links')}
-                  sx={{ bgcolor: 'action.hover', border: '1px solid', borderColor: 'divider', p: 0.75 }}
+                  sx={{
+                    bgcolor: 'action.hover',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    p: 0.75,
+                  }}
                 >
                   <ShareRoundedIcon fontSize="small" />
                 </IconButton>

@@ -10,8 +10,9 @@ import {
   IconButton,
   alpha,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import { useTranslation } from 'react-i18next';
+import { transitionOf } from '../../../lib/motion';
 
 interface TargetCell {
   row: number;
@@ -50,10 +51,6 @@ export const KnisterNumberPickerModal: React.FC<KnisterNumberPickerModalProps> =
       fullWidth
       PaperProps={{
         sx: {
-          bgcolor: 'rgba(22, 22, 35, 0.96)',
-          backdropFilter: 'blur(16px)',
-          borderRadius: 4,
-          border: '1px solid rgba(255, 255, 255, 0.12)',
           p: 1.5,
           userSelect: 'none',
           WebkitTouchCallout: 'none',
@@ -112,20 +109,28 @@ export const KnisterNumberPickerModal: React.FC<KnisterNumberPickerModalProps> =
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontWeight: 900,
+                  fontWeight: 800,
                   fontSize: { xs: '1.4rem', sm: '1.6rem' },
-                  bgcolor: isSeven ? alpha('#ffa726', 0.2) : 'rgba(255, 255, 255, 0.08)',
-                  color: isSeven ? '#ffb74d' : '#fff',
+                  bgcolor: (theme) =>
+                    isSeven
+                      ? alpha(theme.palette.warning.main, 0.2)
+                      : theme.palette.background.default,
+                  color: isSeven ? 'warning.main' : 'text.primary',
                   border: '1.5px solid',
-                  borderColor: isSeven ? 'warning.main' : 'rgba(255, 255, 255, 0.15)',
+                  borderColor: isSeven ? 'warning.main' : 'divider',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
-                  transition: 'all 0.15s ease',
+                  transition: transitionOf([
+                    'background-color',
+                    'color',
+                    'border-color',
+                    'transform',
+                    'box-shadow',
+                  ]),
                   '&:hover': {
                     bgcolor: 'warning.main',
                     color: 'warning.contrastText',
                     transform: 'scale(1.05)',
                     borderColor: 'warning.light',
-                    boxShadow: '0 0 16px rgba(255, 167, 38, 0.5)',
                   },
                   '&:active': {
                     transform: 'scale(0.95)',
@@ -148,13 +153,19 @@ export const KnisterNumberPickerModal: React.FC<KnisterNumberPickerModalProps> =
               justifyContent: 'center',
               fontWeight: 700,
               fontSize: { xs: '0.9rem', sm: '1rem' },
-              bgcolor: 'rgba(255, 255, 255, 0.04)',
+              bgcolor: (theme) => alpha(theme.palette.text.primary, 0.04),
               color: 'text.secondary',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              transition: 'all 0.15s ease',
+              border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
+              transition: transitionOf([
+                'background-color',
+                'color',
+                'border-color',
+                'transform',
+                'box-shadow',
+              ]),
               '&:hover': {
-                bgcolor: 'rgba(255, 255, 255, 0.1)',
-                color: '#fff',
+                bgcolor: (theme) => alpha(theme.palette.text.primary, 0.1),
+                color: 'text.primary',
               },
               '&:active': {
                 transform: 'scale(0.95)',

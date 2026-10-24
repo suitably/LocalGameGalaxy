@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
+import { transitionOf } from '../../../lib/motion';
 
 interface HintWordSlotsProps {
   slotCount: number;
@@ -78,7 +79,7 @@ export const HintWordSlots: React.FC<HintWordSlotsProps> = ({
             sx={{
               width: 38,
               height: 48,
-              borderRadius: 1.5,
+              borderRadius: 2,
               border: '2px solid',
               borderColor: guessChars[index] ? 'primary.main' : 'divider',
               bgcolor: guessChars[index] ? 'primary.main' : 'background.paper',
@@ -89,7 +90,13 @@ export const HintWordSlots: React.FC<HintWordSlotsProps> = ({
               fontSize: 22,
               fontWeight: 700,
               userSelect: 'none',
-              transition: 'all 0.15s ease-in-out',
+              transition: transitionOf([
+                'background-color',
+                'border-color',
+                'color',
+                'box-shadow',
+                'transform',
+              ]),
               boxShadow: guessChars[index] ? 2 : 0,
             }}
           >

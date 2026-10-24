@@ -1,6 +1,6 @@
 import React from 'react';
-import { Box, Tooltip, IconButton } from '@mui/material';
-import HistoryIcon from '@mui/icons-material/History';
+import { alpha, Box, Tooltip, IconButton } from '@mui/material';
+import HistoryIcon from '@mui/icons-material/HistoryRounded';
 import PersonAddAlt1RoundedIcon from '@mui/icons-material/PersonAddAlt1Rounded';
 import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
 import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
@@ -20,7 +20,7 @@ export const HeaderActionBar: React.FC<{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'flex-end',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+        borderBottom: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.12)}`,
         pb: 1.5,
         mb: 1.5,
       }}
@@ -32,7 +32,10 @@ export const HeaderActionBar: React.FC<{
           </IconButton>
         </Tooltip>
         <Tooltip title={t('wordle.duel.btn_tooltip', 'Freund herausfordern')}>
-          <IconButton onClick={onDuel} aria-label={t('wordle.duel.btn_tooltip', 'Freund herausfordern')}>
+          <IconButton
+            onClick={onDuel}
+            aria-label={t('wordle.duel.btn_tooltip', 'Freund herausfordern')}
+          >
             <PersonAddAlt1RoundedIcon />
           </IconButton>
         </Tooltip>

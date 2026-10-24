@@ -1,6 +1,7 @@
 import type { ScoreSong } from '../../../../modules/music-score';
 import { lowerBound, type StageNote } from '../logic/charts';
 import type { StagePlayer } from '../engine/types';
+import { darkTokens as t, fontFamilies } from '../../../../themeTokens';
 
 export type Ctx = CanvasRenderingContext2D;
 
@@ -18,10 +19,24 @@ export interface StageTexts {
 }
 
 export const HEADER_H = 28;
-export const MISS_COLOR = '#4a4566';
-export const FONT_BODY = 'Figtree, system-ui, sans-serif';
-export const FONT_MONO = '"JetBrains Mono", ui-monospace, monospace';
-export const FONT_DISPLAY = 'Syne, system-ui, sans-serif';
+/** Stage colours, derived from the design tokens. The stage is always dark (DESIGN.md §9). */
+export const STAGE = {
+  bgTop: t.bg.surface,
+  bgBottom: t.bg.canvas,
+  panel: t.bg.raised,
+  ink: t.text.primary,
+  muted: t.text.secondary,
+  dim: t.border.strong,
+  perfect: t.primary.main,
+  good: t.accent.main,
+  hit: t.success,
+  miss: t.error,
+} as const;
+
+export const MISS_COLOR = STAGE.dim;
+export const FONT_BODY = fontFamilies.text;
+export const FONT_MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+export const FONT_DISPLAY = fontFamilies.display;
 
 export function roundRect(g: Ctx, x: number, y: number, w: number, h: number, r: number) {
   r = Math.max(0, Math.min(r, w / 2, h / 2));
@@ -89,8 +104,8 @@ export function forVisibleNotes(
 
 export function drawPanelBackground(g: Ctx, color: string, w: number, h: number, pulse: number) {
   const grd = g.createLinearGradient(0, 0, 0, h);
-  grd.addColorStop(0, '#120f24');
-  grd.addColorStop(1, '#0a0914');
+  grd.addColorStop(0, STAGE.bgTop);
+  grd.addColorStop(1, STAGE.bgBottom);
   g.fillStyle = grd;
   g.fillRect(0, 0, w, h);
   const rg = g.createRadialGradient(w / 2, h, 10, w / 2, h, Math.max(w, h) * 0.9);
@@ -101,7 +116,7 @@ export function drawPanelBackground(g: Ctx, color: string, w: number, h: number,
 }
 
 export function barLabel(g: Ctx, text: string, x: number, y: number) {
-  g.fillStyle = 'rgba(255,255,255,0.28)';
+  g.fillStyle = withAlpha(STAGE.ink, 0.28);
   g.font = `600 10px ${FONT_BODY}`;
   g.fillText(text, x, y);
 }

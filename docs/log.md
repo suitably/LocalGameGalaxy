@@ -5,6 +5,109 @@ Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)
 ## 2026-10-23 — Terser agent instructions (claude-code)
 
 - Outside `docs/`: `AGENTS.md` wording tightened (filler removed; rules, conditions and reasons unchanged); `CLAUDE.md` asks for short answers. No code changed.
+## 2026-10-24 — Signaling image published (claude-code)
+
+- `docs/tech/deployment.md` §1: the signaling image is now built by `docker-publish.yml` (was **Unverified**; compose files pointed at an image nobody published).
+- **Code changed:** `.github/workflows/docker-publish.yml` job `build-and-push-signaling`, trigger path `signaling/**`.
+
+## 2026-10-24 — Server setup in one place (claude-code)
+
+- `docs/tech/deployment.md` §4b: the setup wizard is the single place for server setup; its Docker tab is the compose generator; outdated compose files removed.
+- **Code changed:** compose generator moved to `src/components/connection/setup/compose/`, `SetupDockerTab.tsx` rebuilt on it, Settings → Server shows `ServerSetupCard` instead of a second generator; `DockerCommandCard.tsx`, `DockerComposeViewer.tsx`, `server/docker-compose.{ai,tunnel}.yml` deleted.
+
+## 2026-10-24 — Save to server in Tabletop and Melodiq Notes (claude-code)
+
+- `docs/tech/tabletop-engine.md` §6: game manager with device games, save-to-server, snapshot without tokens, native games load by server id.
+- `docs/tech/architecture.md` §3.6: Melodiq Notes client for the `notes` plugin.
+- `docs/tech/game-catalog.md`: tabletop now uses `lib/companion`.
+- **Code changed:** `src/lib/companion/{companionHttp,notesLibraryApi}.ts`, tabletop `logic/{tabletopServerApi,serverGameSnapshot}.ts`, `hooks/useGameManager.ts`, manager components; Melodiq Notes `stage/logic/notesLibrarySync.ts`, `useStageSong.ts`, `NotesLibraryList.tsx`.
+
+## 2026-10-24 — Companion server: Notes plugin, saved tabletop games, configurable compose, ARM64 binaries (claude-code)
+
+- `docs/tech/architecture.md` §3.6: `notes` plugin, tabletop save routes, `NOTES_DIR`, auto-discovered data folders.
+- `docs/tech/server-security.md`: auth and deletion rules for the new routes.
+- `docs/tech/deployment.md`: Node 24 image, one volume per plugin, configurable compose generator, ARM64 release job.
+- `docs/open-questions.md`: Q10 (Node version drift) resolved and removed.
+- **Code changed:** `server/src/plugins/notes/`, `server/src/plugins/tabletop/routes/library.ts`, `server/src/utils/{scoreFiles,fileStream}.ts`, `server/Dockerfile`, `server/docker-compose*.yml`, compose generator in `src/features/settings/components/server/`, `STORAGE_KEYS.COMPOSE_GENERATOR`, `.github/workflows/release.yml`, `server/release-scripts/quick-install.sh`.
+
+## 2026-10-24 — Score alignment for guitar and transposed recordings (claude-code)
+
+- `docs/tech/architecture.md` §3.2: `music-score` alignment now estimates the recording's tuning, tries semitone shifts, and fits tones to pitch-class onsets.
+- **Code changed:** `src/modules/music-score/{alignment,noteFit,onsets}.ts`, new `tuning.ts` and `chromaOnsets.ts` (+ synthetic band tests), Melodiq Notes recording bar shows the detected shift; new dev script `scripts/align-eval.mjs`.
+- `docs/tech/architecture.md` §3.2: `music-score` lists `pinBar` / `nearestBar`.
+- **Code changed:** new `src/modules/music-score/anchors.ts` (+ test); Melodiq Notes recording bar gets "Bar line here" (`useStageSong.pinBarNow`).
+
+## 2026-10-24 — Motion tokens and reduced motion (claude-code)
+
+- `docs/tech/architecture.md`: hooks list gains `usePrefersReducedMotion`.
+- **Code changed:** `motion` tokens in `src/themeTokens.ts`, theme transitions, `src/lib/motion.ts`, global reduced-motion CSS (#507).
+
+## 2026-10-24 — Emoji removed from UI icons (claude-code)
+
+- `DESIGN.md` §7: note on Werewolf role icons (`RoleIcon`, Rounded MUI icons by role id).
+- **Code changed:** decorative emoji removed from locale strings and components, Tabletop and Cards tiles use `AreaSymbol` (#504).
+
+## 2026-10-24 — Game registry colour fields removed (claude-code)
+
+- `docs/tech/data-models.md`, `docs/tech/architecture.md`: `GameDefinition` no longer has `colorStart`/`colorEnd`/`hoverColor`.
+- **Code changed:** `src/lib/gameRegistry.tsx` and `scripts/scaffold-game.mjs` (#498).
+
+## 2026-10-24 — Melodiq gameplay files split (claude-code)
+
+- `docs/tech/sync-protocol.md`: phone-side message handling now lives in `hooks/usePhoneClientMessages.ts` and `hooks/usePhoneMicStreaming.ts` (was `PhoneClientEngine.tsx`).
+- `docs/tech/melodiq-architecture.md`: names the new `lyrics/`, `pitch/` and `scoreboard/` folders.
+- **Code changed:** Melodiq ScoreBoard, LyricsDisplay, PitchVisualizer and PhoneClientEngine decomposed and re-coloured (#496).
+
+## 2026-10-24 — Qwixx state hook (claude-code)
+
+- `docs/tech/game-catalog.md`: the local Qwixx storage constants now live in `useQwixxState.ts` (was `QwixxGame.tsx`).
+- **Code changed:** Qwixx decomposed and re-coloured (#491).
+
+## 2026-10-23 — DESIGN.md §2 names the colour gate (claude-code)
+
+- `DESIGN.md` §2: hard-coded colours are no longer "review only"; points to the `check:architecture` ratchet. No code changed.
+
+## 2026-10-23 — Remove unused opensheetmusicdisplay (claude-code)
+
+- `docs/references/external-sources.md`: dropped the OpenSheetMusicDisplay row (no longer imported since the Melodiq Notes stage rewrite).
+- **Code changed:** `opensheetmusicdisplay` removed from `package.json` / `package-lock.json`.
+
+## 2026-10-23 — Hard-coded colour guard (claude-code)
+
+- `docs/tech/coding-conventions.md` §2 and §4, `AGENTS.md` §4, `scripts/README.md`: hard-coded hex and non-black `rgb()`/`rgba()` in `src/**/*.tsx` are now a gate (per-file count ratchet), no longer review only.
+- **Code changed:** `scripts/check-architecture.mjs` (+ `--init-colors` / `--update-colors`), new `scripts/lib/hardcoded-colors.mjs` (+ test), new `scripts/hardcoded-color-baselines.json`.
+
+## 2026-10-23 — One page title, in the header (claude-code)
+
+- `DESIGN.md` §6 header row: the page title lives only in `GlobalHeader`; content starts with section headings.
+- **Code changed:** repeated in-content titles removed from card games lobby, game table lobby, Sudoku header and GuessArt setup; the party lobby sets its title via `usePageTitle` (was "Nexumia") and drops its own back button and heading; `party.lobbyTitle` is "Party-Lobby"/"Party Lobby"; unused `games.cards.suite_title/suite_subtitle` removed. Storyteller, Knister and Qwixx titles are in budget-blocked files (#497, #492, #491).
+
+## 2026-10-23 — Colour migration to design tokens (claude-code)
+
+- `DESIGN.md` §2.3 (piece helpers in code, exempt table content) and §10 step 5 status.
+- **Code changed:** ~140 components switched from hard-coded colours to theme roles (`sx` palette paths, `alpha(theme.palette.*)` overlays, text roles); player/seat/avatar/spinner/instrument colours from `piecePalette` (`PIECE_ORDER`, `pieceColorForSlot`, `pieceNeutrals` new in `src/themeTokens.ts`); dialogs use the theme surface instead of their own glass backgrounds; gradient buttons/headings removed; settings navigation flat (`src/features/settings/settingsStyles.ts`); Melodiq Notes stage canvas colours and fonts from tokens; `seatLogic.test.ts` expectations updated. 35 files over their line budget are left for #491–#498.
+
+## 2026-10-23 — Hub areas (claude-code)
+
+- `DESIGN.md` §8.2/§10 step 4 done; migration tracked in issues #490–#499. `docs/tech/architecture.md` §3.1/§3.2: design tokens and areas listed; registry gradient fields unused.
+- **Code changed:** new `src/lib/areas.ts` (+ test), `src/components/brand/AreaSymbol.tsx`, `src/features/hub/{HubAreaFilter,HubGameCard}.tsx`; `Hub.tsx` filters by area (Party, Musik, Karten, Rätsel) instead of seven emoji categories, tiles are flat cards with an area-coloured icon plate.
+
+## 2026-10-23 — Design tokens, fonts and word mark live (claude-code)
+
+- `DESIGN.md`: status, type table (actual `h3`/`h4`/`h6` sizes), §8 word mark as paths, §10 steps 1–2 done for dark. `docs/tech/styling.md` §1 and §6 describe the token file and the self-hosted fonts.
+- **Code changed:** new `src/themeTokens.ts`; `src/theme.ts` rebuilt from it (sun-yellow primary, lagoon secondary/info, warm neutrals, `palette.piece`, focus ring, button edge, radii); fonts `@fontsource-variable/{figtree,bricolage-grotesque}` imported in `src/main.tsx`; `index.css`, `index.html`, PWA manifest `#121212` → `#17141C`; hub banner and `src/assets/nexumia-*.svg` replaced with the couch lock-up; `app.title` is "Nexumia" in de/en.
+- Known: six game spots set white text on `primary` (Qwixx total, tabletop badges, Melodiq song tags) — unreadable on yellow (also poor on the old light blue); fixed with DESIGN.md §10 step 5.
+
+## 2026-10-23 — Couch brand mark and app icons (claude-code)
+
+- `DESIGN.md` §8: brand architecture — couch master mark, five areas as couch in piece colour plus name labels, app icon rules; sources in `design/brand/`, explorations in `design/logo-drafts/` and `design/brand-approaches/`.
+- **Code/config changed:** `public/nexumia-icon.svg`, `public/pwa/*.png` (were one 640×640 JPEG under four PNG names; now real PNGs in the declared sizes), Android `mipmap-*/ic_launcher*.png`, `drawable*/splash.png`, `values/ic_launcher_background.xml` (`#FFFFFF` → `#17141C`). Manifest `theme_color`/`background_color` still `#121212` until DESIGN.md §10 step 1.
+
+## 2026-10-23 — DESIGN.md visual system (claude-code)
+
+- New root `DESIGN.md`: target visual system (colors for dark + light, piece palette, Bricolage Grotesque + Figtree, spacing, radius, components, logo brief, migration order). Not implemented yet.
+- `docs/tech/styling.md`: corrected — the theme is dark only (no light tokens exist) and Roboto is declared but never loaded; links to `DESIGN.md`. `AGENTS.md` §4 links `DESIGN.md`.
+- No code changed.
 
 ## 2026-10-23 — Review fixes for Melodiq Notes stage (claude-code)
 

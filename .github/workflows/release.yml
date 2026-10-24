@@ -204,8 +204,10 @@ jobs:
           mkdir -p release/linux/scripts release/windows/scripts release/macos/scripts
 
           # Lyric alignment script (found via <cwd>/scripts/ — the launchers cd into their own folder)
+          # and one empty data folder per plugin (songs, Tabletop games, Melodiq Notes library)
           for os in linux windows macos; do
             cp server/src/scripts/align_lyrics.py "release/$os/scripts/"
+            mkdir -p "release/$os/music" "release/$os/tabletop" "release/$os/notes"
           done
 
           # Linux
@@ -240,6 +242,73 @@ jobs:
             nexumia-server-win.zip \
             --clobber
 
+  # pkg cannot cross-compile bytecode for another CPU, so ARM64 builds run on ARM runners
+  build-server-binaries-arm64:
+    name: Build & Attach Server Binaries (${{ matrix.archive }})
+    needs: create-release
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-24.04-arm
+            target: node24-linux-arm64
+            binary: nexumia-server-linux
+            launchers: start-server.sh NexumiaServer.desktop
+            archive: nexumia-server-linux-arm64
+          - runner: macos-latest
+            target: node24-macos-arm64
+            binary: nexumia-server-macos
+            launchers: start-server.command
+            archive: nexumia-server-macos-arm64
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install Server Dependencies
+        working-directory: ./server
+        run: npm ci
+
+      - name: Build Binary (pkg)
+        working-directory: ./server
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          npm run bundle
+          npx pkg dist/nexumia-server.cjs --targets "$TARGET" --output dist/nexumia-server-arm64
+
+      - name: Create Archive
+        env:
+          BINARY: ${{ matrix.binary }}
+          LAUNCHERS: ${{ matrix.launchers }}
+          ARCHIVE: ${{ matrix.archive }}
+        run: |
+          mkdir -p release/scripts release/music release/tabletop release/notes
+          cp server/src/scripts/align_lyrics.py release/scripts/
+          # same file name as the x64 build, so the launchers work unchanged
+          cp server/dist/nexumia-server-arm64 "release/$BINARY"
+          for launcher in $LAUNCHERS; do cp "server/release-scripts/$launcher" release/; done
+          chmod +x release/nexumia-server-* release/start-server.*
+          tar -czf "$ARCHIVE.tar.gz" -C release .
+
+      - name: Upload Archive to Draft Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.create-release.outputs.tag_name }}
+          ARCHIVE: ${{ matrix.archive }}
+        run: gh release upload "$TAG" "$ARCHIVE.tar.gz" --clobber --repo "$GITHUB_REPOSITORY"
+
   build-docker:
     name: Build & Push Docker Images
     needs: create-release
@@ -248,7 +317,14 @@ jobs:
 
   publish-release:
     name: Undraft & Publish Release
-    needs: [create-release, build-android, build-server-binaries, build-docker]
+    needs:
+      [
+        create-release,
+        build-android,
+        build-server-binaries,
+        build-server-binaries-arm64,
+        build-docker,
+      ]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

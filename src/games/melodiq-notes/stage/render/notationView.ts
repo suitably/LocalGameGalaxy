@@ -7,6 +7,7 @@ import {
   forVisibleNotes,
   withAlpha,
   type Ctx,
+  STAGE,
 } from './common';
 import type { HitPoint, ViewContext } from './view';
 
@@ -16,7 +17,7 @@ const pc = (m: number) => ((m % 12) + 12) % 12;
 const diatonic = (m: number) => (Math.floor(m / 12) - 1) * 7 + DIATONIC[pc(m)];
 /** Staff positions (diatonic steps on a treble staff) of the drum lanes: crash, hi-hat, snare, tom, kick. */
 const DRUM_STEP = [41, 39, 35, 37, 31];
-const STAFF_INK = 'rgba(238,235,255,0.55)';
+const STAFF_INK = withAlpha(STAGE.ink, 0.55);
 /** Guitar and bass are written an octave above sounding pitch. */
 const WRITTEN_OCTAVE = { guitar: 12, bass: 12 } as Record<string, number>;
 
@@ -29,9 +30,9 @@ interface Scroll {
 }
 
 function noteColor(v: ViewContext, n: StageNote) {
-  if (n.judged === 'miss') return '#ff5c7a';
-  if (n.judged) return '#7be3a5';
-  return n.t - v.beat < 0.6 ? v.p.instrument.color : '#eeebff';
+  if (n.judged === 'miss') return STAGE.miss;
+  if (n.judged) return STAGE.hit;
+  return n.t - v.beat < 0.6 ? v.p.instrument.color : STAGE.ink;
 }
 
 function drawStaff(v: ViewContext, top: number, height: number, s: Scroll, points: Points) {
@@ -47,7 +48,7 @@ function drawStaff(v: ViewContext, top: number, height: number, s: Scroll, point
   g.strokeStyle = STAFF_INK;
   g.lineWidth = 1;
   for (let i = 0; i < 5; i++) line(g, 0, staffTop + i * sp, w, staffTop + i * sp);
-  g.fillStyle = 'rgba(238,235,255,0.8)';
+  g.fillStyle = withAlpha(STAGE.ink, 0.8);
   if (clef === 'perc') {
     g.fillRect(8, staffTop + sp, 3, sp * 2);
     g.fillRect(14, staffTop + sp, 3, sp * 2);
@@ -64,7 +65,7 @@ function drawStaff(v: ViewContext, top: number, height: number, s: Scroll, point
     if (x < 34) return;
     g.strokeStyle = STAFF_INK;
     line(g, x, staffTop, x, bottomY);
-    g.fillStyle = 'rgba(238,235,255,0.4)';
+    g.fillStyle = withAlpha(STAGE.ink, 0.4);
     g.font = `600 9px ${FONT_BODY}`;
     g.fillText(String(i + 1), x + 2, staffTop - 4);
   });
@@ -84,7 +85,7 @@ function drawStaff(v: ViewContext, top: number, height: number, s: Scroll, point
       g.fillText('♯', x - sp * 1.9, y + sp * 0.45);
     }
     if (p.instrument.kind === 'vocals' && n.syl) {
-      g.fillStyle = n.t <= s.beat && s.beat < n.t + n.dur ? '#ffffff' : 'rgba(238,235,255,0.6)';
+      g.fillStyle = n.t <= s.beat && s.beat < n.t + n.dur ? STAGE.ink : withAlpha(STAGE.ink, 0.6);
       g.font = `600 13px ${FONT_BODY}`;
       g.textAlign = 'center';
       g.fillText(n.syl, x, bottomY + sp * 4.2);
@@ -150,10 +151,10 @@ function drawTab(v: ViewContext, top: number, height: number, s: Scroll, points:
   const strings = p.instrument.kind === 'guitar' ? 6 : 4;
   const sp = clamp(height / (strings + 2.5), 9, 20);
   const t0 = top + (height - sp * (strings - 1)) / 2;
-  g.strokeStyle = 'rgba(238,235,255,0.5)';
+  g.strokeStyle = withAlpha(STAGE.ink, 0.5);
   g.lineWidth = 1;
   for (let i = 0; i < strings; i++) line(g, 0, t0 + i * sp, w, t0 + i * sp);
-  g.fillStyle = 'rgba(238,235,255,0.8)';
+  g.fillStyle = withAlpha(STAGE.ink, 0.8);
   g.font = `800 ${Math.round(sp * 0.9)}px ${FONT_BODY}`;
   ['T', 'A', 'B'].forEach((c, i) =>
     g.fillText(c, 8, t0 + sp * 0.4 + (i * sp * (strings - 1)) / 2.4),
@@ -170,7 +171,7 @@ function drawTab(v: ViewContext, top: number, height: number, s: Scroll, points:
     const label = String(n.fret ?? 0);
     g.font = `700 ${Math.round(sp * 0.82)}px ${FONT_MONO}`;
     const tw = g.measureText(label).width + 4;
-    g.fillStyle = '#0f0d1e';
+    g.fillStyle = STAGE.bgBottom;
     g.fillRect(x - tw / 2, y - sp * 0.45, tw, sp * 0.9);
     g.fillStyle = noteColor(v, n);
     g.textAlign = 'center';
@@ -191,7 +192,7 @@ export function drawNotation(v: ViewContext): HitPoint {
   const { g, p, w, h } = v;
   const s: Scroll = { beat: v.beat, hitX: clamp(w * 0.24, 70, 220), ppb: clamp(w / 7, 46, 120) };
   const points: Points = new Map();
-  g.fillStyle = 'rgba(15,13,30,0.6)';
+  g.fillStyle = withAlpha(STAGE.bgBottom, 0.6);
   g.fillRect(0, 0, w, h);
   if (p.instrument.view === 'strings') {
     if (h > 250) {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  alpha,
   AppBar,
   Box,
   Chip,
@@ -17,7 +18,7 @@ import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import TransferWithinAStationRoundedIcon from '@mui/icons-material/TransferWithinAStationRounded';
 import PhonelinkRingRoundedIcon from '@mui/icons-material/PhonelinkRingRounded';
-import FeedbackIcon from '@mui/icons-material/Feedback';
+import FeedbackIcon from '@mui/icons-material/FeedbackRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -82,11 +83,11 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
   return (
     <AppBar
       position="static"
-      elevation={1}
+      elevation={0}
       sx={{
-        bgcolor: '#18181b',
+        bgcolor: 'background.default',
         backgroundImage: 'none',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        borderBottom: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
         zIndex: 1100,
       }}
     >
@@ -131,7 +132,7 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
             <Tooltip
               title={t(
                 'guessart.temporaryTurnDesc',
-                'Nur für diesen Zug lokal – danach wieder Remote'
+                'Nur für diesen Zug lokal – danach wieder Remote',
               )}
             >
               <Chip
@@ -146,10 +147,10 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
                 variant="outlined"
                 sx={{
                   fontWeight: 700,
-                  fontSize: '0.72rem',
+                  fontSize: '0.75rem',
                   height: { xs: 24, sm: 26 },
                   borderColor: 'warning.main',
-                  bgcolor: 'rgba(237, 108, 2, 0.08)',
+                  bgcolor: (theme) => alpha(theme.palette.warning.main, 0.08),
                 }}
               />
             </Tooltip>
@@ -178,7 +179,7 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
                 sx={{
                   p: { xs: 0.75, sm: 1 },
                   border: '1px solid',
-                  borderColor: isCurrentTurnLocal ? 'rgba(255, 255, 255, 0.15)' : 'secondary.main',
+                  borderColor: isCurrentTurnLocal ? 'divider' : 'secondary.main',
                   bgcolor: isCurrentTurnLocal ? 'transparent' : 'action.hover',
                 }}
               >
@@ -193,9 +194,7 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
 
           {/* Quick Share Game Link Button (Only for Host) */}
           {Boolean(onOpenShareLinks) && (
-            <Tooltip
-              title={t('guessart.shareGameLink', 'Spiel-Link teilen (Async Multiplayer)')}
-            >
+            <Tooltip title={t('guessart.shareGameLink', 'Spiel-Link teilen (Async Multiplayer)')}>
               <IconButton
                 size="small"
                 onClick={handleShareLink}
@@ -204,7 +203,7 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
                 sx={{
                   p: { xs: 0.75, sm: 1 },
                   border: '1px solid',
-                  borderColor: 'rgba(255, 255, 255, 0.15)',
+                  borderColor: (theme) => alpha(theme.palette.text.primary, 0.15),
                 }}
               >
                 <ShareRoundedIcon fontSize="small" />

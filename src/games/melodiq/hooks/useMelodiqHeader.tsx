@@ -2,115 +2,152 @@ import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLayout, type MenuItem } from '../../../context/LayoutContext';
 
-import SettingsIcon from '@mui/icons-material/Settings';
-import QrCodeIcon from '@mui/icons-material/QrCode';
-import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import SettingsIcon from '@mui/icons-material/SettingsRounded';
+import QrCodeIcon from '@mui/icons-material/QrCodeRounded';
+import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
 
 import { type LoadingProgress } from './useSongs';
 import { TVModeButton } from '../components/TVModeButton';
 
 interface UseMelodiqHeaderProps {
-    currentView: string;
-    setCurrentView: (view: string) => void;
-    loadingProgress?: LoadingProgress | null;
-    refreshSongs?: () => Promise<void>;
-    isClient: boolean;
-    isTVConnected: boolean;
-    isPresentationAvailable: boolean;
-    openTVWindow: () => void;
-    startPresentation: () => void;
-    disconnectTV: () => void;
-    clientRole: string;
-    onBackToHome?: () => void;
-    onOpenLocalFolder?: () => void;
+  currentView: string;
+  setCurrentView: (view: string) => void;
+  loadingProgress?: LoadingProgress | null;
+  refreshSongs?: () => Promise<void>;
+  isClient: boolean;
+  isTVConnected: boolean;
+  isPresentationAvailable: boolean;
+  openTVWindow: () => void;
+  startPresentation: () => void;
+  disconnectTV: () => void;
+  clientRole: string;
+  onBackToHome?: () => void;
+  onOpenLocalFolder?: () => void;
 }
 
 export const useMelodiqHeader = ({
-    currentView, setCurrentView,
-    isClient, isTVConnected, isPresentationAvailable,
-    openTVWindow, startPresentation, disconnectTV,
-    onBackToHome, onOpenLocalFolder
+  currentView,
+  setCurrentView,
+  isClient,
+  isTVConnected,
+  isPresentationAvailable,
+  openTVWindow,
+  startPresentation,
+  disconnectTV,
+  onBackToHome,
+  onOpenLocalFolder,
 }: UseMelodiqHeaderProps) => {
-    const { t } = useTranslation();
-    const { setHeader, setCustomHeaderActions } = useLayout();
+  const { t } = useTranslation();
+  const { setHeader, setCustomHeaderActions } = useLayout();
 
-    const callbacksRef = useRef({ setCurrentView, onBackToHome, openTVWindow, startPresentation, disconnectTV, onOpenLocalFolder });
-    useEffect(() => {
-        callbacksRef.current = { setCurrentView, onBackToHome, openTVWindow, startPresentation, disconnectTV, onOpenLocalFolder };
-    });
+  const callbacksRef = useRef({
+    setCurrentView,
+    onBackToHome,
+    openTVWindow,
+    startPresentation,
+    disconnectTV,
+    onOpenLocalFolder,
+  });
+  useEffect(() => {
+    callbacksRef.current = {
+      setCurrentView,
+      onBackToHome,
+      openTVWindow,
+      startPresentation,
+      disconnectTV,
+      onOpenLocalFolder,
+    };
+  });
 
-    const handleHomeAction = useCallback(() => {
-        if (callbacksRef.current.onBackToHome) {
-            callbacksRef.current.onBackToHome();
-        } else {
-            callbacksRef.current.setCurrentView('Home');
+  const handleHomeAction = useCallback(() => {
+    if (callbacksRef.current.onBackToHome) {
+      callbacksRef.current.onBackToHome();
+    } else {
+      callbacksRef.current.setCurrentView('Home');
+    }
+  }, []);
+
+  const tvModeActions = useMemo(() => {
+    if (isClient) return null;
+    return (
+      <TVModeButton
+        isTVConnected={isTVConnected}
+        isPresentationAvailable={isPresentationAvailable}
+        onOpenTV={() => callbacksRef.current.openTVWindow()}
+        onStartPresentation={() => callbacksRef.current.startPresentation()}
+        onDisconnect={() => callbacksRef.current.disconnectTV()}
+      />
+    );
+  }, [isClient, isTVConnected, isPresentationAvailable]);
+
+  // Unmount cleanup only
+  useEffect(() => {
+    return () => {
+      setHeader(null, [], null);
+      setCustomHeaderActions(null);
+    };
+  }, [setHeader, setCustomHeaderActions]);
+
+  useEffect(() => {
+    const homeAction = currentView === 'Home' ? null : handleHomeAction;
+
+    if (currentView === 'Home') {
+      const headerActions: MenuItem[] = [
+        {
+          label: isClient
+            ? t('melodiq.client_settings', 'Spieler-Profil')
+            : t('settings.title', 'Einstellungen'),
+          icon: <SettingsIcon />,
+          action: () => callbacksRef.current.setCurrentView('Settings'),
+          showAlways: true,
+        },
+      ];
+
+      if (!isClient) {
+        headerActions.push({
+          label: 'Connect Phones',
+          icon: <QrCodeIcon />,
+          action: () => callbacksRef.current.setCurrentView('Connection'),
+          showAlways: true,
+        });
+
+        if (callbacksRef.current.onOpenLocalFolder) {
+          headerActions.push({
+            label: t('melodiq.local_folder', 'Lokaler Song-Ordner'),
+            icon: <FolderOpenIcon />,
+            action: () => callbacksRef.current.onOpenLocalFolder?.(),
+            showAlways: false,
+          });
         }
-    }, []);
+      }
 
-    const tvModeActions = useMemo(() => {
-        if (isClient) return null;
-        return (
-            <TVModeButton
-                isTVConnected={isTVConnected}
-                isPresentationAvailable={isPresentationAvailable}
-                onOpenTV={() => callbacksRef.current.openTVWindow()}
-                onStartPresentation={() => callbacksRef.current.startPresentation()}
-                onDisconnect={() => callbacksRef.current.disconnectTV()}
-            />
+      setHeader(t('melodiq.title'), headerActions, homeAction, null, false, isClient);
+      setCustomHeaderActions(tvModeActions);
+    } else if (currentView === 'Settings') {
+      if (isClient) {
+        setHeader(
+          t('melodiq.client_settings', 'Spieler-Profil'),
+          [],
+          homeAction,
+          null,
+          false,
+          isClient,
         );
-    }, [isClient, isTVConnected, isPresentationAvailable]);
-
-    // Unmount cleanup only
-    useEffect(() => {
-        return () => {
-            setHeader(null, [], null);
-            setCustomHeaderActions(null);
-        };
-    }, [setHeader, setCustomHeaderActions]);
-
-    useEffect(() => {
-        const homeAction = currentView === 'Home' ? null : handleHomeAction;
-
-        if (currentView === 'Home') {
-            const headerActions: MenuItem[] = [
-                {
-                    label: isClient ? t('melodiq.client_settings', 'Spieler-Profil') : t('settings.title', 'Einstellungen'),
-                    icon: <SettingsIcon />,
-                    action: () => callbacksRef.current.setCurrentView('Settings'),
-                    showAlways: true
-                }
-            ];
-
-            if (!isClient) {
-                headerActions.push({
-                    label: 'Connect Phones',
-                    icon: <QrCodeIcon />,
-                    action: () => callbacksRef.current.setCurrentView('Connection'),
-                    showAlways: true
-                });
-
-                if (callbacksRef.current.onOpenLocalFolder) {
-                    headerActions.push({
-                        label: t('melodiq.local_folder', 'Lokaler Song-Ordner'),
-                        icon: <FolderOpenIcon />,
-                        action: () => callbacksRef.current.onOpenLocalFolder?.(),
-                        showAlways: false
-                    });
-                }
-            }
-
-            setHeader(t('melodiq.title'), headerActions, homeAction, null, false, isClient);
-            setCustomHeaderActions(tvModeActions);
-        } else if (currentView === 'Settings') {
-            if (isClient) {
-                setHeader(t('melodiq.client_settings', 'Spieler-Profil'), [], homeAction, null, false, isClient);
-            } else {
-                setHeader(t('settings.title', 'Einstellungen'), [], homeAction, null, true, false);
-            }
-            setCustomHeaderActions(null);
-        } else {
-            setHeader(t('melodiq.title'), [], homeAction, null, false, isClient);
-            setCustomHeaderActions(null);
-        }
-    }, [currentView, isClient, t, setHeader, setCustomHeaderActions, tvModeActions, handleHomeAction]);
+      } else {
+        setHeader(t('settings.title', 'Einstellungen'), [], homeAction, null, true, false);
+      }
+      setCustomHeaderActions(null);
+    } else {
+      setHeader(t('melodiq.title'), [], homeAction, null, false, isClient);
+      setCustomHeaderActions(null);
+    }
+  }, [
+    currentView,
+    isClient,
+    t,
+    setHeader,
+    setCustomHeaderActions,
+    tvModeActions,
+    handleHomeAction,
+  ]);
 };

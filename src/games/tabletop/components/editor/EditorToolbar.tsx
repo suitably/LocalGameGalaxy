@@ -3,12 +3,12 @@
  */
 import React, { useState } from 'react';
 import { Divider, IconButton, Menu, MenuItem, Paper, Tooltip } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DoneIcon from '@mui/icons-material/Done';
-import UndoIcon from '@mui/icons-material/Undo';
-import RedoIcon from '@mui/icons-material/Redo';
-import AddBoxIcon from '@mui/icons-material/AddBox';
-import TableRestaurantIcon from '@mui/icons-material/TableRestaurant';
+import EditIcon from '@mui/icons-material/EditRounded';
+import DoneIcon from '@mui/icons-material/DoneRounded';
+import UndoIcon from '@mui/icons-material/UndoRounded';
+import RedoIcon from '@mui/icons-material/RedoRounded';
+import AddBoxIcon from '@mui/icons-material/AddBoxRounded';
+import TableRestaurantIcon from '@mui/icons-material/TableRestaurantRounded';
 import { useTranslation } from 'react-i18next';
 import { NEW_WIDGET_KINDS } from '../../logic/widgetTemplates';
 import type { TabletopEditorApi } from './useTabletopEditor';
@@ -29,7 +29,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
 
   return (
     <Paper
-      elevation={4}
+      elevation={0}
       sx={{
         position: 'absolute',
         top: 12,
@@ -39,7 +39,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         display: 'flex',
         alignItems: 'center',
         px: 0.5,
-        borderRadius: 6,
+        borderRadius: 5,
       }}
     >
       <Tooltip

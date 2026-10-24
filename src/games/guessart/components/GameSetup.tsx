@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  alpha,
   Alert,
   Box,
   Button,
@@ -13,7 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import InfoOutlinedIcon from '@mui/icons-material/InfoRounded';
 import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded';
 import PhoneIphoneRoundedIcon from '@mui/icons-material/PhoneIphoneRounded';
 import { useTranslation } from 'react-i18next';
@@ -76,10 +77,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
   return (
     <Stack spacing={3} sx={{ p: 2, maxWidth: 600, mx: 'auto', pb: 6 }}>
       {/* Top Banner / Info */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={1}>
-        <Typography variant="h5" fontWeight={800} color="primary.main">
-          {t('games.guessart.title', 'GuessArt')}
-        </Typography>
+      <Box display="flex" justifyContent="flex-end" alignItems="center" flexWrap="wrap" gap={1}>
         <Box display="flex" alignItems="center" gap={1}>
           {onOpenCatalogue && (
             <Button
@@ -114,12 +112,21 @@ export const GameSetup: React.FC<GameSetupProps> = ({
           variant="outlined"
           sx={{
             borderRadius: 3,
-            background: 'linear-gradient(135deg, rgba(156, 39, 176, 0.12) 0%, rgba(233, 30, 99, 0.12) 100%)',
-            border: '1.5px solid rgba(156, 39, 176, 0.35)',
-            boxShadow: 2,
+            bgcolor: (theme) => alpha(theme.palette.piece.pink, 0.08),
+            border: 1,
+            borderColor: (theme) => alpha(theme.palette.piece.pink, 0.4),
           }}
         >
-          <CardContent sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5 }}>
+          <CardContent
+            sx={{
+              p: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 1.5,
+            }}
+          >
             <Box display="flex" alignItems="center" gap={1.5}>
               <PhoneIphoneRoundedIcon sx={{ fontSize: 36, color: 'secondary.main' }} />
               <Box>
@@ -127,7 +134,10 @@ export const GameSetup: React.FC<GameSetupProps> = ({
                   Gartic Phone (Flüsterpost)
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {t('guessart.garticShortDesc', 'Live Multiplayer: Satz schreiben ➔ Zeichnen ➔ Raten ➔ Album-Show!')}
+                  {t(
+                    'guessart.garticShortDesc',
+                    'Live Multiplayer: Satz schreiben ➔ Zeichnen ➔ Raten ➔ Album-Show!',
+                  )}
                 </Typography>
               </Box>
             </Box>
@@ -167,7 +177,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
       />
 
       {/* Game Options Card */}
-      <Card sx={{ borderRadius: 3, boxShadow: 2 }}>
+      <Card sx={{ borderRadius: 3, boxShadow: 0 }}>
         <CardContent sx={{ p: 3 }}>
           <Typography variant="h6" fontWeight={700} gutterBottom>
             {t('guessart.optionsTitle', 'Einstellungen')}
@@ -197,7 +207,10 @@ export const GameSetup: React.FC<GameSetupProps> = ({
                   {t('guessart.manualWordMode', 'Manuelle Begriffseingabe')}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {t('guessart.manualWordModeDesc', 'Begriffe selbst tippen statt aus dem Katalog zu wählen.')}
+                  {t(
+                    'guessart.manualWordModeDesc',
+                    'Begriffe selbst tippen statt aus dem Katalog zu wählen.',
+                  )}
                 </Typography>
               </Box>
             }
@@ -217,7 +230,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
           fontSize: '1.1rem',
           fontWeight: 800,
           borderRadius: 3,
-          boxShadow: 4,
+          boxShadow: 0,
         }}
       >
         {t('guessart.startGame', 'Spiel starten')}

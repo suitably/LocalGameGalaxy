@@ -20,11 +20,7 @@ export const GarticDrawingStep: React.FC<GarticDrawingStepProps> = ({
 
   // Dynamic font scaling for long prompts so they are always 100% visible
   const fontSize =
-    promptText.length > 50
-      ? '0.78rem'
-      : promptText.length > 30
-        ? '0.88rem'
-        : '0.98rem';
+    promptText.length > 50 ? '0.78rem' : promptText.length > 30 ? '0.88rem' : '0.98rem';
 
   return (
     <Box
@@ -39,12 +35,12 @@ export const GarticDrawingStep: React.FC<GarticDrawingStepProps> = ({
     >
       {/* Second Header: Styled matching GuessArt's Secret Word Banner with responsive prompt scaling */}
       <Paper
-        elevation={1}
+        elevation={0}
         sx={{
           px: { xs: 1.2, sm: 2 },
           py: 0.6,
           mb: 1,
-          borderRadius: 2.5,
+          borderRadius: 3,
           bgcolor: 'primary.main',
           color: 'primary.contrastText',
           display: 'flex',
@@ -70,7 +66,7 @@ export const GarticDrawingStep: React.FC<GarticDrawingStepProps> = ({
               px: 1,
               py: 0.3,
               borderRadius: 2,
-              boxShadow: 1,
+              boxShadow: 0,
               fontWeight: 800,
               fontSize,
               lineHeight: 1.2,

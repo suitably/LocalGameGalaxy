@@ -76,7 +76,7 @@ export const DeviceTrackerSettings: React.FC<DeviceTrackerSettingsProps> = ({
         add: t('signaling.add_button', 'Add'),
         emptyWarning: t(
           'signaling.no_trackers_warning',
-          '⚠️ No active signaling servers configured. Connection to mobile devices will not be possible. Please enable at least one server.',
+          'No active signaling servers configured. Connection to mobile devices will not be possible. Please enable at least one server.',
         ),
       }}
       onToggle={(item) => {

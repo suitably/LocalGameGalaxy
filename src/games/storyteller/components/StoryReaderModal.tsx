@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  alpha,
   Box,
   Button,
   Chip,
@@ -43,10 +44,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
   const handleCopyStory = () => {
     const header = `📖 ${title}\n${'='.repeat(title.length + 3)}\n\n`;
     const body = entries
-      .map(
-        (entry) =>
-          `[Kapitel ${entry.turnNumber} - ${entry.authorName}]\n${entry.text}`,
-      )
+      .map((entry) => `[Kapitel ${entry.turnNumber} - ${entry.authorName}]\n${entry.text}`)
       .join('\n\n');
     navigator.clipboard.writeText(header + body);
     setCopied(true);
@@ -61,10 +59,6 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
       fullWidth
       PaperProps={{
         sx: {
-          bgcolor: '#0f172a',
-          backgroundImage: 'none',
-          color: '#f8fafc',
-          borderRadius: 3,
           maxHeight: '85vh',
         },
       }}
@@ -76,22 +70,22 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          borderBottom: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
         }}
       >
         <Stack direction="row" spacing={1.5} alignItems="center">
-          <MenuBookRoundedIcon sx={{ color: '#38bdf8' }} />
+          <MenuBookRoundedIcon sx={{ color: 'secondary.main' }} />
           <Box>
             <Typography variant="h6" fontWeight={700}>
               {title}
             </Typography>
-            <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {entries.length} {t('storyteller.chapters', 'Kapitel')} • {totalWords}{' '}
               {t('storyteller.words', 'Wörter')}
             </Typography>
           </Box>
         </Stack>
-        <IconButton onClick={onClose} sx={{ color: '#94a3b8' }} size="small">
+        <IconButton onClick={onClose} sx={{ color: 'text.secondary' }} size="small">
           <CloseRoundedIcon />
         </IconButton>
       </DialogTitle>
@@ -99,7 +93,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
       <DialogContent sx={{ p: { xs: 2, sm: 3 }, overflowY: 'auto' }}>
         {entries.length === 0 ? (
           <Box py={6} textAlign="center">
-            <Typography variant="body1" sx={{ color: '#94a3b8' }}>
+            <Typography variant="body1" sx={{ color: 'text.secondary' }}>
               {t('storyteller.noEntriesYet', 'Es wurde noch kein Text geschrieben.')}
             </Typography>
           </Box>
@@ -115,7 +109,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
                     mb: 1,
                   }}
                 >
-                  <Typography variant="subtitle2" fontWeight={700} sx={{ color: '#38bdf8' }}>
+                  <Typography variant="subtitle2" fontWeight={700} sx={{ color: 'secondary.main' }}>
                     {t('storyteller.chapter', 'Kapitel')} {entry.turnNumber}
                   </Typography>
 
@@ -123,8 +117,8 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
                     size="small"
                     label={entry.authorName}
                     sx={{
-                      bgcolor: 'rgba(255, 255, 255, 0.08)',
-                      color: '#cbd5e1',
+                      bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
+                      color: 'text.secondary',
                       fontSize: '0.75rem',
                       height: 22,
                     }}
@@ -137,14 +131,16 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
                     fontFamily: 'Georgia, serif',
                     fontSize: { xs: '1rem', sm: '1.05rem' },
                     lineHeight: 1.8,
-                    color: '#e2e8f0',
+                    color: 'text.primary',
                     whiteSpace: 'pre-wrap',
                   }}
                 >
                   {entry.text}
                 </Typography>
 
-                <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.08)', mt: 3 }} />
+                <Divider
+                  sx={{ borderColor: (theme) => alpha(theme.palette.text.primary, 0.08), mt: 3 }}
+                />
               </Box>
             ))}
           </Stack>
@@ -154,7 +150,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
       <DialogActions
         sx={{
           p: 2,
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          borderTop: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
           justifyContent: 'space-between',
         }}
       >
@@ -164,12 +160,22 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
           onClick={handleCopyStory}
           disabled={entries.length === 0}
           startIcon={copied ? <CheckRoundedIcon /> : <ContentCopyRoundedIcon />}
-          sx={{ borderColor: 'rgba(255, 255, 255, 0.2)', color: copied ? '#4ade80' : 'inherit' }}
+          sx={{
+            borderColor: (theme) => alpha(theme.palette.text.primary, 0.2),
+            color: copied ? 'success.main' : 'inherit',
+          }}
         >
-          {copied ? t('common.copied', 'Kopiert!') : t('storyteller.copyStory', 'Geschichte kopieren')}
+          {copied
+            ? t('common.copied', 'Kopiert!')
+            : t('storyteller.copyStory', 'Geschichte kopieren')}
         </Button>
 
-        <Button variant="contained" size="small" onClick={onClose} sx={{ bgcolor: '#38bdf8', color: '#0f172a' }}>
+        <Button
+          variant="contained"
+          size="small"
+          onClick={onClose}
+          sx={{ bgcolor: 'secondary.main', color: 'secondary.contrastText' }}
+        >
           {t('common.close', 'Schließen')}
         </Button>
       </DialogActions>

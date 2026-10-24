@@ -2,10 +2,10 @@
  * Layer rendering Hidden Zones (Fog of War) over the table [ID: GAME-TABLETOP-HIDDEN-ZONE-LAYER]
  */
 import React, { useState } from 'react';
-import { Box, Typography, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { alpha, Box, Typography, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
+import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOffRounded';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineRounded';
 import type { HiddenZone } from '../../logic/types';
 import { useTranslation } from 'react-i18next';
 
@@ -23,7 +23,11 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
   onRemoveZone,
 }) => {
   const { t } = useTranslation();
-  const [menuAnchor, setMenuAnchor] = useState<{ mouseX: number; mouseY: number; zoneId: string } | null>(null);
+  const [menuAnchor, setMenuAnchor] = useState<{
+    mouseX: number;
+    mouseY: number;
+    zoneId: string;
+  } | null>(null);
 
   if (!hiddenZones || Object.keys(hiddenZones).length === 0) return null;
 
@@ -61,19 +65,11 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
               width: zone.width,
               height: zone.height,
               zIndex: isOwner || isRevealed ? 4000 : 9000,
-              bgcolor: isRevealed
-                ? 'rgba(0, 0, 0, 0.1)'
-                : isOwner
-                  ? `${zoneColor}33`
-                  : zoneColor,
+              bgcolor: isRevealed ? 'rgba(0, 0, 0, 0.1)' : isOwner ? `${zoneColor}33` : zoneColor,
               border: '2px dashed',
-              borderColor: isRevealed ? '#4caf50' : zoneColor,
+              borderColor: isRevealed ? 'success.main' : zoneColor,
               borderRadius: 2,
-              boxShadow: isRevealed
-                ? '0 0 15px rgba(76, 175, 80, 0.4)'
-                : isOwner
-                  ? '0 0 15px rgba(0, 0, 0, 0.3)'
-                  : '0 8px 30px rgba(0, 0, 0, 0.85)',
+              boxShadow: isRevealed ? 'none' : isOwner ? 'none' : '0 8px 30px rgba(0, 0, 0, 0.85)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -87,33 +83,33 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
             <Box
               sx={{
                 bgcolor: 'rgba(0,0,0,0.7)',
-                color: '#fff',
+                color: 'text.primary',
                 px: 1.5,
                 py: 0.5,
                 borderRadius: 2,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 0.75,
-                border: '1px solid rgba(255,255,255,0.2)',
+                border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.2)}`,
               }}
             >
               {isRevealed ? (
                 <>
-                  <VisibilityIcon fontSize="small" sx={{ color: '#4caf50' }} />
+                  <VisibilityIcon fontSize="small" sx={{ color: 'success.main' }} />
                   <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
                     {zone.label || t('games.tabletop.zoneRevealed', 'Aufgedeckt')}
                   </Typography>
                 </>
               ) : isOwner ? (
                 <>
-                  <VisibilityIcon fontSize="small" sx={{ color: '#90caf9' }} />
+                  <VisibilityIcon fontSize="small" sx={{ color: 'secondary.main' }} />
                   <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
                     {zone.label || t('games.tabletop.zoneOwnerView', 'Verdeckt (Deine Sicht)')}
                   </Typography>
                 </>
               ) : (
                 <>
-                  <VisibilityOffIcon fontSize="small" sx={{ color: '#ff9800' }} />
+                  <VisibilityOffIcon fontSize="small" sx={{ color: 'warning.main' }} />
                   <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
                     {zone.label || t('games.tabletop.zoneHidden', 'Verdeckter Bereich')}
                   </Typography>
@@ -129,9 +125,7 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
         onClose={() => setMenuAnchor(null)}
         anchorReference="anchorPosition"
         anchorPosition={
-          menuAnchor !== null
-            ? { top: menuAnchor.mouseY, left: menuAnchor.mouseX }
-            : undefined
+          menuAnchor !== null ? { top: menuAnchor.mouseY, left: menuAnchor.mouseX } : undefined
         }
       >
         {activeZone && (
@@ -142,7 +136,11 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
             }}
           >
             <ListItemIcon>
-              {activeZone.revealed ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+              {activeZone.revealed ? (
+                <VisibilityOffIcon fontSize="small" />
+              ) : (
+                <VisibilityIcon fontSize="small" />
+              )}
             </ListItemIcon>
             <ListItemText>
               {activeZone.revealed

@@ -43,12 +43,12 @@ export const GarticPromptStep: React.FC<GarticPromptStepProps> = ({
   return (
     <Box sx={{ maxWidth: 560, mx: 'auto', p: { xs: 2, sm: 3 } }}>
       <Paper
-        elevation={4}
+        elevation={0}
         component="form"
         onSubmit={handleSubmit}
         sx={{
           p: { xs: 2.5, sm: 4 },
-          borderRadius: 4,
+          borderRadius: 5,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -59,10 +59,14 @@ export const GarticPromptStep: React.FC<GarticPromptStepProps> = ({
         <EditNoteRoundedIcon color="primary" sx={{ fontSize: 56 }} />
         <Box>
           <Typography variant="h5" fontWeight={800}>
-            {playerName ? `${playerName}: ` : ''}{t('guessart.writeStartingPrompt', 'Schreibe einen geheimen Satz!')}
+            {playerName ? `${playerName}: ` : ''}
+            {t('guessart.writeStartingPrompt', 'Schreibe einen geheimen Satz!')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {t('guessart.promptStepHint', 'Dein Satz wird an den nächsten Spieler weitergegeben, der ihn zeichnen muss!')}
+            {t(
+              'guessart.promptStepHint',
+              'Dein Satz wird an den nächsten Spieler weitergegeben, der ihn zeichnen muss!',
+            )}
           </Typography>
         </Box>
 
@@ -70,7 +74,10 @@ export const GarticPromptStep: React.FC<GarticPromptStepProps> = ({
           fullWidth
           multiline
           rows={2}
-          placeholder={t('guessart.promptPlaceholder', 'z.B. Ein Pinguin der Fallschirm springt...')}
+          placeholder={t(
+            'guessart.promptPlaceholder',
+            'z.B. Ein Pinguin der Fallschirm springt...',
+          )}
           value={promptText}
           onChange={(e) => setPromptText(e.target.value.slice(0, MAX_PROMPT_LENGTH))}
           variant="outlined"
@@ -85,7 +92,7 @@ export const GarticPromptStep: React.FC<GarticPromptStepProps> = ({
             variant="outlined"
             startIcon={<CasinoRoundedIcon />}
             onClick={handleRandom}
-            sx={{ borderRadius: 2.5 }}
+            sx={{ borderRadius: 3 }}
           >
             {t('guessart.randomPrompt', 'Zufällige Idee')}
           </Button>
@@ -97,7 +104,7 @@ export const GarticPromptStep: React.FC<GarticPromptStepProps> = ({
             type="submit"
             disabled={!promptText.trim()}
             endIcon={<SendRoundedIcon />}
-            sx={{ borderRadius: 2.5, px: 3, fontWeight: 700 }}
+            sx={{ borderRadius: 3, px: 3, fontWeight: 700 }}
           >
             {t('common.submit', 'Absenden')}
           </Button>

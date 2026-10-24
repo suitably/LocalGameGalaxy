@@ -12,12 +12,12 @@ import {
   Grid,
   CircularProgress,
 } from '@mui/material';
-import DrawIcon from '@mui/icons-material/Draw';
-import PhoneForwardedIcon from '@mui/icons-material/PhoneForwarded';
-import StyleIcon from '@mui/icons-material/Style';
-import CasinoIcon from '@mui/icons-material/Casino';
-import GridOnIcon from '@mui/icons-material/GridOn';
-import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import DrawIcon from '@mui/icons-material/DrawRounded';
+import PhoneForwardedIcon from '@mui/icons-material/PhoneForwardedRounded';
+import StyleIcon from '@mui/icons-material/StyleRounded';
+import CasinoIcon from '@mui/icons-material/CasinoRounded';
+import GridOnIcon from '@mui/icons-material/GridOnRounded';
+import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
 import { useTranslation } from 'react-i18next';
 import { listTabletopGames } from '../../../games/tabletop/logic/tabletopStorage';
 import type { TabletopGameSummary } from '../../../games/tabletop/logic/types';
@@ -69,7 +69,7 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
         'games.tabletop.standard_cards_desc',
         'Mau-Mau, Skat, Poker oder Rommé mit geteiltem Tisch und Smartphone-Handkarten.',
       ),
-      icon: <StyleIcon sx={{ fontSize: 36, color: '#1976d2' }} />,
+      icon: <StyleIcon sx={{ fontSize: 36, color: 'secondary.main' }} />,
     },
     {
       id: 'liars-dice',
@@ -78,13 +78,13 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
         'games.tabletop.liars_dice_desc',
         'Bluff-Würfelspiel mit 3D-Würfeln und verdeckten Bechern auf jedem Handy.',
       ),
-      icon: <CasinoIcon sx={{ fontSize: 36, color: '#f57c00' }} />,
+      icon: <CasinoIcon sx={{ fontSize: 36, color: 'warning.main' }} />,
     },
     {
       id: 'checkers',
       title: t('games.tabletop.checkers_title', 'Dame / Checkers'),
       desc: t('games.tabletop.checkers_desc', 'Klassisches Brettspiel auf 8x8 Spielfeld.'),
-      icon: <GridOnIcon sx={{ fontSize: 36, color: '#388e3c' }} />,
+      icon: <GridOnIcon sx={{ fontSize: 36, color: 'success.main' }} />,
     },
   ];
 
@@ -125,7 +125,7 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
         {tabIndex === 0 &&
           grid([
             <PartyPickerCard
-              icon={<PhoneForwardedIcon sx={{ fontSize: 36, color: '#7c4dff' }} />}
+              icon={<PhoneForwardedIcon sx={{ fontSize: 36, color: 'piece.pink' }} />}
               title="Gartic Phone"
               desc={t(
                 'party.gartic_desc',
@@ -134,7 +134,7 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
               onClick={pick('garticphone')}
             />,
             <PartyPickerCard
-              icon={<DrawIcon sx={{ fontSize: 36, color: '#00bcd4' }} />}
+              icon={<DrawIcon sx={{ fontSize: 36, color: 'secondary.main' }} />}
               title="GuessArt"
               desc={t(
                 'party.guessart_desc',
@@ -183,7 +183,7 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
             grid(
               customGames.map((g) => (
                 <PartyPickerCard
-                  icon={<StyleIcon sx={{ fontSize: 36, color: '#7c3aed' }} />}
+                  icon={<StyleIcon sx={{ fontSize: 36, color: 'piece.green' }} />}
                   title={g.name}
                   desc={t('party.custom_game_info', '{{min}}-{{max}} Spieler • {{cards}} Karten', {
                     min: g.minPlayers,
