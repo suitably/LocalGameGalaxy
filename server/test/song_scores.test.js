@@ -11,10 +11,7 @@ test('Song scores: upload, marks, delete', async (t) => {
     addOrUpdateSongInCache,
     getSongCache,
   } = require('../dist/plugins/melodiq/services/scanner.js');
-  const {
-    safeScoreFileName,
-    parseMarksBody,
-  } = require('../dist/plugins/melodiq/services/scoreFiles.js');
+  const { safeScoreFileName, parseMarksBody } = require('../dist/utils/scoreFiles.js');
 
   const library = fs.mkdtempSync(path.join(os.tmpdir(), 'melodiq-scores-'));
   const songDir = path.join(library, 'Band - Song');

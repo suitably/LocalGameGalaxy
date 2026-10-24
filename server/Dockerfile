@@ -1,5 +1,5 @@
 # ===== Stage 1: Build TypeScript =====
-FROM node:20-slim AS builder
+FROM node:24-slim AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ COPY src/ ./src/
 RUN npm run build
 
 # ===== Stage 2: Lightweight Base Runtime (~200MB) =====
-FROM node:20-slim AS base
+FROM node:24-slim AS base
 
 # System dependencies for audio transcoding, healthcheck, and yt-dlp runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -40,15 +40,21 @@ COPY --from=builder /app/dist ./dist
 COPY src/scripts ./src/scripts
 COPY src/scripts ./dist/scripts
 
-# Persistent volumes
+# Persistent volumes (one per plugin; a missing mount is just an empty folder)
+RUN mkdir -p /app/music /app/config /app/models /app/tabletop /app/notes
 VOLUME /app/music
 VOLUME /app/config
 VOLUME /app/models
+VOLUME /app/tabletop
+VOLUME /app/notes
 
 # Runtime environment configuration
 ENV PORT=3000 \
     NODE_ENV=production \
+    PLUGINS=relay,melodiq,tabletop,notes \
     MUSIC_DIR=/app/music \
+    TABLETOP_DIR=/app/tabletop \
+    NOTES_DIR=/app/notes \
     CONFIG_PATH=/app/config/config.json \
     MODELS_DIR=/app/models \
     TORCH_HOME=/app/models \

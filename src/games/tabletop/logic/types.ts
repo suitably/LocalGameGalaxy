@@ -306,6 +306,8 @@ export interface TabletopGameSummary extends TabletopGameMetadata {
   widgetCount: number;
   updatedAt: number;
   format?: 'flat-json' | 'pcio-folder' | 'tts-workshop' | 'unknown';
+  /** Listed by the companion server and saved from the app there, so it can be changed. */
+  serverSaved?: boolean;
 }
 
 export const HEX_CLIP_PATH = 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)';

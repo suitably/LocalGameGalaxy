@@ -3,26 +3,9 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import { storage } from '../../../lib/storage';
-import { parsePcioFile } from '../logic/pcioParser';
+import { loadServerGame, type ServerGameEntry } from '../logic/tabletopServerApi';
 import { pickAndLoadGameFolder, supportsLocalFolderImport } from '../logic/localFolderImport';
 import type { TabletopGameDefinition, TabletopGameSummary } from '../logic/types';
-
-interface ServerGameEntry {
-  id: string;
-  name: string;
-  author?: string;
-  description?: string;
-  widgetCount: number;
-  cardCount: number;
-  format?: 'flat-json' | 'pcio-folder' | 'unknown';
-  updatedAt: number;
-}
-
-interface TabletopRawResponse {
-  id: string;
-  rawJson: string;
-  assetMap: Record<string, string>;
-}
 
 export function useTabletopGames() {
   const [games, setGames] = useState<TabletopGameSummary[]>([]);
@@ -77,6 +60,7 @@ export function useTabletopGames() {
         widgetCount: entry.widgetCount ?? 0,
         format: entry.format,
         updatedAt: entry.updatedAt ?? Date.now(),
+        serverSaved: entry.saved === true,
       }));
 
       setGames(summaries);
@@ -104,25 +88,7 @@ export function useTabletopGames() {
   }, [fetchGames]);
 
   const loadGameFromServer = useCallback(
-    async (id: string): Promise<TabletopGameDefinition> => {
-      const baseUrl = storage.getHelperUrl().replace(/\/$/, '');
-      const token = storage.getHelperToken();
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const res = await fetch(`${baseUrl}/api/tabletop/games/${encodeURIComponent(id)}/raw`, {
-        headers,
-      });
-
-      if (!res.ok) {
-        throw new Error(`Konnte Spiel nicht vom Server laden (HTTP ${res.status})`);
-      }
-
-      const data = (await res.json()) as TabletopRawResponse;
-      return parsePcioFile(data.rawJson, { assetFiles: data.assetMap });
-    },
+    (id: string): Promise<TabletopGameDefinition> => loadServerGame(id),
     [],
   );
 

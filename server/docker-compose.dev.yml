@@ -4,18 +4,22 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: melodiq-server-dev
-    restart: "no"
+    restart: 'no'
     ports:
-      - "3000:3000"
+      - '3000:3000'
     volumes:
       - ./config:/app/config:z
       - ./models:/app/models:z
       - ./src:/app/src:z
       - ./music:/app/music:z
+      - ./tabletop:/app/tabletop:z
+      - ./notes:/app/notes:z
     environment:
       - NODE_ENV=development
       - PORT=3000
       - MUSIC_DIR=/app/music
+      - TABLETOP_DIR=/app/tabletop
+      - NOTES_DIR=/app/notes
       - CONFIG_PATH=/app/config/config.json
       - ALLOWED_ORIGINS=*
 
@@ -24,10 +28,9 @@ services:
       context: ../signaling
       dockerfile: Dockerfile
     container_name: galaxy-signaling-dev
-    restart: "no"
+    restart: 'no'
     ports:
-      - "8000:8000"
+      - '8000:8000'
     environment:
       - NODE_ENV=development
       - PORT=8000
-

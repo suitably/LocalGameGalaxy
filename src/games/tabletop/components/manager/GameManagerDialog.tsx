@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-} from '@mui/material';
+import { Alert, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { InstalledGamesTab } from './InstalledGamesTab';
+import { LocalGamesSection } from './LocalGamesSection';
 import { EditGameDialog } from './EditGameDialog';
 import { ImportWorkshopDialog } from './ImportWorkshopDialog';
-import { useTabletopGames } from '../../hooks/useTabletopGames';
-import { saveTabletopGame, getTabletopGame, deleteTabletopGame } from '../../logic/tabletopStorage';
+import { useGameManager, type GameSource, type ManagerNotice } from '../../hooks/useGameManager';
+import { saveTabletopGame } from '../../logic/tabletopStorage';
 import { exportGameAsJson, exportGameAsPcio } from '../../logic/tabletopExporter';
 import type { TabletopGameDefinition } from '../../logic/types';
 
@@ -31,93 +26,49 @@ export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
   onPublish,
 }) => {
   const { t } = useTranslation();
-  const {
-    games,
-    loading,
-    error,
-    serverConnected,
-    supportsLocalFolder,
-    loadGameFromServer,
-    pickLocalFolder,
-    refresh,
-  } = useTabletopGames();
-
-  const [editingGame, setEditingGame] = useState<TabletopGameDefinition | null>(null);
+  const manager = useGameManager(open);
+  const { server } = manager;
   const [workshopOpen, setWorkshopOpen] = useState(false);
 
-  const fetchFullGame = async (id: string): Promise<TabletopGameDefinition | null> => {
-    try {
-      if (serverConnected) {
-        return await loadGameFromServer(id);
-      }
-    } catch {
-      // fallback to local IDB
-    }
-    return getTabletopGame(id);
-  };
+  const noticeText = (n: ManagerNotice) =>
+    n.kind === 'error'
+      ? t('games.tabletop.server_save_failed', { error: n.error })
+      : t(`games.tabletop.server_${n.kind}`, { name: n.name });
 
-  const handlePlayParty = async (id: string) => {
-    try {
-      const full = await fetchFullGame(id);
-      if (full) await saveTabletopGame(full);
-    } catch {
-      // ignore
-    }
-    onPlayParty(id);
-    onClose();
-  };
-
-  const handlePlayLocal = async (id: string) => {
-    try {
-      const full = await fetchFullGame(id);
-      if (full) await saveTabletopGame(full);
-    } catch {
-      // ignore
-    }
-    onPlayLocal(id);
-    onClose();
+  /** The card actions, bound to where the listed games live. */
+  const handlersFor = (source: GameSource) => {
+    const withFull = (use: (game: TabletopGameDefinition) => void) => async (id: string) => {
+      const full = await manager.fetchFull(id, source);
+      if (full) use(full);
+    };
+    return {
+      onPlayParty: async (id: string) => {
+        await manager.prepareToPlay(id, source);
+        onPlayParty(id);
+        onClose();
+      },
+      onPlayLocal: async (id: string) => {
+        await manager.prepareToPlay(id, source);
+        onPlayLocal(id);
+        onClose();
+      },
+      onEdit: (id: string) => void manager.startEdit(id, source),
+      onExportJson: withFull(exportGameAsJson),
+      onExportPcio: withFull(exportGameAsPcio),
+      onPublish: withFull(onPublish),
+      onDelete: (id: string) => void manager.remove(id, source),
+    };
   };
 
   const handleOpenLocalFolder = async () => {
     try {
-      const def = await pickLocalFolder();
+      const def = await server.pickLocalFolder();
       await saveTabletopGame(def);
       onPlayLocal(def.id);
       onClose();
     } catch (err) {
       console.warn('[GameManagerDialog] Local folder pick cancelled or failed:', err);
     }
-  };
-
-  const handleEdit = async (id: string) => {
-    const full = await fetchFullGame(id);
-    if (full) setEditingGame(full);
-  };
-
-  const handleExportJson = async (id: string) => {
-    const full = await fetchFullGame(id);
-    if (full) exportGameAsJson(full);
-  };
-
-  const handleExportPcio = async (id: string) => {
-    const full = await fetchFullGame(id);
-    if (full) exportGameAsPcio(full);
-  };
-
-  const handlePublishGame = async (id: string) => {
-    const full = await fetchFullGame(id);
-    if (full) onPublish(full);
-  };
-
-  const handleDelete = async (id: string) => {
-    await deleteTabletopGame(id);
-    await refresh();
-  };
-
-  const handleSaveGame = async (saved: TabletopGameDefinition) => {
-    await saveTabletopGame(saved);
-    setEditingGame(null);
-    await refresh();
   };
 
   return (
@@ -128,22 +79,33 @@ export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
         </DialogTitle>
 
         <DialogContent dividers sx={{ pt: 2.5 }}>
+          {manager.notice && (
+            <Alert
+              severity={manager.notice.kind === 'error' ? 'error' : 'success'}
+              onClose={manager.clearNotice}
+              sx={{ mb: 2 }}
+            >
+              {noticeText(manager.notice)}
+            </Alert>
+          )}
           <InstalledGamesTab
-            games={games}
-            loading={loading}
-            error={error}
-            serverConnected={serverConnected}
-            supportsLocalFolder={supportsLocalFolder}
-            onRefresh={refresh}
+            games={server.games}
+            loading={server.loading}
+            error={server.error}
+            serverConnected={server.serverConnected}
+            supportsLocalFolder={server.supportsLocalFolder}
+            onRefresh={server.refresh}
             onOpenLocalFolder={handleOpenLocalFolder}
             onImportWorkshop={() => setWorkshopOpen(true)}
-            onPlayParty={handlePlayParty}
-            onPlayLocal={handlePlayLocal}
-            onEdit={handleEdit}
-            onExportJson={handleExportJson}
-            onExportPcio={handleExportPcio}
-            onPublish={handlePublishGame}
-            onDelete={handleDelete}
+            busyId={manager.busyId}
+            {...handlersFor('server')}
+          />
+          <LocalGamesSection
+            games={manager.localGames}
+            serverConnected={server.serverConnected}
+            busyId={manager.busyId}
+            onSaveToServer={(id) => void manager.saveToServer(id)}
+            {...handlersFor('local')}
           />
         </DialogContent>
 
@@ -155,16 +117,23 @@ export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
       </Dialog>
 
       <EditGameDialog
-        open={Boolean(editingGame)}
-        game={editingGame}
-        onClose={() => setEditingGame(null)}
-        onSave={handleSaveGame}
+        open={Boolean(manager.editing)}
+        game={manager.editing}
+        onClose={manager.cancelEdit}
+        onSave={manager.saveEdit}
       />
 
       <ImportWorkshopDialog
         open={workshopOpen}
-        onClose={() => { setWorkshopOpen(false); refresh(); }}
-        onPlayGame={(id) => { onPlayLocal(id); onClose(); }}
+        onClose={() => {
+          setWorkshopOpen(false);
+          void server.refresh();
+          manager.reloadLocal();
+        }}
+        onPlayGame={(id) => {
+          onPlayLocal(id);
+          onClose();
+        }}
       />
     </>
   );

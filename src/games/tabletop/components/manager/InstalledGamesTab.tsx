@@ -36,6 +36,8 @@ interface InstalledGamesTabProps {
   onPublish?: (id: string) => void;
   onDelete?: (id: string) => void;
   onOpenSettings?: () => void;
+  /** Game whose server action is running. */
+  busyId?: string | null;
 }
 
 export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
@@ -55,6 +57,7 @@ export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
   onPublish,
   onDelete,
   onOpenSettings,
+  busyId = null,
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -160,6 +163,8 @@ export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
                   onExportPcio={onExportPcio ?? (() => {})}
                   onPublish={onPublish ?? (() => {})}
                   onDelete={onDelete ?? (() => {})}
+                  canDelete={g.serverSaved === true}
+                  busy={busyId === g.id}
                 />
               ))}
             </Stack>

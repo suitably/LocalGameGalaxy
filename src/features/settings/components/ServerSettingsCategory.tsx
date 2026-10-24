@@ -4,7 +4,7 @@ import DnsIcon from '@mui/icons-material/DnsRounded';
 import { useTranslation } from 'react-i18next';
 import { SignalingSettingsCard } from './server/SignalingSettingsCard';
 import { CompanionPluginsSection } from './server/CompanionPluginsSection';
-import { ComposeGeneratorPanel } from './server/ComposeGeneratorPanel';
+import { ServerSetupCard } from './server/ServerSetupCard';
 
 interface ServerSettingsCategoryProps {
   autoFocusUsdb?: boolean;
@@ -41,8 +41,8 @@ export const ServerSettingsCategory: React.FC<ServerSettingsCategoryProps> = ({
       {/* 2. Modular Game Companion Plugins */}
       <CompanionPluginsSection autoFocusUsdb={autoFocusUsdb} onBackToGame={onBackToGame} />
 
-      {/* 3. Docker Compose Generator */}
-      <ComposeGeneratorPanel />
+      {/* 3. Setting up a server: app, Docker compose, Cloudflare, terminal */}
+      <ServerSetupCard />
     </Box>
   );
 };

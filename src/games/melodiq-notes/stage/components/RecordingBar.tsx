@@ -7,7 +7,7 @@ const NUDGE_SEC = 0.05;
 const STAGES = ['analyse', 'match', 'refine'] as const;
 const signed = (n: number) => (n > 0 ? '+' : '−') + Math.abs(n);
 
-/** The recording behind the song: choose it, align it bar by bar, fine-tune, save the marks or export the score. */
+/** The recording behind the song: choose it, align it bar by bar, fine-tune, save it to the server or export the score. */
 export function RecordingBar({ state }: { state: StageSongState }) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
@@ -58,6 +58,20 @@ export function RecordingBar({ state }: { state: StageSongState }) {
             if (f) state.setRecordingFile(f);
           }}
         />
+        {state.canSaveToServer && (
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={state.saved || running}
+            onClick={() => void state.saveToServer()}
+          >
+            {state.saved
+              ? k('saved')
+              : state.origin?.kind === 'server'
+                ? k('save_marks')
+                : k('save_to_library')}
+          </Button>
+        )}
         {recording && (
           <>
             <Button
@@ -100,16 +114,6 @@ export function RecordingBar({ state }: { state: StageSongState }) {
                   {k('pin_bar')}
                 </Button>
               </Tooltip>
-            )}
-            {state.origin?.kind === 'server' && marks && (
-              <Button
-                size="small"
-                variant="outlined"
-                disabled={state.saved}
-                onClick={() => void state.saveMarks()}
-              >
-                {state.saved ? k('saved') : k('save_marks')}
-              </Button>
             )}
             {state.canExport && (
               <Button size="small" variant="text" onClick={state.exportScore}>

@@ -47,7 +47,6 @@ export const ServerSetupWizard: React.FC<ServerSetupWizardProps> = ({ isDialog =
     checkLocalhost,
     autoConnect,
     downloadConfigFile,
-    downloadDockerCompose,
   } = useServerAutoDetect();
 
   return (
@@ -176,9 +175,7 @@ export const ServerSetupWizard: React.FC<ServerSetupWizardProps> = ({ isDialog =
         {activeTab === 'binary' && (
           <SetupBinaryTab os={os} downloadConfigFile={downloadConfigFile} />
         )}
-        {activeTab === 'docker' && (
-          <SetupDockerTab token={token} downloadDockerCompose={downloadDockerCompose} />
-        )}
+        {activeTab === 'docker' && <SetupDockerTab token={token} />}
         {activeTab === 'cloudflare' && <SetupCloudflareTab />}
         {activeTab === 'terminal' && <SetupOneLinerTab token={token} />}
       </Collapse>

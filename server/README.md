@@ -13,8 +13,8 @@ WebRTC signaling is handled by the companion **galaxy-signaling** microservice o
 Run the entire companion stack (MelodiQ Media Server + WebRTC Signaling) with a single command:
 
 ```bash
-# 1. Create your local folders
-mkdir -p music config models
+# 1. Create your local folders (one per plugin)
+mkdir -p config music models tabletop notes
 
 # 2. Start stack
 docker compose up -d
@@ -34,16 +34,19 @@ docker compose logs -f
 
 All settings can be configured via environment variables in `docker-compose.yml` or a `.env` file:
 
-| Variable | Default | Description |
-|:---|:---|:---|
-| `PORT` | `3000` | HTTP port inside the container |
-| `NODE_ENV` | `production` | Node runtime environment |
-| `MUSIC_DIR` | `/app/music` | Root folder containing UltraStar karaoke songs |
-| `CONFIG_PATH` | `/app/config/config.json` | Persistent configuration file path |
-| `SECURITY_TOKEN` | *(auto-generated)* | Master authentication bearer token. Generated automatically and stored in `config.json` if empty. |
-| `ENABLE_TUNNEL` | `false` | Set to `true` to auto-launch Cloudflare Quick Tunnel on container startup |
-| `ALLOWED_ORIGINS` | `*` | Comma-separated list of allowed CORS origins, or `*` for all |
-| `MODELS_DIR` | `/app/models` | Storage path for ONNX stem models & Whisper AI weights |
+| Variable          | Default                        | Description                                                                                       |
+| :---------------- | :----------------------------- | :------------------------------------------------------------------------------------------------ |
+| `PORT`            | `3000`                         | HTTP port inside the container                                                                    |
+| `NODE_ENV`        | `production`                   | Node runtime environment                                                                          |
+| `PLUGINS`         | `relay,melodiq,tabletop,notes` | Plugins to load; drop the ones you do not need                                                    |
+| `MUSIC_DIR`       | `/app/music`                   | Root folder containing UltraStar karaoke songs                                                    |
+| `TABLETOP_DIR`    | `/app/tabletop`                | Tabletop game library; games saved from the app go to `saved/` inside it                          |
+| `NOTES_DIR`       | `/app/notes`                   | Melodiq Notes library: one folder per piece with scores, recordings and bar marks                 |
+| `CONFIG_PATH`     | `/app/config/config.json`      | Persistent configuration file path                                                                |
+| `SECURITY_TOKEN`  | _(auto-generated)_             | Master authentication bearer token. Generated automatically and stored in `config.json` if empty. |
+| `ENABLE_TUNNEL`   | `false`                        | Set to `true` to auto-launch Cloudflare Quick Tunnel on container startup                         |
+| `ALLOWED_ORIGINS` | `*`                            | Comma-separated list of allowed CORS origins, or `*` for all                                      |
+| `MODELS_DIR`      | `/app/models`                  | Storage path for ONNX stem models & Whisper AI weights                                            |
 
 ---
 
@@ -51,10 +54,14 @@ All settings can be configured via environment variables in `docker-compose.yml`
 
 ```yaml
 volumes:
-  - ./music:/app/music      # Your UltraStar song library (read/write for stem creation)
-  - ./config:/app/config    # Persistent configuration (config.json)
-  - ./models:/app/models    # Downloaded ONNX and PyTorch/Whisper models
+  - ./music:/app/music # Your UltraStar song library (read/write for stem creation)
+  - ./config:/app/config # Persistent configuration (config.json)
+  - ./models:/app/models # Downloaded ONNX and PyTorch/Whisper models
+  - ./tabletop:/app/tabletop # Tabletop games (saved games in tabletop/saved/)
+  - ./notes:/app/notes # Melodiq Notes pieces (scores, recordings, marks)
 ```
+
+The app's **Settings → Server → Docker Compose Generator** builds this file for you: pick the games, folders, ports and token, download it and run `docker compose up -d`.
 
 ### Container Directory Layout
 
@@ -73,7 +80,15 @@ volumes:
 │   │   └── video.mp4
 ├── config/                   # [VOLUME] Persistent server settings
 │   └── config.json
-└── models/                   # [VOLUME] Cached ML models
+├── models/                   # [VOLUME] Cached ML models
+├── tabletop/                 # [VOLUME] Tabletop games
+│   └── saved/My Game/game.json        # saved from the app
+└── notes/                    # [VOLUME] Melodiq Notes library
+    └── Debussy - Clair de Lune/
+        ├── piece.json                     # title, artist
+        ├── Clair de Lune.mxl              # score (MusicXML/MIDI)
+        ├── Clair de Lune.mxl.marks.json   # bar marks (score ↔ recording)
+        └── Take 1.mp3                     # recording
 ```
 
 ---
@@ -81,27 +96,35 @@ volumes:
 ## 4. Network & Remote Access
 
 ### Local Network (LAN)
+
 Access from any device on your home network:
+
 ```
 http://<SERVER_IP>:3000
 ```
+
 Pairing in the frontend:
+
 1. Open MelodiQ in your browser or PWA.
 2. Go to **Settings ➔ Server**.
 3. Input your server URL (`http://<SERVER_IP>:3000`) and security token (found in `config/config.json` or docker logs).
 
 ### Cloudflare Quick Tunnel (Zero Port-Forwarding)
+
 To share your karaoke session with friends across the internet without opening router ports:
 
 ```bash
 docker compose --profile tunnel up -d
 ```
+
 Inspect logs for the public HTTPS URL:
+
 ```bash
 docker compose logs melodiq-tunnel
 ```
 
 ### Reverse Proxy (Nginx / Caddy / Pangolin)
+
 Point your reverse proxy to `http://127.0.0.1:3000`. WebSocket upgrades are handled automatically on the HTTP port for signaling.
 
 ---
@@ -109,7 +132,8 @@ Point your reverse proxy to `http://127.0.0.1:3000`. WebSocket upgrades are hand
 ## 5. Preinstalled AI Dependencies & Image Size
 
 The Docker image includes full pre-installed AI audio and video processing tools:
-- **Node.js 20 LTS** (Hono runtime)
+
+- **Node.js 24** (Hono runtime)
 - **ffmpeg** (audio transcoding & extraction)
 - **yt-dlp** (YouTube music & video downloader)
 - **audio-separator[cpu]** (ONNX MDX-Net stem separation)
@@ -117,6 +141,7 @@ The Docker image includes full pre-installed AI audio and video processing tools
 - **PyTorch CPU** (`torch`, `torchvision`, `torchaudio` from official CPU index)
 
 ### Image Size:
+
 - **Base image footprint**: ~3.0 – 3.5 GB (due to PyTorch CPU wheels and ML runtimes).
 - **First-run download**: AI models (UVR MDX-Net ~60MB, Whisper Base ~140MB) are downloaded on-demand into `/app/models` and persisted across restarts.
 

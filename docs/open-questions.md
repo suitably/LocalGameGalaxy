@@ -29,11 +29,6 @@ Resolve: run the scaffolder in a scratch branch; either align it with the existi
 Rule: every key is registered in `STORAGE_KEYS`. Reality: qwixx, knister, kniffel, guessart, storyteller and cards define local key strings (list in [game-catalog §2](tech/game-catalog.md#2-persistence)). Several registered keys are therefore **never referenced**: `CARDS_LOBBY_PLAYERS`, `QWIXX_MY_SHEET`, `QWIXX_SHOW_DICE`, `KNISTER_CURRENT_GAME`, `KNISTER_SHOW_DICE`, `EXCALIDRAW_DRAWING`. The architecture check only catches raw `localStorage.` calls, not unregistered keys.
 Resolve: replace local constants with the registry entries (same string values, so no data migration), add the missing ones (kniffel, guessart, storyteller), drop unused entries.
 
-## Q10 — Node version drift
-
-`.nvmrc` = 24, root `package.json` `engines.node >=24`, CI uses `.nvmrc`. But `server/Dockerfile` builds on `node:20-slim` and README "Prerequisites" says Node 20.
-Resolve: bump the Dockerfile base image (check the `full` AI stage too) and README.
-
 ## Q11 — 63.7 MB ONNX model tracked in git
 
 `server/models/UVR-MDX-NET-Inst_HQ_3.onnx` is tracked (hygiene check warns). The rule "never track server media" names `server/music/` only.

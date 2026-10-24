@@ -6,7 +6,7 @@ import { serverConfig } from '../../../config';
 import { getRequestToken } from '../../../core/auth';
 import { cloudflareTunnel } from '../../../core/tunnel';
 import { getLocalIp } from '../../../utils/helpers';
-import { getGameCache, isScanning, scanGames } from '../services/scanner';
+import { getGameCache, isSavedGame, isScanning, scanGames } from '../services/scanner';
 import type {
   HonoEnv,
   TabletopGameEntry,
@@ -16,11 +16,11 @@ import type {
 
 export const tabletopGamesRouter = new Hono<HonoEnv>();
 
-const toClientGameEntry = (entry: TabletopGameEntry): ClientTabletopGameEntry => {
+export const toClientGameEntry = (entry: TabletopGameEntry): ClientTabletopGameEntry => {
   // Destructured only to omit server paths from the client payload.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { jsonPath: _jsonPath, assetsDir: _assetsDir, ...clientSafe } = entry;
-  return clientSafe;
+  return { ...clientSafe, saved: isSavedGame(entry) };
 };
 
 // GET /api/tabletop/games — Client-safe game listing

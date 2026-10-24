@@ -5,32 +5,22 @@ import {
   Typography,
   Box,
   Button,
-  IconButton,
   Chip,
   Menu,
   MenuItem,
   Tooltip,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
-import EditIcon from '@mui/icons-material/EditRounded';
-import FileDownloadIcon from '@mui/icons-material/FileDownloadRounded';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineRounded';
-import PublishIcon from '@mui/icons-material/PublishRounded';
 import GroupsIcon from '@mui/icons-material/GroupsRounded';
 import PhoneIphoneIcon from '@mui/icons-material/PhoneIphoneRounded';
 import { useTranslation } from 'react-i18next';
 import type { TabletopGameSummary } from '../../logic/types';
-import { ConfirmDialog } from '../../../../components/common/ConfirmDialog';
+import { GameCardActions, type GameCardActionsProps } from './GameCardActions';
 
-interface GameCardItemProps {
+interface GameCardItemProps extends GameCardActionsProps {
   game: TabletopGameSummary;
   onPlayParty: (id: string) => void;
   onPlayLocal: (id: string) => void;
-  onEdit: (id: string) => void;
-  onExportJson: (id: string) => void;
-  onExportPcio: (id: string) => void;
-  onPublish: (id: string) => void;
-  onDelete: (id: string) => void;
 }
 
 export const GameCardItem: React.FC<GameCardItemProps> = ({
@@ -42,11 +32,12 @@ export const GameCardItem: React.FC<GameCardItemProps> = ({
   onExportPcio,
   onPublish,
   onDelete,
+  onSaveToServer,
+  busy = false,
+  canDelete = true,
 }) => {
   const { t } = useTranslation();
-  const [exportAnchor, setExportAnchor] = useState<null | HTMLElement>(null);
   const [playAnchor, setPlayAnchor] = useState<null | HTMLElement>(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const canPlayParty = game.supportedModes.includes('party_multi_device');
   const canPlayLocal =
@@ -149,69 +140,19 @@ export const GameCardItem: React.FC<GameCardItemProps> = ({
             </MenuItem>
           </Menu>
 
-          <Box display="flex" gap={0.5}>
-            <Tooltip title={t('common.edit', 'Bearbeiten')}>
-              <IconButton size="small" onClick={() => onEdit(game.id)}>
-                <EditIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={t('games.tabletop.export', 'Exportieren')}>
-              <IconButton size="small" onClick={(e) => setExportAnchor(e.currentTarget)}>
-                <FileDownloadIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Menu
-              anchorEl={exportAnchor}
-              open={Boolean(exportAnchor)}
-              onClose={() => setExportAnchor(null)}
-            >
-              <MenuItem
-                onClick={() => {
-                  setExportAnchor(null);
-                  onExportPcio(game.id);
-                }}
-              >
-                {t('games.tabletop.export_pcio', 'Als .pcio (ZIP) exportieren')}
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  setExportAnchor(null);
-                  onExportJson(game.id);
-                }}
-              >
-                {t('games.tabletop.export_json', 'Als .json exportieren')}
-              </MenuItem>
-            </Menu>
-            <Tooltip title={t('games.tabletop.publish', 'Als PR einreichen')}>
-              <IconButton size="small" color="primary" onClick={() => onPublish(game.id)}>
-                <PublishIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={t('common.delete', 'Löschen')}>
-              <IconButton size="small" color="error" onClick={() => setDeleteConfirmOpen(true)}>
-                <DeleteOutlineIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Box>
+          <GameCardActions
+            game={game}
+            onEdit={onEdit}
+            onExportJson={onExportJson}
+            onExportPcio={onExportPcio}
+            onPublish={onPublish}
+            onDelete={onDelete}
+            onSaveToServer={onSaveToServer}
+            busy={busy}
+            canDelete={canDelete}
+          />
         </Box>
       </CardContent>
-
-      <ConfirmDialog
-        open={deleteConfirmOpen}
-        title={t('games.tabletop.confirm_delete_title', 'Spiel löschen?')}
-        message={t(
-          'games.tabletop.confirm_delete_message',
-          'Möchtest du "{{name}}" wirklich unwiderruflich aus deinem Speicher löschen?',
-          { name: game.name },
-        )}
-        confirmText={t('common.delete', 'Löschen')}
-        confirmColor="error"
-        onConfirm={() => {
-          setDeleteConfirmOpen(false);
-          onDelete(game.id);
-        }}
-        onCancel={() => setDeleteConfirmOpen(false)}
-      />
     </Card>
   );
 };

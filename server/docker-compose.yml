@@ -21,7 +21,8 @@ services:
   # 2. Game Companion Services (Modular Plugins)
   # ══════════════════════════════════════════════════════════════════
 
-  # Companion server: one container, plugins relay + melodiq + tabletop (PLUGINS, default all).
+  # Companion server: one container, plugins relay + melodiq + tabletop + notes (PLUGINS, default all).
+  # Each plugin keeps its data in its own folder; drop a plugin from PLUGINS and its volume line.
   # Push notifications need no container (ntfy or server/cloudflare-push-relay worker).
   melodiq:
     image: nexumia/melodiq-server:latest
@@ -30,13 +31,18 @@ services:
     ports:
       - '3000:3000'
     volumes:
-      - ./music:/app/music
       - ./config:/app/config
-      - ./models:/app/models
+      - ./music:/app/music # melodiq: UltraStar song library
+      - ./models:/app/models # melodiq: AI models (stems, Whisper)
+      - ./tabletop:/app/tabletop # tabletop: game library, saved games in tabletop/saved/
+      - ./notes:/app/notes # notes: Melodiq Notes scores, recordings, bar marks
     environment:
       - PORT=3000
       - NODE_ENV=production
+      - PLUGINS=relay,melodiq,tabletop,notes
       - MUSIC_DIR=/app/music
+      - TABLETOP_DIR=/app/tabletop
+      - NOTES_DIR=/app/notes
       - CONFIG_PATH=/app/config/config.json
       - SECURITY_TOKEN= # Auto-generated and persisted if empty
       - ENABLE_TUNNEL=false # Set to 'true' for Cloudflare Quick Tunnel

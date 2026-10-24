@@ -12,7 +12,7 @@ import QueueMusicIcon from '@mui/icons-material/QueueMusicRounded';
 import LanguageIcon from '@mui/icons-material/LanguageRounded';
 import FeedbackIcon from '@mui/icons-material/FeedbackRounded';
 import VpnKeyRoundedIcon from '@mui/icons-material/VpnKeyRounded';
-import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHighRounded';
 import PianoIcon from '@mui/icons-material/PianoRounded';
 import type { SettingsTabType } from '../../settingsNav';
 
@@ -102,11 +102,10 @@ export const NAV_TABS: Record<SettingsTabType, NavTab> = {
         label: () => 'Companion Plugins',
       },
       {
-        sub: 'compose',
-        section: 'compose',
-        icon: icon(ContentCopyIcon),
-        label: (t) => t('settings.compose_generator', 'Compose'),
-        desktopOnly: true,
+        sub: 'setup',
+        section: 'setup',
+        icon: icon(AutoFixHighIcon),
+        label: (t) => t('settings.server_setup_nav'),
       },
     ],
   },

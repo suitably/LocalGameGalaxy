@@ -735,7 +735,15 @@
         "backing_others": "Nur Begleitung",
         "backing_none": "Stumm",
         "recording_on": "Aufnahme an",
-        "recording_off": "Aufnahme aus"
+        "recording_off": "Aufnahme aus",
+        "tab_notes": "Notes-Bibliothek",
+        "notes_server_error": "Notes-Bibliothek nicht erreichbar ({{error}}). Ist das Plugin „notes\" auf dem Server aktiv?",
+        "notes_empty": "Noch nichts gespeichert. Öffne Noten und tippe auf „In Notes-Bibliothek speichern\".",
+        "notes_recordings_one": "{{count}} Aufnahme",
+        "notes_recordings_other": "{{count}} Aufnahmen",
+        "notes_delete": "Stück löschen",
+        "notes_delete_confirm": "„{{title}}\" mit Noten, Aufnahmen und Taktmarken vom Server löschen?",
+        "save_to_library": "In Notes-Bibliothek speichern"
       }
     },
     "kniffel": {
@@ -1044,7 +1052,14 @@
       "mode_own_devices": "Jeder am eigenen Gerät",
       "mode_own_devices_hint": "Session öffnen, Mitspieler treten per QR-Code oder Link bei.",
       "dice_games": "Würfelspiele",
-      "custom_game_meta": "{{min}}–{{max}} Spieler"
+      "custom_game_meta": "{{min}}–{{max}} Spieler",
+      "save_to_server": "Auf Server speichern",
+      "local_games_title": "Auf diesem Gerät ({{count}})",
+      "local_games_hint": "Diese Spiele liegen nur in diesem Browser. Auf den Server verschoben, haben sie alle Geräte.",
+      "local_games_hint_offline": "Diese Spiele liegen nur in diesem Browser. Mit einem Companion-Server kannst du sie dort speichern.",
+      "server_saved": "„{{name}}\" ist auf dem Server gespeichert.",
+      "server_saved_copy": "Das Original ist schreibgeschützt – „{{name}}\" wurde als Kopie auf dem Server gespeichert.",
+      "server_save_failed": "Speichern auf dem Server fehlgeschlagen: {{error}}"
     }
   },
   "lobby": {
@@ -1114,12 +1129,10 @@
     "companion_tabletop_desc": "Asset-Caching, TTS/PCIO Deck-Konvertierung und Physics-Sync für Tabletop-Simulationen.",
     "companion_tabletop_planned_title": "Tabletop Companion Plugin (In Planung)",
     "companion_tabletop_planned_desc": "Diese Schnittstelle wird zukünftig große 3D-Assets, eigene Kartendecks und synchronisierte Tabletop-Zustände lokal hosten und streamen.",
-    "compose_generator": "Compose",
-    "compose_generator_title": "Docker Compose Generator",
-    "compose_generator_desc": "Wähle die gewünschten Services aus und erhalte eine fertige docker-compose.yml",
+    "compose_generator_desc": "Wähle Dienste, Ports und Ordner – die docker-compose.yml darunter passt sich sofort an. Der Token oben wird übernommen.",
     "compose_copy": "In die Zwischenablage kopieren",
     "compose_copied": "Kopiert!",
-    "compose_services_title": "Services auswählen",
+    "compose_services_title": "Dienste",
     "companion_tabletop_url_title": "Tabletop Server-Verbindung",
     "companion_tabletop_status_games": "{{count}} Spiele verfügbar",
     "companion_tabletop_status_scanning": "Wird gescannt...",
@@ -1201,7 +1214,29 @@
     "ntfy_subscribe_btn": "In ntfy abonnieren",
     "ntfy_badge_title": "100% Google-frei via ntfy",
     "ntfy_badge_desc": "Erhalte Pushs ohne Google Play Services direkt in deiner ntfy-App.",
-    "hostDeviceBadge": "Dein Gerät"
+    "hostDeviceBadge": "Dein Gerät",
+    "compose_service_melodiq": "MelodiQ (Karaoke-Songs)",
+    "compose_service_notes": "Melodiq Notes (Noten & Aufnahmen)",
+    "compose_service_tabletop": "Tabletop (Spiele speichern)",
+    "compose_service_signaling": "WebRTC-Signaling",
+    "compose_service_tunnel": "Cloudflare Tunnel (Internet-Freigabe)",
+    "compose_ai_image": "KI-Image (Stem-Trennung & Whisper, ca. 3 GB)",
+    "compose_connection_title": "Verbindung",
+    "compose_port": "Server-Port",
+    "compose_signaling_port": "Signaling-Port",
+    "compose_folders_title": "Ordner auf deinem Rechner",
+    "compose_path_config": "Konfiguration",
+    "compose_path_music": "Song-Bibliothek",
+    "compose_path_models": "KI-Modelle",
+    "compose_path_notes": "Notes-Bibliothek",
+    "compose_path_tabletop": "Tabletop-Spiele",
+    "compose_download": "Herunterladen",
+    "compose_run_hint": "Speichere die Datei in einem leeren Ordner und starte dort:",
+    "compose_apply": "Dieses Gerät mit localhost verbinden",
+    "compose_applied": "Server-URL und Token übernommen. Starte die Container, dann verbindet sich die App.",
+    "server_setup_nav": "Einrichten",
+    "server_setup_title": "Server einrichten",
+    "server_setup_desc": "Alles an einem Ort: Server-App für Windows, macOS und Linux, Docker Compose mit den gewünschten Spielen, Cloudflare oder Terminal-Einzeiler."
   },
   "server": {
     "title": "Nexumia Server Verbindung",
@@ -1219,7 +1254,7 @@
     "conn_failed": "Verbindung fehlgeschlagen. URL oder Netzwerk prüfen.",
     "setup": {
       "title": "Server automatisch aufsetzen",
-      "subtitle": "Begleit-Server für Melodiq (Song-Bibliothek & Streaming). Partyspiele laufen serverlos.",
+      "subtitle": "Wähle, wie du deinen Companion-Server (Melodiq, Notes, Tabletop) startest – der Token unten gilt für alle Wege.",
       "collapse_show": "Server Setup-Assistent anzeigen",
       "collapse_hide": "Setup-Assistent ausblenden",
       "copy": "Kopieren",
@@ -1242,17 +1277,6 @@
       "step_2_desc": "Doppelklicke auf das Startskript:",
       "step_3_title": "3. Automatisch verbinden",
       "step_3_desc": "Sobald das Serverfenster geöffnet ist, verbindet sich die App automatisch mit localhost:3000.",
-      "docker": {
-        "run_command": "Docker 1-Befehl Schnellstart:",
-        "compose_file_title": "docker-compose.yml Konfiguration",
-        "copy_compose": "YAML kopieren",
-        "download_compose": "docker-compose.yml herunterladen",
-        "desc": "Starte den Server via Docker Container. Enthält dein vorkonfiguriertes Master-Token und Port 3000.",
-        "profiles_title": "Enthaltene Docker-Profile:",
-        "profile_core": "Core Relay & Media (Leichtgewichtig, ~200MB)",
-        "profile_tunnel": "Cloudflare Quick Tunnel (Öffentliches HTTPS ohne Router-Portfreigabe)",
-        "profile_ai": "Melodiq KI Worker (ONNX Gesangstrennung & Whisper KI)"
-      },
       "cloudflare": {
         "title": "Kostenloser 24/7 Cloud-Server",
         "desc": "Hoste deinen eigenen Relay-Server kostenlos auf Cloudflare Workers. Perfekt für Online-Runden mit Freunden ohne laufenden Heim-PC.",
@@ -1271,7 +1295,9 @@
         "connect_btn": "Jetzt mit lokalem Server verbinden",
         "connected_btn": "Erfolgreich verbunden",
         "rescan": "Erneut prüfen"
-      }
+      },
+      "download_binary_apple_silicon": "Apple Silicon (M1–M4)",
+      "download_binary_arm64": "ARM64 (z. B. Raspberry Pi)"
     },
     "admin": {
       "title": "API-Key Verwaltung",
@@ -1366,7 +1392,8 @@
       "auto_separation_desc": "Trennt Gesang und Instrumental-Spuren nach dem Download automatisch (erfordert KI-Worker).",
       "saved": "Einstellungen erfolgreich aktualisiert.",
       "error_save": "Fehler beim Aktualisieren der Einstellungen."
-    }
+    },
+    "setup_button": "Server einrichten oder anpassen"
   },
   "connection": {
     "default_title": "Geräte verbinden",
