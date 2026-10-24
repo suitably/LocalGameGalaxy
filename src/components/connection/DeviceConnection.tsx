@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Button, Typography, TextField, Paper, Container, Divider } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowBackIcon from '@mui/icons-material/ArrowBackRounded';
 import { useTranslation } from 'react-i18next';
 import type { RemotePeerBase } from '../../lib/webrtc';
 import { useDeviceConnectionSettings } from './useDeviceConnectionSettings';

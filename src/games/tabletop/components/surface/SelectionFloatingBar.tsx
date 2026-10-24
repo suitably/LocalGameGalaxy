@@ -3,10 +3,10 @@
  */
 import React from 'react';
 import { alpha, Paper, Chip, IconButton, Tooltip, Divider } from '@mui/material';
-import ZoomInIcon from '@mui/icons-material/ZoomIn';
-import ZoomOutIcon from '@mui/icons-material/ZoomOut';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import CloseIcon from '@mui/icons-material/Close';
+import ZoomInIcon from '@mui/icons-material/ZoomInRounded';
+import ZoomOutIcon from '@mui/icons-material/ZoomOutRounded';
+import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import { useTranslation } from 'react-i18next';
 
 interface SelectionFloatingBarProps {

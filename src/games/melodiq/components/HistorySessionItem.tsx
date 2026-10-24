@@ -9,8 +9,8 @@ import {
   AccordionDetails,
   Divider,
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
+import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
 import { type HistorySession } from '../hooks/useHistory';
 
 interface HistorySessionItemProps {

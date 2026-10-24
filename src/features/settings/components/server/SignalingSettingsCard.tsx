@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, Paper, TextField, Button, Chip } from '@mui/material';
-import HubIcon from '@mui/icons-material/Hub';
+import HubIcon from '@mui/icons-material/HubRounded';
 import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import ErrorRoundedIcon from '@mui/icons-material/ErrorRounded';

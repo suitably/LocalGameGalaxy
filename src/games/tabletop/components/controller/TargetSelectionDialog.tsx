@@ -10,7 +10,7 @@ import {
   ListItemText,
   ListItemIcon,
 } from '@mui/material';
-import LayersIcon from '@mui/icons-material/Layers';
+import LayersIcon from '@mui/icons-material/LayersRounded';
 import { useTranslation } from 'react-i18next';
 import type { HolderWidget } from '../../logic/types';
 

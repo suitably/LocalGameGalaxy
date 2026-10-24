@@ -4,7 +4,7 @@
 
 import React, { useEffect } from 'react';
 import { Box, Button } from '@mui/material';
-import BackspaceOutlinedIcon from '@mui/icons-material/BackspaceOutlined';
+import BackspaceOutlinedIcon from '@mui/icons-material/BackspaceRounded';
 import { useTranslation } from 'react-i18next';
 import type { LetterStatus } from '../logic/types';
 import { statusLabelKey, tileStyle } from './tileStyles';

@@ -12,10 +12,10 @@ import {
   Avatar,
   Paper,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import DeleteIcon from '@mui/icons-material/DeleteRounded';
+import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownwardRounded';
 import { useTranslation } from 'react-i18next';
 import { type SongMeta } from '../db';
 

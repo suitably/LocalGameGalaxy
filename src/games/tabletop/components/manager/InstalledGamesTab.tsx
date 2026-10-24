@@ -9,11 +9,11 @@ import {
   Paper,
   Tooltip,
 } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import FolderOpenIcon from '@mui/icons-material/FolderOpen';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import SettingsIcon from '@mui/icons-material/Settings';
-import CloudOffIcon from '@mui/icons-material/CloudOff';
+import RefreshIcon from '@mui/icons-material/RefreshRounded';
+import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownloadRounded';
+import SettingsIcon from '@mui/icons-material/SettingsRounded';
+import CloudOffIcon from '@mui/icons-material/CloudOffRounded';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { GameCardItem } from './GameCardItem';
@@ -70,19 +70,11 @@ export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
   return (
     <Stack spacing={3}>
       <Box display="flex" justifyContent="flex-end" alignItems="center" gap={1} flexWrap="wrap">
-        <Button
-          variant="outlined"
-          startIcon={<CloudDownloadIcon />}
-          onClick={onImportWorkshop}
-        >
+        <Button variant="outlined" startIcon={<CloudDownloadIcon />} onClick={onImportWorkshop}>
           {t('games.tabletop.import_workshop', 'Steam Workshop importieren')}
         </Button>
         {supportsLocalFolder ? (
-          <Button
-            variant="outlined"
-            startIcon={<FolderOpenIcon />}
-            onClick={onOpenLocalFolder}
-          >
+          <Button variant="outlined" startIcon={<FolderOpenIcon />} onClick={onOpenLocalFolder}>
             {t('games.tabletop.open_local_folder', 'Lokalen Spielordner öffnen')}
           </Button>
         ) : (
@@ -124,11 +116,7 @@ export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
               'Verbinde den Tabletop-Companion-Server in den Einstellungen',
             )}
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<SettingsIcon />}
-            onClick={handleOpenSettings}
-          >
+          <Button variant="contained" startIcon={<SettingsIcon />} onClick={handleOpenSettings}>
             {t('games.tabletop.open_settings', 'Einstellungen öffnen')}
           </Button>
         </Paper>
@@ -157,10 +145,7 @@ export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
             </Box>
           ) : games.length === 0 ? (
             <Typography variant="body2" color="text.secondary" textAlign="center" py={3}>
-              {t(
-                'games.tabletop.no_games',
-                'Noch keine Spiele im Server-Verzeichnis gefunden.',
-              )}
+              {t('games.tabletop.no_games', 'Noch keine Spiele im Server-Verzeichnis gefunden.')}
             </Typography>
           ) : (
             <Stack spacing={1.5}>

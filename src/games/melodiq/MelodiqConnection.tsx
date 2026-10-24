@@ -17,8 +17,8 @@ import {
   Paper,
   Button,
 } from '@mui/material';
-import QrCode2Icon from '@mui/icons-material/QrCode2';
-import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import QrCode2Icon from '@mui/icons-material/QrCode2Rounded';
+import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
 
 interface MelodiqConnectionProps {
   onBack: () => void;

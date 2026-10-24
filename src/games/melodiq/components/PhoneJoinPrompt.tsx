@@ -1,7 +1,7 @@
 import React from 'react';
 import { Dialog, DialogTitle, DialogContent, Button, Typography, Box } from '@mui/material';
-import MicIcon from '@mui/icons-material/Mic';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import MicIcon from '@mui/icons-material/MicRounded';
+import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
 import { useClientEngine } from '../PhoneClientEngine';
 
 export const PhoneJoinPrompt: React.FC = () => {

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { alpha, Box, Button, Typography, Paper, IconButton, Tooltip } from '@mui/material';
-import CloudQueueIcon from '@mui/icons-material/CloudQueue';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
-import LaunchIcon from '@mui/icons-material/Launch';
-import TerminalIcon from '@mui/icons-material/Terminal';
+import CloudQueueIcon from '@mui/icons-material/CloudQueueRounded';
+import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
+import CheckIcon from '@mui/icons-material/CheckRounded';
+import LaunchIcon from '@mui/icons-material/LaunchRounded';
+import TerminalIcon from '@mui/icons-material/TerminalRounded';
 import { useTranslation } from 'react-i18next';
 
 export const SetupCloudflareTab: React.FC = () => {

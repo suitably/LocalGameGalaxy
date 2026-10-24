@@ -1,11 +1,11 @@
 import React from 'react';
 import { Box, Typography, IconButton, Chip } from '@mui/material';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
+import MoreVertIcon from '@mui/icons-material/MoreVertRounded';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownloadRounded';
+import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
 import CircularProgress from '@mui/material/CircularProgress';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesomeRounded';
 import { type SongMeta } from '../db';
 import { formatDuration } from '../utils';
 import { useTranslation } from 'react-i18next';

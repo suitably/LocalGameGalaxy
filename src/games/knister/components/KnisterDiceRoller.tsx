@@ -1,6 +1,6 @@
 import React from 'react';
 import { alpha, Box, Paper, Typography, Button, Chip } from '@mui/material';
-import CasinoIcon from '@mui/icons-material/Casino';
+import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import { useTranslation } from 'react-i18next';
 import { Die3D } from '../../../components/games/Die3D';
 import { useDiceRollAnimation } from '../../../components/games/useDiceRollAnimation';

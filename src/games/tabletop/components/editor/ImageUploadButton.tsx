@@ -3,7 +3,7 @@
  */
 import React, { useRef, useState } from 'react';
 import { CircularProgress, IconButton, Tooltip } from '@mui/material';
-import UploadIcon from '@mui/icons-material/Upload';
+import UploadIcon from '@mui/icons-material/UploadRounded';
 import { useTranslation } from 'react-i18next';
 import { fileToDataUrl } from '../../logic/imageUpload';
 

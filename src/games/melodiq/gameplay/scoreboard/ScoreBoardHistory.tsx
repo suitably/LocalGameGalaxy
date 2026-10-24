@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Paper, Typography } from '@mui/material';
-import HistoryIcon from '@mui/icons-material/History';
+import HistoryIcon from '@mui/icons-material/HistoryRounded';
 import { pieceColorForHue } from '../../logic/singerColor';
 import type { HistoricalEntry } from '../logic/scoreBoardRanking';
 

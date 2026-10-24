@@ -3,13 +3,13 @@
  */
 import React from 'react';
 import { Menu, MenuItem, ListItemIcon, ListItemText, Divider } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import ZoomInIcon from '@mui/icons-material/ZoomIn';
-import ZoomOutIcon from '@mui/icons-material/ZoomOut';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOffRounded';
+import ZoomInIcon from '@mui/icons-material/ZoomInRounded';
+import ZoomOutIcon from '@mui/icons-material/ZoomOutRounded';
+import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
+import CheckBoxIcon from '@mui/icons-material/CheckBoxRounded';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
 import type { TabletopWidget } from '../../logic/types';
 import { useTranslation } from 'react-i18next';
 
@@ -52,9 +52,7 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = ({
       onClose={onClose}
       anchorReference="anchorPosition"
       anchorPosition={
-        position !== null
-          ? { top: position.mouseY, left: position.mouseX }
-          : undefined
+        position !== null ? { top: position.mouseY, left: position.mouseX } : undefined
       }
     >
       {onToggleSelect && (
@@ -65,7 +63,11 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = ({
           }}
         >
           <ListItemIcon>
-            {isSelected ? <CheckBoxIcon fontSize="small" color="primary" /> : <CheckBoxOutlineBlankIcon fontSize="small" />}
+            {isSelected ? (
+              <CheckBoxIcon fontSize="small" color="primary" />
+            ) : (
+              <CheckBoxOutlineBlankIcon fontSize="small" />
+            )}
           </ListItemIcon>
           <ListItemText>
             {isSelected
@@ -83,7 +85,11 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = ({
           }}
         >
           <ListItemIcon>
-            {isShowAlways ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" color="primary" />}
+            {isShowAlways ? (
+              <VisibilityOffIcon fontSize="small" />
+            ) : (
+              <VisibilityIcon fontSize="small" color="primary" />
+            )}
           </ListItemIcon>
           <ListItemText>
             {isShowAlways

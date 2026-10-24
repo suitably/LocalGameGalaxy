@@ -11,10 +11,10 @@ import {
   Chip,
   Link,
 } from '@mui/material';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import OpenInNewIcon from '@mui/icons-material/OpenInNewRounded';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlineRounded';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlineRounded';
+import ArrowBackIcon from '@mui/icons-material/ArrowBackRounded';
 import { settingsCardSx } from '../../features/settings/settingsStyles';
 import { UsdbMissingBanner } from './usdb/UsdbMissingBanner';
 import { UsdbPasswordField } from './usdb/UsdbPasswordField';

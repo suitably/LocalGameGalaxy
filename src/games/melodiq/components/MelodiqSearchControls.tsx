@@ -9,7 +9,7 @@ import {
   Checkbox,
   ListItemText,
 } from '@mui/material';
-import SortIcon from '@mui/icons-material/Sort';
+import SortIcon from '@mui/icons-material/SortRounded';
 import { useTranslation } from 'react-i18next';
 import { type SortOption } from '../hooks/useSearchFilters';
 

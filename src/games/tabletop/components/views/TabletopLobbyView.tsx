@@ -3,7 +3,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Box, Button, Container, Grid, Paper, Typography } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
+import SettingsIcon from '@mui/icons-material/SettingsRounded';
 import { useTranslation } from 'react-i18next';
 import { GameManagerDialog } from '../manager/GameManagerDialog';
 import { PublishTabletopGameDialog } from '../publisher/PublishTabletopGameDialog';

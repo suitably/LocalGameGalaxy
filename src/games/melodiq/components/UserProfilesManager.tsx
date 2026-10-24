@@ -12,8 +12,8 @@ import {
   Switch,
   FormControlLabel,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import DeleteIcon from '@mui/icons-material/DeleteRounded';
+import PersonAddIcon from '@mui/icons-material/PersonAddRounded';
 import type { UserProfile } from '../types';
 
 interface UserProfilesManagerProps {

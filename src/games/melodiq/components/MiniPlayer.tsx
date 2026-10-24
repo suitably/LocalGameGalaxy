@@ -10,12 +10,12 @@ import {
   useTheme,
   Chip,
 } from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import PauseIcon from '@mui/icons-material/Pause';
-import SkipNextIcon from '@mui/icons-material/SkipNext';
-import OpenInFullIcon from '@mui/icons-material/OpenInFull';
-import QueueMusicIcon from '@mui/icons-material/QueueMusic';
-import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
+import PauseIcon from '@mui/icons-material/PauseRounded';
+import SkipNextIcon from '@mui/icons-material/SkipNextRounded';
+import OpenInFullIcon from '@mui/icons-material/OpenInFullRounded';
+import QueueMusicIcon from '@mui/icons-material/QueueMusicRounded';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlineRounded';
 import type { SongMeta, Song } from '../db';
 
 interface MiniPlayerProps {

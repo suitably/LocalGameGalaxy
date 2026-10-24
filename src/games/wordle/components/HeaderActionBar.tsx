@@ -1,6 +1,6 @@
 import React from 'react';
 import { alpha, Box, Tooltip, IconButton } from '@mui/material';
-import HistoryIcon from '@mui/icons-material/History';
+import HistoryIcon from '@mui/icons-material/HistoryRounded';
 import PersonAddAlt1RoundedIcon from '@mui/icons-material/PersonAddAlt1Rounded';
 import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
 import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Paper, Typography, ButtonBase, Tooltip, IconButton, alpha } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import TouchAppIcon from '@mui/icons-material/TouchApp';
+import CloseIcon from '@mui/icons-material/CloseRounded';
+import TouchAppIcon from '@mui/icons-material/TouchAppRounded';
 import { useTranslation } from 'react-i18next';
 
 const KNISTER_NUMBERS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];

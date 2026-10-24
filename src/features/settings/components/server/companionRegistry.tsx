@@ -1,5 +1,5 @@
-import MicIcon from '@mui/icons-material/Mic';
-import CasinoIcon from '@mui/icons-material/Casino';
+import MicIcon from '@mui/icons-material/MicRounded';
+import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import i18n from 'i18next';
 import type { CompanionPluginDefinition } from './types';
 import { MelodiqCompanionConfig } from './MelodiqCompanionConfig';

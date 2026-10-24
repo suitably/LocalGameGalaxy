@@ -11,12 +11,12 @@ import {
   IconButton,
   InputAdornment,
 } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
+import ErrorIcon from '@mui/icons-material/ErrorRounded';
+import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
+import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOffRounded';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHighRounded';
 import { ServerSetupDialog } from './setup/ServerSetupDialog';
 import { useServerConnectionState } from './hooks/useServerConnectionState';
 import { settingsCardSx } from '../../features/settings/settingsStyles';

@@ -10,14 +10,14 @@ import {
   Collapse,
   Divider,
 } from '@mui/material';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import DesktopWindowsIcon from '@mui/icons-material/DesktopWindows';
-import StorageIcon from '@mui/icons-material/Storage';
-import CloudQueueIcon from '@mui/icons-material/CloudQueue';
-import TerminalIcon from '@mui/icons-material/Terminal';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHighRounded';
+import RefreshIcon from '@mui/icons-material/RefreshRounded';
+import DesktopWindowsIcon from '@mui/icons-material/DesktopWindowsRounded';
+import StorageIcon from '@mui/icons-material/StorageRounded';
+import CloudQueueIcon from '@mui/icons-material/CloudQueueRounded';
+import TerminalIcon from '@mui/icons-material/TerminalRounded';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
+import ExpandLessIcon from '@mui/icons-material/ExpandLessRounded';
 import { useTranslation } from 'react-i18next';
 import { SetupScanBanner } from './setup/SetupScanBanner';
 import { useServerAutoDetect } from './setup/useServerAutoDetect';

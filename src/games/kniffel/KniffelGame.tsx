@@ -1,13 +1,13 @@
 import React, { useReducer, useEffect, useState } from 'react';
 import { alpha, Box, Typography, Button, IconButton, Tooltip } from '@mui/material';
-import ReplayIcon from '@mui/icons-material/Replay';
-import CasinoIcon from '@mui/icons-material/Casino';
+import ReplayIcon from '@mui/icons-material/ReplayRounded';
+import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
 import { storage } from '../../lib/storage';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
-import UndoIcon from '@mui/icons-material/Undo';
+import UndoIcon from '@mui/icons-material/UndoRounded';
 
 import { kniffelReducer, INITIAL_KNIFFEL_STATE } from './logic/kniffelReducer';
 import { evaluatePossibleScores } from './logic/kniffelScoring';

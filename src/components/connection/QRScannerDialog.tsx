@@ -10,7 +10,7 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
-import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import QrCodeScannerIcon from '@mui/icons-material/QrCodeScannerRounded';
 import { Html5Qrcode } from 'html5-qrcode';
 
 const SCANNER_ELEMENT_ID = 'qr-scanner-reader';

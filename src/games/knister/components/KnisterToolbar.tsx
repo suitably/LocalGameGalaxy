@@ -1,9 +1,9 @@
 import React from 'react';
 import { Box, Button, IconButton, Tooltip } from '@mui/material';
-import ReplayIcon from '@mui/icons-material/Replay';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import CasinoIcon from '@mui/icons-material/Casino';
-import UndoIcon from '@mui/icons-material/Undo';
+import ReplayIcon from '@mui/icons-material/ReplayRounded';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutlineRounded';
+import CasinoIcon from '@mui/icons-material/CasinoRounded';
+import UndoIcon from '@mui/icons-material/UndoRounded';
 import { useTranslation } from 'react-i18next';
 
 interface KnisterToolbarProps {

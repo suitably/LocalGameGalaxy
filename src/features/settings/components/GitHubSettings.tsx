@@ -13,10 +13,10 @@ import {
   CircularProgress,
 } from '@mui/material';
 import GitHubIcon from '@mui/icons-material/GitHub';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
+import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOffRounded';
+import OpenInNewIcon from '@mui/icons-material/OpenInNewRounded';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { testGitHubToken } from '../../../lib/github';
 import { settingsCardSx } from '../settingsStyles';

@@ -5,9 +5,9 @@
 import React, { useEffect } from 'react';
 import { alpha, Box, Button, IconButton, Stack, Typography, Tooltip } from '@mui/material';
 import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
-import BackspaceOutlinedIcon from '@mui/icons-material/BackspaceOutlined';
+import BackspaceOutlinedIcon from '@mui/icons-material/BackspaceRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
+import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbRounded';
 import { useTranslation } from 'react-i18next';
 
 interface SudokuNumpadProps {

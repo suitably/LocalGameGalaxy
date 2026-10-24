@@ -1,6 +1,6 @@
 import React from 'react';
 import { alpha, Box, Typography, IconButton } from '@mui/material';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import { ScoreDisplay, type ScoreDisplayHandle } from '../ScoreDisplay';
 import { type PlayerRuntime } from '../hooks/PlayerRuntime';
 

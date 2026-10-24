@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { alpha, Box, Button, Tooltip } from '@mui/material';
-import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import QrCodeScannerIcon from '@mui/icons-material/QrCodeScannerRounded';
 import { useTranslation } from 'react-i18next';
 import { QRScannerDialog } from './QRScannerDialog';
 

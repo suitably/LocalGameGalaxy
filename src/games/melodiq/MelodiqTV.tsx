@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, CircularProgress } from '@mui/material';
-import GamepadIcon from '@mui/icons-material/Gamepad';
+import GamepadIcon from '@mui/icons-material/GamepadRounded';
 import { MelodiqSession } from './gameplay/MelodiqSession';
 import { WebRTCMockProvider } from './audio/WebRTCContext';
 import { QueueProvider } from './hooks/useQueue';

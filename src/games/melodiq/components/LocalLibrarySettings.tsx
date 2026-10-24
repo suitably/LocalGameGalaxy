@@ -1,9 +1,9 @@
 import React from 'react';
 import { alpha, Box, Typography, Button, Paper, Alert, Chip, LinearProgress } from '@mui/material';
-import FolderOpenIcon from '@mui/icons-material/FolderOpen';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import FolderDeleteIcon from '@mui/icons-material/FolderDelete';
-import LockOpenIcon from '@mui/icons-material/LockOpen';
+import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
+import RefreshIcon from '@mui/icons-material/RefreshRounded';
+import FolderDeleteIcon from '@mui/icons-material/FolderDeleteRounded';
+import LockOpenIcon from '@mui/icons-material/LockOpenRounded';
 import { useTranslation } from 'react-i18next';
 import { useSongs } from '../hooks/useSongs';
 

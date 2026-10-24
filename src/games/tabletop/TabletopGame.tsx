@@ -1,8 +1,8 @@
 import { useState, useEffect, useReducer } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Box, CircularProgress, Typography, Button } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import GroupsIcon from '@mui/icons-material/Groups';
+import ArrowBackIcon from '@mui/icons-material/ArrowBackRounded';
+import GroupsIcon from '@mui/icons-material/GroupsRounded';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
 import { tabletopReducer } from './logic/tabletopReducer';

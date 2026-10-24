@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Button, Typography } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import SmartphoneIcon from '@mui/icons-material/Smartphone';
+import RefreshIcon from '@mui/icons-material/RefreshRounded';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecordRounded';
+import SmartToyIcon from '@mui/icons-material/SmartToyRounded';
+import SmartphoneIcon from '@mui/icons-material/SmartphoneRounded';
 import type { UserProfile, ActivePlayer } from '../types';
 import { useWebRTC } from '../audio/WebRTCContext';
 import { useClientRoles } from '../hooks/useClientRoles';

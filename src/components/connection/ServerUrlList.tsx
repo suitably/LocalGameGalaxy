@@ -16,7 +16,7 @@ import {
   Tooltip,
   Switch,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteIcon from '@mui/icons-material/DeleteRounded';
 
 type ItemColor = 'success' | 'primary' | 'secondary' | 'info';
 

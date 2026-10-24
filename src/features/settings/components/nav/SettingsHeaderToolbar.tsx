@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Button, Divider, Menu, Typography, useMediaQuery, useTheme } from '@mui/material';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams, useLocation } from 'react-router-dom';
 import { resolveSettingsNav, type SettingsTabType } from '../../settingsNav';

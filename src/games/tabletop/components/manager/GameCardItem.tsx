@@ -11,13 +11,13 @@ import {
   MenuItem,
   Tooltip,
 } from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import EditIcon from '@mui/icons-material/Edit';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import PublishIcon from '@mui/icons-material/Publish';
-import GroupsIcon from '@mui/icons-material/Groups';
-import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
+import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
+import EditIcon from '@mui/icons-material/EditRounded';
+import FileDownloadIcon from '@mui/icons-material/FileDownloadRounded';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineRounded';
+import PublishIcon from '@mui/icons-material/PublishRounded';
+import GroupsIcon from '@mui/icons-material/GroupsRounded';
+import PhoneIphoneIcon from '@mui/icons-material/PhoneIphoneRounded';
 import { useTranslation } from 'react-i18next';
 import type { TabletopGameSummary } from '../../logic/types';
 import { ConfirmDialog } from '../../../../components/common/ConfirmDialog';
@@ -49,7 +49,8 @@ export const GameCardItem: React.FC<GameCardItemProps> = ({
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const canPlayParty = game.supportedModes.includes('party_multi_device');
-  const canPlayLocal = game.supportedModes.includes('local_pass_and_play') || game.supportedModes.includes('solo');
+  const canPlayLocal =
+    game.supportedModes.includes('local_pass_and_play') || game.supportedModes.includes('solo');
 
   const handlePlayClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     if (canPlayParty && canPlayLocal) {
@@ -62,7 +63,10 @@ export const GameCardItem: React.FC<GameCardItemProps> = ({
   };
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 3, p: 1, '&:hover': { borderColor: 'primary.main' } }}>
+    <Card
+      variant="outlined"
+      sx={{ borderRadius: 3, p: 1, '&:hover': { borderColor: 'primary.main' } }}
+    >
       <CardContent sx={{ pb: 1 }}>
         <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={1}>
           <Box>
@@ -70,7 +74,10 @@ export const GameCardItem: React.FC<GameCardItemProps> = ({
               {game.name}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {t('games.tabletop.by_author', 'von {{author}}', { author: game.author || 'Community' })} • {game.minPlayers}-{game.maxPlayers} {t('common.players', 'Spieler')}
+              {t('games.tabletop.by_author', 'von {{author}}', {
+                author: game.author || 'Community',
+              })}{' '}
+              • {game.minPlayers}-{game.maxPlayers} {t('common.players', 'Spieler')}
             </Typography>
           </Box>
           <Box display="flex" gap={0.5}>
@@ -81,19 +88,33 @@ export const GameCardItem: React.FC<GameCardItemProps> = ({
             )}
             {canPlayLocal && (
               <Tooltip title={t('games.tabletop.mode_local', 'Lokal / Pass-and-Play')}>
-                <Chip icon={<PhoneIphoneIcon />} size="small" color="secondary" variant="outlined" />
+                <Chip
+                  icon={<PhoneIphoneIcon />}
+                  size="small"
+                  color="secondary"
+                  variant="outlined"
+                />
               </Tooltip>
             )}
           </Box>
         </Box>
 
         {game.description && (
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 1, maxHeight: 40, overflow: 'hidden' }}>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mt: 1, mb: 1, maxHeight: 40, overflow: 'hidden' }}
+          >
             {game.description}
           </Typography>
         )}
 
-        <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mt: 2, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ mt: 2, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}
+        >
           <Button
             variant="contained"
             size="small"
@@ -103,12 +124,28 @@ export const GameCardItem: React.FC<GameCardItemProps> = ({
             {t('common.play', 'Spielen')}
           </Button>
 
-          <Menu anchorEl={playAnchor} open={Boolean(playAnchor)} onClose={() => setPlayAnchor(null)}>
-            <MenuItem onClick={() => { setPlayAnchor(null); onPlayParty(game.id); }}>
-              <GroupsIcon sx={{ mr: 1, fontSize: 20 }} /> {t('games.tabletop.play_party_choice', 'Im Party-Modus starten')}
+          <Menu
+            anchorEl={playAnchor}
+            open={Boolean(playAnchor)}
+            onClose={() => setPlayAnchor(null)}
+          >
+            <MenuItem
+              onClick={() => {
+                setPlayAnchor(null);
+                onPlayParty(game.id);
+              }}
+            >
+              <GroupsIcon sx={{ mr: 1, fontSize: 20 }} />{' '}
+              {t('games.tabletop.play_party_choice', 'Im Party-Modus starten')}
             </MenuItem>
-            <MenuItem onClick={() => { setPlayAnchor(null); onPlayLocal(game.id); }}>
-              <PhoneIphoneIcon sx={{ mr: 1, fontSize: 20 }} /> {t('games.tabletop.play_local_choice', 'Lokal an diesem Gerät spielen')}
+            <MenuItem
+              onClick={() => {
+                setPlayAnchor(null);
+                onPlayLocal(game.id);
+              }}
+            >
+              <PhoneIphoneIcon sx={{ mr: 1, fontSize: 20 }} />{' '}
+              {t('games.tabletop.play_local_choice', 'Lokal an diesem Gerät spielen')}
             </MenuItem>
           </Menu>
 
@@ -123,11 +160,25 @@ export const GameCardItem: React.FC<GameCardItemProps> = ({
                 <FileDownloadIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={() => setExportAnchor(null)}>
-              <MenuItem onClick={() => { setExportAnchor(null); onExportPcio(game.id); }}>
+            <Menu
+              anchorEl={exportAnchor}
+              open={Boolean(exportAnchor)}
+              onClose={() => setExportAnchor(null)}
+            >
+              <MenuItem
+                onClick={() => {
+                  setExportAnchor(null);
+                  onExportPcio(game.id);
+                }}
+              >
                 {t('games.tabletop.export_pcio', 'Als .pcio (ZIP) exportieren')}
               </MenuItem>
-              <MenuItem onClick={() => { setExportAnchor(null); onExportJson(game.id); }}>
+              <MenuItem
+                onClick={() => {
+                  setExportAnchor(null);
+                  onExportJson(game.id);
+                }}
+              >
                 {t('games.tabletop.export_json', 'Als .json exportieren')}
               </MenuItem>
             </Menu>
@@ -148,10 +199,17 @@ export const GameCardItem: React.FC<GameCardItemProps> = ({
       <ConfirmDialog
         open={deleteConfirmOpen}
         title={t('games.tabletop.confirm_delete_title', 'Spiel löschen?')}
-        message={t('games.tabletop.confirm_delete_message', 'Möchtest du "{{name}}" wirklich unwiderruflich aus deinem Speicher löschen?', { name: game.name })}
+        message={t(
+          'games.tabletop.confirm_delete_message',
+          'Möchtest du "{{name}}" wirklich unwiderruflich aus deinem Speicher löschen?',
+          { name: game.name },
+        )}
         confirmText={t('common.delete', 'Löschen')}
         confirmColor="error"
-        onConfirm={() => { setDeleteConfirmOpen(false); onDelete(game.id); }}
+        onConfirm={() => {
+          setDeleteConfirmOpen(false);
+          onDelete(game.id);
+        }}
         onCancel={() => setDeleteConfirmOpen(false)}
       />
     </Card>

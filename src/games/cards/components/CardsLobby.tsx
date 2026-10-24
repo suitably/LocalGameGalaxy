@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { alpha, Box, Button, Card, CardActionArea, Typography } from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
 import { useTranslation } from 'react-i18next';
 import type { CardGameDefinition } from '../logic/types';
 import { getAllCardGames } from '../logic/gamesCatalogue';

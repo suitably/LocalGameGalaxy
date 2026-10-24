@@ -13,8 +13,8 @@ import {
   IconButton,
   TextField,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import CheckIcon from '@mui/icons-material/Check';
+import EditIcon from '@mui/icons-material/EditRounded';
+import CheckIcon from '@mui/icons-material/CheckRounded';
 import { MicrophoneManager } from '../audio/MicrophoneManager';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 

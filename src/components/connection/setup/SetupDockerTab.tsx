@@ -9,9 +9,9 @@ import {
   FormControlLabel,
   Switch,
 } from '@mui/material';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import PsychologyIcon from '@mui/icons-material/Psychology';
-import PublicIcon from '@mui/icons-material/Public';
+import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
+import PsychologyIcon from '@mui/icons-material/PsychologyRounded';
+import PublicIcon from '@mui/icons-material/PublicRounded';
 import { useTranslation } from 'react-i18next';
 import { DockerCommandCard } from './DockerCommandCard';
 import { DockerComposeViewer } from './DockerComposeViewer';

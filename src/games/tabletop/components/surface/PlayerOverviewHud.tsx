@@ -13,9 +13,9 @@ import {
   Typography,
   Chip,
 } from '@mui/material';
-import StyleIcon from '@mui/icons-material/Style';
-import ExtensionIcon from '@mui/icons-material/Extension';
-import StarIcon from '@mui/icons-material/Star';
+import StyleIcon from '@mui/icons-material/StyleRounded';
+import ExtensionIcon from '@mui/icons-material/ExtensionRounded';
+import StarIcon from '@mui/icons-material/StarRounded';
 import { useTranslation } from 'react-i18next';
 import type { TabletopWidget, SeatWidget } from '../../logic/types';
 import { getPlayerStats } from '../../logic/seatLogic';

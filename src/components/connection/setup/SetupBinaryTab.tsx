@@ -1,8 +1,8 @@
 import React from 'react';
 import { alpha, Box, Button, Typography, Paper, Chip } from '@mui/material';
-import DownloadIcon from '@mui/icons-material/Download';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import SettingsIcon from '@mui/icons-material/Settings';
+import DownloadIcon from '@mui/icons-material/DownloadRounded';
+import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
+import SettingsIcon from '@mui/icons-material/SettingsRounded';
 import { useTranslation } from 'react-i18next';
 import type { DetectedOS } from './useServerAutoDetect';
 

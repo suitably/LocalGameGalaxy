@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box, Typography, IconButton, Avatar } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import EditIcon from '@mui/icons-material/Edit';
+import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
+import EditIcon from '@mui/icons-material/EditRounded';
 import { useTranslation } from 'react-i18next';
 import type { SongMeta } from '../db';
 import type { MelodiqParticipant } from '../types';

@@ -13,8 +13,8 @@ import {
   InputLabel,
   TextField,
 } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import SettingsIcon from '@mui/icons-material/SettingsRounded';
+import VolumeUpIcon from '@mui/icons-material/VolumeUpRounded';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { NotesDialogFrame } from './NotesDialogFrame';

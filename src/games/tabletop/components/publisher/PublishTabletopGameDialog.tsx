@@ -11,8 +11,8 @@ import {
   CircularProgress,
   Link,
 } from '@mui/material';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import LaunchIcon from '@mui/icons-material/Launch';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlineRounded';
+import LaunchIcon from '@mui/icons-material/LaunchRounded';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import type { TabletopGameDefinition } from '../../logic/types';
@@ -53,7 +53,9 @@ export const PublishTabletopGameDialog: React.FC<PublishTabletopGameDialogProps>
     try {
       const { config } = resolveGitHubConfig();
       if (!config) {
-        throw new Error('Kein GitHub Personal Access Token konfiguriert. Bitte hinterlege einen Token in den Einstellungen.');
+        throw new Error(
+          'Kein GitHub Personal Access Token konfiguriert. Bitte hinterlege einen Token in den Einstellungen.',
+        );
       }
 
       const payload = buildPublishPrPayload(game, authorName.trim(), notes.trim());
@@ -73,7 +75,9 @@ export const PublishTabletopGameDialog: React.FC<PublishTabletopGameDialogProps>
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{t('games.tabletop.publish_dialog_title', 'Spiel als Pull Request einreichen')}</DialogTitle>
+      <DialogTitle>
+        {t('games.tabletop.publish_dialog_title', 'Spiel als Pull Request einreichen')}
+      </DialogTitle>
       <DialogContent dividers>
         {createdPrUrl ? (
           <Box textAlign="center" py={3}>
@@ -82,7 +86,10 @@ export const PublishTabletopGameDialog: React.FC<PublishTabletopGameDialogProps>
               {t('games.tabletop.publish_success_title', 'Pull Request erfolgreich erstellt!')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {t('games.tabletop.publish_success_desc', 'Dein Spiel wurde als Branch eingereicht und steht nach dem Review allen Nutzern in der offiziellen Bibliothek zur Verfügung.')}
+              {t(
+                'games.tabletop.publish_success_desc',
+                'Dein Spiel wurde als Branch eingereicht und steht nach dem Review allen Nutzern in der offiziellen Bibliothek zur Verfügung.',
+              )}
             </Typography>
             <Button
               variant="contained"
@@ -103,18 +110,25 @@ export const PublishTabletopGameDialog: React.FC<PublishTabletopGameDialogProps>
                 severity="warning"
                 sx={{ mb: 2 }}
                 action={
-                  <Button color="inherit" size="small" onClick={() => navigate('/settings?tab=general&sub=feedback')}>
+                  <Button
+                    color="inherit"
+                    size="small"
+                    onClick={() => navigate('/settings?tab=general&sub=feedback')}
+                  >
                     Einstellungen
                   </Button>
                 }
               >
-                Du benötigst einen GitHub Personal Access Token (PAT), um direkt aus der App einen PR zu erstellen.
+                Du benötigst einen GitHub Personal Access Token (PAT), um direkt aus der App einen
+                PR zu erstellen.
               </Alert>
             )}
 
             {!validation.valid && (
               <Alert severity="error" sx={{ mb: 2 }}>
-                <Typography variant="subtitle2" fontWeight={700}>Vorbedingungen nicht erfüllt:</Typography>
+                <Typography variant="subtitle2" fontWeight={700}>
+                  Vorbedingungen nicht erfüllt:
+                </Typography>
                 <ul style={{ margin: 0, paddingLeft: 20 }}>
                   {validation.errors.map((e, idx) => (
                     <li key={idx}>{e}</li>
@@ -150,7 +164,9 @@ export const PublishTabletopGameDialog: React.FC<PublishTabletopGameDialogProps>
             variant="contained"
             color="primary"
             onClick={handlePublish}
-            disabled={publishing || !hasPat || !validation.valid || !licenseAgreed || !authorName.trim()}
+            disabled={
+              publishing || !hasPat || !validation.valid || !licenseAgreed || !authorName.trim()
+            }
             startIcon={publishing ? <CircularProgress size={18} color="inherit" /> : undefined}
           >
             {publishing ? 'Sende PR...' : 'Pull Request erstellen'}

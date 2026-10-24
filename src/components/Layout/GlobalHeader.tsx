@@ -9,10 +9,10 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import HomeIcon from '@mui/icons-material/Home';
-import SettingsIcon from '@mui/icons-material/Settings';
-import FeedbackIcon from '@mui/icons-material/Feedback';
-import InstallMobileIcon from '@mui/icons-material/InstallMobile';
+import HomeIcon from '@mui/icons-material/HomeRounded';
+import SettingsIcon from '@mui/icons-material/SettingsRounded';
+import FeedbackIcon from '@mui/icons-material/FeedbackRounded';
+import InstallMobileIcon from '@mui/icons-material/InstallMobileRounded';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useTranslation } from 'react-i18next';
 import { useHeaderLayout } from '../../context/HeaderLayoutContext';

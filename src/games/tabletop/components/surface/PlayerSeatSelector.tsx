@@ -3,8 +3,8 @@
  */
 import React from 'react';
 import { alpha, Box, Tooltip, IconButton, Typography } from '@mui/material';
-import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize';
-import CheckIcon from '@mui/icons-material/Check';
+import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomizeRounded';
+import CheckIcon from '@mui/icons-material/CheckRounded';
 import { useTranslation } from 'react-i18next';
 import type { SeatWidget } from '../../logic/types';
 import { resolveSeatColor } from '../../logic/seatLogic';

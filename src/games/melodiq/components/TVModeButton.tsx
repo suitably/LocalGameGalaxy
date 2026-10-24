@@ -8,11 +8,11 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
-import TvIcon from '@mui/icons-material/Tv';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import CastIcon from '@mui/icons-material/Cast';
-import CastConnectedIcon from '@mui/icons-material/CastConnected';
-import CancelIcon from '@mui/icons-material/Cancel';
+import TvIcon from '@mui/icons-material/TvRounded';
+import OpenInNewIcon from '@mui/icons-material/OpenInNewRounded';
+import CastIcon from '@mui/icons-material/CastRounded';
+import CastConnectedIcon from '@mui/icons-material/CastConnectedRounded';
+import CancelIcon from '@mui/icons-material/CancelRounded';
 
 interface TVModeButtonProps {
   isTVConnected: boolean;

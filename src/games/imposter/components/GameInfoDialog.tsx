@@ -13,8 +13,8 @@ import {
   ListItemText,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import CircleIcon from '@mui/icons-material/Circle';
+import InfoOutlinedIcon from '@mui/icons-material/InfoRounded';
+import CircleIcon from '@mui/icons-material/CircleRounded';
 
 interface GameInfoDialogProps {
   open: boolean;

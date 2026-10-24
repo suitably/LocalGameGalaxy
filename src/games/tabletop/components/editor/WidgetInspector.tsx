@@ -13,10 +13,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import DeleteIcon from '@mui/icons-material/Delete';
-import DataObjectIcon from '@mui/icons-material/DataObject';
-import LayersIcon from '@mui/icons-material/Layers';
+import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
+import DeleteIcon from '@mui/icons-material/DeleteRounded';
+import DataObjectIcon from '@mui/icons-material/DataObjectRounded';
+import LayersIcon from '@mui/icons-material/LayersRounded';
 import { useTranslation } from 'react-i18next';
 import type { TabletopGameDefinition } from '../../logic/types';
 import { InspectorFields } from './InspectorFields';

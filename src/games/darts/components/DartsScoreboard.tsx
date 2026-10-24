@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useDartsGame } from '../useDartsGame';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEventsRounded';
 
 type DartsGameState = ReturnType<typeof useDartsGame>;
 

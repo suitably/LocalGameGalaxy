@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Drawer, Box, Typography, IconButton, List, Button, Badge, Divider } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import HistoryIcon from '@mui/icons-material/History';
+import CloseIcon from '@mui/icons-material/CloseRounded';
+import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlayRounded';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweepRounded';
+import HistoryIcon from '@mui/icons-material/HistoryRounded';
 import { useQueue } from '../hooks/useQueue';
 import { useQueueDrag } from '../hooks/useQueueDrag';
 import { useClientEngine } from '../PhoneClientEngine';

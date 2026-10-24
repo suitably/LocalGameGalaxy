@@ -10,7 +10,7 @@ import {
   type SxProps,
   type Theme,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 
 interface NotesDialogFrameProps {
   open: boolean;

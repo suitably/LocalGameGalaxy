@@ -15,13 +15,13 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import FolderIcon from '@mui/icons-material/Folder';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import CasinoIcon from '@mui/icons-material/Casino';
-import VpnLockIcon from '@mui/icons-material/VpnLock';
-import PublicOffIcon from '@mui/icons-material/PublicOff';
+import FolderIcon from '@mui/icons-material/FolderRounded';
+import DeleteIcon from '@mui/icons-material/DeleteRounded';
+import AddIcon from '@mui/icons-material/AddRounded';
+import RefreshIcon from '@mui/icons-material/RefreshRounded';
+import CasinoIcon from '@mui/icons-material/CasinoRounded';
+import VpnLockIcon from '@mui/icons-material/VpnLockRounded';
+import PublicOffIcon from '@mui/icons-material/PublicOffRounded';
 import { useTranslation } from 'react-i18next';
 import { settingsCardSx } from '../../settingsStyles';
 import { ConfirmDialog } from '../../../../components/common/ConfirmDialog';

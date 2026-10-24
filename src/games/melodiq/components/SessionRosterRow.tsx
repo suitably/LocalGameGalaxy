@@ -12,14 +12,14 @@ import {
   Divider,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import VolumeOffIcon from '@mui/icons-material/VolumeOff';
-import CloseIcon from '@mui/icons-material/Close';
-import SettingsIcon from '@mui/icons-material/Settings';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import SmartphoneIcon from '@mui/icons-material/Smartphone';
+import VolumeUpIcon from '@mui/icons-material/VolumeUpRounded';
+import VolumeOffIcon from '@mui/icons-material/VolumeOffRounded';
+import CloseIcon from '@mui/icons-material/CloseRounded';
+import SettingsIcon from '@mui/icons-material/SettingsRounded';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUpRounded';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDownRounded';
+import SmartToyIcon from '@mui/icons-material/SmartToyRounded';
+import SmartphoneIcon from '@mui/icons-material/SmartphoneRounded';
 import type { ActivePlayer } from '../types';
 import type { MicRemotePeer } from '../audio/WebRTCMicManager';
 

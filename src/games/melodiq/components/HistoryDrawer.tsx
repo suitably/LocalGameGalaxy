@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Drawer, Box, Typography, IconButton, Button } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import HistoryIcon from '@mui/icons-material/History';
-import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
+import CloseIcon from '@mui/icons-material/CloseRounded';
+import HistoryIcon from '@mui/icons-material/HistoryRounded';
+import PlaylistAddIcon from '@mui/icons-material/PlaylistAddRounded';
 import { useTranslation } from 'react-i18next';
 import { useHistory } from '../hooks/useHistory';
 import { useSongs } from '../hooks/useSongs';

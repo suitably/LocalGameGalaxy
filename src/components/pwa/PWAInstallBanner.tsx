@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Paper, Box, Typography, Button, IconButton, alpha } from '@mui/material';
-import InstallMobileIcon from '@mui/icons-material/InstallMobile';
-import CloseIcon from '@mui/icons-material/Close';
+import InstallMobileIcon from '@mui/icons-material/InstallMobileRounded';
+import CloseIcon from '@mui/icons-material/CloseRounded';
 import { useTranslation } from 'react-i18next';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
 import { PWAInstallDialog } from './PWAInstallDialog';
@@ -9,7 +9,8 @@ import { sessionStorageSafe, STORAGE_KEYS } from '../../lib/storage';
 
 export const PWAInstallBanner: React.FC = () => {
   const { t } = useTranslation();
-  const { isStandalone, isInstallable, installApp, showIOSGuide, setShowIOSGuide } = usePWAInstall();
+  const { isStandalone, isInstallable, installApp, showIOSGuide, setShowIOSGuide } =
+    usePWAInstall();
   const [dismissed, setDismissed] = useState<boolean>(() => {
     return sessionStorageSafe.get(STORAGE_KEYS.PWA_BANNER_DISMISSED) === 'true';
   });
@@ -38,7 +39,7 @@ export const PWAInstallBanner: React.FC = () => {
           background: (theme) =>
             `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.15)} 0%, ${alpha(
               theme.palette.secondary.main,
-              0.15
+              0.15,
             )} 100%)`,
           border: (theme) => `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
           display: 'flex',
@@ -71,13 +72,20 @@ export const PWAInstallBanner: React.FC = () => {
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               {t(
                 'app.install_pwa_hub_banner',
-                'Install the app on your smartphone for a native, full-screen gaming experience without the browser search bar!'
+                'Install the app on your smartphone for a native, full-screen gaming experience without the browser search bar!',
               )}
             </Typography>
           </Box>
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, alignSelf: { xs: 'flex-end', sm: 'center' } }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            alignSelf: { xs: 'flex-end', sm: 'center' },
+          }}
+        >
           <Button
             variant="contained"
             color="primary"

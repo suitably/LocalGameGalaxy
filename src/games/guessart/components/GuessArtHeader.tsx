@@ -18,7 +18,7 @@ import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import TransferWithinAStationRoundedIcon from '@mui/icons-material/TransferWithinAStationRounded';
 import PhonelinkRingRoundedIcon from '@mui/icons-material/PhonelinkRingRounded';
-import FeedbackIcon from '@mui/icons-material/Feedback';
+import FeedbackIcon from '@mui/icons-material/FeedbackRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';

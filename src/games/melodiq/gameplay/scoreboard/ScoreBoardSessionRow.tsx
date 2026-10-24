@@ -1,7 +1,7 @@
 import React from 'react';
 import { Avatar, Box, Chip, Paper, Typography } from '@mui/material';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import StarIcon from '@mui/icons-material/Star';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEventsRounded';
+import StarIcon from '@mui/icons-material/StarRounded';
 import { pieceColorForHue } from '../../logic/singerColor';
 import type { ScoreBoardPlayer } from '../logic/scoreBoardRanking';
 

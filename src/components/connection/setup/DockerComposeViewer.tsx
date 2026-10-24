@@ -9,11 +9,11 @@ import {
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
-import DownloadIcon from '@mui/icons-material/Download';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CodeIcon from '@mui/icons-material/Code';
+import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
+import CheckIcon from '@mui/icons-material/CheckRounded';
+import DownloadIcon from '@mui/icons-material/DownloadRounded';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
+import CodeIcon from '@mui/icons-material/CodeRounded';
 import { useTranslation } from 'react-i18next';
 import type { DockerEdition } from './SetupDockerTab';
 
