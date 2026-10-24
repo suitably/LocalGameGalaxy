@@ -1326,6 +1326,7 @@
     },
     "usdb": {
       "title": "UltraStar DB Credentials",
+      "open_site": "Open UltraStar DB",
       "desc": "Credentials for USDB (usdb.animux.de) to enable automatic song lyrics and notes downloading.",
       "username": "USDB Username",
       "password": "Password",

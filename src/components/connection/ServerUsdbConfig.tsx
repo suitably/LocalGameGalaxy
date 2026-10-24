@@ -9,7 +9,9 @@ import {
   CircularProgress,
   Alert,
   Chip,
+  Link,
 } from '@mui/material';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -87,6 +89,16 @@ export const ServerUsdbConfig: React.FC<ServerUsdbConfigProps> = ({
               'Credentials for USDB (usdb.animux.de) for automated song downloading.',
             )}
           </Typography>
+          <Link
+            href="https://usdb.animux.de"
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="body2"
+            sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}
+          >
+            {t('server.usdb.open_site', 'Open UltraStar DB')}
+            <OpenInNewIcon sx={{ fontSize: 14 }} />
+          </Link>
         </Box>
       </Box>
 

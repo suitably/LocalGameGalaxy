@@ -1326,6 +1326,7 @@
     },
     "usdb": {
       "title": "UltraStar DB Zugangsdaten",
+      "open_site": "UltraStar DB öffnen",
       "desc": "Zugangsdaten für USDB (usdb.animux.de), um Songtexte und Noten automatisch herunterzuladen.",
       "username": "USDB-Benutzername",
       "password": "Passwort",
