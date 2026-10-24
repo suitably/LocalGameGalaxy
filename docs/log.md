@@ -2,9 +2,26 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — /issue skill (claude-code)
+
+- `docs/workflows/multi-agent-token-strategy.md` §6: `/issue <number>` runs the workflow and resumes from the spec's Progress list; `ISSUE-539` spec gains §7 Progress.
+- Outside `docs/`: new `.claude/skills/issue/SKILL.md`; `CLAUDE.md` names it. No app code changed.
+
+## 2026-10-24 — Token usage measurement (claude-code)
+
+- `docs/workflows/multi-agent-token-strategy.md`: new §6 Sessions (one session per ticket), §7 Measuring with `npm run tokens` and the first data point.
+- **Code changed:** new `scripts/token-usage.mjs`, npm script `tokens`, entry in `scripts/README.md`.
+
+## 2026-10-24 — Multi-agent token workflow (claude-code)
+
+- New `docs/workflows/multi-agent-token-strategy.md`: roles, delegate-or-not rule, flow, anti-patterns.
+- New task spec `docs/tasks/ISSUE-539-tabletop-hidden-space.md` as the worked example (scout brief, open decisions, three slices). Found: `isWidgetHiddenForViewer` has no non-test caller.
+- Outside `docs/`: new subagents `.claude/agents/{scout,slice-implementer,gate-runner}.md`; `CLAUDE.md` points to the workflow. No app code changed.
+
 ## 2026-10-23 — Terser agent instructions (claude-code)
 
 - Outside `docs/`: `AGENTS.md` wording tightened (filler removed; rules, conditions and reasons unchanged); `CLAUDE.md` asks for short answers. No code changed.
+
 ## 2026-10-24 — Signaling image published (claude-code)
 
 - `docs/tech/deployment.md` §1: the signaling image is now built by `docker-publish.yml` (was **Unverified**; compose files pointed at an image nobody published).

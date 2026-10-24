@@ -44,6 +44,7 @@ This bundle describes **one code base**: the GitHub repository `suitably/LocalGa
 | **Known contradictions, broken things, decisions pending**                   | [open-questions.md](open-questions.md)                                                                                 |
 | Dated audits and evaluations                                                 | [reports/index.md](reports/index.md)                                                                                   |
 | Edit this knowledge base (front matter, links, log, archive)                 | [workflows/knowledge-base-maintenance.md](workflows/knowledge-base-maintenance.md)                                     |
+| Split a task across subagents to save tokens                                 | [workflows/multi-agent-token-strategy.md](workflows/multi-agent-token-strategy.md)                                     |
 | What changed in this bundle                                                  | [log.md](log.md)                                                                                                       |
 | Upstream projects and specs                                                  | [references/index.md](references/index.md)                                                                             |
 | Finished task specs and retired tooling                                      | [archive/index.md](archive/index.md)                                                                                   |

@@ -48,6 +48,19 @@ Validates that architectural changes are synced with documentation and i18n file
 
 ---
 
+### `token-usage.mjs`
+
+Sums tokens and estimated list-price cost of a Claude Code session from its local transcript, split into main session and subagents. See [multi-agent workflow §7](../docs/workflows/multi-agent-token-strategy.md#7-measuring).
+
+- **Execution**:
+  ```bash
+  npm run tokens              # newest session of this project
+  npm run tokens -- --list    # all sessions
+  npm run tokens -- <id> --json
+  ```
+
+---
+
 ## 3. CI/CD Tooling (`scripts/pipeline/preview-comment.cjs` posts the Cloudflare preview comment)
 
 ### `scaffold-game.mjs`

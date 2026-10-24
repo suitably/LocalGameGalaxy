@@ -7,7 +7,8 @@
 Keep context small — load docs on demand, not up front.
 
 1. Questions and trivial fixes: go straight to the code. For changes, follow AGENTS.md §1 (one doc for your area, grep instead of whole-file reads).
-2. Check overlapping work: `git status`, open PRs. Do not commit to `main`.
+2. Multi-file tasks: decide inline vs. subagents per [docs/workflows/multi-agent-token-strategy.md](docs/workflows/multi-agent-token-strategy.md) (agents in `.claude/agents/`). Implementing an issue: `/issue <number>`.
+3. Check overlapping work: `git status`, open PRs. Do not commit to `main`.
 
 ## Commands
 
