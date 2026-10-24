@@ -67,8 +67,9 @@ export function drawStrings(v: ViewContext): HitPoint {
 
   const r = clamp(geo.gap * 0.42, 8, 14);
   forVisibleNotes(p, beat - 0.5, beat + geo.lookBeats, (note) => {
+    // the head is centred on the note's time, so it crosses the hit line as the note sounds
     const x = geo.hitX + (note.t - beat) * geo.pxPerBeat;
-    const len = Math.max(r * 2, note.dur * geo.pxPerBeat - 4);
+    const len = Math.max(r, note.dur * geo.pxPerBeat - 4);
     if (
       x > w + 30 ||
       x + len < geo.hitX - 30 ||
@@ -81,12 +82,12 @@ export function drawStrings(v: ViewContext): HitPoint {
     roundRect(g, x, y - r * 0.35, len, r * 0.7, r * 0.35);
     g.fill();
     g.beginPath();
-    g.arc(x + r, y, r, 0, Math.PI * 2);
+    g.arc(x, y, r, 0, Math.PI * 2);
     fillWithHalo(g, c, 5);
     g.fillStyle = STAGE.bgBottom;
     g.font = `700 ${Math.round(r * 1.05)}px ${FONT_MONO}`;
     g.textAlign = 'center';
-    g.fillText(String(note.fret ?? 0), x + r, y + r * 0.38);
+    g.fillText(String(note.fret ?? 0), x, y + r * 0.38);
     g.textAlign = 'left';
   });
 

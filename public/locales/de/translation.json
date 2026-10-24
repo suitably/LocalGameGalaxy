@@ -707,6 +707,12 @@
           "refine": "Feinabgleich"
         },
         "aligned": "{{bars}} Taktmarken · Takt 1 bei {{start}} s",
+        "tuning_semitones_one": "Aufnahme {{shift}} Halbton gegenüber den Noten",
+        "tuning_semitones_other": "Aufnahme {{shift}} Halbtöne gegenüber den Noten",
+        "tuning_cents": "Stimmung {{cents}} Cent",
+        "pinned": "{{count}} von Hand gesetzt",
+        "pin_bar": "Taktstrich hier",
+        "pin_bar_hint": "Beim Abspielen genau auf die Eins eines Takts tippen: der nächste Taktstrich springt dorthin, die Takte daneben ziehen mit.",
         "not_aligned": "Ohne Abgleich gilt nur ein Startpunkt; bei Live-Musik laufen Noten und Aufnahme dann auseinander.",
         "fine_tune": "Feinkorrektur",
         "earlier": "50 ms früher",

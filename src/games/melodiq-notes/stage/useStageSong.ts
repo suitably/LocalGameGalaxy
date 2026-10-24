@@ -2,22 +2,25 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   applyBarMarksToMusicXml,
   type AlignProgress,
+  type AlignResult,
   type BarMark,
+  nearestBar,
+  pinBar,
   type ScoreSong,
 } from '../../../modules/music-score';
 import {
-  companionUrl,
-  fetchCompanionFile,
-  getBarMarks,
   isCompanionEnabled,
   type CompanionScore,
   type CompanionSong,
 } from '../../../lib/companion/songScoresApi';
+import type { NotesPiece, NotesPieceScore } from '../../../lib/companion/notesLibraryApi';
 import {
-  getNotesMarks,
-  type NotesPiece,
-  type NotesPieceScore,
-} from '../../../lib/companion/notesLibraryApi';
+  loadNotesPieceScore,
+  loadSongFolderScore,
+  type RecordingSource,
+  type ServerScoreLoad,
+  type SongOrigin,
+} from './serverScoreLoad';
 import { saveStageToServer } from './logic/notesLibrarySync';
 import { alignRecordingInBrowser, createElementRecording } from './engine/browserRecording';
 import type { StageEngine } from './engine/StageEngine';
@@ -29,25 +32,13 @@ import {
   serializeXml,
 } from './loadScore';
 
-export type SongOrigin =
-  | { kind: 'example'; title: string }
-  | { kind: 'file'; title: string }
-  | { kind: 'server'; title: string; songId: string; scoreFile: string }
-  | { kind: 'notes'; title: string; pieceId: string; scoreFile: string };
-
-export interface RecordingSource {
-  name: string;
-  url: string;
-  /** Local file (object URL) or server media; local files are released when replaced. */
-  local: boolean;
-  /** A local recording that is not in the Notes library yet. */
-  file?: File;
-}
+export type { SongOrigin, RecordingSource };
 
 export type AlignState =
   | { kind: 'none' }
   | { kind: 'running'; stage: Parameters<AlignProgress>[0]; fraction: number }
-  | { kind: 'done' }
+  /** `tuning` is known only right after aligning, not for marks loaded from the server. */
+  | { kind: 'done'; tuning?: AlignResult['tuning'] }
   | { kind: 'failed'; error: string };
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -70,11 +61,17 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState<RecordingSource | null>(null);
   const [marks, setMarks] = useState<BarMark[] | null>(null);
+  // bars placed by hand (indices into marks); cleared whenever the marks are replaced
+  const [pins, setPins] = useState<number[]>([]);
   const [offset, setOffset] = useState(0);
   const [align, setAlign] = useState<AlignState>({ kind: 'none' });
   const [saved, setSaved] = useState(false);
   // the score file as opened, so the library gets the original (.mxl, .mid) rather than a copy
   const openedFile = useRef<File | null>(null);
+  const replaceMarks = useCallback((next: BarMark[] | null) => {
+    setMarks(next);
+    setPins([]);
+  }, []);
   // bumped whenever the song or the recording changes; async results for an older one are dropped
   const generation = useRef(0);
 
@@ -87,12 +84,12 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
       setXml(nextXml);
       setOrigin(nextOrigin);
       setError(null);
-      setMarks(null);
+      replaceMarks(null);
       setOffset(0);
       setAlign({ kind: 'none' });
       setSaved(false);
     },
-    [engine],
+    [engine, replaceMarks],
   );
 
   const replaceRecording = useCallback((next: RecordingSource | null) => {
@@ -137,77 +134,49 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     [run, show, replaceRecording],
   );
 
-  const loadServerScore = useCallback(
-    (entry: CompanionSong, score: CompanionScore) =>
-      run(async () => {
-        if (!score.url) throw new Error('missing url');
-        const loaded = readScoreFile(score.file, await fetchCompanionFile(score.url));
-        loaded.song.title = entry.title;
-        loaded.song.artist = entry.artist;
-        show(loaded.song, loaded.xml, {
-          kind: 'server',
-          title: entry.title,
-          songId: entry.id,
-          scoreFile: score.file,
-        });
-        const audio = entry.originalAudio ?? entry.audio;
-        replaceRecording(
-          audio ? { name: entry.title, url: companionUrl(audio), local: false } : null,
-        );
-        const loadedAs = generation.current;
-        const stored = score.hasMarks ? await getBarMarks(entry.id, score.file) : null;
-        if (stored && loadedAs === generation.current) {
-          setMarks(stored.marks);
+  /** Shows a score loaded from the companion server, unless another song was chosen meanwhile. */
+  const loadFromServer = useCallback(
+    (fetchScore: () => Promise<ServerScoreLoad>) => {
+      const startedAs = generation.current;
+      return run(async () => {
+        const { loaded, origin: next, recording: rec, marks: stored } = await fetchScore();
+        if (startedAs !== generation.current) return;
+        show(loaded.song, loaded.xml, next);
+        replaceRecording(rec);
+        // straight from the server: nothing to save until something changes
+        setSaved(true);
+        if (stored) {
+          replaceMarks(stored.marks);
           setOffset(stored.offsetSec);
           setAlign({ kind: 'done' });
-          setSaved(true);
         }
-      }),
-    [run, show, replaceRecording],
+      });
+    },
+    [run, show, replaceRecording, replaceMarks],
+  );
+
+  const loadServerScore = useCallback(
+    (entry: CompanionSong, score: CompanionScore) =>
+      loadFromServer(() => loadSongFolderScore(entry, score)),
+    [loadFromServer],
   );
 
   const loadNotesPiece = useCallback(
     (piece: NotesPiece, score: NotesPieceScore) =>
-      run(async () => {
-        const loaded = readScoreFile(score.file, await fetchCompanionFile(score.url));
-        loaded.song.title = piece.title;
-        loaded.song.artist = piece.artist;
-        show(loaded.song, loaded.xml, {
-          kind: 'notes',
-          title: piece.title,
-          pieceId: piece.id,
-          scoreFile: score.file,
-        });
-        const loadedAs = generation.current;
-        const stored = score.hasMarks ? await getNotesMarks(piece.id, score.file) : null;
-        if (loadedAs !== generation.current) return;
-        const audio =
-          piece.recordings.find((r) => r.file === stored?.audio) ?? piece.recordings[0] ?? null;
-        replaceRecording(
-          audio ? { name: audio.file, url: companionUrl(audio.url), local: false } : null,
-        );
-        // straight from the library: nothing to save until something changes
-        setSaved(true);
-        if (stored && audio?.file === stored.audio) {
-          setMarks(stored.marks);
-          setOffset(stored.offsetSec);
-          setAlign({ kind: 'done' });
-          setSaved(true);
-        }
-      }),
-    [run, show, replaceRecording],
+      loadFromServer(() => loadNotesPieceScore(piece, score)),
+    [loadFromServer],
   );
 
   const setRecordingFile = useCallback(
     (file: File) => {
       generation.current++;
       replaceRecording({ name: file.name, url: URL.createObjectURL(file), local: true, file });
-      setMarks(null);
+      replaceMarks(null);
       setOffset(0);
       setAlign({ kind: 'none' });
       setSaved(false);
     },
-    [replaceRecording],
+    [replaceRecording, replaceMarks],
   );
 
   // the engine follows song, recording and its mapping
@@ -235,14 +204,14 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
         if (current()) setAlign({ kind: 'running', stage, fraction });
       });
       if (!current()) return;
-      setMarks(result);
+      replaceMarks(result.marks);
       setOffset(0);
       setSaved(false);
-      setAlign({ kind: 'done' });
+      setAlign({ kind: 'done', tuning: result.tuning });
     } catch (e) {
       if (current()) setAlign({ kind: 'failed', error: errorText(e) });
     }
-  }, [song, recording]);
+  }, [song, recording, replaceMarks]);
 
   /** Melodiq songs get their marks; anything else goes to the Notes library with what is missing. */
   const saveToServer = useCallback(async () => {
@@ -295,6 +264,18 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     );
   }, [song, xml, marks, offset]);
 
+  /** Moves the bar line nearest to what the recording plays now onto this moment and pins it. */
+  const pinBarNow = useCallback(() => {
+    const now = engine.recording?.time();
+    if (!marks || now === undefined) return;
+    const sec = now - offset;
+    const next = pinBar(marks, pins, nearestBar(marks, sec), sec);
+    if (!next) return;
+    setMarks(next.marks);
+    setPins(next.pins);
+    setSaved(false);
+  }, [engine, marks, pins, offset]);
+
   const nudge = useCallback((deltaSec: number) => {
     setOffset((o) => Math.round((o + deltaSec) * 100) / 100);
     setSaved(false);
@@ -307,6 +288,7 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     loading,
     recording,
     marks,
+    pins,
     offset,
     align,
     saved,
@@ -321,6 +303,7 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     canSaveToServer,
     exportScore,
     nudge,
+    pinBarNow,
     clearError: () => setError(null),
   };
 }

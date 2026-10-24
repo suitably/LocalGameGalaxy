@@ -1,6 +1,7 @@
 import { drumLaneOf } from './instruments';
 import { ALIGN_SAMPLE_RATE, fft, frameCentre, frameCount, hann } from './dsp';
 import type { AlignProgress } from './alignment';
+import type { ChromaOnsets } from './chromaOnsets';
 import type { BarMark, ScoreSong } from './types';
 
 const HOP_SEC = 0.01;
@@ -17,6 +18,12 @@ const TEMPO_CHANGE_COST = 20;
 const SHIFT_COST = 0.002;
 const NORM_RADIUS = 200;
 const NORM_BLOCK = 50;
+/**
+ * Flux peaks as soon as an attack is well inside the window, while the window
+ * centre is still before it: each window is centred this much earlier so the
+ * peak lands on the attack itself (measured on synthetic attacks).
+ */
+const WINDOW_LAG_SEC = 0.012;
 
 export type Band = 0 | 1 | 2;
 
@@ -39,6 +46,14 @@ function normalise(env: Float32Array): Float32Array {
 }
 
 export function onsetBands(samples: Float32Array): OnsetBands {
+  return onsetFeatures(samples).bands;
+}
+
+/** Band onsets plus the raw broadband spectral flux (one FFT pass for both). */
+export function onsetFeatures(samples: Float32Array): {
+  bands: OnsetBands;
+  envelope: Float32Array;
+} {
   const frames = frameCount(samples.length, HOP_SEC);
   const half = FFT_SIZE / 2;
   const win = hann(FFT_SIZE);
@@ -53,9 +68,11 @@ export function onsetBands(samples: Float32Array): OnsetBands {
     new Float32Array(frames),
     new Float32Array(frames),
   ];
+  const envelope = new Float32Array(frames);
+  const lag = Math.round(WINDOW_LAG_SEC * ALIGN_SAMPLE_RATE);
   let last = new Float64Array(half);
   for (let f = 0; f < frames; f++) {
-    const centre = frameCentre(f, HOP_SEC);
+    const centre = frameCentre(f, HOP_SEC) - lag;
     for (let i = 0; i < FFT_SIZE; i++) {
       re[i] = (samples[centre + i - half] ?? 0) * win[i];
       im[i] = 0;
@@ -63,46 +80,78 @@ export function onsetBands(samples: Float32Array): OnsetBands {
     fft(re, im);
     const mag = new Float64Array(half);
     for (let k = 1; k < half; k++) {
-      mag[k] = Math.log1p(100 * Math.hypot(re[k], im[k]));
+      mag[k] = Math.log1p(100 * Math.sqrt(re[k] * re[k] + im[k] * im[k]));
+      const rise = Math.max(0, mag[k] - last[k]);
+      envelope[f] += rise;
       const band = bandOfBin[k];
-      if (band >= 0) bands[band][f] += Math.max(0, mag[k] - last[k]);
+      if (band >= 0) bands[band][f] += rise;
     }
     last = mag;
   }
-  return [normalise(bands[0]), normalise(bands[1]), normalise(bands[2])];
+  return {
+    bands: [normalise(bands[0]), normalise(bands[1]), normalise(bands[2])],
+    envelope,
+  };
 }
 
-interface NoteEvent {
+export interface NoteEvent {
   beat: number;
   weight: [number, number, number];
+  /** Pitch classes struck (C = 0), weighted; their fifth counts as the third partial. */
+  pcs: Float32Array;
 }
 
 /** Where each note's attack should show up: drums and bass in their bands, everything else as tones. */
-function noteEvents(song: ScoreSong): NoteEvent[] {
-  const byBeat = new Map<number, [number, number, number]>();
-  const add = (beat: number, band: Band, w: number) => {
+export function noteEvents(song: ScoreSong): NoteEvent[] {
+  const byBeat = new Map<number, { weight: [number, number, number]; pcs: Float32Array }>();
+  const at = (beat: number) => {
     const key = Math.round(beat * 1000) / 1000;
-    const weight = byBeat.get(key) ?? [0, 0, 0];
-    weight[band] += w;
-    byBeat.set(key, weight);
+    let ev = byBeat.get(key);
+    if (!ev) {
+      ev = { weight: [0, 0, 0], pcs: new Float32Array(12) };
+      byBeat.set(key, ev);
+    }
+    return ev;
+  };
+  const tone = (beat: number, pitch: number) => {
+    const ev = at(beat);
+    ev.pcs[pitch % 12] += 1;
+    ev.pcs[(pitch + 7) % 12] += 0.4;
   };
   for (const part of song.parts) {
     for (const n of part.notes) {
       if (part.isDrum) {
         const lane = drumLaneOf(n.pitch);
-        if (lane === 4) add(n.t, 0, 1);
-        else add(n.t, 2, lane === 0 || lane === 2 ? 1 : 0.3);
-      } else if (part.guess === 'bass') add(n.t, 0, 0.7);
-      else add(n.t, 1, 0.5);
+        if (lane === 4) at(n.t).weight[0] += 1;
+        else at(n.t).weight[2] += lane === 0 || lane === 2 ? 1 : 0.3;
+      } else if (part.guess === 'bass') {
+        at(n.t).weight[0] += 0.7;
+        tone(n.t, n.pitch);
+      } else {
+        at(n.t).weight[1] += 0.5;
+        tone(n.t, n.pitch);
+      }
     }
   }
   // Many parts striking together are stronger evidence, but not without limit.
   return [...byBeat.entries()]
     .sort((a, b) => a[0] - b[0])
-    .map(([beat, w]) => ({
-      beat,
-      weight: w.map((v) => Math.min(1.5, Math.sqrt(v))) as [number, number, number],
-    }));
+    .map(([beat, ev]) => {
+      let sum = 0;
+      for (let c = 0; c < 12; c++) sum += ev.pcs[c];
+      if (sum > 0) for (let c = 0; c < 12; c++) ev.pcs[c] /= sum;
+      return {
+        beat,
+        weight: ev.weight.map((v) => Math.min(1.5, Math.sqrt(v))) as [number, number, number],
+        pcs: ev.pcs,
+      };
+    });
+}
+
+export interface FitOptions {
+  /** Pitch-specific onsets; with them a tone counts only where its own pitch classes start. */
+  chroma?: ChromaOnsets;
+  onProgress?: AlignProgress;
 }
 
 /**
@@ -116,14 +165,24 @@ export async function fitMarksToNotes(
   song: ScoreSong,
   marks: BarMark[],
   bands: OnsetBands,
-  onProgress?: AlignProgress,
+  { chroma, onProgress }: FitOptions = {},
 ): Promise<BarMark[]> {
   const events = noteEvents(song);
   if (marks.length < 2 || !events.length) return marks;
-  const strength = (band: Band, sec: number) => {
+  const peakAt = (env: Float32Array, k: number) =>
+    Math.max(env[k - 1] ?? 0, env[k] ?? 0, env[k + 1] ?? 0);
+  const evidence = (e: NoteEvent, sec: number) => {
     const k = Math.round(sec / HOP_SEC);
-    const env = bands[band];
-    return Math.max(env[k - 1] ?? 0, env[k] ?? 0, env[k + 1] ?? 0);
+    let tonal = peakAt(bands[1], k);
+    if (chroma) {
+      let own = 0;
+      for (let c = 0; c < 12; c++) if (e.pcs[c] > 0) own += e.pcs[c] * peakAt(chroma[c], k);
+      // band flux still helps with muted or noisy strums, but a tone needs its own pitch
+      tonal = 0.25 * tonal + 0.75 * own;
+    }
+    return (
+      e.weight[0] * peakAt(bands[0], k) + e.weight[1] * tonal + e.weight[2] * peakAt(bands[2], k)
+    );
   };
   const shifts = 2 * MAX_SHIFT + 1;
   const steps = 2 * MAX_SHIFT_STEP + 1;
@@ -155,11 +214,10 @@ export async function fitMarksToNotes(
         let fit = 0;
         for (let i = first; i < end; i++) {
           const e = events[i];
-          const sec = fromSec + ((e.beat - from.beat) / (to.beat - from.beat)) * (toSec - fromSec);
-          fit +=
-            e.weight[0] * strength(0, sec) +
-            e.weight[1] * strength(1, sec) +
-            e.weight[2] * strength(2, sec);
+          fit += evidence(
+            e,
+            fromSec + ((e.beat - from.beat) / (to.beat - from.beat)) * (toSec - fromSec),
+          );
         }
         const spb = (toSec - fromSec) / (to.beat - from.beat);
         secPerBeat[p] = spb;
