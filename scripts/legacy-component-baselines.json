@@ -9,7 +9,6 @@
   "src/games/guessart/components/catalogue/WordEditorTab.tsx": 455,
   "src/games/werewolf/components/NightPhase.tsx": 411,
   "src/games/storyteller/StorytellerGame.tsx": 280,
-  "src/games/melodiq/gameplay/ScoreBoard.tsx": 405,
   "src/games/melodiq/components/HostQueueDrawer.tsx": 402,
   "src/modules/drawing/ExcalidrawViewer.tsx": 387,
   "src/games/melodiq/PhoneClientEngine.tsx": 378,

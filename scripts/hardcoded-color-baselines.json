@@ -17,7 +17,6 @@
   "src/games/melodiq/gameplay/LyricsDisplay.tsx": 9,
   "src/games/melodiq/gameplay/LyricsLineView.tsx": 4,
   "src/games/melodiq/gameplay/PitchVisualizer.tsx": 6,
-  "src/games/melodiq/gameplay/ScoreBoard.tsx": 42,
   "src/games/tabletop/components/controller/HandCardItem.tsx": 1,
   "src/games/tabletop/components/editor/TableSettingsDialog.tsx": 1,
   "src/games/tabletop/components/surface/BoardDragOverlay.tsx": 1,

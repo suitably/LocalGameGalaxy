@@ -1,404 +1,132 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Box, Typography, Button, Paper, Avatar, Chip, Grid } from '@mui/material';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'; // Trophy icon
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import HistoryIcon from '@mui/icons-material/History';
-import StarIcon from '@mui/icons-material/Star';
-import type { UserProfile } from '../types';
+import React, { useMemo } from 'react';
+import { Box, Button, Grid, Typography } from '@mui/material';
 import { useQueue } from '../hooks/useQueue';
 import { useMelodiqSettings } from '../hooks/SettingsContext';
 import { ScoreBoardQrCode } from './ScoreBoardQrCode';
+import {
+  buildHistoricalRanking,
+  rankSession,
+  type ScoreBoardPlayer,
+} from './logic/scoreBoardRanking';
+import { useScoreBoardAutoplay } from './scoreboard/useScoreBoardAutoplay';
+import { ScoreBoardSessionRow } from './scoreboard/ScoreBoardSessionRow';
+import { ScoreBoardHistory } from './scoreboard/ScoreBoardHistory';
+import { ScoreBoardFooter } from './scoreboard/ScoreBoardFooter';
+import { ScoreBoardEmpty } from './scoreboard/ScoreBoardEmpty';
 
 interface ScoreBoardProps {
-    players: {
-        config: UserProfile;
-        score: number;
-        history: any[];
-        isNewRecord: boolean;
-        loadingHistory?: boolean;
-        isRemote?: boolean;
-    }[];
-    onExit: (forceHome?: boolean) => void;
-    onResume?: () => void;
-    isPassive?: boolean;
-    onMinimize?: () => void;
+  players: ScoreBoardPlayer[];
+  onExit: (forceHome?: boolean) => void;
+  onResume?: () => void;
+  isPassive?: boolean;
+  onMinimize?: () => void;
 }
 
-export const ScoreBoard: React.FC<ScoreBoardProps> = ({ players, onExit, onResume, isPassive, onMinimize }) => {
-    const { queue } = useQueue();
-    const { settings } = useMelodiqSettings();
-    const [countdown, setCountdown] = useState<number | null>(null);
-    const [autoPlayCanceled, setAutoPlayCanceled] = useState(false);
-    
-    // Stabilize onExit callback
-    const onExitRef = useRef(onExit);
-    useEffect(() => {
-        onExitRef.current = onExit;
-    }, [onExit]);
+/** Full-screen results overlay (TV-readable: large type, solid surfaces, no gradients). */
+export const ScoreBoard: React.FC<ScoreBoardProps> = ({
+  players,
+  onExit,
+  onResume,
+  isPassive,
+  onMinimize,
+}) => {
+  const { queue } = useQueue();
+  const { settings } = useMelodiqSettings();
+  const { countdown, cancel } = useScoreBoardAutoplay({
+    playerCount: players.length,
+    noPlayersDelay: settings.autoplayNoPlayersDelay,
+    withPlayersDelay: settings.autoplayWithPlayersDelay,
+    isPassive,
+    onExit,
+  });
 
-    // Auto-play / Next Song logic
-    useEffect(() => {
-        if (isPassive || autoPlayCanceled) return; // Only host handles auto-play
-        
-        const delay = players.length === 0 ? settings.autoplayNoPlayersDelay : settings.autoplayWithPlayersDelay;
-        if (delay && delay > 0) {
-            setCountdown(delay);
-            
-            const timer = setInterval(() => {
-                setCountdown(prev => {
-                    if (prev === null) return null;
-                    if (prev <= 1) {
-                        clearInterval(timer);
-                        onExitRef.current(false);
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-            
-            return () => clearInterval(timer);
-        }
-    }, [players.length, settings.autoplayNoPlayersDelay, settings.autoplayWithPlayersDelay, isPassive, autoPlayCanceled]);
+  const sessionRanking = useMemo(() => rankSession(players), [players]);
+  const historicalRanking = useMemo(() => buildHistoricalRanking(players), [players]);
+  const next = queue[0]?.song;
 
-    const cancelAutoPlay = () => {
-        setAutoPlayCanceled(true);
-        setCountdown(null);
-    };
+  return (
+    <Box
+      sx={{
+        position: 'fixed',
+        inset: 0,
+        bgcolor: 'background.default',
+        display: 'flex',
+        flexDirection: 'column',
+        zIndex: 2000,
+        overflow: 'hidden',
+        p: { xs: 2, md: 4 },
+      }}
+    >
+      {isPassive && onMinimize && (
+        <Box sx={{ position: 'absolute', top: 16, left: 16, zIndex: 10 }}>
+          <Button variant="outlined" color="inherit" onClick={onMinimize}>
+            ▼ Minimize
+          </Button>
+        </Box>
+      )}
+      {players.length > 0 && (
+        <Typography
+          variant="h3"
+          sx={{
+            textAlign: 'center',
+            mb: 3,
+            color: 'primary.main',
+            fontSize: { xs: '2rem', md: '3.5rem' },
+          }}
+        >
+          SESSION RESULTS
+        </Typography>
+      )}
 
-    // 1. Session Ranking: Current players sorted by score
-    const sessionRanking = useMemo(() => {
-        return [...players].sort((a, b) => b.score - a.score);
-    }, [players]);
-
-    // 2. Historical Ranking: Aggregate all history from all players
-    const historicalRanking = useMemo(() => {
-        const allScores: Array<{
-            name: string;
-            score: number;
-            date: string;
-            hue: number;
-            isCurrentSession?: boolean; // To highlight the current run
-        }> = [];
-
-        players.forEach(p => {
-            // Include history if available
-            if (p.history && p.history.length > 0) {
-                p.history.forEach((h: any) => {
-                    allScores.push({
-                        name: p.config.name,
-                        score: h.score,
-                        date: h.date,
-                        hue: p.config.hue,
-                        // Heuristic: if score and date match current player's result, it's likely this session
-                        // But rely on strict equality might be flaky if seconds differ.
-                        // However, standard flow saves to DB then reads. Date ISO string should match.
-                        isCurrentSession: false // default
-                    });
-                });
-            } else {
-                // If no history (e.g. remote syncing or first play), add current score manually
-                // to make sure they appear in the concept of "All time best" for this session at least
-                allScores.push({
-                    name: p.config.name,
-                    score: p.score,
-                    date: new Date().toISOString(),
-                    hue: p.config.hue,
-                    isCurrentSession: true
-                });
-            }
-        });
-
-        // Filter out 0 scores or failed attempts if desired? Keeping simple for now.
-        // Sort by score desc
-        return allScores.sort((a, b) => b.score - a.score).slice(0, 50); // Top 50 generic limit
-    }, [players]);
-
-    return (
-        <Box
-            sx={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                bgcolor: 'black', // Distinct background
+      {players.length === 0 ? (
+        <ScoreBoardEmpty next={next} />
+      ) : (
+        <Grid container spacing={4} sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          <Grid
+            size={{ xs: 12, md: 7 }}
+            sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}
+          >
+            <Box
+              sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                zIndex: 2000,
-                overflow: 'hidden',
-                p: { xs: 2, md: 4 }
+                gap: 2,
+                overflowY: 'auto',
+                pr: 1,
+                pb: 2,
+              }}
+            >
+              {sessionRanking.map((player, index) => (
+                <ScoreBoardSessionRow key={player.config.id} player={player} rank={index + 1} />
+              ))}
+            </Box>
+          </Grid>
+
+          <Grid
+            size={{ xs: 12, md: 5 }}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100%',
+              overflow: 'hidden',
+              gap: 2,
             }}
-        >
-            {isPassive && onMinimize && (
-                <Box sx={{ position: 'absolute', top: 16, left: 16, zIndex: 10 }}>
-                    <Button variant="outlined" onClick={onMinimize} sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}>
-                        ▼ Minimize
-                    </Button>
-                </Box>
-            )}
-            {players.length > 0 && (
-                <Typography variant="h3" sx={{
-                    textAlign: 'center',
-                    mb: 3,
-                    fontWeight: '900',
-                    background: 'linear-gradient(45deg, #FFD700 30%, #FF8E53 90%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    textShadow: '0 0 30px rgba(255, 215, 0, 0.3)',
-                    letterSpacing: 2,
-                    fontSize: { xs: '2rem', md: '3.5rem' }
-                }}>
-                    SESSION RESULTS
-                </Typography>
-            )}
+          >
+            <ScoreBoardHistory entries={historicalRanking} />
+            <ScoreBoardQrCode />
+          </Grid>
+        </Grid>
+      )}
 
-            {players.length === 0 ? (
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <Typography variant="h4" sx={{ color: 'white', mb: 4, fontWeight: 'bold' }}>
-                        Song beendet
-                    </Typography>
-                    {queue.length > 0 ? (
-                        <Box sx={{ textAlign: 'center', p: 6, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 4, border: '1px solid rgba(255,255,255,0.1)' }}>
-                            <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.7)', mb: 2, letterSpacing: 3 }}>
-                                ALS NÄCHSTES
-                            </Typography>
-                            <Typography variant="h2" sx={{ color: '#FFD700', fontWeight: 'bold', mb: 1 }}>
-                                {queue[0].song.title}
-                            </Typography>
-                            <Typography variant="h4" sx={{ color: 'rgba(255,255,255,0.9)' }}>
-                                {queue[0].song.artist}
-                            </Typography>
-                        </Box>
-                    ) : (
-                        <Typography variant="h5" sx={{ color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' }}>
-                            Warteschlange ist leer.
-                        </Typography>
-                    )}
-                    <ScoreBoardQrCode sx={{ mt: 3, maxWidth: 440, width: '100%' }} />
-                </Box>
-            ) : (
-                <Grid container spacing={4} sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                    {/* LEFT: SESSION RANKING */}
-                <Grid size={{ xs: 12, md: 7 }} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, overflowY: 'auto', pr: 1, pb: 2 }}>
-                        {sessionRanking.map((player, index) => {
-                            const isWinner = index === 0;
-                            return (
-                                <Paper
-                                    key={player.config.id}
-                                    elevation={isWinner ? 12 : 4}
-                                    sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        p: { xs: 2, md: 3 },
-                                        borderRadius: 4,
-                                        bgcolor: 'rgba(255, 255, 255, 0.08)',
-                                        border: isWinner ? '2px solid rgba(255, 215, 0, 0.6)' : '1px solid rgba(255, 255, 255, 0.1)',
-                                        transition: 'transform 0.2s',
-                                        '&:hover': {
-                                            transform: 'translateY(-2px)',
-                                            bgcolor: 'rgba(255, 255, 255, 0.12)'
-                                        },
-                                        position: 'relative',
-                                        overflow: 'hidden'
-                                    }}
-                                >
-                                    {/* Rank */}
-                                    <Box sx={{
-                                        width: 50,
-                                        height: 50,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        mr: 2
-                                    }}>
-                                        {isWinner ? (
-                                            <EmojiEventsIcon sx={{ fontSize: 48, color: '#FFD700', filter: 'drop-shadow(0 0 10px rgba(255,215,0,0.5))' }} />
-                                        ) : (
-                                            <Typography variant="h4" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 'bold' }}>
-                                                #{index + 1}
-                                            </Typography>
-                                        )}
-                                    </Box>
-
-                                    {/* Avatar */}
-                                    <Avatar sx={{
-                                        bgcolor: `hsl(${player.config.hue}, 100%, 50%)`,
-                                        width: isWinner ? 64 : 48,
-                                        height: isWinner ? 64 : 48,
-                                        mr: 2,
-                                        fontSize: isWinner ? '1.5rem' : '1rem',
-                                        fontWeight: 'bold',
-                                        border: '2px solid rgba(255,255,255,0.2)'
-                                    }}>
-                                        {player.config.name.substring(0, 1).toUpperCase()}
-                                    </Avatar>
-
-                                    {/* Name & Badge */}
-                                    <Box sx={{ flex: 1 }}>
-                                        <Typography variant={isWinner ? "h4" : "h5"} sx={{
-                                            fontWeight: 'bold',
-                                            color: 'white',
-                                            mb: 0.5
-                                        }}>
-                                            {player.config.name}
-                                        </Typography>
-                                        {player.isNewRecord && (
-                                            <Chip
-                                                icon={<StarIcon sx={{ fontSize: '1rem !important' }} />}
-                                                label="PERSONAL BEST"
-                                                size="small"
-                                                sx={{
-                                                    bgcolor: '#FFD700',
-                                                    color: 'black',
-                                                    fontWeight: '800',
-                                                    '& .MuiChip-icon': { color: 'black' }
-                                                }}
-                                            />
-                                        )}
-                                        {player.loadingHistory && (
-                                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' }}>
-                                                Synchronizing...
-                                            </Typography>
-                                        )}
-                                    </Box>
-
-                                    {/* Score */}
-                                    <Typography variant={isWinner ? "h2" : "h3"} sx={{
-                                        fontWeight: '900',
-                                        color: isWinner ? '#FFD700' : 'rgba(255,255,255,0.9)',
-                                        textShadow: isWinner ? '0 0 20px rgba(255, 215, 0, 0.4)' : 'none',
-                                    }}>
-                                        {Math.round(player.score).toLocaleString()}
-                                    </Typography>
-                                </Paper>
-                            );
-                        })}
-                    </Box>
-                </Grid>
-
-                {/* RIGHT: HISTORICAL RANKING (Subtle/Dezent) */}
-                <Grid size={{ xs: 12, md: 5 }} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', gap: 2 }}>
-                    <Paper sx={{
-                        flex: 1,
-                        minHeight: 0,
-                        bgcolor: 'rgba(0,0,0,0.4)',
-                        borderRadius: 4,
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        overflow: 'hidden'
-                    }}>
-                        <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.1)', bgcolor: 'rgba(255,255,255,0.02)' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <HistoryIcon sx={{ color: 'rgba(255,255,255,0.5)' }} />
-                                <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.7)', fontWeight: 'bold', letterSpacing: 1 }}>
-                                    ALL-TIME BEST
-                                </Typography>
-                            </Box>
-                        </Box>
-
-                        <Box sx={{ flex: 1, overflowY: 'auto', p: 0 }}>
-                            {historicalRanking.length === 0 ? (
-                                <Box sx={{ p: 4, textAlign: 'center' }}>
-                                    <Typography color="text.secondary">No history available yet.</Typography>
-                                </Box>
-                            ) : (
-                                historicalRanking.map((entry, index) => {
-                                    const date = new Date(entry.date);
-                                    const dateStr = date.toLocaleDateString(undefined, {
-                                        month: '2-digit', day: '2-digit', year: '2-digit'
-                                    });
-
-                                    return (
-                                        <Box
-                                            key={index}
-                                            sx={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                p: 1.5,
-                                                borderBottom: '1px solid rgba(255,255,255,0.05)',
-                                                bgcolor: index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
-                                                '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' }
-                                            }}
-                                        >
-                                            <Typography variant="body1" sx={{ width: 40, textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontWeight: 'bold' }}>
-                                                {index + 1}.
-                                            </Typography>
-                                            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-                                                <Typography variant="body1" sx={{
-                                                    color: `hsl(${entry.hue}, 100%, 70%)`,
-                                                    fontWeight: 'bold',
-                                                    whiteSpace: 'nowrap',
-                                                    overflow: 'hidden',
-                                                    textOverflow: 'ellipsis',
-                                                    mr: 1
-                                                }}>
-                                                    {entry.name}
-                                                </Typography>
-                                            </Box>
-                                            <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'white', mx: 2, minWidth: 60, textAlign: 'right' }}>
-                                                {Math.round(entry.score).toLocaleString()}
-                                            </Typography>
-                                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', minWidth: 60, textAlign: 'right' }}>
-                                                {dateStr}
-                                            </Typography>
-                                        </Box>
-                                    );
-                                })
-                            )}
-                        </Box>
-                    </Paper>
-
-                    <ScoreBoardQrCode />
-                </Grid>
-            </Grid>
-            )}
-
-            {/* ACTION FOOTER */}
-            {!isPassive ? (
-                <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', gap: 2 }}>
-                    {onResume && (
-                        <Button variant="contained" size="large" onClick={onResume} startIcon={<PlayArrowIcon />} sx={{ borderRadius: 8, px: 4, bgcolor: 'rgba(255,255,255,0.1)' }}>
-                            Resume
-                        </Button>
-                    )}
-                    {queue.length > 0 && (
-                        <Button variant="outlined" size="large" onClick={() => onExit(true)} sx={{ borderRadius: 8, px: 4, color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}>
-                            Main Menu
-                        </Button>
-                    )}
-                    {countdown !== null && (
-                        <Button variant="outlined" size="large" onClick={cancelAutoPlay} sx={{ borderRadius: 8, px: 4, color: 'rgba(255,255,255,0.7)', borderColor: 'rgba(255,255,255,0.3)' }}>
-                            Cancel Auto-Skip
-                        </Button>
-                    )}
-                    <Button
-                        variant="contained"
-                        size="large"
-                        onClick={() => onExit(false)}
-                        sx={{
-                            borderRadius: 8,
-                            px: 6,
-                            py: 1.5,
-                            backgroundImage: 'linear-gradient(45deg, #FF6B6B 30%, #FF8E53 90%)',
-                            boxShadow: '0 4px 20px rgba(255, 107, 107, 0.4)',
-                            fontWeight: 'bold',
-                            fontSize: '1.2rem'
-                        }}
-                    >
-                        {queue.length > 0 
-                            ? `NEXT: ${queue[0].song.title}${countdown !== null ? ` (${countdown}s)` : ''}`.toUpperCase() 
-                            : `CONTINUE${countdown !== null ? ` (${countdown}s)` : ''}`}
-                    </Button>
-                </Box>
-            ) : (
-                <Box sx={{ mt: 3, pt: 2, display: 'flex', justifyContent: 'center' }}>
-                    <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' }}>
-                        Waiting for Host to continue...
-                    </Typography>
-                </Box>
-            )}
-        </Box>
-    );
+      <ScoreBoardFooter
+        isPassive={isPassive}
+        queueLength={queue.length}
+        nextTitle={next?.title}
+        countdown={countdown}
+        onExit={onExit}
+        onResume={onResume}
+        onCancelAutoPlay={cancel}
+      />
+    </Box>
+  );
 };
