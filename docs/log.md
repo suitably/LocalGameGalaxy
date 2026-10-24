@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Tabletop z-order (claude-code)
+
+- `docs/tech/tabletop-engine.md` §1: new section "Stacking order" (`SET_Z_ORDER`, `logic/zOrder.ts`, move-to-top, context menu, shortcuts); `viewReducer.ts` row updated; front matter `verified` refreshed. Outside `docs/`: tabletop code and locales changed (#540).
+
 ## 2026-10-24 — Nexumia server rename and signaling image name (#530, claude-code)
 
 - Companion server is now called Nexumia server. Docker images `nexumia/nexumia-server` (compose service `nexumia-server`, container `nexumia-server`, tunnel `nexumia-tunnel`); `nexumia/melodiq-server` is a deprecated alias. Dev compose service/container `nexumia-server-dev`. Updated: `deployment.md`, `external-sources.md`, `ci-cd-pipelines.md`, `dev-compose-workflow.md`, `monitoring-scaling.md`, `troubleshooting.md`, `server-runbook.md`.

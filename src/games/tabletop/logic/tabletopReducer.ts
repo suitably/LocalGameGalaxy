@@ -25,6 +25,7 @@ import { viewReducer } from './reducers/viewReducer';
 import { editReducer } from './reducers/editReducer';
 import { tableToolReducer } from './reducers/tableToolReducer';
 import { routineToActions } from './routines';
+import { raiseWidget, type ZOrderOp } from './zOrder';
 import type { WidgetPatch } from './widgetEdits';
 
 export interface FlyingCardAnimation {
@@ -91,6 +92,7 @@ export type TabletopAction =
   | { type: 'PLAY_CARD_FROM_HAND'; payload: { cardId: string; position: { x: number; y: number } } }
   | { type: 'SCALE_WIDGETS'; payload: { widgetIds: string[]; factor: number } }
   | { type: 'RESET_WIDGET_SCALE'; payload: { widgetIds: string[] } }
+  | { type: 'SET_Z_ORDER'; payload: { widgetIds: string[]; op: ZOrderOp } }
   | { type: 'SET_WIDGET_SHOW_ALWAYS'; payload: { widgetId: string; showAlways: boolean } }
   | { type: 'ADD_HIDDEN_ZONE'; payload: { zone: HiddenZone } }
   | { type: 'UPDATE_HIDDEN_ZONE'; payload: { id: string; changes: Partial<HiddenZone> } }
@@ -147,11 +149,15 @@ export function tabletopReducer(
         ...(widget.type === 'card' ? { inPile: false, pileId: undefined } : {}),
       };
 
+      // A moved widget goes to the top unless the caller fixed a zIndex.
+      const stacked =
+        action.payload.zIndex === undefined ? raiseWidget(widgets, action.payload.id) : widgets;
+
       return {
         ...state,
         game: {
           ...state.game,
-          widgets,
+          widgets: stacked,
         },
       };
     }
@@ -407,6 +413,7 @@ export function tabletopReducer(
     case 'SCALE_WIDGETS':
     case 'RESET_WIDGET_SCALE':
     case 'SET_WIDGET_SHOW_ALWAYS':
+    case 'SET_Z_ORDER':
     case 'ADD_HIDDEN_ZONE':
     case 'UPDATE_HIDDEN_ZONE':
     case 'MOVE_HIDDEN_ZONE':
