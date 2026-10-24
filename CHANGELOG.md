@@ -27,6 +27,7 @@
 
 ### Changed
 
+- **Server connection settings**: the connection card, setup wizard and UltraStar DB credentials are split into smaller components and hooks; gradient button, blurred dialog and hard-coded colours replaced by theme colours (#498).
 - **Game registry**: dropped the unused per-game gradient colours (the hub colours games by area); lazy game imports share one helper (#498).
 - **Melodiq library, history and settings**: song cards, search bar, playlists, history drawer and the Melodiq settings page are split into smaller components and use theme colours (no hard-coded white/rgba overlays, local-song tag in primary with contrast text); "Undo session" and "Reset defaults" are now translated (#495).
 - **Melodiq**: score board, lyrics, pitch stage and phone client are split into small components, hooks and tested logic (`scoreBoardRanking`, `lyricsLines`, `pitchLayout`, `apiChunkBuffer`); singers are drawn in the eight piece colours (nearest to their profile hue) instead of free HSL colours, the canvas and score screens read theme colours, and gradients, glows and lift-on-hover are gone (#496).
