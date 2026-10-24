@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   alpha,
   AppBar,
   Box,
   Chip,
   IconButton,
-  Menu,
-  MenuItem,
   Toolbar,
   Tooltip,
   useMediaQuery,
@@ -14,17 +12,12 @@ import {
 } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
-import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
-import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import TransferWithinAStationRoundedIcon from '@mui/icons-material/TransferWithinAStationRounded';
 import PhonelinkRingRoundedIcon from '@mui/icons-material/PhonelinkRingRounded';
-import FeedbackIcon from '@mui/icons-material/FeedbackRounded';
-import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import { GuessArtHeaderTitle } from './GuessArtHeaderTitle';
+import { GuessArtHeaderMenu } from './GuessArtHeaderMenu';
 import { gameNameOverride } from '../logic/gameNameOverride';
-import { hasGitHubPAT } from '../../../lib/github';
 import type { GuessArtGameRecord, GuessArtRound } from '../logic/types';
 import { getTurnPlayers } from '../logic/turnUtils';
 
@@ -54,24 +47,10 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
   isTemporaryTurn = false,
 }) => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
-  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setMenuAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setMenuAnchorEl(null);
-  };
-
   const handleShareLink = () => {
-    if (onOpenShareLinks) {
-      onOpenShareLinks();
-      handleMenuClose();
-    }
+    onOpenShareLinks?.();
   };
 
   const { drawer, guesser } = getTurnPlayers(game, round);
@@ -211,107 +190,15 @@ export const GuessArtHeader: React.FC<GuessArtHeaderProps> = ({
             </Tooltip>
           )}
 
-          {/* Overflow Menu (More Actions) */}
-          <IconButton
-            size="small"
-            color="inherit"
-            aria-label="more actions"
-            onClick={handleMenuOpen}
-            sx={{ p: { xs: 0.75, sm: 1 } }}
-          >
-            <MoreVertRoundedIcon fontSize="small" />
-          </IconButton>
-
-          <Menu
-            anchorEl={menuAnchorEl}
-            open={Boolean(menuAnchorEl)}
-            onClose={handleMenuClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-          >
-            {Boolean(onOpenShareLinks) && (
-              <MenuItem onClick={handleShareLink} sx={{ minHeight: 44 }}>
-                <Box component="span" sx={{ mr: 1.5, display: 'flex', alignItems: 'center' }}>
-                  <ShareRoundedIcon fontSize="small" />
-                </Box>
-                {t('guessart.shareGameLink', 'Spiel-Link teilen')}
-              </MenuItem>
-            )}
-
-            {onToggleLocalRemote && canToggleLocalRemote && (
-              <MenuItem
-                onClick={() => {
-                  onToggleLocalRemote();
-                  handleMenuClose();
-                }}
-                sx={{ minHeight: 44 }}
-              >
-                <Box component="span" sx={{ mr: 1.5, display: 'flex', alignItems: 'center' }}>
-                  {isCurrentTurnLocal ? (
-                    <PhonelinkRingRoundedIcon fontSize="small" />
-                  ) : (
-                    <TransferWithinAStationRoundedIcon fontSize="small" />
-                  )}
-                </Box>
-                {isCurrentTurnLocal
-                  ? t('guessart.switchToRemote', {
-                      name: isDrawing ? currentDrawer : currentGuesser,
-                      defaultValue: 'Zu Remote wechseln',
-                    })
-                  : t('guessart.switchToLocal', {
-                      name: isDrawing ? currentDrawer : currentGuesser,
-                      defaultValue: 'Hier lokal spielen',
-                    })}
-              </MenuItem>
-            )}
-
-            {onEditGame && (
-              <MenuItem
-                onClick={() => {
-                  onEditGame();
-                  handleMenuClose();
-                }}
-                sx={{ minHeight: 44 }}
-              >
-                <Box component="span" sx={{ mr: 1.5, display: 'flex', alignItems: 'center' }}>
-                  <EditRoundedIcon fontSize="small" />
-                </Box>
-                {t('guessart.editGame', 'Spiel bearbeiten')}
-              </MenuItem>
-            )}
-
-            {onOpenHistory && (
-              <MenuItem
-                onClick={() => {
-                  onOpenHistory();
-                  handleMenuClose();
-                }}
-                sx={{ minHeight: 44 }}
-              >
-                <Box component="span" sx={{ mr: 1.5, display: 'flex', alignItems: 'center' }}>
-                  <HistoryRoundedIcon fontSize="small" />
-                </Box>
-                {t('guessart.viewHistory', 'Historie ansehen')}
-              </MenuItem>
-            )}
-
-            <MenuItem
-              onClick={() => {
-                handleMenuClose();
-                if (!hasGitHubPAT()) {
-                  navigate('/settings?tab=general&sub=feedback&missing_pat=1');
-                } else {
-                  window.dispatchEvent(new Event('feedback:open'));
-                }
-              }}
-              sx={{ minHeight: 44 }}
-            >
-              <Box component="span" sx={{ mr: 1.5, display: 'flex', alignItems: 'center' }}>
-                <FeedbackIcon fontSize="small" />
-              </Box>
-              {t('settings.feedback_title', 'Feedback & Fehler melden')}
-            </MenuItem>
-          </Menu>
+          <GuessArtHeaderMenu
+            onOpenShareLinks={onOpenShareLinks}
+            onToggleLocalRemote={onToggleLocalRemote}
+            canToggleLocalRemote={canToggleLocalRemote}
+            isCurrentTurnLocal={isCurrentTurnLocal}
+            switchName={isDrawing ? currentDrawer : currentGuesser}
+            onEditGame={onEditGame}
+            onOpenHistory={onOpenHistory}
+          />
         </Box>
       </Toolbar>
     </AppBar>
