@@ -707,6 +707,8 @@
           "refine": "Fine alignment"
         },
         "aligned": "{{bars}} bar marks · bar 1 at {{start}} s",
+        "tuning_semitones": "recording {{shift}} semitones from the score",
+        "tuning_cents": "tuning {{cents}} cents",
         "not_aligned": "Without alignment there is only a start point; with live music, notes and recording then drift apart.",
         "fine_tune": "Fine-tune",
         "earlier": "50 ms earlier",

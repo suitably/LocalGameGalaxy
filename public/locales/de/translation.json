@@ -707,6 +707,8 @@
           "refine": "Feinabgleich"
         },
         "aligned": "{{bars}} Taktmarken · Takt 1 bei {{start}} s",
+        "tuning_semitones": "Aufnahme {{shift}} Halbtöne gegenüber den Noten",
+        "tuning_cents": "Stimmung {{cents}} Cent",
         "not_aligned": "Ohne Abgleich gilt nur ein Startpunkt; bei Live-Musik laufen Noten und Aufnahme dann auseinander.",
         "fine_tune": "Feinkorrektur",
         "earlier": "50 ms früher",

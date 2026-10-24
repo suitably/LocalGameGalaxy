@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   applyBarMarksToMusicXml,
   type AlignProgress,
+  type AlignResult,
   type BarMark,
   type ScoreSong,
 } from '../../../modules/music-score';
@@ -38,7 +39,8 @@ export interface RecordingSource {
 export type AlignState =
   | { kind: 'none' }
   | { kind: 'running'; stage: Parameters<AlignProgress>[0]; fraction: number }
-  | { kind: 'done' }
+  /** `tuning` is known only right after aligning, not for marks loaded from the server. */
+  | { kind: 'done'; tuning?: AlignResult['tuning'] }
   | { kind: 'failed'; error: string };
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -190,10 +192,10 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
         if (current()) setAlign({ kind: 'running', stage, fraction });
       });
       if (!current()) return;
-      setMarks(result);
+      setMarks(result.marks);
       setOffset(0);
       setSaved(false);
-      setAlign({ kind: 'done' });
+      setAlign({ kind: 'done', tuning: result.tuning });
     } catch (e) {
       if (current()) setAlign({ kind: 'failed', error: errorText(e) });
     }

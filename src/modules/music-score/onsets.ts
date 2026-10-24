@@ -1,38 +1,9 @@
-import { fft, frameCentre, frameCount, hann } from './dsp';
 import type { BarMark } from './types';
 
-const ONSET_FFT = 512;
+/** Hop of the broadband flux envelope (`onsetFeatures`). */
 const ONSET_HOP_SEC = 0.01;
 const ONSET_SEARCH_SEC = 0.12;
 const FIRST_BAR_SEARCH_SEC = 0.4;
-
-/** Spectral-flux onset strength of the recording, one value per 10 ms. */
-export function onsetEnvelope(samples: Float32Array): Float32Array {
-  const frames = frameCount(samples.length, ONSET_HOP_SEC);
-  const half = ONSET_FFT / 2;
-  const win = hann(ONSET_FFT);
-  const re = new Float64Array(ONSET_FFT);
-  const im = new Float64Array(ONSET_FFT);
-  let last = new Float64Array(ONSET_FFT / 2);
-  const out = new Float32Array(frames);
-  for (let f = 0; f < frames; f++) {
-    const centre = frameCentre(f, ONSET_HOP_SEC);
-    for (let i = 0; i < ONSET_FFT; i++) {
-      re[i] = (samples[centre + i - half] ?? 0) * win[i];
-      im[i] = 0;
-    }
-    fft(re, im);
-    const mag = new Float64Array(ONSET_FFT / 2);
-    let flux = 0;
-    for (let k = 1; k < ONSET_FFT / 2; k++) {
-      mag[k] = Math.log1p(100 * Math.hypot(re[k], im[k]));
-      flux += Math.max(0, mag[k] - last[k]);
-    }
-    out[f] = flux;
-    last = mag;
-  }
-  return out;
-}
 
 /** Moves each mark onto the strongest nearby onset, preferring closer ones; weak evidence keeps the mark. */
 export function refineMarksWithOnsets(marks: BarMark[], onsets: Float32Array): BarMark[] {

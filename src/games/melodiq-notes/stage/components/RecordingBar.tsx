@@ -21,8 +21,14 @@ export function RecordingBar({ state }: { state: StageSongState }) {
   if (running)
     info = k('aligning', { stage: k(`align_stage.${align.stage}`), percent: Math.round(progress) });
   else if (align.kind === 'failed') info = k('align_failed', { error: align.error });
-  else if (marks)
+  else if (marks) {
     info = k('aligned', { bars: marks.length - 1, start: (marks[0].sec + offset).toFixed(2) });
+    const tuning = align.kind === 'done' ? align.tuning : undefined;
+    if (tuning?.semitones)
+      info += ` · ${k('tuning_semitones', { shift: (tuning.semitones > 0 ? '+' : '−') + Math.abs(tuning.semitones) })}`;
+    if (tuning && Math.abs(tuning.cents) >= 10)
+      info += ` · ${k('tuning_cents', { cents: (tuning.cents > 0 ? '+' : '−') + Math.abs(tuning.cents) })}`;
+  }
 
   return (
     <Stack spacing={1}>
