@@ -27,6 +27,7 @@
 
 ### Changed
 
+- **Storyteller, Gartic Phone, Imposter**: lobby, header and setup screens split into smaller components and hooks and recoloured with theme and piece colours (Party area pink for Storyteller, green/red role colours for the Imposter result); the in-content Storyteller title is gone (the page title lives in the header) (#497).
 - **Kniffel and Knister**: boards split into focused components and hooks; player columns use the piece-colour tints, scores use the display face with tabular figures, status colours follow the theme; removed the gradient, glow and blur effects and the duplicate Knister title (#492).
 - Cards: decomposed the Schwimmen, Oh Hell and score-sheet views into shared presenters (`components/common/`), a `useSchwimmenState` hook and tested `logic/cardPlayers.ts`; re-coloured with piece/background tokens, removed gradients and emoji icons (#494, #360).
 
