@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useWebRTC } from '../audio/WebRTCContext';
-import { submitFeedbackWithLocalPat } from '../../../lib/github';
+import { submitFeedbackWithLocalPat } from '../../../lib/feedbackSubmit';
 import {
   canSubmitFeedback,
   parseFeedbackSubmit,

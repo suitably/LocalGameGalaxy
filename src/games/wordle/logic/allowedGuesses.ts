@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- word list data */
 /**
  * Extra accepted guesses (beyond the target words) for the "Only dictionary words" setting.
  * Deliberately small: common 5-letter words per language, German in normalized form
