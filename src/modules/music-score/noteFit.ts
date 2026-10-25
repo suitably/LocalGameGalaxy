@@ -256,5 +256,9 @@ export async function fitMarksToNotes(
     chosen[k] = Math.floor(best / steps);
     best = back[k][best];
   }
-  return marks.map((m, k) => ({ beat: m.beat, sec: Math.max(0, m.sec + shiftSec(chosen[k])) }));
+  // bars placed before the recording starts (an intro it does not have) stay where the warp put them
+  return marks.map((m, k) => ({
+    beat: m.beat,
+    sec: m.sec < 0 ? m.sec : Math.max(0, m.sec + shiftSec(chosen[k])),
+  }));
 }

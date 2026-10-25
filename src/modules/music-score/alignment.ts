@@ -26,6 +26,30 @@ const SHIFTS = [0, -1, 1, -2, 2];
 const SHIFT_MARGIN = 0.01;
 /** Frames averaged when comparing shifts on a coarser grid. */
 const COARSE = 5;
+/** Score time that may stay unmatched at either end: an arrangement's intro or outro the recording does not have. */
+const MAX_SKIP_SEC = 30;
+/**
+ * Cost of a skipped frame as a share of what an unrelated pairing of score and
+ * recording frames costs (measured per song), so only a clearly better match is kept.
+ */
+const SKIP_SHARE = 0.89;
+/** Score × recording frame pairs sampled for that baseline. */
+const BASELINE_SAMPLES = 4000;
+/** Matched frames whose tempo the skipped ends continue. */
+const EXTRAPOLATE_FRAMES = 100;
+
+/** Mean cost of score and recording frames paired at random (sampled on a fixed lattice). */
+export function unrelatedCost(n: number, m: number, cost: (i: number, j: number) => number) {
+  let sum = 0;
+  for (let k = 0; k < BASELINE_SAMPLES; k++) {
+    // golden-ratio lattice: evenly spread, deterministic
+    sum += cost(
+      Math.floor(((k * 0.618034) % 1) * n),
+      Math.floor(((k + 0.5) / BASELINE_SAMPLES) * m),
+    );
+  }
+  return sum / BASELINE_SAMPLES;
+}
 
 export type AlignProgress = (
   stage: 'analyse' | 'match' | 'refine',
@@ -42,15 +66,21 @@ export interface AlignResult {
  * Dynamic time warping of n score frames against m recording frames with steps
  * (1,1), (1,2), (2,1): tempo may differ by up to a factor of two. The start in
  * the recording is free (intros, silence) and the end is chosen by mean cost.
- * Returns the recording frame of every score frame and the mean cost along the path.
+ * Up to `maxSkip` score frames at either end may stay unmatched at `skipCost` each
+ * (an arrangement's extra intro or outro); they continue the tempo of the matched
+ * path next to them. Returns the recording frame of every score frame and
+ * the mean cost along the matched path.
  */
 export async function warpScoreToAudio(
   n: number,
   m: number,
   cost: (i: number, j: number) => number,
   onProgress?: AlignProgress,
+  { maxSkip = 0, skipCost = 0 }: { maxSkip?: number; skipCost?: number } = {},
 ): Promise<{ at: Float64Array; meanCost: number }> {
   const INF = 1e30;
+  const skip = Math.max(0, Math.min(maxSkip, n - 1));
+  // 0 diagonal, 1 fast, 2 slow, 3 path starts here (score frames before it skipped)
   const steps = new Int8Array(n * m);
   let prev2 = new Float64Array(m).fill(INF);
   let prev = new Float64Array(m);
@@ -59,8 +89,28 @@ export async function warpScoreToAudio(
   let from2 = new Int32Array(m);
   let from = Int32Array.from({ length: m }, (_, j) => j);
   let fromCur = new Int32Array(m);
-  for (let j = 0; j < m; j++) prev[j] = cost(0, j);
+  for (let j = 0; j < m; j++) {
+    prev[j] = cost(0, j);
+    steps[j] = 3;
+  }
+  let bestEnd = INF;
+  let endRow = n - 1;
+  let endCol = 0;
+  // a path covers about n + (its recording span) cells; skipped frames count as cells at skipCost
+  const considerEnds = (row: number, acc: Float64Array, starts: Int32Array) => {
+    if (row < n - 1 - skip) return;
+    for (let k = 0; k < m; k++) {
+      const v = (acc[k] + (n - 1 - row) * skipCost) / (n + k - starts[k] + 1);
+      if (v < bestEnd) {
+        bestEnd = v;
+        endRow = row;
+        endCol = k;
+      }
+    }
+  };
+  considerEnds(0, prev, from);
   for (let i = 1; i < n; i++) {
+    const fresh = i <= skip ? i * skipCost : INF;
     for (let j = 0; j < m; j++) {
       const diag = j >= 1 ? prev[j - 1] : INF;
       const fast = j >= 2 ? prev[j - 2] + STEP_PENALTY : INF;
@@ -78,31 +128,29 @@ export async function warpScoreToAudio(
         step = 2;
         start = from2[j - 1];
       }
+      if (fresh < best) {
+        best = fresh;
+        step = 3;
+        start = j;
+      }
       cur[j] = best + cost(i, j);
       fromCur[j] = start;
       steps[i * m + j] = step;
     }
+    considerEnds(i, cur, fromCur);
     [prev2, prev, cur] = [prev, cur, prev2];
     [from2, from, fromCur] = [from, fromCur, from2];
     if (onProgress && i % 200 === 0) await onProgress('match', i / n);
   }
-  let j = 0;
-  let bestEnd = INF;
-  for (let k = 0; k < m; k++) {
-    // a path covers about n + (its recording span) cells
-    const v = prev[k] / (n + k - from[k] + 1);
-    if (v < bestEnd) {
-      bestEnd = v;
-      j = k;
-    }
-  }
   const at = new Float64Array(n);
-  let i = n - 1;
+  let i = endRow;
+  let j = endCol;
   at[i] = j;
   let sum = cost(i, j);
   let cells = 1;
   while (i > 0) {
     const step = steps[i * m + j];
+    if (step === 3) break;
     if (step === 0) {
       i--;
       j--;
@@ -123,6 +171,13 @@ export async function warpScoreToAudio(
       cells++;
     }
   }
+  // unmatched ends continue at the tempo of the matched path next to them
+  const startRow = i;
+  const reach = Math.min(EXTRAPOLATE_FRAMES, endRow - startRow);
+  const headSlope = reach > 0 ? (at[startRow + reach] - at[startRow]) / reach : 1;
+  const tailSlope = reach > 0 ? (at[endRow] - at[endRow - reach]) / reach : 1;
+  for (let k = startRow - 1; k >= 0; k--) at[k] = at[k + 1] - headSlope;
+  for (let k = endRow + 1; k < n; k++) at[k] = at[k - 1] + tailSlope;
   return { at, meanCost: sum / cells };
 }
 
@@ -204,12 +259,11 @@ export async function alignRecording(
   const plain = scoreFeatures(song);
   const semitones = await bestShift(plain, audio);
   const score = transpose(plain, semitones);
-  const warp = await warpScoreToAudio(
-    score.frames,
-    audio.frames,
-    frameCost(score, audio),
-    onProgress,
-  );
+  const cost = frameCost(score, audio);
+  const warp = await warpScoreToAudio(score.frames, audio.frames, cost, onProgress, {
+    maxSkip: Math.round(MAX_SKIP_SEC / HOP_SEC),
+    skipCost: SKIP_SHARE * unrelatedCost(score.frames, audio.frames, cost),
+  });
   const coarse = marksFromWarp(
     song,
     warp.at.map((f) => f * HOP_SEC),
