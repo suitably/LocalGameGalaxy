@@ -114,7 +114,7 @@ export const subPillSx = (isActive: boolean): SxProps<Theme> => ({
   textTransform: 'none',
   fontWeight: isActive ? 700 : 500,
   fontSize: '0.8rem',
-  color: isActive ? 'primary.main' : 'text.secondary',
+  color: isActive ? 'primary.text' : 'text.secondary',
   bgcolor: (theme) => alpha(theme.palette.primary.main, isActive ? 0.12 : 0),
   border: 1,
   borderColor: (theme) =>

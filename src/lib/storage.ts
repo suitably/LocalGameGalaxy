@@ -145,6 +145,8 @@ export const STORAGE_KEYS = {
   PWA_BANNER_DISMISSED: 'pwa-banner-dismissed',
   LANGUAGE: 'lgg_language',
   LANGUAGE_LEGACY: 'language',
+  /** Colour mode setting: `system` | `dark` | `light` (src/lib/colorMode.ts, DESIGN.md §9). */
+  COLOR_MODE: 'lgg_color_mode',
   EXCALIDRAW_LIBRARY: 'guessart_excalidraw_library',
 } as const;
 

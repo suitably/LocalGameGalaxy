@@ -88,7 +88,7 @@ export const KnisterCombinationsLegend: React.FC<KnisterCombinationsLegendProps>
             borderColor: 'primary.main',
           }}
         >
-          <Typography variant="body2" sx={{ color: 'primary.main', fontWeight: 600 }}>
+          <Typography variant="body2" sx={{ color: 'primary.text', fontWeight: 600 }}>
             ★{' '}
             {t(
               'games.knister.diagonal_bonus_hint',

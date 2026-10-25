@@ -22,7 +22,8 @@ verified:
 LocalGameGalaxy uses **Material UI (MUI) v7** for all UI components and theming.
 
 - The global theme is defined in `src/theme.ts`.
-- The app uses **dark mode only**: `src/theme.ts` builds a dark MUI theme from the tokens in `src/themeTokens.ts` (which also hold the light tokens and the `piece` palette, exposed as `theme.palette.piece`). The target is dark + light; see [DESIGN.md](../../DESIGN.md) §9.
+- Dark and light mode: `src/theme.ts` builds `appTheme` with MUI `colorSchemes` (`dark` + `light`, no CSS variables) from `darkTokens` / `lightTokens` in `src/themeTokens.ts`; the `piece` palette is `theme.palette.piece`. `ColorModeProvider` (`src/context/ColorModeProvider.tsx`) picks the scheme from the user setting `STORAGE_KEYS.COLOR_MODE` (`system` default / `dark` / `light`, `src/lib/colorMode.ts`, Settings → General → Appearance); MUI's own `mui-mode` storage is disabled (`storageManager={null}`). TV views use `TvThemeProvider` (dark-only `baseTheme`) and stay dark. See [DESIGN.md](../../DESIGN.md) §9.
+- Primary-coloured text, icons and thin parts use `primary.text` (`theme.palette.primary.text`, sx `'primary.text'`); `primary.main` (sun-yellow) is the fill colour and is unreadable on paper. Theme overrides already map `Typography`/`SvgIcon` `color="primary"`, text/outlined buttons, links, outlined chips and selected toggle buttons/tabs.
 - The visual system (colors, type, spacing, radius, components) is defined in [DESIGN.md](../../DESIGN.md). Dark tokens, fonts and logo are implemented; the remaining migration order is in DESIGN.md §10.
 - Theme tokens (colors, typography, spacing) are accessed via `theme.palette.*` — **never hardcode hex color values**.
 

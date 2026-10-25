@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider, CssBaseline } from '@mui/material';
+import { CssBaseline } from '@mui/material';
 import App from './App';
-import theme from './theme';
+import { ColorModeProvider } from './context/ColorModeProvider';
 import { TitleProvider } from './context/TitleContext';
 import { LayoutProvider } from './context/LayoutContext';
 import { SettingsProvider } from './games/melodiq';
@@ -46,7 +46,7 @@ initSafeArea();
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <BrowserRouter>
-      <ThemeProvider theme={theme}>
+      <ColorModeProvider>
         <CssBaseline />
         <SettingsProvider>
           <TitleProvider>
@@ -57,7 +57,7 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
             </LayoutProvider>
           </TitleProvider>
         </SettingsProvider>
-      </ThemeProvider>
+      </ColorModeProvider>
     </BrowserRouter>
   </React.StrictMode>,
 );

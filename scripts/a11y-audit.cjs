@@ -64,7 +64,7 @@ function localAxePath() {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   await context.addInitScript((t) => {
     try {
-      localStorage.setItem('themeMode', t);
+      localStorage.setItem('lgg_color_mode', t); // STORAGE_KEYS.COLOR_MODE
     } catch {
       /* ignore */
     }

@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Light mode and mode setting (#499, claude-code)
+
+- `docs/tech/styling.md`: dark + light `colorSchemes`, `ColorModeProvider`, `primary.text` rule; `verified.at` refreshed. `docs/tech/persistence.md`: `COLOR_MODE` key. `DESIGN.md` §9/§10 step 3 and status line updated.
+- Outside `docs/`: `src/theme.ts`, `src/context/ColorModeProvider.tsx`, `src/lib/colorMode.ts`, `AppearanceSettings`, `TvThemeProvider` (dark page background), hub ink banner, `primary.text` in settings/PWA chrome, locales; `scripts/a11y-audit.cjs --theme light` now sets `lgg_color_mode` (0 violations light and dark).
+
 ## 2026-10-25 — Touch-action on game surfaces (#512, claude-code)
 
 - `docs/tech/styling.md` §5: one paragraph on `touch-action` for pinch-zoom-enabled pages (`none` for gesture surfaces, `manipulation` for tap-only controllers).

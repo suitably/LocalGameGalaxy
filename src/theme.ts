@@ -1,15 +1,30 @@
 import type { CSSProperties } from 'react';
-import { createTheme, responsiveFontSizes } from '@mui/material/styles';
 import {
-  darkTokens as t,
+  createTheme,
+  responsiveFontSizes,
+  type PaletteOptions,
+  type Theme,
+  type ThemeOptions,
+} from '@mui/material/styles';
+import {
+  darkTokens,
+  lightTokens,
   fontFamilies,
   motion,
   piecePalette,
   type PiecePalette,
+  type SchemeTokens,
 } from './themeTokens';
 import { TOUCH_TARGET, invisibleHitArea } from './lib/touchTarget';
 
 declare module '@mui/material/styles' {
+  /** `primary.text`: primary-coloured text and thin parts (DESIGN.md §2.2); yellow fails on paper. */
+  interface PaletteColor {
+    text?: string;
+  }
+  interface SimplePaletteColorOptions {
+    text?: string;
+  }
   interface Palette {
     piece: PiecePalette;
   }
@@ -30,14 +45,23 @@ declare module '@mui/material/Typography' {
   }
 }
 
-const display = { fontFamily: fontFamilies.display };
+export type ColorScheme = 'dark' | 'light';
 
-// "Game night on the couch" — see DESIGN.md. Dark only until the mode setting exists (DESIGN.md §10).
-/** Unwrapped dark theme; `src/themeTv.ts` derives the TV variant from it. */
-export const baseTheme = createTheme({
-  palette: {
-    mode: 'dark',
-    primary: { main: t.primary.main, dark: t.primary.edge, contrastText: t.primary.contrastText },
+/** Tokens of the scheme a theme is currently rendering (DESIGN.md §2, §9). */
+export const schemeTokens = (theme: Pick<Theme, 'palette'>): SchemeTokens =>
+  theme.palette.mode === 'light' ? lightTokens : darkTokens;
+
+const paletteFor = (mode: ColorScheme): PaletteOptions => {
+  const t = mode === 'light' ? lightTokens : darkTokens;
+  return {
+    mode,
+    primary: {
+      main: t.primary.main,
+      light: t.primary.hover,
+      dark: t.primary.edge,
+      text: t.primary.text,
+      contrastText: t.primary.contrastText,
+    },
     secondary: { main: t.accent.main, contrastText: t.accent.contrastText },
     info: { main: t.accent.main, contrastText: t.accent.contrastText },
     success: { main: t.success, contrastText: t.onStatus },
@@ -48,7 +72,23 @@ export const baseTheme = createTheme({
     divider: t.border.subtle,
     action: { disabledBackground: t.bg.raised, disabled: t.text.disabled },
     piece: piecePalette,
-  },
+  };
+};
+
+const display = { fontFamily: fontFamilies.display };
+
+/** Colour for primary-coloured text on surfaces; `primary.main` stays the fill colour. */
+export const primaryText = (theme: Pick<Theme, 'palette'>): string =>
+  theme.palette.primary.text ?? theme.palette.primary.main;
+
+const focusRing = (theme: Theme) => ({
+  outline: `3px solid ${schemeTokens(theme).accent.main}`,
+  outlineOffset: 2,
+});
+
+// "Game night on the couch" — see DESIGN.md. Overrides read the active scheme's tokens
+// through `schemeTokens(theme)`, so one set serves dark and light (DESIGN.md §9).
+const sharedOptions: Omit<ThemeOptions, 'palette' | 'colorSchemes'> = {
   shape: { borderRadius: 4 },
   transitions: {
     duration: { short: motion.duration.short, standard: motion.duration.standard },
@@ -73,15 +113,11 @@ export const baseTheme = createTheme({
   },
   components: {
     MuiCssBaseline: {
-      styleOverrides: {
-        ':focus-visible': { outline: `3px solid ${t.accent.main}`, outlineOffset: 2 },
-      },
+      styleOverrides: (theme) => ({ ':focus-visible': focusRing(theme) }),
     },
     MuiButtonBase: {
       styleOverrides: {
-        root: {
-          '&.Mui-focusVisible': { outline: `3px solid ${t.accent.main}`, outlineOffset: 2 },
-        },
+        root: ({ theme }) => ({ '&.Mui-focusVisible': focusRing(theme) }),
       },
     },
     MuiButton: {
@@ -89,14 +125,36 @@ export const baseTheme = createTheme({
       styleOverrides: {
         root: { borderRadius: 12, minHeight: TOUCH_TARGET },
         // Tactile "edge" under the main action (DESIGN.md §5)
-        containedPrimary: {
-          boxShadow: `0 4px 0 ${t.primary.edge}`,
-          '&:hover': { backgroundColor: t.primary.hover, boxShadow: `0 4px 0 ${t.primary.edge}` },
-          '&:active': { transform: 'translateY(2px)', boxShadow: `0 2px 0 ${t.primary.edge}` },
-          '&.Mui-disabled': { boxShadow: 'none' },
+        containedPrimary: ({ theme }) => {
+          const t = schemeTokens(theme);
+          return {
+            boxShadow: `0 4px 0 ${t.primary.edge}`,
+            '&:hover': { backgroundColor: t.primary.hover, boxShadow: `0 4px 0 ${t.primary.edge}` },
+            '&:active': { transform: 'translateY(2px)', boxShadow: `0 2px 0 ${t.primary.edge}` },
+            '&.Mui-disabled': { boxShadow: 'none' },
+          };
         },
-        outlined: { borderColor: t.border.subtle, '&:hover': { borderColor: t.border.strong } },
+        // Yellow is unreadable on paper: primary-coloured text uses `primary.text` (DESIGN.md §2.2).
+        textPrimary: ({ theme }) => ({ color: primaryText(theme) }),
+        outlinedPrimary: ({ theme }) => ({ color: primaryText(theme) }),
+        outlined: ({ theme }) => {
+          const t = schemeTokens(theme);
+          return { borderColor: t.border.subtle, '&:hover': { borderColor: t.border.strong } };
+        },
       },
+    },
+    MuiLink: {
+      styleOverrides: {
+        root: ({ theme }) => ({ color: primaryText(theme) }),
+      },
+    },
+    MuiSvgIcon: {
+      styleOverrides: { colorPrimary: ({ theme }) => ({ color: primaryText(theme) }) },
+    },
+    MuiTypography: {
+      variants: [
+        { props: { color: 'primary' }, style: ({ theme }) => ({ color: primaryText(theme) }) },
+      ],
     },
     // Touch targets (DESIGN.md §4, #510): >= 48px for every interactive control.
     MuiIconButton: {
@@ -104,9 +162,18 @@ export const baseTheme = createTheme({
     },
     MuiToggleButton: {
       styleOverrides: { root: { minHeight: TOUCH_TARGET } },
+      variants: [
+        {
+          props: { color: 'primary' },
+          style: ({ theme }) => ({ '&.Mui-selected': { color: primaryText(theme) } }),
+        },
+      ],
     },
     MuiTab: {
-      styleOverrides: { root: { minHeight: TOUCH_TARGET } },
+      styleOverrides: {
+        root: { minHeight: TOUCH_TARGET },
+        textColorPrimary: ({ theme }) => ({ '&.Mui-selected': { color: primaryText(theme) } }),
+      },
     },
     MuiCheckbox: {
       styleOverrides: { root: { padding: 12 }, sizeSmall: { padding: 14 } },
@@ -125,47 +192,79 @@ export const baseTheme = createTheme({
         // Visual chip stays compact; an invisible overlay extends the hit area vertically.
         clickable: invisibleHitArea(TOUCH_TARGET, 'y'),
         deletable: invisibleHitArea(TOUCH_TARGET, 'y'),
+        outlinedPrimary: ({ theme }) => ({ color: primaryText(theme) }),
       },
     },
     MuiCard: {
       styleOverrides: {
-        root: { borderRadius: 20, backgroundImage: 'none', border: `1px solid ${t.border.subtle}` },
+        root: ({ theme }) => ({
+          borderRadius: 20,
+          backgroundImage: 'none',
+          border: `1px solid ${schemeTokens(theme).border.subtle}`,
+        }),
       },
     },
     MuiPaper: {
       styleOverrides: { root: { backgroundImage: 'none' } },
     },
     MuiDialog: {
-      styleOverrides: { paper: { borderRadius: 20, boxShadow: t.overlayShadow } },
+      styleOverrides: {
+        paper: ({ theme }) => ({ borderRadius: 20, boxShadow: schemeTokens(theme).overlayShadow }),
+      },
     },
     MuiPopover: {
-      styleOverrides: { paper: { borderRadius: 12, boxShadow: t.overlayShadow } },
+      styleOverrides: {
+        paper: ({ theme }) => ({ borderRadius: 12, boxShadow: schemeTokens(theme).overlayShadow }),
+      },
     },
     MuiOutlinedInput: {
       styleOverrides: {
         root: { borderRadius: 8 },
         input: { '&:not(textarea)': { boxSizing: 'border-box', minHeight: TOUCH_TARGET } },
-        notchedOutline: { borderColor: t.border.strong },
+        notchedOutline: ({ theme }) => ({ borderColor: schemeTokens(theme).border.strong }),
       },
     },
   },
-});
+};
 
-export default responsiveFontSizes(baseTheme, {
-  variants: [
-    'display',
-    'h1',
-    'h2',
-    'h3',
-    'h4',
-    'h5',
-    'h6',
-    'subtitle1',
-    'subtitle2',
-    'body1',
-    'body2',
-    'caption',
-    'button',
-    'overline',
-  ],
-});
+/**
+ * Unwrapped dark-only theme (no `colorSchemes`). `src/themeTv.ts` derives the TV variant
+ * from it, so TV views stay dark whatever the app mode is (DESIGN.md §9).
+ */
+export const baseTheme = createTheme({ ...sharedOptions, palette: paletteFor('dark') });
+
+const FONT_VARIANTS = [
+  'display',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'subtitle1',
+  'subtitle2',
+  'body1',
+  'body2',
+  'caption',
+  'button',
+  'overline',
+] as const;
+
+/**
+ * App theme with dark and light `colorSchemes` (no CSS variables). The active scheme is
+ * picked by `ColorModeProvider` from our own setting, never from MUI's mode storage.
+ */
+export const appTheme = responsiveFontSizes(
+  createTheme({
+    ...sharedOptions,
+    defaultColorScheme: 'dark',
+    colorSchemes: {
+      dark: { palette: paletteFor('dark') },
+      light: { palette: paletteFor('light') },
+    },
+  }),
+  { variants: [...FONT_VARIANTS] },
+);
+
+/** Dark-only app theme for code rendered outside `ColorModeProvider` (tests). */
+export default responsiveFontSizes(baseTheme, { variants: [...FONT_VARIANTS] });

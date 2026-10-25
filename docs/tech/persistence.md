@@ -52,7 +52,7 @@ The only file allowed to touch `localStorage` / `sessionStorage` (enforced by `n
 | Notifications           | `PUSH_RELAY_URL`, `PUSH_SITE_SUBSCRIPTION`, `NOTIFICATION_METHOD`, `NTFY_SERVER_URL`, `NTFY_TOPIC`                                                                                                                                    |
 | Small games             | `DARTS_GAME_STATE`, `SUDOKU_STATE`, `SUDOKU_STATS`, `WORDLE_STATS`, `CARDS_LOBBY_PLAYERS`, `KNISTER_*`, `QWIXX_*`                                                                                                                     |
 | Party / Gartic          | `GARTIC_STATE_PREFIX`, `GARTIC_HOST_PREFIX`, `PARTY_MY_PLAYER_ID`, `HOST_ROOM_CODE`, `PARTY_PLAYER_NAME` (`guessart_player_name`, shared by party lobby and Gartic Phone; `features/party/logic/playerName.ts`)                       |
-| App                     | `SHARE_WEBAPP_URL`, `PWA_BANNER_DISMISSED`, `LANGUAGE` (`lgg_language`), `LANGUAGE_LEGACY` (`language`), `EXCALIDRAW_LIBRARY`, `EXCALIDRAW_DRAWING`                                                                                   |
+| App                     | `SHARE_WEBAPP_URL`, `PWA_BANNER_DISMISSED`, `LANGUAGE` (`lgg_language`), `LANGUAGE_LEGACY` (`language`), `COLOR_MODE` (`lgg_color_mode`), `EXCALIDRAW_LIBRARY`, `EXCALIDRAW_DRAWING`                                                  |
 
 Read the file for the full list — this table is a map, not a copy.
 

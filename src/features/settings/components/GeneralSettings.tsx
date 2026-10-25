@@ -19,6 +19,7 @@ import VpnKeyRoundedIcon from '@mui/icons-material/VpnKeyRounded';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { GitHubSettings } from './GitHubSettings';
+import { AppearanceSettings } from './AppearanceSettings';
 import { settingsCardSx } from '../settingsStyles';
 import { resolveGitHubConfig } from '../../../lib/github';
 
@@ -53,8 +54,8 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = () => {
         document.getElementById('settings-section-feedback') ||
         document.getElementById('feedback-section');
       el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else if (sub === 'language') {
-      const el = document.getElementById('settings-section-language');
+    } else if (sub === 'language' || sub === 'appearance') {
+      const el = document.getElementById(`settings-section-${sub}`);
       el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else if (sub === 'github' || sub === 'pat') {
       const el = document.getElementById('settings-section-github');
@@ -106,6 +107,8 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = () => {
           </Select>
         </FormControl>
       </Paper>
+
+      <AppearanceSettings />
 
       {/* Feedback & Support Section */}
       {(!hasGithubConfig || isMissingPatParam) && (
