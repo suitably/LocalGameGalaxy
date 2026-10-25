@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Melodiq Notes stage and pult (#485, claude-code)
+
+- `docs/tech/game-catalog.md` §3 (new melodiq-notes row) and shared-module row; `docs/tech/architecture.md` §3.2 `room-game` (`useRoomEvents`, `roomTransport.ts`, consumer melodiq-notes); `docs/tech/sync-protocol.md` `lgg/room` instance and channels.
+- Outside `docs/`: `src/modules/room-game/{roomTransport,useRoomEvents}.ts`, Melodiq Notes `pult/` (protocol, clock sync, remote judging, `useStageRoom`, `usePult`, `usePultInput`, `PultView`, `PultPad`, `StageInvite`), `stage/engine/remote.ts`, engine input at a given beat, `MelodiqNotesEntry`, registry, locales.
+
 ## 2026-10-25 — Accessibility audit script (#512, claude-code)
 
 - No doc pages changed. Outside `docs/`: `scripts/a11y-audit.cjs` (axe over hub, settings, game start screens; run with `npm run dev`), icon-button names (`common.a11y.*` locales), viewport meta allows zoom, `Tooltip describeChild` on span-wrapped buttons.

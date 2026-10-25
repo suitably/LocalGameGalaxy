@@ -766,6 +766,23 @@
         "yt_failed": "That did not work ({{error}}).",
         "yt_download": "Download and align",
         "yt_use": "Use and align"
+      },
+      "pult": {
+        "title": "Melodiq Notes – your instrument",
+        "invite": "Invite players",
+        "invite_title": "Play on your own device · room {{room}}",
+        "invite_hint": "Each player opens the link or scans the QR code of their part on their phone or tablet. Their device shows only their instrument and takes MIDI, microphone or keys there; the stage keeps the notes, the band and the score. New players are seated before the next song starts.",
+        "invite_message": "Play {{part}} with us in Melodiq Notes: {{link}}",
+        "stage_row": "Stage (this screen)",
+        "connecting": "Connecting to stage {{room}}…",
+        "no_song": "The stage has not picked a song yet.",
+        "no_part": "All parts are taken – pick another one when one becomes free.",
+        "part": "Your part",
+        "clock": "Synced · {{ms}} ms",
+        "clock_pending": "Syncing clock…",
+        "playing": "Playing – the stage judges your notes.",
+        "waiting": "Waiting for the stage to start.",
+        "sing_hint": "Choose “Microphone” and sing – the stage shows your pitch."
       }
     },
     "kniffel": {

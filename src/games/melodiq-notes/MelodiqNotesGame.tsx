@@ -20,6 +20,7 @@ import { RecordingBar } from './stage/components/RecordingBar';
 import { SongPicker } from './stage/components/SongPicker';
 import { InputSourcePicker } from './stage/components/InputSourcePicker';
 import type { StageDisplay } from './stage/render/stageRenderer';
+import { StageInvite } from './pult/components/StageInvite';
 
 const noop = () => {};
 
@@ -38,6 +39,8 @@ export const MelodiqNotesGame: React.FC = () => {
   const [display, setDisplay] = useState<StageDisplay>('instrument');
   const [pickerOpen, setPickerOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // null until first opened: the room only exists once someone is invited
+  const [inviteOpen, setInviteOpen] = useState<boolean | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const fullscreen = useFullscreen(stageRef);
   const portrait = useMediaQuery('(orientation: portrait)');
@@ -79,6 +82,9 @@ export const MelodiqNotesGame: React.FC = () => {
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
           <Button variant="outlined" size="small" onClick={openPicker}>
             {k('song_pick')}
+          </Button>
+          <Button variant="outlined" size="small" onClick={() => setInviteOpen(true)}>
+            {t('games.melodiq_notes.pult.invite')}
           </Button>
           <Typography variant="body2" color="text.secondary" noWrap sx={{ minWidth: 0 }}>
             {song
@@ -182,6 +188,9 @@ export const MelodiqNotesGame: React.FC = () => {
       </Stack>
       <SongPicker open={pickerOpen} onClose={() => setPickerOpen(false)} state={songState} />
       <SoundSettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      {inviteOpen !== null && (
+        <StageInvite engine={engine} open={inviteOpen} onClose={() => setInviteOpen(false)} />
+      )}
     </GameLayout>
   );
 };

@@ -2,6 +2,7 @@ import { drumLaneOf, type InstrumentKind, type ScoreSong } from '../../../../mod
 import { buildChart, pitchRange } from '../logic/charts';
 import { STAGE_INSTRUMENTS } from '../logic/instruments';
 import { newStats } from '../logic/judging';
+import { REMOTE_MISS_GRACE_SEC } from '../../pult/logic/remoteHits';
 import type { BandEvent, BandMode, PlayerSeat, StagePlayer } from './types';
 
 export const MAX_PLAYERS = 4;
@@ -55,6 +56,8 @@ export function createPlayers(
     return [
       {
         no: i + 1,
+        remoteId: seat.remoteId,
+        missGraceSec: seat.remoteId ? REMOTE_MISS_GRACE_SEC : 0,
         part,
         instrument: STAGE_INSTRUMENTS[seat.inst],
         notes,

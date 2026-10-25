@@ -132,7 +132,7 @@ export class StageEngine {
     this.state = 'idle';
     if (!this.song) return this.emit();
     this.players = createPlayers(this.song, this.seats, this.sections.length);
-    this.focus = this.players[0] ?? null;
+    this.focus = this.players.find((p) => !p.remoteId) ?? this.players[0] ?? null;
     this.countIn = Math.min(6, Math.max(2, this.song.measureLengths[0] ?? 4));
     this.bandEvents = buildBandEvents(this.song, this.seats, this.band, this.countIn);
     this.bandIdx = 0;

@@ -51,7 +51,7 @@ export function advanceMisses(
 ) {
   while (
     p.missIdx < p.notes.length &&
-    (beat - p.notes[p.missIdx].t) * secPerBeat(p.notes[p.missIdx].t) > GOOD_SEC
+    (beat - p.notes[p.missIdx].t) * secPerBeat(p.notes[p.missIdx].t) > GOOD_SEC + p.missGraceSec
   ) {
     const n = p.notes[p.missIdx++];
     if (!n.judged && inLoop(loop, n.t)) judge(p, n, 'miss');
