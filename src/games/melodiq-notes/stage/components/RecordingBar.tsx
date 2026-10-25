@@ -67,7 +67,7 @@ export function RecordingBar({ state }: { state: StageSongState }) {
           >
             {state.saved
               ? k('saved')
-              : state.origin?.kind === 'server'
+              : state.saveTarget === 'song-marks'
                 ? k('save_marks')
                 : k('save_to_library')}
           </Button>

@@ -35,13 +35,16 @@ export interface ServerScoreLoad {
   recording: RecordingSource | null;
   /** Only marks that belong to `recording`. */
   marks: StoredBarMarks | null;
+  /** The score as stored, for copying a read-only song-folder score into the Notes library. */
+  sourceFile?: File;
 }
 
 async function readServerScore(file: string, url: string, meta: { title: string; artist: string }) {
-  const loaded = readScoreFile(file, await fetchCompanionFile(url));
+  const data = await fetchCompanionFile(url);
+  const loaded = readScoreFile(file, data);
   loaded.song.title = meta.title;
   loaded.song.artist = meta.artist;
-  return loaded;
+  return { loaded, data };
 }
 
 /** Sheet music in a Melodiq song folder; the song's mix is the recording. */
@@ -50,10 +53,11 @@ export async function loadSongFolderScore(
   score: CompanionScore,
 ): Promise<ServerScoreLoad> {
   if (!score.url) throw new Error('missing url');
-  const loaded = await readServerScore(score.file, score.url, entry);
+  const { loaded, data } = await readServerScore(score.file, score.url, entry);
   const audio = entry.originalAudio ?? entry.audio;
   return {
     loaded,
+    sourceFile: new File([data], score.file),
     origin: { kind: 'server', title: entry.title, songId: entry.id, scoreFile: score.file },
     recording: audio ? { name: entry.title, url: companionUrl(audio), local: false } : null,
     marks: score.hasMarks ? await getBarMarks(entry.id, score.file) : null,
@@ -65,7 +69,7 @@ export async function loadNotesPieceScore(
   piece: NotesPiece,
   score: NotesPieceScore,
 ): Promise<ServerScoreLoad> {
-  const loaded = await readServerScore(score.file, score.url, piece);
+  const { loaded } = await readServerScore(score.file, score.url, piece);
   const stored = score.hasMarks ? await getNotesMarks(piece.id, score.file) : null;
   const audio =
     piece.recordings.find((r) => r.file === stored?.audio) ?? piece.recordings[0] ?? null;

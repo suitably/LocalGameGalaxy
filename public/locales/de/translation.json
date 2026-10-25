@@ -682,7 +682,6 @@
         "input_mic": "Mikrofon",
         "midi_none": "Kein MIDI-Gerät gefunden",
         "song_pick": "Song wählen",
-        "tab_server": "Nexumia-Server",
         "tab_examples": "Beispiele",
         "tab_file": "Datei",
         "server_off": "Kein Nexumia-Server verbunden. Verbinde ihn in den Einstellungen, um Songs aus deiner Bibliothek zu spielen.",
@@ -690,9 +689,7 @@
         "search": "Songs durchsuchen",
         "no_scores": "Noch keine Noten",
         "find_scores": "Noten suchen",
-        "find_scores_hint": "Öffnet die MuseScore-Suche. Lade dort die Partitur als MusicXML (.mxl) herunter und lade sie hier zum Song hoch.",
-        "upload_score": "Noten hochladen",
-        "uploading": "Wird hochgeladen …",
+        "find_scores_hint": "Öffnet die MuseScore-Suche. Lade dort die Partitur als MusicXML (.mxl) herunter, öffne sie unter „Datei\" und speichere sie in der Notes-Bibliothek.",
         "open_file": "MusicXML oder MIDI öffnen",
         "file_hint": "Eine Datei von diesem Gerät; sie wird nicht gespeichert.",
         "loading": "Wird geladen …",
@@ -747,7 +744,10 @@
         "notes_recordings_other": "{{count}} Aufnahmen",
         "notes_delete": "Stück löschen",
         "notes_delete_confirm": "„{{title}}\" mit Noten, Aufnahmen und Taktmarken vom Server löschen?",
-        "save_to_library": "In Notes-Bibliothek speichern"
+        "save_to_library": "In Notes-Bibliothek speichern",
+        "source_song": "Melodiq-Song",
+        "source_song_hint": "Liegt im Song-Ordner der Melodiq-Bibliothek (nur lesen). Mit eigener Aufnahme gespeichert, landet es in der Notes-Bibliothek.",
+        "notes_delete_song_kept": "Die Noten im Melodiq-Song-Ordner bleiben erhalten."
       }
     },
     "kniffel": {

@@ -46,16 +46,6 @@ export async function fetchCompanionFile(path: string): Promise<ArrayBuffer> {
   return res.arrayBuffer();
 }
 
-export async function uploadScore(songId: string, file: File): Promise<string> {
-  const form = new FormData();
-  form.append('file', file);
-  const res = await request<{ file: string }>(`/api/songs/${encodeURIComponent(songId)}/scores`, {
-    method: 'POST',
-    body: form,
-  });
-  return res.file;
-}
-
 export async function getBarMarks(songId: string, file: string): Promise<StoredBarMarks | null> {
   try {
     return await request<StoredBarMarks>(`${scorePath(songId, file)}/marks`);
