@@ -1,3 +1,5 @@
+import type { DrumVoice, Hand } from './drumVoices';
+
 /** Instrument families the stage can render and score. */
 export type InstrumentKind =
   'keyboard' | 'guitar' | 'bass' | 'ukulele' | 'drums' | 'vocals' | 'melody';
@@ -10,6 +12,10 @@ export interface ScoreNote {
   pitch: number;
   /** Lyric syllable; a trailing '-' means the word continues. */
   syl?: string;
+  /** Drum parts: the written instrument and articulation; derive it from `pitch` when absent. */
+  drum?: DrumVoice;
+  /** Drum parts: sticking (R/L) when the score has it. */
+  hand?: Hand;
 }
 
 export interface ScorePart {

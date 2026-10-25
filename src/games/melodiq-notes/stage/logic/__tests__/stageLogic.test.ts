@@ -144,6 +144,38 @@ describe('judging', () => {
     expect(nearestOpenNote(notes, 60, 0.9, 0.5)?.note.t).toBe(1);
     expect(nearestOpenNote(notes, 64, 1, 0.5)).toBeNull();
   });
+
+  it('prefers the exact drum voice and falls back to the same instrument', () => {
+    const notes = [
+      stageNote(1, 1, { drum: 'hihatClosed' }),
+      stageNote(1, 1, { drum: 'hihatOpen' }),
+    ];
+    expect(nearestOpenNote(notes, 1, 1, 0.5, 'hihatOpen')?.note.drum).toBe('hihatOpen');
+    expect(nearestOpenNote(notes, 1, 1, 0.5, 'hihatClosed')?.note.drum).toBe('hihatClosed');
+    expect(nearestOpenNote(notes, 1, 1, 0.5, 'hihatPedal')).not.toBeNull();
+    expect(nearestOpenNote(notes, 1, 1, 0.5)).not.toBeNull();
+  });
+
+  it('builds drum charts with voice and sticking, one note per voice', () => {
+    const part: ScorePart = {
+      id: 'd',
+      name: 'Drums',
+      isDrum: true,
+      program: null,
+      guess: 'drums',
+      notes: [
+        { t: 0, dur: 1, pitch: 42, hand: 'R' },
+        { t: 0, dur: 1, pitch: 46, drum: 'hihatOpen' },
+        { t: 1, dur: 1, pitch: 47 },
+      ],
+    };
+    const chart = buildChart(part, 'drums');
+    expect(chart.map((n) => [n.lane, n.drum, n.hand])).toEqual([
+      [1, 'hihatClosed', 'R'],
+      [1, 'hihatOpen', undefined],
+      [3, 'tom2', undefined],
+    ]);
+  });
 });
 
 describe('sections', () => {

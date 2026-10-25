@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Drum voices in music-score (#531, claude-code)
+
+- `docs/tech/song-pipeline.md`: `music-score` row mentions `drumVoices` (drum voice enum, GM key and MusicXML mapping, sticking, match ranks). Outside `docs/`: `src/modules/music-score/drumVoices.ts`, `ScoreNote.drum`/`hand`, drum highway glyphs.
+
 ## 2026-10-24 — Melodiq Notes seek bar and section groups (claude-code)
 
 - `docs/tech/game-catalog.md`: melodiq-notes now has 4 `MELODIQ_NOTES_*` storage keys (`MELODIQ_NOTES_SEEK_LEAD_IN`).

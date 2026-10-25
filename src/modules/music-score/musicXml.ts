@@ -1,3 +1,4 @@
+import { DRUM_VOICE_KEY, parseSticking, resolveDrumVoice, type DrumVoice } from './drumVoices';
 import { guessInstrument } from './instruments';
 import { playOrder, readBars } from './musicXmlBars';
 import { kid, kids, num, text } from './xmlDom';
@@ -11,6 +12,8 @@ interface PartInfo {
   program: number | null;
   channel: number | null;
   unpitched: Record<string, number>;
+  /** `<instrument-name>` by instrument id. */
+  names: Record<string, string>;
 }
 
 function readPartList(root: Element): Record<string, PartInfo> {
@@ -21,7 +24,12 @@ function readPartList(root: Element): Record<string, PartInfo> {
       program: null,
       channel: null,
       unpitched: {},
+      names: {},
     };
+    for (const si of Array.from(sp.getElementsByTagName('score-instrument'))) {
+      const nm = text(si, 'instrument-name');
+      if (nm) info.names[si.getAttribute('id') || ''] = nm;
+    }
     for (const mi of Array.from(sp.getElementsByTagName('midi-instrument'))) {
       const up = text(mi, 'midi-unpitched');
       if (up) info.unpitched[mi.getAttribute('id') || ''] = Number(up) - 1;
@@ -42,6 +50,8 @@ interface BarEvent {
   tieStart: boolean;
   tieStop: boolean;
   syl: string;
+  drum?: DrumVoice;
+  hand?: 'R' | 'L';
 }
 
 function readPartBars(pe: Element, info: PartInfo) {
@@ -71,6 +81,8 @@ function readPartBars(pe: Element, info: PartInfo) {
         }
         if (kid(c, 'rest')) continue;
         let pitch: number | null = null;
+        let drum: DrumVoice | undefined;
+        let hand: 'R' | 'L' | undefined;
         const p = kid(c, 'pitch');
         const u = kid(c, 'unpitched');
         if (p)
@@ -81,16 +93,36 @@ function readPartBars(pe: Element, info: PartInfo) {
             transpose;
         else if (u) {
           isDrum = true;
-          const mapped = info.unpitched[kid(c, 'instrument')?.getAttribute('id') || ''];
-          pitch =
+          const iid = kid(c, 'instrument')?.getAttribute('id') || '';
+          const mapped = info.unpitched[iid];
+          const nh = kid(c, 'notehead');
+          const tech = kid(kid(c, 'notations') ?? c, 'technical');
+          const mark = tech ? text(tech, 'other-technical') : null;
+          const found = resolveDrumVoice({
+            key: mapped,
+            name: info.names[iid],
+            notehead: nh?.textContent?.trim(),
+            parenthesized: nh?.getAttribute('parentheses') === 'yes',
+            open: !!tech && !!kid(tech, 'open'),
+            stopped: !!tech && !!kid(tech, 'stopped'),
+            mark,
+          });
+          if (found && found !== 'other') {
+            drum = found;
+            pitch = DRUM_VOICE_KEY[found];
+          } else if (found) drum = found;
+          pitch ??=
             mapped ??
             (num(u, 'display-octave', 4) + 1) * 12 + (STEP[text(u, 'display-step') || 'C'] ?? 0);
+          hand = parseSticking(tech ? text(tech, 'fingering') : null) ?? undefined;
         }
         if (pitch === null) continue;
         const ties = Array.from(c.getElementsByTagName('tie')).map((x) => x.getAttribute('type'));
         const lyric = c.getElementsByTagName('lyric')[0];
         let syl = '';
-        if (lyric && text(lyric, 'text')) {
+        const lyricHand = u ? parseSticking(text(lyric ?? null, 'text')) : null;
+        if (lyricHand) hand ??= lyricHand;
+        else if (lyric && text(lyric, 'text')) {
           hasLyrics = true;
           syl =
             (text(lyric, 'text') || '') +
@@ -104,6 +136,8 @@ function readPartBars(pe: Element, info: PartInfo) {
           tieStart: ties.includes('start'),
           tieStop: ties.includes('stop'),
           syl,
+          drum,
+          hand,
         });
       }
     }
@@ -127,6 +161,8 @@ function writeOutNotes(bars: BarEvent[][], order: number[], starts: number[]): S
       }
       const note: ScoreNote = { t, dur: Math.max(0.05, ev.dur), pitch: ev.pitch };
       if (ev.syl) note.syl = ev.syl;
+      if (ev.drum) note.drum = ev.drum;
+      if (ev.hand) note.hand = ev.hand;
       notes.push(note);
       if (ev.tieStart) open.set(key, note);
       else open.delete(key);
@@ -167,7 +203,13 @@ export function parseMusicXml(xml: string, fileName: string, parseXml: XmlParser
   const parts: ScorePart[] = partEls
     .map((pe) => {
       const id = pe.getAttribute('id') || '';
-      const info = partList[id] ?? { name: id, program: null, channel: null, unpitched: {} };
+      const info = partList[id] ?? {
+        name: id,
+        program: null,
+        channel: null,
+        unpitched: {},
+        names: {},
+      };
       const read = readPartBars(pe, info);
       return {
         id,

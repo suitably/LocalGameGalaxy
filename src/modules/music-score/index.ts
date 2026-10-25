@@ -13,3 +13,4 @@ export * from './tuning';
 export * from './chromaOnsets';
 export * from './alignFeatures';
 export * from './anchors';
+export * from './drumVoices';
