@@ -25,6 +25,7 @@ import { useTabletopAutosave } from './hooks/useTabletopAutosave';
 import { TabletopPassAndPlay } from './components/views/TabletopPassAndPlay';
 import { RestartGameButton } from './components/views/RestartGameButton';
 import { SaveStateButton } from './components/saves/SaveStateButton';
+import { TvThemeProvider } from '../../components/common/TvThemeProvider';
 import type { TabletopGameDefinition } from './logic/types';
 
 export function TabletopGame() {
@@ -164,24 +165,26 @@ export function TabletopGame() {
   // 1. In Room: TV / Shared Table Mode
   if (roomId && role === 'tv') {
     return (
-      <Box position="relative" width="100%" height="100%">
-        <Button
-          size="small"
-          variant="contained"
-          color="inherit"
-          startIcon={<GroupsIcon />}
-          onClick={() => {
-            broadcastAction({ type: 'RETURN_TO_LOBBY' });
-            returnToLobby();
-          }}
-          sx={{ position: 'absolute', top: 12, left: 12, zIndex: 1000, opacity: 0.85 }}
-        >
-          Zurück zur Party-Lobby
-        </Button>
-        <RestartGameButton onRestart={restartGame} />
-        <SaveStateButton game={gameState.game} onLoad={loadSavedTable} />
-        <TabletopEditor state={gameState} dispatch={syncedDispatch} isTvMode={true} />
-      </Box>
+      <TvThemeProvider>
+        <Box position="relative" width="100%" height="100%">
+          <Button
+            size="small"
+            variant="contained"
+            color="inherit"
+            startIcon={<GroupsIcon />}
+            onClick={() => {
+              broadcastAction({ type: 'RETURN_TO_LOBBY' });
+              returnToLobby();
+            }}
+            sx={{ position: 'absolute', top: 12, left: 12, zIndex: 1000, opacity: 0.85 }}
+          >
+            Zurück zur Party-Lobby
+          </Button>
+          <RestartGameButton onRestart={restartGame} />
+          <SaveStateButton game={gameState.game} onLoad={loadSavedTable} />
+          <TabletopEditor state={gameState} dispatch={syncedDispatch} isTvMode={true} />
+        </Box>
+      </TvThemeProvider>
     );
   }
 

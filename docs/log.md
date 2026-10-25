@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — TV theme variant (#509, claude-code)
+
+- `DESIGN.md` §3.3: names `src/themeTv.ts` (`createTvTheme`) and `TvThemeProvider`.
+- Outside `docs/`: `src/themeTv.ts`, `src/components/common/TvThemeProvider.tsx`, `baseTheme` export in `src/theme.ts`, wrappers in `MelodiqTV.tsx` and the tabletop TV branch.
+
 ## 2026-10-25 — Tabletop named saves and default templates (#538, claude-code)
 
 - `docs/tech/tabletop-engine.md`: named saves (device / server), unique names, owner rules, default template; `galaxy_tabletop_db` v4. `verified.at` refreshed.

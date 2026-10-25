@@ -33,7 +33,8 @@ declare module '@mui/material/Typography' {
 const display = { fontFamily: fontFamilies.display };
 
 // "Game night on the couch" — see DESIGN.md. Dark only until the mode setting exists (DESIGN.md §10).
-const theme = createTheme({
+/** Unwrapped dark theme; `src/themeTv.ts` derives the TV variant from it. */
+export const baseTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: { main: t.primary.main, dark: t.primary.edge, contrastText: t.primary.contrastText },
@@ -150,7 +151,7 @@ const theme = createTheme({
   },
 });
 
-export default responsiveFontSizes(theme, {
+export default responsiveFontSizes(baseTheme, {
   variants: [
     'display',
     'h1',
