@@ -1,346 +1,231 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+} from 'react';
 import { WebRTCHostManager } from './WebRTCHostManager';
 import type { RemotePeerBase } from './WebRTCHostManager';
-import { buildAllTrackers, filterActiveTrackers, setTrackerPreference } from './trackerLogic';
-import { storage, STORAGE_KEYS, STORAGE_PREFIXES } from '../storage';
+import { DEFAULT_PUBLIC_TRACKERS, type TrackerItem } from './trackerTypes';
+import { useRosterBroadcast } from './useRosterBroadcast';
+import { useTrackerConfig } from './useTrackerConfig';
+import { applyPeerConnected, applyPeerCreated, applyPeerUpdated } from './peerListUpdates';
+import { storage, STORAGE_PREFIXES } from '../storage';
 
-export interface TrackerItem {
-    url: string;
-    type: 'backend' | 'public' | 'custom';
-    enabled: boolean;
+export { DEFAULT_PUBLIC_TRACKERS, type TrackerItem };
+
+export interface WebRTCHostContextType<
+  T extends RemotePeerBase = RemotePeerBase,
+  M extends WebRTCHostManager<T> = WebRTCHostManager<T>,
+> {
+  manager: M | null;
+  peers: T[];
+  activePeers: T[];
+  inactivePeers: T[];
+  togglePeerActive: (peerId: string) => void;
+  partyId: string;
+  regeneratePartyId: () => void;
+  trackerUrls: string[];
+  activeTrackerUrls: string[];
+  disabledTrackerUrls: string[];
+  allTrackers: TrackerItem[];
+  toggleTrackerActive: (url: string, enabled?: boolean) => void;
+  addTrackerUrl: (url: string) => void;
+  removeTrackerUrl: (url: string) => void;
+  restoreDefaultTrackers: () => void;
 }
 
-export const DEFAULT_PUBLIC_TRACKERS: readonly string[] = [
-    'wss://tracker.openwebtorrent.com',
-    'wss://tracker.btorrent.xyz',
-    'wss://tracker.webtorrent.dev'
-];
-
-export interface WebRTCHostContextType<T extends RemotePeerBase = RemotePeerBase, M extends WebRTCHostManager<T> = WebRTCHostManager<T>> {
-    manager: M | null;
-    peers: T[];
-    activePeers: T[];
-    inactivePeers: T[];
-    togglePeerActive: (peerId: string) => void;
-    partyId: string;
-    regeneratePartyId: () => void;
-    trackerUrls: string[];
-    activeTrackerUrls: string[];
-    disabledTrackerUrls: string[];
-    allTrackers: TrackerItem[];
-    toggleTrackerActive: (url: string, enabled?: boolean) => void;
-    addTrackerUrl: (url: string) => void;
-    removeTrackerUrl: (url: string) => void;
-    restoreDefaultTrackers: () => void;
-}
-
-// We use a generic context type but map to any under the hood. 
+// We use a generic context type but map to any under the hood.
 // Consumers can cast it or use specific typed hooks.
 export const WebRTCHostContext = createContext<WebRTCHostContextType<any, any> | null>(null);
 
-export function useWebRTCHost<T extends RemotePeerBase = RemotePeerBase, M extends WebRTCHostManager<T> = WebRTCHostManager<T>>() {
-    const context = useContext(WebRTCHostContext);
-    if (!context) {
-        throw new Error('useWebRTCHost must be used within a WebRTCHostProvider');
-    }
-    return context as WebRTCHostContextType<T, M>;
+export function useWebRTCHost<
+  T extends RemotePeerBase = RemotePeerBase,
+  M extends WebRTCHostManager<T> = WebRTCHostManager<T>,
+>() {
+  const context = useContext(WebRTCHostContext);
+  if (!context) {
+    throw new Error('useWebRTCHost must be used within a WebRTCHostProvider');
+  }
+  return context as WebRTCHostContextType<T, M>;
 }
 
 export interface WebRTCHostProviderProps<T extends RemotePeerBase, M extends WebRTCHostManager<T>> {
-    children: React.ReactNode;
-    gameId?: string; // Used for storage key isolation (e.g. 'melodiq')
-    createManager: (partyId: string, trackerUrls: string[], callbacks: any) => M;
+  children: React.ReactNode;
+  gameId?: string; // Used for storage key isolation (e.g. 'melodiq')
+  createManager: (partyId: string, trackerUrls: string[], callbacks: any) => M;
 }
 
 export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHostManager<T>>({
-    children,
-    gameId = 'generic',
-    createManager
+  children,
+  gameId = 'generic',
+  createManager,
 }: WebRTCHostProviderProps<T, M>) {
-    const createManagerRef = useRef(createManager);
-    useEffect(() => {
-        createManagerRef.current = createManager;
-    }, [createManager]);
+  const createManagerRef = useRef(createManager);
+  useEffect(() => {
+    createManagerRef.current = createManager;
+  }, [createManager]);
 
-    // 1. Configuration State (Persisted)
-    const [partyId, setPartyId] = useState(() => {
-        const stored = storage.get(`${gameId}${STORAGE_PREFIXES.WEBRTC_PARTY_ID}`);
-        return stored || Math.random().toString(36).substring(2, 8).toUpperCase();
-    });
+  // 1. Configuration State (Persisted)
+  const [partyId, setPartyId] = useState(() => {
+    const stored = storage.get(`${gameId}${STORAGE_PREFIXES.WEBRTC_PARTY_ID}`);
+    return stored || Math.random().toString(36).substring(2, 8).toUpperCase();
+  });
 
-    const [trackerUrls, setTrackerUrls] = useState<string[]>(() => {
-        return storage.getJson<string[]>(`${gameId}${STORAGE_PREFIXES.WEBRTC_TRACKER_URLS}`, []);
-    });
+  const {
+    trackerUrls,
+    allTrackers,
+    activeTrackerUrls,
+    disabledTrackerUrls,
+    toggleTrackerActive,
+    addTrackerUrl,
+    removeTrackerUrl,
+    restoreDefaultTrackers,
+  } = useTrackerConfig(gameId);
 
-    // Explicit user preferences per tracker URL (overriding default state)
-    const [trackerPreferences, setTrackerPreferences] = useState<Record<string, boolean>>(() => {
-        return storage.getJson<Record<string, boolean>>(`${gameId}${STORAGE_PREFIXES.WEBRTC_TRACKER_PREF}`, {});
-    });
+  // 2. Runtime State
+  const [manager, setManager] = useState<M | null>(null);
+  const [peers, setPeers] = useState<T[]>([]);
 
-    const [helperSettingsHash, setHelperSettingsHash] = useState(0);
+  // Active/Inactive peer tracking (persisted)
+  const [activePeerIds, setActivePeerIds] = useState<string[]>(() => {
+    return storage.getJson<string[]>(`${gameId}${STORAGE_PREFIXES.WEBRTC_ACTIVE_PEERS}`, []);
+  });
 
-    useEffect(() => {
-        const handleSettingsUpdate = () => setHelperSettingsHash(h => h + 1);
-        window.addEventListener('melodiq_settings_updated', handleSettingsUpdate);
-        window.addEventListener('server_connection_updated', handleSettingsUpdate);
-        return () => {
-            window.removeEventListener('melodiq_settings_updated', handleSettingsUpdate);
-            window.removeEventListener('server_connection_updated', handleSettingsUpdate);
-        };
-    }, []);
+  // Persist Config Changes
+  useEffect(() => {
+    storage.set(`${gameId}${STORAGE_PREFIXES.WEBRTC_PARTY_ID}`, partyId);
+  }, [partyId, gameId]);
 
-    // Self-hosted backend tracker URL if helper is enabled or custom signaling is configured
-    const backendTrackerUrl = useMemo(() => {
-        const signalingUrl = storage.getSignalingUrl();
-        return signalingUrl || null;
-    }, [helperSettingsHash]);
+  // Persist active peer IDs
+  useEffect(() => {
+    storage.setJson(`${gameId}${STORAGE_PREFIXES.WEBRTC_ACTIVE_PEERS}`, activePeerIds);
+  }, [activePeerIds, gameId]);
 
-    // All available trackers with their classification and enabled/disabled status
-    // When a custom backend is configured, free public trackers are deactivated by default per user request.
-    const allTrackers = useMemo<TrackerItem[]>(() => {
-        return buildAllTrackers({
-            backendTrackerUrl,
-            publicTrackers: DEFAULT_PUBLIC_TRACKERS,
-            customTrackerUrls: trackerUrls,
-            trackerPreferences
-        });
-    }, [backendTrackerUrl, trackerPreferences, trackerUrls]);
+  // 3. Manager Lifecycle
+  const activeTrackersKey = activeTrackerUrls.join(',');
+  useEffect(() => {
+    if (!partyId || activeTrackerUrls.length === 0) return;
 
-    // Computed active tracker URLs: only those that are enabled
-    const activeTrackerUrls = useMemo(() => {
-        return filterActiveTrackers(allTrackers);
-    }, [allTrackers]);
+    let managerInstance: M | null = null;
+    let isCleanedUp = false;
 
-    const disabledTrackerUrls = useMemo(() => {
-        return allTrackers.filter(t => !t.enabled).map(t => t.url);
-    }, [allTrackers]);
+    console.log(`[WebRTCHostProvider:${gameId}] Scheduling Manager init...`, { partyId });
 
-    // 2. Runtime State
-    const [manager, setManager] = useState<M | null>(null);
-    const [peers, setPeers] = useState<T[]>([]);
+    const timer = setTimeout(() => {
+      if (isCleanedUp) return;
 
-    // Active/Inactive peer tracking (persisted)
-    const [activePeerIds, setActivePeerIds] = useState<string[]>(() => {
-        return storage.getJson<string[]>(`${gameId}${STORAGE_PREFIXES.WEBRTC_ACTIVE_PEERS}`, []);
-    });
+      console.log(`[WebRTCHostProvider:${gameId}] Initializing Manager with:`, {
+        partyId,
+        trackerUrls: activeTrackerUrls,
+      });
 
-    // Persist Config Changes
-    useEffect(() => {
-        storage.set(`${gameId}${STORAGE_PREFIXES.WEBRTC_PARTY_ID}`, partyId);
-    }, [partyId, gameId]);
+      managerInstance = createManagerRef.current(partyId, activeTrackerUrls, {
+        onPeerConnected: (
+          peerId: string,
+          name: string,
+          hue?: number,
+          connectionId?: string,
+          deviceId?: string,
+        ) => {
+          setPeers((prev) => applyPeerConnected(prev, peerId, name, hue, connectionId, deviceId));
+          setActivePeerIds((prev) => (prev.includes(peerId) ? prev : [...prev, peerId]));
+        },
+        onPeerDisconnected: (peerId: string) => {
+          setPeers((prev) => prev.filter((p) => p.peerId !== peerId));
+        },
+        onPeerUpdated: (
+          peerId: string,
+          name: string,
+          hue?: number,
+          connectionId?: string,
+          deviceId?: string,
+        ) => {
+          setPeers((prev) => applyPeerUpdated(prev, peerId, name, hue, connectionId, deviceId));
+          setActivePeerIds((prev) => (prev.includes(peerId) ? prev : [...prev, peerId]));
+        },
+        onPeerCreated: (peerId: string, remotePeer: T) => {
+          setPeers((prev) => applyPeerCreated(prev, peerId, remotePeer));
+        },
+        onPeerRemoved: (peerId: string, _remotePeer: T) => {
+          setPeers((prev) => prev.filter((p) => p.peerId !== peerId));
+        },
+        onMessage: (peerId: string, data: any) => {
+          if (data.type === 'roster.toggle') {
+            setActivePeerIds((prev) =>
+              prev.includes(peerId) ? prev.filter((id) => id !== peerId) : [...prev, peerId],
+            );
+          }
+        },
+      });
 
-    useEffect(() => {
-        storage.setJson(`${gameId}${STORAGE_PREFIXES.WEBRTC_TRACKER_URLS}`, trackerUrls);
-    }, [trackerUrls, gameId]);
-
-    useEffect(() => {
-        storage.setJson(`${gameId}${STORAGE_PREFIXES.WEBRTC_TRACKER_PREF}`, trackerPreferences);
-    }, [trackerPreferences, gameId]);
-
-    // Persist active peer IDs
-    useEffect(() => {
-        storage.setJson(`${gameId}${STORAGE_PREFIXES.WEBRTC_ACTIVE_PEERS}`, activePeerIds);
-    }, [activePeerIds, gameId]);
-
-    // 3. Manager Lifecycle
-    const activeTrackersKey = activeTrackerUrls.join(',');
-    useEffect(() => {
-        if (!partyId || activeTrackerUrls.length === 0) return;
-
-        let managerInstance: M | null = null;
-        let isCleanedUp = false;
-
-        console.log(`[WebRTCHostProvider:${gameId}] Scheduling Manager init...`, { partyId });
-
-        const timer = setTimeout(() => {
-            if (isCleanedUp) return;
-
-            console.log(`[WebRTCHostProvider:${gameId}] Initializing Manager with:`, { partyId, trackerUrls: activeTrackerUrls });
-
-            managerInstance = createManagerRef.current(partyId, activeTrackerUrls, {
-                onPeerConnected: (peerId: string, name: string, hue?: number, connectionId?: string, deviceId?: string) => {
-                    setPeers(prev => {
-                        let list = prev;
-                        if (deviceId) {
-                            list = prev.filter(p => p.peerId === peerId || p.deviceId !== deviceId);
-                        }
-                        const existing = list.find(p => p.peerId === peerId);
-                        if (existing) {
-                            return list.map(p => p.peerId === peerId ? { ...p, name, hue, connectionId, deviceId } : p);
-                        }
-                        return list;
-                    });
-                    setActivePeerIds(prev => prev.includes(peerId) ? prev : [...prev, peerId]);
-                },
-                onPeerDisconnected: (peerId: string) => {
-                    setPeers(prev => prev.filter(p => p.peerId !== peerId));
-                },
-                onPeerUpdated: (peerId: string, name: string, hue?: number, connectionId?: string, deviceId?: string) => {
-                    setPeers(prev => {
-                        let list = prev;
-                        if (deviceId) {
-                            list = prev.filter(p => p.peerId === peerId || p.deviceId !== deviceId);
-                        }
-                        const existing = list.find(p => p.peerId === peerId);
-                        if (existing) {
-                            return list.map(p => p.peerId === peerId ? { ...p, name, hue, connectionId: connectionId || p.connectionId, deviceId: deviceId || p.deviceId } : p);
-                        }
-                        return list;
-                    });
-                    setActivePeerIds(prev => prev.includes(peerId) ? prev : [...prev, peerId]);
-                },
-                onPeerCreated: (peerId: string, remotePeer: T) => {
-                    setPeers(prev => {
-                        if (prev.some(p => p.peerId === peerId)) return prev;
-                        if (remotePeer.deviceId && prev.some(p => p.deviceId === remotePeer.deviceId)) {
-                            return prev.map(p => p.deviceId === remotePeer.deviceId ? remotePeer : p);
-                        }
-                        return [...prev, remotePeer];
-                    });
-                },
-                onPeerRemoved: (peerId: string, _remotePeer: T) => {
-                    setPeers(prev => prev.filter(p => p.peerId !== peerId));
-                },
-                onMessage: (peerId: string, data: any) => {
-                    if (data.type === 'roster.toggle') {
-                        setActivePeerIds(prev =>
-                            prev.includes(peerId)
-                                ? prev.filter(id => id !== peerId)
-                                : [...prev, peerId]
-                        );
-                    }
-                }
-            });
-
-            managerInstance.start().catch(err => console.error(`[WebRTCHostProvider:${gameId}] Failed to start manager:`, err));
-            setManager(managerInstance);
-        }, 500);
-
-        return () => {
-            isCleanedUp = true;
-            clearTimeout(timer);
-            if (managerInstance) {
-                console.log(`[WebRTCHostProvider:${gameId}] Cleaning up Manager`);
-                managerInstance.stop();
-                setManager(null);
-                setPeers([]);
-            }
-        };
-    }, [partyId, activeTrackersKey, gameId]);
-
-    // 4. Actions
-    const regeneratePartyId = useCallback(() => {
-        setPartyId(Math.random().toString(36).substring(2, 8).toUpperCase());
-    }, []);
-
-    const toggleTrackerActive = useCallback((url: string, enabled?: boolean) => {
-        setTrackerPreferences(prev => {
-            const currentItem = allTrackers.find(t => t.url === url);
-            const currentEffective = currentItem ? currentItem.enabled : true;
-            const newEnabled = enabled !== undefined ? enabled : !currentEffective;
-            return setTrackerPreference(prev, url, newEnabled);
-        });
-    }, [allTrackers]);
-
-    const addTrackerUrl = useCallback((url: string) => {
-        const trimmed = url?.trim();
-        if (!trimmed) return;
-        setTrackerUrls(prev => {
-            if (
-                !prev.includes(trimmed) &&
-                !DEFAULT_PUBLIC_TRACKERS.includes(trimmed) &&
-                trimmed !== backendTrackerUrl
-            ) {
-                return [...prev, trimmed];
-            }
-            return prev;
-        });
-        // Ensure added tracker is explicitly enabled
-        setTrackerPreferences(prev => setTrackerPreference(prev, trimmed, true));
-    }, [backendTrackerUrl]);
-
-    const removeTrackerUrl = useCallback((url: string) => {
-        if (DEFAULT_PUBLIC_TRACKERS.includes(url) || url === backendTrackerUrl) {
-            // Default public or backend tracker: deactivate instead of deleting
-            toggleTrackerActive(url, false);
-        } else {
-            setTrackerUrls(prev => prev.filter(t => t !== url));
-            setTrackerPreferences(prev => {
-                const next = { ...prev };
-                delete next[url];
-                return next;
-            });
-        }
-    }, [backendTrackerUrl, toggleTrackerActive]);
-
-    const restoreDefaultTrackers = useCallback(() => {
-        setTrackerUrls([]);
-        setTrackerPreferences({});
-        storage.remove(`${gameId}${STORAGE_PREFIXES.WEBRTC_TRACKER_PREF}`);
-        storage.remove(`${gameId}_disabled_tracker_urls`);
-    }, [gameId]);
-
-    const togglePeerActive = useCallback((peerId: string) => {
-        setActivePeerIds(prev =>
-            prev.includes(peerId)
-                ? prev.filter(id => id !== peerId)
-                : [...prev, peerId]
+      managerInstance
+        .start()
+        .catch((err) =>
+          console.error(`[WebRTCHostProvider:${gameId}] Failed to start manager:`, err),
         );
-    }, []);
+      setManager(managerInstance);
+    }, 500);
 
-    // Computed
-    const activePeers = useMemo(() => peers.filter(p => activePeerIds.includes(p.peerId)), [peers, activePeerIds]);
-    const inactivePeers = useMemo(() => peers.filter(p => !activePeerIds.includes(p.peerId)), [peers, activePeerIds]);
+    return () => {
+      isCleanedUp = true;
+      clearTimeout(timer);
+      if (managerInstance) {
+        console.log(`[WebRTCHostProvider:${gameId}] Cleaning up Manager`);
+        managerInstance.stop();
+        setManager(null);
+        setPeers([]);
+      }
+    };
+  }, [partyId, activeTrackersKey, gameId]);
 
-    // Broadcast roster updates
-    const broadcastRoster = useCallback(() => {
-        if (manager) {
-            const parsedRoles = storage.getJson<Record<string, string>>(STORAGE_KEYS.MELODIQ_CLIENT_ROLES, {});
+  // 4. Actions
+  const regeneratePartyId = useCallback(() => {
+    setPartyId(Math.random().toString(36).substring(2, 8).toUpperCase());
+  }, []);
 
-            const roster = activePeers.map(p => ({
-                id: p.peerId, // Legacy format expectation maybe?
-                connectionId: p.connectionId,
-                name: p.name,
-                hue: p.hue,
-                deviceId: p.deviceId,
-                role: (p.deviceId ? parsedRoles[p.deviceId] : undefined) || 'singer'
-            }));
-            manager.broadcast({
-                type: 'roster.update',
-                roster
-            });
-        }
-    }, [activePeers, manager]);
-
-    useEffect(() => {
-        broadcastRoster();
-    }, [broadcastRoster]);
-
-    useEffect(() => {
-        const handler = () => broadcastRoster();
-        window.addEventListener('melodiq_roles_updated', handler);
-        return () => window.removeEventListener('melodiq_roles_updated', handler);
-    }, [broadcastRoster]);
-
-    return (
-        <WebRTCHostContext.Provider value={{
-            manager,
-            peers,
-            activePeers,
-            inactivePeers,
-            togglePeerActive,
-            partyId,
-            regeneratePartyId,
-            trackerUrls,
-            activeTrackerUrls,
-            disabledTrackerUrls,
-            allTrackers,
-            toggleTrackerActive,
-            addTrackerUrl,
-            removeTrackerUrl,
-            restoreDefaultTrackers
-        }}>
-            {children}
-        </WebRTCHostContext.Provider>
+  const togglePeerActive = useCallback((peerId: string) => {
+    setActivePeerIds((prev) =>
+      prev.includes(peerId) ? prev.filter((id) => id !== peerId) : [...prev, peerId],
     );
+  }, []);
+
+  // Computed
+  const activePeers = useMemo(
+    () => peers.filter((p) => activePeerIds.includes(p.peerId)),
+    [peers, activePeerIds],
+  );
+  const inactivePeers = useMemo(
+    () => peers.filter((p) => !activePeerIds.includes(p.peerId)),
+    [peers, activePeerIds],
+  );
+
+  useRosterBroadcast(manager, activePeers);
+
+  return (
+    <WebRTCHostContext.Provider
+      value={{
+        manager,
+        peers,
+        activePeers,
+        inactivePeers,
+        togglePeerActive,
+        partyId,
+        regeneratePartyId,
+        trackerUrls,
+        activeTrackerUrls,
+        disabledTrackerUrls,
+        allTrackers,
+        toggleTrackerActive,
+        addTrackerUrl,
+        removeTrackerUrl,
+        restoreDefaultTrackers,
+      }}
+    >
+      {children}
+    </WebRTCHostContext.Provider>
+  );
 }

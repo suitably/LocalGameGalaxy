@@ -1,10 +1,10 @@
-import { DEFAULT_PUBLIC_TRACKERS, type TrackerItem } from './WebRTCHostContext';
+import { DEFAULT_PUBLIC_TRACKERS, type TrackerItem } from './trackerTypes';
 
 export interface ResolveTrackersOptions {
-    backendTrackerUrl?: string | null;
-    publicTrackers?: readonly string[];
-    customTrackerUrls?: string[];
-    trackerPreferences?: Record<string, boolean>;
+  backendTrackerUrl?: string | null;
+  publicTrackers?: readonly string[];
+  customTrackerUrls?: string[];
+  trackerPreferences?: Record<string, boolean>;
 }
 
 /**
@@ -19,12 +19,12 @@ export interface ResolveTrackersOptions {
  *       but public trackers remain in the list so the user can easily toggle them on as needed).
  */
 export function isTrackerEnabledByDefault(
-    type: 'backend' | 'public' | 'custom',
-    hasBackend: boolean
+  type: 'backend' | 'public' | 'custom',
+  hasBackend: boolean,
 ): boolean {
-    if (type === 'backend') return true;
-    if (type === 'custom') return true;
-    return !hasBackend;
+  if (type === 'backend') return true;
+  if (type === 'custom') return true;
+  return !hasBackend;
 }
 
 /**
@@ -38,74 +38,77 @@ export function isTrackerEnabledByDefault(
  * 4. User can explicitly toggle any tracker on or off, which persists in trackerPreferences.
  */
 export function buildAllTrackers({
-    backendTrackerUrl = null,
-    publicTrackers = DEFAULT_PUBLIC_TRACKERS,
-    customTrackerUrls = [],
-    trackerPreferences = {}
+  backendTrackerUrl = null,
+  publicTrackers = DEFAULT_PUBLIC_TRACKERS,
+  customTrackerUrls = [],
+  trackerPreferences = {},
 }: ResolveTrackersOptions): TrackerItem[] {
-    const items: TrackerItem[] = [];
-    const hasBackend = Boolean(backendTrackerUrl);
+  const items: TrackerItem[] = [];
+  const hasBackend = Boolean(backendTrackerUrl);
 
-    // 1. Self-hosted backend tracker (from configured companion server)
-    if (backendTrackerUrl) {
-        const isEnabled = trackerPreferences[backendTrackerUrl] !== undefined
-            ? trackerPreferences[backendTrackerUrl]
-            : isTrackerEnabledByDefault('backend', hasBackend);
-        items.push({
-            url: backendTrackerUrl,
-            type: 'backend',
-            enabled: isEnabled
-        });
+  // 1. Self-hosted backend tracker (from configured companion server)
+  if (backendTrackerUrl) {
+    const isEnabled =
+      trackerPreferences[backendTrackerUrl] !== undefined
+        ? trackerPreferences[backendTrackerUrl]
+        : isTrackerEnabledByDefault('backend', hasBackend);
+    items.push({
+      url: backendTrackerUrl,
+      type: 'backend',
+      enabled: isEnabled,
+    });
+  }
+
+  // 2. Default free public fallback trackers (remain listed; deactivated by default if backend configured)
+  publicTrackers.forEach((url) => {
+    if (!items.some((it) => it.url === url)) {
+      const isEnabled =
+        trackerPreferences[url] !== undefined
+          ? trackerPreferences[url]
+          : isTrackerEnabledByDefault('public', hasBackend);
+      items.push({
+        url,
+        type: 'public',
+        enabled: isEnabled,
+      });
     }
+  });
 
-    // 2. Default free public fallback trackers (remain listed; deactivated by default if backend configured)
-    publicTrackers.forEach(url => {
-        if (!items.some(it => it.url === url)) {
-            const isEnabled = trackerPreferences[url] !== undefined
-                ? trackerPreferences[url]
-                : isTrackerEnabledByDefault('public', hasBackend);
-            items.push({
-                url,
-                type: 'public',
-                enabled: isEnabled
-            });
-        }
-    });
+  // 3. Custom user-added trackers
+  customTrackerUrls.forEach((url) => {
+    if (!items.some((it) => it.url === url)) {
+      const isEnabled =
+        trackerPreferences[url] !== undefined
+          ? trackerPreferences[url]
+          : isTrackerEnabledByDefault('custom', hasBackend);
+      items.push({
+        url,
+        type: 'custom',
+        enabled: isEnabled,
+      });
+    }
+  });
 
-    // 3. Custom user-added trackers
-    customTrackerUrls.forEach(url => {
-        if (!items.some(it => it.url === url)) {
-            const isEnabled = trackerPreferences[url] !== undefined
-                ? trackerPreferences[url]
-                : isTrackerEnabledByDefault('custom', hasBackend);
-            items.push({
-                url,
-                type: 'custom',
-                enabled: isEnabled
-            });
-        }
-    });
-
-    return items;
+  return items;
 }
 
 /**
  * Returns only the URLs of currently active (enabled) trackers.
  */
 export function filterActiveTrackers(trackers: TrackerItem[]): string[] {
-    return trackers.filter(t => t.enabled).map(t => t.url);
+  return trackers.filter((t) => t.enabled).map((t) => t.url);
 }
 
 /**
  * Updates tracker preferences for a specific URL.
  */
 export function setTrackerPreference(
-    preferences: Record<string, boolean>,
-    targetUrl: string,
-    enabled: boolean
+  preferences: Record<string, boolean>,
+  targetUrl: string,
+  enabled: boolean,
 ): Record<string, boolean> {
-    return {
-        ...preferences,
-        [targetUrl]: enabled
-    };
+  return {
+    ...preferences,
+    [targetUrl]: enabled,
+  };
 }
