@@ -46,6 +46,12 @@ export function rewriteMediaHeaders(txt: string, media: MediaHeaders): string {
   return lines.join('\n');
 }
 
+/** The `#VIDEO` value of a .txt ('' when there is none), so a re-download can keep it. */
+export function videoHeader(txt?: string | null): string {
+  const line = (txt ?? '').split('\n').find((l) => /^#VIDEO:/i.test(l));
+  return line ? line.slice('#VIDEO:'.length).trim() : '';
+}
+
 /** Minimal playable .txt (no notes) when no lyrics file could be obtained. */
 export function buildMinimalTxt(song: { title: string; artist: string } & MediaHeaders): string {
   return [

@@ -42,7 +42,11 @@ const defaultApi: NotesApi = {
   saveMarks: saveNotesMarks,
 };
 
-const scoreFileName = (title: string) => `${title.trim() || 'score'}.musicxml`;
+/** MusicXML text as a file to upload, named after the piece. */
+export const musicXmlFile = (xml: string, title: string) =>
+  new File([xml], `${title.trim() || 'score'}.musicxml`, {
+    type: 'application/vnd.recordare.musicxml+xml',
+  });
 
 /**
  * Stores what is missing on the server: a new piece with its score, a recording that is still
@@ -54,13 +58,7 @@ export async function saveToNotesLibrary(
 ): Promise<NotesSaveResult> {
   let stored = input.stored;
   if (!stored) {
-    const score =
-      input.scoreFile ??
-      (input.xml
-        ? new File([input.xml], scoreFileName(input.title), {
-            type: 'application/vnd.recordare.musicxml+xml',
-          })
-        : null);
+    const score = input.scoreFile ?? (input.xml ? musicXmlFile(input.xml, input.title) : null);
     if (!score) throw new Error('no score to store');
     const piece = await api.createPiece({ title: input.title || 'Score', artist: input.artist });
     const uploaded = await api.upload(piece.id, score);

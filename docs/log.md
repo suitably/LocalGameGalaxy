@@ -2,6 +2,12 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Melodiq Notes: recording from YouTube into a song folder (#486, claude-code)
+
+- `docs/tech/song-pipeline.md` §1: `songId` in download requests (existing song folder, keeps `#VIDEO`), job `songId` in `GET /api/usdb/status/:jobId`; §4: the YouTube import flow and its client call of `POST /api/songs/:id/scores`.
+- `docs/open-questions.md` Q18: notes that the upload route has a client again.
+- Outside `docs/`: server `queueManager.resolveDownloadRequest`/`songFolderTarget`, `ultrastarTxt.videoHeader`, `download.ts` order (index before `done`), `server/test/song_download.test.js`; client `songDownloadApi.ts`, `songScoresApi.uploadSongScore`, Melodiq Notes `youtubeImport.ts`, `useYouTubeImport.ts`, `YouTubeRecordingDialog`, `YouTubeResults`, locales.
+
 ## 2026-10-25 — One sheet-music library in Melodiq Notes (#534, claude-code)
 
 - `docs/tech/song-pipeline.md` §4: song-folder scores appear read-only in the merged Melodiq Notes library (`stage/logic/scoreCatalog.ts`); only their bar marks are written; the client no longer uploads to song folders. `verified.at` refreshed.

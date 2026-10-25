@@ -57,7 +57,7 @@ Compose files, README and [deployment](tech/deployment.md) pull `nexumia/galaxy-
 
 ## Q18 — One storage place for Melodiq Notes sheet music (#534)
 
-Since #534 Melodiq Notes shows one library (`stage/logic/scoreCatalog.ts`) that merges Notes library pieces (`NOTES_DIR`) with the scores in Melodiq song folders; song-folder scores are read-only there, except that their bar marks are still written to `<score>.marks.json` in the song folder while they play with the song's own mix. The server keeps `POST`/`DELETE /api/songs/:id/scores`, which no client calls any more. **(user)** Decide whether to (a) move song-folder scores into the Notes library (a piece that references the Melodiq song's mix instead of a copy), (b) store their marks in the Notes library too, and (c) remove the upload/delete score routes from the `melodiq` plugin.
+Since #534 Melodiq Notes shows one library (`stage/logic/scoreCatalog.ts`) that merges Notes library pieces (`NOTES_DIR`) with the scores in Melodiq song folders; song-folder scores are read-only there, except that their bar marks are still written to `<score>.marks.json` in the song folder while they play with the song's own mix. The server keeps `POST`/`DELETE /api/songs/:id/scores`; since #486 the YouTube import ("Find on YouTube") uploads the score on stage into the song folder it downloaded the recording into, so (c) would have to move that flow to the Notes library as well. **(user)** Decide whether to (a) move song-folder scores into the Notes library (a piece that references the Melodiq song's mix instead of a copy), (b) store their marks in the Notes library too, and (c) remove the upload/delete score routes from the `melodiq` plugin.
 
 ## Resolved 2026-10-18
 
