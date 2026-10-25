@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-22
+  at: 2026-10-25
   method: 'read server/src/plugins/melodiq/{services/download.ts,services/separator.ts,services/usdb.ts,routes/*.ts}, server/src/scripts/align_lyrics.py'
 sources:
   - 'server/src/plugins/melodiq/services/download.ts'
@@ -76,6 +76,11 @@ A song folder may also hold sheet music: `.mxl`, `.musicxml`, `.mid`/`.midi`, an
 | `DELETE /api/songs/:id/scores/:file`    | remove score and marks (master token or API key with `allowSongDeletion`)                                                  |
 
 The server does not search or download sheet music: users fetch MusicXML themselves (for example from musescore.com with their own account) and upload it or drop it into the folder. Alignment runs in the client (`src/modules/music-score`), the server only stores the result.
+
+`alignRecording` (`src/modules/music-score/alignment.ts`) produces one mark per bar in two stages: a coarse match, then `fitMarksToNotes` (whole-song Viterbi fit of the score's attacks to band and pitch-class onsets, ±0.6 s per bar). The coarse match depends on the score:
+
+- **Pitched parts present:** tuning estimate, semitone-shift search and a chroma + onset DTW (`warpScoreToAudio`, `marksFromWarp`).
+- **Drums only** (`hasPitchedNotes` is false, `onsetAlign.ts`): there is no pitch to follow, so `estimateTempoAndStart` cross-correlates (FFT) the score's kick/snare/cymbal attacks with the recording's band onsets (`onsetFeatures`) for tempo ratios 0.7–1.4, and `marksFromOnsets` places every bar start jointly by a Viterbi on a 20 ms grid (each bar at most 10 % off the global tempo, at a cost; free start). Bars without attacks, such as an intro without drums, follow the tempo around them. `tuning.semitones` is 0.
 
 ## 5. Song folder layout
 

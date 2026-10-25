@@ -11,6 +11,7 @@ import {
 import { chromaOnsets, type ChromaOnsets } from './chromaOnsets';
 import { fitMarksToNotes, onsetFeatures } from './noteFit';
 import { refineMarksWithOnsets } from './onsets';
+import { hasPitchedNotes, marksFromOnsets } from './onsetAlign';
 import { beatToSec } from './timing';
 import { estimateTuningCents } from './tuning';
 import type { BarMark, ScoreSong } from './types';
@@ -189,8 +190,15 @@ export async function alignRecording(
   onProgress?: AlignProgress,
 ): Promise<AlignResult> {
   const cents = estimateTuningCents(samples);
-  const { chroma, frames } = await audioChroma(samples, onProgress, cents);
   const { bands, envelope } = onsetFeatures(samples);
+  if (!hasPitchedNotes(song)) {
+    // no pitches to follow (drums only): coarse marks from the attacks alone
+    const coarse = await marksFromOnsets(song, bands, onProgress);
+    if (onProgress) await onProgress('refine', 0);
+    const marks = await fitMarksToNotes(song, coarse, bands, { onProgress });
+    return { marks, tuning: { cents: Math.round(cents), semitones: 0 } };
+  }
+  const { chroma, frames } = await audioChroma(samples, onProgress, cents);
   const pitched = chromaOnsets(samples, cents);
   const audio: Features = { chroma, frames, onsets: audioOnsetRows(pitched, bands, frames) };
   const plain = scoreFeatures(song);
