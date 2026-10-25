@@ -30,9 +30,12 @@ const COARSE = 5;
 const MAX_SKIP_SEC = 30;
 /**
  * Cost of a skipped frame as a share of what an unrelated pairing of score and
- * recording frames costs (measured per song), so only a clearly better match is kept.
+ * recording frames costs (measured per song): above it, so only score unlike the
+ * recording is left out. Lower values let a chord loop that repeats every two bars
+ * match shifted by those bars more cheaply than at its true place (a brass
+ * arrangement of "Rose Tattoo" moved two bars at 0.89).
  */
-const SKIP_SHARE = 0.89;
+const SKIP_SHARE = 1.1;
 /** Score × recording frame pairs sampled for that baseline. */
 const BASELINE_SAMPLES = 4000;
 /** Matched frames whose tempo the skipped ends continue. */

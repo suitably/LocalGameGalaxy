@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Melodiq Notes: safer skip cost in alignment (claude-code)
+
+- `docs/tech/song-pipeline.md` §4: skip cost factor 1.1 (was 0.89, which shifted a real arrangement by two bars). Outside `docs/`: `src/modules/music-score/alignment.ts`.
+
 ## 2026-10-25 — Melodiq Notes: stage leaves out bars before the recording (claude-code)
 
 - `docs/tech/song-pipeline.md` §4 alignment paragraph: stage starts at `firstRecordedBeat`. Outside `docs/`: `src/modules/music-score/timing.ts`, Melodiq Notes `stage/engine/{StageEngine,players,transport,types,browserRecording}.ts`, tests.
