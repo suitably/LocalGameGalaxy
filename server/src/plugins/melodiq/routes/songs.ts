@@ -28,7 +28,9 @@ const toClientSong = (s: Song, token: string, pieces: NotesPiece[] = []): Client
     return `/media?path=${encodeURIComponent(absPath)}&token=${encodeURIComponent(token)}`;
   };
 
-  const { folderScores: _folderScores, ...rest } = s;
+  // song-folder scores are only the import source; clients get the linked Notes pieces' scores
+  const { folderScores, ...rest } = s;
+  void folderScores;
   return {
     ...rest,
     video: secureUrl(s.video),

@@ -33,8 +33,8 @@ interface ScoreLibraryListProps {
 }
 
 /**
- * The one sheet-music library of Melodiq Notes: Notes library pieces and the scores in Melodiq
- * song folders, merged by artist and title. Song-folder scores carry a badge and stay read-only.
+ * The sheet-music library of Melodiq Notes: the pieces of the Notes library (the only score
+ * store, Q18). Pieces linked to a Melodiq song carry a badge and play with the song's mix.
  */
 export function ScoreLibraryList({ onPlay }: ScoreLibraryListProps) {
   const { t } = useTranslation();
@@ -66,7 +66,7 @@ export function ScoreLibraryList({ onPlay }: ScoreLibraryListProps) {
   const remove = async (entry: CatalogEntry) => {
     setDeleting(null);
     try {
-      for (const piece of entry.pieces) await deleteNotesPiece(piece.id);
+      await deleteNotesPiece(entry.piece.id);
       reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -110,15 +110,21 @@ export function ScoreLibraryList({ onPlay }: ScoreLibraryListProps) {
             <Typography variant="caption" color="text.secondary">
               {k('notes_recordings', { count: entry.recordings })}
             </Typography>
-            {entry.pieces.length > 0 && (
-              <IconButton
+            {entry.piece.songId && (
+              <Chip
                 size="small"
-                aria-label={k('notes_delete')}
-                onClick={() => setDeleting(entry)}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
+                variant="outlined"
+                label={k('source_song')}
+                title={k('source_song_hint')}
+              />
             )}
+            <IconButton
+              size="small"
+              aria-label={k('notes_delete')}
+              onClick={() => setDeleting(entry)}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
           </Stack>
           <Stack
             direction="row"
@@ -134,24 +140,9 @@ export function ScoreLibraryList({ onPlay }: ScoreLibraryListProps) {
               </Typography>
             )}
             {entry.scores.map((item) => (
-              <Stack
-                key={`${item.source}:${item.source === 'notes' ? item.piece.id : item.song.id}:${item.file}`}
-                direction="row"
-                spacing={0.5}
-                alignItems="center"
-              >
-                <Button size="small" variant="contained" onClick={() => onPlay(item)}>
-                  {k('play_score')}: {item.file}
-                </Button>
-                {item.source === 'song' && (
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={k('source_song')}
-                    title={k('source_song_hint')}
-                  />
-                )}
-              </Stack>
+              <Button key={item.file} size="small" variant="contained" onClick={() => onPlay(item)}>
+                {k('play_score')}: {item.file}
+              </Button>
             ))}
           </Stack>
         </Box>
@@ -161,7 +152,7 @@ export function ScoreLibraryList({ onPlay }: ScoreLibraryListProps) {
         title={k('notes_delete')}
         message={
           k('notes_delete_confirm', { title: deleting?.title ?? '' }) +
-          (deleting?.songs.length ? ` ${k('notes_delete_song_kept')}` : '')
+          (deleting?.piece.songId ? ` ${k('notes_delete_song_kept')}` : '')
         }
         confirmText={t('common.delete')}
         confirmColor="error"

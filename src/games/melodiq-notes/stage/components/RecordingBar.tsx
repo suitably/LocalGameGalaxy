@@ -91,11 +91,7 @@ export function RecordingBar({ state }: { state: StageSongState }) {
             disabled={state.saved || running}
             onClick={() => void state.saveToServer()}
           >
-            {state.saved
-              ? k('saved')
-              : state.saveTarget === 'song-marks'
-                ? k('save_marks')
-                : k('save_to_library')}
+            {state.saved ? k('saved') : k('save_to_library')}
           </Button>
         )}
         {recording && (

@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — One sheet-music store: Notes library (Q18, claude-code)
+
+- `docs/tech/song-pipeline.md` §4 rewritten (Notes library only store, `songId`, one-time import with marker `.song-scores-imported.json`, deprecated `/api/songs/:id/scores` routes, YouTube flow links a Notes piece) and §5 folder tree; `verified` refreshed. `docs/tech/architecture.md` `notes` plugin bullet. `docs/open-questions.md`: Q18 resolved.
+- Outside `docs/`: server `plugins/notes/{services/library.ts,routes/pieces.ts}` (`songId`), `plugins/melodiq/{services/scoreMigration.ts,routes/scores.ts,routes/songs.ts,index.ts}`, `Song.folderScores`, tests; client `lib/companion/{notesLibraryApi,songScoresApi}.ts`, Melodiq Notes `stage/logic/{scoreCatalog,notesLibrarySync,youtubeImport}.ts`, `serverScoreLoad.ts`, `useStageSong.ts`, `useYouTubeImport.ts`, `ScoreLibraryList`, `YouTubeRecordingDialog`, `RecordingBar`, locales; `server/README.md`.
+
 ## 2026-10-25 — Melodiq Notes stage and pult (#485, claude-code)
 
 - `docs/tech/game-catalog.md` §3 (new melodiq-notes row) and shared-module row; `docs/tech/architecture.md` §3.2 `room-game` (`useRoomEvents`, `roomTransport.ts`, consumer melodiq-notes); `docs/tech/sync-protocol.md` `lgg/room` instance and channels.
