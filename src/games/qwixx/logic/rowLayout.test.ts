@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildRowSegments, isCellClickable } from './rowLayout';
+import { buildRowSegments, isCellClickable, splitSegmentsIntoLines } from './rowLayout';
 import type { SheetCell, SheetRowDefinition } from './types';
 
 const cell = (number: number, color: SheetCell['color'], extra: Partial<SheetCell> = {}) => ({
@@ -58,5 +58,35 @@ describe('isCellClickable', () => {
   it('keeps crossed sub-box cells tappable', () => {
     const state = { crossed: [2, 4], isLocked: false };
     expect(isCellClickable(cell(2, 'red', { hasSubBox: true }), numbers, state)).toBe(true);
+  });
+});
+
+describe('splitSegmentsIntoLines', () => {
+  const nums = (n: number, color: SheetCell['color'], from = 2) =>
+    Array.from({ length: n }, (_, i) => cell(from + i, color));
+
+  it('splits an 11-cell row into 6 + 5 and marks the lock on the second line', () => {
+    const lines = splitSegmentsIntoLines(buildRowSegments(row(nums(11, 'red'))));
+    expect(lines.map((l) => l.reduce((n, s) => n + s.cells.length, 0))).toEqual([6, 5]);
+    expect(lines[0][0].isLastSegment).toBe(false);
+    expect(lines[1][0].isLastSegment).toBe(true);
+  });
+
+  it('cuts a multi-colour segment at the split and keeps cell order', () => {
+    const cells = [...nums(4, 'red'), ...nums(4, 'yellow', 6), ...nums(3, 'green', 10)];
+    const lines = splitSegmentsIntoLines(buildRowSegments(row(cells)));
+    expect(lines[0].map((s) => [s.color, s.cells.length])).toEqual([
+      ['red', 4],
+      ['yellow', 2],
+    ]);
+    expect(lines[1].map((s) => [s.color, s.cells.length])).toEqual([
+      ['yellow', 2],
+      ['green', 3],
+    ]);
+    expect(lines[1][1].isLastSegment).toBe(true);
+  });
+
+  it('keeps a short row on one line', () => {
+    expect(splitSegmentsIntoLines(buildRowSegments(row(nums(1, 'red'))))).toHaveLength(1);
   });
 });

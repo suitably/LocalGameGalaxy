@@ -19,6 +19,7 @@ import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlineRounded';
 import { useTranslation } from 'react-i18next';
 import type { SongMeta, Song } from '../db';
+import { CONTROLLER_TARGET } from '../../../lib/touchTarget';
 
 interface MiniPlayerProps {
   song: SongMeta | Song | null;
@@ -47,11 +48,13 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   queueLength,
   isRestored = false,
   onRestart,
-
+  isClient = false,
   canControlPlayback = true,
 }) => {
   const theme = useTheme();
   const { t } = useTranslation();
+  // Phone client: primary playback buttons use the controller size (DESIGN.md §4).
+  const primarySx = isClient ? { width: CONTROLLER_TARGET, height: CONTROLLER_TARGET } : {};
 
   return (
     <Card
@@ -144,7 +147,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                   onTogglePlay();
                 }}
                 size="medium"
-                sx={{ color: theme.palette.secondary.main }}
+                sx={{ color: theme.palette.secondary.main, ...primarySx }}
                 title={t('melodiq.resume_song')}
                 aria-label={t('common.a11y.play', 'Play')}
               >
@@ -157,7 +160,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                   onTogglePlay();
                 }}
                 size="medium"
-                sx={{ color: 'text.primary' }}
+                sx={{ color: 'text.primary', ...primarySx }}
                 aria-label={
                   isPlaying && song
                     ? t('common.a11y.pause', 'Pause')
@@ -174,7 +177,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                 onNext();
               }}
               size="medium"
-              sx={{ color: 'text.primary' }}
+              sx={{ color: 'text.primary', ...primarySx }}
               aria-label={t('common.a11y.next', 'Next')}
             >
               <SkipNextIcon />

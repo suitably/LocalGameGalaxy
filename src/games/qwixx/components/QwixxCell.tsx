@@ -70,8 +70,8 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
         disabled={disabled || !isClickable}
         sx={{
           ...invisibleHitArea(48, 'y'),
-          width: { xs: 26, sm: 36, md: 44 },
-          height: { xs: 32, sm: 40, md: 48 },
+          width: { xs: 48, sm: 36, md: 44 },
+          height: { xs: 48, sm: 40, md: 48 },
           borderRadius: 2,
           bgcolor: isCrossed ? tone.buttonCrossed : tone.button,
           color: isCrossed ? 'common.white' : tone.ink,

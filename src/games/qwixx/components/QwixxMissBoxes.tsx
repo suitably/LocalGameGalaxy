@@ -47,8 +47,8 @@ export const QwixxMissBoxes: React.FC<QwixxMissBoxesProps> = ({
               disabled={disabled}
               sx={{
                 ...invisibleHitArea(48, 'y'),
-                width: { xs: 28, sm: 34 },
-                height: { xs: 28, sm: 34 },
+                width: { xs: 48, sm: 34 },
+                height: { xs: 48, sm: 34 },
                 borderRadius: 2,
                 border: '2px solid',
                 borderColor: isMissed ? 'error.main' : 'divider',

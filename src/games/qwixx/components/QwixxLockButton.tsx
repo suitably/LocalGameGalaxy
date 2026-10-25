@@ -36,8 +36,8 @@ export const QwixxLockButton: React.FC<QwixxLockButtonProps> = ({
         isLocked ? t('common.a11y.unlock_row', 'Unlock row') : t('common.a11y.lock_row', 'Lock row')
       }
       sx={{
-        width: { xs: 28, sm: 38, md: 46 },
-        height: { xs: 32, sm: 40, md: 48 },
+        width: { xs: 48, sm: 38, md: 46 },
+        height: { xs: 48, sm: 40, md: 48 },
         borderRadius: '50%',
         bgcolor: active ? tone.button : tone.muted,
         color: active ? tone.ink : alpha(tone.ink, 0.5),

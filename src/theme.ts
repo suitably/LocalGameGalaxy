@@ -183,8 +183,34 @@ const sharedOptions: Omit<ThemeOptions, 'palette' | 'colorSchemes'> = {
     },
     MuiSlider: {
       styleOverrides: {
-        root: { paddingTop: 22, paddingBottom: 22 },
-        sizeSmall: { paddingTop: 22, paddingBottom: 22 },
+        root: {
+          paddingTop: 22,
+          paddingBottom: 22,
+          boxSizing: 'border-box',
+          minHeight: TOUCH_TARGET,
+        },
+        sizeSmall: {
+          paddingTop: 22,
+          paddingBottom: 22,
+          boxSizing: 'border-box',
+          minHeight: TOUCH_TARGET,
+        },
+      },
+    },
+    MuiSwitch: {
+      styleOverrides: {
+        // The 38px thumb track stays; an invisible overlay extends the hit area to 48px.
+        switchBase: {
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            width: TOUCH_TARGET,
+            height: TOUCH_TARGET,
+            transform: 'translate(-50%, -50%)',
+          },
+        },
       },
     },
     MuiChip: {

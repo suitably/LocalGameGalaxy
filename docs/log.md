@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Touch targets follow-up (#510, claude-code)
+
+- `DESIGN.md` §4 touch-target line: dense rows re-flow, documented Wordle keyboard width exception. Outside `docs/`: Qwixx two-line rows on phones, Wordle zero-gap keyboard, theme Slider/Switch hit areas, Melodiq phone client and party rejoin at `CONTROLLER_TARGET`, `scripts/measure-touch-targets.cjs` (`data-touch-exempt`, pseudo-element on switch wrapper).
+
 ## 2026-10-25 — Spectators in the party lobby, read-only (#536 follow-up, claude-code)
 
 - `docs/tech/tabletop-engine.md` (Seats, spectators and the hand dock): lobby "Zuschauen" switch, `PartyPlayer.spectator`, host-side `acceptIntent` guard, `readOnly` surface.
