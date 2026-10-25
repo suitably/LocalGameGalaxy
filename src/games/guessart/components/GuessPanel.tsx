@@ -1,12 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import {
-  Alert,
-  Box,
-  CircularProgress,
-  IconButton,
-  TextField,
-  Tooltip,
-} from '@mui/material';
+import { Alert, Box, CircularProgress, IconButton, TextField, Tooltip } from '@mui/material';
 import LightbulbRoundedIcon from '@mui/icons-material/LightbulbRounded';
 import SendRoundedIcon from '@mui/icons-material/SendRounded';
 import { useTranslation } from 'react-i18next';
@@ -23,8 +16,6 @@ interface GuessPanelProps {
   onRequestHint: () => Promise<{ hint?: HintResult; exhausted?: boolean }>;
 }
 
-
-
 export const GuessPanel: React.FC<GuessPanelProps> = ({
   currentRound,
   onSubmitGuess,
@@ -32,18 +23,23 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
 }) => {
   const { t } = useTranslation();
   const [guess, setGuess] = useState<string>('');
-  const { hintStage, setHintStage, hintLetters, setHintLetters } = useGuessArtHints(currentRound, guess, setGuess);
+  const { hintStage, setHintStage, hintLetters, setHintLetters } = useGuessArtHints(
+    currentRound,
+    guess,
+    setGuess,
+  );
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [requestingHint, setRequestingHint] = useState<boolean>(false);
-  const [feedback, setFeedback] = useState<{ type: 'error' | 'warning' | 'info'; text: string } | null>(null);
+  const [feedback, setFeedback] = useState<{
+    type: 'error' | 'warning' | 'info';
+    text: string;
+  } | null>(null);
   const knownGuessesRef = useRef<Set<string>>(new Set());
 
   const slotCount = useMemo(() => {
     if (hintStage <= 0) return 0;
     return currentRound?.wordLength || currentRound?.wordMask?.length || 0;
   }, [hintStage, currentRound]);
-
-
 
   const handleHintClick = async () => {
     if (hintStage >= 2 || requestingHint) return;
@@ -89,7 +85,6 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
       if (slotCount > 0 && prev.length >= slotCount) return prev;
       return prev + entry.letter;
     });
-
   };
 
   const handleSlotClick = (index: number) => {
@@ -104,7 +99,10 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
 
     const norm = normalize(trimmed);
     if (knownGuessesRef.current.has(norm)) {
-      setFeedback({ type: 'warning', text: t('guessart.repeatedGuess', 'Dieses Wort hast du schon versucht!') });
+      setFeedback({
+        type: 'warning',
+        text: t('guessart.repeatedGuess', 'Dieses Wort hast du schon versucht!'),
+      });
       return;
     }
     knownGuessesRef.current.add(norm);
@@ -114,10 +112,12 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
     try {
       const result = await onSubmitGuess(trimmed);
       if (!result.correct) {
-        setFeedback({ type: 'error', text: t('guessart.wrongGuess', 'Leider falsch! Versuch es weiter.') });
+        setFeedback({
+          type: 'error',
+          text: t('guessart.wrongGuess', 'Leider falsch! Versuch es weiter.'),
+        });
         // Reset guess input for next attempt
         setGuess('');
-
       }
     } catch (err) {
       setFeedback({ type: 'error', text: err instanceof Error ? err.message : 'Guess failed' });
@@ -127,7 +127,9 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
   };
 
   return (
-    <Box sx={{ flexGrow: 1, minHeight: 0, display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box
+      sx={{ flexGrow: 1, minHeight: 0, display: 'flex', flexDirection: 'column', height: '100%' }}
+    >
       <Box sx={{ flexGrow: 1, minHeight: 0, height: '100%', position: 'relative' }}>
         <ExcalidrawViewer data={currentRound?.canvasData} />
       </Box>
@@ -155,13 +157,25 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
 
       {/* Input Bar */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pt: 1.5, pb: 1 }}>
-        <Tooltip title={hintStage >= 2 ? t('guessart.noMoreHints', 'Keine weiteren Tipps') : t('guessart.getHint', 'Tipp anfordern')}>
+        <Tooltip
+          title={
+            hintStage >= 2
+              ? t('guessart.noMoreHints', 'Keine weiteren Tipps')
+              : t('guessart.getHint', 'Tipp anfordern')
+          }
+        >
           <span>
             <IconButton
               color="warning"
               onClick={handleHintClick}
               disabled={hintStage >= 2 || requestingHint}
-              sx={{ width: 52, height: 52, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}
+              sx={{
+                width: 52,
+                height: 52,
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+              }}
             >
               {requestingHint ? <CircularProgress size={20} /> : <LightbulbRoundedIcon />}
             </IconButton>

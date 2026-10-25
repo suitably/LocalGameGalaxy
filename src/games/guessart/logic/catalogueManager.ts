@@ -276,10 +276,7 @@ export const calculateCatalogueDiff = (
 /**
  * Generates formatted TypeScript source code for lexicon.ts.
  */
-export const generateLexiconTsCode = (
-  categories: CategoryItem[],
-  words: WordItem[],
-): string => {
+export const generateLexiconTsCode = (categories: CategoryItem[], words: WordItem[]): string => {
   const categoriesJson = JSON.stringify(categories, null, 2);
   const wordsJson = JSON.stringify(words, null, 2);
 
@@ -346,7 +343,9 @@ export const publishCatalogueToGit = async (options: {
   }
 
   const prTitle = options.prTitle || '[GuessArt] Update Word & Category Catalogue';
-  const prBody = summaryMarkdown + '\n---\n*Created automatically via LocalGameGalaxy In-Game Catalogue Editor.*';
+  const prBody =
+    summaryMarkdown +
+    '\n---\n*Created automatically via LocalGameGalaxy In-Game Catalogue Editor.*';
 
   // Direct GitHub API with local PAT
   const { config: ghConfig, source } = resolveGitHubConfig();

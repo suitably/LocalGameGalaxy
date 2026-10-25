@@ -44,8 +44,27 @@ export const buildHintLetters = (word?: string): string[] => {
 
   const vowels = ['A', 'E', 'I', 'O', 'U'];
   const consonants = [
-    'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M',
-    'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z',
+    'B',
+    'C',
+    'D',
+    'F',
+    'G',
+    'H',
+    'J',
+    'K',
+    'L',
+    'M',
+    'N',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'V',
+    'W',
+    'X',
+    'Y',
+    'Z',
   ];
   const baseLetters: string[] = [];
   const letterCounts = new Map<string, number>();
@@ -159,7 +178,12 @@ export const resolveHintArtifacts = (
   fallbackLang?: string,
   fallbackWord?: string,
 ): { mask: string[]; length: number; letters: string[]; language: string } | null => {
-  const { word, language } = resolveWordForLanguage(translations, requested, fallbackLang, fallbackWord);
+  const { word, language } = resolveWordForLanguage(
+    translations,
+    requested,
+    fallbackLang,
+    fallbackWord,
+  );
   const trimmed = word.trim();
   if (!trimmed) {
     return null;
