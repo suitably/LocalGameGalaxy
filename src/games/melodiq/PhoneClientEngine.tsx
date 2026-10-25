@@ -5,6 +5,7 @@ import { storage, sessionStorageSafe, STORAGE_KEYS } from '../../lib/storage';
 import { usePhoneClientMessages } from './hooks/usePhoneClientMessages';
 import { RemoteHostSettingsModal } from './components/RemoteHostSettingsModal';
 import type { HostSettings } from './types';
+import { useFeedbackRelay } from './hooks/useFeedbackRelay';
 import { usePhoneMicStreaming } from './hooks/usePhoneMicStreaming';
 import { loadClientProfile, resolveTrackerUrls, type ClientProfile } from './logic/clientProfile';
 
@@ -136,6 +137,9 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
       }, 500);
     }
   }, [isConnected, sendData]);
+
+  // Route feedback through the host (its PAT) while connected
+  useFeedbackRelay(isConnected, sendData);
 
   // Forward events from UI components (like useQueue) to the host
   useEffect(() => {

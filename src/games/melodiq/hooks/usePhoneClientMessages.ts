@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { storage } from '../../../lib/storage';
+import { parseFeedbackResult } from '../logic/feedbackRpc';
 import { ApiChunkBuffer } from '../logic/apiChunkBuffer';
 import type { ClientProfile } from '../logic/clientProfile';
 import type {
@@ -155,6 +156,11 @@ export const usePhoneClientMessages = ({
         case 'host.settings.state':
           setHostSettings((data as unknown as HostSettingsReply).settings);
           break;
+        case 'host.feedback.result': {
+          const result = parseFeedbackResult(data);
+          if (result) emit(`melodiq_feedback_result_${result.reqId}`, result);
+          break;
+        }
         case 'helper_config':
           if (data.url) {
             storage.setHelperUrl(data.url as string);

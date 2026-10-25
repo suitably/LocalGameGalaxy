@@ -6,6 +6,7 @@ import VpnKeyRoundedIcon from '@mui/icons-material/VpnKeyRounded';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { hasGitHubPAT } from '../../lib/github';
+import { hasFeedbackRelay } from '../../lib/feedbackRelay';
 import { FeedbackForm } from './FeedbackForm';
 
 export const FeedbackDialog: React.FC = () => {
@@ -15,13 +16,13 @@ export const FeedbackDialog: React.FC = () => {
   const [hasGithubConfig, setHasGithubConfig] = useState(true);
 
   const checkConfig = useCallback(() => {
-    setHasGithubConfig(hasGitHubPAT());
+    setHasGithubConfig(hasGitHubPAT() || hasFeedbackRelay());
   }, []);
 
   // Expose open method via custom event so GlobalHeader can trigger it
   useEffect(() => {
     const handleOpen = () => {
-      if (!hasGitHubPAT()) {
+      if (!hasGitHubPAT() && !hasFeedbackRelay()) {
         navigate('/settings?tab=general&sub=feedback&missing_pat=1');
         return;
       }
@@ -36,7 +37,7 @@ export const FeedbackDialog: React.FC = () => {
     setOpen(false);
   };
 
-  if (!open || !hasGitHubPAT()) {
+  if (!open || !(hasGitHubPAT() || hasFeedbackRelay())) {
     return null;
   }
 
