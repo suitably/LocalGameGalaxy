@@ -79,6 +79,11 @@ The server does not search or download sheet music: users fetch MusicXML themsel
 
 Melodiq Notes shows these scores in its one sheet-music library, merged with the Notes library pieces (plugin `notes`, `NOTES_DIR`) by normalised artist + title (`src/games/melodiq-notes/stage/logic/scoreCatalog.ts`), with a "Melodiq song" badge. They are read-only there: the app only writes their bar marks (`PUT …/marks`) while the score plays with the song's mix; with a recording chosen on the device, saving creates a Notes library piece (original score file, recording, marks) instead. The client no longer calls `POST /api/songs/:id/scores`; the route stays for now ([Q18](../open-questions.md#q18--one-storage-place-for-melodiq-notes-sheet-music-534)).
 
+`alignRecording` (`src/modules/music-score/alignment.ts`) produces one mark per bar in two stages: a coarse match, then `fitMarksToNotes` (whole-song Viterbi fit of the score's attacks to band and pitch-class onsets, ±0.6 s per bar). The coarse match depends on the score:
+
+- **Pitched parts present:** tuning estimate, semitone-shift search and a chroma + onset DTW (`warpScoreToAudio`, `marksFromWarp`).
+- **Drums only** (`hasPitchedNotes` is false, `onsetAlign.ts`): there is no pitch to follow, so `estimateTempoAndStart` cross-correlates (FFT) the score's kick/snare/cymbal attacks with the recording's band onsets (`onsetFeatures`) for tempo ratios 0.7–1.4, and `marksFromOnsets` places every bar start jointly by a Viterbi on a 20 ms grid (each bar at most 10 % off the global tempo, at a cost; free start). Bars without attacks, such as an intro without drums, follow the tempo around them. `tuning.semitones` is 0.
+
 ## 5. Song folder layout
 
 No fixed file names — whatever the `.txt` headers reference:

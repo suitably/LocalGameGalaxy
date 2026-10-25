@@ -2,6 +2,7 @@
 
 ### Added
 
+- **Melodiq Notes: drums-only scores align** (#484): a score with only a drum part is aligned to the recording from its attacks (tempo and start by cross-correlating kick, snare and cymbals with the recording's onsets, then bar by bar) instead of the pitch match, which found nothing to follow and placed bar 1 far off.
 - **Melodiq Notes: finer alignment and continuous speed** (#532): fine-tuning has a ±2 s slider in 1 ms steps plus ±10 ms / ±1 ms buttons; playback speed is a continuous 25–150 % slider (5 % steps, pitch-preserving for recordings) for practising and fine-tuning.
 - **Melodiq Notes: real drum instruments** (#531): drum parts keep the written sound (hi-hat closed/open/pedal, toms 1–3 and floor tom, snare normal/rimshot/cross-stick/ghost, kick, crash, ride, ride bell, china, splash, cowbell) from MusicXML instrument, notehead and articulations or General MIDI keys 35–81. The drum highway marks them on the notes (+, o, 1–3, F, x, RS, Bell, …) and shows sticking (R/L) when the score has it; MIDI hits prefer the exact sound and accept any hi-hat for a hi-hat, any tom for a tom.
 - **Tabletop: hidden zones** (#539): in edit mode the owner moves and resizes their hidden zone like a widget, and the widgets inside move along (pinned and non-movable ones stay). An eye button inside the zone shows and switches whether only the owner or everyone sees the contents. Other players now really see only placeholders for widgets inside a hidden zone.

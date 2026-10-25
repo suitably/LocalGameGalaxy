@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Drums-only score alignment (#484, claude-code)
+
+- `docs/tech/song-pipeline.md` §4: how `alignRecording` aligns (coarse match, then `fitMarksToNotes`) and the onset path for drums-only scores (`onsetAlign.ts`); `verified` refreshed. `docs/tech/architecture.md`: `music-score` row names `marksFromOnsets`. Outside `docs/`: `src/modules/music-score/onsetAlign.ts`, `alignment.ts`.
+
 ## 2026-10-25 — One sheet-music library in Melodiq Notes (#534, claude-code)
 
 - `docs/tech/song-pipeline.md` §4: song-folder scores appear read-only in the merged Melodiq Notes library (`stage/logic/scoreCatalog.ts`); only their bar marks are written; the client no longer uploads to song folders. `verified.at` refreshed.
