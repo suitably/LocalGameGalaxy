@@ -2,7 +2,8 @@
  * Players in the room [ID: COMP-PARTY-PLAYER-ROSTER]
  */
 import React from 'react';
-import { alpha, Box, Chip, Tooltip, Typography, Avatar, CircularProgress } from '@mui/material';
+import { alpha, Box, Chip, Tooltip, Typography, Avatar } from '@mui/material';
+import { EmptyState } from '../../../components/common/EmptyState';
 import StarsRoundedIcon from '@mui/icons-material/StarsRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import PersonRemoveRoundedIcon from '@mui/icons-material/PersonRemoveRounded';
@@ -102,12 +103,7 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
           })}
 
           {players.length === 0 && (
-            <Box display="flex" alignItems="center" gap={1} py={1}>
-              <CircularProgress size={18} />
-              <Typography color="text.secondary" variant="body2">
-                {t('party.waitingForGuests', 'Warte auf Mitspieler...')}
-              </Typography>
-            </Box>
+            <EmptyState dense message={t('party.waitingForGuests', 'Warte auf Mitspieler...')} />
           )}
         </Box>
       </Box>

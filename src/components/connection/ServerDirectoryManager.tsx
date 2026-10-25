@@ -11,7 +11,6 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   Divider,
-  CircularProgress,
   Alert,
   Tooltip,
 } from '@mui/material';
@@ -22,6 +21,7 @@ import DownloadIcon from '@mui/icons-material/DownloadRounded';
 import EditIcon from '@mui/icons-material/EditRounded';
 import { settingsCardSx } from '../../features/settings/settingsStyles';
 import { ConfirmDialog } from '../common/ConfirmDialog';
+import { ListSkeleton } from '../common/ListSkeleton';
 import { ServerDirectoryBrowser } from './ServerDirectoryBrowser';
 import { useServerDirectories } from './useServerDirectories';
 
@@ -88,9 +88,7 @@ export const ServerDirectoryManager: React.FC = () => {
       )}
 
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-          <CircularProgress size={28} />
-        </Box>
+        <ListSkeleton rows={2} />
       ) : (
         <List dense sx={{ bgcolor: 'action.hover', borderRadius: 2, p: 0.5, mb: 3 }}>
           {directories.length === 0 ? (

@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Shared list states (#511, claude-code)
+
+- `docs/tech/architecture.md` §3.2: added `EmptyState`, `ErrorState`, `ListSkeleton` to the reuse catalog.
+- Outside `docs/`: components in `src/components/common/`, adopted in party roster/picker, server directory browser/manager, tabletop installed games, Melodiq online songs; `common.retry` locale key.
+
 ## 2026-10-25 — Drums-only score alignment (#484, claude-code)
 
 - `docs/tech/song-pipeline.md` §4: how `alignRecording` aligns (coarse match, then `fitMarksToNotes`) and the onset path for drums-only scores (`onsetAlign.ts`); `verified` refreshed. `docs/tech/architecture.md`: `music-score` row names `marksFromOnsets`. Outside `docs/`: `src/modules/music-score/onsetAlign.ts`, `alignment.ts`.

@@ -1083,6 +1083,7 @@
     "addPlayer": "Hinzufügen"
   },
   "common": {
+    "retry": "Erneut versuchen",
     "start": "Spiel starten",
     "back": "Zurück",
     "next": "Weiter",
