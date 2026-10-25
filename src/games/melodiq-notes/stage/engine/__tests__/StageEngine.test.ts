@@ -252,6 +252,35 @@ describe('StageEngine', () => {
     expect(from).toBeLessThan(1.6);
   });
 
+  it('leaves out bars before the recording starts (an intro it lacks)', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    // bars 1-2 lie before the recording, bar 3 starts at 0 s
+    const marks = [0, 4, 8, 12, 16].map((beat) => ({ beat, sec: (beat - 8) * 0.5 }));
+    const rec: StageRecording = {
+      map: createAudioMap(song(), marks, 0),
+      startBeat: 8,
+      duration: 30,
+      time: () => 0,
+      isPlaying: () => false,
+      play: vi.fn(),
+      pause: vi.fn(),
+      setRate: vi.fn(),
+      setVolume: vi.fn(),
+    };
+    e.setRecording(rec);
+    expect(e.beat).toBe(8 - e.countIn);
+    expect(e.players[0].notes[0].t).toBe(8);
+    e.setMode('perform');
+    e.start();
+    run(e, 2.04);
+    const [from] = (rec.play as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(from).toBeGreaterThanOrEqual(0);
+    expect(from).toBeLessThan(0.1);
+    e.seekTo(0);
+    expect(e.beat).toBe(8 - e.countIn);
+  });
+
   it('seeks on the timeline and jumps to the first note with a lead-in', () => {
     const e = new StageEngine(fakeSound());
     e.loadSong(song());

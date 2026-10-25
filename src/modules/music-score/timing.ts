@@ -54,6 +54,16 @@ export function measureIndexAt(song: ScoreSong, beat: number): number {
   return Math.max(0, lo);
 }
 
+/**
+ * Beat of the first bar the recording has: bars marked before 0 s belong to an
+ * arrangement's intro the recording lacks (the alignment skipped them). 0 without marks.
+ */
+export function firstRecordedBeat(marks: BarMark[] | null): number {
+  if (!marks) return 0;
+  const first = marks.slice(0, -1).find((m) => m.sec >= 0);
+  return first && first !== marks[0] ? first.beat : 0;
+}
+
 export interface AudioMap {
   /** Position in the recording (seconds) of a score beat. */
   secAt(beat: number): number;

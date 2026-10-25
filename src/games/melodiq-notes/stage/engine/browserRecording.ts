@@ -2,6 +2,7 @@ import {
   ALIGN_SAMPLE_RATE,
   alignRecording,
   createAudioMap,
+  firstRecordedBeat,
   type AlignProgress,
   type AlignResult,
   type BarMark,
@@ -28,6 +29,7 @@ export function createElementRecording(
   const recording: StageRecording & { element: HTMLAudioElement } = {
     element: el,
     map: createAudioMap(song, marks, offsetSec),
+    startBeat: firstRecordedBeat(marks),
     get duration() {
       return Number.isFinite(el.duration) ? el.duration : Infinity;
     },
