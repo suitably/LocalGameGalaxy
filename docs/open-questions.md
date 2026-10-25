@@ -55,6 +55,10 @@ Since #539 board widgets inside a non-revealed hidden zone render as placeholder
 
 Compose files, README and [deployment](tech/deployment.md) pull `nexumia/galaxy-signaling`, `nexumia/nexumia-server` and the deprecated `nexumia/melodiq-server`. Until #530 the workflow pushed to `${DOCKERHUB_USERNAME}/…`, so the pulled name only existed if that secret was `nexumia`. The workflow now pushes to the literal `nexumia` namespace. **(user)** Confirm that the Docker Hub account behind `DOCKERHUB_USERNAME` owns the `nexumia` namespace, and decide when to stop publishing `melodiq-server`.
 
+## Q18 — One storage place for Melodiq Notes sheet music (#534)
+
+Since #534 Melodiq Notes shows one library (`stage/logic/scoreCatalog.ts`) that merges Notes library pieces (`NOTES_DIR`) with the scores in Melodiq song folders; song-folder scores are read-only there, except that their bar marks are still written to `<score>.marks.json` in the song folder while they play with the song's own mix. The server keeps `POST`/`DELETE /api/songs/:id/scores`, which no client calls any more. **(user)** Decide whether to (a) move song-folder scores into the Notes library (a piece that references the Melodiq song's mix instead of a copy), (b) store their marks in the Notes library too, and (c) remove the upload/delete score routes from the `melodiq` plugin.
+
 ## Resolved 2026-10-18
 
 - Q15 issues #353–#361 vs branch state → #384 merged; #353, #354, #355, #357, #358 closed, specs moved to [archive/issue-specs](archive/index.md). Open: #356, #359, #360 ([tasks](tasks/index.md)); #361 closed 2026-10-21.

@@ -9,12 +9,8 @@ import {
   pinBar,
   type ScoreSong,
 } from '../../../modules/music-score';
-import {
-  isCompanionEnabled,
-  type CompanionScore,
-  type CompanionSong,
-} from '../../../lib/companion/songScoresApi';
-import type { NotesPiece, NotesPieceScore } from '../../../lib/companion/notesLibraryApi';
+import { isCompanionEnabled } from '../../../lib/companion/songScoresApi';
+import type { CatalogScore } from './logic/scoreCatalog';
 import {
   loadNotesPieceScore,
   loadSongFolderScore,
@@ -22,7 +18,7 @@ import {
   type ServerScoreLoad,
   type SongOrigin,
 } from './serverScoreLoad';
-import { saveStageToServer } from './logic/notesLibrarySync';
+import { saveStageToServer, saveTargetFor } from './logic/notesLibrarySync';
 import { alignRecordingInBrowser, createElementRecording } from './engine/browserRecording';
 import type { StageEngine } from './engine/StageEngine';
 import {
@@ -140,9 +136,16 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     (fetchScore: () => Promise<ServerScoreLoad>) => {
       const startedAs = generation.current;
       return run(async () => {
-        const { loaded, origin: next, recording: rec, marks: stored } = await fetchScore();
+        const {
+          loaded,
+          origin: next,
+          recording: rec,
+          marks: stored,
+          sourceFile,
+        } = await fetchScore();
         if (startedAs !== generation.current) return;
         show(loaded.song, loaded.xml, next);
+        openedFile.current = sourceFile ?? null;
         replaceRecording(rec);
         // straight from the server: nothing to save until something changes
         setSaved(true);
@@ -156,15 +159,14 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     [run, show, replaceRecording, replaceMarks],
   );
 
-  const loadServerScore = useCallback(
-    (entry: CompanionSong, score: CompanionScore) =>
-      loadFromServer(() => loadSongFolderScore(entry, score)),
-    [loadFromServer],
-  );
-
-  const loadNotesPiece = useCallback(
-    (piece: NotesPiece, score: NotesPieceScore) =>
-      loadFromServer(() => loadNotesPieceScore(piece, score)),
+  /** Opens a score from the merged library, whichever store it lives in. */
+  const loadCatalogScore = useCallback(
+    (item: CatalogScore) =>
+      loadFromServer(() =>
+        item.source === 'notes'
+          ? loadNotesPieceScore(item.piece, item.score)
+          : loadSongFolderScore(item.song, item.score),
+      ),
     [loadFromServer],
   );
 
@@ -214,24 +216,24 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     }
   }, [song, recording, replaceMarks]);
 
+  const stored = origin?.kind === 'server' || origin?.kind === 'notes' ? origin : null;
+  const saveTarget = saveTargetFor(stored, !!recording?.file);
+
   /** Melodiq songs get their marks; anything else goes to the Notes library with what is missing. */
   const saveToServer = useCallback(async () => {
     if (!song) return;
     const savingAs = generation.current;
     try {
-      const result = await saveStageToServer(
-        origin?.kind === 'server' || origin?.kind === 'notes' ? origin : null,
-        {
-          title: song.title,
-          artist: song.artist,
-          scoreFile: openedFile.current,
-          xml,
-          recordingFile: recording?.file ?? null,
-          recordingName: recording && !recording.file ? recording.name : null,
-          marks,
-          offsetSec: offset,
-        },
-      );
+      const result = await saveStageToServer(stored, {
+        title: song.title,
+        artist: song.artist,
+        scoreFile: openedFile.current,
+        xml,
+        recordingFile: recording?.file ?? null,
+        recordingName: recording && !recording.file ? recording.name : null,
+        marks,
+        offsetSec: offset,
+      });
       if (savingAs !== generation.current) return;
       if (result) {
         setOrigin({
@@ -249,10 +251,13 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     } catch (e) {
       setError(errorText(e));
     }
-  }, [song, origin, xml, marks, offset, recording]);
+  }, [song, stored, xml, marks, offset, recording]);
 
+  // a song-folder score always has its original file to copy into the Notes library
   const canSaveToServer =
-    !!song && isCompanionEnabled() && (origin?.kind === 'server' ? !!marks : !!xml);
+    !!song &&
+    isCompanionEnabled() &&
+    (origin?.kind !== 'server' ? !!xml : saveTarget === 'notes' || !!marks);
 
   const exportScore = useCallback(() => {
     if (!song || !xml || !marks) return;
@@ -301,12 +306,12 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     canExport: !!xml && !!marks,
     loadExample,
     loadFile,
-    loadServerScore,
-    loadNotesPiece,
+    loadCatalogScore,
     setRecordingFile,
     alignNow,
     saveToServer,
     canSaveToServer,
+    saveTarget,
     exportScore,
     nudge,
     setOffsetSec,

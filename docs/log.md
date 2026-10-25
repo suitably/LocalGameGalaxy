@@ -2,6 +2,13 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — One sheet-music library in Melodiq Notes (#534, claude-code)
+
+- `docs/tech/song-pipeline.md` §4: song-folder scores appear read-only in the merged Melodiq Notes library (`stage/logic/scoreCatalog.ts`); only their bar marks are written; the client no longer uploads to song folders. `verified.at` refreshed.
+- `docs/tech/architecture.md` (`notes` plugin bullet): the "Notes library" tab merges both stores.
+- `docs/open-questions.md`: new Q18 **(user)** — move song-folder scores/marks into the Notes library, drop the upload route.
+- Outside `docs/`: Melodiq Notes song picker (one "Notes library" tab instead of "Nexumia server" + "Notes library"), `notesLibrarySync.saveTargetFor`, `songScoresApi.uploadScore` removed, locales.
+
 ## 2026-10-25 — Melodiq Notes fine-tune and speed sliders (#532, claude-code)
 
 - No `docs/` content changed; code: `stage/logic/tuning.ts`, `RecordingBar`, `StageToolbar`.

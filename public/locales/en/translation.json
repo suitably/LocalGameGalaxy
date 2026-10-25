@@ -682,7 +682,6 @@
         "input_mic": "Microphone",
         "midi_none": "No MIDI device found",
         "song_pick": "Choose song",
-        "tab_server": "Nexumia server",
         "tab_examples": "Examples",
         "tab_file": "File",
         "server_off": "No Nexumia server connected. Connect it in Settings to play songs from your library.",
@@ -690,9 +689,7 @@
         "search": "Search songs",
         "no_scores": "No sheet music yet",
         "find_scores": "Find sheet music",
-        "find_scores_hint": "Opens the MuseScore search. Download the score there as MusicXML (.mxl) and upload it to the song here.",
-        "upload_score": "Upload sheet music",
-        "uploading": "Uploading …",
+        "find_scores_hint": "Opens the MuseScore search. Download the score there as MusicXML (.mxl), open it under \"File\" and save it to the Notes library.",
         "open_file": "Open MusicXML or MIDI",
         "file_hint": "A file from this device; it is not stored.",
         "loading": "Loading …",
@@ -747,7 +744,10 @@
         "notes_recordings_other": "{{count}} recordings",
         "notes_delete": "Delete piece",
         "notes_delete_confirm": "Delete \"{{title}}\" with its scores, recordings and bar marks from the server?",
-        "save_to_library": "Save to Notes library"
+        "save_to_library": "Save to Notes library",
+        "source_song": "Melodiq song",
+        "source_song_hint": "Stored in a Melodiq song folder (read-only). Saved with your own recording, it becomes a Notes library piece.",
+        "notes_delete_song_kept": "The sheet music in the Melodiq song folder stays."
       }
     },
     "kniffel": {

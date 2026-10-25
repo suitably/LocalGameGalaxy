@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-22
+  at: 2026-10-25
   method: 'read server/src/plugins/melodiq/{services/download.ts,services/separator.ts,services/usdb.ts,routes/*.ts}, server/src/scripts/align_lyrics.py'
 sources:
   - 'server/src/plugins/melodiq/services/download.ts'
@@ -75,7 +75,9 @@ A song folder may also hold sheet music: `.mxl`, `.musicxml`, `.mid`/`.midi`, an
 | `PUT /api/songs/:id/scores/:file/marks` | store bar marks `{ marks: [{ beat, sec }], offsetSec?, audio? }` (strictly increasing) as `<file>.marks.json`              |
 | `DELETE /api/songs/:id/scores/:file`    | remove score and marks (master token or API key with `allowSongDeletion`)                                                  |
 
-The server does not search or download sheet music: users fetch MusicXML themselves (for example from musescore.com with their own account) and upload it or drop it into the folder. Alignment runs in the client (`src/modules/music-score`), the server only stores the result.
+The server does not search or download sheet music: users fetch MusicXML themselves (for example from musescore.com with their own account) and drop it into the folder. Alignment runs in the client (`src/modules/music-score`), the server only stores the result.
+
+Melodiq Notes shows these scores in its one sheet-music library, merged with the Notes library pieces (plugin `notes`, `NOTES_DIR`) by normalised artist + title (`src/games/melodiq-notes/stage/logic/scoreCatalog.ts`), with a "Melodiq song" badge. They are read-only there: the app only writes their bar marks (`PUT …/marks`) while the score plays with the song's mix; with a recording chosen on the device, saving creates a Notes library piece (original score file, recording, marks) instead. The client no longer calls `POST /api/songs/:id/scores`; the route stays for now ([Q18](../open-questions.md#q18--one-storage-place-for-melodiq-notes-sheet-music-534)).
 
 ## 5. Song folder layout
 

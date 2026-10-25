@@ -88,23 +88,42 @@ export type StoredScore =
   | { kind: 'notes'; pieceId: string; scoreFile: string }
   | null;
 
+/** Where saving the stage goes: bar marks next to a Melodiq song, or the Notes library. */
+export type SaveTarget = 'song-marks' | 'notes';
+
 /**
- * Melodiq songs only get their bar marks (score and recording are already in the song folder);
- * everything else goes to the Notes library. Returns the Notes result, or null for a Melodiq song.
+ * Song folders are read-only for Melodiq Notes: a score from one only gets its bar marks there
+ * while it plays with the song's own mix. A recording added on this device makes it a new Notes
+ * library piece (score, recording, marks); everything else goes to the Notes library as well.
  */
+export const saveTargetFor = (stored: StoredScore, hasLocalRecording: boolean): SaveTarget =>
+  stored?.kind === 'server' && !hasLocalRecording ? 'song-marks' : 'notes';
+
+export interface SaveStageApi {
+  saveSongMarks: typeof saveBarMarks;
+  saveToNotes: (input: NotesSaveInput) => Promise<NotesSaveResult>;
+}
+
+const defaultStageApi: SaveStageApi = {
+  saveSongMarks: saveBarMarks,
+  saveToNotes: (input) => saveToNotesLibrary(input),
+};
+
+/** Returns the Notes result, or null when only the marks of a Melodiq song were stored. */
 export async function saveStageToServer(
   stored: StoredScore,
   input: Omit<NotesSaveInput, 'stored'>,
+  api: SaveStageApi = defaultStageApi,
 ): Promise<NotesSaveResult | null> {
-  if (stored?.kind === 'server') {
+  if (stored?.kind === 'server' && saveTargetFor(stored, !!input.recordingFile) === 'song-marks') {
     if (input.marks) {
-      await saveBarMarks(stored.songId, stored.scoreFile, {
+      await api.saveSongMarks(stored.songId, stored.scoreFile, {
         marks: input.marks,
         offsetSec: input.offsetSec,
-        audio: input.recordingName ?? input.recordingFile?.name ?? null,
+        audio: input.recordingName,
       });
     }
     return null;
   }
-  return saveToNotesLibrary({ ...input, stored: stored?.kind === 'notes' ? stored : null });
+  return api.saveToNotes({ ...input, stored: stored?.kind === 'notes' ? stored : null });
 }
