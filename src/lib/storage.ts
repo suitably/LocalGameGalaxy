@@ -120,6 +120,8 @@ export const STORAGE_KEYS = {
 
   // Wordle
   WORDLE_STATS: 'galaxy_wordle_stats',
+  /** Wordle setting "Only dictionary words" (JSON boolean, default true). */
+  WORDLE_DICTIONARY_ONLY: 'galaxy_wordle_dictionary_only',
 
   // Cards
   CARDS_LOBBY_PLAYERS: 'cards_lobby_players',

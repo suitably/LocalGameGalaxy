@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Wordle dictionary-only guesses (#130, claude-code)
+
+- `docs/tech/persistence.md` (key `WORDLE_DICTIONARY_ONLY`) and `docs/tech/architecture.md` Wordle row. No open-questions entry existed for #130. Outside `docs/`: `src/games/wordle` (`logic/dictionary.ts`, `logic/allowedGuesses.ts`, settings dialog, `useWordle`), `src/lib/storage.ts`.
+
 ## 2026-10-25 — Singer colour picker (#524, claude-code)
 
 - `DESIGN.md` §2.3 exempt list: removed "the hue picker" (Melodiq profiles now pick from `palette.piece.*`; the nearest-colour hue mapping and stored hue are unchanged). No open-questions entry existed for #524.
