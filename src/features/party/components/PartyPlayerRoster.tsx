@@ -62,7 +62,7 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
                 deleteIcon={
                   isMe ? (
                     <Tooltip title={t('party.editNameTooltip', 'Namen ändern')}>
-                      <EditRoundedIcon fontSize="small" sx={{ color: 'primary.main' }} />
+                      <EditRoundedIcon fontSize="small" sx={{ color: 'primary.text' }} />
                     </Tooltip>
                   ) : amIHost ? (
                     <Tooltip title={t('party.removePlayer', 'Aus der Party entfernen')}>

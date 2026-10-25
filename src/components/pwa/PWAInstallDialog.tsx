@@ -52,7 +52,7 @@ export const PWAInstallDialog: React.FC<PWAInstallDialogProps> = ({ open, onClos
 
         <List disablePadding>
           <ListItem disableGutters sx={{ py: 1 }}>
-            <ListItemIcon sx={{ minWidth: 40, color: 'primary.main' }}>
+            <ListItemIcon sx={{ minWidth: 40, color: 'primary.text' }}>
               <IosShareIcon />
             </ListItemIcon>
             <ListItemText
@@ -65,7 +65,7 @@ export const PWAInstallDialog: React.FC<PWAInstallDialogProps> = ({ open, onClos
           </ListItem>
 
           <ListItem disableGutters sx={{ py: 1 }}>
-            <ListItemIcon sx={{ minWidth: 40, color: 'primary.main' }}>
+            <ListItemIcon sx={{ minWidth: 40, color: 'primary.text' }}>
               <AddBoxOutlinedIcon />
             </ListItemIcon>
             <ListItemText

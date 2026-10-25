@@ -35,8 +35,7 @@ export const darkTokens: SchemeTokens = {
   overlayShadow: '0 12px 32px rgba(0, 0, 0, 0.5)',
 };
 
-// Not wired into the theme yet: light mode needs the mode setting (DESIGN.md §10 step 3)
-// and games without hard-coded colours (step 5).
+// Light scheme of `appTheme` (src/theme.ts), selected by the colour mode setting (DESIGN.md §9).
 export const lightTokens: SchemeTokens = {
   bg: { canvas: '#FAF6F0', surface: '#FFFFFF', raised: '#F1EBE2' },
   border: { subtle: '#DDD3C5', strong: '#8C8291' },

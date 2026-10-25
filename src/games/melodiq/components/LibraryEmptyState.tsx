@@ -25,7 +25,6 @@ const EmptyPanel: React.FC<{ wide?: boolean; children: React.ReactNode }> = ({
       textAlign: 'center',
       py: wide ? 6 : 8,
       px: 2,
-      opacity: 0.9,
       flexGrow: 1,
       maxWidth: wide ? 650 : 600,
       mx: 'auto',

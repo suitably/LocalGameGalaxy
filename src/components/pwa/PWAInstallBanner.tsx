@@ -55,7 +55,7 @@ export const PWAInstallBanner: React.FC = () => {
               p: 1.25,
               borderRadius: 2,
               bgcolor: (theme) => alpha(theme.palette.primary.main, 0.2),
-              color: 'primary.main',
+              color: 'primary.text',
               flexShrink: 0,
             }}
           >
