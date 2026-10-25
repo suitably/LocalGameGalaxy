@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Accessibility audit script (#512, claude-code)
+
+- No doc pages changed. Outside `docs/`: `scripts/a11y-audit.cjs` (axe over hub, settings, game start screens; run with `npm run dev`), icon-button names (`common.a11y.*` locales), viewport meta allows zoom, `Tooltip describeChild` on span-wrapped buttons.
+
 ## 2026-10-25 — Melodiq remote host settings RPC (#356, claude-code)
 
 - `docs/tech/melodiq-architecture.md` §2.7 (new): typed `HostSettingsRpc` schema, admin gate, host handler. Outside `docs/`: `types.ts`, `logic/hostSettingsRpc.ts`, `HostSettingsRpcBridge`, `RemoteHostSettingsModal`, header action, locales.

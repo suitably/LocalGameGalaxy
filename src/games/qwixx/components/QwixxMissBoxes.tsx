@@ -42,6 +42,8 @@ export const QwixxMissBoxes: React.FC<QwixxMissBoxesProps> = ({
             <ButtonBase
               key={index}
               onClick={() => handleTap(index)}
+              aria-label={t('common.a11y.miss_box', { no: index, defaultValue: 'Miss {{no}}' })}
+              aria-pressed={isMissed}
               disabled={disabled}
               sx={{
                 ...invisibleHitArea(48, 'y'),

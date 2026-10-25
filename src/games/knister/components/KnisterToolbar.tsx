@@ -50,9 +50,13 @@ export const KnisterToolbar: React.FC<KnisterToolbarProps> = ({
         </Button>
       </Tooltip>
 
-      <Tooltip title={t('games.knister.undo_tooltip', 'Letzten Eintrag rückgängig machen')}>
+      <Tooltip
+        title={t('games.knister.undo_tooltip', 'Letzten Eintrag rückgängig machen')}
+        describeChild
+      >
         <span>
           <IconButton
+            aria-label={t('games.knister.undo_tooltip', 'Letzten Eintrag rückgängig machen')}
             onClick={onUndo}
             disabled={!canUndo}
             color="inherit"

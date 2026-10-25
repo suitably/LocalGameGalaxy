@@ -87,6 +87,7 @@ export function DartsInput({ state }: Props) {
           variant="outlined"
           color="error"
           onClick={undoThrow}
+          aria-label={t('common.a11y.undo_throw', 'Undo last throw')}
           disabled={state.turns.length === 0 && state.currentTurnThrows.length === 0}
           sx={{ px: 3 }}
         >

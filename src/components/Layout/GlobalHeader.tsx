@@ -167,9 +167,10 @@ export const GlobalHeader: React.FC = () => {
 
           {/* Toolbar Items (Desktop) */}
           {visibleInToolbar.map((item, index) => (
-            <Tooltip key={index} title={item.label}>
+            <Tooltip key={index} title={item.label} describeChild>
               <span>
                 <IconButton
+                  aria-label={item.label}
                   color="inherit"
                   onClick={item.action}
                   disabled={item.disabled}

@@ -38,7 +38,16 @@ export const UsdbPasswordField: React.FC<UsdbPasswordFieldProps> = ({
         input: {
           endAdornment: (
             <InputAdornment position="end">
-              <IconButton size="small" onClick={() => setShow(!show)} edge="end">
+              <IconButton
+                size="small"
+                onClick={() => setShow(!show)}
+                edge="end"
+                aria-label={
+                  show
+                    ? t('common.a11y.hide_password', 'Hide')
+                    : t('common.a11y.show_password', 'Show')
+                }
+              >
                 {show ? (
                   <VisibilityOffIcon fontSize="small" />
                 ) : (

@@ -75,6 +75,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
       <LinearProgress
         variant="determinate"
         value={progress}
+        aria-label={t('common.a11y.progress', 'Playback progress')}
         sx={{
           position: 'absolute',
           top: 0,
@@ -96,11 +97,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography
-            variant="subtitle2"
-            noWrap
-            sx={{ fontWeight: 'bold', color: song ? 'text.primary' : 'text.disabled' }}
-          >
+          <Typography variant="subtitle2" noWrap sx={{ fontWeight: 'bold', color: 'text.primary' }}>
             {song ? song.title : 'No Song Playing'}
           </Typography>
           {isRestored && (
@@ -149,6 +146,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                 size="medium"
                 sx={{ color: theme.palette.secondary.main }}
                 title="Resume song"
+                aria-label={t('common.a11y.play', 'Play')}
               >
                 <PlayCircleOutlineIcon />
               </IconButton>
@@ -160,6 +158,11 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                 }}
                 size="medium"
                 sx={{ color: 'text.primary' }}
+                aria-label={
+                  isPlaying && song
+                    ? t('common.a11y.pause', 'Pause')
+                    : t('common.a11y.play', 'Play')
+                }
               >
                 {isPlaying && song ? <PauseIcon /> : <PlayArrowIcon />}
               </IconButton>
@@ -172,6 +175,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
               }}
               size="medium"
               sx={{ color: 'text.primary' }}
+              aria-label={t('common.a11y.next', 'Next')}
             >
               <SkipNextIcon />
             </IconButton>
@@ -186,6 +190,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
             }}
             size="medium"
             sx={{ color: 'text.primary' }}
+            aria-label={t('melodiq.queue', 'Queue')}
           >
             <Badge
               badgeContent={queueLength}
@@ -206,6 +211,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
           size="medium"
           sx={{ color: 'text.primary', ml: 1 }}
           disabled={!song}
+          aria-label={t('common.a11y.expand', 'Expand')}
         >
           <OpenInFullIcon fontSize="small" />
         </IconButton>
