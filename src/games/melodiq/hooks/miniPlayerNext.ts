@@ -2,6 +2,7 @@ import { type RefObject } from 'react';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { type Song, type SongMeta } from '../db';
 import { type MelodiqSessionHandle } from '../gameplay/MelodiqSession';
+import { type MelodiqParticipant } from '../types';
 import { type QueueItem } from './useQueue';
 import { IDLE_PLAYBACK_STATE, type PlaybackState } from './usePlaybackReporting';
 
@@ -16,11 +17,11 @@ interface UseMiniPlayerNextArgs {
   isClient: boolean;
   currentView: string;
   sendClientCommand?: (command: string) => void;
-  sendRemoteCommand: (command: string, value: any) => void;
+  sendRemoteCommand: (command: string, value: unknown) => void;
   setRemoteSong: (song: SongMeta | null) => void;
   setPlaybackState: (state: PlaybackState) => void;
   setFeedbackMessage: (msg: string | null) => void;
-  onSelectSong: (song: SongMeta, forcePlay?: boolean, participants?: any[]) => void;
+  onSelectSong: (song: SongMeta, forcePlay?: boolean, participants?: MelodiqParticipant[]) => void;
   onExitSession: (forceHome?: boolean) => void;
   onRestoreSession: () => void;
 }

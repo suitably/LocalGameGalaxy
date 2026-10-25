@@ -22,7 +22,7 @@ export const IDLE_PLAYBACK_STATE: PlaybackState = {
  */
 export function usePlaybackReporting(
   selectedSong: Song | null,
-  sendGameUpdate?: (state: any) => void,
+  sendGameUpdate?: (state: Record<string, unknown>) => void,
 ) {
   const [playbackState, setPlaybackState] = useState<PlaybackState>(IDLE_PLAYBACK_STATE);
 
@@ -53,9 +53,10 @@ export function usePlaybackReporting(
   const lastStorageRef = useRef<number>(0);
 
   const handlePlaybackUpdate = useCallback(
-    (state: any) => {
+    (state: PlaybackState) => {
       const now = Date.now();
-      (window as any).__melodiq_current_time = state.currentTime;
+      (window as unknown as { __melodiq_current_time?: number }).__melodiq_current_time =
+        state.currentTime;
 
       // Broadcast game state to TV (replaces the old separate setInterval loop)
       const song = selectedSongRef.current;

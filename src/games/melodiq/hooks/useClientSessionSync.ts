@@ -1,5 +1,11 @@
 import { useEffect, useRef } from 'react';
 import { type Song, type SongMeta } from '../db';
+import { type MelodiqParticipant } from '../types';
+
+interface SessionSyncDetail {
+  activeSong?: { id: string; title?: string; artist?: string } | null;
+  participants?: MelodiqParticipant[];
+}
 
 interface UseClientSessionSyncProps {
   isClient: boolean;
@@ -7,8 +13,8 @@ interface UseClientSessionSyncProps {
   selectedSong: Song | null;
   getSongById: (id: string) => Promise<Song | undefined>;
   setSelectedSong: (song: Song | null) => void;
-  setCurrentView: (view: any) => void;
-  setActiveParticipants: (p: any[] | null) => void;
+  setCurrentView: (view: 'Session' | 'Home') => void;
+  setActiveParticipants: (p: MelodiqParticipant[] | null) => void;
 }
 
 /** Keeps a client's view in sync with the song the host is playing (session_sync). */
@@ -27,8 +33,8 @@ export const useClientSessionSync = ({
   useEffect(() => {
     if (!isClient) return;
 
-    const handleSessionSync = (e: any) => {
-      const data = e.detail;
+    const handleSessionSync = (e: Event) => {
+      const data = (e as CustomEvent<SessionSyncDetail>).detail;
       if (data.activeSong) {
         // If the song ID hasn't changed, only update activeParticipants — DO NOT re-set selectedSong
         if (selectedSong && selectedSong.id === data.activeSong.id) {
@@ -46,7 +52,7 @@ export const useClientSessionSync = ({
             } else if (data.activeSong && data.activeSong.title) {
               // If it's an online song, use the partial data from host
               pendingSyncIdRef.current = null;
-              setSelectedSong(data.activeSong as any);
+              setSelectedSong(data.activeSong as unknown as Song);
               if (data.participants) setActiveParticipants(data.participants);
               setCurrentView('Session');
             }

@@ -97,8 +97,12 @@ export const loadSettings = (): SettingsState => ({
     return stored ? parseFloat(stored) : 2.0;
   })(),
   defaultSongClickAction:
-    (storage.get(STORAGE_KEYS.MELODIQ_DEFAULT_SONG_CLICK_ACTION) as any) || 'add_end',
-  defaultViewMode: (storage.get(STORAGE_KEYS.MELODIQ_DEFAULT_VIEW_MODE) as any) || 'list',
+    (storage.get(
+      STORAGE_KEYS.MELODIQ_DEFAULT_SONG_CLICK_ACTION,
+    ) as SettingsState['defaultSongClickAction']) || 'add_end',
+  defaultViewMode:
+    (storage.get(STORAGE_KEYS.MELODIQ_DEFAULT_VIEW_MODE) as SettingsState['defaultViewMode']) ||
+    'list',
   autoplayNoPlayersDelay: (() => {
     const stored = storage.get(STORAGE_KEYS.MELODIQ_AUTOPLAY_NO_PLAYERS);
     return stored ? parseInt(stored) : 10;
@@ -118,8 +122,12 @@ export const loadSettings = (): SettingsState => ({
     const stored = storage.get(STORAGE_KEYS.MELODIQ_LYRICS_LINES);
     return stored ? parseInt(stored) : 2;
   })(),
-  lyricsPosition: (storage.get(STORAGE_KEYS.MELODIQ_LYRICS_POSITION) as any) || 'bottom',
-  audioPlaybackMode: (storage.get(STORAGE_KEYS.MELODIQ_AUDIO_PLAYBACK_MODE) as any) || 'separated',
+  lyricsPosition:
+    (storage.get(STORAGE_KEYS.MELODIQ_LYRICS_POSITION) as SettingsState['lyricsPosition']) ||
+    'bottom',
+  audioPlaybackMode:
+    (storage.get(STORAGE_KEYS.MELODIQ_AUDIO_PLAYBACK_MODE) as SettingsState['audioPlaybackMode']) ||
+    'separated',
   showScoreboardQrCode: (() => {
     const stored = storage.get(STORAGE_KEYS.MELODIQ_SHOW_SCOREBOARD_QR_CODE);
     return stored === '' ? true : stored === 'true';

@@ -4,6 +4,7 @@ import { handleHostApiRequest } from './handleHostApiRequest';
 import { type Song, type SongMeta } from '../db';
 import { type TVEvent } from './useTVMode';
 import { useClientSessionSync } from './useClientSessionSync';
+import { useRemoteConfigListener } from './useRemoteConfigListener';
 import { playCalibrationBeep } from './playCalibrationBeep';
 
 interface UseMelodiqGlobalEventsProps {
@@ -23,7 +24,6 @@ interface UseMelodiqGlobalEventsProps {
   isTVConnected: boolean;
   sendRemoteCommand: (command: string, value?: any) => void;
   currentView: string;
-  refreshSongs: () => Promise<void>;
   isClient: boolean;
   getSongById: (id: string) => Promise<Song | undefined>;
   setSelectedSong: (song: Song | null) => void;
@@ -46,7 +46,6 @@ export const useMelodiqGlobalEvents = ({
   isTVConnected,
   sendRemoteCommand,
   currentView,
-  refreshSongs,
   isClient,
   getSongById,
   setSelectedSong,
@@ -181,31 +180,7 @@ export const useMelodiqGlobalEvents = ({
     };
   }, [manager, isTVConnected, sendRemoteCommand]);
 
-  // 4. Remote Configuration Listener
-  useEffect(() => {
-    if (!manager) return;
-
-    if (currentView !== 'Session') {
-      const handleConfig = (peerId: string, data: any) => {
-        if (data.type === 'configure' && data.config) {
-          console.log(`[Host] Received Remote Config from ${peerId}:`, data.config);
-          if (data.config.url) storage.setHelperUrl(data.config.url);
-          if (data.config.token) storage.setHelperToken(data.config.token);
-          storage.setHelperActive(true);
-          setFeedbackMessage(
-            `Configuration Updated by Remote Phone!\nURL: ${data.config.url}\nReloading...`,
-          );
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
-        }
-      };
-      manager.on('message', handleConfig);
-      return () => {
-        manager.off('message', handleConfig);
-      };
-    }
-  }, [manager, currentView, refreshSongs]);
+  useRemoteConfigListener(manager, currentView, setFeedbackMessage);
 
   useClientSessionSync({
     isClient,

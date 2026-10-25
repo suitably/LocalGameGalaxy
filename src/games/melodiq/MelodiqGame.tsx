@@ -1,15 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Box, Snackbar, Alert, CircularProgress } from '@mui/material';
-import { type Song, type SongMeta, type Playlist } from './db';
-const Settings = lazy(() => import('../../features/settings/Settings').then(m => ({ default: m.Settings })));
-import { MelodiqPlaylists } from './components/MelodiqPlaylists';
-import { PlaylistDetails } from './components/PlaylistDetails';
-import { ClientSettings } from './components/ClientSettings';
+import { Box } from '@mui/material';
 import { initMelodiqI18n } from './i18n';
 import { WebRTCProvider, WebRTCMockProvider, useWebRTC } from './audio/WebRTCContext';
 import { useMelodiqSettings } from './hooks/SettingsContext';
-import { MelodiqConnection } from './MelodiqConnection';
 import { useSongs, SongsProvider } from './hooks/useSongs';
 import { useQueue, QueueProvider } from './hooks/useQueue';
 import { useDownloads } from './hooks/useDownloads';
@@ -17,528 +11,233 @@ import { PhoneQueueBridge } from './components/PhoneQueueBridge';
 import { PhoneClientEngine, useClientEngine } from './PhoneClientEngine';
 import { useTVMode } from './hooks/useTVMode';
 import { useSearchFilters } from './hooks/useSearchFilters';
-import { storage, STORAGE_KEYS } from '../../lib/storage';
-import { MelodiqSearchBar } from './components/MelodiqSearchBar';
-import { LibraryEmptyState } from './components/LibraryEmptyState';
-import { OnlineSongsView } from './components/OnlineSongsView';
-import { LocalSongsView } from './components/LocalSongsView';
+import { MelodiqHomeView } from './components/MelodiqHomeView';
+import { MelodiqSubViews } from './components/MelodiqSubViews';
+import { PlaybackFeedback } from './components/PlaybackFeedback';
+import { useMelodiqNavigation } from './hooks/useMelodiqNavigation';
+import { useMelodiqPlayback } from './hooks/useMelodiqPlayback';
+import { useSongQueueDialog } from './hooks/useSongQueueDialog';
+import { useGuardedDownloads } from './hooks/useGuardedDownloads';
+import { useHostGameUpdate } from './hooks/useHostGameUpdate';
 import { PlaybackManager } from './components/PlaybackManager';
 import { HostQueueDrawer } from './components/HostQueueDrawer';
 import { SongActionDialogs } from './components/SongActionDialogs';
 import { useMelodiqHeader } from './hooks/useMelodiqHeader';
-import { useMelodiqGlobalEvents } from './hooks/useMelodiqGlobalEvents';
-import { useDownloadSync } from './hooks/useDownloadSync';
 import { DownloadWaitScreen } from './components/DownloadWaitScreen';
-import { useSongDownloader } from './hooks/useSongDownloader';
-import { type MelodiqParticipant, type MelodiqProfile, type UsdbSongItem, type PassiveGameState } from './types';
-
-type View = 'Home' | 'Settings' | 'Session' | 'Connection' | 'Playlists' | 'PlaylistDetails' | 'DownloadWait';
 
 // Initialize i18n bundles at module load time to prevent setState side-effects during render
 initMelodiqI18n();
 
 export const MelodiqGameContent: React.FC = () => {
-    const [searchParams] = useSearchParams();
-    const isClient = searchParams.get('role') === 'client';
+  const [searchParams] = useSearchParams();
+  const isClient = searchParams.get('role') === 'client';
 
-    const { songs, refreshSongs, getSongById, isLoading, hasConnectionError, localLibrary } = useSongs();
-    const { queue, popNext, setNowPlaying, addToQueue, addNext, nowPlaying, replaceItem } = useQueue();
-    const { jobs } = useDownloads(isClient ? 0 : 2000);
-    
-    const { manager, partyId, activeTrackerUrls } = useWebRTC();
-    const {
-        isTVConnected, isPresentationAvailable, openTVWindow, startPresentation,
-        playSongOnTV, lastEvent, sendRemoteCommand, sendGameUpdate, disconnectTV
-    } = useTVMode({ partyId, activeTrackerUrls });
-    const { settings } = useMelodiqSettings();
-    const { clientRole, clientProfile } = useClientEngine();
+  const { songs, refreshSongs, getSongById, isLoading, hasConnectionError, localLibrary } =
+    useSongs();
+  const { queue, popNext, setNowPlaying, addToQueue, addNext, nowPlaying, replaceItem } =
+    useQueue();
+  const { jobs } = useDownloads(isClient ? 0 : 2000);
 
-    const searchFilterState = useSearchFilters(songs, jobs);
-    const { isOnlineSearch, isSearchingOnline, filteredSongs, filteredOnlineSongs } = searchFilterState;
+  const { manager, partyId, activeTrackerUrls } = useWebRTC();
+  const {
+    isTVConnected,
+    isPresentationAvailable,
+    openTVWindow,
+    startPresentation,
+    playSongOnTV,
+    lastEvent,
+    sendRemoteCommand,
+    sendGameUpdate,
+    disconnectTV,
+  } = useTVMode({ partyId, activeTrackerUrls });
+  const { settings } = useMelodiqSettings();
+  const { clientRole, clientProfile } = useClientEngine();
 
-    const memoizedFilteredSongs = React.useMemo(() => filteredSongs, [filteredSongs]);
-    const memoizedJobs = React.useMemo(() => jobs, [jobs]);
+  const searchFilterState = useSearchFilters(songs, jobs);
 
-    const [remoteSong, setRemoteSong] = useState<SongMeta | null>(null);
-    const [selectedSongForQueue, setSelectedSongForQueue] = useState<SongMeta | null>(null);
-    const [queueDialogOpen, setQueueDialogOpen] = useState(false);
-    const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
-    const [showQueueDrawer, setShowQueueDrawer] = useState(false);
-    const [activeParticipants, setActiveParticipants] = useState<MelodiqParticipant[] | null>(() => 
-        storage.getJson<MelodiqParticipant[] | null>(STORAGE_KEYS.CURRENT_SONG_PARTICIPANTS, null)
-    );
-    const [sessionInstanceId, setSessionInstanceId] = useState<number>(0);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [showQueueDrawer, setShowQueueDrawer] = useState(false);
 
-    const handleToggleCurrentParticipant = useCallback((deviceId: string, profile: MelodiqProfile) => {
-        setActiveParticipants(prev => {
-            const participants = prev ?? storage.getJson<MelodiqParticipant[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
-            const exists = participants.find((p: MelodiqParticipant) =>
-                p.deviceId === deviceId || p.profileId === deviceId || (profile?.peerId && p.deviceId === profile.peerId)
-            );
-            let next: MelodiqParticipant[];
-            if (exists) {
-                next = participants.filter((p: MelodiqParticipant) =>
-                    p.deviceId !== deviceId && p.profileId !== deviceId && !(profile?.peerId && p.deviceId === profile.peerId)
-                );
-            } else {
-                next = [...participants, {
-                    profileId: deviceId,
-                    deviceId: deviceId,
-                    volume: 0.8,
-                    muted: false,
-                    latency: 0,
-                    isRemote: profile?.isRemote || false,
-                    name: profile?.name,
-                    hue: profile?.hue
-                }];
-            }
-            storage.setJson(STORAGE_KEYS.CURRENT_SONG_PARTICIPANTS, next);
-            return next;
-        });
-    }, []);
+  const isSettingsFromUrl = Boolean(searchParams.get('tab') || searchParams.get('sub'));
+  const {
+    currentView,
+    setCurrentView,
+    handleSetCurrentView,
+    handleCloseSubView,
+    handleBackFromSettings,
+  } = useMelodiqNavigation(isSettingsFromUrl, refreshSongs);
 
-    const handleReorderCurrentParticipant = useCallback((startIndex: number, endIndex: number) => {
-        setActiveParticipants(prev => {
-            const base = prev ?? storage.getJson<MelodiqParticipant[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
-            const next = Array.from(base);
-            const [removed] = next.splice(startIndex, 1);
-            next.splice(endIndex, 0, removed);
-            storage.setJson(STORAGE_KEYS.CURRENT_SONG_PARTICIPANTS, next);
-            return next;
-        });
-    }, []);
+  const playback = useMelodiqPlayback({
+    isClient,
+    clientRole,
+    isTVConnected,
+    getSongById,
+    addToQueue,
+    setNowPlaying,
+    playSongOnTV,
+    sendRemoteCommand,
+    setFeedbackMessage,
+    setCurrentView,
+    nowPlaying,
+    popNext,
+    jobs,
+    queue,
+    refreshSongs,
+    replaceItem,
+    songs,
+    lastEvent,
+    manager,
+    currentView,
+  });
+  const { selectedSong, remoteSong, handleSelectSong } = playback;
 
-    const currentDisplayParticipants = React.useMemo(() => {
-        if (activeParticipants !== null) return activeParticipants;
-        return storage.getJson<MelodiqParticipant[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
-    }, [activeParticipants]);
-    
-    const [activePlaylist, setActivePlaylist] = useState<Playlist | null>(null);
-    const [restoredSong, setRestoredSong] = useState<SongMeta | null>(() => nowPlaying ?? null);
-    
-    const isSettingsFromUrl = Boolean(searchParams.get('tab') || searchParams.get('sub'));
-    const [currentView, setCurrentView] = useState<View>(() => isSettingsFromUrl ? 'Settings' : 'Home');
-    const handleSetCurrentView = useCallback((v: string) => {
-        setCurrentView(v as View);
-    }, []);
-    const [selectedSong, setSelectedSong] = useState<Song | SongMeta | null>(null);
+  useMelodiqHeader({
+    currentView,
+    setCurrentView: handleSetCurrentView,
+    isClient,
+    isTVConnected,
+    isPresentationAvailable,
+    openTVWindow,
+    startPresentation,
+    disconnectTV,
+    clientRole,
+    onBackToHome: handleCloseSubView,
+    onOpenLocalFolder: localLibrary.selectFolder,
+  });
 
-    const [, setIsPlaybackPlaying] = useState<boolean>(false);
-    const isPlaybackPlayingRef = useRef<boolean>(false);
-    const selectedSongRef = useRef<Song | SongMeta | null>(selectedSong);
-    const remoteSongRef = useRef<SongMeta | null>(remoteSong);
+  const isSinger = isClient && clientRole === 'singer';
+  const { selectedSongForQueue, queueDialogOpen, setQueueDialogOpen, handleSongLongPress } =
+    useSongQueueDialog(isSinger, setFeedbackMessage);
 
-    useEffect(() => {
-        selectedSongRef.current = selectedSong;
-    }, [selectedSong]);
+  const { canDownload, handleDownloadOnly, handleDownloadAndQueue } = useGuardedDownloads(
+    isClient,
+    clientRole,
+    { addToQueue, setFeedbackMessage },
+  );
 
-    useEffect(() => {
-        remoteSongRef.current = remoteSong;
-    }, [remoteSong]);
+  const handleGameUpdate = useHostGameUpdate(sendGameUpdate, manager, isClient);
 
-    const handlePlayingChange = useCallback((playing: boolean) => {
-        setIsPlaybackPlaying(playing);
-        isPlaybackPlayingRef.current = playing;
-    }, []);
-
-    const handleCurrentSongDownloaded = useCallback((realSong: Song) => {
-        setSelectedSong(realSong);
-        setNowPlaying(realSong);
-        if (isTVConnected) {
-            playSongOnTV(realSong.id, realSong);
-            setRemoteSong(realSong);
-        }
-        setCurrentView('Session');
-    }, [isTVConnected, playSongOnTV, setRemoteSong, setSelectedSong, setNowPlaying, setCurrentView]);
-
-    useDownloadSync({
-        isClient, jobs: memoizedJobs, queue, refreshSongs, replaceItem, selectedSong, onCurrentSongDownloaded: handleCurrentSongDownloaded
-    });
-
-    const handleCloseSubView = useCallback(() => {
-        if (window.history.state?.melodiqSubView) {
-            window.history.back();
-        } else {
-            setCurrentView('Home');
-        }
-    }, []);
-
-    const handleBackFromSettings = useCallback(() => {
-        refreshSongs();
-        handleCloseSubView();
-    }, [refreshSongs, handleCloseSubView]);
-
-    useEffect(() => {
-        const isSubView = currentView === 'Settings' || currentView === 'Connection' || currentView === 'Playlists' || currentView === 'PlaylistDetails';
-        if (isSubView) {
-            window.history.pushState({ melodiqSubView: true }, '', window.location.href);
-            const handlePopState = () => setCurrentView('Home');
-            window.addEventListener('popstate', handlePopState);
-            return () => window.removeEventListener('popstate', handlePopState);
-        }
-    }, [currentView]);
-
-    useMelodiqHeader({
-        currentView, setCurrentView: handleSetCurrentView,
-        isClient, isTVConnected, isPresentationAvailable, openTVWindow, startPresentation, disconnectTV, clientRole,
-        onBackToHome: handleCloseSubView,
-        onOpenLocalFolder: localLibrary.selectFolder
-    });
-
-    const handleSelectSong = async (songMeta: SongMeta, forcePlay: boolean = false, participants?: MelodiqParticipant[], requester?: string, requesterId?: string) => {
-        try {
-            if (isClient) {
-                if (clientRole === 'singer') {
-                    setFeedbackMessage('Als Sänger kannst du keine Lieder auswählen.');
-                    return;
-                }
-                
-                const isHostPlaying = isPlaybackPlayingRef.current;
-                const canForce = (clientRole === 'admin' || clientRole === 'queue_manager');
-                const willForcePlay = canForce && (forcePlay || !isHostPlaying);
-                
-                window.dispatchEvent(new CustomEvent('melodiq_client_send_data', { 
-                    detail: { type: 'remote.select_song', songId: songMeta.id, forcePlay: willForcePlay } 
-                }));
-                
-                if (isHostPlaying && !willForcePlay) {
-                    setFeedbackMessage(`Zur Warteschlange hinzugefügt: ${songMeta.title}`);
-                } else {
-                    setFeedbackMessage(`Wird abgespielt: ${songMeta.title}`);
-                }
-                return;
-            }
-
-            const isPlayingActive = (Boolean(selectedSongRef.current) || Boolean(remoteSongRef.current)) && isPlaybackPlayingRef.current;
-
-            let actualForcePlay = forcePlay;
-            if (!forcePlay && !isPlayingActive) {
-                actualForcePlay = true;
-            }
-
-            if (!actualForcePlay) {
-                addToQueue(songMeta, requester, requesterId);
-                setFeedbackMessage(`Zur Warteschlange hinzugefügt: ${songMeta.title}`);
-                return;
-            }
-
-            if (restoredSong) {
-                setRestoredSong(null);
-            }
-            if (!selectedSongRef.current || selectedSongRef.current.id !== songMeta.id) {
-                storage.remove(STORAGE_KEYS.MELODIQ_SAVED_TIME);
-            }
-
-            setSessionInstanceId(prev => prev + 1);
-            if (participants) {
-                storage.setJson(STORAGE_KEYS.CURRENT_SONG_PARTICIPANTS, participants);
-            } else {
-                storage.remove(STORAGE_KEYS.CURRENT_SONG_PARTICIPANTS);
-            }
-
-            if (isTVConnected) {
-                const fullSong = await getSongById(songMeta.id);
-                if (fullSong) {
-                    playSongOnTV(songMeta.id, fullSong);
-                    setRemoteSong(songMeta);
-                    setSelectedSong(fullSong);
-                    setNowPlaying(songMeta);
-                    setActiveParticipants(participants || null);
-                } else if (songMeta.isDownloading) {
-                    sendRemoteCommand('WAIT_FOR_DOWNLOAD', { title: songMeta.title, artist: songMeta.artist });
-                    setRemoteSong(songMeta);
-                    setSelectedSong(songMeta);
-                    setNowPlaying(songMeta);
-                    setActiveParticipants(participants || null);
-                    setCurrentView('DownloadWait');
-                } else {
-                    playSongOnTV(songMeta.id, songMeta);
-                    setRemoteSong(songMeta);
-                }
-            } else {
-                const fullSong = await getSongById(songMeta.id);
-                if (fullSong) {
-                    setSelectedSong(fullSong);
-                    if (actualForcePlay) {
-                        setCurrentView('Session');
-                    }
-                    setNowPlaying(songMeta);
-                    setActiveParticipants(participants || null);
-                } else if (songMeta.isDownloading) {
-                    setSelectedSong(songMeta);
-                    setNowPlaying(songMeta);
-                    setActiveParticipants(participants || null);
-                    setCurrentView('DownloadWait');
-                } else {
-                    console.error("Song content not found in DB");
-                }
-            }
-        } catch (e) {
-            console.error("Failed to load song", e);
-        }
-    };
-
-    useMelodiqGlobalEvents({
-        lastEvent, popNext, playSongOnTV, setRemoteSong, setFeedbackMessage,
-        handleSelectSong, manager, isTVConnected, sendRemoteCommand,
-        currentView, refreshSongs, isClient, getSongById, setSelectedSong,
-        setCurrentView, selectedSong, remoteSong, songs, activeParticipants,
-        setActiveParticipants
-    });
-
-    const handleSkipAndRequeue = useCallback(() => {
-        if (selectedSong && (selectedSong as SongMeta).isDownloading) {
-            addToQueue(selectedSong, 'System');
-            setFeedbackMessage(`${selectedSong.title} wurde hinten angestellt.`);
-            
-            const nextItem = popNext();
-            if (nextItem) {
-                handleSelectSong(nextItem.song, true, nextItem.participants);
-            } else {
-                setSelectedSong(null);
-                setNowPlaying(null);
-                setRemoteSong(null);
-                setCurrentView('Home');
-            }
-        }
-    }, [selectedSong, addToQueue, popNext, setNowPlaying, setRemoteSong, handleSelectSong, setSelectedSong, setCurrentView, setFeedbackMessage]);
-
-    const handleSongLongPress = (song: SongMeta) => {
-        if (isClient && clientRole === 'singer') {
-            setFeedbackMessage('Als Sänger kannst du keine Lieder zur Warteschlange hinzufügen.');
-            return;
-        }
-        setSelectedSongForQueue(song);
-        setQueueDialogOpen(true);
-    };
-
-    const { handleDownloadOnly: originalHandleDownloadOnly, handleDownloadAndQueue: originalHandleDownloadAndQueue } = useSongDownloader({
-        addToQueue,
-        setFeedbackMessage
-    });
-
-    const handleDownloadOnly = async (usdbSong: UsdbSongItem) => {
-        if (isClient && clientRole !== 'admin' && clientRole !== 'queue_manager') {
-            setFeedbackMessage('Nur Queue Manager können Songs herunterladen.');
-            return;
-        }
-        return originalHandleDownloadOnly(usdbSong);
-    };
-
-    const handleDownloadAndQueue = async (usdbSong: UsdbSongItem) => {
-        if (isClient && clientRole !== 'admin' && clientRole !== 'queue_manager') {
-            setFeedbackMessage('Nur Queue Manager können Songs herunterladen.');
-            return;
-        }
-        return originalHandleDownloadAndQueue(usdbSong);
-    };
-
-    const lastGameUpdateRef = React.useRef<number>(0);
-    const handleGameUpdate = useCallback((state: PassiveGameState) => {
-        sendGameUpdate(state);
-        if (manager && !isClient) {
-            const now = Date.now();
-            if (now - lastGameUpdateRef.current > 50) {
-                manager.broadcast({ type: 'game_state_update', state: { ...state, hostTimestamp: now } });
-                lastGameUpdateRef.current = now;
-            }
-        }
-    }, [sendGameUpdate, manager, isClient]);
-
-    if ((selectedSong || remoteSong) && restoredSong !== null) {
-        setRestoredSong(null);
-    }
-
-    if (currentView === 'DownloadWait') {
-        return (
-            <DownloadWaitScreen 
-                songTitle={selectedSong?.title || ''}
-                artist={selectedSong?.artist || ''}
-                onSkipAndRequeue={handleSkipAndRequeue}
-            />
-        );
-    }
-
+  if (currentView === 'DownloadWait') {
     return (
-        <Box sx={{ width: '100vw', height: '100%', overflow: 'hidden', bgcolor: 'background.default', color: 'text.primary' }}>
-            <Box sx={{ display: currentView === 'Settings' ? 'block' : 'none', height: '100%', overflow: 'auto' }}>
-                {isClient ? (
-                    <ClientSettings onBack={handleBackFromSettings} />
-                ) : (
-                    <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
-                        <Settings
-                            key={searchParams.get('sub') || 'all'}
-                            activeGameId="melodiq"
-                            activeSub={searchParams.get('sub') || 'all'}
-                            onBack={handleBackFromSettings}
-                            onNavigateToPlaylists={() => setCurrentView('Playlists')}
-                        />
-                    </Suspense>
-                )}
-            </Box>
-
-            <Box sx={{ display: currentView === 'Connection' ? 'block' : 'none', height: '100%', overflow: 'auto' }}>
-                <MelodiqConnection onBack={handleCloseSubView} />
-            </Box>
-
-            <Box sx={{ display: currentView === 'Playlists' ? 'block' : 'none', height: '100%' }}>
-                <MelodiqPlaylists 
-                    onBack={handleCloseSubView} 
-                    onSelectPlaylist={(p) => {
-                        setActivePlaylist(p);
-                        setCurrentView('PlaylistDetails');
-                    }} 
-                />
-            </Box>
-
-            <Box sx={{ display: currentView === 'PlaylistDetails' ? 'block' : 'none', height: '100%' }}>
-                {activePlaylist && (
-                    <PlaylistDetails
-                        playlist={activePlaylist}
-                        onBack={() => setCurrentView('Playlists')}
-                    />
-                )}
-            </Box>
-
-            <Box sx={{
-                display: (currentView === 'Home' || currentView === 'Session') ? 'flex' : 'none',
-                height: '100%',
-                flexDirection: 'column',
-                overflow: 'hidden',
-                pb: '64px'
-            }}>
-                {(!hasConnectionError || songs.length > 0) && (
-                    <MelodiqSearchBar 
-                        {...searchFilterState} 
-                        filteredSongsLength={memoizedFilteredSongs.length} 
-                        totalSongsLength={songs.length} 
-                        canSearchOnline={!hasConnectionError}
-                    />
-                )}
-
-                <LibraryEmptyState 
-                    hasConnectionError={hasConnectionError && songs.length === 0}
-                    isLoading={isLoading}
-                    songsLength={isOnlineSearch ? (songs?.length || 0) : (memoizedFilteredSongs?.length || 0)}
-                    isOnlineSearch={isOnlineSearch}
-                    refreshSongs={refreshSongs}
-                    isClient={isClient}
-                />
-
-                {isOnlineSearch && (
-                    <OnlineSongsView 
-                        isSearchingOnline={isSearchingOnline}
-                        viewMode={settings.defaultViewMode}
-                        filteredOnlineSongs={filteredOnlineSongs}
-                        songs={songs}
-                        jobs={memoizedJobs}
-                        handleSelectSong={handleSelectSong}
-                        handleDownloadAndQueue={handleDownloadAndQueue}
-                        handleSongLongPress={handleSongLongPress}
-                        handleDownloadOnly={handleDownloadOnly}
-                        isSinger={isClient && clientRole === 'singer'}
-                        canDownload={!isClient || clientRole === 'admin' || clientRole === 'queue_manager'}
-                    />
-                )}
-
-                {!isOnlineSearch && (
-                    <LocalSongsView 
-                        viewMode={settings.defaultViewMode}
-                        filteredSongs={memoizedFilteredSongs}
-                        handleSelectSong={handleSelectSong}
-                        handleSongLongPress={handleSongLongPress}
-                        isSinger={isClient && clientRole === 'singer'}
-                        jobs={memoizedJobs}
-                    />
-                )}
-            </Box >
-
-            <PlaybackManager
-                selectedSong={selectedSong}
-                remoteSong={remoteSong}
-                isTVConnected={isTVConnected}
-                currentView={currentView}
-                sessionInstanceId={sessionInstanceId}
-                onExitSession={() => {
-                    setSelectedSong(null);
-                    setActiveParticipants(null);
-                    storage.remove(STORAGE_KEYS.CURRENT_SONG_PARTICIPANTS);
-                    setCurrentView('Home');
-                }}
-                onMinimizeSession={() => setCurrentView('Home')}
-                onRestoreSession={() => setCurrentView('Session')}
-                onSelectSong={handleSelectSong}
-                sendRemoteCommand={sendRemoteCommand}
-                setRemoteSong={setRemoteSong}
-                onShowQueue={() => setShowQueueDrawer(true)}
-                sendGameUpdate={handleGameUpdate}
-                restoredSong={restoredSong}
-                onClearRestoredSong={() => setRestoredSong(null)}
-                isClient={isClient}
-                activeParticipants={activeParticipants}
-                clientDeviceId={clientProfile?.deviceId}
-                onPlayingChange={handlePlayingChange}
-            />
-
-            <HostQueueDrawer
-                open={showQueueDrawer}
-                onClose={() => setShowQueueDrawer(false)}
-                activeParticipants={currentDisplayParticipants}
-                onToggleCurrentParticipant={handleToggleCurrentParticipant}
-                onReorderCurrentParticipant={handleReorderCurrentParticipant}
-            />
-
-            <SongActionDialogs
-                selectedSongForQueue={selectedSongForQueue}
-                queueDialogOpen={queueDialogOpen}
-                setQueueDialogOpen={setQueueDialogOpen}
-                isTVConnected={isTVConnected}
-
-                handleSelectSong={handleSelectSong}
-                addNext={addNext}
-                addToQueue={addToQueue}
-                refreshSongs={refreshSongs}
-                setFeedbackMessage={setFeedbackMessage}
-                isClient={isClient}
-                clientRole={clientRole}
-            />
-
-            <Snackbar
-                open={!!feedbackMessage}
-                autoHideDuration={3000}
-                onClose={() => setFeedbackMessage(null)}
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-            >
-                <Alert severity="info" onClose={() => setFeedbackMessage(null)}>
-                    {feedbackMessage}
-                </Alert>
-            </Snackbar>
-        </Box>
+      <DownloadWaitScreen
+        songTitle={selectedSong?.title || ''}
+        artist={selectedSong?.artist || ''}
+        onSkipAndRequeue={playback.handleSkipAndRequeue}
+      />
     );
+  }
+
+  return (
+    <Box
+      sx={{
+        width: '100vw',
+        height: '100%',
+        overflow: 'hidden',
+        bgcolor: 'background.default',
+        color: 'text.primary',
+      }}
+    >
+      <MelodiqSubViews
+        currentView={currentView}
+        setCurrentView={setCurrentView}
+        isClient={isClient}
+        onBackFromSettings={handleBackFromSettings}
+        onCloseSubView={handleCloseSubView}
+      />
+
+      <MelodiqHomeView
+        visible={currentView === 'Home' || currentView === 'Session'}
+        searchFilterState={searchFilterState}
+        songs={songs}
+        jobs={jobs}
+        isLoading={isLoading}
+        hasConnectionError={hasConnectionError}
+        refreshSongs={refreshSongs}
+        isClient={isClient}
+        isSinger={isSinger}
+        canDownload={canDownload}
+        viewMode={settings.defaultViewMode}
+        handleSelectSong={handleSelectSong}
+        handleSongLongPress={handleSongLongPress}
+        handleDownloadAndQueue={handleDownloadAndQueue}
+        handleDownloadOnly={handleDownloadOnly}
+      />
+
+      <PlaybackManager
+        selectedSong={selectedSong}
+        remoteSong={remoteSong}
+        isTVConnected={isTVConnected}
+        currentView={currentView}
+        sessionInstanceId={playback.sessionInstanceId}
+        onExitSession={playback.handleExitSession}
+        onMinimizeSession={() => setCurrentView('Home')}
+        onRestoreSession={() => setCurrentView('Session')}
+        onSelectSong={handleSelectSong}
+        sendRemoteCommand={sendRemoteCommand}
+        setRemoteSong={playback.setRemoteSong}
+        onShowQueue={() => setShowQueueDrawer(true)}
+        sendGameUpdate={handleGameUpdate}
+        restoredSong={playback.restoredSong}
+        onClearRestoredSong={() => playback.setRestoredSong(null)}
+        isClient={isClient}
+        activeParticipants={playback.activeParticipants}
+        clientDeviceId={clientProfile?.deviceId}
+        onPlayingChange={playback.handlePlayingChange}
+      />
+
+      <HostQueueDrawer
+        open={showQueueDrawer}
+        onClose={() => setShowQueueDrawer(false)}
+        activeParticipants={playback.currentDisplayParticipants}
+        onToggleCurrentParticipant={playback.handleToggleCurrentParticipant}
+        onReorderCurrentParticipant={playback.handleReorderCurrentParticipant}
+      />
+
+      <SongActionDialogs
+        selectedSongForQueue={selectedSongForQueue}
+        queueDialogOpen={queueDialogOpen}
+        setQueueDialogOpen={setQueueDialogOpen}
+        isTVConnected={isTVConnected}
+        handleSelectSong={handleSelectSong}
+        addNext={addNext}
+        addToQueue={addToQueue}
+        refreshSongs={refreshSongs}
+        setFeedbackMessage={setFeedbackMessage}
+        isClient={isClient}
+        clientRole={clientRole}
+      />
+
+      <PlaybackFeedback
+        message={feedbackMessage}
+        onClose={() => setFeedbackMessage(null)}
+        anchorVertical="top"
+      />
+    </Box>
+  );
 };
 
 export const MelodiqGame: React.FC = () => {
-    const [searchParams] = useSearchParams();
-    const isClient = searchParams.get('role') === 'client';
+  const [searchParams] = useSearchParams();
+  const isClient = searchParams.get('role') === 'client';
 
-    return !isClient ? (
-        <WebRTCProvider>
-            <SongsProvider>
-                <QueueProvider>
-                    <MelodiqGameContent />
-                    <PhoneQueueBridge />
-                </QueueProvider>
-            </SongsProvider>
-        </WebRTCProvider>
-    ) : (
-        <PhoneClientEngine>
-            <WebRTCMockProvider>
-                <SongsProvider>
-                    <QueueProvider>
-                        <MelodiqGameContent />
-                    </QueueProvider>
-                </SongsProvider>
-            </WebRTCMockProvider>
-        </PhoneClientEngine>
-    );
+  return !isClient ? (
+    <WebRTCProvider>
+      <SongsProvider>
+        <QueueProvider>
+          <MelodiqGameContent />
+          <PhoneQueueBridge />
+        </QueueProvider>
+      </SongsProvider>
+    </WebRTCProvider>
+  ) : (
+    <PhoneClientEngine>
+      <WebRTCMockProvider>
+        <SongsProvider>
+          <QueueProvider>
+            <MelodiqGameContent />
+          </QueueProvider>
+        </SongsProvider>
+      </WebRTCMockProvider>
+    </PhoneClientEngine>
+  );
 };
