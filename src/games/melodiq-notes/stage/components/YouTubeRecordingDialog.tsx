@@ -11,7 +11,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { NotesDialogFrame } from '../../components/NotesDialogFrame';
-import { findSongFolder, planImport } from '../logic/youtubeImport';
+import { matchSong, planImport } from '../logic/youtubeImport';
 import type { StageSongState } from '../useStageSong';
 import type { YouTubeImportState } from '../useYouTubeImport';
 import { YouTubeResults } from './YouTubeResults';
@@ -23,7 +23,7 @@ interface YouTubeRecordingDialogProps {
   importer: YouTubeImportState;
 }
 
-/** Find the recording of the score on stage on YouTube; the server downloads it into a song folder. */
+/** Find the recording of the score on stage on YouTube; the server downloads it into a song folder and the score's Notes piece is linked to it. */
 export function YouTubeRecordingDialog({
   open,
   onClose,
@@ -42,9 +42,10 @@ export function YouTubeRecordingDialog({
 
   useEffect(() => refreshSongs(), [refreshSongs]);
 
+  const linked = state.origin?.kind === 'notes' ? state.origin.songId : null;
   const plan = useMemo(
-    () => (songs ? planImport(findSongFolder(songs, title, artist)) : null),
-    [songs, title, artist],
+    () => (songs ? planImport(matchSong(songs, title, artist, linked)) : null),
+    [songs, title, artist, linked],
   );
   const needsDownload = plan?.kind !== 'reuse';
   const ready = !!plan && !!title.trim() && !!artist.trim() && (!needsDownload || !!url);

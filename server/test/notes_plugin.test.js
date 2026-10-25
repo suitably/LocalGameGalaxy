@@ -129,6 +129,30 @@ test('Notes plugin: pieces, scores, recordings, marks', async (t) => {
     assert.ok(fs.existsSync(path.join(library, 'Debussy - Clair de Lune')));
   });
 
+  await t.test('links a piece to a Melodiq song and keeps the link on rename', async () => {
+    const put = (body) =>
+      app.request(`/api/notes/pieces/${id}`, {
+        method: 'PUT',
+        headers: json,
+        body: JSON.stringify(body),
+      });
+    const bad = await put({ title: 'Clair', songId: '../x' });
+    assert.strictEqual(bad.status, 400);
+    assert.strictEqual(
+      (await (await put({ title: 'Clair', songId: 'abc123' })).json()).songId,
+      'abc123',
+    );
+    // songId left out keeps the link
+    assert.strictEqual((await (await put({ title: 'Clair de Lune' })).json()).songId, 'abc123');
+    const listed = await (await app.request(`/api/notes/pieces/${id}`, { headers: auth })).json();
+    assert.strictEqual(listed.songId, 'abc123');
+    // null removes it
+    assert.strictEqual(
+      (await (await put({ title: 'Clair de Lune', songId: null })).json()).songId,
+      null,
+    );
+  });
+
   await t.test('deletes files and pieces only with deletion rights', async () => {
     const key = serverConfig.createApiKey('notes-test', false, false);
     t.after(() => serverConfig.deleteApiKey(key.id));

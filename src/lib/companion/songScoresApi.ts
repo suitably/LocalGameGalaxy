@@ -1,17 +1,13 @@
 /**
- * Sheet music and bar marks stored next to songs on the companion server [ID: LIB-COMPANION-SCORES]
+ * Melodiq songs on the companion server, as Melodiq Notes uses them [ID: LIB-COMPANION-SCORES]
+ *
+ * Sheet music and bar marks live only in the Notes library (`notesLibraryApi.ts`); a Notes piece
+ * links a song with `songId` and plays with its mix. The song folders store no scores (Q18).
  */
 import { getHelperUrl, isHelperActive } from './companionSettings';
 import { companionRequest as request, companionUrl } from './companionHttp';
 
 export { companionUrl };
-
-export interface CompanionScore {
-  file: string;
-  /** Server-relative media URL; resolve with companionUrl(). */
-  url: string | null;
-  hasMarks: boolean;
-}
 
 export interface CompanionSong {
   id: string;
@@ -22,53 +18,26 @@ export interface CompanionSong {
   audio: string | null;
   instrumentalAudio: string | null;
   cover: string | null;
-  scores: CompanionScore[];
 }
 
 export interface StoredBarMarks {
   marks: { beat: number; sec: number }[];
   offsetSec: number;
+  /** Recording the marks belong to: a file of the piece, or null / anything else for the song mix. */
   audio: string | null;
 }
 
 export const isCompanionEnabled = () => isHelperActive() && !!getHelperUrl();
 
-const scorePath = (songId: string, file: string) =>
-  `/api/songs/${encodeURIComponent(songId)}/scores/${encodeURIComponent(file)}`;
+export const listCompanionSongs = () => request<CompanionSong[]>('/api/songs');
 
-/** Servers from before sheet-music support send songs without `scores`. */
-export const listCompanionSongs = async (): Promise<CompanionSong[]> =>
-  (await request<CompanionSong[]>('/api/songs')).map((s) => ({ ...s, scores: s.scores ?? [] }));
+/** The song's mixed recording (server-relative media URL), if it has one. */
+export const songRecording = (song: CompanionSong) => song.originalAudio ?? song.audio;
 
 export async function fetchCompanionFile(path: string): Promise<ArrayBuffer> {
   const res = await fetch(companionUrl(path));
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.arrayBuffer();
-}
-
-export async function getBarMarks(songId: string, file: string): Promise<StoredBarMarks | null> {
-  try {
-    return await request<StoredBarMarks>(`${scorePath(songId, file)}/marks`);
-  } catch {
-    return null;
-  }
-}
-
-export const saveBarMarks = (songId: string, file: string, marks: StoredBarMarks) =>
-  request<{ success: true }>(`${scorePath(songId, file)}/marks`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(marks),
-  });
-
-/** Stores a MusicXML/MIDI file in a Melodiq song folder; the server picks a free name. */
-export async function uploadSongScore(songId: string, file: File): Promise<{ file: string }> {
-  const form = new FormData();
-  form.append('file', file);
-  return request<{ file: string }>(`/api/songs/${encodeURIComponent(songId)}/scores`, {
-    method: 'POST',
-    body: form,
-  });
 }
 
 /** Opens musescore.com's search for the song; the user downloads the MusicXML with their own account. */

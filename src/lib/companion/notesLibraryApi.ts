@@ -15,6 +15,8 @@ export interface NotesPiece {
   id: string;
   title: string;
   artist: string;
+  /** Melodiq song the piece plays with (its mix instead of a copy); absent on older servers. */
+  songId?: string | null;
   updatedAt: number;
   scores: NotesPieceScore[];
   recordings: { file: string; url: string }[];
@@ -31,8 +33,20 @@ const marksPath = (id: string, file: string) =>
 
 export const listNotesPieces = () => request<NotesPiece[]>('/api/notes/pieces');
 
-export const createNotesPiece = (meta: { title: string; artist: string }) =>
+export interface NotesPieceMeta {
+  title: string;
+  artist: string;
+  /** Left out keeps the stored link; null removes it. */
+  songId?: string | null;
+}
+
+export const getNotesPiece = (id: string) => request<NotesPiece>(piecePath(id));
+
+export const createNotesPiece = (meta: NotesPieceMeta) =>
   request<NotesPiece>('/api/notes/pieces', jsonBody('POST', meta));
+
+export const updateNotesPiece = (id: string, meta: NotesPieceMeta) =>
+  request<NotesPiece>(piecePath(id), jsonBody('PUT', meta));
 
 /** Stores a score or a recording; the server picks a free file name and says which it used. */
 export async function uploadNotesFile(pieceId: string, file: File): Promise<StoredNotesFile> {

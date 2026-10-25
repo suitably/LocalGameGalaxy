@@ -8,7 +8,8 @@ import { separatorRouter } from './routes/separator';
 import { configRouter } from './routes/config';
 import { playlistsRouter } from './routes/playlists';
 import { scoresRouter } from './routes/scores';
-import { scanSongs } from './services/scanner';
+import { getSongCache, scanSongs } from './services/scanner';
+import { migrateSongFolderScores } from './services/scoreMigration';
 
 export const melodiqPlugin: GalaxyPlugin = {
   id: 'melodiq',
@@ -57,7 +58,14 @@ export const melodiqPlugin: GalaxyPlugin = {
     app.route('/', configRouter);
     app.route('/', playlistsRouter);
 
-    // Initial song library scan
-    scanSongs();
+    // Initial song library scan, then the one-time import of song-folder scores into Notes (Q18)
+    scanSongs()
+      .then(() => migrateSongFolderScores(getSongCache()))
+      .catch((e: unknown) =>
+        console.warn(
+          '[Notes] Song-folder score import failed:',
+          e instanceof Error ? e.message : e,
+        ),
+      );
   },
 };

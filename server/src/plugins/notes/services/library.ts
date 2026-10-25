@@ -26,7 +26,17 @@ export const MAX_RECORDING_BYTES = 300 * 1024 * 1024;
 export interface PieceMeta {
   title: string;
   artist: string;
+  /**
+   * Melodiq song the piece belongs to: it plays with that song folder's mix instead of a copy.
+   * The song folder itself holds no sheet music for Melodiq Notes (Q18).
+   */
+  songId: string | null;
 }
+
+/** Create/update body: `songId` left out keeps the stored link, `null` removes it. */
+export type PieceMetaInput = Omit<PieceMeta, 'songId'> & { songId?: string | null };
+
+const SONG_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 
 export interface NotesRecordingFile {
   file: string;
@@ -76,24 +86,28 @@ export function folderNameFor(meta: PieceMeta): string {
 }
 
 /** Checks a create/update body; returns the normalised metadata or an error message. */
-export function parsePieceMeta(body: unknown): PieceMeta | string {
+export function parsePieceMeta(body: unknown): PieceMetaInput | string {
   if (!body || typeof body !== 'object') return 'Body must be a JSON object';
   const b = body as Record<string, unknown>;
   const title = typeof b.title === 'string' ? b.title.trim().slice(0, 200) : '';
   const artist = typeof b.artist === 'string' ? b.artist.trim().slice(0, 200) : '';
   if (!title) return 'title is required';
-  return { title, artist };
+  if (b.songId === undefined) return { title, artist };
+  if (b.songId === null || b.songId === '') return { title, artist, songId: null };
+  if (typeof b.songId !== 'string' || !SONG_ID_PATTERN.test(b.songId))
+    return 'songId must be a Melodiq song id';
+  return { title, artist, songId: b.songId };
 }
 
 async function readMeta(folder: string, fallbackTitle: string): Promise<PieceMeta> {
   try {
     const raw = JSON.parse(await fs.promises.readFile(path.join(folder, PIECE_META_FILE), 'utf-8'));
     const parsed = parsePieceMeta(raw);
-    if (typeof parsed !== 'string') return parsed;
+    if (typeof parsed !== 'string') return { ...parsed, songId: parsed.songId ?? null };
   } catch {
     // no or broken piece.json: fall back to the folder name
   }
-  return { title: fallbackTitle, artist: '' };
+  return { title: fallbackTitle, artist: '', songId: null };
 }
 
 export async function writeMeta(folder: string, meta: PieceMeta): Promise<void> {
@@ -165,9 +179,10 @@ export async function findPiece(
 
 /** Creates a piece folder (never reuses an existing one) and writes its piece.json. */
 export async function createPiece(
-  meta: PieceMeta,
+  input: PieceMetaInput,
   root = serverConfig.notesDir,
 ): Promise<NotesPiece> {
+  const meta: PieceMeta = { ...input, songId: input.songId ?? null };
   await fs.promises.mkdir(root, { recursive: true });
   const base = folderNameFor(meta);
   let name = base;
@@ -177,6 +192,18 @@ export async function createPiece(
   const piece = await readPiece(root, name);
   if (!piece) throw new Error('Piece folder vanished');
   return piece;
+}
+
+/** Pieces linked to Melodiq songs, by song id (a song may have several pieces). */
+export async function piecesBySong(
+  root = serverConfig.notesDir,
+): Promise<Map<string, NotesPiece[]>> {
+  const out = new Map<string, NotesPiece[]>();
+  for (const piece of await listPieces(root)) {
+    if (!piece.songId) continue;
+    out.set(piece.songId, [...(out.get(piece.songId) ?? []), piece]);
+  }
+  return out;
 }
 
 /** Only files the listing found for a piece can be addressed, which rules out path tricks. */
@@ -193,6 +220,7 @@ export function toClientPiece(piece: NotesPiece, token: string): ClientNotesPiec
     id: piece.id,
     title: piece.title,
     artist: piece.artist,
+    songId: piece.songId,
     updatedAt: piece.updatedAt,
     scores: piece.scores.map((s) => ({
       file: s.file,

@@ -12,7 +12,7 @@ const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 /**
  * Score on stage → recording from YouTube in a Melodiq song folder (server yt-dlp queue) →
- * the score from that folder on stage, aligned right away.
+ * the score's Notes piece linked to that song, on stage with the song's mix, aligned right away.
  */
 export function useYouTubeImport(state: StageSongState) {
   const [run, setRun] = useState<ImportRun>({ kind: 'idle' });
@@ -42,9 +42,9 @@ export function useYouTubeImport(state: StageSongState) {
             ...meta,
             youtubeUrl,
             scoreFile: state.currentScoreFile(),
-            fromSong:
-              origin?.kind === 'server'
-                ? { songId: origin.songId, scoreFile: origin.scoreFile }
+            fromPiece:
+              origin?.kind === 'notes'
+                ? { pieceId: origin.pieceId, scoreFile: origin.scoreFile, songId: origin.songId }
                 : null,
           },
           (progress) => {
@@ -54,12 +54,7 @@ export function useYouTubeImport(state: StageSongState) {
           controller.signal,
         );
         alignPending.current = true;
-        const ok = await state.loadCatalogScore({
-          source: 'song',
-          file: result.score.file,
-          song: result.song,
-          score: result.score,
-        });
+        const ok = await state.loadCatalogScore({ file: result.score.file, ...result });
         if (!ok) {
           alignPending.current = false;
           throw new Error('the stored score could not be opened');
@@ -80,7 +75,7 @@ export function useYouTubeImport(state: StageSongState) {
     setRun({ kind: 'idle' });
   }, []);
 
-  // align once the song folder's score and recording are on stage, unless it brought marks
+  // align once the linked piece and the song's mix are on stage, unless it brought marks
   const { recording, loading, marks, alignNow } = state;
   useEffect(() => {
     if (!alignPending.current || loading || !recording) return;

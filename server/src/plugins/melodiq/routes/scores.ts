@@ -1,112 +1,102 @@
 import { Hono, type Context } from 'hono';
 import fs from 'node:fs';
-import path from 'node:path';
-import { resolveSecurePath } from '../../../utils/helpers';
-import { addOrUpdateSongInCache, getSongCache } from '../services/scanner';
-import {
-  MAX_SCORE_BYTES,
-  marksPathFor,
-  parseMarksBody,
-  safeScoreFileName,
-  uniqueFileName,
-} from '../../../utils/scoreFiles';
-import type { HonoEnv, Song, SongScore } from '../../../core/types';
+import { getRequestToken } from '../../../core/auth';
+import { getSongCache } from '../services/scanner';
+import { marksPathFor, parseMarksBody, type SongScoreFile } from '../../../utils/scoreFiles';
+import { piecesBySong, toClientPiece, type NotesPiece } from '../../notes/services/library';
+import type { ClientSongScore, HonoEnv, Song } from '../../../core/types';
 
+/**
+ * Deprecated song-score routes (Q18). Sheet music lives only in the Notes library; a song's
+ * scores are the scores of the Notes pieces linked to it (`songId`). Reads and bar marks are
+ * answered from those pieces; uploading or deleting here answers 410 with the Notes route to use.
+ */
 export const scoresRouter = new Hono<HonoEnv>();
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 type Lookup<T> = { ok: true; value: T } | { ok: false; response: Response };
 
-function songFolder(c: Context<HonoEnv>): Lookup<{ song: Song; folder: string }> {
-  const song = getSongCache().find((s) => s.id === c.req.param('id'));
-  if (!song?.txtPath) return { ok: false, response: c.json({ error: 'Song not found' }, 404) };
-  const folder = resolveSecurePath(path.dirname(song.txtPath));
-  if (!folder) return { ok: false, response: c.json({ error: 'Access denied' }, 403) };
-  return { ok: true, value: { song, folder } };
+/** Scores of the Notes pieces linked to a song, as clients see them. */
+export function clientSongScores(pieces: NotesPiece[], token: string): ClientSongScore[] {
+  return pieces.flatMap((piece) =>
+    toClientPiece(piece, token).scores.map((s) => ({ pieceId: piece.id, ...s })),
+  );
 }
 
-/** Only score files the scanner found for this song can be addressed, which rules out path tricks. */
-function songScore(c: Context<HonoEnv>): Lookup<{ song: Song; score: SongScore }> {
-  const found = songFolder(c);
-  if (!found.ok) return found;
-  const score = (found.value.song.scores ?? []).find((s) => s.file === c.req.param('file'));
-  if (!score) return { ok: false, response: c.json({ error: 'Score not found' }, 404) };
-  return { ok: true, value: { song: found.value.song, score } };
-}
+const findSong = (c: Context<HonoEnv>): Song | null =>
+  getSongCache().find((s) => s.id === c.req.param('id')) ?? null;
 
-// POST /api/songs/:id/scores — store a MusicXML/MIDI file in the song folder (multipart field "file")
-scoresRouter.post('/api/songs/:id/scores', async (c) => {
-  const lookup = songFolder(c);
-  if (!lookup.ok) return lookup.response;
-  const found = lookup.value;
-  try {
-    const body = await c.req.parseBody();
-    const upload = body['file'];
-    if (!(upload instanceof File)) return c.json({ error: 'No file uploaded (field "file")' }, 400);
-    if (upload.size > MAX_SCORE_BYTES) return c.json({ error: 'File is too large' }, 413);
-    const name = safeScoreFileName(upload.name);
-    if (!name)
-      return c.json({ error: 'Only .mxl, .musicxml, .xml, .mid or .midi files are accepted' }, 400);
-    // never overwrites: replacing a score is a delete (with its permission check) plus an upload
-    const target = uniqueFileName(found.folder, name);
-    await fs.promises.writeFile(
-      path.join(found.folder, target),
-      Buffer.from(await upload.arrayBuffer()),
-    );
-    await addOrUpdateSongInCache(found.song.txtPath);
-    return c.json({ success: true, file: target });
-  } catch (e: unknown) {
-    return c.json({ error: `Failed to store score: ${errorText(e)}` }, 500);
+/** The first piece linked to the song with a score of this name; only listed files match. */
+async function linkedScore(
+  c: Context<HonoEnv>,
+): Promise<Lookup<{ piece: NotesPiece; score: SongScoreFile }>> {
+  const song = findSong(c);
+  if (!song) return { ok: false, response: c.json({ error: 'Song not found' }, 404) };
+  const file = c.req.param('file');
+  for (const piece of (await piecesBySong()).get(song.id) ?? []) {
+    const score = piece.scores.find((s) => s.file === file);
+    if (score) return { ok: true, value: { piece, score } };
   }
+  return { ok: false, response: c.json({ error: 'Score not found' }, 404) };
+}
+
+const gone = (c: Context<HonoEnv>, use: string) =>
+  c.json(
+    {
+      error: 'Song folders no longer store sheet music; use the Notes library (piece with songId)',
+      use,
+    },
+    410,
+  );
+
+// GET /api/songs/:id/scores — scores of the Notes pieces linked to the song
+scoresRouter.get('/api/songs/:id/scores', async (c) => {
+  const song = findSong(c);
+  if (!song) return c.json({ error: 'Song not found' }, 404);
+  c.header('Cache-Control', 'no-store');
+  const pieces = (await piecesBySong()).get(song.id) ?? [];
+  return c.json(clientSongScores(pieces, getRequestToken(c) ?? ''));
 });
 
-// GET /api/songs/:id/scores/:file/marks — bar marks that align the score with the recording
+// POST /api/songs/:id/scores — deprecated: create a piece with songId and upload into it
+scoresRouter.post('/api/songs/:id/scores', (c) =>
+  gone(
+    c,
+    'POST /api/notes/pieces { title, artist, songId }, then POST /api/notes/pieces/:id/files',
+  ),
+);
+
+// DELETE /api/songs/:id/scores/:file — deprecated: delete the file from its Notes piece
+scoresRouter.delete('/api/songs/:id/scores/:file', (c) =>
+  gone(c, 'DELETE /api/notes/pieces/:id/files/:file'),
+);
+
+// GET /api/songs/:id/scores/:file/marks — deprecated alias of the linked piece's marks
 scoresRouter.get('/api/songs/:id/scores/:file/marks', async (c) => {
-  const lookup = songScore(c);
+  const lookup = await linkedScore(c);
   if (!lookup.ok) return lookup.response;
-  const found = lookup.value;
-  if (!found.score.marksPath) return c.json({ error: 'No marks stored' }, 404);
+  const { score } = lookup.value;
+  if (!score.marksPath) return c.json({ error: 'No marks stored' }, 404);
   try {
-    const data = JSON.parse(await fs.promises.readFile(found.score.marksPath, 'utf-8'));
     c.header('Cache-Control', 'no-store');
-    return c.json(data);
+    return c.json(JSON.parse(await fs.promises.readFile(score.marksPath, 'utf-8')));
   } catch (e: unknown) {
     return c.json({ error: `Failed to read marks: ${errorText(e)}` }, 500);
   }
 });
 
-// PUT /api/songs/:id/scores/:file/marks — store bar marks ({ marks, offsetSec?, audio? })
+// PUT /api/songs/:id/scores/:file/marks — deprecated alias: stores the marks in the linked piece
 scoresRouter.put('/api/songs/:id/scores/:file/marks', async (c) => {
-  const lookup = songScore(c);
+  const lookup = await linkedScore(c);
   if (!lookup.ok) return lookup.response;
-  const found = lookup.value;
   const parsed = parseMarksBody(await c.req.json().catch(() => null));
   if (typeof parsed === 'string') return c.json({ error: parsed }, 400);
   try {
-    await fs.promises.writeFile(marksPathFor(found.score.path), JSON.stringify(parsed), 'utf-8');
-    await addOrUpdateSongInCache(found.song.txtPath);
+    const target = marksPathFor(lookup.value.score.path);
+    await fs.promises.writeFile(target, JSON.stringify(parsed), 'utf-8');
     return c.json({ success: true });
   } catch (e: unknown) {
     return c.json({ error: `Failed to store marks: ${errorText(e)}` }, 500);
-  }
-});
-
-// DELETE /api/songs/:id/scores/:file — remove a score and its marks
-scoresRouter.delete('/api/songs/:id/scores/:file', async (c) => {
-  const apiKey = c.get('apiKey');
-  if (!c.get('isMasterToken') && !apiKey?.allowSongDeletion) {
-    return c.json({ error: 'Permission denied: deletion not allowed' }, 403);
-  }
-  const lookup = songScore(c);
-  if (!lookup.ok) return lookup.response;
-  const found = lookup.value;
-  try {
-    await fs.promises.rm(found.score.path, { force: true });
-    if (found.score.marksPath) await fs.promises.rm(found.score.marksPath, { force: true });
-    await addOrUpdateSongInCache(found.song.txtPath);
-    return c.json({ success: true });
-  } catch (e: unknown) {
-    return c.json({ error: `Failed to delete score: ${errorText(e)}` }, 500);
   }
 });

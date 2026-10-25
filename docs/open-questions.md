@@ -55,13 +55,13 @@ Since #539 board widgets inside a non-revealed hidden zone render as placeholder
 
 Compose files, README and [deployment](tech/deployment.md) pull `nexumia/galaxy-signaling`, `nexumia/nexumia-server` and the deprecated `nexumia/melodiq-server`. Until #530 the workflow pushed to `${DOCKERHUB_USERNAME}/…`, so the pulled name only existed if that secret was `nexumia`. The workflow now pushes to the literal `nexumia` namespace. **(user)** Confirm that the Docker Hub account behind `DOCKERHUB_USERNAME` owns the `nexumia` namespace, and decide when to stop publishing `melodiq-server`.
 
-## Q18 — One storage place for Melodiq Notes sheet music (#534)
-
-Since #534 Melodiq Notes shows one library (`stage/logic/scoreCatalog.ts`) that merges Notes library pieces (`NOTES_DIR`) with the scores in Melodiq song folders; song-folder scores are read-only there, except that their bar marks are still written to `<score>.marks.json` in the song folder while they play with the song's own mix. The server keeps `POST`/`DELETE /api/songs/:id/scores`; since #486 the YouTube import ("Find on YouTube") uploads the score on stage into the song folder it downloaded the recording into, so (c) would have to move that flow to the Notes library as well. **(user)** Decide whether to (a) move song-folder scores into the Notes library (a piece that references the Melodiq song's mix instead of a copy), (b) store their marks in the Notes library too, and (c) remove the upload/delete score routes from the `melodiq` plugin.
-
 ## Q19 — Local default template for tabletop games (#538)
 
 Since #538 a player can store the running table as a server game's default template (`PUT /api/tabletop/games/:id/template`, permission `allowTabletopTemplates`). On the device there is no such option: writing the table into `custom_games` under the game's id would shadow the starter JSON and the server game forever, because `TabletopGame` loads IndexedDB first. **(user)** Decide whether device-only games (and starter games) should get a local "save as default template", and how to reset it.
+
+## Resolved 2026-10-25
+
+- Q18 one storage place for Melodiq Notes sheet music (#534, #486) → maintainer decision: (a) and (b) yes — the Notes library is the only score store; a piece links a Melodiq song with `songId` and plays with its mix, bar marks live in the piece; song-folder scores are imported once on startup (non-destructive, marker file). (c) `POST`/`DELETE /api/songs/:id/scores` answer `410`; reads and marks routes stay as deprecated aliases of the linked pieces. [song-pipeline §4](tech/song-pipeline.md#4-sheet-music-for-melodiq-notes)
 
 ## Resolved 2026-10-18
 
