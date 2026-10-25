@@ -17,6 +17,7 @@ import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownwardRounded';
 import { useTranslation } from 'react-i18next';
+import { EmptyState } from '../../../components/common/EmptyState';
 import { type SongMeta } from '../db';
 
 interface QueueListProps {
@@ -144,9 +145,7 @@ export const QueueList: React.FC<QueueListProps> = ({
             </ListItem>
           ))}
           {queue.length === 0 && (
-            <Box sx={{ p: 4, textAlign: 'center', opacity: 0.6 }}>
-              <Typography>{t('melodiq.queue_empty')}</Typography>
-            </Box>
+            <EmptyState icon={<MusicNoteIcon />} message={t('melodiq.queue_empty')} />
           )}
         </List>
       </Box>
