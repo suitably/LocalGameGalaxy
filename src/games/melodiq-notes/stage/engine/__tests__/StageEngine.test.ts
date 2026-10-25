@@ -230,4 +230,33 @@ describe('StageEngine', () => {
     expect(from).toBeGreaterThanOrEqual(1.5);
     expect(from).toBeLessThan(1.6);
   });
+
+  it('seeks on the timeline and jumps to the first note with a lead-in', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    e.setMode('perform');
+    e.start();
+    run(e, 5);
+    e.seekTo(8);
+    expect(e.beat).toBe(8);
+    expect(e.players[0].notes[8].judged).toBeNull();
+    expect(e.players[0].missIdx).toBe(8);
+    e.seekTo(1000);
+    expect(e.beat).toBe(16);
+    // first note is at beat 0; 3 s at 0.5 s per beat = 6 beats, clamped to the count-in
+    e.jumpToFirstNote(3);
+    expect(e.beat).toBe(-e.countIn);
+    e.seekTo(10);
+    e.jumpToFirstNote(1);
+    expect(e.beat).toBe(-2);
+  });
+
+  it('ends a loop when the seek leaves it', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    e.setLoop(1);
+    expect(e.loop).not.toBeNull();
+    e.seekTo(12);
+    expect(e.loop).toBeNull();
+  });
 });

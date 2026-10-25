@@ -2,6 +2,7 @@
 
 ### Added
 
+- **Melodiq Notes: timeline and section groups** (#533, #535): a seekable timeline bar (drag or click, like a video player) and a "Jump to first note" button with a configurable lead-in (0–10 s, default 3 s); the section strip shows at most five groups that open into their sections on tap, and sections without notes carry no rating and cannot be looped.
 - **Tabletop: save games to the server**: the game manager also lists the games that only live in this browser, and "Save to server" moves them into the companion server's library so every device has them. Editing a saved server game overwrites it; editing a read-only one saves a copy. Images from local folders and the server's asset folders are embedded, so a stored game contains no token.
 - **Melodiq Notes: save to the Notes library**: "Save to Notes library" stores the open score (the original .mxl/.musicxml/.mid), a recording chosen on this device and the bar marks on the companion server; the song picker's new "Notes library" tab opens them again with their recording and marks, and can delete a piece.
 - **Companion server – Melodiq Notes library** (plugin `notes`, `NOTES_DIR`): pieces with sheet music (MusicXML/MIDI), recordings and bar marks are stored in their own folder per piece, independent of the karaoke library; endpoints `/api/notes/pieces*` (create, rename, upload, marks, delete) and `/notes/media/:id/:file` with range streaming.

@@ -659,6 +659,10 @@
           "practise": "{{section}} üben",
           "again": "Nochmal"
         },
+        "timeline": "Zeitleiste",
+        "lead_in": "Vorlauf",
+        "lead_in_seconds": "{{count}} s davor",
+        "first_note": "Zur ersten Note springen",
         "section_bar": "Takt {{bar}}",
         "section_bars": "Takt {{from}}–{{to}}",
         "sections_title": "Abschnitte · Farbe zeigt, wie sicher du warst",

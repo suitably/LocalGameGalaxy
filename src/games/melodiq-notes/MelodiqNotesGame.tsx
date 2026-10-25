@@ -13,6 +13,7 @@ import { useFullscreen } from './stage/useFullscreen';
 import { StageCanvas } from './stage/components/StageCanvas';
 import { StageOverlay } from './stage/components/StageOverlay';
 import { StageToolbar } from './stage/components/StageToolbar';
+import { SeekBar } from './stage/components/SeekBar';
 import { SectionStrip } from './stage/components/SectionStrip';
 import { PlayerList } from './stage/components/PlayerList';
 import { RecordingBar } from './stage/components/RecordingBar';
@@ -174,6 +175,7 @@ export const MelodiqNotesGame: React.FC = () => {
             )}
           </StageCanvas>
         </Paper>
+        <SeekBar engine={engine} />
         <SectionStrip engine={engine} />
         <RecordingBar state={songState} />
         <PlayerList engine={engine} />
