@@ -766,6 +766,23 @@
         "yt_failed": "Das hat nicht geklappt ({{error}}).",
         "yt_download": "Herunterladen und ausrichten",
         "yt_use": "Verwenden und ausrichten"
+      },
+      "pult": {
+        "title": "Melodiq Notes – dein Instrument",
+        "invite": "Mitspieler einladen",
+        "invite_title": "Auf dem eigenen Gerät spielen · Raum {{room}}",
+        "invite_hint": "Jede Person öffnet den Link oder scannt den QR-Code ihrer Stimme auf ihrem Handy oder Tablet. Ihr Gerät zeigt nur ihr Instrument und nimmt dort MIDI, Mikrofon oder Tasten entgegen; die Bühne behält Noten, Band und Wertung. Neue Mitspieler bekommen ihren Platz vor dem nächsten Start.",
+        "invite_message": "Spiel {{part}} mit uns in Melodiq Notes: {{link}}",
+        "stage_row": "Bühne (dieser Bildschirm)",
+        "connecting": "Verbinde mit Bühne {{room}} …",
+        "no_song": "Die Bühne hat noch kein Lied gewählt.",
+        "no_part": "Alle Stimmen sind vergeben – wähle eine andere, sobald eine frei wird.",
+        "part": "Deine Stimme",
+        "clock": "Synchron · {{ms}} ms",
+        "clock_pending": "Uhr wird abgeglichen …",
+        "playing": "Läuft – die Bühne wertet deine Noten.",
+        "waiting": "Warte, bis die Bühne startet.",
+        "sing_hint": "Wähle „Mikrofon“ und sing – die Bühne zeigt deine Tonhöhe."
       }
     },
     "kniffel": {

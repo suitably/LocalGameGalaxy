@@ -52,9 +52,9 @@ Topic = `<topicPrefix>/<channelId>`. Prefixes in use:
 | `lgg/storyteller/v1` | `src/games/storyteller/logic/mailboxService.ts` |
 | `lgg/tabletop`       | `src/games/tabletop/hooks/useTabletopSync.ts`   |
 | `lgg/party`          | `src/features/party/logic/partyMailbox.ts`      |
-| `lgg/room`           | `src/modules/room-game/useRoomReducer.ts`       |
+| `lgg/room`           | `src/modules/room-game/roomTransport.ts`        |
 
-`channelId` is the game / room id chosen by the game.
+`channelId` is the game / room id chosen by the game. On `lgg/room`, `useRoomReducer` uses `<gameKey>_<roomId>` (host-run state) and `useRoomEvents` uses `<gameKey>_<roomId>_live` (fire-and-forget events, e.g. Melodiq Notes pult input and clock pings). MQTT publishes are retained, so a receiver of live events must ignore stale ones.
 
 ### Envelope
 

@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Melodiq Notes stage and pult (#485, claude-code)
+
+- `docs/tech/game-catalog.md` §3 (new melodiq-notes row) and shared-module row; `docs/tech/architecture.md` §3.2 `room-game` (`useRoomEvents`, `roomTransport.ts`, consumer melodiq-notes); `docs/tech/sync-protocol.md` `lgg/room` instance and channels.
+- Outside `docs/`: `src/modules/room-game/{roomTransport,useRoomEvents}.ts`, Melodiq Notes `pult/` (protocol, clock sync, remote judging, `useStageRoom`, `usePult`, `usePultInput`, `PultView`, `PultPad`, `StageInvite`), `stage/engine/remote.ts`, engine input at a given beat, `MelodiqNotesEntry`, registry, locales.
+
 ## 2026-10-25 — Melodiq remote host settings RPC (#356, claude-code)
 
 - `docs/tech/melodiq-architecture.md` §2.7 (new): typed `HostSettingsRpc` schema, admin gate, host handler. Outside `docs/`: `types.ts`, `logic/hostSettingsRpc.ts`, `HostSettingsRpcBridge`, `RemoteHostSettingsModal`, header action, locales.
