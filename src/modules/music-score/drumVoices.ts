@@ -18,6 +18,7 @@ export const DRUM_VOICES = [
   'china',
   'splash',
   'cowbell',
+  'tambourine',
   'other',
 ] as const;
 export type DrumVoice = (typeof DRUM_VOICES)[number];
@@ -47,6 +48,7 @@ const GM_VOICES: Record<number, DrumVoice> = {
   52: 'china',
   53: 'rideBell',
   55: 'splash',
+  54: 'tambourine',
   56: 'cowbell',
   57: 'crash',
   59: 'ride',
@@ -72,6 +74,7 @@ export const DRUM_VOICE_KEY: Record<DrumVoice, number> = {
   china: 52,
   splash: 55,
   cowbell: 56,
+  tambourine: 54,
   other: 39,
 };
 
@@ -124,6 +127,7 @@ export function drumMatchRank(played: DrumVoice, expected: DrumVoice): 0 | 1 | 2
 export function drumVoiceOfName(name: string): DrumVoice | null {
   const n = name.toLowerCase().replace(/[-_]/g, ' ');
   if (/cow ?bell/.test(n)) return 'cowbell';
+  if (/tambo?urin/.test(n)) return 'tambourine';
   if (/rim ?shot/.test(n)) return 'snareRimshot';
   if (/side ?stick|cross ?stick|rim click/.test(n)) return 'snareCrossStick';
   if (/ghost/.test(n)) return 'snareGhost';

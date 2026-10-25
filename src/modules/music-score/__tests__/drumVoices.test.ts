@@ -26,6 +26,7 @@ describe('drum voices', () => {
     expect(drumVoiceOfKey(52)).toBe('china');
     expect(drumVoiceOfKey(55)).toBe('splash');
     expect(drumVoiceOfKey(56)).toBe('cowbell');
+    expect(drumVoiceOfKey(54)).toBe('tambourine');
     expect(drumVoiceOfKey(70)).toBe('other');
     expect(drumVoiceOfKey(10)).toBe('other');
   });
@@ -47,6 +48,8 @@ describe('drum voices', () => {
     expect(drumVoiceOfName('High Tom')).toBe('tom1');
     expect(drumVoiceOfName('Side Stick')).toBe('snareCrossStick');
     expect(drumVoiceOfName('Bass Drum')).toBe('kick');
+    expect(drumVoiceOfName('Tambourine')).toBe('tambourine');
+    expect(drumVoiceOfName('Tamburin')).toBe('tambourine');
     expect(drumVoiceOfName('Piano')).toBeNull();
   });
 
