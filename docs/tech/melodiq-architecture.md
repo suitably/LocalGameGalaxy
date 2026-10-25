@@ -68,6 +68,20 @@ Melodiq follows a strict separation of concerns, divided into domains:
 - On a phone (`isClient`), `usePhoneTrackChoice.ts` shows `PhoneTrackPicker.tsx` (P1 / P2) for a duet when the phone is on the host's session list and sends `{ type: 'trackSelect', trackIndex }` (`gameplay/logic/trackChoice.ts`) through `sendClientData` of `PhoneClientEngine.tsx`.
 - The host maps it to the phone's singer by peer id (`usePeerSessionMessages.ts`) and calls `switchTrack`. The choice is re-sent after a reconnect. The host does not echo the part back to the phone.
 
+### 2.7 Remote host settings (phone to host RPC)
+
+Admin phones adjust a few host settings without mounting the desktop `<Settings>` and without touching the phone's own storage. All messages travel over the existing WebRTC data channel and are typed in `types.ts`:
+
+| Direction     | Message                                                         | Meaning                                               |
+| ------------- | --------------------------------------------------------------- | ----------------------------------------------------- |
+| phone to host | `HostSettingsRpc` `{ type: 'host.settings.get' }`               | ask for the current values                            |
+| phone to host | `HostSettingsRpc` `{ type: 'host.settings.set', patch }`        | change values (`Partial<HostSettings>`)               |
+| host to phone | `HostSettingsReply` `{ type: 'host.settings.state', settings }` | host's current `HostSettings` (answer to get and set) |
+
+- `HostSettings` is a fixed subset of `SettingsState` (volumes, playback mode, lyrics options, note labels, scoreboard QR). `logic/hostSettingsRpc.ts` validates and clamps every patch and drops unknown keys, so helper URL or token can never be set this way.
+- Host: `HostSettingsRpcBridge.tsx` (mounted next to `PhoneQueueBridge`) accepts the messages only from devices whose stored role is `admin` (`getRoleForDevice`), applies the patch through `updateSetting` (host storage) and replies to the sender.
+- Phone: `usePhoneClientMessages.ts` keeps the reported `hostSettings`; `RemoteHostSettingsModal.tsx` (opened from the header action "Host settings", shown only for `clientRole === 'admin'`) sends the requests via `sendClientData`.
+
 ## 3. Known Technical Debt & Refactoring Goals
 
 To ensure Melodiq aligns perfectly with the SOLID principles outlined in the main architecture doc, the following areas are targeted for future refactoring:

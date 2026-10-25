@@ -2,6 +2,7 @@
 
 ### Added
 
+- **Melodiq: host settings from an admin phone** (#356): admin phones open a small "Host settings" dialog (volumes, playback mode, lyrics options) that changes the host's settings over the existing WebRTC connection; other roles never see it and the host rejects their requests.
 - **Melodiq: choose P1 or P2 on the phone** (#146): for duet songs a phone singer picks the part they sing; the choice is sent to the host.
 - **Melodiq: resume after reload** (#152): a song that was running when the page reloaded (or the user left for another route, e.g. to set up a token) resumes at its last position; the mini player also offers "Restart from the beginning".
 - **Melodiq Notes: finer alignment and continuous speed** (#532): fine-tuning has a ±2 s slider in 1 ms steps plus ±10 ms / ±1 ms buttons; playback speed is a continuous 25–150 % slider (5 % steps, pitch-preserving for recordings) for practising and fine-tuning.

@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Melodiq remote host settings RPC (#356, claude-code)
+
+- `docs/tech/melodiq-architecture.md` §2.7 (new): typed `HostSettingsRpc` schema, admin gate, host handler. Outside `docs/`: `types.ts`, `logic/hostSettingsRpc.ts`, `HostSettingsRpcBridge`, `RemoteHostSettingsModal`, header action, locales.
+
 ## 2026-10-25 — Melodiq phone picks its duet part (#146, claude-code)
 
 - `docs/tech/melodiq-architecture.md` §2.6 (new): phone to host `trackSelect`. Outside `docs/`: `PhoneTrackPicker`, `usePhoneTrackChoice`, `sendClientData`, locales.

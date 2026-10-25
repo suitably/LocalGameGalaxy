@@ -3,6 +3,8 @@ import { Box, Typography } from '@mui/material';
 import { useWebRTCClient } from '../../lib/webrtc';
 import { storage, sessionStorageSafe, STORAGE_KEYS } from '../../lib/storage';
 import { usePhoneClientMessages } from './hooks/usePhoneClientMessages';
+import { RemoteHostSettingsModal } from './components/RemoteHostSettingsModal';
+import type { HostSettings } from './types';
 import { usePhoneMicStreaming } from './hooks/usePhoneMicStreaming';
 import { loadClientProfile, resolveTrackerUrls, type ClientProfile } from './logic/clientProfile';
 
@@ -17,6 +19,10 @@ interface ClientEngineContextType {
   /** Sends a typed message to the host over the data channel. */
   sendClientData: (data: object) => void;
   clientProfile: ClientProfile;
+  /** Host settings last reported by the host (admin phones only). */
+  hostSettings: HostSettings | null;
+  isHostSettingsOpen: boolean;
+  setHostSettingsOpen: (open: boolean) => void;
   clientRole: string;
   setClientRole: (role: string) => void;
   promptedSongId: string | null;
@@ -32,6 +38,9 @@ export const ClientEngineContext = createContext<ClientEngineContextType>({
   sendClientCommand: () => {},
   sendClientData: () => {},
   clientProfile: { name: 'Phone', hue: 120, deviceId: '' },
+  hostSettings: null,
+  isHostSettingsOpen: false,
+  setHostSettingsOpen: () => {},
   clientRole: 'spectator',
   setClientRole: () => {},
   promptedSongId: null,
@@ -67,6 +76,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
   const [clientProfile, setClientProfile] = useState<ClientProfile>(loadClientProfile);
   const [clientRole, setClientRole] = useState<string>('spectator');
   const [promptedSongId, setPromptedSongId] = useState<string | null>(null);
+  const [isHostSettingsOpen, setHostSettingsOpen] = useState(false);
 
   const updateClientProfile = useCallback((updates: Partial<ClientProfile>) => {
     setClientProfile((prev) => {
@@ -93,7 +103,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     [],
   );
 
-  const { handleMessage, isSessionPlaying, activeSongId } = usePhoneClientMessages({
+  const { handleMessage, isSessionPlaying, activeSongId, hostSettings } = usePhoneClientMessages({
     getDeviceId,
     setClientRole,
     updateClientProfile,
@@ -168,6 +178,9 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
         sendClientCommand,
         sendClientData: sendData,
         clientProfile,
+        hostSettings,
+        isHostSettingsOpen,
+        setHostSettingsOpen,
         updateClientProfile,
         clientRole,
         setClientRole,
@@ -177,6 +190,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     >
       {!isConnected && <ConnectionOverlay message={statusMessage} />}
       {children}
+      {clientRole === 'admin' && <RemoteHostSettingsModal />}
     </ClientEngineContext.Provider>
   );
 };

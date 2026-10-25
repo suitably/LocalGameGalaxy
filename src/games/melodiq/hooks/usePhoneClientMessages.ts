@@ -7,6 +7,8 @@ import type {
   MelodiqParticipant,
   MelodiqProfile,
   MelodiqRosterMember,
+  HostSettings,
+  HostSettingsReply,
 } from '../types';
 
 interface HostPlayer {
@@ -38,6 +40,7 @@ export const usePhoneClientMessages = ({
 }: Options) => {
   const [isSessionPlaying, setIsSessionPlaying] = useState(false);
   const [activeSongId, setActiveSongId] = useState<string | null>(null);
+  const [hostSettings, setHostSettings] = useState<HostSettings | null>(null);
 
   const playingRef = useRef(isSessionPlaying);
   const activeSongRef = useRef(activeSongId);
@@ -149,6 +152,9 @@ export const usePhoneClientMessages = ({
           // Legacy fallback for small responses sent without chunking
           emit(`melodiq_api_response_${data.reqId}`, data);
           break;
+        case 'host.settings.state':
+          setHostSettings((data as unknown as HostSettingsReply).settings);
+          break;
         case 'helper_config':
           if (data.url) {
             storage.setHelperUrl(data.url as string);
@@ -161,5 +167,5 @@ export const usePhoneClientMessages = ({
     [getDeviceId, setClientRole, handleGameState, handleSessionSync, handleChunk],
   );
 
-  return { handleMessage, isSessionPlaying, activeSongId };
+  return { handleMessage, isSessionPlaying, activeSongId, hostSettings };
 };
