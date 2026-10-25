@@ -3,6 +3,7 @@ import { alpha, Box, Typography, Button, Alert } from '@mui/material';
 import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
 import LockOpenIcon from '@mui/icons-material/LockOpenRounded';
 import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useSongs } from '../hooks/useSongs';
 
 interface LibraryEmptyStateProps {
@@ -23,6 +24,8 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
 }) => {
   const { t } = useTranslation();
   const { localLibrary } = useSongs();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   if (isClient) {
     if (hasConnectionError) {
@@ -171,21 +174,15 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
           <Button
             variant="outlined"
             color="secondary"
-            onClick={() => {
-              let filename = 'nexumia-server-win.zip';
-              if (navigator.userAgent.includes('Mac')) {
-                filename = 'nexumia-server-macos.tar.gz';
-              } else if (
-                navigator.userAgent.includes('Linux') &&
-                !navigator.userAgent.includes('Android')
-              ) {
-                filename = 'nexumia-server-linux.tar.gz';
-              }
-              window.location.href = `https://github.com/suitably/LocalGameGalaxy/releases/latest/download/${filename}`;
-            }}
+            onClick={() =>
+              // Settings → Server opens the setup wizard (OS download + auto-pairing).
+              navigate('/settings?tab=server&section=setup', {
+                state: { from: location.pathname + location.search },
+              })
+            }
             sx={{ borderRadius: 999, px: 3, py: 1 }}
           >
-            {t('melodiq.download_helper')}
+            {t('melodiq.setup_server')}
           </Button>
           <Button
             onClick={refreshSongs}

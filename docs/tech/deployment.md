@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-24
+  at: 2026-10-25
   method: 'read wrangler.jsonc, capacitor.config.ts, android/app/build.gradle, server/Dockerfile, server/docker-compose*.yml, .github/workflows/{ci,release,docker-publish,deploy-push-relay}.yml, server/package.json'
 sources:
   - 'wrangler.jsonc'
@@ -88,6 +88,8 @@ npm run package    # bundle + @yao-pkg/pkg → dist/nexumia-server-{linux,win.ex
 ```
 
 `release.yml` → `build-server-binaries` runs `npm run package` (x64) and packs each binary with its launcher from `server/release-scripts/` (`start-server.sh` + `NexumiaServer.desktop`, `start-server.bat`, `start-server.command`) and `scripts/align_lyrics.py`. The launchers `cd` into their folder, so the binary finds `config.json`, `scripts/` and the empty data folders `music/`, `tabletop/`, `notes/` there. `build-server-binaries-arm64` builds `nexumia-server-{linux,macos}-arm64.tar.gz` natively on `ubuntu-24.04-arm` and `macos-latest` (pkg cannot cross-compile bytecode); the binary keeps the x64 file name so the launchers work unchanged. `quick-install.sh` picks the ARM archive from `uname -m`; the setup dialog's binary tab links it for macOS and Linux. **Unverified:** the ARM jobs have not run yet. Separation/alignment still need Python and `ffmpeg` on the host.
+
+First start without `config.json`: the server generates its token, prints a one-time pairing link and opens it in the browser, which pairs the app automatically (Settings → Server, [server-security §3a](server-security.md#3a-one-time-pairing-148)). Melodiq's "set up server" button opens Settings → Server with the setup wizard (`section=setup`), whose binary tab detects the OS and links the matching release archive.
 
 Restored in PR #394 (the `package` script had been removed on 2026-09-13). Only the Linux binary was smoke-tested.
 

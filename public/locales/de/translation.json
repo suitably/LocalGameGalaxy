@@ -1319,11 +1319,11 @@
       "download_binary": "Server-Paket herunterladen ({{os}})",
       "download_config": "Vorkonfigurierte config.json herunterladen",
       "step_1_title": "1. Paket & Config herunterladen",
-      "step_1_desc": "Lade das Server-Archiv für dein Betriebssystem herunter und entpacke es. Speichere die heruntergeladene config.json im selben Ordner.",
+      "step_1_desc": "Lade das Server-Archiv für dein Betriebssystem herunter und entpacke es. Die config.json ist optional: Ohne sie erzeugt der Server einen eigenen Token und koppelt die App über einen Einmal-Link.",
       "step_2_title": "2. Startskript ausführen",
       "step_2_desc": "Doppelklicke auf das Startskript:",
-      "step_3_title": "3. Automatisch verbinden",
-      "step_3_desc": "Sobald das Serverfenster geöffnet ist, verbindet sich die App automatisch mit localhost:3000.",
+      "step_3_title": "3. Automatisch koppeln",
+      "step_3_desc": "Beim ersten Start öffnet der Server diese App mit einem Einmal-Kopplungslink; bestätige ihn und URL und Schlüssel sind gespeichert. Bei späteren Starts steht der Link in der Konsole. Mit der heruntergeladenen config.json verbindet sich die App direkt mit localhost:3000.",
       "cloudflare": {
         "title": "Kostenloser 24/7 Cloud-Server",
         "desc": "Hoste deinen eigenen Relay-Server kostenlos auf Cloudflare Workers. Perfekt für Online-Runden mit Freunden ohne laufenden Heim-PC.",
@@ -1442,7 +1442,22 @@
       "saved": "Einstellungen erfolgreich aktualisiert.",
       "error_save": "Fehler beim Aktualisieren der Einstellungen."
     },
-    "setup_button": "Server einrichten oder anpassen"
+    "setup_button": "Server einrichten oder anpassen",
+    "pairing": {
+      "title": "Mit Nexumia-Server koppeln",
+      "desc": "Dieser Link verbindet die App mit dem Server unter {{url}}. Fahre nur fort, wenn du diesen Server gerade selbst gestartet hast.",
+      "connect": "Verbinden",
+      "connecting": "Verbinde…",
+      "dismiss": "Verwerfen",
+      "retry": "Erneut versuchen",
+      "open_server": "Server einmal öffnen",
+      "paired": "Verbunden. Server-URL und API-Schlüssel sind auf diesem Gerät gespeichert.",
+      "invalid": "Dieser Kopplungslink ist ungültig, abgelaufen oder schon benutzt. Starte den Server neu, um einen neuen Link zu erhalten.",
+      "rate_limited": "Zu viele Versuche. Warte eine Minute und versuche es erneut.",
+      "unreachable": "Der Server unter {{url}} ist nicht erreichbar. Prüfe, ob er läuft.",
+      "https_hint": "Klappt es weiterhin nicht, öffne die Server-URL einmal in einem neuen Tab (bei einem selbstsignierten Zertifikat die Warnung bestätigen) und versuche es dann erneut.",
+      "mixed_content": "Diese https-Seite kann keinen http-Server in deinem Netzwerk erreichen (Mixed Content). Nutze den https-Link des Servers (Cloudflare-Tunnel) oder öffne die App über http."
+    }
   },
   "connection": {
     "default_title": "Geräte verbinden",

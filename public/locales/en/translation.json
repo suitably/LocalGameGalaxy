@@ -1319,11 +1319,11 @@
       "download_binary": "Download Server Package ({{os}})",
       "download_config": "Download Pre-configured config.json",
       "step_1_title": "1. Download Package & Config",
-      "step_1_desc": "Download the server archive for your OS and extract it. Save the downloaded config.json into the same folder.",
+      "step_1_desc": "Download the server archive for your OS and extract it. The config.json is optional: without it the server creates its own token and pairs the app via a one-time link.",
       "step_2_title": "2. Run Launcher Script",
       "step_2_desc": "Double-click the startup launcher script:",
-      "step_3_title": "3. Auto-Connect",
-      "step_3_desc": "Once the server console window opens, the app will automatically connect to localhost:3000.",
+      "step_3_title": "3. Auto-Pairing",
+      "step_3_desc": "On first start the server opens this app with a one-time pairing link; confirm it and URL and key are saved. Later starts print the link in the console. With the downloaded config.json the app connects to localhost:3000 directly.",
       "cloudflare": {
         "title": "Free 24/7 Cloud Server",
         "desc": "Host your own relay server for free on Cloudflare Workers. Perfect for remote games with friends without keeping a PC running.",
@@ -1442,7 +1442,22 @@
       "saved": "Preferences updated successfully.",
       "error_save": "Failed to update preferences."
     },
-    "setup_button": "Set up or adjust server"
+    "setup_button": "Set up or adjust server",
+    "pairing": {
+      "title": "Pair with Nexumia server",
+      "desc": "This link connects the app to the server at {{url}}. Continue only if you just started this server yourself.",
+      "connect": "Connect",
+      "connecting": "Connecting…",
+      "dismiss": "Dismiss",
+      "retry": "Try again",
+      "open_server": "Open server once",
+      "paired": "Connected. Server URL and API key are saved on this device.",
+      "invalid": "This pairing link is invalid, expired or already used. Restart the server for a new link.",
+      "rate_limited": "Too many attempts. Wait a minute and try again.",
+      "unreachable": "The server at {{url}} cannot be reached. Make sure it is running.",
+      "https_hint": "If it still fails, open the server URL once in a new tab (accept the certificate warning if it uses a self-signed certificate), then try again.",
+      "mixed_content": "This https page cannot reach an http server on your network (mixed content). Use the server's https link (Cloudflare tunnel) or open the app via http."
+    }
   },
   "connection": {
     "default_title": "Connect Devices",

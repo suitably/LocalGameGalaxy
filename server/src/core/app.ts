@@ -3,6 +3,8 @@ import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import type { ServerConfig, HonoEnv } from './types';
 import { loadPlugins } from './pluginLoader';
+import { pairingStore, registerPairingRoutes } from './pairing';
+import { serverConfig } from '../config';
 
 export async function createGalaxyServer(config: ServerConfig): Promise<Hono<HonoEnv>> {
   const app = new Hono<HonoEnv>();
@@ -20,7 +22,11 @@ export async function createGalaxyServer(config: ServerConfig): Promise<Hono<Hon
     '*',
     cors({
       origin: (reqOrigin) => {
-        if (!config.allowedOrigins || config.allowedOrigins.length === 0 || config.allowedOrigins.includes('*')) {
+        if (
+          !config.allowedOrigins ||
+          config.allowedOrigins.length === 0 ||
+          config.allowedOrigins.includes('*')
+        ) {
           return reqOrigin || '*';
         }
         if (config.allowedOrigins.includes(reqOrigin)) {
@@ -29,7 +35,9 @@ export async function createGalaxyServer(config: ServerConfig): Promise<Hono<Hon
         // Always allow localhost and private network development origins
         if (
           /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(reqOrigin) ||
-          /^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(reqOrigin)
+          /^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)(:\d+)?$/.test(
+            reqOrigin,
+          )
         ) {
           return reqOrigin;
         }
@@ -39,7 +47,7 @@ export async function createGalaxyServer(config: ServerConfig): Promise<Hono<Hon
       allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
       exposeHeaders: ['Content-Length', 'X-Requested-With', 'X-Total-Count', 'X-Page', 'X-Limit'],
       maxAge: 86400,
-    })
+    }),
   );
 
   // Health & Server Info
@@ -49,7 +57,16 @@ export async function createGalaxyServer(config: ServerConfig): Promise<Hono<Hon
       name: 'LocalGameGalaxy Backend Kernel',
       version: '2.0.0',
       activePlugins: config.activePlugins,
-    })
+    }),
+  );
+
+  // One-time pairing: the app trades a code for an API key, so nobody copies the token by hand.
+  // A paired device is the owner's app, so its key may manage the server (revocable per key).
+  registerPairingRoutes(app, config.pairingStore ?? pairingStore, (name) =>
+    serverConfig.createApiKey(name, true, false, {
+      allowTabletopSaves: true,
+      allowTabletopTemplates: true,
+    }),
   );
 
   // Load requested plugins
