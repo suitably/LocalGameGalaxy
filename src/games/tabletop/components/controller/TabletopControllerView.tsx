@@ -14,6 +14,8 @@ interface TabletopControllerViewProps {
   state: TabletopGameState;
   dispatch: React.Dispatch<TabletopAction>;
   mySeat: number | null;
+  /** Spectator: sees the table, changes nothing (no draw, roll, counters, moves). */
+  readOnly?: boolean;
   onFlickCardToTable?: (cardId: string, targetHolderId: string) => void;
 }
 
@@ -21,6 +23,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
   state,
   dispatch,
   mySeat,
+  readOnly = false,
   onFlickCardToTable,
 }) => {
   const { t } = useTranslation();
@@ -37,7 +40,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
     myCounters,
     topDiscardCard,
   } = useDynamicControllerState(state.game, mySeat);
-  const isSpectator = mySeat === null;
+  const isSpectator = readOnly || mySeat === null;
 
   const handleCardFlick = (cardId: string) => {
     if (dropTargets.length === 0) {
@@ -92,7 +95,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
             label={
               isSpectator
                 ? t('games.tabletop.spectator', 'Zuschauer')
-                : t('games.tabletop.playerN', 'Spieler {{n}}', { n: mySeat + 1 })
+                : t('games.tabletop.playerN', 'Spieler {{n}}', { n: (mySeat ?? 0) + 1 })
             }
           />
           {topDiscardCard && (
@@ -120,7 +123,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
       {/* Main View Area */}
       <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         {viewMode === 'board' ? (
-          <TabletopSurface state={state} dispatch={dispatch} />
+          <TabletopSurface state={state} dispatch={dispatch} readOnly={isSpectator} />
         ) : (
           <Box
             sx={{
@@ -168,8 +171,8 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
 
             <ControllerActionToolbar
               decks={isSpectator ? [] : publicDecks}
-              dice={publicDice}
-              counters={myCounters}
+              dice={isSpectator ? [] : publicDice}
+              counters={isSpectator ? [] : myCounters}
               onDrawCard={(deckId) => {
                 // Always into this phone's own hand (#536: the first draw used to land in
                 // whichever hand came first, later ones on the discard pile).

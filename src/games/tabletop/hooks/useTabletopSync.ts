@@ -9,6 +9,7 @@ import { useMultiChannelSync } from '../../../modules/sync/useMultiChannelSync';
 import { MqttMailboxService } from '../../../modules/sync/MqttMailboxService';
 import { generateUUID } from '../../../lib/uuid';
 import {
+  acceptIntent,
   classifyDelta,
   isSyncedIntent,
   type TabletopSyncEnvelope,
@@ -27,6 +28,8 @@ interface UseTabletopSyncOptions {
   onReturnToLobby?: () => void;
   /** Seat of this device (phones); its private hand is sealed for it. */
   seat?: number | null;
+  /** This device only watches: it sends no intents and the host would reject them anyway. */
+  spectator?: boolean;
 }
 
 export function useTabletopSync({
@@ -36,9 +39,12 @@ export function useTabletopSync({
   dispatch,
   onReturnToLobby,
   seat = null,
+  spectator = false,
 }: UseTabletopSyncOptions) {
   const [senderId] = useState(() => `tt_${generateUUID().slice(0, 8)}`);
   const gameRef = useRef(game);
+  /** Host: devices that announced themselves as spectators. */
+  const spectatorsRef = useRef(new Set<string>());
   /** Host: last broadcast sequence number. Others: last applied one (`null` = no snapshot yet). */
   const seqRef = useRef<number | null>(isHost ? 0 : null);
   const lastSentGameRef = useRef(game);
@@ -65,7 +71,14 @@ export function useTabletopSync({
 
       switch (action.type) {
         case 'INTENT':
-          if (isHost && isSyncedIntent(action.action)) dispatch(action.action);
+          if (
+            isHost &&
+            acceptIntent(action.action, {
+              spectator: action.spectator === true || spectatorsRef.current.has(envelope.senderId),
+            })
+          ) {
+            dispatch(action.action);
+          }
           break;
         case 'STATE_DELTA':
           if (isHost) break;
@@ -89,6 +102,8 @@ export function useTabletopSync({
           break;
         case 'REQUEST_SNAPSHOT':
           if (!isHost) break;
+          if (action.spectator) spectatorsRef.current.add(envelope.senderId);
+          else spectatorsRef.current.delete(envelope.senderId);
           enqueue(async () => {
             if (typeof action.seat === 'number' && action.publicKey) {
               await hands.registerSeat(action.seat, action.publicKey);
@@ -161,19 +176,21 @@ export function useTabletopSync({
       broadcastAction({
         type: 'REQUEST_SNAPSHOT',
         ...(publicKey ? { seat: seat!, publicKey } : {}),
+        ...(spectator ? { spectator: true } : {}),
       });
     });
-  }, [roomId, isHost, broadcastAction, enqueue, hands, seat]);
+  }, [roomId, isHost, broadcastAction, enqueue, hands, seat, spectator]);
 
   /** Dispatch for UI components: applies locally and, on non-host devices, sends the intent. */
   const syncedDispatch = useCallback<React.Dispatch<TabletopAction>>(
     (action) => {
+      if (spectator && isSyncedIntent(action)) return;
       dispatch(action);
       if (roomId && !isHost && isSyncedIntent(action)) {
-        broadcastAction({ type: 'INTENT', action });
+        broadcastAction({ type: 'INTENT', action, ...(spectator ? { spectator } : {}) });
       }
     },
-    [dispatch, roomId, isHost, broadcastAction],
+    [dispatch, roomId, isHost, broadcastAction, spectator],
   );
 
   return { broadcastAction, syncedDispatch, senderId };

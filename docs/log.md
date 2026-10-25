@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Spectators in the party lobby, read-only (#536 follow-up, claude-code)
+
+- `docs/tech/tabletop-engine.md` (Seats, spectators and the hand dock): lobby "Zuschauen" switch, `PartyPlayer.spectator`, host-side `acceptIntent` guard, `readOnly` surface.
+- Outside `docs/`: `src/features/party` (roster, routes, manager, controller), `syncProtocol.ts`, `useTabletopSync`, `useSeatView`, `TabletopSurface`, `TabletopControllerView`, locales (`party.watchOnly*`).
+
 ## 2026-10-25 — Feedback via Melodiq host (#145, claude-code)
 
 - `docs/tech/melodiq-architecture.md` §2.8 (new). No open-questions entry existed for #145. Outside `docs/`: `src/lib/feedbackRelay.ts`, `src/lib/github.ts`, `FeedbackDialog`, Melodiq `FeedbackRpcBridge`, `useFeedbackRelay`, `logic/feedbackRpc.ts`.

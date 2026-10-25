@@ -32,6 +32,16 @@ describe('partyRoutes (#417)', () => {
     );
   });
 
+  it('a spectator opens tabletop as role=spectator without a seat', () => {
+    const base = { gameType: 'tabletop' as const, roomId: 'R1', tabletopGameId: 'catan', seat: 0 };
+    expect(getGameRoute({ ...base, isHost: false, spectator: true })).toBe(
+      '/games/tabletop?room=R1&gameId=catan&role=spectator',
+    );
+    expect(getGameRoute({ ...base, isHost: true, spectator: true })).toBe(
+      '/games/tabletop?room=R1&gameId=catan&role=tv',
+    );
+  });
+
   it('routes gartic phone with the room and guessart without', () => {
     expect(getGameRoute({ gameType: 'garticphone', roomId: 'R1', isHost: false, seat: 0 })).toBe(
       '/games/garticphone?room=R1',

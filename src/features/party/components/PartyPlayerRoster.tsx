@@ -2,9 +2,19 @@
  * Players in the room [ID: COMP-PARTY-PLAYER-ROSTER]
  */
 import React from 'react';
-import { alpha, Box, Chip, Tooltip, Typography, Avatar } from '@mui/material';
+import {
+  alpha,
+  Box,
+  Chip,
+  FormControlLabel,
+  Switch,
+  Tooltip,
+  Typography,
+  Avatar,
+} from '@mui/material';
 import { EmptyState } from '../../../components/common/EmptyState';
 import StarsRoundedIcon from '@mui/icons-material/StarsRounded';
+import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import PersonRemoveRoundedIcon from '@mui/icons-material/PersonRemoveRounded';
 import { useTranslation } from 'react-i18next';
@@ -14,7 +24,8 @@ import { transitionOf } from '../../../lib/motion';
 
 export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ lobby }) => {
   const { t } = useTranslation();
-  const { setEditNameOpen, setEditNameInput, players, amIHost, removePlayer } = lobby;
+  const { setEditNameOpen, setEditNameInput, players, amIHost, removePlayer, setWatching } = lobby;
+  const me = players.find((p) => p.id === universalPartyManager.getMyPlayerId());
   return (
     <>
       {/* Connected Players Roster */}
@@ -47,6 +58,11 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
                       {p.name} {isMe ? `(${t('common.you', 'Du')})` : ''}
                     </Typography>
                     {p.isHost && <StarsRoundedIcon sx={{ color: 'warning.main', fontSize: 18 }} />}
+                    {p.spectator && (
+                      <Tooltip title={t('party.spectatorBadge', 'Zuschauer')}>
+                        <VisibilityRoundedIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
+                      </Tooltip>
+                    )}
                   </Box>
                 }
                 onDelete={
@@ -106,6 +122,26 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
             <EmptyState dense message={t('party.waitingForGuests', 'Warte auf Mitspieler...')} />
           )}
         </Box>
+
+        {me && !amIHost && (
+          <FormControlLabel
+            sx={{ mt: 1.5 }}
+            control={
+              <Switch
+                checked={Boolean(me.spectator)}
+                onChange={(e) => setWatching(e.target.checked)}
+              />
+            }
+            label={
+              <Typography variant="body2">
+                {t('party.watchOnly', 'Zuschauen')}
+                <Typography variant="caption" color="text.secondary" component="span" ml={1}>
+                  {t('party.watchOnlyHint', 'Tischspiele ohne Sitz, nur ansehen')}
+                </Typography>
+              </Typography>
+            }
+          />
+        )}
       </Box>
     </>
   );

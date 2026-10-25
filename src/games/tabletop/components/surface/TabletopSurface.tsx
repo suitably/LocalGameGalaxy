@@ -18,7 +18,7 @@ import { HiddenZoneLayer } from './HiddenZoneLayer';
 import type { WidgetContextMenuPosition } from './WidgetContextMenu';
 import { SurfaceContextMenu } from './SurfaceContextMenu';
 import { useTableKeyShortcuts } from '../../hooks/useTableKeyShortcuts';
-import { createDefaultHiddenZone } from '../../logic/hiddenZoneLogic';
+import { useAddHiddenZone } from '../../hooks/useAddHiddenZone';
 import { getSeatWidgets } from '../../logic/seatLogic';
 import { filterBoardHolders, filterBoardWidgets } from '../../logic/boardFilter';
 import { SurfaceSeatControls } from './SurfaceSeatControls';
@@ -32,24 +32,31 @@ interface TabletopSurfaceProps {
   /** Pass and play: seats change only through the handover cover. */
   hideSeatSelector?: boolean;
   editMode?: boolean;
+  /** Spectator device: the table can be viewed, panned and zoomed but never changed. */
+  readOnly?: boolean;
 }
 
 export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
   state,
-  dispatch,
+  dispatch: seatDispatch,
   isTvMode = false,
   hideSeatSelector = false,
   editMode = false,
+  readOnly = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [rulesOpen, setRulesOpen] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState<WidgetContextMenuPosition | null>(null);
 
-  const selection = useTabletopSelection({ dispatch });
   const { game, flyingCards } = state;
   const seats = useMemo(() => getSeatWidgets(game.widgets), [game.widgets]);
-  const { activeSeat, isSpectator, handHolder } = useSeatView(state);
+  // Spectators are read-only: only the seat picker (a local view choice) keeps the real dispatch.
+  const { activeSeat, isSpectator, handHolder, dispatch } = useSeatView(state, {
+    readOnly,
+    dispatch: seatDispatch,
+  });
+  const selection = useTabletopSelection({ dispatch });
 
   const {
     transform,
@@ -106,16 +113,11 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
   const fitToScreen = useFitToScreen(containerRef, game.table, setTransform, setContainerSize);
 
   const onPointerDownBoardWidget = (e: React.PointerEvent, w: TabletopWidget) => {
+    if (isSpectator) return; // bubbles up to the board pan
     if (!selection.handleWidgetClick(w.id, e.shiftKey)) handlePointerDownWidget(e, w);
   };
 
-  const handleAddHiddenZone = () => {
-    const zone = createDefaultHiddenZone(`hz_${Date.now()}`, game.table.width, game.table.height, {
-      ownerSeat: activeSeat?.index,
-      color: activeSeat?.color,
-    });
-    dispatch({ type: 'ADD_HIDDEN_ZONE', payload: { zone } });
-  };
+  const handleAddHiddenZone = useAddHiddenZone(game.table, activeSeat, dispatch);
 
   return (
     <Box
@@ -165,6 +167,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
             onContextMenu={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              if (isSpectator) return;
               // Touch long press on a deck/bag picks it up; its menu opens on release.
               if (isPressingSource()) return;
               setContextMenuPos({ mouseX: e.clientX, mouseY: e.clientY, widgetId: w.id });
@@ -207,7 +210,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
         seats={seats}
         widgets={game.widgets}
         currentSeatId={state.currentSeatId}
-        dispatch={dispatch}
+        dispatch={seatDispatch}
         hideSelector={isTvMode || hideSeatSelector}
       />
 
@@ -219,8 +222,8 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
           onOpenRules={() => setRulesOpen(true)}
           hasRules={Boolean(game.ruleText)}
           isSelectionMode={selection.isSelectionMode}
-          onToggleSelectionMode={selection.toggleSelectionMode}
-          onAddHiddenZone={handleAddHiddenZone}
+          onToggleSelectionMode={isSpectator ? undefined : selection.toggleSelectionMode}
+          onAddHiddenZone={isSpectator ? undefined : handleAddHiddenZone}
         />
       )}
 
