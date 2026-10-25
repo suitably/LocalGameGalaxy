@@ -61,6 +61,16 @@ export const saveBarMarks = (songId: string, file: string, marks: StoredBarMarks
     body: JSON.stringify(marks),
   });
 
+/** Stores a MusicXML/MIDI file in a Melodiq song folder; the server picks a free name. */
+export async function uploadSongScore(songId: string, file: File): Promise<{ file: string }> {
+  const form = new FormData();
+  form.append('file', file);
+  return request<{ file: string }>(`/api/songs/${encodeURIComponent(songId)}/scores`, {
+    method: 'POST',
+    body: form,
+  });
+}
+
 /** Opens musescore.com's search for the song; the user downloads the MusicXML with their own account. */
 export const scoreSearchUrl = (artist: string, title: string) =>
   `https://musescore.com/sheetmusic?text=${encodeURIComponent(`${artist} ${title}`.trim())}`;

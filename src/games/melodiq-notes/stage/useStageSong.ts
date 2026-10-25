@@ -18,7 +18,7 @@ import {
   type ServerScoreLoad,
   type SongOrigin,
 } from './serverScoreLoad';
-import { saveStageToServer, saveTargetFor } from './logic/notesLibrarySync';
+import { musicXmlFile, saveStageToServer, saveTargetFor } from './logic/notesLibrarySync';
 import { alignRecordingInBrowser, createElementRecording } from './engine/browserRecording';
 import type { StageEngine } from './engine/StageEngine';
 import {
@@ -259,6 +259,12 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     isCompanionEnabled() &&
     (origin?.kind !== 'server' ? !!xml : saveTarget === 'notes' || !!marks);
 
+  /** The score on stage as a file: the one opened, else its MusicXML. */
+  const currentScoreFile = useCallback(
+    () => openedFile.current ?? (xml && song ? musicXmlFile(xml, song.title) : null),
+    [xml, song],
+  );
+
   const exportScore = useCallback(() => {
     if (!song || !xml || !marks) return;
     const shifted = marks.map((m) => ({ ...m, sec: m.sec + offset }));
@@ -312,6 +318,7 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     saveToServer,
     canSaveToServer,
     saveTarget,
+    currentScoreFile,
     exportScore,
     nudge,
     setOffsetSec,

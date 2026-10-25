@@ -9,7 +9,7 @@ generated:
   by: claude-code
 verified:
   at: 2026-10-25
-  method: 'read server/src/plugins/melodiq/{services/download.ts,services/separator.ts,services/usdb.ts,routes/*.ts}, server/src/scripts/align_lyrics.py'
+  method: 'read server/src/plugins/melodiq/{services/download.ts,services/queueManager.ts,services/separator.ts,services/usdb.ts,routes/*.ts}, server/src/scripts/align_lyrics.py'
 sources:
   - 'server/src/plugins/melodiq/services/download.ts'
   - 'server/src/plugins/melodiq/services/separator.ts'
@@ -26,11 +26,11 @@ yt-dlp lookup, install and spawning live in `services/ytdlp.ts`; `.txt` header p
 
 Started by `POST /api/usdb/download`; poll `GET /api/usdb/status/:jobId`; list `GET /api/usdb/jobs`; cancel/clear `DELETE /api/usdb/jobs/:jobId?`.
 
-1. **Target folder** — `downloadDir`, else the first configured directory, else cwd; one sub-folder per song (sanitised name).
+1. **Target folder** — `downloadDir`, else the first configured directory, else cwd; one sub-folder per song (sanitised name). A request with `songId` downloads into that indexed song's folder instead (`queueManager.resolveDownloadRequest`; folder must lie in a library directory, unknown ids queue nothing → `400`); such a job keeps the folder's existing `#VIDEO` when `videoMode` is `none`.
 2. **Lyrics** — reuse an existing local `.txt` with notes, else log in to USDB (`usdb.animux.de`, credentials via `POST /api/config/usdb-credentials`) and fetch `?link=gettxt&id=<usdbId>`. Without credentials/ID a minimal `.txt` is generated.
 3. **YouTube URL** — taken from the request or resolved by search (`GET /api/youtube/search`).
 4. **Cover, audio, video** — via `yt-dlp`. Video either downloaded (`bestvideo[ext=mp4]+bestaudio[ext=m4a]/…`) or, in `stream` mode (`defaultDownloadMode`, default `stream`), only the stream URL is written to the `.txt` header.
-5. **Write `.txt`** with media headers, rescan, and — if `autoVocalSeparation` is enabled in config — queue a separation job.
+5. **Write `.txt`** with media headers, index the song (the job's `songId`, returned by `GET /api/usdb/status/:jobId`, is set before `status` becomes `done`), rescan, and — if `autoVocalSeparation` is enabled in config — queue a separation job.
 
 `yt-dlp` resolution: looks in `PATH` and several fixed locations; if missing it tries `pip3 install --user yt-dlp`, then downloads the **latest** release binary from GitHub. **Inference:** this is an unpinned runtime download — relevant for security reviews and offline hosts. `ffmpeg` must be installed separately.
 
@@ -77,7 +77,9 @@ A song folder may also hold sheet music: `.mxl`, `.musicxml`, `.mid`/`.midi`, an
 
 The server does not search or download sheet music: users fetch MusicXML themselves (for example from musescore.com with their own account) and drop it into the folder. Alignment runs in the client (`src/modules/music-score`), the server only stores the result.
 
-Melodiq Notes shows these scores in its one sheet-music library, merged with the Notes library pieces (plugin `notes`, `NOTES_DIR`) by normalised artist + title (`src/games/melodiq-notes/stage/logic/scoreCatalog.ts`), with a "Melodiq song" badge. They are read-only there: the app only writes their bar marks (`PUT …/marks`) while the score plays with the song's mix; with a recording chosen on the device, saving creates a Notes library piece (original score file, recording, marks) instead. The client no longer calls `POST /api/songs/:id/scores`; the route stays for now ([Q18](../open-questions.md#q18--one-storage-place-for-melodiq-notes-sheet-music-534)).
+Melodiq Notes shows these scores in its one sheet-music library, merged with the Notes library pieces (plugin `notes`, `NOTES_DIR`) by normalised artist + title (`src/games/melodiq-notes/stage/logic/scoreCatalog.ts`), with a "Melodiq song" badge. They are read-only there: the app only writes their bar marks (`PUT …/marks`) while the score plays with the song's mix; with a recording chosen on the device, saving creates a Notes library piece (original score file, recording, marks) instead. The only client call of `POST /api/songs/:id/scores` is the YouTube import below ([Q18](../open-questions.md#q18--one-storage-place-for-melodiq-notes-sheet-music-534)).
+
+**Recording from YouTube (#486).** "Find on YouTube" in the Melodiq Notes recording bar (`stage/components/YouTubeRecordingDialog.tsx`, `stage/useYouTubeImport.ts`, logic in `stage/logic/youtubeImport.ts`) starts from the score on stage: it looks for a song folder with the same normalised artist + title. A matching folder **with** a recording is used as it is (its mix is never replaced); one without a recording, or no match, gets a §1 download job (`POST /api/usdb/download` with `youtubeUrl`, `videoMode: 'none'`, and `songId` for the existing folder), searched via `GET /api/youtube/search` (client: `src/lib/companion/songDownloadApi.ts`). After the job is done the score is uploaded into the folder (unless it was opened from it), opened from there and aligned right away; saving then stores its bar marks in the song folder.
 
 `alignRecording` (`src/modules/music-score/alignment.ts`) produces one mark per bar in two stages: a coarse match, then `fitMarksToNotes` (whole-song Viterbi fit of the score's attacks to band and pitch-class onsets, ±0.6 s per bar). The coarse match depends on the score:
 

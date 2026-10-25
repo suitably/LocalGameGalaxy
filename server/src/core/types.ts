@@ -146,6 +146,8 @@ export interface DownloadJob {
   safeName: string | null;
   skipAudio: boolean;
   audioFile: string | null;
+  /** Existing song folder to download into; once done, the indexed song (also for new folders). */
+  songId: string | null;
   status: 'pending' | 'running' | 'done' | 'error';
   progress: number;
   log: string[];

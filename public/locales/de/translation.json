@@ -747,7 +747,25 @@
         "save_to_library": "In Notes-Bibliothek speichern",
         "source_song": "Melodiq-Song",
         "source_song_hint": "Liegt im Song-Ordner der Melodiq-Bibliothek (nur lesen). Mit eigener Aufnahme gespeichert, landet es in der Notes-Bibliothek.",
-        "notes_delete_song_kept": "Die Noten im Melodiq-Song-Ordner bleiben erhalten."
+        "notes_delete_song_kept": "Die Noten im Melodiq-Song-Ordner bleiben erhalten.",
+        "yt_open": "Auf YouTube suchen",
+        "yt_title": "Aufnahme von YouTube",
+        "yt_hint": "Der Companion-Server lädt die Aufnahme in einen Melodiq-Songordner und legt diese Noten daneben ab; das Ausrichten startet sofort.",
+        "yt_artist": "Interpret",
+        "yt_song_title": "Titel",
+        "yt_search": "YouTube durchsuchen oder Link einfügen",
+        "yt_search_error": "Die YouTube-Suche ist fehlgeschlagen ({{error}}).",
+        "yt_no_results": "Keine Videos gefunden.",
+        "yt_songs_error": "Die Songordner auf dem Server konnten nicht gelesen werden ({{error}}).",
+        "yt_plan_reuse": "Der Songordner „{{folder}}“ hat schon eine Aufnahme; sie wird unverändert verwendet und die Noten werden dort abgelegt.",
+        "yt_plan_into": "Die Aufnahme wird in den vorhandenen Songordner „{{folder}}“ geladen.",
+        "yt_plan_new": "Für die Aufnahme wird ein neuer Songordner angelegt.",
+        "yt_queued": "Wartet in der Download-Warteschlange des Servers …",
+        "yt_downloading": "Lädt herunter … {{percent}} %",
+        "yt_storing_score": "Noten werden im Songordner abgelegt …",
+        "yt_failed": "Das hat nicht geklappt ({{error}}).",
+        "yt_download": "Herunterladen und ausrichten",
+        "yt_use": "Verwenden und ausrichten"
       }
     },
     "kniffel": {

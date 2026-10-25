@@ -1,6 +1,7 @@
 import { Button, LinearProgress, Slider, Stack, Tooltip, Typography } from '@mui/material';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { isCompanionEnabled } from '../../../../lib/companion/songScoresApi';
 import {
   formatOffsetMs,
   OFFSET_COARSE_SEC,
@@ -8,6 +9,8 @@ import {
   OFFSET_RANGE_SEC,
 } from '../logic/tuning';
 import type { StageSongState } from '../useStageSong';
+import { useYouTubeImport } from '../useYouTubeImport';
+import { YouTubeRecordingDialog } from './YouTubeRecordingDialog';
 
 const NUDGES = [
   { sec: -OFFSET_COARSE_SEC, label: '−10' },
@@ -24,6 +27,8 @@ export function RecordingBar({ state }: { state: StageSongState }) {
   const k = (key: string, opts?: Record<string, unknown>) =>
     t(`games.melodiq_notes.stage.${key}`, opts);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [youTubeOpen, setYouTubeOpen] = useState(false);
+  const importer = useYouTubeImport(state);
   const { recording, align, marks, offset, pins } = state;
   const running = align.kind === 'running';
   const progress = running
@@ -69,6 +74,16 @@ export function RecordingBar({ state }: { state: StageSongState }) {
             if (f) state.setRecordingFile(f);
           }}
         />
+        {state.song && isCompanionEnabled() && (
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={running}
+            onClick={() => setYouTubeOpen(true)}
+          >
+            {k('yt_open')}
+          </Button>
+        )}
         {state.canSaveToServer && (
           <Button
             size="small"
@@ -157,6 +172,14 @@ export function RecordingBar({ state }: { state: StageSongState }) {
         </Typography>
       )}
       {running && <LinearProgress variant="determinate" value={progress} />}
+      {youTubeOpen && (
+        <YouTubeRecordingDialog
+          open
+          onClose={() => setYouTubeOpen(false)}
+          state={state}
+          importer={importer}
+        />
+      )}
     </Stack>
   );
 }

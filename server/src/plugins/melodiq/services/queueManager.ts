@@ -8,7 +8,8 @@ import {
   checkIsInstalled,
 } from './separator';
 import { getSongCache } from './scanner';
-import type { DownloadJob, SeparatorJob } from '../../../core/types';
+import { resolveSecurePath } from '../../../utils/helpers';
+import type { DownloadJob, SeparatorJob, Song } from '../../../core/types';
 
 export interface DownloadJobRequest {
   usdbId?: string | null;
@@ -20,6 +21,36 @@ export interface DownloadJobRequest {
   safeName?: string | null;
   skipAudio?: boolean;
   audioFile?: string | null;
+  /** Download into this indexed song's folder (wins over targetDir/safeName; artist/title default to the song's). */
+  songId?: string | null;
+}
+
+/** Folder and file base name of an indexed song, or null when its folder is not in a library directory. */
+export function songFolderTarget(
+  song: Pick<Song, 'txtPath'>,
+  allowedDirs?: string[],
+): { targetDir: string; safeName: string } | null {
+  const targetDir = resolveSecurePath(path.dirname(song.txtPath), allowedDirs);
+  if (!targetDir) return null;
+  return { targetDir, safeName: path.basename(song.txtPath).replace(/\.txt$/i, '') };
+}
+
+/** The request with an existing song's folder filled in; null for an unknown or inaccessible song. */
+export function resolveDownloadRequest(
+  req: DownloadJobRequest,
+  songs: Pick<Song, 'id' | 'txtPath' | 'artist' | 'title'>[],
+  allowedDirs?: string[],
+): DownloadJobRequest | null {
+  if (!req.songId) return req;
+  const song = songs.find((s) => s.id === req.songId);
+  const target = song?.txtPath ? songFolderTarget(song, allowedDirs) : null;
+  if (!song || !target) return null;
+  return {
+    ...req,
+    ...target,
+    artist: req.artist || song.artist,
+    title: req.title || song.title,
+  };
 }
 
 export interface SeparatorJobRequest {
@@ -36,8 +67,21 @@ export function addDownloadJobs(requests: DownloadJobRequest[] | DownloadJobRequ
   const list = Array.isArray(requests) ? requests : [requests];
   const jobIds: string[] = [];
 
-  for (const reqItem of list) {
-    const { usdbId, artist, title, videoMode, youtubeUrl, targetDir, safeName, skipAudio, audioFile } = reqItem;
+  for (const rawItem of list) {
+    const reqItem = resolveDownloadRequest(rawItem, getSongCache());
+    if (!reqItem) continue;
+    const {
+      usdbId,
+      artist,
+      title,
+      videoMode,
+      youtubeUrl,
+      targetDir,
+      safeName,
+      skipAudio,
+      audioFile,
+      songId,
+    } = reqItem;
     if (!artist || !title) continue;
     const mode = videoMode && ['mp4', 'stream', 'none'].includes(videoMode) ? videoMode : 'none';
     const jobId = crypto.randomBytes(8).toString('hex');
@@ -52,6 +96,7 @@ export function addDownloadJobs(requests: DownloadJobRequest[] | DownloadJobRequ
       safeName: safeName || null,
       skipAudio: !!skipAudio,
       audioFile: audioFile || null,
+      songId: songId || null,
       status: 'pending',
       progress: 0,
       log: [],
@@ -75,6 +120,7 @@ export function getDownloadJobsList() {
     artist: j.artist,
     title: j.title,
     videoMode: j.videoMode,
+    songId: j.songId,
     status: j.status,
     progress: j.progress,
     error: j.error,
