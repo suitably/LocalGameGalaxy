@@ -14,6 +14,8 @@ export type PlayState = 'idle' | 'playing' | 'paused' | 'done';
 export interface PlayerSeat {
   partId: string;
   inst: InstrumentKind;
+  /** Set when the player plays on their own device (a pult) instead of this screen. */
+  remoteId?: string;
 }
 
 /**
@@ -31,6 +33,10 @@ export interface FxEvent {
 
 export interface StagePlayer {
   no: number;
+  /** Pult id when this player plays on their own device. */
+  remoteId?: string;
+  /** Extra seconds before an unplayed note counts as missed (input from a pult arrives late). */
+  missGraceSec: number;
   part: ScorePart;
   instrument: StageInstrument;
   notes: StageNote[];
