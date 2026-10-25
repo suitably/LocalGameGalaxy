@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Melodiq phone picks its duet part (#146, claude-code)
+
+- `docs/tech/melodiq-architecture.md` §2.6 (new): phone to host `trackSelect`. Outside `docs/`: `PhoneTrackPicker`, `usePhoneTrackChoice`, `sendClientData`, locales.
+
 ## 2026-10-25 — Melodiq resumes the song after reload (#152, claude-code)
 
 - `docs/tech/melodiq-architecture.md` §2.5 (new): persisted song + position, resume vs. restart. Outside `docs/`: `logic/savedPlayback.ts`, `hooks/useRestoredResume.ts`, MiniPlayer restart button, locales.

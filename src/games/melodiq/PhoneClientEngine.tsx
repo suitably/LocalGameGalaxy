@@ -14,6 +14,8 @@ interface ClientEngineContextType {
   isSessionPlaying: boolean;
   activeSongId: string | null;
   sendClientCommand: (command: string, data?: Record<string, unknown>) => void;
+  /** Sends a typed message to the host over the data channel. */
+  sendClientData: (data: object) => void;
   clientProfile: ClientProfile;
   clientRole: string;
   setClientRole: (role: string) => void;
@@ -28,6 +30,7 @@ export const ClientEngineContext = createContext<ClientEngineContextType>({
   isSessionPlaying: false,
   activeSongId: null,
   sendClientCommand: () => {},
+  sendClientData: () => {},
   clientProfile: { name: 'Phone', hue: 120, deviceId: '' },
   clientRole: 'spectator',
   setClientRole: () => {},
@@ -163,6 +166,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
         isSessionPlaying,
         activeSongId,
         sendClientCommand,
+        sendClientData: sendData,
         clientProfile,
         updateClientProfile,
         clientRole,

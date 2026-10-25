@@ -62,6 +62,12 @@ Melodiq follows a strict separation of concerns, divided into domains:
 - `useQueue.ts` persists the running song as `STORAGE_KEYS.NOW_PLAYING`; `usePlaybackReporting.ts` writes its position about once per second to `STORAGE_KEYS.MELODIQ_SAVED_TIME` (`{ id, time }`).
 - `useMelodiqPlayback.ts` seeds `restoredSong` from `NOW_PLAYING` plus the saved position (`logic/savedPlayback.ts`). The MiniPlayer shows it as "Paused"; resume (`useRestoredResume.ts`) continues at that position, the restart button plays it from the beginning and drops the saved position.
 
+### 2.6 Duet part choice on the phone
+
+- Duet songs have several `parsedSong.tracks`. The host sends their names to each phone (`songInfo`, `useBroadcastSongInfo.ts`).
+- On a phone (`isClient`), `usePhoneTrackChoice.ts` shows `PhoneTrackPicker.tsx` (P1 / P2) for a duet when the phone is on the host's session list and sends `{ type: 'trackSelect', trackIndex }` (`gameplay/logic/trackChoice.ts`) through `sendClientData` of `PhoneClientEngine.tsx`.
+- The host maps it to the phone's singer by peer id (`usePeerSessionMessages.ts`) and calls `switchTrack`. The choice is re-sent after a reconnect. The host does not echo the part back to the phone.
+
 ## 3. Known Technical Debt & Refactoring Goals
 
 To ensure Melodiq aligns perfectly with the SOLID principles outlined in the main architecture doc, the following areas are targeted for future refactoring:
