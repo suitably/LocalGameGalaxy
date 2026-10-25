@@ -98,7 +98,7 @@ export function TabletopGame() {
           return;
         }
 
-        throw new Error(`Spiel "${gameId}" konnte nicht geladen werden.`);
+        throw new Error(t('games.tabletop.load_error', { gameId }));
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
       } finally {
@@ -156,7 +156,7 @@ export function TabletopGame() {
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/games/tabletop')}
         >
-          Zurück zur Übersicht
+          {t('games.tabletop.backToOverview')}
         </Button>
       </Box>
     );
@@ -178,7 +178,7 @@ export function TabletopGame() {
             }}
             sx={{ position: 'absolute', top: 12, left: 12, zIndex: 1000, opacity: 0.85 }}
           >
-            Zurück zur Party-Lobby
+            {t('party.backToLobby')}
           </Button>
           <RestartGameButton onRestart={restartGame} />
           <SaveStateButton game={gameState.game} onLoad={loadSavedTable} />

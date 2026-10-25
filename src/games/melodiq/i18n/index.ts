@@ -293,6 +293,10 @@ export const melodiqResources = {
       waiting_for_download: 'Waiting for download...',
       playing_on_tv: 'Playing on TV',
       restore_restart: 'Restart from the beginning',
+      no_song_playing: 'No Song Playing',
+      paused: 'Paused',
+      select_song_hint: 'Select a song or play from queue',
+      resume_song: 'Resume song',
       duet_part: 'Duet part',
       remote_host: {
         title: 'Host settings',
@@ -623,6 +627,10 @@ export const melodiqResources = {
       waiting_for_download: 'Warte auf Download...',
       playing_on_tv: 'Wird auf dem Fernseher abgespielt',
       restore_restart: 'Von vorn beginnen',
+      no_song_playing: 'Kein Song wird abgespielt',
+      paused: 'Pausiert',
+      select_song_hint: 'Song auswählen oder aus der Warteschlange starten',
+      resume_song: 'Song fortsetzen',
       duet_part: 'Duett-Stimme',
       remote_host: {
         title: 'Host-Einstellungen',

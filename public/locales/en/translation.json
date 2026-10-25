@@ -953,6 +953,7 @@
       "loading": "Loading game...",
       "backToLobby": "Back to Party Lobby",
       "backToOverview": "Back to Overview",
+      "load_error": "Game \"{{gameId}}\" could not be loaded.",
       "yourHand": "Your Hand",
       "handEmpty": "No cards in hand",
       "returnToDeck": "Return to deck",
@@ -1188,7 +1189,8 @@
       "song": "Song",
       "progress": "Playback progress",
       "undo_throw": "Undo last throw",
-      "download": "Download"
+      "download": "Download",
+      "menu": "Menu"
     }
   },
   "settings": {

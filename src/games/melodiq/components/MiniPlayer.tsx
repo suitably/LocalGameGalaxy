@@ -98,11 +98,11 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="subtitle2" noWrap sx={{ fontWeight: 'bold', color: 'text.primary' }}>
-            {song ? song.title : 'No Song Playing'}
+            {song ? song.title : t('melodiq.no_song_playing')}
           </Typography>
           {isRestored && (
             <Chip
-              label="Paused"
+              label={t('melodiq.paused')}
               size="small"
               sx={{
                 height: 16,
@@ -115,7 +115,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
           )}
         </Box>
         <Typography variant="caption" color="text.secondary" noWrap>
-          {song ? song.artist : 'Select a song or play from queue'}
+          {song ? song.artist : t('melodiq.select_song_hint')}
         </Typography>
       </Box>
 
@@ -145,7 +145,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                 }}
                 size="medium"
                 sx={{ color: theme.palette.secondary.main }}
-                title="Resume song"
+                title={t('melodiq.resume_song')}
                 aria-label={t('common.a11y.play', 'Play')}
               >
                 <PlayCircleOutlineIcon />

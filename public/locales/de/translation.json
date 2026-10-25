@@ -973,6 +973,7 @@
       "loading": "Wird geladen...",
       "backToLobby": "Zurück zur Lobby",
       "backToOverview": "Zurück zur Übersicht",
+      "load_error": "Spiel \"{{gameId}}\" konnte nicht geladen werden.",
       "restart": "Spiel neu starten",
       "restart_confirm": "Dieses Spiel von vorn beginnen? Der aktuelle Tisch geht verloren.",
       "saves": {
@@ -1188,7 +1189,8 @@
       "song": "Song",
       "progress": "Wiedergabefortschritt",
       "undo_throw": "Letzten Wurf rückgängig machen",
-      "download": "Herunterladen"
+      "download": "Herunterladen",
+      "menu": "Menü"
     }
   },
   "settings": {
