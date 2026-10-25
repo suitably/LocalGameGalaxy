@@ -2,6 +2,14 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Tabletop named saves and default templates (#538, claude-code)
+
+- `docs/tech/tabletop-engine.md`: named saves (device / server), unique names, owner rules, default template; `galaxy_tabletop_db` v4. `verified.at` refreshed.
+- `docs/tech/server-security.md`: API key permissions `allowTabletopSaves`, `allowTabletopTemplates`, `hasPermission`, save/template routes. `verified.at` refreshed.
+- `docs/tech/persistence.md`: `named_saves` store. `docs/tech/architecture.md`: tabletop plugin bullet names the save and template routes.
+- `docs/open-questions.md`: new question **(user)** on a local default template.
+- Outside `docs/`: server `routes/saves.ts`, `services/saveStore.ts`, `core/auth.ts`, API key config; client `components/saves/*`, `useTableSaves`, `saveNames`, admin key dialogs (permission switches), locales.
+
 ## 2026-10-25 — One sheet-music library in Melodiq Notes (#534, claude-code)
 
 - `docs/tech/song-pipeline.md` §4: song-folder scores appear read-only in the merged Melodiq Notes library (`stage/logic/scoreCatalog.ts`); only their bar marks are written; the client no longer uploads to song folders. `verified.at` refreshed.

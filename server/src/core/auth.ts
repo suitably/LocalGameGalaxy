@@ -1,6 +1,6 @@
 import type { Context, MiddlewareHandler } from 'hono';
 import { serverConfig } from '../config';
-import type { HonoEnv } from './types';
+import type { ApiKeyPermission, HonoEnv } from './types';
 
 /** Token sent by the caller via `Authorization: Bearer …` or `?token=`, normalized; null if absent. */
 export const getRequestToken = (c: Context<HonoEnv>): string | null => {
@@ -48,4 +48,14 @@ export const requireMasterToken: MiddlewareHandler<HonoEnv> = async (c, next) =>
     return c.json({ error: 'Master Token or Management permission required' }, 403);
   }
   return next();
+};
+
+/** True for the master token (and management keys) or an API key that holds `permission`. */
+export const hasPermission = (c: Context<HonoEnv>, permission: ApiKeyPermission): boolean =>
+  c.get('isMasterToken') === true || c.get('apiKey')?.[permission] === true;
+
+/** Who made the request: the API key, or the master token. Used to own server-side records. */
+export const getRequester = (c: Context<HonoEnv>): { id: string; name: string } => {
+  const apiKey = c.get('apiKey');
+  return apiKey ? { id: apiKey.id, name: apiKey.name } : { id: 'master', name: 'Master' };
 };

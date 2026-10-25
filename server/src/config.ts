@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import type { ApiKey, ServerConfigData } from './core/types';
+import type { ApiKey, ApiKeyPermission, ServerConfigData } from './core/types';
 import {
   applyEnvOverrides,
   readEnvOverrides,
@@ -329,6 +329,7 @@ export class ConfigManager {
     name?: string,
     allowManagement?: boolean,
     allowSongDeletion?: boolean,
+    extra: Partial<Pick<ApiKey, 'allowTabletopSaves' | 'allowTabletopTemplates'>> = {},
   ): ApiKey {
     if (!this.fileConfig.apiKeys) {
       this.fileConfig.apiKeys = [];
@@ -341,6 +342,8 @@ export class ConfigManager {
       token,
       allowManagement: allowManagement === true,
       allowSongDeletion: allowSongDeletion === true,
+      allowTabletopSaves: extra.allowTabletopSaves === true,
+      allowTabletopTemplates: extra.allowTabletopTemplates === true,
       createdAt: new Date().toISOString(),
     };
     this.fileConfig.apiKeys.push(keyObj);
@@ -351,7 +354,7 @@ export class ConfigManager {
 
   public updateApiKey(
     id: string,
-    updates: Partial<Pick<ApiKey, 'name' | 'allowManagement' | 'allowSongDeletion'>>,
+    updates: Partial<Pick<ApiKey, 'name' | ApiKeyPermission>>,
   ): ApiKey | false {
     if (!this.fileConfig.apiKeys) return false;
     const keyIndex = this.fileConfig.apiKeys.findIndex((k) => k.id === id);
@@ -360,11 +363,16 @@ export class ConfigManager {
         this.fileConfig.apiKeys[keyIndex].name =
           updates.name || this.fileConfig.apiKeys[keyIndex].name;
       }
-      if (updates.allowManagement !== undefined) {
-        this.fileConfig.apiKeys[keyIndex].allowManagement = updates.allowManagement === true;
-      }
-      if (updates.allowSongDeletion !== undefined) {
-        this.fileConfig.apiKeys[keyIndex].allowSongDeletion = updates.allowSongDeletion === true;
+      const flags: ApiKeyPermission[] = [
+        'allowManagement',
+        'allowSongDeletion',
+        'allowTabletopSaves',
+        'allowTabletopTemplates',
+      ];
+      for (const flag of flags) {
+        if (updates[flag] !== undefined) {
+          this.fileConfig.apiKeys[keyIndex][flag] = updates[flag] === true;
+        }
       }
       this.refreshEffectiveConfig();
       this.saveConfig();

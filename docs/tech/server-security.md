@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-24
+  at: 2026-10-25
   method: 'read server/src/core/app.ts, server/src/plugins/melodiq/{index.ts,middleware/auth.ts}, server/src/plugins/tabletop/routes/*.ts, server/src/plugins/notes/**/*.ts, server/src/plugins/relay/index.ts, server/src/utils/helpers.ts'
 sources:
   - 'server/src/plugins/melodiq/middleware/auth.ts'
@@ -71,7 +71,7 @@ The token is stored in `config.json` and loaded at server startup via `server/sr
 
 - Reads `Authorization: Bearer <token>` or the `?token=` query parameter.
 - Applied by the `melodiq` plugin to: `/api/songs*`, `/api/status`, `/api/auth/me`, `/media`, `/api/usdb/*`, `/api/youtube/*`, `/api/separator/*`, `/api/config/*`, `/api/playlists*`, `/api/browse`, `/api/feedback` (`server/src/plugins/melodiq/index.ts`). Public: `/health`, `/api/info`.
-- Applied by the `tabletop` plugin to `/api/tabletop/*` and `/tabletop/media`; `/api/tabletop/config/*` additionally needs `requireMasterToken`. `/tabletop/proxy-image` checks its token itself. Saving games needs any valid token; only games under `saved/` can be overwritten, and deleting one needs `allowSongDeletion` (or the master token).
+- Applied by the `tabletop` plugin to `/api/tabletop/*` and `/tabletop/media`; `/api/tabletop/config/*` additionally needs `requireMasterToken`. `/tabletop/proxy-image` checks its token itself. Saving games needs any valid token; only games under `saved/` can be overwritten, and deleting one needs `allowSongDeletion` (or the master token). Named table states (`/api/tabletop/saves`) can be listed and loaded with any token; storing one needs `allowTabletopSaves`, and only the key that stored it may overwrite or delete it (the master token may also delete). `PUT/DELETE /api/tabletop/games/:id/template` needs `allowTabletopTemplates`. Checks use `hasPermission` from `server/src/core/auth.ts`.
 - Applied by the `notes` plugin to `/api/notes/*` and `/notes/media/*`. Files are addressed by piece id and a file name the listing found, never by path. Deleting files or pieces needs `allowSongDeletion` (or the master token).
 - Matches against the master `config.token` (which grants full permissions) or a valid API key in `config.apiKeys`.
 - Returns `401 Unauthorized` if missing or mismatched.
@@ -90,9 +90,11 @@ Each API key contains:
 - `token`: Bearer authentication token
 - `allowManagement`: Boolean indicating whether the key can manage server settings and keys
 - `allowSongDeletion`: Boolean indicating whether the key can delete songs
+- `allowTabletopSaves`: Boolean, store named tabletop table states on the server (missing = false)
+- `allowTabletopTemplates`: Boolean, replace a tabletop game's default template (missing = false)
 - `createdAt`: ISO timestamp
 
-API keys are passed via the standard `Authorization: Bearer <token>` header and validated in `requireAuth` and `requireMasterToken`.
+API keys are passed via the standard `Authorization: Bearer <token>` header and validated in `requireAuth` and `requireMasterToken`. The master token and keys with `allowManagement` hold every capability (`hasPermission`). `GET /api/tabletop/status` and `GET /api/tabletop/saves` report the caller's tabletop rights as `permissions: { saveStates, saveTemplates }`.
 
 ---
 

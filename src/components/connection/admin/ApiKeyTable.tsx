@@ -18,6 +18,7 @@ import EditIcon from '@mui/icons-material/EditRounded';
 import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
 import QrCode2Icon from '@mui/icons-material/QrCode2Rounded';
 import type { ApiKey } from '../hooks/useServerApiKeys';
+import { PERMISSION_FLAGS } from './permissionFlags';
 
 interface Props {
   apiKeys: ApiKey[];
@@ -57,23 +58,18 @@ export const ApiKeyTable: React.FC<Props> = ({
               </TableCell>
               <TableCell>
                 <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', alignItems: 'center' }}>
-                  {key.allowManagement && (
-                    <Chip
-                      label={t('server.admin.perm_manage', 'Admin')}
-                      size="small"
-                      color="warning"
-                      variant="outlined"
-                    />
+                  {PERMISSION_FLAGS.filter(({ flag }) => key[flag] === true).map(
+                    ({ flag, labelKey, color }) => (
+                      <Chip
+                        key={flag}
+                        label={t(labelKey)}
+                        size="small"
+                        color={color}
+                        variant="outlined"
+                      />
+                    ),
                   )}
-                  {key.allowSongDeletion && (
-                    <Chip
-                      label={t('server.admin.perm_delete', 'Delete Songs')}
-                      size="small"
-                      color="error"
-                      variant="outlined"
-                    />
-                  )}
-                  {!key.allowManagement && !key.allowSongDeletion && (
+                  {!PERMISSION_FLAGS.some(({ flag }) => key[flag] === true) && (
                     <Chip
                       label={t('server.admin.perm_readonly', 'Read Only')}
                       size="small"

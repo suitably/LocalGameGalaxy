@@ -3,10 +3,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import fg from 'fast-glob';
 import { serverConfig } from '../../../config';
-import { getRequestToken } from '../../../core/auth';
+import { getRequestToken, hasPermission } from '../../../core/auth';
 import { cloudflareTunnel } from '../../../core/tunnel';
 import { getLocalIp } from '../../../utils/helpers';
 import { getGameCache, isSavedGame, isScanning, scanGames } from '../services/scanner';
+import { readTemplate } from '../services/saveStore';
 import type {
   HonoEnv,
   TabletopGameEntry,
@@ -38,9 +39,10 @@ tabletopGamesRouter.get('/api/tabletop/games/:id/raw', async (c) => {
     return c.json({ error: 'Game not found' }, 404);
   }
 
+  const template = await readTemplate(entry.id);
   let rawJson: string;
   try {
-    rawJson = await fs.promises.readFile(entry.jsonPath, 'utf-8');
+    rawJson = template ?? (await fs.promises.readFile(entry.jsonPath, 'utf-8'));
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     return c.json({ error: `Failed to read game file: ${msg}` }, 500);
@@ -87,6 +89,7 @@ tabletopGamesRouter.get('/api/tabletop/games/:id/raw', async (c) => {
     id: entry.id,
     rawJson,
     assetMap,
+    template: template !== null,
   };
 
   return c.json(response);
@@ -100,6 +103,10 @@ tabletopGamesRouter.get('/api/tabletop/status', (c) => {
     gameCount: getGameCache().length,
     publicUrl: cloudflareTunnel.getUrl(),
     localUrl: `http://${localIp}:${serverConfig.port}`,
+    permissions: {
+      saveStates: hasPermission(c, 'allowTabletopSaves'),
+      saveTemplates: hasPermission(c, 'allowTabletopTemplates'),
+    },
   });
 });
 
