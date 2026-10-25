@@ -42,15 +42,21 @@ export function getGameRoute({
   roomId,
   isHost,
   seat,
+  spectator = false,
 }: {
   gameType: PartyGameType | null;
   tabletopGameId?: string | null;
   roomId: string;
   isHost: boolean;
   seat: number;
+  /** Opens tabletop as `role=spectator` (no seat, read-only). */
+  spectator?: boolean;
 }): string {
   if (gameType === 'tabletop') {
     const targetGame = tabletopGameId || 'standard-cards';
+    if (!isHost && spectator) {
+      return `/games/tabletop?room=${roomId}&gameId=${targetGame}&role=spectator`;
+    }
     return isHost
       ? `/games/tabletop?room=${roomId}&gameId=${targetGame}&role=tv`
       : `/games/tabletop?room=${roomId}&gameId=${targetGame}&seat=${Math.max(0, seat)}`;

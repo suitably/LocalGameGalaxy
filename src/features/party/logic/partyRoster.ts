@@ -75,7 +75,8 @@ export function mergeRoster(
     merged.set(p.id, {
       ...winner,
       score: Math.max(existing?.score ?? 0, p.score || 0),
-      slot: winner.slot ?? p.slot ?? existing?.slot,
+      // A spectator has no seat; otherwise a known slot survives a copy without one.
+      slot: winner.spectator ? undefined : (winner.slot ?? p.slot ?? existing?.slot),
     });
   }
   return Array.from(merged.values()).filter((p) => !hasLeft(p, left));
@@ -89,15 +90,20 @@ export function mergeRoster(
 export function assignSlots(players: PartyPlayer[]): PartyPlayer[] {
   const taken = new Set<number>();
   const keep = new Set<string>();
-  for (const p of players) {
+  const seated = players.filter((p) => !p.spectator);
+  for (const p of seated) {
     if (typeof p.slot === 'number' && p.slot >= 0 && !taken.has(p.slot)) {
       taken.add(p.slot);
       keep.add(p.id);
     }
   }
-  if (keep.size === players.length) return players;
+  if (keep.size === seated.length) {
+    return players.map((p) =>
+      p.spectator && p.slot !== undefined ? { ...p, slot: undefined } : p,
+    );
+  }
   let next = 0;
-  const byJoin = [...players].sort((a, b) => a.joinedAt - b.joinedAt);
+  const byJoin = [...seated].sort((a, b) => a.joinedAt - b.joinedAt);
   const slots = new Map<string, number>();
   for (const p of byJoin) {
     if (keep.has(p.id)) continue;
@@ -105,7 +111,10 @@ export function assignSlots(players: PartyPlayer[]): PartyPlayer[] {
     taken.add(next);
     slots.set(p.id, next);
   }
-  return players.map((p) => (slots.has(p.id) ? { ...p, slot: slots.get(p.id) } : p));
+  return players.map((p) => {
+    if (p.spectator) return p.slot === undefined ? p : { ...p, slot: undefined };
+    return slots.has(p.id) ? { ...p, slot: slots.get(p.id) } : p;
+  });
 }
 
 /** A player's seat in party games: the host-assigned slot, else the roster position. */
@@ -114,6 +123,10 @@ export function seatOf(players: PartyPlayer[], playerId: string): number {
   const slot = players[index]?.slot;
   return typeof slot === 'number' ? slot : Math.max(0, index);
 }
+
+/** Whether this player watches table games instead of taking a seat. */
+export const isSpectatorPlayer = (players: PartyPlayer[], playerId: string): boolean =>
+  Boolean(players.find((p) => p.id === playerId)?.spectator);
 
 /**
  * Room state after receiving `incoming` from another device. `current` is our state for the
@@ -170,10 +183,18 @@ export function addPresencePlayer(
   const index = state.players.findIndex((p) => p.id === player.id);
   if (index >= 0) {
     const known = state.players[index];
-    if (changedAt(player) <= changedAt(known) || player.name === known.name) return null;
+    const unchanged =
+      player.name === known.name && Boolean(player.spectator) === Boolean(known.spectator);
+    if (changedAt(player) <= changedAt(known) || unchanged) return null;
     const players = [...state.players];
     const name = ensureUniquePlayerName(player.name, state.players, player.id);
-    players[index] = { ...known, name, updatedAt: changedAt(player) };
+    players[index] = {
+      ...known,
+      name,
+      spectator: player.spectator,
+      slot: player.spectator ? undefined : known.slot,
+      updatedAt: changedAt(player),
+    };
     return { ...state, players, updatedAt: now };
   }
   const name = ensureUniquePlayerName(player.name, state.players, player.id);
@@ -205,10 +226,18 @@ export function upsertHost(
 /** Roster when this device joins (or renames itself); keeps slot colour and score of a returning player. */
 export function upsertJoiningPlayer(
   players: PartyPlayer[],
-  { playerId, name, isHost, now }: { playerId: string; name: string; isHost: boolean; now: number },
+  {
+    playerId,
+    name,
+    isHost,
+    spectator,
+    now,
+  }: { playerId: string; name: string; isHost: boolean; spectator?: boolean; now: number },
 ): { players: PartyPlayer[]; player: PartyPlayer } {
   const index = players.findIndex((p) => p.id === playerId);
   const known = index >= 0 ? players[index] : null;
+  // A rename keeps the role unless the caller picks one.
+  const watching = spectator ?? known?.spectator;
   const player: PartyPlayer = {
     id: playerId,
     name: ensureUniquePlayerName(name || 'Spieler', players, playerId),
@@ -218,7 +247,8 @@ export function upsertJoiningPlayer(
     // A rename keeps the join time (slot order); `updatedAt` marks the newer copy.
     joinedAt: known?.joinedAt ?? now,
     updatedAt: now,
-    slot: known?.slot,
+    slot: watching ? undefined : known?.slot,
+    ...(watching ? { spectator: true } : {}),
   };
   const next = [...players];
   if (index >= 0) next[index] = player;

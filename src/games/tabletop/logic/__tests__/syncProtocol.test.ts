@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { classifyDelta, isSyncedIntent } from '../syncProtocol';
+import type { TabletopAction } from '../tabletopReducer';
+import { acceptIntent, classifyDelta, isSyncedIntent } from '../syncProtocol';
 
 describe('syncProtocol (#449)', () => {
   it('applies the next delta, ignores duplicates and waits for the first snapshot', () => {
@@ -18,5 +19,31 @@ describe('syncProtocol (#449)', () => {
     expect(isSyncedIntent({ type: 'ROLL_DIE', payload: { dieId: 'd' } })).toBe(true);
     expect(isSyncedIntent({ type: 'FINISH_ANIMATION', payload: { animationId: 'x' } })).toBe(false);
     expect(isSyncedIntent({ type: 'APPLY_REMOTE_DELTA', payload: { widgets: {} } })).toBe(false);
+  });
+
+  it('rejects every mutating intent from a spectator and accepts them from players', () => {
+    const mutating: TabletopAction[] = [
+      { type: 'MOVE_WIDGET', payload: { id: 'a', x: 1, y: 2 } },
+      { type: 'FLIP_CARD', payload: { cardId: 'c' } },
+      { type: 'DRAW_CARD', payload: { deckId: 'd' } },
+      { type: 'SHUFFLE_DECK', payload: { deckId: 'd' } },
+      { type: 'ROLL_DIE', payload: { dieId: 'd' } },
+      { type: 'DELETE_WIDGETS', payload: { ids: ['a'] } },
+      { type: 'UPDATE_COUNTER', payload: { counterId: 'c', delta: 1 } },
+      { type: 'SELECT_SEAT', payload: { seatId: 's' } },
+    ];
+    for (const action of mutating) {
+      expect(acceptIntent(action, { spectator: true })).toBe(false);
+      expect(acceptIntent(action, { spectator: false })).toBe(true);
+    }
+  });
+
+  it('never accepts device-local actions as intents', () => {
+    expect(
+      acceptIntent(
+        { type: 'FINISH_ANIMATION', payload: { animationId: 'x' } },
+        { spectator: false },
+      ),
+    ).toBe(false);
   });
 });

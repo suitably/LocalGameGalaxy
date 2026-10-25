@@ -12,7 +12,7 @@ import {
 } from '../logic/universalPartyManager';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { getOrCreatePlayerName, savePlayerName } from '../logic/playerName';
-import { seatOf } from '../logic/partyRoster';
+import { isSpectatorPlayer, seatOf } from '../logic/partyRoster';
 import {
   buildPartyShareUrl,
   getGameRoute as resolveGameRoute,
@@ -72,6 +72,7 @@ export function usePartyLobbyController(initialRoomId?: string) {
       roomId,
       isHost: universalPartyManager.isHost(roomId),
       seat: seatOf(roomState?.players ?? [], myId),
+      spectator: isSpectatorPlayer(roomState?.players ?? [], myId),
     });
   };
 
@@ -109,6 +110,7 @@ export function usePartyLobbyController(initialRoomId?: string) {
             roomId,
             isHost: false,
             seat: seatOf(updated.players, myId),
+            spectator: isSpectatorPlayer(updated.players, myId),
           }),
         );
       }
@@ -139,6 +141,11 @@ export function usePartyLobbyController(initialRoomId?: string) {
     }
     setRoomState(updated);
     setEditNameOpen(false);
+  };
+
+  const setWatching = (spectator: boolean) => {
+    const updated = universalPartyManager.setSpectator(roomId, spectator);
+    if (updated) setRoomState(updated);
   };
 
   const handleSaveCustomRoom = () => {
@@ -212,6 +219,7 @@ export function usePartyLobbyController(initialRoomId?: string) {
     setPickerOpen,
     getGameRoute,
     handleSaveName,
+    setWatching,
     handleSaveCustomRoom,
     handleCopyLink,
     handleLaunchGame,

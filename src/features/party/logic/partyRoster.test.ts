@@ -4,6 +4,7 @@ import {
   addPresencePlayer,
   assignSlots,
   colorForSlot,
+  isSpectatorPlayer,
   markHost,
   mergeIncomingState,
   mergeRoster,
@@ -271,5 +272,61 @@ describe('leaving, removing and renaming (#467)', () => {
       now: 50,
     });
     expect(renamed).toMatchObject({ name: 'Bea', joinedAt: 3, updatedAt: 50, slot: 2 });
+  });
+});
+
+describe('party spectators', () => {
+  it('assignSlots gives spectators no seat and keeps the seats of players dense', () => {
+    const out = assignSlots([
+      player('a', { joinedAt: 1 }),
+      player('w', { joinedAt: 2, spectator: true }),
+      player('b', { joinedAt: 3 }),
+    ]);
+    expect(out.map((p) => p.slot)).toEqual([0, undefined, 1]);
+  });
+
+  it('assignSlots drops the slot of a player who turned spectator', () => {
+    const out = assignSlots([player('a', { slot: 0 }), player('b', { slot: 1, spectator: true })]);
+    expect(out.map((p) => p.slot)).toEqual([0, undefined]);
+  });
+
+  it('a returning spectator can pick a seat again and gets a free slot', () => {
+    const { player: back } = upsertJoiningPlayer(
+      [player('b', { slot: undefined, spectator: true })],
+      { playerId: 'b', name: 'b', isHost: false, spectator: false, now: 5 },
+    );
+    expect(back.spectator).toBeUndefined();
+    expect(assignSlots([player('a', { slot: 0 }), back]).map((p) => p.slot)).toEqual([0, 1]);
+  });
+
+  it('a rename keeps the spectator role, an explicit choice overrides it', () => {
+    const known = [player('b', { spectator: true })];
+    const base = { playerId: 'b', name: 'Bea', isHost: false, now: 5 };
+    expect(upsertJoiningPlayer(known, base).player.spectator).toBe(true);
+    expect(
+      upsertJoiningPlayer(known, { ...base, spectator: false }).player.spectator,
+    ).toBeUndefined();
+  });
+
+  it('merging does not resurrect a slot for a spectator', () => {
+    const seated = player('b', { slot: 2, updatedAt: 1 });
+    const watching = player('b', { spectator: true, updatedAt: 9 });
+    expect(mergeRoster([seated], [watching])[0]).toMatchObject({
+      spectator: true,
+      slot: undefined,
+    });
+  });
+
+  it('a presence ping carries a role change', () => {
+    const state = room({ players: [player('b', { slot: 1, updatedAt: 1 })] });
+    const next = addPresencePlayer(state, player('b', { spectator: true, updatedAt: 5 }), 9);
+    expect(next?.players[0]).toMatchObject({ spectator: true, slot: undefined });
+  });
+
+  it('isSpectatorPlayer reads the role of one player', () => {
+    const players = [player('a'), player('b', { spectator: true })];
+    expect(isSpectatorPlayer(players, 'a')).toBe(false);
+    expect(isSpectatorPlayer(players, 'b')).toBe(true);
+    expect(isSpectatorPlayer(players, 'x')).toBe(false);
   });
 });

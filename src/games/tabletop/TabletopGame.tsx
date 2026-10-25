@@ -128,6 +128,7 @@ export function TabletopGame() {
     dispatch,
     onReturnToLobby: returnToLobby,
     seat,
+    spectator: isSpectator,
   });
 
   if (loading) {
@@ -195,6 +196,7 @@ export function TabletopGame() {
         state={gameState}
         dispatch={syncedDispatch}
         mySeat={seat}
+        readOnly={isSpectator}
         onFlickCardToTable={(cardId, targetHolderId) => {
           broadcastAction({
             type: 'FLICK_CARD_TO_TABLE',

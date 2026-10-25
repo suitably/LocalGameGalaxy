@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Spectators in the party lobby, read-only (#536 follow-up, claude-code)
+
+- `docs/tech/tabletop-engine.md` (Seats, spectators and the hand dock): lobby "Zuschauen" switch, `PartyPlayer.spectator`, host-side `acceptIntent` guard, `readOnly` surface.
+- Outside `docs/`: `src/features/party` (roster, routes, manager, controller), `syncProtocol.ts`, `useTabletopSync`, `useSeatView`, `TabletopSurface`, `TabletopControllerView`, locales (`party.watchOnly*`).
+
 ## 2026-10-25 — Melodiq Notes stage and pult (#485, claude-code)
 
 - `docs/tech/game-catalog.md` §3 (new melodiq-notes row) and shared-module row; `docs/tech/architecture.md` §3.2 `room-game` (`useRoomEvents`, `roomTransport.ts`, consumer melodiq-notes); `docs/tech/sync-protocol.md` `lgg/room` instance and channels.
