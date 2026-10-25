@@ -8,6 +8,7 @@ import type { RowColor, SheetCell } from '../logic/types';
 import { QwixxCellBadge } from './QwixxCellBadges';
 import { getRowTone } from './rowTone';
 import { transitionOf } from '../../../lib/motion';
+import { invisibleHitArea } from '../../../lib/touchTarget';
 
 interface QwixxCellProps {
   cell: SheetCell;
@@ -68,6 +69,7 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
         onClick={onTap}
         disabled={disabled || !isClickable}
         sx={{
+          ...invisibleHitArea(48, 'y'),
           width: { xs: 26, sm: 36, md: 44 },
           height: { xs: 32, sm: 40, md: 48 },
           borderRadius: 2,

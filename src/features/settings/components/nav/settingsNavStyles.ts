@@ -47,7 +47,7 @@ export const mainMenuBtnSx = (isActive: boolean): SxProps<Theme> => ({
   borderRadius: 2,
   px: { xs: 1, sm: 1.5 },
   py: 0.5,
-  minHeight: 34,
+  minHeight: 48,
   transition: 'color 150ms, background-color 150ms',
   '&:hover': {
     bgcolor: (theme) =>

@@ -36,7 +36,7 @@ export function SectionCell({
       onClick={onClick}
       sx={{
         position: 'relative',
-        height: 28,
+        height: 48,
         borderRadius: 2,
         border: 1,
         overflow: 'hidden',
