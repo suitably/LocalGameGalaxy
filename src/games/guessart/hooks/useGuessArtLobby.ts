@@ -55,24 +55,11 @@ export const useGuessArtLobby = () => {
           const language = remoteSnapshot.game?.options?.language || 'de';
           const importResult = await LocalGameEngine.importSnapshot(remoteSnapshot, language);
           if (importResult.updated) {
-            const isHistorical = timestamp ? Date.now() - timestamp > 30000 : false;
-            const isInitialGameStart =
-              !importResult.round ||
-              (importResult.round.roundNumber === 1 &&
-                (importResult.round.status === 'selecting' ||
-                  (importResult.round.status === 'drawing' && !importResult.round.word)));
-
-            if (!isHistorical) {
-              await guessArtNotificationService.notifyTurnIfEligible({
-                game: importResult.game,
-                round: importResult.round,
-                isRemoteEvent: true,
-                isInitialGameStart,
-                activeGameScreenId: guessArtNotificationService.getActiveScreenGameId(),
-                isDocumentVisible:
-                  typeof document !== 'undefined' ? document.visibilityState === 'visible' : true,
-              });
-            }
+            await guessArtNotificationService.notifyAfterRemoteImport(
+              importResult,
+              timestamp,
+              guessArtNotificationService.getActiveScreenGameId(),
+            );
           }
 
           const games = await LocalGameEngine.listGames();

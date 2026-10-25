@@ -37,6 +37,20 @@ export interface QueueItem {
   participants?: any[]; // using any[] to avoid circular dependency or needing ActivePlayer import if not available here
 }
 
+/** Builds a queue entry with the currently active session participants attached. */
+function createQueueItem(song: SongMeta, requester?: string, requesterId?: string): QueueItem {
+  const activeSession = storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
+  const storedProfiles = storage.getJson<any[]>(STORAGE_KEYS.PROFILES, []);
+  return {
+    id: generateUUID(),
+    song,
+    addedAt: Date.now(),
+    requester,
+    requesterId,
+    participants: enrichQueueParticipants(activeSession, storedProfiles),
+  };
+}
+
 interface QueueContextValue {
   queue: QueueItem[];
   nowPlaying: SongMeta | null;
@@ -167,18 +181,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return;
       }
 
-      const activeSession = storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
-      const storedProfiles = storage.getJson<any[]>(STORAGE_KEYS.PROFILES, []);
-      const enrichedSession = enrichQueueParticipants(activeSession, storedProfiles);
-
-      const newItem: QueueItem = {
-        id: generateUUID(),
-        song,
-        addedAt: Date.now(),
-        requester,
-        requesterId,
-        participants: enrichedSession,
-      };
+      const newItem = createQueueItem(song, requester, requesterId);
 
       // The strict duplicate check was removed to allow users to queue the same song back-to-back.
       // If accidental double clicks become an issue, we should implement a time-based debounce instead.
@@ -265,18 +268,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const addNext = useCallback(
     (song: SongMeta, requester?: string, requesterId?: string) => {
-      const activeSession = storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
-      const storedProfiles = storage.getJson<any[]>(STORAGE_KEYS.PROFILES, []);
-      const enrichedSession = enrichQueueParticipants(activeSession, storedProfiles);
-
-      const newItem: QueueItem = {
-        id: generateUUID(),
-        song,
-        addedAt: Date.now(),
-        requester,
-        requesterId,
-        participants: enrichedSession,
-      };
+      const newItem = createQueueItem(song, requester, requesterId);
 
       // The strict duplicate check was removed to allow users to queue the same song back-to-back.
       // If accidental double clicks become an issue, we should implement a time-based debounce instead.

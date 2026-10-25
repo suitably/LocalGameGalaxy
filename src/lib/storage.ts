@@ -161,6 +161,15 @@ export const STORAGE_PREFIXES = {
 
 const memoryFallback = new Map<string, string>();
 
+function parseJsonOr<T>(val: string | null | undefined, fallback: T): T {
+  if (!val) return fallback;
+  try {
+    return JSON.parse(val) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 export const storage = {
   get(key: string, fallback = ''): string {
     try {
@@ -207,13 +216,7 @@ export const storage = {
   },
 
   getJson<T>(key: string, fallback: T): T {
-    const val = this.get(key);
-    if (!val) return fallback;
-    try {
-      return JSON.parse(val) as T;
-    } catch {
-      return fallback;
-    }
+    return parseJsonOr(this.get(key), fallback);
   },
 
   setJson<T>(key: string, value: T): void {
@@ -325,16 +328,6 @@ export const sessionStorageSafe = {
       sessionMemoryFallback.delete(key);
     }
   },
-  getJson<T>(key: string, fallback: T): T {
-    const val = this.get(key);
-    if (!val) return fallback;
-    try {
-      return JSON.parse(val) as T;
-    } catch {
-      return fallback;
-    }
-  },
-  setJson<T>(key: string, value: T): void {
-    this.set(key, JSON.stringify(value));
-  },
+  getJson: <T>(key: string, fallback: T): T => parseJsonOr(sessionStorageSafe.get(key), fallback),
+  setJson: <T>(key: string, value: T): void => sessionStorageSafe.set(key, JSON.stringify(value)),
 };
