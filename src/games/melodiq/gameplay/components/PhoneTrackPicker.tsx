@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { CONTROLLER_TARGET } from '../../../../lib/touchTarget';
 
 interface PhoneTrackPickerProps {
   trackNames: string[];
@@ -37,7 +38,11 @@ export const PhoneTrackPicker: React.FC<PhoneTrackPickerProps> = ({
         aria-label={t('melodiq.duet_part')}
       >
         {trackNames.map((name, index) => (
-          <ToggleButton key={index} value={index} sx={{ px: 1.5, color: 'text.primary' }}>
+          <ToggleButton
+            key={index}
+            value={index}
+            sx={{ px: 1.5, color: 'text.primary', minHeight: CONTROLLER_TARGET }}
+          >
             {`P${index + 1}`}
             {name && !/^player \d+$/i.test(name) ? ` · ${name}` : ''}
           </ToggleButton>

@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Touch targets follow-up (#510, claude-code)
+
+- `DESIGN.md` §4 touch-target line: dense rows re-flow, documented Wordle keyboard width exception. Outside `docs/`: Qwixx two-line rows on phones, Wordle zero-gap keyboard, theme Slider/Switch hit areas, Melodiq phone client and party rejoin at `CONTROLLER_TARGET`, `scripts/measure-touch-targets.cjs` (`data-touch-exempt`, pseudo-element on switch wrapper).
+
 ## 2026-10-25 — Melodiq Notes stage and pult (#485, claude-code)
 
 - `docs/tech/game-catalog.md` §3 (new melodiq-notes row) and shared-module row; `docs/tech/architecture.md` §3.2 `room-game` (`useRoomEvents`, `roomTransport.ts`, consumer melodiq-notes); `docs/tech/sync-protocol.md` `lgg/room` instance and channels.

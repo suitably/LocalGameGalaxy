@@ -117,7 +117,7 @@ Implementation: `createTvTheme()` in `src/themeTv.ts` (explicit ×1.5 sizes, min
 - **Page gutter:** 16px phone, 24px tablet/desktop, 48px TV.
 - **Section gap:** 32px phone, 48px desktop. **Gap inside cards:** 16px; between cards in a grid: 16px (phone) / 24px.
 - **Content width:** hub and lobbies max 1200px; text pages (rules, settings) max 720px; game boards use the full viewport.
-- **Touch targets:** ≥ 48×48px everywhere; ≥ 56px for primary actions on phone controllers (people tap without looking).
+- **Touch targets:** ≥ 48×48px everywhere; ≥ 56px for primary actions on phone controllers (people tap without looking). Dense rows change layout instead of shrinking (Qwixx rows wrap into two lines on phones). The only width exception is the 10-key Wordle keyboard at 360px: keys are ≥ 48px tall, fill the row with zero gap and no dead zones (`data-touch-exempt` in `scripts/measure-touch-targets.cjs`).
 - Layout via Grid/Flexbox, full-height screens use `100dvh`, safe areas per [docs/tech/styling.md](docs/tech/styling.md) §4.
 
 ## 5. Shape and depth

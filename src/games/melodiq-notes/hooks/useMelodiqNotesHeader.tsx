@@ -6,6 +6,7 @@ import GraphicEqIcon from '@mui/icons-material/GraphicEqRounded';
 import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle, useHeaderLayout } from '../../../context/LayoutContext';
+import { TOUCH_TARGET } from '../../../lib/touchTarget';
 
 interface UseMelodiqNotesHeaderOptions {
   currentTitle: string | null;
@@ -49,7 +50,7 @@ export function useMelodiqNotesHeader({
           maxWidth: '100%',
           minWidth: 0,
           cursor: 'pointer',
-          py: 0.5,
+          minHeight: TOUCH_TARGET,
           px: 1,
           borderRadius: 2,
           transition: 'background-color 0.2s',

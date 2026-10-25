@@ -64,12 +64,15 @@ function collect([minSize, SELECTOR]) {
     return `${el.tagName.toLowerCase()}${cls ? '.' + cls : ''} "${label}"`;
   };
   const out = [];
+  const exempt = [];
   for (const el of document.querySelectorAll(SELECTOR)) {
     const style = getComputedStyle(el);
     let r = el.getBoundingClientRect();
+    let sized = el;
     // Visually hidden inputs (checkbox/radio): measure the wrapping control instead.
     if (el.matches('input') && Number(style.opacity) === 0 && el.parentElement) {
       r = el.parentElement.getBoundingClientRect();
+      sized = el.parentElement;
     }
     if (r.width === 0 || r.height === 0) continue;
     if (style.visibility === 'hidden' || style.display === 'none' || style.pointerEvents === 'none')
@@ -80,13 +83,18 @@ function collect([minSize, SELECTOR]) {
     let w = r.width;
     let h = r.height;
     for (const pseudo of ['::before', '::after']) {
-      const ps = getComputedStyle(el, pseudo);
+      const ps = getComputedStyle(sized, pseudo);
       if (ps.content !== 'none' && ps.position === 'absolute') {
         w = Math.max(w, parseFloat(ps.width) || 0);
         h = Math.max(h, parseFloat(ps.height) || 0);
       }
     }
     if (w + 0.5 < minSize || h + 0.5 < minSize) {
+      // Documented physical limit (e.g. 10-key keyboard at 360px): height must still pass.
+      if (el.hasAttribute('data-touch-exempt') && h + 0.5 >= minSize) {
+        exempt.push(el.getAttribute('data-touch-exempt'));
+        continue;
+      }
       out.push({
         el: describe(el),
         w: Math.round(w),
@@ -96,7 +104,7 @@ function collect([minSize, SELECTOR]) {
       });
     }
   }
-  return out;
+  return { out, exempt: exempt.length };
 }
 
 (async () => {
@@ -113,10 +121,14 @@ function collect([minSize, SELECTOR]) {
     try {
       await page.goto(base + route, { waitUntil: 'networkidle', timeout: 30000 });
       await page.waitForTimeout(800);
-      const bad = await page.evaluate(collect, [min, SELECTOR]);
+      const res = await page.evaluate(collect, [min, SELECTOR]);
+      const bad = res.out;
+      bad.exempt = res.exempt;
       report[route] = bad;
       total += bad.length;
-      console.log(`\n${route}: ${bad.length} below ${min}px`);
+      console.log(
+        `\n${route}: ${bad.length} below ${min}px${bad.exempt ? ` (+${bad.exempt} width-exempt, height ok)` : ''}`,
+      );
       for (const b of bad) console.log(`  ${b.w}x${b.h} @${b.x},${b.y}  ${b.el}`);
     } catch (e) {
       report[route] = { error: String(e.message || e) };

@@ -8,6 +8,7 @@ import PhoneIphoneRoundedIcon from '@mui/icons-material/PhoneIphoneRounded';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import type { PartyLobbyController } from '../hooks/usePartyLobbyController';
+import { CONTROLLER_TARGET } from '../../../lib/touchTarget';
 
 export const PartyActiveGameBanner: React.FC<{ lobby: PartyLobbyController }> = ({ lobby }) => {
   const { t } = useTranslation();
@@ -101,6 +102,7 @@ export const PartyActiveGameBanner: React.FC<{ lobby: PartyLobbyController }> = 
                 flexGrow: { xs: 1, sm: 0 },
                 py: 1.2,
                 px: 3,
+                minHeight: CONTROLLER_TARGET,
               }}
             >
               {t('party.rejoinGame', 'Spiel beitreten / fortsetzen')}
