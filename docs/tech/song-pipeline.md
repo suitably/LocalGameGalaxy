@@ -88,7 +88,7 @@ Melodiq Notes lists only Notes pieces (`src/games/melodiq-notes/stage/logic/scor
 
 `alignRecording` (`src/modules/music-score/alignment.ts`) produces one mark per bar in two stages: a coarse match, then `fitMarksToNotes` (whole-song Viterbi fit of the score's attacks to band and pitch-class onsets, ±0.6 s per bar). The coarse match depends on the score:
 
-- **Pitched parts present:** tuning estimate, semitone-shift search and a chroma + onset DTW (`warpScoreToAudio`, `marksFromWarp`).
+- **Pitched parts present:** tuning estimate, semitone-shift search and a chroma + onset DTW (`warpScoreToAudio`, `marksFromWarp`). The DTW may leave up to 30 s of score unmatched at either end (an arrangement's intro or outro the recording lacks); a skipped frame costs 0.89 × the song's mean cost of unrelated frame pairs (`unrelatedCost`), and skipped bars continue the tempo of the matched path, so bars before the recording get negative times (`fitMarksToNotes` leaves those unclamped). The shift search does not skip.
 - **Drums only** (`hasPitchedNotes` is false, `onsetAlign.ts`): there is no pitch to follow, so `estimateTempoAndStart` cross-correlates (FFT) the score's kick/snare/cymbal attacks with the recording's band onsets (`onsetFeatures`) for tempo ratios 0.7–1.4, and `marksFromOnsets` places every bar start jointly by a Viterbi on a 20 ms grid (each bar at most 10 % off the global tempo, at a cost; free start). Bars without attacks, such as an intro without drums, follow the tempo around them. `tuning.semitones` is 0.
 
 ## 5. Song folder layout

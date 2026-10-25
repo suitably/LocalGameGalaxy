@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Melodiq Notes: alignment skips missing intro/outro, tambourine mark (claude-code)
+
+- `docs/tech/song-pipeline.md` §4 alignment paragraph and `docs/tech/architecture.md` `music-score` row: DTW skips score bars at either end. Outside `docs/`: `src/modules/music-score/{alignment.ts,noteFit.ts,drumVoices.ts}`, `stage/logic/drumGlyphs.ts`, tests. Separate drum lanes: issue #571.
+
 ## 2026-10-25 — One sheet-music store: Notes library (Q18, claude-code)
 
 - `docs/tech/song-pipeline.md` §4 rewritten (Notes library only store, `songId`, one-time import with marker `.song-scores-imported.json`, deprecated `/api/songs/:id/scores` routes, YouTube flow links a Notes piece) and §5 folder tree; `verified` refreshed. `docs/tech/architecture.md` `notes` plugin bullet. `docs/open-questions.md`: Q18 resolved.
