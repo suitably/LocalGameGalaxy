@@ -69,6 +69,8 @@ export interface StageSound {
 /** A recording that replaces the synthesised band, mapped to the score by bar marks. */
 export interface StageRecording {
   map: AudioMap;
+  /** First beat the recording has (bars before it are an intro it lacks and are not played); 0 when absent. */
+  startBeat?: number;
   duration: number;
   time(): number;
   isPlaying(): boolean;

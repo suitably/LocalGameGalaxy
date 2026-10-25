@@ -47,11 +47,12 @@ export function createPlayers(
   song: ScoreSong,
   seats: PlayerSeat[],
   sectionCount: number,
+  fromBeat = 0,
 ): StagePlayer[] {
   return seats.slice(0, MAX_PLAYERS).flatMap((seat, i) => {
     const part = song.parts.find((p) => p.id === seat.partId);
     if (!part) return [];
-    const notes = buildChart(part, seat.inst);
+    const notes = buildChart(part, seat.inst).filter((n) => n.t >= fromBeat);
     const range = pitchRange(notes);
     return [
       {
@@ -76,20 +77,23 @@ export function createPlayers(
   });
 }
 
-/** Count-in clicks plus the notes the synth plays for the band mode. */
+/** Count-in clicks before `fromBeat` plus the notes from there on the synth plays for the band mode. */
 export function buildBandEvents(
   song: ScoreSong,
   seats: PlayerSeat[],
   mode: BandMode,
   countIn: number,
+  fromBeat = 0,
 ): BandEvent[] {
   const events: BandEvent[] = [];
-  for (let q = -countIn; q < 0; q++) events.push({ t: q, kind: 'click', accent: q === -countIn });
+  for (let q = -countIn; q < 0; q++)
+    events.push({ t: fromBeat + q, kind: 'click', accent: q === -countIn });
   if (mode === 'none') return events;
   const played = new Set(seats.map((s) => s.partId));
   for (const part of song.parts) {
     if (mode === 'others' && played.has(part.id)) continue;
     for (const n of part.notes) {
+      if (n.t < fromBeat) continue;
       if (part.isDrum) events.push({ t: n.t, kind: 'drum', lane: drumLaneOf(n.pitch) });
       else events.push({ t: n.t, kind: 'note', inst: part.guess, midi: n.pitch, dur: n.dur });
     }
