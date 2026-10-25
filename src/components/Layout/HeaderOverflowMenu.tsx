@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, IconButton, Menu, MenuItem as MuiMenuItem } from '@mui/material';
 import MenuIcon from '@mui/icons-material/MenuRounded';
+import { useTranslation } from 'react-i18next';
 import type { MenuItem } from '../../context/HeaderLayoutContext';
 
 interface HeaderOverflowMenuProps {
@@ -10,6 +11,7 @@ interface HeaderOverflowMenuProps {
 
 /** Burger menu for header actions that do not fit the toolbar on small screens. */
 export const HeaderOverflowMenu: React.FC<HeaderOverflowMenuProps> = ({ items, iconSize }) => {
+  const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const close = () => setAnchorEl(null);
 
@@ -20,7 +22,7 @@ export const HeaderOverflowMenu: React.FC<HeaderOverflowMenuProps> = ({ items, i
       <IconButton
         size="medium"
         edge="end"
-        aria-label="menu"
+        aria-label={t('common.a11y.menu', 'Menu')}
         aria-controls="menu-appbar"
         aria-haspopup="true"
         onClick={(e) => setAnchorEl(e.currentTarget)}

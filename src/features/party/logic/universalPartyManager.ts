@@ -22,6 +22,8 @@ export interface PartyPlayer {
   updatedAt?: number;
   /** Stable seat number assigned by the host (`assignSlots`); tabletop seat of this player. */
   slot?: number;
+  /** Watches table games without a seat (`role=spectator`); gets no slot. */
+  spectator?: boolean;
 }
 
 /** Dice games played in the room, everyone on their own sheet (`modules/room-game`). */
@@ -156,7 +158,7 @@ class UniversalPartyManager {
     return { roomId, hostId, state };
   }
 
-  public joinParty(roomId: string, playerName: string): PartyRoomState {
+  public joinParty(roomId: string, playerName: string, spectator?: boolean): PartyRoomState {
     const pId = this.getMyPlayerId();
     const normalizedRoomId = roomId.toUpperCase().trim();
     const isRoomCreator = Boolean(
@@ -195,6 +197,7 @@ class UniversalPartyManager {
       playerId: pId,
       name: playerName,
       isHost: isRoomCreator || knownHostId === pId,
+      spectator,
       now: Date.now(),
     });
 
@@ -216,6 +219,13 @@ class UniversalPartyManager {
 
   public updatePlayerName(roomId: string, newName: string): PartyRoomState {
     return this.joinParty(roomId, newName);
+  }
+
+  /** Switches this device between playing (seat) and watching; keeps its name. */
+  public setSpectator(roomId: string, spectator: boolean): PartyRoomState | null {
+    const myId = this.getMyPlayerId();
+    const me = this.currentRoomState?.players.find((p) => p.id === myId);
+    return me ? this.joinParty(roomId, me.name, spectator) : null;
   }
 
   public launchGame(

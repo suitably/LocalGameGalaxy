@@ -225,6 +225,34 @@ class GuessArtNotificationService {
       data: { url: message.url },
     });
   }
+
+  /**
+   * Notifies after a remote snapshot was imported. Skips historical snapshots (older than 30 s)
+   * and flags the initial game start so it is not announced as a regular turn.
+   */
+  public async notifyAfterRemoteImport(
+    importResult: { game: GuessArtGameRecord; round: GuessArtRound | null },
+    timestamp: number | undefined,
+    activeGameScreenId: string | null,
+  ): Promise<boolean> {
+    const isHistorical = timestamp ? Date.now() - timestamp > 30000 : false;
+    if (isHistorical) return false;
+    const { game, round } = importResult;
+    const isInitialGameStart =
+      !round ||
+      (round.roundNumber === 1 &&
+        (round.status === 'selecting' || (round.status === 'drawing' && !round.word)));
+
+    return this.notifyTurnIfEligible({
+      game,
+      round,
+      isRemoteEvent: true,
+      isInitialGameStart,
+      activeGameScreenId,
+      isDocumentVisible:
+        typeof document !== 'undefined' ? document.visibilityState === 'visible' : true,
+    });
+  }
 }
 
 export const guessArtNotificationService = new GuessArtNotificationService();

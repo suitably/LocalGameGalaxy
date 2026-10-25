@@ -87,6 +87,7 @@ export const STORAGE_KEYS = {
   MELODIQ_NOTES_SOUND_CONFIG: 'melodiq_notes_sound_config',
   MELODIQ_NOTES_VIEW_MODE: 'melodiq_notes_view_mode',
   MELODIQ_NOTES_SHEET_RENDER_MODE: 'melodiq_notes_sheet_render_mode',
+  MELODIQ_NOTES_SEEK_LEAD_IN: 'melodiq_notes_seek_lead_in',
 
   // Werewolf game state
   WEREWOLF_STATE: 'werewolf-game-state',
@@ -119,6 +120,8 @@ export const STORAGE_KEYS = {
 
   // Wordle
   WORDLE_STATS: 'galaxy_wordle_stats',
+  /** Wordle setting "Only dictionary words" (JSON boolean, default true). */
+  WORDLE_DICTIONARY_ONLY: 'galaxy_wordle_dictionary_only',
 
   // Cards
   CARDS_LOBBY_PLAYERS: 'cards_lobby_players',
@@ -144,6 +147,8 @@ export const STORAGE_KEYS = {
   PWA_BANNER_DISMISSED: 'pwa-banner-dismissed',
   LANGUAGE: 'lgg_language',
   LANGUAGE_LEGACY: 'language',
+  /** Colour mode setting: `system` | `dark` | `light` (src/lib/colorMode.ts, DESIGN.md §9). */
+  COLOR_MODE: 'lgg_color_mode',
   EXCALIDRAW_LIBRARY: 'guessart_excalidraw_library',
 } as const;
 
@@ -160,6 +165,15 @@ export const STORAGE_PREFIXES = {
 } as const;
 
 const memoryFallback = new Map<string, string>();
+
+function parseJsonOr<T>(val: string | null | undefined, fallback: T): T {
+  if (!val) return fallback;
+  try {
+    return JSON.parse(val) as T;
+  } catch {
+    return fallback;
+  }
+}
 
 export const storage = {
   get(key: string, fallback = ''): string {
@@ -207,13 +221,7 @@ export const storage = {
   },
 
   getJson<T>(key: string, fallback: T): T {
-    const val = this.get(key);
-    if (!val) return fallback;
-    try {
-      return JSON.parse(val) as T;
-    } catch {
-      return fallback;
-    }
+    return parseJsonOr(this.get(key), fallback);
   },
 
   setJson<T>(key: string, value: T): void {
@@ -325,16 +333,6 @@ export const sessionStorageSafe = {
       sessionMemoryFallback.delete(key);
     }
   },
-  getJson<T>(key: string, fallback: T): T {
-    const val = this.get(key);
-    if (!val) return fallback;
-    try {
-      return JSON.parse(val) as T;
-    } catch {
-      return fallback;
-    }
-  },
-  setJson<T>(key: string, value: T): void {
-    this.set(key, JSON.stringify(value));
-  },
+  getJson: <T>(key: string, fallback: T): T => parseJsonOr(sessionStorageSafe.get(key), fallback),
+  setJson: <T>(key: string, value: T): void => sessionStorageSafe.set(key, JSON.stringify(value)),
 };

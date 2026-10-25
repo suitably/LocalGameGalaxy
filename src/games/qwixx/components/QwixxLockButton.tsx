@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ButtonBase } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import LockIcon from '@mui/icons-material/LockRounded';
@@ -22,6 +23,7 @@ export const QwixxLockButton: React.FC<QwixxLockButtonProps> = ({
   onLock,
   onUnlock,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const tone = getRowTone(theme, color);
   const active = isLocked || canLock;
@@ -30,9 +32,12 @@ export const QwixxLockButton: React.FC<QwixxLockButtonProps> = ({
     <ButtonBase
       onClick={isLocked ? onUnlock : onLock}
       disabled={!active}
+      aria-label={
+        isLocked ? t('common.a11y.unlock_row', 'Unlock row') : t('common.a11y.lock_row', 'Lock row')
+      }
       sx={{
-        width: { xs: 28, sm: 38, md: 46 },
-        height: { xs: 32, sm: 40, md: 48 },
+        width: { xs: 48, sm: 38, md: 46 },
+        height: { xs: 48, sm: 40, md: 48 },
         borderRadius: '50%',
         bgcolor: active ? tone.button : tone.muted,
         color: active ? tone.ink : alpha(tone.ink, 0.5),

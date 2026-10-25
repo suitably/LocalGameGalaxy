@@ -1,20 +1,11 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Box,
-  Button,
-  Typography,
-  Paper,
-  TextField,
-  CircularProgress,
-  Alert,
-  Chip,
-  Link,
-} from '@mui/material';
+import { Box, Button, Paper, TextField, CircularProgress, Alert, Chip, Link } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNewRounded';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlineRounded';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlineRounded';
 import ArrowBackIcon from '@mui/icons-material/ArrowBackRounded';
+import { SettingsCardHeader } from './SettingsCardHeader';
 import { settingsCardSx } from '../../features/settings/settingsStyles';
 import { UsdbMissingBanner } from './usdb/UsdbMissingBanner';
 import { UsdbPasswordField } from './usdb/UsdbPasswordField';
@@ -56,51 +47,37 @@ export const ServerUsdbConfig: React.FC<ServerUsdbConfigProps> = ({
 
   return (
     <Paper sx={settingsCardSx}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          mb: 1.5,
-          flexWrap: 'wrap',
-          gap: 1,
-        }}
+      <SettingsCardHeader
+        title={t('server.usdb.title', 'UltraStar DB Credentials')}
+        description={t(
+          'server.usdb.desc',
+          'Credentials for USDB (usdb.animux.de) for automated song downloading.',
+        )}
+        titleAdornment={
+          <Chip
+            icon={isConfigured ? <CheckCircleOutlineIcon /> : <HelpOutlineIcon />}
+            label={
+              isConfigured
+                ? t('server.usdb.status_configured', 'Configured')
+                : t('server.usdb.status_not_configured', 'Not Configured')
+            }
+            size="small"
+            color={isConfigured ? 'success' : 'default'}
+            variant="outlined"
+          />
+        }
       >
-        <Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="h6">
-              {t('server.usdb.title', 'UltraStar DB Credentials')}
-            </Typography>
-            <Chip
-              icon={isConfigured ? <CheckCircleOutlineIcon /> : <HelpOutlineIcon />}
-              label={
-                isConfigured
-                  ? t('server.usdb.status_configured', 'Configured')
-                  : t('server.usdb.status_not_configured', 'Not Configured')
-              }
-              size="small"
-              color={isConfigured ? 'success' : 'default'}
-              variant="outlined"
-            />
-          </Box>
-          <Typography variant="body2" color="text.secondary">
-            {t(
-              'server.usdb.desc',
-              'Credentials for USDB (usdb.animux.de) for automated song downloading.',
-            )}
-          </Typography>
-          <Link
-            href="https://usdb.animux.de"
-            target="_blank"
-            rel="noopener noreferrer"
-            variant="body2"
-            sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}
-          >
-            {t('server.usdb.open_site', 'Open UltraStar DB')}
-            <OpenInNewIcon sx={{ fontSize: 14 }} />
-          </Link>
-        </Box>
-      </Box>
+        <Link
+          href="https://usdb.animux.de"
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="body2"
+          sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}
+        >
+          {t('server.usdb.open_site', 'Open UltraStar DB')}
+          <OpenInNewIcon sx={{ fontSize: 14 }} />
+        </Link>
+      </SettingsCardHeader>
 
       {showMissingBanner && !isConfigured && <UsdbMissingBanner />}
 

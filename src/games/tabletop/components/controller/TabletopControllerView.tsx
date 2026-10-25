@@ -14,6 +14,8 @@ interface TabletopControllerViewProps {
   state: TabletopGameState;
   dispatch: React.Dispatch<TabletopAction>;
   mySeat: number | null;
+  /** Spectator: sees the table, changes nothing (no draw, roll, counters, moves). */
+  readOnly?: boolean;
   onFlickCardToTable?: (cardId: string, targetHolderId: string) => void;
 }
 
@@ -21,6 +23,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
   state,
   dispatch,
   mySeat,
+  readOnly = false,
   onFlickCardToTable,
 }) => {
   const { t } = useTranslation();
@@ -28,8 +31,16 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [pendingFlickCardId, setPendingFlickCardId] = useState<string | null>(null);
 
-  const { myHandCards, publicDecks, dropTargets, publicDice, myCounters, topDiscardCard } =
-    useDynamicControllerState(state.game, mySeat);
+  const {
+    myHandCards,
+    myHolders,
+    publicDecks,
+    dropTargets,
+    publicDice,
+    myCounters,
+    topDiscardCard,
+  } = useDynamicControllerState(state.game, mySeat);
+  const isSpectator = readOnly || mySeat === null;
 
   const handleCardFlick = (cardId: string) => {
     if (dropTargets.length === 0) {
@@ -60,6 +71,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
         flexDirection: 'column',
         bgcolor: 'background.default',
         overflow: 'hidden',
+        touchAction: 'manipulation',
       }}
     >
       {/* Top Header Status & Mode Switcher */}
@@ -80,7 +92,11 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
           <Chip
             size="small"
             color="primary"
-            label={mySeat !== null ? `Spieler ${mySeat + 1}` : 'Zuschauer'}
+            label={
+              isSpectator
+                ? t('games.tabletop.spectator', 'Zuschauer')
+                : t('games.tabletop.playerN', 'Spieler {{n}}', { n: (mySeat ?? 0) + 1 })
+            }
           />
           {topDiscardCard && (
             <Typography variant="caption" color="text.secondary" fontWeight={600}>
@@ -107,7 +123,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
       {/* Main View Area */}
       <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         {viewMode === 'board' ? (
-          <TabletopSurface state={state} dispatch={dispatch} />
+          <TabletopSurface state={state} dispatch={dispatch} readOnly={isSpectator} />
         ) : (
           <Box
             sx={{
@@ -154,12 +170,15 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
             )}
 
             <ControllerActionToolbar
-              decks={publicDecks}
-              dice={publicDice}
-              counters={myCounters}
+              decks={isSpectator ? [] : publicDecks}
+              dice={isSpectator ? [] : publicDice}
+              counters={isSpectator ? [] : myCounters}
               onDrawCard={(deckId) => {
-                const targetId = myHandCards[0]?.id ? dropTargets[0]?.id : undefined;
-                dispatch({ type: 'DRAW_CARD', payload: { deckId, targetHolderId: targetId } });
+                // Always into this phone's own hand (#536: the first draw used to land in
+                // whichever hand came first, later ones on the discard pile).
+                const targetHolderId = myHolders[0]?.id;
+                if (targetHolderId)
+                  dispatch({ type: 'DRAW_CARD', payload: { deckId, targetHolderId } });
               }}
               onRollDice={(dieIds) => {
                 for (const dieId of dieIds) dispatch({ type: 'ROLL_DIE', payload: { dieId } });

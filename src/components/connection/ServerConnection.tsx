@@ -52,12 +52,12 @@ export const ServerConnection: React.FC = () => {
   return (
     <Paper sx={settingsCardSx}>
       <Typography variant="h6" gutterBottom>
-        {t('server.title', 'Melodiq Companion Server Verbindung')}
+        {t('server.title', 'Nexumia Companion Server Verbindung')}
       </Typography>
       <Typography variant="body2" color="text.secondary" paragraph>
         {t(
           'server.desc',
-          'Verbinde dich mit dem Melodiq Companion Server, um auf deine Song-Bibliothek zuzugreifen, Audio zu streamen, Songs herunterzuladen und KI-Gesangstrennung zu nutzen.',
+          'Verbinde dich mit dem Nexumia Companion Server, um auf deine Song-Bibliothek zuzugreifen, Audio zu streamen, Songs herunterzuladen und KI-Gesangstrennung zu nutzen.',
         )}
       </Typography>
 

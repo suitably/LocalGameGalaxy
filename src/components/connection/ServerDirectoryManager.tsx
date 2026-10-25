@@ -11,7 +11,6 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   Divider,
-  CircularProgress,
   Alert,
   Tooltip,
 } from '@mui/material';
@@ -22,6 +21,8 @@ import DownloadIcon from '@mui/icons-material/DownloadRounded';
 import EditIcon from '@mui/icons-material/EditRounded';
 import { settingsCardSx } from '../../features/settings/settingsStyles';
 import { ConfirmDialog } from '../common/ConfirmDialog';
+import { ListSkeleton } from '../common/ListSkeleton';
+import { SettingsCardHeader } from './SettingsCardHeader';
 import { ServerDirectoryBrowser } from './ServerDirectoryBrowser';
 import { useServerDirectories } from './useServerDirectories';
 
@@ -53,33 +54,20 @@ export const ServerDirectoryManager: React.FC = () => {
 
   return (
     <Paper sx={settingsCardSx}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          mb: 1.5,
-          flexWrap: 'wrap',
-          gap: 1,
-        }}
-      >
-        <Box>
-          <Typography variant="h6">
-            {t('server.directories.title', 'Library Directories')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {t('server.directories.desc', 'Manage scanned server directories for songs.')}
-          </Typography>
-        </Box>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<AddIcon />}
-          onClick={() => setBrowserMode('library')}
-        >
-          {t('server.directories.add_btn', 'Add Directory')}
-        </Button>
-      </Box>
+      <SettingsCardHeader
+        title={t('server.directories.title', 'Library Directories')}
+        description={t('server.directories.desc', 'Manage scanned server directories for songs.')}
+        action={
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={() => setBrowserMode('library')}
+          >
+            {t('server.directories.add_btn', 'Add Directory')}
+          </Button>
+        }
+      />
 
       {error && (
         <Alert severity="error" sx={{ my: 1.5 }}>
@@ -88,9 +76,7 @@ export const ServerDirectoryManager: React.FC = () => {
       )}
 
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-          <CircularProgress size={28} />
-        </Box>
+        <ListSkeleton rows={2} />
       ) : (
         <List dense sx={{ bgcolor: 'action.hover', borderRadius: 2, p: 0.5, mb: 3 }}>
           {directories.length === 0 ? (

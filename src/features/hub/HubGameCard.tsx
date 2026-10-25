@@ -60,7 +60,12 @@ export const HubGameCard: React.FC<HubGameCardProps> = ({ game, area, onOpen }) 
                 cut={theme.palette.background.paper}
                 size={16}
               />
-              <Typography variant="caption" component="span" sx={{ color: fill }}>
+              {/* Piece colours are under 4.5:1 on paper: the label text goes neutral in light mode. */}
+              <Typography
+                variant="caption"
+                component="span"
+                sx={{ color: theme.palette.mode === 'light' ? 'text.primary' : fill }}
+              >
                 {t(area.labelKey)}
               </Typography>
             </Box>

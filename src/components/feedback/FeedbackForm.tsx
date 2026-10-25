@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { alpha, TextField, Button, CircularProgress, Alert, Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { submitFeedback } from '../../lib/github';
+import { submitFeedback } from '../../lib/feedbackSubmit';
 
 export interface FeedbackFormProps {
   onClose?: () => void;

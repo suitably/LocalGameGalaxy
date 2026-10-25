@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { createAudioMap, type ScoreSong } from '../../../../../modules/music-score';
 import { StageEngine } from '../StageEngine';
 import { buildBandEvents, nextSeat } from '../players';
+import { playRemote, seatRemotes } from '../remote';
 import { playerResults, weakestSection } from '../results';
 import type { StageRecording, StageSound } from '../types';
 
@@ -103,6 +104,26 @@ describe('StageEngine', () => {
     expect(first.judged).toBe('perfect');
     expect(second.judged).toBe('miss');
     expect(e.players[0].stats.combo).toBe(0);
+  });
+
+  it('judges a pult player at the beat its late input was played, silently', () => {
+    const sound = fakeSound();
+    const e = new StageEngine(sound);
+    e.loadSong(song());
+    seatRemotes(e, [{ id: 'a', name: 'A', partId: 'piano', inst: 'keyboard' }]);
+    expect(e.players[0].remoteId).toBe('a');
+    e.setMode('perform');
+    e.start();
+    run(e, 2.32); // 0.32 s into beat 0: too late on this screen, within the pult's grace
+    expect(e.players[0].notes[0].judged).toBeNull();
+    playRemote(e, 'a', { kind: 'lane', lane: 60 }, 0.3);
+    expect(e.players[0].notes[0].judged).toBe('perfect');
+    expect(sound.notes).not.toContain(60);
+    run(e, 1.0);
+    expect(e.players[0].notes[1].judged).toBe('miss');
+    playRemote(e, 'nobody', { kind: 'lane', lane: 62 }, 0);
+    seatRemotes(e, []);
+    expect(e.players[0].remoteId).toBeUndefined();
   });
 
   it('plays the whole song, finishes and reports results', () => {
@@ -229,5 +250,34 @@ describe('StageEngine', () => {
     const [from] = (rec.play as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(from).toBeGreaterThanOrEqual(1.5);
     expect(from).toBeLessThan(1.6);
+  });
+
+  it('seeks on the timeline and jumps to the first note with a lead-in', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    e.setMode('perform');
+    e.start();
+    run(e, 5);
+    e.seekTo(8);
+    expect(e.beat).toBe(8);
+    expect(e.players[0].notes[8].judged).toBeNull();
+    expect(e.players[0].missIdx).toBe(8);
+    e.seekTo(1000);
+    expect(e.beat).toBe(16);
+    // first note is at beat 0; 3 s at 0.5 s per beat = 6 beats, clamped to the count-in
+    e.jumpToFirstNote(3);
+    expect(e.beat).toBe(-e.countIn);
+    e.seekTo(10);
+    e.jumpToFirstNote(1);
+    expect(e.beat).toBe(-2);
+  });
+
+  it('ends a loop when the seek leaves it', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    e.setLoop(1);
+    expect(e.loop).not.toBeNull();
+    e.seekTo(12);
+    expect(e.loop).toBeNull();
   });
 });

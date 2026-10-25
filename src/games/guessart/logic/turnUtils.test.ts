@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  getEffectiveDrawerIndex,
-  getEffectiveGuesserIndex,
-  getTurnPlayers,
-} from './turnUtils';
+import { getEffectiveDrawerIndex, getEffectiveGuesserIndex, getTurnPlayers } from './turnUtils';
 import type { PlayerIdentity } from './types';
 
 describe('turnUtils', () => {

@@ -18,13 +18,14 @@ import { applyLayout, layoutHolderChildren } from './holderLayout';
 import { applyGameDelta, type GameDelta } from './stateDelta';
 import { normalizeHandHolders } from './handHolder';
 import { removeFromHolderAndUpdateHand } from './reducers/holderMembership';
-import { deckReducer } from './reducers/deckReducer';
+import { deckReducer, placeCardInDeck } from './reducers/deckReducer';
 import { bagReducer } from './reducers/bagReducer';
 import { pieceReducer } from './reducers/pieceReducer';
 import { viewReducer } from './reducers/viewReducer';
 import { editReducer } from './reducers/editReducer';
 import { tableToolReducer } from './reducers/tableToolReducer';
 import { routineToActions } from './routines';
+import { raiseWidget, type ZOrderOp } from './zOrder';
 import type { WidgetPatch } from './widgetEdits';
 
 export interface FlyingCardAnimation {
@@ -52,6 +53,8 @@ export type TabletopAction =
         cardId?: string;
         targetHolderId?: string;
         position?: { x: number; y: number };
+        /** Only with `position`: false keeps the drawn card hidden (dragged off a deck). */
+        faceUp?: boolean;
       };
     }
   | {
@@ -91,6 +94,7 @@ export type TabletopAction =
   | { type: 'PLAY_CARD_FROM_HAND'; payload: { cardId: string; position: { x: number; y: number } } }
   | { type: 'SCALE_WIDGETS'; payload: { widgetIds: string[]; factor: number } }
   | { type: 'RESET_WIDGET_SCALE'; payload: { widgetIds: string[] } }
+  | { type: 'SET_Z_ORDER'; payload: { widgetIds: string[]; op: ZOrderOp } }
   | { type: 'SET_WIDGET_SHOW_ALWAYS'; payload: { widgetId: string; showAlways: boolean } }
   | { type: 'ADD_HIDDEN_ZONE'; payload: { zone: HiddenZone } }
   | { type: 'UPDATE_HIDDEN_ZONE'; payload: { id: string; changes: Partial<HiddenZone> } }
@@ -147,11 +151,15 @@ export function tabletopReducer(
         ...(widget.type === 'card' ? { inPile: false, pileId: undefined } : {}),
       };
 
+      // A moved widget goes to the top unless the caller fixed a zIndex.
+      const stacked =
+        action.payload.zIndex === undefined ? raiseWidget(widgets, action.payload.id) : widgets;
+
       return {
         ...state,
         game: {
           ...state.game,
-          widgets,
+          widgets: stacked,
         },
       };
     }
@@ -236,32 +244,7 @@ export function tabletopReducer(
             }
           }
         }
-        const newCardIds = deck.cardIds.includes(widgetId)
-          ? deck.cardIds
-          : [...deck.cardIds, widgetId];
-        widgets[deck.id] = {
-          ...deck,
-          cardIds: newCardIds,
-          cardCount: newCardIds.length,
-          ...(deck.isPile
-            ? {
-                frontContent: card.frontContent,
-                backContent: card.backContent,
-                faceObjects: card.faceObjects,
-                backFaceObjects: card.backFaceObjects,
-              }
-            : {}),
-        };
-        widgets[widgetId] = {
-          ...card,
-          inPile: true,
-          pileId: deck.id,
-          faceUp: deck.faceUp ?? false,
-          activeFace: deck.activeFace ?? 0,
-          x: deck.x,
-          y: deck.y,
-          zIndex: deck.zIndex,
-        };
+        placeCardInDeck(widgets, deck, card, widgetId);
         return {
           ...state,
           game: {
@@ -407,6 +390,7 @@ export function tabletopReducer(
     case 'SCALE_WIDGETS':
     case 'RESET_WIDGET_SCALE':
     case 'SET_WIDGET_SHOW_ALWAYS':
+    case 'SET_Z_ORDER':
     case 'ADD_HIDDEN_ZONE':
     case 'UPDATE_HIDDEN_ZONE':
     case 'MOVE_HIDDEN_ZONE':

@@ -13,9 +13,8 @@ import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DEMO_SONGS } from '../../demoSongs';
 import type { StageSongState } from '../useStageSong';
-import { ServerSongList } from './ServerSongList';
 import { LibraryTab } from './LibraryTab';
-import { NotesLibraryList } from './NotesLibraryList';
+import { ScoreLibraryList } from './ScoreLibraryList';
 
 interface SongPickerProps {
   open: boolean;
@@ -23,13 +22,13 @@ interface SongPickerProps {
   state: StageSongState;
 }
 
-type PickerTab = 'notes' | 'server' | 'library' | 'examples' | 'file';
+type PickerTab = 'notes' | 'library' | 'examples' | 'file';
 
 export function SongPicker({ open, onClose, state }: SongPickerProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
     t(`games.melodiq_notes.stage.${key}`, opts);
-  const [tab, setTab] = useState<PickerTab>('server');
+  const [tab, setTab] = useState<PickerTab>('notes');
   const fileRef = useRef<HTMLInputElement>(null);
   // the picker stays open when loading fails, so the error below is seen
   const closeIfLoaded = (load: Promise<boolean>) =>
@@ -46,21 +45,13 @@ export function SongPicker({ open, onClose, state }: SongPickerProps) {
         sx={{ px: 2 }}
       >
         <Tab value="notes" label={k('tab_notes')} />
-        <Tab value="server" label={k('tab_server')} />
         <Tab value="library" label={k('tab_library')} />
         <Tab value="examples" label={k('tab_examples')} />
         <Tab value="file" label={k('tab_file')} />
       </Tabs>
       <DialogContent sx={{ minHeight: 320 }}>
         {tab === 'notes' && (
-          <NotesLibraryList
-            onPlay={(piece, score) => closeIfLoaded(state.loadNotesPiece(piece, score))}
-          />
-        )}
-        {tab === 'server' && (
-          <ServerSongList
-            onPlay={(song, score) => closeIfLoaded(state.loadServerScore(song, score))}
-          />
+          <ScoreLibraryList onPlay={(item) => closeIfLoaded(state.loadCatalogScore(item))} />
         )}
         {tab === 'library' && (
           <LibraryTab

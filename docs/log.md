@@ -2,6 +2,141 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — One sheet-music store: Notes library (Q18, claude-code)
+
+- `docs/tech/song-pipeline.md` §4 rewritten (Notes library only store, `songId`, one-time import with marker `.song-scores-imported.json`, deprecated `/api/songs/:id/scores` routes, YouTube flow links a Notes piece) and §5 folder tree; `verified` refreshed. `docs/tech/architecture.md` `notes` plugin bullet. `docs/open-questions.md`: Q18 resolved.
+- Outside `docs/`: server `plugins/notes/{services/library.ts,routes/pieces.ts}` (`songId`), `plugins/melodiq/{services/scoreMigration.ts,routes/scores.ts,routes/songs.ts,index.ts}`, `Song.folderScores`, tests; client `lib/companion/{notesLibraryApi,songScoresApi}.ts`, Melodiq Notes `stage/logic/{scoreCatalog,notesLibrarySync,youtubeImport}.ts`, `serverScoreLoad.ts`, `useStageSong.ts`, `useYouTubeImport.ts`, `ScoreLibraryList`, `YouTubeRecordingDialog`, `RecordingBar`, locales; `server/README.md`.
+
+## 2026-10-25 — Touch targets follow-up (#510, claude-code)
+
+- `DESIGN.md` §4 touch-target line: dense rows re-flow, documented Wordle keyboard width exception. Outside `docs/`: Qwixx two-line rows on phones, Wordle zero-gap keyboard, theme Slider/Switch hit areas, Melodiq phone client and party rejoin at `CONTROLLER_TARGET`, `scripts/measure-touch-targets.cjs` (`data-touch-exempt`, pseudo-element on switch wrapper).
+
+## 2026-10-25 — Spectators in the party lobby, read-only (#536 follow-up, claude-code)
+
+- `docs/tech/tabletop-engine.md` (Seats, spectators and the hand dock): lobby "Zuschauen" switch, `PartyPlayer.spectator`, host-side `acceptIntent` guard, `readOnly` surface.
+- Outside `docs/`: `src/features/party` (roster, routes, manager, controller), `syncProtocol.ts`, `useTabletopSync`, `useSeatView`, `TabletopSurface`, `TabletopControllerView`, locales (`party.watchOnly*`).
+
+## 2026-10-25 — Feedback via Melodiq host (#145, claude-code)
+
+- `docs/tech/melodiq-architecture.md` §2.8 (new). No open-questions entry existed for #145. Outside `docs/`: `src/lib/feedbackRelay.ts`, `src/lib/github.ts`, `FeedbackDialog`, Melodiq `FeedbackRpcBridge`, `useFeedbackRelay`, `logic/feedbackRpc.ts`.
+
+## 2026-10-25 — Wordle dictionary-only guesses (#130, claude-code)
+
+- `docs/tech/persistence.md` (key `WORDLE_DICTIONARY_ONLY`) and `docs/tech/architecture.md` Wordle row. No open-questions entry existed for #130. Outside `docs/`: `src/games/wordle` (`logic/dictionary.ts`, `logic/allowedGuesses.ts`, settings dialog, `useWordle`), `src/lib/storage.ts`.
+
+## 2026-10-25 — Singer colour picker (#524, claude-code)
+
+- `DESIGN.md` §2.3 exempt list: removed "the hue picker" (Melodiq profiles now pick from `palette.piece.*`; the nearest-colour hue mapping and stored hue are unchanged). No open-questions entry existed for #524.
+
+## 2026-10-25 — Light mode and mode setting (#499, claude-code)
+
+- `docs/tech/styling.md`: dark + light `colorSchemes`, `ColorModeProvider`, `primary.text` rule; `verified.at` refreshed. `docs/tech/persistence.md`: `COLOR_MODE` key. `DESIGN.md` §9/§10 step 3 and status line updated.
+- Outside `docs/`: `src/theme.ts`, `src/context/ColorModeProvider.tsx`, `src/lib/colorMode.ts`, `AppearanceSettings`, `TvThemeProvider` (dark page background), hub ink banner, `primary.text` in settings/PWA chrome, locales; `scripts/a11y-audit.cjs --theme light` now sets `lgg_color_mode` (0 violations light and dark).
+
+## 2026-10-25 — Touch-action on game surfaces (#512, claude-code)
+
+- `docs/tech/styling.md` §5: one paragraph on `touch-action` for pinch-zoom-enabled pages (`none` for gesture surfaces, `manipulation` for tap-only controllers).
+- Outside `docs/`: `touchAction` on roots of `DrawingCanvas`, `ExcalidrawViewer` (none); Qwixx `QwixxSheetCard`, Knister `KnisterBoard`, Qwixx/Knister/Kniffel dice rollers, tabletop `TabletopControllerView` (manipulation). Tabletop board, Melodiq Notes stage/pult were already `none`.
+
+## 2026-10-25 — Melodiq Notes stage and pult (#485, claude-code)
+
+- `docs/tech/game-catalog.md` §3 (new melodiq-notes row) and shared-module row; `docs/tech/architecture.md` §3.2 `room-game` (`useRoomEvents`, `roomTransport.ts`, consumer melodiq-notes); `docs/tech/sync-protocol.md` `lgg/room` instance and channels.
+- Outside `docs/`: `src/modules/room-game/{roomTransport,useRoomEvents}.ts`, Melodiq Notes `pult/` (protocol, clock sync, remote judging, `useStageRoom`, `usePult`, `usePultInput`, `PultView`, `PultPad`, `StageInvite`), `stage/engine/remote.ts`, engine input at a given beat, `MelodiqNotesEntry`, registry, locales.
+
+## 2026-10-25 — Accessibility audit script (#512, claude-code)
+
+- No doc pages changed. Outside `docs/`: `scripts/a11y-audit.cjs` (axe over hub, settings, game start screens; run with `npm run dev`), icon-button names (`common.a11y.*` locales), viewport meta allows zoom, `Tooltip describeChild` on span-wrapped buttons.
+
+## 2026-10-25 — Touch targets (#510) and duplicate cleanup (#426), list states (#511) (claude-code)
+
+- `docs/tech/architecture.md` §3.2: new rows for `GameHeaderBar` (in-game top bar shell shared by GuessArt and Storyteller). Outside `docs/`: `SettingsCardHeader` (server settings cards), local `EmptyPanel`/`RetryButton`/`LyricsBar` in Melodiq files; remaining jscpd clones are imposter word pairs and werewolf role views (excluded by #426).
+- #510 (no doc change needed beyond this entry): touch-target theme overrides in `src/theme.ts`, constants and `invisibleHitArea` in `src/lib/touchTarget.ts`, measuring script `scripts/measure-touch-targets.cjs`; rule text stays in `DESIGN.md` §4.
+- #511: Melodiq Notes `ScoreLibraryList`, Melodiq `QueueList` and `YouTubeSearchDialog` use `EmptyState`/`ListSkeleton`/`ErrorState`.
+
+## 2026-10-25 — Server one-time pairing (#148, claude-code)
+
+- `docs/tech/server-security.md`: new §3a one-time pairing (`POST /api/pair`, `POST /api/pair/code`, code TTL, rate limit, first-start browser open, client confirmation card); token-source sentence corrected. `verified.at` refreshed.
+- `docs/tech/deployment.md` §4c: first start pairs automatically; Melodiq links to the setup wizard. `verified.at` refreshed.
+- Outside `docs/`: server `core/pairing.ts`, `utils/openBrowser.ts`, `index.ts`, `config.ts` (`isFirstRun`), tests; client `lib/companion/serverPairing.ts`, `ServerPairingCard`, `useServerPairing`, `ServerSetupCard` (`section=setup` opens the wizard), Melodiq `LibraryEmptyState`, locales.
+
+## 2026-10-25 — Melodiq remote host settings RPC (#356, claude-code)
+
+- `docs/tech/melodiq-architecture.md` §2.7 (new): typed `HostSettingsRpc` schema, admin gate, host handler. Outside `docs/`: `types.ts`, `logic/hostSettingsRpc.ts`, `HostSettingsRpcBridge`, `RemoteHostSettingsModal`, header action, locales.
+
+## 2026-10-25 — Melodiq phone picks its duet part (#146, claude-code)
+
+- `docs/tech/melodiq-architecture.md` §2.6 (new): phone to host `trackSelect`. Outside `docs/`: `PhoneTrackPicker`, `usePhoneTrackChoice`, `sendClientData`, locales.
+
+## 2026-10-25 — Melodiq resumes the song after reload (#152, claude-code)
+
+- `docs/tech/melodiq-architecture.md` §2.5 (new): persisted song + position, resume vs. restart. Outside `docs/`: `logic/savedPlayback.ts`, `hooks/useRestoredResume.ts`, MiniPlayer restart button, locales.
+
+## 2026-10-25 — Melodiq Notes: recording from YouTube into a song folder (#486, claude-code)
+
+- `docs/tech/song-pipeline.md` §1: `songId` in download requests (existing song folder, keeps `#VIDEO`), job `songId` in `GET /api/usdb/status/:jobId`; §4: the YouTube import flow and its client call of `POST /api/songs/:id/scores`.
+- `docs/open-questions.md` Q18: notes that the upload route has a client again.
+- Outside `docs/`: server `queueManager.resolveDownloadRequest`/`songFolderTarget`, `ultrastarTxt.videoHeader`, `download.ts` order (index before `done`), `server/test/song_download.test.js`; client `songDownloadApi.ts`, `songScoresApi.uploadSongScore`, Melodiq Notes `youtubeImport.ts`, `useYouTubeImport.ts`, `YouTubeRecordingDialog`, `YouTubeResults`, locales.
+
+## 2026-10-25 — TV theme variant (#509, claude-code)
+
+- `DESIGN.md` §3.3: names `src/themeTv.ts` (`createTvTheme`) and `TvThemeProvider`.
+- Outside `docs/`: `src/themeTv.ts`, `src/components/common/TvThemeProvider.tsx`, `baseTheme` export in `src/theme.ts`, wrappers in `MelodiqTV.tsx` and the tabletop TV branch.
+
+## 2026-10-25 — Tabletop named saves and default templates (#538, claude-code)
+
+- `docs/tech/tabletop-engine.md`: named saves (device / server), unique names, owner rules, default template; `galaxy_tabletop_db` v4. `verified.at` refreshed.
+- `docs/tech/server-security.md`: API key permissions `allowTabletopSaves`, `allowTabletopTemplates`, `hasPermission`, save/template routes. `verified.at` refreshed.
+- `docs/tech/persistence.md`: `named_saves` store. `docs/tech/architecture.md`: tabletop plugin bullet names the save and template routes.
+- `docs/open-questions.md`: new question **(user)** on a local default template.
+- Outside `docs/`: server `routes/saves.ts`, `services/saveStore.ts`, `core/auth.ts`, API key config; client `components/saves/*`, `useTableSaves`, `saveNames`, admin key dialogs (permission switches), locales.
+
+## 2026-10-25 — Tabletop table gestures (claude-code)
+
+- `docs/tech/tabletop-engine.md` §4: new section "Table gestures" (sources tap/drag/long press, `faceUp` on `DRAW_CARD`, F/S keys, shake, die drag no longer rolls, `SurfaceContextMenu` with z-order restored); front matter `verified` refreshed. Outside `docs/`: tabletop code and locales (#537).
+
+## 2026-10-25 — Tabletop hand dock fan, card zoom, spectators (claude-code)
+
+- `docs/tech/tabletop-engine.md` §4: new section "Seats, spectators and the hand dock" (`resolveSeatView`, `SPECTATOR_SEAT_ID`, `role=spectator`, `fanLayout`, `CardZoomDialog`); pass-and-play paragraph notes the explicit first seat. Outside `docs/`: tabletop code and locales (#536).
+
+## 2026-10-25 — Shared list states (#511, claude-code)
+
+- `docs/tech/architecture.md` §3.2: added `EmptyState`, `ErrorState`, `ListSkeleton` to the reuse catalog.
+- Outside `docs/`: components in `src/components/common/`, adopted in party roster/picker, server directory browser/manager, tabletop installed games, Melodiq online songs; `common.retry` locale key.
+
+## 2026-10-25 — Drums-only score alignment (#484, claude-code)
+
+- `docs/tech/song-pipeline.md` §4: how `alignRecording` aligns (coarse match, then `fitMarksToNotes`) and the onset path for drums-only scores (`onsetAlign.ts`); `verified` refreshed. `docs/tech/architecture.md`: `music-score` row names `marksFromOnsets`. Outside `docs/`: `src/modules/music-score/onsetAlign.ts`, `alignment.ts`.
+
+## 2026-10-25 — One sheet-music library in Melodiq Notes (#534, claude-code)
+
+- `docs/tech/song-pipeline.md` §4: song-folder scores appear read-only in the merged Melodiq Notes library (`stage/logic/scoreCatalog.ts`); only their bar marks are written; the client no longer uploads to song folders. `verified.at` refreshed.
+- `docs/tech/architecture.md` (`notes` plugin bullet): the "Notes library" tab merges both stores.
+- `docs/open-questions.md`: new Q18 **(user)** — move song-folder scores/marks into the Notes library, drop the upload route.
+- Outside `docs/`: Melodiq Notes song picker (one "Notes library" tab instead of "Nexumia server" + "Notes library"), `notesLibrarySync.saveTargetFor`, `songScoresApi.uploadScore` removed, locales.
+
+## 2026-10-25 — Melodiq Notes fine-tune and speed sliders (#532, claude-code)
+
+- No `docs/` content changed; code: `stage/logic/tuning.ts`, `RecordingBar`, `StageToolbar`.
+
+## 2026-10-25 — Drum voices in music-score (#531, claude-code)
+
+- `docs/tech/song-pipeline.md`: `music-score` row mentions `drumVoices` (drum voice enum, GM key and MusicXML mapping, sticking, match ranks). Outside `docs/`: `src/modules/music-score/drumVoices.ts`, `ScoreNote.drum`/`hand`, drum highway glyphs.
+
+## 2026-10-24 — Melodiq Notes seek bar and section groups (claude-code)
+
+- `docs/tech/game-catalog.md`: melodiq-notes now has 4 `MELODIQ_NOTES_*` storage keys (`MELODIQ_NOTES_SEEK_LEAD_IN`).
+- Outside `docs/`: `SeekBar`, `SectionStrip` groups, `StageEngine.seekTo` / `jumpToFirstNote`, logic in `stage/logic/seek.ts` and `sectionGroups.ts`.
+
+## 2026-10-24 — Tabletop z-order (claude-code)
+
+- `docs/tech/tabletop-engine.md` §1: new section "Stacking order" (`SET_Z_ORDER`, `logic/zOrder.ts`, move-to-top, context menu, shortcuts); `viewReducer.ts` row updated; front matter `verified` refreshed. Outside `docs/`: tabletop code and locales changed (#540).
+
+## 2026-10-24 — Nexumia server rename and signaling image name (#530, claude-code)
+
+- Companion server is now called Nexumia server. Docker images `nexumia/nexumia-server` (compose service `nexumia-server`, container `nexumia-server`, tunnel `nexumia-tunnel`); `nexumia/melodiq-server` is a deprecated alias. Dev compose service/container `nexumia-server-dev`. Updated: `deployment.md`, `external-sources.md`, `ci-cd-pipelines.md`, `dev-compose-workflow.md`, `monitoring-scaling.md`, `troubleshooting.md`, `server-runbook.md`.
+- Signaling image: `docker-publish.yml` pushed to `${DOCKERHUB_USERNAME}/galaxy-signaling` while every compose file pulls `nexumia/galaxy-signaling`. Both publish targets now use the literal `nexumia` namespace. Open: [Q17](open-questions.md).
+- Outside `docs/`: UI strings (de/en) and the server plugin name now say Nexumia server; the download helper links the `nexumia-server-*` release files it always should have; `composeYamlGenerator` emits `nexumia/nexumia-server`; `server/package.json` description. Routes, storage keys and the `server/` folder are unchanged.
+
 ## 2026-10-24 — Tabletop hidden zones: move, resize, reveal toggle, fog of war (claude-code)
 
 - `docs/tech/tabletop-engine.md`: new "Hidden zones" section, viewReducer row names the zone actions.

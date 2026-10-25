@@ -76,7 +76,7 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
             <IconButton
               size="small"
               onClick={() => onSelectNumber(null)}
-              sx={{ p: 0.2, color: 'text.secondary', '&:hover': { color: 'error.main' } }}
+              sx={{ color: 'text.secondary', '&:hover': { color: 'error.main' } }}
             >
               <CloseIcon fontSize="small" />
             </IconButton>
@@ -88,7 +88,7 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(11, 1fr)',
+          gridTemplateColumns: { xs: 'repeat(6, 1fr)', sm: 'repeat(11, 1fr)' },
           gap: { xs: 0.5, sm: 0.8 },
         }}
       >

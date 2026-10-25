@@ -1,8 +1,11 @@
 import {
   assignTab,
   drumLaneOf,
+  drumVoiceOfKey,
   STRING_TUNINGS,
   topLine,
+  type DrumVoice,
+  type Hand,
   type InstrumentKind,
   type ScorePart,
 } from '../../../../modules/music-score';
@@ -19,6 +22,10 @@ export interface StageNote {
   lane: number;
   fret?: number;
   syl?: string;
+  /** Drums: the written instrument and articulation. */
+  drum?: DrumVoice;
+  /** Drums: sticking, when the score has it. */
+  hand?: Hand;
   judged: Judgement | null;
   /** Beats sung on pitch (pitch view). */
   acc: number;
@@ -42,9 +49,10 @@ export function buildChart(part: ScorePart, kind: InstrumentKind): StageNote[] {
       .map((n) => ({
         ...n,
         lane: part.isDrum ? drumLaneOf(n.pitch) : [4, 2, 1, 3, 0][n.pitch % 5],
+        drum: part.isDrum ? (n.drum ?? drumVoiceOfKey(n.pitch)) : undefined,
       }))
       .filter((n) => {
-        const key = `${Math.round(n.t * 1000)}:${n.lane}`;
+        const key = `${Math.round(n.t * 1000)}:${n.lane}:${n.drum ?? ''}`;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;

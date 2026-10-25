@@ -124,7 +124,12 @@ export const ImposterGame: React.FC = () => {
           zIndex: 10,
         }}
       >
-        <IconButton color="primary" onClick={() => setInfoOpen(true)} size="large">
+        <IconButton
+          color="primary"
+          onClick={() => setInfoOpen(true)}
+          size="large"
+          aria-label={t('common.a11y.info', 'Info')}
+        >
           <InfoOutlinedIcon fontSize="inherit" />
         </IconButton>
       </Box>

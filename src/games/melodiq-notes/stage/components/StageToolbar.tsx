@@ -1,6 +1,7 @@
-import { Button, Stack, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Button, Slider, Stack, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { StageEngine } from '../engine/StageEngine';
+import { snapSpeed, SPEED_MAX, SPEED_MIN, SPEED_STEP } from '../logic/tuning';
 import type { BandMode, StageMode } from '../engine/types';
 import type { StageDisplay } from '../render/stageRenderer';
 
@@ -12,7 +13,6 @@ interface StageToolbarProps {
   onFullscreen: () => void;
 }
 
-const SPEEDS = [0.5, 0.75, 1];
 const BAND_MODES: BandMode[] = ['all', 'others', 'none'];
 
 export function StageToolbar({
@@ -40,20 +40,25 @@ export function StageToolbar({
           </ToggleButton>
         ))}
       </ToggleButtonGroup>
-      <ToggleButtonGroup
-        size="small"
-        exclusive
-        value={engine.speed}
-        aria-label={k('speed')}
-        disabled={engine.mode === 'perform'}
-        onChange={(_, v: number | null) => v && engine.setSpeed(v)}
-      >
-        {SPEEDS.map((s) => (
-          <ToggleButton key={s} value={s}>
-            {Math.round(s * 100)} %
-          </ToggleButton>
-        ))}
-      </ToggleButtonGroup>
+      <Stack direction="row" spacing={1} alignItems="center">
+        <Typography variant="body2" color="text.secondary">
+          {k('speed')}
+        </Typography>
+        <Slider
+          size="small"
+          aria-label={k('speed')}
+          value={engine.speed}
+          min={SPEED_MIN}
+          max={SPEED_MAX}
+          step={SPEED_STEP}
+          disabled={engine.mode === 'perform'}
+          onChange={(_, v) => engine.setSpeed(snapSpeed(v as number))}
+          sx={{ width: 120 }}
+        />
+        <Typography variant="body2" sx={{ fontFamily: 'monospace', minWidth: '5ch' }}>
+          {Math.round(engine.speed * 100)} %
+        </Typography>
+      </Stack>
       <ToggleButtonGroup
         size="small"
         exclusive

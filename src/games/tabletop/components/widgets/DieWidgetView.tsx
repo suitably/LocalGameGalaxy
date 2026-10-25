@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Box } from '@mui/material';
 import type { DieWidget } from '../../logic/types';
+import { DRAG_THRESHOLD_PX } from '../../logic/tableGestures';
 
 interface DieWidgetViewProps {
   widget: DieWidget;
@@ -16,12 +17,17 @@ export const DieWidgetView: React.FC<DieWidgetViewProps> = ({
   onPointerDown,
 }) => {
   const [rolling, setRolling] = useState(false);
+  // Dragging a die never rolls it: a click only counts if the pointer stayed put.
+  const downAt = useRef<{ x: number; y: number } | null>(null);
   const val = Math.min(6, Math.max(1, widget.currentValue || 1));
   const dieColor = widget.color || '#ffffff';
   const pipColor = widget.pipColor || '#dc2626';
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    const start = downAt.current;
+    downAt.current = null;
+    if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) >= DRAG_THRESHOLD_PX) return;
     setRolling(true);
     setTimeout(() => setRolling(false), 400);
     onRoll?.();
@@ -29,18 +35,46 @@ export const DieWidgetView: React.FC<DieWidgetViewProps> = ({
 
   const PIP_PATTERNS: Record<number, number[][]> = {
     1: [[1, 1]],
-    2: [[0, 0], [2, 2]],
-    3: [[0, 0], [1, 1], [2, 2]],
-    4: [[0, 0], [0, 2], [2, 0], [2, 2]],
-    5: [[0, 0], [0, 2], [1, 1], [2, 0], [2, 2]],
-    6: [[0, 0], [0, 2], [1, 0], [1, 2], [2, 0], [2, 2]],
+    2: [
+      [0, 0],
+      [2, 2],
+    ],
+    3: [
+      [0, 0],
+      [1, 1],
+      [2, 2],
+    ],
+    4: [
+      [0, 0],
+      [0, 2],
+      [2, 0],
+      [2, 2],
+    ],
+    5: [
+      [0, 0],
+      [0, 2],
+      [1, 1],
+      [2, 0],
+      [2, 2],
+    ],
+    6: [
+      [0, 0],
+      [0, 2],
+      [1, 0],
+      [1, 2],
+      [2, 0],
+      [2, 2],
+    ],
   };
 
   const activePips = PIP_PATTERNS[val] || PIP_PATTERNS[1];
 
   return (
     <Box
-      onPointerDown={onPointerDown}
+      onPointerDown={(e) => {
+        downAt.current = { x: e.clientX, y: e.clientY };
+        onPointerDown?.(e);
+      }}
       onClick={handleClick}
       sx={{
         position: 'absolute',
@@ -61,7 +95,7 @@ export const DieWidgetView: React.FC<DieWidgetViewProps> = ({
         p: 0.8,
         boxSizing: 'border-box',
         transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-        transform: rolling ? 'rotate(360deg) scale(1.2)' : (isDragging ? 'scale(1.1)' : 'none'),
+        transform: rolling ? 'rotate(360deg) scale(1.2)' : isDragging ? 'scale(1.1)' : 'none',
         '&:hover': {
           boxShadow: 6,
         },
@@ -71,7 +105,10 @@ export const DieWidgetView: React.FC<DieWidgetViewProps> = ({
         [0, 1, 2].map((c) => {
           const isPip = activePips.some(([pr, pc]) => pr === r && pc === c);
           return (
-            <Box key={`${r}-${c}`} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box
+              key={`${r}-${c}`}
+              sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
               {isPip && (
                 <Box
                   sx={{
@@ -85,7 +122,7 @@ export const DieWidgetView: React.FC<DieWidgetViewProps> = ({
               )}
             </Box>
           );
-        })
+        }),
       )}
     </Box>
   );

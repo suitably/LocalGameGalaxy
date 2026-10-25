@@ -1,4 +1,5 @@
 import { alpha, type SxProps, type Theme } from '@mui/material';
+import { TOUCH_TARGET } from '../../lib/touchTarget';
 
 /**
  * Shared styling for all Settings cards and containers (DESIGN.md §6):
@@ -36,7 +37,7 @@ export const mainTabsBarSx: SxProps<Theme> = {
 };
 
 export const mainTabSx: SxProps<Theme> = {
-  minHeight: 46,
+  minHeight: TOUCH_TARGET,
   py: 1.25,
   px: { xs: 2, sm: 3 },
   textTransform: 'none',
@@ -64,7 +65,7 @@ export const subTabsBarSx: SxProps<Theme> = {
 };
 
 export const subTabSx: SxProps<Theme> = {
-  minHeight: 38,
+  minHeight: TOUCH_TARGET,
   py: 0.75,
   px: 2,
   textTransform: 'none',
@@ -113,7 +114,7 @@ export const subPillSx = (isActive: boolean): SxProps<Theme> => ({
   textTransform: 'none',
   fontWeight: isActive ? 700 : 500,
   fontSize: '0.8rem',
-  color: isActive ? 'primary.main' : 'text.secondary',
+  color: isActive ? 'primary.text' : 'text.secondary',
   bgcolor: (theme) => alpha(theme.palette.primary.main, isActive ? 0.12 : 0),
   border: 1,
   borderColor: (theme) =>
@@ -121,7 +122,7 @@ export const subPillSx = (isActive: boolean): SxProps<Theme> => ({
   borderRadius: 5,
   px: 1.5,
   py: 0.3,
-  minHeight: 28,
+  minHeight: TOUCH_TARGET,
   whiteSpace: 'nowrap',
   transition: 'color 150ms, background-color 150ms',
   '&:hover': {

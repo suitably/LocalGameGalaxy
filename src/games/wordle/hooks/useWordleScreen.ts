@@ -10,7 +10,7 @@ import { wordleEngine } from '../logic/wordleEngine';
 import type { WordleGameMode } from '../logic/types';
 import { useWordle } from './useWordle';
 
-export type WordleDialog = 'stats' | 'duel' | 'help' | 'history';
+export type WordleDialog = 'stats' | 'duel' | 'help' | 'history' | 'settings';
 
 export function useWordleScreen() {
   const { i18n } = useTranslation();

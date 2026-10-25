@@ -3,6 +3,7 @@ import { alpha, Box, Typography, Button, Alert } from '@mui/material';
 import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
 import LockOpenIcon from '@mui/icons-material/LockOpenRounded';
 import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useSongs } from '../hooks/useSongs';
 
 interface LibraryEmptyStateProps {
@@ -14,6 +15,34 @@ interface LibraryEmptyStateProps {
   isClient?: boolean;
 }
 
+const EmptyPanel: React.FC<{ wide?: boolean; children: React.ReactNode }> = ({
+  wide = false,
+  children,
+}) => (
+  <Box
+    sx={{
+      width: '100%',
+      textAlign: 'center',
+      py: wide ? 6 : 8,
+      px: 2,
+      flexGrow: 1,
+      maxWidth: wide ? 650 : 600,
+      mx: 'auto',
+    }}
+  >
+    {children}
+  </Box>
+);
+
+const RetryButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
+  const { t } = useTranslation();
+  return (
+    <Button onClick={onClick} variant="outlined" sx={{ borderRadius: 999, px: 3, py: 1 }}>
+      {t('melodiq.retry_connection', 'Erneut versuchen')}
+    </Button>
+  );
+};
+
 export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
   hasConnectionError,
   songsLength,
@@ -23,22 +52,13 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
 }) => {
   const { t } = useTranslation();
   const { localLibrary } = useSongs();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   if (isClient) {
     if (hasConnectionError) {
       return (
-        <Box
-          sx={{
-            width: '100%',
-            textAlign: 'center',
-            py: 6,
-            px: 2,
-            opacity: 0.9,
-            flexGrow: 1,
-            maxWidth: 650,
-            mx: 'auto',
-          }}
-        >
+        <EmptyPanel wide={true}>
           <Typography variant="h5">
             {t('melodiq.client_connection_error', 'Konnte keine Songs vom Host laden')}
           </Typography>
@@ -48,31 +68,14 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
               'Bitte stelle sicher, dass der Host verbunden ist und Songs bereitstellt.',
             )}
           </Typography>
-          <Button
-            onClick={refreshSongs}
-            variant="outlined"
-            sx={{ borderRadius: 999, px: 3, py: 1 }}
-          >
-            {t('melodiq.retry_connection', 'Erneut versuchen')}
-          </Button>
-        </Box>
+          <RetryButton onClick={refreshSongs} />
+        </EmptyPanel>
       );
     }
 
     if (songsLength === 0 && !isOnlineSearch) {
       return (
-        <Box
-          sx={{
-            width: '100%',
-            textAlign: 'center',
-            py: 8,
-            px: 2,
-            opacity: 0.9,
-            flexGrow: 1,
-            maxWidth: 600,
-            mx: 'auto',
-          }}
-        >
+        <EmptyPanel wide={false}>
           <Typography variant="h5">
             {t('melodiq.client_empty_library_title', 'Keine Songs vom Host verfügbar')}
           </Typography>
@@ -82,14 +85,8 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
               'Der Host hat momentan keine Songs in der Bibliothek geladen.',
             )}
           </Typography>
-          <Button
-            onClick={refreshSongs}
-            variant="outlined"
-            sx={{ borderRadius: 999, px: 3, py: 1 }}
-          >
-            {t('melodiq.retry_connection', 'Erneut versuchen')}
-          </Button>
-        </Box>
+          <RetryButton onClick={refreshSongs} />
+        </EmptyPanel>
       );
     }
     return null;
@@ -97,18 +94,7 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
 
   if (hasConnectionError) {
     return (
-      <Box
-        sx={{
-          width: '100%',
-          textAlign: 'center',
-          py: 6,
-          px: 2,
-          opacity: 0.9,
-          flexGrow: 1,
-          maxWidth: 650,
-          mx: 'auto',
-        }}
-      >
+      <EmptyPanel wide={true}>
         <Typography variant="h5">{t('melodiq.cannot_connect')}</Typography>
         <Typography sx={{ mt: 1, mb: 3, color: 'text.secondary' }}>
           {t('melodiq.helper_required')}
@@ -171,48 +157,25 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
           <Button
             variant="outlined"
             color="secondary"
-            onClick={() => {
-              let filename = 'melodiq-server-win.zip';
-              if (navigator.userAgent.includes('Mac')) {
-                filename = 'melodiq-server-macos.tar.gz';
-              } else if (
-                navigator.userAgent.includes('Linux') &&
-                !navigator.userAgent.includes('Android')
-              ) {
-                filename = 'melodiq-server-linux.tar.gz';
-              }
-              window.location.href = `https://github.com/suitably/LocalGameGalaxy/releases/latest/download/${filename}`;
-            }}
+            onClick={() =>
+              // Settings → Server opens the setup wizard (OS download + auto-pairing).
+              navigate('/settings?tab=server&section=setup', {
+                state: { from: location.pathname + location.search },
+              })
+            }
             sx={{ borderRadius: 999, px: 3, py: 1 }}
           >
-            {t('melodiq.download_helper')}
+            {t('melodiq.setup_server')}
           </Button>
-          <Button
-            onClick={refreshSongs}
-            variant="outlined"
-            sx={{ borderRadius: 999, px: 3, py: 1 }}
-          >
-            {t('melodiq.retry_connection')}
-          </Button>
+          <RetryButton onClick={refreshSongs} />
         </Box>
-      </Box>
+      </EmptyPanel>
     );
   }
 
   if (songsLength === 0 && !isOnlineSearch) {
     return (
-      <Box
-        sx={{
-          width: '100%',
-          textAlign: 'center',
-          py: 8,
-          px: 2,
-          opacity: 0.9,
-          flexGrow: 1,
-          maxWidth: 600,
-          mx: 'auto',
-        }}
-      >
+      <EmptyPanel wide={false}>
         <Typography variant="h5">
           {t('melodiq.empty_library_title', 'Deine Bibliothek ist leer')}
         </Typography>
@@ -241,7 +204,7 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
             )}
           </Alert>
         )}
-      </Box>
+      </EmptyPanel>
     );
   }
 

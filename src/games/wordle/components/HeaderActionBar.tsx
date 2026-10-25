@@ -4,6 +4,7 @@ import HistoryIcon from '@mui/icons-material/HistoryRounded';
 import PersonAddAlt1RoundedIcon from '@mui/icons-material/PersonAddAlt1Rounded';
 import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
 import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
+import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import { useTranslation } from 'react-i18next';
 
 export const HeaderActionBar: React.FC<{
@@ -11,7 +12,8 @@ export const HeaderActionBar: React.FC<{
   onDuel: () => void;
   onStats: () => void;
   onHelp: () => void;
-}> = ({ onHistory, onDuel, onStats, onHelp }) => {
+  onSettings: () => void;
+}> = ({ onHistory, onDuel, onStats, onHelp, onSettings }) => {
   const { t } = useTranslation();
   return (
     <Box
@@ -42,6 +44,14 @@ export const HeaderActionBar: React.FC<{
         <Tooltip title={t('wordle.stats.btn_tooltip', 'Statistiken')}>
           <IconButton onClick={onStats} aria-label={t('wordle.stats.btn_tooltip', 'Statistiken')}>
             <BarChartRoundedIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title={t('wordle.settings.btn_tooltip', 'Einstellungen')}>
+          <IconButton
+            onClick={onSettings}
+            aria-label={t('wordle.settings.btn_tooltip', 'Einstellungen')}
+          >
+            <SettingsRoundedIcon />
           </IconButton>
         </Tooltip>
         <Tooltip title={t('common.help', 'Hilfe')}>

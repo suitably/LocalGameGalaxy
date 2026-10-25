@@ -1,16 +1,5 @@
 import React, { useState } from 'react';
-import {
-  alpha,
-  AppBar,
-  Box,
-  IconButton,
-  Menu,
-  MenuItem,
-  Toolbar,
-  Tooltip,
-  Typography,
-  Chip,
-} from '@mui/material';
+import { alpha, Box, IconButton, Menu, MenuItem, Tooltip, Typography, Chip } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
 import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded';
@@ -20,6 +9,7 @@ import PhonelinkRingRoundedIcon from '@mui/icons-material/PhonelinkRingRounded';
 import TransferWithinAStationRoundedIcon from '@mui/icons-material/TransferWithinAStationRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import { useTranslation } from 'react-i18next';
+import { GameHeaderBar } from '../../../components/common/GameHeaderBar';
 import type { StoryGameRecord } from '../types';
 
 interface StoryHeaderProps {
@@ -67,138 +57,127 @@ export const StoryHeader: React.FC<StoryHeaderProps> = ({
   };
 
   return (
-    <AppBar
-      position="static"
-      elevation={0}
-      sx={{
-        bgcolor: 'background.default',
-        backgroundImage: 'none',
-        borderBottom: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
-        zIndex: 1100,
-      }}
-    >
-      <Toolbar sx={{ minHeight: { xs: 56, sm: 64 }, px: { xs: 1, sm: 2 }, gap: 1 }}>
-        <Tooltip title={t('common.exit', 'Beenden')}>
-          <IconButton edge="start" color="inherit" onClick={onExit} size="small">
-            <ArrowBackRoundedIcon />
-          </IconButton>
-        </Tooltip>
+    <GameHeaderBar toolbarSx={{ minHeight: { xs: 56, sm: 64 }, px: { xs: 1, sm: 2 }, gap: 1 }}>
+      <Tooltip title={t('common.exit', 'Beenden')}>
+        <IconButton edge="start" color="inherit" onClick={onExit} size="small">
+          <ArrowBackRoundedIcon />
+        </IconButton>
+      </Tooltip>
 
-        <Box sx={{ minWidth: 0, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ color: 'text.primary' }}>
-              {game.name || t('games.storyteller.title', 'Geschichtenschreiber')}
-            </Typography>
-            {roomId && (
-              <Chip
-                size="small"
-                label={roomId}
-                color="primary"
-                sx={{ height: 22, fontWeight: 700, fontSize: '0.75rem' }}
-              />
-            )}
+      <Box sx={{ minWidth: 0, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ color: 'text.primary' }}>
+            {game.name || t('games.storyteller.title', 'Geschichtenschreiber')}
+          </Typography>
+          {roomId && (
             <Chip
               size="small"
-              label={`${t('storyteller.turnLabel', 'Zug')} ${game.turnNumber}`}
-              sx={{
-                bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.15),
-                color: 'secondary.main',
-                fontWeight: 600,
-                height: 22,
-              }}
+              label={roomId}
+              color="primary"
+              sx={{ height: 22, fontWeight: 700, fontSize: '0.75rem' }}
             />
-          </Box>
-
-          <Typography variant="caption" noWrap sx={{ color: 'text.secondary' }}>
-            {t('storyteller.currentTurnOf', 'Am Zug: ')}
-            <Box component="strong" sx={{ color: 'secondary.main' }}>
-              {activePlayer.name}
-            </Box>
-            {!isCurrentTurnLocal && ` (${t('storyteller.remotePlayer', 'Remote')})`}
-          </Typography>
+          )}
+          <Chip
+            size="small"
+            label={`${t('storyteller.turnLabel', 'Zug')} ${game.turnNumber}`}
+            sx={{
+              bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.15),
+              color: 'secondary.main',
+              fontWeight: 600,
+              height: 22,
+            }}
+          />
         </Box>
 
-        {/* Read full story */}
-        <Tooltip title={t('storyteller.readStory', 'Geschichte lesen')}>
-          <IconButton color="inherit" onClick={onOpenReader} size="small">
-            <MenuBookRoundedIcon />
+        <Typography variant="caption" noWrap sx={{ color: 'text.secondary' }}>
+          {t('storyteller.currentTurnOf', 'Am Zug: ')}
+          <Box component="strong" sx={{ color: 'secondary.main' }}>
+            {activePlayer.name}
+          </Box>
+          {!isCurrentTurnLocal && ` (${t('storyteller.remotePlayer', 'Remote')})`}
+        </Typography>
+      </Box>
+
+      {/* Read full story */}
+      <Tooltip title={t('storyteller.readStory', 'Geschichte lesen')}>
+        <IconButton color="inherit" onClick={onOpenReader} size="small">
+          <MenuBookRoundedIcon />
+        </IconButton>
+      </Tooltip>
+
+      {/* If remote turn, allow claiming directly from header */}
+      {!isCurrentTurnLocal && onToggleLocalRemote && canToggleLocalRemote && (
+        <Tooltip title={t('storyteller.claimLocalTurn', 'Auf diesem Gerät schreiben')}>
+          <IconButton color="warning" onClick={onToggleLocalRemote} size="small">
+            <TransferWithinAStationRoundedIcon />
           </IconButton>
         </Tooltip>
+      )}
 
-        {/* If remote turn, allow claiming directly from header */}
-        {!isCurrentTurnLocal && onToggleLocalRemote && canToggleLocalRemote && (
-          <Tooltip title={t('storyteller.claimLocalTurn', 'Auf diesem Gerät schreiben')}>
-            <IconButton color="warning" onClick={onToggleLocalRemote} size="small">
-              <TransferWithinAStationRoundedIcon />
-            </IconButton>
-          </Tooltip>
+      {/* Share turn / Player links */}
+      {(onOpenShare || onShareTurn) && (
+        <Tooltip title={copied ? t('common.copied', 'Kopiert!') : t('common.share', 'Teilen')}>
+          <IconButton color="inherit" onClick={handleShare} size="small">
+            {copied ? <CheckRoundedIcon sx={{ color: 'success.main' }} /> : <ShareRoundedIcon />}
+          </IconButton>
+        </Tooltip>
+      )}
+
+      {/* Overflow Menu */}
+      <IconButton color="inherit" size="small" onClick={(e) => setMenuAnchorEl(e.currentTarget)}>
+        <MoreVertRoundedIcon />
+      </IconButton>
+
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={() => setMenuAnchorEl(null)}
+      >
+        {onOpenShare && (
+          <MenuItem
+            onClick={() => {
+              setMenuAnchorEl(null);
+              onOpenShare();
+            }}
+          >
+            <ShareRoundedIcon sx={{ mr: 1.5, fontSize: 20 }} />
+            {t('storyteller.shareLinksTitle', 'Mitspieler-Links')}
+          </MenuItem>
         )}
 
-        {/* Share turn / Player links */}
-        {(onOpenShare || onShareTurn) && (
-          <Tooltip title={copied ? t('common.copied', 'Kopiert!') : t('common.share', 'Teilen')}>
-            <IconButton color="inherit" onClick={handleShare} size="small">
-              {copied ? <CheckRoundedIcon sx={{ color: 'success.main' }} /> : <ShareRoundedIcon />}
-            </IconButton>
-          </Tooltip>
+        {onOpenEdit && (
+          <MenuItem
+            onClick={() => {
+              setMenuAnchorEl(null);
+              onOpenEdit();
+            }}
+          >
+            <EditRoundedIcon sx={{ mr: 1.5, fontSize: 20 }} />
+            {t('storyteller.editStory', 'Geschichte bearbeiten')}
+          </MenuItem>
         )}
 
-        {/* Overflow Menu */}
-        <IconButton color="inherit" size="small" onClick={(e) => setMenuAnchorEl(e.currentTarget)}>
-          <MoreVertRoundedIcon />
-        </IconButton>
-
-        <Menu
-          anchorEl={menuAnchorEl}
-          open={Boolean(menuAnchorEl)}
-          onClose={() => setMenuAnchorEl(null)}
-        >
-          {onOpenShare && (
-            <MenuItem
-              onClick={() => {
-                setMenuAnchorEl(null);
-                onOpenShare();
-              }}
-            >
-              <ShareRoundedIcon sx={{ mr: 1.5, fontSize: 20 }} />
-              {t('storyteller.shareLinksTitle', 'Mitspieler-Links')}
-            </MenuItem>
-          )}
-
-          {onOpenEdit && (
-            <MenuItem
-              onClick={() => {
-                setMenuAnchorEl(null);
-                onOpenEdit();
-              }}
-            >
-              <EditRoundedIcon sx={{ mr: 1.5, fontSize: 20 }} />
-              {t('storyteller.editStory', 'Geschichte bearbeiten')}
-            </MenuItem>
-          )}
-
-          {canToggleLocalRemote && onToggleLocalRemote && (
-            <MenuItem
-              onClick={() => {
-                setMenuAnchorEl(null);
-                onToggleLocalRemote();
-              }}
-            >
-              {isCurrentTurnLocal ? (
-                <>
-                  <PhonelinkRingRoundedIcon sx={{ mr: 1.5, fontSize: 20 }} />
-                  {t('storyteller.markAsRemote', 'Als Remote markieren')}
-                </>
-              ) : (
-                <>
-                  <TransferWithinAStationRoundedIcon sx={{ mr: 1.5, fontSize: 20 }} />
-                  {t('storyteller.claimLocalTurn', 'Auf diesem Gerät spielen')}
-                </>
-              )}
-            </MenuItem>
-          )}
-        </Menu>
-      </Toolbar>
-    </AppBar>
+        {canToggleLocalRemote && onToggleLocalRemote && (
+          <MenuItem
+            onClick={() => {
+              setMenuAnchorEl(null);
+              onToggleLocalRemote();
+            }}
+          >
+            {isCurrentTurnLocal ? (
+              <>
+                <PhonelinkRingRoundedIcon sx={{ mr: 1.5, fontSize: 20 }} />
+                {t('storyteller.markAsRemote', 'Als Remote markieren')}
+              </>
+            ) : (
+              <>
+                <TransferWithinAStationRoundedIcon sx={{ mr: 1.5, fontSize: 20 }} />
+                {t('storyteller.claimLocalTurn', 'Auf diesem Gerät spielen')}
+              </>
+            )}
+          </MenuItem>
+        )}
+      </Menu>
+    </GameHeaderBar>
   );
 };

@@ -10,11 +10,12 @@ import { initMelodiqI18n } from './i18n';
 import { useWakeLock } from '../../hooks/useWakeLock';
 import { useScreenOrientation } from '../../hooks/useScreenOrientation';
 import { useTVReceiver } from './hooks/useTVReceiver';
+import { TvThemeProvider } from '../../components/common/TvThemeProvider';
 
 // Initialize i18n bundles at module load time to prevent setState side-effects during render
 initMelodiqI18n();
 
-export const MelodiqTV: React.FC = () => {
+const MelodiqTVScreen: React.FC = () => {
   const { t } = useTranslation();
   useWakeLock(true);
   useScreenOrientation('landscape');
@@ -113,3 +114,9 @@ export const MelodiqTV: React.FC = () => {
     </WebRTCMockProvider>
   );
 };
+
+export const MelodiqTV: React.FC = () => (
+  <TvThemeProvider>
+    <MelodiqTVScreen />
+  </TvThemeProvider>
+);

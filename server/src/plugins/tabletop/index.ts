@@ -5,6 +5,7 @@ import { tabletopMediaRouter } from './routes/media';
 import { tabletopConfigRouter } from './routes/config';
 import { tabletopWorkshopRouter } from './routes/workshop';
 import { tabletopLibraryRouter } from './routes/library';
+import { tabletopSavesRouter } from './routes/saves';
 import { scanGames } from './services/scanner';
 
 export const tabletopPlugin: GalaxyPlugin = {
@@ -22,6 +23,7 @@ export const tabletopPlugin: GalaxyPlugin = {
     // Mount routes
     app.route('/', tabletopGamesRouter);
     app.route('/', tabletopLibraryRouter);
+    app.route('/', tabletopSavesRouter);
     app.route('/', tabletopMediaRouter);
     app.route('/', tabletopConfigRouter);
     app.route('/', tabletopWorkshopRouter);

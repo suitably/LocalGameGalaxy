@@ -3,6 +3,7 @@
  */
 import { moveZoneWithContents, resizeZone } from '../hiddenZoneLogic';
 import type { TabletopAction, TabletopGameState } from '../tabletopReducer';
+import { reorderWidgets } from '../zOrder';
 
 export type ViewAction = Extract<
   TabletopAction,
@@ -11,6 +12,7 @@ export type ViewAction = Extract<
       | 'SCALE_WIDGETS'
       | 'RESET_WIDGET_SCALE'
       | 'SET_WIDGET_SHOW_ALWAYS'
+      | 'SET_Z_ORDER'
       | 'ADD_HIDDEN_ZONE'
       | 'UPDATE_HIDDEN_ZONE'
       | 'MOVE_HIDDEN_ZONE'
@@ -67,6 +69,17 @@ export function viewReducer(state: TabletopGameState, action: ViewAction): Table
           };
         }
       }
+      return { ...state, game: { ...state.game, widgets } };
+    }
+
+    case 'SET_Z_ORDER': {
+      const { widgetIds, op } = action.payload;
+      if (!widgetIds || widgetIds.length === 0) return state;
+      const changes = reorderWidgets(state.game.widgets, widgetIds, op);
+      const ids = Object.keys(changes);
+      if (ids.length === 0) return state;
+      const widgets = { ...state.game.widgets };
+      for (const id of ids) widgets[id] = { ...widgets[id], zIndex: changes[id] };
       return { ...state, game: { ...state.game, widgets } };
     }
 

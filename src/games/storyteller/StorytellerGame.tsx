@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, CircularProgress } from '@mui/material';
+import { Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../../context/TitleContext';
@@ -7,12 +7,7 @@ import { useWakeLock } from '../../hooks/useWakeLock';
 import { useHeaderLayout } from '../../context/HeaderLayoutContext';
 import { useStorytellerLobby } from './hooks/useStorytellerLobby';
 import { StoryLobby } from './components/StoryLobby';
-import { StoryHeader } from './components/StoryHeader';
-import { StoryWriterView } from './components/StoryWriterView';
-import { WaitingForStoryTurnView } from './components/WaitingForStoryTurnView';
-import { StoryReaderModal } from './components/StoryReaderModal';
-import { EditStoryDialog } from './components/EditStoryDialog';
-import { ShareStoryLinksDialog } from './components/ShareStoryLinksDialog';
+import { StoryActiveView } from './components/StoryActiveView';
 import { LocalStoryEngine } from './logic/engine';
 import { storytellerNotificationService } from './logic/notificationService';
 import { storytellerMailboxService, type StorytellerSyncMessage } from './logic/mailboxService';
@@ -21,7 +16,6 @@ import type { StoryEntry, StoryGameRecord, StoryGameSnapshot } from './types';
 import { useStoryJoinLink } from './hooks/useStoryJoinLink';
 import { useStorySeats } from './hooks/useStorySeats';
 import { notifyAfterOwnTurn, notifyIncomingTurn } from './logic/storyTurnNotify';
-import { PlayerJoinedSnackbar } from '../../modules/player-management/PlayerJoinedSnackbar';
 
 export const StorytellerGame: React.FC = () => {
   const { t } = useTranslation();
@@ -33,8 +27,6 @@ export const StorytellerGame: React.FC = () => {
   const [entries, setEntries] = useState<StoryEntry[]>([]);
   const [gameLoading, setGameLoading] = useState<boolean>(false);
   const [readerOpen, setReaderOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   const {
     lobbyPlayers,
@@ -202,78 +194,21 @@ export const StorytellerGame: React.FC = () => {
   }
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        width: '100%',
-        overflow: 'hidden',
-      }}
-    >
-      <StoryHeader
-        game={game}
-        onExit={handleBack}
-        onOpenReader={() => setReaderOpen(true)}
-        onOpenEdit={() => setEditOpen(true)}
-        onOpenShare={() => setShareDialogOpen(true)}
-        isCurrentTurnLocal={isCurrentTurnLocal}
-        canToggleLocalRemote={true}
-        onToggleLocalRemote={toggleCurrentTurn}
-      />
-
-      <Box sx={{ flexGrow: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        {gameLoading && !game ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
-            <CircularProgress />
-          </Box>
-        ) : !isCurrentTurnLocal ? (
-          <WaitingForStoryTurnView
-            game={game}
-            onClaimPlayer={claimPlayer}
-            onShareTurn={() => setShareDialogOpen(true)}
-            onOpenShare={() => setShareDialogOpen(true)}
-            onOpenReader={() => setReaderOpen(true)}
-          />
-        ) : (
-          <StoryWriterView
-            game={game}
-            entries={entries}
-            onSubmitTurn={handleSubmitTurn}
-            onFinishStory={handleFinishStory}
-            loading={gameLoading}
-          />
-        )}
-      </Box>
-
-      <PlayerJoinedSnackbar names={joinedNames} onClose={clearJoined} />
-      <StoryReaderModal
-        open={readerOpen}
-        onClose={() => setReaderOpen(false)}
-        game={game}
-        entries={entries}
-      />
-
-      <EditStoryDialog
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        game={game}
-        onSave={async (payload) => {
-          const updated = await LocalStoryEngine.updateGameDetails(game.id, payload);
-          broadcastSnapshot(updated.game, updated.entries);
-        }}
-      />
-
-      <ShareStoryLinksDialog
-        open={shareDialogOpen}
-        onClose={() => setShareDialogOpen(false)}
-        game={game}
-        entries={entries}
-        onPlayerChanged={async () => {
-          const snap = await LocalStoryEngine.getGameSnapshot(game.id);
-          broadcastSnapshot(snap.game, snap.entries);
-        }}
-      />
-    </Box>
+    <StoryActiveView
+      game={game}
+      entries={entries}
+      gameLoading={gameLoading}
+      readerOpen={readerOpen}
+      setReaderOpen={setReaderOpen}
+      joinedNames={joinedNames}
+      clearJoined={clearJoined}
+      isCurrentTurnLocal={isCurrentTurnLocal}
+      claimPlayer={claimPlayer}
+      toggleCurrentTurn={toggleCurrentTurn}
+      onExit={handleBack}
+      onSubmitTurn={handleSubmitTurn}
+      onFinishStory={handleFinishStory}
+      broadcastSnapshot={broadcastSnapshot}
+    />
   );
 };

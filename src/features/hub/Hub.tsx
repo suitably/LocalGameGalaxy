@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Typography, Box } from '@mui/material';
+import { Typography, Box, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { gameRegistry } from '../../lib/gameRegistry';
@@ -7,6 +7,7 @@ import { areaOfCategory, areasFor } from '../../lib/areas';
 import { PWAInstallBanner } from '../../components/pwa';
 import { DICE_GAMES } from '../../games/tabletop/logic/tableCatalog';
 import nexumiaBanner from '../../assets/nexumia-banner.svg';
+import nexumiaBannerInk from '../../assets/nexumia-banner-ink.svg';
 import { HubAreaFilter, type AreaFilter } from './HubAreaFilter';
 import { HubGameCard } from './HubGameCard';
 
@@ -15,6 +16,8 @@ const TABLE_GAME_IDS = new Set(DICE_GAMES.map((g) => g.id));
 export const Hub: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  // Colour marks sit on dark surfaces; light mode uses the ink lock-up (DESIGN.md §8.1).
+  const isLight = useTheme().palette.mode === 'light';
   const [selectedArea, setSelectedArea] = useState<AreaFilter>('all');
 
   // Dice games live on the Spieltisch (tabletop lobby), not in the hub; their routes stay.
@@ -30,7 +33,7 @@ export const Hub: React.FC = () => {
       <Box mb={{ xs: 2.5, sm: 3, md: 4 }} textAlign="center">
         <Box
           component="img"
-          src={nexumiaBanner}
+          src={isLight ? nexumiaBannerInk : nexumiaBanner}
           alt="Nexumia"
           sx={{
             width: '100%',

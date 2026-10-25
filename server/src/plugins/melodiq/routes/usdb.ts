@@ -122,6 +122,8 @@ usdbRouter.get('/api/usdb/status/:jobId', (c) => {
     progress: job.progress,
     log: job.log.slice(-30),
     error: job.error,
+    // set once done: the indexed song (Melodiq Notes opens it for alignment)
+    songId: job.songId,
   });
 });
 

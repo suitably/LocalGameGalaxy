@@ -8,9 +8,18 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOffRounded';
 import ZoomInIcon from '@mui/icons-material/ZoomInRounded';
 import ZoomOutIcon from '@mui/icons-material/ZoomOutRounded';
 import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
+import FlipToFrontIcon from '@mui/icons-material/FlipToFrontRounded';
+import FlipToBackIcon from '@mui/icons-material/FlipToBackRounded';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownwardRounded';
 import CheckBoxIcon from '@mui/icons-material/CheckBoxRounded';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
+import FlipIcon from '@mui/icons-material/FlipRounded';
+import ShuffleIcon from '@mui/icons-material/ShuffleRounded';
+import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import type { TabletopWidget } from '../../logic/types';
+import type { ZOrderOp } from '../../logic/zOrder';
+import { flipActionFor, shakeActionFor } from '../../logic/tableGestures';
 import { useTranslation } from 'react-i18next';
 
 export interface WidgetContextMenuPosition {
@@ -28,7 +37,19 @@ interface WidgetContextMenuProps {
   onToggleShowAlways?: (widgetId: string, current: boolean) => void;
   onScaleWidget?: (widgetId: string, factor: number) => void;
   onResetWidgetScale?: (widgetId: string) => void;
+  onZOrder?: (widgetId: string, op: ZOrderOp) => void;
+  /** Flip a card (F). */
+  onFlip?: (widgetId: string) => void;
+  /** Shuffle a deck / roll a die (S). */
+  onShake?: (widgetId: string) => void;
 }
+
+const Z_ITEMS = [
+  { op: 'front', icon: FlipToFrontIcon, key: 'bringToFront', fallback: 'Bring to front' },
+  { op: 'forward', icon: ArrowUpwardIcon, key: 'bringForward', fallback: 'Bring forward' },
+  { op: 'backward', icon: ArrowDownwardIcon, key: 'sendBackward', fallback: 'Send backward' },
+  { op: 'back', icon: FlipToBackIcon, key: 'sendToBack', fallback: 'Send to back' },
+] as const;
 
 export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = ({
   position,
@@ -39,12 +60,18 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = ({
   onToggleShowAlways,
   onScaleWidget,
   onResetWidgetScale,
+  onZOrder,
+  onFlip,
+  onShake,
 }) => {
   const { t } = useTranslation();
 
   if (!position || !widget) return null;
 
   const isShowAlways = Boolean(widget.showAlways);
+  const canFlip = Boolean(onFlip && flipActionFor(widget));
+  const canShake = Boolean(onShake && shakeActionFor(widget));
+  const ShakeIcon = widget.type === 'die' ? CasinoIcon : ShuffleIcon;
 
   return (
     <Menu
@@ -55,6 +82,40 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = ({
         position !== null ? { top: position.mouseY, left: position.mouseX } : undefined
       }
     >
+      {canFlip && (
+        <MenuItem
+          onClick={() => {
+            onFlip?.(widget.id);
+            onClose();
+          }}
+        >
+          <ListItemIcon>
+            <FlipIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText secondary="F">{t('games.tabletop.flipCard', 'Umdrehen')}</ListItemText>
+        </MenuItem>
+      )}
+
+      {canShake && (
+        <MenuItem
+          onClick={() => {
+            onShake?.(widget.id);
+            onClose();
+          }}
+        >
+          <ListItemIcon>
+            <ShakeIcon fontSize="small" />
+          </ListItemIcon>
+          <ListItemText secondary="S">
+            {widget.type === 'die'
+              ? t('games.tabletop.rollDie', 'Würfeln')
+              : t('games.tabletop.shuffleDeck', 'Mischen')}
+          </ListItemText>
+        </MenuItem>
+      )}
+
+      {(canFlip || canShake) && <Divider sx={{ my: 0.5 }} />}
+
       {onToggleSelect && (
         <MenuItem
           onClick={() => {
@@ -100,6 +161,24 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = ({
       )}
 
       <Divider sx={{ my: 0.5 }} />
+
+      {onZOrder &&
+        Z_ITEMS.map(({ op, icon: Icon, key, fallback }) => (
+          <MenuItem
+            key={op}
+            onClick={() => {
+              onZOrder(widget.id, op);
+              onClose();
+            }}
+          >
+            <ListItemIcon>
+              <Icon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>{t(`games.tabletop.${key}`, fallback)}</ListItemText>
+          </MenuItem>
+        ))}
+
+      {onZOrder && <Divider sx={{ my: 0.5 }} />}
 
       {onScaleWidget && (
         <>

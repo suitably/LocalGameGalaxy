@@ -116,7 +116,7 @@ export const SudokuNumpad: React.FC<SudokuNumpadProps> = ({
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(9, 1fr)',
+          gridTemplateColumns: { xs: 'repeat(5, 1fr)', sm: 'repeat(9, 1fr)' },
           gap: { xs: 0.5, sm: 1 },
         }}
       >
@@ -132,7 +132,7 @@ export const SudokuNumpad: React.FC<SudokuNumpadProps> = ({
               variant="contained"
               sx={{
                 minWidth: 0,
-                height: { xs: 46, sm: 54 },
+                height: { xs: 56, sm: 54 },
                 p: 0,
                 display: 'flex',
                 flexDirection: 'column',

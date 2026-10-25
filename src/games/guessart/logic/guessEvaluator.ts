@@ -145,7 +145,11 @@ export const evaluateGuess = (
     }
     if (distance <= threshold) {
       const candidateTokens = candidateNorm.split(' ').filter(Boolean);
-      if (candidateTokens.length <= 1 || guessTokens.length <= 1 || shareToken(guessTokens, candidateTokens)) {
+      if (
+        candidateTokens.length <= 1 ||
+        guessTokens.length <= 1 ||
+        shareToken(guessTokens, candidateTokens)
+      ) {
         return true;
       }
     }

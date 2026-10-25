@@ -4,6 +4,7 @@ import { alpha } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/CloseRounded';
 import { useTranslation } from 'react-i18next';
 import { transitionOf } from '../../../lib/motion';
+import { invisibleHitArea } from '../../../lib/touchTarget';
 
 interface QwixxMissBoxesProps {
   misses: number;
@@ -41,10 +42,13 @@ export const QwixxMissBoxes: React.FC<QwixxMissBoxesProps> = ({
             <ButtonBase
               key={index}
               onClick={() => handleTap(index)}
+              aria-label={t('common.a11y.miss_box', { no: index, defaultValue: 'Miss {{no}}' })}
+              aria-pressed={isMissed}
               disabled={disabled}
               sx={{
-                width: { xs: 28, sm: 34 },
-                height: { xs: 28, sm: 34 },
+                ...invisibleHitArea(48, 'y'),
+                width: { xs: 48, sm: 34 },
+                height: { xs: 48, sm: 34 },
                 borderRadius: 2,
                 border: '2px solid',
                 borderColor: isMissed ? 'error.main' : 'divider',

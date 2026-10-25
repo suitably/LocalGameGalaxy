@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, LinearProgress } from '@mui/material';
+import { Box, ButtonBase, Typography, LinearProgress } from '@mui/material';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownloadRounded';
 import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesomeRounded';
@@ -36,6 +36,7 @@ export const SongCardCorner: React.FC<SongCardStatusProps> = ({
   hasActiveJob,
   activeJobType,
 }) => {
+  const { t } = useTranslation();
   if (isDownloading) {
     return (
       <Box sx={cornerSx}>
@@ -65,9 +66,13 @@ export const SongCardCorner: React.FC<SongCardStatusProps> = ({
   }
   if (!isDownloaded && !hasActiveJob && hasUsdbId && onActionClick) {
     return (
-      <Box sx={cornerSx} onClick={onActionClick}>
+      <ButtonBase
+        sx={cornerSx}
+        onClick={onActionClick}
+        aria-label={t('common.a11y.download', 'Download')}
+      >
         <CloudDownloadIcon sx={{ color: 'primary.main', fontSize: 20 }} />
-      </Box>
+      </ButtonBase>
     );
   }
   return null;

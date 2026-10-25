@@ -56,7 +56,7 @@ notesPiecesRouter.get('/api/notes/pieces/:id', async (c) => {
   return c.json(client(c, found.value));
 });
 
-// POST /api/notes/pieces — create a piece ({ title, artist? })
+// POST /api/notes/pieces — create a piece ({ title, artist?, songId? })
 notesPiecesRouter.post('/api/notes/pieces', async (c) => {
   const meta = parsePieceMeta(await c.req.json().catch(() => null));
   if (typeof meta === 'string') return c.json({ error: meta }, 400);
@@ -67,12 +67,14 @@ notesPiecesRouter.post('/api/notes/pieces', async (c) => {
   }
 });
 
-// PUT /api/notes/pieces/:id — rename ({ title, artist? }); the folder keeps its name
+// PUT /api/notes/pieces/:id — rename / link ({ title, artist?, songId? }); the folder keeps its
+// name; `songId` left out keeps the current link, `null` removes it
 notesPiecesRouter.put('/api/notes/pieces/:id', async (c) => {
   const found = await piece(c);
   if (!found.ok) return found.response;
-  const meta = parsePieceMeta(await c.req.json().catch(() => null));
-  if (typeof meta === 'string') return c.json({ error: meta }, 400);
+  const input = parsePieceMeta(await c.req.json().catch(() => null));
+  if (typeof input === 'string') return c.json({ error: input }, 400);
+  const meta = { ...input, songId: input.songId === undefined ? found.value.songId : input.songId };
   try {
     await writeMeta(found.value.folder, meta);
     return c.json(client(c, { ...found.value, ...meta }));

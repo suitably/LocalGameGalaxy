@@ -15,8 +15,11 @@ import PauseIcon from '@mui/icons-material/PauseRounded';
 import SkipNextIcon from '@mui/icons-material/SkipNextRounded';
 import OpenInFullIcon from '@mui/icons-material/OpenInFullRounded';
 import QueueMusicIcon from '@mui/icons-material/QueueMusicRounded';
+import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlineRounded';
+import { useTranslation } from 'react-i18next';
 import type { SongMeta, Song } from '../db';
+import { CONTROLLER_TARGET } from '../../../lib/touchTarget';
 
 interface MiniPlayerProps {
   song: SongMeta | Song | null;
@@ -28,6 +31,8 @@ interface MiniPlayerProps {
   onShowQueue?: () => void;
   queueLength: number;
   isRestored?: boolean;
+  /** Restored song only: start from the beginning instead of the saved position. */
+  onRestart?: () => void;
   isClient?: boolean;
   canControlPlayback?: boolean;
 }
@@ -42,10 +47,14 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   onShowQueue,
   queueLength,
   isRestored = false,
-
+  onRestart,
+  isClient = false,
   canControlPlayback = true,
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
+  // Phone client: primary playback buttons use the controller size (DESIGN.md §4).
+  const primarySx = isClient ? { width: CONTROLLER_TARGET, height: CONTROLLER_TARGET } : {};
 
   return (
     <Card
@@ -69,6 +78,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
       <LinearProgress
         variant="determinate"
         value={progress}
+        aria-label={t('common.a11y.progress', 'Playback progress')}
         sx={{
           position: 'absolute',
           top: 0,
@@ -90,16 +100,12 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography
-            variant="subtitle2"
-            noWrap
-            sx={{ fontWeight: 'bold', color: song ? 'text.primary' : 'text.disabled' }}
-          >
-            {song ? song.title : 'No Song Playing'}
+          <Typography variant="subtitle2" noWrap sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+            {song ? song.title : t('melodiq.no_song_playing')}
           </Typography>
           {isRestored && (
             <Chip
-              label="Paused"
+              label={t('melodiq.paused')}
               size="small"
               sx={{
                 height: 16,
@@ -112,7 +118,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
           )}
         </Box>
         <Typography variant="caption" color="text.secondary" noWrap>
-          {song ? song.artist : 'Select a song or play from queue'}
+          {song ? song.artist : t('melodiq.select_song_hint')}
         </Typography>
       </Box>
 
@@ -120,6 +126,20 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         {canControlPlayback && (
           <>
+            {isRestored && onRestart && (
+              <IconButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRestart();
+                }}
+                size="medium"
+                sx={{ color: 'text.secondary' }}
+                title={t('melodiq.restore_restart')}
+                aria-label={t('melodiq.restore_restart')}
+              >
+                <RestartAltIcon />
+              </IconButton>
+            )}
             {isRestored ? (
               <IconButton
                 onClick={(e) => {
@@ -127,8 +147,9 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                   onTogglePlay();
                 }}
                 size="medium"
-                sx={{ color: theme.palette.secondary.main }}
-                title="Resume song"
+                sx={{ color: theme.palette.secondary.main, ...primarySx }}
+                title={t('melodiq.resume_song')}
+                aria-label={t('common.a11y.play', 'Play')}
               >
                 <PlayCircleOutlineIcon />
               </IconButton>
@@ -139,7 +160,12 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                   onTogglePlay();
                 }}
                 size="medium"
-                sx={{ color: 'text.primary' }}
+                sx={{ color: 'text.primary', ...primarySx }}
+                aria-label={
+                  isPlaying && song
+                    ? t('common.a11y.pause', 'Pause')
+                    : t('common.a11y.play', 'Play')
+                }
               >
                 {isPlaying && song ? <PauseIcon /> : <PlayArrowIcon />}
               </IconButton>
@@ -151,7 +177,8 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
                 onNext();
               }}
               size="medium"
-              sx={{ color: 'text.primary' }}
+              sx={{ color: 'text.primary', ...primarySx }}
+              aria-label={t('common.a11y.next', 'Next')}
             >
               <SkipNextIcon />
             </IconButton>
@@ -166,6 +193,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
             }}
             size="medium"
             sx={{ color: 'text.primary' }}
+            aria-label={t('melodiq.queue', 'Queue')}
           >
             <Badge
               badgeContent={queueLength}
@@ -186,6 +214,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
           size="medium"
           sx={{ color: 'text.primary', ml: 1 }}
           disabled={!song}
+          aria-label={t('common.a11y.expand', 'Expand')}
         >
           <OpenInFullIcon fontSize="small" />
         </IconButton>

@@ -1,9 +1,23 @@
-import { Button, LinearProgress, Stack, Tooltip, Typography } from '@mui/material';
-import { useRef } from 'react';
+import { Button, LinearProgress, Slider, Stack, Tooltip, Typography } from '@mui/material';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { isCompanionEnabled } from '../../../../lib/companion/songScoresApi';
+import {
+  formatOffsetMs,
+  OFFSET_COARSE_SEC,
+  OFFSET_FINE_SEC,
+  OFFSET_RANGE_SEC,
+} from '../logic/tuning';
 import type { StageSongState } from '../useStageSong';
+import { useYouTubeImport } from '../useYouTubeImport';
+import { YouTubeRecordingDialog } from './YouTubeRecordingDialog';
 
-const NUDGE_SEC = 0.05;
+const NUDGES = [
+  { sec: -OFFSET_COARSE_SEC, label: '−10' },
+  { sec: -OFFSET_FINE_SEC, label: '−1' },
+  { sec: OFFSET_FINE_SEC, label: '+1' },
+  { sec: OFFSET_COARSE_SEC, label: '+10' },
+];
 const STAGES = ['analyse', 'match', 'refine'] as const;
 const signed = (n: number) => (n > 0 ? '+' : '−') + Math.abs(n);
 
@@ -13,6 +27,8 @@ export function RecordingBar({ state }: { state: StageSongState }) {
   const k = (key: string, opts?: Record<string, unknown>) =>
     t(`games.melodiq_notes.stage.${key}`, opts);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [youTubeOpen, setYouTubeOpen] = useState(false);
+  const importer = useYouTubeImport(state);
   const { recording, align, marks, offset, pins } = state;
   const running = align.kind === 'running';
   const progress = running
@@ -58,6 +74,16 @@ export function RecordingBar({ state }: { state: StageSongState }) {
             if (f) state.setRecordingFile(f);
           }}
         />
+        {state.song && isCompanionEnabled() && (
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={running}
+            onClick={() => setYouTubeOpen(true)}
+          >
+            {k('yt_open')}
+          </Button>
+        )}
         {state.canSaveToServer && (
           <Button
             size="small"
@@ -65,11 +91,7 @@ export function RecordingBar({ state }: { state: StageSongState }) {
             disabled={state.saved || running}
             onClick={() => void state.saveToServer()}
           >
-            {state.saved
-              ? k('saved')
-              : state.origin?.kind === 'server'
-                ? k('save_marks')
-                : k('save_to_library')}
+            {state.saved ? k('saved') : k('save_to_library')}
           </Button>
         )}
         {recording && (
@@ -85,29 +107,46 @@ export function RecordingBar({ state }: { state: StageSongState }) {
             <Typography variant="body2" color="text.secondary">
               {k('fine_tune')}
             </Typography>
-            <Button
+            {NUDGES.filter((n) => n.sec < 0).map((n) => (
+              <Button
+                key={n.sec}
+                size="small"
+                variant="outlined"
+                aria-label={k('earlier_ms', { ms: Math.abs(n.sec * 1000) })}
+                onClick={() => state.nudge(n.sec)}
+              >
+                {n.label}
+              </Button>
+            ))}
+            <Slider
               size="small"
-              variant="outlined"
-              aria-label={k('earlier')}
-              onClick={() => state.nudge(-NUDGE_SEC)}
-            >
-              −
-            </Button>
+              aria-label={k('fine_tune')}
+              value={offset}
+              min={-OFFSET_RANGE_SEC}
+              max={OFFSET_RANGE_SEC}
+              step={OFFSET_FINE_SEC}
+              onChange={(_, v) => state.setOffsetSec(v as number)}
+              valueLabelDisplay="auto"
+              valueLabelFormat={formatOffsetMs}
+              sx={{ width: 160 }}
+            />
+            {NUDGES.filter((n) => n.sec > 0).map((n) => (
+              <Button
+                key={n.sec}
+                size="small"
+                variant="outlined"
+                aria-label={k('later_ms', { ms: n.sec * 1000 })}
+                onClick={() => state.nudge(n.sec)}
+              >
+                {n.label}
+              </Button>
+            ))}
             <Typography
               variant="body2"
-              sx={{ fontFamily: 'monospace', minWidth: '6ch', textAlign: 'center' }}
+              sx={{ fontFamily: 'monospace', minWidth: '8ch', textAlign: 'center' }}
             >
-              {offset >= 0 ? '+' : ''}
-              {offset.toFixed(2)} s
+              {formatOffsetMs(offset)}
             </Typography>
-            <Button
-              size="small"
-              variant="outlined"
-              aria-label={k('later')}
-              onClick={() => state.nudge(NUDGE_SEC)}
-            >
-              +
-            </Button>
             {marks && (
               <Tooltip title={k('pin_bar_hint')} describeChild>
                 <Button size="small" variant="outlined" onClick={state.pinBarNow}>
@@ -129,6 +168,14 @@ export function RecordingBar({ state }: { state: StageSongState }) {
         </Typography>
       )}
       {running && <LinearProgress variant="determinate" value={progress} />}
+      {youTubeOpen && (
+        <YouTubeRecordingDialog
+          open
+          onClose={() => setYouTubeOpen(false)}
+          state={state}
+          importer={importer}
+        />
+      )}
     </Stack>
   );
 }

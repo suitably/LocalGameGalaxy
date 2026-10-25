@@ -44,8 +44,8 @@ const pick =
 const WerewolfGame = lazy(() => import('../games/werewolf').then(pick('WerewolfGame')));
 const ImposterGame = lazy(() => import('../games/imposter').then(pick('ImposterGame')));
 const MelodiqGame = lazy(() => import('../games/melodiq').then(pick('MelodiqGame')));
-const MelodiqNotesGame = lazy(() =>
-  import('../games/melodiq-notes').then(pick('MelodiqNotesGame')),
+const MelodiqNotesEntry = lazy(() =>
+  import('../games/melodiq-notes').then(pick('MelodiqNotesEntry')),
 );
 const MelodiqQueue = lazy(() => import('../games/melodiq').then(pick('MelodiqQueue')));
 const MelodiqTV = lazy(() => import('../games/melodiq').then(pick('MelodiqTV')));
@@ -160,7 +160,7 @@ class GameRegistry {
       descriptionKey: 'games.melodiq_notes.description',
       icon: <PianoIcon sx={{ fontSize: 72, mb: 2 }} />,
       category: 'music',
-      component: <MelodiqNotesGame />,
+      component: <MelodiqNotesEntry />,
     },
     {
       id: 'werewolf',

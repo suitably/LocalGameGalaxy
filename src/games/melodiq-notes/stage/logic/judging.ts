@@ -1,3 +1,4 @@
+import { drumMatchRank, type DrumVoice } from '../../../../modules/music-score';
 import { lowerBound, type Judgement, type StageNote } from './charts';
 
 export const PERFECT_SEC = 0.06;
@@ -93,20 +94,28 @@ export function pendingNotes(
   return out;
 }
 
+/** Timing cost in seconds of playing a sibling voice instead of the written one. */
+const VOICE_TIE_SEC = 0.02;
+
 /** Closest open note on `lane` around `beat`, with its distance in seconds. */
 export function nearestOpenNote(
   notes: StageNote[],
   lane: number,
   beat: number,
   secPerBeat: number,
+  played?: DrumVoice,
 ) {
   let best: StageNote | null = null;
   let bestSec = Infinity;
+  let bestScore = Infinity;
   for (let i = lowerBound(notes, beat - 1); i < notes.length && notes[i].t < beat + 1; i++) {
     const n = notes[i];
     if (n.judged || n.lane !== lane) continue;
     const d = Math.abs(n.t - beat) * secPerBeat;
-    if (d < bestSec) {
+    // The exact drum voice wins over a sibling (open vs closed hi-hat) at near-equal timing.
+    const score = d + (played && n.drum ? drumMatchRank(played, n.drum) * VOICE_TIE_SEC : 0);
+    if (score < bestScore) {
+      bestScore = score;
       bestSec = d;
       best = n;
     }

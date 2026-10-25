@@ -131,10 +131,10 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
     instrumentalPath = audioPath;
   }
 
-  let scores: SongScore[] = [];
+  let folderScores: SongScore[] = [];
   try {
     const dirFiles = await fs.promises.readdir(dir);
-    scores = await findScoreFiles(dir, dirFiles);
+    folderScores = await findScoreFiles(dir, dirFiles);
     if (!vocalsPath) {
       const vFile = dirFiles.find(
         (f) => f.toLowerCase().endsWith('.mp3') && f.toLowerCase().includes('vocals'),
@@ -217,7 +217,7 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
     txtPath,
     txtContent: content,
     duration,
-    scores,
+    folderScores,
     searchString:
       `${headers['TITLE']} ${headers['ARTIST']} ${headers['GENRE']} ${headers['LANGUAGE']}`.toLowerCase(),
   };

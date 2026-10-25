@@ -37,9 +37,7 @@ export function getEffectiveDrawerIndex(
   if (dIdx < 0 && round?.drawnById) {
     dIdx = players.findIndex((p) => p.id === round.drawnById);
   }
-  return dIdx >= 0
-    ? dIdx
-    : (Math.max(1, round?.roundNumber ?? 1) - 1) % playersCount;
+  return dIdx >= 0 ? dIdx : (Math.max(1, round?.roundNumber ?? 1) - 1) % playersCount;
 }
 
 /**

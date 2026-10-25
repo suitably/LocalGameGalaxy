@@ -10,6 +10,7 @@ import PersonIcon from '@mui/icons-material/PersonRounded';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsportsRounded';
 import QueueMusicIcon from '@mui/icons-material/QueueMusicRounded';
 import LanguageIcon from '@mui/icons-material/LanguageRounded';
+import ContrastIcon from '@mui/icons-material/ContrastRounded';
 import FeedbackIcon from '@mui/icons-material/FeedbackRounded';
 import VpnKeyRoundedIcon from '@mui/icons-material/VpnKeyRounded';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHighRounded';
@@ -60,6 +61,11 @@ export const NAV_TABS: Record<SettingsTabType, NavTab> = {
         sub: 'language',
         icon: icon(LanguageIcon),
         label: (t) => t('settings.language_preferences', 'Language Preferences'),
+      },
+      {
+        sub: 'appearance',
+        icon: icon(ContrastIcon),
+        label: (t) => t('settings.appearance_title', 'Appearance'),
       },
       {
         sub: 'feedback',

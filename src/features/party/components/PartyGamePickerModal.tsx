@@ -8,9 +8,7 @@ import {
   Tabs,
   Tab,
   Box,
-  Typography,
   Grid,
-  CircularProgress,
 } from '@mui/material';
 import DrawIcon from '@mui/icons-material/DrawRounded';
 import PhoneForwardedIcon from '@mui/icons-material/PhoneForwardedRounded';
@@ -24,6 +22,8 @@ import type { TabletopGameSummary } from '../../../games/tabletop/logic/types';
 import { DICE_GAMES } from '../../../games/tabletop/logic/tableCatalog';
 import type { PartyGameType } from '../logic/universalPartyManager';
 import { isRoomDiceGame } from '../logic/partyRoutes';
+import { EmptyState } from '../../../components/common/EmptyState';
+import { ListSkeleton } from '../../../components/common/ListSkeleton';
 import { PartyPickerCard } from './PartyPickerCard';
 
 interface PartyGamePickerModalProps {
@@ -166,19 +166,15 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
 
         {tabIndex === 2 &&
           (loadingCustom ? (
-            <Box display="flex" justifyContent="center" py={4}>
-              <CircularProgress size={32} />
-            </Box>
+            <ListSkeleton rows={3} rowHeight={72} />
           ) : customGames.length === 0 ? (
-            <Box textAlign="center" py={4}>
-              <FolderOpenIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
-              <Typography variant="body2" color="text.secondary">
-                {t(
-                  'party.no_custom_tabletop',
-                  'Noch keine eigenen Party-fähigen Tabletop-Spiele importiert.',
-                )}
-              </Typography>
-            </Box>
+            <EmptyState
+              icon={<FolderOpenIcon sx={{ fontSize: 48 }} />}
+              message={t(
+                'party.no_custom_tabletop',
+                'Noch keine eigenen Party-fähigen Tabletop-Spiele importiert.',
+              )}
+            />
           ) : (
             grid(
               customGames.map((g) => (

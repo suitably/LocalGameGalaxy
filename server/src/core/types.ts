@@ -1,4 +1,5 @@
 import type { Hono } from 'hono';
+import type { PairingStore } from './pairing';
 
 export interface ApiKey {
   id: string;
@@ -6,8 +7,16 @@ export interface ApiKey {
   token: string;
   allowManagement: boolean;
   allowSongDeletion: boolean;
+  /** Tabletop: store named table states (save games) on the server. Missing in older configs. */
+  allowTabletopSaves?: boolean;
+  /** Tabletop: replace a game's default template (what a new table starts from). */
+  allowTabletopTemplates?: boolean;
   createdAt: string;
 }
+
+/** Capability flags of an API key; the master token and management keys hold all of them. */
+export type ApiKeyPermission =
+  'allowManagement' | 'allowSongDeletion' | 'allowTabletopSaves' | 'allowTabletopTemplates';
 
 export type HonoEnv = {
   Variables: {
@@ -24,6 +33,8 @@ export interface ServerConfig {
   activePlugins: string[];
   musicDir?: string;
   modelsDir?: string;
+  /** Pairing code store; defaults to the process-wide one (tests inject their own). */
+  pairingStore?: PairingStore;
 }
 
 export interface ServerConfigData {
@@ -66,6 +77,8 @@ export interface TabletopRawResponse {
   id: string;
   rawJson: string;
   assetMap: Record<string, string>;
+  /** rawJson is the stored default template, not the game file (see PUT .../template). */
+  template?: boolean;
 }
 
 export interface GalaxyPlugin {
@@ -105,8 +118,11 @@ export interface Song {
   txtContent: string;
   duration: number;
   searchString: string;
-  /** Sheet music (MusicXML/MIDI) in the song folder, for Melodiq Notes. */
-  scores: SongScore[];
+  /**
+   * Sheet music (MusicXML/MIDI) found in the song folder. Only the source of the one-time import
+   * into the Notes library (Q18); clients get the song's scores from the Notes library.
+   */
+  folderScores: SongScore[];
 }
 
 export interface SongScore {
@@ -116,14 +132,16 @@ export interface SongScore {
   mtimeMs: number;
 }
 
+/** A score of a Notes library piece linked to the song (`songId`). */
 export interface ClientSongScore {
+  pieceId: string;
   file: string;
   /** Media URL of the score file. */
   url: string | null;
   hasMarks: boolean;
 }
 
-export type ClientSong = Omit<Song, 'scores'> & { scores: ClientSongScore[] };
+export type ClientSong = Omit<Song, 'folderScores'> & { scores: ClientSongScore[] };
 
 export interface DownloadJob {
   jobId: string;
@@ -136,6 +154,8 @@ export interface DownloadJob {
   safeName: string | null;
   skipAudio: boolean;
   audioFile: string | null;
+  /** Existing song folder to download into; once done, the indexed song (also for new folders). */
+  songId: string | null;
   status: 'pending' | 'running' | 'done' | 'error';
   progress: number;
   log: string[];

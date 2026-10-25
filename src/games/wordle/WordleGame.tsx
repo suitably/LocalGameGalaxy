@@ -16,6 +16,7 @@ import { WordleStatsModal } from './components/WordleStatsModal';
 import { WordleDuelModal } from './components/WordleDuelModal';
 import { WordleHistoryModal } from './components/WordleHistoryModal';
 import { WordleHelpDialog } from './components/WordleHelpDialog';
+import { WordleSettingsDialog } from './components/WordleSettingsDialog';
 import { WordleToast } from './components/WordleToast';
 import { HeaderActionBar } from './components/HeaderActionBar';
 
@@ -28,6 +29,8 @@ export const WordleGame: React.FC = () => {
     stats,
     keyStatuses,
     language,
+    dictionaryOnly,
+    setDictionaryOnly,
     openDialog,
     open,
     close,
@@ -56,6 +59,7 @@ export const WordleGame: React.FC = () => {
           onDuel={() => open('duel')}
           onStats={() => open('stats')}
           onHelp={() => open('help')}
+          onSettings={() => open('settings')}
         />
 
         <ButtonGroup size="small" variant="outlined" sx={{ mb: 1.5 }}>
@@ -135,6 +139,12 @@ export const WordleGame: React.FC = () => {
         <WordleDuelModal open={openDialog === 'duel'} onClose={close} />
         <WordleHistoryModal open={openDialog === 'history'} onClose={close} language={language} />
         <WordleHelpDialog open={openDialog === 'help'} onClose={close} />
+        <WordleSettingsDialog
+          open={openDialog === 'settings'}
+          onClose={close}
+          dictionaryOnly={dictionaryOnly}
+          onDictionaryOnlyChange={setDictionaryOnly}
+        />
       </Box>
     </GameLayout>
   );

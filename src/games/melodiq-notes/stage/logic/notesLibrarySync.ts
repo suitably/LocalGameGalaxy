@@ -1,5 +1,4 @@
 import type { BarMark } from '../../../../modules/music-score';
-import { saveBarMarks } from '../../../../lib/companion/songScoresApi';
 import {
   createNotesPiece,
   saveNotesMarks,
@@ -42,11 +41,17 @@ const defaultApi: NotesApi = {
   saveMarks: saveNotesMarks,
 };
 
-const scoreFileName = (title: string) => `${title.trim() || 'score'}.musicxml`;
+/** MusicXML text as a file to upload, named after the piece. */
+export const musicXmlFile = (xml: string, title: string) =>
+  new File([xml], `${title.trim() || 'score'}.musicxml`, {
+    type: 'application/vnd.recordare.musicxml+xml',
+  });
 
 /**
  * Stores what is missing on the server: a new piece with its score, a recording that is still
- * local, and the bar marks. Safe to call again — stored parts are not uploaded twice.
+ * local, and the bar marks. Safe to call again — stored parts are not uploaded twice. The Notes
+ * library is the only place the stage saves to (Q18); a piece linked to a Melodiq song keeps its
+ * link and stores marks for the song's mix with `recordingName: null`.
  */
 export async function saveToNotesLibrary(
   input: NotesSaveInput,
@@ -54,13 +59,7 @@ export async function saveToNotesLibrary(
 ): Promise<NotesSaveResult> {
   let stored = input.stored;
   if (!stored) {
-    const score =
-      input.scoreFile ??
-      (input.xml
-        ? new File([input.xml], scoreFileName(input.title), {
-            type: 'application/vnd.recordare.musicxml+xml',
-          })
-        : null);
+    const score = input.scoreFile ?? (input.xml ? musicXmlFile(input.xml, input.title) : null);
     if (!score) throw new Error('no score to store');
     const piece = await api.createPiece({ title: input.title || 'Score', artist: input.artist });
     const uploaded = await api.upload(piece.id, score);
@@ -80,31 +79,4 @@ export async function saveToNotesLibrary(
     });
   }
   return { ...stored, recordingName };
-}
-
-/** Where the song on stage is stored: a Melodiq song folder, a Notes piece, or nowhere yet. */
-export type StoredScore =
-  | { kind: 'server'; songId: string; scoreFile: string }
-  | { kind: 'notes'; pieceId: string; scoreFile: string }
-  | null;
-
-/**
- * Melodiq songs only get their bar marks (score and recording are already in the song folder);
- * everything else goes to the Notes library. Returns the Notes result, or null for a Melodiq song.
- */
-export async function saveStageToServer(
-  stored: StoredScore,
-  input: Omit<NotesSaveInput, 'stored'>,
-): Promise<NotesSaveResult | null> {
-  if (stored?.kind === 'server') {
-    if (input.marks) {
-      await saveBarMarks(stored.songId, stored.scoreFile, {
-        marks: input.marks,
-        offsetSec: input.offsetSec,
-        audio: input.recordingName ?? input.recordingFile?.name ?? null,
-      });
-    }
-    return null;
-  }
-  return saveToNotesLibrary({ ...input, stored: stored?.kind === 'notes' ? stored : null });
 }

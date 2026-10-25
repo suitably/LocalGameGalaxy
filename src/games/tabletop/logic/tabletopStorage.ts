@@ -9,10 +9,12 @@ import {
 import type { TabletopGameDefinition, TabletopGameSummary } from './types';
 
 const DB_NAME = 'galaxy_tabletop_db';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const STORE_GAMES = 'custom_games';
 /** Running games, keyed by `sessionKey()`; v3. */
 const STORE_SESSIONS = 'sessions';
+/** Named table states the player saved to resume later (#538), keyed by `id`; v4. */
+const STORE_NAMED_SAVES = 'named_saves';
 
 let dbInstance: IDBDatabase | null = null;
 
@@ -31,6 +33,11 @@ export async function openTabletopDb(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(STORE_SESSIONS)) {
         db.createObjectStore(STORE_SESSIONS, { keyPath: 'key' });
+      }
+      if (!db.objectStoreNames.contains(STORE_NAMED_SAVES)) {
+        db.createObjectStore(STORE_NAMED_SAVES, { keyPath: 'id' }).createIndex('gameId', 'gameId', {
+          unique: false,
+        });
       }
     };
 
@@ -138,5 +145,57 @@ export async function getTabletopSession(key: string): Promise<TabletopSessionRe
 export async function deleteTabletopSession(key: string): Promise<void> {
   return runWithStore(openTabletopDb, STORE_SESSIONS, 'readwrite', (store) => {
     store.delete(key);
+  });
+}
+
+/** A table state saved under a name on this device (#538). */
+export interface TabletopNamedSave {
+  id: string;
+  gameId: string;
+  name: string;
+  savedAt: number;
+  game: TabletopGameDefinition;
+}
+
+export type TabletopNamedSaveMeta = Omit<TabletopNamedSave, 'game'>;
+
+const toSaveMeta = ({ id, gameId, name, savedAt }: TabletopNamedSave): TabletopNamedSaveMeta => ({
+  id,
+  gameId,
+  name,
+  savedAt,
+});
+
+/** Saves of one game, newest first, without their (large) game state. */
+export async function listNamedSaves(gameId: string): Promise<TabletopNamedSaveMeta[]> {
+  return runWithStore(openTabletopDb, STORE_NAMED_SAVES, 'readonly', async (store) => {
+    const all = await cursorCollect<TabletopNamedSave>(
+      store.index('gameId').openCursor(IDBKeyRange.only(gameId)),
+    );
+    return all.map(toSaveMeta).sort((a, b) => b.savedAt - a.savedAt);
+  });
+}
+
+export async function getNamedSave(id: string): Promise<TabletopNamedSave | null> {
+  return runWithStore(openTabletopDb, STORE_NAMED_SAVES, 'readonly', async (store) => {
+    const res = await requestToPromise<TabletopNamedSave | undefined>(store.get(id));
+    return res ?? null;
+  });
+}
+
+/** Stores (or, with an existing id, overwrites) a named save; the game is kept whole like a session. */
+export async function putNamedSave(
+  save: Omit<TabletopNamedSave, 'savedAt'>,
+): Promise<TabletopNamedSaveMeta> {
+  const record: TabletopNamedSave = { ...save, savedAt: Date.now() };
+  await runWithStore(openTabletopDb, STORE_NAMED_SAVES, 'readwrite', (store) => {
+    store.put(record);
+  });
+  return toSaveMeta(record);
+}
+
+export async function deleteNamedSave(id: string): Promise<void> {
+  return runWithStore(openTabletopDb, STORE_NAMED_SAVES, 'readwrite', (store) => {
+    store.delete(id);
   });
 }

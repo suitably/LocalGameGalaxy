@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { nudgeOffset } from './logic/tuning';
 import {
   applyBarMarksToMusicXml,
   type AlignProgress,
@@ -8,20 +9,15 @@ import {
   pinBar,
   type ScoreSong,
 } from '../../../modules/music-score';
-import {
-  isCompanionEnabled,
-  type CompanionScore,
-  type CompanionSong,
-} from '../../../lib/companion/songScoresApi';
-import type { NotesPiece, NotesPieceScore } from '../../../lib/companion/notesLibraryApi';
+import { isCompanionEnabled } from '../../../lib/companion/songScoresApi';
+import type { CatalogScore } from './logic/scoreCatalog';
 import {
   loadNotesPieceScore,
-  loadSongFolderScore,
   type RecordingSource,
   type ServerScoreLoad,
   type SongOrigin,
 } from './serverScoreLoad';
-import { saveStageToServer } from './logic/notesLibrarySync';
+import { musicXmlFile, saveToNotesLibrary } from './logic/notesLibrarySync';
 import { alignRecordingInBrowser, createElementRecording } from './engine/browserRecording';
 import type { StageEngine } from './engine/StageEngine';
 import {
@@ -155,15 +151,10 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     [run, show, replaceRecording, replaceMarks],
   );
 
-  const loadServerScore = useCallback(
-    (entry: CompanionSong, score: CompanionScore) =>
-      loadFromServer(() => loadSongFolderScore(entry, score)),
-    [loadFromServer],
-  );
-
-  const loadNotesPiece = useCallback(
-    (piece: NotesPiece, score: NotesPieceScore) =>
-      loadFromServer(() => loadNotesPieceScore(piece, score)),
+  /** Opens a score from the Notes library, with its linked song's mix when it has one. */
+  const loadCatalogScore = useCallback(
+    (item: CatalogScore) =>
+      loadFromServer(() => loadNotesPieceScore(item.piece, item.score, item.song)),
     [loadFromServer],
   );
 
@@ -213,45 +204,51 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     }
   }, [song, recording, replaceMarks]);
 
-  /** Melodiq songs get their marks; anything else goes to the Notes library with what is missing. */
+  const stored = origin?.kind === 'notes' ? origin : null;
+
+  /** Everything goes to the Notes library (Q18): the piece with what is missing, and the marks. */
   const saveToServer = useCallback(async () => {
     if (!song) return;
     const savingAs = generation.current;
     try {
-      const result = await saveStageToServer(
-        origin?.kind === 'server' || origin?.kind === 'notes' ? origin : null,
-        {
-          title: song.title,
-          artist: song.artist,
-          scoreFile: openedFile.current,
-          xml,
-          recordingFile: recording?.file ?? null,
-          recordingName: recording && !recording.file ? recording.name : null,
-          marks,
-          offsetSec: offset,
-        },
-      );
+      const result = await saveToNotesLibrary({
+        stored: stored && { pieceId: stored.pieceId, scoreFile: stored.scoreFile },
+        title: song.title,
+        artist: song.artist,
+        scoreFile: openedFile.current,
+        xml,
+        recordingFile: recording?.file ?? null,
+        // marks for a linked song's mix name no recording of the piece
+        recordingName: recording && !recording.file && !recording.songMix ? recording.name : null,
+        marks,
+        offsetSec: offset,
+      });
       if (savingAs !== generation.current) return;
-      if (result) {
-        setOrigin({
-          kind: 'notes',
-          title: song.title,
-          pieceId: result.pieceId,
-          scoreFile: result.scoreFile,
-        });
-        // the recording keeps playing from its object URL, but counts as stored now
-        if (recording?.file && result.recordingName) {
-          setRecording({ name: result.recordingName, url: recording.url, local: true });
-        }
+      setOrigin({
+        kind: 'notes',
+        title: song.title,
+        pieceId: result.pieceId,
+        scoreFile: result.scoreFile,
+        songId: stored?.songId ?? null,
+      });
+      // the recording keeps playing from its object URL, but counts as stored now
+      if (recording?.file && result.recordingName) {
+        setRecording({ name: result.recordingName, url: recording.url, local: true });
       }
       setSaved(true);
     } catch (e) {
       setError(errorText(e));
     }
-  }, [song, origin, xml, marks, offset, recording]);
+  }, [song, stored, xml, marks, offset, recording]);
 
-  const canSaveToServer =
-    !!song && isCompanionEnabled() && (origin?.kind === 'server' ? !!marks : !!xml);
+  // a stored piece only needs marks or a recording; anything else needs its MusicXML to upload
+  const canSaveToServer = !!song && isCompanionEnabled() && (!!stored || !!xml);
+
+  /** The score on stage as a file: the one opened, else its MusicXML. */
+  const currentScoreFile = useCallback(
+    () => openedFile.current ?? (xml && song ? musicXmlFile(xml, song.title) : null),
+    [xml, song],
+  );
 
   const exportScore = useCallback(() => {
     if (!song || !xml || !marks) return;
@@ -276,8 +273,13 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     setSaved(false);
   }, [engine, marks, pins, offset]);
 
+  const setOffsetSec = useCallback((sec: number) => {
+    setOffset(nudgeOffset(sec, 0));
+    setSaved(false);
+  }, []);
+
   const nudge = useCallback((deltaSec: number) => {
-    setOffset((o) => Math.round((o + deltaSec) * 100) / 100);
+    setOffset((o) => nudgeOffset(o, deltaSec));
     setSaved(false);
   }, []);
 
@@ -295,14 +297,15 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     canExport: !!xml && !!marks,
     loadExample,
     loadFile,
-    loadServerScore,
-    loadNotesPiece,
+    loadCatalogScore,
     setRecordingFile,
     alignNow,
     saveToServer,
     canSaveToServer,
+    currentScoreFile,
     exportScore,
     nudge,
+    setOffsetSec,
     pinBarNow,
     clearError: () => setError(null),
   };

@@ -51,6 +51,18 @@ ADR-0004 says "Demucs via PyTorch". `server/src/plugins/melodiq/services/separat
 
 Since #539 board widgets inside a non-revealed hidden zone render as placeholders for other seats, but `BoardDragOverlay`, `DockDragOverlay`, `FlyingCardsLayer` and select-all / shift-multiselect (`SelectionHighlightLayer`, `WidgetContextMenu`) do not check zones; sync still sends full widget data to every device. A device without a selected seat falls back to the first seat as viewer. Decide whether to close these gaps in a follow-up.
 
+## Q17 — Docker Hub namespace of the server and signaling images (#530)
+
+Compose files, README and [deployment](tech/deployment.md) pull `nexumia/galaxy-signaling`, `nexumia/nexumia-server` and the deprecated `nexumia/melodiq-server`. Until #530 the workflow pushed to `${DOCKERHUB_USERNAME}/…`, so the pulled name only existed if that secret was `nexumia`. The workflow now pushes to the literal `nexumia` namespace. **(user)** Confirm that the Docker Hub account behind `DOCKERHUB_USERNAME` owns the `nexumia` namespace, and decide when to stop publishing `melodiq-server`.
+
+## Q19 — Local default template for tabletop games (#538)
+
+Since #538 a player can store the running table as a server game's default template (`PUT /api/tabletop/games/:id/template`, permission `allowTabletopTemplates`). On the device there is no such option: writing the table into `custom_games` under the game's id would shadow the starter JSON and the server game forever, because `TabletopGame` loads IndexedDB first. **(user)** Decide whether device-only games (and starter games) should get a local "save as default template", and how to reset it.
+
+## Resolved 2026-10-25
+
+- Q18 one storage place for Melodiq Notes sheet music (#534, #486) → maintainer decision: (a) and (b) yes — the Notes library is the only score store; a piece links a Melodiq song with `songId` and plays with its mix, bar marks live in the piece; song-folder scores are imported once on startup (non-destructive, marker file). (c) `POST`/`DELETE /api/songs/:id/scores` answer `410`; reads and marks routes stay as deprecated aliases of the linked pieces. [song-pipeline §4](tech/song-pipeline.md#4-sheet-music-for-melodiq-notes)
+
 ## Resolved 2026-10-18
 
 - Q15 issues #353–#361 vs branch state → #384 merged; #353, #354, #355, #357, #358 closed, specs moved to [archive/issue-specs](archive/index.md). Open: #356, #359, #360 ([tasks](tasks/index.md)); #361 closed 2026-10-21.

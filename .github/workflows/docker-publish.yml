@@ -86,13 +86,15 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # Docker Metadata for Base Image
+      # Image names are fixed to the nexumia namespace that compose files and docs pull from.
+      # nexumia/melodiq-server is a deprecated alias kept for existing users; remove it once no one pulls it.
       - name: Extract Docker metadata (Base Image)
         id: meta_base
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server
-            ${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server
+            nexumia/nexumia-server
+            nexumia/melodiq-server
           flavor: |
             latest=auto
           tags: |
@@ -111,8 +113,8 @@ jobs:
           push: true
           tags: ${{ steps.meta_base.outputs.tags }}
           labels: ${{ steps.meta_base.outputs.labels }}
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:buildcache-base
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:buildcache-base,mode=max
+          cache-from: type=registry,ref=nexumia/nexumia-server:buildcache-base
+          cache-to: type=registry,ref=nexumia/nexumia-server:buildcache-base,mode=max
 
       # Docker Metadata for Full Image
       - name: Extract Docker metadata (Full Image)
@@ -120,8 +122,8 @@ jobs:
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server
-            ${{ secrets.DOCKERHUB_USERNAME }}/melodiq-server
+            nexumia/nexumia-server
+            nexumia/melodiq-server
           flavor: |
             suffix=-full
             latest=false
@@ -132,7 +134,7 @@ jobs:
             type=sha,prefix=sha-
 
       # 2. Build & Push Full Image with PyTorch & AI Vocal Separation (~2GB)
-      - name: Build and Push Full Image (Melodiq AI)
+      - name: Build and Push Full Image (AI)
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: ./server
@@ -141,10 +143,10 @@ jobs:
           push: true
           tags: ${{ steps.meta_full.outputs.tags }}
           labels: ${{ steps.meta_full.outputs.labels }}
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:buildcache-full
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/nexumia-server:buildcache-full,mode=max
+          cache-from: type=registry,ref=nexumia/nexumia-server:buildcache-full
+          cache-to: type=registry,ref=nexumia/nexumia-server:buildcache-full,mode=max
 
-  # WebRTC signaling tracker (signaling/), referenced by the compose files as galaxy-signaling
+  # WebRTC signaling tracker (signaling/), pushed to nexumia/galaxy-signaling = image used by the compose files (keep names in sync)
   build-and-push-signaling:
     name: Build & Push Signaling Image
     needs: check-secrets
@@ -171,7 +173,7 @@ jobs:
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/galaxy-signaling
+            nexumia/galaxy-signaling
           flavor: |
             latest=auto
           tags: |
@@ -188,5 +190,5 @@ jobs:
           push: true
           tags: ${{ steps.meta_signaling.outputs.tags }}
           labels: ${{ steps.meta_signaling.outputs.labels }}
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/galaxy-signaling:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/galaxy-signaling:buildcache,mode=max
+          cache-from: type=registry,ref=nexumia/galaxy-signaling:buildcache
+          cache-to: type=registry,ref=nexumia/galaxy-signaling:buildcache,mode=max

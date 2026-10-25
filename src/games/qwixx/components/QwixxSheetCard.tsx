@@ -77,6 +77,7 @@ export const QwixxSheetCard: React.FC<QwixxSheetCardProps> = ({
       sx={{
         display: 'flex',
         flexDirection: 'column',
+        touchAction: 'manipulation',
         borderRadius: 3,
         border: isCurrent ? '2px solid' : '1px solid',
         borderColor: isCurrent ? 'primary.main' : 'divider',

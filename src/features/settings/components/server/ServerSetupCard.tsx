@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { Box, Button, Paper, Typography } from '@mui/material';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHighRounded';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { settingsCardSx } from '../../settingsStyles';
 import { ServerSetupDialog } from '../../../../components/connection/setup/ServerSetupDialog';
 
 /** The one entry to setting up a companion server: app, Docker compose, Cloudflare or terminal. */
 export const ServerSetupCard: React.FC = () => {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  // Deep links such as Melodiq's "set up server" (`section=setup`) open the wizard directly.
+  const [open, setOpen] = useState(() => searchParams.get('section') === 'setup');
   return (
     <Paper id="settings-section-setup" sx={settingsCardSx}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>

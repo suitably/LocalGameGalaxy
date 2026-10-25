@@ -23,6 +23,34 @@ export const buildRowSegments = (rowDef: SheetRowDefinition): RowSegment[] => {
 };
 
 /**
+ * Splits segments into two display lines for narrow phones. The lock/star slot counts as one
+ * slot, so an 11-cell row becomes 6 cells + (5 cells + lock). Segments crossing the split are
+ * cut; only the final segment of the second line keeps `isLastSegment`.
+ */
+export const splitSegmentsIntoLines = (segments: RowSegment[]): RowSegment[][] => {
+  const total = segments.reduce((sum, seg) => sum + seg.cells.length, 0);
+  const firstLineSize = Math.ceil((total + 1) / 2);
+  const lines: RowSegment[][] = [[], []];
+  let used = 0;
+  segments.forEach((seg) => {
+    const room = Math.max(0, firstLineSize - used);
+    const head = seg.cells.slice(0, room);
+    const tail = seg.cells.slice(room);
+    used += seg.cells.length;
+    if (head.length > 0)
+      lines[0].push({
+        color: seg.color,
+        cells: head,
+        isLastSegment: seg.isLastSegment && tail.length === 0,
+      });
+    if (tail.length > 0) {
+      lines[1].push({ color: seg.color, cells: tail, isLastSegment: seg.isLastSegment });
+    }
+  });
+  return lines[1].length === 0 ? [lines[0]] : lines;
+};
+
+/**
  * Whether a cell can be tapped. Sub-box cells (double_sub) are always tappable once crossed:
  * the next taps tick the sub-box and then reset it.
  */

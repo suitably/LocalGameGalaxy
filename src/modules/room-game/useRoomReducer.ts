@@ -7,14 +7,10 @@
  * (`lgg/room`, channel `<gameKey>_<roomId>`).
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { MqttMailboxService } from '../sync/MqttMailboxService';
+import type { MqttMailboxService } from '../sync/MqttMailboxService';
 import { MultiChannelSyncCoordinator } from '../sync/useMultiChannelSync';
+import { roomMailbox } from './roomTransport';
 import { guestAccept, hostApply, type RoomHost, type RoomMessage } from './roomSync';
-
-// One mailbox per message type would be equal; the payload is untyped on the wire anyway.
-const roomMailbox = new MqttMailboxService<RoomMessage<unknown, unknown>>({
-  topicPrefix: 'lgg/room',
-});
 
 export interface UseRoomReducerOptions<S, A> {
   gameKey: string;

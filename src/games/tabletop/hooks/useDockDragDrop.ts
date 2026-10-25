@@ -42,62 +42,73 @@ export function useDockDragDrop({ tableWidth, tableHeight, dispatch }: UseDockDr
     }
   }, []);
 
-  const handlePointerUp = useCallback((e: PointerEvent) => {
-    if (!startRef.current) return;
-    const { hasMoved, item, grabOffset, onClick } = startRef.current;
+  const handlePointerUp = useCallback(
+    (e: PointerEvent) => {
+      if (!startRef.current) return;
+      const { hasMoved, item, grabOffset, onClick } = startRef.current;
 
-    if (!hasMoved) {
-      onClick?.();
-    } else {
-      const isOverBoard = e.clientY < window.innerHeight - 140;
-      if (isOverBoard) {
-        const boardEl = document.getElementById('tabletop-board-canvas');
-        if (boardEl) {
-          const rect = boardEl.getBoundingClientRect();
-          if (rect.width > 0 && rect.height > 0) {
-            const currentScale = rect.width / tableWidth;
-            const rawBoardX = (e.clientX - rect.left) / currentScale;
-            const rawBoardY = (e.clientY - rect.top) / currentScale;
-            const itemOffsetX = grabOffset.x / currentScale;
-            const itemOffsetY = grabOffset.y / currentScale;
+      if (!hasMoved) {
+        onClick?.();
+      } else {
+        const isOverBoard = e.clientY < window.innerHeight - 140;
+        if (isOverBoard) {
+          const boardEl = document.getElementById('tabletop-board-canvas');
+          if (boardEl) {
+            const rect = boardEl.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+              const currentScale = rect.width / tableWidth;
+              const rawBoardX = (e.clientX - rect.left) / currentScale;
+              const rawBoardY = (e.clientY - rect.top) / currentScale;
+              const itemOffsetX = grabOffset.x / currentScale;
+              const itemOffsetY = grabOffset.y / currentScale;
 
-            if (item.type === 'card') {
-              const cardW = item.card.width || 80;
-              const cardH = item.card.height || 120;
-              const posX = Math.round(Math.max(10, Math.min(tableWidth - cardW - 10, rawBoardX - itemOffsetX)));
-              const posY = Math.round(Math.max(10, Math.min(tableHeight - cardH - 10, rawBoardY - itemOffsetY)));
-              dispatch({
-                type: 'PLAY_CARD_FROM_HAND',
-                payload: {
-                  cardId: item.card.id,
-                  position: { x: posX, y: posY },
-                },
-              });
-            } else if (item.type === 'piece') {
-              const pieceW = item.piece.width || 56;
-              const pieceH = item.piece.height || 56;
-              const posX = Math.round(Math.max(10, Math.min(tableWidth - pieceW - 10, rawBoardX - itemOffsetX)));
-              const posY = Math.round(Math.max(10, Math.min(tableHeight - pieceH - 10, rawBoardY - itemOffsetY)));
-              dispatch({
-                type: 'TAKE_PIECE_FROM_SUPPLY',
-                payload: {
-                  pieceId: item.piece.id,
-                  targetPosition: { x: posX, y: posY },
-                },
-              });
+              if (item.type === 'card') {
+                const cardW = item.card.width || 80;
+                const cardH = item.card.height || 120;
+                const posX = Math.round(
+                  Math.max(10, Math.min(tableWidth - cardW - 10, rawBoardX - itemOffsetX)),
+                );
+                const posY = Math.round(
+                  Math.max(10, Math.min(tableHeight - cardH - 10, rawBoardY - itemOffsetY)),
+                );
+                dispatch({
+                  type: 'PLAY_CARD_FROM_HAND',
+                  payload: {
+                    cardId: item.card.id,
+                    position: { x: posX, y: posY },
+                  },
+                });
+              } else if (item.type === 'piece') {
+                const pieceW = item.piece.width || 56;
+                const pieceH = item.piece.height || 56;
+                const posX = Math.round(
+                  Math.max(10, Math.min(tableWidth - pieceW - 10, rawBoardX - itemOffsetX)),
+                );
+                const posY = Math.round(
+                  Math.max(10, Math.min(tableHeight - pieceH - 10, rawBoardY - itemOffsetY)),
+                );
+                dispatch({
+                  type: 'TAKE_PIECE_FROM_SUPPLY',
+                  payload: {
+                    pieceId: item.piece.id,
+                    targetPosition: { x: posX, y: posY },
+                  },
+                });
+              }
             }
           }
         }
       }
-    }
 
-    startRef.current = null;
-    setDraggingItem(null);
-    setPointerPos(null);
-    setGrabOffset({ x: 0, y: 0 });
-    setBoardScale(1);
-    setIsDragging(false);
-  }, [tableWidth, tableHeight, dispatch]);
+      startRef.current = null;
+      setDraggingItem(null);
+      setPointerPos(null);
+      setGrabOffset({ x: 0, y: 0 });
+      setBoardScale(1);
+      setIsDragging(false);
+    },
+    [tableWidth, tableHeight, dispatch],
+  );
 
   useEffect(() => {
     if (draggingItem) {
@@ -110,51 +121,44 @@ export function useDockDragDrop({ tableWidth, tableHeight, dispatch }: UseDockDr
     }
   }, [draggingItem, handlePointerMove, handlePointerUp]);
 
-  const startCardDrag = useCallback((e: React.PointerEvent, card: CardWidget, onClick?: () => void) => {
-    if (e.button !== 0) return;
-    const item: DockDragItem = { type: 'card', card };
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const grabOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    const boardEl = document.getElementById('tabletop-board-canvas');
-    const boardRect = boardEl?.getBoundingClientRect();
-    const boardScale = boardRect && boardRect.width > 0 ? boardRect.width / tableWidth : 1;
+  const beginDrag = useCallback(
+    (e: React.PointerEvent, item: DockDragItem, onClick?: () => void) => {
+      if (e.button !== 0) return;
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const grabOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      const boardEl = document.getElementById('tabletop-board-canvas');
+      const boardRect = boardEl?.getBoundingClientRect();
+      const boardScale = boardRect && boardRect.width > 0 ? boardRect.width / tableWidth : 1;
 
-    startRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      grabOffset,
-      boardScale,
-      item,
-      onClick,
-      hasMoved: false,
-    };
-    setGrabOffset(grabOffset);
-    setBoardScale(boardScale);
-    setDraggingItem(item);
-  }, [tableWidth]);
+      startRef.current = {
+        startX: e.clientX,
+        startY: e.clientY,
+        grabOffset,
+        boardScale,
+        item,
+        onClick,
+        hasMoved: false,
+      };
+      setGrabOffset(grabOffset);
+      setBoardScale(boardScale);
+      setDraggingItem(item);
+    },
+    [tableWidth],
+  );
 
-  const startPieceDrag = useCallback((e: React.PointerEvent, piece: TokenWidget, groupName: string, onClick?: () => void) => {
-    if (e.button !== 0) return;
-    const item: DockDragItem = { type: 'piece', piece, groupName };
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const grabOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    const boardEl = document.getElementById('tabletop-board-canvas');
-    const boardRect = boardEl?.getBoundingClientRect();
-    const boardScale = boardRect && boardRect.width > 0 ? boardRect.width / tableWidth : 1;
+  const startCardDrag = useCallback(
+    (e: React.PointerEvent, card: CardWidget, onClick?: () => void) => {
+      beginDrag(e, { type: 'card', card }, onClick);
+    },
+    [beginDrag],
+  );
 
-    startRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      grabOffset,
-      boardScale,
-      item,
-      onClick,
-      hasMoved: false,
-    };
-    setGrabOffset(grabOffset);
-    setBoardScale(boardScale);
-    setDraggingItem(item);
-  }, [tableWidth]);
+  const startPieceDrag = useCallback(
+    (e: React.PointerEvent, piece: TokenWidget, groupName: string, onClick?: () => void) => {
+      beginDrag(e, { type: 'piece', piece, groupName }, onClick);
+    },
+    [beginDrag],
+  );
 
   return {
     draggingItem,

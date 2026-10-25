@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
 import { storage } from '../../lib/storage';
+import { SettingsCardHeader } from './SettingsCardHeader';
 import { settingsCardSx } from '../../features/settings/settingsStyles';
 import { melodiqFetch } from '../../games/melodiq';
 import type { ServerPreferencesResponse, DownloadMode } from './serverConfigTypes';
@@ -105,36 +106,23 @@ export const ServerPreferences: React.FC = () => {
 
   return (
     <Paper sx={settingsCardSx}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          mb: 1.5,
-          flexWrap: 'wrap',
-          gap: 1,
-        }}
-      >
-        <Box>
-          <Typography variant="h6">
-            {t('server.preferences.title', 'Server Preferences')}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {t(
-              'server.preferences.desc',
-              'Configure download behaviors and audio processing options.',
-            )}
-          </Typography>
-        </Box>
-        {savedNotice && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'success.main' }}>
-            <CheckCircleIcon fontSize="small" />
-            <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-              {t('server.preferences.saved', 'Saved')}
-            </Typography>
-          </Box>
+      <SettingsCardHeader
+        title={t('server.preferences.title', 'Server Preferences')}
+        description={t(
+          'server.preferences.desc',
+          'Configure download behaviors and audio processing options.',
         )}
-      </Box>
+        action={
+          savedNotice && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'success.main' }}>
+              <CheckCircleIcon fontSize="small" />
+              <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+                {t('server.preferences.saved', 'Saved')}
+              </Typography>
+            </Box>
+          )
+        }
+      />
 
       {error && (
         <Alert severity="error" sx={{ my: 1.5 }}>

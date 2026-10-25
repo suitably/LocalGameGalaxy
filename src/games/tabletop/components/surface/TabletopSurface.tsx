@@ -4,18 +4,21 @@ import { TabletopToolbar } from './TabletopToolbar';
 import { RulesDialog } from './RulesDialog';
 import { FlyingCardsLayer } from './FlyingCardsLayer';
 import type { TabletopGameState, TabletopAction } from '../../logic/tabletopReducer';
-import type { TabletopWidget, SeatWidget } from '../../logic/types';
+import type { TabletopWidget } from '../../logic/types';
 import { useTabletopEngine } from '../../hooks/useTabletopEngine';
 import { useViewportCulling } from '../../hooks/useViewportCulling';
 import { useTabletopSelection } from '../../hooks/useTabletopSelection';
 import { useObscuredWidgetIds } from '../../hooks/useObscuredWidgetIds';
+import { useSeatView } from '../../hooks/useSeatView';
 import { HolderWidgetView } from '../widgets/HolderWidgetView';
 import { BoardWidgetRenderer } from './BoardWidgetRenderer';
 import { SelectionHighlightLayer } from './SelectionHighlightLayer';
 import { SelectionFloatingBar } from './SelectionFloatingBar';
 import { HiddenZoneLayer } from './HiddenZoneLayer';
-import { WidgetContextMenu, type WidgetContextMenuPosition } from './WidgetContextMenu';
-import { createDefaultHiddenZone } from '../../logic/hiddenZoneLogic';
+import type { WidgetContextMenuPosition } from './WidgetContextMenu';
+import { SurfaceContextMenu } from './SurfaceContextMenu';
+import { useTableKeyShortcuts } from '../../hooks/useTableKeyShortcuts';
+import { useAddHiddenZone } from '../../hooks/useAddHiddenZone';
 import { getSeatWidgets } from '../../logic/seatLogic';
 import { filterBoardHolders, filterBoardWidgets } from '../../logic/boardFilter';
 import { SurfaceSeatControls } from './SurfaceSeatControls';
@@ -29,29 +32,31 @@ interface TabletopSurfaceProps {
   /** Pass and play: seats change only through the handover cover. */
   hideSeatSelector?: boolean;
   editMode?: boolean;
+  /** Spectator device: the table can be viewed, panned and zoomed but never changed. */
+  readOnly?: boolean;
 }
 
 export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
   state,
-  dispatch,
+  dispatch: seatDispatch,
   isTvMode = false,
   hideSeatSelector = false,
   editMode = false,
+  readOnly = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [rulesOpen, setRulesOpen] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState<WidgetContextMenuPosition | null>(null);
 
-  const selection = useTabletopSelection({ dispatch });
   const { game, flyingCards } = state;
   const seats = useMemo(() => getSeatWidgets(game.widgets), [game.widgets]);
-  const activeSeat = useMemo(() => {
-    if (state.currentSeatId && state.game.widgets[state.currentSeatId]) {
-      return state.game.widgets[state.currentSeatId] as SeatWidget;
-    }
-    return seats[0];
-  }, [seats, state.currentSeatId, state.game.widgets]);
+  // Spectators are read-only: only the seat picker (a local view choice) keeps the real dispatch.
+  const { activeSeat, isSpectator, handHolder, dispatch } = useSeatView(state, {
+    readOnly,
+    dispatch: seatDispatch,
+  });
+  const selection = useTabletopSelection({ dispatch });
 
   const {
     transform,
@@ -65,18 +70,27 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     zoomIn,
     zoomOut,
     hoveredTargetId,
+    isPressingSource,
   } = useTabletopEngine({
     tableWidth: game.table.width,
     tableHeight: game.table.height,
     widgets: game.widgets,
     currentSeatIndex: activeSeat?.index,
+    handHolderId: handHolder?.id,
+    canDraw: !isSpectator,
     onMoveWidget: (id, x, y) => dispatch({ type: 'MOVE_WIDGET', payload: { id, x, y } }),
     onSnapToHolder: (widgetId, holderId) =>
       dispatch({ type: 'SNAP_TO_HOLDER', payload: { widgetId, holderId } }),
     onDoubleClickWidget: (cardId) => dispatch({ type: 'FLIP_CARD', payload: { cardId } }),
-    onDrawCardAt: (deckId, x, y, cardId) =>
-      dispatch({ type: 'DRAW_CARD', payload: { deckId, position: { x, y }, cardId } }),
+    onDrawCardAt: (deckId, x, y, cardId, faceUp) =>
+      dispatch({ type: 'DRAW_CARD', payload: { deckId, position: { x, y }, cardId, faceUp } }),
+    onDrawFromBag: (bagId, position, spawnedId) =>
+      dispatch({ type: 'DRAW_FROM_BAG', payload: { bagId, position, spawnedId } }),
+    onShake: dispatch,
+    onLongPressRelease: (widgetId, mouseX, mouseY) =>
+      setContextMenuPos({ mouseX, mouseY, widgetId }),
   });
+  const trackHover = useTableKeyShortcuts(game.widgets, activeDragId, dispatch);
 
   const visibleIds = useViewportCulling(
     game.widgets,
@@ -99,21 +113,17 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
   const fitToScreen = useFitToScreen(containerRef, game.table, setTransform, setContainerSize);
 
   const onPointerDownBoardWidget = (e: React.PointerEvent, w: TabletopWidget) => {
+    if (isSpectator) return; // bubbles up to the board pan
     if (!selection.handleWidgetClick(w.id, e.shiftKey)) handlePointerDownWidget(e, w);
   };
 
-  const handleAddHiddenZone = () => {
-    const zone = createDefaultHiddenZone(`hz_${Date.now()}`, game.table.width, game.table.height, {
-      ownerSeat: activeSeat?.index,
-      color: activeSeat?.color,
-    });
-    dispatch({ type: 'ADD_HIDDEN_ZONE', payload: { zone } });
-  };
+  const handleAddHiddenZone = useAddHiddenZone(game.table, activeSeat, dispatch);
 
   return (
     <Box
       ref={containerRef}
       onPointerDown={handleStartPan}
+      onPointerOver={trackHover}
       sx={{
         width: '100%',
         height: '100%',
@@ -157,6 +167,9 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
             onContextMenu={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              if (isSpectator) return;
+              // Touch long press on a deck/bag picks it up; its menu opens on release.
+              if (isPressingSource()) return;
               setContextMenuPos({ mouseX: e.clientX, mouseY: e.clientY, widgetId: w.id });
             }}
             dispatch={dispatch}
@@ -197,7 +210,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
         seats={seats}
         widgets={game.widgets}
         currentSeatId={state.currentSeatId}
-        dispatch={dispatch}
+        dispatch={seatDispatch}
         hideSelector={isTvMode || hideSeatSelector}
       />
 
@@ -209,8 +222,8 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
           onOpenRules={() => setRulesOpen(true)}
           hasRules={Boolean(game.ruleText)}
           isSelectionMode={selection.isSelectionMode}
-          onToggleSelectionMode={selection.toggleSelectionMode}
-          onAddHiddenZone={handleAddHiddenZone}
+          onToggleSelectionMode={isSpectator ? undefined : selection.toggleSelectionMode}
+          onAddHiddenZone={isSpectator ? undefined : handleAddHiddenZone}
         />
       )}
 
@@ -223,23 +236,13 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
         scale={transform.scale}
       />
 
-      <WidgetContextMenu
+      <SurfaceContextMenu
         position={contextMenuPos}
-        widget={contextMenuPos ? game.widgets[contextMenuPos.widgetId] : undefined}
-        isSelected={
-          contextMenuPos ? selection.selectedWidgetIds.includes(contextMenuPos.widgetId) : false
-        }
-        onClose={() => setContextMenuPos(null)}
+        widgets={game.widgets}
+        selectedIds={selection.selectedWidgetIds}
         onToggleSelect={(id) => selection.handleWidgetClick(id, true)}
-        onToggleShowAlways={(id, cur) =>
-          dispatch({ type: 'SET_WIDGET_SHOW_ALWAYS', payload: { widgetId: id, showAlways: !cur } })
-        }
-        onScaleWidget={(id, factor) =>
-          dispatch({ type: 'SCALE_WIDGETS', payload: { widgetIds: [id], factor } })
-        }
-        onResetWidgetScale={(id) =>
-          dispatch({ type: 'RESET_WIDGET_SCALE', payload: { widgetIds: [id] } })
-        }
+        onClose={() => setContextMenuPos(null)}
+        dispatch={dispatch}
       />
     </Box>
   );

@@ -53,6 +53,7 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
         userSelect: 'none',
         WebkitTouchCallout: 'none',
         WebkitTapHighlightColor: 'transparent',
+        touchAction: 'manipulation',
       }}
     >
       <Box

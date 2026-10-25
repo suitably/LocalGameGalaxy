@@ -10,6 +10,7 @@ import {
   fillWithHalo,
   STAGE,
 } from './common';
+import { DRUM_GLYPH } from '../logic/drumGlyphs';
 import { drumGeometry } from './geometry';
 import type { StageNote } from '../logic/charts';
 import type { HitPoint, ViewContext } from './view';
@@ -73,6 +74,8 @@ export function drawDrums(v: ViewContext): HitPoint {
       roundRect(g, laneX(n.lane, q.s) - gw / 2, q.y - gh / 2, gw, gh, gh / 2);
     }
     fillWithHalo(g, c, 6 * q.s);
+    const isKick = n.lane === 4;
+    drawNoteMarks(g, n, isKick ? cx : laneX(n.lane, q.s), q.y, q.s, isKick ? width * q.s - 12 : 0);
   }
 
   const rad = Math.min(width / 8 - 8, 40, h * 0.12);
@@ -112,4 +115,30 @@ export function drawDrums(v: ViewContext): HitPoint {
   g.textAlign = 'left';
 
   return (n) => (n.lane === 4 ? { x: cx, y: kickY } : { x: laneX(n.lane, 1), y: hitY });
+}
+
+/** Voice glyph inside the note (open hi-hat, tom 2, ...) and sticking letter beside it. */
+function drawNoteMarks(
+  g: CanvasRenderingContext2D,
+  n: StageNote,
+  x: number,
+  y: number,
+  scale: number,
+  barWidth: number,
+) {
+  if (scale < 0.55) return;
+  const glyph = n.drum ? DRUM_GLYPH[n.drum] : undefined;
+  g.textAlign = 'center';
+  g.fillStyle = STAGE.ink;
+  if (glyph && n.lane !== 4) {
+    g.font = `800 ${Math.round(11 * scale)}px ${FONT_MONO}`;
+    g.fillText(glyph, x, y + 4 * scale);
+  }
+  if (n.hand) {
+    const dx = barWidth ? barWidth / 2 - 10 : 50 * scale;
+    g.font = `800 ${Math.round(12 * scale)}px ${FONT_MONO}`;
+    g.fillStyle = withAlpha(STAGE.ink, 0.85);
+    g.fillText(n.hand, x + (n.hand === 'L' ? -dx : dx), y + 4 * scale);
+  }
+  g.textAlign = 'left';
 }

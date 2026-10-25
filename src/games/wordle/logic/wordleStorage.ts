@@ -46,7 +46,8 @@ export function loadDailyGameState(lang: string, dateKey: string): WordleState {
       mode: 'daily',
       dateKey,
       invalidWordShake: false,
-      message: status === 'won' ? 'wordle.congratulations' : status === 'lost' ? 'wordle.game_over' : null,
+      message:
+        status === 'won' ? 'wordle.congratulations' : status === 'lost' ? 'wordle.game_over' : null,
     };
   }
 
@@ -66,7 +67,7 @@ export function loadDailyGameState(lang: string, dateKey: string): WordleState {
 export function saveDailyGameState(
   lang: string,
   dateKey: string,
-  state: Pick<WordleState, 'guesses' | 'evaluations' | 'status'>
+  state: Pick<WordleState, 'guesses' | 'evaluations' | 'status'>,
 ): void {
   // Only persist if at least one guess was made or the game has concluded
   if (state.guesses.length === 0 && state.status === 'playing') {
@@ -87,4 +88,12 @@ export function loadWordleStats(): WordleStats {
 
 export function saveWordleStats(stats: WordleStats): void {
   storage.setJson(STATS_STORAGE_KEY, stats);
+}
+
+export function loadDictionaryOnly(): boolean {
+  return storage.getJson<boolean>(STORAGE_KEYS.WORDLE_DICTIONARY_ONLY, true) !== false;
+}
+
+export function saveDictionaryOnly(value: boolean): void {
+  storage.setJson(STORAGE_KEYS.WORDLE_DICTIONARY_ONLY, value);
 }

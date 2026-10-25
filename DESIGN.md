@@ -1,6 +1,6 @@
 # DESIGN.md — Nexumia visual system
 
-Status: **partly implemented.** Dark tokens, fonts, logo and app icons are live (`src/themeTokens.ts`, `src/theme.ts`); light mode and the games' hard-coded colours are not yet (§10). This file is the target every new or changed screen follows; the migration steps are in §10. Covers the whole product: hub, game screens, phone controllers, TV mode and the Android app.
+Status: **partly implemented.** Dark and light tokens (with the mode setting, §9), fonts, logo and app icons are live (`src/themeTokens.ts`, `src/theme.ts`); some games' hard-coded colours are not yet migrated (§10). This file is the target every new or changed screen follows; the migration steps are in §10. Covers the whole product: hub, game screens, phone controllers, TV mode and the Android app.
 
 ## 1. Direction: "Game night on the couch"
 
@@ -69,7 +69,7 @@ Rules:
 - Tints for large areas (a player's score column, a row background): the piece colour at 16 % opacity over `bg.surface`, text stays `text.primary`.
 - Game-specific needs that the palette cannot cover (e.g. Sudoku conflict highlights, Wordle letter states) map to roles first (`success`, `warning`, `error`, `accent`). Anything still missing is added here as a token, never inline.
 - In code: `theme.palette.piece.*` in components, `piecePalette`, `PIECE_ORDER`, `pieceColorForSlot()` and `pieceNeutrals` (white/black pieces) from `src/themeTokens.ts` in logic and canvas code.
-- **Exempt — table content:** what a game _depicts_ keeps realistic or user-defined colours: playing-card faces and suits, wood holders, table felt, imported Tabletop widget colours (`src/games/tabletop/logic/*` parsers), MusicXML colours, the karaoke lyric highlight on video, the hue picker. Exempt colours never style UI chrome (buttons, dialogs, navigation, selection).
+- **Exempt — table content:** what a game _depicts_ keeps realistic or user-defined colours: playing-card faces and suits, wood holders, table felt, imported Tabletop widget colours (`src/games/tabletop/logic/*` parsers), MusicXML colours, the karaoke lyric highlight on video. Exempt colours never style UI chrome (buttons, dialogs, navigation, selection).
 
 ## 3. Typography
 
@@ -109,13 +109,15 @@ Buttons use sentence case (no `textTransform`). Long text (rules, help) is cappe
 | Host PC / laptop             | Scale as above.                                                                                |
 | TV mode (1080p+, 3 m away)   | Scale × 1.5 (body 24px, `display` 5.25rem); nothing smaller than 20px; max 3 actions per view. |
 
+Implementation: `createTvTheme()` in `src/themeTv.ts` (explicit ×1.5 sizes, min 20px, 32px icons, 48px container gutter, always dark), applied by `src/components/common/TvThemeProvider.tsx` around TV views.
+
 ## 4. Spacing and layout
 
 - **Scale (MUI `theme.spacing`, 8px base):** `0.5`=4 · `1`=8 · `1.5`=12 · `2`=16 · `3`=24 · `4`=32 · `6`=48 · `8`=64. No other values.
 - **Page gutter:** 16px phone, 24px tablet/desktop, 48px TV.
 - **Section gap:** 32px phone, 48px desktop. **Gap inside cards:** 16px; between cards in a grid: 16px (phone) / 24px.
 - **Content width:** hub and lobbies max 1200px; text pages (rules, settings) max 720px; game boards use the full viewport.
-- **Touch targets:** ≥ 48×48px everywhere; ≥ 56px for primary actions on phone controllers (people tap without looking).
+- **Touch targets:** ≥ 48×48px everywhere; ≥ 56px for primary actions on phone controllers (people tap without looking). Dense rows change layout instead of shrinking (Qwixx rows wrap into two lines on phones). The only width exception is the 10-key Wordle keyboard at 360px: keys are ≥ 48px tall, fill the row with zero gap and no dead zones (`data-touch-exempt` in `scripts/measure-touch-targets.cjs`).
 - Layout via Grid/Flexbox, full-height screens use `100dvh`, safe areas per [docs/tech/styling.md](docs/tech/styling.md) §4.
 
 ## 5. Shape and depth
@@ -212,7 +214,9 @@ Generated from `design/brand/nexumia-mark.svg`: `public/pwa/*.png` (any: mark on
 
 ## 9. Light and dark mode
 
-Both modes are first-class. Default follows the system (`prefers-color-scheme`); a user setting (system / dark / light) overrides it. TV mode defaults to dark. Every token in §2 has both values; anything added must define both.
+Both modes are first-class. Default follows the system (`prefers-color-scheme`); a user setting (system / dark / light, Settings → General → Appearance) overrides it. TV mode is always dark. Every token in §2 has both values; anything added must define both.
+
+Implementation: `appTheme` in `src/theme.ts` (MUI `colorSchemes` dark + light), `ColorModeProvider` in `src/context/ColorModeProvider.tsx` (mode from `STORAGE_KEYS.COLOR_MODE` via `src/lib/storage.ts`, never MUI's `mui-mode`; also sets `theme-color`), `TvThemeProvider` forces dark. Primary-coloured text uses `theme.palette.primary.text`. Canvas and video surfaces (Melodiq stage and lyrics, Melodiq Notes stage, Tabletop table content) stay dark by design. The hub uses the ink lock-up (`src/assets/nexumia-banner-ink.svg`) in light mode. Checked with `node scripts/a11y-audit.cjs --theme light` (0 violations on hub, settings and every game start screen).
 
 ## 10. Implementation and migration
 
@@ -220,7 +224,7 @@ Order (each step its own PR):
 
 1. ~~**Tokens in code**~~ — done for dark (`src/themeTokens.ts` holds dark, light and piece tokens; `src/theme.ts` builds a dark-only MUI theme, no `colorSchemes`/CSS variables yet, because MUI would follow the system mode and keep its own `localStorage` key). Original plan: rewrite `src/theme.ts` with MUI `colorSchemes` (`dark` + `light`) and CSS variables (`cssVariables: true`), the piece palette as a custom palette key, typography (§3), `shape.borderRadius: 4`, component overrides (§6). Update `index.css`, `index.html` and the PWA manifest in `vite.config.ts` to `bg.canvas`.
 2. ~~**Fonts**~~ — done: add both `@fontsource-variable` packages, import in `src/main.tsx`.
-3. **Mode setting:** storage key via `src/lib/storage.ts`, toggle in settings; then enable `colorSchemes` with `lightTokens`. Needs step 5 first for game screens, or light mode limited to hub/settings.
+3. ~~**Mode setting**~~ — done (§9, #499): `STORAGE_KEYS.COLOR_MODE`, Settings → General → Appearance, `colorSchemes` with `lightTokens`.
 4. ~~**Hub**~~ — done: tiles and filter use the areas (`src/lib/areas.ts`, `src/features/hub/HubGameCard.tsx`, `HubAreaFilter.tsx`). The unused gradient fields in `src/lib/gameRegistry.tsx` go with suitably/LocalGameGalaxy#498.
 5. **Games:** done for every file that stays within its component budget (codemod for `sx` props, hand edits elsewhere, stage canvas via `STAGE` in `src/games/melodiq-notes/stage/render/common.ts`). The 35 files that must be decomposed first are tracked in suitably/LocalGameGalaxy#491–#498; light mode in #499; epic #490.
 6. ~~Logo, word mark and app icons~~ — done (§8). Remaining: area icons in the hub (with step 4).

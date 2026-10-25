@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  germanGenderForms,
-  levenshtein,
-  normalize,
-  transliterateUmlauts,
-} from './lingo';
+import { germanGenderForms, levenshtein, normalize, transliterateUmlauts } from './lingo';
 import { evaluateGuess } from './guessEvaluator';
 import { buildHintLetters, buildWordMask, resolveHintArtifacts } from './hintResolver';
 import { toRoundPayload } from './engine';
@@ -185,9 +180,7 @@ describe('GuessArt Game Model & Player Management', () => {
     expect(game.players).toHaveLength(2);
 
     // Renaming Bob to Charlie
-    const updatedPlayers = game.players.map((p) =>
-      p.id === 'p2' ? { ...p, name: 'Charlie' } : p,
-    );
+    const updatedPlayers = game.players.map((p) => (p.id === 'p2' ? { ...p, name: 'Charlie' } : p));
     expect(updatedPlayers[1].name).toBe('Charlie');
     expect(updatedPlayers[1].id).toBe('p2');
   });
@@ -308,12 +301,18 @@ describe('GuessArt Cross-Language Round Payload Resolution', () => {
   });
 
   it('evaluates guesses in both languages successfully', () => {
-    expect(evaluateGuess(dummyRoundEnglish.translations, dummyRoundEnglish.word, 'Hund')).toBe(true);
+    expect(evaluateGuess(dummyRoundEnglish.translations, dummyRoundEnglish.word, 'Hund')).toBe(
+      true,
+    );
     expect(evaluateGuess(dummyRoundEnglish.translations, dummyRoundEnglish.word, 'Dog')).toBe(true);
-    expect(evaluateGuess(dummyRoundEnglish.translations, dummyRoundEnglish.word, 'Welpe')).toBe(true);
-    expect(evaluateGuess(dummyRoundEnglish.translations, dummyRoundEnglish.word, 'Puppy')).toBe(true);
-    expect(evaluateGuess(dummyRoundEnglish.translations, dummyRoundEnglish.word, 'Katze')).toBe(false);
+    expect(evaluateGuess(dummyRoundEnglish.translations, dummyRoundEnglish.word, 'Welpe')).toBe(
+      true,
+    );
+    expect(evaluateGuess(dummyRoundEnglish.translations, dummyRoundEnglish.word, 'Puppy')).toBe(
+      true,
+    );
+    expect(evaluateGuess(dummyRoundEnglish.translations, dummyRoundEnglish.word, 'Katze')).toBe(
+      false,
+    );
   });
 });
-
-

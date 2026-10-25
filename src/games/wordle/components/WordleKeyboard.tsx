@@ -3,11 +3,14 @@
  */
 
 import React, { useEffect } from 'react';
-import { Box, Button } from '@mui/material';
+import { Box, ButtonBase } from '@mui/material';
 import BackspaceOutlinedIcon from '@mui/icons-material/BackspaceRounded';
 import { useTranslation } from 'react-i18next';
 import type { LetterStatus } from '../logic/types';
 import { statusLabelKey, tileStyle } from './tileStyles';
+
+/** Row height incl. the 2px face margins; keeps every key >= 48px tall in portrait and landscape. */
+const KEY_HEIGHT = 56;
 
 interface WordleKeyboardProps {
   onChar: (char: string) => void;
@@ -70,7 +73,7 @@ export const WordleKeyboard: React.FC<WordleKeyboardProps> = ({
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 0.8,
+        gap: 0,
         width: '100%',
         maxWidth: 500,
         mx: 'auto',
@@ -80,23 +83,26 @@ export const WordleKeyboard: React.FC<WordleKeyboardProps> = ({
       }}
     >
       {rows.map((row, rowIndex) => (
-        <Box
-          key={rowIndex}
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: { xs: 0.5, sm: 0.8 },
-          }}
-        >
+        <Box key={rowIndex} sx={{ display: 'flex', justifyContent: 'center' }}>
+          {/* Half-key spacers centre the 9-key row without a gap between keys. */}
+          {rowIndex === 1 && <Box sx={{ flex: 0.5 }} />}
           {row.map((key) => {
             const isSpecial = key === 'ENTER' || key === 'DELETE';
             const status: LetterStatus = isSpecial ? 'empty' : keyStatuses[key] || 'empty';
             const style = tileStyle(status === 'empty' ? 'tbd' : status);
+            const faceBg = isSpecial
+              ? 'action.selected'
+              : status === 'empty'
+                ? 'background.paper'
+                : style.bgcolor;
 
             return (
-              <Button
+              <ButtonBase
                 key={key}
                 disabled={disabled}
+                // 10 keys cannot be 48px wide at 360px: keys fill the row with zero gap, the
+                // visual gap is the face margin, so the hit area has no dead zones.
+                data-touch-exempt="dense-keyboard-width"
                 aria-label={
                   isSpecial
                     ? key === 'ENTER'
@@ -110,35 +116,49 @@ export const WordleKeyboard: React.FC<WordleKeyboardProps> = ({
                   else onChar(key);
                 }}
                 sx={{
-                  minWidth: isSpecial ? { xs: 54, sm: 66 } : { xs: 30, sm: 38 },
-                  height: { xs: 50, sm: 54 },
+                  flex: isSpecial ? 1.5 : 1,
+                  minWidth: 0,
+                  height: KEY_HEIGHT,
                   p: 0,
-                  fontSize: isSpecial
-                    ? { xs: '0.75rem', sm: '0.85rem' }
-                    : { xs: '1.15rem', sm: '1.25rem' },
-                  fontWeight: 700,
-                  ...(isSpecial
-                    ? { bgcolor: 'action.selected', color: 'text.primary' }
-                    : {
-                        ...style,
-                        bgcolor: status === 'empty' ? 'background.paper' : style.bgcolor,
-                        border: '2px solid',
-                        borderColor: status === 'empty' ? 'divider' : style.borderColor,
-                        borderStyle: style.borderStyle ?? 'solid',
-                      }),
-                  borderRadius: 2,
-                  '&:hover': {
+                  '&:active .key-face': { transform: 'scale(0.95)' },
+                  '&:hover .key-face': {
                     bgcolor: isSpecial || status === 'empty' ? 'action.hover' : style.bgcolor,
-                  },
-                  '&:active': {
-                    transform: 'scale(0.95)',
                   },
                 }}
               >
-                {key === 'DELETE' ? <BackspaceOutlinedIcon fontSize="small" /> : key}
-              </Button>
+                <Box
+                  className="key-face"
+                  sx={{
+                    width: '100%',
+                    height: 'calc(100% - 4px)',
+                    m: '2px',
+                    mx: { xs: '1.5px', sm: '2.5px' },
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: isSpecial
+                      ? { xs: '0.75rem', sm: '0.85rem' }
+                      : { xs: '1.15rem', sm: '1.25rem' },
+                    fontWeight: 700,
+                    borderRadius: 2,
+                    transition: 'transform 0.1s',
+                    ...(isSpecial
+                      ? { color: 'text.primary' }
+                      : {
+                          ...style,
+                          border: '2px solid',
+                          borderColor: status === 'empty' ? 'divider' : style.borderColor,
+                          borderStyle: style.borderStyle ?? 'solid',
+                        }),
+                    bgcolor: faceBg,
+                  }}
+                >
+                  {key === 'DELETE' ? <BackspaceOutlinedIcon fontSize="small" /> : key}
+                </Box>
+              </ButtonBase>
             );
           })}
+          {rowIndex === 1 && <Box sx={{ flex: 0.5 }} />}
         </Box>
       ))}
     </Box>

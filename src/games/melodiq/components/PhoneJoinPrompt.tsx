@@ -3,6 +3,7 @@ import { Dialog, DialogTitle, DialogContent, Button, Typography, Box } from '@mu
 import MicIcon from '@mui/icons-material/MicRounded';
 import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
 import { useClientEngine } from '../PhoneClientEngine';
+import { CONTROLLER_TARGET } from '../../../lib/touchTarget';
 
 export const PhoneJoinPrompt: React.FC = () => {
   const {
@@ -51,6 +52,7 @@ export const PhoneJoinPrompt: React.FC = () => {
             color="primary"
             size="large"
             startIcon={<MicIcon />}
+            sx={{ minHeight: CONTROLLER_TARGET }}
             onClick={() => handleChoice('singer')}
           >
             Join as Singer
@@ -60,6 +62,7 @@ export const PhoneJoinPrompt: React.FC = () => {
             color="inherit"
             size="large"
             startIcon={<VisibilityIcon />}
+            sx={{ minHeight: CONTROLLER_TARGET }}
             onClick={() => handleChoice('spectator')}
           >
             Just Spectate

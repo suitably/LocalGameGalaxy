@@ -13,6 +13,7 @@ import {
   hasNotes,
   hasSongHeaders,
   rewriteMediaHeaders,
+  videoHeader,
 } from './ultrastarTxt';
 import type { DownloadJob, SeparatorJob, Song } from '../../../core/types';
 
@@ -235,7 +236,10 @@ export async function runDownloadJob(job: DownloadJob): Promise<void> {
     job.progress = 55;
     job.log.push('✅ Audio and cover done.');
 
-    const video = await resolveVideo(ytBin, job, url, songDir, safeName);
+    // an existing song folder keeps its video when only the audio is downloaded
+    const video =
+      (await resolveVideo(ytBin, job, url, songDir, safeName)) ||
+      (job.songId ? videoHeader(txtContent) : '');
     job.progress = 85;
 
     const media = {
@@ -248,11 +252,8 @@ export async function runDownloadJob(job: DownloadJob): Promise<void> {
       : buildMinimalTxt({ title: job.title, artist: job.artist, ...media });
     fs.writeFileSync(txtPath, txt, 'utf-8');
     job.log.push('✅ .txt written.');
-    job.progress = 100;
-    job.status = 'done';
-    job.log.push(`🎉 Saved to: ${songDir}`);
 
-    // Index right away so the UI has the song before the rescan
+    // Index right away so the UI has the song (and its id) before the rescan
     let indexedSong: Song | null = null;
     try {
       indexedSong = await addOrUpdateSongInCache(txtPath);
@@ -260,6 +261,11 @@ export async function runDownloadJob(job: DownloadJob): Promise<void> {
     } catch (e) {
       console.warn('[Download] Failed to instantly index song:', e);
     }
+    if (indexedSong) job.songId = indexedSong.id;
+    // done only now, so a client polling the status gets the song id with it
+    job.progress = 100;
+    job.status = 'done';
+    job.log.push(`🎉 Saved to: ${songDir}`);
 
     enqueueAutoSeparation(job, songDir, safeName, indexedSong);
     setTimeout(scanSongs, 1000);

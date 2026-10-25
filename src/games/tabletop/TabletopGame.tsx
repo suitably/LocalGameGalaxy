@@ -24,6 +24,9 @@ import { usePartyLobbyReturn } from './hooks/usePartyLobbyReturn';
 import { useTabletopAutosave } from './hooks/useTabletopAutosave';
 import { TabletopPassAndPlay } from './components/views/TabletopPassAndPlay';
 import { RestartGameButton } from './components/views/RestartGameButton';
+import { SaveStateButton } from './components/saves/SaveStateButton';
+import { TvThemeProvider } from '../../components/common/TvThemeProvider';
+import type { TabletopGameDefinition } from './logic/types';
 
 export function TabletopGame() {
   const { t } = useTranslation();
@@ -31,9 +34,10 @@ export function TabletopGame() {
   const [searchParams] = useSearchParams();
 
   const roomId = searchParams.get('room');
-  const role = searchParams.get('role'); // 'tv' | 'player'
+  const role = searchParams.get('role'); // 'tv' | 'player' | 'spectator'
   const seatParam = searchParams.get('seat');
-  const seat = seatParam !== null ? Number(seatParam) : null;
+  const isSpectator = role === 'spectator';
+  const seat = seatParam !== null && !isSpectator ? Number(seatParam) : null;
   const gameId = searchParams.get('gameId') || 'standard-cards';
   const isLocal = searchParams.get('local') === '1';
 
@@ -94,7 +98,7 @@ export function TabletopGame() {
           return;
         }
 
-        throw new Error(`Spiel "${gameId}" konnte nicht geladen werden.`);
+        throw new Error(t('games.tabletop.load_error', { gameId }));
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
       } finally {
@@ -107,6 +111,9 @@ export function TabletopGame() {
   }, [gameId, roomId, isLocal, restartCount]);
 
   useTabletopAutosave(saveKey, gameState.game, ownsState && !loading && !error);
+
+  const loadSavedTable = (game: TabletopGameDefinition) =>
+    dispatch({ type: 'LOAD_GAME', payload: game });
 
   const restartGame = async () => {
     await deleteTabletopSession(saveKey);
@@ -121,6 +128,7 @@ export function TabletopGame() {
     dispatch,
     onReturnToLobby: returnToLobby,
     seat,
+    spectator: isSpectator,
   });
 
   if (loading) {
@@ -149,7 +157,7 @@ export function TabletopGame() {
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate('/games/tabletop')}
         >
-          Zurück zur Übersicht
+          {t('games.tabletop.backToOverview')}
         </Button>
       </Box>
     );
@@ -158,39 +166,43 @@ export function TabletopGame() {
   // 1. In Room: TV / Shared Table Mode
   if (roomId && role === 'tv') {
     return (
-      <Box position="relative" width="100%" height="100%">
-        <Button
-          size="small"
-          variant="contained"
-          color="inherit"
-          startIcon={<GroupsIcon />}
-          onClick={() => {
-            broadcastAction({ type: 'RETURN_TO_LOBBY' });
-            returnToLobby();
-          }}
-          sx={{ position: 'absolute', top: 12, left: 12, zIndex: 1000, opacity: 0.85 }}
-        >
-          Zurück zur Party-Lobby
-        </Button>
-        <RestartGameButton onRestart={restartGame} />
-        <TabletopEditor state={gameState} dispatch={syncedDispatch} isTvMode={true} />
-      </Box>
+      <TvThemeProvider>
+        <Box position="relative" width="100%" height="100%">
+          <Button
+            size="small"
+            variant="contained"
+            color="inherit"
+            startIcon={<GroupsIcon />}
+            onClick={() => {
+              broadcastAction({ type: 'RETURN_TO_LOBBY' });
+              returnToLobby();
+            }}
+            sx={{ position: 'absolute', top: 12, left: 12, zIndex: 1000, opacity: 0.85 }}
+          >
+            {t('party.backToLobby')}
+          </Button>
+          <RestartGameButton onRestart={restartGame} />
+          <SaveStateButton game={gameState.game} onLoad={loadSavedTable} />
+          <TabletopEditor state={gameState} dispatch={syncedDispatch} isTvMode={true} />
+        </Box>
+      </TvThemeProvider>
     );
   }
 
-  // 2. In Room: Smartphone Controller Mode
-  if (roomId && seat !== null) {
+  // 2. In Room: Smartphone Controller Mode (`role=spectator`: no seat, no hand, no drawing)
+  if (roomId && (seat !== null || isSpectator)) {
     return (
       <TabletopControllerView
         state={gameState}
         dispatch={syncedDispatch}
         mySeat={seat}
+        readOnly={isSpectator}
         onFlickCardToTable={(cardId, targetHolderId) => {
           broadcastAction({
             type: 'FLICK_CARD_TO_TABLE',
             cardId,
             targetHolderId,
-            senderSeat: seat,
+            senderSeat: seat ?? undefined,
           });
           dispatch({ type: 'ANIMATE_CARD_TO_TABLE', payload: { cardId, targetHolderId } });
         }}
@@ -204,6 +216,7 @@ export function TabletopGame() {
       <Box display="flex" flexDirection="column" width="100%" height="100%" overflow="hidden">
         <Box flex={1} position="relative" minHeight={0}>
           <RestartGameButton onRestart={restartGame} />
+          <SaveStateButton game={gameState.game} onLoad={loadSavedTable} />
           <TabletopEditor state={gameState} dispatch={syncedDispatch} hideSeatSelector />
           <TabletopPassAndPlay state={gameState} dispatch={syncedDispatch} />
         </Box>

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { SignalingSettingsCard } from './server/SignalingSettingsCard';
 import { CompanionPluginsSection } from './server/CompanionPluginsSection';
 import { ServerSetupCard } from './server/ServerSetupCard';
+import { ServerPairingCard } from './server/ServerPairingCard';
 
 interface ServerSettingsCategoryProps {
   autoFocusUsdb?: boolean;
@@ -34,6 +35,9 @@ export const ServerSettingsCategory: React.FC<ServerSettingsCategoryProps> = ({
           </Typography>
         </Box>
       </Box>
+
+      {/* Opened via the server's one-time pairing link */}
+      <ServerPairingCard />
 
       {/* 1. Platform Infrastructure: WebRTC Signaling */}
       <SignalingSettingsCard />

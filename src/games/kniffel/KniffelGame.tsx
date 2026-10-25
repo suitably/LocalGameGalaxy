@@ -89,9 +89,13 @@ export const KniffelGame: React.FC = () => {
             </Button>
           </Tooltip>
 
-          <Tooltip title={t('games.kniffel.undo_tooltip', 'Letzten Eintrag rückgängig machen')}>
+          <Tooltip
+            title={t('games.kniffel.undo_tooltip', 'Letzten Eintrag rückgängig machen')}
+            describeChild
+          >
             <span>
               <IconButton
+                aria-label={t('games.kniffel.undo_tooltip', 'Letzten Eintrag rückgängig machen')}
                 onClick={() => dispatch({ type: 'UNDO_MOVE' })}
                 disabled={!state.moveHistory || state.moveHistory.length === 0 || state.isGameOver}
                 color="inherit"

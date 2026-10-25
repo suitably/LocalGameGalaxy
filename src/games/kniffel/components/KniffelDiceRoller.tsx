@@ -63,6 +63,7 @@ export const KniffelDiceRoller: React.FC<KniffelDiceRollerProps> = ({
         flexDirection: 'column',
         alignItems: 'center',
         gap: 2,
+        touchAction: 'manipulation',
       }}
     >
       <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', flexWrap: 'wrap' }}>

@@ -8,8 +8,8 @@ generated:
   at: 2026-10-21T23:45:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-24
-  method: 'Read src/games/tabletop/logic/{tabletopReducer,widgetEdits,editHistory,stateDelta,syncProtocol,tabletopStorage,tabletopServerApi,serverGameSnapshot}.ts, hooks/useGameManager.ts, logic/reducers/*, hooks/{useTabletopSync,useTabletopAutosave}.ts and their tests.'
+  at: 2026-10-25
+  method: 'Read hooks/useTableSaves.ts, logic/saveNames.ts, components/saves/* (named saves, #538); logic/tableGestures.ts, hooks/{useTabletopEngine,usePanPinch,sourcePress,useTableKeyShortcuts}.ts, components/surface/SurfaceContextMenu.tsx (gestures); logic/{handFan,seatLogic}.ts, hooks/useSeatView.ts, components/surface/{HandDockStrip,HandFan,CardZoomDialog}.tsx (hand dock, spectators); logic/zOrder.ts, reducers/viewReducer.ts (z-order); src/games/tabletop/logic/{tabletopReducer,widgetEdits,editHistory,stateDelta,syncProtocol,tabletopStorage,tabletopServerApi,serverGameSnapshot}.ts, hooks/useGameManager.ts, logic/reducers/*, hooks/{useTabletopSync,useTabletopAutosave}.ts and their tests.'
 sources:
   - 'src/games/tabletop/logic/tabletopReducer.ts'
   - 'src/games/tabletop/logic/reducers/'
@@ -27,17 +27,21 @@ Roadmap and comparison with VirtualTabletop: [2026-10-21 plan](../reports/2026-1
 
 `logic/tabletopReducer.ts` holds the action union (`TabletopAction`) and the table actions (move, flip, rotate, snap to holder, counters, dice, animation, seats). Groups live in `logic/reducers/`:
 
-| File                  | Actions                                                                                                                                        |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `deckReducer.ts`      | `SHUFFLE_DECK`, `DRAW_CARD`, `RETURN_CARD_TO_DECK`                                                                                             |
-| `bagReducer.ts`       | `DRAW_FROM_BAG`                                                                                                                                |
-| `pieceReducer.ts`     | `TAKE_PIECE_FROM_SUPPLY`, `PLAY_CARD_FROM_HAND`                                                                                                |
-| `viewReducer.ts`      | `SCALE_WIDGETS`, `RESET_WIDGET_SCALE`, `SET_WIDGET_SHOW_ALWAYS`, hidden zones (`MOVE_HIDDEN_ZONE`, `RESIZE_HIDDEN_ZONE`, `TOGGLE_ZONE_REVEAL`) |
-| `tableToolReducer.ts` | `TOGGLE_TIMER`, `RESET_TIMER`, `SPIN_SPINNER`, `NEXT_STATE` (rules in `logic/tableTools.ts`)                                                   |
-| `editReducer.ts`      | `PATCH_WIDGETS`, `ADD_WIDGET`, `DELETE_WIDGETS`, `UPDATE_TABLE`                                                                                |
-| `holderMembership.ts` | helper `removeFromHolderAndUpdateHand`                                                                                                         |
+| File                  | Actions                                                                                                                                                       |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `deckReducer.ts`      | `SHUFFLE_DECK`, `DRAW_CARD`, `RETURN_CARD_TO_DECK`                                                                                                            |
+| `bagReducer.ts`       | `DRAW_FROM_BAG`                                                                                                                                               |
+| `pieceReducer.ts`     | `TAKE_PIECE_FROM_SUPPLY`, `PLAY_CARD_FROM_HAND`                                                                                                               |
+| `viewReducer.ts`      | `SCALE_WIDGETS`, `RESET_WIDGET_SCALE`, `SET_WIDGET_SHOW_ALWAYS`, `SET_Z_ORDER`, hidden zones (`MOVE_HIDDEN_ZONE`, `RESIZE_HIDDEN_ZONE`, `TOGGLE_ZONE_REVEAL`) |
+| `tableToolReducer.ts` | `TOGGLE_TIMER`, `RESET_TIMER`, `SPIN_SPINNER`, `NEXT_STATE` (rules in `logic/tableTools.ts`)                                                                  |
+| `editReducer.ts`      | `PATCH_WIDGETS`, `ADD_WIDGET`, `DELETE_WIDGETS`, `UPDATE_TABLE`                                                                                               |
+| `holderMembership.ts` | helper `removeFromHolderAndUpdateHand`                                                                                                                        |
 
 Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`.
+
+### Stacking order
+
+`logic/zOrder.ts` holds the pure rules on `zIndex` (widgets without a `parent` only). `MOVE_WIDGET` without an explicit `zIndex` puts the moved widget above all others (`raiseWidget`; the stack is renumbered to 1..n once it passes `Z_RENUMBER_LIMIT`, so it stays below hidden zones). `SET_Z_ORDER { widgetIds, op }` (`front`, `forward`, `backward`, `back`) comes from the widget context menu (`WidgetContextMenu`; a widget inside the selection moves the whole selection) and from Ctrl/Cmd+`]`/`[` (Shift: front/back, `hooks/useZOrderShortcuts.ts`, acts on the selection). Forward/backward pass the next overlapping widget (bounding boxes, rotation ignored); front/back go past all. An explicit send to back sticks until that widget is moved again. Only `zIndex` values change, so it syncs as an ordinary intent and delta. Not covered: editor-mode selection (`selectedId`) has no shortcut yet.
 
 ## 2. Editor operations and undo
 
@@ -58,7 +62,26 @@ A hidden zone (`HiddenZone`, `logic/hiddenZoneLogic.ts`) belongs to one seat (`o
 
 ### Pass and play (local)
 
-In local play (`?local=1`) `TabletopGame` mounts `components/views/TabletopPassAndPlay.tsx` on top of the editor: a "switch player" button covers the screen for the next seat (`modules/pass-and-play`), the cover can be pointed at another seat, and only the reveal dispatches `SELECT_SEAT` — so the hand dock and seat-only hidden zones never show the previous player's content to the next one. The seat chips (`PlayerSeatSelector`) are hidden in this mode (`hideSeatSelector`). Games with hand holders but no seat widgets (the built-in card deck, Liar's Dice) get one seat per hand owner (`seatsForHands` in `logic/seatLogic.ts`: `index` = `ownerSeat`, `hand` = the holder), added once with `ADD_WIDGETS`; `findPlayerHandHolder` prefers an exact `ownerSeat` match over the `index - 1` fallback.
+In local play (`?local=1`) `TabletopGame` mounts `components/views/TabletopPassAndPlay.tsx` on top of the editor: a "switch player" button covers the screen for the next seat (`modules/pass-and-play`), the cover can be pointed at another seat, and only the reveal dispatches `SELECT_SEAT` — so the hand dock and seat-only hidden zones never show the previous player's content to the next one. The seat chips (`PlayerSeatSelector`) are hidden in this mode (`hideSeatSelector`). Games with hand holders but no seat widgets (the built-in card deck, Liar's Dice) get one seat per hand owner (`seatsForHands` in `logic/seatLogic.ts`: `index` = `ownerSeat`, `hand` = the holder), added once with `ADD_WIDGETS`; `findPlayerHandHolder` prefers an exact `ownerSeat` match over the `index - 1` fallback. The first seat is selected (`SELECT_SEAT`) as soon as the seats exist, and "switch player" rotates through the seats only; the cover can also be pointed at the spectator.
+
+### Seats, spectators and the hand dock
+
+`resolveSeatView(widgets, currentSeatId)` (`logic/seatLogic.ts`, hook `hooks/useSeatView.ts`) is the one place that decides the viewer's seat and hand: the chosen seat, else the first seat; the seat's `hand` link, else `findPlayerHandHolder` by index (index 0 included). `TabletopSurface` passes that hand to `useTabletopEngine` (`handHolderId`: tap on a deck, drop on the dock) and `HandDockStrip` shows the same hand, so a draw always lands in the hand the dock shows. `currentSeatId === SPECTATOR_SEAT_ID` (`'spectator'`; eye chip in `PlayerSeatSelector`, or the pass-and-play cover) is a spectator: no hand, the engine gets `canDraw: false` (decks move like ordinary widgets), the dock shows a note. On phones, `role=spectator` opens `TabletopControllerView` with `mySeat: null` (no hand, no decks to draw from, no seat key for private hands); the party lobby hands it out: a non-host player switches "Zuschauen" on in the roster (`PartyPlayer.spectator`, `setSpectator` in `universalPartyManager`; no `slot`, `getGameRoute({ spectator })` adds `role=spectator`). Spectators are read-only: `acceptIntent` (`logic/syncProtocol.ts`) makes the host reject every synced intent from a sender that announced `spectator` in `REQUEST_SNAPSHOT` or flags the `INTENT`; `useTabletopSync({ spectator })` sends none, and `TabletopSurface`/`TabletopControllerView` get `readOnly` (`useSeatView` returns a no-op `dispatch`: no drag, flip, context menu, roll, counters, selection tools). Players keep tap-to-roll.
+
+The dock (`HandDockStrip` → `HandFan`) lays the hand out as an overlapping, slightly arced fan (`fanLayout` in `logic/handFan.ts`: cards spread while there is room, overlap down to a 22 px strip, then scroll; `handSlots` keeps stacks of identical cards as one slot with a count). A tap on a card opens `CardZoomDialog` for that card (play to the table centre, return to deck), the zoom button in `HandDockHeader` opens the whole hand; a drag still plays the card where it is dropped. The phone controller's `CardHandDock` uses the same overlap and zoom dialog and draws into its own hand (`myHolders[0]`).
+
+### Table gestures
+
+Pure rules in `logic/tableGestures.ts`, pointer handling in `hooks/useTabletopEngine.ts` (pan and pinch in `hooks/usePanPinch.ts`, deck/bag presses in `hooks/sourcePress.ts`). Decks with cards and non-empty or infinite bags are _sources_ (`sourceKind`; never for spectators):
+
+| Gesture                                 | Deck                                                                               | Bag                                                              |
+| --------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Tap                                     | top card into the viewer's hand                                                    | item next to the bag (`DRAW_FROM_BAG`)                           |
+| Drag                                    | top card follows the pointer, face down unless the pile is open (`deckShowsFront`) | an item (infinite bag: a clone with a fresh `spawnedId`) follows |
+| Long press (`LONG_PRESS_MS`), then drag | the whole deck moves                                                               | the whole bag moves                                              |
+| Long press, release without moving      | context menu                                                                       | context menu                                                     |
+
+`DRAW_CARD` takes `faceUp` with a `position`. Flipping a card: F, double tap, or the context menu (`flipActionFor`). Shuffling a deck and rolling a die are one action (`shakeActionFor`): S, shaking while dragging (`createShakeTracker`: four direction changes of at least 18 px within 900 ms), or the context menu. Keys act on the dragged widget, else the one under the pointer (`hooks/useTableKeyShortcuts.ts`). Dragging a die never rolls it (`DieWidgetView` ignores the click after a drag); a tap still rolls. The context menu (`SurfaceContextMenu`) also carries the z-order entries again. While a deck or bag is pressed the native touch context menu is suppressed (`isPressingSource`).
 
 ### Spieltisch (lobby)
 
@@ -74,7 +97,9 @@ Cards in a hand holder with an `ownerSeat` are private (`logic/handPrivacy.ts`).
 
 ## 6. Storage
 
-`galaxy_tabletop_db` v3 (see [persistence](persistence.md)): `custom_games` for imported/edited definitions, `sessions` for running games. `useTabletopAutosave` saves 1 s after a change on the host or in local play; `TabletopGame` resumes a saved session first, `RestartGameButton` deletes it.
+`galaxy_tabletop_db` v4 (see [persistence](persistence.md)): `custom_games` for imported/edited definitions, `sessions` for running games, `named_saves` for named table states. `useTabletopAutosave` saves 1 s after a change on the host or in local play; `TabletopGame` resumes a saved session first, `RestartGameButton` deletes it.
+
+**Named saves (#538).** `SaveStateButton` (host and local play, next to restart) opens `components/saves/SaveStateDialog.tsx`, driven by `hooks/useTableSaves.ts`: save the running table under a name on this device (`named_saves`, always allowed) or on the companion server (`POST/PUT /api/tabletop/saves[/:id]`, needs the API key permission `allowTabletopSaves`), and load or delete saves of the running game. Loading dispatches `LOAD_GAME` with the running game's id, so autosave and resume continue on the same table and the host's sync broadcasts the new state. Names are unique per game (trimmed, case-insensitive, `logic/saveNames.ts`); a taken name offers "name (2)", one of the player's own saves can be overwritten. Server saves record the owner (API key name, or "Master"); everyone can load them and save a copy under their own name, only the owner overwrites or deletes (the "Only mine" switch filters the list). With `allowTabletopTemplates`, "Save as default template" stores the table as the server game's start state (`PUT /api/tabletop/games/:id/template`, served by `GET …/raw` instead of the game file). There is no local default template ([Q19](../open-questions.md)).
 
 With a companion server, the game manager (`hooks/useGameManager.ts`) lists the server's games and, below, the games only on this device. "Save to server" moves a device game into the server library (`logic/tabletopServerApi.ts` → `POST /api/tabletop/games`); editing a saved server game overwrites it (`PUT`), editing a read-only one saves a copy. Before upload `logic/serverGameSnapshot.ts` turns `blob:` and `/tabletop/media?…&token=` URLs into data URLs and unwraps `/tabletop/proxy-image`, so a stored `game.json` holds no token. Games in this app's own format load from the server as they are, keyed by the server id (`parseServerGame`); other formats go through the importer.
 
