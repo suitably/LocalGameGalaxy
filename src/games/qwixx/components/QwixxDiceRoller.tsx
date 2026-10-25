@@ -86,6 +86,7 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
         bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
         border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
         mb: 2,
+        touchAction: 'manipulation',
       }}
     >
       <Box

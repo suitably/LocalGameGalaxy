@@ -149,6 +149,7 @@ export const ExcalidrawViewer: React.FC<ExcalidrawViewerProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        touchAction: 'none',
         ...hiddenExcalidrawChromeSx,
       }}
     >

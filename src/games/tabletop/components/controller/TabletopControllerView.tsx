@@ -68,6 +68,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
         flexDirection: 'column',
         bgcolor: 'background.default',
         overflow: 'hidden',
+        touchAction: 'manipulation',
       }}
     >
       {/* Top Header Status & Mode Switcher */}

@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Touch-action on game surfaces (#512, claude-code)
+
+- `docs/tech/styling.md` §5: one paragraph on `touch-action` for pinch-zoom-enabled pages (`none` for gesture surfaces, `manipulation` for tap-only controllers).
+- Outside `docs/`: `touchAction` on roots of `DrawingCanvas`, `ExcalidrawViewer` (none); Qwixx `QwixxSheetCard`, Knister `KnisterBoard`, Qwixx/Knister/Kniffel dice rollers, tabletop `TabletopControllerView` (manipulation). Tabletop board, Melodiq Notes stage/pult were already `none`.
+
 ## 2026-10-25 — Melodiq Notes stage and pult (#485, claude-code)
 
 - `docs/tech/game-catalog.md` §3 (new melodiq-notes row) and shared-module row; `docs/tech/architecture.md` §3.2 `room-game` (`useRoomEvents`, `roomTransport.ts`, consumer melodiq-notes); `docs/tech/sync-protocol.md` `lgg/room` instance and channels.

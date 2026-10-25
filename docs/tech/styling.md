@@ -9,7 +9,7 @@ generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
 verified:
-  at: 2026-10-23
+  at: 2026-10-25
   method: '2026-10-23: §1 and §6 checked against src/theme.ts, src/index.css, index.html and package.json'
 ---
 
@@ -97,7 +97,11 @@ textarea {
 body {
   overscroll-behavior-y: contain;
 }
+```
 
+Pinch-zoom stays enabled app-wide (WCAG, #512). Game surfaces with their own gestures set `touch-action: none` on their root (tabletop board, drawing canvases, Melodiq Notes stage/pult); tap-only controllers (dice, Qwixx, Knister, tabletop controller) use `touch-action: manipulation` to drop double-tap zoom.
+
+```css
 /* Use dynamic viewport height (avoids mobile browser bar issues) */
 .full-height {
   height: 100dvh;

@@ -19,7 +19,10 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   submitButtonLabel,
 }) => {
   const { t } = useTranslation();
-  const [feedback, setFeedback] = useState<{ type: 'error' | 'warning' | 'success'; text: string } | null>(null);
+  const [feedback, setFeedback] = useState<{
+    type: 'error' | 'warning' | 'success';
+    text: string;
+  } | null>(null);
   const initialScene = useMemo(() => parseSceneData(initialCanvasData), [initialCanvasData]);
   const latestSceneRef = useRef<ExcalidrawScenePayload>(initialScene);
   const serializedSceneRef = useRef<string>('');
@@ -79,11 +82,16 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const handleSubmit = async () => {
     const scene = latestSceneRef.current;
     const cleanElements = Array.isArray(scene?.elements)
-      ? scene.elements.filter((element) => element && !element.isDeleted && element.type !== 'selection')
+      ? scene.elements.filter(
+          (element) => element && !element.isDeleted && element.type !== 'selection',
+        )
       : [];
 
     if (cleanElements.length === 0) {
-      setFeedback({ type: 'warning', text: t('guessart.canvasEmptyWarning', 'Please draw something before submitting!') });
+      setFeedback({
+        type: 'warning',
+        text: t('guessart.canvasEmptyWarning', 'Please draw something before submitting!'),
+      });
       return;
     }
 
@@ -115,7 +123,16 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   };
 
   return (
-    <Box sx={{ flexGrow: 1, minHeight: 0, display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <Box
+      sx={{
+        flexGrow: 1,
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        touchAction: 'none',
+      }}
+    >
       <Box
         sx={{
           flexGrow: 1,
@@ -132,7 +149,15 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
         <Box sx={{ position: 'absolute', inset: 0 }}>
           <React.Suspense
             fallback={
-              <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Box
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 <CircularProgress size={32} />
               </Box>
             }
@@ -143,7 +168,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
               onChange={(
                 elements: readonly Record<string, unknown>[],
                 appState: Record<string, unknown> | null,
-                files: Record<string, unknown> | null
+                files: Record<string, unknown> | null,
               ) => {
                 const mergedAppState = {
                   ...(latestSceneRef.current?.appState || {}),
@@ -182,9 +207,17 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           onClick={handleSubmit}
           disabled={loading}
           endIcon={loading ? null : <SendRoundedIcon />}
-          sx={{ py: { xs: 1, sm: 1.5 }, fontWeight: 700, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}
+          sx={{
+            py: { xs: 1, sm: 1.5 },
+            fontWeight: 700,
+            fontSize: { xs: '0.95rem', sm: '1.05rem' },
+          }}
         >
-          {loading ? <CircularProgress size={20} color="inherit" /> : (submitButtonLabel ?? t('guessart.submitDrawing', 'Fertig gezeichnet'))}
+          {loading ? (
+            <CircularProgress size={20} color="inherit" />
+          ) : (
+            (submitButtonLabel ?? t('guessart.submitDrawing', 'Fertig gezeichnet'))
+          )}
         </Button>
       </Box>
     </Box>

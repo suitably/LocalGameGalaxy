@@ -45,7 +45,13 @@ export const KnisterBoard: React.FC<KnisterBoardProps> = ({
 
   return (
     <Box
-      sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', my: { xs: 1, sm: 2 } }}
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        my: { xs: 1, sm: 2 },
+        touchAction: 'manipulation',
+      }}
     >
       <Box
         sx={{
