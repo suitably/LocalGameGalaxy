@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Melodiq resumes the song after reload (#152, claude-code)
+
+- `docs/tech/melodiq-architecture.md` §2.5 (new): persisted song + position, resume vs. restart. Outside `docs/`: `logic/savedPlayback.ts`, `hooks/useRestoredResume.ts`, MiniPlayer restart button, locales.
+
 ## 2026-10-25 — One sheet-music library in Melodiq Notes (#534, claude-code)
 
 - `docs/tech/song-pipeline.md` §4: song-folder scores appear read-only in the merged Melodiq Notes library (`stage/logic/scoreCatalog.ts`); only their bar marks are written; the client no longer uploads to song folders. `verified.at` refreshed.

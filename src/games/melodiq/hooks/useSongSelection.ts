@@ -96,7 +96,11 @@ export function useSongSelection(a: UseSongSelectionArgs) {
       if (a.restoredSong) {
         a.setRestoredSong(null);
       }
-      if (!selectedSongRef.current || selectedSongRef.current.id !== songMeta.id) {
+      const isResumingRestored = a.restoredSong?.id === songMeta.id;
+      if (
+        !isResumingRestored &&
+        (!selectedSongRef.current || selectedSongRef.current.id !== songMeta.id)
+      ) {
         storage.remove(STORAGE_KEYS.MELODIQ_SAVED_TIME);
       }
 

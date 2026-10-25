@@ -6,6 +6,7 @@ import { useActiveParticipants } from './useActiveParticipants';
 import { useDownloadSync } from './useDownloadSync';
 import { useSongSelection } from './useSongSelection';
 import { useMelodiqGlobalEvents } from './useMelodiqGlobalEvents';
+import { readSavedPlaybackTime, type RestoredSong } from '../logic/savedPlayback';
 
 type SelectionArgs = Parameters<typeof useSongSelection>[0];
 type GlobalEventsArgs = Parameters<typeof useMelodiqGlobalEvents>[0];
@@ -42,7 +43,11 @@ interface UseMelodiqPlaybackArgs
 export function useMelodiqPlayback(a: UseMelodiqPlaybackArgs) {
   const [remoteSong, setRemoteSong] = useState<SongMeta | null>(null);
   const [selectedSong, setSelectedSong] = useState<Song | SongMeta | null>(null);
-  const [restoredSong, setRestoredSong] = useState<SongMeta | null>(() => a.nowPlaying ?? null);
+  const [restoredSong, setRestoredSong] = useState<RestoredSong | null>(() => {
+    if (!a.nowPlaying) return null;
+    const time = readSavedPlaybackTime(a.nowPlaying.id);
+    return time === null ? a.nowPlaying : { ...a.nowPlaying, currentTime: time };
+  });
   const [sessionInstanceId, setSessionInstanceId] = useState<number>(0);
   const participants = useActiveParticipants();
   const { setActiveParticipants } = participants;
