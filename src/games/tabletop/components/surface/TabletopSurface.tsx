@@ -15,7 +15,9 @@ import { BoardWidgetRenderer } from './BoardWidgetRenderer';
 import { SelectionHighlightLayer } from './SelectionHighlightLayer';
 import { SelectionFloatingBar } from './SelectionFloatingBar';
 import { HiddenZoneLayer } from './HiddenZoneLayer';
-import { WidgetContextMenu, type WidgetContextMenuPosition } from './WidgetContextMenu';
+import type { WidgetContextMenuPosition } from './WidgetContextMenu';
+import { SurfaceContextMenu } from './SurfaceContextMenu';
+import { useTableKeyShortcuts } from '../../hooks/useTableKeyShortcuts';
 import { createDefaultHiddenZone } from '../../logic/hiddenZoneLogic';
 import { getSeatWidgets } from '../../logic/seatLogic';
 import { filterBoardHolders, filterBoardWidgets } from '../../logic/boardFilter';
@@ -61,6 +63,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     zoomIn,
     zoomOut,
     hoveredTargetId,
+    isPressingSource,
   } = useTabletopEngine({
     tableWidth: game.table.width,
     tableHeight: game.table.height,
@@ -72,9 +75,15 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     onSnapToHolder: (widgetId, holderId) =>
       dispatch({ type: 'SNAP_TO_HOLDER', payload: { widgetId, holderId } }),
     onDoubleClickWidget: (cardId) => dispatch({ type: 'FLIP_CARD', payload: { cardId } }),
-    onDrawCardAt: (deckId, x, y, cardId) =>
-      dispatch({ type: 'DRAW_CARD', payload: { deckId, position: { x, y }, cardId } }),
+    onDrawCardAt: (deckId, x, y, cardId, faceUp) =>
+      dispatch({ type: 'DRAW_CARD', payload: { deckId, position: { x, y }, cardId, faceUp } }),
+    onDrawFromBag: (bagId, position, spawnedId) =>
+      dispatch({ type: 'DRAW_FROM_BAG', payload: { bagId, position, spawnedId } }),
+    onShake: dispatch,
+    onLongPressRelease: (widgetId, mouseX, mouseY) =>
+      setContextMenuPos({ mouseX, mouseY, widgetId }),
   });
+  const trackHover = useTableKeyShortcuts(game.widgets, activeDragId, dispatch);
 
   const visibleIds = useViewportCulling(
     game.widgets,
@@ -112,6 +121,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     <Box
       ref={containerRef}
       onPointerDown={handleStartPan}
+      onPointerOver={trackHover}
       sx={{
         width: '100%',
         height: '100%',
@@ -155,6 +165,8 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
             onContextMenu={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              // Touch long press on a deck/bag picks it up; its menu opens on release.
+              if (isPressingSource()) return;
               setContextMenuPos({ mouseX: e.clientX, mouseY: e.clientY, widgetId: w.id });
             }}
             dispatch={dispatch}
@@ -221,23 +233,13 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
         scale={transform.scale}
       />
 
-      <WidgetContextMenu
+      <SurfaceContextMenu
         position={contextMenuPos}
-        widget={contextMenuPos ? game.widgets[contextMenuPos.widgetId] : undefined}
-        isSelected={
-          contextMenuPos ? selection.selectedWidgetIds.includes(contextMenuPos.widgetId) : false
-        }
-        onClose={() => setContextMenuPos(null)}
+        widgets={game.widgets}
+        selectedIds={selection.selectedWidgetIds}
         onToggleSelect={(id) => selection.handleWidgetClick(id, true)}
-        onToggleShowAlways={(id, cur) =>
-          dispatch({ type: 'SET_WIDGET_SHOW_ALWAYS', payload: { widgetId: id, showAlways: !cur } })
-        }
-        onScaleWidget={(id, factor) =>
-          dispatch({ type: 'SCALE_WIDGETS', payload: { widgetIds: [id], factor } })
-        }
-        onResetWidgetScale={(id) =>
-          dispatch({ type: 'RESET_WIDGET_SCALE', payload: { widgetIds: [id] } })
-        }
+        onClose={() => setContextMenuPos(null)}
+        dispatch={dispatch}
       />
     </Box>
   );

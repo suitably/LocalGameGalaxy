@@ -1076,7 +1076,10 @@
       "zoomHand": "Ganze Hand vergrößern",
       "cardZoom": "Karte",
       "backToHand": "Zurück zur Hand",
-      "playerN": "Spieler {{n}}"
+      "playerN": "Spieler {{n}}",
+      "flipCard": "Umdrehen",
+      "rollDie": "Würfeln",
+      "shuffleDeck": "Mischen"
     }
   },
   "lobby": {

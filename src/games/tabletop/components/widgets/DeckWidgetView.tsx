@@ -7,7 +7,6 @@ import { CardFaceContent } from './CardFaceContent';
 interface DeckWidgetViewProps {
   widget: DeckWidget;
   onDraw?: () => void;
-  onShuffle?: () => void;
   onPointerDown?: (e: React.PointerEvent) => void;
   isDragging?: boolean;
 }
@@ -15,7 +14,6 @@ interface DeckWidgetViewProps {
 export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
   widget,
   onDraw,
-  onShuffle,
   onPointerDown,
   isDragging,
 }) => {
@@ -31,10 +29,6 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
     <Box
       onPointerDown={onPointerDown}
       onClick={!onPointerDown && !isEmpty ? onDraw : undefined}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        onShuffle?.();
-      }}
       sx={{
         position: 'absolute',
         left: widget.x,

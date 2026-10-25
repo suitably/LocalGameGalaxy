@@ -181,14 +181,15 @@ export function deckReducer(state: TabletopGameState, action: DeckAction): Table
       }
 
       if (card && (action.payload.position || action.payload.targetHolderId)) {
+        const faceUp = action.payload.position ? (action.payload.faceUp ?? true) : true;
         widgets[drawnCardId] = {
           ...card,
           x: nextX,
           y: nextY,
           inPile: false,
           pileId: undefined,
-          faceUp: true,
-          activeFace: 1,
+          faceUp,
+          activeFace: faceUp ? 1 : 0,
           zIndex: 2000000,
         };
       }

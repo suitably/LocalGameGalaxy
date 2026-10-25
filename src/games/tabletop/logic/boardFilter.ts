@@ -221,3 +221,21 @@ export function filterBoardWidgets(
     })
     .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
 }
+
+/** Snap target (deck or board holder) under the centre of a widget at x/y, if any. */
+export function findSnapTargetAt(
+  widgets: Record<string, TabletopWidget>,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  draggedType?: TabletopWidget['type'],
+): string | null {
+  const cx = x + width / 2;
+  const cy = y + height / 2;
+  for (const [id, w] of Object.entries(widgets)) {
+    if (!isBoardSnapTarget(w, draggedType)) continue;
+    if (cx >= w.x && cx <= w.x + w.width && cy >= w.y && cy <= w.y + w.height) return id;
+  }
+  return null;
+}

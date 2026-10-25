@@ -1076,7 +1076,10 @@
       "zoomHand": "Enlarge whole hand",
       "cardZoom": "Card",
       "backToHand": "Back to hand",
-      "playerN": "Player {{n}}"
+      "playerN": "Player {{n}}",
+      "flipCard": "Flip",
+      "rollDie": "Roll",
+      "shuffleDeck": "Shuffle"
     }
   },
   "lobby": {

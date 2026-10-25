@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Tabletop table gestures (claude-code)
+
+- `docs/tech/tabletop-engine.md` §4: new section "Table gestures" (sources tap/drag/long press, `faceUp` on `DRAW_CARD`, F/S keys, shake, die drag no longer rolls, `SurfaceContextMenu` with z-order restored); front matter `verified` refreshed. Outside `docs/`: tabletop code and locales (#537).
+
 ## 2026-10-25 — Tabletop hand dock fan, card zoom, spectators (claude-code)
 
 - `docs/tech/tabletop-engine.md` §4: new section "Seats, spectators and the hand dock" (`resolveSeatView`, `SPECTATOR_SEAT_ID`, `role=spectator`, `fanLayout`, `CardZoomDialog`); pass-and-play paragraph notes the explicit first seat. Outside `docs/`: tabletop code and locales (#536).
