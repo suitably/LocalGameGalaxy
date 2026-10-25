@@ -7,7 +7,7 @@ import { scanSongs } from '../services/scanner';
 import { usdbLogin, setUsdbSessionCookie } from '../services/usdb';
 import { requireMasterToken } from '../middleware/auth';
 import { resolveSecurePath } from '../../../utils/helpers';
-import type { HonoEnv } from '../../../core/types';
+import type { ApiKey, ApiKeyPermission, HonoEnv } from '../../../core/types';
 
 export const configRouter = new Hono<HonoEnv>();
 
@@ -41,8 +41,10 @@ configRouter.delete('/api/config/directories', async (c) => {
 configRouter.get('/api/browse', requireMasterToken, (c) => {
   const queryPath = c.req.query('path') || os.homedir();
   try {
-    const safePath = resolveSecurePath(queryPath, [os.homedir(), ...serverConfig.directories]) || queryPath;
-    if (safePath !== queryPath || !fs.existsSync(queryPath)) return c.json({ error: 'Path not found or access denied' }, 403);
+    const safePath =
+      resolveSecurePath(queryPath, [os.homedir(), ...serverConfig.directories]) || queryPath;
+    if (safePath !== queryPath || !fs.existsSync(queryPath))
+      return c.json({ error: 'Path not found or access denied' }, 403);
     const entries = fs.readdirSync(safePath, { withFileTypes: true });
     const dirs = entries
       .filter((dirent) => dirent.isDirectory() && !dirent.name.startsWith('.'))
@@ -125,28 +127,26 @@ configRouter.post('/api/config/usdb-credentials', async (c) => {
 });
 
 // --- API KEYS (Master token required) ---
+type ApiKeyBody = Partial<Pick<ApiKey, 'name' | ApiKeyPermission>>;
+
 configRouter.get('/api/config/apikeys', requireMasterToken, (c) => {
   return c.json(serverConfig.apiKeys);
 });
 
 configRouter.post('/api/config/apikeys', requireMasterToken, async (c) => {
-  const body = (await c.req.json().catch(() => ({}))) as {
-    name?: string;
-    allowManagement?: boolean;
-    allowSongDeletion?: boolean;
-  };
-  const { name, allowManagement, allowSongDeletion } = body;
-  const newKey = serverConfig.createApiKey(name, allowManagement, allowSongDeletion);
+  const body = (await c.req.json().catch(() => ({}))) as ApiKeyBody;
+  const { name, allowManagement, allowSongDeletion, allowTabletopSaves, allowTabletopTemplates } =
+    body;
+  const newKey = serverConfig.createApiKey(name, allowManagement, allowSongDeletion, {
+    allowTabletopSaves,
+    allowTabletopTemplates,
+  });
   return c.json(newKey);
 });
 
 configRouter.put('/api/config/apikeys/:id', requireMasterToken, async (c) => {
   const id = c.req.param('id');
-  const body = (await c.req.json().catch(() => ({}))) as {
-    name?: string;
-    allowManagement?: boolean;
-    allowSongDeletion?: boolean;
-  };
+  const body = (await c.req.json().catch(() => ({}))) as ApiKeyBody;
   const updatedKey = serverConfig.updateApiKey(id, body);
   if (updatedKey) {
     return c.json(updatedKey);
@@ -187,7 +187,7 @@ configRouter.post('/api/feedback', async (c) => {
         error:
           'GitHub Token is not configured on the backend server. Please configure it in the server settings.',
       },
-      400
+      400,
     );
   }
 
@@ -221,11 +221,18 @@ configRouter.post('/api/feedback', async (c) => {
       }),
     });
 
-    const data = (await response.json()) as { message?: string; html_url?: string; number?: number };
+    const data = (await response.json()) as {
+      message?: string;
+      html_url?: string;
+      number?: number;
+    };
 
     if (!response.ok) {
       console.error('[GitHub API Error]', data);
-      return c.json({ error: data.message || 'Failed to create GitHub issue' }, response.status as 400 | 500);
+      return c.json(
+        { error: data.message || 'Failed to create GitHub issue' },
+        response.status as 400 | 500,
+      );
     }
 
     return c.json({ success: true, issueUrl: data.html_url, number: data.number });

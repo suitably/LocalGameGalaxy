@@ -6,8 +6,16 @@ export interface ApiKey {
   token: string;
   allowManagement: boolean;
   allowSongDeletion: boolean;
+  /** Tabletop: store named table states (save games) on the server. Missing in older configs. */
+  allowTabletopSaves?: boolean;
+  /** Tabletop: replace a game's default template (what a new table starts from). */
+  allowTabletopTemplates?: boolean;
   createdAt: string;
 }
+
+/** Capability flags of an API key; the master token and management keys hold all of them. */
+export type ApiKeyPermission =
+  'allowManagement' | 'allowSongDeletion' | 'allowTabletopSaves' | 'allowTabletopTemplates';
 
 export type HonoEnv = {
   Variables: {
@@ -66,6 +74,8 @@ export interface TabletopRawResponse {
   id: string;
   rawJson: string;
   assetMap: Record<string, string>;
+  /** rawJson is the stored default template, not the game file (see PUT .../template). */
+  template?: boolean;
 }
 
 export interface GalaxyPlugin {

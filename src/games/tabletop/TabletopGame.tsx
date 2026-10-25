@@ -24,6 +24,8 @@ import { usePartyLobbyReturn } from './hooks/usePartyLobbyReturn';
 import { useTabletopAutosave } from './hooks/useTabletopAutosave';
 import { TabletopPassAndPlay } from './components/views/TabletopPassAndPlay';
 import { RestartGameButton } from './components/views/RestartGameButton';
+import { SaveStateButton } from './components/saves/SaveStateButton';
+import type { TabletopGameDefinition } from './logic/types';
 
 export function TabletopGame() {
   const { t } = useTranslation();
@@ -109,6 +111,9 @@ export function TabletopGame() {
 
   useTabletopAutosave(saveKey, gameState.game, ownsState && !loading && !error);
 
+  const loadSavedTable = (game: TabletopGameDefinition) =>
+    dispatch({ type: 'LOAD_GAME', payload: game });
+
   const restartGame = async () => {
     await deleteTabletopSession(saveKey);
     setRestartCount((n) => n + 1);
@@ -174,6 +179,7 @@ export function TabletopGame() {
           Zurück zur Party-Lobby
         </Button>
         <RestartGameButton onRestart={restartGame} />
+        <SaveStateButton game={gameState.game} onLoad={loadSavedTable} />
         <TabletopEditor state={gameState} dispatch={syncedDispatch} isTvMode={true} />
       </Box>
     );
@@ -205,6 +211,7 @@ export function TabletopGame() {
       <Box display="flex" flexDirection="column" width="100%" height="100%" overflow="hidden">
         <Box flex={1} position="relative" minHeight={0}>
           <RestartGameButton onRestart={restartGame} />
+          <SaveStateButton game={gameState.game} onLoad={loadSavedTable} />
           <TabletopEditor state={gameState} dispatch={syncedDispatch} hideSeatSelector />
           <TabletopPassAndPlay state={gameState} dispatch={syncedDispatch} />
         </Box>
