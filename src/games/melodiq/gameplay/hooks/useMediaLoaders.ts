@@ -72,7 +72,7 @@ export function useMediaLoaders(
         // @ts-ignore
         const file = await mediaTarget.getFile();
         return URL.createObjectURL(file);
-      } catch (e) {
+      } catch {
         return undefined;
       }
     }
