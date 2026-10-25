@@ -9,6 +9,7 @@ import {
   type PultRoomState,
   type PultSong,
 } from '../protocol';
+import { pultJoinUrl, pultSongOf } from '../pultSong';
 import { beatBefore, MAX_REMOTE_LAG_SEC, mergeRemoteSeats, remoteLagSec } from '../remoteHits';
 
 const SONG: PultSong = {
@@ -111,5 +112,35 @@ describe('remote hits', () => {
     expect(mergeRemoteSeats(both, [member('b', 'bass')], 4)).toEqual([both[1]]);
     expect(mergeRemoteSeats(both, [], 4)).toEqual([{ partId: 'piano', inst: 'keyboard' }]);
     expect(mergeRemoteSeats(seats, [member('b', 'bass')], 1)).toEqual(seats);
+  });
+});
+
+describe('pult song', () => {
+  it('lists the playable parts with their keyboard octave and builds the join link', () => {
+    const song = pultSongOf({
+      title: 'T',
+      artist: '',
+      source: 't',
+      tempoMap: [{ beat: 0, bpm: 120 }],
+      measureStarts: [0],
+      measureLengths: [4],
+      measureNumbers: [1],
+      end: 4,
+      parts: [
+        {
+          id: 'p',
+          name: 'Piano',
+          notes: [{ t: 0, dur: 1, pitch: 64 }],
+          isDrum: false,
+          program: 0,
+          guess: 'keyboard',
+        },
+        { id: 'e', name: 'Empty', notes: [], isDrum: false, program: 0, guess: 'guitar' },
+      ],
+    });
+    expect(song.parts).toEqual([{ id: 'p', name: 'Piano', inst: 'keyboard', octaveBase: 60 }]);
+    expect(pultJoinUrl('https://x/', 'AB12', 'p')).toBe(
+      'https://x/#/games/melodiq-notes?pult=AB12&part=p',
+    );
   });
 });
