@@ -37,7 +37,8 @@ export function useDynamicControllerState(
     for (const w of Object.values(widgets)) {
       if (w.type === 'holder') {
         const h = w as HolderWidget;
-        if (h.isHand && (h.ownerSeat === mySeat || mySeat === null)) {
+        // Spectators (mySeat null) own no hand.
+        if (h.isHand && mySeat !== null && h.ownerSeat === mySeat) {
           myHolders.push(h);
         } else if (h.dropTarget) {
           dropTargets.push(h);

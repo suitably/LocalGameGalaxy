@@ -53,6 +53,8 @@ export type TabletopAction =
         cardId?: string;
         targetHolderId?: string;
         position?: { x: number; y: number };
+        /** Only with `position`: false keeps the drawn card hidden (dragged off a deck). */
+        faceUp?: boolean;
       };
     }
   | {

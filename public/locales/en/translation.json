@@ -1069,7 +1069,17 @@
       "local_games_hint_offline": "These games only live in this browser. With a companion server you can save them there.",
       "server_saved": "\"{{name}}\" is saved on the server.",
       "server_saved_copy": "The original is read-only – \"{{name}}\" was saved on the server as a copy.",
-      "server_save_failed": "Saving on the server failed: {{error}}"
+      "server_save_failed": "Saving on the server failed: {{error}}",
+      "spectator": "Spectator",
+      "spectatorHint": "You are watching and cannot draw cards.",
+      "spectatorSeat": "Watch (no hand, no drawing)",
+      "zoomHand": "Enlarge whole hand",
+      "cardZoom": "Card",
+      "backToHand": "Back to hand",
+      "playerN": "Player {{n}}",
+      "flipCard": "Flip",
+      "rollDie": "Roll",
+      "shuffleDeck": "Shuffle"
     }
   },
   "lobby": {

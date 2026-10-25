@@ -1,5 +1,5 @@
 /**
- * A bag on the table: tap to draw, drag to move [ID: COMP-TABLETOP-BAG-VIEW]
+ * A bag on the table: tap to draw, drag to take an item, long press to move [ID: COMP-TABLETOP-BAG-VIEW]
  */
 import React from 'react';
 import { Box, Typography } from '@mui/material';
@@ -24,10 +24,15 @@ export const BagWidgetView: React.FC<BagWidgetViewProps> = ({
   return (
     <Box
       onPointerDown={onPointerDown}
-      onClick={(e) => {
-        e.stopPropagation();
-        if (!empty) onDraw?.();
-      }}
+      // On the table the engine handles taps and drags (tap: item next to the bag, drag: take one).
+      onClick={
+        onPointerDown
+          ? undefined
+          : (e) => {
+              e.stopPropagation();
+              if (!empty) onDraw?.();
+            }
+      }
       title={widget.label || widget.previewLabel}
       sx={{
         position: 'absolute',

@@ -1069,7 +1069,17 @@
       "local_games_hint_offline": "Diese Spiele liegen nur in diesem Browser. Mit einem Companion-Server kannst du sie dort speichern.",
       "server_saved": "„{{name}}\" ist auf dem Server gespeichert.",
       "server_saved_copy": "Das Original ist schreibgeschützt – „{{name}}\" wurde als Kopie auf dem Server gespeichert.",
-      "server_save_failed": "Speichern auf dem Server fehlgeschlagen: {{error}}"
+      "server_save_failed": "Speichern auf dem Server fehlgeschlagen: {{error}}",
+      "spectator": "Zuschauer",
+      "spectatorHint": "Du schaust zu und kannst keine Karten ziehen.",
+      "spectatorSeat": "Zuschauen (keine Hand, kein Ziehen)",
+      "zoomHand": "Ganze Hand vergrößern",
+      "cardZoom": "Karte",
+      "backToHand": "Zurück zur Hand",
+      "playerN": "Spieler {{n}}",
+      "flipCard": "Umdrehen",
+      "rollDie": "Würfeln",
+      "shuffleDeck": "Mischen"
     }
   },
   "lobby": {

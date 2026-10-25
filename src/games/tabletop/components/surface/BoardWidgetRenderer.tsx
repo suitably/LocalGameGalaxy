@@ -92,7 +92,6 @@ export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
                 isDragging={isDragging}
                 onPointerDown={onPointerDown}
                 onDraw={() => dispatch({ type: 'DRAW_CARD', payload: { deckId: w.id } })}
-                onShuffle={() => dispatch({ type: 'SHUFFLE_DECK', payload: { deckId: w.id } })}
               />
             );
           case 'token':

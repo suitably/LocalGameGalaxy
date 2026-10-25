@@ -123,6 +123,18 @@ describe('tabletopReducer card handling', () => {
     expect(drawnCard.faceUp).toBe(true);
   });
 
+  it('keeps a card dragged off a closed deck face down (faceUp: false)', () => {
+    const nextState = tabletopReducer(baseState, {
+      type: 'DRAW_CARD',
+      payload: { deckId: 'deck1', position: { x: 150, y: 250 }, faceUp: false },
+    });
+
+    const drawnCard = nextState.game.widgets.c1 as CardWidget;
+    expect(drawnCard.faceUp).toBe(false);
+    expect(drawnCard.activeFace).toBe(0);
+    expect(drawnCard.inPile).toBe(false);
+  });
+
   it('draws a specific cardId when provided in payload', () => {
     const nextState = tabletopReducer(baseState, {
       type: 'DRAW_CARD',

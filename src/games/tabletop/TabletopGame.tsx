@@ -31,9 +31,10 @@ export function TabletopGame() {
   const [searchParams] = useSearchParams();
 
   const roomId = searchParams.get('room');
-  const role = searchParams.get('role'); // 'tv' | 'player'
+  const role = searchParams.get('role'); // 'tv' | 'player' | 'spectator'
   const seatParam = searchParams.get('seat');
-  const seat = seatParam !== null ? Number(seatParam) : null;
+  const isSpectator = role === 'spectator';
+  const seat = seatParam !== null && !isSpectator ? Number(seatParam) : null;
   const gameId = searchParams.get('gameId') || 'standard-cards';
   const isLocal = searchParams.get('local') === '1';
 
@@ -178,8 +179,8 @@ export function TabletopGame() {
     );
   }
 
-  // 2. In Room: Smartphone Controller Mode
-  if (roomId && seat !== null) {
+  // 2. In Room: Smartphone Controller Mode (`role=spectator`: no seat, no hand, no drawing)
+  if (roomId && (seat !== null || isSpectator)) {
     return (
       <TabletopControllerView
         state={gameState}
@@ -190,7 +191,7 @@ export function TabletopGame() {
             type: 'FLICK_CARD_TO_TABLE',
             cardId,
             targetHolderId,
-            senderSeat: seat,
+            senderSeat: seat ?? undefined,
           });
           dispatch({ type: 'ANIMATE_CARD_TO_TABLE', payload: { cardId, targetHolderId } });
         }}
