@@ -82,6 +82,14 @@ Admin phones adjust a few host settings without mounting the desktop `<Settings>
 - Host: `HostSettingsRpcBridge.tsx` (mounted next to `PhoneQueueBridge`) accepts the messages only from devices whose stored role is `admin` (`getRoleForDevice`), applies the patch through `updateSetting` (host storage) and replies to the sender.
 - Phone: `usePhoneClientMessages.ts` keeps the reported `hostSettings`; `RemoteHostSettingsModal.tsx` (opened from the header action "Host settings", shown only for `clientRole === 'admin'`) sends the requests via `sendClientData`.
 
+### 2.8 Feedback via host (phone to host RPC)
+
+While a phone is connected to a host, feedback is not sent with the phone's own PAT but over the data channel (#145):
+
+- Phone: `hooks/useFeedbackRelay.ts` (called in `PhoneClientEngine`) registers a relay in `src/lib/feedbackRelay.ts`; `submitFeedback` (`src/lib/github.ts`) tries it first and sends `{ type: 'host.feedback.submit', reqId, title, body }`. The reply `host.feedback.result` (`success`, `issueUrl`, `error`, `code`) is routed by `usePhoneClientMessages` and shown by the normal `FeedbackForm`. The feedback dialog opens without a local PAT while the relay is active.
+- Host: `FeedbackRpcBridge.tsx` validates/caps the request (`logic/feedbackRpc.ts`, one request per phone per 10 s, any connected phone) and creates the issue with the host's PAT (`submitFeedbackWithLocalPat`). Without a host PAT it answers `code: 'no_token'`.
+- Fallback: on `no_token`, error or timeout, `submitFeedback` uses the phone's own PAT if it has one, then the server proxy as before.
+
 ## 3. Known Technical Debt & Refactoring Goals
 
 To ensure Melodiq aligns perfectly with the SOLID principles outlined in the main architecture doc, the following areas are targeted for future refactoring:

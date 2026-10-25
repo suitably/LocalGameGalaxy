@@ -8,12 +8,15 @@ import {
   IconButton,
   Avatar,
   Popover,
-  Slider,
   Switch,
   FormControlLabel,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/DeleteRounded';
+import CheckIcon from '@mui/icons-material/CheckRounded';
 import PersonAddIcon from '@mui/icons-material/PersonAddRounded';
+import { useTranslation } from 'react-i18next';
+import { piecePalette } from '../../../themeTokens';
+import { hueForPieceColor, PIECE_HUES, pieceColorForHue, singerColor } from '../logic/singerColor';
 import type { UserProfile } from '../types';
 
 interface UserProfilesManagerProps {
@@ -29,6 +32,7 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
   onUpdateProfile,
   onDeleteProfile,
 }) => {
+  const { t } = useTranslation();
   // Color Picker State
   const [colorAnchorEl, setColorAnchorEl] = useState<HTMLElement | null>(null);
   const [editingProfileId, setEditingProfileId] = useState<string | null>(null);
@@ -42,6 +46,9 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
     setColorAnchorEl(null);
     setEditingProfileId(null);
   };
+
+  const editingHue = profiles.find((p) => p.id === editingProfileId)?.hue;
+  const editingColor = editingHue === undefined ? null : pieceColorForHue(editingHue);
 
   return (
     <Box>
@@ -74,7 +81,7 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
               gap: 2,
             }}
           >
-            <Avatar sx={{ bgcolor: `hsl(${profile.hue}, 100%, 50%)` }}>
+            <Avatar sx={{ bgcolor: singerColor(profile.hue), color: piecePalette.contrastText }}>
               {profile.name.charAt(0).toUpperCase()}
             </Avatar>
             <Box sx={{ flex: 1 }}>
@@ -93,13 +100,23 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
                   width: 32,
                   height: 32,
                   borderRadius: '50%',
-                  bgcolor: `hsl(${profile.hue}, 100%, 50%)`,
+                  bgcolor: singerColor(profile.hue),
                   cursor: 'pointer',
                   border: '2px solid white',
                   transition: 'transform 0.2s',
                   '&:hover': { transform: 'scale(1.1)' },
                 }}
-                title="Change Color"
+                role="button"
+                tabIndex={0}
+                aria-label={t('melodiq.profile_color.change', {
+                  color: t(`melodiq.profile_color.${pieceColorForHue(profile.hue)}`),
+                })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleColorClick(e as unknown as React.MouseEvent<HTMLElement>, profile.id);
+                  }
+                }}
               />
             </Box>
             <FormControlLabel
@@ -134,59 +151,42 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
       >
         <Box sx={{ p: 2, minWidth: 200 }}>
           <Typography variant="subtitle2" sx={{ mb: 1, textAlign: 'center' }}>
-            Pick Color
+            {t('melodiq.profile_color.pick')}
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                bgcolor: editingProfileId
-                  ? `hsl(${profiles.find((p) => p.id === editingProfileId)?.hue || 0}, 100%, 50%)`
-                  : 'grey',
-                border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.3)}`,
-              }}
-            />
-            <Slider
-              value={
-                editingProfileId ? profiles.find((p) => p.id === editingProfileId)?.hue || 0 : 0
-              }
-              min={0}
-              max={360}
-              onChange={(_, val) => {
-                if (editingProfileId) {
-                  onUpdateProfile(editingProfileId, { hue: val as number });
-                }
-              }}
-              sx={{
-                width: 200,
-                '& .MuiSlider-track': {
-                  border: 'none',
-                  background: 'transparent',
-                },
-                '& .MuiSlider-rail': {
-                  opacity: 1,
-                  background:
-                    'linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #00f 83%, #f00 100%)',
-                  height: 8,
-                  borderRadius: 5,
-                },
-                '& .MuiSlider-thumb': {
-                  height: 20,
-                  width: 20,
-                  backgroundColor: 'text.primary',
-                  border: '2px solid currentColor',
-                  '&:focus, &:hover, &.Mui-active, &.Mui-focusVisible': {
-                    boxShadow: 'inherit',
-                  },
-                  '&:before': {
-                    display: 'none',
-                  },
-                },
-                color: 'text.primary',
-              }}
-            />
+          <Box
+            role="radiogroup"
+            aria-label={t('melodiq.profile_color.pick')}
+            sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 40px)', gap: 1 }}
+          >
+            {PIECE_HUES.map(([color]) => {
+              const selected = color === editingColor;
+              const name = t(`melodiq.profile_color.${color}`);
+              return (
+                <IconButton
+                  key={color}
+                  role="radio"
+                  aria-checked={selected}
+                  aria-label={name}
+                  title={name}
+                  onClick={() => {
+                    if (editingProfileId) {
+                      onUpdateProfile(editingProfileId, { hue: hueForPieceColor(color) });
+                    }
+                  }}
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    bgcolor: piecePalette[color],
+                    color: piecePalette.contrastText,
+                    border: (theme) =>
+                      `2px solid ${selected ? theme.palette.text.primary : 'transparent'}`,
+                    '&:hover': { bgcolor: piecePalette[color], opacity: 0.85 },
+                  }}
+                >
+                  {selected ? <CheckIcon fontSize="small" /> : null}
+                </IconButton>
+              );
+            })}
           </Box>
         </Box>
       </Popover>

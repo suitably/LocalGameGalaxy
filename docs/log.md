@@ -2,6 +2,18 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Feedback via Melodiq host (#145, claude-code)
+
+- `docs/tech/melodiq-architecture.md` §2.8 (new). No open-questions entry existed for #145. Outside `docs/`: `src/lib/feedbackRelay.ts`, `src/lib/github.ts`, `FeedbackDialog`, Melodiq `FeedbackRpcBridge`, `useFeedbackRelay`, `logic/feedbackRpc.ts`.
+
+## 2026-10-25 — Wordle dictionary-only guesses (#130, claude-code)
+
+- `docs/tech/persistence.md` (key `WORDLE_DICTIONARY_ONLY`) and `docs/tech/architecture.md` Wordle row. No open-questions entry existed for #130. Outside `docs/`: `src/games/wordle` (`logic/dictionary.ts`, `logic/allowedGuesses.ts`, settings dialog, `useWordle`), `src/lib/storage.ts`.
+
+## 2026-10-25 — Singer colour picker (#524, claude-code)
+
+- `DESIGN.md` §2.3 exempt list: removed "the hue picker" (Melodiq profiles now pick from `palette.piece.*`; the nearest-colour hue mapping and stored hue are unchanged). No open-questions entry existed for #524.
+
 ## 2026-10-25 — Light mode and mode setting (#499, claude-code)
 
 - `docs/tech/styling.md`: dark + light `colorSchemes`, `ColorModeProvider`, `primary.text` rule; `verified.at` refreshed. `docs/tech/persistence.md`: `COLOR_MODE` key. `DESIGN.md` §9/§10 step 3 and status line updated.

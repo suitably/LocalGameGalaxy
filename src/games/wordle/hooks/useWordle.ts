@@ -4,18 +4,31 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { wordleEngine } from '../logic/wordleEngine';
+import { isDictionaryWord } from '../logic/dictionary';
 import {
   getTodayDateKey,
   loadDailyGameState,
   saveDailyGameState,
   loadWordleStats,
   saveWordleStats,
+  loadDictionaryOnly,
+  saveDictionaryOnly,
 } from '../logic/wordleStorage';
 import type { LetterStatus, WordleGameMode, WordleState, WordleStats } from '../logic/types';
 
-export function useWordle(language = 'de', initialMode: WordleGameMode = 'daily', customWord?: string | null) {
+export function useWordle(
+  language = 'de',
+  initialMode: WordleGameMode = 'daily',
+  customWord?: string | null,
+) {
   const [stats, setStats] = useState<WordleStats>(() => loadWordleStats());
   const [justFinished, setJustFinished] = useState(false);
+  const [dictionaryOnly, setDictionaryOnlyState] = useState<boolean>(() => loadDictionaryOnly());
+
+  const setDictionaryOnly = useCallback((value: boolean) => {
+    setDictionaryOnlyState(value);
+    saveDictionaryOnly(value);
+  }, []);
 
   // Cached state for practice mode so switching between modes doesn't lose practice progress
   const practiceStateRef = useRef<WordleState | null>(null);
@@ -83,7 +96,11 @@ export function useWordle(language = 'de', initialMode: WordleGameMode = 'daily'
   // Check if date changed (e.g. past midnight) when window regains visibility/focus
   useEffect(() => {
     const handleVisibilityOrFocus = () => {
-      if (typeof document !== 'undefined' && document.visibilityState === 'visible' && state.mode === 'daily') {
+      if (
+        typeof document !== 'undefined' &&
+        document.visibilityState === 'visible' &&
+        state.mode === 'daily'
+      ) {
         const today = getTodayDateKey();
         if (state.dateKey !== today) {
           setState(loadDailyGameState(language, today));
@@ -113,7 +130,10 @@ export function useWordle(language = 'de', initialMode: WordleGameMode = 'daily'
       if (prev.status !== 'playing' || prev.currentInput.length >= 5) {
         return prev;
       }
-      const cleanChar = letter.toUpperCase().replace(/[^A-Z]/g, '').substring(0, 1);
+      const cleanChar = letter
+        .toUpperCase()
+        .replace(/[^A-Z]/g, '')
+        .substring(0, 1);
       if (!cleanChar) return prev;
       return {
         ...prev,
@@ -149,6 +169,16 @@ export function useWordle(language = 'de', initialMode: WordleGameMode = 'daily'
       }
 
       const guess = prev.currentInput.toUpperCase();
+
+      // Unknown word: shake and hint, keep the typed letters, no attempt used.
+      if (dictionaryOnly && !isDictionaryWord(guess, language, prev.targetWord)) {
+        return {
+          ...prev,
+          invalidWordShake: true,
+          message: 'wordle.not_in_dictionary',
+        };
+      }
+
       const evaluation = wordleEngine.evaluateGuess(guess, prev.targetWord);
       const newGuesses = [...prev.guesses, guess];
       const newEvaluations = [...prev.evaluations, evaluation];
@@ -168,7 +198,7 @@ export function useWordle(language = 'de', initialMode: WordleGameMode = 'daily'
             prevStats,
             won,
             newGuesses.length,
-            prev.mode === 'daily' ? prev.dateKey : undefined
+            prev.mode === 'daily' ? prev.dateKey : undefined,
           );
         });
       }
@@ -183,7 +213,7 @@ export function useWordle(language = 'de', initialMode: WordleGameMode = 'daily'
         message: won ? 'wordle.congratulations' : lost ? 'wordle.game_over' : null,
       };
     });
-  }, []);
+  }, [dictionaryOnly, language]);
 
   const switchMode = useCallback(
     (newMode: WordleGameMode) => {
@@ -232,7 +262,7 @@ export function useWordle(language = 'de', initialMode: WordleGameMode = 'daily'
         return prev;
       });
     },
-    [language]
+    [language],
   );
 
   const startNewGame = useCallback(
@@ -274,7 +304,7 @@ export function useWordle(language = 'de', initialMode: WordleGameMode = 'daily'
         setState(newState);
       }
     },
-    [language]
+    [language],
   );
 
   const clearShake = useCallback(() => {
@@ -290,6 +320,8 @@ export function useWordle(language = 'de', initialMode: WordleGameMode = 'daily'
     stats,
     keyStatuses,
     justFinished,
+    dictionaryOnly,
+    setDictionaryOnly,
     addLetter,
     removeLetter,
     submitGuess,

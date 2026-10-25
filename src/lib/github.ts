@@ -9,13 +9,14 @@
  * The token never leaves the device except for direct GitHub API calls.
  */
 import { storage, STORAGE_KEYS } from './storage';
+import { getFeedbackRelay, type FeedbackResult } from './feedbackRelay';
 
 const GITHUB_API = 'https://api.github.com';
 
 export interface GitHubConfig {
-    owner: string;
-    repo: string;
-    token: string;
+  owner: string;
+  repo: string;
+  token: string;
 }
 
 export type GitHubSource = 'local' | 'server' | 'none';
@@ -24,7 +25,7 @@ export type GitHubSource = 'local' | 'server' | 'none';
  * Checks if a GitHub Personal Access Token (PAT) is stored.
  */
 export function hasGitHubPAT(): boolean {
-    return Boolean(storage.get(STORAGE_KEYS.GITHUB_TOKEN)?.trim());
+  return Boolean(storage.get(STORAGE_KEYS.GITHUB_TOKEN)?.trim());
 }
 
 /**
@@ -32,98 +33,94 @@ export function hasGitHubPAT(): boolean {
  * Priority: 1) Local PAT → 2) Server proxy → 3) None
  */
 export function resolveGitHubConfig(): { config: GitHubConfig | null; source: GitHubSource } {
-    // 1. Try locally stored PAT
-    const localToken = storage.get(STORAGE_KEYS.GITHUB_TOKEN);
-    const localOwner = storage.get(STORAGE_KEYS.GITHUB_OWNER, 'suitably');
-    const localRepo = storage.get(STORAGE_KEYS.GITHUB_REPO, 'LocalGameGalaxy');
+  // 1. Try locally stored PAT
+  const localToken = storage.get(STORAGE_KEYS.GITHUB_TOKEN);
+  const localOwner = storage.get(STORAGE_KEYS.GITHUB_OWNER, 'suitably');
+  const localRepo = storage.get(STORAGE_KEYS.GITHUB_REPO, 'LocalGameGalaxy');
 
-    if (localToken) {
-        return {
-            config: { owner: localOwner, repo: localRepo, token: localToken },
-            source: 'local',
-        };
-    }
+  if (localToken) {
+    return {
+      config: { owner: localOwner, repo: localRepo, token: localToken },
+      source: 'local',
+    };
+  }
 
-    // 2. Server proxy (check if helper is active)
-    if (storage.isHelperActive()) {
-        return { config: null, source: 'server' };
-    }
+  // 2. Server proxy (check if helper is active)
+  if (storage.isHelperActive()) {
+    return { config: null, source: 'server' };
+  }
 
-    return { config: null, source: 'none' };
+  return { config: null, source: 'none' };
 }
 
 /**
  * Calls the GitHub API directly using a local PAT token.
  */
 async function githubApiFetch(
-    path: string,
-    token: string,
-    options: RequestInit = {},
+  path: string,
+  token: string,
+  options: RequestInit = {},
 ): Promise<Response> {
-    return fetch(`${GITHUB_API}${path}`, {
-        ...options,
-        headers: {
-            Authorization: `token ${token}`,
-            Accept: 'application/vnd.github.v3+json',
-            'User-Agent': 'LocalGameGalaxy-Client',
-            'Content-Type': 'application/json',
-            ...(options.headers as Record<string, string> | undefined),
-        },
-    });
+  return fetch(`${GITHUB_API}${path}`, {
+    ...options,
+    headers: {
+      Authorization: `token ${token}`,
+      Accept: 'application/vnd.github.v3+json',
+      'User-Agent': 'LocalGameGalaxy-Client',
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string> | undefined),
+    },
+  });
 }
 
 /**
  * Tests if a GitHub token is valid by fetching repository info.
  */
 export async function testGitHubToken(config: GitHubConfig): Promise<{
-    valid: boolean;
-    repoName?: string;
-    error?: string;
+  valid: boolean;
+  repoName?: string;
+  error?: string;
 }> {
-    try {
-        const res = await githubApiFetch(`/repos/${config.owner}/${config.repo}`, config.token);
-        if (res.ok) {
-            const data = await res.json();
-            return { valid: true, repoName: data.full_name };
-        }
-        const data = await res.json();
-        return { valid: false, error: data.message || `HTTP ${res.status}` };
-    } catch (e: unknown) {
-        const message = e instanceof Error ? e.message : 'Unknown error';
-        return { valid: false, error: message };
+  try {
+    const res = await githubApiFetch(`/repos/${config.owner}/${config.repo}`, config.token);
+    if (res.ok) {
+      const data = await res.json();
+      return { valid: true, repoName: data.full_name };
     }
+    const data = await res.json();
+    return { valid: false, error: data.message || `HTTP ${res.status}` };
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return { valid: false, error: message };
+  }
 }
 
 /**
  * Creates a GitHub issue directly via the API.
  */
 export async function createGitHubIssue(
-    config: GitHubConfig,
-    issue: { title: string; body: string; labels?: string[] },
+  config: GitHubConfig,
+  issue: { title: string; body: string; labels?: string[] },
 ): Promise<{ success: boolean; issueUrl?: string; number?: number; error?: string }> {
-    try {
-        const res = await githubApiFetch(
-            `/repos/${config.owner}/${config.repo}/issues`,
-            config.token,
-            {
-                method: 'POST',
-                body: JSON.stringify({
-                    title: issue.title,
-                    body: issue.body,
-                    labels: issue.labels || ['user-feedback'],
-                }),
-            },
-        );
+  try {
+    const res = await githubApiFetch(`/repos/${config.owner}/${config.repo}/issues`, config.token, {
+      method: 'POST',
+      body: JSON.stringify({
+        title: issue.title,
+        body: issue.body,
+        labels: issue.labels || ['user-feedback'],
+      }),
+    });
 
-        const data = await res.json();
-        if (!res.ok) {
-            return { success: false, error: data.message || 'Failed to create issue' };
-        }
-        return { success: true, issueUrl: data.html_url, number: data.number };
-    } catch (e: unknown) {
-        const message = e instanceof Error ? e.message : 'Unknown error';
-        return { success: false, error: message };
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, error: data.message || 'Failed to create issue' };
     }
+    return { success: true, issueUrl: data.html_url, number: data.number };
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return { success: false, error: message };
+  }
 }
 
 /**
@@ -132,240 +129,294 @@ export async function createGitHubIssue(
  * and updates the PR description instead of creating duplicate PRs. (Fixes #124)
  */
 export async function createGitHubPR(
-    config: GitHubConfig,
-    pr: {
-        filePath: string;
-        fileContent: string;
-        branchPrefix: string;
-        commitMessage: string;
-        prTitle: string;
-        prBody: string;
-    },
-): Promise<{ success: boolean; prUrl?: string; prNumber?: number; branch?: string; updated?: boolean; error?: string }> {
-    const { owner, repo, token } = config;
+  config: GitHubConfig,
+  pr: {
+    filePath: string;
+    fileContent: string;
+    branchPrefix: string;
+    commitMessage: string;
+    prTitle: string;
+    prBody: string;
+  },
+): Promise<{
+  success: boolean;
+  prUrl?: string;
+  prNumber?: number;
+  branch?: string;
+  updated?: boolean;
+  error?: string;
+}> {
+  const { owner, repo, token } = config;
 
-    try {
-        // 1. Get default branch
-        const repoRes = await githubApiFetch(`/repos/${owner}/${repo}`, token);
-        const repoData = await repoRes.json();
-        if (!repoRes.ok) {
-            return { success: false, error: repoData.message || 'Failed to fetch repo info' };
-        }
-        const defaultBranch = repoData.default_branch || 'main';
-
-        // 2. Check if an open PR already exists for this branchPrefix
-        let existingPR: { number: number; html_url: string; head: { ref: string } } | null = null;
-        try {
-            const openPullsRes = await githubApiFetch(`/repos/${owner}/${repo}/pulls?state=open&per_page=30`, token);
-            if (openPullsRes.ok) {
-                const openPulls = await openPullsRes.json();
-                if (Array.isArray(openPulls)) {
-                    existingPR = openPulls.find(
-                        (p: { head?: { ref?: string } }) => p.head?.ref && p.head.ref.startsWith(pr.branchPrefix),
-                    ) || null;
-                }
-            }
-        } catch (err) {
-            console.warn('[GitHub] Could not query open PRs, falling back to new PR creation:', err);
-        }
-
-        // Scenario A: Existing open PR found -> update file on existing branch and update PR body
-        if (existingPR && existingPR.head?.ref) {
-            const targetBranch = existingPR.head.ref;
-
-            // Fetch current file SHA on the target branch
-            let fileSha: string | undefined;
-            const branchFileRes = await githubApiFetch(
-                `/repos/${owner}/${repo}/contents/${pr.filePath}?ref=${targetBranch}`,
-                token,
-            );
-            if (branchFileRes.ok) {
-                const fileData = await branchFileRes.json();
-                fileSha = fileData.sha;
-            }
-
-            // Commit updated file to existing branch
-            const commitRes = await githubApiFetch(
-                `/repos/${owner}/${repo}/contents/${pr.filePath}`,
-                token,
-                {
-                    method: 'PUT',
-                    body: JSON.stringify({
-                        message: pr.commitMessage,
-                        content: btoa(unescape(encodeURIComponent(pr.fileContent))),
-                        branch: targetBranch,
-                        ...(fileSha ? { sha: fileSha } : {}),
-                    }),
-                },
-            );
-            if (!commitRes.ok) {
-                const data = await commitRes.json();
-                return { success: false, error: data.message || 'Failed to update file on existing branch' };
-            }
-
-            // Update PR title and body
-            await githubApiFetch(
-                `/repos/${owner}/${repo}/pulls/${existingPR.number}`,
-                token,
-                {
-                    method: 'PATCH',
-                    body: JSON.stringify({
-                        title: pr.prTitle,
-                        body: pr.prBody,
-                    }),
-                },
-            );
-
-            return {
-                success: true,
-                prUrl: existingPR.html_url,
-                prNumber: existingPR.number,
-                branch: targetBranch,
-                updated: true,
-            };
-        }
-
-        // Scenario B: No open PR -> create new branch and PR
-        // 2. Get latest commit SHA
-        const refRes = await githubApiFetch(
-            `/repos/${owner}/${repo}/git/ref/heads/${defaultBranch}`,
-            token,
-        );
-        const refData = await refRes.json();
-        if (!refRes.ok) {
-            return { success: false, error: refData.message || 'Failed to fetch branch ref' };
-        }
-        const baseCommitSha = refData.object.sha;
-
-        // 3. Get current file SHA (if file exists in default branch)
-        let fileSha: string | undefined;
-        const fileRes = await githubApiFetch(
-            `/repos/${owner}/${repo}/contents/${pr.filePath}?ref=${defaultBranch}`,
-            token,
-        );
-        if (fileRes.ok) {
-            const fileData = await fileRes.json();
-            fileSha = fileData.sha;
-        }
-
-        // 4. Create branch
-        const branchName = `${pr.branchPrefix}-${Date.now()}`;
-        const createRefRes = await githubApiFetch(
-            `/repos/${owner}/${repo}/git/refs`,
-            token,
-            {
-                method: 'POST',
-                body: JSON.stringify({
-                    ref: `refs/heads/${branchName}`,
-                    sha: baseCommitSha,
-                }),
-            },
-        );
-        if (!createRefRes.ok) {
-            const data = await createRefRes.json();
-            return { success: false, error: data.message || 'Failed to create branch' };
-        }
-
-        // 5. Commit file
-        const commitRes = await githubApiFetch(
-            `/repos/${owner}/${repo}/contents/${pr.filePath}`,
-            token,
-            {
-                method: 'PUT',
-                body: JSON.stringify({
-                    message: pr.commitMessage,
-                    content: btoa(unescape(encodeURIComponent(pr.fileContent))),
-                    branch: branchName,
-                    ...(fileSha ? { sha: fileSha } : {}),
-                }),
-            },
-        );
-        if (!commitRes.ok) {
-            const data = await commitRes.json();
-            return { success: false, error: data.message || 'Failed to commit file' };
-        }
-
-        // 6. Create PR
-        const prRes = await githubApiFetch(
-            `/repos/${owner}/${repo}/pulls`,
-            token,
-            {
-                method: 'POST',
-                body: JSON.stringify({
-                    title: pr.prTitle,
-                    head: branchName,
-                    base: defaultBranch,
-                    body: pr.prBody,
-                }),
-            },
-        );
-        const prData = await prRes.json();
-        if (!prRes.ok) {
-            return { success: false, error: prData.message || 'Failed to create PR' };
-        }
-
-        return {
-            success: true,
-            prUrl: prData.html_url,
-            prNumber: prData.number,
-            branch: branchName,
-            updated: false,
-        };
-    } catch (e: unknown) {
-        const message = e instanceof Error ? e.message : 'Unknown error';
-        return { success: false, error: message };
+  try {
+    // 1. Get default branch
+    const repoRes = await githubApiFetch(`/repos/${owner}/${repo}`, token);
+    const repoData = await repoRes.json();
+    if (!repoRes.ok) {
+      return { success: false, error: repoData.message || 'Failed to fetch repo info' };
     }
+    const defaultBranch = repoData.default_branch || 'main';
+
+    // 2. Check if an open PR already exists for this branchPrefix
+    let existingPR: { number: number; html_url: string; head: { ref: string } } | null = null;
+    try {
+      const openPullsRes = await githubApiFetch(
+        `/repos/${owner}/${repo}/pulls?state=open&per_page=30`,
+        token,
+      );
+      if (openPullsRes.ok) {
+        const openPulls = await openPullsRes.json();
+        if (Array.isArray(openPulls)) {
+          existingPR =
+            openPulls.find(
+              (p: { head?: { ref?: string } }) =>
+                p.head?.ref && p.head.ref.startsWith(pr.branchPrefix),
+            ) || null;
+        }
+      }
+    } catch (err) {
+      console.warn('[GitHub] Could not query open PRs, falling back to new PR creation:', err);
+    }
+
+    // Scenario A: Existing open PR found -> update file on existing branch and update PR body
+    if (existingPR && existingPR.head?.ref) {
+      const targetBranch = existingPR.head.ref;
+
+      // Fetch current file SHA on the target branch
+      let fileSha: string | undefined;
+      const branchFileRes = await githubApiFetch(
+        `/repos/${owner}/${repo}/contents/${pr.filePath}?ref=${targetBranch}`,
+        token,
+      );
+      if (branchFileRes.ok) {
+        const fileData = await branchFileRes.json();
+        fileSha = fileData.sha;
+      }
+
+      // Commit updated file to existing branch
+      const commitRes = await githubApiFetch(
+        `/repos/${owner}/${repo}/contents/${pr.filePath}`,
+        token,
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            message: pr.commitMessage,
+            content: btoa(unescape(encodeURIComponent(pr.fileContent))),
+            branch: targetBranch,
+            ...(fileSha ? { sha: fileSha } : {}),
+          }),
+        },
+      );
+      if (!commitRes.ok) {
+        const data = await commitRes.json();
+        return {
+          success: false,
+          error: data.message || 'Failed to update file on existing branch',
+        };
+      }
+
+      // Update PR title and body
+      await githubApiFetch(`/repos/${owner}/${repo}/pulls/${existingPR.number}`, token, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          title: pr.prTitle,
+          body: pr.prBody,
+        }),
+      });
+
+      return {
+        success: true,
+        prUrl: existingPR.html_url,
+        prNumber: existingPR.number,
+        branch: targetBranch,
+        updated: true,
+      };
+    }
+
+    // Scenario B: No open PR -> create new branch and PR
+    // 2. Get latest commit SHA
+    const refRes = await githubApiFetch(
+      `/repos/${owner}/${repo}/git/ref/heads/${defaultBranch}`,
+      token,
+    );
+    const refData = await refRes.json();
+    if (!refRes.ok) {
+      return { success: false, error: refData.message || 'Failed to fetch branch ref' };
+    }
+    const baseCommitSha = refData.object.sha;
+
+    // 3. Get current file SHA (if file exists in default branch)
+    let fileSha: string | undefined;
+    const fileRes = await githubApiFetch(
+      `/repos/${owner}/${repo}/contents/${pr.filePath}?ref=${defaultBranch}`,
+      token,
+    );
+    if (fileRes.ok) {
+      const fileData = await fileRes.json();
+      fileSha = fileData.sha;
+    }
+
+    // 4. Create branch
+    const branchName = `${pr.branchPrefix}-${Date.now()}`;
+    const createRefRes = await githubApiFetch(`/repos/${owner}/${repo}/git/refs`, token, {
+      method: 'POST',
+      body: JSON.stringify({
+        ref: `refs/heads/${branchName}`,
+        sha: baseCommitSha,
+      }),
+    });
+    if (!createRefRes.ok) {
+      const data = await createRefRes.json();
+      return { success: false, error: data.message || 'Failed to create branch' };
+    }
+
+    // 5. Commit file
+    const commitRes = await githubApiFetch(
+      `/repos/${owner}/${repo}/contents/${pr.filePath}`,
+      token,
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          message: pr.commitMessage,
+          content: btoa(unescape(encodeURIComponent(pr.fileContent))),
+          branch: branchName,
+          ...(fileSha ? { sha: fileSha } : {}),
+        }),
+      },
+    );
+    if (!commitRes.ok) {
+      const data = await commitRes.json();
+      return { success: false, error: data.message || 'Failed to commit file' };
+    }
+
+    // 6. Create PR
+    const prRes = await githubApiFetch(`/repos/${owner}/${repo}/pulls`, token, {
+      method: 'POST',
+      body: JSON.stringify({
+        title: pr.prTitle,
+        head: branchName,
+        base: defaultBranch,
+        body: pr.prBody,
+      }),
+    });
+    const prData = await prRes.json();
+    if (!prRes.ok) {
+      return { success: false, error: prData.message || 'Failed to create PR' };
+    }
+
+    return {
+      success: true,
+      prUrl: prData.html_url,
+      prNumber: prData.number,
+      branch: branchName,
+      updated: false,
+    };
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Unknown error';
+    return { success: false, error: message };
+  }
 }
 
 /**
- * Submits feedback either via Nexumia Server or directly to GitHub as a fallback.
+ * Submits feedback as a GitHub issue using only this device's own PAT.
+ * Returns `code: 'no_token'` when no PAT is stored (used by hosts answering phones).
  */
-export async function submitFeedback(title: string, body: string): Promise<{ success: boolean; issueUrl?: string; error?: string }> {
-    const { config: ghConfig, source } = resolveGitHubConfig();
+export async function submitFeedbackWithLocalPat(
+  title: string,
+  body: string,
+): Promise<FeedbackResult> {
+  const { config, source } = resolveGitHubConfig();
+  if (source !== 'local' || !config) {
+    return {
+      success: false,
+      code: 'no_token',
+      error: 'No GitHub token configured on this device.',
+    };
+  }
+  const result = await createGitHubIssue(config, {
+    title: `[Feedback] ${title}`,
+    body,
+    labels: ['user-feedback'],
+  });
+  return result.success
+    ? { success: true, issueUrl: result.issueUrl }
+    : { success: false, error: result.error || 'Failed to create issue' };
+}
 
-    if (source === 'local' && ghConfig) {
-        // Direct GitHub API call with local PAT
-        const result = await createGitHubIssue(ghConfig, {
-            title: `[Feedback] ${title}`,
-            body: body,
-            labels: ['user-feedback'],
-        });
-
-        if (result.success) {
-            return { success: true, issueUrl: result.issueUrl };
-        } else {
-            return { success: false, error: result.error || 'Failed to create issue' };
-        }
-    } else if (source === 'server') {
-        // Proxy through Nexumia Server
-        const baseUrl = storage.getHelperUrl();
-        const token = storage.getHelperToken();
-        const cleanBaseUrl = baseUrl.replace(/\/$/, '');
-
-        try {
-            const res = await fetch(`${cleanBaseUrl}/api/feedback`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                },
-                body: JSON.stringify({
-                    title: title,
-                    body: body,
-                }),
-            });
-
-            const data = await res.json();
-            if (!res.ok) {
-                return { success: false, error: data.error || 'Failed to submit feedback' };
-            }
-
-            return { success: true, issueUrl: data.issueUrl };
-        } catch (e: unknown) {
-            const message = e instanceof Error ? e.message : 'Unknown error';
-            return { success: false, error: message };
-        }
-    } else {
-        return { success: false, error: 'No GitHub connection configured. Please set up a GitHub Token in General Settings or connect a Nexumia Server.' };
+/**
+ * Submits feedback. Order: 1) a registered relay (phone connected to a Melodiq host: the host
+ * submits with its own PAT) 2) this device's PAT 3) Nexumia Server proxy.
+ * If the host has no PAT or the relay fails, this device's own PAT is used when present.
+ */
+export async function submitFeedback(title: string, body: string): Promise<FeedbackResult> {
+  const relay = getFeedbackRelay();
+  if (relay) {
+    let relayed: FeedbackResult;
+    try {
+      relayed = await relay(title, body);
+    } catch (e: unknown) {
+      relayed = { success: false, error: e instanceof Error ? e.message : 'Unknown error' };
     }
+    if (relayed.success) return relayed;
+    if (!hasGitHubPAT()) {
+      return relayed.code === 'no_token'
+        ? {
+            success: false,
+            error: 'Neither the host nor this device has a GitHub token configured.',
+          }
+        : relayed;
+    }
+    // Fall through to this device's own PAT.
+  }
+  const { config: ghConfig, source } = resolveGitHubConfig();
+
+  if (source === 'local' && ghConfig) {
+    // Direct GitHub API call with local PAT
+    const result = await createGitHubIssue(ghConfig, {
+      title: `[Feedback] ${title}`,
+      body: body,
+      labels: ['user-feedback'],
+    });
+
+    if (result.success) {
+      return { success: true, issueUrl: result.issueUrl };
+    } else {
+      return { success: false, error: result.error || 'Failed to create issue' };
+    }
+  } else if (source === 'server') {
+    // Proxy through Nexumia Server
+    const baseUrl = storage.getHelperUrl();
+    const token = storage.getHelperToken();
+    const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+
+    try {
+      const res = await fetch(`${cleanBaseUrl}/api/feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          title: title,
+          body: body,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.error || 'Failed to submit feedback' };
+      }
+
+      return { success: true, issueUrl: data.issueUrl };
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Unknown error';
+      return { success: false, error: message };
+    }
+  } else {
+    return {
+      success: false,
+      error:
+        'No GitHub connection configured. Please set up a GitHub Token in General Settings or connect a Nexumia Server.',
+    };
+  }
 }
