@@ -87,6 +87,7 @@ export const STORAGE_KEYS = {
   MELODIQ_NOTES_SOUND_CONFIG: 'melodiq_notes_sound_config',
   MELODIQ_NOTES_VIEW_MODE: 'melodiq_notes_view_mode',
   MELODIQ_NOTES_SHEET_RENDER_MODE: 'melodiq_notes_sheet_render_mode',
+  MELODIQ_NOTES_SEEK_LEAD_IN: 'melodiq_notes_seek_lead_in',
 
   // Werewolf game state
   WEREWOLF_STATE: 'werewolf-game-state',

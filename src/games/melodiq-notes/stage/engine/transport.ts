@@ -1,3 +1,4 @@
+import { firstNoteBeat, leadInBeat } from '../logic/seek';
 import type { StageEngine } from './StageEngine';
 
 /** How far the recording may drift from the song clock before it is moved (scaled by speed). */
@@ -13,4 +14,25 @@ export function syncRecording(e: StageEngine) {
   if (!shouldPlay) rec.pause();
   else if (!rec.isPlaying() || Math.abs(rec.time() - target) > RESEEK_SEC * e.speed)
     rec.play(target, e.speed);
+}
+
+/** Moves the playhead to `beat`; a loop the target lies outside of ends. */
+export function seekStage(e: StageEngine, beat: number, loopLeadBeats: number) {
+  const song = e.song;
+  if (!song || !e.players.length) return;
+  const target = Math.min(song.end, Math.max(-e.countIn, beat));
+  if (e.loop && (target >= e.loop.to || target < e.loop.from - loopLeadBeats)) e.loop = null;
+  e.sound.stopAll();
+  e.waitingFor = null;
+  if (e.state === 'done') e.state = 'paused';
+  e.rewindTo(target, target);
+  syncRecording(e);
+  e.emit();
+}
+
+/** Seeks to `leadInSec` real seconds before the first note of any player. */
+export function seekToFirstNote(e: StageEngine, leadInSec: number, loopLeadBeats: number) {
+  const first = firstNoteBeat(e.players.map((p) => p.notes));
+  if (first === null) return;
+  seekStage(e, leadInBeat(first, leadInSec, e.secPerBeat(first), -e.countIn), loopLeadBeats);
 }

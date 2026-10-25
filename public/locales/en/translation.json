@@ -659,6 +659,10 @@
           "practise": "Practise {{section}}",
           "again": "Again"
         },
+        "timeline": "Timeline",
+        "lead_in": "Lead-in",
+        "lead_in_seconds": "{{count}} s before",
+        "first_note": "Jump to first note",
         "section_bar": "Bar {{bar}}",
         "section_bars": "Bars {{from}}–{{to}}",
         "sections_title": "Sections · colour shows how sure you were",

@@ -4,7 +4,7 @@ import { pendingNotes, recordJudgement, type BeatRange } from '../logic/judging'
 import { buildSections, sectionIndexAt, type Section } from '../logic/sections';
 import { advanceMisses, advanceSinging, resetRange, startAwaitedNote } from './advance';
 import { playLane, playPitch } from './input';
-import { syncRecording } from './transport';
+import { seekStage, seekToFirstNote, syncRecording } from './transport';
 import { buildBandEvents, createPlayers, defaultSeats, nextSeat } from './players';
 import type {
   BandEvent,
@@ -86,7 +86,7 @@ export class StageEngine {
     this.liveListeners.forEach((fn) => fn());
   }
 
-  private emit() {
+  emit() {
     this.version++;
     this.listeners.forEach((fn) => fn());
     this.notifyLive();
@@ -300,8 +300,13 @@ export class StageEngine {
   }
 
   private restartAt(from: number) {
+    this.rewindTo(from - Math.min(LOOP_LEAD_BEATS, this.countIn), from);
+  }
+
+  /** Puts the playhead on `beat` and makes everything from `from` on playable again. */
+  rewindTo(beat: number, from: number) {
     const to = this.loop?.to ?? this.song?.end ?? 0;
-    this.beat = from - Math.min(LOOP_LEAD_BEATS, this.countIn);
+    this.beat = beat;
     const first = this.sectionAt(from);
     for (const p of this.players) {
       resetRange(p, from, to, this.beat);
@@ -309,6 +314,16 @@ export class StageEngine {
         p.stats.sections[s] = { weight: 0, count: 0, errors: 0 };
     }
     this.bandIdx = lowerBound(this.bandEvents, this.beat);
+  }
+
+  /** Jumps to `beat` (the timeline bar); earlier notes are skipped, later ones can be played. */
+  seekTo(beat: number) {
+    seekStage(this, beat, LOOP_LEAD_BEATS);
+  }
+
+  /** Jumps to `leadInSec` real seconds before the first note of any player. */
+  jumpToFirstNote(leadInSec: number) {
+    seekToFirstNote(this, leadInSec, LOOP_LEAD_BEATS);
   }
 
   /** Records a judgement and queues it for the renderer's effects. */

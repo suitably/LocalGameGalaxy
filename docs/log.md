@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-24 — Melodiq Notes seek bar and section groups (claude-code)
+
+- `docs/tech/game-catalog.md`: melodiq-notes now has 4 `MELODIQ_NOTES_*` storage keys (`MELODIQ_NOTES_SEEK_LEAD_IN`).
+- Outside `docs/`: `SeekBar`, `SectionStrip` groups, `StageEngine.seekTo` / `jumpToFirstNote`, logic in `stage/logic/seek.ts` and `sectionGroups.ts`.
+
 ## 2026-10-24 — Tabletop z-order (claude-code)
 
 - `docs/tech/tabletop-engine.md` §1: new section "Stacking order" (`SET_Z_ORDER`, `logic/zOrder.ts`, move-to-top, context menu, shortcuts); `viewReducer.ts` row updated; front matter `verified` refreshed. Outside `docs/`: tabletop code and locales changed (#540).
