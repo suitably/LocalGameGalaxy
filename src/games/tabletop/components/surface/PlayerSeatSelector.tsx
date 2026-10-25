@@ -5,9 +5,10 @@ import React from 'react';
 import { alpha, Box, Tooltip, IconButton, Typography } from '@mui/material';
 import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomizeRounded';
 import CheckIcon from '@mui/icons-material/CheckRounded';
+import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
 import { useTranslation } from 'react-i18next';
 import type { SeatWidget } from '../../logic/types';
-import { resolveSeatColor } from '../../logic/seatLogic';
+import { isSpectatorSeat, resolveSeatColor, SPECTATOR_SEAT_ID } from '../../logic/seatLogic';
 
 interface PlayerSeatSelectorProps {
   seats: SeatWidget[];
@@ -101,6 +102,22 @@ export const PlayerSeatSelector: React.FC<PlayerSeatSelectorProps> = ({
           </Tooltip>
         );
       })}
+
+      <Tooltip title={t('games.tabletop.spectatorSeat', 'Zuschauen (keine Hand, kein Ziehen)')}>
+        <IconButton
+          size="small"
+          onClick={() => onSelectSeat(SPECTATOR_SEAT_ID)}
+          aria-pressed={isSpectatorSeat(currentSeatId)}
+          aria-label={t('games.tabletop.spectator', 'Zuschauer')}
+          sx={{
+            p: 0.5,
+            color: isSpectatorSeat(currentSeatId) ? 'text.primary' : 'text.secondary',
+            border: isSpectatorSeat(currentSeatId) ? '2px solid' : '1px solid transparent',
+          }}
+        >
+          <VisibilityIcon sx={{ fontSize: 18 }} />
+        </IconButton>
+      </Tooltip>
 
       {onToggleHud && (
         <Tooltip title={t('games.tabletop.playerHud', 'Spieler-Übersicht')}>

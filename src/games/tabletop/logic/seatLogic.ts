@@ -3,6 +3,7 @@
  */
 import type { TabletopWidget, SeatWidget, TokenWidget, HolderWidget, CardWidget } from './types';
 import { isHandHolderWidget } from './handHolder';
+import { findPlayerHandHolder } from './boardFilter';
 import { PIECE_ORDER, pieceNeutrals, piecePalette } from '../../../themeTokens';
 
 /** Seat 1..8 in palette order (DESIGN.md §2.3). */
@@ -194,4 +195,39 @@ export function seatsForHands(widgets: Record<string, TabletopWidget>): SeatWidg
       height: 0,
       zIndex: 0,
     }));
+}
+
+/** `currentSeatId` of a viewer without a seat: sees the table, has no hand, cannot draw. */
+export const SPECTATOR_SEAT_ID = 'spectator';
+
+export function isSpectatorSeat(seatId: string | undefined | null): boolean {
+  return seatId === SPECTATOR_SEAT_ID;
+}
+
+export interface SeatView {
+  /** The viewer's seat; the first seat while none was chosen; undefined for spectators. */
+  activeSeat?: SeatWidget;
+  isSpectator: boolean;
+  /** Hand the viewer draws into and sees in the dock; undefined for spectators. */
+  handHolder?: HolderWidget;
+}
+
+/**
+ * Seat and hand of the viewer. The table surface and the hand dock both use it, so a tap on
+ * the deck and the dock always agree on the hand — also for seat index 0 before any seat
+ * was picked. A seat's own `hand` link wins over the owner/index heuristics.
+ */
+export function resolveSeatView(
+  widgets: Record<string, TabletopWidget>,
+  currentSeatId: string | undefined,
+): SeatView {
+  if (isSpectatorSeat(currentSeatId)) return { isSpectator: true };
+  const chosen = currentSeatId ? widgets[currentSeatId] : undefined;
+  const activeSeat = chosen?.type === 'seat' ? (chosen as SeatWidget) : getSeatWidgets(widgets)[0];
+  const linked = activeSeat?.hand ? widgets[activeSeat.hand] : undefined;
+  const handHolder =
+    linked?.type === 'holder'
+      ? (linked as HolderWidget)
+      : findPlayerHandHolder(widgets, activeSeat?.index);
+  return { activeSeat, isSpectator: false, handHolder };
 }

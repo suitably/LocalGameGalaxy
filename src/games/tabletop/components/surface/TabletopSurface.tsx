@@ -4,11 +4,12 @@ import { TabletopToolbar } from './TabletopToolbar';
 import { RulesDialog } from './RulesDialog';
 import { FlyingCardsLayer } from './FlyingCardsLayer';
 import type { TabletopGameState, TabletopAction } from '../../logic/tabletopReducer';
-import type { TabletopWidget, SeatWidget } from '../../logic/types';
+import type { TabletopWidget } from '../../logic/types';
 import { useTabletopEngine } from '../../hooks/useTabletopEngine';
 import { useViewportCulling } from '../../hooks/useViewportCulling';
 import { useTabletopSelection } from '../../hooks/useTabletopSelection';
 import { useObscuredWidgetIds } from '../../hooks/useObscuredWidgetIds';
+import { useSeatView } from '../../hooks/useSeatView';
 import { HolderWidgetView } from '../widgets/HolderWidgetView';
 import { BoardWidgetRenderer } from './BoardWidgetRenderer';
 import { SelectionHighlightLayer } from './SelectionHighlightLayer';
@@ -46,12 +47,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
   const selection = useTabletopSelection({ dispatch });
   const { game, flyingCards } = state;
   const seats = useMemo(() => getSeatWidgets(game.widgets), [game.widgets]);
-  const activeSeat = useMemo(() => {
-    if (state.currentSeatId && state.game.widgets[state.currentSeatId]) {
-      return state.game.widgets[state.currentSeatId] as SeatWidget;
-    }
-    return seats[0];
-  }, [seats, state.currentSeatId, state.game.widgets]);
+  const { activeSeat, isSpectator, handHolder } = useSeatView(state);
 
   const {
     transform,
@@ -70,6 +66,8 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     tableHeight: game.table.height,
     widgets: game.widgets,
     currentSeatIndex: activeSeat?.index,
+    handHolderId: handHolder?.id,
+    canDraw: !isSpectator,
     onMoveWidget: (id, x, y) => dispatch({ type: 'MOVE_WIDGET', payload: { id, x, y } }),
     onSnapToHolder: (widgetId, holderId) =>
       dispatch({ type: 'SNAP_TO_HOLDER', payload: { widgetId, holderId } }),

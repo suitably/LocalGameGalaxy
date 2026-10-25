@@ -28,8 +28,16 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [pendingFlickCardId, setPendingFlickCardId] = useState<string | null>(null);
 
-  const { myHandCards, publicDecks, dropTargets, publicDice, myCounters, topDiscardCard } =
-    useDynamicControllerState(state.game, mySeat);
+  const {
+    myHandCards,
+    myHolders,
+    publicDecks,
+    dropTargets,
+    publicDice,
+    myCounters,
+    topDiscardCard,
+  } = useDynamicControllerState(state.game, mySeat);
+  const isSpectator = mySeat === null;
 
   const handleCardFlick = (cardId: string) => {
     if (dropTargets.length === 0) {
@@ -80,7 +88,11 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
           <Chip
             size="small"
             color="primary"
-            label={mySeat !== null ? `Spieler ${mySeat + 1}` : 'Zuschauer'}
+            label={
+              isSpectator
+                ? t('games.tabletop.spectator', 'Zuschauer')
+                : t('games.tabletop.playerN', 'Spieler {{n}}', { n: mySeat + 1 })
+            }
           />
           {topDiscardCard && (
             <Typography variant="caption" color="text.secondary" fontWeight={600}>
@@ -154,12 +166,15 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
             )}
 
             <ControllerActionToolbar
-              decks={publicDecks}
+              decks={isSpectator ? [] : publicDecks}
               dice={publicDice}
               counters={myCounters}
               onDrawCard={(deckId) => {
-                const targetId = myHandCards[0]?.id ? dropTargets[0]?.id : undefined;
-                dispatch({ type: 'DRAW_CARD', payload: { deckId, targetHolderId: targetId } });
+                // Always into this phone's own hand (#536: the first draw used to land in
+                // whichever hand came first, later ones on the discard pile).
+                const targetHolderId = myHolders[0]?.id;
+                if (targetHolderId)
+                  dispatch({ type: 'DRAW_CARD', payload: { deckId, targetHolderId } });
               }}
               onRollDice={(dieIds) => {
                 for (const dieId of dieIds) dispatch({ type: 'ROLL_DIE', payload: { dieId } });

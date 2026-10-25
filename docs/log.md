@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Tabletop hand dock fan, card zoom, spectators (claude-code)
+
+- `docs/tech/tabletop-engine.md` §4: new section "Seats, spectators and the hand dock" (`resolveSeatView`, `SPECTATOR_SEAT_ID`, `role=spectator`, `fanLayout`, `CardZoomDialog`); pass-and-play paragraph notes the explicit first seat. Outside `docs/`: tabletop code and locales (#536).
+
 ## 2026-10-24 — Melodiq Notes seek bar and section groups (claude-code)
 
 - `docs/tech/game-catalog.md`: melodiq-notes now has 4 `MELODIQ_NOTES_*` storage keys (`MELODIQ_NOTES_SEEK_LEAD_IN`).

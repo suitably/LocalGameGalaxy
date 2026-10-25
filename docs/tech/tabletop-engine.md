@@ -8,8 +8,8 @@ generated:
   at: 2026-10-21T23:45:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-24
-  method: 'Read logic/zOrder.ts, reducers/viewReducer.ts (z-order); src/games/tabletop/logic/{tabletopReducer,widgetEdits,editHistory,stateDelta,syncProtocol,tabletopStorage,tabletopServerApi,serverGameSnapshot}.ts, hooks/useGameManager.ts, logic/reducers/*, hooks/{useTabletopSync,useTabletopAutosave}.ts and their tests.'
+  at: 2026-10-25
+  method: 'Read logic/{handFan,seatLogic}.ts, hooks/useSeatView.ts, components/surface/{HandDockStrip,HandFan,CardZoomDialog}.tsx (hand dock, spectators); logic/zOrder.ts, reducers/viewReducer.ts (z-order); src/games/tabletop/logic/{tabletopReducer,widgetEdits,editHistory,stateDelta,syncProtocol,tabletopStorage,tabletopServerApi,serverGameSnapshot}.ts, hooks/useGameManager.ts, logic/reducers/*, hooks/{useTabletopSync,useTabletopAutosave}.ts and their tests.'
 sources:
   - 'src/games/tabletop/logic/tabletopReducer.ts'
   - 'src/games/tabletop/logic/reducers/'
@@ -62,7 +62,13 @@ A hidden zone (`HiddenZone`, `logic/hiddenZoneLogic.ts`) belongs to one seat (`o
 
 ### Pass and play (local)
 
-In local play (`?local=1`) `TabletopGame` mounts `components/views/TabletopPassAndPlay.tsx` on top of the editor: a "switch player" button covers the screen for the next seat (`modules/pass-and-play`), the cover can be pointed at another seat, and only the reveal dispatches `SELECT_SEAT` — so the hand dock and seat-only hidden zones never show the previous player's content to the next one. The seat chips (`PlayerSeatSelector`) are hidden in this mode (`hideSeatSelector`). Games with hand holders but no seat widgets (the built-in card deck, Liar's Dice) get one seat per hand owner (`seatsForHands` in `logic/seatLogic.ts`: `index` = `ownerSeat`, `hand` = the holder), added once with `ADD_WIDGETS`; `findPlayerHandHolder` prefers an exact `ownerSeat` match over the `index - 1` fallback.
+In local play (`?local=1`) `TabletopGame` mounts `components/views/TabletopPassAndPlay.tsx` on top of the editor: a "switch player" button covers the screen for the next seat (`modules/pass-and-play`), the cover can be pointed at another seat, and only the reveal dispatches `SELECT_SEAT` — so the hand dock and seat-only hidden zones never show the previous player's content to the next one. The seat chips (`PlayerSeatSelector`) are hidden in this mode (`hideSeatSelector`). Games with hand holders but no seat widgets (the built-in card deck, Liar's Dice) get one seat per hand owner (`seatsForHands` in `logic/seatLogic.ts`: `index` = `ownerSeat`, `hand` = the holder), added once with `ADD_WIDGETS`; `findPlayerHandHolder` prefers an exact `ownerSeat` match over the `index - 1` fallback. The first seat is selected (`SELECT_SEAT`) as soon as the seats exist, and "switch player" rotates through the seats only; the cover can also be pointed at the spectator.
+
+### Seats, spectators and the hand dock
+
+`resolveSeatView(widgets, currentSeatId)` (`logic/seatLogic.ts`, hook `hooks/useSeatView.ts`) is the one place that decides the viewer's seat and hand: the chosen seat, else the first seat; the seat's `hand` link, else `findPlayerHandHolder` by index (index 0 included). `TabletopSurface` passes that hand to `useTabletopEngine` (`handHolderId`: tap on a deck, drop on the dock) and `HandDockStrip` shows the same hand, so a draw always lands in the hand the dock shows. `currentSeatId === SPECTATOR_SEAT_ID` (`'spectator'`; eye chip in `PlayerSeatSelector`, or the pass-and-play cover) is a spectator: no hand, the engine gets `canDraw: false` (decks move like ordinary widgets), the dock shows a note. On phones, `role=spectator` opens `TabletopControllerView` with `mySeat: null` (no hand, no decks to draw from, no seat key for private hands); the party lobby does not hand out this role yet.
+
+The dock (`HandDockStrip` → `HandFan`) lays the hand out as an overlapping, slightly arced fan (`fanLayout` in `logic/handFan.ts`: cards spread while there is room, overlap down to a 22 px strip, then scroll; `handSlots` keeps stacks of identical cards as one slot with a count). A tap on a card opens `CardZoomDialog` for that card (play to the table centre, return to deck), the zoom button in `HandDockHeader` opens the whole hand; a drag still plays the card where it is dropped. The phone controller's `CardHandDock` uses the same overlap and zoom dialog and draws into its own hand (`myHolders[0]`).
 
 ### Spieltisch (lobby)
 

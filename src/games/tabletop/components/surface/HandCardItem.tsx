@@ -14,6 +14,8 @@ export const CARD_H = 108;
 interface HandCardItemProps {
   card: CardWidget;
   count?: number;
+  /** Rendered width in px (height keeps the 2:3 dock ratio); defaults to CARD_W. */
+  width?: number;
   onReturnToDeck?: (cardId: string, deckId: string) => void;
   onPointerDown?: (e: React.PointerEvent) => void;
 }
@@ -21,6 +23,7 @@ interface HandCardItemProps {
 export const HandCardItem: React.FC<HandCardItemProps> = ({
   card,
   count,
+  width = CARD_W,
   onReturnToDeck,
   onPointerDown,
 }) => {
@@ -33,18 +36,19 @@ export const HandCardItem: React.FC<HandCardItemProps> = ({
   const isUnstyled = Boolean(
     showFaceObjects || showBackFaceObjects || hasClipPath || card.isTransparent,
   );
-  const scale = CARD_W / (card.width || 80);
+  const scale = width / (card.width || 80);
+  const height = Math.round((width * CARD_H) / CARD_W);
 
   return (
     <Box
       onPointerDown={onPointerDown}
       sx={{
         position: 'relative',
-        width: CARD_W,
-        height: CARD_H,
+        width,
+        height,
         flexShrink: 0,
         borderRadius: isUnstyled ? 0 : 2,
-        cursor: 'grab',
+        cursor: onPointerDown ? 'grab' : 'default',
         boxShadow: isUnstyled ? 'none' : '0 4px 10px rgba(0,0,0,0.5)',
         border: isUnstyled ? 'none' : '1.5px solid rgba(255,255,255,0.25)',
         overflow: isUnstyled ? 'visible' : 'hidden',
