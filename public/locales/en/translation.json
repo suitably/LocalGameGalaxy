@@ -755,6 +755,7 @@
         "yt_search": "Search YouTube or paste a link",
         "yt_search_error": "YouTube search failed ({{error}}).",
         "yt_no_results": "No videos found.",
+        "yt_pick_video": "Pick a video from the list or paste a YouTube link to download.",
         "yt_songs_error": "The song folders on the server could not be read ({{error}}).",
         "yt_plan_reuse": "The song folder \"{{folder}}\" already has a recording; it is used as it is and linked to the score.",
         "yt_plan_into": "The recording is downloaded into the existing song folder \"{{folder}}\".",

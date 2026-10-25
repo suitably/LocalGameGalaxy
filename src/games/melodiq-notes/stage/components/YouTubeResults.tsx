@@ -11,7 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/SearchRounded';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { searchYouTube, type YouTubeResult } from '../../../../lib/companion/songDownloadApi';
 
@@ -39,13 +39,21 @@ export function YouTubeResults({
   const [results, setResults] = useState<YouTubeResult[] | null>(null);
   const [searching, setSearching] = useState(() => canSearch(initialQuery));
   const [error, setError] = useState<string | null>(null);
+  const queryRef = useRef(initialQuery);
 
-  const fetchResults = useCallback((q: string) => {
-    searchYouTube(q.trim())
-      .then(setResults)
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
-      .finally(() => setSearching(false));
-  }, []);
+  // pick the top hit right away (unless a link was pasted meanwhile): Download needs no extra tap
+  const fetchResults = useCallback(
+    (q: string) => {
+      searchYouTube(q.trim())
+        .then((found) => {
+          setResults(found);
+          if (!isUrl(queryRef.current)) onSelect(found[0]?.url ?? null);
+        })
+        .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
+        .finally(() => setSearching(false));
+    },
+    [onSelect],
+  );
 
   const search = (q: string) => {
     if (!canSearch(q)) return;
@@ -69,6 +77,7 @@ export function YouTubeResults({
         disabled={disabled}
         onChange={(e) => {
           setQuery(e.target.value);
+          queryRef.current = e.target.value;
           onSelect(isUrl(e.target.value) ? e.target.value.trim() : null);
         }}
         onKeyDown={(e) => e.key === 'Enter' && search(query)}

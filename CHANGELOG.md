@@ -126,6 +126,7 @@
 
 ### Fixed
 
+- **Melodiq Notes: YouTube download button** (#562): "Download and align" stayed greyed out until a video was tapped, with no hint why. The top search hit is now chosen right away, and a hint asks to pick a video or paste a link when none is chosen (e.g. when the search failed).
 - **Melodiq Notes tab view**: guitar, bass and ukulele note heads were drawn one radius to the right of their time, so they reached the hit line about a tenth of a beat after the note sounded (around 100 ms in slow songs); they are now centred on their time like drums, keys and notation.
 - **Settings language**: the notifications tab and its description show English text in the English UI (the keys `settings.notifications_tab` / `settings.notifications_relay_desc` were missing, so the German fallback was shown) (#154).
 - **Melodiq lyrics**: the first syllable of a line is no longer swallowed — a finished line now makes way for the next one shortly before it starts instead of lingering into it (#441).

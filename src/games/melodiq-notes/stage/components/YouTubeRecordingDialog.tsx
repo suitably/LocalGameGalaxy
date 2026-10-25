@@ -118,6 +118,11 @@ export function YouTubeRecordingDialog({
               disabled={busy}
             />
           )}
+          {needsDownload && songs && !url && !busy && (
+            <Typography variant="caption" color="text.secondary">
+              {k('yt_pick_video')}
+            </Typography>
+          )}
           {busy && (
             <Stack spacing={0.5}>
               <LinearProgress
