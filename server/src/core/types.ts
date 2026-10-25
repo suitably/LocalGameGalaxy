@@ -118,8 +118,11 @@ export interface Song {
   txtContent: string;
   duration: number;
   searchString: string;
-  /** Sheet music (MusicXML/MIDI) in the song folder, for Melodiq Notes. */
-  scores: SongScore[];
+  /**
+   * Sheet music (MusicXML/MIDI) found in the song folder. Only the source of the one-time import
+   * into the Notes library (Q18); clients get the song's scores from the Notes library.
+   */
+  folderScores: SongScore[];
 }
 
 export interface SongScore {
@@ -129,14 +132,16 @@ export interface SongScore {
   mtimeMs: number;
 }
 
+/** A score of a Notes library piece linked to the song (`songId`). */
 export interface ClientSongScore {
+  pieceId: string;
   file: string;
   /** Media URL of the score file. */
   url: string | null;
   hasMarks: boolean;
 }
 
-export type ClientSong = Omit<Song, 'scores'> & { scores: ClientSongScore[] };
+export type ClientSong = Omit<Song, 'folderScores'> & { scores: ClientSongScore[] };
 
 export interface DownloadJob {
   jobId: string;

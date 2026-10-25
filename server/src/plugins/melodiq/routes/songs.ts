@@ -12,11 +12,14 @@ import {
 } from '../services/scanner';
 import type { HonoEnv, Song, ClientSong } from '../../../core/types';
 import { getRequestToken } from '../../../core/auth';
+import { piecesBySong, type NotesPiece } from '../../notes/services/library';
+import { clientSongScores } from './scores';
 
 export const songsRouter = new Hono<HonoEnv>();
 
 // `token` is the caller's own token; media URLs must never carry the master token.
-const toClientSong = (s: Song, token: string): ClientSong => {
+// `pieces` are the Notes library pieces linked to the song: its sheet music (Q18).
+const toClientSong = (s: Song, token: string, pieces: NotesPiece[] = []): ClientSong => {
   const secureUrl = (absPath: string | null): string | null => {
     if (!absPath) return null;
     if (absPath.startsWith('http://') || absPath.startsWith('https://')) {
@@ -25,8 +28,9 @@ const toClientSong = (s: Song, token: string): ClientSong => {
     return `/media?path=${encodeURIComponent(absPath)}&token=${encodeURIComponent(token)}`;
   };
 
+  const { folderScores: _folderScores, ...rest } = s;
   return {
-    ...s,
+    ...rest,
     video: secureUrl(s.video),
     audio: secureUrl(s.audio),
     originalAudio: secureUrl(s.originalAudio),
@@ -35,17 +39,12 @@ const toClientSong = (s: Song, token: string): ClientSong => {
     hasSeparation: Boolean(s.hasSeparation),
     cover: secureUrl(s.cover),
     background: secureUrl(s.background),
-    scores: (s.scores ?? []).map((f) => ({
-      file: f.file,
-      // the version parameter defeats the week-long media cache when a score is replaced
-      url: `${secureUrl(f.path)}&v=${Math.round(f.mtimeMs)}`,
-      hasMarks: Boolean(f.marksPath),
-    })),
+    scores: clientSongScores(pieces, token),
   };
 };
 
 // GET /api/songs — List / search songs with pagination
-songsRouter.get('/api/songs', (c) => {
+songsRouter.get('/api/songs', async (c) => {
   const page = parseInt(c.req.query('page') || '1', 10) || 1;
   const limit = parseInt(c.req.query('limit') || '10000', 10) || 10000;
   const search = (c.req.query('search') || '').trim().toLowerCase();
@@ -57,9 +56,10 @@ songsRouter.get('/api/songs', (c) => {
 
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
+  const linked = await piecesBySong();
   const paginated = results
     .slice(startIndex, endIndex)
-    .map((s) => toClientSong(s, getRequestToken(c) ?? ''));
+    .map((s) => toClientSong(s, getRequestToken(c) ?? '', linked.get(s.id)));
 
   c.header('X-Total-Count', String(results.length));
   c.header('X-Page', String(page));
@@ -69,7 +69,7 @@ songsRouter.get('/api/songs', (c) => {
 });
 
 // GET /api/songs/:id — Single song
-songsRouter.get('/api/songs/:id', (c) => {
+songsRouter.get('/api/songs/:id', async (c) => {
   const songId = c.req.param('id');
   const song = getSongCache().find((s) => s.id === songId);
 
@@ -77,7 +77,8 @@ songsRouter.get('/api/songs/:id', (c) => {
     return c.json({ error: 'Song not found' }, 404);
   }
 
-  return c.json(toClientSong(song, getRequestToken(c) ?? ''));
+  const linked = (await piecesBySong()).get(song.id);
+  return c.json(toClientSong(song, getRequestToken(c) ?? '', linked));
 });
 
 // DELETE /api/songs/:id — Delete song + cleanup
