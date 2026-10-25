@@ -57,7 +57,8 @@ test('Song scores: import into the Notes library, deprecated song routes', async
   await t.test(
     'startup imports song-folder scores with marks into a linked Notes piece',
     async () => {
-      for (let i = 0; i < 100 && (await linkedPieces()).length === 0; i++) {
+      // The marker is written after the scores are copied: wait for the whole import, not the piece.
+      for (let i = 0; i < 100 && !fs.existsSync(path.join(notesDir, MIGRATION_MARKER)); i++) {
         await new Promise((r) => setTimeout(r, 50));
       }
       const pieces = await linkedPieces();
