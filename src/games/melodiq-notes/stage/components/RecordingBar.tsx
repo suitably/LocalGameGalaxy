@@ -1,9 +1,20 @@
-import { Button, LinearProgress, Stack, Tooltip, Typography } from '@mui/material';
+import { Button, LinearProgress, Slider, Stack, Tooltip, Typography } from '@mui/material';
 import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  formatOffsetMs,
+  OFFSET_COARSE_SEC,
+  OFFSET_FINE_SEC,
+  OFFSET_RANGE_SEC,
+} from '../logic/tuning';
 import type { StageSongState } from '../useStageSong';
 
-const NUDGE_SEC = 0.05;
+const NUDGES = [
+  { sec: -OFFSET_COARSE_SEC, label: '−10' },
+  { sec: -OFFSET_FINE_SEC, label: '−1' },
+  { sec: OFFSET_FINE_SEC, label: '+1' },
+  { sec: OFFSET_COARSE_SEC, label: '+10' },
+];
 const STAGES = ['analyse', 'match', 'refine'] as const;
 const signed = (n: number) => (n > 0 ? '+' : '−') + Math.abs(n);
 
@@ -85,29 +96,46 @@ export function RecordingBar({ state }: { state: StageSongState }) {
             <Typography variant="body2" color="text.secondary">
               {k('fine_tune')}
             </Typography>
-            <Button
+            {NUDGES.filter((n) => n.sec < 0).map((n) => (
+              <Button
+                key={n.sec}
+                size="small"
+                variant="outlined"
+                aria-label={k('earlier_ms', { ms: Math.abs(n.sec * 1000) })}
+                onClick={() => state.nudge(n.sec)}
+              >
+                {n.label}
+              </Button>
+            ))}
+            <Slider
               size="small"
-              variant="outlined"
-              aria-label={k('earlier')}
-              onClick={() => state.nudge(-NUDGE_SEC)}
-            >
-              −
-            </Button>
+              aria-label={k('fine_tune')}
+              value={offset}
+              min={-OFFSET_RANGE_SEC}
+              max={OFFSET_RANGE_SEC}
+              step={OFFSET_FINE_SEC}
+              onChange={(_, v) => state.setOffsetSec(v as number)}
+              valueLabelDisplay="auto"
+              valueLabelFormat={formatOffsetMs}
+              sx={{ width: 160 }}
+            />
+            {NUDGES.filter((n) => n.sec > 0).map((n) => (
+              <Button
+                key={n.sec}
+                size="small"
+                variant="outlined"
+                aria-label={k('later_ms', { ms: n.sec * 1000 })}
+                onClick={() => state.nudge(n.sec)}
+              >
+                {n.label}
+              </Button>
+            ))}
             <Typography
               variant="body2"
-              sx={{ fontFamily: 'monospace', minWidth: '6ch', textAlign: 'center' }}
+              sx={{ fontFamily: 'monospace', minWidth: '8ch', textAlign: 'center' }}
             >
-              {offset >= 0 ? '+' : ''}
-              {offset.toFixed(2)} s
+              {formatOffsetMs(offset)}
             </Typography>
-            <Button
-              size="small"
-              variant="outlined"
-              aria-label={k('later')}
-              onClick={() => state.nudge(NUDGE_SEC)}
-            >
-              +
-            </Button>
             {marks && (
               <Tooltip title={k('pin_bar_hint')} describeChild>
                 <Button size="small" variant="outlined" onClick={state.pinBarNow}>

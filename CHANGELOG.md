@@ -2,6 +2,7 @@
 
 ### Added
 
+- **Melodiq Notes: finer alignment and continuous speed** (#532): fine-tuning has a ±2 s slider in 1 ms steps plus ±10 ms / ±1 ms buttons; playback speed is a continuous 25–150 % slider (5 % steps, pitch-preserving for recordings) for practising and fine-tuning.
 - **Melodiq Notes: real drum instruments** (#531): drum parts keep the written sound (hi-hat closed/open/pedal, toms 1–3 and floor tom, snare normal/rimshot/cross-stick/ghost, kick, crash, ride, ride bell, china, splash, cowbell) from MusicXML instrument, notehead and articulations or General MIDI keys 35–81. The drum highway marks them on the notes (+, o, 1–3, F, x, RS, Bell, …) and shows sticking (R/L) when the score has it; MIDI hits prefer the exact sound and accept any hi-hat for a hi-hat, any tom for a tom.
 - **Tabletop: hidden zones** (#539): in edit mode the owner moves and resizes their hidden zone like a widget, and the widgets inside move along (pinned and non-movable ones stay). An eye button inside the zone shows and switches whether only the owner or everyone sees the contents. Other players now really see only placeholders for widgets inside a hidden zone.
 - **Tabletop stacking order** (#540): a piece you move lands on top of the others; the right-click menu (long press on touch devices that send a context menu) offers Bring to front / Bring forward / Send backward / Send to back, and Ctrl/Cmd+] / [ (with Shift: front / back) reorder the selected pieces. Send to back stays until the piece is moved again; the order is synced like any other move.

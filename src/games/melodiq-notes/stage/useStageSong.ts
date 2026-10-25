@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { nudgeOffset } from './logic/tuning';
 import {
   applyBarMarksToMusicXml,
   type AlignProgress,
@@ -276,8 +277,13 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     setSaved(false);
   }, [engine, marks, pins, offset]);
 
+  const setOffsetSec = useCallback((sec: number) => {
+    setOffset(nudgeOffset(sec, 0));
+    setSaved(false);
+  }, []);
+
   const nudge = useCallback((deltaSec: number) => {
-    setOffset((o) => Math.round((o + deltaSec) * 100) / 100);
+    setOffset((o) => nudgeOffset(o, deltaSec));
     setSaved(false);
   }, []);
 
@@ -303,6 +309,7 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     canSaveToServer,
     exportScore,
     nudge,
+    setOffsetSec,
     pinBarNow,
     clearError: () => setError(null),
   };
