@@ -9,8 +9,7 @@ generated:
   by: claude-code
 verified:
   at: 2026-10-25
-  method: 'Read logic/tableGestures.ts, hooks/{useTabletopEngine,usePanPinch,sourcePress,useTableKeyShortcuts}.ts, components/surface/SurfaceContextMenu.tsx (gestures); logic/{handFan,seatLogic}.ts, hooks/useSeatView.ts, components/surface/{HandDockStrip,HandFan,CardZoomDialog}.tsx (hand dock, spectators); logic/zOrder.ts, reducers/viewReducer.ts (z-order); src/games/tabletop/logic/{tabletopReducer,widgetEdits,editHistory,stateDelta,syncProtocol,tabletopStorage,tabletopServerApi,serverGameSnapshot}.ts, hooks/useGameManager.ts, logic/reducers/*, hooks/{useTabletopSync,useTabletopAutosave}.ts and their tests.'
-  method: 'Read hooks/useTableSaves.ts, logic/saveNames.ts, components/saves/* (named saves, #538); logic/zOrder.ts, reducers/viewReducer.ts (z-order); src/games/tabletop/logic/{tabletopReducer,widgetEdits,editHistory,stateDelta,syncProtocol,tabletopStorage,tabletopServerApi,serverGameSnapshot}.ts, hooks/useGameManager.ts, logic/reducers/*, hooks/{useTabletopSync,useTabletopAutosave}.ts and their tests.'
+  method: 'Read hooks/useTableSaves.ts, logic/saveNames.ts, components/saves/* (named saves, #538); logic/tableGestures.ts, hooks/{useTabletopEngine,usePanPinch,sourcePress,useTableKeyShortcuts}.ts, components/surface/SurfaceContextMenu.tsx (gestures); logic/{handFan,seatLogic}.ts, hooks/useSeatView.ts, components/surface/{HandDockStrip,HandFan,CardZoomDialog}.tsx (hand dock, spectators); logic/zOrder.ts, reducers/viewReducer.ts (z-order); src/games/tabletop/logic/{tabletopReducer,widgetEdits,editHistory,stateDelta,syncProtocol,tabletopStorage,tabletopServerApi,serverGameSnapshot}.ts, hooks/useGameManager.ts, logic/reducers/*, hooks/{useTabletopSync,useTabletopAutosave}.ts and their tests.'
 sources:
   - 'src/games/tabletop/logic/tabletopReducer.ts'
   - 'src/games/tabletop/logic/reducers/'
