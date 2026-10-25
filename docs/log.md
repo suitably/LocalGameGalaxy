@@ -2,6 +2,12 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Server one-time pairing (#148, claude-code)
+
+- `docs/tech/server-security.md`: new §3a one-time pairing (`POST /api/pair`, `POST /api/pair/code`, code TTL, rate limit, first-start browser open, client confirmation card); token-source sentence corrected. `verified.at` refreshed.
+- `docs/tech/deployment.md` §4c: first start pairs automatically; Melodiq links to the setup wizard. `verified.at` refreshed.
+- Outside `docs/`: server `core/pairing.ts`, `utils/openBrowser.ts`, `index.ts`, `config.ts` (`isFirstRun`), tests; client `lib/companion/serverPairing.ts`, `ServerPairingCard`, `useServerPairing`, `ServerSetupCard` (`section=setup` opens the wizard), Melodiq `LibraryEmptyState`, locales.
+
 ## 2026-10-25 — Melodiq remote host settings RPC (#356, claude-code)
 
 - `docs/tech/melodiq-architecture.md` §2.7 (new): typed `HostSettingsRpc` schema, admin gate, host handler. Outside `docs/`: `types.ts`, `logic/hostSettingsRpc.ts`, `HostSettingsRpcBridge`, `RemoteHostSettingsModal`, header action, locales.

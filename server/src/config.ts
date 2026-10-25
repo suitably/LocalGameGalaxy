@@ -49,6 +49,8 @@ export class ConfigManager {
   private envOverrides: EnvOverrides = readEnvOverrides({});
   /** Runtime view (`fileConfig` + env overrides). Getters read this. */
   private currentConfig: ServerConfigData = { ...defaultConfig };
+  /** True when this start generated the master token, i.e. the server runs for the first time. */
+  private tokenGenerated = false;
 
   constructor() {
     this.loadConfig();
@@ -156,6 +158,7 @@ export class ConfigManager {
     // Generate a token if neither the file nor the environment provides one; only this one is persisted.
     if (!this.currentConfig.token) {
       this.fileConfig.token = crypto.randomBytes(16).toString('hex');
+      this.tokenGenerated = true;
       this.refreshEffectiveConfig();
       this.saveConfig();
     } else if (dropped.length > 0) {
@@ -190,6 +193,11 @@ export class ConfigManager {
         console.error('[Config] Failed to save config:', e);
       }
     }
+  }
+
+  /** First start: no token in config.json or the environment yet (one was generated). */
+  get isFirstRun(): boolean {
+    return this.tokenGenerated;
   }
 
   get port(): number {

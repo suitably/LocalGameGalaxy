@@ -4,6 +4,8 @@ import { cloudflareTunnel } from './core/tunnel';
 import type { ServerConfig } from './core/types';
 import { serverConfig } from './config';
 import { getLocalIp } from './utils/helpers';
+import { buildPairingUrl, DEFAULT_APP_URL, pairingStore } from './core/pairing';
+import { canOpenBrowser, openBrowser } from './utils/openBrowser';
 
 const port = serverConfig.port;
 const activePlugins = (process.env.PLUGINS || 'relay,melodiq,tabletop,notes')
@@ -32,6 +34,20 @@ async function main(): Promise<void> {
     console.log(`🔑 Security Token:  ${serverConfig.token}`);
     console.log(`🧩 Active Plugins:  ${config.activePlugins.join(', ')}`);
     console.log(`======================================================`);
+
+    // One-time pairing link: opens the app's server settings, which trade the code for an API key.
+    const { code } = pairingStore.issue();
+    const pairingUrl = buildPairingUrl(
+      process.env.APP_URL || DEFAULT_APP_URL,
+      `http://localhost:${info.port}`,
+      code,
+    );
+    console.log(`🔗 Pair the app (one-time link, valid 10 min):`);
+    console.log(`👉 ${pairingUrl}`);
+    console.log(`======================================================`);
+    if (serverConfig.isFirstRun && canOpenBrowser()) {
+      openBrowser(pairingUrl);
+    }
 
     if (enableTunnel) {
       console.log(`\n⏳ Establishing Cloudflare Quick Tunnel for friends...`);

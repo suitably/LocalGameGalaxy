@@ -1,4 +1,5 @@
 import type { Hono } from 'hono';
+import type { PairingStore } from './pairing';
 
 export interface ApiKey {
   id: string;
@@ -32,6 +33,8 @@ export interface ServerConfig {
   activePlugins: string[];
   musicDir?: string;
   modelsDir?: string;
+  /** Pairing code store; defaults to the process-wide one (tests inject their own). */
+  pairingStore?: PairingStore;
 }
 
 export interface ServerConfigData {
