@@ -1,7 +1,7 @@
 import { piecePalette, type PieceColor } from '../../../themeTokens';
 
 /** Anchor hue (degrees) per piece colour; blue and purple sit where the preset profile hues (240, 270) are. */
-const PIECE_HUES: ReadonlyArray<readonly [PieceColor, number]> = [
+export const PIECE_HUES: ReadonlyArray<readonly [PieceColor, number]> = [
   ['red', 0],
   ['orange', 24],
   ['yellow', 51],
@@ -37,3 +37,7 @@ export const pieceColorForHue = (hue: number): PieceColor => {
 
 /** Hex value of the piece colour closest to a profile hue (for canvas and non-theme code). */
 export const singerColor = (hue: number): string => piecePalette[pieceColorForHue(hue)];
+
+/** Stored profile hue for a picked piece colour (the anchor hue maps back to the same colour). */
+export const hueForPieceColor = (color: PieceColor): number =>
+  PIECE_HUES.find(([c]) => c === color)?.[1] ?? 0;

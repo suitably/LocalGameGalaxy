@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Singer colour picker (#524, claude-code)
+
+- `DESIGN.md` §2.3 exempt list: removed "the hue picker" (Melodiq profiles now pick from `palette.piece.*`; the nearest-colour hue mapping and stored hue are unchanged). No open-questions entry existed for #524.
+
 ## 2026-10-25 — Melodiq Notes stage and pult (#485, claude-code)
 
 - `docs/tech/game-catalog.md` §3 (new melodiq-notes row) and shared-module row; `docs/tech/architecture.md` §3.2 `room-game` (`useRoomEvents`, `roomTransport.ts`, consumer melodiq-notes); `docs/tech/sync-protocol.md` `lgg/room` instance and channels.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { piecePalette } from '../../../themeTokens';
-import { pieceColorForHue, singerColor } from './singerColor';
+import { hueForPieceColor, PIECE_HUES, pieceColorForHue, singerColor } from './singerColor';
 
 describe('pieceColorForHue', () => {
   it('maps the preset profile hues to piece colours', () => {
@@ -27,5 +27,13 @@ describe('pieceColorForHue', () => {
 describe('singerColor', () => {
   it('returns the palette value', () => {
     expect(singerColor(240)).toBe(piecePalette.blue);
+  });
+});
+
+describe('hueForPieceColor', () => {
+  it('round-trips every piece colour through its stored hue', () => {
+    for (const [color] of PIECE_HUES) {
+      expect(pieceColorForHue(hueForPieceColor(color))).toBe(color);
+    }
   });
 });

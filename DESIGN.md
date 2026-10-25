@@ -69,7 +69,7 @@ Rules:
 - Tints for large areas (a player's score column, a row background): the piece colour at 16 % opacity over `bg.surface`, text stays `text.primary`.
 - Game-specific needs that the palette cannot cover (e.g. Sudoku conflict highlights, Wordle letter states) map to roles first (`success`, `warning`, `error`, `accent`). Anything still missing is added here as a token, never inline.
 - In code: `theme.palette.piece.*` in components, `piecePalette`, `PIECE_ORDER`, `pieceColorForSlot()` and `pieceNeutrals` (white/black pieces) from `src/themeTokens.ts` in logic and canvas code.
-- **Exempt — table content:** what a game _depicts_ keeps realistic or user-defined colours: playing-card faces and suits, wood holders, table felt, imported Tabletop widget colours (`src/games/tabletop/logic/*` parsers), MusicXML colours, the karaoke lyric highlight on video, the hue picker. Exempt colours never style UI chrome (buttons, dialogs, navigation, selection).
+- **Exempt — table content:** what a game _depicts_ keeps realistic or user-defined colours: playing-card faces and suits, wood holders, table felt, imported Tabletop widget colours (`src/games/tabletop/logic/*` parsers), MusicXML colours, the karaoke lyric highlight on video. Exempt colours never style UI chrome (buttons, dialogs, navigation, selection).
 
 ## 3. Typography
 
