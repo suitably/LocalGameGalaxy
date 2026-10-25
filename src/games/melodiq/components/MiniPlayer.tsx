@@ -15,7 +15,9 @@ import PauseIcon from '@mui/icons-material/PauseRounded';
 import SkipNextIcon from '@mui/icons-material/SkipNextRounded';
 import OpenInFullIcon from '@mui/icons-material/OpenInFullRounded';
 import QueueMusicIcon from '@mui/icons-material/QueueMusicRounded';
+import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlineRounded';
+import { useTranslation } from 'react-i18next';
 import type { SongMeta, Song } from '../db';
 
 interface MiniPlayerProps {
@@ -28,6 +30,8 @@ interface MiniPlayerProps {
   onShowQueue?: () => void;
   queueLength: number;
   isRestored?: boolean;
+  /** Restored song only: start from the beginning instead of the saved position. */
+  onRestart?: () => void;
   isClient?: boolean;
   canControlPlayback?: boolean;
 }
@@ -42,10 +46,12 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
   onShowQueue,
   queueLength,
   isRestored = false,
+  onRestart,
 
   canControlPlayback = true,
 }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   return (
     <Card
@@ -120,6 +126,20 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         {canControlPlayback && (
           <>
+            {isRestored && onRestart && (
+              <IconButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRestart();
+                }}
+                size="medium"
+                sx={{ color: 'text.secondary' }}
+                title={t('melodiq.restore_restart')}
+                aria-label={t('melodiq.restore_restart')}
+              >
+                <RestartAltIcon />
+              </IconButton>
+            )}
             {isRestored ? (
               <IconButton
                 onClick={(e) => {

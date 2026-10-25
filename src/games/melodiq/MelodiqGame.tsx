@@ -8,6 +8,7 @@ import { useSongs, SongsProvider } from './hooks/useSongs';
 import { useQueue, QueueProvider } from './hooks/useQueue';
 import { useDownloads } from './hooks/useDownloads';
 import { PhoneQueueBridge } from './components/PhoneQueueBridge';
+import { HostSettingsRpcBridge } from './components/HostSettingsRpcBridge';
 import { PhoneClientEngine, useClientEngine } from './PhoneClientEngine';
 import { useTVMode } from './hooks/useTVMode';
 import { useSearchFilters } from './hooks/useSearchFilters';
@@ -226,6 +227,7 @@ export const MelodiqGame: React.FC = () => {
         <QueueProvider>
           <MelodiqGameContent />
           <PhoneQueueBridge />
+          <HostSettingsRpcBridge />
         </QueueProvider>
       </SongsProvider>
     </WebRTCProvider>

@@ -1,5 +1,6 @@
 import { forwardRef, type ComponentProps } from 'react';
 import { Box } from '@mui/material';
+import { PhoneTrackChoiceOverlay } from '../gameplay/components/PhoneTrackChoiceOverlay';
 import { MelodiqSession, type MelodiqSessionHandle } from '../gameplay/MelodiqSession';
 
 interface PersistentSessionLayerProps extends ComponentProps<typeof MelodiqSession> {
@@ -28,6 +29,13 @@ export const PersistentSessionLayer = forwardRef<MelodiqSessionHandle, Persisten
       }}
     >
       <MelodiqSession ref={ref} {...sessionProps} />
+      {sessionProps.isClient && (
+        <PhoneTrackChoiceOverlay
+          song={sessionProps.song}
+          clientDeviceId={sessionProps.clientDeviceId}
+          activeSessionOverride={sessionProps.activeSessionOverride}
+        />
+      )}
     </Box>
   ),
 );

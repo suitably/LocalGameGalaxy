@@ -7,6 +7,9 @@ import QrCodeIcon from '@mui/icons-material/QrCodeRounded';
 import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
 
 import { type LoadingProgress } from './useSongs';
+import TuneIcon from '@mui/icons-material/TuneRounded';
+import { useClientEngine } from '../PhoneClientEngine';
+import { canEditHostSettings } from '../logic/hostSettingsRpc';
 import { TVModeButton } from '../components/TVModeButton';
 
 interface UseMelodiqHeaderProps {
@@ -34,9 +37,11 @@ export const useMelodiqHeader = ({
   openTVWindow,
   startPresentation,
   disconnectTV,
+  clientRole,
   onBackToHome,
   onOpenLocalFolder,
 }: UseMelodiqHeaderProps) => {
+  const { setHostSettingsOpen } = useClientEngine();
   const { t } = useTranslation();
   const { setHeader, setCustomHeaderActions } = useLayout();
 
@@ -103,6 +108,15 @@ export const useMelodiqHeader = ({
         },
       ];
 
+      if (isClient && canEditHostSettings(clientRole)) {
+        headerActions.push({
+          label: t('melodiq.remote_host.title', 'Host settings'),
+          icon: <TuneIcon />,
+          action: () => setHostSettingsOpen(true),
+          showAlways: true,
+        });
+      }
+
       if (!isClient) {
         headerActions.push({
           label: 'Connect Phones',
@@ -144,6 +158,8 @@ export const useMelodiqHeader = ({
   }, [
     currentView,
     isClient,
+    clientRole,
+    setHostSettingsOpen,
     t,
     setHeader,
     setCustomHeaderActions,

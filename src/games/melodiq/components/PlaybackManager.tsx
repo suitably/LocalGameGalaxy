@@ -1,10 +1,11 @@
-import { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo } from 'react';
+import { useState, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { Box } from '@mui/material';
 import { type Song, type SongMeta } from '../db';
 import { type MelodiqSessionHandle } from '../gameplay/MelodiqSession';
 import { PersistentSessionLayer } from './PersistentSessionLayer';
 import { PlaybackFeedback } from './PlaybackFeedback';
-import { resolveInitialPlaybackTime } from '../logic/initialPlaybackTime';
+import { useRestoredResume } from '../hooks/useRestoredResume';
+import type { RestoredSong } from '../logic/savedPlayback';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { MiniPlayer } from './MiniPlayer';
 import { useQueue } from '../hooks/useQueue';
@@ -28,7 +29,7 @@ interface PlaybackManagerProps {
   onShowQueue: () => void;
   sendGameUpdate?: (state: any) => void;
   /** Song that was playing before the last page reload, restored from storage */
-  restoredSong?: SongMeta | null;
+  restoredSong?: RestoredSong | null;
   /** Clears the restored song state in the parent once the user resumes */
   onClearRestoredSong?: () => void;
   /** True if this app is running in client/remote mode (no media rendering) */
@@ -79,10 +80,12 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     );
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
-    const initialTime = useMemo(
-      () => resolveInitialPlaybackTime(selectedSong, restoredSong),
-      [selectedSong, restoredSong],
-    );
+    const { initialTime, handleResume, resetResume } = useRestoredResume({
+      selectedSong,
+      restoredSong,
+      onClearRestoredSong,
+      onSelectSong,
+    });
 
     // sendClientCommand is used to control the remote session.
     const clientEngine = useClientEngine();
@@ -149,14 +152,6 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
       remoteSong ||
       (isInRestoredMode ? restoredSong : queue.length > 0 ? queue[0].song : null);
 
-    // Handle Resume: load and start the restored song
-    const handleResume = () => {
-      if (restoredSong) {
-        onClearRestoredSong?.();
-        onSelectSong(restoredSong, true);
-      }
-    };
-
     return (
       <>
         {/* Persistent Session (Hidden or Visible) */}
@@ -169,6 +164,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             initialTime={initialTime}
             onExit={(forceHome = false) => {
               setNowPlaying(null);
+              resetResume();
               storage.remove(STORAGE_KEYS.MELODIQ_SAVED_TIME);
               if (!forceHome) {
                 const nextItem = popNext();
@@ -201,7 +197,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
               progress={isInRestoredMode ? 0 : playbackState.progress}
               onTogglePlay={() => {
                 if (isInRestoredMode) {
-                  handleResume();
+                  handleResume(false);
                 } else if (isClient && sendClientCommand) {
                   sendClientCommand(actualIsPlaying ? 'pause' : 'play');
                 } else if (selectedSong) {
@@ -233,6 +229,11 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
               onShowQueue={onShowQueue}
               queueLength={queue.length}
               isRestored={isInRestoredMode}
+              onRestart={
+                isInRestoredMode && (restoredSong?.currentTime ?? 0) > 0
+                  ? () => handleResume(true)
+                  : undefined
+              }
               isClient={isClient}
               canControlPlayback={canControlPlayback}
             />
