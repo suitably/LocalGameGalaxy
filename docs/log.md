@@ -2,6 +2,12 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Touch targets (#510) and duplicate cleanup (#426), list states (#511) (claude-code)
+
+- `docs/tech/architecture.md` §3.2: new rows for `GameHeaderBar` (in-game top bar shell shared by GuessArt and Storyteller). Outside `docs/`: `SettingsCardHeader` (server settings cards), local `EmptyPanel`/`RetryButton`/`LyricsBar` in Melodiq files; remaining jscpd clones are imposter word pairs and werewolf role views (excluded by #426).
+- #510 (no doc change needed beyond this entry): touch-target theme overrides in `src/theme.ts`, constants and `invisibleHitArea` in `src/lib/touchTarget.ts`, measuring script `scripts/measure-touch-targets.cjs`; rule text stays in `DESIGN.md` §4.
+- #511: Melodiq Notes `ScoreLibraryList`, Melodiq `QueueList` and `YouTubeSearchDialog` use `EmptyState`/`ListSkeleton`/`ErrorState`.
+
 ## 2026-10-25 — Melodiq remote host settings RPC (#356, claude-code)
 
 - `docs/tech/melodiq-architecture.md` §2.7 (new): typed `HostSettingsRpc` schema, admin gate, host handler. Outside `docs/`: `types.ts`, `logic/hostSettingsRpc.ts`, `HostSettingsRpcBridge`, `RemoteHostSettingsModal`, header action, locales.
