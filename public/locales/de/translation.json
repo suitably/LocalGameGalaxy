@@ -1168,7 +1168,28 @@
       "otherPlayer": "Jemand anderes ist dran?"
     },
     "seatInvited": "Eingeladen – Link noch nicht geöffnet",
-    "seatJoined": "Beigetreten"
+    "seatJoined": "Beigetreten",
+    "a11y": {
+      "show_password": "Anzeigen",
+      "hide_password": "Verbergen",
+      "undo": "Rückgängig",
+      "lock_row": "Reihe sperren",
+      "unlock_row": "Reihe entsperren",
+      "miss_box": "Fehlwurf {{no}}",
+      "increase": "Erhöhen",
+      "decrease": "Verringern",
+      "info": "Info",
+      "pause": "Pause",
+      "play": "Abspielen",
+      "next": "Weiter",
+      "expand": "Vergrößern",
+      "settings": "Einstellungen",
+      "connect_phones": "Handys verbinden",
+      "song": "Song",
+      "progress": "Wiedergabefortschritt",
+      "undo_throw": "Letzten Wurf rückgängig machen",
+      "download": "Herunterladen"
+    }
   },
   "settings": {
     "title": "Einstellungen",

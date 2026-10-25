@@ -1168,7 +1168,28 @@
       "otherPlayer": "Someone else's turn?"
     },
     "seatInvited": "Invited – link not opened yet",
-    "seatJoined": "Joined"
+    "seatJoined": "Joined",
+    "a11y": {
+      "show_password": "Show",
+      "hide_password": "Hide",
+      "undo": "Undo",
+      "lock_row": "Lock row",
+      "unlock_row": "Unlock row",
+      "miss_box": "Miss {{no}}",
+      "increase": "Increase",
+      "decrease": "Decrease",
+      "info": "Info",
+      "pause": "Pause",
+      "play": "Play",
+      "next": "Next",
+      "expand": "Expand",
+      "settings": "Settings",
+      "connect_phones": "Connect phones",
+      "song": "Song",
+      "progress": "Playback progress",
+      "undo_throw": "Undo last throw",
+      "download": "Download"
+    }
   },
   "settings": {
     "title": "Settings",

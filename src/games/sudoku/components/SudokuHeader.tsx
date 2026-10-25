@@ -81,12 +81,12 @@ export const SudokuHeader: React.FC<SudokuHeaderProps> = ({
 
         <Box sx={{ display: 'flex', gap: 0.5 }}>
           <Tooltip title={t('sudoku.stats.title', 'Statistiken')}>
-            <IconButton onClick={onOpenStats}>
+            <IconButton onClick={onOpenStats} aria-label={t('sudoku.stats.title', 'Statistiken')}>
               <BarChartRoundedIcon />
             </IconButton>
           </Tooltip>
           <Tooltip title={t('common.help', 'Hilfe')}>
-            <IconButton onClick={onOpenHelp}>
+            <IconButton onClick={onOpenHelp} aria-label={t('common.help', 'Hilfe')}>
               <HelpOutlineRoundedIcon />
             </IconButton>
           </Tooltip>
@@ -135,7 +135,11 @@ export const SudokuHeader: React.FC<SudokuHeaderProps> = ({
           <Typography variant="body2" sx={{ ...scoreText, fontWeight: 800, fontSize: '1.05rem' }}>
             {formatTime(timeElapsed)}
           </Typography>
-          <IconButton size="small" onClick={onTogglePause}>
+          <IconButton
+            size="small"
+            onClick={onTogglePause}
+            aria-label={isPaused ? t('common.a11y.play', 'Play') : t('common.a11y.pause', 'Pause')}
+          >
             {isPaused ? (
               <PlayCircleOutlineRoundedIcon color="primary" />
             ) : (

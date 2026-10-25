@@ -115,6 +115,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
           >
             <IconButton
               size="small"
+              aria-label={t('common.a11y.decrease', 'Decrease')}
               onClick={() => setNumWerewolves((prev: number) => Math.max(1, prev - 1))}
               disabled={numWerewolves <= 1}
             >
@@ -132,6 +133,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
             </Typography>
             <IconButton
               size="small"
+              aria-label={t('common.a11y.increase', 'Increase')}
               onClick={() => setNumWerewolves((prev: number) => prev + 1)}
               disabled={numWerewolves >= players.length - 1 && players.length > 0}
             >

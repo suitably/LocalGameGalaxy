@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Accessibility audit script (#512, claude-code)
+
+- No doc pages changed. Outside `docs/`: `scripts/a11y-audit.cjs` (axe over hub, settings, game start screens; run with `npm run dev`), icon-button names (`common.a11y.*` locales), viewport meta allows zoom, `Tooltip describeChild` on span-wrapped buttons.
+
 ## 2026-10-25 — Touch targets (#510) and duplicate cleanup (#426), list states (#511) (claude-code)
 
 - `docs/tech/architecture.md` §3.2: new rows for `GameHeaderBar` (in-game top bar shell shared by GuessArt and Storyteller). Outside `docs/`: `SettingsCardHeader` (server settings cards), local `EmptyPanel`/`RetryButton`/`LyricsBar` in Melodiq files; remaining jscpd clones are imposter word pairs and werewolf role views (excluded by #426).

@@ -142,7 +142,16 @@ export const GitHubSettings: React.FC<GitHubSettingsProps> = ({ autoFocusPat, on
             input: {
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton onClick={() => setShowToken((v) => !v)} edge="end" size="small">
+                  <IconButton
+                    onClick={() => setShowToken((v) => !v)}
+                    edge="end"
+                    size="small"
+                    aria-label={
+                      showToken
+                        ? t('common.a11y.hide_password', 'Hide')
+                        : t('common.a11y.show_password', 'Show')
+                    }
+                  >
                     {showToken ? (
                       <VisibilityOffIcon fontSize="small" />
                     ) : (
