@@ -16,6 +16,8 @@ import SettingsIcon from '@mui/icons-material/SettingsRounded';
 import CloudOffIcon from '@mui/icons-material/CloudOffRounded';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { EmptyState } from '../../../../components/common/EmptyState';
+import { ListSkeleton } from '../../../../components/common/ListSkeleton';
 import { GameCardItem } from './GameCardItem';
 import type { TabletopGameSummary } from '../../logic/types';
 
@@ -143,13 +145,16 @@ export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
           </Box>
 
           {loading ? (
-            <Box display="flex" justifyContent="center" py={4}>
-              <CircularProgress size={32} />
-            </Box>
+            <ListSkeleton rows={3} rowHeight={72} />
           ) : games.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" textAlign="center" py={3}>
-              {t('games.tabletop.no_games', 'Noch keine Spiele im Server-Verzeichnis gefunden.')}
-            </Typography>
+            <EmptyState
+              message={t(
+                'games.tabletop.no_games',
+                'Noch keine Spiele im Server-Verzeichnis gefunden.',
+              )}
+              actionLabel={t('games.tabletop.refresh', 'Neu scannen')}
+              onAction={onRefresh}
+            />
           ) : (
             <Stack spacing={1.5}>
               {games.map((g) => (

@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-25 — Shared list states (#511, claude-code)
+
+- `docs/tech/architecture.md` §3.2: added `EmptyState`, `ErrorState`, `ListSkeleton` to the reuse catalog.
+- Outside `docs/`: components in `src/components/common/`, adopted in party roster/picker, server directory browser/manager, tabletop installed games, Melodiq online songs; `common.retry` locale key.
+
 ## 2026-10-25 — One sheet-music library in Melodiq Notes (#534, claude-code)
 
 - `docs/tech/song-pipeline.md` §4: song-folder scores appear read-only in the merged Melodiq Notes library (`stage/logic/scoreCatalog.ts`); only their bar marks are written; the client no longer uploads to song folders. `verified.at` refreshed.

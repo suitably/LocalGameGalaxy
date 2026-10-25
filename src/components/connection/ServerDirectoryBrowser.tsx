@@ -12,15 +12,14 @@ import {
   ListItemText,
   Typography,
   Box,
-  CircularProgress,
-  Alert,
   IconButton,
 } from '@mui/material';
 import FolderIcon from '@mui/icons-material/FolderRounded';
 import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
 import CloseIcon from '@mui/icons-material/CloseRounded';
-import RefreshIcon from '@mui/icons-material/RefreshRounded';
+import { ErrorState } from '../common/ErrorState';
+import { ListSkeleton } from '../common/ListSkeleton';
 import { melodiqFetch } from '../../games/melodiq';
 import type { BrowseResponse } from './serverConfigTypes';
 
@@ -133,22 +132,9 @@ export const ServerDirectoryBrowser: React.FC<ServerDirectoryBrowserProps> = ({
         </Box>
 
         {loading ? (
-          <Box
-            sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}
-          >
-            <CircularProgress size={36} />
-          </Box>
+          <ListSkeleton rows={5} rowHeight={36} />
         ) : error ? (
-          <Alert
-            severity="error"
-            action={
-              <IconButton color="inherit" size="small" onClick={() => loadDirectory(currentPath)}>
-                <RefreshIcon fontSize="inherit" />
-              </IconButton>
-            }
-          >
-            {error}
-          </Alert>
+          <ErrorState message={error} onRetry={() => loadDirectory(currentPath)} />
         ) : (
           <List dense disablePadding>
             {dirs
