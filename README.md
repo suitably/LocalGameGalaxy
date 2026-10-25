@@ -1,4 +1,13 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="design/brand/nexumia-lockup.svg" />
+    <img src="design/brand/nexumia-lockup-ink.svg" alt="Nexumia" width="360" />
+  </picture>
+</p>
+
 # LocalGameGalaxy
+
+Brand: Nexumia, the couch mark. Colours, type and components are described in [DESIGN.md](DESIGN.md).
 
 LocalGameGalaxy is a purely client-side, offline-first web application suite designed to act as a hub for local group games (like Werewolf, Imposter, and Melodiq). It allows players to use their smartphones as controller screens while looking at a main television screen (TV/Host mode), synchronized via a local peer-to-peer WebRTC network.
 
