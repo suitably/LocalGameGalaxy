@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   IconButton,
   Link,
   Stack,
@@ -14,6 +13,9 @@ import DeleteIcon from '@mui/icons-material/DeleteOutlineRounded';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '../../../../components/common/ConfirmDialog';
+import { EmptyState } from '../../../../components/common/EmptyState';
+import { ErrorState } from '../../../../components/common/ErrorState';
+import { ListSkeleton } from '../../../../components/common/ListSkeleton';
 import { isCompanionEnabled, scoreSearchUrl } from '../../../../lib/companion/songScoresApi';
 import { deleteNotesPiece } from '../../../../lib/companion/notesLibraryApi';
 import {
@@ -75,7 +77,7 @@ export function ScoreLibraryList({ onPlay }: ScoreLibraryListProps) {
   const errors = catalog?.errors ?? {};
   return (
     <Stack spacing={1.5}>
-      {error && <Alert severity="warning">{k('server_error', { error })}</Alert>}
+      {error && <ErrorState dense message={k('server_error', { error })} onRetry={reload} />}
       {errors.notes && (
         <Alert severity="warning">{k('notes_server_error', { error: errors.notes })}</Alert>
       )}
@@ -97,12 +99,8 @@ export function ScoreLibraryList({ onPlay }: ScoreLibraryListProps) {
       >
         {k('find_scores')}
       </Link>
-      {!catalog && !error && <CircularProgress size={24} sx={{ alignSelf: 'center' }} />}
-      {catalog?.entries.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
-          {k('notes_empty')}
-        </Typography>
-      )}
+      {!catalog && !error && <ListSkeleton rows={3} />}
+      {catalog?.entries.length === 0 && <EmptyState dense message={k('notes_empty')} />}
       {shown.map((entry) => (
         <Box key={entry.key} sx={{ border: 1, borderColor: 'divider', borderRadius: 2, p: 1.25 }}>
           <Stack direction="row" alignItems="center" spacing={1}>

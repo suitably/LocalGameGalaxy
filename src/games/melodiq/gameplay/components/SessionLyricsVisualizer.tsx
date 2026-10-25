@@ -20,6 +20,43 @@ export interface SessionLyricsVisualizerProps {
   onSwitchTrack: (playerIndex: number, trackIndex: number) => void;
 }
 
+interface LyricsBarProps {
+  song: SongWithNotes;
+  audioRef: SessionLyricsVisualizerProps['timeProxyRef'];
+  uiScale: number;
+  enableZoom: boolean;
+  lyricsLines?: number;
+}
+
+/** Translucent lyrics strip docked to the bottom of the stage. */
+const LyricsBar: React.FC<LyricsBarProps> = (props) => (
+  <Box
+    sx={{
+      flexShrink: 0,
+      width: '100%',
+      pointerEvents: 'none',
+      zIndex: 10,
+      borderTop: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.12)}`,
+      bgcolor: 'rgba(0,0,0,0.4)',
+      // Blur kept on purpose: the bar sits over the lyrics video and needs it for legibility.
+      backdropFilter: 'blur(8px)',
+      position: 'relative',
+      display: 'flex',
+      justifyContent: 'center',
+    }}
+  >
+    <Box sx={{ width: '100%', maxWidth: '1400px' }}>
+      <LyricsDisplay
+        song={props.song}
+        audioRef={props.audioRef}
+        uiScale={props.uiScale}
+        enableZoom={props.enableZoom}
+        lyricsLines={props.lyricsLines}
+      />
+    </Box>
+  </Box>
+);
+
 export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = ({
   visiblePlayers,
   allPlayers,
@@ -35,6 +72,14 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
   uiScale = 1.0,
   onSwitchTrack,
 }) => {
+  const lyricsProps: LyricsBarProps = {
+    song: parsedSong,
+    audioRef: timeProxyRef,
+    uiScale: lyricsUiScale,
+    enableZoom: activeLyricsZoom,
+    lyricsLines: activeLyricsLines,
+  };
+
   if (visiblePlayers.length === 0) {
     if (activeLyricsPosition === 'center') {
       return (
@@ -68,31 +113,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
         sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}
       >
         <Box sx={{ flex: 1 }} />
-        <Box
-          sx={{
-            flexShrink: 0,
-            width: '100%',
-            pointerEvents: 'none',
-            zIndex: 10,
-            borderTop: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.12)}`,
-            bgcolor: 'rgba(0,0,0,0.4)',
-            // Blur kept on purpose: the bar sits over the lyrics video and needs it for legibility.
-            backdropFilter: 'blur(8px)',
-            position: 'relative',
-            display: 'flex',
-            justifyContent: 'center',
-          }}
-        >
-          <Box sx={{ width: '100%', maxWidth: '1400px' }}>
-            <LyricsDisplay
-              song={parsedSong}
-              audioRef={timeProxyRef}
-              uiScale={lyricsUiScale}
-              enableZoom={activeLyricsZoom}
-              lyricsLines={activeLyricsLines}
-            />
-          </Box>
-        </Box>
+        <LyricsBar {...lyricsProps} />
       </Box>
     );
   }
@@ -200,31 +221,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
           );
         })}
       </Box>
-      <Box
-        sx={{
-          flexShrink: 0,
-          width: '100%',
-          pointerEvents: 'none',
-          zIndex: 10,
-          borderTop: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.12)}`,
-          bgcolor: 'rgba(0,0,0,0.4)',
-          // Blur kept on purpose: the bar sits over the lyrics video and needs it for legibility.
-          backdropFilter: 'blur(8px)',
-          position: 'relative',
-          display: 'flex',
-          justifyContent: 'center',
-        }}
-      >
-        <Box sx={{ width: '100%', maxWidth: '1400px' }}>
-          <LyricsDisplay
-            song={parsedSong}
-            audioRef={timeProxyRef}
-            uiScale={lyricsUiScale}
-            enableZoom={activeLyricsZoom}
-            lyricsLines={activeLyricsLines}
-          />
-        </Box>
-      </Box>
+      <LyricsBar {...lyricsProps} />
     </Box>
   );
 };

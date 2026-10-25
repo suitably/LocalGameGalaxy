@@ -9,7 +9,6 @@ import {
   TextField,
   Box,
   Typography,
-  CircularProgress,
   List,
   ListItem,
   ListItemAvatar,
@@ -24,6 +23,8 @@ import {
 import SearchIcon from '@mui/icons-material/SearchRounded';
 import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
 import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
+import { ErrorState } from '../../../components/common/ErrorState';
+import { ListSkeleton } from '../../../components/common/ListSkeleton';
 
 interface YouTubeResult {
   id: string;
@@ -132,13 +133,9 @@ export const YouTubeSearchDialog: React.FC<YouTubeSearchDialogProps> = ({
         </Box>
 
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress />
-          </Box>
+          <ListSkeleton rows={4} rowHeight={45} />
         ) : error ? (
-          <Typography color="error" variant="body2">
-            {error}
-          </Typography>
+          <ErrorState dense message={error} onRetry={() => handleSearch()} />
         ) : results.length > 0 ? (
           <List sx={{ width: '100%', bgcolor: 'background.paper', borderRadius: 2 }}>
             {results.map((result) => (
