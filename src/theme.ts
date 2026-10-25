@@ -7,6 +7,7 @@ import {
   piecePalette,
   type PiecePalette,
 } from './themeTokens';
+import { TOUCH_TARGET, invisibleHitArea } from './lib/touchTarget';
 
 declare module '@mui/material/styles' {
   interface Palette {
@@ -85,7 +86,7 @@ const theme = createTheme({
     MuiButton: {
       defaultProps: { disableElevation: true },
       styleOverrides: {
-        root: { borderRadius: 12 },
+        root: { borderRadius: 12, minHeight: TOUCH_TARGET },
         // Tactile "edge" under the main action (DESIGN.md §5)
         containedPrimary: {
           boxShadow: `0 4px 0 ${t.primary.edge}`,
@@ -94,6 +95,35 @@ const theme = createTheme({
           '&.Mui-disabled': { boxShadow: 'none' },
         },
         outlined: { borderColor: t.border.subtle, '&:hover': { borderColor: t.border.strong } },
+      },
+    },
+    // Touch targets (DESIGN.md §4, #510): >= 48px for every interactive control.
+    MuiIconButton: {
+      styleOverrides: { root: { minWidth: TOUCH_TARGET, minHeight: TOUCH_TARGET } },
+    },
+    MuiToggleButton: {
+      styleOverrides: { root: { minHeight: TOUCH_TARGET } },
+    },
+    MuiTab: {
+      styleOverrides: { root: { minHeight: TOUCH_TARGET } },
+    },
+    MuiCheckbox: {
+      styleOverrides: { root: { padding: 12 }, sizeSmall: { padding: 14 } },
+    },
+    MuiRadio: {
+      styleOverrides: { root: { padding: 12 }, sizeSmall: { padding: 14 } },
+    },
+    MuiSlider: {
+      styleOverrides: {
+        root: { paddingTop: 22, paddingBottom: 22 },
+        sizeSmall: { paddingTop: 22, paddingBottom: 22 },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        // Visual chip stays compact; an invisible overlay extends the hit area vertically.
+        clickable: invisibleHitArea(TOUCH_TARGET, 'y'),
+        deletable: invisibleHitArea(TOUCH_TARGET, 'y'),
       },
     },
     MuiCard: {
@@ -113,6 +143,7 @@ const theme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         root: { borderRadius: 8 },
+        input: { '&:not(textarea)': { boxSizing: 'border-box', minHeight: TOUCH_TARGET } },
         notchedOutline: { borderColor: t.border.strong },
       },
     },
