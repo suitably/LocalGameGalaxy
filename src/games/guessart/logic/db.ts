@@ -26,12 +26,5 @@ const createUpgradeHandler = (event: IDBVersionChangeEvent) => {
   }
 };
 
-export const {
-  openDatabase,
-  withStore,
-  getAll,
-  getByKey,
-  putItem,
-  deleteByKey,
-  clearStore,
-} = createDatabaseExports(DB_NAME, DB_VERSION, createUpgradeHandler);
+export const { openDatabase, withStore, getAll, getByKey, putItem, deleteByKey, clearStore } =
+  createDatabaseExports(DB_NAME, DB_VERSION, createUpgradeHandler);

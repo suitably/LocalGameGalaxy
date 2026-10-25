@@ -1,6 +1,5 @@
 {
   "src/games/melodiq/MelodiqGame.tsx": 544,
-  "src/games/guessart/GuessArtGame.tsx": 440,
   "src/games/melodiq/components/PlaybackManager.tsx": 373,
   "src/lib/webrtc/WebRTCHostContext.tsx": 347
 }
