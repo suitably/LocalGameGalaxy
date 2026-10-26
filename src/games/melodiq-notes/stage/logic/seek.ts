@@ -37,3 +37,8 @@ export function parseLeadIn(raw: unknown): number {
   const n = typeof raw === 'string' ? Number(raw) : raw;
   return LEAD_IN_OPTIONS_SEC.find((o) => o === n) ?? DEFAULT_LEAD_IN_SEC;
 }
+
+/** True when every player's notes have ended by `beat` (nothing left to play before the song ends). */
+export function noNotesAhead(noteSets: { t: number; dur: number }[][], beat: number): boolean {
+  return noteSets.every((notes) => notes.every((n) => n.t + n.dur <= beat));
+}

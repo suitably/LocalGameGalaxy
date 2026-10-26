@@ -191,12 +191,13 @@ describe('sections', () => {
     parts: [],
   });
 
-  it('uses one section per bar for short songs and groups long ones', () => {
+  it('uses one section per bar, also for long songs', () => {
     expect(buildSections(song(8))).toHaveLength(8);
     const long = buildSections(song(150));
-    expect(long).toHaveLength(30);
-    expect(long[1]).toEqual({ from: 20, to: 40, firstBar: 6, lastBar: 10 });
-    expect(sectionIndexAt(long, 41)).toBe(2);
+    expect(long).toHaveLength(150);
+    expect(long[1]).toEqual({ from: 4, to: 8, firstBar: 2, lastBar: 2 });
+    expect(long[149].to).toBe(600);
+    expect(sectionIndexAt(long, 41)).toBe(10);
   });
 });
 

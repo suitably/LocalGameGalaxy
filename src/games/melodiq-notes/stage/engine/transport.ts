@@ -1,4 +1,4 @@
-import { firstNoteBeat, leadInBeat } from '../logic/seek';
+import { firstNoteBeat, leadInBeat, noNotesAhead } from '../logic/seek';
 import type { StageEngine } from './StageEngine';
 
 /** How far the recording may drift from the song clock before it is moved (scaled by speed). */
@@ -35,4 +35,18 @@ export function seekToFirstNote(e: StageEngine, leadInSec: number, loopLeadBeats
   const first = firstNoteBeat(e.players.map((p) => p.notes));
   if (first === null) return;
   seekStage(e, leadInBeat(first, leadInSec, e.secPerBeat(first), -e.countIn), loopLeadBeats);
+}
+
+/** Running without a loop, before the song's end, and every player is past their last note. */
+export function nothingLeftToPlay(e: StageEngine) {
+  const song = e.song;
+  if (!song || e.loop || !e.players.length) return false;
+  if (e.state !== 'playing' && e.state !== 'paused') return false;
+  return (
+    e.beat < song.end &&
+    noNotesAhead(
+      e.players.map((p) => p.notes),
+      e.beat,
+    )
+  );
 }

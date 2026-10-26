@@ -10,12 +10,15 @@ import {
   withAlpha,
   fillWithHalo,
   barLabel,
+  fadeIfPlayed,
   STAGE,
 } from './common';
 import { stringGeometry } from './geometry';
 import { upcoming, type HitPoint, type ViewContext } from './view';
 
 const VISIBLE_FRETS = 7;
+/** String names sit at the left edge; the strings run from there across the played part. */
+const LABEL_X = 22;
 
 /** Tab highway: strings as lanes, fret numbers on the notes, a fretboard showing the next grip. */
 export function drawStrings(v: ViewContext): HitPoint {
@@ -44,17 +47,17 @@ export function drawStrings(v: ViewContext): HitPoint {
       i * (p.instrument.kind === 'bass' ? 0.6 : 0.4) +
       lit * 2;
     g.beginPath();
-    g.moveTo(geo.hitX - 6, y);
+    g.moveTo(LABEL_X + (v.isFocus ? 20 : 6), y);
     g.lineTo(w, y);
     g.stroke();
     g.textAlign = 'right';
     g.fillStyle = colors[i];
     g.font = `700 14px ${FONT_MONO}`;
-    g.fillText(geo.strings[i], geo.hitX - (v.isFocus ? 26 : 12), y + 5);
+    g.fillText(geo.strings[i], LABEL_X, y + 5);
     if (v.isFocus) {
       g.fillStyle = withAlpha(STAGE.ink, 0.45);
       g.font = `600 10px ${FONT_MONO}`;
-      g.fillText(String(i + 1), geo.hitX - 12, y + 4);
+      g.fillText(String(i + 1), LABEL_X + 14, y + 4);
     }
     g.textAlign = 'left';
   }
@@ -66,16 +69,17 @@ export function drawStrings(v: ViewContext): HitPoint {
   g.fillRect(geo.hitX - 5, geo.top - 16, 10, geo.bottom - geo.top + 32);
 
   const r = clamp(geo.gap * 0.42, 8, 14);
-  forVisibleNotes(p, beat - 0.5, beat + geo.lookBeats, (note) => {
+  // played notes scroll out under the string names, not over them
+  g.save();
+  g.beginPath();
+  g.rect(LABEL_X + (v.isFocus ? 20 : 6), 0, w, h);
+  g.clip();
+  forVisibleNotes(p, beat - geo.hitX / geo.pxPerBeat, beat + geo.lookBeats, (note) => {
     // the head is centred on the note's time, so it crosses the hit line as the note sounds
     const x = geo.hitX + (note.t - beat) * geo.pxPerBeat;
     const len = Math.max(r, note.dur * geo.pxPerBeat - 4);
-    if (
-      x > w + 30 ||
-      x + len < geo.hitX - 30 ||
-      (note.judged && note.judged !== 'miss' && x < geo.hitX - 2)
-    )
-      return;
+    if (x > w + 30 || x + len < 0) return;
+    fadeIfPlayed(g, note, beat);
     const y = laneY(note.lane);
     const c = note.judged === 'miss' ? MISS_COLOR : colors[note.lane];
     g.fillStyle = withAlpha(c, 0.22);
@@ -90,6 +94,8 @@ export function drawStrings(v: ViewContext): HitPoint {
     g.fillText(String(note.fret ?? 0), x, y + r * 0.38);
     g.textAlign = 'left';
   });
+  g.globalAlpha = 1;
+  g.restore();
 
   if (geo.fretboardH) drawFretboard(v, geo.fretboardH, colors);
   return (note) => ({ x: geo.hitX, y: laneY(note.lane) });

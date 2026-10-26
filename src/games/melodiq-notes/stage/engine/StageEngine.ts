@@ -4,7 +4,7 @@ import { pendingNotes, recordJudgement, type BeatRange } from '../logic/judging'
 import { buildSections, sectionIndexAt, type Section } from '../logic/sections';
 import { advanceMisses, advanceSinging, resetRange, startAwaitedNote } from './advance';
 import { playLane, playPitch } from './input';
-import { seekStage, seekToFirstNote, syncRecording } from './transport';
+import { nothingLeftToPlay, seekStage, seekToFirstNote, syncRecording } from './transport';
 import { buildBandEvents, createPlayers, defaultSeats, nextSeat } from './players';
 import type {
   BandEvent,
@@ -190,20 +190,16 @@ export class StageEngine {
     this.setFocus(this.players[(this.players.indexOf(this.focus) + 1) % this.players.length]);
   }
 
-  /** Loops a practice section (and the next one when sections are single bars); null ends the loop. */
-  setLoop(section: number | null) {
-    if (section === null || this.mode === 'perform') {
+  /** Loops sections `first..last` (bars); null ends the loop. */
+  setLoop(first: number | null, last: number | null = first) {
+    const [a, b] = [first, last].map((i) => (i === null ? undefined : this.sections[i]));
+    if (!a || !b || this.mode === 'perform') {
       const had = this.loop;
       this.loop = null;
       // before the start, the playhead goes back to the count-in of bar 1
       if (had && this.state === 'idle') this.reset();
     } else {
-      const s = this.sections[section];
-      const end =
-        this.sections[
-          Math.min(this.sections.length - 1, section + (this.sections.length >= 16 ? 0 : 1))
-        ];
-      this.loop = { from: s.from, to: end.to };
+      this.loop = { from: Math.min(a.from, b.from), to: Math.max(a.to, b.to) };
       if (this.mode === 'learn') this.setMode('practice');
       if (this.state === 'done') this.reset();
       else this.restartAt(this.loop.from);
@@ -319,6 +315,14 @@ export class StageEngine {
   /** Jumps to `beat` (the timeline bar); earlier notes are skipped, later ones can be played. */
   seekTo(beat: number) {
     seekStage(this, beat, LOOP_LEAD_BEATS);
+  }
+
+  /** Skips the rest of the song once nobody has notes left: straight to the results. */
+  skipToEnd() {
+    if (!nothingLeftToPlay(this)) return;
+    this.beat = this.song?.end ?? this.beat;
+    this.sound.stopAll();
+    this.finish();
   }
 
   /** Jumps to `leadInSec` real seconds before the first note of any player. */

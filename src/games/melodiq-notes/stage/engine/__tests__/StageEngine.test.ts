@@ -3,6 +3,7 @@ import { createAudioMap, type ScoreSong } from '../../../../../modules/music-sco
 import { StageEngine } from '../StageEngine';
 import { buildBandEvents, nextSeat } from '../players';
 import { playRemote, seatRemotes } from '../remote';
+import { nothingLeftToPlay } from '../transport';
 import { playerResults, weakestSection } from '../results';
 import type { StageRecording, StageSound } from '../types';
 
@@ -184,7 +185,7 @@ describe('StageEngine', () => {
   it('loops a practice section', () => {
     const e = new StageEngine(fakeSound());
     e.loadSong(song());
-    e.setLoop(1);
+    e.setLoop(1, 2);
     expect(e.mode).toBe('practice');
     expect(e.loop).toEqual({ from: 4, to: 12 });
     e.start();
@@ -270,6 +271,33 @@ describe('StageEngine', () => {
     e.seekTo(10);
     e.jumpToFirstNote(1);
     expect(e.beat).toBe(-2);
+  });
+
+  it('loops the bars between two picked ones in either order', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    e.setLoop(3, 1);
+    expect(e.loop).toEqual({ from: 4, to: 16 });
+    e.setLoop(2);
+    expect(e.loop).toEqual({ from: 8, to: 12 });
+  });
+
+  it('skips to the results once nobody has notes left', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    e.setMode('perform');
+    e.start();
+    run(e, 2);
+    expect(nothingLeftToPlay(e)).toBe(false);
+    e.skipToEnd();
+    expect(e.state).toBe('playing');
+    // the piano's last note (beat 15) ends at beat 16 = the song's end, so cut the song longer
+    e.song = { ...e.song!, end: 24 };
+    e.seekTo(16.5);
+    expect(nothingLeftToPlay(e)).toBe(true);
+    e.skipToEnd();
+    expect(e.state).toBe('done');
+    expect(e.beat).toBe(24);
   });
 
   it('ends a loop when the seek leaves it', () => {

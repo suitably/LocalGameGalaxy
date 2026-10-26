@@ -3,8 +3,10 @@ import {
   clamp,
   FONT_BODY,
   FONT_MONO,
+  fadeIfPlayed,
   forBarLines,
   forVisibleNotes,
+  playLineX,
   withAlpha,
   type Ctx,
   STAGE,
@@ -72,6 +74,7 @@ function drawStaff(v: ViewContext, top: number, height: number, s: Scroll, point
   forVisibleNotes(p, s.beat - s.hitX / s.ppb, s.beat + (w - s.hitX) / s.ppb, (n) => {
     const x = s.hitX + (n.t - s.beat) * s.ppb;
     if (x < 30 || x > w + 10) return;
+    fadeIfPlayed(g, n, s.beat);
     const step = isDrum ? DRUM_STEP[n.lane] : diatonic(n.pitch + written);
     const y = yOf(step);
     points.set(n, { x, y });
@@ -92,6 +95,7 @@ function drawStaff(v: ViewContext, top: number, height: number, s: Scroll, point
       g.textAlign = 'left';
     }
   });
+  g.globalAlpha = 1;
 }
 
 function drawNoteSymbol(
@@ -168,6 +172,7 @@ function drawTab(v: ViewContext, top: number, height: number, s: Scroll, points:
     if (x < 30 || x > w + 10) return;
     const y = t0 + n.lane * sp;
     points.set(n, { x, y });
+    fadeIfPlayed(g, n, s.beat);
     const label = String(n.fret ?? 0);
     g.font = `700 ${Math.round(sp * 0.82)}px ${FONT_MONO}`;
     const tw = g.measureText(label).width + 4;
@@ -178,6 +183,7 @@ function drawTab(v: ViewContext, top: number, height: number, s: Scroll, points:
     g.fillText(label, x, y + sp * 0.3);
     g.textAlign = 'left';
   });
+  g.globalAlpha = 1;
 }
 
 function line(g: Ctx, x1: number, y1: number, x2: number, y2: number) {
@@ -190,7 +196,7 @@ function line(g: Ctx, x1: number, y1: number, x2: number, y2: number) {
 /** Scrolling notation: a staff, a staff plus TAB for string instruments, or drum notation. */
 export function drawNotation(v: ViewContext): HitPoint {
   const { g, p, w, h } = v;
-  const s: Scroll = { beat: v.beat, hitX: clamp(w * 0.24, 70, 220), ppb: clamp(w / 7, 46, 120) };
+  const s: Scroll = { beat: v.beat, hitX: playLineX(w, 70), ppb: clamp(w / 7, 46, 120) };
   const points: Points = new Map();
   g.fillStyle = withAlpha(STAGE.bgBottom, 0.6);
   g.fillRect(0, 0, w, h);
