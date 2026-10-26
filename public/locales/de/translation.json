@@ -1380,7 +1380,11 @@
     "compose_applied": "Server-URL und Token übernommen. Starte die Container, dann verbindet sich die App.",
     "server_setup_nav": "Einrichten",
     "server_setup_title": "Server einrichten",
-    "server_setup_desc": "Alles an einem Ort: Server-App für Windows, macOS und Linux, Docker Compose mit den gewünschten Spielen, Cloudflare oder Terminal-Einzeiler."
+    "server_setup_desc": "Alles an einem Ort: Server-App für Windows, macOS und Linux, Docker Compose mit den gewünschten Spielen, Cloudflare oder Terminal-Einzeiler.",
+    "reset": {
+      "button": "Auf Standard zurücksetzen",
+      "confirm": "Diese Einstellungen auf Standardwerte zurücksetzen?"
+    }
   },
   "server": {
     "title": "Nexumia Server Verbindung",

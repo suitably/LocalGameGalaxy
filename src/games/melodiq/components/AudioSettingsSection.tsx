@@ -4,7 +4,7 @@ import SpeedIcon from '@mui/icons-material/SpeedRounded';
 import { useTranslation } from 'react-i18next';
 import type { SettingsState } from '../hooks/SettingsContext';
 import { useDirectVolumeSliders } from '../hooks/useDirectVolumeSliders';
-import { SettingSlider, SettingToggleGroup } from './GameSettingsControls';
+import { SettingSlider, SettingToggleGroup } from '../../../components/settings';
 import { LatencyCalibratorDialog } from './LatencyCalibratorDialog';
 
 interface AudioSettingsSectionProps {

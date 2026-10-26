@@ -1380,7 +1380,11 @@
     "compose_applied": "Server URL and token saved. Start the containers and the app connects.",
     "server_setup_nav": "Setup",
     "server_setup_title": "Set up a server",
-    "server_setup_desc": "Everything in one place: server app for Windows, macOS and Linux, Docker Compose with the games you want, Cloudflare or a terminal one-liner."
+    "server_setup_desc": "Everything in one place: server app for Windows, macOS and Linux, Docker Compose with the games you want, Cloudflare or a terminal one-liner.",
+    "reset": {
+      "button": "Reset to defaults",
+      "confirm": "Reset these settings to their defaults?"
+    }
   },
   "server": {
     "title": "Nexumia Server Connection",

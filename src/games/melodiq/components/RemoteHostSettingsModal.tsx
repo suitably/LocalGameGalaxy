@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useClientEngine } from '../PhoneClientEngine';
-import { SettingSlider, SettingSwitch, SettingToggleGroup } from './GameSettingsControls';
+import { SettingSlider, SettingSwitch, SettingToggleGroup } from '../../../components/settings';
 import type { HostSettings, HostSettingsRpc } from '../types';
 
 type VolumeKey = 'songVolume' | 'masterVolume' | 'vocalsVolume';

@@ -14,6 +14,7 @@ import AdsClickIcon from '@mui/icons-material/AdsClickRounded';
 import AutoStoriesIcon from '@mui/icons-material/AutoStoriesRounded';
 import PianoIcon from '@mui/icons-material/PianoRounded';
 import { SongsProvider } from '../games/melodiq';
+import type { GameSettingsSectionDefinition } from './gameSettingsTypes';
 
 export type GameCategory =
   'all' | 'dice' | 'drawing' | 'music' | 'social_deduction' | 'cards' | 'party' | 'puzzle';
@@ -22,6 +23,8 @@ export interface GameRouteDefinition {
   path: string;
   component: React.ReactNode;
 }
+
+export type { GameSettingsAudience, GameSettingsSectionDefinition } from './gameSettingsTypes';
 
 export interface GameDefinition {
   id: string;
@@ -32,6 +35,7 @@ export interface GameDefinition {
   component: React.ReactNode;
   category: GameCategory;
   hasSettings?: boolean;
+  settings?: { sections: GameSettingsSectionDefinition[] };
   nestedRoutes?: GameRouteDefinition[];
   standaloneRoutes?: GameRouteDefinition[];
 }
