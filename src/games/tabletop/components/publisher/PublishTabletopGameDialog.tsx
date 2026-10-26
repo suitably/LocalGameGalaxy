@@ -19,6 +19,7 @@ import type { TabletopGameDefinition } from '../../logic/types';
 import { validateGameForPublishing, buildPublishPrPayload } from '../../logic/publishValidator';
 import { hasGitHubPAT, resolveGitHubConfig, createGitHubPR } from '../../../../lib/github';
 import { PublishFormFields } from './PublishFormFields';
+import { settingsPath } from '../../../../features/settings/settingsRoutes';
 
 interface PublishTabletopGameDialogProps {
   open: boolean;
@@ -113,7 +114,11 @@ export const PublishTabletopGameDialog: React.FC<PublishTabletopGameDialogProps>
                   <Button
                     color="inherit"
                     size="small"
-                    onClick={() => navigate('/settings?tab=general&sub=feedback')}
+                    onClick={() =>
+                      navigate(
+                        settingsPath({ kind: 'app', section: 'integrations', highlight: 'pat' }),
+                      )
+                    }
                   >
                     Einstellungen
                   </Button>

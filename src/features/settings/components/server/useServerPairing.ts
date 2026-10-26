@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
+import { parseSettingsLocation } from '../../settingsRoutes';
 import {
   applyPairing,
   describeDevice,
@@ -15,10 +16,12 @@ export type PairingPhase =
 
 /** Pairing link state for Settings → Server: confirm, redeem the one-time code, clean the URL. */
 export function useServerPairing() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [request, setRequest] = useState<PairingRequest | null>(() =>
-    parsePairingParams(searchParams),
-  );
+  const [, setSearchParams] = useSearchParams();
+  const { pathname, search } = useLocation();
+  const [request, setRequest] = useState<PairingRequest | null>(() => {
+    const { pairing } = parseSettingsLocation(pathname, search);
+    return pairing ? parsePairingParams(new URLSearchParams(pairing)) : null;
+  });
   const [state, setState] = useState<PairingPhase>({ phase: 'ready' });
 
   const clearParams = useCallback(() => {

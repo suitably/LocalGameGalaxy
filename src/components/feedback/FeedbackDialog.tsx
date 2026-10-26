@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { hasGitHubPAT } from '../../lib/github';
 import { hasFeedbackRelay } from '../../lib/feedbackRelay';
 import { FeedbackForm } from './FeedbackForm';
+import { settingsPath } from '../../features/settings/settingsRoutes';
 
 export const FeedbackDialog: React.FC = () => {
   const { t } = useTranslation();
@@ -23,7 +24,7 @@ export const FeedbackDialog: React.FC = () => {
   useEffect(() => {
     const handleOpen = () => {
       if (!hasGitHubPAT() && !hasFeedbackRelay()) {
-        navigate('/settings?tab=general&sub=feedback&missing_pat=1');
+        navigate(settingsPath({ kind: 'app', section: 'integrations', highlight: 'pat' }));
         return;
       }
       checkConfig();
@@ -108,7 +109,7 @@ export const FeedbackDialog: React.FC = () => {
               startIcon={<SettingsIcon />}
               onClick={() => {
                 handleClose();
-                navigate('/settings');
+                navigate(settingsPath({ kind: 'app', section: 'integrations', highlight: 'pat' }));
               }}
               sx={{ textTransform: 'none', fontWeight: 600 }}
             >

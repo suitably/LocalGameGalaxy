@@ -10,6 +10,7 @@ import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { hasGitHubPAT } from '../../../lib/github';
+import { settingsPath } from '../../../features/settings/settingsRoutes';
 
 interface GuessArtHeaderMenuProps {
   onOpenShareLinks?: () => void;
@@ -140,7 +141,7 @@ export const GuessArtHeaderMenu: React.FC<GuessArtHeaderMenuProps> = ({
           onClick={() => {
             handleMenuClose();
             if (!hasGitHubPAT()) {
-              navigate('/settings?tab=general&sub=feedback&missing_pat=1');
+              navigate(settingsPath({ kind: 'app', section: 'integrations', highlight: 'pat' }));
             } else {
               window.dispatchEvent(new Event('feedback:open'));
             }

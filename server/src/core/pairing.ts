@@ -88,8 +88,8 @@ export const pairingStore = new PairingStore();
 /** URL the server prints (and opens on first start): the app's server settings with the code. */
 export const buildPairingUrl = (appUrl: string, serverUrl: string, code: string): string => {
   const base = appUrl.replace(/\/+$/, '');
-  const params = new URLSearchParams({ tab: 'server', pair: serverUrl, code });
-  return `${base}/settings?${params.toString()}`;
+  const params = new URLSearchParams({ pair: serverUrl, code });
+  return `${base}/settings/connectivity?${params.toString()}`;
 };
 
 type CreatePairedKey = (name: string) => ApiKey;

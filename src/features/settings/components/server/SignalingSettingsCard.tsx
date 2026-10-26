@@ -28,7 +28,7 @@ export const SignalingSettingsCard: React.FC = () => {
   } = useSignalingTrackerState();
 
   return (
-    <Paper id="settings-section-signaling" sx={settingsCardSx}>
+    <Paper id="settings-section-signaling" tabIndex={-1} sx={settingsCardSx}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <HubIcon color="primary" sx={{ fontSize: 30 }} />

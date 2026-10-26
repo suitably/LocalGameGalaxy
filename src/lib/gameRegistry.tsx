@@ -15,6 +15,7 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStoriesRounded';
 import PianoIcon from '@mui/icons-material/PianoRounded';
 import { SongsProvider } from '../games/melodiq';
 import type { GameSettingsSectionDefinition } from './gameSettingsTypes';
+import { withGameSettings } from './gameSettingsRegistry';
 
 export type GameCategory =
   'all' | 'dice' | 'drawing' | 'music' | 'social_deduction' | 'cards' | 'party' | 'puzzle';
@@ -66,7 +67,7 @@ const KniffelGame = lazy(() => import('../games/kniffel').then(pick('KniffelGame
 const DartsGame = lazy(() => import('../games/darts').then(pick('DartsGame')));
 
 class GameRegistry {
-  private games: GameDefinition[] = [
+  private definitions: GameDefinition[] = [
     {
       id: 'darts',
       route: 'games/darts',
@@ -221,6 +222,8 @@ class GameRegistry {
       component: <TabletopGame />,
     },
   ];
+
+  private games: GameDefinition[] = this.definitions.map(withGameSettings);
 
   getGames(): GameDefinition[] {
     return this.games;

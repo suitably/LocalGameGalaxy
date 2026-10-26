@@ -25,6 +25,7 @@ import {
   type InstrumentSoundConfig,
 } from '../logic/soundSettings';
 import { useAudioSynth } from '../useAudioSynth';
+import { settingsPath } from '../../../features/settings/settingsRoutes';
 
 interface SoundSettingsDialogProps {
   open: boolean;
@@ -61,7 +62,9 @@ export const SoundSettingsDialog: React.FC<SoundSettingsDialogProps> = ({
 
   const handleOpenFullSettings = () => {
     onClose();
-    navigate('/settings?tab=melodiq-notes&from=/games/melodiq-notes');
+    navigate(settingsPath({ kind: 'game', gameId: 'melodiq-notes' }), {
+      state: { from: '/games/melodiq-notes' },
+    });
   };
 
   return (

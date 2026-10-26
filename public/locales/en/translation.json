@@ -1384,6 +1384,31 @@
     "reset": {
       "button": "Reset to defaults",
       "confirm": "Reset these settings to their defaults?"
+    },
+    "nav": {
+      "general": "General",
+      "audio": "Audio",
+      "connectivity": "Connectivity",
+      "notifications": "Notifications",
+      "integrations": "GitHub (PAT)",
+      "games": "Games",
+      "about": "About"
+    },
+    "sections": {
+      "gameplay": "Gameplay",
+      "sounds": "Sounds",
+      "profiles": "Profiles",
+      "client": "Player profile"
+    },
+    "audio": {
+      "title": "Audio input",
+      "desc": "Microphones that games may use, for example for singing.",
+      "refresh": "Refresh devices",
+      "hint_enable": "Enable the real microphones that may be used for singing. Keep webcams and unused inputs disabled.",
+      "hint_order": "The first enabled microphone is assigned to player 1, the second to player 2, and so on.",
+      "unknown_device": "Unknown audio device",
+      "disabled": "Disabled",
+      "active": "Active (assigned to local player {{n}})"
     }
   },
   "server": {

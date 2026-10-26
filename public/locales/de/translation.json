@@ -1384,6 +1384,31 @@
     "reset": {
       "button": "Auf Standard zurücksetzen",
       "confirm": "Diese Einstellungen auf Standardwerte zurücksetzen?"
+    },
+    "nav": {
+      "general": "Allgemein",
+      "audio": "Audio",
+      "connectivity": "Verbindungen",
+      "notifications": "Benachrichtigungen",
+      "integrations": "GitHub (PAT)",
+      "games": "Spiele",
+      "about": "Info"
+    },
+    "sections": {
+      "gameplay": "Spielablauf",
+      "sounds": "Sounds",
+      "profiles": "Profile",
+      "client": "Spielerprofil"
+    },
+    "audio": {
+      "title": "Audio-Eingang",
+      "desc": "Mikrofone, die Spiele nutzen dürfen, zum Beispiel zum Singen.",
+      "refresh": "Geräte aktualisieren",
+      "hint_enable": "Aktiviere hier die echten Mikrofone, die beim Singen verwendet werden dürfen. Webcams oder ungenutzte Anschlüsse solltest du deaktiviert lassen.",
+      "hint_order": "Das erste aktivierte Mikrofon bekommt Spieler 1, das zweite Spieler 2 usw.",
+      "unknown_device": "Unbekanntes Audiogerät",
+      "disabled": "Deaktiviert",
+      "active": "Aktiv (zugewiesen an lokalen Spieler {{n}})"
     }
   },
   "server": {

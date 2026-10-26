@@ -99,7 +99,7 @@ export const GitHubSettings: React.FC<GitHubSettingsProps> = ({ autoFocusPat, on
   };
 
   return (
-    <Paper id="settings-section-github" sx={settingsCardSx}>
+    <Paper id="settings-section-pat" tabIndex={-1} sx={settingsCardSx}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
         <GitHubIcon />
         <Typography variant="h6">{t('github.title', 'GitHub Integration')}</Typography>

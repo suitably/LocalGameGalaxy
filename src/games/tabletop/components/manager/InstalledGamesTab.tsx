@@ -20,6 +20,7 @@ import { EmptyState } from '../../../../components/common/EmptyState';
 import { ListSkeleton } from '../../../../components/common/ListSkeleton';
 import { GameCardItem } from './GameCardItem';
 import type { TabletopGameSummary } from '../../logic/types';
+import { settingsPath } from '../../../../features/settings/settingsRoutes';
 
 interface InstalledGamesTabProps {
   games: TabletopGameSummary[];
@@ -68,7 +69,7 @@ export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
     if (onOpenSettings) {
       onOpenSettings();
     } else {
-      navigate('/settings?tab=server');
+      navigate(settingsPath({ kind: 'app', section: 'connectivity' }));
     }
   };
 

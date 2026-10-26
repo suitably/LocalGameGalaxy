@@ -1,16 +1,15 @@
-import React, { lazy, Suspense, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Box, CircularProgress } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Button, Stack } from '@mui/material';
+import { useTranslation } from 'react-i18next';
+import { SettingsSection } from '../../../components/settings';
+import { MelodiqProfilesSection } from '../settings/MelodiqProfilesSection';
+import { MelodiqGameplaySection } from '../settings/MelodiqGameplaySection';
 import { type Playlist } from '../db';
 import { MelodiqPlaylists } from './MelodiqPlaylists';
 import { PlaylistDetails } from './PlaylistDetails';
 import { ClientSettings } from './ClientSettings';
 import { MelodiqConnection } from '../MelodiqConnection';
 import { type MelodiqView } from '../hooks/useMelodiqNavigation';
-
-const Settings = lazy(() =>
-  import('../../../features/settings/Settings').then((m) => ({ default: m.Settings })),
-);
 
 interface MelodiqSubViewsProps {
   currentView: MelodiqView;
@@ -28,9 +27,8 @@ export const MelodiqSubViews: React.FC<MelodiqSubViewsProps> = ({
   onBackFromSettings,
   onCloseSubView,
 }) => {
-  const [searchParams] = useSearchParams();
+  const { t } = useTranslation();
   const [activePlaylist, setActivePlaylist] = useState<Playlist | null>(null);
-  const sub = searchParams.get('sub') || 'all';
 
   return (
     <>
@@ -44,21 +42,23 @@ export const MelodiqSubViews: React.FC<MelodiqSubViewsProps> = ({
         {isClient ? (
           <ClientSettings onBack={onBackFromSettings} />
         ) : (
-          <Suspense
-            fallback={
-              <Box display="flex" justifyContent="center" p={4}>
-                <CircularProgress />
-              </Box>
-            }
-          >
-            <Settings
-              key={sub}
-              activeGameId="melodiq"
-              activeSub={sub}
-              onBack={onBackFromSettings}
-              onNavigateToPlaylists={() => setCurrentView('Playlists')}
-            />
-          </Suspense>
+          // Temporary in-game view until the in-game settings sheet replaces it.
+          <Stack spacing={3} sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <SettingsSection id="profiles" title={t('settings.sections.profiles')}>
+              <MelodiqProfilesSection />
+            </SettingsSection>
+            <SettingsSection id="gameplay" title={t('settings.sections.gameplay')}>
+              <MelodiqGameplaySection />
+            </SettingsSection>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button variant="outlined" onClick={() => setCurrentView('Playlists')}>
+                {t('melodiq.manage_playlists', 'Manage Playlists')}
+              </Button>
+              <Button variant="contained" onClick={onBackFromSettings}>
+                {t('common.back', 'Zurück')}
+              </Button>
+            </Box>
+          </Stack>
         )}
       </Box>
 

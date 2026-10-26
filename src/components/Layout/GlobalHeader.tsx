@@ -24,11 +24,8 @@ import { usePWAInstall } from '../../hooks/usePWAInstall';
 import { HeaderOverflowMenu } from './HeaderOverflowMenu';
 import { useHomeNavigation } from './useHomeNavigation';
 import { PWAInstallDialog } from '../pwa/PWAInstallDialog';
-import {
-  SettingsHeaderToolbar,
-  SettingsHeaderSubNav,
-} from '../../features/settings/components/SettingsHeaderNav';
 import { hasGitHubPAT } from '../../lib/github';
+import { settingsPath } from '../../features/settings/settingsRoutes';
 
 export const GlobalHeader: React.FC = () => {
   const { t } = useTranslation();
@@ -43,7 +40,7 @@ export const GlobalHeader: React.FC = () => {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const activeGame = gameRegistry.findGameByPath(location.pathname);
   const hasSettings = activeGame?.hasSettings ?? false;
-  const isSettingsPage = location.pathname === '/settings' || isSettingsMode;
+  const isSettingsPage = location.pathname.startsWith('/settings') || isSettingsMode;
   const { isStandalone, isInstallable, installApp, showIOSGuide, setShowIOSGuide } =
     usePWAInstall();
 
@@ -91,9 +88,7 @@ export const GlobalHeader: React.FC = () => {
             </Tooltip>
           )}
 
-          {isSettingsPage ? (
-            <SettingsHeaderToolbar />
-          ) : customHeaderTitle ? (
+          {customHeaderTitle && !isSettingsPage ? (
             <Box sx={{ flexGrow: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
               {customHeaderTitle}
             </Box>
@@ -135,7 +130,9 @@ export const GlobalHeader: React.FC = () => {
               <IconButton
                 color="inherit"
                 onClick={() =>
-                  navigate('/settings', { state: { from: location.pathname + location.search } })
+                  navigate(settingsPath({ kind: 'list' }), {
+                    state: { from: location.pathname + location.search },
+                  })
                 }
                 sx={{ ml: 0.5, p: 1.25 }}
               >
@@ -151,7 +148,9 @@ export const GlobalHeader: React.FC = () => {
               color="inherit"
               onClick={() => {
                 if (!hasGitHubPAT()) {
-                  navigate('/settings?tab=general&sub=feedback&missing_pat=1');
+                  navigate(
+                    settingsPath({ kind: 'app', section: 'integrations', highlight: 'pat' }),
+                  );
                 } else {
                   window.dispatchEvent(new Event('feedback:open'));
                 }
@@ -184,7 +183,6 @@ export const GlobalHeader: React.FC = () => {
 
           <HeaderOverflowMenu items={overflowItems} iconSize={isSmallScreen ? 'small' : 'medium'} />
         </Toolbar>
-        {isSettingsPage && <SettingsHeaderSubNav />}
       </AppBar>
       <PWAInstallDialog open={showIOSGuide} onClose={() => setShowIOSGuide(false)} />
     </>
