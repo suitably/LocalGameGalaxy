@@ -4,7 +4,7 @@ Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)
 
 ## 2026-10-26 — Settings unification plan (claude-code)
 
-- New `docs/reports/2026-10-26-settings-unification-plan.md`, listed in `docs/reports/index.md`.
+- New `docs/reports/2026-10-26-settings-unification-plan.md`, listed in `docs/reports/index.md`; maintainer decisions D1–D6 recorded (master–detail, Games group, global Audio input, old URLs removed except pairing).
 - No code or configuration outside `docs/` changed.
 
 ## 2026-10-26 — Melodiq Notes: tidier stage layout (claude-code)
