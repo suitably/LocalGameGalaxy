@@ -29,11 +29,6 @@ Resolve: run the scaffolder in a scratch branch; either align it with the existi
 Rule: every key is registered in `STORAGE_KEYS`. Reality: qwixx, knister, kniffel, guessart, storyteller and cards define local key strings (list in [game-catalog §2](tech/game-catalog.md#2-persistence)). Several registered keys are therefore **never referenced**: `CARDS_LOBBY_PLAYERS`, `QWIXX_MY_SHEET`, `QWIXX_SHOW_DICE`, `KNISTER_CURRENT_GAME`, `KNISTER_SHOW_DICE`, `EXCALIDRAW_DRAWING`. The architecture check only catches raw `localStorage.` calls, not unregistered keys.
 Resolve: replace local constants with the registry entries (same string values, so no data migration), add the missing ones (kniffel, guessart, storyteller), drop unused entries.
 
-## Q11 — 63.7 MB ONNX model tracked in git
-
-`server/models/UVR-MDX-NET-Inst_HQ_3.onnx` is tracked (hygiene check warns). The rule "never track server media" names `server/music/` only.
-Resolve _(user)_: keep (offline Docker builds) or move to Git LFS / download on first use like `separator.ts` already supports via `MODELS_DIR`.
-
 ## Q12 — CHANGELOG structure broken
 
 `CHANGELOG.md` contains four `## [Unreleased]` sections (lines 1, 77, 150, 158) and a second `# Changelog` header at line 70 — merge artefacts. Which entries shipped in 1.1.0 is unclear.
@@ -63,10 +58,13 @@ Since #538 a player can store the running table as a server game's default templ
 
 Since #573 a pult judges its player against the stage clock (`src/games/melodiq-notes/pult/PultEngine.ts`). Learn mode waits only for players on the stage's screen (`StageEngine.tick` skips `remoteId` players for `waitingFor`); a pult in learn mode judges like practice (timing window, misses). The input latency is calibrated only with the shared beep calibrator (`src/modules/audio/latency`): the stage sounds a beep, the pult's microphone hears it; without a microphone the value is set with a slider. **(user)** Decide (a) whether learn mode should also wait for pult players (needs a "waiting" message from the pult), and (b) whether a tap-along calibration (player taps to the stage's clicks; also covers touch and MIDI delay) should be added to `modules/audio/latency` as a second measurement.
 
-## Q21 — Third-party files in an AGPL repository
+## Q21 — Third-party Workshop fixture in an AGPL repository
 
-The repository is licensed `AGPL-3.0-or-later` since 2026-10-26 (`LICENSE`). Some tracked files are not the maintainer's own work and cannot be covered by that licence: `src/games/tabletop/tabletopsimulator/2500271578.json` and `.png` (a Tabletop Simulator Steam Workshop save of a commercial board game, used as a test fixture) and `server/models/` (the `UVR-MDX-NET-Inst_HQ_3.onnx` separation model and its `*.json` metadata; **Unverified:** origin and licence, probably Ultimate Vocal Remover models via the `audio-separator` project; size: Q11). `server/.vapid_keys.json` is tracked although `.gitignore` lists it.
-Resolve: record holder and licence of each third-party file (REUSE annotations), replace the Workshop fixture with a self-made sample, and **(user)** remove `server/.vapid_keys.json` from git and rotate the keys if they are used anywhere.
+The repository is licensed `AGPL-3.0-or-later` since 2026-10-26 (`LICENSE`). `src/games/tabletop/tabletopsimulator/2500271578.json` and `.png` are a Tabletop Simulator Steam Workshop save of a commercial board game, used as a test fixture by `ttsParser.test.ts` and `steamWorkshopApi.test.ts`; `logic/gameValidator.ts` carries migrations written for that one game. **(user)** decided on 2026-10-26 that the app shall not fetch games from the Workshop or other outside sources and that the fixture must go; the scope of the removal is still open.
+
+## Resolved 2026-10-26
+
+- Q11 ONNX model tracked in git → `server/models/` untracked (it is already in `.gitignore`; `audio-separator` downloads the model into `MODELS_DIR` on first use). `server/.vapid_keys.json` (unused by any code) and the generated `dev-dist/` untracked too.
 
 ## Resolved 2026-10-25
 

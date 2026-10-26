@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-26 — Untrack downloaded model, unused VAPID keys, dev-dist (claude-code)
+
+- `docs/open-questions.md`: Q11 resolved, Q21 narrowed to the Workshop fixture.
+- Outside `docs/`: `git rm --cached` of `server/models/`, `server/.vapid_keys.json`, `dev-dist/`; `.gitignore` gains `dev-dist/`.
+
 ## 2026-10-26 — Licence AGPL-3.0-or-later (claude-code)
 
 - `docs/open-questions.md`: Q21 (third-party files, tracked VAPID keys).

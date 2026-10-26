@@ -62,3 +62,6 @@ mock_library/
 .claude/worktrees/
 server/tabletop/
 server/notes/
+
+# vite-plugin-pwa dev service worker (generated)
+dev-dist/
