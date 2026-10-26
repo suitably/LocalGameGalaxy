@@ -1,11 +1,16 @@
+# Changelog
+
+All notable changes to **LocalGameGalaxy** will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
 ## [Unreleased]
 
 ### Added
 
 - **Settings: app settings and game settings separated**: `/settings` is a list of sections (left rail on wide screens, list → page on phones) in a fixed order — General, Audio input, Connectivity, Notifications, Integrations, Games, About & feedback — instead of header tabs, drop-downs and pills. Every game with settings (Melodiq, Melodiq Notes, Wordle) shows the same sections in a settings sheet opened by the header gear and under Settings → Games. Microphones are an app setting (Audio input). Darts' dialog is now "Game setup" (it changes the running game). Old settings links (`?tab=…&sub=…`) no longer work, except pairing links of older companion servers; the server prints `/settings/connectivity?pair=…`.
-
 - **Melodiq Notes: practise alone, calibrate latency per input** (#573 follow-up): learn mode (the song waits for you) is for one player; with two or more players it is switched off, and a single player on their own device is waited for too. "Latency" on the stage and on each device calibrates by tapping along to 12 clicks with the input you play (screen or keys, MIDI, microphone) — it covers how late you hear the stage and how late your input arrives; each input keeps its own value. A device's part runs behind the stage clock by that value, so notes reach the line when you hear them.
-
 - **Melodiq Notes: players join the stage at any time and are judged on their own device** (#573, #546): the stage shows the game and every player in split screen — players on this screen and players who joined through "Invite players" on their phone or tablet. A joining player gets their seat at once, also mid-song. Their device shows the falling notes and their own score, takes MIDI, microphone, keys or touch and judges the notes itself on the stage's synced clock; the stage merges the results. Each device keeps its own input latency (calibrated with a beep from the stage, or set by hand). The computer keys of the stage never drive an invited player. Invite links carry the companion server when one is active. The beep latency calibrator moved to `modules/audio` and is shared with Melodiq.
 - **Melodiq Notes: stage play line, bars and loops** (#576, #570, #574, #575): on the guitar/bass highway, the pitch view and the scrolling notation the play line sits at a third of the width, and notes already played stay visible faint to its left. Once no player on stage has notes left (an outro), "Jump to end" skips straight to the results. The bar strip now holds one section per bar: groups open into the next row on tap, down to single bars, so the number of rows depends on the song's length. Outside perform mode a loop is picked by tapping its first and last bar or group (a tap inside a picked cell narrows that end); the loop chip turns it on and off.
 - **Melodiq Notes: alignment copes with extra intro/outro bars**: when an arrangement has bars at the start or end that the recording does not (a brass intro, a longer ending), automatic alignment now leaves them out instead of squeezing the whole beginning out of place; those bars sit before the recording starts, and the stage leaves them out (no notes, it starts at the first bar the recording has). Tambourine notes on the drum highway are marked "Tb" and other percussion "Pc" instead of looking like hi-hat strokes.
@@ -54,12 +59,33 @@
 - **WebRTC**: STUN servers can be chosen per device in the connection and server settings, next to the tracker list: toggle built-in servers (Google stays off by default), add or remove custom `stun:`/`stuns:` URLs, with a warning when all are off. Tracker and STUN lists share one `ServerUrlList` component (#422).
 - **Testing & Edge-Case Audit**: Added comprehensive unit tests for Kniffel scoring (`kniffelScoring.ts`) and game reducer (`kniffelReducer.ts`), Darts game rules, countdown modes, double-out evaluation, and bust logic (`useDartsGame.ts`), and Imposter database repository & seeder (`imposterRepository.ts`, `dbSeeder.ts`) (Fixes #386).
 - **Sync & Resilience Tests**: Extended `MqttMailboxService` and `MultiChannelSyncCoordinator` test suites with coverage for listener error isolation, LZString payload compression, and dynamic channel re-subscription edge cases (Fixes #386).
+- Declarative Jules Agents Registry: added `.github/agents/` with scheduled orchestrator workflow (`jules-audit.yml`) and runner (`jules-agent-runner.cjs`) allowing scheduled autonomous audits (e.g. security) that automatically create tracking issues and PRs.
+- `npm run check:hygiene` deterministic prechecks (stray artifacts, conflict markers, JSON validity, i18n parity ratchet, secret patterns, workflow permissions) as first CI job; `ci.yml` now has `permissions`, `concurrency`, fork-safe deploy; removed tracked `.orig`/`.diff` leftovers.
+- **Testing Suite**: Added comprehensive test coverage for MQTT mailbox network sync, addressing edge-cases (JSON parsing, LZString decompression), error paths (broker failover handling), and race conditions in cross-channel synchronization (Fixes #350).
+- Pre-commit hooks for running quality gates automatically before committing locally.
+- **Kniffel**: Added the classic dice game Kniffel to the local game galaxy. Players can roll 5 dice up to 3 times, score in 13 categories across upper and lower sections, and compete for the highest score. Implements full offline persistence and German/English localization.
+- Dart Checker game for tracking scores in 301, 501, and Count Up modes.
+- **Documentation**: Added `docs/tech/pipeline-quality-gates.md` documenting our deterministic tools strategy (eslint, tsc, component budget, jscpd, and architecture checks). Also updated `docs/tech/architecture.md`.
+- **CI/CD**: Added a fully functional `.gitlab-ci.yml` pipeline with security gates (SAST, Secret-Detection, npm audit), and integrated `npm run check:security` into the GitHub Actions CI pipeline.
+- **Documentation (OKF v0.2)**: Converted technical documentation into an Open Knowledge Format (OKF) v0.2 Knowledge Bundle with root `index.md`, `log.md`, and typed frontmatter. Brought `docs/tech/architecture.md` and related tech docs up to date with the current codebase (all 13 games, shared modules, Hono micro-kernel, Cloudflare Quick Tunnel, and segregated layout contexts).
+- **Melodiq**: Fixed an issue where the "Back" button was broken when exiting the settings view during a game by properly memoizing the exit callback to prevent unstable reference loops with the GlobalHeader state.
+- **Settings**: Extracted GitHub issue submission logic and Server proxy feedback logic from `FeedbackDialog` and `SettingsFeedbackForm` components into a single `submitFeedback` function within `src/lib/github.ts` to fix a Separation of Concerns violation.
+- Fixed GuessArt game redirect URLs (#126)
+- Fixed Excalidraw library loading from local storage (#126)
+- **All Games**: Created a standardized `GameLayout` component to ensure scrollbars are rendered at the window's edge. Implemented in Wordle, Sudoku, Qwixx, Melodiq Notes, Knister, and Cards (Fixes #199).
+- Melodiq Notes: Fixed an issue where the user could not scroll vertically on the game screen by adding CSS properties `height: 100%`, `overflowY: auto`, and `WebkitOverflowScrolling: touch` to the main container component (Fixes #196).
+- **Cloudflare Preview Cleanup Pipeline**: Automated deletion of preview branches & deployments on Cloudflare upon PR merge or closure (`.github/workflows/cleanup-preview.yml`) and manual `workflow_dispatch` trigger to purge all historical preview deployments.
+- **Melodiq Notes UX & Multi-Stem Audio Player**: Responsive mobile sheet music layout, collapsible settings accordion, fixed bottom action bar, and synchronized multi-stem Web Audio playback (#132, PR #189).
+- **AI Issue Curator & Deduplication Pipeline**: Automated issue clustering, duplicate detection, and 1-click issue bundling via `/curate`, `/bundle`, and `/duplicate` slash commands and GitHub labels (`curate`, `bundle`, `duplicate`, `plan`, `approved`).
+- **Google Jules & Gemini 3.8 Multi-Key Pool**: Cloud-native execution with multi-account rotation across 5 Google AI Pro accounts (`JULES_API_KEY_1..5`).
+- **RepoLens Lens Integration**: Specialized audit lenses for code duplication, architecture, i18n, and UX directly integrated into Jules tasks (`scripts/jules-lens-resolver.mjs`).
+- **Melodiq Notes (Instrument Practice)**: Complete sheet music viewer with OSMD, MusicXML parsing, Web Audio multi-stem player, and MIDI note verification (`src/games/melodiq-notes/`).
+- **Generalized Cards Suite**: Universal score and lives tracker (`UniversalScoreView.tsx`, `ModernScoreAdjuster.tsx`) in `src/games/cards/`.
 
 ### Changed
 
 - **Melodiq Notes: tidier stage** — the stage page is arranged by how often each control is used. Above the stage, a session bar holds the mode, one input button (source plus latency, with "Calibrate latency" in its menu), a players button and a recording button with its status (none, not aligned, aligned, aligning %, error). Players and the recording open in a side panel (a bottom sheet on phones), so the stage stays in view while you fine-tune. The recording panel follows the order of work: source, alignment and pinning bars, fine-tuning, then save and export. Below the stage, one transport bar like a music player holds play/pause, "Jump to first note" (lead-in in its menu), the timeline, speed (a "75 %" button with a slider), the backing (synth band or recording on/off), the view and full screen. The same bar floats over the stage in full screen. The bar strip ("Bars & loop") is closed by default and shows only the hint that fits. Removed duplicates: the second "Choose song" button (the song title in the header opens the picker), the second "Invite" button and the second "Start" button. Also removed the hidden, never-working band-mixer menu entry. Controls are at least 48 px high.
 - **Melodiq Notes: MIDI is chosen automatically** — until you pick an input yourself, the stage and each player's device use MIDI as soon as a real instrument is connected (loopback ports such as "Midi Through" do not count) and go back to the computer keys when it is unplugged. In this automatic mode the devices are re-checked every 2 s, so Firefox also finds an instrument plugged in later. The input menu names the connected instrument under MIDI.
-
 - **Tabletop: no third-party game in the repository** (#586): the Tabletop Simulator Workshop save that served as a test fixture is gone; the tests use a small hand-made save, and the Workshop import works as before (games are loaded when the user imports them). The import no longer carries migrations written for that one game (fixed image hashes, card back, board size, field positions, scaling); hex cards are recognised by their shape alone.
 - **Melodiq Notes: one sheet-music store** (Q18, follows #534/#486): the Notes library on the companion server is the only place for scores and bar marks. A piece can belong to a Melodiq song (`songId`) and then plays with that song's mix instead of a copy; the library lists every piece once with a "Melodiq song" badge instead of merging song folders by title. On startup the server imports scores found in song folders (with their marks) once into linked pieces and leaves the originals in place. "Find on YouTube" now links the piece on stage to the downloaded song (or creates a linked piece) instead of copying the score into the song folder. Server: `POST`/`PUT /api/notes/pieces` accept `songId`; `POST`/`DELETE /api/songs/:id/scores` are deprecated and answer `410`, `GET /api/songs/:id/scores` and the marks routes read and write the linked pieces.
 - **Melodiq Notes: one sheet-music library** (#534): the song picker's "Notes library" tab lists the Notes library pieces and the sheet music in Melodiq song folders together (same artist and title shown once); song-folder scores carry a "Melodiq song" badge and are read-only. Saving goes to the Notes library — a song-folder score with a recording chosen on this device becomes a Notes piece; played with the song's own mix it still keeps its bar marks in the song folder. The separate "Nexumia server" tab and its score upload are gone; a failing store no longer hides the other.
@@ -69,7 +95,6 @@
 - **Leftover polish pass** (#503 #504 #506 #507 #508): `ModernScoreAdjuster`, `SongActionDialogs`, `QueueParticipantDialog`, `QwixxSheetSelector` and `ServerDirectoryManager` are split into smaller components/hooks and use Rounded icons, theme colours, `transitionOf` and `scoreText`.
 - **Werewolf**: setup, night phase and role editor are split into focused components and a `useWerewolfSetup` hook (night-order rules moved to `logic/nightRoles.ts` with tests); built-in role icons are Rounded MUI icons instead of emoji (`RoleIcon`), cards use outlines instead of elevation, narrator and role-info buttons got labels (#503 #504 #506 #508).
 - **Typography rules (#508)**: new `display` typography variant (3.5rem, weight 800) and shared `scoreText` helper (display face + tabular numbers) used for Darts, Sudoku, Imposter, tabletop and Melodiq timers/scores; text below 0.75rem raised to the caption size and weight 900 reduced to 800.
-
 - **Radius scale and flat surfaces**: border radii use the DESIGN.md steps only (8/12/20 px, circle, pill) and cards and panels no longer carry elevation shadows; dialogs, menus and other overlays keep the theme shadow (#506).
 - **Flat surfaces**: removed the remaining gradients, glow shadows and glass blur from the install banner, feedback dialog, Melodiq scoring and lyrics dots, Knister number picker, Sudoku pause and Tabletop selection/seat/HUD highlights (#505). The lyrics bar over video keeps its blur for legibility.
 - **Icons**: decorative emoji removed from headings, buttons, menus and status texts in the hub party mode, push settings, Sudoku, Qwixx, Melodiq, Knister and connection screens (de and en). Werewolf winner and role screens, Spieltisch and Cards game tiles now use Rounded icons or area symbols (#504).
@@ -84,7 +109,6 @@
 - **Storyteller, Gartic Phone, Imposter**: lobby, header and setup screens split into smaller components and hooks and recoloured with theme and piece colours (Party area pink for Storyteller, green/red role colours for the Imposter result); the in-content Storyteller title is gone (the page title lives in the header) (#497).
 - **Kniffel and Knister**: boards split into focused components and hooks; player columns use the piece-colour tints, scores use the display face with tabular figures, status colours follow the theme; removed the gradient, glow and blur effects and the duplicate Knister title (#492).
 - Cards: decomposed the Schwimmen, Oh Hell and score-sheet views into shared presenters (`components/common/`), a `useSchwimmenState` hook and tested `logic/cardPlayers.ts`; re-coloured with piece/background tokens, removed gradients and emoji icons (#494, #360).
-
 - **Qwixx**: score sheet split into focused components and a `useQwixxState` hook; rows use the piece palette, scores and totals the theme tokens; gradients, glows, blur and emoji icons removed (#491).
 - **Wordle**: decomposed (`WordleGame.tsx` 247 → 141 lines, new `useWordleScreen`, `WordleToast`, `WordleHelpDialog`, shared `tileStyles`); letter states use theme roles (correct → success, present → warning, absent → raised) with non-colour cues (underline / dashed ring) and an `aria-label` per tile and key; emoji removed from UI labels (#493).
 - **Melodiq Notes players and backing**: one player by default; "Add player" adds up to four, each row picks its part and how it is shown and can be removed. The backing is one global choice without a recording — everything (the players' parts too), backing only, or silent — and switches mid-song; with a recording there is just recording on/off. Replaces per-track roles and the solo/band presets.
@@ -116,6 +140,19 @@
 - **WebRTC (Melodiq)**: STUN servers are now resolved per device from `src/lib/webrtc/iceServers.ts` instead of four hardcoded lists. Defaults are Cloudflare and Twilio; Google's STUN server stays selectable but is disabled by default. Custom STUN URLs and per-server toggles are stored in `galaxy_stun_custom_urls` / `galaxy_stun_preferences`.
 - Fixed missing i18n keys for guessart, tabletop and party translations.
 - Refactored any to unknown in melodiqFetch.
+- **Melodiq**: Opening the settings inside the game no longer unmounts the background views, enabling seamless background execution.
+- **Melodiq**: Das Halten eines Songs öffnet nicht mehr die Einstellungen/Warteschlange.
+- **Melodiq Notes**: Streamlined UI for mobile-first responsiveness. Integrated song title and settings directly into `GlobalHeader`, removed in-sheet overlay controls, compacted page HUD into a single note and score bar, and made playback controls icon-only on mobile.
+- Melodiq: Limited the maximum score per track to 1000 points.
+- Actions pinned to commit SHAs (Dependabot keeps them current), `persist-credentials: false`, actionlint + unit tests (`npm run test:scripts`) for Jules scripts in CI precheck; watcher isolates per-issue failures and no longer re-posts PR links.
+- Jules pipeline reduced to minimal `/jules` trigger (`jules-start.yml`) plus cron watcher (`jules-watch.yml`); removed lens, reviewer, auto-fixer and suggestions workflows.
+- Jules key rotation via `JULES_API_KEY_*` secrets; watcher only polls issues labeled `jules:active`.
+- Decoupled Cloudflare preview deployments from CI tests to speed up review previews.
+- Deduplicated queue participant logic in Melodiq game and removed `any` types from song downloader.
+- Resolved 23 i18n translation parity gaps across tabletop, guessart, and party modules.
+- **Melodiq**: Phone client correctly utilizes WebRTC passthrough to access the Host's song library directly instead of failing due to a missing local helper configuration (Fixes #248).
+- Core: Migrated direct `localStorage` and `sessionStorage` calls in Melodiq to the unified `storage.ts` service with typed constants (`STORAGE_KEYS`), enforcing the zero raw storage policy and resolving Dependency Inversion Principle (DIP) violations.
+- Refactored CI quality gates to enforce zero-duplication (`jscpd` < 2.5%), anti-god-component budget (< 250 lines), and doc synchronization.
 
 ### Refactored
 
@@ -134,8 +171,14 @@
 - **Duplication & DRY**: Extracted `FeedbackForm` into `src/components/feedback/FeedbackForm.tsx` and refactored `FeedbackDialog` and `SettingsFeedbackForm` to reuse it, eliminating duplicate feedback form UI code (Fixes #403).
 - **Code Quality**: Deduplicated multiple areas of the codebase to adhere to DRY principles, including extracting a shared `shuffle` utility, optimizing component logic in `Qwixx` and `Melodiq`, and extracting the `removeFromHolderAndUpdateHand` function in `TabletopReducer`.
 - **Dead Code**: Eliminated unused local storage references and docstrings in `wordle` and `melodiq`.
+- `ServerAdminPanel`: Decomposed into smaller sub-components and extracted state into `useServerApiKeys` custom hook to resolve Separation of Concerns and God Component size violations.
+- Deduplicated `guessart` and `storyteller` core primitives by extracting pure IndexedDB operations into `src/modules/async-game`, round-robin player assignment logic into `src/lib/utils/turnAssignment.ts`, and sharing dialogs logic via `useSessionSharing` into `src/modules/sharing`.
 
 ### Fixed
+
+- **Share links** (#588): Wordle and Sudoku results link to https://games.nexumia.de/games/… instead of the foreign `localgamegalaxy.app/#/…`; the Sudoku share text is translated (de/en) instead of always German.
+- **Server setup dialog** (#559): the wizard no longer shows a second title and collapse button inside the dialog, which looked like the setup opening twice.
+- **Melodiq Notes: recording from YouTube** (#562): the dialog says why "Download" is still disabled (artist/title missing, song folders loading, no video picked).
 
 - **Melodiq Notes: learn mode no longer stutters, MIDI play stays smooth**: learn mode stopped exactly on every note, so a hit on time (which always arrives a little late) paused the song for a moment on each note. The song now runs on 140 ms past a note before it waits, and a hit in that time counts without a stop; hits may come up to 250 ms early (practice and perform keep ±140 ms). While the song waits, any hit on the right lane counts, also with a calibrated input latency above 140 ms, which made the awaited note impossible to hit. In every mode a MIDI note no longer re-renders the stage page (twice per hit, note-on and note-off), which made busy passages lag. Roland V-Drums tom 3 rim (key 58) plays the tom lane instead of the hi-hat. Choosing MIDI asks the browser for its devices again, and so does a check every 2 s while no instrument is connected (Firefox lists an instrument plugged in later only then); a replugged instrument in Firefox can still stay silent until the browser restarts (#599).
 - **Melodiq Notes: MIDI drum kits and keyboards are picked up on Linux**: the stage listened to the first MIDI input, which on Linux is the ALSA loopback port "Midi Through", so a connected e-drum (e.g. Roland TD-11) or keyboard did nothing. It now prefers a real instrument, switches to one plugged in later and rebinds after hot-plug. MIDI hits reach the stage as they arrive, so short drum hits (note-off a few ms after note-on) are no longer lost between renders.
@@ -157,125 +200,14 @@
 - **Darts**: Hardened `useDartsGame` persistence against corrupted JSON storage values by using `storage.getJson` with safe structure validation and fallbacks to prevent UI crashes on mount (Fixes #386).
 - **Release**: `release.yml` called `npm run package` in `server/`, which no longer existed, so server binaries and the release publish step failed. `server/` now bundles with esbuild and packages Node 24 binaries for Linux, Windows and macOS with `@yao-pkg/pkg`; the release archives also ship `scripts/align_lyrics.py`.
 - **Melodiq TV**: Fixed an issue where clicking the Cast button would open a new window instead of initiating a stream to the TV because of dynamic query string mismatches.
-
-### Security
-
-- **Companion server**: all tabletop routes (`/api/tabletop/*`, `/tabletop/media`) now require a valid token; changing tabletop directories needs the master token or a management API key. Previously `/tabletop/media` accepted requests without a token and the directory routes were open, which allowed reading arbitrary files.
-- **Companion server**: media URLs returned by `/api/songs` and `/api/tabletop/games/:id/raw` carry the caller's own token instead of the master token, so restricted API keys can no longer obtain the master token.
-- Applied security audit fixes (Security & Vulnerability Auditor).
-- Hardened `DOMPurify.sanitize` usage in `RulesDialog` with strict allowlists for tags and attributes.
-- Hardened server routes in `relayPlugin` with explicit length constraints and type checking for POST requests.
-- Pinned all dependency versions in `package.json` and `server/package.json` to fixed versions (removed caret `^` and tilde `~` modifiers) to ensure reproducible builds.
-- Updated vulnerable dependencies via `npm audit fix --force`.
-
-### Changed
-
-- **Melodiq**: Opening the settings inside the game no longer unmounts the background views, enabling seamless background execution.
-- **Melodiq**: Das Halten eines Songs öffnet nicht mehr die Einstellungen/Warteschlange.
-- **Melodiq Notes**: Streamlined UI for mobile-first responsiveness. Integrated song title and settings directly into `GlobalHeader`, removed in-sheet overlay controls, compacted page HUD into a single note and score bar, and made playback controls icon-only on mobile.
-- Melodiq: Limited the maximum score per track to 1000 points.
-- Actions pinned to commit SHAs (Dependabot keeps them current), `persist-credentials: false`, actionlint + unit tests (`npm run test:scripts`) for Jules scripts in CI precheck; watcher isolates per-issue failures and no longer re-posts PR links.
-
-### Added
-
-- Declarative Jules Agents Registry: added `.github/agents/` with scheduled orchestrator workflow (`jules-audit.yml`) and runner (`jules-agent-runner.cjs`) allowing scheduled autonomous audits (e.g. security) that automatically create tracking issues and PRs.
-- `npm run check:hygiene` deterministic prechecks (stray artifacts, conflict markers, JSON validity, i18n parity ratchet, secret patterns, workflow permissions) as first CI job; `ci.yml` now has `permissions`, `concurrency`, fork-safe deploy; removed tracked `.orig`/`.diff` leftovers.
-
-### Changed
-
-- Melodiq: Limited the maximum score per track to 1000 points.
-- Jules pipeline reduced to minimal `/jules` trigger (`jules-start.yml`) plus cron watcher (`jules-watch.yml`); removed lens, reviewer, auto-fixer and suggestions workflows.
-- Jules key rotation via `JULES_API_KEY_*` secrets; watcher only polls issues labeled `jules:active`.
-
-### Changed
-
-- Melodiq: Limited the maximum score per track to 1000 points.
-- Decoupled Cloudflare preview deployments from CI tests to speed up review previews.
-
-### Changed
-
-- Deduplicated queue participant logic in Melodiq game and removed `any` types from song downloader.
-- Resolved 23 i18n translation parity gaps across tabletop, guessart, and party modules.
-
-## [Unreleased]
-
-### Added
-
-- **Testing Suite**: Added comprehensive test coverage for MQTT mailbox network sync, addressing edge-cases (JSON parsing, LZString decompression), error paths (broker failover handling), and race conditions in cross-channel synchronization (Fixes #350).
-
-### Fixed
-
 - **GuessArt**: Fixed a "Cannot read properties of undefined (reading 'ReactCurrentOwner')" error during drawing turns by updating `@excalidraw/excalidraw` to version `0.18.1` for React 19 compatibility.
-
-### Added
-
-- Pre-commit hooks for running quality gates automatically before committing locally.
-
-### Added
-
-- **Kniffel**: Added the classic dice game Kniffel to the local game galaxy. Players can roll 5 dice up to 3 times, score in 13 categories across upper and lower sections, and compete for the highest score. Implements full offline persistence and German/English localization.
-
-# Changelog
-
-All notable changes to **LocalGameGalaxy** will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
-- **Melodiq**: Phone client correctly utilizes WebRTC passthrough to access the Host's song library directly instead of failing due to a missing local helper configuration (Fixes #248).
-- Core: Migrated direct `localStorage` and `sessionStorage` calls in Melodiq to the unified `storage.ts` service with typed constants (`STORAGE_KEYS`), enforcing the zero raw storage policy and resolving Dependency Inversion Principle (DIP) violations.
-
-### Fixed
-
 - **Melodiq**: Fixed an issue where the YouTube background video would go permanently out of sync (delayed) by correcting the soft drift tolerance threshold and seek cooldown rate limits.
-
-### Added
-
-- Dart Checker game for tracking scores in 301, 501, and Count Up modes.
-- **Documentation**: Added `docs/tech/pipeline-quality-gates.md` documenting our deterministic tools strategy (eslint, tsc, component budget, jscpd, and architecture checks). Also updated `docs/tech/architecture.md`.
-- **CI/CD**: Added a fully functional `.gitlab-ci.yml` pipeline with security gates (SAST, Secret-Detection, npm audit), and integrated `npm run check:security` into the GitHub Actions CI pipeline.
-- **Documentation (OKF v0.2)**: Converted technical documentation into an Open Knowledge Format (OKF) v0.2 Knowledge Bundle with root `index.md`, `log.md`, and typed frontmatter. Brought `docs/tech/architecture.md` and related tech docs up to date with the current codebase (all 13 games, shared modules, Hono micro-kernel, Cloudflare Quick Tunnel, and segregated layout contexts).
-- **Melodiq**: Fixed an issue where the "Back" button was broken when exiting the settings view during a game by properly memoizing the exit callback to prevent unstable reference loops with the GlobalHeader state.
-- **Settings**: Extracted GitHub issue submission logic and Server proxy feedback logic from `FeedbackDialog` and `SettingsFeedbackForm` components into a single `submitFeedback` function within `src/lib/github.ts` to fix a Separation of Concerns violation.
-- Fixed GuessArt game redirect URLs (#126)
-- Fixed Excalidraw library loading from local storage (#126)
-- **All Games**: Created a standardized `GameLayout` component to ensure scrollbars are rendered at the window's edge. Implemented in Wordle, Sudoku, Qwixx, Melodiq Notes, Knister, and Cards (Fixes #199).
-- Melodiq Notes: Fixed an issue where the user could not scroll vertically on the game screen by adding CSS properties `height: 100%`, `overflowY: auto`, and `WebkitOverflowScrolling: touch` to the main container component (Fixes #196).
-
-### Fixed
-
 - **Code Health**: Removed unused dummy cache functions (`getCachedFiles`, `setCachedFiles`, `clearFileCache`) from Melodiq's database and media loaders.
-
 - Scanner: Replaced blocking synchronous file IO (`fs.readFileSync`, `fs.existsSync`, `fs.readdirSync`) with asynchronous equivalents in `parseSongFile` for vastly improved event loop performance.
 - Melodiq: Fixed an issue where the PitchVisualizer animation loop would occasionally access stale `currentPitchRef` and `sungSegmentsRef` values by switching `useEffect` to `useLayoutEffect`.
 - Tabletop: Fixed an HTML injection vulnerability in tabletop game rules dialog using DOMPurify.
-- Melodiq Notes: Fixed an issue where the user could not scroll vertically on the game screen by adding CSS properties `height: 100%`, `overflowY: auto`, and `WebkitOverflowScrolling: touch` to the main container component (Fixes #196).
 - GuessArt: Fixed an issue where the prefilled hint letters would persist in the input bar even after transitioning to hint stage 2, causing them to be duplicated and not correctly matched against the newly revealed hint letter pool (Fixes #140).
-
-### Fixed
-
 - **Code Health**: Fixed eslint-disable exhaustive-deps in MelodiqSettings.
-
-### Added
-
-- **Cloudflare Preview Cleanup Pipeline**: Automated deletion of preview branches & deployments on Cloudflare upon PR merge or closure (`.github/workflows/cleanup-preview.yml`) and manual `workflow_dispatch` trigger to purge all historical preview deployments.
-- **Melodiq Notes UX & Multi-Stem Audio Player**: Responsive mobile sheet music layout, collapsible settings accordion, fixed bottom action bar, and synchronized multi-stem Web Audio playback (#132, PR #189).
-
-- **AI Issue Curator & Deduplication Pipeline**: Automated issue clustering, duplicate detection, and 1-click issue bundling via `/curate`, `/bundle`, and `/duplicate` slash commands and GitHub labels (`curate`, `bundle`, `duplicate`, `plan`, `approved`).
-- **Google Jules & Gemini 3.8 Multi-Key Pool**: Cloud-native execution with multi-account rotation across 5 Google AI Pro accounts (`JULES_API_KEY_1..5`).
-- **RepoLens Lens Integration**: Specialized audit lenses for code duplication, architecture, i18n, and UX directly integrated into Jules tasks (`scripts/jules-lens-resolver.mjs`).
-- **Melodiq Notes (Instrument Practice)**: Complete sheet music viewer with OSMD, MusicXML parsing, Web Audio multi-stem player, and MIDI note verification (`src/games/melodiq-notes/`).
-- **Generalized Cards Suite**: Universal score and lives tracker (`UniversalScoreView.tsx`, `ModernScoreAdjuster.tsx`) in `src/games/cards/`.
-
-### Changed
-
-- Melodiq: Limited the maximum score per track to 1000 points.
-- Refactored CI quality gates to enforce zero-duplication (`jscpd` < 2.5%), anti-god-component budget (< 250 lines), and doc synchronization.
-
-### Fixed
-
 - **Jules Plan Generator**: Jules implementation plan generation has been upgraded to the RepoLens RFC Research Plan standard (as seen in RepoLens #389), featuring real code snippets, git history context, line-level citations, alternatives analysis, and concrete Vitest test plans.
 - **Self-Improving Pipeline Memory**: Added `.pipeline-memory/` persistence allowing the plan generator to learn domain aliases, subsystem component topologies, and resolution patterns dynamically across runs.
 - **Generic Codebase Introspector**: Upgraded scanner to dynamically discover all games and modules, matching AST symbols, state hooks, and exact line citations to guarantee zero generic placeholders.
@@ -286,7 +218,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Obsolete Python Scripts**: Deleted 10 legacy migration scripts (`scripts/fix_*.py`, `scripts/patch_*.py`, `scripts/update_i18n*.py`).
 - **Legacy Pipeline Fallbacks**: Decoupled Jules agent execution keys from Gemini API callers, eliminating redundant 403 authorization failures on Google Cloud.
 
----
+### Security
+
+- **Push relay without a shared key pair** (#587): `server/cloudflare-push-relay` no longer ships a VAPID key pair in `wrangler.toml` and `worker.ts`. A deployment uses its Worker secrets, or generates a pair once and keeps it in KV (a KV store still holding the formerly shipped pair is rotated). Without secrets and KV, Web Push is off (`/vapid-public-key` answers 503) and only ntfy is delivered; devices re-subscribe on their own when the key changes.
+
+- **Companion server**: all tabletop routes (`/api/tabletop/*`, `/tabletop/media`) now require a valid token; changing tabletop directories needs the master token or a management API key. Previously `/tabletop/media` accepted requests without a token and the directory routes were open, which allowed reading arbitrary files.
+- **Companion server**: media URLs returned by `/api/songs` and `/api/tabletop/games/:id/raw` carry the caller's own token instead of the master token, so restricted API keys can no longer obtain the master token.
+- Applied security audit fixes (Security & Vulnerability Auditor).
+- Hardened `DOMPurify.sanitize` usage in `RulesDialog` with strict allowlists for tags and attributes.
+- Hardened server routes in `relayPlugin` with explicit length constraints and type checking for POST requests.
+- Pinned all dependency versions in `package.json` and `server/package.json` to fixed versions (removed caret `^` and tilde `~` modifiers) to ensure reproducible builds.
+- Updated vulnerable dependencies via `npm audit fix --force`.
 
 ## [1.1.0] - 2026-09-02
 
@@ -294,17 +236,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Multi-game party suite with WebRTC local peer discovery and MQTT relay fallback.
 - Support for Werewolf, Gartic Phone, Storyteller, Tabletop, Sudoku, Knister, Qwixx, and Wordle.
-
-## [Unreleased]
-
-- Core: Migrated direct `localStorage` and `sessionStorage` calls in Melodiq to the unified `storage.ts` service with typed constants (`STORAGE_KEYS`), enforcing the zero raw storage policy and resolving Dependency Inversion Principle (DIP) violations.
-
-### Refactored
-
-- `ServerAdminPanel`: Decomposed into smaller sub-components and extracted state into `useServerApiKeys` custom hook to resolve Separation of Concerns and God Component size violations.
-
-## [Unreleased]
-
-### Refactored
-
-- Deduplicated `guessart` and `storyteller` core primitives by extracting pure IndexedDB operations into `src/modules/async-game`, round-robin player assignment logic into `src/lib/utils/turnAssignment.ts`, and sharing dialogs logic via `useSessionSharing` into `src/modules/sharing`.

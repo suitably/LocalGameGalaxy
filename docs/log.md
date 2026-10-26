@@ -2,6 +2,12 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-26 — M1: CHANGELOG consolidated, feedback fixes (claude-code)
+
+- `docs/open-questions.md`: Q12 resolved — `CHANGELOG.md` has one `[Unreleased]` section again (entries from the four merge-artefact sections and from below `[1.1.0]` merged per category, exact duplicates dropped, second `# Changelog` header removed). Entries whose release is unknown stay under `[Unreleased]`.
+- `docs/tech/sync-protocol.md`: push relay `/vapid-public-key` without secrets and KV answers 503 (#587).
+- Outside `docs/`: `server/cloudflare-push-relay/` without the shipped VAPID pair (`wrangler.toml`, `worker.ts`, README; #587), `NotificationSettings` names a relay without keys, `src/lib/publicAppUrl.ts` (share links to https://games.nexumia.de, #588) used by Wordle and Sudoku (Sudoku share text via `t()`), `ServerSetupWizard` without its own header inside the setup dialog (#559), Melodiq Notes `YouTubeRecordingDialog` says why the download button is disabled (#562), locales.
+
 ## 2026-10-26 — Settings unification implemented (claude-code)
 
 - `docs/tech/architecture.md`: new §3.8 (app vs. game settings, routes, registry sections, sheet), reuse catalog gains the settings UI kit and `useStoredSettings`, §3.4 lists `GameSettingsContext`.
