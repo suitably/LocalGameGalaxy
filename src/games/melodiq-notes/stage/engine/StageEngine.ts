@@ -4,7 +4,14 @@ import { pendingNotes, recordJudgement, type BeatRange } from '../logic/judging'
 import { buildSections, sectionIndexAt, type Section } from '../logic/sections';
 import { advanceMisses, advanceSinging, resetRange, startAwaitedNote } from './advance';
 import { playLane, playPitch } from './input';
-import { secPerBeatAt, seekStage, seekToFirstNote, syncRecording } from './transport';
+import {
+  loopSections,
+  secPerBeatAt,
+  seekStage,
+  seekToFirstNote,
+  skipRest,
+  syncRecording,
+} from './transport';
 import { buildBandEvents, createPlayers, defaultSeats, nextSeat } from './players';
 import type {
   BandEvent,
@@ -198,25 +205,9 @@ export class StageEngine {
     this.setFocus(this.players[(this.players.indexOf(this.focus) + 1) % this.players.length]);
   }
 
-  /** Loops a practice section (and the next one when sections are single bars); null ends the loop. */
-  setLoop(section: number | null) {
-    if (section === null || this.mode === 'perform') {
-      const had = this.loop;
-      this.loop = null;
-      // before the start, the playhead goes back to the count-in of bar 1
-      if (had && this.state === 'idle') this.reset();
-    } else {
-      const s = this.sections[section];
-      const end =
-        this.sections[
-          Math.min(this.sections.length - 1, section + (this.sections.length >= 16 ? 0 : 1))
-        ];
-      this.loop = { from: s.from, to: end.to };
-      if (this.mode === 'learn') this.setMode('practice');
-      if (this.state === 'done') this.reset();
-      else this.restartAt(this.loop.from);
-    }
-    this.emit();
+  /** Loops sections `first..last` (bars); null ends the loop. */
+  setLoop(first: number | null, last: number | null = first) {
+    loopSections(this, first, last);
   }
 
   start() {
@@ -305,7 +296,8 @@ export class StageEngine {
     }
   }
 
-  private restartAt(from: number) {
+  /** Rewinds to a lead-in before `from` (loop restart). */
+  restartAt(from: number) {
     this.rewindTo(from - Math.min(LOOP_LEAD_BEATS, this.countIn), from);
   }
 
@@ -325,6 +317,11 @@ export class StageEngine {
   /** Jumps to `beat` (the timeline bar); earlier notes are skipped, later ones can be played. */
   seekTo(beat: number) {
     seekStage(this, beat, LOOP_LEAD_BEATS);
+  }
+
+  /** Skips the rest of the song once nobody has notes left: straight to the results. */
+  skipToEnd() {
+    skipRest(this);
   }
 
   /** Jumps to `leadInSec` real seconds before the first note of any player. */
@@ -354,7 +351,7 @@ export class StageEngine {
     if (this.focus) this.focus.voice = { pitch, singing };
   }
 
-  private finish() {
+  finish() {
     this.state = 'done';
     this.recording?.pause();
     this.emit();

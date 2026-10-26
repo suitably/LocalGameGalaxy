@@ -1,5 +1,5 @@
 import { bpmAt } from '../../../../modules/music-score';
-import { firstNoteBeat, leadInBeat } from '../logic/seek';
+import { firstNoteBeat, leadInBeat, noNotesAhead } from '../logic/seek';
 import type { StageEngine } from './StageEngine';
 
 /** How far the recording may drift from the song clock before it is moved (scaled by speed). */
@@ -49,4 +49,43 @@ export function seekToFirstNote(e: StageEngine, leadInSec: number, loopLeadBeats
     leadInBeat(first, leadInSec, e.secPerBeat(first), e.startBeat - e.countIn),
     loopLeadBeats,
   );
+}
+
+/** Running without a loop, before the song's end, and every player is past their last note. */
+export function nothingLeftToPlay(e: StageEngine) {
+  const song = e.song;
+  if (!song || e.loop || !e.players.length) return false;
+  if (e.state !== 'playing' && e.state !== 'paused') return false;
+  return (
+    e.beat < song.end &&
+    noNotesAhead(
+      e.players.map((p) => p.notes),
+      e.beat,
+    )
+  );
+}
+
+/** Skips the rest of the song once nobody has notes left: straight to the results. */
+export function skipRest(e: StageEngine) {
+  if (!nothingLeftToPlay(e)) return;
+  e.beat = e.song?.end ?? e.beat;
+  e.sound.stopAll();
+  e.finish();
+}
+
+/** Loops sections `first..last` (bars, either order); null ends the loop. */
+export function loopSections(e: StageEngine, first: number | null, last: number | null) {
+  const [a, b] = [first, last].map((i) => (i === null ? undefined : e.sections[i]));
+  if (!a || !b || e.mode === 'perform') {
+    const had = e.loop;
+    e.loop = null;
+    // before the start, the playhead goes back to the count-in of bar 1
+    if (had && e.state === 'idle') e.reset();
+  } else {
+    e.loop = { from: Math.min(a.from, b.from), to: Math.max(a.to, b.to) };
+    if (e.mode === 'learn') e.setMode('practice');
+    if (e.state === 'done') e.reset();
+    else e.restartAt(e.loop.from);
+  }
+  e.emit();
 }

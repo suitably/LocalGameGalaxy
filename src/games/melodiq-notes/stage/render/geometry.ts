@@ -1,6 +1,6 @@
 import type { StagePlayer } from '../engine/types';
 import { STRING_TUNINGS } from '../../../../modules/music-score';
-import { clamp } from './common';
+import { clamp, playLineX } from './common';
 
 export const isBlackKey = (m: number) => [1, 3, 6, 8, 10].includes(((m % 12) + 12) % 12);
 
@@ -71,7 +71,7 @@ export function stringGeometry(p: StagePlayer, w: number, h: number): StringGeom
   const fretboardH = h > 300 ? clamp(h * 0.24, 70, 110) : 0;
   const top = 34;
   const bottom = h - fretboardH - (fretboardH ? 22 : 16);
-  const hitX = clamp(w * 0.13, 52, 130);
+  const hitX = playLineX(w);
   const lookBeats = clamp((w - hitX) / 110, 3, 7);
   return {
     top,
@@ -107,7 +107,7 @@ export function pitchGeometry(p: StagePlayer, w: number, h: number) {
   const top = 26;
   const bottom = h - (p.instrument.kind === 'vocals' ? 46 : 18);
   const laneH = (bottom - top) / (hi - lo);
-  const hitX = clamp(w * 0.22, 60, 240);
+  const hitX = playLineX(w, 60);
   const lookBeats = clamp((w - hitX) / 110, 3, 8);
   return {
     lo,

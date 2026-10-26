@@ -8,6 +8,7 @@ import {
   MISS_COLOR,
   roundRect,
   withAlpha,
+  fadeIfPlayed,
   STAGE,
 } from './common';
 import { pitchGeometry } from './geometry';
@@ -48,6 +49,7 @@ export function drawPitch(v: ViewContext): HitPoint {
     const x = geo.hitX + (n.t - beat) * geo.pxPerBeat;
     const bw = Math.max(10, n.dur * geo.pxPerBeat - 4);
     if (x > w || x + bw < 0) return;
+    fadeIfPlayed(g, n, beat);
     const y = geo.yOf(n.pitch);
     const bh = Math.max(5, geo.laneH * 0.78);
     g.fillStyle = withAlpha(STAGE.ink, 0.06);
@@ -76,6 +78,7 @@ export function drawPitch(v: ViewContext): HitPoint {
       g.fillText(n.syl, x, h - 18);
     }
   });
+  g.globalAlpha = 1;
 
   g.strokeStyle = color;
   g.lineWidth = 3.5;

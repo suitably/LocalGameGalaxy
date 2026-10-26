@@ -1,30 +1,22 @@
 import type { ScoreSong } from '../../../../modules/music-score';
 
-const MAX_SECTIONS = 32;
-
 export interface Section {
   from: number;
   to: number;
-  /** 1-based played bar numbers covered (first and last). */
+  /** 1-based played bar numbers covered (first and last; equal, one section is one bar). */
   firstBar: number;
   lastBar: number;
 }
 
-/** Groups the played bars into at most 32 practice sections. */
+/** One practice section per played bar (the strip groups them for display). */
 export function buildSections(song: ScoreSong): Section[] {
   const n = song.measureStarts.length;
-  const per = Math.max(1, Math.ceil(n / MAX_SECTIONS));
-  const out: Section[] = [];
-  for (let i = 0; i < n; i += per) {
-    const j = Math.min(n, i + per);
-    out.push({
-      from: song.measureStarts[i],
-      to: j < n ? song.measureStarts[j] : song.end,
-      firstBar: i + 1,
-      lastBar: j,
-    });
-  }
-  return out;
+  return song.measureStarts.map((from, i) => ({
+    from,
+    to: i + 1 < n ? song.measureStarts[i + 1] : song.end,
+    firstBar: i + 1,
+    lastBar: i + 1,
+  }));
 }
 
 export function sectionIndexAt(sections: Section[], beat: number): number {
