@@ -1,22 +1,83 @@
 import { describe, it, expect } from 'vitest';
-import sampleJson from '../../tabletopsimulator/2500271578.json';
 import { isTtsSaveFile, parseTtsSaveFile } from '../ttsParser';
 import { validateAndSanitizeGame } from '../gameValidator';
-import type { TTSSaveFile } from '../ttsTypes';
-import { HEX_CLIP_PATH, type CardWidget, type DeckWidget, type DieWidget, type TokenWidget, type HolderWidget } from '../types';
+import type { TTSObjectState, TTSSaveFile } from '../ttsTypes';
+import {
+  HEX_CLIP_PATH,
+  type CardWidget,
+  type DeckWidget,
+  type DieWidget,
+  type TokenWidget,
+  type HolderWidget,
+} from '../types';
+
+const obj = (GUID: string, Name: string, fields: Partial<TTSObjectState> = {}): TTSObjectState =>
+  ({
+    GUID,
+    Name,
+    Transform: {
+      posX: 0,
+      posY: 1,
+      posZ: 0,
+      rotX: 0,
+      rotY: 0,
+      rotZ: 0,
+      scaleX: 1,
+      scaleY: 1,
+      scaleZ: 1,
+    },
+    ...fields,
+  }) as TTSObjectState;
+
+const ugc = (path: string) => `http://cloud-3.steamusercontent.com/ugc/${path}/`;
+
+/** A small hand-made save with every object kind the parser converts. */
+const ttsData = {
+  SaveName: 'Testspiel',
+  PlayerCounts: [2, 10],
+  ObjectStates: [
+    obj('board', 'Custom_Board', {
+      CustomImage: { ImageURL: ugc('1/board'), WidthScale: 1, ImageScalar: 1 },
+      AttachedSnapPoints: Array.from({ length: 6 }, (_, i) => ({
+        Position: { x: Math.cos(i) * 5, y: 0, z: Math.sin(i) * 5 },
+        Tags: ['Feldkarten'],
+      })),
+    }),
+    obj('cards', 'Deck', {
+      DeckIDs: Array.from({ length: 12 }, (_, i) => 100 + i),
+      CustomDeck: {
+        '1': { FaceURL: ugc('1/faces'), BackURL: ugc('1/back'), NumWidth: 10, NumHeight: 7 },
+      },
+    }),
+    obj('hexes', 'Deck', {
+      DeckIDs: [200, 201],
+      CustomDeck: {
+        '2': {
+          FaceURL: ugc('2/faces'),
+          BackURL: ugc('2/back'),
+          NumWidth: 2,
+          NumHeight: 1,
+          Type: 3,
+        },
+      },
+    }),
+    obj('die', 'Die_6'),
+    obj('piece', 'backgammon_piece_white'),
+    obj('pack', 'PiecePack_Pawn'),
+    obj('hand', 'HandTrigger', { FogColor: 'Red' }),
+  ],
+} as unknown as TTSSaveFile;
 
 describe('ttsParser', () => {
-  const ttsData = sampleJson as unknown as TTSSaveFile;
-
   it('detects TTS save file format correctly', () => {
     expect(isTtsSaveFile(ttsData)).toBe(true);
     expect(isTtsSaveFile({ somethingElse: true })).toBe(false);
     expect(isTtsSaveFile(null)).toBe(false);
   });
 
-  it('parses metadata from Rick and Morty sample', () => {
+  it('parses metadata from the save', () => {
     const game = parseTtsSaveFile(ttsData);
-    expect(game.name).toBe('Rick and Morty 100 Tage');
+    expect(game.name).toBe('Testspiel');
     expect(game.minPlayers).toBe(2);
     expect(game.maxPlayers).toBe(10);
     expect(game.author).toBe('Steam Workshop');
@@ -46,9 +107,7 @@ describe('ttsParser', () => {
 
   it('converts decks with spritesheet cards', () => {
     const game = parseTtsSaveFile(ttsData);
-    const decks = Object.values(game.widgets).filter(
-      (w) => w.type === 'deck',
-    ) as DeckWidget[];
+    const decks = Object.values(game.widgets).filter((w) => w.type === 'deck') as DeckWidget[];
 
     expect(decks.length).toBeGreaterThan(0);
     const mainDeck = decks.find((d) => d.cardIds.length > 10);
@@ -67,23 +126,17 @@ describe('ttsParser', () => {
 
   it('converts dice and tokens', () => {
     const game = parseTtsSaveFile(ttsData);
-    const dice = Object.values(game.widgets).filter(
-      (w) => w.type === 'die',
-    ) as DieWidget[];
+    const dice = Object.values(game.widgets).filter((w) => w.type === 'die') as DieWidget[];
     expect(dice.length).toBeGreaterThanOrEqual(1);
     expect(dice[0].sides).toBe(6);
 
-    const tokens = Object.values(game.widgets).filter(
-      (w) => w.type === 'token',
-    ) as TokenWidget[];
+    const tokens = Object.values(game.widgets).filter((w) => w.type === 'token') as TokenWidget[];
     expect(tokens.length).toBeGreaterThan(0);
   });
 
   it('converts HandTriggers into seat-bound holder widgets', () => {
     const game = parseTtsSaveFile(ttsData);
-    const hands = Object.values(game.widgets).filter(
-      (w) => w.type === 'holder' && w.isHand,
-    );
+    const hands = Object.values(game.widgets).filter((w) => w.type === 'holder' && w.isHand);
     expect(hands.length).toBeGreaterThan(0);
   });
 
@@ -99,33 +152,21 @@ describe('ttsParser', () => {
     expect(board.pinned).toBe(true);
     expect(board.movable).toBe(false);
     expect(board.zIndex).toBe(0);
-    expect(board.width).toBe(1275);
+    // 24.5 TTS units at 50 px per unit
+    expect(board.width).toBe(1225);
     expect(board.height).toBe(1225);
     expect(board.image).toContain('steamusercontent-a.akamaihd.net');
   });
 
-  it('migrates legacy games with backgroundImageUrl to a board TokenWidget in validateAndSanitizeGame', () => {
-    const legacyGame = {
-      name: 'Legacy Rick and Morty',
-      author: 'Steam Workshop',
-      table: {
-        width: 3000,
-        height: 2000,
-        backgroundImageUrl: 'http://cloud-3.steamusercontent.com/ugc/1752432457657315071/4CA2BC0FD0D8483D003FC39203118B9C5B3A5A88/',
-      },
+  it('keeps a legacy board background as table background with a working CDN URL', () => {
+    const validated = validateAndSanitizeGame({
+      name: 'Altes Spiel',
+      table: { width: 3000, height: 2000, backgroundImageUrl: ugc('1/board') },
       widgets: {},
-    };
-
-    const validated = validateAndSanitizeGame(legacyGame);
-    // Even when passing through validateAndSanitizeGame directly:
-    expect(validated.table.backgroundImageUrl).toBeUndefined();
-    const board = Object.values(validated.widgets).find(
-      (w) => w.type === 'token' && (w as TokenWidget).shape === 'rectangle',
-    ) as TokenWidget;
-    expect(board).toBeDefined();
-    expect(board.width).toBe(1275);
-    expect(board.height).toBe(1225);
-    expect(board.image).toContain('steamusercontent-a.akamaihd.net');
+    });
+    expect(validated.table.backgroundImageUrl).toBe(
+      'https://steamusercontent-a.akamaihd.net/ugc/1/board/',
+    );
   });
 
   it('converts hex cards (TTS Type 3) to 210x182 px with hexagonal clipPath', () => {
@@ -178,79 +219,30 @@ describe('ttsParser', () => {
     }
   });
 
-  it('migrates existing saves in validateAndSanitizeGame to add hex shape, clean token labels, and add snap holders', () => {
-    const unmigratedGame = {
-      name: 'Rick and Morty 100 Tage',
-      table: { width: 2000, height: 1600 },
+  it('makes a deck with hex cards and all its cards hex-shaped in validateAndSanitizeGame', () => {
+    const sanitized = validateAndSanitizeGame({
+      name: 'Hex',
       widgets: {
-        migrated_board: {
-          id: 'migrated_board',
-          type: 'token' as const,
-          shape: 'rectangle' as const,
-          x: 400,
-          y: 200,
-          width: 1275,
-          height: 1225,
-          image: 'https://steamusercontent-a.akamaihd.net/ugc/1752432457657315071/4CA2BC0FD0D8483D003FC39203118B9C5B3A5A88/',
-        },
-        hex_card_1: {
-          id: 'hex_card_1',
-          type: 'card' as const,
+        hex_card: { id: 'hex_card', type: 'card', width: 80, height: 120, clipPath: HEX_CLIP_PATH },
+        plain_card: { id: 'plain_card', type: 'card', width: 80, height: 120 },
+        deck: {
+          id: 'deck',
+          type: 'deck',
           width: 80,
           height: 120,
-          frontContent: {
-            type: 'image' as const,
-            value: 'https://steamusercontent-a.akamaihd.net/ugc/1752432457657352341/B8E2540B64D0AA1B8ED447707E09019A07CFDA6A/',
-          },
-          backContent: {
-            type: 'image' as const,
-            value: 'https://steamusercontent-a.akamaihd.net/ugc/1752432457657319703/B3D051B76921548648B589CF8A62585AE37116D0/',
-          },
+          cardIds: ['hex_card', 'plain_card'],
         },
-        generic_token_1: {
-          id: 'generic_token_1',
-          type: 'token' as const,
-          label: 'backgammon_piece_white',
-        },
-        old_deck: {
-          id: 'old_deck',
-          type: 'deck' as const,
-          width: 80,
-          height: 120,
-          cardIds: ['hex_card_1'],
-          backContent: {
-            type: 'image' as const,
-            value: 'https://steamusercontent-a.akamaihd.net/ugc/legacy_wrong_back/',
-          },
-        },
+        other_card: { id: 'other_card', type: 'card', width: 80, height: 120 },
       },
-    };
+    });
 
-    const sanitized = validateAndSanitizeGame(unmigratedGame);
-
-    // Card should now be hex and have hex back
-    const card = sanitized.widgets.hex_card_1 as CardWidget;
-    expect(card.width).toBe(210);
-    expect(card.height).toBe(182);
-    expect(card.clipPath).toBe(HEX_CLIP_PATH);
-    expect(card.backContent.value).toContain('B3D051B76921548648B589CF8A62585AE37116D0');
-
-    // Deck containing hex card should now be hex and have hex back
-    const deck = sanitized.widgets.old_deck as DeckWidget;
-    expect(deck.width).toBe(210);
-    expect(deck.height).toBe(182);
-    expect(deck.clipPath).toBe(HEX_CLIP_PATH);
-    expect(deck.backContent?.value).toContain('B3D051B76921548648B589CF8A62585AE37116D0');
-
-    // Token label should be cleared
-    const token = sanitized.widgets.generic_token_1 as TokenWidget;
-    expect(token.label).toBeUndefined();
-
-    // Snap holders should be generated for the board
-    const snaps = Object.values(sanitized.widgets).filter((w) => w.id.startsWith('snap_'));
-    expect(snaps.length).toBe(6);
-    expect(snaps[0].width).toBe(210);
-    expect(snaps[0].height).toBe(182);
-    expect(snaps[0].clipPath).toBe(HEX_CLIP_PATH);
+    for (const id of ['deck', 'hex_card', 'plain_card']) {
+      const w = sanitized.widgets[id] as CardWidget | DeckWidget;
+      expect(w.width).toBe(210);
+      expect(w.height).toBe(182);
+      expect(w.clipPath).toBe(HEX_CLIP_PATH);
+    }
+    expect(sanitized.widgets.other_card.clipPath).toBeUndefined();
+    expect(sanitized.widgets.other_card.width).toBe(80);
   });
 });

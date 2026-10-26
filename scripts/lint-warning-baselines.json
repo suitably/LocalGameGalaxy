@@ -91,7 +91,6 @@
   "src/games/tabletop/hooks/useTabletopGames.ts": 1,
   "src/games/tabletop/logic/__tests__/tabletopReducer.test.ts": 1,
   "src/games/tabletop/logic/__tests__/vttFrontiersNormalizer.test.ts": 1,
-  "src/games/tabletop/logic/gameValidator.ts": 1,
   "src/games/tabletop/logic/pcioNormalizer.ts": 1,
   "src/games/tabletop/logic/tabletopReducer.ts": 1,
   "src/games/tabletop/logic/tabletopStorage.ts": 2,

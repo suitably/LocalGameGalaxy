@@ -8,7 +8,6 @@ import {
   type TabletopPlayMode,
   type TabletopTableConfig,
   type HolderWidget,
-  type TokenWidget,
   type CardWidget,
   type DeckWidget,
   type HiddenZone,
@@ -151,20 +150,9 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
     }
 
     // Normalization for hex cards/decks
-    const fcVal =
-      typeof (widgetCopy.frontContent as Record<string, unknown> | undefined)?.value === 'string'
-        ? ((widgetCopy.frontContent as Record<string, unknown>).value as string)
-        : '';
-    const bcVal =
-      typeof (widgetCopy.backContent as Record<string, unknown> | undefined)?.value === 'string'
-        ? ((widgetCopy.backContent as Record<string, unknown>).value as string)
-        : '';
-
     const isHexCardOrDeck =
       (widgetCopy.type === 'card' || widgetCopy.type === 'deck') &&
-      (fcVal.includes('B8E2540B64D0AA1B8ED447707E09019A07CFDA6A') ||
-        bcVal.includes('B3D051B76921548648B589CF8A62585AE37116D0') ||
-        widgetCopy.clipPath === HEX_CLIP_PATH ||
+      (widgetCopy.clipPath === HEX_CLIP_PATH ||
         (widgetCopy.width === 210 && widgetCopy.height === 182));
 
     if (isHexCardOrDeck) {
@@ -176,10 +164,7 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
     cleanWidgets[widgetId] = widgetCopy as unknown as TabletopWidget;
   }
 
-  const HEX_BACK_URL =
-    'https://steamusercontent-a.akamaihd.net/ugc/1752432457657319703/B3D051B76921548648B589CF8A62585AE37116D0/';
-
-  // Pass 2: Ensure any deck that contains hex cards is also hex-shaped, has 210x182, and has the hex back image
+  // Pass 2: a deck that contains hex cards is hex-shaped too, and so are all its cards
   for (const w of Object.values(cleanWidgets)) {
     if (w.type === 'deck') {
       const deck = w as DeckWidget;
@@ -187,49 +172,31 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
         const c = cleanWidgets[cId] as CardWidget | undefined;
         return c && (c.clipPath === HEX_CLIP_PATH || c.width === 210);
       });
-      const isRickAndMortyHexDeck =
-        containsHexCards ||
-        (typeof deck.backContent?.value === 'string' &&
-          deck.backContent.value.includes('B3D051B76921548648B589CF8A62585AE37116D0'));
 
-      if (isRickAndMortyHexDeck) {
+      if (containsHexCards) {
         deck.width = 210;
         deck.height = 182;
         deck.clipPath = HEX_CLIP_PATH;
-        deck.backContent = { type: 'image', value: HEX_BACK_URL };
-        if (deck.cardIds) {
-          for (const cId of deck.cardIds) {
-            const childCard = cleanWidgets[cId] as CardWidget | undefined;
-            if (childCard) {
-              childCard.width = 210;
-              childCard.height = 182;
-              childCard.clipPath = HEX_CLIP_PATH;
-              childCard.backContent = { type: 'image', value: HEX_BACK_URL };
-            }
+        for (const cId of deck.cardIds) {
+          const childCard = cleanWidgets[cId] as CardWidget | undefined;
+          if (childCard) {
+            childCard.width = 210;
+            childCard.height = 182;
+            childCard.clipPath = HEX_CLIP_PATH;
           }
         }
       }
     }
   }
 
-  // Pass 3: Ensure any standalone hex card (or card referencing a hex deck) is also 210x182 and has the hex back
+  // Pass 3: a card that belongs to a hex deck is hex-shaped too
   for (const w of Object.values(cleanWidgets)) {
     if (w.type === 'card') {
       const card = w as CardWidget;
-      const isHexCard =
-        card.clipPath === HEX_CLIP_PATH ||
-        card.width === 210 ||
-        (typeof card.frontContent?.value === 'string' &&
-          card.frontContent.value.includes('B8E2540B64D0AA1B8ED447707E09019A07CFDA6A')) ||
-        (typeof card.backContent?.value === 'string' &&
-          card.backContent.value.includes('B3D051B76921548648B589CF8A62585AE37116D0')) ||
-        (card.deckId && cleanWidgets[card.deckId]?.clipPath === HEX_CLIP_PATH);
-
-      if (isHexCard) {
+      if (card.deckId && cleanWidgets[card.deckId]?.clipPath === HEX_CLIP_PATH) {
         card.width = 210;
         card.height = 182;
         card.clipPath = HEX_CLIP_PATH;
-        card.backContent = { type: 'image', value: HEX_BACK_URL };
       }
     }
   }
@@ -248,186 +215,9 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
     supportedModes.push('local_pass_and_play');
   }
 
-  let rawBg =
+  const rawBg =
     raw.table?.backgroundImageUrl ||
     ((raw.table as Record<string, unknown> | undefined)?.background as string | undefined);
-
-  // If a TTS game previously had its board mapped to table.backgroundImageUrl,
-  // migrate it to a proper centered board TokenWidget.
-  const hasBoardWidget = Object.values(cleanWidgets).some(
-    (w) =>
-      w.type === 'token' &&
-      (w as TokenWidget).shape === 'rectangle' &&
-      (w.width >= 500 || w.height >= 500),
-  );
-
-  const isTtsBoardBg = Boolean(
-    rawBg &&
-    !hasBoardWidget &&
-    (raw.author === 'Steam Workshop' ||
-      rawBg.includes('steamusercontent') ||
-      rawBg.includes('steamuserimages') ||
-      rawBg.includes('akamaihd.net')),
-  );
-
-  if (isTtsBoardBg && rawBg) {
-    const tableW = raw.table?.width && raw.table.width > 200 ? raw.table.width : 1600;
-    const tableH = raw.table?.height && raw.table.height > 200 ? raw.table.height : 1000;
-    const boardW = 1275;
-    const boardH = 1225;
-    const boardId = 'migrated_board';
-    const boardWidget: TokenWidget = {
-      id: boardId,
-      type: 'token',
-      shape: 'rectangle',
-      x: Math.round((tableW - boardW) / 2),
-      y: Math.round((tableH - boardH) / 2),
-      width: boardW,
-      height: boardH,
-      zIndex: 0,
-      label: 'Spielbrett',
-      image: sanitizeLegacyUrl(rawBg),
-      movable: false,
-      pinned: true,
-    };
-    cleanWidgets[boardId] = boardWidget;
-    rawBg = undefined;
-  }
-
-  // Generate snap holders for Rick and Morty board if not already present
-  const boardWidget = Object.values(cleanWidgets).find(
-    (w) =>
-      w.type === 'token' &&
-      (w as TokenWidget).shape === 'rectangle' &&
-      (w.width >= 500 || w.height >= 500),
-  ) as TokenWidget | undefined;
-
-  // Corrected snap offsets derived from pixel analysis of the board image (4CA2BC0...).
-  // Each entry is the (dx,dy) offset from board center to the visual hex-field center.
-  // Order matches the 6 TTS AttachedSnapPoints after their 180° rotY correction:
-  //   [0]=bottom-left  [1]=bottom  [2]=bottom-right  [3]=top-right  [4]=top  [5]=top-left
-  const RM_SNAP_OFFSETS = [
-    { dx: -341, dy: 179 }, // 0: bottom-left
-    { dx: 0, dy: 390 }, // 1: bottom
-    { dx: 341, dy: 179 }, // 2: bottom-right
-    { dx: 341, dy: -179 }, // 3: top-right
-    { dx: 0, dy: -390 }, // 4: top
-    { dx: -341, dy: -179 }, // 5: top-left
-  ] as const;
-  const RM_SNAP_W = 210;
-  const RM_SNAP_H = 182;
-
-  const hasSnapHolders = Object.keys(cleanWidgets).some((wId) => wId.startsWith('snap_'));
-
-  const isRickAndMorty = Boolean(
-    boardWidget?.image &&
-    (boardWidget.image.includes('4CA2BC0FD0D8483D003FC39203118B9C5B3A5A88') ||
-      name.toLowerCase().includes('rick and morty') ||
-      name.toLowerCase().includes('rick & morty')),
-  );
-
-  // Migrate existing saves that have snap holders at the OLD (wrong) positions,
-  // and update any cards that are already snapped inside them.
-  if (boardWidget && hasSnapHolders && isRickAndMorty) {
-    const boardCenterX = boardWidget.x + Math.round(boardWidget.width / 2);
-    const boardCenterY = boardWidget.y + Math.round(boardWidget.height / 2);
-    RM_SNAP_OFFSETS.forEach((offset, idx) => {
-      const hId = `snap_${boardWidget.id}_${idx}`;
-      const holder = cleanWidgets[hId] as HolderWidget | undefined;
-      if (holder) {
-        const correctX = Math.round(boardCenterX + offset.dx - RM_SNAP_W / 2);
-        const correctY = Math.round(boardCenterY + offset.dy - RM_SNAP_H / 2);
-        cleanWidgets[hId] = {
-          ...holder,
-          x: correctX,
-          y: correctY,
-          width: RM_SNAP_W,
-          height: RM_SNAP_H,
-        };
-        if (holder.childIds && holder.childIds.length > 0) {
-          holder.childIds.forEach((cId) => {
-            const child = cleanWidgets[cId];
-            if (child) {
-              cleanWidgets[cId] = {
-                ...child,
-                x: Math.round(correctX + (RM_SNAP_W - (child.width || RM_SNAP_W)) / 2),
-                y: Math.round(correctY + (RM_SNAP_H - (child.height || RM_SNAP_H)) / 2),
-              };
-            }
-          });
-        }
-      }
-    });
-  }
-
-  // Scale up undersized elements for Rick & Morty so they match the large 1275x1225 board
-  if (isRickAndMorty) {
-    for (const [wId, w] of Object.entries(cleanWidgets)) {
-      if (
-        w.type === 'card' &&
-        (w as CardWidget).clipPath !== HEX_CLIP_PATH &&
-        (w as CardWidget).width < 130
-      ) {
-        cleanWidgets[wId] = {
-          ...w,
-          width: 135,
-          height: 190,
-          defaultWidth: 135,
-          defaultHeight: 190,
-        };
-      } else if (
-        w.type === 'deck' &&
-        (w as DeckWidget).clipPath !== HEX_CLIP_PATH &&
-        (w as DeckWidget).width < 130
-      ) {
-        cleanWidgets[wId] = {
-          ...w,
-          width: 135,
-          height: 190,
-          defaultWidth: 135,
-          defaultHeight: 190,
-        };
-      } else if (w.type === 'die' && (w.width < 80 || w.height < 80)) {
-        cleanWidgets[wId] = { ...w, width: 80, height: 80, defaultWidth: 80, defaultHeight: 80 };
-      } else if (
-        w.type === 'token' &&
-        w.id !== boardWidget?.id &&
-        (w.width < 70 || w.height < 70)
-      ) {
-        cleanWidgets[wId] = { ...w, width: 76, height: 76, defaultWidth: 76, defaultHeight: 76 };
-      }
-    }
-  }
-
-  if (boardWidget && !hasSnapHolders && isRickAndMorty) {
-    const boardCenterX = boardWidget.x + Math.round(boardWidget.width / 2);
-    const boardCenterY = boardWidget.y + Math.round(boardWidget.height / 2);
-    const snapOffsets = RM_SNAP_OFFSETS;
-    const snapW = RM_SNAP_W;
-    const snapH = RM_SNAP_H;
-
-    snapOffsets.forEach((offset, idx) => {
-      const hId = `snap_${boardWidget.id}_${idx}`;
-      cleanWidgets[hId] = {
-        id: hId,
-        type: 'holder',
-        x: Math.round(boardCenterX + offset.dx - snapW / 2),
-        y: Math.round(boardCenterY + offset.dy - snapH / 2),
-        width: snapW,
-        height: snapH,
-        zIndex: (boardWidget.zIndex || 0) + 1,
-        label: 'Feldkarten',
-        dropTargetTypes: ['card', 'token'],
-        childIds: [],
-        layout: 'stack',
-        dropTarget: true,
-        pinned: true,
-        movable: false,
-        clipPath: HEX_CLIP_PATH,
-        customCss: 'transparent',
-      } as HolderWidget;
-    });
-  }
 
   const rawHiddenZones =
     raw.hiddenZones && typeof raw.hiddenZones === 'object' ? raw.hiddenZones : {};

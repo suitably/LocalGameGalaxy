@@ -29,11 +29,6 @@ Resolve: run the scaffolder in a scratch branch; either align it with the existi
 Rule: every key is registered in `STORAGE_KEYS`. Reality: qwixx, knister, kniffel, guessart, storyteller and cards define local key strings (list in [game-catalog §2](tech/game-catalog.md#2-persistence)). Several registered keys are therefore **never referenced**: `CARDS_LOBBY_PLAYERS`, `QWIXX_MY_SHEET`, `QWIXX_SHOW_DICE`, `KNISTER_CURRENT_GAME`, `KNISTER_SHOW_DICE`, `EXCALIDRAW_DRAWING`. The architecture check only catches raw `localStorage.` calls, not unregistered keys.
 Resolve: replace local constants with the registry entries (same string values, so no data migration), add the missing ones (kniffel, guessart, storyteller), drop unused entries.
 
-## Q11 — 63.7 MB ONNX model tracked in git
-
-`server/models/UVR-MDX-NET-Inst_HQ_3.onnx` is tracked (hygiene check warns). The rule "never track server media" names `server/music/` only.
-Resolve _(user)_: keep (offline Docker builds) or move to Git LFS / download on first use like `separator.ts` already supports via `MODELS_DIR`.
-
 ## Q12 — CHANGELOG structure broken
 
 `CHANGELOG.md` contains four `## [Unreleased]` sections (lines 1, 77, 150, 158) and a second `# Changelog` header at line 70 — merge artefacts. Which entries shipped in 1.1.0 is unclear.
@@ -61,7 +56,9 @@ Since #538 a player can store the running table as a server game's default templ
 
 ## Resolved 2026-10-26
 
+- Q21 third-party Workshop fixture (#586) → maintainer decision: the Tabletop Simulator Workshop import stays; games from the Workshop or other outside sources are loaded at runtime and never stored in the repository. `src/games/tabletop/tabletopsimulator/2500271578.{json,png}` removed; `ttsParser.test.ts` and `steamWorkshopApi.test.ts` use a small hand-made save. `logic/gameValidator.ts` lost the migrations written for that one game (image hashes, hex back URL, board size, snap offsets, scaling); hex shape now follows only the clip path or the 210×182 size.
 - Q20 learn mode and latency calibration with pults (#573, #546) → maintainer decision: practising (learn mode, which waits) is for one player alone — the toggle is off with two or more players and a second player switches to practice; a single pult player is waited for until the pult's judgement arrives. Latency is calibrated by best practice: tap-along to clicks per input source (screen/keys, MIDI, microphone), on the stage and on each pult; network jitter only affects the clock sync, judging happens on the device. [sync-protocol §3](tech/sync-protocol.md#3-multi-channel-sync-usemultichannelsynct)
+- Q11 ONNX model tracked in git → `server/models/` untracked (it is already in `.gitignore`; `audio-separator` downloads the model into `MODELS_DIR` on first use). `server/.vapid_keys.json` (unused by any code) and the generated `dev-dist/` untracked too.
 
 ## Resolved 2026-10-25
 

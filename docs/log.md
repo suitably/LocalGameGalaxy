@@ -2,6 +2,21 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-26 — Remove the third-party Workshop fixture (#586, claude-code)
+
+- `docs/open-questions.md`: Q21 resolved (Workshop import stays, outside games are never stored in the repository).
+- Outside `docs/`: removed `src/games/tabletop/tabletopsimulator/2500271578.{json,png}`; `ttsParser.test.ts` and `steamWorkshopApi.test.ts` use a hand-made save; `logic/gameValidator.ts` without the game-specific migrations.
+
+## 2026-10-26 — Untrack downloaded model, unused VAPID keys, dev-dist (claude-code)
+
+- `docs/open-questions.md`: Q11 resolved, Q21 narrowed to the Workshop fixture.
+- Outside `docs/`: `git rm --cached` of `server/models/`, `server/.vapid_keys.json`, `dev-dist/`; `.gitignore` gains `dev-dist/`.
+
+## 2026-10-26 — Licence AGPL-3.0-or-later (claude-code)
+
+- `docs/open-questions.md`: Q21 (third-party files, tracked VAPID keys).
+- Outside `docs/`: `LICENSE` (AGPL-3.0), `license` field in `package.json` and `package-lock.json` of root, `server/`, `signaling/`; README §8 Licence.
+
 ## 2026-10-26 — Melodiq Notes: learn mode solo, tap-along latency per source (Q20, claude-code)
 
 - `docs/open-questions.md`: Q20 resolved (maintainer decision). `docs/tech/sync-protocol.md` §3 pult bullet (`click-request`/`click-plan` replace `beep`, latency shift, clock window, learn mode), `docs/tech/persistence.md` (`MELODIQ_NOTES_INPUT_LATENCY` per role and source), `docs/tech/architecture.md` `audio` row.
